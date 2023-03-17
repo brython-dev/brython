@@ -216,6 +216,7 @@ frame.f_code = {
                 co_filename: _self.__file__,
                 co_varnames: $B.fast_tuple([])
             }
+            res.co_qualname = res.co_name // XXX
         }
         res.__class__ = _b_.code
         return res
@@ -412,7 +413,6 @@ $B.exception = function(js_exc, in_ctx_manager){
             return js_exc.$py_exc
         }
         console.log('Javascript error\n', js_exc)
-        console.log(js_exc.stack)
         console.log('frames', $B.frames_stack.slice())
         var exc = _b_.Exception.$factory("Internal Javascript error: " +
             (js_exc.__name__ || js_exc.name))

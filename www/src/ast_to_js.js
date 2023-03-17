@@ -619,6 +619,7 @@ function init_comprehension(comp, scopes){
                `co_freevars: $B.fast_tuple([]),\n` +
                `co_kwonlyargcount: 0,\n` +
                `co_posonlyargount: 0,\n` +
+               `co_qualname: "<${comp.type.toLowerCase()}>",\n` +
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
            `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
@@ -1918,6 +1919,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_name: '${this.$is_lambda ? '<lambda>': this.name}',\n` +
         `co_nlocals: ${varnames.length},\n` +
         `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
+        `co_qualname: '${this.$is_lambda ? '<lambda>': qualname}',\n` +
         `co_varnames: $B.fast_tuple([${varnames}])\n` +
         `},\n` +
         `arg_names: [${arg_names}],\n` +
