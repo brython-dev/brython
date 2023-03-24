@@ -2737,6 +2737,10 @@ var vars = _b_.vars = function(){
 
 var $Reader = $B.make_class("Reader")
 
+$Reader.__bool__ = function(){
+    return true
+}
+
 $Reader.__enter__ = function(self){
     return self
 }
