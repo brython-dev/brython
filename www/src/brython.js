@@ -156,9 +156,9 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-17 13:55:30.417143"
-__BRYTHON__.timestamp=1679057730416
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
+__BRYTHON__.compiled_date="2023-03-24 08:46:43.022660"
+__BRYTHON__.timestamp=1679644003022
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7042,6 +7042,7 @@ var vars=_b_.vars=function(){var def={},$=$B.args('vars',1,{obj:null},['obj'],ar
 if($.obj===def){return _b_.locals()}else{try{return $B.$getattr($.obj,'__dict__')}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
 throw err}}}
 var $Reader=$B.make_class("Reader")
+$Reader.__bool__=function(){return true}
 $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
 $Reader.__init__=function(_self,initial_value='',newline='\n'){_self.$content=initial_value
@@ -11393,8 +11394,9 @@ $B.$getattr(obj,"__bool__",missing)
 var test=false 
 if(test){console.log('bool(obj)',obj,'apply bool method',bool_method)
 console.log('$B.$call(bool_method)',bool_method+'')}
-if(bool_method===missing){try{return _b_.len(obj)> 0}
-catch(err){return true}}else{try{var res=bool_class ?
+if(bool_method===missing){var len_method=$B.$getattr(klass,'__len__',missing)
+if(len_method===missing){return true}
+return len_method(obj)> 0}else{try{var res=bool_class ?
 $B.$call(bool_method)(obj):
 $B.$call(bool_method)()}catch(err){throw err}
 if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+

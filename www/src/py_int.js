@@ -894,7 +894,9 @@ _b_.int = int
 $B.$bool = function(obj, bool_class){ // return true or false
     // bool_class is set if called by built-in bool()
     // In this case, if __bool__ is called, it is on obj.__class__
-    if(obj === null || obj === undefined ){ return false}
+    if(obj === null || obj === undefined ){
+        return false
+    }
     switch(typeof obj){
         case "boolean":
             return obj
@@ -903,21 +905,25 @@ $B.$bool = function(obj, bool_class){ // return true or false
             if(obj){return true}
             return false
         default:
-            if(obj.$is_class){return true}
+            if(obj.$is_class){
+                return true
+            }
             var klass = obj.__class__ || $B.get_class(obj),
                 missing = {},
                 bool_method = bool_class ?
                               $B.$getattr(klass, "__bool__", missing):
                               $B.$getattr(obj, "__bool__", missing)
-
             var test = false // klass.$infos.__name__ == 'FlagBoundary'
             if(test){
                 console.log('bool(obj)', obj, 'apply bool method', bool_method)
                 console.log('$B.$call(bool_method)', bool_method + '')
             }
             if(bool_method === missing){
-                try{return _b_.len(obj) > 0}
-                catch(err){return true}
+                var len_method = $B.$getattr(klass, '__len__', missing)
+                if(len_method === missing){
+                    return true
+                }
+                return len_method(obj) > 0
             }else{
                 try{
                     var res = bool_class ?

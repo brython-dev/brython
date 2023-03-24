@@ -304,6 +304,8 @@ class Interpreter:
         sel = window.getSelection()
         # self.zone.lastChild is a PRE, take its internal text node
         last_child = self.zone.lastChild.firstChild
+        if last_child is None: # issue 2175
+            last_child = self.zone.lastChild
         pos = len(last_child.text)
         # put caret at the end of text
         sel.setBaseAndExtent(last_child, pos, last_child, pos)
