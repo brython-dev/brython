@@ -604,7 +604,6 @@ function init_comprehension(comp, scopes){
     return `var ${comp.locals_name} = {},\n` +
                `locals = ${comp.locals_name}\n` +
            `locals['.0'] = expr\n` +
-           `$B.last($B.frames_stack).$has_generators = true\n` +
            `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
            `frame.$has_generators = true\n` +
