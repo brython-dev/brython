@@ -36,7 +36,7 @@ $B.surrogates = function(s){
             s1 += char
         }
     }
-    
+
     var codepoints = [],
         surrogates = [],
         j = 0
@@ -254,7 +254,18 @@ str.__dir__ = _b_.object.__dir__
 str.__eq__ = function(_self, other){
     if(_b_.isinstance(other, str)){
         [_self, other] = to_string([_self, other])
-        return _self == other
+        if(typeof _self == 'string' && typeof other == 'string'){
+            return _self == other
+        }
+        if(_self.length != other.length){
+            return false
+        }
+        for(var i = 0, len = _self.length; i < len; i++){
+            if(_self[i] != other[i]){
+                return false
+            }
+        }
+        return true
     }
     return _b_.NotImplemented
 }
@@ -444,7 +455,7 @@ const max_precision = 2 ** 31 - 4,
 var format_int_precision = function(val, flags){
     var precision = flags.precision
     if(! precision){
-        return val.toString()
+        return _b_.str.$factory(val)
     }
     precision = parseInt(precision, 10)
     if(precision > max_precision){
@@ -506,11 +517,9 @@ var str_format = function(val, flags) {
 
 var num_format = function(val, flags) {
     number_check(val, flags)
-    if(val.__class__ === $B.long_int){
-        val = $B.long_int.to_base(val, 10)
-    }else if(_b_.isinstance(val, _b_.float)){
+    if(_b_.isinstance(val, _b_.float)){
         val = parseInt(val.value)
-    }else{
+    }else if(! _b_.isinstance(val, _b_.int)){
         val = parseInt(val)
     }
 
