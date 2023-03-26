@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-24 08:50:00.183207"
-__BRYTHON__.timestamp=1679644200183
+__BRYTHON__.compiled_date="2023-03-26 20:49:01.963180"
+__BRYTHON__.timestamp=1679856541963
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10029,7 +10029,10 @@ return false}
 str.__delitem__=function(){throw _b_.TypeError.$factory("'str' object doesn't support item deletion")}
 str.__dir__=_b_.object.__dir__
 str.__eq__=function(_self,other){if(_b_.isinstance(other,str)){[_self,other]=to_string([_self,other])
-return _self==other}
+if(typeof _self=='string' && typeof other=='string'){return _self==other}
+if(_self.length !=other.length){return false}
+for(var i=0,len=_self.length;i < len;i++){if(_self[i]!=other[i]){return false}}
+return true}
 return _b_.NotImplemented}
 function preformat(_self,fmt){if(fmt.empty){return _b_.str.$factory(_self)}
 if(fmt.type && fmt.type !="s"){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
@@ -10099,7 +10102,7 @@ if(! flags.left){return get_char_array(padding-s.length,flags.pad_char)+s}else{
 return s+get_char_array(padding-s.length,flags.pad_char)}}
 const max_precision=2**31-4,max_repeat=2**30-1
 var format_int_precision=function(val,flags){var precision=flags.precision
-if(! precision){return val.toString()}
+if(! precision){return _b_.str.$factory(val)}
 precision=parseInt(precision,10)
 if(precision > max_precision){throw _b_.OverflowError.$factory('precision too large')}
 var s
@@ -10119,7 +10122,7 @@ var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
 var num_format=function(val,flags){number_check(val,flags)
-if(val.__class__===$B.long_int){val=$B.long_int.to_base(val,10)}else if(_b_.isinstance(val,_b_.float)){val=parseInt(val.value)}else{val=parseInt(val)}
+if(_b_.isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! _b_.isinstance(val,_b_.int)){val=parseInt(val)}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==="0"){if(val < 0){s=s.substring(1)
 return "-"+format_padding(s,flags,true)}

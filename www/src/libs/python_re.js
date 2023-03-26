@@ -1,5 +1,8 @@
 // Regular expression
 
+
+var _debug = {value: false}
+
 var $B = __BRYTHON__,
     _b_ = $B.builtins
 
@@ -51,11 +54,14 @@ var error = $B.make_class("error",
         return {
             __class__: error,
             msg: message,
-            args: $B.fast_tuple([])
+            args: $B.fast_tuple([]),
+            __cause__: _b_.None,
+            __context__: _b_.None,
+            __suppress_context__: false
         }
     })
 error.__bases__ = [_b_.Exception, _b_.object]
-error.__mro__ = [_b_.Exception, _b_.object]
+error.__mro__ = [_b_.Exception, _b_.BaseException, _b_.object]
 
 error.__str__ = function(self){
     var s = self.msg + ' at position ' + self.pos
@@ -1131,7 +1137,7 @@ CharacterSet.prototype.match = function(string, pos){
             $B.codepoint2jsstring(cp)
         }catch(err){
             console.log(err.message)
-            throw _b_.Exception.$factory('mauvais codepoint')
+            throw _b_.Exception.$factory('bad codepoint')
         }
         var char = $B.codepoint2jsstring(cp),
             cps = cased_cps(cp, ignore_case, this.flags.value & ASCII.value),
@@ -1852,7 +1858,7 @@ function compile(pattern, flags){
                 delete item.num
             }
             if(item instanceof Group && item.items.length == 0){
-                item.add(new Char(pos, EmptyString, group_stack.concat([item])))
+                item.add(EmptyString)
             }else if(item instanceof ConditionalBackref){
                 if(item.re_if_exists.items.length == 0){
                     item.re_if_exists.add(EmptyString)
@@ -2674,7 +2680,10 @@ function transform_repl(data, pattern){
                         fail("missing group name", pos - 1)
                     }
                     var group_name = mo[1]
-                    if(/^\d+$/.exec(group_name)){
+                    if(group_name == '0'){
+                        //  The backreference \g<0> substitutes in the entire
+                        // substring matched by the RE.
+                    }else if(/^\d+$/.exec(group_name)){
                         if(pattern.groups[group_name] === undefined){
                             fail(`invalid group reference ${group_name}`,
                                 pos)
@@ -2733,7 +2742,7 @@ function transform_repl(data, pattern){
     data.repl1 = repl1
     if(has_backref){
         parts.push(repl.substr(next_pos))
-data.repl = function(bmo){
+        data.repl = function(bmo){
             var mo = bmo.mo,
                 res = parts[0],
                 groups = mo.$groups,
@@ -2741,7 +2750,13 @@ data.repl = function(bmo){
                 group,
                 is_bytes = s.type == 'bytes'
             for(var i = 1, len = parts.length; i < len; i += 2){
-                if(groups[parts[i]] === undefined){
+                if(parts[i] == 0){
+                    var x = s.substring(mo.start, mo.end)
+                    if(is_bytes){
+                        x = _b_.bytes.decode(x, 'latin-1')
+                    }
+                    res += x
+                }else if(groups[parts[i]] === undefined){
                     if(mo.node.$groups[parts[i]] !== undefined){
                         // group is defined in the RE, but didn't contribute
                         // to the match
@@ -2803,7 +2818,7 @@ function StringObj(obj){
         this.codepoints = obj.codepoints
         this.index_map = obj.index_map
     }else if(_b_.isinstance(obj, _b_.str)){ // str subclass
-        var so = new StringObj(obj.valueOf())
+        var so = new StringObj(_b_.str.$factory(obj))
         this.string = so.string
         this.codepoints = so.codepoints
     }else if(_b_.isinstance(obj, [_b_.bytes, _b_.bytearray])){
@@ -2824,7 +2839,7 @@ function StringObj(obj){
         this.codepoints = obj
     }else{
         throw _b_.TypeError.$factory(
-            'expected string or bytes-like object')
+            `expected string or bytes-like object, got '${$B.class_name(obj)}'`)
     }
     this.length = this.codepoints.length
 }
@@ -2931,6 +2946,22 @@ function subn(pattern, repl, string, count, flags){
 var escaped = [9, 10, 11, 12, 13, 32, 35, 36, 38, 40, 41, 42, 43, 45, 46, 63,
                91, 92, 93, 94, 123, 124, 125, 126]
 
+function starts_with_string_start(pattern){
+    // returns true if the pattern starts with ^ or \A
+    if(pattern.node){
+        pattern = pattern.node
+    }
+    if(pattern.items){
+        return starts_with_string_start(pattern.items[0])
+    }else if(pattern instanceof CharacterClass){
+        return pattern.value == 'A'
+    }else if(pattern instanceof StringStart){
+        return true
+    }else{
+        return false
+    }
+}
+
 function* iterator(pattern, string, flags, original_string, pos, endpos){
     var result = [],
         pos = pos | 0
@@ -2954,11 +2985,13 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
         }else{
             pos++
         }
+        if(starts_with_string_start(pattern)){
+            break
+        }
     }
     delete original_string.in_iteration
 }
 
-var _debug = {value: false}
 
 function MO(node, pos, mo, len){
     this.node = node
@@ -3126,11 +3159,11 @@ BMO.end = function(self){
     }
 }
 
-BMO.endpos = {
-    __get__: function(self){
+BMO.endpos = _b_.property.$factory(
+    function(self){
         return self.mo.endpos
     }
-}
+)
 
 BMO.expand = function(){
     var $ = $B.args("expand", 2, {self: null, template: null},
@@ -3215,25 +3248,25 @@ BMO.groups = function(self){
     return self.mo.groups(_default)
 }
 
-BMO.lastindex = {
-    /* The integer index of the last matched capturing group, or None if no
-       group was matched at all.
-    */
-    __get__: function(self){
+BMO.lastindex = _b_.property.$factory(
+   function(self){
+        /* The integer index of the last matched capturing group, or None if
+           no group was matched at all.
+        */
         var last = self.mo.$groups.$last
         if(last.length == 0){
             return _b_.None
         }
         return parseInt($last(last))
     }
-}
+)
 
-BMO.lastgroup = {
-    /* The name of the last matched capturing group, or None if the group
-       didn't have a name, or if no group was matched at all.
-    */
-    __get__: function(self){
-        var lastindex = BMO.lastindex.__get__(self)
+BMO.lastgroup = _b_.property.$factory(
+    function(self){
+        /* The name of the last matched capturing group, or None if the group
+           didn't have a name, or if no group was matched at all.
+        */
+        var lastindex = BMO.lastindex.fget(self)
         if(lastindex === _b_.None){
             return _b_.None
         }
@@ -3241,23 +3274,23 @@ BMO.lastgroup = {
             name = group.item.name
         return name === undefined ? _b_.None : name
     }
-}
+)
 
-BMO.pos = {
-    __get__: function(self){
+BMO.pos = _b_.property.$factory(
+    function(self){
         return self.mo.start
     }
-}
+)
 
-BMO.re = {
-    __get__: function(self){
+BMO.re = _b_.property.$factory(
+    function(self){
         return self.mo.node.pattern
     }
-}
+)
 
-BMO.regs = {
-    __get__: function(self){
-        var res = [$B.fast_tuple([self.mo.start, self.mo.end])]
+BMO.regs = _b_.property.$factory(
+    function(self){
+        var res = [$B.fast_tuple($B.fast_tuple([self.mo.start, self.mo.end]))]
         for(var group_num in self.mo.node.$groups){
             if(isFinite(group_num)){
                 var group = self.mo.node.$groups[group_num].item
@@ -3268,7 +3301,7 @@ BMO.regs = {
         }
         return $B.fast_tuple(res)
     }
-}
+)
 
 BMO.span = function(){
     /*
@@ -3306,11 +3339,11 @@ BMO.start = function(self){
     }
 }
 
-BMO.string = {
-    __get__: function(self){
+BMO.string = _b_.property.$factory(
+    function(self){
         return self.mo.string.to_str()
     }
-}
+)
 
 $B.set_func_names(BMO, 're')
 
@@ -3345,7 +3378,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
         groups = {$last:[]}
     }
     if(pattern.text === undefined){
-        console.log('pas de texte', pattern)
+        console.log('no text', pattern)
     }
     var node = pattern.node,
         mo
@@ -3553,7 +3586,7 @@ var $module = {
             res.push(cp)
         }
         res = from_codepoint_list(res, data.type)
-        if(data.type == "bytes"){
+        if(data.type == "bytes" && _b_.isinstance(res, _b_.str)){
             res = _b_.str.encode(res, 'latin1')
         }
         return res
@@ -3682,6 +3715,7 @@ var $module = {
         cache.clear()
         return _b_.None
     },
+    Scanner,
     search: function(){
         var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
@@ -3698,7 +3732,16 @@ var $module = {
             pattern = BPattern.$factory(compile(data.pattern, flags))
         }
         data.pattern = pattern
-        // optimization
+        // optimizations
+        if(pattern.pattern.startsWith('\\A') ||
+                pattern.pattern.startsWith('^')){
+            var mo = match(data.pattern.$pattern, data.string, pos)
+            if(mo){
+                return BMO.$factory(mo)
+            }else{
+                return _b_.None
+            }
+        }
         if(pattern.$pattern.fixed_length !== false &&
                 isFinite(pattern.$pattern.fixed_length) &&
                 pattern.pattern.endsWith('$') &&
@@ -3767,7 +3810,13 @@ var $module = {
         }
         res.push(data.string.substring(pos))
         if(data.type === "bytes"){
-            res = res.map(function(x){return _b_.str.encode(x, "latin-1")})
+            res = res.map(
+                function(x){
+                    return _b_.isinstance(x, _b_.bytes) ?
+                               x :
+                               _b_.str.encode(x, "latin-1")
+                }
+            )
         }
         return res
     },
