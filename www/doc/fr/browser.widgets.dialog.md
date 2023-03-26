@@ -46,7 +46,7 @@ d1 = InfoDialog("Test", "Je ferme dans 3 secondes", remove_after=3)
 > dans la zone de saisie, un événement nommé "entry" est déclenché sur
 > sur l'instance de `EntryDialog`.
 
-- _title, top, left, default_css_ et _ok_ ont la même signification que pour 
+- _title, top, left, default_css_ et _ok_ ont la même signification que pour
   `InfoDialog`
 - _message_ est le texte optionnel à afficher à gauche de la zone d'entrée
 
@@ -117,6 +117,33 @@ def ok(ev):
   d3 = InfoDialog("Test", f"{prompt}, {name} !", left=left, top=top)
 ```
 </blockquote>
+
+### Fonction `Input`
+
+La fonction intégrée Python `input()` est implémentée par la fonction intégrée
+Javascript `prompt()`. Ceci peut poser problème quand `input()` se trouve dans
+une boucle: aucune modification du document n'est permise par les navigateurs
+tant que la boucle n'est pas terminée.
+
+La fonction asynchrone `Input()` permet de remplacer `input()` en mettant la
+boucle à l'intérieur d'une fonction asynchrone.
+
+Exemple:
+```python
+from browser import aio
+from browser.widgets.dialog import Input, InfoDialog
+
+async def loop():
+    while True:
+        x = await Input('Enter an integer')
+        try:
+            return int(x)
+        except ValueError:
+            InfoDialog('Info', f'{x} is not an integer')
+            await aio.sleep(0.5)
+
+aio.run(loop())
+```
 
 ### Style CSS
 
