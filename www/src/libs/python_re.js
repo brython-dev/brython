@@ -1274,7 +1274,11 @@ var Group = function(pos, extension){
 Group.prototype.add = Node.prototype.add
 
 Group.prototype.toString = function(){
-    var res = 'Group #' + this.num + ' ' + this.pattern
+    if(this.type == 'negative_lookahead_assertion'){
+        var res = 'NegativeLookahead ' + this.pattern
+    }else{
+        var res = 'Group #' + this.num + ' ' + this.pattern
+    }
     if(this.repeat !== undefined){
         res += ' repeat {' + this.repeat.min + ',' + this.repeat.max + '}'
         if(this.non_greedy){
@@ -2793,6 +2797,7 @@ function StringObj(obj){
     this.py_obj = obj
     this.codepoints = []
     this.type = "str"
+    this.is_string = typeof obj == 'string'
     if(typeof obj == "string" ||
             (obj instanceof String && ! obj.codepoints)){
         // Python object represented as a Javascript string
@@ -2868,6 +2873,9 @@ StringObj.prototype.substring = function(start, end){
 }
 
 StringObj.prototype.to_str = function(){
+    if(this.hasOwnProperty('string')){
+        return this.string
+    }
     return from_codepoint_list(this.codepoints, this.type)
 }
 
@@ -2898,9 +2906,11 @@ function prepare(args){
     return res
 }
 
+$B.nb_subn = 0
 function subn(pattern, repl, string, count, flags){
     // string is a StringObj instance
     // pattern is either a Pattern instance or a StringObj instance
+    var t0 = window.performance.now()
     var res = '',
         pos = 0,
         nb_sub = 0
@@ -2913,7 +2923,9 @@ function subn(pattern, repl, string, count, flags){
         repl1 = data1.repl1
     }
     pos = 0
-    for(var bmo of $module.finditer(BPattern.$factory(pattern), string.to_str()).js_gen){
+    var s = string.to_str()
+    for(var bmo of $module.finditer(BPattern.$factory(pattern), s).js_gen){
+        $B.nb_subn++
         // finditer yields instances of BMatchObject
         var mo = bmo.mo // instance of MatchObject
         res += from_codepoint_list(string.codepoints.slice(pos, mo.start))
@@ -2935,7 +2947,11 @@ function subn(pattern, repl, string, count, flags){
             break
         }
     }
-    res += from_codepoint_list(string.codepoints.slice(pos))
+    if(string.is_string){
+        res += string.string.substr(pos)
+    }else{
+        res += from_codepoint_list(string.codepoints.slice(pos))
+    }
     if(pattern.type === "bytes"){
         res = _b_.str.encode(res, "latin-1")
     }
@@ -3431,7 +3447,6 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                             log("lookahead assertion", item, "succeeds")
                         }else{
                             mos.push(mo)
-                            log('item ' + item, 'succeeds, mo', mo, mos, 'groups', groups)
                             pos = mo.end
                         }
                         i++
@@ -3466,8 +3481,9 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                             if(node.type == "negative_lookahead_assertion"){
                                 // If a negative lookahead assertion fails,
                                 // return a match
-                                return new GroupMO(node, start, matches,
+                                var res = new GroupMO(node, start, matches,
                                     string, groups, endpos)
+                                return res
                             }
                             if(nb_repeat == 0){
                                 // remove the groups introduced before
