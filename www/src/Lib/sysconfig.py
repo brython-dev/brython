@@ -175,25 +175,6 @@ if os.name == 'nt':
     _PROJECT_BASE = _fix_pcbuild(_PROJECT_BASE)
     _sys_home = _fix_pcbuild(_sys_home)
 
-def is_python_build(check_home=False):
-    if check_home and _sys_home:
-        return _is_python_source_dir(_sys_home)
-    return _is_python_source_dir(_PROJECT_BASE)
-
-_PYTHON_BUILD = is_python_build(True)
-
-if _PYTHON_BUILD:
-    for scheme in ('posix_prefix', 'posix_home'):
-        # On POSIX-y platofrms, Python will:
-        # - Build from .h files in 'headers' (which is only added to the
-        #   scheme when building CPython)
-        # - Install .h files to 'include'
-        scheme = _INSTALL_SCHEMES[scheme]
-        scheme['headers'] = scheme['include']
-        scheme['include'] = '{srcdir}/Include'
-        scheme['platinclude'] = '{projectbase}/.'
-
-
 def _subst_vars(s, local_vars):
     try:
         return s.format(**local_vars)

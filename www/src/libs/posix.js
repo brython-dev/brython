@@ -14,41 +14,57 @@ function _randint(a, b){
 
 var stat_result = $B.make_class("stat_result",
     function(filename){
-        // Use $B.files, created by "python -m brython --make_file_system"
-        if($B.files && $B.files.hasOwnProperty(filename)){
-            var f = $B.files[filename],
+        if($B.file_cache && $B.file_cache.hasOwnProperty(filename)){
+            var f = $B.file_cache[filename],
                 res = {
                     __class__: stat_result,
-                    st_atime: new Date().getTime(),
+                    st_atime: __BRYTHON__.timestamp,
                     st_ctime: f.ctime,
                     st_mtime: f.mtime,
                     st_uid: -1,
                     st_gid: -1,
                     st_ino: -1,
                     st_mode: 0,
-                    st_size: 1
+                    st_size: f.length
                 };
-            ["atime", "mtime", "ctime"].
-                forEach(function(item){
-                    res["st_" + item + "_ns"] = res["st_" + item] *
-                        1000000
-                });
+                ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
+                    forEach(function(item){
+                        res["st_" + item] = res.st_atime
+                    });
+            return res
         }else{
-            var res = {
-                __class__: stat_result,
-                st_atime: new Date(),
-                st_uid: -1,
-                st_gid: -1,
-                st_ino: -1,
-                st_mode: filename.endsWith('/') ? 16895 : 33206,
-                st_size: 1
-            };
-            ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
-                forEach(function(item){
-                    res["st_" + item] = res.st_atime
-                });
+            try{
+                var xhr = new XMLHttpRequest()
+            }catch(err){
+                console.log('err', filename, err.message)
+                console.log('stack', $B.frames_stack.slice())
+                throw err
+            }
+            xhr.open('HEAD', filename, false)
+            console.log('send head', $B.frames_stack.slice())
+            var infos = {}
+            xhr.onreadystatechange = function(){
+                if(this.readyState == 4){
+                    var res = {
+                        __class__: stat_result,
+                        st_atime: __BRYTHON__.timestamp,
+                        st_uid: -1,
+                        st_gid: -1,
+                        st_ino: -1,
+                        st_mode: filename.endsWith('/') ? 16895 : 33206,
+                        st_size: this.getResponseHeader('content-length')
+                    };
+                    ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
+                        forEach(function(item){
+                            res["st_" + item] = res.st_atime
+                        });
+                    infos.value = res
+                    $B.file_cache[filename] = this.responseText
+                }
+            }
+            xhr.send()
+            return infos.value
         }
-        return res
     }
 )
 $B.set_func_names(stat_result, "posix")
@@ -88,7 +104,9 @@ var $module = {
     },
     getcwd: function(){return $B.brython_path},
     getpid: function(){return 0},
-    lstat: function(filename){return stat_result.$factory(filename)},
+    lstat: function(filename){
+        return stat_result.$factory(filename)
+    },
     open: function(path, flags){return _b_.open(path, flags)},
     stat: function(filename){return stat_result.$factory(filename)},
     stat_result: function(filename){return stat_result.$factory(filename)},

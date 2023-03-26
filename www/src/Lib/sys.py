@@ -29,10 +29,7 @@ dont_write_bytecode = True
 
 exec_prefix = __BRYTHON__.brython_path
 
-if hasattr(__BRYTHON__, 'full_url'):
-    executable = __BRYTHON__.full_url.address + 'brython.js'
-else:
-    executable = __BRYTHON__.brython_path + 'brython.js'
+executable = __BRYTHON__.brython_path + 'brython.js'
 
 argv = orig_argv = [__BRYTHON__.script_path]
 
