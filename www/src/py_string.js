@@ -1147,7 +1147,8 @@ $B.printf_format = function(s, type, args){
 
 str.__mod__ = function(_self, args){
     _self = to_string(_self)
-    return $B.printf_format(_self, 'str', args)
+    var res = $B.printf_format(_self, 'str', args)
+    return $B.String(res)
 }
 
 str.__mro__ = [_b_.object]
