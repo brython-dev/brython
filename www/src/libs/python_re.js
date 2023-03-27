@@ -3751,7 +3751,7 @@ var $module = {
         // optimizations
         if(pattern.pattern.startsWith('\\A') ||
                 pattern.pattern.startsWith('^')){
-            var mo = match(data.pattern.$pattern, data.string, pos)
+            var mo = match(data.pattern.$pattern, data.string, 0)
             if(mo){
                 return BMO.$factory(mo)
             }else{
