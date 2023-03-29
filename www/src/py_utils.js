@@ -516,8 +516,37 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+    if(typeof iterator == 'string'){
+        // Python strings that don't have "astral plane" characters are
+        // implemented as plain JS strings. If they have characters in the
+        // range 0xD800 - 0xDBFF, iteration on the JS string yields a 2-elt
+        // string made of this character + the next one.
+        // Python strings with "astral plane" characters are implemented as
+        // instances of the String class.
+        var it = iterator[Symbol.iterator](),
+            gen = (function*(){
+                for(var char of iterator){
+                    if(char.length == 2){
+                        yield char[0]
+                        yield char[1]
+                    }else{
+                        yield char
+                    }
+                }
+            })()
+        return {
+            [Symbol.iterator](){
+                return this
+            },
+            next(){
+                set_lineno(frame, lineno)
+                return gen.next()
+            }
+        }
+    }
     if(iterator[Symbol.iterator]){
-        var it = iterator[Symbol.iterator]()
+        var it = iterator[Symbol.iterator](),
+            nb = 0
         return {
             [Symbol.iterator](){
                 return this
