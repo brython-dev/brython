@@ -169,17 +169,7 @@ function to_chars(s){
     // Transform Javascript string s into a list of Python characters
     // (2 JS chars if surrogate, 1 otherwise)
     s = to_string(s)
-    var chars = []
-    for(var i = 0, len = s.length; i < len; i++){
-        var code = s.charCodeAt(i)
-        if(code >= 0xD800 && code <= 0xDBFF){
-            chars.push(s.substr(i, 2))
-            i++
-        }else{
-            chars.push(s.charAt(i))
-        }
-    }
-    return chars
+    return Array.from(s)
 }
 
 function to_codepoints(s){
@@ -1832,7 +1822,7 @@ str.isalnum = function(){
             arguments, {}, null, null),
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp] ||
                 unicode_tables.Lu[cp] ||
@@ -1859,7 +1849,7 @@ str.isalpha = function(){
             arguments, {}, null, null),
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp] ||
                 unicode_tables.Lu[cp] ||
@@ -1883,7 +1873,7 @@ str.isdecimal = function(){
             arguments, {}, null, null),
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(! unicode_tables.Nd[cp]){
             return false
@@ -1899,7 +1889,7 @@ str.isdigit = function(){
             arguments, {}, null, null),
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(! unicode_tables.digits[cp]){
             return false
@@ -1940,7 +1930,7 @@ str.islower = function(){
         cp,
         _self = to_string($.self)
 
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp]){
             has_cased = true
@@ -1962,7 +1952,7 @@ str.isnumeric = function(){
     var $ = $B.args("isnumeric", 1, {self: null}, ["self"],
             arguments, {}, null, null),
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         if(! unicode_tables.numeric[_b_.ord(char)]){
             return false
         }
@@ -1992,7 +1982,7 @@ str.isprintable = function(){
     var $ = $B.args("isprintable", 1, {self: null}, ["self"],
             arguments, {}, null, null),
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         if(unprintable[_b_.ord(char)]){
             return false
         }
@@ -2011,7 +2001,7 @@ str.isspace = function(self){
             arguments, {}, null, null),
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(! unicode_tables.Zs[cp] &&
                 $B.unicode_bidi_whitespace.indexOf(cp) == -1){
@@ -2041,7 +2031,7 @@ str.isupper = function(self){
         cp,
         _self = to_string(self)
 
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(unicode_tables.Lu[cp]){
             is_upper = true
@@ -2247,8 +2237,8 @@ str.removesuffix = function(){
 function $re_escape(str){
     var specials = "[.*+?|()$^"
     for(var i = 0, len = specials.length; i < len; i++){
-        var re = new RegExp("\\"+specials.charAt(i), "g")
-        str = str.replace(re, "\\"+specials.charAt(i))
+        var re = new RegExp("\\" + specials.charAt(i), "g")
+        str = str.replace(re, "\\" + specials.charAt(i))
     }
     return str
 }
@@ -2603,7 +2593,7 @@ str.swapcase = function(self){
         res = "",
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp]){
             res += char.toUpperCase()
@@ -2623,7 +2613,7 @@ str.title = function(self){
         cp,
         res = "",
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp]){
             if(! state){
@@ -2651,7 +2641,7 @@ str.translate = function(){
         getitem = $B.$getattr(table, "__getitem__"),
         cp,
         _self = to_string($.self)
-    for(var char of to_chars(_self)){
+    for(var char of _self){
         cp = _b_.ord(char)
         try{
             var repl = getitem(cp)
