@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-28 09:59:55.068959"
-__BRYTHON__.timestamp=1679990395053
+__BRYTHON__.compiled_date="2023-03-29 21:51:46.093912"
+__BRYTHON__.timestamp=1680119506093
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4955,7 +4955,13 @@ if(obj.ix <=iterator.stop){return{done:true,value:null}}
 var value=obj.ix
 obj.ix+=iterator.step
 return{done:false,value}}}}}
-if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator]()
+if(typeof iterator=='string'){
+var it=iterator[Symbol.iterator](),gen=(function*(){for(var char of iterator){if(char.length==2){yield char[0]
+yield char[1]}else{yield char}}})()
+return{
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
+return gen.next()}}}
+if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator](),nb=0
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}
@@ -9997,11 +10003,7 @@ if(! _b_.isinstance(obj,str)){throw _b_.TypeError.$factory((prefix ||'')+
 "must be str, not "+$B.class_name(obj))}}
 function to_chars(s){
 s=to_string(s)
-var chars=[]
-for(var i=0,len=s.length;i < len;i++){var code=s.charCodeAt(i)
-if(code >=0xD800 && code <=0xDBFF){chars.push(s.substr(i,2))
-i++}else{chars.push(s.charAt(i))}}
-return chars}
+return Array.from(s)}
 function to_codepoints(s){
 if(s.codepoints){return s.codepoints}
 var cps=[]
@@ -10567,7 +10569,7 @@ for(var i=0,len=_self.length;i < len;i++){if(_self.charCodeAt(i)> 127){return fa
 return true}
 str.isalnum=function(){
 var $=$B.args("isalnum",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(unicode_tables.Ll[cp]||
 unicode_tables.Lu[cp]||
 unicode_tables.Lm[cp]||
@@ -10580,7 +10582,7 @@ return false}
 return true}
 str.isalpha=function(){
 var $=$B.args("isalpha",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(unicode_tables.Ll[cp]||
 unicode_tables.Lu[cp]||
 unicode_tables.Lm[cp]||
@@ -10590,12 +10592,12 @@ return false}
 return true}
 str.isdecimal=function(){
 var $=$B.args("isdecimal",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(! unicode_tables.Nd[cp]){return false}}
 return _self.length > 0}
 str.isdigit=function(){
 var $=$B.args("isdigit",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(! unicode_tables.digits[cp]){return false}}
 return _self.length > 0}
 str.isidentifier=function(){
@@ -10607,13 +10609,13 @@ if(unicode_tables.XID_Continue[cp]===undefined){return false}}}
 return true}
 str.islower=function(){
 var $=$B.args("islower",1,{self:null},["self"],arguments,{},null,null),has_cased=false,cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(unicode_tables.Ll[cp]){has_cased=true
 continue}else if(unicode_tables.Lu[cp]||unicode_tables.Lt[cp]){return false}}
 return has_cased}
 str.isnumeric=function(){
 var $=$B.args("isnumeric",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
-for(var char of to_chars(_self)){if(! unicode_tables.numeric[_b_.ord(char)]){return false}}
+for(var char of _self){if(! unicode_tables.numeric[_b_.ord(char)]){return false}}
 return _self.length > 0}
 var unprintable={},unprintable_gc=['Cc','Cf','Co','Cs','Zl','Zp','Zs']
 str.isprintable=function(){
@@ -10621,11 +10623,11 @@ if(Object.keys(unprintable).length==0){for(var i=0;i < unprintable_gc.length;i++
 for(var cp in table){unprintable[cp]=true}}
 unprintable[32]=true}
 var $=$B.args("isprintable",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
-for(var char of to_chars(_self)){if(unprintable[_b_.ord(char)]){return false}}
+for(var char of _self){if(unprintable[_b_.ord(char)]){return false}}
 return true}
 str.isspace=function(self){
 var $=$B.args("isspace",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(! unicode_tables.Zs[cp]&&
 $B.unicode_bidi_whitespace.indexOf(cp)==-1){return false}}
 return _self.length > 0}
@@ -10634,7 +10636,7 @@ var $=$B.args("istitle",1,{self:null},["self"],arguments,{},null,null),_self=to_
 return _self.length > 0 && str.title(_self)==_self}
 str.isupper=function(self){
 var $=$B.args("islower",1,{self:null},["self"],arguments,{},null,null),is_upper=false,cp,_self=to_string(self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(unicode_tables.Lu[cp]){is_upper=true
 continue}else if(unicode_tables.Ll[cp]||unicode_tables.Lt[cp]){return false}}
 return is_upper}
@@ -10825,18 +10827,18 @@ str.strip=function(){var $=$B.args("strip",2,{self:null,chars:null},["self","cha
 if($.chars===_b_.None){return $.self.trim()}
 return str.rstrip(str.lstrip($.self,$.chars),$.chars)}
 str.swapcase=function(self){var $=$B.args("swapcase",1,{self},["self"],arguments,{},null,null),res="",cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(unicode_tables.Ll[cp]){res+=char.toUpperCase()}else if(unicode_tables.Lu[cp]){res+=char.toLowerCase()}else{res+=char}}
 return res}
 str.title=function(self){var $=$B.args("title",1,{self},["self"],arguments,{},null,null),state,cp,res="",_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 if(unicode_tables.Ll[cp]){if(! state){res+=char.toUpperCase()
 state="word"}else{res+=char}}else if(unicode_tables.Lu[cp]||unicode_tables.Lt[cp]){res+=state ? char.toLowerCase():char
 state="word"}else{state=null
 res+=char}}
 return res}
 str.translate=function(){var $=$B.args('translate',2,{self:null,table:null},['self','table'],arguments,{},null,null),table=$.table,res=[],getitem=$B.$getattr(table,"__getitem__"),cp,_self=to_string($.self)
-for(var char of to_chars(_self)){cp=_b_.ord(char)
+for(var char of _self){cp=_b_.ord(char)
 try{var repl=getitem(cp)
 if(repl !==_b_.None){if(typeof repl=="string"){res.push(repl)}else if(typeof repl=="number"){res.push(String.fromCharCode(repl))}}}catch(err){res.push(char)}}
 return res.join("")}

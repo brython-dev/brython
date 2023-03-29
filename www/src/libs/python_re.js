@@ -1778,7 +1778,8 @@ function compile(pattern, flags){
     var original_pattern = pattern,
         original_flags = flags,
         type = pattern.type,
-        choices
+        choices,
+        allow_global_flags = true
     pattern = pattern.codepoints
     var is_bytes = type !== "str"
     if(is_bytes && flags && (flags.value & U.value)){
@@ -1802,7 +1803,8 @@ function compile(pattern, flags){
         lookbehind,
         node = new Node(),
         accept_inline_flag = true,
-        verbose = (flags.value || 0) & VERBOSE.value
+        verbose = (flags.value || 0) & VERBOSE.value,
+        comment = false
     node.$groups = groups
     for(var item of tokenize(pattern, type, verbose)){
         item.flags = flags
@@ -1811,6 +1813,10 @@ function compile(pattern, flags){
             item.lookbehind = lookbehind
             lookbehind.parent = item
             lookbehind = false
+        }
+        if(allow_global_flags &&
+                (group_stack.length > 0 || ! (item instanceof SetFlags))){
+            allow_global_flags = false
         }
         if(item instanceof Group){
             group_stack.push(item)
@@ -2103,6 +2109,11 @@ function compile(pattern, flags){
                  item instanceof StringEnd){
             node.add(item)
         }else if(item instanceof SetFlags){
+            if(group_stack.length == 0 && ! allow_global_flags){
+                // pattern like (?x) only allowed as first in reg exp
+                fail('global flags not at the start of the ' +
+                        'expression', item.pos)
+            }
             // copy flags, otherwise re.ASCII etc might be modified
             flags = Flag.$factory(flags.value || U.value)
             if(item.on_flags.indexOf('u') > -1){
@@ -2123,7 +2134,8 @@ function compile(pattern, flags){
                     throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
                         "are incompatible")
                 }
-            }else if(item.on_flags.indexOf('a') > -1){
+            }
+            if(item.on_flags.indexOf('a') > -1){
                 if(group_stack.length == 0 &&
                         original_flags && original_flags.value & U.value){
                     throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
@@ -2219,7 +2231,9 @@ function* tokenize(pattern, type, _verbose){
     var is_bytes = type == "bytes"
     // verbose_stack is the stack of verbose state for each group in the regex
     var verbose_stack = [_verbose],
-        verbose = _verbose
+        verbose = _verbose,
+        group_level = 0,
+        parenth_pos
     var pos = 0
     while(pos < pattern.length){
         var cp = pattern[pos],
@@ -2249,6 +2263,7 @@ function* tokenize(pattern, type, _verbose){
             }
         }
         if(char == '('){
+            parenth_pos = pos
             if(pattern[pos + 1] == ord('?')){
                 if(pattern[pos + 2] == ord('P')){
                     if(pattern[pos + 3] == ord('<')){
@@ -2269,6 +2284,7 @@ function* tokenize(pattern, type, _verbose){
                             fail("missing >, unterminated name", pos)
                         }
                         yield new Group(pos, {type: 'name_def', value: name})
+                        group_level++
                         verbose_stack.push(verbose)
                         pos = i + 1
                         continue
@@ -2321,24 +2337,28 @@ function* tokenize(pattern, type, _verbose){
                 }else if(pattern[pos + 2] == ord('=')){
                     // (?=...) : lookahead assertion
                     yield new Group(pos, {type: 'lookahead_assertion'})
+                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] == ord('!')){
                     // (?!...) : negative lookahead assertion
                     yield new Group(pos, {type: 'negative_lookahead_assertion'})
+                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(from_codepoint_list(pattern.slice(pos + 2, pos + 4)) == '<!'){
                     // (?<!...) : negative lookbehind
                     yield new Group(pos, {type: 'negative_lookbehind'})
+                    group_level++
                     verbose_stack.push(verbose)
                     pos += 4
                     continue
                 }else if(from_codepoint_list(pattern.slice(pos + 2, pos + 4)) == '<='){
                     // (?<=...) : positive lookbehind
                     yield new Group(pos, {type: 'positive_lookbehind'})
+                    group_level++
                     verbose_stack.push(verbose)
                     pos += 4
                     continue
@@ -2350,6 +2370,7 @@ function* tokenize(pattern, type, _verbose){
                     fail("unknown extension ?<" + _b_.chr(pattern[pos]), pos)
                 }else if(pattern[pos + 2] == ord(':')){
                     yield new Group(pos, {non_capturing: true})
+                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
@@ -2399,6 +2420,7 @@ function* tokenize(pattern, type, _verbose){
                                 break
                             }else if(pattern[pos] == ord(':')){
                                 yield new Group(pos, {name: "Group", type: "flags"})
+                                group_level++
                                 verbose_stack.push(verbose)
                                 closed = true
                                 break
@@ -2424,6 +2446,7 @@ function* tokenize(pattern, type, _verbose){
                                 pos++
                             }else if(pattern[pos] == ord(':')){
                                 yield new Group(pos, {name: "Group", type: "flags"})
+                                group_level++
                                 verbose_stack.push(verbose)
                                 break
                             }else if(String.fromCharCode(pattern[pos]).
@@ -2447,10 +2470,12 @@ function* tokenize(pattern, type, _verbose){
                     }
                     var set_flags = new SetFlags(flags_start,
                         {on_flags, off_flags})
+                        
                     yield set_flags
                     // reset verbose
                     if(on_flags.indexOf('x') > -1){
                         verbose = true
+                        verbose_stack.push(verbose)
                     }
                     if(off_flags.indexOf('x') > -1){
                         verbose = false
@@ -2478,11 +2503,13 @@ function* tokenize(pattern, type, _verbose){
                 }
             }else{
                 yield new Group(pos)
+                group_level++
                 verbose_stack.push(verbose)
                 pos++
             }
         }else if(cp == ord(')')){
             yield new GroupEnd(pos)
+            group_level--
             verbose_stack.pop()
             verbose = $last(verbose_stack)
             pos++
