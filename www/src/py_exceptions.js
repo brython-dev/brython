@@ -713,7 +713,6 @@ function calculate_suggestions(dir, name){
 function offer_suggestions_for_attribute_error(exc){
     var name = exc.name,
         obj = exc.obj
-    console.log('offer suggestions', name, obj)
     var dir = _b_.dir(obj),
         suggestions = calculate_suggestions(dir, name)
     return suggestions

@@ -2470,7 +2470,7 @@ function* tokenize(pattern, type, _verbose){
                     }
                     var set_flags = new SetFlags(flags_start,
                         {on_flags, off_flags})
-                        
+
                     yield set_flags
                     // reset verbose
                     if(on_flags.indexOf('x') > -1){
@@ -3015,6 +3015,9 @@ function starts_with_string_start(pattern){
         pattern = pattern.node
     }
     if(pattern.items){
+        if(pattern.items.length == 0){
+            return false
+        }
         return starts_with_string_start(pattern.items[0])
     }else if(pattern instanceof CharacterClass){
         return pattern.value == 'A'
@@ -3123,8 +3126,10 @@ GroupMO.prototype.backtrack = function(string, groups){
                         // update GroupMO object
                         mos.push(_mo)
                         this.end = _mo.end
-                        var ix = this.$groups.$last[this.$groups.$last.length - 1]
-                        this.$groups[ix].end = _mo.end
+                        if(this.$groups.$last.length > 0){
+                            var ix = this.$groups.$last[this.$groups.$last.length - 1]
+                            this.$groups[ix].end = _mo.end
+                        }
                         return true
                     }
                 }
@@ -3774,7 +3779,37 @@ var $module = {
             flags, original_string)
     },
     fullmatch: function(){
-        var bmo = $module.match.apply(null, arguments)
+        var $ = $B.args("fullmatch", 3, {pattern: null, string: null, flags: null},
+                    ['pattern', 'string', 'flags'], arguments,
+                    {flags: no_flag}, null, null),
+                pattern = $.pattern,
+                string = $.string,
+                flags = $.flags
+        pattern = check_pattern_flags(pattern, flags)
+        var data
+        if(pattern.__class__ === BPattern){
+            data = prepare({string})
+            pattern = pattern.$pattern
+        }else{
+            data = prepare({pattern, string})
+            pattern = compile(data.pattern, flags)
+        }
+        // transform <pattern> into "(?:<pattern>)$"
+        var ncgroup = new Group() // non-capturing group
+        ncgroup.pos = 0
+        ncgroup.non_capturing = true
+        for(var item of pattern.node.items){
+            ncgroup.add(item)
+        }
+        var se = new StringEnd()
+        se.flags = Flag.$factory(32)
+        pattern.node = new Node()
+        pattern.node.add(ncgroup)
+        pattern.node.add(se)
+
+        // match transformed RE
+        var res = match(pattern, data.string, 0)
+        var bmo = res === false ? _b_.None : BMO.$factory(res)
         if(bmo !== _b_.None){
             if(bmo.mo.string.codepoints.length != bmo.mo.end - bmo.mo.start){
                 return _b_.None

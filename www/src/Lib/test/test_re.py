@@ -2665,6 +2665,7 @@ class ImplementationTest(unittest.TestCase):
             tp = type(pat.scanner(""))
             tp.foo = 1
 
+    @cpython_only
     def test_overlap_table(self):
         f = re._compiler._generate_overlap_table
         self.assertEqual(f(""), [])
@@ -2674,6 +2675,7 @@ class ImplementationTest(unittest.TestCase):
         self.assertEqual(f("ababba"), [0, 0, 1, 2, 0, 1])
         self.assertEqual(f("abcabdac"), [0, 0, 0, 1, 2, 0, 1, 0])
 
+    @cpython_only
     def test_signedness(self):
         self.assertGreaterEqual(re._compiler.MAXREPEAT, 0)
         self.assertGreaterEqual(re._compiler.MAXGROUPS, 0)
