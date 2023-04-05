@@ -280,6 +280,14 @@ var BPattern = $B.make_class("Pattern",
     }
 )
 
+BPattern.__copy__ = function(self){
+    return self
+}
+
+BPattern.__deepcopy__ = function(self){
+    return self
+}
+
 BPattern.__eq__ = function(self, other){
     if(other.$pattern && self.$pattern.type != other.$pattern.$type){
         // warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
@@ -291,6 +299,28 @@ BPattern.__eq__ = function(self, other){
 BPattern.__hash__ = function(self){
     // best effort ;-)
     return _b_.hash(self.pattern) + self.flags.value
+}
+
+BPattern.__new__ = BPattern.$factory
+
+BPattern.__reduce__ = function(self){
+    return BPattern.__reduce_ex__(self, 4)
+}
+
+BPattern.__reduce_ex__ = function(self, protocol){
+    var res = _reconstructor,
+        state = [self.__class__].concat(self.__class__.__mro__)
+    var d = $B.empty_dict()
+    _b_.dict.$setitem(d, 'pattern', self.pattern)
+    _b_.dict.$setitem(d, 'flags', self.flags.value)
+    state.push(d)
+    return $B.fast_tuple([res, $B.fast_tuple(state)])
+}
+
+function _reconstructor(cls, base, state){
+    var pattern = _b_.dict.$getitem(state, 'pattern'),
+        flags = Flag.$factory(_b_.dict.$getitem(state, 'flags'))
+    return $module.compile(pattern, flags)
 }
 
 BPattern.__repr__ = BPattern.__str__ = function(self){
@@ -332,7 +362,7 @@ BPattern.findall = function(self){
         }
         var bmo = next.value,
             mo = bmo.mo,
-            groups = BMO.groups(bmo)
+            groups = MatchObject.groups(bmo)
 
         // replace None by the empty string
         for(var i = 0, len = groups.length; i < len; i++){
@@ -377,7 +407,7 @@ BPattern.fullmatch = function(self, string){
     }
     var mo = match($.self.$pattern, data.string, $.pos, $.endpos)
     if(mo && mo.end - mo.start == $.endpos - $.pos){
-        return BMO.$factory(mo)
+        return MatchObject.$factory(mo)
     }else{
         return _b_.None
     }
@@ -422,7 +452,7 @@ BPattern.match = function(self, string){
     }
     var mo = match($.self.$pattern, data.string, $.pos,
         $.endpos)
-    return mo ? BMO.$factory(mo) : _b_.None
+    return mo ? MatchObject.$factory(mo) : _b_.None
 }
 
 BPattern.scanner = function(self, string){
@@ -446,7 +476,7 @@ BPattern.search = function(self, string){
     while(pos < $.endpos){
         var mo = match(self.$pattern, data.string, pos)
         if(mo){
-            return BMO.$factory(mo)
+            return MatchObject.$factory(mo)
         }else{
             pos++
         }
@@ -1762,8 +1792,6 @@ function validate_named_char(description, pos){
 var cache = new Map()
 
 function compile(pattern, flags){
-    // data has attributes "pattern" (instance of StringObj)
-    // and "type" ("str" or "bytes")
     if(pattern.__class__ === BPattern){
         if(flags !== no_flag){
             throw _b_.ValueError.$factory("no flags")
@@ -2596,7 +2624,7 @@ function to_codepoint_list(s){
         if(typeof s != "string"){
             s = s.valueOf()
         }
-        for(const char of s){
+        for(var char of s){
             items.push(char.codePointAt(0))
         }
         items.type = "unicode"
@@ -2619,7 +2647,7 @@ function from_codepoint_list(codepoints, type){
         return _b_.bytes.$factory(codepoints)
     }
     var s = ''
-    for(const cp of codepoints){
+    for(var cp of codepoints){
         s += _b_.chr(cp)
     }
     return $B.String(s)
@@ -3034,13 +3062,13 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
     while(pos <= string.length){
         var mo = match(pattern, string, pos, endpos)
         if(mo){
-            yield BMO.$factory(mo)
+            yield MatchObject.$factory(mo)
             if(mo.end == mo.start){
                 // If match has zero with, retry at the same position but
                 // with the flag no_zero_width set, to avoid infinite loops
                 mo = match(pattern, string, pos, endpos, true)
                 if(mo){
-                    yield BMO.$factory(mo)
+                    yield MatchObject.$factory(mo)
                     pos = mo.end
                 }else{
                     pos++ // at least 1, else infinite loop
@@ -3181,16 +3209,25 @@ GroupMO.prototype.groups = function(_default){
     return $B.fast_tuple(res)
 }
 
-var BMO = $B.make_class("Match",
+// Brython MatchObject
+var MatchObject = $B.make_class("Match",
     function(mo){
         return {
-            __class__: BMO,
+            __class__: MatchObject,
             mo
         }
     }
 )
 
-BMO.__getitem__ = function(){
+MatchObject.__copy__ = function(self){
+    return self
+}
+
+MatchObject.__deepcopy__ = function(self){
+    return self
+}
+
+MatchObject.__getitem__ = function(){
     var $ = $B.args("__getitem__", 2, {self: null, key: null},
                 ['self', 'key'], arguments, {}, null, null),
         self = $.self,
@@ -3210,14 +3247,14 @@ BMO.__getitem__ = function(){
     throw _b_.IndexError.$factory("no such group")
 }
 
-BMO.__repr__ = BMO.__str__ =  function(self){
+MatchObject.__repr__ = MatchObject.__str__ =  function(self){
     return self.mo.toString()
 }
 
-BMO.end = function(self){
+MatchObject.end = function(self){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
-    var group = BMO.group(self, $.group)
+    var group = MatchObject.group(self, $.group)
     if(group === _b_.None){
         return -1
     }else if($.group == 0){
@@ -3227,13 +3264,13 @@ BMO.end = function(self){
     }
 }
 
-BMO.endpos = _b_.property.$factory(
+MatchObject.endpos = _b_.property.$factory(
     function(self){
         return self.mo.endpos
     }
 )
 
-BMO.expand = function(){
+MatchObject.expand = function(){
     var $ = $B.args("expand", 2, {self: null, template: null},
                 ['self', 'template'], arguments, {}, null, null)
     var data = {
@@ -3241,13 +3278,13 @@ BMO.expand = function(){
     }
     data = transform_repl(data, {groups: $.self.mo.node.$groups})
     if(typeof data.repl == "function"){
-        return $B.$call(data.repl)(BMO.$factory($.self.mo))
+        return $B.$call(data.repl)(MatchObject.$factory($.self.mo))
     }else{
         return data.repl1
     }
 }
 
-BMO.group = function(self){
+MatchObject.group = function(self){
     var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
                 {}, 'args', null),
             self = $.self,
@@ -3282,7 +3319,7 @@ BMO.group = function(self){
     return $B.fast_tuple(result)
 }
 
-BMO.groupdict = function(){
+MatchObject.groupdict = function(){
     /*
     Return a dictionary containing all the named subgroups of the match, keyed
     by the subgroup name. The default argument is used for groups that did not
@@ -3307,7 +3344,7 @@ BMO.groupdict = function(){
     return d
 }
 
-BMO.groups = function(self){
+MatchObject.groups = function(self){
     var $ = $B.args("group", 2, {self: null, default: null},
                 ['self', 'default'], arguments,
                 {default: _b_.None}, null, null),
@@ -3316,7 +3353,7 @@ BMO.groups = function(self){
     return self.mo.groups(_default)
 }
 
-BMO.lastindex = _b_.property.$factory(
+MatchObject.lastindex = _b_.property.$factory(
    function(self){
         /* The integer index of the last matched capturing group, or None if
            no group was matched at all.
@@ -3329,12 +3366,12 @@ BMO.lastindex = _b_.property.$factory(
     }
 )
 
-BMO.lastgroup = _b_.property.$factory(
+MatchObject.lastgroup = _b_.property.$factory(
     function(self){
         /* The name of the last matched capturing group, or None if the group
            didn't have a name, or if no group was matched at all.
         */
-        var lastindex = BMO.lastindex.fget(self)
+        var lastindex = MatchObject.lastindex.fget(self)
         if(lastindex === _b_.None){
             return _b_.None
         }
@@ -3344,19 +3381,19 @@ BMO.lastgroup = _b_.property.$factory(
     }
 )
 
-BMO.pos = _b_.property.$factory(
+MatchObject.pos = _b_.property.$factory(
     function(self){
         return self.mo.start
     }
 )
 
-BMO.re = _b_.property.$factory(
+MatchObject.re = _b_.property.$factory(
     function(self){
         return self.mo.node.pattern
     }
 )
 
-BMO.regs = _b_.property.$factory(
+MatchObject.regs = _b_.property.$factory(
     function(self){
         var res = [$B.fast_tuple($B.fast_tuple([self.mo.start, self.mo.end]))]
         for(var group_num in self.mo.node.$groups){
@@ -3371,7 +3408,7 @@ BMO.regs = _b_.property.$factory(
     }
 )
 
-BMO.span = function(){
+MatchObject.span = function(){
     /*
     Match.span([group])
 
@@ -3394,10 +3431,10 @@ BMO.span = function(){
     return $B.fast_tuple([span.start, span.end])
 }
 
-BMO.start = function(self){
+MatchObject.start = function(self){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
-    var group = BMO.group(self, $.group)
+    var group = MatchObject.group(self, $.group)
     if(group === _b_.None){
         return -1
     }else if($.group == 0){
@@ -3407,13 +3444,13 @@ BMO.start = function(self){
     }
 }
 
-BMO.string = _b_.property.$factory(
+MatchObject.string = _b_.property.$factory(
     function(self){
         return self.mo.string.to_str()
     }
 )
 
-$B.set_func_names(BMO, 're')
+$B.set_func_names(MatchObject, 're')
 
 function test_after_min_repeat_one(items, pattern, string, pos,
                             endpos, no_zero_width, groups){
@@ -3733,7 +3770,7 @@ var $module = {
             }
             var bmo = next.value,
                 mo = bmo.mo,
-                groups = BMO.groups(bmo)
+                groups = MatchObject.groups(bmo)
 
             // replace None by the empty string
             for(var i = 0, len = groups.length; i < len; i++){
@@ -3795,6 +3832,17 @@ var $module = {
             pattern = compile(data.pattern, flags)
         }
         // transform <pattern> into "(?:<pattern>)$"
+        // use a new pattern object, otherwise if pattern is in cache the
+        // value in cache would be changed
+
+        var new_pattern = {}
+        for(var key in pattern){
+            if(key == 'node'){
+                continue
+            }
+            new_pattern[key] = pattern[key]
+        }
+
         var ncgroup = new Group() // non-capturing group
         ncgroup.pos = 0
         ncgroup.non_capturing = true
@@ -3803,13 +3851,13 @@ var $module = {
         }
         var se = new StringEnd()
         se.flags = Flag.$factory(32)
-        pattern.node = new Node()
-        pattern.node.add(ncgroup)
-        pattern.node.add(se)
+        new_pattern.node = new Node()
+        new_pattern.node.add(ncgroup)
+        new_pattern.node.add(se)
 
         // match transformed RE
-        var res = match(pattern, data.string, 0)
-        var bmo = res === false ? _b_.None : BMO.$factory(res)
+        var res = match(new_pattern, data.string, 0)
+        var bmo = res === false ? _b_.None : MatchObject.$factory(res)
         if(bmo !== _b_.None){
             if(bmo.mo.string.codepoints.length != bmo.mo.end - bmo.mo.start){
                 return _b_.None
@@ -3819,7 +3867,7 @@ var $module = {
         }
         return _b_.None
     },
-    Match: BMO,
+    Match: MatchObject,
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
@@ -3837,7 +3885,7 @@ var $module = {
             pattern = compile(data.pattern, flags)
         }
         var res = match(pattern, data.string, 0)
-        return res === false ? _b_.None : BMO.$factory(res)
+        return res === false ? _b_.None : MatchObject.$factory(res)
     },
     Pattern: BPattern,
     purge: function(){
@@ -3845,6 +3893,7 @@ var $module = {
         cache.clear()
         return _b_.None
     },
+    _reconstructor,
     Scanner,
     search: function(){
         var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
@@ -3867,7 +3916,7 @@ var $module = {
                 pattern.pattern.startsWith('^')){
             var mo = match(data.pattern.$pattern, data.string, 0)
             if(mo){
-                return BMO.$factory(mo)
+                return MatchObject.$factory(mo)
             }else{
                 return _b_.None
             }
@@ -3879,7 +3928,7 @@ var $module = {
             var mo = match(data.pattern.$pattern, data.string,
                 data.string.length - pattern.$pattern.fixed_length)
             if(mo){
-                return BMO.$factory(mo)
+                return MatchObject.$factory(mo)
             }
             return _b_.None
         }
@@ -3887,7 +3936,7 @@ var $module = {
         while(pos < data.string.codepoints.length){
             var mo = match(data.pattern.$pattern, data.string, pos)
             if(mo){
-                return BMO.$factory(mo)
+                return MatchObject.$factory(mo)
             }else{
                 pos++
             }
@@ -3911,12 +3960,13 @@ var $module = {
             data
         if(pattern.__class__ !== BPattern){
             data = prepare({pattern, string})
-            pattern = BPattern.$factory(compile(data.pattern, flags))
+            var comp = compile(data.pattern, flags)
+            pattern = BPattern.$factory(comp)
         }else{
             data = {pattern, string}
         }
         for(var bmo of $module.finditer(pattern, $.string).js_gen){
-            var mo = bmo.mo, // finditer returns instances of BMO
+            var mo = bmo.mo, // finditer returns instances of MatchObject
                 groupobj = mo.$groups
             res.push(data.string.substring(pos, mo.start))
             for(var key in mo.node.$groups){
@@ -4016,6 +4066,8 @@ var DOTALL = $module.S = $module.DOTALL = Flag.$factory(16)
 var U = $module.U = $module.UNICODE = Flag.$factory(32)
 var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory(64)
 $module.cache = cache
+$module._compile = $module.compile
+
 
 var inline_flags = {
     i: IGNORECASE,

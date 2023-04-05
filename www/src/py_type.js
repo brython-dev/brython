@@ -545,7 +545,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__qualname__" // && klass.$infos.__name__ == 'StrEnum'
+    var $test = false // attr == "__module__" && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")

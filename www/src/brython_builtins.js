@@ -217,6 +217,7 @@ $B.set_func_names = function(klass, module){
             }
         }
     }
+    klass.__module__ = module
 }
 
 var has_storage = typeof(Storage) !== "undefined"

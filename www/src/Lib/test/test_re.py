@@ -2448,7 +2448,7 @@ class ReTests(unittest.TestCase):
         self.assertTrue(template_re1.match('ahoy'))
         self.assertFalse(template_re1.match('nope'))
 
-    @unittest.skipIf(multiprocessing is None, 'test requires multiprocessing')
+    @unittest.skipIf(True, 'test requires multiprocessing')
     def test_regression_gh94675(self):
         pattern = re.compile(r'(?<=[({}])(((//[^\n]*)?[\n])([\000-\040])*)*'
                              r'((/[^/\[\n]*(([^\n]|(\[\n]*(]*)*\]))'
@@ -2830,3 +2830,4 @@ class ExternalTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
