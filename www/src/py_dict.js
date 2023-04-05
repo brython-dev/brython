@@ -1261,11 +1261,18 @@ dict.setdefault = function(){
         self = $.self,
         key = $.key,
         _default = $._default
+    _default = _default === undefined ? _b_.None : _default
+    if(self.$all_str){
+        if(! self.$strings.hasOwnProperty(key)){
+            self.$strings[key] = _default
+        }
+        return self.$strings[key]
+    }
+
     var lookup = dict.$lookup_by_key(self, key)
     if(lookup.found){
         return lookup.value
     }
-    _default = _default === undefined ? _b_.None : _default
     var hash = lookup.hash
     dict.$setitem(self, key, _default, hash, true)
     return _default
