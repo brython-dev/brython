@@ -124,8 +124,9 @@ function run_js(module_contents, path, _module){
         throw err
     }
     // check that module name is in namespace
-    try{$module}
-    catch(err){
+    try{
+        $module
+    }catch(err){
         console.log("no $module")
         throw _b_.ImportError.$factory("name '$module' not defined in module")
     }
@@ -139,6 +140,9 @@ function run_js(module_contents, path, _module){
                 __qualname__: attr
             }
             $module[attr].$in_js_module = true
+        }else if(_b_.isinstance($module[attr], _b_.type) &&
+                ! $module[attr].hasOwnProperty('__module__')){
+            $module[attr].__module__ = _module.__name__
         }
     }
 
