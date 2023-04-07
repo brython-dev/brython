@@ -760,4 +760,7 @@ ltnzi64 = int("0x3C039E0D19DFDB8A", 16)
 gAnswer = (ltnzi64 - nzi64) % (2 ** 64)
 assert gAnswer == 0xAAF3C2EF5D598ACC, gAnswer
 
+# digits in non-latin alphabets
+assert int('9' + chr(int('17E4', 16)) + 'b', 16) == 2379
+
 print('passed all tests...')

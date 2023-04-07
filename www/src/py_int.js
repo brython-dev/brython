@@ -842,13 +842,32 @@ int.$factory = function(value, base){
         // _value doesn't start with 0b, 0o, 0x
         base = 10
     }
-
     var _digits = $valid_digits(base),
         _re = new RegExp("^[+-]?[" + _digits + "]" +
         "[" + _digits + "_]*$", "i"),
         match = _re.exec(_value)
     if(match === null){
-        invalid(base)
+        // try with number in non-latin alphabets
+        res = 0
+        var coef = 1
+        for(var char of _value){
+            var cp = char.codePointAt(0),
+                digit = $B.digits_mapping[cp]
+            if(digit === undefined){
+                if(base > 10 && _digits.indexOf(char.toUpperCase()) > -1){
+                    digit = char.toUpperCase().charCodeAt(0) - 55
+                }else{
+                    invalid(base)
+                }
+            }
+            if(digit < base){
+                res = $B.rich_op('__mul__', res, base)
+                res = $B.rich_op('__add__', res, digit)
+            }else{
+                invalid(base)
+            }
+        }
+        return res
     }else{
         _value = _value.replace(/_/g, "")
     }
