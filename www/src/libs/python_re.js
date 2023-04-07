@@ -939,15 +939,14 @@ CharSeq.prototype.match = function(string, pos){
             }
         }
     }
-    var nb_min = 0,
-        nb_max = 0
-    for(var mo of mos){
-        nb_min += mo.nb_min
-        nb_max += mo.nb_max
+    var nb = 0,
+        last_mo = $B.last(mos)
+    for(var mo of mos.slice(0, mos.length - 1)){
+        nb += mo.non_greedy ? mo.nb_min : mo.nb_max
     }
     return {
-        nb_min,
-        nb_max
+        nb_min: nb + last_mo.nb_min,
+        nb_max: nb + last_mo.nb_max
     }
 }
 
@@ -1502,7 +1501,6 @@ function validate(name, pos){
             }
         }
         if(pos != name.length){
-            console.log("bad character", pos, name)
             fail(`bad character in group name '${sname}'`, pos)
         }
     }else{
@@ -1523,7 +1521,7 @@ function chr(i){
 }
 
 var character_classes = {
-    in_charset: to_codepoint_list('bdDsSwW'),
+    in_charset: to_codepoint_list('dDsSwW'),
     in_re: to_codepoint_list('AbBdDsSwWZ')
 }
 
@@ -1537,6 +1535,11 @@ function escaped_char(args){
         fail('bad escape (end of pattern)', pos)
     }
     var key = in_charset ? 'in_charset' : 'in_re'
+    if(in_charset && special == ord('b')){
+        // Inside a character range, \b represents the backspace character,
+        // for compatibility with Python’s string literals.
+        return '\b'
+    }
     if(character_classes[key].indexOf(special) > -1){
         return new CharacterClass(pos, special, 2)
     }else if(special == ord('N') && ! is_bytes){
@@ -3985,11 +3988,13 @@ var $module = {
         // optimizations
         if(pattern.pattern.startsWith('\\A') ||
                 pattern.pattern.startsWith('^')){
-            var mo = match(data.pattern.$pattern, data.string, 0)
-            if(mo){
-                return MatchObject.$factory(mo)
-            }else{
-                return _b_.None
+            if(! (pattern.$pattern.node.items[0] instanceof Choice)){
+                var mo = match(data.pattern.$pattern, data.string, 0)
+                if(mo){
+                    return MatchObject.$factory(mo)
+                }else{
+                    return _b_.None
+                }
             }
         }
         if(pattern.$pattern.fixed_length !== false &&
