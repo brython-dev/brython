@@ -2099,7 +2099,11 @@ function compile(pattern, flags){
                             previous.min_repeat_one = true
                         }
                     }else{
-                        fail("multiple repeat", pos)
+                        if(item instanceof Repeater && item.op == '+'){
+                            previous.possessive = true
+                        }else{
+                            fail("multiple repeat", pos)
+                        }
                     }
                 }else{
                     // convert to minimum and maximum number of repeats
@@ -2465,6 +2469,12 @@ function* tokenize(pattern, type, _verbose){
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
+                }else if(pattern[pos + 2] == ord('>')){
+                    yield new Group(pos, {possessive: true})
+                    group_level++
+                    verbose_stack.push(verbose)
+                    pos += 3
+                    continue
                 }else if(pattern[pos + 2] === undefined){
                     fail("unexpected end of pattern", pos)
                 }
@@ -2589,6 +2599,7 @@ function* tokenize(pattern, type, _verbose){
                     pos++
                     continue
                 }else{
+                    console.log('XXX')
                     fail("unknown extension ?" + _b_.chr(pattern[pos + 2]),
                         pos)
                 }
@@ -3167,6 +3178,9 @@ function MO(node, pos, mo, len){
 }
 
 MO.prototype.backtrack = function(string, groups){
+    if(this.node.possessive){
+        return false
+    }
     if(this.node.non_greedy && this.nb < this.nb_max){
         this.nb++
         this.end = this.start + this.len * this.nb
@@ -3207,6 +3221,9 @@ function GroupMO(node, start, matches, string, groups, endpos){
 
 GroupMO.prototype.backtrack = function(string, groups){
     // Try backtracking in the last match
+    if(this.node.possessive){
+        return false
+    }
     if(this.matches.length > 0){
         var _match = $last(this.matches),
             mos = _match.mos,
@@ -4026,8 +4043,8 @@ var $module = {
         }
         return _b_.None
     },
-    set_debug: function(){
-        _debug.value = true
+    set_debug: function(value){
+        _debug.value = value
     },
     split: function(){
         var $ = $B.args("split", 4,
