@@ -920,7 +920,7 @@ CharSeq.prototype.match = function(string, pos){
                 mo = mos.pop()
                 pos -= mo.nb
                 nb = mo.nb
-                if(mo.non_greedy && nb + 1 < mo.nb_max){
+                if(mo.non_greedy && nb < mo.nb_max){
                     nb += 1
                     backtrack = true
                 }else if(! mo.non_greedy && nb - 1 >= mo.nb_min){
@@ -942,7 +942,7 @@ CharSeq.prototype.match = function(string, pos){
     var nb = 0,
         last_mo = $B.last(mos)
     for(var mo of mos.slice(0, mos.length - 1)){
-        nb += mo.non_greedy ? mo.nb_min : mo.nb_max
+        nb += mo.nb
     }
     return {
         nb_min: nb + last_mo.nb_min,
