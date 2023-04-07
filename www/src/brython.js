@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-04-05 14:48:10.447301"
-__BRYTHON__.timestamp=1680698890447
+__BRYTHON__.compiled_date="2023-04-07 14:12:42.907575"
+__BRYTHON__.timestamp=1680869562907
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -2957,7 +2957,7 @@ return ast_obj}
 NumberCtx.prototype.transition=function(token,value){var C=this
 var num_type={2:'binary',8:'octal',10:'decimal',16:'hexadecimal'}[this.value[0]]
 if(token=='id'){if(value=='_'){raise_syntax_error(C,'invalid decimal literal')}else if(["and","else","for","if","in","is","or"].indexOf(value)==-1){raise_syntax_error(C,`invalid ${num_type} literal`)}else if(num_type=='hexadecimal' && this.value[1].length % 2==1){$B.warn(_b_.SyntaxWarning,`invalid hexadecimal literal`,get_module(C).filename,$token.value)}}else if(token=='op'){if(["and","in","is","or"].indexOf(value)>-1 &&
-num_type=='hexadecimal' && 
+num_type=='hexadecimal' &&
 this.value[1].length % 2==1){$B.warn(_b_.SyntaxWarning,`invalid hexadecimal literal`,get_module(C).filename,$token.value)}}
 return transition(C.parent,token,value)}
 var OpCtx=$B.parser.OpCtx=function(C,op){
@@ -3700,6 +3700,7 @@ function encode_bytestring(s){s=s.replace(/\\t/g,'\t')
 .replace(/\\n/g,'\n')
 .replace(/\\r/g,'\r')
 .replace(/\\f/g,'\f')
+.replace(/\\v/g,'\v')
 .replace(/\\\\/g,'\\')
 var t=[]
 for(var i=0,len=s.length;i < len;i++){var cp=s.codePointAt(i)
@@ -4165,7 +4166,7 @@ type:'imaginary',value:prepare_number(num.value)}}else{return{
 type:'float',value:num.value}}}else{if(num.imaginary){return{
 type:'imaginary',value:prepare_number(num.value)}}else{return{
 type:'int',value:[10,num.value]}}}}}
-function test_escape(C,text,antislash_pos){
+function test_escape(text,antislash_pos){
 var seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
 if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
@@ -4173,24 +4174,28 @@ switch(text[antislash_pos+1]){case "x":
 var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=2){seq_end=antislash_pos+mo[0].length+1
 $token.value.start[1]=seq_end
-raise_syntax_error(C,"(unicode error) 'unicodeescape' codec can't decode "+
+throw Error(
+"(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\xXX escape")}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "u":
 var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=4){seq_end=antislash_pos+mo[0].length+1
 $token.value.start[1]=seq_end
-raise_syntax_error(C,"(unicode error) 'unicodeescape' codec can't decode "+
+throw Error(
+"(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape")}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "U":
 var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=8){seq_end=antislash_pos+mo[0].length+1
 $token.value.start[1]=seq_end
-raise_syntax_error(C,"(unicode error) 'unicodeescape' codec can't decode "+
+throw Error(
+"(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape")}else{var value=parseInt(mo[0],16)
-if(value > 0x10FFFF){raise_syntax_error(C,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
+if(value > 0x10FFFF){throw Error('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
+$B.test_escape=test_escape
 function prepare_string(C,s,position){var len=s.length,pos=0,string_modifier,_type="string"
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
@@ -4256,7 +4261,7 @@ if(search===null){raise_syntax_error(C," (unicode error) "+
 "unknown Unicode character name")}
 var cp=parseInt(search[1],16)
 zone+=String.fromCodePoint(cp)
-end=end_lit+1}else{end++}}else{var esc=test_escape(C,src,end)
+end=end_lit+1}else{end++}}else{try{var esc=test_escape(src,end)}catch(err){raise_syntax_error(C,err.message)}
 if(esc){if(esc[0]=='\\'){zone+='\\\\'}else{zone+=esc[0]}
 end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}

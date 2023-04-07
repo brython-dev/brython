@@ -1,7 +1,7 @@
 // Regular expression
 
 
-var _debug = {value: false}
+var _debug = {value: 0}
 
 var $B = __BRYTHON__,
     _b_ = $B.builtins
@@ -405,7 +405,8 @@ BPattern.fullmatch = function(self, string){
         throw _b_.TypeError.$factory("not the same type for pattern " +
             "and string")
     }
-    var mo = match($.self.$pattern, data.string, $.pos, $.endpos)
+    var fullmatch_pattern = create_fullmatch_pattern($.self.$pattern)
+    var mo = match(fullmatch_pattern, data.string, $.pos, $.endpos)
     if(mo && mo.end - mo.start == $.endpos - $.pos){
         return MatchObject.$factory(mo)
     }else{
@@ -464,13 +465,13 @@ BPattern.search = function(self, string){
                     {self: null, string: null, pos: null, endpos: null},
                     ["self", "string", "pos", "endpos"], arguments,
                     {pos: 0, endpos: _b_.None}, null, null)
-    if($.endpos === _b_.None){
-        $.endpos = $.string.length
-    }
     var data = prepare({string: $.string})
     if(self.$pattern.type != data.string.type){
         throw _b_.TypeError.$factory("not the same type for pattern " +
             "and string")
+    }
+    if($.endpos === _b_.None){
+        $.endpos = data.string.length
     }
     var pos = $.pos
     while(pos < $.endpos){
@@ -875,6 +876,12 @@ Char.prototype.toString = function(){
 function CharSeq(chars){
     // sequence of consecutive characters
     this.chars = chars
+    this.merge_same_chars()
+}
+
+CharSeq.prototype.add_char = function(char){
+    this.chars.push(char)
+    this.merge_same_chars()
 }
 
 CharSeq.prototype.fixed_length = function(){
@@ -893,6 +900,10 @@ CharSeq.prototype.match = function(string, pos){
     for(var i = 0, len = this.chars.length; i < len; i++){
         var char =  this.chars[i],
             mo = char.match(string, pos) // form {nb_min, nb_max}
+        if(_debug.value){
+            console.log('CharSeq match, pos', pos, 'char', char, 'mo', mo)
+            alert()
+        }
         if(mo){
             nb = char.non_greedy ? mo.nb_min : mo.nb_max
             mos.push({nb,
@@ -908,6 +919,7 @@ CharSeq.prototype.match = function(string, pos){
                 i--
                 mo = mos.pop()
                 pos -= mo.nb
+                nb = mo.nb
                 if(mo.non_greedy && nb + 1 < mo.nb_max){
                     nb += 1
                     backtrack = true
@@ -919,7 +931,6 @@ CharSeq.prototype.match = function(string, pos){
                     pos += nb
                     mo.nb = nb
                     mos.push(mo)
-                    i++
                     break
                 }
             }
@@ -940,8 +951,34 @@ CharSeq.prototype.match = function(string, pos){
     }
 }
 
-
-
+CharSeq.prototype.merge_same_chars = function(){
+    // b?b merged into b+ etc.
+    var current,
+        chars = [],
+        merged
+    for(var item of this.chars){
+        if(current && current.char == item.char &&
+                current.non_greedy === item.non_greedy){
+            if(! current.repeat){
+                current.repeat = {min: 1, max: 1}
+            }
+            if(item.repeat){
+                current.repeat.min += item.repeat.min
+                current.repeat.max += item.repeat.max
+            }else{
+                current.repeat.min += 1
+                current.repeat.max += 1
+            }
+            merged = true
+        }else{
+            chars.push(item)
+        }
+        current = item
+    }
+    if(merged){
+        this.chars = chars
+    }
+}
 
 CharSeq.prototype.toString = function(){
     var res = ''
@@ -1178,6 +1215,9 @@ CharacterSet.prototype.match = function(string, pos){
 
         for(var cp1 of cps){
             for(var item of this.set.items){
+                if(typeof item == 'string'){
+
+                }
                 if(Array.isArray(item.ord)){
                     if(cp1 >= item.ord[0] &&
                             cp1 <= item.ord[1]){
@@ -1204,9 +1244,14 @@ CharacterSet.prototype.match = function(string, pos){
                         test = true
                         break
                     }
+                    item_str = typeof item == 'string' ? item : chr(item.ord)
+                    if(item_str == char){
+                        test = true
+                        break
+                    }
                     if(ignore_case && char_is_cased &&
-                            (char.toUpperCase() == chr(item.ord).toUpperCase() ||
-                            char.toLowerCase() == chr(item.ord).toLowerCase())){
+                            (char.toUpperCase() == item_str.toUpperCase() ||
+                            char.toLowerCase() == item_str.toLowerCase())){
                         test = true
                         break
                     }
@@ -1575,6 +1620,21 @@ function escaped_char(args){
         // character with octal value number
         var rest = from_codepoint_list(cps.slice(pos + 1)),
             mo = /^[0-7]{3}/.exec(rest)
+        if(in_charset){
+            try{
+                var res = $B.test_escape(rest, -1)
+                if(res){
+                    return {
+                        type: 'u',
+                        ord: res[0].codePointAt(0),
+                        char: res[0],
+                        length: res[1]
+                    }
+                }
+            }catch(err){
+                // ignore
+            }
+        }
         if(mo == null){
             mo = /^0[0-7]*/.exec(rest)
         }
@@ -1591,7 +1651,7 @@ function escaped_char(args){
                 length: 1 + mo[0].length
             }
         }
-        var mo = /^\d+/.exec(rest)
+        var mo = /^\d{1,2}/.exec(rest) // backref is at most 99
         if(mo){
             return {
                 type: 'backref',
@@ -1599,7 +1659,7 @@ function escaped_char(args){
                 length: 1 + mo[0].length
             }
         }
-        var trans = {f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'},
+        var trans = {a: chr(7), f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'},
             res = trans[chr(special)]
         if(res){
             return ord(res)
@@ -1695,7 +1755,7 @@ function parse_character_set(text, pos, is_bytes){
             // Character range, or character "-"
             if(pos == start + 1 ||
                     (result.neg && pos == start + 2) ||
-                    pos == text.length - 1 ||
+                    pos == text.length - 2 || // [a-]
                     range ||
                     (result.items.length > 0 &&
                     result.items[result.items.length - 1].type ==
@@ -1989,7 +2049,7 @@ function compile(pattern, flags){
                 if(node.items && node.items.length > 0){
                     var previous = $last(node.items)
                     if(previous instanceof CharSeq){
-                        previous.chars.push(item)
+                        previous.add_char(item)
                         added_to_charseq = true
                     }else if(previous instanceof Char && ! previous.repeater){
                         node.items.pop()
@@ -2550,8 +2610,13 @@ function* tokenize(pattern, type, _verbose){
                 yield new Char(pos, escape.ord)
                 pos += escape.length
             }else if(escape.type == "backref"){
+                var len = escape.length
+                if(escape.value.length > 2){
+                    escape.value = escape.value.substr(0, 2)
+                    len = 2
+                }
                 yield new BackReference(pos, "num", escape.value)
-                pos += escape.length
+                pos += len
             }else if(typeof escape == "number"){
                 // eg "\."
                 var esc = new Char(pos, escape)
@@ -3463,10 +3528,37 @@ function log(){
     }
 }
 
+function create_fullmatch_pattern(pattern){
+    // transform <pattern> into "(?:<pattern>)$"
+    // use a new pattern object, otherwise if pattern is in cache the
+    // value in cache would be changed
+    var new_pattern = {}
+    for(var key in pattern){
+        if(key == 'node'){
+            continue
+        }
+        new_pattern[key] = pattern[key]
+    }
+
+    var ncgroup = new Group() // non-capturing group
+    ncgroup.pos = 0
+    ncgroup.non_capturing = true
+    for(var item of pattern.node.items){
+        ncgroup.add(item)
+    }
+    var se = new StringEnd()
+    se.flags = Flag.$factory(32)
+    new_pattern.node = new Node()
+    new_pattern.node.add(ncgroup)
+    new_pattern.node.add(se)
+    return new_pattern
+}
+
 function match(pattern, string, pos, endpos, no_zero_width, groups){
     // Follow the pattern tree structure
     if(_debug.value){
         console.log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
+        alert()
     }
     var string1 = string
     if(endpos !== undefined){
@@ -3831,29 +3923,8 @@ var $module = {
             data = prepare({pattern, string})
             pattern = compile(data.pattern, flags)
         }
-        // transform <pattern> into "(?:<pattern>)$"
-        // use a new pattern object, otherwise if pattern is in cache the
-        // value in cache would be changed
 
-        var new_pattern = {}
-        for(var key in pattern){
-            if(key == 'node'){
-                continue
-            }
-            new_pattern[key] = pattern[key]
-        }
-
-        var ncgroup = new Group() // non-capturing group
-        ncgroup.pos = 0
-        ncgroup.non_capturing = true
-        for(var item of pattern.node.items){
-            ncgroup.add(item)
-        }
-        var se = new StringEnd()
-        se.flags = Flag.$factory(32)
-        new_pattern.node = new Node()
-        new_pattern.node.add(ncgroup)
-        new_pattern.node.add(se)
+        var new_pattern = create_fullmatch_pattern(pattern)
 
         // match transformed RE
         var res = match(new_pattern, data.string, 0)
@@ -3933,6 +4004,13 @@ var $module = {
             return _b_.None
         }
         var pos = 0
+        if(data.string.codepoints.length == 0){
+            mo = match(data.pattern.$pattern, data.string)
+            if(mo){
+                mo.start = mo.end = 0
+            }
+            return mo ? MatchObject.$factory(mo) : _b_.None
+        }
         while(pos < data.string.codepoints.length){
             var mo = match(data.pattern.$pattern, data.string, pos)
             if(mo){

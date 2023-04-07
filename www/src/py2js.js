@@ -5016,7 +5016,7 @@ NumberCtx.prototype.transition = function(token, value){
         }
     }else if(token == 'op'){
         if(["and", "in", "is", "or"].indexOf(value) > -1 &&
-                num_type == 'hexadecimal' && 
+                num_type == 'hexadecimal' &&
                 this.value[1].length % 2 == 1){
             $B.warn(_b_.SyntaxWarning,
                     `invalid hexadecimal literal`,
@@ -6561,6 +6561,7 @@ function encode_bytestring(s){
          .replace(/\\n/g, '\n')
          .replace(/\\r/g, '\r')
          .replace(/\\f/g, '\f')
+         .replace(/\\v/g, '\v')
          .replace(/\\\\/g, '\\')
     var t = []
     for(var i = 0, len = s.length; i < len; i++){
@@ -7681,7 +7682,7 @@ function prepare_number(n){
     }
 }
 
-function test_escape(context, text, antislash_pos){
+function test_escape(text, antislash_pos){
     // Test if the escape sequence starting at position "antislah_pos" in text
     // is is valid
     // string_start is the position of the first character after the quote
@@ -7700,7 +7701,7 @@ function test_escape(context, text, antislash_pos){
             if(mo[0].length != 2){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                raise_syntax_error(context,
+                throw Error(
                      "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\xXX escape")
@@ -7712,7 +7713,7 @@ function test_escape(context, text, antislash_pos){
             if(mo[0].length != 4){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                raise_syntax_error(context,
+                throw Error(
                      "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape")
@@ -7724,14 +7725,14 @@ function test_escape(context, text, antislash_pos){
             if(mo[0].length != 8){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                raise_syntax_error(context,
+                throw Error(
                      "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape")
             }else{
                 var value = parseInt(mo[0], 16)
                 if(value > 0x10FFFF){
-                    raise_syntax_error(context, 'invalid unicode escape ' + mo[0])
+                    throw Error('invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
                     return [SurrogatePair(value), 2 + mo[0].length]
                 }else{
@@ -7740,6 +7741,8 @@ function test_escape(context, text, antislash_pos){
             }
     }
 }
+
+$B.test_escape = test_escape
 
 function prepare_string(context, s, position){
     var len = s.length,
@@ -7883,7 +7886,11 @@ function prepare_string(context, s, position){
                         end++
                     }
                 }else{
-                    var esc = test_escape(context, src, end)
+                    try{
+                        var esc = test_escape(src, end)
+                    }catch(err){
+                        raise_syntax_error(context, err.message)
+                    }
                     if(esc){
                         if(esc[0] == '\\'){
                             zone += '\\\\'
