@@ -1480,12 +1480,24 @@ StringEnd.prototype.toString = function(){
 
 function validate(name, pos){
     // name is a StringObj
+    var original = name
     sname = name.string
     name = name.codepoints
     if(name.length == 0){
         fail("missing group name", pos)
-    }else if(chr(name[0]).match(/\d/) || name.indexOf(ord('.')) > - 1){
-        fail(`bad character in group name '${sname}'`, pos)
+    }
+    if(sname.match(/^\d+$/)){
+        return
+    }
+    try{
+        var num = _b_.int.$factory(sname)
+        warn(_b_.DeprecationWarning,
+            `bad character in group name '${sname}' at position ${pos + 3}`,
+            pos + 3, sname)
+        original.string = num + ''
+        return
+    }catch(err){
+        // ignore
     }
 
     var $B = window.__BRYTHON__,
@@ -1895,7 +1907,8 @@ function compile(pattern, flags){
         node = new Node(),
         accept_inline_flag = true,
         verbose = (flags.value || 0) & VERBOSE.value,
-        comment = false
+        comment = false,
+        backrefs = {}
     node.$groups = groups
     for(var item of tokenize(pattern, type, verbose)){
         item.flags = flags
@@ -1981,6 +1994,11 @@ function compile(pattern, flags){
             if(item instanceof Group && item.items.length == 0){
                 item.add(EmptyString)
             }else if(item instanceof ConditionalBackref){
+                if(groups[item.group_ref] === undefined){
+                    // might be defined later; store in backrefs and check
+                    // when all items have been processed
+                    backrefs[item.group_ref] = backrefs[item.group_ref] | pos + 3
+                }
                 if(item.re_if_exists.items.length == 0){
                     item.re_if_exists.add(EmptyString)
                 }else if(item.re_if_not_exists.items.length == 0){
@@ -2093,6 +2111,9 @@ function compile(pattern, flags){
                 }
                 if(previous.repeater){
                     if(item.op == '?' && ! previous.non_greedy){
+                        if(previous.possessive){
+                            fail('multiple repeat', pos)
+                        }
                         previous.non_greedy = true
                         if(previous instanceof CharacterClass &&
                                 previous.value == '.'){
@@ -2100,6 +2121,9 @@ function compile(pattern, flags){
                         }
                     }else{
                         if(item instanceof Repeater && item.op == '+'){
+                            if(previous.possessive || previous.non_greedy){
+                                fail('multiple repeat', pos)
+                            }
                             previous.possessive = true
                         }else{
                             fail("multiple repeat", pos)
@@ -2276,6 +2300,11 @@ function compile(pattern, flags){
             accept_inline_flag = false
         }
     }
+    for(ref in backrefs){
+        if(groups[ref] === undefined){
+            fail('invalid group name ' + ref, backrefs[ref])
+        }
+    }
     if(group_stack.length > 0){
         var last = group_stack[group_stack.length - 1]
         fail("missing ), unterminated subpattern", last.pos)
@@ -2319,6 +2348,18 @@ function show(node, indent){
 
 function ord(char){
     return char.charCodeAt(0)
+}
+
+function is_valid_id(name){
+    if(! $B.unicode_tables.XID_Start[name[0]]){
+        return false
+    }
+    for(var char of name.slice(1)){
+        if(! $B.unicode_tables.XID_Continue[char]){
+            return false
+        }
+    }
+    return true
 }
 
 function* tokenize(pattern, type, _verbose){
@@ -2373,8 +2414,13 @@ function* tokenize(pattern, type, _verbose){
                             name.push(pattern[i])
                             i++
                         }
-                        name = StringObj.from_codepoints(name)
-                        validate(name, pos)
+                        var sname = StringObj.from_codepoints(name)
+                        if(! is_valid_id(name)){
+                            fail(`bad character in group name '${sname.string}'`,
+                                pos + 4)
+                        }
+                        name = sname
+                        // validate(name, pos)
                         if(i == pattern.length){
                             fail("missing >, unterminated name", pos)
                         }
@@ -2470,7 +2516,7 @@ function* tokenize(pattern, type, _verbose){
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] == ord('>')){
-                    yield new Group(pos, {possessive: true})
+                    yield new Group(pos, {atomic: true})
                     group_level++
                     verbose_stack.push(verbose)
                     pos += 3
@@ -2847,16 +2893,28 @@ function transform_repl(data, pattern){
                                 pos)
                         }
                     }else{
-                        if(! _b_.str.isidentifier(group_name)){
-                            var cps = to_codepoint_list(group_name)
-                            if($B.unicode_tables.XID_Start[cps[0]] === undefined){
-                                fail("bad character in group name '" +
-                                    group_name + "'", pos)
-                            }else{
-                                for(cp of cps.slice(1)){
-                                    if($B.unicode_tables.XID_Continue[cp] === undefined){
-                                        fail("bad character in group name '" +
-                                            group_name + "'", pos)
+                        try{
+                            var group_num = _b_.int.$factory(group_name)
+                            if(group_num < 0){
+                                fail(`bad character in group name ` +
+                                    `'${group_name}' at position ${pos}`, pos)
+                            }
+                            warn(_b_.DeprecationWarning,
+                                `bad character in group name '${group_name}' ` +
+                                `at position ${pos}`)
+                            mo[1] = group_name = group_num + ''
+                        }catch(err){
+                            if(! _b_.str.isidentifier(group_name)){
+                                var cps = to_codepoint_list(group_name)
+                                if($B.unicode_tables.XID_Start[cps[0]] === undefined){
+                                    fail("bad character in group name '" +
+                                        group_name + "'", pos)
+                                }else{
+                                    for(cp of cps.slice(1)){
+                                        if($B.unicode_tables.XID_Continue[cp] === undefined){
+                                            fail("bad character in group name '" +
+                                                group_name + "'", pos)
+                                        }
                                     }
                                 }
                             }
@@ -3221,7 +3279,7 @@ function GroupMO(node, start, matches, string, groups, endpos){
 
 GroupMO.prototype.backtrack = function(string, groups){
     // Try backtracking in the last match
-    if(this.node.possessive){
+    if(this.node.possessive || this.node.atomic){
         return false
     }
     if(this.matches.length > 0){
