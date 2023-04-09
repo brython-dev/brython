@@ -474,7 +474,7 @@ BPattern.search = function(self, string){
         $.endpos = data.string.length
     }
     var pos = $.pos
-    while(pos < $.endpos){
+    while(pos <= $.endpos){
         var mo = match(self.$pattern, data.string, pos)
         if(mo){
             return MatchObject.$factory(mo)
@@ -1478,47 +1478,6 @@ StringEnd.prototype.toString = function(){
     return '$<end>'
 }
 
-function validate(name, pos){
-    // name is a StringObj
-    var original = name
-    sname = name.string
-    name = name.codepoints
-    if(name.length == 0){
-        fail("missing group name", pos)
-    }
-    if(sname.match(/^\d+$/)){
-        return
-    }
-    try{
-        var num = _b_.int.$factory(sname)
-        warn(_b_.DeprecationWarning,
-            `bad character in group name '${sname}' at position ${pos + 3}`,
-            pos + 3, sname)
-        original.string = num + ''
-        return
-    }catch(err){
-        // ignore
-    }
-
-    var $B = window.__BRYTHON__,
-        cp = name[0]
-    if($B.unicode_tables.XID_Start[cp]){
-        var pos = 1
-        while(pos < name.length){
-            cp = name[pos]
-            if($B.unicode_tables.XID_Continue[cp]){
-                pos++
-            }else{
-                break
-            }
-        }
-        if(pos != name.length){
-            fail(`bad character in group name '${sname}'`, pos)
-        }
-    }else{
-        fail(`bad character in group name '${sname}'`, pos)
-    }
-}
 
 function chr(i){
     if(i < 0 || i > 1114111){
@@ -1935,7 +1894,7 @@ function compile(pattern, flags){
                 group_num--
             }else if(item.type == "name_def"){
                 var value = item.value
-                validate(value, pos)
+                validate(value, pos, is_bytes)
                 if(groups[value.string] !== undefined){
                     fail(`redefinition of group name` +
                         ` '${value.string}' as group ${group_num}; was group` +
@@ -2350,6 +2309,10 @@ function ord(char){
     return char.charCodeAt(0)
 }
 
+function is_ascii(name){
+    return /^[\x00-\x7F]*$/.test(name)
+}
+
 function is_valid_id(name){
     if(! $B.unicode_tables.XID_Start[name[0]]){
         return false
@@ -2362,13 +2325,56 @@ function is_valid_id(name){
     return true
 }
 
+function validate(name, pos, is_bytes){
+    // name is a StringObj
+    if(validate_group_num(name, pos)){
+        return true
+    }
+    validate_group_name(name, pos, is_bytes)
+}
+
+function validate_group_name(sname, pos, is_bytes){
+    // sname is an instance of StringObj
+    if(! _b_.str.isidentifier(sname.string)){
+        fail(`bad character in group name '${sname.string}'`, pos + 4)
+    }
+    if(is_bytes && ! is_ascii(sname.string)){
+        var s = _b_.bytes.decode(_b_.bytes.$factory(sname.codepoints),
+                                 'ascii', 'backslashreplace')
+        warn(_b_.DeprecationWarning,
+            `bad character in group name '${s}' at position ${pos + 4}`)
+    }
+    return true
+}
+
+function validate_group_num(so, pos){
+    var s = so.string
+    if(s.match(/^\d+$/)){
+        return true
+    }
+    try{
+        var num = _b_.int.$factory(s)
+        warn(_b_.DeprecationWarning,
+            `bad character in group name '${s}' at position ${pos + 3}`,
+            pos + 3, s)
+        so.string = num + ''
+        return true
+    }catch(err){
+        return false
+    }
+}
+
+function validate_num_or_name(so, pos, is_bytes){
+    return validate_group_num(so, pos, is_bytes) ||
+               validate_group_name(so, pos - 1, is_bytes)
+}
+
 function* tokenize(pattern, type, _verbose){
     // pattern is a list of codepoints
     var is_bytes = type == "bytes"
     // verbose_stack is the stack of verbose state for each group in the regex
     var verbose_stack = [_verbose],
         verbose = _verbose,
-        group_level = 0,
         parenth_pos
     var pos = 0
     while(pos < pattern.length){
@@ -2415,17 +2421,12 @@ function* tokenize(pattern, type, _verbose){
                             i++
                         }
                         var sname = StringObj.from_codepoints(name)
-                        if(! is_valid_id(name)){
-                            fail(`bad character in group name '${sname.string}'`,
-                                pos + 4)
-                        }
+                        validate_group_name(sname, pos, is_bytes)
                         name = sname
-                        // validate(name, pos)
                         if(i == pattern.length){
                             fail("missing >, unterminated name", pos)
                         }
                         yield new Group(pos, {type: 'name_def', value: name})
-                        group_level++
                         verbose_stack.push(verbose)
                         pos = i + 1
                         continue
@@ -2440,7 +2441,7 @@ function* tokenize(pattern, type, _verbose){
                             i++
                         }
                         name = StringObj.from_codepoints(name)
-                        validate(name, pos)
+                        validate_group_name(name, pos, is_bytes)
                         if(i == pattern.length){
                             fail("missing ), unterminated name", pos)
                         }
@@ -2466,7 +2467,7 @@ function* tokenize(pattern, type, _verbose){
                     if(sref.string.match(/^\d+$/)){
                         ref = parseInt(sref.string)
                     }else{
-                        validate(sref, pos)
+                        validate_num_or_name(sref, pos, is_bytes)
                         ref = sref.string
                     }
                     if(i == pattern.length){
@@ -2478,28 +2479,24 @@ function* tokenize(pattern, type, _verbose){
                 }else if(pattern[pos + 2] == ord('=')){
                     // (?=...) : lookahead assertion
                     yield new Group(pos, {type: 'lookahead_assertion'})
-                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] == ord('!')){
                     // (?!...) : negative lookahead assertion
                     yield new Group(pos, {type: 'negative_lookahead_assertion'})
-                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(from_codepoint_list(pattern.slice(pos + 2, pos + 4)) == '<!'){
                     // (?<!...) : negative lookbehind
                     yield new Group(pos, {type: 'negative_lookbehind'})
-                    group_level++
                     verbose_stack.push(verbose)
                     pos += 4
                     continue
                 }else if(from_codepoint_list(pattern.slice(pos + 2, pos + 4)) == '<='){
                     // (?<=...) : positive lookbehind
                     yield new Group(pos, {type: 'positive_lookbehind'})
-                    group_level++
                     verbose_stack.push(verbose)
                     pos += 4
                     continue
@@ -2511,13 +2508,11 @@ function* tokenize(pattern, type, _verbose){
                     fail("unknown extension ?<" + _b_.chr(pattern[pos]), pos)
                 }else if(pattern[pos + 2] == ord(':')){
                     yield new Group(pos, {non_capturing: true})
-                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] == ord('>')){
                     yield new Group(pos, {atomic: true})
-                    group_level++
                     verbose_stack.push(verbose)
                     pos += 3
                     continue
@@ -2567,7 +2562,6 @@ function* tokenize(pattern, type, _verbose){
                                 break
                             }else if(pattern[pos] == ord(':')){
                                 yield new Group(pos, {name: "Group", type: "flags"})
-                                group_level++
                                 verbose_stack.push(verbose)
                                 closed = true
                                 break
@@ -2593,7 +2587,6 @@ function* tokenize(pattern, type, _verbose){
                                 pos++
                             }else if(pattern[pos] == ord(':')){
                                 yield new Group(pos, {name: "Group", type: "flags"})
-                                group_level++
                                 verbose_stack.push(verbose)
                                 break
                             }else if(String.fromCharCode(pattern[pos]).
@@ -2651,13 +2644,11 @@ function* tokenize(pattern, type, _verbose){
                 }
             }else{
                 yield new Group(pos)
-                group_level++
                 verbose_stack.push(verbose)
                 pos++
             }
         }else if(cp == ord(')')){
             yield new GroupEnd(pos)
-            group_level--
             verbose_stack.pop()
             verbose = $last(verbose_stack)
             pos++
@@ -2917,6 +2908,12 @@ function transform_repl(data, pattern){
                                         }
                                     }
                                 }
+                            }else if(data.type == "bytes" && ! is_ascii(group_name)){
+                                var b = _b_.bytes.$factory(group_name, 'latin-1'),
+                                    s = _b_.bytes.decode(b, 'ascii', 'backslashreplace')
+                                warn(_b_.DeprecationWarning,
+                                    `bad character in group name '${s}'` +
+                                    ` at position ${pos}`)
                             }
                         }
                         if(pattern.groups[group_name] === undefined){
