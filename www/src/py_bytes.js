@@ -1723,6 +1723,8 @@ var decode = $B.decode = function(obj, encoding, errors){
               }else{
                   if(errors == "ignore"){
                       // ignore
+                  }else if(errors == "backslashreplace"){
+                      s += '\\x' + cp.toString(16)
                   }else{
                       var msg = "'ascii' codec can't decode byte 0x" +
                         cp.toString(16) + " in position " + i +
