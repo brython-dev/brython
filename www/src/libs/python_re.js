@@ -1227,11 +1227,18 @@ $B.set_func_names(Flag, "re")
 var no_flag = {}
 
 var Scanner = $B.make_class("Scanner",
-    function(pattern, string){
+    function(pattern, string, pos, endpos){
+        var $ = $B.args('__init__', 4,
+                    {pattern: null, string: null, pos: null, endpos:null},
+                    ['pattern', 'string', 'pos', 'endpos'],
+                    arguments, {pos: 0, endpos: _b_.None}, null, null),
+            endpos = endpos === _b_.None ? $.string.length : endpos
         return {
             __class__: Scanner,
-            $string: string,
-            pattern
+            $string: $.string,
+            pattern: $.pattern,
+            pos: $.pos,
+            endpos
         }
     }
 )
@@ -1244,15 +1251,12 @@ Scanner.search = function(self){
     if(! self.$iterator){
         self.$iterator = $module.finditer(self.pattern, self.$string)
     }
-    try{
-        var nxt = _b_.next(self.$iterator)
-    }catch(err){
-        if($B.is_exc(err, [_b_.StopIteration])){
-            return _b_.None
-        }
-        throw err
+    // return last match
+    var mo = _b_.None
+    for(mo of self.$iterator.js_gen){
+        // set mo
     }
-    return nxt
+    return mo
 }
 
 var GroupIndex = $B.make_class("GroupIndex",
@@ -1451,8 +1455,8 @@ Pattern.match = function(self, string){
     return mo ? MatchObject.$factory(mo) : _b_.None
 }
 
-Pattern.scanner = function(self, string){
-    return Scanner.$factory(self, string)
+Pattern.scanner = function(self, string, pos, endpos){
+    return Scanner.$factory.apply(null, arguments) // self, string, pos, endpos)
 }
 
 Pattern.search = function(self, string){
