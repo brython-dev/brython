@@ -180,7 +180,8 @@ const PARENTH_OPEN = ord('('),
       COLON = ord(':'),
       BACKSLASH = ord('\\'),
       DOLLAR = ord('$'),
-      CARET = ord('^')
+      CARET = ord('^'),
+      LINEFEED = ord('\n')
 
 // pattern tokenizer
 
@@ -825,7 +826,6 @@ function* tokenize(pattern, type, _verbose){
                     pos++
                     continue
                 }else{
-                    console.log('XXX')
                     fail("unknown extension ?" + _b_.chr(pattern[pos + 2]),
                         pos)
                 }
@@ -3311,7 +3311,7 @@ GroupMO.prototype.backtrack = function(string, groups){
         }
     }
     // Else, remove last match if possible
-    if(this.matches.length >= this.node.repeat.min &&
+    if(this.matches.length > this.node.repeat.min &&
             this.matches.length >= 1){
         this.matches.pop()
         if(this.matches.length > 0){
@@ -3322,6 +3322,11 @@ GroupMO.prototype.backtrack = function(string, groups){
             this.end = this.start
         }
         return true
+    }
+    // Group fails; if some of its subgroups succeded, remove them from
+    // groups
+    if(this.node.repeat.min > 0){
+        del_groups(groups, this.node)
     }
     return false
 }
@@ -4058,6 +4063,17 @@ var $module = {
                 var mo = match(data.pattern.$pattern, data.string, 0)
                 if(mo){
                     return MatchObject.$factory(mo)
+                }else if(pattern.flags.value & MULTILINE.value){
+                    var pos = 0
+                    while(pos < data.string.length){
+                        if(data.string.codepoints[pos] == LINEFEED){
+                            mo = match(data.pattern.$pattern, data.string, pos + 1)
+                            if(mo){
+                                return MatchObject.$factory(mo)
+                            }
+                        }
+                        pos++
+                    }
                 }else{
                     return _b_.None
                 }
