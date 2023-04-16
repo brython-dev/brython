@@ -51,6 +51,10 @@ list.__add__ = function(self, other){
     return res
 }
 
+list.__bool__ = function(self){
+    return list.__len__(self) > 0
+}
+
 list.__class_getitem__ = function(cls, item){
     // PEP 585
     if(! Array.isArray(item)){

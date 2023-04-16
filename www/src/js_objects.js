@@ -362,6 +362,7 @@ var js_list = $B.make_class('jslist')
 js_list.__class__ = js_list_meta
 
 js_list.__getattribute__ = function(_self, attr){
+    console.log('jslist __ga__', _self, attr)
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
         // attributes of _self Javascript prototype
@@ -434,6 +435,16 @@ var js_ops = {
 
 for(var js_op in js_ops){
     $B.JSObj[js_op] = js_ops[js_op]
+}
+
+$B.JSObj.__bool__ = function(_self){
+    if(typeof _self == 'object'){
+        for(var key in _self){
+            return true
+        }
+        return false
+    }
+    return !! _self
 }
 
 $B.JSObj.__dir__ = function(_self){

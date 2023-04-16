@@ -934,7 +934,8 @@ $B.$bool = function(obj, bool_class){ // return true or false
                               $B.$getattr(obj, "__bool__", missing)
             var test = false // klass.$infos.__name__ == 'FlagBoundary'
             if(test){
-                console.log('bool(obj)', obj, 'apply bool method', bool_method)
+                console.log('bool(obj)', obj, 'bool_class', bool_class,
+                            'klass', klass, 'apply bool method', bool_method)
                 console.log('$B.$call(bool_method)', bool_method + '')
             }
             if(bool_method === missing){
