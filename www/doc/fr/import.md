@@ -95,7 +95,7 @@ Pour cela il faut ouvrir une console système, se positionner dans le
 répertoire de l'application, et exécuter
 
 ```console
-brython-cli modules
+brython-cli make_modules
 ```
 
 A noter que ce programme analyse le code Brython contenu dans tous les scripts,
