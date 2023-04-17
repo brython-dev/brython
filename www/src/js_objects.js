@@ -362,7 +362,6 @@ var js_list = $B.make_class('jslist')
 js_list.__class__ = js_list_meta
 
 js_list.__getattribute__ = function(_self, attr){
-    console.log('jslist __ga__', _self, attr)
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
         // attributes of _self Javascript prototype
