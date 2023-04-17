@@ -14,6 +14,8 @@ dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
 #   points of the form start + i * step for i in range(number) has this GC
 # - a list with 2 elements [start, number] when step is 1
 letters = {}
+digits_mapping = {}
+
 start = None
 gc = None
 
