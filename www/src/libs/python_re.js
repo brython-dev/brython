@@ -1437,7 +1437,12 @@ Pattern.groupindex = {
     }
 }
 
+$B.nb_pattern_match = 0
+$B.t_pattern_match = 0
+
 Pattern.match = function(self, string){
+    $B.nb_pattern_match++
+    var t0 = performance.now()
     var $ = $B.args("match", 4,
                     {self: null, string: null, pos: null, endpos: null},
                     ["self", "string", "pos", "endpos"], arguments,
@@ -1450,6 +1455,7 @@ Pattern.match = function(self, string){
         throw _b_.TypeError.$factory("not the same type for pattern " +
             "and string")
     }
+    $B.t_pattern_match += performance.now() - t0
     var mo = match($.self.$pattern, data.string, $.pos,
         $.endpos)
     return mo ? MatchObject.$factory(mo) : _b_.None
@@ -1789,9 +1795,14 @@ Char.prototype.fixed_length = function(){
     return this.char === EmptyString ? 0 : 1
 }
 
+$B.nb_char_match = 0
+$B.t_char_match = 0
+
 Char.prototype.match = function(string, pos){
     // Returns {pos1, pos2} such that "this" matches all the substrings
     // string[pos:i] with pos1 <= i < pos2, or false if no match
+    $B.nb_char_match++
+    var t0 = performance.now()
     this.repeat = this.repeat || {min: 1, max: 1}
 
     var len = string.codepoints.length,
@@ -1802,6 +1813,7 @@ Char.prototype.match = function(string, pos){
     if(this.flags){
         if(this.flags.value & ASCII.value){
             if(this.cp > 127){
+                $B.t_char_match += performance.now() - t0
                 return false
             }
         }
@@ -1834,11 +1846,13 @@ Char.prototype.match = function(string, pos){
     var nb = i
     if(nb >= this.repeat.min){
         // Number of repeats ok
+        $B.t_char_match += performance.now() - t0
         return {
             nb_min: this.repeat.min,
             nb_max: nb
         }
     }else{
+        $B.t_char_match += performance.now() - t0
         return false
     }
 }
@@ -1854,9 +1868,10 @@ Char.prototype.toString = function(){
     return res
 }
 
-function CharSeq(chars){
+function CharSeq(chars, flags){
     // sequence of consecutive characters
     this.chars = chars
+    this.flags = flags
     this.merge_same_chars()
 }
 
@@ -1866,18 +1881,45 @@ CharSeq.prototype.add_char = function(char){
 }
 
 CharSeq.prototype.fixed_length = function(){
-    var len = 0
+    var len = 0,
+        cps = [],
+        char_len
     for(var char of this.chars){
-        len += char.fixed_length()
+        if(! char.repeat){
+            char_len = 1
+        }else if(char.repeat.min == char.repeat.max){
+            char_len = char.repeat.min
+        }else{
+            len = false
+            break
+        }
+        for(var i = 0; i < char_len; i++){
+            cps.push(char.cp)
+        }
+        len += char_len
     }
-    return len
+    this.cps = cps
+    return this.len = len
 }
 
 CharSeq.prototype.match = function(string, pos){
     var mos = [],
         i = 0,
         backtrack,
-        nb
+        nb,
+        fast_res
+    this.len = this.len === undefined ? this.fixed_length() : this.len
+    // optimization if character sequence has a fixed length
+    if(this.len !== false && ! (this.flags.value & IGNORECASE.value)){
+        for(var i = 0; i < this.len; i++){
+            if(string.codepoints[pos + i] !== this.cps[i]){
+                fast_res = false
+                break
+            }
+        }
+        fast_res = fast_res === undefined ?
+            {nb_min: this.len, nb_max: this.len} : fast_res
+    }
     for(var i = 0, len = this.chars.length; i < len; i++){
         var char =  this.chars[i],
             mo = char.match(string, pos) // form {nb_min, nb_max}
@@ -1916,6 +1958,10 @@ CharSeq.prototype.match = function(string, pos){
                 }
             }
             if(mos.length == 0){
+                if(fast_res !== false && fast_res !== undefined){
+                    console.log(this, 'fast res', fast_res, 'res', false)
+                    throw Error()
+                }
                 return false
             }
         }
@@ -1925,10 +1971,22 @@ CharSeq.prototype.match = function(string, pos){
     for(var mo of mos.slice(0, mos.length - 1)){
         nb += mo.nb
     }
-    return {
+    var res = {
         nb_min: nb + last_mo.nb_min,
         nb_max: nb + last_mo.nb_max
     }
+    if(fast_res === false ||
+            (fast_res !== undefined &&
+                (fast_res.nb_min != res.nb_min ||
+                fast_res.nb_max != res.nb_max))){
+        console.log(this, 'fast res', fast_res, 'res', res)
+        console.log('string', string, 'pos', pos)
+        console.log($B.frames_stack.slice())
+        console.log($B.frames_stack.map(x => x.$lineno))
+        throw Error()
+
+    }
+    return res
 }
 
 CharSeq.prototype.merge_same_chars = function(){
@@ -2668,7 +2726,7 @@ function compile(pattern, flags){
                         added_to_charseq = true
                     }else if(previous instanceof Char && ! previous.repeater){
                         node.items.pop()
-                        node.items.push(new CharSeq([previous, item]))
+                        node.items.push(new CharSeq([previous, item], flags))
                         added_to_charseq = true
                     }
                 }
@@ -2965,7 +3023,9 @@ function to_codepoint_list(s){
     return items
 }
 
+$B.nb_from_cp = 0
 function from_codepoint_list(codepoints, type){
+    $B.nb_from_cp++
     // Return a string
     if(type == "bytes"){
         return _b_.bytes.$factory(codepoints)
@@ -3053,6 +3113,13 @@ function StringObj(obj){
             `expected string or bytes-like object, got '${$B.class_name(obj)}'`)
     }
     this.length = this.codepoints.length
+}
+
+StringObj.prototype.cp_at = function(pos){
+    var res = this.codepoints[pos]
+    if(res !== undefined){
+        return res
+    }
 }
 
 StringObj.prototype.substring = function(start, end){
@@ -3272,7 +3339,16 @@ function GroupMO(node, start, matches, string, groups, endpos){
     this.$groups = groups
 }
 
+$B.nb_group_backtrack = 0
+$B.t_group_backtrack = 0
+
 GroupMO.prototype.backtrack = function(string, groups){
+    if(_debug.value){
+        console.log('group MO backtrack, this', this)
+        alert()
+    }
+    $B.nb_group_backtrack++
+    var t0 = performance.now()
     // Try backtracking in the last match
     if(this.node.possessive || this.node.atomic){
         return false
@@ -3296,6 +3372,7 @@ GroupMO.prototype.backtrack = function(string, groups){
                             var ix = this.$groups.$last[this.$groups.$last.length - 1]
                             this.$groups[ix].end = _mo.end
                         }
+                        $B.t_group_backtrack += performance.now() - t0
                         return true
                     }
                 }
@@ -3306,6 +3383,7 @@ GroupMO.prototype.backtrack = function(string, groups){
                     groups[this.node.num].end = mo.end
                 }
                 this.end = mo.end
+                $B.t_group_backtrack += performance.now() - t0
                 return true
             }
         }
@@ -3321,6 +3399,7 @@ GroupMO.prototype.backtrack = function(string, groups){
             del_groups(groups, this.node)
             this.end = this.start
         }
+        $B.t_group_backtrack += performance.now() - t0
         return true
     }
     // Group fails; if some of its subgroups succeded, remove them from
@@ -3328,6 +3407,7 @@ GroupMO.prototype.backtrack = function(string, groups){
     if(this.node.repeat.min > 0){
         del_groups(groups, this.node)
     }
+    $B.t_group_backtrack += performance.now() - t0
     return false
 }
 
