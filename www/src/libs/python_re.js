@@ -1594,13 +1594,14 @@ BackReference.prototype.match = function(string, pos, groups){
     // search (repetitions of) the matched group codepoints
     var _pos = pos,
         nb = 0,
-        len = string.codepoints.length,
         group_len = group_cps.length,
-        flag
-    while(_pos < len && nb < this.repeat.max){
+        flag,
+        cp
+    while(string.cp_at(_pos) !== undefined && nb < this.repeat.max){
         flag = true
         for(var i = 0; i < group_len; i++){
-            if(string.codepoints[_pos + i] != group_cps[i]){
+            cp = string.cp_at(_pos + i)
+            if(cp != group_cps[i]){
                 flag = false
                 break
             }
@@ -1805,8 +1806,7 @@ Char.prototype.match = function(string, pos){
     var t0 = performance.now()
     this.repeat = this.repeat || {min: 1, max: 1}
 
-    var len = string.codepoints.length,
-        i = 0
+    var i = 0
 
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
@@ -1823,9 +1823,11 @@ Char.prototype.match = function(string, pos){
             // For bytes pattern, case insensitive matching only works
             // for ASCII characters
             var char_upper = this.char.toUpperCase(),
-                char_lower = this.char.toLowerCase()
-            while(i < this.repeat.max && pos + i < len){
-                var char = chr(string.codepoints[pos + i])
+                char_lower = this.char.toLowerCase(),
+                cp
+            while(i < this.repeat.max &&
+                    (cp = string.cp_at(pos + i)) !== undefined){
+                var char = chr(cp)
                 if(char.toUpperCase() != char_upper &&
                         char.toLowerCase() != char_lower){
                    break
@@ -1833,13 +1835,13 @@ Char.prototype.match = function(string, pos){
                 i++
             }
         }else{
-            while(string.codepoints[pos + i] == this.cp &&
+            while(string.cp_at(pos + i) == this.cp &&
                     i < this.repeat.max){
                 i++
             }
         }
     }else{
-        while(string.codepoints[pos + i] == this.cp && i < this.repeat.max){
+        while(string.cp_at(pos + i) == this.cp && i < this.repeat.max){
             i++
         }
     }
@@ -1906,19 +1908,16 @@ CharSeq.prototype.match = function(string, pos){
     var mos = [],
         i = 0,
         backtrack,
-        nb,
-        fast_res
+        nb
     this.len = this.len === undefined ? this.fixed_length() : this.len
     // optimization if character sequence has a fixed length
     if(this.len !== false && ! (this.flags.value & IGNORECASE.value)){
         for(var i = 0; i < this.len; i++){
-            if(string.codepoints[pos + i] !== this.cps[i]){
-                fast_res = false
-                break
+            if(string.cp_at(pos + i) !== this.cps[i]){
+                return false
             }
         }
-        fast_res = fast_res === undefined ?
-            {nb_min: this.len, nb_max: this.len} : fast_res
+        return {nb_min: this.len, nb_max: this.len}
     }
     for(var i = 0, len = this.chars.length; i < len; i++){
         var char =  this.chars[i],
@@ -1958,10 +1957,6 @@ CharSeq.prototype.match = function(string, pos){
                 }
             }
             if(mos.length == 0){
-                if(fast_res !== false && fast_res !== undefined){
-                    console.log(this, 'fast res', fast_res, 'res', false)
-                    throw Error()
-                }
                 return false
             }
         }
@@ -1974,17 +1969,6 @@ CharSeq.prototype.match = function(string, pos){
     var res = {
         nb_min: nb + last_mo.nb_min,
         nb_max: nb + last_mo.nb_max
-    }
-    if(fast_res === false ||
-            (fast_res !== undefined &&
-                (fast_res.nb_min != res.nb_min ||
-                fast_res.nb_max != res.nb_max))){
-        console.log(this, 'fast res', fast_res, 'res', res)
-        console.log('string', string, 'pos', pos)
-        console.log($B.frames_stack.slice())
-        console.log($B.frames_stack.map(x => x.$lineno))
-        throw Error()
-
     }
     return res
 }
