@@ -202,7 +202,8 @@ str.__add__ = function(_self, other){
                 $B.class_name(other) + " to str implicitly")}
     }
     [_self, other] = to_string([_self, other])
-    return $B.String(_self + other)
+    var res = $B.String(_self + other)
+    return res
 }
 
 str.__contains__ = function(_self, item){

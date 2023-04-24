@@ -544,6 +544,27 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+    if(iterator instanceof String){
+        // produces one-char strings or instances of String
+        return (function*(){
+            var len = iterator.length,
+                pos = 0,
+                string_ix = 0,
+                surrogate_ix = 0
+            while(string_ix < len){
+                if(pos == iterator.surrogates[surrogate_ix]){
+                    var res = $B.make_String(iterator.substr(string_ix, 2), [0])
+                    yield res
+                    string_ix++
+                    surrogate_ix++
+                }else{
+                    yield iterator[string_ix]
+                }
+                string_ix++
+                pos++
+            }
+        })()
+    }
     if(iterator[Symbol.iterator]){
         var it = iterator[Symbol.iterator](),
             nb = 0
