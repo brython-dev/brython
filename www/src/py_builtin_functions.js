@@ -216,9 +216,10 @@ var chr = _b_.chr = function(i){
     if(i < 0 || i > 1114111){
         throw _b_.ValueError.$factory('Outside valid range')
     }else if(i >= 0x10000 && i <= 0x10FFFF){
-        var code = (i - 0x10000)
-        return String.fromCodePoint(0xD800 | (code >> 10)) +
-            String.fromCodePoint(0xDC00 | (code & 0x3FF))
+        var code = (i - 0x10000),
+            s =  String.fromCodePoint(0xD800 | (code >> 10)) +
+                 String.fromCodePoint(0xDC00 | (code & 0x3FF))
+            return $B.make_String(s, [0])
     }else{
         return String.fromCodePoint(i)
     }
@@ -2095,7 +2096,7 @@ var ord = _b_.ord = function(c){
             return c.charCodeAt(0)
         }else if(c.length == 2){
             var code = c.codePointAt(0)
-            if((code > 0x10000 && code <= 0x1FFFF) ||
+            if((code >= 0x10000 && code <= 0x1FFFF) ||
                     (code >= 0x20000 && code <= 0x2FFFF) ||
                     (code >= 0x30000 && code <= 0x3FFFF) ||
                     (code >= 0xD0000 && code <= 0xDFFFF) ||
