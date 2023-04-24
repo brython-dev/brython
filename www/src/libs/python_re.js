@@ -1437,12 +1437,7 @@ Pattern.groupindex = {
     }
 }
 
-$B.nb_pattern_match = 0
-$B.t_pattern_match = 0
-
 Pattern.match = function(self, string){
-    $B.nb_pattern_match++
-    var t0 = performance.now()
     var $ = $B.args("match", 4,
                     {self: null, string: null, pos: null, endpos: null},
                     ["self", "string", "pos", "endpos"], arguments,
@@ -1455,7 +1450,6 @@ Pattern.match = function(self, string){
         throw _b_.TypeError.$factory("not the same type for pattern " +
             "and string")
     }
-    $B.t_pattern_match += performance.now() - t0
     var mo = match($.self.$pattern, data.string, $.pos,
         $.endpos)
     return mo ? MatchObject.$factory(mo) : _b_.None
@@ -1574,7 +1568,7 @@ BackReference.prototype.get_group = function(){
     return top.$groups[this.value]
 }
 
-BackReference.prototype.match = function(string, pos, groups){
+BackReference.prototype.match = function(string, pos, endpos, groups){
     this.repeat = this.repeat || {min: 1, max: 1}
 
     var group = groups[this.value]
@@ -1693,7 +1687,7 @@ var EmptyString = {
         toString: function(){
             return ''
         },
-        match: function(string, pos){
+        match: function(string, pos, endpos){
             return {nb_min: 0, nb_max: 0}
         },
         fixed_length: function(){
@@ -1796,14 +1790,9 @@ Char.prototype.fixed_length = function(){
     return this.char === EmptyString ? 0 : 1
 }
 
-$B.nb_char_match = 0
-$B.t_char_match = 0
-
-Char.prototype.match = function(string, pos){
+Char.prototype.match = function(string, pos, endpos){
     // Returns {pos1, pos2} such that "this" matches all the substrings
     // string[pos:i] with pos1 <= i < pos2, or false if no match
-    $B.nb_char_match++
-    var t0 = performance.now()
     this.repeat = this.repeat || {min: 1, max: 1}
 
     var i = 0
@@ -1813,7 +1802,6 @@ Char.prototype.match = function(string, pos){
     if(this.flags){
         if(this.flags.value & ASCII.value){
             if(this.cp > 127){
-                $B.t_char_match += performance.now() - t0
                 return false
             }
         }
@@ -1825,8 +1813,8 @@ Char.prototype.match = function(string, pos){
             var char_upper = this.char.toUpperCase(),
                 char_lower = this.char.toLowerCase(),
                 cp
-            while(i < this.repeat.max &&
-                    (cp = string.cp_at(pos + i)) !== undefined){
+            while(i < this.repeat.max && pos + i < endpos){
+                cp = string.cp_at(pos + i)
                 var char = chr(cp)
                 if(char.toUpperCase() != char_upper &&
                         char.toLowerCase() != char_lower){
@@ -1835,26 +1823,27 @@ Char.prototype.match = function(string, pos){
                 i++
             }
         }else{
-            while(string.cp_at(pos + i) == this.cp &&
+            while(pos + i < endpos &&
+                    string.cp_at(pos + i) == this.cp &&
                     i < this.repeat.max){
                 i++
             }
         }
     }else{
-        while(string.cp_at(pos + i) == this.cp && i < this.repeat.max){
+        while(pos + i < endpos &&
+                string.cp_at(pos + i) == this.cp &&
+                i < this.repeat.max){
             i++
         }
     }
     var nb = i
     if(nb >= this.repeat.min){
         // Number of repeats ok
-        $B.t_char_match += performance.now() - t0
         return {
             nb_min: this.repeat.min,
             nb_max: nb
         }
     }else{
-        $B.t_char_match += performance.now() - t0
         return false
     }
 }
@@ -1904,7 +1893,7 @@ CharSeq.prototype.fixed_length = function(){
     return this.len = len
 }
 
-CharSeq.prototype.match = function(string, pos){
+CharSeq.prototype.match = function(string, pos, endpos){
     var mos = [],
         i = 0,
         backtrack,
@@ -1921,7 +1910,7 @@ CharSeq.prototype.match = function(string, pos){
     }
     for(var i = 0, len = this.chars.length; i < len; i++){
         var char =  this.chars[i],
-            mo = char.match(string, pos) // form {nb_min, nb_max}
+            mo = char.match(string, pos, endpos) // form {nb_min, nb_max}
         if(_debug.value){
             console.log('CharSeq match, pos', pos, 'char', char, 'mo', mo)
             alert()
@@ -2032,14 +2021,14 @@ function CharacterClass(pos, cp, length, groups){
             break
         case 's':
             this.test_func = function(string, pos){
-                var cp = string.codepoints[pos]
+                var cp = string.cp_at(pos)
                 return $B.unicode_tables.Zs[cp] !== undefined ||
                     $B.unicode_bidi_whitespace.indexOf(cp) > -1
             }
             break
         case 'S':
             this.test_func = function(string, pos){
-                var cp = string.codepoints[pos]
+                var cp = string.cp_at(pos)
                 return cp !== undefined &&
                     $B.unicode_tables.Zs[cp] === undefined &&
                     $B.unicode_bidi_whitespace.indexOf(cp) == -1
@@ -2047,13 +2036,13 @@ function CharacterClass(pos, cp, length, groups){
             break
         case '.':
             this.test_func = function(string, pos){
-                if(string.codepoints[pos] === undefined){
+                if(string.cp_at(pos) === undefined){
                     return false
                 }
                 if(this.flags.value & DOTALL.value){
                     return true
                 }else{
-                    return string.codepoints[pos] != 10
+                    return string.cp_at(pos) != 10
                 }
             }
             break
@@ -2062,7 +2051,7 @@ function CharacterClass(pos, cp, length, groups){
                 if(this.flags === undefined){
                     console.log("\\d, no flags", this)
                 }
-                var cp = string.codepoints[pos],
+                var cp = string.cp_at(pos),
                     table = (this.flags.value & ASCII.value) ?
                         is_ascii_digit : is_digit
                 return table[cp]
@@ -2070,7 +2059,7 @@ function CharacterClass(pos, cp, length, groups){
             break
         case 'D':
             this.test_func = function(string, pos){
-                var cp = string.codepoints[pos],
+                var cp = string.cp_at(pos),
                     table = (this.flags.value & ASCII.value) ?
                         is_ascii_digit : is_digit
                 return ! table[cp]
@@ -2082,8 +2071,7 @@ function CharacterClass(pos, cp, length, groups){
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
                     table = is_ascii_word
                 }
-                var cp = string.codepoints[pos],
-                    len = string.codepoints.length,
+                var cp = string.cp_at(pos),
                     ok = {nb_min: 0, nb_max: 0}
 
                 // return true if char at pos is at the beginning or start
@@ -2091,11 +2079,11 @@ function CharacterClass(pos, cp, length, groups){
                 if(pos == 0 && table[cp]){
                     return ok
                 }
-                if(pos == len && table[string.codepoints[pos - 1]]){
+                if(string.cp_at(pos) === undefined && table[string.cp_at(pos - 1)]){
                     return ok
                 }
-                if(pos > 0 && pos < len){
-                    if((table[string.codepoints[pos - 1]]) !==
+                if(pos > 0 && string.cp_at(pos) !== undefined){
+                    if((table[string.cp_at(pos - 1)]) !==
                             table[cp]){
                         return ok
                     }
@@ -2110,20 +2098,23 @@ function CharacterClass(pos, cp, length, groups){
                     table = is_ascii_word
                 }
 
-                var cp = string.codepoints[pos],
-                    len = string.codepoints.length,
+                var cp = string.cp_at(pos),
                     ok = {nb_min: 0, nb_max: 0}
                 // test is true if char at pos is not at the beginning or
                 // start of a word
+                if(pos == 0 && cp === undefined){
+                    // empty string
+                    return false
+                }
                 if(pos == 0 && table[cp]){
                     return false
                 }
-                if(pos == len && table[string.codepoints[pos - 1]]){
+                if(cp === undefined &&
+                        table[string.cp_at(pos - 1)]){
                     return false
                 }
-                if(pos > 0 && pos < len){
-                    if((table[string.codepoints[pos - 1]]) !==
-                            table[cp]){
+                if(pos > 0 && cp !== undefined){
+                    if(table[string.cp_at(pos - 1)] !== table[cp]){
                         return false
                     }
                 }
@@ -2136,7 +2127,7 @@ function CharacterClass(pos, cp, length, groups){
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
                     table = is_ascii_word
                 }
-                return table[string.codepoints[pos]]
+                return table[string.cp_at(pos)]
             }
             break
         case 'W':
@@ -2145,12 +2136,12 @@ function CharacterClass(pos, cp, length, groups){
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
                     table = is_ascii_word
                 }
-                return ! table[string.codepoints[pos]]
+                return ! table[string.cp_at(pos)]
             }
             break
         case 'Z':
             this.test_func = function(string, pos){
-                if(pos >= string.codepoints.length){
+                if(string.cp_at(pos) === undefined){
                     return {nb_min: 0, nb_max: 0}
                 }
             }
@@ -2162,20 +2153,26 @@ CharacterClass.prototype.fixed_length = function(){
     return this.repeat ? false : 1
 }
 
-CharacterClass.prototype.match = function(string, pos){
+CharacterClass.prototype.match = function(string, pos, endpos){
     // Returns {pos1, pos2} such that "this" matches all the substrings
     // string[pos:i] with pos1 <= i < pos2, or false if no match
+    if(pos === undefined){
+        console.log('no pos')
+        throw Error()
+    }
     this.repeat = this.repeat || {min: 1, max: 1}
-    var len = string.codepoints.length,
-        i = 0
 
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
-    while(pos + i <= len &&
-            i < this.repeat.max &&
-            this.test_func(string, pos + i, this.flags)){
+    var i = 0
+    while(i < this.repeat.max){
+        var test = this.test_func(string, pos + i, this.flags)
+        if(! test){
+            break
+        }
         i++
     }
+
     var nb = i
     if(nb >= this.repeat.min){
         // Number of repeats ok
@@ -2208,27 +2205,27 @@ CharacterSet.prototype.fixed_length = function(){
     return 1
 }
 
-CharacterSet.prototype.match = function(string, pos){
+CharacterSet.prototype.match = function(string, pos, endpos){
     var ignore_case = this.flags && (this.flags.value & IGNORECASE.value),
         test,
         match = false,
-        len = string.codepoints.length,
         i = 0,
         cp
 
     this.repeat = this.repeat || {min: 1, max: 1}
 
-    while(i < this.repeat.max && pos + i < len){
+    while(i < this.repeat.max && (cp = string.cp_at(pos + i)) !== undefined){
         test = false
-        cp = string.codepoints[pos + i]
 
-        if(pos >= len){
+        if(string.cp_at(pos) === undefined){
             cp = EmptyString
         }
         try{
             $B.codepoint2jsstring(cp)
         }catch(err){
             console.log(err.message)
+            console.log('cp', cp, '\nstring', string, 'pos', pos)
+            console.log($B.print_stack())
             throw _b_.Exception.$factory('bad codepoint')
         }
         var char = $B.codepoint2jsstring(cp),
@@ -2260,7 +2257,7 @@ CharacterSet.prototype.match = function(string, pos){
                         }
                     }
                 }else if(item instanceof CharacterClass){
-                    test = !! item.match(string, pos + i) // boolean
+                    test = !! item.match(string, pos + i, endpos) // boolean
                 }else{
                     if(item.ord == cp1){
                         test = true
@@ -2337,12 +2334,11 @@ ConditionalBackref.prototype.fixed_length = function(){
     return false
 }
 
-ConditionalBackref.prototype.match = function(string, pos, groups){
+ConditionalBackref.prototype.match = function(string, pos, endpos, groups){
     var re = groups[this.group_ref] ? this.re_if_exists :
             this.re_if_not_exists,
         pattern = {node: re, text: re + ''},
-        mo = match(pattern, string, pos, undefined,
-            false, groups)
+        mo = match(pattern, string, pos, endpos, false, groups)
     if(mo){
         return {nb_min: mo.end - mo.start, nb_max: mo.end - mo.start}
     }
@@ -2423,7 +2419,7 @@ function Lookbehind(item){
     this.neg = this.re.type == "negative_lookbehind"
 }
 
-Lookbehind.prototype.match = function(string, pos, groups){
+Lookbehind.prototype.match = function(string, pos, endpos, groups){
     var ok = {nb_min: 0, nb_max: 0},
         pattern = {node: this.re, text: this.re + ''},
         length = this.re.length,
@@ -2431,8 +2427,7 @@ Lookbehind.prototype.match = function(string, pos, groups){
     if(pos - length < 0){
         mo = false
     }else{
-        mo = match(pattern, string, pos - length, undefined,
-            false, groups)
+        mo = match(pattern, string, pos - length, endpos, false, groups)
     }
     if(mo){
         return this.neg ? false : ok
@@ -2462,10 +2457,10 @@ function StringStart(pos){
     this.pos = pos
 }
 
-StringStart.prototype.match = function(string, pos){
+StringStart.prototype.match = function(string, pos, endpos){
     var ok = {nb_min:0, nb_max: 0}
     if(this.flags.value & MULTILINE.value){
-        return (pos == 0 || string.codepoints[pos - 1] == 10) ? ok : false
+        return (pos == 0 || string.cp_at(pos - 1) == 10) ? ok : false
     }
     return pos == 0 ? ok : false
 }
@@ -2482,15 +2477,15 @@ function StringEnd(pos){
     this.pos = pos
 }
 
-StringEnd.prototype.match = function(string, pos){
-    var ok = {nb_min:0, nb_max: 0}
+StringEnd.prototype.match = function(string, pos, endpos){
+    var ok = {nb_min:0, nb_max: 0},
+        cp = string.cp_at(pos)
     if(this.flags.value & MULTILINE.value){
         return (pos > string.codepoints.length - 1 ||
-            string.codepoints[pos] == 10) ? ok : false
+            cp == 10) ? ok : false
     }
-    return pos > string.codepoints.length - 1 ? ok :
-           (pos == string.codepoints.length - 1 &&
-               string.codepoints[pos] == 10) ? ok : false
+    return pos > endpos - 1 ? ok :
+           (pos == endpos - 1 && cp == 10) ? ok : false
 }
 
 StringEnd.prototype.fixed_length = function(){
@@ -3062,6 +3057,7 @@ function StringObj(obj){
                 i++
             }
         }
+        this.length = _b_.str.__len__(obj)
         if(obj instanceof String){
             // store for next use
             obj.codepoints = this.codepoints
@@ -3072,10 +3068,12 @@ function StringObj(obj){
         this.string = obj.string
         this.codepoints = obj.codepoints
         this.index_map = obj.index_map
+        this.length = _b_.str.__len__(obj)
     }else if(_b_.isinstance(obj, _b_.str)){ // str subclass
         var so = new StringObj(_b_.str.$factory(obj))
         this.string = so.string
         this.codepoints = so.codepoints
+        this.length = _b_.str.__len__(obj)
     }else if(_b_.isinstance(obj, [_b_.bytes, _b_.bytearray])){
         this.string = _b_.bytes.decode(obj, 'latin1')
         this.codepoints = obj.source
@@ -3096,10 +3094,20 @@ function StringObj(obj){
         throw _b_.TypeError.$factory(
             `expected string or bytes-like object, got '${$B.class_name(obj)}'`)
     }
-    this.length = this.codepoints.length
+    if(this.length === undefined){
+        this.length = this.codepoints.length
+    }
 }
 
 StringObj.prototype.cp_at = function(pos){
+    if(pos >= this.length){
+        return undefined
+    }
+    /*
+    if(typeof this.string == 'string'){
+        return this.string.charCodeAt(pos)
+    }
+    */
     var res = this.codepoints[pos]
     if(res !== undefined){
         return res
@@ -3196,9 +3204,6 @@ function subn(pattern, repl, string, count, flags){
         }
         nb_sub++
         pos = mo.end
-        if(pos >= string.length){
-            break
-        }
         if(count != 0 && nb_sub >= count){
             break
         }
@@ -3239,8 +3244,10 @@ function starts_with_string_start(pattern){
 
 function* iterator(pattern, string, flags, original_string, pos, endpos){
     var result = [],
-        pos = pos | 0
-    while(pos <= string.length){
+        pos = pos | 0,
+        cp,
+        accept_one = true // used to test one position after string end
+    while((cp = string.cp_at(pos)) !== undefined || accept_one){
         var mo = match(pattern, string, pos, endpos)
         if(mo){
             yield MatchObject.$factory(mo)
@@ -3259,6 +3266,9 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
             }
         }else{
             pos++
+        }
+        if(cp === undefined){
+            accept_one = false
         }
         if(starts_with_string_start(pattern)){
             break
@@ -3697,15 +3707,12 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
         console.log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
         alert()
     }
-    var string1 = string
     if(endpos !== undefined){
         if(endpos < pos){
             return false
-        }else if(endpos < string.length){
-            string1 = new StringObj('')
-            string1.codepoints = string.codepoints.slice(0, endpos)
-            string1.length = endpos
         }
+    }else{
+        endpos = string.length
     }
     if(pattern.node instanceof Node){
         show(pattern.node)
@@ -3899,10 +3906,9 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
             }
         }
     }else{
-        if(node.match === undefined){
-            console.log('pas de match', node)
-        }
-        var mo = node.match(string1, pos, groups)
+        // for BackReference, Char, CharSeq, CharacterClass, CharacterSet,
+        // ConditionalBackref, Lookbehind, StringStart, StringEnd
+        var mo = node.match(string, pos, endpos, groups)
         if(_debug.value){
             console.log(node + '', "mo", mo)
         }
@@ -4128,9 +4134,10 @@ var $module = {
                 if(mo){
                     return MatchObject.$factory(mo)
                 }else if(pattern.flags.value & MULTILINE.value){
-                    var pos = 0
-                    while(pos < data.string.length){
-                        if(data.string.codepoints[pos] == LINEFEED){
+                    var pos = 0,
+                        cp
+                    while((cp = data.string.cp_at(pos)) !== undefined){
+                        if(cp == LINEFEED){
                             mo = match(data.pattern.$pattern, data.string, pos + 1)
                             if(mo){
                                 return MatchObject.$factory(mo)
@@ -4156,7 +4163,7 @@ var $module = {
         }
         var pos = 0
         if(data.string.codepoints.length == 0){
-            mo = match(data.pattern.$pattern, data.string)
+            mo = match(data.pattern.$pattern, data.string, 0)
             if(mo){
                 mo.start = mo.end = 0
             }

@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-04-23 18:01:48.297231"
-__BRYTHON__.timestamp=1682265708297
+__BRYTHON__.compiled_date="2023-04-24 16:24:18.482600"
+__BRYTHON__.timestamp=1682346258482
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4968,6 +4968,14 @@ yield char[1]}else{yield char}}})()
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return gen.next()}}}
+if(iterator instanceof String){
+return(function*(){var len=iterator.length,pos=0,string_ix=0,surrogate_ix=0
+while(string_ix < len){if(pos==iterator.surrogates[surrogate_ix]){var res=$B.make_String(iterator.substr(string_ix,2),[0])
+yield res
+string_ix++
+surrogate_ix++}else{yield iterator[string_ix]}
+string_ix++
+pos++}})()}
 if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator](),nb=0
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
@@ -6172,9 +6180,9 @@ var callable=_b_.callable=function(obj){check_nb_args_no_kw('callable',1,argumen
 return hasattr(obj,'__call__')}
 var chr=_b_.chr=function(i){check_nb_args_no_kw('chr',1,arguments)
 i=$B.PyNumber_Index(i)
-if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
-return String.fromCodePoint(0xD800 |(code >> 10))+
-String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
+if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000),s=String.fromCodePoint(0xD800 |(code >> 10))+
+String.fromCodePoint(0xDC00 |(code & 0x3FF))
+return $B.make_String(s,[0])}else{return String.fromCodePoint(i)}}
 var code=_b_.code=$B.make_class("code")
 code.__repr__=code.__str__=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
 `line ${_self.co_firstlineno || 1}>`}
@@ -6843,7 +6851,7 @@ var oct=_b_.oct=function(obj){check_nb_args_no_kw('oct',1,arguments)
 return bin_hex_oct(8,obj)}
 var ord=_b_.ord=function(c){check_nb_args_no_kw('ord',1,arguments)
 if(typeof c.valueOf()=='string'){if(c.length==1){return c.charCodeAt(0)}else if(c.length==2){var code=c.codePointAt(0)
-if((code > 0x10000 && code <=0x1FFFF)||
+if((code >=0x10000 && code <=0x1FFFF)||
 (code >=0x20000 && code <=0x2FFFF)||
 (code >=0x30000 && code <=0x3FFFF)||
 (code >=0xD0000 && code <=0xDFFFF)||
@@ -10026,7 +10034,8 @@ return s.codepoints=cps}
 str.__add__=function(_self,other){if(! _b_.isinstance(other,str)){try{return $B.$getattr(other,"__radd__")(_self)}catch(err){throw _b_.TypeError.$factory("Can't convert "+
 $B.class_name(other)+" to str implicitly")}}
 [_self,other]=to_string([_self,other])
-return $B.String(_self+other)}
+var res=$B.String(_self+other)
+return res}
 str.__contains__=function(_self,item){if(! _b_.isinstance(item,str)){throw _b_.TypeError.$factory("'in <string>' requires "+
 "string as left operand, not "+$B.class_name(item))}
 [_self,item]=to_string([_self,item])
