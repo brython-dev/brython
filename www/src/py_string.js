@@ -1052,6 +1052,10 @@ function parse_mod_format(s, type, pos){
     throw _b_.ValueError.$factory('invalid format')
 }
 
+function is_mapping(obj){
+    return _b_.hasattr(obj, 'keys') && _b_.hasattr(obj, '__getitem__')
+}
+
 $B.printf_format = function(s, type, args){
     // printf-style bytes or string formatting
     // s is a string
@@ -1083,6 +1087,14 @@ $B.printf_format = function(s, type, args){
             pos += 2
         }else{
             nbph++
+            if(nbph > 1){
+                // issue 2184
+                if((! _b_.isinstance(args, _b_.tuple)) &&
+                        ! is_mapping(args)){
+                    throw _b_.TypeError.$factory(
+                        "not enough arguments for format string")
+                }
+            }
             var fmt = parse_mod_format(s, type, pos)
             pos = fmt.end + 1
             if(fmt.padding == '*'){

@@ -281,4 +281,9 @@ assert "{:016X}".format(2**52) == '0010000000000000'
 assert "{:016X}".format(2**53) == '0020000000000000'
 assert "{:016X}".format((2**64)-1) == 'FFFFFFFFFFFFFFFF'
 
+# issue 2184
+from tester import assert_raises
+
+assert_raises(TypeError, '%s %s %s'.__mod__, ["foo", "bar", "baz"])
+
 print("passed all tests...")

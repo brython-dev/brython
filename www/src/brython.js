@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-04-27 19:09:54.679417"
-__BRYTHON__.timestamp=1682615394679
+__BRYTHON__.compiled_date="2023-04-27 19:26:50.787213"
+__BRYTHON__.timestamp=1682616410787
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10310,6 +10310,7 @@ if(flags.left && flags.pad_char=='0'){
 flags.pad_char=' '}
 return flags}else{throw _b_.ValueError.$factory(`invalid character in format: ${char}`)}}
 throw _b_.ValueError.$factory('invalid format')}
+function is_mapping(obj){return _b_.hasattr(obj,'keys')&& _b_.hasattr(obj,'__getitem__')}
 $B.printf_format=function(s,type,args){
 var length=s.length,pos=0,argpos=null,getitem
 if(_b_.isinstance(args,_b_.tuple)){argpos=0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
@@ -10324,6 +10325,10 @@ ret+=s.substring(pos,fmtpos)
 pos=fmtpos
 if(s[pos+1]=='%'){ret+='%'
 pos+=2}else{nbph++
+if(nbph > 1){
+if((! _b_.isinstance(args,_b_.tuple))&&
+! is_mapping(args)){throw _b_.TypeError.$factory(
+"not enough arguments for format string")}}
 var fmt=parse_mod_format(s,type,pos)
 pos=fmt.end+1
 if(fmt.padding=='*'){
