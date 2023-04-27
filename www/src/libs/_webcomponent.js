@@ -116,8 +116,7 @@ function define(tag_name, cls){
                 webcomp.prototype[key] = (function(attr, klass){
                     return function(){
                         try{
-                            return $B.pyobj2jsobj(klass[attr]).call(null,
-                                $B.DOMNode.$factory(this), ...arguments)
+                            return $B.$call(klass[attr])($B.DOMNode.$factory(this), ...arguments)
                         }catch(err){
                             $B.show_error(err)
                         }
