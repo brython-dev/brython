@@ -2930,11 +2930,14 @@ function compile(pattern, flags){
 }
 
 function show(node, indent){
+    if(! _debug.value){
+        return
+    }
     indent = indent === undefined ? 0 : indent
     if(indent == 0){
-        log('root', node)
+        console.log('root', node)
     }
-    log(' '.repeat(indent) + node)
+    console.log(' '.repeat(indent) + node)
     if(node.items !== undefined){
         for(var item of node.items){
             show(item, indent + 1)
@@ -3628,10 +3631,24 @@ function create_fullmatch_pattern(pattern){
 }
 
 function match(pattern, string, pos, endpos, no_zero_width, groups){
-    // Follow the pattern tree structure
+    /*
+    `pattern` is either the result of compile(), or an element of such result.
+    An element can be a "compound" element (instance of Group, Choice, Case);
+    in this case it has an attribute "items", or a "simple" element (Char,
+    CharSeq, CharacterClass, etc)
+
+    `string` is an instance of StringObj
+
+    `pos` and `endpos` are the start and end positions in `string` where the
+    match is evaluated
+
+    `no_zero_width` is set by iterator() to avoid infinite loops
+
+    `groups` is set for the result of compile()
+    */
+
     if(_debug.value){
         console.log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
-        alert()
     }
     var string1 = string
     if(endpos !== undefined){
@@ -3705,7 +3722,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                            endpos)
                 }
                 var initial_groups = Object.keys(groups)
-                mos = []
+                mos = [] // list of MO or GroupMO objects, one per item in node.items
                 match_start = pos
                 if(_debug.value){
                     console.log("pattern", pattern.text,
@@ -3723,51 +3740,53 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                     if(mo){
                         if(item instanceof Group &&
                                 item.type == "lookahead_assertion"){
-                            log("lookahead assertion", item + '',
-                                "succeeds, mo", mo)
+                            if(_debug.value){
+                                console.log("lookahead assertion", item + '',
+                                    "succeeds, mo", mo)
+                            }
                         }else{
                             mos.push(mo)
                             pos = mo.end
                         }
-                        i++
-                    }else if(false && item instanceof Group &&
-                            item.type == "negative_lookahead_assertion"){
-                        log("negative lookahead assertion", item, "fails : ok !")
                         i++
                     }else{
                         if(_debug.value){
                             console.log('item ' + item, 'of group fails, nb_repeat',
                                 nb_repeat, 'node repeat', node.repeat)
                         }
+                        // try backtracking on the previous match objects
                         var backtrack = false
                         while(mos.length > 0){
                             var mo = mos.pop()
-                            if(mo.backtrack === undefined){
-                                log('no backtrack for', mo)
-                            }
                             if(_debug.value){
                                 console.log('try backtrack on mo', mo)
                             }
                             if(mo.backtrack(string, groups)){
-                                log('can backtrack, mo', mo)
+                                // mo.backtrack sets a new end position for mo
+                                if(_debug.value){
+                                    console.log('can backtrack, mo', mo)
+                                }
                                 mos.push(mo)
                                 i = mos.length
-                                log('mos', mos, 'restart at item', i)
+                                if(_debug.value){
+                                    console.log('mos', mos, 'restart at item', i)
+                                }
                                 pos = mo.end
                                 backtrack = true
                                 break
                             }
                         }
                         if(backtrack){
-                            log('backtrack ok')
+                            if(_debug.value){
+                                console.log('backtrack ok')
+                            }
                             continue
                         }else{
                             if(node.type == "negative_lookahead_assertion"){
                                 // If a negative lookahead assertion fails,
                                 // return a match
-                                var res = new GroupMO(node, start, matches,
+                                return new GroupMO(node, start, matches,
                                     string, groups, endpos)
-                                return res
                             }
                             if(nb_repeat == 0){
                                 // remove the groups introduced before
@@ -3779,7 +3798,9 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                                 }
                             }
                             if(nb_repeat >= node.repeat.min){
-                                log("enough repetitions for node", node)
+                                if(_debug.value){
+                                    console.log("enough repetitions for node", node)
+                                }
                                 if(node.type == "negative_lookahead_assertion"){
                                     return false
                                 }
@@ -3819,14 +3840,17 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                     var res = new GroupMO(node, start, matches, string,
                         groups, endpos)
                     if(res.start == res.end && no_zero_width){
-                        // no_zero_width is set when previous match in
-                        // iterator() had length 0; avoids infinite loops
+                        // no_zero_width is set in function* iterator() when
+                        // previous match in iterator() had length 0; avoids
+                        // infinite loops
                         return false
                     }
                     return res
                 }
-                log('loop on group', pattern.text, 'nb repeats', nb_repeat,
+                if(_debug.value){
+                    console.log('loop on group', pattern.text, 'nb repeats', nb_repeat,
                     'nb zero length', nb_zerolength_repeat, 'groups', groups)
+                }
                 if(nb_zerolength_repeat == 65535){
                     return matches.length == 0 ? false :
                        new GroupMO(node, start, matches, string, groups,
@@ -3835,6 +3859,8 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
             }
         }
     }else{
+        // BackReference, Char, CharSeq, CharacterClass, ConditionalBackref,
+        // Lookbehind, StringStart, StringEnd
         if(node.match === undefined){
             console.log('pas de match', node)
         }
@@ -3843,9 +3869,8 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
             console.log(node + '', "mo", mo)
         }
         if(mo){
-            var len = mo.group_len === undefined ? 1 : mo.group_len,
-                ix = node.non_greedy ? mo.nb_min : mo.nb_max,
-                end = pos + len * ix
+            // mo.group_len is set for BackReference
+            var len = mo.group_len === undefined ? 1 : mo.group_len
             return new MO(node, pos, mo, len)
         }else{
             return false
