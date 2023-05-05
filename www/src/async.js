@@ -14,6 +14,8 @@ coroutine.send = function(self){
         throw _b_.TypeError.$factory(msg)
     }
     var res = self.$func.apply(null, self.$args)
+    // restore frames after resolution
+    res.then(function(){if(self.$frames){$B.frames_stack = self.$frames}})
     return res
 }
 
@@ -49,6 +51,9 @@ $B.make_async = func => {
 
 $B.promise = function(obj){
     if(obj.__class__ === coroutine){
+        // store current frames stack, to be able to restore it when the
+        // promise resolves
+        obj.$frames = $B.frames_stack.slice()
         return coroutine.send(obj)
     }
     if(typeof obj == "function"){

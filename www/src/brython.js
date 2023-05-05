@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-04-17 15:21:05.205298"
-__BRYTHON__.timestamp=1681737665205
+__BRYTHON__.compiled_date="2023-05-05 22:05:20.874260"
+__BRYTHON__.timestamp=1683317120874
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6277,13 +6277,8 @@ del(frame[3][name])
 delete frame[3][name]}}
 if(!found){throw $B.name_error(name)}}
 var dir=_b_.dir=function(obj){if(obj===undefined){
-var frame=$B.last($B.frames_stack)
-locals_obj=frame[1],res=_b_.list.$factory(),pos=0
-for(var attr in locals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
-continue}
-res[pos++]=attr}
-_b_.list.sort(res)
-return res}
+var locals=_b_.locals()
+return _b_.sorted(locals)}
 check_nb_args_no_kw('dir',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
 if(obj.$is_class){
@@ -9335,7 +9330,7 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,_self)}
-if(js_attr.toString().startsWith('class ')){
+if(js_attr && js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
 console.log("attribute",attr,"of _self",_self,js_attr,args,arguments)
@@ -13862,6 +13857,7 @@ break}
 if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
 var frame=$B.last($B.frames_stack)
+if(! frame){return}
 if($B.debug > 0){var file=frame.__file__,lineno=frame.$lineno
 console.log("module",frame[2],"line",lineno)
 if($B.file_cache.hasOwnProperty(file)){var src=$B.file_cache[file]
@@ -14253,6 +14249,7 @@ if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
 self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
 throw _b_.TypeError.$factory(msg)}
 var res=self.$func.apply(null,self.$args)
+res.then(function(){if(self.$frames){$B.frames_stack=self.$frames}})
 return res}
 coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
@@ -14263,7 +14260,9 @@ return{
 __class__:coroutine,$args:args,$func:func,$stack:stack}}
 f.$infos=func.$infos
 return f}
-$B.promise=function(obj){if(obj.__class__===coroutine){return coroutine.send(obj)}
+$B.promise=function(obj){if(obj.__class__===coroutine){
+obj.$frames=$B.frames_stack.slice()
+return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
 ;
