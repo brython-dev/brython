@@ -89,6 +89,10 @@ import make_doc
 # update implementation in brython/__init__.py
 print("Update CPython brython package...")
 
+init_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
+with open(init_script, 'w', encoding='utf-8') as out:
+    out.write(f"__version__ = '{vname}'")
+
 br_script = os.path.join(pdir, 'setup', 'brython', '__main__.py')
 with open(br_script, encoding="utf-8") as f:
     content = f.read()

@@ -185,5 +185,31 @@ class DemoComponent2169(UIPLugin2169, BaseComponent2169):
 demo_comp = DemoComponent2169()
 assert t2169 == ['init2169']
 
+# issue 2181
+ann = []
+
+class DemoComponent2181:
+
+    x: str
+
+    def get_annotations(self):
+        cls = self.__class__
+        annotations = {}
+
+        bases = cls.__bases__ + (cls, )
+        for base in bases:
+            if hasattr(base, "__annotations__"):
+                annotations.update(base.__annotations__)
+        return annotations
+
+    def connectedCallback(self):
+        annotations = self.get_annotations()
+        for property_name, property_type in annotations.items():
+            ann.append((property_name, property_type))
+
+
+webcomponent.define("demo-component2181", DemoComponent2181)
+assert ann == [('x', str)], ann
+
 
 print('all tests passed...')

@@ -148,19 +148,19 @@ return false}
 return false}
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-05 22:05:20.874260"
-__BRYTHON__.timestamp=1683317120874
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
+__BRYTHON__.compiled_date="2023-04-27 19:26:50.787213"
+__BRYTHON__.timestamp=1682616410787
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4968,6 +4968,14 @@ yield char[1]}else{yield char}}})()
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return gen.next()}}}
+if(iterator instanceof String){
+return(function*(){var len=iterator.length,pos=0,string_ix=0,surrogate_ix=0
+while(string_ix < len){if(pos==iterator.surrogates[surrogate_ix]){var res=$B.make_String(iterator.substr(string_ix,2),[0])
+yield res
+string_ix++
+surrogate_ix++}else{yield iterator[string_ix]}
+string_ix++
+pos++}})()}
 if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator](),nb=0
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
@@ -6172,9 +6180,9 @@ var callable=_b_.callable=function(obj){check_nb_args_no_kw('callable',1,argumen
 return hasattr(obj,'__call__')}
 var chr=_b_.chr=function(i){check_nb_args_no_kw('chr',1,arguments)
 i=$B.PyNumber_Index(i)
-if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
-return String.fromCodePoint(0xD800 |(code >> 10))+
-String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
+if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000),s=String.fromCodePoint(0xD800 |(code >> 10))+
+String.fromCodePoint(0xDC00 |(code & 0x3FF))
+return $B.make_String(s,[0])}else{return String.fromCodePoint(i)}}
 var code=_b_.code=$B.make_class("code")
 code.__repr__=code.__str__=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
 `line ${_self.co_firstlineno || 1}>`}
@@ -6277,8 +6285,13 @@ del(frame[3][name])
 delete frame[3][name]}}
 if(!found){throw $B.name_error(name)}}
 var dir=_b_.dir=function(obj){if(obj===undefined){
-var locals=_b_.locals()
-return _b_.sorted(locals)}
+var frame=$B.last($B.frames_stack)
+locals_obj=frame[1],res=_b_.list.$factory(),pos=0
+for(var attr in locals_obj){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
+continue}
+res[pos++]=attr}
+_b_.list.sort(res)
+return res}
 check_nb_args_no_kw('dir',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
 if(obj.$is_class){
@@ -6838,7 +6851,7 @@ var oct=_b_.oct=function(obj){check_nb_args_no_kw('oct',1,arguments)
 return bin_hex_oct(8,obj)}
 var ord=_b_.ord=function(c){check_nb_args_no_kw('ord',1,arguments)
 if(typeof c.valueOf()=='string'){if(c.length==1){return c.charCodeAt(0)}else if(c.length==2){var code=c.codePointAt(0)
-if((code > 0x10000 && code <=0x1FFFF)||
+if((code >=0x10000 && code <=0x1FFFF)||
 (code >=0x20000 && code <=0x2FFFF)||
 (code >=0x30000 && code <=0x3FFFF)||
 (code >=0xD0000 && code <=0xDFFFF)||
@@ -9330,7 +9343,7 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,_self)}
-if(js_attr && js_attr.toString().startsWith('class ')){
+if(js_attr !==null && js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
 console.log("attribute",attr,"of _self",_self,js_attr,args,arguments)
@@ -10021,7 +10034,8 @@ return s.codepoints=cps}
 str.__add__=function(_self,other){if(! _b_.isinstance(other,str)){try{return $B.$getattr(other,"__radd__")(_self)}catch(err){throw _b_.TypeError.$factory("Can't convert "+
 $B.class_name(other)+" to str implicitly")}}
 [_self,other]=to_string([_self,other])
-return $B.String(_self+other)}
+var res=$B.String(_self+other)
+return res}
 str.__contains__=function(_self,item){if(! _b_.isinstance(item,str)){throw _b_.TypeError.$factory("'in <string>' requires "+
 "string as left operand, not "+$B.class_name(item))}
 [_self,item]=to_string([_self,item])
@@ -10296,6 +10310,7 @@ if(flags.left && flags.pad_char=='0'){
 flags.pad_char=' '}
 return flags}else{throw _b_.ValueError.$factory(`invalid character in format: ${char}`)}}
 throw _b_.ValueError.$factory('invalid format')}
+function is_mapping(obj){return _b_.hasattr(obj,'keys')&& _b_.hasattr(obj,'__getitem__')}
 $B.printf_format=function(s,type,args){
 var length=s.length,pos=0,argpos=null,getitem
 if(_b_.isinstance(args,_b_.tuple)){argpos=0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
@@ -10310,6 +10325,10 @@ ret+=s.substring(pos,fmtpos)
 pos=fmtpos
 if(s[pos+1]=='%'){ret+='%'
 pos+=2}else{nbph++
+if(nbph > 1){
+if((! _b_.isinstance(args,_b_.tuple))&&
+! is_mapping(args)){throw _b_.TypeError.$factory(
+"not enough arguments for format string")}}
 var fmt=parse_mod_format(s,type,pos)
 pos=fmt.end+1
 if(fmt.padding=='*'){
@@ -13857,7 +13876,6 @@ break}
 if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
 var frame=$B.last($B.frames_stack)
-if(! frame){return}
 if($B.debug > 0){var file=frame.__file__,lineno=frame.$lineno
 console.log("module",frame[2],"line",lineno)
 if($B.file_cache.hasOwnProperty(file)){var src=$B.file_cache[file]
@@ -14249,7 +14267,6 @@ if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
 self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
 throw _b_.TypeError.$factory(msg)}
 var res=self.$func.apply(null,self.$args)
-res.then(function(){if(self.$frames){$B.frames_stack=self.$frames}})
 return res}
 coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
@@ -14260,13 +14277,11 @@ return{
 __class__:coroutine,$args:args,$func:func,$stack:stack}}
 f.$infos=func.$infos
 return f}
-$B.promise=function(obj){if(obj.__class__===coroutine){
-obj.$frames=$B.frames_stack.slice()
-return coroutine.send(obj)}
+$B.promise=function(obj){if(obj.__class__===coroutine){return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
 ;
-(function($B){$B.builtin_class_flags={builtins:{1073763584:['PendingDeprecationWarning','Warning','FileExistsError','UnicodeError','NotADirectoryError','UnicodeTranslateError','InterruptedError','UnboundLocalError','BlockingIOError','EncodingWarning','ReferenceError','BaseExceptionGroup','LookupError','RuntimeError','ValueError','NotImplementedError','RuntimeWarning','ConnectionRefusedError','KeyError','ProcessLookupError','ArithmeticError','SystemExit','DeprecationWarning','PermissionError','TimeoutError','ZeroDivisionError','ResourceWarning','IndexError','UserWarning','ChildProcessError','SystemError','StopAsyncIteration','ConnectionResetError','ConnectionAbortedError','MemoryError','UnicodeWarning','UnicodeEncodeError','IsADirectoryError','SyntaxWarning','AssertionError','KeyboardInterrupt','OSError','UnicodeDecodeError','BufferError','ConnectionError','TabError','StopIteration','EOFError','FileNotFoundError','BytesWarning','IndentationError','RecursionError','OverflowError','SyntaxError','WindowsError','EnvironmentError','FutureWarning','GeneratorExit','IOError','ImportWarning','BrokenPipeError','FloatingPointError'],1074287872:['Exception','BaseException','NameError','ImportError','TypeError','AttributeError','ModuleNotFoundError'],1073763840:['ExceptionGroup'],21500160:['bool'],4723968:['float','bytearray'],138941696:['bytes'],546048:['property','map','staticmethod','classmethod'],5376:['complex'],541611328:['dict'],21760:['enumerate','filter','reversed','super','zip'],4740352:['frozenset','set'],21501184:['int'],38294816:['list'],545056:['memoryview'],529664:['object'],528672:['range'],20736:['slice'],273159424:['str'],71849248:['tuple'],2148031744:['type'],},types:{20864:['async_generator','classmethod_descriptor','method-wrapper'],547200:['builtin_function_or_method'],20736:['cell'],4352:['code'],545152:['frame','getset_descriptor','generator','member_descriptor','coroutine'],528640:['ellipsis','NotImplementedType','NoneType'],678144:['function'],545088:['mappingproxy'],153984:['method_descriptor'],22784:['method'],546048:['module'],545024:['traceback'],676224:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1073763584:['ArithmeticError','ReferenceError','ChildProcessError','PermissionError','WindowsError','InterruptedError','UnicodeError','LookupError','EOFError','FileNotFoundError','MemoryError','EnvironmentError','IsADirectoryError','UnboundLocalError','KeyboardInterrupt','ResourceWarning','IndexError','FloatingPointError','UnicodeWarning','OSError','BlockingIOError','ImportWarning','NotImplementedError','SystemExit','UnicodeDecodeError','UnicodeTranslateError','UserWarning','ConnectionAbortedError','Warning','SystemError','TimeoutError','StopIteration','EncodingWarning','RuntimeError','IOError','SyntaxWarning','GeneratorExit','NotADirectoryError','ZeroDivisionError','BrokenPipeError','AssertionError','SyntaxError','FileExistsError','StopAsyncIteration','IndentationError','ConnectionError','UnicodeEncodeError','ValueError','DeprecationWarning','TabError','ProcessLookupError','BufferError','RuntimeWarning','ConnectionResetError','PendingDeprecationWarning','OverflowError','ConnectionRefusedError','FutureWarning','RecursionError','KeyError','BytesWarning','BaseExceptionGroup'],1074287872:['BaseException','TypeError','NameError','AttributeError','ImportError','ModuleNotFoundError','Exception'],1073763840:['ExceptionGroup'],21500160:['bool'],4723968:['float','bytearray'],138941696:['bytes'],546048:['property','classmethod','staticmethod','map'],5376:['complex'],541611328:['dict'],21760:['filter','enumerate','super','reversed','zip'],4740352:['frozenset','set'],21501184:['int'],38294816:['list'],545056:['memoryview'],529664:['object'],528672:['range'],20736:['slice'],273159424:['str'],71849248:['tuple'],2148031744:['type'],},types:{20864:['classmethod_descriptor','async_generator','method-wrapper'],547200:['builtin_function_or_method'],20736:['cell'],4352:['code'],545152:['generator','getset_descriptor','member_descriptor','coroutine','frame'],528640:['NotImplementedType','ellipsis','NoneType'],678144:['function'],545088:['mappingproxy'],153984:['method_descriptor'],22784:['method'],546048:['module'],545024:['traceback'],676224:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
  ;(function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
