@@ -467,19 +467,8 @@ $B.$delete = function(name, is_global){
 var dir = _b_.dir = function(obj){
     if(obj === undefined){
         // if dir is called without arguments, use locals
-        var frame = $B.last($B.frames_stack)
-            locals_obj = frame[1],
-            res = _b_.list.$factory(),
-            pos = 0
-        for(var attr in locals_obj){
-            if(attr.charAt(0) == '$' && attr.charAt(1) != '$') {
-                // exclude internal attributes set by Brython
-                continue
-            }
-            res[pos++] = attr
-        }
-        _b_.list.sort(res)
-        return res
+        var locals = _b_.locals()
+        return _b_.sorted(locals)
     }
 
     check_nb_args_no_kw('dir', 1, arguments)
