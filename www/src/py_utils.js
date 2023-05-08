@@ -696,8 +696,8 @@ $B.$JS2Py = function(src){
 // warning
 $B.warn = function(klass, message, filename, token){
     var warning = klass.$factory(message)
+    warning.filename = filename
     if(klass === _b_.SyntaxWarning){
-        warning.filename = filename
         warning.lineno = token.start[0]
         warning.offset = token.start[1]
         warning.end_lineno = token.end[0]

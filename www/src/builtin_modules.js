@@ -776,6 +776,17 @@
         ],
         warn: function(message){
             // Issue a warning, or maybe ignore it or raise an exception.
+            var $ = $B.args('warn', 4,
+                            {message: null, category: null, stacklevel: null, source: null},
+                            ['message', 'category', 'stacklevel', 'source'],
+                            arguments, {category: _b_.None, stacklevel: 1, source: _b_.None},
+                            null, null),
+                    message = $.message,
+                    category = $.category,
+                    stacklevel = $.stacklevel
+            if(_b_.isinstance(message, _b_.Warning)){
+                category = $B.get_class(message)
+            }
             var filters
             if($B.imported.warnings){
                 filters = $B.imported.warnings.filters
@@ -792,8 +803,7 @@
                 syntax_error.line = message.line
                 throw syntax_error
             }
-            var category = message.__class__ || $B.get_class(message),
-                warning_message
+            var warning_message
             if(category === _b_.SyntaxWarning){
                 var file = message.filename,
                     lineno = message.lineno,
@@ -810,7 +820,8 @@
                     _category_name: category.__name__
                 }
             }else{
-                var frame = $B.imported._sys.Getframe(),
+                var frame_rank = Math.max(0, $B.frames_stack.length - stacklevel),
+                    frame = $B.frames_stack[frame_rank],
                     file = frame.__file__,
                     f_code = $B._frame.f_code.__get__(frame),
                     lineno = frame.$lineno,

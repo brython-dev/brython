@@ -265,7 +265,7 @@ class Interpreter:
 
     def insert(self, text):
         # used for header text and prompts
-        pre = html.PRE(style="display:inline;")
+        pre = html.PRE(style="display:inline;white-space:pre-wrap;")
         pre.text = text
         if self.cc_color is not None:
             pre.style.color = self.cc_color
@@ -389,13 +389,12 @@ class Interpreter:
                     self.insert_continuation()
                     self._status = "block"
                 else:
+                    self.insert_cr()
                     try:
                         code = compile(currentLine, '<stdin>', 'exec')
                         exec(code, self.globals, self.locals)
-                    except:
+                    except Exception as exc:
                         self.print_tb(msg)
-                    else:
-                        self.insert_cr()
                     self.insert_prompt()
                     self._status = "main"
             except Exception as exc:
@@ -506,7 +505,7 @@ class Interpreter:
     def print_tb(self, exc):
         trace = Trace(exc)
         traceback.print_exc(file=trace)
-        self.write(trace.format())
+        self.write(trace.format().lstrip())
         self.insert_cr()
 
 
