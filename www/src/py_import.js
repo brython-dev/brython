@@ -1170,7 +1170,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // mod_name == "_frozen_importlib_external"
+    var test = false // fromlist.indexOf('chainmap') > -1 //mod_name == "_frozen_importlib_external"
     if(test){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()
@@ -1338,7 +1338,15 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 "future feature " + name + " is not defined")
                             throw exc
                         }
+                        // calculate suggestion based on module namespace 
+                        // (new in Python 3.12)
+                        var $frame = [mod_name, modobj, mod_name, modobj],
+                            suggestion = $B.offer_suggestions_for_name_error({name}, $frame)
                         if($err3.$py_error){
+                            $err3.__class__ = _b_.ImportError
+                            $err3.args[0] = `cannot import name '${name}' ` +
+                                `from '${mod_name}' (${modobj.__file__})`
+                            $err3.$suggestion = suggestion
                             throw $err3
                         }
                         if($B.debug > 1){

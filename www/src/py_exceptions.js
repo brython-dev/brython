@@ -718,9 +718,9 @@ function offer_suggestions_for_attribute_error(exc){
     return suggestions
 }
 
-function offer_suggestions_for_name_error(exc){
+function offer_suggestions_for_name_error(exc, frame){
     var name = exc.name,
-        frame = $B.last(exc.$stack)
+        frame = frame || $B.last(exc.$stack)
     if(typeof name != 'string'){
         return
     }
@@ -736,7 +736,17 @@ function offer_suggestions_for_name_error(exc){
             return suggestion
         }
     }
+    if(frame[4] && frame[4].$is_method){
+        // new in 3.12
+        var instance_name = frame[4].$infos.__code__.co_varnames[0],
+            instance = frame[1][instance_name]
+        if(_b_.hasattr(instance, name)){
+            return `self.${name}`
+        }
+    }
 }
+
+$B.offer_suggestions_for_name_error = offer_suggestions_for_name_error
 
 // PEP 654
 var exc_group_code =
@@ -1008,11 +1018,19 @@ $B.error_trace = function(err){
             if(suggestion){
                 trace += `. Did you mean '${suggestion}'?`
             }
+            if($B.stdlib_module_names.indexOf(err.name) > -1){
+                // new in 3.12
+                trace += `. Did you forget to import '${err.name}'?`
+            }
         }else if(err.__class__ === _b_.AttributeError){
             var suggestion = offer_suggestions_for_attribute_error(err)
             if(suggestion){
                 trace += `. Did you mean: '${suggestion}'?`
             }
+        }else if(err.__class__ === _b_.ImportError){
+            if(err.$suggestion){
+                trace += `. Did you mean: '${err.$suggestion}'?`
+            }                
         }
     }else{
         trace = err + ""

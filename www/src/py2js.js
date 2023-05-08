@@ -4081,23 +4081,27 @@ ImportCtx.prototype.transition = function(token, value){
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
-               new ImportedModuleCtx(context, value)
-               context.expect = ','
-               return context
+                if(context.order_error){
+                    raise_syntax_error(context,
+                        "Did you mean to use 'from ... import ...' instead?")
+                }
+                new ImportedModuleCtx(context, value)
+                context.expect = ','
+                return context
             }
             if(context.expect == 'qual'){
-               context.expect = ','
-               context.tree[context.tree.length - 1].name +=
-                   '.' + value
-               context.tree[context.tree.length - 1].alias +=
-                   '.' + value
-               return context
+                context.expect = ','
+                context.tree[context.tree.length - 1].name +=
+                    '.' + value
+                context.tree[context.tree.length - 1].alias +=
+                    '.' + value
+                return context
             }
             if(context.expect == 'alias'){
-               context.expect = ','
-               context.tree[context.tree.length - 1].alias =
-                   value
-               return context
+                context.expect = ','
+                context.tree[context.tree.length - 1].alias =
+                    value
+                return context
             }
             break
         case '.':
@@ -4121,6 +4125,15 @@ ImportCtx.prototype.transition = function(token, value){
         case 'eol':
             if(context.expect == ','){
                return transition(context.parent, token)
+            }
+            break
+        case 'from':
+            // new in 3.12 to prepare error message in case of
+            // "import A from B" instead of "from B import A"
+            if(context.expect == ','){
+                context.expect = 'id'
+                context.order_error = true
+                return context
             }
             break
     }
