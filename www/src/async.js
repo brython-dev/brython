@@ -15,7 +15,8 @@ coroutine.send = function(self){
     }
     var res = self.$func.apply(null, self.$args)
     // restore frames after resolution
-    res.then(function(){if(self.$frames){$B.frames_stack = self.$frames}})
+    res.then(function(){if(self.$frames){$B.frames_stack = self.$frames}}).
+        catch(function(err){if(self.$frames){$B.frames_stack = self.$frames}})
     return res
 }
 
@@ -34,13 +35,11 @@ $B.make_async = func => {
         return func
     }
     var f = function(){
-        var args = arguments,
-            stack = $B.frames_stack.slice()
+        var args = arguments
         return {
             __class__: coroutine,
             $args: args,
-            $func: func,
-            $stack: stack
+            $func: func
         }
     }
     f.$infos = func.$infos

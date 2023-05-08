@@ -1837,7 +1837,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `}catch(err){
     $B.set_exc(err, frame)\n`
 
-    if(func_scope.needs_frames || is_async){
+    if(func_scope.needs_frames){
         // set exception $stack and $linenos
         js += `err.$stack = _frames\n` +
               `_linenos[_linenos.length - 1] = frame.$lineno\n` +
