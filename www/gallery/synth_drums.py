@@ -6,18 +6,27 @@ import random
 
 from browser import bind, console, document, html, timer, window
 
+class Config:
+
+    context = None
+
+
+def setup():
+    if Config.context is None:
+        Config.context = window.AudioContext.new()
+
 kick_freq = document['kick_freq']
 
 class Kick:
 
-    def __init__(self, context):
-        self.context = context
+    def __init__(self):
+        setup()
 
     def setup(self):
-      self.osc = self.context.createOscillator()
-      self.gain = self.context.createGain()
+      self.osc = Config.context.createOscillator()
+      self.gain = Config.context.createGain()
       self.osc.connect(self.gain)
-      self.gain.connect(self.context.destination)
+      self.gain.connect(Config.context.destination)
 
     def trigger(self, time):
       self.setup()
@@ -35,27 +44,28 @@ class Kick:
 
 class Snare:
 
-    def __init__(self, context):
-      self.context = context
+    def __init__(self):
+      setup()
       self.setup()
 
     def setup(self):
-      self.noise = self.context.createBufferSource()
+      self.noise = Config.context.createBufferSource()
       self.noise.buffer = self.noiseBuffer()
 
-      noiseFilter = self.context.createBiquadFilter()
+      noiseFilter = Config.context.createBiquadFilter()
       noiseFilter.type = 'highpass'
       noiseFilter.frequency.value = 1000
       self.noise.connect(noiseFilter)
 
-      self.noiseEnvelope = self.context.createGain()
+      self.noiseEnvelope = Config.context.createGain()
       noiseFilter.connect(self.noiseEnvelope)
 
-      self.noiseEnvelope.connect(self.context.destination)
+      self.noiseEnvelope.connect(Config.context.destination)
 
     def noiseBuffer(self):
-      bufferSize = self.context.sampleRate
-      buffer = self.context.createBuffer(1, bufferSize, self.context.sampleRate)
+      bufferSize = Config.context.sampleRate
+      buffer = Config.context.createBuffer(1, bufferSize,
+                                           Config.context.sampleRate)
       output = buffer.getChannelData(0)
 
       for i in range(bufferSize):
@@ -65,12 +75,12 @@ class Snare:
 
     def trigger(self, time):
 
-      self.osc = self.context.createOscillator()
+      self.osc = Config.context.createOscillator()
       self.osc.type = 'triangle'
 
-      self.oscEnvelope = self.context.createGain()
+      self.oscEnvelope = Config.context.createGain()
       self.osc.connect(self.oscEnvelope)
-      self.oscEnvelope.connect(self.context.destination)
+      self.oscEnvelope.connect(Config.context.destination)
 
       self.noiseEnvelope.gain.setValueAtTime(1, time)
       self.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2)
@@ -88,18 +98,22 @@ class HiHat:
 
     buffer = None
 
-    def __init__(self, context):
-      self.context = context
+    def setup(self, time):
+        self.source = Config.context.createBufferSource()
+        self.source.buffer = self.buffer
+        self.source.connect(Config.context.destination)
+        self.play(time)
 
-    def setup(self):
-      self.source = self.context.createBufferSource()
-      self.source.buffer = self.buffer
-      self.source.connect(self.context.destination)
+    def trigger(self, time=None):
+        if self.buffer is None:
+            Config.context = window.AudioContext.new()
+            sampleLoader('samples/hihat.wav', HiHat, lambda: self.setup(time))
+        else:
+            self.setup(time)
 
-    def trigger(self, time):
-      self.setup()
-
-      self.source.start(time)
+    def play(self, time):
+        time = Config.context.currentTime if time is None else time
+        self.source.start(time)
 
 score = html.TABLE()
 rows = {}
@@ -121,40 +135,40 @@ snare_inputs = rows[Snare].select('INPUT')
 for t in [2, 3, 6]:
     snare_inputs[t].checked = True
 
-def sampleLoader(url, context, cls):
+
+def sampleLoader(url, cls, callback):
     request = window.XMLHttpRequest.new()
     request.open("GET", url, True)
     request.responseType = "arraybuffer"
 
     def f(buffer):
         cls.buffer = buffer
+        callback()
 
     @bind(request, 'load')
     def load(ev):
-        context.decodeAudioData(request.response, f)
+        Config.context.decodeAudioData(request.response, f)
 
     request.send()
-
-context = window.AudioContext.new()
 
 
 @bind('#play_kick', 'click')
 def play_kick(ev):
-    kick = Kick(context)
-    kick.trigger(context.currentTime)
+    kick = Kick()
+    kick.trigger(Config.context.currentTime)
 
 @bind('#play_snare', 'click')
 def play_snare(ev):
-    snare = Snare(context)
-    snare.trigger(context.currentTime)
+    snare = Snare()
+    snare.trigger(Config.context.currentTime)
 
 @bind('#play_hihat', 'click')
 def play_hihat(ev):
-    hihat = HiHat(context)
-    hihat.trigger(context.currentTime)
+    hihat = HiHat()
+    hihat.trigger()
 
 window.playing = False
-sampleLoader('samples/hihat.wav', context, HiHat)
+#sampleLoader('samples/hihat.wav', context, HiHat)
 
 look_ahead = 0.1
 schedule_period = 1000 * 0.05 # milliseconds
@@ -182,26 +196,27 @@ def get_seq():
 
 @bind('#start_loop', 'click')
 def start_loop(ev):
+    setup()
     if Sequencer.running:
         return
     Sequencer.running = True
     bpm = get_bpm()
     seq = get_seq()
     seq1 = [[instrument, t * 60 / bpm] for (instrument, t) in seq]
-    loop(context.currentTime, seq, seq1, 0)
+    loop(Config.context.currentTime, seq, seq1, 0)
 
 @bind('#end_loop', 'click')
 def end_loop(ev):
     Sequencer.running = False
 
 def loop(t0, seq, seq1, i):
-    dt = context.currentTime - t0
+    dt = Config.context.currentTime - t0
 
     if not Sequencer.running:
         return
 
     if dt > seq1[i][1] - look_ahead:
-        instrument = seq1[i][0](context)
+        instrument = seq1[i][0]()
         t = seq1[i][1]
         start = t0 + t
         instrument.trigger(start + 0.1)
