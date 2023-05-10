@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+</body>
+</html><!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Drum synthesis by chrislo</title>
+
+    <script src="/src/brython.js"></script>
+    <script src="/src/brython_stdlib.js"></script>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <!-- link rel="stylesheet" href="stylesheets/pygment_trac.css" -->
+    <link rel="stylesheet" href="stylesheets/buttons-min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body onload="brython()">
+    <div class="wrapper">
+
+      <section>
+        <h3>Drum Synthesis.</h3>
+
+      <p>
+        <button id="play_kick" class="pure-button">KICK</button><input type="range" id="kick_freq" min="100" max="300" step="1"><br>
+        <button id="play_snare" class="pure-button">SNARE</button><br>
+        <button id="play_hihat" class="pure-button">HIHAT</button>
+      </p>
+      <p>
+        <button id="start_loop" class="pure-button">LOOP</button>
+        <button id="end_loop" class="pure-button">STOP</button>
+        <input type="range" id="bpm" min="30" max="300" step="1">
+      </p>
+      </section>
+
+      
+    </div>
+    <script type="text/python" src="synth_drums.py"></script>
+  </body>
+</html>
