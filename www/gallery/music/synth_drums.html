@@ -12,8 +12,43 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Drum synthesis by chrislo</title>
 
-    <script src="/src/brython.js"></script>
-    <script src="/src/brython_stdlib.js"></script>
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+
+<script type="text/javascript" src="/src/py_ast_classes.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+<script type="text/javascript" src="/src/py_flags.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <!-- link rel="stylesheet" href="stylesheets/pygment_trac.css" -->
@@ -27,21 +62,23 @@
     <div class="wrapper">
 
       <section>
-        <h3>Drum Synthesis.</h3>
+        <div id="score">
+      </section>
+      
+      <section>
 
       <p>
-        <button id="play_kick" class="pure-button">KICK</button><input type="range" id="kick_freq" min="100" max="300" step="1"><br>
-        <button id="play_snare" class="pure-button">SNARE</button><br>
-        <button id="play_hihat" class="pure-button">HIHAT</button>
+        Kick frequency<input type="range" id="kick_freq" min="100" max="300" step="1"><br>
+
       </p>
       <p>
         <button id="start_loop" class="pure-button">LOOP</button>
         <button id="end_loop" class="pure-button">STOP</button>
-        <input type="range" id="bpm" min="30" max="300" step="1">
+        <input type="range" id="bpm" min="30" max="500" step="1">
       </p>
       </section>
 
-      
+
     </div>
     <script type="text/python" src="synth_drums.py"></script>
   </body>

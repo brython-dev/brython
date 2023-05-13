@@ -6,6 +6,8 @@ import random
 
 from browser import bind, console, document, html, timer, window
 
+import drum_score
+
 class Config:
 
     context = None
@@ -18,6 +20,8 @@ def setup():
 kick_freq = document['kick_freq']
 
 class Kick:
+
+    checked = 'o'
 
     def __init__(self):
         setup()
@@ -43,6 +47,8 @@ class Kick:
 
 
 class Snare:
+
+    checked = 'o'
 
     def __init__(self):
       setup()
@@ -97,6 +103,7 @@ class Snare:
 class HiHat:
 
     buffer = None
+    checked = 'x'
 
     def setup(self, time):
         self.source = Config.context.createBufferSource()
@@ -115,25 +122,9 @@ class HiHat:
         time = Config.context.currentTime if time is None else time
         self.source.start(time)
 
-score = html.TABLE()
-rows = {}
 instruments = [HiHat, Snare, Kick]
 
-for instrument in instruments:
-    score <= (row := html.TR(html.TD(instrument.__name__)))
-    for i in range(8):
-        row <= html.TD(html.INPUT(type="checkbox"))
-    rows[instrument] = row
-
-document <= score
-
-kick_inputs = rows[Kick].select('INPUT')
-for t in [0, 1, 4]:
-    kick_inputs[t].checked = True
-
-snare_inputs = rows[Snare].select('INPUT')
-for t in [2, 3, 6]:
-    snare_inputs[t].checked = True
+document['score'] <= score := drum_score.Score(instruments)
 
 
 def sampleLoader(url, cls, callback):
@@ -167,65 +158,61 @@ def play_hihat(ev):
     hihat = HiHat()
     hihat.trigger()
 
-window.playing = False
-#sampleLoader('samples/hihat.wav', context, HiHat)
 
 look_ahead = 0.1
 schedule_period = 1000 * 0.05 # milliseconds
 
 bpm_control = document['bpm']
 
+@bind('#bpm', 'input')
+def change_bpm(ev):
+    global seq
+    seq = score.get_seq(int(ev.target.value))
+
 def get_bpm():
     return int(bpm_control.value)
-
-seq = [[Kick, 1], [Kick, 1.5], [Snare, 2], [Snare, 2.5], [Kick, 3], [Snare, 4]]
 
 class Sequencer:
 
     running = False
 
 def get_seq():
-    seq = []
-    for instrument in instruments:
-        cells = rows[instrument].select('INPUT')
-        for i, cell in enumerate(cells):
-            if cell.checked:
-                seq.append([instrument, (i + 2) / 2])
-    seq.sort(key=lambda x: x[1])
-    return seq
+    global seq
+    seq = score.get_seq(get_bpm())
 
 @bind('#start_loop', 'click')
 def start_loop(ev):
+    global seq
     setup()
     if Sequencer.running:
         return
+    seq = score.get_seq(get_bpm())
+    if not seq:
+        return
     Sequencer.running = True
-    bpm = get_bpm()
-    seq = get_seq()
-    seq1 = [[instrument, t * 60 / bpm] for (instrument, t) in seq]
-    loop(Config.context.currentTime, seq, seq1, 0)
+    loop(Config.context.currentTime, 0)
 
 @bind('#end_loop', 'click')
 def end_loop(ev):
     Sequencer.running = False
 
-def loop(t0, seq, seq1, i):
+def loop(t0, i):
+    global seq
     dt = Config.context.currentTime - t0
 
     if not Sequencer.running:
         return
 
-    if dt > seq1[i][1] - look_ahead:
-        instrument = seq1[i][0]()
-        t = seq1[i][1]
+    if dt > seq[i][1] - look_ahead:
+        instrument = seq[i][0]()
+        t = seq[i][1]
         start = t0 + t
         instrument.trigger(start + 0.1)
         i += 1
         if i >= len(seq):
             i = 0
             bpm = get_bpm()
-            t0 = t0 + 4 * 60 / bpm
-            seq = get_seq()
-            seq1 = [[instrument, t * 60 / bpm] for (instrument, t) in seq]
+            t0 = t0 + 16 * 30 / bpm
+            seq = score.get_seq(bpm)
 
-    timer.set_timeout(loop, schedule_period, t0, seq, seq1, i)
+    timer.set_timeout(loop, schedule_period, t0, i)

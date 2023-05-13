@@ -70,15 +70,7 @@ pre {
   overflow-x: auto;
 }
 
-table {
-  border-collapse:collapse;
-}
 
-th, td {
-  text-align:left;
-  padding:5px 10px;
-  border-bottom:1px solid #e5e5e5;
-}
 
 dt {
   color:#444;
@@ -250,4 +242,14 @@ footer {
     font-size:12pt;
     color:#444;
   }
+}
+
+.score {
+    background-color: #888;
+    color: #000;
+}
+
+.note {
+    width: 15px;
+    text-align: center;
 }
