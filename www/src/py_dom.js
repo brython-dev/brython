@@ -701,32 +701,43 @@ DOMNode.__getattribute__ = function(self, attr){
         return res
     }
 
+    var klass = $B.get_class(self)
+
     var property = self[attr]
 
     if(property !== undefined && self.__class__ &&
-            self.__class__.__module__ != "browser.html" &&
-            self.__class__.__module__ != "browser.svg" &&
-            ! self.__class__.$webcomponent){
-        // cf. issue #1543 : if an element has the attribute "attr" set and
-        // its class has an attribute of the same name, show a warning that
-        // the class attribute is ignored
-        var bases = self.__class__.__bases__
-        var show_message = true
-        for(var base of bases){
-            if(base.__module__ == "browser.html"){
-                show_message = false
-                break
+            klass.__module__ != "browser.html" &&
+            klass.__module__ != "browser.svg" &&
+            ! klass.$webcomponent){
+        var from_class = $B.$getattr(klass, attr, null)
+        if(from_class !== null){
+            property = from_class
+            if(typeof from_class === 'function'){
+                return property.bind(self, self)
             }
-        }
-        if(show_message){
-            var from_class = $B.$getattr(self.__class__, attr, _b_.None)
-            if(from_class !== _b_.None){
-                var frame = $B.last($B.frames_stack),
-                    line = frame.$lineno
-                console.info("Warning: line " + line + ", " + self.tagName +
-                    " element has instance attribute '" + attr + "' set." +
-                    " Attribute of class " + $B.class_name(self) +
-                    " is ignored.")
+        }else{
+
+            // cf. issue #1543 : if an element has the attribute "attr" set and
+            // its class has an attribute of the same name, show a warning that
+            // the class attribute is ignored
+            var bases = self.__class__.__bases__
+            var show_message = true
+            for(var base of bases){
+                if(base.__module__ == "browser.html"){
+                    show_message = false
+                    break
+                }
+            }
+            if(show_message){
+                var from_class = $B.$getattr(self.__class__, attr, _b_.None)
+                if(from_class !== _b_.None){
+                    var frame = $B.last($B.frames_stack),
+                        line = frame.$lineno
+                    console.info("Warning: line " + line + ", " + self.tagName +
+                        " element has instance attribute '" + attr + "' set." +
+                        " Attribute of class " + $B.class_name(self) +
+                        " is ignored.")
+                }
             }
         }
     }
@@ -927,7 +938,7 @@ DOMNode.__mul__ = function(self,other){
         var res = TagSum.$factory()
         var pos = res.children.length
         for(var i = 0; i < other.valueOf(); i++){
-            res.children[pos++] = DOMNode.clone(self)()
+            res.children[pos++] = DOMNode.clone(self)
         }
         return res
     }
@@ -1123,6 +1134,7 @@ DOMNode.bind = function(self, event){
             try{
                 return f($DOMEvent(ev))
             }catch(err){
+
                 if(err.__class__ !== undefined){
                     $B.handle_error(err)
                 }else{
@@ -1668,8 +1680,8 @@ TagSum.__add__ = function(self, other){
 
 TagSum.__radd__ = function(self, other){
     var res = TagSum.$factory()
-    res.children = self.children.concat(
-        DOMNode.$factory(document.createTextNode(other)))
+    res.children = self.children.slice()
+    res.children.splice(0, 0, DOMNode.$factory(document.createTextNode(other)))
     return res
 }
 
