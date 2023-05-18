@@ -773,6 +773,15 @@ DOMNode.__getattribute__ = function(self, attr){
             return _b_.None
         }
         if(typeof res === "function"){
+            if(self.__class__ && self.__class__.$webcomponent){
+                var method = $B.$getattr(self.__class__, attr, null)
+                if(method !== null){
+                    // element is a web component, function is a method of the
+                    // webcomp class: call it with Python arguments, bind to
+                    // self. Cf. issue #2190
+                    return res.bind(self)
+                }
+            }
             if(res.$is_func){
                 // If the attribute was set in __setattr__ (elt.foo = func),
                 // then getattr(elt, "foo") must be "func"

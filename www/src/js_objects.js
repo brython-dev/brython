@@ -272,6 +272,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             // javascript.extends
             return pyobj
         }
+        
         return function(){
             try{
                 var args = []

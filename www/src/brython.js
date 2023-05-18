@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-11 08:35:48.867336"
-__BRYTHON__.timestamp=1683786948867
+__BRYTHON__.compiled_date="2023-05-18 08:58:57.159145"
+__BRYTHON__.timestamp=1684393137158
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13750,11 +13750,14 @@ if(location.search !=""){for(var i=0;i < qs.length;i++){var pos=qs[i].search("="
 if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(key)
 res._values[key]=[value]}}}
 return res}
+var klass=$B.get_class(self)
 var property=self[attr]
 if(property !==undefined && self.__class__ &&
-self.__class__.__module__ !="browser.html" &&
-self.__class__.__module__ !="browser.svg" &&
-! self.__class__.$webcomponent){
+klass.__module__ !="browser.html" &&
+klass.__module__ !="browser.svg" &&
+! klass.$webcomponent){var from_class=$B.$getattr(klass,attr,null)
+if(from_class !==null){property=from_class
+if(typeof from_class==='function'){return property.bind(self,self)}}else{
 var bases=self.__class__.__bases__
 var show_message=true
 for(var base of bases){if(base.__module__=="browser.html"){show_message=false
@@ -13764,7 +13767,7 @@ if(from_class !==_b_.None){var frame=$B.last($B.frames_stack),line=frame.$lineno
 console.info("Warning: line "+line+", "+self.tagName+
 " element has instance attribute '"+attr+"' set."+
 " Attribute of class "+$B.class_name(self)+
-" is ignored.")}}}
+" is ignored.")}}}}
 if(property===undefined){
 if(self.tagName){var ce=customElements.get(self.tagName.toLowerCase())
 if(ce !==undefined && ce.$cls !==undefined){
@@ -13776,7 +13779,10 @@ return res}catch(err){self.__class__=save_class
 if(! $B.is_exc(err,[_b_.AttributeError])){throw err}}}}else{return object.__getattribute__(self,attr)}}
 var res=property
 if(res !==undefined){if(res===null){return _b_.None}
-if(typeof res==="function"){if(res.$is_func){
+if(typeof res==="function"){if(self.__class__ && self.__class__.$webcomponent){var method=$B.$getattr(self.__class__,attr,null)
+if(method !==null){
+return res.bind(self)}}
+if(res.$is_func){
 return res}
 var func=(function(f,elt){return function(){var args=[],pos=0
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
@@ -13829,7 +13835,6 @@ return self }
 DOMNode.__len__=function(self){return self.length}
 DOMNode.__mul__=function(self,other){if(_b_.isinstance(other,_b_.int)&& other.valueOf()> 0){var res=TagSum.$factory()
 var pos=res.children.length
-console.log('clone',DOMNode.clone)
 for(var i=0;i < other.valueOf();i++){res.children[pos++]=DOMNode.clone(self)}
 return res}
 throw _b_.ValueError.$factory("can't multiply "+self.__class__+
@@ -14111,8 +14116,8 @@ TagSum.__add__=function(self,other){if($B.get_class(other)===TagSum){self.childr
 DOMNode.$factory(document.createTextNode(other)))}else{self.children.push(other)}
 return self}
 TagSum.__radd__=function(self,other){var res=TagSum.$factory()
-res.children=self.children.concat(
-DOMNode.$factory(document.createTextNode(other)))
+res.children=self.children.slice()
+res.children.splice(0,0,DOMNode.$factory(document.createTextNode(other)))
 return res}
 TagSum.__repr__=function(self){var res="<object TagSum> "
 for(var i=0;i < self.children.length;i++){res+=self.children[i]
