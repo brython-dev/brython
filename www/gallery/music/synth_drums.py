@@ -124,7 +124,7 @@ class HiHat:
 
 instruments = [HiHat, Snare, Kick]
 
-document['score'] <= score := drum_score.Score(instruments)
+document['score'] <= (score := drum_score.Score(instruments))
 
 
 def sampleLoader(url, cls, callback):
