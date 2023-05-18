@@ -27,23 +27,24 @@ class Kick:
         setup()
 
     def setup(self):
-      self.osc = Config.context.createOscillator()
-      self.gain = Config.context.createGain()
-      self.osc.connect(self.gain)
-      self.gain.connect(Config.context.destination)
+        self.osc = Config.context.createOscillator()
+        self.gain = Config.context.createGain()
+        self.osc.connect(self.gain)
+        self.gain.connect(Config.context.destination)
 
-    def trigger(self, time):
-      self.setup()
+    def trigger(self, time=None):
+        time = time or Config.context.currentTime
+        self.setup()
 
-      self.osc.frequency.setValueAtTime(int(kick_freq.value), time)
-      self.gain.gain.setValueAtTime(1, time)
+        self.osc.frequency.setValueAtTime(int(kick_freq.value), time)
+        self.gain.gain.setValueAtTime(1, time)
 
-      self.osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5)
-      self.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5)
+        self.osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5)
+        self.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5)
 
-      self.osc.start(time)
+        self.osc.start(time)
 
-      self.osc.stop(time + 0.5)
+        self.osc.stop(time + 0.5)
 
 
 class Snare:
@@ -51,54 +52,55 @@ class Snare:
     checked = 'o'
 
     def __init__(self):
-      setup()
-      self.setup()
+        setup()
+        self.setup()
 
     def setup(self):
-      self.noise = Config.context.createBufferSource()
-      self.noise.buffer = self.noiseBuffer()
+        self.noise = Config.context.createBufferSource()
+        self.noise.buffer = self.noiseBuffer()
 
-      noiseFilter = Config.context.createBiquadFilter()
-      noiseFilter.type = 'highpass'
-      noiseFilter.frequency.value = 1000
-      self.noise.connect(noiseFilter)
+        noiseFilter = Config.context.createBiquadFilter()
+        noiseFilter.type = 'highpass'
+        noiseFilter.frequency.value = 1000
+        self.noise.connect(noiseFilter)
 
-      self.noiseEnvelope = Config.context.createGain()
-      noiseFilter.connect(self.noiseEnvelope)
+        self.noiseEnvelope = Config.context.createGain()
+        noiseFilter.connect(self.noiseEnvelope)
 
-      self.noiseEnvelope.connect(Config.context.destination)
+        self.noiseEnvelope.connect(Config.context.destination)
 
     def noiseBuffer(self):
-      bufferSize = Config.context.sampleRate
-      buffer = Config.context.createBuffer(1, bufferSize,
-                                           Config.context.sampleRate)
-      output = buffer.getChannelData(0)
+        bufferSize = Config.context.sampleRate
+        buffer = Config.context.createBuffer(1, bufferSize,
+                                             Config.context.sampleRate)
+        output = buffer.getChannelData(0)
 
-      for i in range(bufferSize):
-        output[i] = random.random() * 2 - 1
+        for i in range(bufferSize):
+          output[i] = random.random() * 2 - 1
 
-      return buffer
+        return buffer
 
-    def trigger(self, time):
+    def trigger(self, time=None):
 
-      self.osc = Config.context.createOscillator()
-      self.osc.type = 'triangle'
+        time = time or Config.context.currentTime
+        self.osc = Config.context.createOscillator()
+        self.osc.type = 'triangle'
 
-      self.oscEnvelope = Config.context.createGain()
-      self.osc.connect(self.oscEnvelope)
-      self.oscEnvelope.connect(Config.context.destination)
+        self.oscEnvelope = Config.context.createGain()
+        self.osc.connect(self.oscEnvelope)
+        self.oscEnvelope.connect(Config.context.destination)
 
-      self.noiseEnvelope.gain.setValueAtTime(1, time)
-      self.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2)
-      self.noise.start(time)
+        self.noiseEnvelope.gain.setValueAtTime(1, time)
+        self.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2)
+        self.noise.start(time)
 
-      self.osc.frequency.setValueAtTime(100, time)
-      self.oscEnvelope.gain.setValueAtTime(0.7, time)
-      self.oscEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.1)
-      self.osc.start(time)
+        self.osc.frequency.setValueAtTime(100, time)
+        self.oscEnvelope.gain.setValueAtTime(0.7, time)
+        self.oscEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.1)
+        self.osc.start(time)
 
-      self.osc.stop(time + 0.2)
-      self.noise.stop(time + 0.2)
+        self.osc.stop(time + 0.2)
+        self.noise.stop(time + 0.2)
 
 class HiHat:
 
@@ -114,8 +116,10 @@ class HiHat:
     def trigger(self, time=None):
         if self.buffer is None:
             Config.context = window.AudioContext.new()
+            time = time or Config.context.currentTime
             sampleLoader('samples/hihat.wav', HiHat, lambda: self.setup(time))
         else:
+            time = time or Config.context.currentTime
             self.setup(time)
 
     def play(self, time):
