@@ -16,7 +16,6 @@ class Note(NoteCell):
         super().__init__(text)
         uncheck(self)
 
-
 def checked(elt):
     return elt.style.backgroundColor == NoteStyle.checked
 
@@ -30,50 +29,106 @@ seq = []
 
 class Tab(html.TD):
 
-    def __init__(self, num):
+    def __init__(self, score, num):
         super().__init__('&nbsp;' * (num <= 9) + str(num))
         self.num = num
+        self.score = score
+        self.bind('click', score.select_tab)
 
     def select(self):
-        self.style.backgroundColor = 'blue'
+        index = int(self.text) - 1
+        bar = self.score.bars[index]
+        if self.score.selected_tab is not None:
+            self.score.selected_tab.unselect()
+        self.score.bar_cell <= self.score.bars[index]
+        self.score.selected_tab = self
+        self.className = 'selected_tab'
 
     def unselect(self):
-        self.style.backgroundColor = 'inherit'
+        bar = self.score.bars[int(self.text) - 1]
+        self.score.bar_cell.clear()
+        self.className = 'unselected_tab'
 
 class Score(html.TABLE):
 
     def __init__(self, instruments):
         super().__init__(cellpadding=5, cellspacing=3, Class='score')
-        self.tabs = [Tab(i + 1) for i in range(16)]
-        for tab in self.tabs:
-            tab.bind('click', self.select_tab)
 
-        tabs = html.TD(colspan=17)
-        tabs <= html.TABLE(html.TR(self.tabs), width="100%")
-        self <= html.TR(tabs)
-        self.tabs[0].select()
-        self.selected_tab = self.tabs[0]
         self.instruments = instruments
-        self.lines = []
-        self <= (top := html.TR(html.TD('&nbsp;')))
-        top <= [NoteCell(x) for x in '1   2   3   4   ']
-        for instrument in instruments:
-            line = html.TR(html.TD(instrument.__name__))
-            for _ in range(16):
-                line <= Note()
-            self <= line
-            self.lines.append(line)
-            for note in line.select('TD'):
-                note.bind('click', lambda ev, instrument=instrument:
-                        self.click(ev, instrument))
+
+        self.tabs = [Tab(self, 1)]
+        new_tab = html.TD('+', Class='unselected_tab')
+        self.tabs.append(new_tab)
+        new_tab.bind('click', self.new_tab)
+
+        tabs = html.TD()
+        tabs <= html.TABLE(html.TR(self.tabs), width="100%", Class="tabs")
+        self <= html.TR(tabs)
+        self.selected_tab = None
+
+        self.bar_cell = html.TD()
+        self <= html.TR(self.bar_cell)
+
+        self.bars = [Bar(self)]
+        self.tabs[0].select()
+
+        self.patterns = html.TEXTAREA("1", cols=50)
+        self <= html.TR(html.TD(self.patterns))
+
+
+    def new_tab(self, ev):
+        tab = Tab(self, len(self.tabs))
+        self.tabs[0].closest('TR').insertBefore(tab, self.tabs[-1])
+        self.tabs.insert(len(self.tabs) - 1, tab)
+        self.bars.append(Bar(self))
+        self.selected_tab.unselect()
+        tab.select()
+        self.selected_tab = tab
 
     def select_tab(self, ev):
         selected = self.tabs[int(ev.target.text) - 1]
         if selected is self.selected_tab:
             return
-        self.selected_tab.unselect()
         selected.select()
-        self.selected_tab = selected
+
+    def get_seq(self, bpm):
+        seq = []
+        patterns = [int(x.strip()) - 1 for x in self.patterns.value.split()]
+        nb_bars = len(patterns)
+        # a bar has 4 quarter notes, there are bpm quarter notes per minute
+        # each quarter note lasts 60 / bpm second
+        # a bar lasts 240 / bpm seconds
+        # dt is the interval between 16th notes
+        dt = 15 / bpm
+        t0 = 0
+        for pattern in patterns:
+            for line, instrument in zip(self.bars[pattern].lines, self.instruments):
+                for i, cell in enumerate(line.select('TD')):
+                    if checked(cell):
+                        seq.append((instrument, t0 + (i + 1) * dt))
+            t0 += 240 / bpm
+        seq.sort(key=lambda x: x[1])
+        return seq, nb_bars
+
+class Bar(html.TABLE):
+
+    def __init__(self, score):
+        super().__init__()
+        self.score = score
+        top = html.TR(html.TD('&nbsp;'))
+        top <= [NoteCell(x) for x in '1   2   3   4   ']
+        self <= top
+        self.lines = []
+        for instrument in score.instruments:
+            line = html.TR(html.TD(instrument.__name__))
+            for _ in range(16):
+                line <= Note()
+            self.lines.append(line)
+            for note in line.select('TD'):
+                note.bind('click', lambda ev, instrument=instrument:
+                        self.click(ev, instrument))
+        self <= self.lines
+        score.bar_cell <= self
 
     def click(self, ev, instrument):
         note = ev.target
@@ -81,14 +136,5 @@ class Score(html.TABLE):
             uncheck(note)
         else:
             instrument().trigger()
-            check(note)
+            check(note) if checked(note) else check(note)
 
-    def get_seq(self, bpm):
-        seq = []
-        dt = 30 / bpm
-        for line, instrument in zip(self.lines, self.instruments):
-            for i, cell in enumerate(line.select('TD')):
-                if checked(cell):
-                    seq.append((instrument, (i + 1) * dt))
-        seq.sort(key=lambda x: x[1])
-        return seq

@@ -170,8 +170,8 @@ bpm_control = document['bpm']
 
 @bind('#bpm', 'input')
 def change_bpm(ev):
-    global seq
-    seq = score.get_seq(int(ev.target.value))
+    global seq, nb_bars
+    seq, nb_bars = score.get_seq(int(ev.target.value))
 
 def get_bpm():
     return int(bpm_control.value)
@@ -180,17 +180,14 @@ class Sequencer:
 
     running = False
 
-def get_seq():
-    global seq
-    seq = score.get_seq(get_bpm())
 
 @bind('#start_loop', 'click')
 def start_loop(ev):
-    global seq
+    global seq, nb_bars
     setup()
     if Sequencer.running:
         return
-    seq = score.get_seq(get_bpm())
+    seq, nb_bars = score.get_seq(get_bpm())
     if not seq:
         return
     Sequencer.running = True
@@ -201,7 +198,7 @@ def end_loop(ev):
     Sequencer.running = False
 
 def loop(t0, i):
-    global seq
+    global seq, nb_bars
     dt = Config.context.currentTime - t0
 
     if not Sequencer.running:
@@ -216,7 +213,7 @@ def loop(t0, i):
         if i >= len(seq):
             i = 0
             bpm = get_bpm()
-            t0 = t0 + 16 * 30 / bpm
-            seq = score.get_seq(bpm)
+            t0 = t0 + nb_bars * 240 / bpm # duration of a bar (4 quarter notes)
+            seq, nb_bars = score.get_seq(bpm)
 
     timer.set_timeout(loop, schedule_period, t0, i)
