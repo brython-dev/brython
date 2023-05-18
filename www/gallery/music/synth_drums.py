@@ -194,6 +194,7 @@ def start_loop(ev):
     if not Sequencer.seq:
         return
     Sequencer.running = True
+    Sequencer.pattern = None
     loop(Config.context.currentTime, 0)
 
 @bind('#end_loop', 'click')
