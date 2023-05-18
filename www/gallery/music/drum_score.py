@@ -1,4 +1,4 @@
-from browser import document, console, html
+from browser import document, console, html, timer
 
 class NoteStyle:
 
@@ -17,7 +17,7 @@ class Note(NoteCell):
         uncheck(self)
 
 def checked(elt):
-    return elt.style.backgroundColor == NoteStyle.checked
+    return elt.style.backgroundColor != NoteStyle.unchecked
 
 def uncheck(elt):
     elt.style.backgroundColor = NoteStyle.unchecked
@@ -85,11 +85,18 @@ class Score(html.TABLE):
         tab.select()
         self.selected_tab = tab
 
-    def select_tab(self, ev):
-        selected = self.tabs[int(ev.target.text) - 1]
+    def show_pattern(self, pattern_num):
+        selected = self.tabs[pattern_num]
         if selected is self.selected_tab:
             return
         selected.select()
+
+    def flash(self, cell):
+        cell.style.backgroundColor = 'black'
+        timer.set_timeout(lambda: check(cell), 100)
+
+    def select_tab(self, ev):
+        self.show_pattern(int(ev.target.text) - 1)
 
     def get_seq(self, bpm):
         seq = []
@@ -102,10 +109,11 @@ class Score(html.TABLE):
         dt = 15 / bpm
         t0 = 0
         for pattern in patterns:
-            for line, instrument in zip(self.bars[pattern].lines, self.instruments):
+            for line_num, (line, instrument) in \
+                    enumerate(zip(self.bars[pattern].lines, self.instruments)):
                 for i, cell in enumerate(line.select('TD')):
-                    if checked(cell):
-                        seq.append((instrument, t0 + (i + 1) * dt))
+                    if i > 0 and checked(cell):
+                        seq.append((line_num, t0 + (i + 1) * dt, pattern, cell))
             t0 += 240 / bpm
         seq.sort(key=lambda x: x[1])
         return seq, nb_bars

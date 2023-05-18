@@ -170,8 +170,7 @@ bpm_control = document['bpm']
 
 @bind('#bpm', 'input')
 def change_bpm(ev):
-    global seq, nb_bars
-    seq, nb_bars = score.get_seq(int(ev.target.value))
+    Sequencer.read_sequence()
 
 def get_bpm():
     return int(bpm_control.value)
@@ -179,16 +178,20 @@ def get_bpm():
 class Sequencer:
 
     running = False
+    pattern = None
+
+    @classmethod
+    def read_sequence(cls):
+        cls.seq, cls.nb_bars = score.get_seq(get_bpm())
 
 
 @bind('#start_loop', 'click')
 def start_loop(ev):
-    global seq, nb_bars
     setup()
     if Sequencer.running:
         return
-    seq, nb_bars = score.get_seq(get_bpm())
-    if not seq:
+    Sequencer.read_sequence()
+    if not Sequencer.seq:
         return
     Sequencer.running = True
     loop(Config.context.currentTime, 0)
@@ -198,22 +201,25 @@ def end_loop(ev):
     Sequencer.running = False
 
 def loop(t0, i):
-    global seq, nb_bars
     dt = Config.context.currentTime - t0
 
     if not Sequencer.running:
         return
 
-    if dt > seq[i][1] - look_ahead:
-        instrument = seq[i][0]()
-        t = seq[i][1]
+    if dt > Sequencer.seq[i][1] - look_ahead:
+        line_num, t, pattern, cell = Sequencer.seq[i]
+        instrument = score.instruments[line_num]()
+        if pattern != Sequencer.pattern:
+            score.show_pattern(pattern)
+            Sequencer.pattern = pattern
+        score.flash(cell)
         start = t0 + t
         instrument.trigger(start + 0.1)
         i += 1
-        if i >= len(seq):
+        if i >= len(Sequencer.seq):
             i = 0
             bpm = get_bpm()
-            t0 = t0 + nb_bars * 240 / bpm # duration of a bar (4 quarter notes)
-            seq, nb_bars = score.get_seq(bpm)
+            t0 = t0 + Sequencer.nb_bars * 240 / bpm # bar duration (4 quarter notes)
+            Sequencer.read_sequence()
 
     timer.set_timeout(loop, schedule_period, t0, i)
