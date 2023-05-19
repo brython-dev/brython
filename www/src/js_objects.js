@@ -272,7 +272,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             // javascript.extends
             return pyobj
         }
-        
+
         return function(){
             try{
                 var args = []
@@ -696,7 +696,19 @@ $B.JSObj.__repr__ = $B.JSObj.__str__ = function(_self){
 $B.JSObj.bind = function(_self, evt, func){
     // "bind" is an alias for "addEventListener"
     var js_func = function(ev) {
-        return func(jsobj2pyobj(ev))
+        try{
+            return func(jsobj2pyobj(ev))
+        }catch(err){
+            if(err.__class__ !== undefined){
+                $B.handle_error(err)
+            }else{
+                try{
+                    $B.$getattr($B.get_stderr(), "write")(err)
+                }catch(err1){
+                    console.log(err)
+                }
+            }
+        }
     }
     _self.addEventListener(evt, js_func)
     return _b_.None

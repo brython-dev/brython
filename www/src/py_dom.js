@@ -1143,7 +1143,6 @@ DOMNode.bind = function(self, event){
             try{
                 return f($DOMEvent(ev))
             }catch(err){
-
                 if(err.__class__ !== undefined){
                     $B.handle_error(err)
                 }else{

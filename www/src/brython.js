@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-18 08:58:57.159145"
-__BRYTHON__.timestamp=1684393137158
+__BRYTHON__.compiled_date="2023-05-19 19:14:24.893036"
+__BRYTHON__.timestamp=1684516464893
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9378,7 +9378,7 @@ throw $B.attr_error('__len__',_self)}
 $B.JSObj.__repr__=$B.JSObj.__str__=function(_self){var js_repr=Object.prototype.toString.call(_self)
 return `<Javascript object: ${js_repr}>`}
 $B.JSObj.bind=function(_self,evt,func){
-var js_func=function(ev){return func(jsobj2pyobj(ev))}
+var js_func=function(ev){try{return func(jsobj2pyobj(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}catch(err1){console.log(err)}}}}
 _self.addEventListener(evt,js_func)
 return _b_.None}
 $B.JSObj.to_dict=function(_self){
