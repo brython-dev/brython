@@ -91,6 +91,8 @@ class Snare:
         self.osc.connect(self.oscEnvelope)
         self.oscEnvelope.connect(Config.context.destination)
 
+        self.noiseEnvelope.gain.cancelScheduledValues(time)
+
         self.noiseEnvelope.gain.setValueAtTime(1, time)
         self.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2)
         self.noise.start(time)
@@ -245,7 +247,7 @@ def loop(t0, i):
     if not Sequencer.running:
         return
 
-    if dt > Sequencer.seq[i][1] - look_ahead:
+    while dt > Sequencer.seq[i][1] - look_ahead:
         line_num, t, pattern, cell = Sequencer.seq[i]
         instrument = score.instruments[line_num]()
         if pattern != Sequencer.pattern:
@@ -260,5 +262,6 @@ def loop(t0, i):
             bpm = get_bpm()
             t0 = t0 + Sequencer.nb_bars * 240 / bpm # bar duration (4 quarter notes)
             Sequencer.read_sequence()
+            break
 
     timer.set_timeout(loop, schedule_period, t0, i)
