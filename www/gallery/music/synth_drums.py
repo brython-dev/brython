@@ -3,6 +3,7 @@ https://github.com/chrislo/drum_synthesis
 """
 
 import random
+import json
 
 from browser import bind, console, document, html, timer, window
 
@@ -128,7 +129,9 @@ class HiHat:
 
 instruments = [HiHat, Snare, Kick]
 
-document['score'] <= (score := drum_score.Score(instruments))
+score = drum_score.Score(instruments)
+document['score'] <= score
+score.new_tab()
 
 
 def sampleLoader(url, cls, callback):
@@ -146,21 +149,56 @@ def sampleLoader(url, cls, callback):
 
     request.send()
 
+load_button = document['load_score']
 
-@bind('#play_kick', 'click')
-def play_kick(ev):
-    kick = Kick()
-    kick.trigger(Config.context.currentTime)
+@bind(load_button, "input")
+def file_read(ev):
 
-@bind('#play_snare', 'click')
-def play_snare(ev):
-    snare = Snare()
-    snare.trigger(Config.context.currentTime)
+    def onload(event):
+        """Triggered when file is read. The FileReader instance is
+        event.target.
+        The file content, as text, is the FileReader instance's "result"
+        attribute."""
+        global score
+        data = json.loads(event.target.result)
+        score = drum_score.Score(instruments)
+        document['score'].clear()
+        document['score'] <= score
+        score.patterns.value = data['patterns']
+        for i, notes in enumerate(data['bars']):
+            score.new_tab(notes=notes)
+        # set attribute "download" to file name
+        save_button.attrs["download"] = file.name
 
-@bind('#play_hihat', 'click')
-def play_hihat(ev):
-    hihat = HiHat()
-    hihat.trigger()
+    # Get the selected file as a DOM File object
+    file = load_button.files[0]
+    # Create a new DOM FileReader instance
+    reader = window.FileReader.new()
+    # Read the file content as text
+    reader.readAsText(file)
+    reader.bind("load", onload)
+
+save_button = document['save_score']
+
+@bind(save_button, "mousedown")
+def mousedown(evt):
+      """Create a "data URI" to set the downloaded file content
+      Cf. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
+      """
+      patterns = score.patterns.value
+      bars = []
+      for bar in score.bars:
+          sbar = {}
+          for instrument in bar.notes:
+              sbar[instrument.__name__] = bar.notes[instrument]
+          bars.append(sbar)
+
+      data = json.dumps({'patterns': score.patterns.value, 'bars': bars})
+
+      content = window.encodeURIComponent(data)
+      # set attribute "href" of save link
+      save_button.attrs["download"] = 'drum_score.json'
+      save_button.attrs["href"] = "data:text/json," + content
 
 
 look_ahead = 0.1
