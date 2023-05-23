@@ -403,13 +403,26 @@ object.__ne__ = function(self, other){
 }
 
 object.__reduce__ = function(self){
-    function _reconstructor(cls){
-        return $B.$call(cls)()
+    if($B.imported.copyreg === undefined){
+        $B.$import('copyreg')
     }
-    _reconstructor.$infos = {__qualname__: "_reconstructor"}
-    var res = [_reconstructor]
-    res.push(_b_.tuple.$factory([self.__class__].
-        concat(self.__class__.__mro__)))
+    var res = [$B.imported.copyreg._reconstructor]
+    var D = $B.get_class(self),
+        B = object
+    for(var klass of D.__mro__){
+        if(klass.__module__ == 'builtins'){
+            B = klass
+            break
+        }
+    }
+    var args = [D, B]
+    if(B === object){
+        args.push(_b_.None)
+    }else{
+        args.push($B.$call(B)(self))
+    }
+
+    res.push($B.fast_tuple(args))
     var d = $B.empty_dict()
     for(var attr of _b_.dict.$keys_string(self.__dict__)){
         _b_.dict.$setitem(d, attr,
@@ -428,11 +441,15 @@ __newobj__.$infos = {
 }
 _b_.__newobj__ = __newobj__
 
-object.__reduce_ex__ = function(self){
+object.__reduce_ex__ = function(self, protocol){
+    console.log('reduce_ex', self, protocol)
     var klass = $B.get_class(self),
         reduce = $B.$getattr(klass, '__reduce__')
     if(reduce !== object.__reduce__){
         return $B.$call(reduce)(self)
+    }
+    if(protocol < 2){
+        return object.__reduce__(self)
     }
     var res = [__newobj__]
     var arg2 = _b_.tuple.$factory([self.__class__])

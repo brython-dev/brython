@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-19 19:14:24.893036"
-__BRYTHON__.timestamp=1684516464893
+__BRYTHON__.compiled_date="2023-05-23 11:14:16.602734"
+__BRYTHON__.timestamp=1684833256602
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5523,11 +5523,14 @@ if(eq !==null){var res=$B.$call(eq)(self,other)
 if(res===_b_.NotImplemented){return res}
 return ! $B.$bool(res)}
 return _b_.NotImplemented}
-object.__reduce__=function(self){function _reconstructor(cls){return $B.$call(cls)()}
-_reconstructor.$infos={__qualname__:"_reconstructor"}
-var res=[_reconstructor]
-res.push(_b_.tuple.$factory([self.__class__].
-concat(self.__class__.__mro__)))
+object.__reduce__=function(self){if($B.imported.copyreg===undefined){$B.$import('copyreg')}
+var res=[$B.imported.copyreg._reconstructor]
+var D=$B.get_class(self),B=object
+for(var klass of D.__mro__){if(klass.__module__=='builtins'){B=klass
+break}}
+var args=[D,B]
+if(B===object){args.push(_b_.None)}else{args.push($B.$call(B)(self))}
+res.push($B.fast_tuple(args))
 var d=$B.empty_dict()
 for(var attr of _b_.dict.$keys_string(self.__dict__)){_b_.dict.$setitem(d,attr,_b_.dict.$getitem_string(self.__dict__,attr))}
 res.push(d)
@@ -5535,8 +5538,10 @@ return _b_.tuple.$factory(res)}
 function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
 __newobj__.$infos={__name__:"__newobj__",__qualname__:"__newobj__"}
 _b_.__newobj__=__newobj__
-object.__reduce_ex__=function(self){var klass=$B.get_class(self),reduce=$B.$getattr(klass,'__reduce__')
+object.__reduce_ex__=function(self,protocol){console.log('reduce_ex',self,protocol)
+var klass=$B.get_class(self),reduce=$B.$getattr(klass,'__reduce__')
 if(reduce !==object.__reduce__){return $B.$call(reduce)(self)}
+if(protocol < 2){return object.__reduce__(self)}
 var res=[__newobj__]
 var arg2=_b_.tuple.$factory([self.__class__])
 if(Array.isArray(self)){self.forEach(function(item){arg2.push(item)})}
