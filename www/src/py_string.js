@@ -1532,11 +1532,12 @@ str.find = function(){
             {self: null, sub: null, start: null, end: null},
             ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
-        _self
+        _self,
+        sub
     check_str($.sub)
     normalize_start_end($);
 
-    [_self, sub] = to_string([$.self, $.sub])
+    [_self, sub] = to_string([$.self, $.sub]);
 
     var len = str.__len__(_self),
         sub_len = str.__len__(sub)
@@ -1548,9 +1549,11 @@ str.find = function(){
         return -1
     }
     // Use .indexOf(), not .search(), to avoid conversion to reg exp
+    // Also use .slice() instead of .substring() because substring swaps
+    // arguments if start > end...
     var js_start = pypos2jspos(_self, $.start),
         js_end = pypos2jspos(_self, $.end),
-        ix = _self.substring(js_start, js_end).indexOf(sub)
+        ix = _self.slice(js_start, js_end).indexOf(sub)
     if(ix == -1){
         return -1
     }

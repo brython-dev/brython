@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-23 11:14:16.602734"
-__BRYTHON__.timestamp=1684833256602
+__BRYTHON__.compiled_date="2023-05-23 12:15:25.427959"
+__BRYTHON__.timestamp=1684836925427
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10490,14 +10490,14 @@ break}
 pos++}
 return res}
 str.find=function(){
-var $=$B.args("str.find",4,{self:null,sub:null,start:null,end:null},["self","sub","start","end"],arguments,{start:0,end:null},null,null),_self
+var $=$B.args("str.find",4,{self:null,sub:null,start:null,end:null},["self","sub","start","end"],arguments,{start:0,end:null},null,null),_self,sub
 check_str($.sub)
 normalize_start_end($);
-[_self,sub]=to_string([$.self,$.sub])
+[_self,sub]=to_string([$.self,$.sub]);
 var len=str.__len__(_self),sub_len=str.__len__(sub)
 if(sub_len==0 && $.start==len){return len}
 if(len+sub_len==0){return-1}
-var js_start=pypos2jspos(_self,$.start),js_end=pypos2jspos(_self,$.end),ix=_self.substring(js_start,js_end).indexOf(sub)
+var js_start=pypos2jspos(_self,$.start),js_end=pypos2jspos(_self,$.end),ix=_self.slice(js_start,js_end).indexOf(sub)
 if(ix==-1){return-1}
 return jspos2pypos(_self,js_start+ix)}
 $B.parse_format=function(fmt_string){
@@ -12827,14 +12827,19 @@ return res}catch(err){if(err.__class__===_b_.KeyError){if(_default !==missing){r
 throw err}
 throw err}}
 dict.popitem=function(self){$B.check_nb_args_no_kw('popitem',1,arguments)
+if(dict.__len__(self)==0){throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")}
+if(self.$all_str){for(var key in self.$strings){}
+var res=$B.fast_tuple([key,self.$strings[key]])
+delete self.$strings[key]
+self.$version++
+return res}
 var index=self._keys.length-1
 while(index >=0){if(self._keys[index]!==undefined){var res=$B.fast_tuple([self._keys[index],self._values[index]])
 delete self._keys[index]
 delete self._values[index]
 self.$version++
 return res}
-index--}
-throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")}
+index--}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
 _default=_default===undefined ? _b_.None :_default
 if(self.$all_str){if(! self.$strings.hasOwnProperty(key)){self.$strings[key]=_default}
