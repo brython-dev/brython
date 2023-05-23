@@ -1241,6 +1241,18 @@ dict.pop = function(){
 
 dict.popitem = function(self){
     $B.check_nb_args_no_kw('popitem', 1, arguments)
+    if(dict.__len__(self) == 0){
+        throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
+    }
+    if(self.$all_str){
+        for(var key in self.$strings){
+            // go to last key
+        }
+        var res = $B.fast_tuple([key, self.$strings[key]])
+        delete self.$strings[key]
+        self.$version++
+        return res
+    }
     var index = self._keys.length - 1
     while(index >= 0){
         if(self._keys[index] !== undefined){
@@ -1252,7 +1264,6 @@ dict.popitem = function(self){
         }
         index--
     }
-    throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
 }
 
 dict.setdefault = function(){
