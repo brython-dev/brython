@@ -132,6 +132,8 @@ class HiHat:
 instruments = [HiHat, Snare, Kick]
 
 score = drum_score.Score(instruments)
+document['score'] <= html.DIV('Patterns')
+
 document['score'] <= score
 score.new_tab()
 

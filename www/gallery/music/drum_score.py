@@ -1,14 +1,24 @@
 from browser import document, console, html, timer
+from browser.widgets.dialog import InfoDialog
+
+class PatternError(Exception):
+
+    def __init__(self, message):
+        super().__init__(message)
+        InfoDialog('Pattern error', message)
+
 
 class NoteStyle:
 
-    checked = 'red'
-    unchecked = 'white'
+    checked = '#666'
+    unchecked = '#ddd'
+
 
 class NoteCell(html.TD):
 
     def __init__(self, text=""):
         super().__init__(text, Class="note")
+
 
 class Note(NoteCell):
 
@@ -20,7 +30,6 @@ class Note(NoteCell):
         self.uncheck()
 
     def click(self, ev):
-        print('click, instr', self.instrument)
         index = self.closest('TR').children.index(self) - 1
         notes = self.bar.notes[self.instrument]
         if index in notes:
@@ -31,7 +40,6 @@ class Note(NoteCell):
             notes.sort()
             self.check()
             self.instrument().trigger()
-        print(self.bar.notes)
 
     def check(self):
         self.style.backgroundColor = NoteStyle.checked
@@ -43,20 +51,32 @@ class Note(NoteCell):
 def checked(elt):
     return elt.style.backgroundColor != NoteStyle.unchecked
 
-
-
 seq = []
 
 class Tab(html.TD):
 
     def __init__(self, score, num):
-        super().__init__('&nbsp;' * (num <= 9) + str(num))
-        self.num = num
+        super().__init__()
+        self.num = num + 1
         self.score = score
         self.bind('click', score.select_tab)
+        self.row = html.TR(html.TD(self.num))
+        self <= html.TABLE(self.row, width="100%",
+            cellpadding=0, cellspacing=0)
+        self.close_button = html.TD('x', Class="close_tab")
+        self.close_button.bind('click', self.close)
+        self.add_close_button()
+
+    def add_close_button(self):
+        if self.num > 1:
+            self.row <= self.close_button
+
+    def remove_close_button(self):
+        if self.num > 1:
+            self.close_button.remove()
 
     def select(self):
-        index = int(self.text) - 1
+        index = self.num - 1
         bar = self.score.bars[index]
         if self.score.selected_tab is not None:
             self.score.selected_tab.unselect()
@@ -65,9 +85,17 @@ class Tab(html.TD):
         self.className = 'selected_tab'
 
     def unselect(self):
-        bar = self.score.bars[int(self.text) - 1]
+        bar = self.score.bars[self.num - 1]
         self.score.bar_cell.clear()
         self.className = 'unselected_tab'
+
+    def close(self, ev):
+        ev.stopPropagation()
+        self.score.tabs[-2].add_close_button()
+        self.score.tabs[-2].select()
+        del self.score.tabs[-1]
+        del self.score.bars[-1]
+        self.remove()
 
 class Score(html.TABLE):
 
@@ -76,13 +104,14 @@ class Score(html.TABLE):
 
         self.instruments = instruments
 
-        new_tab = html.TD('+', Class='unselected_tab')
-        self.tabs = [new_tab]
-        new_tab.bind('click', self.new_tab)
+        self.plus_tab = html.TD('+', Class='plus unselected_tab')
+        self.tabs = []
+        self.plus_tab.bind('click', self.new_tab)
 
         tabs = html.TD()
         self.tabs_row = html.TR(self.tabs)
         tabs <= html.TABLE(self.tabs_row, width="100%", Class="tabs")
+        self.tabs_row <= self.plus_tab
         self <= html.TR(tabs)
         self.selected_tab = None
 
@@ -96,8 +125,10 @@ class Score(html.TABLE):
 
     def new_tab(self, ev=None, notes=None):
         tab = Tab(self, len(self.tabs))
-        self.tabs[0].closest('TR').insertBefore(tab, self.tabs[-1])
-        self.tabs.insert(len(self.tabs) - 1, tab)
+        self.tabs_row.insertBefore(tab, self.plus_tab)
+        if len(self.tabs) > 0:
+            self.tabs[-1].remove_close_button()
+        self.tabs.append(tab)
         self.bars.append(Bar(self, notes))
         if self.selected_tab is not None:
             self.selected_tab.unselect()
@@ -119,12 +150,21 @@ class Score(html.TABLE):
 
     def get_seq(self, bpm):
         seq = []
-        patterns = [int(x.strip()) - 1 for x in self.patterns.value.split()]
+        patterns = []
+        for pattern in self.patterns.value.split():
+            repeat = pattern.split('x')
+            if len(repeat) == 2:
+                patterns += [int(repeat[0]) - 1] * int(repeat[1])
+            elif len(repeat) > 2:
+                raise PatternError(f'invalid pattern: {pattern}')
+            else:
+                patterns.append(int(pattern) - 1)
+        #patterns = [int(x.strip()) - 1 for x in self.patterns.value.split()]
         nb_bars = len(patterns)
-        # a bar has 4 quarter notes, there are bpm quarter notes per minute
-        # each quarter note lasts 60 / bpm second
-        # a bar lasts 240 / bpm seconds
-        # dt is the interval between 16th notes
+        # there are bpm quarter notes per minute
+        # each quarter note lasts 60/bpm second
+        # a bar has 4 quarter notes, so a bar lasts 240/bpm seconds
+        # dt is the interval between 16th notes (1/4 of a quarter)
         dt = 15 / bpm
         t0 = 0
         for pattern in patterns:
@@ -137,6 +177,7 @@ class Score(html.TABLE):
             t0 += 240 / bpm
         seq.sort(key=lambda x: x[1])
         return seq, nb_bars
+
 
 class Bar(html.TABLE):
 
