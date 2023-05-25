@@ -10,7 +10,7 @@ var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
         return {
             __class__: Module,
-            __builtins__: $B.obj_dict(_b_),
+            __builtins__: _b_.__builtins__,
             __name__: name,
             __doc__: doc || _b_.None,
             __package__: $package || _b_.None
@@ -21,7 +21,7 @@ var Module = $B.module = $B.make_class("module",
 Module.__new__ = function(cls, name, doc, $package){
     return {
         __class__: cls,
-        __builtins__: $B.obj_dict(_b_),
+        __builtins__: _b_.__builtins__,
         __name__: name,
         __doc__: doc || _b_.None,
         __package__: $package || _b_.None

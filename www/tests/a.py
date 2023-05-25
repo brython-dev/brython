@@ -3,6 +3,8 @@
 def f():
     print(__annotations__)
 
+__builtins__.open # cf. issue 2196
+
 try:
     f()
     raise Exception('should have raised NameError')
