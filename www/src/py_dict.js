@@ -249,12 +249,25 @@ dict.$iter_items_check = function*(d){
 
 var $copy_dict = function(left, right){
     // left and right are dicts
+    var t0 = window.performance.now()
     right.$version = right.$version || 0
     var right_version = right.$version
-    for(var entry of dict.$iter_items_with_hash(right)){
-        dict.$setitem(left, entry.key, entry.value, entry.hash)
-        if(right.$version != right_version){
-            throw _b_.RuntimeError.$factory("dict mutated during update")
+    if(right.$all_str){
+        if(left.$all_str){
+            for(var key in right.$strings){
+                left.$strings[key] = right.$strings[key]
+            }
+        }else{
+            for(var key in right.$strings){
+                dict.$setitem(left, key, right.$strings[key])
+            }
+        }
+    }else{
+        for(var entry of dict.$iter_items_with_hash(right)){
+            dict.$setitem(left, entry.key, entry.value, entry.hash)
+            if(right.$version != right_version){
+                throw _b_.RuntimeError.$factory("dict mutated during update")
+            }
         }
     }
 }
@@ -626,11 +639,7 @@ dict.$getitem = function(self, key, ignore_missing){
 dict.__hash__ = _b_.None
 
 function init_from_list(self, args){
-    var i = -1,
-        stop = args.length - 1,
-        si = dict.$setitem
-    while(i++ < stop){
-        var item = args[i]
+    for(var item of args){
         if(item.length != 2){
             throw _b_.ValueError.$factory("dictionary " +
                 `update sequence element #${i} has length ${item.length}; 2 is required`)
@@ -656,11 +665,11 @@ dict.__init__ = function(self, first, second){
             }
             self.$all_str = false
             return $N
-        }else if(Array.isArray(first)){
+        }else if(first[Symbol.iterator]){
             init_from_list(self, first)
             return $N
-        }else if(first[Symbol.iterator]){
-            init_from_list(self, Array.from(first))
+        }else if(first.__class__ === $B.generator){
+            init_from_list(self, first.js_gen)
             return $N
         }
     }
@@ -1289,9 +1298,7 @@ dict.setdefault = function(){
     return _default
 }
 
-$B.nb_updates = 0
 dict.update = function(self){
-    $B.nb_updates++
     var $ = $B.args("update", 1, {"self": null}, ["self"], arguments,
             {}, "args", "kw"),
         self = $.self,
