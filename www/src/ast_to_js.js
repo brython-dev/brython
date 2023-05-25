@@ -1906,6 +1906,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n` +
         `__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n` +
         `__defaults__: ${defaults},\n` +
+        `__globals__: _b_.globals(),\n` +
         `__kwdefaults__: ${kw_defaults},\n` +
         `__doc__: ${docstring},\n` +
         `__code__:{\n` +
