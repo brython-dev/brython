@@ -361,6 +361,7 @@ $B.set_func_names(js_list_meta, 'builtins')
 
 var js_list = $B.make_class('jslist')
 js_list.__class__ = js_list_meta
+js_list.__mro__ = [_b_.list, _b_.object]
 
 js_list.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
