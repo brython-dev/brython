@@ -1840,6 +1840,7 @@ function $extreme(args, op){ // used by min() and max()
         switch(attr){
             case 'key':
                 func = $.kw.$jsobj[attr]
+                func = func === _b_.None ? func : $B.$call(func)
                 break
             case 'default':
                 var default_value = $.kw.$jsobj[attr]
@@ -3334,6 +3335,11 @@ $B.function.__getattribute__ = function(self, attr){
             }
         }
         return _b_.tuple.$factory(cells)
+    }else if(attr == '__builtins__'){
+        if(self.$infos && self.$infos.__globals__){
+            return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
+        }
+        return $B.obj_dict(_b_)
     }else if(attr == "__globals__"){
         return $B.obj_dict($B.imported[self.$infos.__module__])
     }else if(self.$attrs && self.$attrs[attr] !== undefined){
