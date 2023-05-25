@@ -49,6 +49,7 @@ function set_add(so, item, hash){
         so.$store[hash] = so.$store[hash] || []
         so.$store[hash].push(item)
         so.$used++
+        so.$version++
     }
 }
 
@@ -635,7 +636,6 @@ set.add = function(){
         self = $.self,
         item = $.item
     set_add(self, item)
-    self.$version++
     return _b_.None
 }
 

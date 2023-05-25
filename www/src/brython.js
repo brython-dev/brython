@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-23 12:15:25.427959"
-__BRYTHON__.timestamp=1684836925427
+__BRYTHON__.compiled_date="2023-05-25 09:44:35.984453"
+__BRYTHON__.timestamp=1685000675984
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6766,6 +6766,7 @@ var $=$B.args($op_name,0,{},[],args,{},'args','kw')
 var has_default=false,func=false
 for(var attr in $.kw.$jsobj){switch(attr){case 'key':
 func=$.kw.$jsobj[attr]
+func=func===_b_.None ? func :$B.$call(func)
 break
 case 'default':
 var default_value=$.kw.$jsobj[attr]
@@ -7262,7 +7263,8 @@ if(free_vars.length==0){return None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(None))}}
-return _b_.tuple.$factory(cells)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
+return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
+return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
 $B.make_function_defaults=function(f){if(f.$infos && f.$infos.__code__){
@@ -8823,7 +8825,8 @@ function set_hash(item){return $B.$hash(item)}
 function set_add(so,item,hash){hash=hash===undefined ? $B.$hash(item):hash
 if(set_contains(so,item,hash)){return}else{so.$store[hash]=so.$store[hash]||[]
 so.$store[hash].push(item)
-so.$used++}}
+so.$used++
+so.$version++}}
 function set_contains(so,key,hash){return !! set_lookkey(so,key,hash)}
 function set_copy(obj){var res=make_new_set_base_type(obj)
 for(var hash in obj.$store){res.$store[hash]=obj.$store[hash].slice()}
@@ -9001,7 +9004,6 @@ return res}
 $B.make_rmethods(set)
 set.add=function(){var $=$B.args("add",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 set_add(self,item)
-self.$version++
 return _b_.None}
 set.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 $.self.$used=0
@@ -9431,10 +9433,10 @@ $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 
 ;(function($B){var _b_=$B.builtins,_window=self
 var Module=$B.module=$B.make_class("module",function(name,doc,$package){return{
-__class__:Module,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
+__class__:Module,__builtins__:$B.obj_dict(_b_),__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 )
 Module.__new__=function(cls,name,doc,$package){return{
-__class__:cls,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
+__class__:cls,__builtins__:$B.obj_dict(_b_),__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 Module.__repr__=Module.__str__=function(self){var res="<module "+self.__name__
 res+=self.__file__===undefined ? " (built-in)" :
 ' at '+self.__file__
@@ -9885,7 +9887,7 @@ alert()}
 if($B.$options.debug==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+$B.static_stdlib_import)}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
+var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals["__import__"],globals=_globals 
 if(__import__===undefined){
 __import__=$B.$__import__}
 var importer=typeof __import__=="function" ?
@@ -12491,11 +12493,14 @@ dict.$iter_items_check=function*(d){if(d.$jsobj){for(var key in d.$jsobj){yield[
 for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield[d._keys[i],d._values[i]]
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
+$B.count_copy_dict=0
 var $copy_dict=function(left,right){
+var t0=window.performance.now()
 right.$version=right.$version ||0
 var right_version=right.$version
-for(var entry of dict.$iter_items_with_hash(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
+if(right.$all_str){if(left.$all_str){for(var key in right.$strings){left.$strings[key]=right.$strings[key]}}else{for(var key in right.$strings){dict.$setitem(left,key,right.$strings[key])}}}else{for(var entry of dict.$iter_items_with_hash(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right.$version !=right_version){throw _b_.RuntimeError.$factory("dict mutated during update")}}}
+$B.count_copy_dict+=window.performance.now()-t0}
 dict.__bool__=function(){var $=$B.args("__bool__",1,{self:null},["self"],arguments,{},null,null)
 return dict.__len__($.self)> 0}
 dict.__class_getitem__=function(cls,item){
@@ -12618,9 +12623,7 @@ if(! ignore_missing){if(self.__class__ !==dict && ! ignore_missing){try{var miss
 if(missing_method !==_b_.None){return missing_method(self,key)}}}
 throw _b_.KeyError.$factory(key)}
 dict.__hash__=_b_.None
-function init_from_list(self,args){var i=-1,stop=args.length-1,si=dict.$setitem
-while(i++< stop){var item=args[i]
-if(item.length !=2){throw _b_.ValueError.$factory("dictionary "+
+function init_from_list(self,args){for(var item of args){if(item.length !=2){throw _b_.ValueError.$factory("dictionary "+
 `update sequence element #${i} has length ${item.length}; 2 is required`)}
 dict.$setitem(self,item[0],item[1])}}
 dict.__init__=function(self,first,second){if(first===undefined){return _b_.None}
@@ -12628,8 +12631,8 @@ if(second===undefined){if((! first.$kw)&& $B.get_class(first)===$B.JSObj){for(va
 return _b_.None}else if(first.$jsobj){self.$jsobj={}
 for(var attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
 self.$all_str=false
-return $N}else if(Array.isArray(first)){init_from_list(self,first)
-return $N}else if(first[Symbol.iterator]){init_from_list(self,Array.from(first))
+return $N}else if(first[Symbol.iterator]){init_from_list(self,first)
+return $N}else if(first.__class__===$B.generator){init_from_list(self,first.js_gen)
 return $N}}
 var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
 var args=$.first
@@ -12849,12 +12852,14 @@ if(lookup.found){return lookup.value}
 var hash=lookup.hash
 dict.$setitem(self,key,_default,hash,true)
 return _default}
-$B.nb_updates=0
-dict.update=function(self){$B.nb_updates++
+$B.count_update=0
+$B.nb_update=0
+dict.update=function(self){var t0=window.performance.now()
 var $=$B.args("update",1,{"self":null},["self"],arguments,{},"args","kw"),self=$.self,args=$.args,kw=$.kw
 if(args.length > 0){var o=args[0]
 if(_b_.isinstance(o,dict)){if(o.$jsobj){o=jsobj2dict(o.$jsobj)}
-$copy_dict(self,o)}else if(_b_.hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys"))())
+$copy_dict(self,o)
+$B.count_update+=window.performance.now()-t0}else if(_b_.hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys"))())
 for(var i=0,len=_keys.length;i < len;i++){var _value=$B.$getattr(o,"__getitem__")(_keys[i])
 dict.$setitem(self,_keys[i],_value)}}else{var it=_b_.iter(o),i=0
 while(true){try{var item=_b_.next(it)}catch(err){if(err.__class__===_b_.StopIteration){break}
@@ -15383,6 +15388,7 @@ js+=`${name2}.$infos = {\n`+
 `__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n`+
 `__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n`+
 `__defaults__: ${defaults},\n`+
+`__globals__: _b_.globals(),\n`+
 `__kwdefaults__: ${kw_defaults},\n`+
 `__doc__: ${docstring},\n`+
 `__code__:{\n`+
