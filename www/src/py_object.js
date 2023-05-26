@@ -442,7 +442,6 @@ __newobj__.$infos = {
 _b_.__newobj__ = __newobj__
 
 object.__reduce_ex__ = function(self, protocol){
-    console.log('reduce_ex', self, protocol)
     var klass = $B.get_class(self),
         reduce = $B.$getattr(klass, '__reduce__')
     if(reduce !== object.__reduce__){

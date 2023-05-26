@@ -588,7 +588,10 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         }
         throw $B.attr_error(attr, _self)
     }
-    if(js_attr !== null && js_attr.toString().startsWith('class ')){
+    if(js_attr !== null &&
+            js_attr.toString && 
+            typeof js_attr.toString == 'function' &&
+            js_attr.toString().startsWith('class ')){
         // Javascript class
         return jsclass2pyclass(js_attr)
     }else if(typeof js_attr === 'function'){

@@ -2160,12 +2160,13 @@ CharacterClass.prototype.match = function(string, pos, endpos){
         console.log('no pos')
         throw Error()
     }
+    var len = string.length
     this.repeat = this.repeat || {min: 1, max: 1}
 
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
-    var i = 0
-    while(i < this.repeat.max){
+    var i = 0 
+    while(i < this.repeat.max && i < len){
         var test = this.test_func(string, pos + i, this.flags)
         if(! test){
             break
