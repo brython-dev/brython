@@ -485,6 +485,12 @@ function check_assignment(context, kwargs){
                     // "x += 1, y = 2"
                     raise_syntax_error(context)
                 }
+                if(parent_match(context, {type: 'assign'})){
+                    raise_syntax_error_known_range(
+                        context,
+                        a, b,
+                        `invalid syntax. Maybe you meant '==' or ':=' instead of '='?`)
+                }
                 if(! parent_match(context, {type: 'list_or_tuple'})){
                     msg += " here. Maybe you meant '==' instead of '='?"
                 }
@@ -2826,7 +2832,7 @@ ExprCtx.prototype.transition = function(token, value){
                 if(context.parent.type == 'assign'){
                     var assigned = context.parent.tree[0]
                     if(assigned.type == 'expr' && assigned.tree[0].type == 'id'){
-                        if(context.name == 'unary' || context.name == 'operand'){
+                        if(context.name == 'unary'){
                             var a = context.parent.tree[0].position,
                                 b = last_position(context)
                             raise_syntax_error_known_range(

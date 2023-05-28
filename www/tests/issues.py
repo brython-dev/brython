@@ -3172,7 +3172,11 @@ try:
     exec('f(1 + *x)')
 except SyntaxError as e:
     assert e.args[1][3].strip() == 'f(1 + *x)'
-    
+
+# issue 2198
+a = 1 + 1, 2 + 2
+assert a == (2, 4)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
