@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-29 16:00:51.943819"
-__BRYTHON__.timestamp=1685368851942
+__BRYTHON__.compiled_date="2023-05-29 16:12:36.156738"
+__BRYTHON__.timestamp=1685369556156
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1830,12 +1830,7 @@ if(C.parent.type=='target_list'){
 return transition(C.parent,token)}
 if(C.expect==','){return transition(C,'op','in')}
 case ',':
-if(C.expect==','){if(C.parent.type=='assign'){var assigned=C.parent.tree[0]
-if(assigned.type=='expr' && assigned.tree[0].type=='id'){if(C.name=='unary'){var a=C.parent.tree[0].position,b=last_position(C)
-raise_syntax_error_known_range(
-C,a,b,"invalid syntax. "+
-"Maybe you meant '==' or ':=' instead of '='?")}}}
-if(C.name=='iterator' &&
+if(C.expect==','){if(C.name=='iterator' &&
 C.parent.parent.type !='node'){
 var for_expr=C.parent.parent
 raise_syntax_error_known_range(C,first_position(for_expr),last_position(for_expr),'Generator expression must be parenthesized')}

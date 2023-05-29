@@ -3177,6 +3177,9 @@ except SyntaxError as e:
 a = 1 + 1, 2 + 2
 assert a == (2, 4)
 
+x = -1, 1
+assert x[0] == -1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
