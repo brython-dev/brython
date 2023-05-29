@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-29 14:49:39.757768"
-__BRYTHON__.timestamp=1685364579756
+__BRYTHON__.compiled_date="2023-05-29 16:00:51.943819"
+__BRYTHON__.timestamp=1685368851942
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13213,22 +13213,13 @@ default:
 console.log("erreur",value)
 throw _b_.TypeError.$factory("keys must be str, int, "+
 "float, bool or None, not "+$B.class_name(value))}}
-var symbols={is_dict_proxy:Symbol(),brython_dict:Symbol()}
 $B.pyobj2structuredclone=function(obj,strict){
 strict=strict===undefined ? true :strict
 if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string" ||obj instanceof String){return obj}else if(obj.__class__===_b_.float){return obj.value}else if(obj===_b_.None){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){var res=[]
 for(var i=0,len=obj.length;i < len;i++){res.push($B.pyobj2structuredclone(obj[i]))}
-return res}else if(_b_.isinstance(obj,_b_.dict)){return new Proxy(obj,{get(target,prop){if(prop===symbols.is_dict_proxy){return true}else if(prop==symbols.brython_dict){return target}
-try{return _b_.dict.$getitem(target,prop)}catch(err){if(prop=='toString'){return()=> target.toString()}else if(prop=='valueOf'){var that=this
-return()=> that}
-return undefined}},set(target,prop,value){return _b_.dict.$setitem(target,prop,value)},has(target,prop){return _b_.dict.__contains__(target,prop)},ownKeys(target){
-return _b_.list.$factory(_b_.dict.keys(target))},getOwnPropertyDescriptor(target,prop){
-return{
-enumerable:true,configurable:true}}}
-)
-if(strict){for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
+return res}else if(_b_.isinstance(obj,_b_.dict)){if(strict){for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
 "keys does not support structured clone")}}}
 var res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
@@ -13267,9 +13258,10 @@ case false:
 return jsobj}
 if(jsobj===undefined){return $B.Undefined}else if(jsobj===null){return _b_.None}
 if(Array.isArray(jsobj)){return $B.$list(jsobj.map(jsobj2pyobj))}else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
-return _b_.float.$factory(jsobj)}else if(typeof jsobj=="string"){return $B.String(jsobj)}else if(jsobj[symbols.is_dict_proxy]){return jsobj[symbols.brython_dict]}else if(typeof jsobj=="function"){
+return _b_.float.$factory(jsobj)}else if(typeof jsobj=="string"){return $B.String(jsobj)}else if(typeof jsobj=="function"){
 _this=_this===undefined ? null :_this
-return function(){var args=Array.from(arguments).map(pyobj2jsobj)
+return function(){var args=[]
+for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
 return jsobj2pyobj(jsobj.apply(_this,args))}}
 if(jsobj.$kw){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
@@ -13404,9 +13396,8 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,_self)}
-if(js_attr[symbols.is_dict_proxy]){return js_attr[symbols.brython_dict]}
 if(js_attr !==null &&
-js_attr.toString &&
+js_attr.toString && 
 typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
@@ -13421,9 +13412,7 @@ res.__mro__=[_b_.object]
 res.$infos={__name__:js_attr.name,__qualname__:js_attr.name}
 if($B.frames_stack.length > 0){res.$infos.__module__=$B.last($B.frames_stack)[3].__name__}
 return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
-$B.JSObj.__setattr__=function(_self,attr,value){if(typeof value=='function'){
-_self[attr]=function(){var args=Array.from(arguments).map(jsobj2pyobj)
-return value.apply(null,args)}}else{_self[attr]=$B.pyobj2structuredclone(value)}
+$B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2structuredclone(value)
 return _b_.None}
 $B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){return $B.JSObj.__getattribute__(_self,key)}else if(typeof key=="number"){if(_self[key]!==undefined){return $B.JSObj.$factory(_self[key])}
 if(typeof _self.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&

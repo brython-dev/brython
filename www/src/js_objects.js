@@ -28,11 +28,6 @@ function to_simple(value){
     }
 }
 
-var symbols = {
-    is_dict_proxy: Symbol(),
-    brython_dict: Symbol()
-}
-
 $B.pyobj2structuredclone = function(obj, strict){
     // If the Python object supports the structured clone algorithm, return
     // the result, else raise an exception
@@ -53,46 +48,6 @@ $B.pyobj2structuredclone = function(obj, strict){
         }
         return res
     }else if(_b_.isinstance(obj, _b_.dict)){
-        return new Proxy(obj,
-            {
-                get(target, prop){
-                     if(prop === symbols.is_dict_proxy){
-                        return true
-                    }else if(prop == symbols.brython_dict){
-                        return target
-                    }
-                    try{
-                        return _b_.dict.$getitem(target, prop)
-                    }catch(err){
-                        if(prop == 'toString'){
-                            return () => target.toString()
-                        }else if(prop == 'valueOf'){
-                            var that = this
-                            return () => that
-                        }
-                        return undefined
-                    }
-                },
-                set(target, prop, value){
-                    return _b_.dict.$setitem(target, prop, value)
-                },
-                has(target, prop){
-                    return _b_.dict.__contains__(target, prop)
-                },
-                ownKeys(target){
-                    // return the list of dictionary keys
-                    return _b_.list.$factory(_b_.dict.keys(target))
-                },
-                getOwnPropertyDescriptor(target, prop){
-                    // required to return dict keys in ownKeys()
-                    // cf. https://stackoverflow.com/questions/65339985/why-isnt-ownkeys-proxy-trap-working-with-object-keys
-                    return {
-                      enumerable: true,
-                      configurable: true
-                    }
-                }
-            }
-        )
         if(strict){
             for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){
                 if(typeof key !== 'string'){
@@ -222,13 +177,14 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
        return _b_.float.$factory(jsobj)
     }else if(typeof jsobj == "string"){
         return $B.String(jsobj)
-    }else if(jsobj[symbols.is_dict_proxy]){
-        return jsobj[symbols.brython_dict]
     }else if(typeof jsobj == "function"){
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
         return function(){
-            var args = Array.from(arguments).map(pyobj2jsobj)
+            var args = []
+            for(var i = 0, len = arguments.length; i < len; i++){
+                args.push(pyobj2jsobj(arguments[i]))
+            }
             return jsobj2pyobj(jsobj.apply(_this, args))
         }
     }
@@ -577,7 +533,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "py_obj"
+    var test = false // attr == "Rectangle"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -632,11 +588,8 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         }
         throw $B.attr_error(attr, _self)
     }
-    if(js_attr[symbols.is_dict_proxy]){
-        return js_attr[symbols.brython_dict]
-    }
     if(js_attr !== null &&
-            js_attr.toString &&
+            js_attr.toString && 
             typeof js_attr.toString == 'function' &&
             js_attr.toString().startsWith('class ')){
         // Javascript class
@@ -678,15 +631,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
 }
 
 $B.JSObj.__setattr__ = function(_self, attr, value){
-    if(typeof value == 'function'){
-        // the function is meant to be called with JS arguments
-        _self[attr] = function(){
-            var args = Array.from(arguments).map(jsobj2pyobj)
-            return value.apply(null, args)
-        }
-    }else{
-        _self[attr] = $B.pyobj2structuredclone(value)
-    }
+    _self[attr] = $B.pyobj2structuredclone(value)
     return _b_.None
 }
 
