@@ -146,10 +146,10 @@ float.__eq__ = function(self, other){
         return self.value == other.value
     }
     if(_b_.isinstance(other, _b_.complex)){
-        if(other.$imag != 0){
+        if(! $B.rich_comp('__eq__', 0, other.$imag)){
             return false
         }
-        return self.value == other.$real
+        return float.__eq__(self, other.$real)
     }
     return _b_.NotImplemented
 }

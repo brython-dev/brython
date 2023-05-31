@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-31 08:50:44.798454"
-__BRYTHON__.timestamp=1685515844798
+__BRYTHON__.compiled_date="2023-05-31 14:29:23.709774"
+__BRYTHON__.timestamp=1685536163709
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7244,7 +7244,6 @@ $B.function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs 
 return Object.keys(infos).
 concat(Object.keys(attrs)).
 filter(x=> !x.startsWith('$'))}
-$B.function.__eq__=function(self,other){return self===other}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
@@ -11434,8 +11433,8 @@ if(isNaN(self.value)&&
 (_b_.isinstance(other,float)&& isNaN(other.value))){return false}
 if(_b_.isinstance(other,_b_.int)){return self.value==other}
 if(_b_.isinstance(other,float)){return self.value==other.value}
-if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
-return self.value==other.$real}
+if(_b_.isinstance(other,_b_.complex)){if(! $B.rich_comp('__eq__',0,other.$imag)){return false}
+return float.__eq__(self,other.$real)}
 return _b_.NotImplemented}
 float.__floor__=function(self){check_self_is_float(self,'__floor__')
 if(isnan(self)){throw _b_.ValueError.$factory('cannot convert float NaN to integer')}else if(isinf(self)){throw _b_.OverflowError.$factory('cannot convert float infinity to integer')}
@@ -11956,7 +11955,7 @@ complex.__eq__=function(self,other){if(_b_.isinstance(other,complex)){return sel
 self.$imag.value==other.$imag.value}
 if(_b_.isinstance(other,_b_.int)){if(self.$imag.value !=0){return false}
 return self.$real.value==other.valueOf()}
-if(_b_.isinstance(other,_b_.float)){if(self.$imag.value !=0){return false}
+if(_b_.isinstance(other,_b_.float)){if(! $B.rich_comp('__eq__',0,self.$imag)){return false}
 return self.$real.value==other.value}
 return _b_.NotImplemented}
 const max_precision=2**31-4,max_repeat=2**30-1
@@ -13207,7 +13206,6 @@ return value ? "true" :"false"
 case 'object':
 if(value===_b_.None){return 'null'}else if(value instanceof Number){return value.valueOf()}else if(value instanceof String){return value.valueOf()}
 default:
-console.log("erreur",value)
 throw _b_.TypeError.$factory("keys must be str, int, "+
 "float, bool or None, not "+$B.class_name(value))}}
 $B.pyobj2structuredclone=function(obj,strict){
@@ -13229,8 +13227,7 @@ obj.__class__===_b_.tuple){var res=_b_.list.$factory()
 for(var i=0,len=obj.length;i < len;i++){res.push($B.structuredclone2pyobj(obj[i]))}
 return res}else if(typeof obj=="object"){var res=$B.empty_dict()
 for(var key in obj){_b_.dict.$setitem(res,key,$B.structuredclone2pyobj(obj[key]))}
-return res}else{console.log(obj,Array.isArray(obj),obj.__class__,_b_.list,obj.__class__===_b_.list)
-throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
+return res}else{throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
 " does not support the structured clone algorithm")}}
 var JSConstructor=$B.make_class('JSConstructor')
 JSConstructor.__module__="<javascript>"
@@ -13264,12 +13261,10 @@ if(jsobj.$kw){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
 return $B.JSObj.$factory(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
-if(pyobj===true ||pyobj===false){return pyobj}
-if(pyobj===_b_.None){return null}
-if(pyobj===$B.Undefined){return undefined}
+if(pyobj===true ||pyobj===false){return pyobj}else if(pyobj===_b_.None){return null}else if(pyobj===$B.Undefined){return undefined}
 var klass=$B.get_class(pyobj)
 if(klass===undefined){
-return pyobj;}
+return pyobj}
 if(klass===JSConstructor){
 if(pyobj.js_func !==undefined){return pyobj.js_func}
 return pyobj.js}else if(klass===$B.DOMNode ||
@@ -13285,14 +13280,15 @@ if(typeof entry.value=='function'){
 entry.value.bind(jsobj)}
 jsobj[key]=pyobj2jsobj(entry.value)}
 return jsobj}else if(klass===_b_.str){
-return pyobj.valueOf()}else if(klass===_b_.float){return pyobj.value}else if(klass===$B.function ||klass===$B.method){
+return pyobj.valueOf()}else if(klass===_b_.float){
+return pyobj.value}else if(klass===$B.function ||klass===$B.method){
 if(pyobj.prototype &&
 pyobj.prototype.constructor===pyobj &&
 ! pyobj.$is_func){
 return pyobj}
-return function(){try{var args=[]
-for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
-else{args.push(jsobj2pyobj(arguments[i]))}}
+return function(){try{
+var args=[]
+for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}else{args.push(jsobj2pyobj(arguments[i]))}}
 if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}}else{
 return pyobj}}
@@ -13394,7 +13390,7 @@ return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,_self)}
 if(js_attr !==null &&
-js_attr.toString && 
+js_attr.toString &&
 typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self

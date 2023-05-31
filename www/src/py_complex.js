@@ -72,7 +72,7 @@ complex.__eq__ = function(self, other){
         return self.$real.value == other.valueOf()
     }
     if(_b_.isinstance(other, _b_.float)){
-        if(self.$imag.value != 0){
+        if(! $B.rich_comp('__eq__', 0, self.$imag)){
             return false
         }
         return self.$real.value == other.value

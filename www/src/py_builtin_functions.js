@@ -3285,10 +3285,6 @@ $B.function.__dir__ = function(self){
                filter(x => !x.startsWith('$'))
 }
 
-$B.function.__eq__ = function(self, other){
-    return self === other
-}
-
 $B.function.__get__ = function(self, obj){
     // adapated from
     // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
