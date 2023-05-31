@@ -250,5 +250,9 @@ for (k, v) in d.items():
 
 assert d == {True: 'y'}
 
+# issue 2200
+d = {"Corriger les erreurs d'extraction" : 1}
+d[list(d.keys())[0]]
+
 
 print("passed all tests..")

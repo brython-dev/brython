@@ -6499,6 +6499,11 @@ var StringCtx = $B.parser.StringCtx = function(context, value){
     this.raw = false
 }
 
+$B.string_from_ast_value = function(value){
+    // remove escaped "'" in string value
+    return value.replace(new RegExp("\\\\'", 'g'), "'")
+}
+
 var make_string_for_ast_value = $B.make_string_for_ast_value = function(value){
     value = value.replace(/\n/g,'\\n\\\n')
     value = value.replace(/\r/g,'\\r\\\r')

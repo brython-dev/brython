@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-29 16:12:36.156738"
-__BRYTHON__.timestamp=1685369556156
+__BRYTHON__.compiled_date="2023-05-31 08:50:44.798454"
+__BRYTHON__.timestamp=1685515844798
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3677,6 +3677,8 @@ this.is_bytes=value.startsWith('b')
 this.value=this.is_bytes ?[]:''
 this.add_value(value)
 this.raw=false}
+$B.string_from_ast_value=function(value){
+return value.replace(new RegExp("\\\\'",'g'),"'")}
 var make_string_for_ast_value=$B.make_string_for_ast_value=function(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
 if(value[0]=="'"){var unquoted=value.substr(1,value.length-2)
@@ -15204,8 +15206,9 @@ has_packed=true
 items.push('_b_.list.$factory(_b_.dict.items('+
 $B.js_from_ast(this.values[i],scopes)+'))')}else{var item=`[${$B.js_from_ast(this.keys[i], scopes)}, `+
 `${$B.js_from_ast(this.values[i], scopes)}`
-if(this.keys[i]instanceof $B.ast.Constant){try{var hash=$B.$hash(this.keys[i].value)
-item+=`, ${hash}`}catch(err){}}
+if(this.keys[i]instanceof $B.ast.Constant){var v=this.keys[i].value
+if(typeof v=='string'){item+=', '+$B.$hash($B.string_from_ast_value(v))}else{try{var hash=$B.$hash(this.keys[i].value)
+item+=`, ${hash}`}catch(err){}}}
 items.push(item+']')}}
 if(! has_packed){return `_b_.dict.$literal([${items}])`}
 var first=no_key(0)? items[0]:`[${items[0]}]`,js='_b_.dict.$literal('+first

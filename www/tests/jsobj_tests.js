@@ -1,3 +1,5 @@
+var _b_ = __BRYTHON__.builtins
+
 test_jsobj = {
     null_value:null,
     undef_value:undefined,

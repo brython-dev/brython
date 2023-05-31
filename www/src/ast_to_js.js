@@ -1513,11 +1513,16 @@ $B.ast.Dict.prototype.to_js = function(scopes){
             var item = `[${$B.js_from_ast(this.keys[i], scopes)}, ` +
                        `${$B.js_from_ast(this.values[i], scopes)}`
             if(this.keys[i] instanceof $B.ast.Constant){
-                try{
-                    var hash = $B.$hash(this.keys[i].value)
-                    item += `, ${hash}`
-                }catch(err){
-                    // not hashable, will be raised at runtime
+                var v = this.keys[i].value
+                if(typeof v == 'string'){
+                    item += ', ' + $B.$hash($B.string_from_ast_value(v))
+                }else{
+                    try{
+                        var hash = $B.$hash(this.keys[i].value)
+                        item += `, ${hash}`
+                    }catch(err){
+                        // not hashable, will be raised at runtime
+                    }
                 }
             }
             items.push(item + ']')
