@@ -461,7 +461,12 @@ $B.JSObj.__bool__ = function(_self){
 }
 
 $B.JSObj.__dir__ = function(_self){
-    return Object.keys(_self)
+    var attrs = []
+    for(key in _self){
+        attrs.push(key)
+    }
+    attrs = attrs.sort()
+    return attrs
 }
 
 $B.JSObj.__eq__ = function(_self, other){

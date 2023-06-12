@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-06-12 22:20:19.238722"
-__BRYTHON__.timestamp=1686601219238
+__BRYTHON__.compiled_date="2023-06-12 22:43:11.142340"
+__BRYTHON__.timestamp=1686602591142
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13382,7 +13382,10 @@ for(var js_op in js_ops){$B.JSObj[js_op]=js_ops[js_op]}
 $B.JSObj.__bool__=function(_self){if(typeof _self=='object'){for(var key in _self){return true}
 return false}
 return !! _self}
-$B.JSObj.__dir__=function(_self){return Object.keys(_self)}
+$B.JSObj.__dir__=function(_self){var attrs=[]
+for(key in _self){attrs.push(key)}
+attrs=attrs.sort()
+return attrs}
 $B.JSObj.__eq__=function(_self,other){switch(typeof _self){case "object":
 if(_self.__eq__ !==undefined){return _self.__eq__(other)}
 if(Object.keys(_self).length !==Object.keys(other).length){return false}
