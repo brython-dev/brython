@@ -11,9 +11,7 @@ function $err(op, other){
 }
 
 function float_value(obj){
-    // Instances of float subclasses that call float.__new__(cls, value)
-    // have an attribute $brython_value set
-    return obj.$brython_value !== undefined ? obj.$brython_value : obj
+    return obj.__class__ === float ? obj : fast_float(obj.value)
 }
 
 // dictionary for built-in class 'float'
@@ -606,13 +604,21 @@ float.$format = function(self, fmt){
     return $B.format_width(raw.join("."), fmt) // in py_string.js
 }
 
+float.$getnewargs = function(self){
+    return $B.fast_tuple([float_value(self)])
+}
+
+float.__getnewargs__ = function(){
+    return float.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+}
+
 var nan_hash = $B.$py_next_hash--
 
 var mp2_31 = Math.pow(2, 31)
 
 $B.float_hash_cache = new Map()
 
-float.__hash__ = function(self) {
+float.__hash__ = function(self){
     check_self_is_float(self, '__hash__')
     return float.$hash_func(self)
 }
@@ -950,25 +956,6 @@ float.__pow__ = function(self, other){
         return fast_float(Math.pow(self.value, other))
     }
     return _b_.NotImplemented
-}
-
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    return {
-        __class__: args[0],
-        value: args[1]
-    }
-}
-
-float.__reduce_ex__ = function(self){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__ || _b_.float, _b_.repr(self)]),
-        _b_.None,
-        _b_.None,
-        _b_.None])
 }
 
 float.__repr__ = function(self){

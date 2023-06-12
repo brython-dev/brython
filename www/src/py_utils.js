@@ -125,6 +125,13 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                     kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly)
 }
 
+$B.single_arg = function(fname, arg, args){
+    var slots = {}
+    slots[arg] = null
+    var $ = $B.args(fname, 1, slots, [arg], args, {}, null, null)
+    return $[arg]
+}
+
 $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
                     kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly){
     // Algorithm to parse the arguments ("args") for the function with the
@@ -432,7 +439,6 @@ $B.get_class = function(obj){
                     // Javascript function or constructor
                     return $B.JSObj
                 }
-                obj.__class__ = $B.function
                 return $B.function
             case "object":
                 if(Array.isArray(obj)){
@@ -1203,12 +1209,11 @@ $B.to_num = function(obj, methods){
         if(method !== missing){
             var res = method(obj)
             if(!_b_.isinstance(res, expected_class[methods[i]])){
-                console.log(res, methods[i], expected_class[methods[i]])
                 throw _b_.TypeError.$factory(methods[i] + "returned non-" +
-                    expected_class[methods[i]].$infos.__name__ +
+                    expected_class[methods[i]].__name__ +
                     "(type " + $B.get_class(res) +")")
             }
-            return res
+            return {result: res, method: methods[i]}
         }
     }
     return null

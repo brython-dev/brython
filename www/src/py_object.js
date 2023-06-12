@@ -113,7 +113,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'surface' // false // attr == "__args__"
+    var $test = false // attr == 'method' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -403,6 +403,9 @@ object.__ne__ = function(self, other){
 }
 
 object.__reduce__ = function(self){
+    if(! self.__dict__){
+        throw _b_.TypeError.$factory(`cannot pickle '${$B.class_name(self)}' object`)
+    }
     if($B.imported.copyreg === undefined){
         $B.$import('copyreg')
     }
@@ -432,47 +435,84 @@ object.__reduce__ = function(self){
     return _b_.tuple.$factory(res)
 }
 
-function __newobj__(cls){
-    return $B.$getattr(cls, "__new__").apply(null, arguments)
+function getNewArguments(self, klass){
+    var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
+    if(newargs_ex !== null){
+        var newargs = newargs_ex()
+        if((! newargs) || newargs.__class__ !== _b_.tuple){
+            throw _b_.TypeError.$factory("__getnewargs_ex__ should " +
+                `return a tuple, not '${$B.class_name(newargs)}'`)
+        }
+        if(newargs.length != 2){
+            throw _b_.ValueError.$factory("__getnewargs_ex__ should " +
+                `return a tuple of length 2, not ${newargs.length}`)
+        }
+        var args = newargs[0],
+            kwargs = newargs[1]
+        if((! args) || args.__class__ !== _b_.tuple){
+            throw _b_.TypeError.$factory("first item of the tuple returned " +
+                `by __getnewargs_ex__ must be a tuple, not '${$B.class_name(args)}'`)
+        }
+        if((! kwargs) || kwargs.__class__ !== _b_.dict){
+            throw  _b_.TypeError.$factory("second item of the tuple returned " +
+                `by __getnewargs_ex__ must be a dict, not '${$B.class_name(kwargs)}'`)
+        }
+        return {args, kwargs}
+    }
+    var newargs = klass.$getnewargs,
+        args
+    if(! newargs){
+        newargs = $B.$getattr(klass, '__getnewargs__', null)
+    }
+    if(newargs){
+        args = newargs(self)
+        if((! args) || args.__class__ !== _b_.tuple){
+            throw _b_.TypeError.$factory("__getnewargs__ should " +
+                `return a tuple, not '${$B.class_name(args)}'`)
+        }
+        return {args}
+    }
 }
-__newobj__.$infos = {
-    __name__: "__newobj__",
-    __qualname__: "__newobj__"
-}
-_b_.__newobj__ = __newobj__
+
 
 object.__reduce_ex__ = function(self, protocol){
-    var klass = $B.get_class(self),
-        reduce = $B.$getattr(klass, '__reduce__')
+    var klass = $B.get_class(self)
+    if($B.imported.copyreg === undefined){
+        $B.$import('copyreg')
+    }
+    if(protocol < 2){
+        return $B.$call($B.imported.copyreg._reduce_ex)(self, protocol)
+    }
+
+    var reduce = $B.$getattr(klass, '__reduce__')
+
     if(reduce !== object.__reduce__){
         return $B.$call(reduce)(self)
     }
-    if(protocol < 2){
-        return object.__reduce__(self)
+    var res = [$B.imported.copyreg.__newobj__]
+    var arg2 = [klass]
+    var newargs = getNewArguments(self, klass)
+    if(newargs){
+        arg2 = arg2.concat(newargs.args)
     }
-    var res = [__newobj__]
-    var arg2 = _b_.tuple.$factory([self.__class__])
-    if(Array.isArray(self)){
-        self.forEach(function(item){arg2.push(item)})
-    }
-    res.push(arg2)
+    res.push($B.fast_tuple(arg2))
     var d = $B.empty_dict(),
         nb = 0
-    if(self.__dict__ === undefined){
-        throw _b_.TypeError.$factory("cannot pickle '" +
-            $B.class_name(self) + "' object")
-    }
-    for(var attr of _b_.dict.$keys_string(self.__dict__)){
-        if(attr == "__class__" || attr.startsWith("$")){
-            continue
+    if(self.__dict__){
+        for(var item of _b_.dict.$iter_items_with_hash(self.__dict__)){
+            if(item.key == "__class__" || item.key.startsWith("$")){
+                continue
+            }
+            _b_.dict.$setitem(d, item.key, item.value)
+            nb++
         }
-        _b_.dict.$setitem(d, attr,
-            _b_.dict.$getitem_string(self.__dict__, attr))
-        nb++
     }
-    if(nb == 0){d = _b_.None}
+    if(nb == 0){
+        d = _b_.None
+    }
     res.push(d)
-    res.push(_b_.None)
+    res.push(_b_.None) // XXX fix me
+    res.push(_b_.None) // XXX fix me
     return _b_.tuple.$factory(res)
 }
 

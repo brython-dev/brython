@@ -5,6 +5,10 @@ var _b_ = $B.builtins
 var from_unicode = {},
     to_unicode = {}
 
+function bytes_value(obj){
+    return obj.__class__ === bytes ? obj : fast_bytes(obj.source)
+}
+
 // Conversion of byte-like objects (bytes, bytearray, memoryview, array.array...)
 // into a list of bytes
 // Make the function an attribute of $B, it is used in libs/_binascii.js
@@ -294,6 +298,13 @@ bytes.__getitem__ = function(self, arg){
     }
 }
 
+bytes.$getnewargs = function(self){
+    return $B.fast_tuple([bytes_value(self)])
+}
+
+bytes.__getnewargs__ = function(){
+    return bytes.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+}
 
 bytes.__gt__ = function(self, other){
     if(invalid(other)){return _b_.NotImplemented}
@@ -521,8 +532,6 @@ bytes.__repr__ = bytes.__str__ = function(self){
         return "b'" + res.replace(new RegExp("'", "g"), "\\'")  + "'"
     }
 }
-
-bytes.__reduce_ex__ = function(self){return bytes.__repr__(self)}
 
 bytes.capitalize = function(self) {
     var src = self.source,

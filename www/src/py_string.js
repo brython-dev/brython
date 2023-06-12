@@ -366,6 +366,14 @@ function fnv(p){
     return x
 }
 
+str.$getnewargs = function(self){
+    return $B.fast_tuple([to_string(self)])
+}
+
+str.__getnewargs__ = function(){
+    return str.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+}
+
 str.__hash__ = function(_self){
     // copied from
     // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
@@ -1185,24 +1193,6 @@ str.__new__ = function(cls, value){
             __dict__: $B.empty_dict()
             }
     }
-}
-
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    var res = args[1]
-    res.__class__ = args[0]
-    return res
-}
-
-str.__reduce_ex__ = function(_self){
-    _self = to_string(_self)
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([_self.__class__ || _b_.str, _self]),
-        _b_.None,
-        _b_.None])
 }
 
 str.__repr__ = function(_self){

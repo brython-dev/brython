@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-05-31 14:29:23.709774"
-__BRYTHON__.timestamp=1685536163709
+__BRYTHON__.compiled_date="2023-06-12 09:02:31.421413"
+__BRYTHON__.timestamp=1686553351408
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4844,6 +4844,10 @@ for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
 if($dobj.hasOwnProperty(var_name)){if(i < argcount){defaults.push($dobj[var_name])}else{kwdefaults.$jsobj[var_name]=$dobj[var_name]}}}
 for(var k in slots){slots[k]=empty}
 return $B.parse_args(args,fname,argcount,slots,var_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly)}
+$B.single_arg=function(fname,arg,args){var slots={}
+slots[arg]=null
+var $=$B.args(fname,1,slots,[arg],args,{},null,null)
+return $[arg]}
 $B.parse_args=function(args,fname,argcount,slots,arg_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly){
 var nb_passed=args.length,nb_passed_pos=nb_passed,nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set={},nb_def=defaults.length,varargs=[],extra_kw={},kw
 for(var i=0;i < nb_passed;i++){var arg=args[i]
@@ -4932,7 +4936,6 @@ return _b_.bool
 case "function":
 if(obj.$is_js_func){
 return $B.JSObj}
-obj.__class__=$B.function
 return $B.function
 case "object":
 if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
@@ -5196,11 +5199,10 @@ var expected_class={"__complex__":_b_.complex,"__float__":_b_.float,"__index__":
 var klass=obj.__class__ ||$B.get_class(obj)
 for(var i=0;i < methods.length;i++){var missing={},method=$B.$getattr(klass,methods[i],missing)
 if(method !==missing){var res=method(obj)
-if(!_b_.isinstance(res,expected_class[methods[i]])){console.log(res,methods[i],expected_class[methods[i]])
-throw _b_.TypeError.$factory(methods[i]+"returned non-"+
-expected_class[methods[i]].$infos.__name__+
+if(!_b_.isinstance(res,expected_class[methods[i]])){throw _b_.TypeError.$factory(methods[i]+"returned non-"+
+expected_class[methods[i]].__name__+
 "(type "+$B.get_class(res)+")")}
-return res}}
+return{result:res,method:methods[i]}}}
 return null}
 $B.PyNumber_Index=function(item){switch(typeof item){case "boolean":
 return item ? 1 :0
@@ -5522,7 +5524,8 @@ if(eq !==null){var res=$B.$call(eq)(self,other)
 if(res===_b_.NotImplemented){return res}
 return ! $B.$bool(res)}
 return _b_.NotImplemented}
-object.__reduce__=function(self){if($B.imported.copyreg===undefined){$B.$import('copyreg')}
+object.__reduce__=function(self){if(! self.__dict__){throw _b_.TypeError.$factory(`cannot pickle '${$B.class_name(self)}' object`)}
+if($B.imported.copyreg===undefined){$B.$import('copyreg')}
 var res=[$B.imported.copyreg._reconstructor]
 var D=$B.get_class(self),B=object
 for(var klass of D.__mro__){if(klass.__module__=='builtins'){B=klass
@@ -5534,24 +5537,41 @@ var d=$B.empty_dict()
 for(var attr of _b_.dict.$keys_string(self.__dict__)){_b_.dict.$setitem(d,attr,_b_.dict.$getitem_string(self.__dict__,attr))}
 res.push(d)
 return _b_.tuple.$factory(res)}
-function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
-__newobj__.$infos={__name__:"__newobj__",__qualname__:"__newobj__"}
-_b_.__newobj__=__newobj__
-object.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self),reduce=$B.$getattr(klass,'__reduce__')
+function getNewArguments(self,klass){var newargs_ex=$B.$getattr(self,'__getnewargs_ex__',null)
+if(newargs_ex !==null){var newargs=newargs_ex()
+if((! newargs)||newargs.__class__ !==_b_.tuple){throw _b_.TypeError.$factory("__getnewargs_ex__ should "+
+`return a tuple, not '${$B.class_name(newargs)}'`)}
+if(newargs.length !=2){throw _b_.ValueError.$factory("__getnewargs_ex__ should "+
+`return a tuple of length 2, not ${newargs.length}`)}
+var args=newargs[0],kwargs=newargs[1]
+if((! args)||args.__class__ !==_b_.tuple){throw _b_.TypeError.$factory("first item of the tuple returned "+
+`by __getnewargs_ex__ must be a tuple, not '${$B.class_name(args)}'`)}
+if((! kwargs)||kwargs.__class__ !==_b_.dict){throw _b_.TypeError.$factory("second item of the tuple returned "+
+`by __getnewargs_ex__ must be a dict, not '${$B.class_name(kwargs)}'`)}
+return{args,kwargs}}
+var newargs=klass.$getnewargs,args
+if(! newargs){newargs=$B.$getattr(klass,'__getnewargs__',null)}
+if(newargs){args=newargs(self)
+if((! args)||args.__class__ !==_b_.tuple){throw _b_.TypeError.$factory("__getnewargs__ should "+
+`return a tuple, not '${$B.class_name(args)}'`)}
+return{args}}}
+object.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
+if($B.imported.copyreg===undefined){$B.$import('copyreg')}
+if(protocol < 2){return $B.$call($B.imported.copyreg._reduce_ex)(self,protocol)}
+var reduce=$B.$getattr(klass,'__reduce__')
 if(reduce !==object.__reduce__){return $B.$call(reduce)(self)}
-if(protocol < 2){return object.__reduce__(self)}
-var res=[__newobj__]
-var arg2=_b_.tuple.$factory([self.__class__])
-if(Array.isArray(self)){self.forEach(function(item){arg2.push(item)})}
-res.push(arg2)
+var res=[$B.imported.copyreg.__newobj__]
+var arg2=[klass]
+var newargs=getNewArguments(self,klass)
+if(newargs){arg2=arg2.concat(newargs.args)}
+res.push($B.fast_tuple(arg2))
 var d=$B.empty_dict(),nb=0
-if(self.__dict__===undefined){throw _b_.TypeError.$factory("cannot pickle '"+
-$B.class_name(self)+"' object")}
-for(var attr of _b_.dict.$keys_string(self.__dict__)){if(attr=="__class__" ||attr.startsWith("$")){continue}
-_b_.dict.$setitem(d,attr,_b_.dict.$getitem_string(self.__dict__,attr))
-nb++}
+if(self.__dict__){for(var item of _b_.dict.$iter_items_with_hash(self.__dict__)){if(item.key=="__class__" ||item.key.startsWith("$")){continue}
+_b_.dict.$setitem(d,item.key,item.value)
+nb++}}
 if(nb==0){d=_b_.None}
 res.push(d)
+res.push(_b_.None)
 res.push(_b_.None)
 return _b_.tuple.$factory(res)}
 object.__repr__=function(self){if(self===object){return "<class 'object'>"}
@@ -7244,6 +7264,8 @@ $B.function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs 
 return Object.keys(infos).
 concat(Object.keys(attrs)).
 filter(x=> !x.startsWith('$'))}
+$B.function.__Xeq__=function(self,other){console.log('compare functions',self,other)
+return self===other}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
@@ -8186,6 +8208,7 @@ _b_.slice=slice})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var from_unicode={},to_unicode={}
+function bytes_value(obj){return obj.__class__===bytes ? obj :fast_bytes(obj.source)}
 $B.to_bytes=function(obj){var res
 if(_b_.isinstance(obj,[bytes,bytearray])){res=obj.source}else{var ga=$B.$getattr(obj,"tobytes",null)
 if(ga !==null){res=$B.$call(ga)().source}else{throw _b_.TypeError.$factory("object doesn't support the buffer protocol")}}
@@ -8279,6 +8302,8 @@ for(var i=start;i < stop;i+=step){res[pos++]=self.source[i]}}else{if(stop >=star
 stop=Math.max(0,stop)
 for(var i=start;i >=stop;i+=step){res[pos++]=self.source[i]}}
 return bytes.$factory(res)}else if(_b_.isinstance(arg,_b_.bool)){return self.source.__getitem__(_b_.int.$factory(arg))}}
+bytes.$getnewargs=function(self){return $B.fast_tuple([bytes_value(self)])}
+bytes.__getnewargs__=function(){return bytes.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 bytes.__gt__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
 return _b_.list.__gt__(self.source,other.source)}
 bytes.__hash__=function(self){if(self===undefined){return bytes.__hashvalue__ ||$B.$py_next_hash--}
@@ -8356,7 +8381,6 @@ if(t[s]!==undefined){res+=t[s]}else if(s < 32 ||s >=128){var hx=s.toString(16)
 hx=(hx.length==1 ? '0' :'')+hx
 res+='\\x'+hx}else if(s=="\\".charCodeAt(0)){res+="\\\\"}else{res+=String.fromCharCode(s)}}
 if(res.indexOf("'")>-1 && res.indexOf('"')==-1){return 'b"'+res+'"'}else{return "b'"+res.replace(new RegExp("'","g"),"\\'")+"'"}}
-bytes.__reduce_ex__=function(self){return bytes.__repr__(self)}
 bytes.capitalize=function(self){var src=self.source,len=src.length,buffer=src.slice()
 if(buffer[0]> 96 && buffer[0]< 123){buffer[0]-=32}
 for(var i=1;i < len;++i){if(buffer[i]> 64 && buffer[i]< 91){buffer[i]+=32}}
@@ -9809,6 +9833,8 @@ x=(x ^ p.length)& mask
 x=(x ^ suffix)& mask
 if(x==-1){x=-2}
 return x}
+str.$getnewargs=function(self){return $B.fast_tuple([to_string(self)])}
+str.__getnewargs__=function(){return str.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 str.__hash__=function(_self){
 var s=to_string(_self)
 return s.split("").reduce(function(a,b){a=((a << 5)-a)+b.charCodeAt(0);
@@ -10081,13 +10107,6 @@ str.__ne__=function(_self,other){var eq=str.__eq__(_self,other)
 return eq===_b_.NotImplemented ? eq :! eq}
 str.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}else if(cls===_b_.str){return value}else{return{
 __class__:cls,$brython_value:str.$factory(value),__dict__:$B.empty_dict()}}}
-function __newobj__(){
-var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
-var res=args[1]
-res.__class__=args[0]
-return res}
-str.__reduce_ex__=function(_self){_self=to_string(_self)
-return $B.fast_tuple([__newobj__,$B.fast_tuple([_self.__class__ ||_b_.str,_self]),_b_.None,_b_.None])}
 str.__repr__=function(_self){
 _self=to_string(_self)
 var t=$B.special_string_repr,
@@ -10917,6 +10936,8 @@ int.__floordiv__=function(self,other){if(typeof other=="number"){if(other==0){th
 return Math.floor(self/other)}else if(typeof other=="boolean"){if(other===false){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return self}else if(other.__class__===$B.long_int){return Math.floor(self/Number(other.value))}else if(_b_.isinstance(other,_b_.int)){return int.__floordiv__(self,other.$brython_value)}
 return _b_.NotImplemented}
+int.$getnewargs=function(self){return $B.fast_tuple([int_value(self)])}
+int.__getnewargs__=function(){return int.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 int.__hash__=function(self){if(self.$brython_value !==undefined){
 if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 if(typeof self.$brython_value=="number"){return self.__hashvalue__=self.$brython_value}else{
@@ -10985,7 +11006,6 @@ var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
 var res=args.slice(1)
 res.__class__=args[0]
 return res}
-int.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,int_value(self)]),_b_.None,_b_.None,_b_.None])}
 int.__repr__=function(self){$B.builtins_repr_check(int,arguments)
 var value=int_value(self),x=value.__class__===$B.long_int ? value.value :value
 if($B.int_max_str_digits !=0 &&
@@ -11388,8 +11408,7 @@ var object=_b_.object
 function $err(op,other){var msg="unsupported operand type(s) for "+op+
 ": 'float' and '"+$B.class_name(other)+"'"
 throw _b_.TypeError.$factory(msg)}
-function float_value(obj){
-return obj.$brython_value !==undefined ? obj.$brython_value :obj}
+function float_value(obj){return obj.__class__===float ? obj :fast_float(obj.value)}
 var float={__class__:_b_.type,__dir__:object.__dir__,__qualname__:'float',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 float.$float_value=float_value
 float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
@@ -11594,6 +11613,8 @@ for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
 raw[0]=chunks.join(",")}
 return $B.format_width(raw.join("."),fmt)}
+float.$getnewargs=function(self){return $B.fast_tuple([float_value(self)])}
+float.__getnewargs__=function(){return float.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 var nan_hash=$B.$py_next_hash--
 var mp2_31=Math.pow(2,31)
 $B.float_hash_cache=new Map()
@@ -11718,11 +11739,6 @@ fast_float(Number.POSITIVE_INFINITY)}
 if(self.value < 0 && ! Number.isInteger(other)){return _b_.complex.__pow__($B.make_complex(self.value,0),fast_float(other))}
 return fast_float(Math.pow(self.value,other))}
 return _b_.NotImplemented}
-function __newobj__(){
-var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
-return{
-__class__:args[0],value:args[1]}}
-float.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||_b_.float,_b_.repr(self)]),_b_.None,_b_.None,_b_.None])}
 float.__repr__=function(self){$B.builtins_repr_check(float,arguments)
 self=self.value
 if(self==Infinity){return 'inf'}else if(self==-Infinity){return '-inf'}else if(isNaN(self)){return 'nan'}else if(self===0){if(1/self===-Infinity){return '-0.0'}
@@ -11949,8 +11965,11 @@ return make_complex(
 $B.rich_op('__add__',self.$real.value,other.valueOf()),self.$imag.value)}
 if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real.value+other.value,self.$imag.value)}
 return _b_.NotImplemented}
-complex.__bool__=function(self){return(self.$real !=0 ||self.$imag !=0)}
-complex.__complex__=function(self){return self}
+complex.__bool__=function(self){return(! $B.rich_comp('__eq__',self.$real,0))||
+! $B.rich_comp('__eq__',self.$imag,0)}
+complex.__complex__=function(self){
+if(self.__class__===complex){return self}
+return $B.make_complex(self.$real,self.$imag)}
 complex.__eq__=function(self,other){if(_b_.isinstance(other,complex)){return self.$real.value==other.$real.value &&
 self.$imag.value==other.$imag.value}
 if(_b_.isinstance(other,_b_.int)){if(self.$imag.value !=0){return false}
@@ -11989,6 +12008,8 @@ res+=formatted_im
 if(add_parens){res='('+res+')'}
 return res}
 throw _b_.ValueError.$factory(`invalid type for complex: ${type}`)}
+complex.$getnewargs=function(self){return $B.fast_tuple([self.$real,self.$imag])}
+complex.__getnewargs__=function(){return complex.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 complex.__hash__=function(self){
 return self.$imag.value*1000003+self.$real.value}
 complex.__init__=function(){return _b_.None}
@@ -12003,46 +12024,49 @@ complex.__ne__=function(self,other){var res=complex.__eq__(self,other)
 return res===_b_.NotImplemented ? res :! res}
 complex.__neg__=function(self){return make_complex(-self.$real.value,-self.$imag.value)}
 complex.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')}
-var res,missing={},args=$B.args("complex",3,{cls:null,real:null,imag:null},["cls","real","imag"],arguments,{real:0,imag:missing},null,null),$real=args.real,$imag=args.imag
-if(typeof $real=="string"){if($imag !==missing){throw _b_.TypeError.$factory("complex() can't take second arg "+
-"if first is a string")}else{var arg=$real
-$real=$real.trim()
-if($real.startsWith("(")&& $real.endsWith(")")){$real=$real.substr(1)
-$real=$real.substr(0,$real.length-1)}
+var res,missing={},$=$B.args("complex",3,{cls:null,real:null,imag:null},["cls","real","imag"],arguments,{real:0,imag:missing},null,null),cls=$.cls,first=$.real,second=$.imag
+if(typeof first=="string"){if(second !==missing){throw _b_.TypeError.$factory("complex() can't take second arg "+
+"if first is a string")}else{var arg=first
+first=first.trim()
+if(first.startsWith("(")&& first.endsWith(")")){first=first.substr(1)
+first=first.substr(0,first.length-1)}
 var complex_re=/^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
-var parts=complex_re.exec($real)
+var parts=complex_re.exec(first)
 function to_num(s){var res=parseFloat(s.charAt(0)+s.substr(1).replace(/_/g,""))
 if(isNaN(res)){throw _b_.ValueError.$factory("could not convert string "+
 "to complex: '"+arg+"'")}
 return res}
-if(parts===null){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_real]=="." ||parts[_imag]=="." ||
+if(parts===null){throw _b_.ValueError.$factory("complex() arg is a malformed string")}
+if(parts[_real]&& parts[_imag].startsWith('.')&&
+parts[_sign]==''){throw _b_.ValueError.$factory('complex() arg is a malformed string')}else if(parts[_real]=="." ||parts[_imag]=="." ||
 parts[_real]==".e" ||parts[_imag]==".e" ||
-parts[_real]=="e" ||parts[_imag]=="e"){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){$real=0
-if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else{$imag=to_num(parts[_real])}}else{$real=to_num(parts[_real])
-$imag=parts[_imag]=="" ? 1 :to_num(parts[_imag])
-$imag=parts[_sign]=="-" ?-$imag :$imag}}else{$real=to_num(parts[_real])
-$imag=0}
-res=make_complex($real,$imag)
+parts[_real]=="e" ||parts[_imag]=="e"){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){first=0
+if(parts[_real]=="+" ||parts[_real]==""){second=1}else if(parts[_real]=='-'){second=-1}else{second=to_num(parts[_real])}}else{first=to_num(parts[_real])
+second=parts[_imag]=="" ? 1 :to_num(parts[_imag])
+second=parts[_sign]=="-" ?-second :second}}else{if(parts[_sign]&& parts[_imag]==''){throw _b_.ValueError.$factory('complex() arg is a malformed string')}
+first=to_num(parts[_real])
+second=0}
+res=make_complex(first,second)
+res.__class__=cls
+res.__dict__=$B.empty_dict()
 return res}}
-$imag=$imag===missing ? 0 :$imag
-if(arguments.length==2 && $real.__class__===complex && $imag==0){return $real}
-if(_b_.isinstance($real,[_b_.float,_b_.int])&&
-_b_.isinstance($imag,[_b_.float,_b_.int])){res=make_complex($real,$imag)
+if(first.__class__===complex && cls===complex && second===missing){return first}
+var arg1=_convert(first),r,i
+if(arg1===null){throw _b_.TypeError.$factory("complex() first argument must be a "+
+`string or a number, not '${$B.class_name(first)}'`)}
+if(typeof second=="string"){throw _b_.TypeError.$factory("complex() second arg can't be a string")}
+var arg2=_convert(second===missing ? 0 :second)
+if(arg2===null){throw _b_.TypeError.$factory("complex() second argument must be a "+
+`number, not '${$B.class_name(second)}'`)}
+if(arg1.method=='__complex__'){if(arg2.method=='__complex__'){r=$B.rich_op('__sub__',arg1.result.$real,arg2.result.$imag)
+i=$B.rich_op('__add__',arg1.result.$imag,arg2.result.$real)}else{r=arg1.result.$real
+i=$B.rich_op('__add__',arg1.result.$imag,arg2.result)}}else{if(arg2.method=='__complex__'){r=$B.rich_op('__sub__',arg1.result,arg2.result.$imag)
+i=arg2.result.$real}else{r=arg1.result
+i=arg2.result}}
+var res=make_complex(r,i)
+res.__class__=cls
+res.__dict__=$B.empty_dict()
 return res}
-var real_to_num=$B.to_num($real,["__complex__","__float__","__index__"])
-if(real_to_num===null){throw _b_.TypeError.$factory("complex() first argument must be a "+
-" string or a number, not '"+$B.class_name($real)+"'")}
-$real=real_to_num
-$imag=_convert($imag)
-if(! _b_.isinstance($real,_b_.float)&& ! _b_.isinstance($real,_b_.int)&&
-! _b_.isinstance($real,_b_.complex)){throw _b_.TypeError.$factory("complex() argument must be a string "+
-"or a number")}
-if(typeof $imag=="string"){throw _b_.TypeError.$factory("complex() second arg can't be a string")}
-if(! _b_.isinstance($imag,_b_.float)&& ! _b_.isinstance($imag,_b_.int)&&
-! _b_.isinstance($imag,_b_.complex)&& $imag !==missing){throw _b_.TypeError.$factory("complex() argument must be a string "+
-"or a number")}
-$imag=complex.__mul__(complex.$factory("1j"),$imag)
-return complex.__add__($imag,$real)}
 complex.__pos__=function(self){return self}
 function complex2expo(cx){var norm=Math.sqrt((cx.$real.value*cx.$real.value)+
 (cx.$imag.value*cx.$imag.value)),sin=cx.$imag.value/norm,cos=cx.$real.value/norm,angle
@@ -12140,10 +12164,22 @@ complex.real.setter=function(){throw _b_.AttributeError.$factory("readonly attri
 complex.imag=function(self){return self.$imag}
 complex.imag.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
-var type_conversions=["__complex__","__float__","__index__"]
-var _convert=function(num){var klass=num.__class__ ||$B.get_class(num)
-for(var i=0;i < type_conversions.length;i++){var missing={},method=$B.$getattr(klass,type_conversions[i],missing)
-if(method !==missing){return method(num)}}
+var expected_class={"__complex__":complex,"__float__":_b_.float,"__index__":_b_.int}
+function _convert(obj){
+var klass=obj.__class__ ||$B.get_class(obj)
+for(var method_name in expected_class){var missing={},method=$B.$getattr(klass,method_name,missing)
+if(method !==missing){var res=method(obj)
+if(!_b_.isinstance(res,expected_class[method_name])){throw _b_.TypeError.$factory(method_name+"returned non-"+
+expected_class[method_name].__name__+
+"(type "+$B.get_class(res)+")")}
+if(method_name=='__index__' &&
+$B.rich_comp('__gt__',res,__BRYTHON__.MAX_VALUE)){throw _b_.OverflowError.$factory('int too large to convert to float')}
+if(method_name=='__complex__' && res.__class__ !==complex){$B.warn(_b_.DeprecationWarning,"__complex__ returned "+
+`non-complex (type ${$B.class_name(res)}). `+
+"The ability to return an instance of a strict subclass "+
+"of complex is deprecated, and may be removed in a future "+
+"version of Python.")}
+return{result:res,method:method_name}}}
 return null}
 var make_complex=$B.make_complex=function(real,imag){return{
 __class__:complex,$real:_b_.float.$factory(real),$imag:_b_.float.$factory(imag)}}
@@ -13073,6 +13109,8 @@ if(other===undefined){return self===tuple}
 return list.__eq__(self,other)}
 function c_mul(a,b){s=((parseInt(a)*b)& 0xFFFFFFFF).toString(16)
 return parseInt(s.substr(0,s.length-1),16)}
+tuple.$getnewargs=function(self){return $B.fast_tuple([self])}
+tuple.__getnewargs__=function(){return tuple.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 tuple.__hash__=function(self){
 var x=0x3456789
 for(var i=0,len=self.length;i < len;i++){var y=_b_.hash(self[i])
