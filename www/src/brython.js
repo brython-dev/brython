@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-06-12 09:02:31.421413"
-__BRYTHON__.timestamp=1686553351408
+__BRYTHON__.compiled_date="2023-06-12 12:37:19.329320"
+__BRYTHON__.timestamp=1686566239329
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6326,10 +6326,8 @@ obj[attr]!==undefined){res[pos++]=attr}}
 res.sort()
 return res}
 var divmod=_b_.divmod=function(x,y){check_nb_args_no_kw('divmod',2,arguments)
-var klass=x.__class__ ||$B.get_class(x)
-var dm=$B.$getattr(klass,"__divmod__",_b_.None)
-if(dm !==_b_.None){return dm(x,y)}
-return _b_.tuple.$factory([$B.$getattr(klass,'__floordiv__')(x,y),$B.$getattr(klass,'__mod__')(x,y)])}
+try{return $B.rich_op('__divmod__',x,y)}catch(err){if($B.is_exc(err,[_b_.TypeError])){return _b_.tuple.$factory([$B.rich_op('__floordiv__',x,y),$B.rich_op('__mod__',x,y)])}
+throw err}}
 var enumerate=_b_.enumerate=$B.make_class("enumerate",function(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null),_iter=iter($ns["iterable"]),start=$ns["start"]
 return{
 __class__:enumerate,__name__:'enumerate iterator',counter:start-1,iter:_iter,start:start}}
@@ -7264,8 +7262,6 @@ $B.function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs 
 return Object.keys(infos).
 concat(Object.keys(attrs)).
 filter(x=> !x.startsWith('$'))}
-$B.function.__Xeq__=function(self,other){console.log('compare functions',self,other)
-return self===other}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
@@ -12011,7 +12007,7 @@ throw _b_.ValueError.$factory(`invalid type for complex: ${type}`)}
 complex.$getnewargs=function(self){return $B.fast_tuple([self.$real,self.$imag])}
 complex.__getnewargs__=function(){return complex.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 complex.__hash__=function(self){
-return self.$imag.value*1000003+self.$real.value}
+return $B.$hash(self.$real)+$B.$hash(self.$imag)*1000003}
 complex.__init__=function(){return _b_.None}
 complex.__invert__=function(self){return ~self}
 complex.__mro__=[_b_.object]
@@ -12119,7 +12115,8 @@ return "-0+"+imag+"j"}else{return imag+"j"}}
 if(self.$imag.value > 0 ||isNaN(self.$imag.value)){return "("+real+"+"+imag+"j)"}
 if(self.$imag.value==0){if(1/self.$imag.value < 0){return "("+real+"-0j)"}
 return "("+real+"+0j)"}
-return "("+real+"-"+_b_.str.$factory(-self.$imag.value)+"j)"}
+var sign=imag.startsWith('-')? '' :'+'
+return "("+real+sign+imag+"j)"}
 complex.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
 if(_b_.isinstance(other,_b_.int)){return make_complex(other*self.$real.value,other*self.$imag.value)}else if(_b_.isinstance(other,_b_.float)){return make_complex(other.value*self.$real.value,other.value*self.$imag.value)}
 return _b_.NotImplemented}

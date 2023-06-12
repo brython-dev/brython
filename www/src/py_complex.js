@@ -176,7 +176,7 @@ complex.__getnewargs__ = function(){
 complex.__hash__ = function(self){
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
-    return self.$imag.value * 1000003 + self.$real.value
+    return $B.$hash(self.$real) + $B.$hash(self.$imag) * 1000003
 }
 
 complex.__init__ = function() {
@@ -483,7 +483,7 @@ complex.__repr__ = function(self){
                    self.$imag.value + '' :
                    _b_.str.$factory(self.$imag)
     if(imag.endsWith('.0')){
-        imag = imag.substr(0, imag.length -2)
+        imag = imag.substr(0, imag.length - 2)
     }
     if(self.$imag instanceof Number && self.$imag == parseInt(self.$imag)){
         if(self.$imag == 0 && 1 / self.$imag === -Infinity){
@@ -509,7 +509,8 @@ complex.__repr__ = function(self){
         }
         return "(" + real + "+0j)"
     }
-    return "(" + real + "-" + _b_.str.$factory(-self.$imag.value) + "j)"
+    var sign = imag.startsWith('-') ? '' : '+'
+    return "(" + real + sign + imag + "j)"
 }
 
 complex.__rmul__ = function(self, other){
