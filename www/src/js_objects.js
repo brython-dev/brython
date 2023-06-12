@@ -593,11 +593,6 @@ $B.JSObj.__getattribute__ = function(_self, attr){
                 return class_attr
             }
         }
-        if(attr == "bind" && typeof _self.addEventListener == "function"){
-            return function(event, callback){
-                return _self.addEventListener(event, callback)
-            }
-        }
         throw $B.attr_error(attr, _self)
     }
     if(js_attr !== null &&
@@ -730,8 +725,50 @@ $B.JSObj.bind = function(_self, evt, func){
             }
         }
     }
+    _self.$brython_events = _self.$brython_events || {}
+    if(_self.$brython_events){
+        _self.$brython_events[evt] = _self.$brython_events[evt] || []
+        _self.$brython_events[evt].push([func, js_func])
+    }
     _self.addEventListener(evt, js_func)
     return _b_.None
+}
+
+$B.JSObj.bindings = function(_self){
+    var res = $B.empty_dict()
+    if(_self.$brython_events){
+        for(var key in _self.$brython_events){
+            _b_.dict.$setitem(res, key,
+                $B.fast_tuple(_self.$brython_events[key].map(x => x[0])))
+        }
+    }
+    return res
+}
+
+$B.JSObj.unbind = function(_self, evt, func){
+    if(! _self.$brython_events){
+        return _b_.None
+    }
+    if(! _self.$brython_events[evt]){
+        return _b_.None
+    }
+    var events = _self.$brython_events[evt]
+    if(func === undefined){
+        // remove all event listeners for the event
+        for(var item of events){
+            _self.removeEventListener(evt, item[1])
+        }
+        delete _self.$brython_events[evt]
+    }else{
+        for(var i = 0, len = events.length; i < len; i++){
+            if(events[i][0] === func){
+                events.splice(i, 1)
+            }
+        }
+        if(events.length == 0){
+            delete _self.$brython_events[evt]
+        }
+    }
 }
 
 $B.JSObj.to_dict = function(_self){
