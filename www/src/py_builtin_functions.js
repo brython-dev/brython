@@ -2129,7 +2129,7 @@ var pow = _b_.pow = function() {
     if(z === _b_.None){
         return $B.rich_op('__pow__', x, y)
     }else{
-        if(x != _b_.int.$factory(x) || y != _b_.int.$factory(y)){
+        if((! _b_.isinstance(x, _b_.int)) || ! _b_.isinstance(y, _b_.int)){
             throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +
                 "unless all arguments are integers")
         }

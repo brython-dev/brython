@@ -344,7 +344,6 @@ function complex2expo(cx){
         sin = cx.$imag.value / norm,
         cos = cx.$real.value / norm,
         angle
-
     if(cos == 0){
         angle = sin == 1 ? Math.PI / 2 : 3 * Math.PI / 2
     }else if(sin == 0){
@@ -423,9 +422,13 @@ function c_quot(a, b){
     }
 }
 
-complex.__pow__ = function(self, other){
+complex.__pow__ = function(self, other, mod){
     // complex power : use Moivre formula
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
+
+    if(mod !== undefined && mod !== _b_.None){
+        throw _b_.ValueError.$factory('complex modulo')
+    }
     if(other == 1){
         return self
     }
@@ -437,6 +440,14 @@ complex.__pow__ = function(self, other){
     }
     if(_b_.isinstance(other, _b_.float)){
         other = _b_.float.$to_js_number(other)
+    }
+    if(self.$real.value == 0 && self.$imag.value == 0){
+        if(_b_.isinstance(other, complex) &&
+                (other.$imag.value != 0 || other.$real.value < 0)){
+            throw _b_.ZeroDivisionError.$factory(
+                '0.0 to a negative or complex power')
+        }
+        return $B.make_complex(0, 0)
     }
     var exp = complex2expo(self),
         angle = exp.angle,
@@ -485,17 +496,13 @@ complex.__repr__ = function(self){
     if(imag.endsWith('.0')){
         imag = imag.substr(0, imag.length - 2)
     }
-    if(self.$imag instanceof Number && self.$imag == parseInt(self.$imag)){
-        if(self.$imag == 0 && 1 / self.$imag === -Infinity){
-            imag = "-0"
-        }
+    if(Object.is(self.$imag.value, -0)){
+        imag = "-0"
     }
+    var sign = imag.startsWith('-') ? '' : '+'
     if(self.$real.value == 0){
-        if(1 / self.$real.value < 0){
-            if(imag.startsWith('-')){
-                return "-0" + imag + "j"
-            }
-            return "-0+" + imag + "j"
+        if(Object.is(self.$real.value, -0)){
+            return "(-0" + sign + imag + "j)"
         }else{
             return imag + "j"
         }
@@ -509,7 +516,7 @@ complex.__repr__ = function(self){
         }
         return "(" + real + "+0j)"
     }
-    var sign = imag.startsWith('-') ? '' : '+'
+
     return "(" + real + sign + imag + "j)"
 }
 

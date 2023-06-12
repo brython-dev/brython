@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-06-12 12:37:19.329320"
-__BRYTHON__.timestamp=1686566239329
+__BRYTHON__.compiled_date="2023-06-12 21:40:47.169671"
+__BRYTHON__.timestamp=1686598847169
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6889,7 +6889,7 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
 var pow=_b_.pow=function(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'],arguments,{mod:None},null,null),x=$.x,y=$.y,z=$.mod
 var klass=x.__class__ ||$B.get_class(x)
-if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
+if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if((! _b_.isinstance(x,_b_.int))||! _b_.isinstance(y,_b_.int)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
 "unless all arguments are integers")}
 return _b_.int.__pow__(x,y,z)}}
 var $print=_b_.print=function(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
@@ -12088,10 +12088,15 @@ if(b.$imag.value==0.0){throw _b_.ZeroDivisionError.$factory()}
 return make_complex(
 (a.$real.value*ratio+a.$imag.value)/denom,(a.$imag.value*ratio-a.$real.value)/denom)}else{
 return _b_.float('nan')}}
-complex.__pow__=function(self,other){
+complex.__pow__=function(self,other,mod){
+if(mod !==undefined && mod !==_b_.None){throw _b_.ValueError.$factory('complex modulo')}
 if(other==1){return self}
 if(_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100){return c_powi(self,other)}
 if(_b_.isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
+if(self.$real.value==0 && self.$imag.value==0){if(_b_.isinstance(other,complex)&&
+(other.$imag.value !=0 ||other.$real.value < 0)){throw _b_.ZeroDivisionError.$factory(
+'0.0 to a negative or complex power')}
+return $B.make_complex(0,0)}
 var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,_b_.int)){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,_b_.float)){return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if(_b_.isinstance(other,complex)){
 var x=other.$real.value,y=other.$imag.value
@@ -12109,13 +12114,12 @@ _b_.str.$factory(self.$real),imag=Number.isInteger(self.$imag.value)?
 self.$imag.value+'' :
 _b_.str.$factory(self.$imag)
 if(imag.endsWith('.0')){imag=imag.substr(0,imag.length-2)}
-if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){if(self.$imag==0 && 1/self.$imag===-Infinity){imag="-0"}}
-if(self.$real.value==0){if(1/self.$real.value < 0){if(imag.startsWith('-')){return "-0"+imag+"j"}
-return "-0+"+imag+"j"}else{return imag+"j"}}
+if(Object.is(self.$imag.value,-0)){imag="-0"}
+var sign=imag.startsWith('-')? '' :'+'
+if(self.$real.value==0){if(Object.is(self.$real.value,-0)){return "(-0"+sign+imag+"j)"}else{return imag+"j"}}
 if(self.$imag.value > 0 ||isNaN(self.$imag.value)){return "("+real+"+"+imag+"j)"}
 if(self.$imag.value==0){if(1/self.$imag.value < 0){return "("+real+"-0j)"}
 return "("+real+"+0j)"}
-var sign=imag.startsWith('-')? '' :'+'
 return "("+real+sign+imag+"j)"}
 complex.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
 if(_b_.isinstance(other,_b_.int)){return make_complex(other*self.$real.value,other*self.$imag.value)}else if(_b_.isinstance(other,_b_.float)){return make_complex(other.value*self.$real.value,other.value*self.$imag.value)}
