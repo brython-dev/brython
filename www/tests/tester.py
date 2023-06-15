@@ -92,7 +92,8 @@ class Tester:
         self.cleanups.append([function, args, kw])
 
     def assertAlmostEqual(self, result, expected, msg=None):
-        if round(result - expected, 7) != 0:
+        diff = abs(result - expected)
+        if round(diff, 7) != 0:
             if msg is not None:
                 raise AssertionError(msg)
             raise AssertionError('assertEqual, expected %s, got %s'
