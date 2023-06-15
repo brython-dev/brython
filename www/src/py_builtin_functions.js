@@ -2119,6 +2119,10 @@ var ord = _b_.ord = function(c){
     }
 }
 
+var complex_modulo = () => _b_.ValueError.$factory('complex modulo')
+var all_ints = () => _b_.TypeError.$factory('pow() 3rd argument not ' +
+    'allowed unless all arguments are integers')
+
 var pow = _b_.pow = function() {
     var $ = $B.args('pow', 3, {x: null, y: null, mod: null},['x', 'y', 'mod'],
         arguments, {mod: None}, null, null),
@@ -2129,11 +2133,24 @@ var pow = _b_.pow = function() {
     if(z === _b_.None){
         return $B.rich_op('__pow__', x, y)
     }else{
-        if((! _b_.isinstance(x, _b_.int)) || ! _b_.isinstance(y, _b_.int)){
-            throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +
-                "unless all arguments are integers")
+        if(_b_.isinstance(x, _b_.int)){
+            if(_b_.isinstance(y, _b_.float)){
+                throw all_ints()
+            }else if(_b_.isinstance(y, _b_.complex)){
+                throw complex_modulo()
+            }else if(_b_.isinstance(y, _b_.int)){
+                if(_b_.isinstance(z, _b_.complex)){
+                    throw complex_modulo()
+                }else if(! _b_.isinstance(z, _b_.int)){
+                    throw all_ints()
+                }
+            }
+            return _b_.int.__pow__(x, y, z)
+        }else if(_b_.isinstance(x, _b_.float)){
+            throw all_ints()
+        }else if(_b_.isinstance(x, _b_.complex)){
+            throw complex_modulo()
         }
-        return _b_.int.__pow__(x, y, z)
     }
 }
 

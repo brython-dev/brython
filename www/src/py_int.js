@@ -422,7 +422,6 @@ function extended_euclidean(a, b){
     }
 }
 
-
 int.__pow__ = function(self, other, z){
     if(! _b_.isinstance(other, int)){
         return _b_.NotImplemented

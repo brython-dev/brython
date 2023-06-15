@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-06-12 21:40:47.169671"
-__BRYTHON__.timestamp=1686598847169
+__BRYTHON__.compiled_date="2023-06-15 11:34:08.154315"
+__BRYTHON__.timestamp=1686821648154
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6887,11 +6887,13 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 default:
 throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
+var complex_modulo=()=> _b_.ValueError.$factory('complex modulo')
+var all_ints=()=> _b_.TypeError.$factory('pow() 3rd argument not '+
+'allowed unless all arguments are integers')
 var pow=_b_.pow=function(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'],arguments,{mod:None},null,null),x=$.x,y=$.y,z=$.mod
 var klass=x.__class__ ||$B.get_class(x)
-if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if((! _b_.isinstance(x,_b_.int))||! _b_.isinstance(y,_b_.int)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
-"unless all arguments are integers")}
-return _b_.int.__pow__(x,y,z)}}
+if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(_b_.isinstance(x,_b_.int)){if(_b_.isinstance(y,_b_.float)){throw all_ints()}else if(_b_.isinstance(y,_b_.complex)){throw complex_modulo()}else if(_b_.isinstance(y,_b_.int)){if(_b_.isinstance(z,_b_.complex)){throw complex_modulo()}else if(! _b_.isinstance(z,_b_.int)){throw all_ints()}}
+return _b_.int.__pow__(x,y,z)}else if(_b_.isinstance(x,_b_.float)){throw all_ints()}else if(_b_.isinstance(x,_b_.complex)){throw complex_modulo()}}}
 var $print=_b_.print=function(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var kw=$ns['kw'],end=$B.is_none(kw.$jsobj.end)? '\n' :kw.$jsobj.end,sep=$B.is_none(kw.$jsobj.sep)? ' ' :kw.$jsobj.sep,file=$B.is_none(kw.$jsobj.file)? $B.get_stdout():kw.$jsobj.file
 var args=$ns['args'],writer=$B.$getattr(file,'write')
@@ -12079,7 +12081,7 @@ return r;}
 function c_prod(a,b){return make_complex(
 a.$real.value*b.$real.value-a.$imag.value*b.$imag.value,a.$real.value*b.$imag.value+a.$imag.value*b.$real.value)}
 function c_quot(a,b){var r,
-abs_breal=_b_.abs(b.$real.value),abs_bimag=_b_.abs(b.$imag.value)
+abs_breal=Math.abs(b.$real.value),abs_bimag=Math.abs(b.$imag.value)
 if($B.rich_comp('__ge__',abs_breal,abs_bimag)){
 if(abs_breal==0.0){throw _b_.ZeroDivisionError.$factory()}else{var ratio=b.$imag.value/b.$real.value,denom=b.$real.value+b.$imag.value*ratio
 return make_complex((a.$real.value+a.$imag.value*ratio)/denom,(a.$imag.value-a.$real.value*ratio)/denom)}}else if(abs_bimag >=abs_breal){
@@ -12087,11 +12089,19 @@ var ratio=b.$real.value/b.$imag.value,denom=b.$real.value*ratio+b.$imag.value;
 if(b.$imag.value==0.0){throw _b_.ZeroDivisionError.$factory()}
 return make_complex(
 (a.$real.value*ratio+a.$imag.value)/denom,(a.$imag.value*ratio-a.$real.value)/denom)}else{
-return _b_.float('nan')}}
+return $B.make_complex('nan','nan')}}
 complex.__pow__=function(self,other,mod){
 if(mod !==undefined && mod !==_b_.None){throw _b_.ValueError.$factory('complex modulo')}
-if(other==1){return self}
-if(_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100){return c_powi(self,other)}
+if($B.rich_comp('__eq__',other,1)){var funcs=_b_.float.$funcs
+if(funcs.isinf(self.$real)||funcs.isninf(self.$real)||
+funcs.isinf(self.$imag)||funcs.isninf(self.$imag)){throw _b_.OverflowError.$factory('complex exponentiation')}
+return self}
+var small_int=null
+if(_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100){small_int=other}else if(_b_.isinstance(other,_b_.float)&&
+Number.isInteger(other.value)&& Math.abs(other.value < 100)){small_int=other.value}else if(_b_.isinstance(other,complex)&& other.$imag.value==0 &&
+Number.isInteger(other.$real.value)&&
+Math.abs(other.$real.value)< 100){small_int=other.$real.value}
+if(small_int !==null){return c_powi(self,small_int)}
 if(_b_.isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
 if(self.$real.value==0 && self.$imag.value==0){if(_b_.isinstance(other,complex)&&
 (other.$imag.value !=0 ||other.$real.value < 0)){throw _b_.ZeroDivisionError.$factory(
@@ -12101,6 +12111,7 @@ var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,_b_.int)){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,_b_.float)){return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if(_b_.isinstance(other,complex)){
 var x=other.$real.value,y=other.$imag.value
 var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
+if(pw==Number.POSITIVE_INFINITY ||pw===Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory('complex exponentiation')}
 return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for ** or pow(): 'complex' and '"+
 $B.class_name(other)+"'")}}

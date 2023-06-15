@@ -377,10 +377,10 @@ function c_powu(x, n){
         p = x
     while (mask > 0 && n >= mask) {
         if (n & mask){
-            r = c_prod(r,p);
+            r = c_prod(r, p);
         }
         mask <<= 1;
-        p = c_prod(p,p)
+        p = c_prod(p, p)
     }
     return r;
 }
@@ -393,8 +393,8 @@ function c_prod(a, b){
 
 function c_quot(a, b){
      var r,      /* the result */
-         abs_breal = _b_.abs(b.$real.value),
-         abs_bimag = _b_.abs(b.$imag.value)
+         abs_breal = Math.abs(b.$real.value),
+         abs_bimag = Math.abs(b.$imag.value)
 
     if ($B.rich_comp('__ge__', abs_breal, abs_bimag)){
         /* divide tops and bottom by b.real */
@@ -418,7 +418,7 @@ function c_quot(a, b){
             (a.$imag.value * ratio - a.$real.value) / denom)
     }else{
         /* At least one of b.real or b.imag is a NaN */
-        return _b_.float('nan')
+        return $B.make_complex('nan', 'nan')
     }
 }
 
@@ -429,14 +429,30 @@ complex.__pow__ = function(self, other, mod){
     if(mod !== undefined && mod !== _b_.None){
         throw _b_.ValueError.$factory('complex modulo')
     }
-    if(other == 1){
+    if($B.rich_comp('__eq__', other, 1)){
+        var funcs = _b_.float.$funcs
+        if(funcs.isinf(self.$real) || funcs.isninf(self.$real) ||
+                funcs.isinf(self.$imag) || funcs.isninf(self.$imag)){
+            throw _b_.OverflowError.$factory('complex exponentiation')
+        }
         return self
     }
 
     // Check whether the exponent has a small integer value, and if so use
     // a faster and more accurate algorithm.
+    var small_int = null
     if (_b_.isinstance(other, _b_.int) && _b_.abs(other) < 100){
-        return c_powi(self, other)
+        small_int = other
+    }else if(_b_.isinstance(other, _b_.float) &&
+            Number.isInteger(other.value) && Math.abs(other.value < 100)){
+        small_int = other.value
+    }else if(_b_.isinstance(other, complex) && other.$imag.value == 0 &&
+            Number.isInteger(other.$real.value) &&
+            Math.abs(other.$real.value) < 100){
+        small_int = other.$real.value
+    }
+    if(small_int !== null){
+        return c_powi(self, small_int)
     }
     if(_b_.isinstance(other, _b_.float)){
         other = _b_.float.$to_js_number(other)
@@ -465,6 +481,9 @@ complex.__pow__ = function(self, other, mod){
             y = other.$imag.value
         var pw = Math.pow(exp.norm, x) * Math.pow(Math.E, -y * angle),
             theta = y * Math.log(exp.norm) - x * angle
+        if(pw == Number.POSITIVE_INFINITY || pw === Number.NEGATIVE_INFINITY){
+            throw _b_.OverflowError.$factory('complex exponentiation')
+        }
         return make_complex(pw * Math.cos(theta), pw * Math.sin(theta))
     }else{
         throw _b_.TypeError.$factory("unsupported operand type(s) " +
