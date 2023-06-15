@@ -148,19 +148,19 @@ return false}
 return false}
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-06-15 11:34:08.154315"
-__BRYTHON__.timestamp=1686821648154
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
+__BRYTHON__.compiled_date="2023-06-12 22:43:11.142340"
+__BRYTHON__.timestamp=1686602591142
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6887,13 +6887,11 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 default:
 throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
-var complex_modulo=()=> _b_.ValueError.$factory('complex modulo')
-var all_ints=()=> _b_.TypeError.$factory('pow() 3rd argument not '+
-'allowed unless all arguments are integers')
 var pow=_b_.pow=function(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'],arguments,{mod:None},null,null),x=$.x,y=$.y,z=$.mod
 var klass=x.__class__ ||$B.get_class(x)
-if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(_b_.isinstance(x,_b_.int)){if(_b_.isinstance(y,_b_.float)){throw all_ints()}else if(_b_.isinstance(y,_b_.complex)){throw complex_modulo()}else if(_b_.isinstance(y,_b_.int)){if(_b_.isinstance(z,_b_.complex)){throw complex_modulo()}else if(! _b_.isinstance(z,_b_.int)){throw all_ints()}}
-return _b_.int.__pow__(x,y,z)}else if(_b_.isinstance(x,_b_.float)){throw all_ints()}else if(_b_.isinstance(x,_b_.complex)){throw complex_modulo()}}}
+if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if((! _b_.isinstance(x,_b_.int))||! _b_.isinstance(y,_b_.int)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
+"unless all arguments are integers")}
+return _b_.int.__pow__(x,y,z)}}
 var $print=_b_.print=function(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var kw=$ns['kw'],end=$B.is_none(kw.$jsobj.end)? '\n' :kw.$jsobj.end,sep=$B.is_none(kw.$jsobj.sep)? ' ' :kw.$jsobj.sep,file=$B.is_none(kw.$jsobj.file)? $B.get_stdout():kw.$jsobj.file
 var args=$ns['args'],writer=$B.$getattr(file,'write')
@@ -12081,7 +12079,7 @@ return r;}
 function c_prod(a,b){return make_complex(
 a.$real.value*b.$real.value-a.$imag.value*b.$imag.value,a.$real.value*b.$imag.value+a.$imag.value*b.$real.value)}
 function c_quot(a,b){var r,
-abs_breal=Math.abs(b.$real.value),abs_bimag=Math.abs(b.$imag.value)
+abs_breal=_b_.abs(b.$real.value),abs_bimag=_b_.abs(b.$imag.value)
 if($B.rich_comp('__ge__',abs_breal,abs_bimag)){
 if(abs_breal==0.0){throw _b_.ZeroDivisionError.$factory()}else{var ratio=b.$imag.value/b.$real.value,denom=b.$real.value+b.$imag.value*ratio
 return make_complex((a.$real.value+a.$imag.value*ratio)/denom,(a.$imag.value-a.$real.value*ratio)/denom)}}else if(abs_bimag >=abs_breal){
@@ -12089,19 +12087,11 @@ var ratio=b.$real.value/b.$imag.value,denom=b.$real.value*ratio+b.$imag.value;
 if(b.$imag.value==0.0){throw _b_.ZeroDivisionError.$factory()}
 return make_complex(
 (a.$real.value*ratio+a.$imag.value)/denom,(a.$imag.value*ratio-a.$real.value)/denom)}else{
-return $B.make_complex('nan','nan')}}
+return _b_.float('nan')}}
 complex.__pow__=function(self,other,mod){
 if(mod !==undefined && mod !==_b_.None){throw _b_.ValueError.$factory('complex modulo')}
-if($B.rich_comp('__eq__',other,1)){var funcs=_b_.float.$funcs
-if(funcs.isinf(self.$real)||funcs.isninf(self.$real)||
-funcs.isinf(self.$imag)||funcs.isninf(self.$imag)){throw _b_.OverflowError.$factory('complex exponentiation')}
-return self}
-var small_int=null
-if(_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100){small_int=other}else if(_b_.isinstance(other,_b_.float)&&
-Number.isInteger(other.value)&& Math.abs(other.value < 100)){small_int=other.value}else if(_b_.isinstance(other,complex)&& other.$imag.value==0 &&
-Number.isInteger(other.$real.value)&&
-Math.abs(other.$real.value)< 100){small_int=other.$real.value}
-if(small_int !==null){return c_powi(self,small_int)}
+if(other==1){return self}
+if(_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100){return c_powi(self,other)}
 if(_b_.isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
 if(self.$real.value==0 && self.$imag.value==0){if(_b_.isinstance(other,complex)&&
 (other.$imag.value !=0 ||other.$real.value < 0)){throw _b_.ZeroDivisionError.$factory(
@@ -12111,7 +12101,6 @@ var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,_b_.int)){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,_b_.float)){return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if(_b_.isinstance(other,complex)){
 var x=other.$real.value,y=other.$imag.value
 var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
-if(pw==Number.POSITIVE_INFINITY ||pw===Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory('complex exponentiation')}
 return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for ** or pow(): 'complex' and '"+
 $B.class_name(other)+"'")}}
@@ -13393,7 +13382,10 @@ for(var js_op in js_ops){$B.JSObj[js_op]=js_ops[js_op]}
 $B.JSObj.__bool__=function(_self){if(typeof _self=='object'){for(var key in _self){return true}
 return false}
 return !! _self}
-$B.JSObj.__dir__=function(_self){return Object.keys(_self)}
+$B.JSObj.__dir__=function(_self){var attrs=[]
+for(key in _self){attrs.push(key)}
+attrs=attrs.sort()
+return attrs}
 $B.JSObj.__eq__=function(_self,other){switch(typeof _self){case "object":
 if(_self.__eq__ !==undefined){return _self.__eq__(other)}
 if(Object.keys(_self).length !==Object.keys(other).length){return false}
@@ -13437,7 +13429,6 @@ if(klass && klass[attr]){var class_attr=klass[attr]
 if(typeof class_attr=="function"){return function(){var args=[_self]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
-if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,_self)}
 if(js_attr !==null &&
 js_attr.toString &&
@@ -13483,8 +13474,21 @@ $B.JSObj.__repr__=$B.JSObj.__str__=function(_self){var js_repr=Object.prototype.
 return `<Javascript object: ${js_repr}>`}
 $B.JSObj.bind=function(_self,evt,func){
 var js_func=function(ev){try{return func(jsobj2pyobj(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}catch(err1){console.log(err)}}}}
+_self.$brython_events=_self.$brython_events ||{}
+if(_self.$brython_events){_self.$brython_events[evt]=_self.$brython_events[evt]||[]
+_self.$brython_events[evt].push([func,js_func])}
 _self.addEventListener(evt,js_func)
 return _b_.None}
+$B.JSObj.bindings=function(_self){var res=$B.empty_dict()
+if(_self.$brython_events){for(var key in _self.$brython_events){_b_.dict.$setitem(res,key,$B.fast_tuple(_self.$brython_events[key].map(x=> x[0])))}}
+return res}
+$B.JSObj.unbind=function(_self,evt,func){if(! _self.$brython_events){return _b_.None}
+if(! _self.$brython_events[evt]){return _b_.None}
+var events=_self.$brython_events[evt]
+if(func===undefined){
+for(var item of events){_self.removeEventListener(evt,item[1])}
+delete _self.$brython_events[evt]}else{for(var i=0,len=events.length;i < len;i++){if(events[i][0]===func){events.splice(i,1)}}
+if(events.length==0){delete _self.$brython_events[evt]}}}
 $B.JSObj.to_dict=function(_self){
 return $B.structuredclone2pyobj(_self)}
 $B.set_func_names($B.JSObj,"builtins")
