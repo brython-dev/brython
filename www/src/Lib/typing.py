@@ -325,7 +325,6 @@ def _flatten_literal_params(parameters):
 
 
 _cleanups = []
-_caches = {}
 
 
 def _tp_cache(func=None, /, *, typed=False):
@@ -333,20 +332,13 @@ def _tp_cache(func=None, /, *, typed=False):
     original function for non-hashable arguments.
     """
     def decorator(func):
-        # The callback 'inner' references the newly created lru_cache
-        # indirectly by performing a lookup in the global '_caches' dictionary.
-        # This breaks a reference that can be problematic when combined with
-        # C API extensions that leak references to types. See GH-98253.
-
-        cache = functools.lru_cache(typed=typed)(func)
-        _caches[func] = cache
-        _cleanups.append(cache.cache_clear)
-        del cache
+        cached = functools.lru_cache(typed=typed)(func)
+        _cleanups.append(cached.cache_clear)
 
         @functools.wraps(func)
         def inner(*args, **kwds):
             try:
-                return _caches[func](*args, **kwds)
+                return cached(*args, **kwds)
             except TypeError:
                 pass  # All real errors (not unhashable args) are raised below.
             return func(*args, **kwds)
@@ -948,9 +940,6 @@ class _BoundVarianceMixin:
             prefix = '~'
         return prefix + self.__name__
 
-    def __mro_entries__(self, bases):
-        raise TypeError(f"Cannot subclass an instance of {type(self).__name__}")
-
 
 class TypeVar(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
               _root=True):
@@ -1098,9 +1087,6 @@ class TypeVarTuple(_Final, _Immutable, _PickleUsingNameMixin, _root=True):
             *args[alen - right:],
         )
 
-    def __mro_entries__(self, bases):
-        raise TypeError(f"Cannot subclass an instance of {type(self).__name__}")
-
 
 class ParamSpecArgs(_Final, _Immutable, _root=True):
     """The args for a ParamSpec object.
@@ -1125,9 +1111,6 @@ class ParamSpecArgs(_Final, _Immutable, _root=True):
             return NotImplemented
         return self.__origin__ == other.__origin__
 
-    def __mro_entries__(self, bases):
-        raise TypeError(f"Cannot subclass an instance of {type(self).__name__}")
-
 
 class ParamSpecKwargs(_Final, _Immutable, _root=True):
     """The kwargs for a ParamSpec object.
@@ -1151,9 +1134,6 @@ class ParamSpecKwargs(_Final, _Immutable, _root=True):
         if not isinstance(other, ParamSpecKwargs):
             return NotImplemented
         return self.__origin__ == other.__origin__
-
-    def __mro_entries__(self, bases):
-        raise TypeError(f"Cannot subclass an instance of {type(self).__name__}")
 
 
 class ParamSpec(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
@@ -2102,7 +2082,7 @@ class _AnnotatedAlias(_NotIterable, _GenericAlias, _root=True):
         if isinstance(origin, _AnnotatedAlias):
             metadata = origin.__metadata__ + metadata
             origin = origin.__origin__
-        super().__init__(origin, origin, name='Annotated')
+        super().__init__(origin, origin)
         self.__metadata__ = metadata
 
     def copy_with(self, params):
@@ -2134,9 +2114,6 @@ class _AnnotatedAlias(_NotIterable, _GenericAlias, _root=True):
         if attr in {'__name__', '__qualname__'}:
             return 'Annotated'
         return super().__getattr__(attr)
-
-    def __mro_entries__(self, bases):
-        return (self.__origin__,)
 
 
 class Annotated:
@@ -3363,7 +3340,6 @@ def dataclass_transform(
     eq_default: bool = True,
     order_default: bool = False,
     kw_only_default: bool = False,
-    frozen_default: bool = False,
     field_specifiers: tuple[type[Any] | Callable[..., Any], ...] = (),
     **kwargs: Any,
 ) -> Callable[[T], T]:
@@ -3417,8 +3393,6 @@ def dataclass_transform(
         assumed to be True or False if it is omitted by the caller.
     - ``kw_only_default`` indicates whether the ``kw_only`` parameter is
         assumed to be True or False if it is omitted by the caller.
-    - ``frozen_default`` indicates whether the ``frozen`` parameter is
-        assumed to be True or False if it is omitted by the caller.
     - ``field_specifiers`` specifies a static list of supported classes
         or functions that describe fields, similar to ``dataclasses.field()``.
     - Arbitrary other keyword arguments are accepted in order to allow for
@@ -3435,7 +3409,6 @@ def dataclass_transform(
             "eq_default": eq_default,
             "order_default": order_default,
             "kw_only_default": kw_only_default,
-            "frozen_default": frozen_default,
             "field_specifiers": field_specifiers,
             "kwargs": kwargs,
         }

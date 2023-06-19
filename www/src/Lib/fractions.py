@@ -754,4 +754,3 @@ class Fraction(numbers.Rational):
         if type(self) == Fraction:
             return self     # My components are also immutable
         return self.__class__(self._numerator, self._denominator)
-

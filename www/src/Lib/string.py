@@ -115,9 +115,13 @@ class Template:
             if mo.group('escaped') is not None:
                 return self.delimiter
             if mo.group('invalid') is not None:
+                print('string 112, mo', mo, '\n  re', mo.re,
+                    '\n  groups', mo.groupdict(),
+                    '\n  invalid', mo.group('invalid'))
                 self._invalid(mo)
             raise ValueError('Unrecognized named group in pattern',
                              self.pattern)
+        print('string 121, self.pattern', self.pattern)
         return self.pattern.sub(convert, self.template)
 
     def safe_substitute(self, mapping=_sentinel_dict, /, **kws):
@@ -307,3 +311,10 @@ class Formatter:
                 obj = obj[i]
 
         return obj, first
+
+
+if __name__ == '__main__':
+    class AmpersandTemplate(Template):
+        delimiter = '&'
+    s = AmpersandTemplate('this &gift is for &{who} &')
+    s.substitute(dict(gift='bud', who='you'))
