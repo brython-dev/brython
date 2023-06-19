@@ -485,6 +485,12 @@ function check_assignment(context, kwargs){
                     // "x += 1, y = 2"
                     raise_syntax_error(context)
                 }
+                if(parent_match(context, {type: 'assign'})){
+                    raise_syntax_error_known_range(
+                        context,
+                        a, b,
+                        `invalid syntax. Maybe you meant '==' or ':=' instead of '='?`)
+                }
                 if(! parent_match(context, {type: 'list_or_tuple'})){
                     msg += " here. Maybe you meant '==' instead of '='?"
                 }
@@ -2823,19 +2829,6 @@ ExprCtx.prototype.transition = function(token, value){
             }
         case ',':
             if(context.expect == ','){
-                if(context.parent.type == 'assign'){
-                    var assigned = context.parent.tree[0]
-                    if(assigned.type == 'expr' && assigned.tree[0].type == 'id'){
-                        if(context.name == 'unary' || context.name == 'operand'){
-                            var a = context.parent.tree[0].position,
-                                b = last_position(context)
-                            raise_syntax_error_known_range(
-                                context,
-                                a, b, "invalid syntax. " +
-                                    "Maybe you meant '==' or ':=' instead of '='?")
-                        }
-                    }
-                }
                 if(context.name == 'iterator' &&
                         context.parent.parent.type != 'node'){
                     // case "(x for x in expr, y)" : we must detect that the
@@ -6517,6 +6510,11 @@ var StringCtx = $B.parser.StringCtx = function(context, value){
     this.value = this.is_bytes ? [] : ''
     this.add_value(value)
     this.raw = false
+}
+
+$B.string_from_ast_value = function(value){
+    // remove escaped "'" in string value
+    return value.replace(new RegExp("\\\\'", 'g'), "'")
 }
 
 var make_string_for_ast_value = $B.make_string_for_ast_value = function(value){

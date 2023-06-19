@@ -92,7 +92,8 @@ class Tester:
         self.cleanups.append([function, args, kw])
 
     def assertAlmostEqual(self, result, expected, msg=None):
-        if round(result - expected, 7) != 0:
+        diff = abs(result - expected)
+        if round(diff, 7) != 0:
             if msg is not None:
                 raise AssertionError(msg)
             raise AssertionError('assertEqual, expected %s, got %s'
@@ -149,9 +150,9 @@ class Tester:
     def assertIsNotNone(self, obj, msg=None):
         assert obj is not None, obj
 
-    def assertIsNot(self, a, b):
+    def assertIsNot(self, a, b, msg=None):
         if a is b:
-            raise AssertionError('%s is %s should be false' %(a,b))
+            raise AssertionError('%s is %s should be false' %(a, b))
 
     def assertIn(self, item, container):
         if not item in container:

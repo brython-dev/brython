@@ -506,15 +506,17 @@ var dir = _b_.dir = function(obj){
 
 //divmod() (built in function)
 var divmod = _b_.divmod = function(x,y){
-   check_nb_args_no_kw('divmod', 2, arguments)
+    check_nb_args_no_kw('divmod', 2, arguments)
 
-   var klass = x.__class__ || $B.get_class(x)
-   var dm = $B.$getattr(klass, "__divmod__", _b_.None)
-   if(dm !== _b_.None){
-       return dm(x, y)
-   }
-   return _b_.tuple.$factory([$B.$getattr(klass, '__floordiv__')(x, y),
-       $B.$getattr(klass, '__mod__')(x, y)])
+    try{
+        return $B.rich_op('__divmod__', x, y)
+    }catch(err){
+        if($B.is_exc(err, [_b_.TypeError])){
+            return _b_.tuple.$factory([$B.rich_op('__floordiv__', x, y),
+                                       $B.rich_op('__mod__', x, y)])
+        }
+        throw err
+    }
 }
 
 var enumerate = _b_.enumerate = $B.make_class("enumerate",
@@ -1840,6 +1842,7 @@ function $extreme(args, op){ // used by min() and max()
         switch(attr){
             case 'key':
                 func = $.kw.$jsobj[attr]
+                func = func === _b_.None ? func : $B.$call(func)
                 break
             case 'default':
                 var default_value = $.kw.$jsobj[attr]
@@ -2116,6 +2119,10 @@ var ord = _b_.ord = function(c){
     }
 }
 
+var complex_modulo = () => _b_.ValueError.$factory('complex modulo')
+var all_ints = () => _b_.TypeError.$factory('pow() 3rd argument not ' +
+    'allowed unless all arguments are integers')
+
 var pow = _b_.pow = function() {
     var $ = $B.args('pow', 3, {x: null, y: null, mod: null},['x', 'y', 'mod'],
         arguments, {mod: None}, null, null),
@@ -2126,11 +2133,24 @@ var pow = _b_.pow = function() {
     if(z === _b_.None){
         return $B.rich_op('__pow__', x, y)
     }else{
-        if(x != _b_.int.$factory(x) || y != _b_.int.$factory(y)){
-            throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +
-                "unless all arguments are integers")
+        if(_b_.isinstance(x, _b_.int)){
+            if(_b_.isinstance(y, _b_.float)){
+                throw all_ints()
+            }else if(_b_.isinstance(y, _b_.complex)){
+                throw complex_modulo()
+            }else if(_b_.isinstance(y, _b_.int)){
+                if(_b_.isinstance(z, _b_.complex)){
+                    throw complex_modulo()
+                }else if(! _b_.isinstance(z, _b_.int)){
+                    throw all_ints()
+                }
+            }
+            return _b_.int.__pow__(x, y, z)
+        }else if(_b_.isinstance(x, _b_.float)){
+            throw all_ints()
+        }else if(_b_.isinstance(x, _b_.complex)){
+            throw complex_modulo()
         }
-        return _b_.int.__pow__(x, y, z)
     }
 }
 
@@ -3284,10 +3304,6 @@ $B.function.__dir__ = function(self){
                filter(x => !x.startsWith('$'))
 }
 
-$B.function.__eq__ = function(self, other){
-    return self === other
-}
-
 $B.function.__get__ = function(self, obj){
     // adapated from
     // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
@@ -3334,6 +3350,11 @@ $B.function.__getattribute__ = function(self, attr){
             }
         }
         return _b_.tuple.$factory(cells)
+    }else if(attr == '__builtins__'){
+        if(self.$infos && self.$infos.__globals__){
+            return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
+        }
+        return $B.obj_dict(_b_)
     }else if(attr == "__globals__"){
         return $B.obj_dict($B.imported[self.$infos.__module__])
     }else if(self.$attrs && self.$attrs[attr] !== undefined){

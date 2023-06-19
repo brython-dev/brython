@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+</body>
+</html><!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Drum synthesis by chrislo</title>
+
+<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
+
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <!-- link rel="stylesheet" href="stylesheets/pygment_trac.css" -->
+    <link rel="stylesheet" href="stylesheets/buttons-min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body onload="brython()">
+    <div class="wrapper">
+
+      <section>
+        <div id="score"></div>
+      </section>
+
+      <section>
+
+      <p>
+        Kick frequency<input type="range" id="kick_freq" min="100" value="170" max="300" step="1"><br>
+
+      </p>
+      <p>
+        <button id="start_loop" class="pure-button">LOOP</button>
+        <button id="end_loop" class="pure-button">STOP</button>
+        <input type="range" id="bpm" min="30" max="300" step="1" value="120">
+      </p>
+      <p>
+        LOAD <input type="file" id="load_score" class="pure-button">
+        <a href="#" id="save_score" download class="pure-button">SAVE</a>
+        <input type="range" id="bpm" min="30" max="300" step="1" value="120">
+      </p>
+      </section>
+
+
+    </div>
+    <script type="text/python" src="synth_drums.py"></script>
+  </body>
+</html>

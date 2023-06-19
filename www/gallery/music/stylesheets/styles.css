@@ -1,0 +1,55 @@
+
+body {
+  padding:50px;
+  font:14px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color:#777;
+  font-weight:300;
+}
+
+
+.score {
+    color: #000;
+}
+
+.note {
+    width: 15px;
+}
+
+.tabs {
+    border-spacing: 0px;
+    padding: 0px;
+}
+
+.unselected_tab {
+    border-style: solid;
+    border-color: #333;
+    border-width: 0px 0px 1px 0px;
+    cursor: default;
+    text-align: center;
+}
+
+.selected_tab {
+   border-style: solid;
+   border-color: #333;   border-width: 1px 1px 0px 1px;
+   text-align: center;
+}
+
+.close_tab {
+    border-style: solid;
+    border-width: 1px;
+    border-color: #fff;
+    width: 10%;
+    font-weight: bold;
+    margin: 2px;
+}
+
+.close_tab:hover {
+    border-color: #aaa;
+    cursor: default;
+}
+
+.plus {
+    font-weight: bold;
+    text-align: left;
+    padding-left: 5%;
+}

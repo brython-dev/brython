@@ -307,6 +307,14 @@ int.__floordiv__ = function(self, other){
     return _b_.NotImplemented
 }
 
+int.$getnewargs = function(self){
+    return $B.fast_tuple([int_value(self)])
+}
+
+int.__getnewargs__ = function(){
+    return int.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+}
+
 int.__hash__ = function(self){
     if(self.$brython_value !== undefined){
         // int subclass
@@ -414,7 +422,6 @@ function extended_euclidean(a, b){
     }
 }
 
-
 int.__pow__ = function(self, other, z){
     if(! _b_.isinstance(other, int)){
         return _b_.NotImplemented
@@ -500,15 +507,6 @@ function __newobj__(){
     var res = args.slice(1)
     res.__class__ = args[0]
     return res
-}
-
-int.__reduce_ex__ = function(self){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__ || int, int_value(self)]),
-        _b_.None,
-        _b_.None,
-        _b_.None])
 }
 
 int.__repr__ = function(self){

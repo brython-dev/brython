@@ -166,6 +166,7 @@ class _TestResult(TestResult):
         test.startTime = time.time()
         method = getattr(test.__class__, test._testMethodName)
         test.lineno = method.__code__.co_firstlineno
+        target.send(['start', str(test)])
 
     def ident(self, test):
         return [test.__class__.__name__,
@@ -316,6 +317,9 @@ def message(ev):
         row = html.TR(
             html.TD('Done', colspan=5),
             Class="method")
+    elif isinstance(ev.data, list) and len(ev.data) == 2:
+        document['test_name'].text = ev.data[1]
+        return
     else:
         test_class, method, lineno, duration, result, *comment = ev.data
         if result == 'ok' and duration < float(limit.value) * 1000:
@@ -422,6 +426,7 @@ UnitTests:
 
 &nbsp;Report tests longer than <input id="duration" size=2 value="3"> seconds
 
+<span id="test_name"></span>
 </div>
 
 <div style="float:right">
@@ -460,7 +465,6 @@ Brython version: <span id="version"></span>
 <script type="text/javascript" src="/src/py_range_slice.js"></script>
 <script type="text/javascript" src="/src/py_bytes.js"></script>
 <script type="text/javascript" src="/src/py_set.js"></script>
-<script type="text/javascript" src="/src/js_objects.js"></script>
 <script type="text/javascript" src="/src/py_import.js"></script>
 <script type="text/javascript" src="/src/py_string.js"></script>
 <script type="text/javascript" src="/src/py_int.js"></script>
@@ -470,6 +474,7 @@ Brython version: <span id="version"></span>
 <script type="text/javascript" src="/src/py_dict.js"></script>
 <script type="text/javascript" src="/src/py_list.js"></script>
 <script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
 <script type="text/javascript" src="/src/py_dom.js"></script>
 <script type="text/javascript" src="/src/py_pattern_matching.js"></script>
 <script type="text/javascript" src="/src/async.js"></script>

@@ -366,6 +366,14 @@ function fnv(p){
     return x
 }
 
+str.$getnewargs = function(self){
+    return $B.fast_tuple([to_string(self)])
+}
+
+str.__getnewargs__ = function(){
+    return str.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+}
+
 str.__hash__ = function(_self){
     // copied from
     // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
@@ -1187,24 +1195,6 @@ str.__new__ = function(cls, value){
     }
 }
 
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    var res = args[1]
-    res.__class__ = args[0]
-    return res
-}
-
-str.__reduce_ex__ = function(_self){
-    _self = to_string(_self)
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([_self.__class__ || _b_.str, _self]),
-        _b_.None,
-        _b_.None])
-}
-
 str.__repr__ = function(_self){
     // special cases
     _self = to_string(_self)
@@ -1532,11 +1522,12 @@ str.find = function(){
             {self: null, sub: null, start: null, end: null},
             ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
-        _self
+        _self,
+        sub
     check_str($.sub)
     normalize_start_end($);
 
-    [_self, sub] = to_string([$.self, $.sub])
+    [_self, sub] = to_string([$.self, $.sub]);
 
     var len = str.__len__(_self),
         sub_len = str.__len__(sub)
@@ -1548,9 +1539,11 @@ str.find = function(){
         return -1
     }
     // Use .indexOf(), not .search(), to avoid conversion to reg exp
+    // Also use .slice() instead of .substring() because substring swaps
+    // arguments if start > end...
     var js_start = pypos2jspos(_self, $.start),
         js_end = pypos2jspos(_self, $.end),
-        ix = _self.substring(js_start, js_end).indexOf(sub)
+        ix = _self.slice(js_start, js_end).indexOf(sub)
     if(ix == -1){
         return -1
     }

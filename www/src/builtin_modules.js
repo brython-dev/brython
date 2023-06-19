@@ -259,6 +259,10 @@
                     return res
                 }
 
+                dict.__rmul__ = function(self, num){
+                    return $B.DOMNode.__mul__(self, num)
+                }
+
                 $B.set_func_names(dict, "browser.html")
                 return dict
             }
