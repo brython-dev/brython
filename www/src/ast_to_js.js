@@ -3223,7 +3223,7 @@ $B.js_from_ast = function(ast, scopes){
         }
         return ast.to_js(scopes)
     }
-    console.log("unhandled", ast.constructor.$name)
+    console.log("unhandled", ast.constructor.$name, ast)
     return '// unhandled class ast.' + ast.constructor.$name
 }
 

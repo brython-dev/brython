@@ -917,7 +917,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
             return new StringCtx(new ExprCtx(context, 'str', commas),
                 value)
         case 'JoinedStr':
-            return new JoinedStrCtx(new ExprCtx(context, 'str', commas),
+            return new FStringCtx(new ExprCtx(context, 'str', commas),
                 value)
         case 'bytes':
             return new StringCtx(new ExprCtx(context, 'bytes', commas),
@@ -2789,8 +2789,6 @@ ExprCtx.prototype.transition = function(token, value){
         case 'int':
         case 'lambda':
         case 'pass':
-        case 'str':
-        case 'JoinedStr':
             var msg = 'invalid syntax. Perhaps you forgot a comma?'
             raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)
@@ -2867,6 +2865,14 @@ ExprCtx.prototype.transition = function(token, value){
       case '(':
           return new CallCtx(context)
       case 'op':
+          if($op_weight[value] === undefined){
+              // case of "!"
+              var frs = parent_match(context, {type: "fstring_replacement_field"})
+              if(frs){
+                  return transition(frs, token, value)
+              }
+              raise_syntax_error(context)
+          }
           if(context.parent.type == 'withitem' && context.parent.tree.length == 2){
               raise_syntax_error(context, "expected ':'")
           }
@@ -3038,7 +3044,10 @@ ExprCtx.prototype.transition = function(token, value){
           }
           break
       case '=':
-
+          var frs = parent_match(context, {type: 'fstring_replacement_field'})
+          if(frs){
+              return transition(frs, token, value)
+          }
           var call_arg = parent_match(context, {type: 'call_arg'})
           // Special case for '=' inside a call
           try{
@@ -3054,6 +3063,7 @@ ExprCtx.prototype.transition = function(token, value){
                       $token.value,
                       'expression cannot contain assignment, perhaps you meant "=="?')
               }else{
+
                   throw err
               }
           }
@@ -3212,7 +3222,27 @@ ExprCtx.prototype.transition = function(token, value){
               ctx = ctx.parent
           }
           return new AbstractExprCtx(new TernaryCtx(ctx), false)
-
+      case 'JoinedStr':
+          if(context.tree.length == 1 && context.tree[0] instanceof FStringCtx){
+              var fstring = context.tree[0]
+              return fstring
+          }else{
+              var msg = 'invalid syntax. Perhaps you forgot a comma?'
+              raise_syntax_error_known_range(context,
+                  this.position, $token.value, msg)
+          }
+          break
+      case 'str':
+          if(context.tree.length == 1 && context.tree[0] instanceof FStringCtx){
+              var fstring = context.tree[0]
+              new StringCtx(fstring, value)
+              return context
+          }else{
+              var msg = 'invalid syntax. Perhaps you forgot a comma?'
+              raise_syntax_error_known_range(context,
+                  this.position, $token.value, msg)
+          }
+          break
       case 'eol':
           // Special case for print and exec
           if(context.tree.length == 2 &&
@@ -3499,6 +3529,182 @@ FromCtx.prototype.transition = function(token, value){
     }
     raise_syntax_error(context)
 
+}
+
+function escape_quotes(s, quotes){
+    if(quotes.length == 1){
+        return quotes + s + quotes
+    }else{
+        var quote = quotes[0]
+        return quote + s.replace(new RegExp(quote, 'g'), '\\' + quote) + quote
+    }
+}
+
+var FStringCtx = $B.parser.FStringCtx = function(context, start){
+    // Class for f-strings. start is prefix + quote
+    for(var i = 0; i < start.length; i++){
+        if(start[i] == '"' || start[i] == "'"){
+            this.prefix = start.substr(0, i)
+            this.quotes = start.substr(i)
+            break
+        }
+    }
+    this.type = 'fstring'
+    this.parent = context
+    this.tree = []
+    this.position = $token.value
+    this.scope = get_scope(context)
+    context.tree.push(this)
+    this.raw = this.prefix.toLowerCase().indexOf('r') > -1
+}
+
+FStringCtx.prototype.transition = function(token, value){
+    var context = this
+    if(token == 'middle'){
+        new StringCtx(context, escape_quotes(value, this.quotes))
+        return context
+    }else if(token == '{'){
+        return new AbstractExprCtx(new FStringReplacementFieldCtx(context), false)
+    }else if(token == 'end'){
+        return context.parent
+    }
+    raise_syntax_error(context)
+}
+
+FStringCtx.prototype.ast = function(){
+    var res = {
+        type: 'JoinedStr',
+        values: []
+    }
+    var state
+    for(var item of this.tree){
+        if(item instanceof StringCtx){
+            if(state == 'string'){
+                // eg in "'ab' f'c{x}'"
+                $B.last(res.values).value += item.value
+            }else{
+                var item_ast = new ast.Constant(item.value)
+                set_position(item_ast, item.position)
+                res.values.push(item_ast)
+            }
+            state = 'string'
+        }else{
+            var item_ast = item.ast()
+            set_position(item_ast, item.position)
+            res.values.push(item_ast)
+            state = 'formatted_value'
+        }
+    }
+    var ast_obj = new ast.JoinedStr(res.values)
+    set_position(ast_obj, this.position)
+    return ast_obj
+}
+
+var FStringReplacementFieldCtx =
+        $B.parser.FStringReplacementFieldCtx = function(context){
+    this.type = 'fstring_replacement_field'
+    this.tree = []
+    this.parent = context
+    this.position = $token.value
+    context.tree.push(this)
+}
+
+FStringReplacementFieldCtx.prototype.transition = function(token, value){
+    var context = this
+
+    if(token == '='){
+        if(context.equal_sign_pos){
+            raise_syntax_error(context)
+        }
+        var expr_text = context.position.line.substring(
+                context.position.start[1] + 1, $token.value.start[1])
+        // introduce a string with epxression text before replacement field
+        var quotes = context.parent.quotes
+        context.formula = new StringCtx(context.parent, escape_quotes(expr_text + '=', quotes))
+        var s = context.parent.tree.pop()
+        context.parent.tree.splice(context.parent.tree.length - 1, 0, s)
+        context.equal_sign_pos = $token.value.start
+        return context
+    }else if(context.equal_sign_pos){
+        // retain whitespaces between "=" and the next part of the
+        // replacement field, eg 'f"{x = :.1f}"'
+        if(! context.insert_whitespace){
+            var nb_ws = $token.value.start[1] - context.equal_sign_pos[1]
+            if(nb_ws > 1){
+                context.formula.value += ' '.repeat(nb_ws - 1)
+            }
+            context.insert_whitespace = true
+        }
+    }
+    if(token == 'op' && value == '!'){
+        context.expect = 'id'
+        return context
+    }else if(token == ':'){
+        return new FStringFormatSpecCtx(context)
+    }else if(token == '}'){
+        if(context.tree.length == 1 &&
+                context.tree[0] instanceof AbstractExprCtx){
+            raise_syntax_error(context,
+                "f-string: valid expression required before '}'")
+        }
+        return context.parent
+    }else if(token == 'id' && this.expect == 'id'){
+        if('sra'.indexOf(value) > -1){
+            context.conversion = value
+            delete this.expect
+            return context
+        }
+        raise_syntax_error(context, `unknown conversion type ${value}`)
+    }
+    raise_syntax_error(context)
+}
+
+FStringReplacementFieldCtx.prototype.ast = function(){
+    var value = this.tree[0].ast(),
+        format = this.tree[1]
+    var conv_num = {a: 97, r: 114, s: 115},
+        conversion = conv_num[this.conversion] || -1
+    if(format !== undefined){
+        format = format.ast()
+    }
+    var res = new ast.FormattedValue(
+            value,
+            conversion,
+            format)
+    set_position(res, this.position)
+    return res
+}
+
+
+var FStringFormatSpecCtx =
+        $B.parser.FStringFormatSpecCtx = function(context){
+    this.type = 'fstring_format_spec'
+    this.tree = []
+    this.parent = context
+    this.position = $token.value
+    context.tree.push(this)
+}
+
+FStringFormatSpecCtx.prototype.transition = function(token, value){
+    var context = this
+    if(token == 'middle'){
+        var quotes = this.parent.parent.quotes
+        new StringCtx(context, escape_quotes(value, quotes))
+        return context
+    }else if(token == '{'){
+        return new AbstractExprCtx(new FStringReplacementFieldCtx(context), false)
+    }else if(token == '}'){
+        return transition(context.parent, token, value)
+    }
+    raise_syntax_error(context)
+}
+
+FStringFormatSpecCtx.prototype.ast = function(){
+    if(this.tree.length == 1){
+        return this.tree[0].ast()
+    }else{
+        return FStringCtx.prototype.ast.call(this)
+    }
 }
 
 var FuncArgs = $B.parser.FuncArgs = function(context){
@@ -4220,7 +4426,7 @@ JoinedStrCtx.prototype.ast = function(){
                     item.ast(),
                     conv_num[item.elt.conversion] || -1,
                     format)
-                set_position(value, this.position)
+            set_position(value, this.position)
             var format = item.format
             if(format !== undefined){
                 value.format = item.format.ast()
@@ -6617,13 +6823,16 @@ StringCtx.prototype.transition = function(token, value){
         case 'JoinedStr':
             // replace by a new JoinedStr where the first value is this
             context.parent.tree.pop()
-            var joined_str = new JoinedStrCtx(context.parent, value)
+            var fstring = new FStringCtx(context.parent, value)
+            new StringCtx(fstring, fstring.quotes + this.value + fstring.quotes)
+            /*
             if(typeof joined_str.tree[0].value == "string"){
                 joined_str.tree[0].value = this.value + ' + ' + joined_str.tree[0].value
             }else{
                 joined_str.tree.splice(0, 0, this)
             }
-            return joined_str
+            */
+            return fstring
     }
     return transition(context.parent, token, value)
 }
@@ -8145,7 +8354,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             console.log('no start', token)
         }
         lnum = token.start[0]
-        // console.log('token', token, 'lnum', lnum, 'node', node)
+        // console.log('token', token.type, token.string, 'lnum', lnum, 'context', context)
         //console.log('context', context)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
@@ -8195,6 +8404,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             case 'NUMBER':
             case 'OP':
             case 'STRING':
+            case 'FSTRING_START':
                 context = context || new NodeCtx(node)
         }
 
@@ -8286,6 +8496,15 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     context = transition(context, 'str', prepared.value)
                 }
                 continue
+            case 'FSTRING_START':
+                context = transition(context, 'JoinedStr', token[1])
+                break
+            case 'FSTRING_MIDDLE':
+                context = transition(context, 'middle', token[1])
+                break
+            case 'FSTRING_END':
+                context = transition(context, 'end', token[1])
+                break
             case 'NUMBER':
                 try{
                     var prepared = prepare_number(token[1])

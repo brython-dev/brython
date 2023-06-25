@@ -2,6 +2,10 @@
 
 var _b_ = $B.builtins
 
+const FSTRING_START = 'FSTRING_START',
+      FSTRING_MIDDLE = 'FSTRING_MIDDLE',
+      FSTRING_END = 'FSTRING_END'
+
 function ord(char){
     if(char.length == 1){
         return char.charCodeAt(0)
@@ -16,7 +20,7 @@ function $last(array){
   return array[array.length - 1]
 }
 
-var ops = '.,:;+-*/%~^|&=<>[](){}@',
+var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
     op2 = ['**', '//', '>>', '<<'],
     augm_op = '+-*/%^|&=<>@',
     closing = {'}': '{', ']': '[', ')': '('}
@@ -33,7 +37,6 @@ function Token(type, string, start, end, line){
 }
 
 var errors = {}
-
 
 function TokenError(message, position){
     if(errors.TokenError === undefined){
@@ -153,6 +156,29 @@ $B.TokenReader.prototype.seek = function(position){
     this.position = position
 }
 
+function nesting_level(token_modes){
+    var ix = token_modes.length - 1
+    while(ix >= 0){
+        var mode = token_modes[ix]
+        if(mode.nesting !== undefined){
+            return mode.nesting
+        }
+        ix--
+    }
+}
+
+function update_braces(braces, char){
+    if('[({'.indexOf(char) > -1){
+        braces.push(char)
+    }else if('])}'.indexOf(char) > -1){
+        if(braces.length && $last(braces) == closing[char]){
+            braces.pop()
+        }else{
+            braces.push(char)
+        }
+    }
+}
+
 $B.tokenizer = function*(src, filename, mode){
     var unicode_tables = $B.unicode_tables,
         whitespace = ' \t\n',
@@ -202,7 +228,15 @@ $B.tokenizer = function*(src, filename, mode){
         indents = [],
         braces = [],
         line_num = 0,
-        line_start = 1
+        line_start = 1,
+        token_modes = ['regular'],
+        token_mode = 'regular',
+        save_mode = token_mode,
+        fstring_buffer,
+        fstring_start,
+        fstring_escape,
+        format_specifier,
+        nesting
 
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 
@@ -217,6 +251,142 @@ $B.tokenizer = function*(src, filename, mode){
             pos++
         }
         pos++
+
+        // console.log('token mode', token_mode, 'char', char)
+        if(token_mode != save_mode){
+            if(token_mode == 'fstring'){
+                fstring_buffer = ''
+                fstring_escape = false
+            }else if(token_mode == 'format_specifier'){
+                format_specifier = ''
+            }
+        }
+        save_mode = token_mode
+
+        if(token_mode == 'fstring'){
+            if(char == token_mode.quote){
+                if(fstring_escape){
+                    fstring_buffer += '\\' + char
+                    fstring_escape = false
+                    continue
+                }
+                if(token_mode.triple_quote){
+                    if(src.substr(pos, 2) != token_mode.quote.repeat(2)){
+                        fstring_buffer += char
+                        continue
+                    }
+                    char = token_mode.quote.repeat(3)
+                    pos += 2
+                }
+                if(fstring_buffer.length > 0){
+                    // emit FSTRING_MIDDLE token
+                    yield Token(FSTRING_MIDDLE, fstring_buffer,
+                        [line_num, fstring_start],
+                        [line_num, fstring_start + fstring_buffer.length],
+                        line)
+                }
+                yield Token(FSTRING_END, char,
+                    [line_num, fstring_start + fstring_buffer.length],
+                    [line_num, fstring_start + fstring_buffer.length + token_mode.quote.length],
+                    line)
+                // pop from token modes
+                token_modes.pop()
+                token_mode = $B.last(token_modes)
+                state = null
+                continue
+            }else if(char == '{'){
+                if(src.charAt(pos) == '{'){
+                    // consecutive opening brackets = the "{" character
+                    fstring_buffer += char
+                    pos++
+                    continue
+                }else{
+                    // emit FSTRING_MIDDLE
+                    yield Token(FSTRING_MIDDLE, fstring_buffer,
+                        [line_num, fstring_start],
+                        [line_num, fstring_start + fstring_buffer.length],
+                        line)
+                    token_mode = 'regular_within_fstring'
+                    state = null
+                    token_modes.push(token_mode)
+                }
+            }else if(char == '}'){
+                if(src.charAt(pos) == '}'){
+                    // consecutive closing brackets = the "}" character
+                    fstring_buffer += char
+                    pos++
+                    continue
+                }else{
+                    // emit closing bracket token
+                    yield Token('OP', char,
+                        [line_num, pos - line_start],
+                        [line_num, pos - line_start + 1],
+                        line)
+                    console.log('emit closing bracket')
+                    alert()
+                    continue
+                }
+            }else if(char == '\\'){
+                if(fstring_escape){
+                    fstring_buffer += char
+                }
+                fstring_escape = ! fstring_escape
+                continue
+            }else{
+                if(fstring_escape){
+                    fstring_buffer += '\\'
+                }
+                fstring_buffer += char
+                fstring_escape = false
+                continue
+            }
+        }else if(token_mode == 'format_specifier'){
+            if(char == quote){
+                if(format_specifier.length > 0){
+                    // emit FSTRING_MIDDLE token
+                    yield Token(FSTRING_MIDDLE, format_specifier,
+                        [line_num, fstring_start],
+                        [line_num, fstring_start + format_specifier.length],
+                        line)
+                    // pop from token modes
+                    token_modes.pop()
+                    token_mode = $B.last(token_modes)
+                    continue
+                }
+            }else if(char == '{'){
+                // emit FSTRING_MIDDLE
+                yield Token(FSTRING_MIDDLE, format_specifier,
+                    [line_num, fstring_start],
+                    [line_num, fstring_start + format_specifier.length],
+                    line)
+                token_mode = 'regular_within_fstring'
+                state = null
+                token_modes.push(token_mode)
+            }else if(char == '}'){
+                // emit FSTRING_MIDDLE
+                yield Token(FSTRING_MIDDLE, format_specifier,
+                    [line_num, fstring_start],
+                    [line_num, fstring_start + format_specifier.length],
+                    line)
+                // emit closing bracket token
+                yield Token('OP', char,
+                    [line_num, pos - line_start],
+                    [line_num, pos - line_start + 1],
+                    line)
+                if(braces.length == 0 || $B.last(braces) !== '{'){
+                    throw Error('wrong braces')
+                }
+                braces.pop()
+                // pop from token modes
+                token_modes.pop()
+                token_mode = $B.last(token_modes)
+                continue
+            }else{
+                format_specifier += char
+                continue
+            }
+        }
+
         switch(state){
             case "line_start":
                 line = get_line_at(pos - 1)
@@ -383,7 +553,6 @@ $B.tokenizer = function*(src, filename, mode){
                         }
                         break
                     case '\\':
-                        //console.log('found \\, rest', src.substr(pos), '\nsrc', `[${src}]`)
                         if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
                             if(pos == src.length - 1){
                                 yield Token('ERRORTOKEN', char,
@@ -432,6 +601,37 @@ $B.tokenizer = function*(src, filename, mode){
                             num_type = ''
                             number = char
                         }else if(ops.indexOf(char) > -1){
+                            if(token_mode == 'regular_within_fstring' &&
+                                    (char == ':' || char == '}')){
+                                if(char == ':'){
+                                    // Nesting_level(token_modes) is the number of
+                                    // braces at the start of the fstring
+                                    // Inside a ReplacementField, braces has the
+                                    // opening '{' appended
+                                    if(nesting_level(token_modes) == braces.length - 1){
+                                        yield Token('OP', char,
+                                            [line_num, pos - line_start - op.length + 1],
+                                            [line_num, pos - line_start + 1],
+                                            line)
+                                        token_modes.pop()
+                                        token_mode = 'format_specifier'
+                                        token_modes.push(token_mode)
+                                        continue
+                                    }
+                                }else{
+                                    yield Token('OP', char,
+                                        [line_num, pos - line_start - op.length + 1],
+                                        [line_num, pos - line_start + 1],
+                                        line)
+                                    token_modes.pop()
+                                    token_mode = token_modes[token_modes.length - 1]
+                                    if(braces.length == 0 || $B.last(braces) !== '{'){
+                                        throw Error('wrong braces')
+                                    }
+                                    braces.pop()
+                                    continue
+                                }
+                            }
                             var op = char
                             if(op2.indexOf(char + src[pos]) > -1){
                                 op = char + src[pos]
@@ -459,12 +659,19 @@ $B.tokenizer = function*(src, filename, mode){
                                 [line_num, pos - line_start - op.length + 1],
                                 [line_num, pos - line_start + 1],
                                 line)
-                        }else if(char == '!' && src[pos] == '='){
-                          yield Token('OP', '!=',
-                              [line_num, pos - line_start],
-                              [line_num, pos - line_start + 2],
-                              line)
-                          pos++
+                        }else if(char == '!'){
+                            if(src[pos] == '='){
+                                yield Token('OP', '!=',
+                                    [line_num, pos - line_start],
+                                    [line_num, pos - line_start + 2],
+                                    line)
+                                pos++
+                            }else{
+                                yield Token('OP', char,
+                                    [line_num, pos - line_start],
+                                    [line_num, pos - line_start + 1],
+                                    line)
+                            }
                         }else if(char == ' ' || char == '\t'){
                             // ignore
                         }else{
@@ -487,12 +694,26 @@ $B.tokenizer = function*(src, filename, mode){
                         quote = char
                         triple_quote = src[pos] == quote && src[pos + 1] == quote
                         prefix = name
-                        escaped = false
-                        string_start = [line_num,
-                            pos - line_start - name.length, line_start]
                         if(triple_quote){
                           pos += 2
                         }
+                        if(prefix.toLowerCase().indexOf('f') > -1){
+                            fstring_start = pos - line_start - name.length
+                            token_mode = new String('fstring')
+                            token_mode.nesting = braces.length
+                            token_mode.quote = quote
+                            token_mode.triple_quote = triple_quote
+                            token_modes.push(token_mode)
+                            var s = triple_quote ? quote.repeat(3) : quote
+                            yield Token(FSTRING_START, prefix + s,
+                                [line_num, fstring_start],
+                                [line_num, pos - line_start],
+                                line)
+                            continue
+                        }
+                        escaped = false
+                        string_start = [line_num,
+                            pos - line_start - name.length, line_start]
                         string = ''
                     }else{
                         yield Token('NAME', name,
@@ -658,6 +879,7 @@ $B.tokenizer = function*(src, filename, mode){
     }
 
     if(braces.length > 0){
+        console.log('braces', braces)
         throw SyntaxError('EOF in multi-line statement')
     }
 
