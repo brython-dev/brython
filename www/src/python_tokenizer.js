@@ -327,10 +327,15 @@ $B.tokenizer = function*(src, filename, mode){
                     continue
                 }
             }else if(char == '\\'){
-                if(fstring_escape){
-                    fstring_buffer += char
+                if(token_mode.raw){
+                    console.log('\\ in raw mode')
+                    fstring_buffer += char + char
+                }else{
+                    if(fstring_escape){
+                        fstring_buffer += char
+                    }
+                    fstring_escape = ! fstring_escape
                 }
-                fstring_escape = ! fstring_escape
                 continue
             }else{
                 if(fstring_escape){
@@ -703,6 +708,7 @@ $B.tokenizer = function*(src, filename, mode){
                             token_mode.nesting = braces.length
                             token_mode.quote = quote
                             token_mode.triple_quote = triple_quote
+                            token_mode.raw = prefix.toLowerCase().indexOf('r') > -1
                             token_modes.push(token_mode)
                             var s = triple_quote ? quote.repeat(3) : quote
                             yield Token(FSTRING_START, prefix + s,

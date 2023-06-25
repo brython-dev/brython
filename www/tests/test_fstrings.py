@@ -111,4 +111,23 @@ a = 2
 s = f'foo { a }'
 assert s == 'foo 2'
 
+# PEP 701
+bag = {'bag': 'hey'}
+
+s = f'''A complex trick: {
+ bag['bag']  # recursive bags!
+ }'''
+assert s == "A complex trick: hey"
+
+s = f"{f"{f"infinite"}"}" + " " + f"{f"nesting!!!"}"
+assert s == "infinite nesting!!!"
+
+a = ["hello", "world"]
+assert f"{'\n'.join(a)}" == "hello\nworld"
+
+assert f"{f"{f"{f"{f"{f"{1+1}"}"}"}"}"}" == '2'
+
+x = 8
+assert rf'raw\n{x}' == 'raw\\n8'
+
 print("passed all tests")
