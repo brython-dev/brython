@@ -108,7 +108,7 @@ def traceFn(frame, event, arg):
 
 sys.settrace(traceFn)
 f()
-assert argcounts == [0, 1]
+assert argcounts == [0]
 
 # same for gen expr
 def f1():
@@ -117,7 +117,7 @@ def f1():
 
 argcounts = []
 f1()
-assert argcounts == [0, 1], argcounts
+assert argcounts == [0], argcounts
 
 def f2():
     assert argcounts == [0] # for f()
@@ -152,7 +152,7 @@ def traceFn(frame, event, arg):
 sys.settrace(traceFn)
 [x for x in ()]
 
-assert t == ['call', 'line', 'return']
+assert t == []
 
 # remove trace for next tests
 sys.settrace(None)

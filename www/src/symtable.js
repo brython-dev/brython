@@ -35,7 +35,7 @@ var DEF_GLOBAL = 1,           /* global stmt */
     DEF_FREE_CLASS = 2<<5,    /* free variable from class's method */
     DEF_IMPORT = 2<<6,        /* assignment occurred via import */
     DEF_ANNOT = 2<<7,         /* this name is annotated */
-    DEF_COMP_ITER = 2<<8     /* this name is a comprehension iteration variable */
+    DEF_COMP_ITER = 2<<8      /* this name is a comprehension iteration variable */
 
 var DEF_BOUND = DEF_LOCAL | DEF_PARAM | DEF_IMPORT
 
@@ -198,6 +198,7 @@ function ste_new(st, name, block,
     ste.comprehension = NoComprehension
     ste.returns_value = 0
     ste.needs_class_closure = 0
+    ste.comp_inlined = 0
     ste.comp_iter_target = 0
     ste.comp_iter_expr = 0
 
@@ -261,6 +262,11 @@ function _PyST_GetSymbol(ste, name){
         return 0
     }
     return _b_.dict.$getitem_string(ste.symbols, name)
+}
+
+function _PyST_GetScope(ste, name){
+    var symbol = _PyST_GetSymbol(ste, name);
+    return (symbol >> SCOPE_OFFSET) & SCOPE_MASK;
 }
 
 function PyErr_Format(exc_type, message, arg){
@@ -354,6 +360,48 @@ function error_at_directive(exc, ste, name){
 
 function SET_SCOPE(DICT, NAME, I) {
     DICT[NAME] = I
+}
+
+function is_free_in_any_child(entry, key){
+    for (var child_ste of entry.ste_children){
+        var scope = _PyST_GetScope(child_ste, key)
+        if(scope == FREE){
+            return 1
+        }
+    }
+    return 0
+}
+
+function inline_comprehension(ste, comp, scopes, comp_free){
+    var pos = 0
+
+    for (var item of _b_.dict.$iter_items_with_hash(comp.symbols)) {
+        // skip comprehension parameter
+        var k = item.key,
+            comp_flags = item.value;
+        if (comp_flags & DEF_PARAM) {
+            // assert(_PyUnicode_EqualToASCIIString(k, ".0"));
+            continue;
+        }
+        var scope = (comp_flags >> SCOPE_OFFSET) & SCOPE_MASK;
+        var only_flags = comp_flags & ((1 << SCOPE_OFFSET) - 1),
+            existing = _b_.dict.$contains_string(ste.symbols, k)
+        if (!existing) {
+            // name does not exist in scope, copy from comprehension
+            //assert(scope != FREE || PySet_Contains(comp_free, k) == 1);
+            var v_flags = only_flags
+            _b_.dict.$setitem(ste.symbols, k, v_flags);
+            SET_SCOPE(scopes, k, scope);
+        } else {
+            // free vars in comprehension that are locals in outer scope can
+            // now simply be locals, unless they are free in comp children
+            if ((existing & DEF_BOUND) &&
+                    !is_free_in_any_child(comp, k)) {
+                _b_.set.remove(comp_free, k)
+            }
+        }
+    }
+    return 1;
 }
 
 /* Decide on scope of name, given flags.
@@ -569,8 +617,8 @@ function analyze_block(ste, bound, free, global){
     local = new Set()  /* collect new names bound in block */
     scopes = {}  /* collect scopes defined for each name */
 
-    /* Allocate new global and bound variable dictionaries.  These
-       dictionaries hold the names visible in nested blocks.  For
+    /* Allocate new global, bound and free variable sets.  hese
+       sets hold the names visible in nested blocks.  For
        ClassBlocks, the bound and global names are initialized
        before analyzing names, because class bindings aren't
        visible in methods.  For other blocks, they are initialized
@@ -632,21 +680,37 @@ function analyze_block(ste, bound, free, global){
        nested blocks.  The free variables in the children will
        be collected in allfree.
     */
-    allfree = new Set()
 
     for (var c of ste.children){
+        var child_free = new Set()
         var entry = c
+        var inline_comp = entry.comprehension && ! entry.generator;
         if (! analyze_child_block(entry, newbound, newfree, newglobal,
-                                 allfree)){
+                                 child_free)){
             return 0
         }
+        if (inline_comp) {
+            if (! inline_comprehension(ste, entry, scopes, child_free)) {
+                error();
+            }
+            entry.comp_inlined = 1;
+        }
+        Set_Union(newfree, child_free);
         /* Check if any children have free variables */
         if (entry.free || entry.child_free){
             ste.child_free = 1
         }
     }
 
-    Set_Union(newfree, allfree)
+    /* Splice children of inlined comprehensions into our children list */
+    for (var i = ste.children.length - 1; i >= 0; i--) {
+        var entry = ste.children[i];
+        if (entry.comp_inlined) {
+            ste.children.splice(i, 0, ...entry.children)
+        }
+    }
+
+    // Set_Union(newfree, child_free)
 
     /* Check if any local variables must be converted to cell variables */
     if (ste.type === FunctionBlock && !analyze_cells(scopes, newfree)){
@@ -771,7 +835,6 @@ function symtable_lookup(st, name){
 }
 
 function symtable_add_def_helper(st, name, flag, ste, _location){
-
     var o, dict, val, mangled = _Py_Mangle(st.private, name)
 
     if (!mangled){
@@ -1724,7 +1787,7 @@ visitor.genexp = function(st, e){
                                          e.elt, NULL);
 }
 
-visitor.listcomp = function(st,e){
+visitor.listcomp = function(st, e){
     return symtable_handle_comprehension(st, e, 'listcomp',
                                          e.generators,
                                          e.elt, NULL);

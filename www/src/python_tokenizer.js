@@ -328,7 +328,6 @@ $B.tokenizer = function*(src, filename, mode){
                 }
             }else if(char == '\\'){
                 if(token_mode.raw){
-                    console.log('\\ in raw mode')
                     fstring_buffer += char + char
                 }else{
                     if(fstring_escape){

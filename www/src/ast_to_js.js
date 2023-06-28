@@ -598,7 +598,14 @@ function extract_docstring(ast_obj, scopes){
 }
 
 function init_comprehension(comp, scopes){
-    // Code common to comprehensions and generator expressions
+    if(comp.type == 'genexpr'){
+        return init_genexpr(comp, scopes)
+    }
+    // Code common to comprehensions
+    return `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`
+}
+
+function init_genexpr(comp, scopes){
     var comp_id = comp.type + '_' + comp.id,
         varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
     return `var ${comp.locals_name} = {},\n` +
@@ -622,24 +629,32 @@ function init_comprehension(comp, scopes){
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
            `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
-           `frame.$f_trace = $B.enter_frame(frame)\n` +
+           `frame.$f_trace = _b_.None\n` +
            `var _frames = $B.frames_stack.slice()\n`
 }
+
 
 function make_comp(scopes){
     // Code common to list / set / dict comprehensions
     var id = $B.UUID(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
-        varnames = symtable_block.varnames.map(x => `"${x}"`)
-
+        varnames = symtable_block.varnames.map(x => `"${x}"`),
+        comp_iter,
+        comp_scope = $B.last(scopes)
+    for(var symbol of _b_.dict.$iter_items_with_hash(symtable_block.symbols)){
+        if(symbol.value & DEF_COMP_ITER){
+            comp_iter = symbol.key
+        }
+    }
+    var comp_iter_scope = name_scope(comp_iter, scopes)
     var first_for = this.generators[0],
         // outmost expression is evaluated in enclosing scope
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
         nb_paren = 1
 
-    var comp_scope = new Scope(`${type}_${id}`, 'comprehension', this)
-    scopes.push(comp_scope)
+    //var comp_scope = new Scope(`${type}_${id}`, 'comprehension', this)
+    //scopes.push(comp_scope)
 
     var comp = {ast:this, id, type, varnames,
                 module_name: scopes[0].name,
@@ -648,6 +663,9 @@ function make_comp(scopes){
 
     var js = init_comprehension(comp, scopes)
 
+    if(comp_iter_scope.found){
+        js += `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
+    }
     if(this instanceof $B.ast.ListComp){
         js += `var result_${id} = []\n`
     }else if(this instanceof $B.ast.SetComp){
@@ -709,20 +727,20 @@ function make_comp(scopes){
     }
     js += `}catch(err){\n` +
           (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
-          `$B.leave_frame()\n` +
           `$B.set_exc(err, frame)\n` +
           `throw err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
-    js += '\nif(frame.$f_trace !== _b_.None){\n' +
-              '$B.trace_return(_b_.None)\n' +
-          '}\n' +
-          `$B.leave_frame()\n` +
-          `return result_${id}\n` +
+    if(comp_iter_scope.found){
+        js += `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
+    }else{
+        js += `delete locals.${comp_iter}\n`
+    }
+    js += `return result_${id}\n` +
           `}\n` +
           `)(${outmost_expr})\n`
 
-    scopes.pop()
+    //scopes.pop()
     return js
 }
 
@@ -2000,7 +2018,8 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    var js = `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
+    var js = `$B.enter_frame(frame)\n` +
+          `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
           `for(var next_${id} of next_func_${id}){\n` +
               `frame.$f_trace = $B.enter_frame(frame)\n`
     // assign result of iteration to target
@@ -2044,12 +2063,11 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     for(var i = 0; i < nb_paren - 1; i++){
         js += '}\n'
     }
-    js += '$B.leave_frame()\n}\n'
-
-    js += `\n}, "<genexpr>")(expr)\n`
+    js += '$B.leave_frame()\n}\n' +
+          '$B.leave_frame()\n}, "<genexpr>")(expr)\n'
 
     scopes.pop()
-    var func = `${head}\n${js}\n$B.leave_frame()\nreturn gen${id}`
+    var func = `${head}\n${js}\nreturn gen${id}`
     return `(function(expr){\n${func}\n})(${outmost_expr})\n`
 }
 
