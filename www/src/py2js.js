@@ -1801,11 +1801,11 @@ var ClassCtx = $B.parser.ClassCtx = function(context){
 }
 
 ClassCtx.prototype.ast = function(){
-    // ClassDef(identifier name, expr* bases, keyword* keywords,
-    //         stmt* body, expr* decorator_list)
+    // ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*'
     var decorators = get_decorators(this.parent.node),
         bases = [],
-        keywords = []
+        keywords = [],
+        type_params = []
     if(this.args){
         for(var arg of this.args.tree){
             if(arg.tree[0].type == 'kwarg'){
@@ -1816,8 +1816,12 @@ ClassCtx.prototype.ast = function(){
             }
         }
     }
+    if(this.type_params){
+        type_params = this.type_params.ast()
+    }
     var ast_obj = new ast.ClassDef(this.name, bases, keywords,
-                            ast_body(this.parent), decorators)
+                            ast_body(this.parent), decorators,
+                            type_params)
     set_position(ast_obj, this.position)
     return ast_obj
 }
