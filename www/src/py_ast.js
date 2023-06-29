@@ -177,6 +177,17 @@ $B.create_python_ast_classes = function(){
             cls.__module__ = 'ast'
             cls.__dict__ = $B.empty_dict()
 
+            // For fields that end with "?", set class attribute to None
+            // Used in ast.dump to skip printing the field
+            if(raw_fields){
+                for(var i=0, len=raw_fields.length; i < len; i++){
+                    var raw_field = raw_fields[i]
+                    if(raw_field.endsWith('?')){
+                        _b_.dict.$setitem(cls.__dict__, _fields[i], _b_.None)
+                    }
+                }
+            }
+
             return cls
         })(klass)
     }
