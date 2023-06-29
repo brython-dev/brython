@@ -2894,6 +2894,10 @@ $B.ast.Tuple.prototype.to_js = function(scopes){
     return list_or_tuple_to_js.bind(this)('$B.fast_tuple', scopes)
 }
 
+$B.ast.TypeAlias.prototype.to_js = function(scopes){
+    return '// type alias\n'
+}
+
 $B.ast.UnaryOp.prototype.to_js = function(scopes){
     var operand = $B.js_from_ast(this.operand, scopes)
     if(this.op instanceof $B.ast.Not){

@@ -1838,6 +1838,11 @@ ClassCtx.prototype.transition = function(token, value){
             }
             context.parenthesis_position = $token.value
             return new CallCtx(context)
+        case '[':
+            if(context.name === undefined){
+                raise_syntax_error(context, 'missing class name')
+            }
+            return new TypeParamsCtx(context)
         case ':':
             if(this.args){
                 for(var arg of this.args.tree){
@@ -2159,7 +2164,8 @@ DefCtx.prototype.ast = function(){
             args: [],
             kwonlyargs: [],
             kw_defaults: [],
-            defaults: []
+            defaults: [],
+            type_params: []
         },
         decorators = get_decorators(this.parent.node),
         func_args = this.tree[1],
@@ -2175,6 +2181,9 @@ DefCtx.prototype.ast = function(){
     }
     if(this.annotation){
         res.returns = this.annotation.tree[0].ast()
+    }
+    if(this.type_params){
+        res.type_params = this.type_params.ast()
     }
     res.body = ast_body(this.parent)
     set_position(res, this.position)
@@ -2210,6 +2219,11 @@ DefCtx.prototype.transition = function(token, value){
             }
             context.has_args = true;
             return new FuncArgs(context)
+        case '[':
+            if(context.name === undefined){
+                raise_syntax_error(context, 'missing function name')
+            }
+            return new TypeParamsCtx(context)
         case ')':
             return context
         case 'annotation':
@@ -4206,6 +4220,12 @@ IdCtx.prototype.transition = function(token, value){
                 new MatchCtx(context.parent.parent), true),
                 token, value)
         }
+    }else if(context.value == 'type' && context.parent.parent.type == "node"){
+        console.log('transition after id "type"')
+        if(token == 'id'){
+            // test soft keyword 'type'
+            return new TypeAliasCtx(context, value)
+        }
     }
     switch(token) {
         case '=':
@@ -5088,12 +5108,20 @@ NodeCtx.prototype.transition = function(token, value){
         case 'yield':
             return new AbstractExprCtx(new YieldCtx(context),true)
         case 'eol':
+            if(context.maybe_type){
+                if(context.tree.length > 0 && context.tree[0].type == 'assign'){
+                    alert('type soft keyword')
+                }else{
+                    raise_syntax_error(context)
+                }
+            }
             if(context.tree.length == 0){ // might be the case after a :
                 context.node.parent.children.pop()
                 return context.node.parent.context
             }
             return context
     }
+    console.log('error, context', context, 'token', token, value)
     raise_syntax_error(context)
 }
 
@@ -7095,6 +7123,217 @@ TryCtx.prototype.transition = function(token, value){
         return BodyCtx(context)
     }
     raise_syntax_error(context, "expected ':'")
+}
+
+var TypeAliasCtx = $B.parser.TypeAlias = function(context, value){
+    // used for "type <value>"
+    // context is the id "type"; context.parent is an ExprCtx
+    context.parent.parent.tree = [this]
+    this.parent = context.parent.parent
+    this.name = value
+    this.expect = '='
+    this.tree = []
+    this.position = $token.value
+}
+
+TypeAliasCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('TypeAlias transition, expect', context.expect, 'token', token, value)
+
+    if(context.expect == '='){
+        if(token == '['){
+            if(this.tree.length > 0){
+                raise_syntax_error(context)
+            }
+            return new TypeParamsCtx(context)
+        }else if(token == '='){
+            context.has_value = true
+            return new AbstractExprCtx(context, false)
+        }else if(token == 'eol'){
+            if(! context.has_value ||
+                    this.tree.length !== 1 ||
+                    this.tree[0] instanceof AbstractExprCtx){
+                raise_syntax_error(context)
+            }
+            return transition(context.parent, token, value)
+        }
+    }
+    raise_syntax_error(context)
+}
+
+TypeAliasCtx.prototype.ast = function(){
+    var name = new ast.Name(this.name),
+        params,
+        value
+    if(this.type_params){
+        params = this.type_params.ast()
+    }
+    var ast_obj = new ast.TypeAlias(name)
+    set_position(ast_obj, this.position)
+    return ast_obj
+}
+
+var TypeParamsCtx = $B.parser.TypeParamsCtx = function(context){
+    this.type = 'type_params'
+    this.parent = context
+    context.type_params = this
+    this.tree = []
+    this.expect = 'param'
+}
+
+TypeParamsCtx.prototype.check_duplicate = function(name){
+    // check duplicate names
+    for(var item of this.tree){
+        if(item.name == name){
+            raise_syntax_error(this, `duplicate type parameter '${name}'`)
+        }
+    }
+}
+
+TypeParamsCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('TypeParams, expect:', context.expect, 'got:', token, value)
+    if(context.expect == 'param'){
+        if(token == 'id'){
+            context.check_duplicate(value)
+            context.expect = ','
+            return new TypeVarCtx(context, value)
+        }else if(token == 'op'){
+            if(value == '*'){
+                context.expect = ','
+                return new TypeVarTupleCtx(context)
+            }else if(value == '**'){
+                context.expect = ','
+                return new TypeParamSpecCtx(context)
+            }
+        }else if(token == ']'){
+            return context.parent
+        }
+        raise_syntax_error(context)
+    }else if(context.expect == ','){
+        if(token == ','){
+            context.expect = 'param'
+            return context
+        }else if(token == ']'){
+            return context.parent
+        }
+        raise_syntax_error(context)
+    }
+    raise_syntax_error(context)
+}
+
+TypeParamsCtx.prototype.ast = function(){
+    return this.tree.map(x => x.ast())
+}
+
+var TypeVarCtx = $B.parser.TypeVarCtx = function(context, name){
+    this.name = name
+    this.parent = context
+    context.tree.push(this)
+    this.tree = []
+    this.position = $token.value
+}
+
+TypeVarCtx.prototype.transition = function(token, value){
+    var context = this
+    if(token == ':'){
+        return new AbstractExprCtx(context, false)
+    }
+    return transition(this.parent, token, value)
+}
+
+TypeVarCtx.prototype.ast = function(){
+    console.log('typevar ast', this)
+    var name = this.name,
+        bound
+    if(this.tree.length > 0){
+        bound = this.tree[0].ast()
+    }
+    var ast_obj = new ast.TypeVar(name, bound)
+    set_position(ast_obj, this.position)
+    return ast_obj
+}
+
+var TypeParamSpecCtx = $B.parser.TypeParamSpecCtx = function(context){
+    this.parent = context
+    context.tree.push(this)
+    this.tree = []
+    this.position = $token.value
+}
+
+TypeParamSpecCtx.prototype.transition = function(token, value){
+    var context = this
+    if(token == 'id'){
+        if(context.name){
+            raise_syntax_error(context)
+        }
+        context.parent.check_duplicate(value)
+        context.name = value
+        return context
+    }else if(token == ':'){
+        if(! context.name){
+            raise_syntax_error(context)
+        }
+        this.has_colon = true
+        return new AbstractExprCtx(context, false)
+    }else if(this.has_colon){
+        var msg
+        if(this.tree[0].name == 'tuple'){
+            msg = 'cannot use constraints with ParamSpec'
+        }else{
+            msg = 'cannot use bound with ParamSpec'
+        }
+        raise_syntax_error_known_range(context, this.position, $token.value, msg)
+    }
+    return transition(this.parent, token, value)
+}
+
+TypeParamSpecCtx.prototype.ast = function(){
+    var name = new ast.Name(this.name)
+    var ast_obj = new ast.ParamSpec(name)
+    set_position(ast_obj, this.position)
+    return ast_obj
+}
+
+var TypeVarTupleCtx = $B.parser.TypeVarTupleCtx = function(context){
+    this.parent = context
+    context.tree.push(this)
+    this.tree = []
+    this.position = $token.value
+}
+
+TypeVarTupleCtx.prototype.transition = function(token, value){
+    var context = this
+    if(token == 'id'){
+        if(context.name){
+            raise_syntax_error(context)
+        }
+        context.parent.check_duplicate(value)
+        context.name = value
+        return context
+    }else if(token == ':'){
+        if(! context.name){
+            raise_syntax_error(context)
+        }
+        this.has_colon = true
+        return new AbstractExprCtx(context, false)
+    }else if(this.has_colon){
+        var msg
+        if(this.tree[0].name == 'tuple'){
+            msg = 'cannot use constraints with TypeVarTuple'
+        }else{
+            msg = 'cannot use bound with TypeVarTuple'
+        }
+        raise_syntax_error_known_range(context, this.position, $token.value, msg)
+    }
+    return transition(this.parent, token, value)
+}
+
+TypeVarTupleCtx.prototype.ast = function(){
+    var name = new ast.Name(this.name)
+    var ast_obj = new ast.TypeVarTuple(name)
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 var UnaryCtx = $B.parser.UnaryCtx = function(context, op){
