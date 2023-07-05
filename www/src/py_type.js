@@ -160,6 +160,7 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
     }else{
         metaclass = metaclass || _b_.type
     }
+
     return metaclass
 }
 

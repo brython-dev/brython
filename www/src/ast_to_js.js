@@ -1326,6 +1326,26 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
 
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
+    var has_type_params = this.type_params.length > 0
+    if(has_type_params){
+        console.log('type params', this.type_params)
+        js += `$B.$import('typing')\n` +
+              `var typing = $B.imported.typing\n`
+        var name = this.type_params[0].name
+        bases.push(`typing.Generic.__class_getitem__(typing.Generic,` +
+                ` $B.$call(typing.TypeVar)('${name}'))`)
+        for(var item of this.type_params){
+            var name,
+                param_type = item.constructor.$name
+            if(param_type == 'TypeVar'){
+                name = item.name
+            }else{ // if(item.constructor.$name == 'TypeVarTuple'){
+                name = item.name.id
+            }
+            js += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
+        }
+    }
+
 
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
@@ -1716,6 +1736,27 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
+    // Type params (PEP 695)
+    var has_type_params = this.type_params.length > 0,
+        type_params = ''
+    if(has_type_params){
+        console.log('type params', this.type_params)
+        var type_params = `$B.$import('typing')\n` +
+              `var typing = $B.imported.typing\n`
+        var name = this.type_params[0].name
+        for(var item of this.type_params){
+            var name,
+                param_type = item.constructor.$name
+            if(param_type == 'TypeVar'){
+                name = item.name
+            }else{ // if(item.constructor.$name == 'TypeVarTuple'){
+                name = item.name.id
+            }
+            type_params += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
+        }
+        console.log('function', this.name, 'type params', type_params)
+    }
+
     // Parse args
     var parsed_args = transform_args.bind(this)(scopes),
         default_names = parsed_args.default_names,
@@ -1773,7 +1814,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var parse_args = [name2]
 
     var js = decs +
-             `$B.set_lineno(frame, ${this.lineno})\n`
+             `$B.set_lineno(frame, ${this.lineno})\n` +
+             type_params
 
     if(is_async && ! is_generator){
         js += 'async '

@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = 'asyncio'
+stdlib_name = '_typing'
 
 include_doc = False
 include_base_classes = False
@@ -37,9 +37,14 @@ def skeleton(infos):
     if infos.__doc__ and include_doc:
         res += '"""%s"""\n\n' % infos.__doc__
     for key in dir(infos):
-        if key.startswith('__') and key.endswith('__') and \
-                key not in ['__module__', '__match_args__']:
-            continue
+        if key.startswith('__') and key.endswith('__'):
+            if key == '__doc__':
+                continue
+            attr = getattr(infos, key, None)
+            if attr is None or \
+                    attr is getattr(object, key, None) or \
+                    attr is getattr(type, key, None):
+                continue
         try:
             val = getattr(infos, key)
         except AttributeError:
@@ -66,10 +71,14 @@ def skeleton(infos):
                     res += '    %s"""\n' % lines[-1]
             res += '    pass\n'
         elif inspect.isclass(val):
+            print('class', val, val.__doc__)
             res += '\n\nclass %s' % key
             if val.__bases__ and include_base_classes:
                 res += '('+','.join(x.__name__ for x in val.__bases__)+')'
             res += ':\n'
+            if val.__doc__:
+                doc_lines = val.__doc__.splitlines()
+                res += '    """' + '\n'.join(f'    {x}' for x in doc_lines) + '"""\n'
             res += '\n'.join('    %s' % line
                              for line in skeleton(val).splitlines())
         else:

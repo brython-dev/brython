@@ -1,10 +1,126 @@
 # Brython-only
 
+class Typing:
+
+    def __getattr__(self, attr):
+        import typing
+        return getattr(typing, attr)
+
+typing = Typing()
+
 def _idfunc(_, x):
     return x
 
-class TypeVar(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
-              _root=True):
+def _caller():
+    import sys
+    frame = sys._getframe()
+    module_name = frame.f_back.f_globals["__name__"]
+    return sys.modules[module_name]
+
+def _call_typing_func(name, *args, **kwargs):
+    import typing
+    func = getattr(typing, name)
+    return func(*args, **kwargs)
+
+def _get_typing_obj(name):
+    import typing
+    return getattr(typing, name)
+
+def _type_check(t, msg):
+    assert isinstance(t, type), msg
+
+def _type_convert(arg, module=None, *, allow_special_forms=False):
+    """For converting None to type(None), and strings to ForwardRef."""
+    if arg is None:
+        return type(None)
+    if isinstance(arg, str):
+        return ForwardRef(arg, module=module, is_class=allow_special_forms)
+    return arg
+
+class ForwardRef:
+    """Internal wrapper to hold a forward reference."""
+
+    __slots__ = ('__forward_arg__', '__forward_code__',
+                 '__forward_evaluated__', '__forward_value__',
+                 '__forward_is_argument__', '__forward_is_class__',
+                 '__forward_module__')
+
+    def __init__(self, arg, is_argument=True, module=None, *, is_class=False):
+        if not isinstance(arg, str):
+            raise TypeError(f"Forward reference must be a string -- got {arg!r}")
+
+        # If we do `def f(*args: *Ts)`, then we'll have `arg = '*Ts'`.
+        # Unfortunately, this isn't a valid expression on its own, so we
+        # do the unpacking manually.
+        if arg[0] == '*':
+            arg_to_compile = f'({arg},)[0]'  # E.g. (*Ts,)[0] or (*tuple[int, int],)[0]
+        else:
+            arg_to_compile = arg
+        try:
+            code = compile(arg_to_compile, '<string>', 'eval')
+        except SyntaxError:
+            raise SyntaxError(f"Forward reference must be an expression -- got {arg!r}")
+
+        self.__forward_arg__ = arg
+        self.__forward_code__ = code
+        self.__forward_evaluated__ = False
+        self.__forward_value__ = None
+        self.__forward_is_argument__ = is_argument
+        self.__forward_is_class__ = is_class
+        self.__forward_module__ = module
+
+    def _evaluate(self, globalns, localns, recursive_guard):
+        if self.__forward_arg__ in recursive_guard:
+            return self
+        if not self.__forward_evaluated__ or localns is not globalns:
+            if globalns is None and localns is None:
+                globalns = localns = {}
+            elif globalns is None:
+                globalns = localns
+            elif localns is None:
+                localns = globalns
+            if self.__forward_module__ is not None:
+                globalns = getattr(
+                    sys.modules.get(self.__forward_module__, None), '__dict__', globalns
+                )
+            type_ = _type_check(
+                eval(self.__forward_code__, globalns, localns),
+                "Forward references must evaluate to types.",
+                is_argument=self.__forward_is_argument__,
+                allow_special_forms=self.__forward_is_class__,
+            )
+            self.__forward_value__ = _eval_type(
+                type_, globalns, localns, recursive_guard | {self.__forward_arg__}
+            )
+            self.__forward_evaluated__ = True
+        return self.__forward_value__
+
+    def __eq__(self, other):
+        if not isinstance(other, ForwardRef):
+            return NotImplemented
+        if self.__forward_evaluated__ and other.__forward_evaluated__:
+            return (self.__forward_arg__ == other.__forward_arg__ and
+                    self.__forward_value__ == other.__forward_value__)
+        return (self.__forward_arg__ == other.__forward_arg__ and
+                self.__forward_module__ == other.__forward_module__)
+
+    def __hash__(self):
+        return hash((self.__forward_arg__, self.__forward_module__))
+
+    def __or__(self, other):
+        return Union[self, other]
+
+    def __ror__(self, other):
+        return Union[other, self]
+
+    def __repr__(self):
+        if self.__forward_module__ is None:
+            module_repr = ''
+        else:
+            module_repr = f', module={self.__forward_module__!r}'
+        return f'ForwardRef({self.__forward_arg__!r}{module_repr})'
+
+class TypeVar:
     """Type variable.
 
     Usage::
@@ -48,19 +164,24 @@ class TypeVar(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
     Note that only type variables defined in global scope can be pickled.
     """
 
+    __module__ = 'typing'
+
+
     def __init__(self, name, *constraints, bound=None,
-                 covariant=False, contravariant=False):
+                 covariant=False, contravariant=False,
+                 infer_variance=True):
         self.__name__ = name
-        super().__init__(bound, covariant, contravariant)
         if constraints and bound is not None:
             raise TypeError("Constraints cannot be combined with bound=...")
         if constraints and len(constraints) == 1:
             raise TypeError("A single constraint is not allowed")
         msg = "TypeVar(name, constraint, ...): constraints must be types."
         self.__constraints__ = tuple(_type_check(t, msg) for t in constraints)
-        def_mod = _caller()
-        if def_mod != 'typing':
-            self.__module__ = def_mod
+        self.__module__ = 'typing'
+        self.__covariant__ = covariant
+        self.__contravariant__ = contravariant
+        self.__infer_variance__ = infer_variance
+
 
     def __typing_subst__(self, arg):
         msg = "Parameters to generic types must be types."
@@ -70,8 +191,15 @@ class TypeVar(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
             raise TypeError(f"{arg} is not valid as type argument")
         return arg
 
+    def __repr__(self):
+        if self.__infer_variance__:
+            return self.__name__
 
-class TypeVarTuple(_Final, _Immutable, _PickleUsingNameMixin, _root=True):
+        variance = '+' if self.__covariant__ else \
+                       '-' if self.__contravariant__ else '~'
+        return f"{variance}{self.__name__}"
+
+class TypeVarTuple:
     """Type variable tuple.
 
     Usage:
@@ -95,6 +223,8 @@ class TypeVarTuple(_Final, _Immutable, _PickleUsingNameMixin, _root=True):
 
     Note that only TypeVarTuples defined in global scope can be pickled.
     """
+
+    __module__ = 'typing'
 
     def __init__(self, name):
         self.__name__ = name
@@ -150,7 +280,7 @@ class TypeVarTuple(_Final, _Immutable, _PickleUsingNameMixin, _root=True):
         )
 
 
-class ParamSpecArgs(_Final, _Immutable, _root=True):
+class ParamSpecArgs:
     """The args for a ParamSpec object.
 
     Given a ParamSpec object P, P.args is an instance of ParamSpecArgs.
@@ -162,6 +292,9 @@ class ParamSpecArgs(_Final, _Immutable, _root=True):
     This type is meant for runtime introspection and has no special meaning to
     static type checkers.
     """
+
+    __module__ = 'typing'
+
     def __init__(self, origin):
         self.__origin__ = origin
 
@@ -174,7 +307,7 @@ class ParamSpecArgs(_Final, _Immutable, _root=True):
         return self.__origin__ == other.__origin__
 
 
-class ParamSpecKwargs(_Final, _Immutable, _root=True):
+class ParamSpecKwargs:
     """The kwargs for a ParamSpec object.
 
     Given a ParamSpec object P, P.kwargs is an instance of ParamSpecKwargs.
@@ -186,6 +319,9 @@ class ParamSpecKwargs(_Final, _Immutable, _root=True):
     This type is meant for runtime introspection and has no special meaning to
     static type checkers.
     """
+
+    __module__ = 'typing'
+
     def __init__(self, origin):
         self.__origin__ = origin
 
@@ -198,8 +334,7 @@ class ParamSpecKwargs(_Final, _Immutable, _root=True):
         return self.__origin__ == other.__origin__
 
 
-class ParamSpec(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
-                _root=True):
+class ParamSpec:
     """Parameter specification variable.
 
     Usage::
@@ -236,6 +371,8 @@ class ParamSpec(_Final, _Immutable, _BoundVarianceMixin, _PickleUsingNameMixin,
     Note that only parameter specification variables defined in global scope can
     be pickled.
     """
+
+    __module__ = 'typing'
 
     @property
     def args(self):
@@ -294,10 +431,10 @@ class Generic:
           except KeyError:
               return default
     """
+    __module__ = 'typing'
     __slots__ = ()
     _is_protocol = False
 
-    @_tp_cache
     def __class_getitem__(cls, params):
         """Parameterizes a generic class.
 
@@ -308,78 +445,10 @@ class Generic:
         However, note that this method is also called when defining generic
         classes in the first place with `class Foo(Generic[T]): ...`.
         """
-        if not isinstance(params, tuple):
-            params = (params,)
-
-        params = tuple(_type_convert(p) for p in params)
-        if cls in (Generic, Protocol):
-            # Generic and Protocol can only be subscripted with unique type variables.
-            if not params:
-                raise TypeError(
-                    f"Parameter list to {cls.__qualname__}[...] cannot be empty"
-                )
-            if not all(_is_typevar_like(p) for p in params):
-                raise TypeError(
-                    f"Parameters to {cls.__name__}[...] must all be type variables "
-                    f"or parameter specification variables.")
-            if len(set(params)) != len(params):
-                raise TypeError(
-                    f"Parameters to {cls.__name__}[...] must all be unique")
-        else:
-            # Subscripting a regular Generic subclass.
-            for param in cls.__parameters__:
-                prepare = getattr(param, '__typing_prepare_subst__', None)
-                if prepare is not None:
-                    params = prepare(cls, params)
-            _check_generic(cls, params, len(cls.__parameters__))
-
-            new_args = []
-            for param, new_arg in zip(cls.__parameters__, params):
-                if isinstance(param, TypeVarTuple):
-                    new_args.extend(new_arg)
-                else:
-                    new_args.append(new_arg)
-            params = tuple(new_args)
-
-        return _GenericAlias(cls, params,
-                             _paramspec_tvars=True)
+        return typing._generic_class_getitem(cls, params)
 
     def __init_subclass__(cls, *args, **kwargs):
-        super().__init_subclass__(*args, **kwargs)
-        tvars = []
-        if '__orig_bases__' in cls.__dict__:
-            error = Generic in cls.__orig_bases__
-        else:
-            error = (Generic in cls.__bases__ and
-                        cls.__name__ != 'Protocol' and
-                        type(cls) != _TypedDictMeta)
-        if error:
-            raise TypeError("Cannot inherit from plain Generic")
-        if '__orig_bases__' in cls.__dict__:
-            tvars = _collect_parameters(cls.__orig_bases__)
-            # Look for Generic[T1, ..., Tn].
-            # If found, tvars must be a subset of it.
-            # If not found, tvars is it.
-            # Also check for and reject plain Generic,
-            # and reject multiple Generic[...].
-            gvars = None
-            for base in cls.__orig_bases__:
-                if (isinstance(base, _GenericAlias) and
-                        base.__origin__ is Generic):
-                    if gvars is not None:
-                        raise TypeError(
-                            "Cannot inherit from Generic[...] multiple times.")
-                    gvars = base.__parameters__
-            if gvars is not None:
-                tvarset = set(tvars)
-                gvarset = set(gvars)
-                if not tvarset <= gvarset:
-                    s_vars = ', '.join(str(t) for t in tvars if t not in gvarset)
-                    s_args = ', '.join(str(g) for g in gvars)
-                    raise TypeError(f"Some type variables ({s_vars}) are"
-                                    f" not listed in Generic[{s_args}]")
-                tvars = gvars
-        cls.__parameters__ = tuple(tvars)
+        return typing._generic_init_subclass(cls, *args, **kwargs)
 
 class TypeAliasType:
     pass
