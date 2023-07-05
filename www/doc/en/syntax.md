@@ -39,7 +39,7 @@ Here are a few features and limitations imposed by the browser and Javascript :
   with a `write()` method, and this allows for the redirection of output to go
   to a window or text area, for example.
 
-- dy default, `sys.stdout.write()` and `sys.stderr.write()` don't immediately
+- by default, `sys.stdout.write()` and `sys.stderr.write()` don't immediately
   print in the console, there would be a line feed each time. Messages are
   stored in a buffer, printing to the console requires a call to method
   `flush()` of `sys.stdout` or `sys.stderr`
