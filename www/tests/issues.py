@@ -3180,6 +3180,10 @@ assert a == (2, 4)
 x = -1, 1
 assert x[0] == -1
 
+# issue 2209
+assert_raises(SyntaxError, exec, "def f():\n  await x")
+assert_raises(SyntaxError, exec, "await x")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
