@@ -1098,8 +1098,21 @@ $B.ast.Await.prototype.to_js = function(scopes){
     while(scopes[ix].parent){
         ix--
     }
-    scopes[ix].has_await = true
-    return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`
+    while(scopes[ix].ast instanceof $B.ast.ListComp ||
+            scopes[ix].ast instanceof $B.ast.DictComp ||
+            scopes[ix].ast instanceof $B.ast.SetComp ||
+            scopes[ix].ast instanceof $B.ast.GeneratorExp){
+        scopes[ix].has_await = true
+        ix--
+    }
+    if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){
+        scopes[ix].has_await = true
+        return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`
+    }else if(scopes[ix].ast instanceof $B.ast.FunctionDef){
+        compiler_error(this, "'await' outside async function", this.value)
+    }else{
+        compiler_error(this, "'await' outside function", this.value)
+    }
 }
 
 $B.ast.BinOp.prototype.to_js = function(scopes){

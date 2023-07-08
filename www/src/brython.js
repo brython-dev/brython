@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-06-19 11:56:35.623573"
-__BRYTHON__.timestamp=1687168595623
+__BRYTHON__.compiled_date="2023-07-08 07:42:30.696083"
+__BRYTHON__.timestamp=1688794950695
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8019,7 +8019,7 @@ console.log('err line',line)
 console.log('indent',indent)}
 var start=err.offset-indent,end_offset=err.end_offset+
 (err.end_offset==err.offset ? 1 :0)
-marks='   '+' '.repeat(start),nb_marks=1
+marks='    '+' '.repeat(start),nb_marks=1
 if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=end_offset-start-indent}
 if(nb_marks==0 &&
 err.end_offset==line.substr(indent).length){nb_marks=1}}
@@ -15104,8 +15104,13 @@ js=`${target} = $B.augm_assign(${target}, '${iop}', ${value})`}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Await.prototype.to_js=function(scopes){var ix=scopes.length-1
 while(scopes[ix].parent){ix--}
-scopes[ix].has_await=true
-return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`}
+while(scopes[ix].ast instanceof $B.ast.ListComp ||
+scopes[ix].ast instanceof $B.ast.DictComp ||
+scopes[ix].ast instanceof $B.ast.SetComp ||
+scopes[ix].ast instanceof $B.ast.GeneratorExp){scopes[ix].has_await=true
+ix--}
+if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){scopes[ix].has_await=true
+return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{compiler_error(this,"'await' outside function",this.value)}}
 $B.ast.BinOp.prototype.to_js=function(scopes){
 var name=this.op.$name ? this.op.$name :this.op.constructor.$name
 var op=opclass2dunder[name]
