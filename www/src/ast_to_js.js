@@ -1341,18 +1341,26 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
     if(has_type_params){
-        console.log('type params', this.type_params)
         js += `$B.$import('typing')\n` +
               `var typing = $B.imported.typing\n`
-        var name = this.type_params[0].name
+        var params = []
+        for(var item of this.type_params){
+            if(item instanceof $B.ast.TypeVar){
+                params.push(`$B.$call(typing.TypeVar)('${item.name}')`)
+            }else if(item instanceof $B.ast.TypeVarTuple){
+                params.push(`$B.$call($B.$getattr(typing.Unpack, '__getitem__'))($B.$call(typing.TypeVarTuple)('${item.name.id}'))`)
+            }else if(item instanceof $B.ast.ParamSpec){
+                params.push(`$B.$call(typing.ParamSpec)('${item.name.id}')`)
+            }
+        }
         bases.push(`typing.Generic.__class_getitem__(typing.Generic,` +
-                ` $B.$call(typing.TypeVar)('${name}'))`)
+                ` $B.fast_tuple([${params}]))`)
         for(var item of this.type_params){
             var name,
                 param_type = item.constructor.$name
             if(param_type == 'TypeVar'){
                 name = item.name
-            }else{ // if(item.constructor.$name == 'TypeVarTuple'){
+            }else{
                 name = item.name.id
             }
             js += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
@@ -1753,7 +1761,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var has_type_params = this.type_params.length > 0,
         type_params = ''
     if(has_type_params){
-        console.log('type params', this.type_params)
         var type_params = `$B.$import('typing')\n` +
               `var typing = $B.imported.typing\n`
         var name = this.type_params[0].name
@@ -1762,12 +1769,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 param_type = item.constructor.$name
             if(param_type == 'TypeVar'){
                 name = item.name
-            }else{ // if(item.constructor.$name == 'TypeVarTuple'){
+            }else{
                 name = item.name.id
             }
             type_params += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
         }
-        console.log('function', this.name, 'type params', type_params)
     }
 
     // Parse args
@@ -1827,8 +1833,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var parse_args = [name2]
 
     var js = decs +
-             `$B.set_lineno(frame, ${this.lineno})\n` +
-             type_params
+             `$B.set_lineno(frame, ${this.lineno})\n`
 
     if(is_async && ! is_generator){
         js += 'async '
@@ -1856,6 +1861,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
+
+    js += type_params
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]
@@ -2950,7 +2957,14 @@ $B.ast.Tuple.prototype.to_js = function(scopes){
 }
 
 $B.ast.TypeAlias.prototype.to_js = function(scopes){
-    return '// type alias\n'
+    var value = this.value.to_js(scopes),
+        type_params = this.type_params.map(x => x.to_js(scopes))
+    return `locals.${this.name.id} = $B.make_type_alias('${this.name.id}', ` +
+           `$B.fast_tuple([${type_params}]), ${value})\n`// type alias\n`
+}
+
+$B.ast.TypeVar.prototype.to_js = function(){
+    return `$B.$call($B.imported.typing.TypeVar)('${this.name}')`
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){

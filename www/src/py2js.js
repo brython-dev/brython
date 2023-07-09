@@ -4225,7 +4225,6 @@ IdCtx.prototype.transition = function(token, value){
                 token, value)
         }
     }else if(context.value == 'type' && context.parent.parent.type == "node"){
-        console.log('transition after id "type"')
         if(token == 'id'){
             // test soft keyword 'type'
             return new TypeAliasCtx(context, value)
@@ -7142,7 +7141,6 @@ var TypeAliasCtx = $B.parser.TypeAlias = function(context, value){
 
 TypeAliasCtx.prototype.transition = function(token, value){
     var context = this
-    console.log('TypeAlias transition, expect', context.expect, 'token', token, value)
 
     if(context.expect == '='){
         if(token == '['){
@@ -7168,11 +7166,11 @@ TypeAliasCtx.prototype.transition = function(token, value){
 TypeAliasCtx.prototype.ast = function(){
     var name = new ast.Name(this.name),
         params,
-        value
+        value = this.tree[0].ast()
     if(this.type_params){
         params = this.type_params.ast()
     }
-    var ast_obj = new ast.TypeAlias(name)
+    var ast_obj = new ast.TypeAlias(name, params, value)
     set_position(ast_obj, this.position)
     return ast_obj
 }
@@ -7196,7 +7194,6 @@ TypeParamsCtx.prototype.check_duplicate = function(name){
 
 TypeParamsCtx.prototype.transition = function(token, value){
     var context = this
-    console.log('TypeParams, expect:', context.expect, 'got:', token, value)
     if(context.expect == 'param'){
         if(token == 'id'){
             context.check_duplicate(value)
@@ -7247,7 +7244,6 @@ TypeVarCtx.prototype.transition = function(token, value){
 }
 
 TypeVarCtx.prototype.ast = function(){
-    console.log('typevar ast', this)
     var name = this.name,
         bound
     if(this.tree.length > 0){

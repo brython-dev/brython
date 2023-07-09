@@ -382,12 +382,26 @@ class ParamSpec:
     def kwargs(self):
         return ParamSpecKwargs(self)
 
-    def __init__(self, name, *, bound=None, covariant=False, contravariant=False):
+    def __init__(self, name, *, bound=None,
+                 covariant=False, contravariant=False,
+                 infer_variance=True):
         self.__name__ = name
         super().__init__(bound, covariant, contravariant)
         def_mod = _caller()
         if def_mod != 'typing':
             self.__module__ = def_mod
+        self.__module__ = 'typing'
+        self.__covariant__ = covariant
+        self.__contravariant__ = contravariant
+        self.__infer_variance__ = infer_variance
+
+    def __repr__(self):
+        if self.__infer_variance__:
+            return self.__name__
+
+        variance = '+' if self.__covariant__ else \
+                       '-' if self.__contravariant__ else '~'
+        return f"{variance}{self.__name__}"
 
     def __typing_subst__(self, arg):
         if isinstance(arg, (list, tuple)):
@@ -451,4 +465,8 @@ class Generic:
         return typing._generic_init_subclass(cls, *args, **kwargs)
 
 class TypeAliasType:
-    pass
+
+    def __init__(self, name, value):
+        self.__name__ = name
+        self.__type_params__ = ()
+        self.__value__ = value

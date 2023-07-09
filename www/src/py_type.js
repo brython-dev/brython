@@ -284,6 +284,13 @@ $B.make_class = function(qualname, factory){
     return A
 }
 
+$B.make_type_alias = function(name, type_params, value){
+    $B.$import('typing')
+    var t = $B.$call($B.$getattr($B.imported.typing, 'TypeAliasType'))(name, value)
+    t.__type_params__ = type_params
+    return t
+}
+
 var type = $B.make_class("type",
     function(kls, bases, cl_dict){
         var missing = {},
