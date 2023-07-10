@@ -116,7 +116,7 @@ def minify(src, preserve_lines=False):
                         or (last_type == tokenize.NAME and
                         last_item.string in kwlist)):
                     out += ' '
-            elif (item.type == tokenize.STRING and
+            elif (item.type in [tokenize.STRING, tokenize.FSTRING_START] and
                     last_type in [tokenize.NAME, tokenize.NUMBER]):
                 # for cases like "return b'x'"
                 out += ' '
