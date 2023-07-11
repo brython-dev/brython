@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-07-10 18:56:05.007040"
-__BRYTHON__.timestamp=1689008165007
+__BRYTHON__.compiled_date="2023-07-11 09:27:16.425631"
+__BRYTHON__.timestamp=1689060436425
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9311,8 +9311,8 @@ __class__:VFSLoader}}
 VFSLoader.create_module=function(self,spec){
 return _b_.None}
 VFSLoader.exec_module=function(self,modobj){
+if(modobj.__spec__.loader_state===undefined){console.log('no loader state in __spec__',modobj.__name__,modobj)}
 var stored=modobj.__spec__.loader_state.stored,timestamp=modobj.__spec__.loader_state.timestamp
-delete modobj.__spec__["loader_state"]
 var ext=stored[0],module_contents=stored[1],imports=stored[2]
 modobj.$is_package=stored[3]||false
 var path="VFS."+modobj.__name__
@@ -9331,6 +9331,7 @@ continue}
 if(Array.isArray(mod_js)){mod_js=mod_js[0]}
 var mod=$B.imported[parent]=Module.$factory(parent,undefined,is_package)
 mod.__initialized__=true
+mod.__spec__=modobj.__spec__
 if(is_package){mod.__path__="<stdlib>"
 mod.__package__=parent
 mod.$is_package=true}else{var elts=parent.split(".")

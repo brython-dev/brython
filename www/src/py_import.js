@@ -376,7 +376,6 @@ VFSLoader.exec_module = function(self, modobj){
     // indexedBD cache
     var stored = modobj.__spec__.loader_state.stored,
         timestamp = modobj.__spec__.loader_state.timestamp
-    delete modobj.__spec__["loader_state"]
     var ext = stored[0],
         module_contents = stored[1],
         imports = stored[2]
@@ -412,6 +411,7 @@ VFSLoader.exec_module = function(self, modobj){
             var mod = $B.imported[parent] = Module.$factory(parent,
                 undefined, is_package)
             mod.__initialized__ = true
+            mod.__spec__ = modobj.__spec__
             if(is_package){
                 mod.__path__ = "<stdlib>"
                 mod.__package__ = parent
