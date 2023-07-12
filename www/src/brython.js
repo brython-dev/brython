@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-07-11 09:27:16.425631"
-__BRYTHON__.timestamp=1689060436425
+__BRYTHON__.compiled_date="2023-07-12 16:25:53.006792"
+__BRYTHON__.timestamp=1689171953006
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9311,7 +9311,6 @@ __class__:VFSLoader}}
 VFSLoader.create_module=function(self,spec){
 return _b_.None}
 VFSLoader.exec_module=function(self,modobj){
-if(modobj.__spec__.loader_state===undefined){console.log('no loader state in __spec__',modobj.__name__,modobj)}
 var stored=modobj.__spec__.loader_state.stored,timestamp=modobj.__spec__.loader_state.timestamp
 var ext=stored[0],module_contents=stored[1],imports=stored[2]
 modobj.$is_package=stored[3]||false
@@ -13673,7 +13672,7 @@ return $mouseCoords(self).x
 case 'y':
 return $mouseCoords(self).y
 case 'data':
-if(self.dataTransfer !==null){return Clipboard.$factory(self.dataTransfer)}
+if(self.dataTransfer !==null && self.dataTransfer !==undefined){return Clipboard.$factory(self.dataTransfer)}
 return $B.$JS2Py(self['data'])
 case 'target':
 if(self.target !==undefined){return DOMNode.$factory(self.target)}
@@ -13964,7 +13963,9 @@ descriptors[attr].set===undefined){warn("Warning: property '"+attr+
 attr+"'] instead.")}
 break}}else{break}
 proto=Object.getPrototypeOf(proto)}
-if(self.style && self.style[attr]!==undefined){warn("Warning: '"+attr+"' is a property of element.style")}
+if(self.style && self.style[attr]!==undefined &&
+attr !='src' 
+){warn("Warning: '"+attr+"' is a property of element.style")}
 self[attr]=py_immutable_to_js(value)
 return _b_.None}}
 DOMNode.__setitem__=function(self,key,value){if(typeof key=="number"){self.childNodes[key]=value}else if(typeof key=="string"){if(self.attributes){if(self instanceof SVGElement){self.setAttributeNS(null,key,value)}else if(typeof self.setAttribute=="function"){self.setAttribute(key,value)}}}}

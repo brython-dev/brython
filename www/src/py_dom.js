@@ -347,7 +347,7 @@ DOMEvent.__getattribute__ = function(self, attr){
         case 'y':
             return $mouseCoords(self).y
         case 'data':
-            if(self.dataTransfer !== null){
+            if(self.dataTransfer !== null && self.dataTransfer !== undefined){
                 return Clipboard.$factory(self.dataTransfer)
             }
             return $B.$JS2Py(self['data'])
@@ -1074,7 +1074,9 @@ DOMNode.__setattr__ = function(self, attr, value){
         }
 
         // Warns if attribute is a property of style
-        if(self.style && self.style[attr] !== undefined){
+        if(self.style && self.style[attr] !== undefined &&
+                attr != 'src' // set by Chrome
+                ){
             warn("Warning: '" + attr + "' is a property of element.style")
         }
 
