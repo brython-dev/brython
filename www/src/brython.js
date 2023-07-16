@@ -150,7 +150,7 @@ return false}
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
@@ -158,9 +158,9 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-07-08 07:58:44.892007"
-__BRYTHON__.timestamp=1688795924892
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
+__BRYTHON__.compiled_date="2023-07-16 10:50:40.778852"
+__BRYTHON__.timestamp=1689497440778
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 const FSTRING_START='FSTRING_START',FSTRING_MIDDLE='FSTRING_MIDDLE',FSTRING_END='FSTRING_END'
@@ -2552,8 +2552,7 @@ new CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent
 var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
 module.token_reader.position=save_position
 if(ends_with_comma){return transition(new AbstractExprCtx(
-new MatchCtx(C.parent.parent),true),token,value)}}else if(C.value=='type' && C.parent.parent.type=="node"){console.log('transition after id "type"')
-if(token=='id'){
+new MatchCtx(C.parent.parent),true),token,value)}}else if(C.value=='type' && C.parent.parent.type=="node"){if(token=='id'){
 return new TypeAliasCtx(C,value)}}
 switch(token){case '=':
 if(C.parent.type=='expr' &&
@@ -4069,7 +4068,6 @@ this.expect='='
 this.tree=[]
 this.position=$token.value}
 TypeAliasCtx.prototype.transition=function(token,value){var C=this
-console.log('TypeAlias transition, expect',C.expect,'token',token,value)
 if(C.expect=='='){if(token=='['){if(this.tree.length > 0){raise_syntax_error(C)}
 return new TypeParamsCtx(C)}else if(token=='='){C.has_value=true
 return new AbstractExprCtx(C,false)}else if(token=='eol'){if(! C.has_value ||
@@ -4077,9 +4075,9 @@ this.tree.length !==1 ||
 this.tree[0]instanceof AbstractExprCtx){raise_syntax_error(C)}
 return transition(C.parent,token,value)}}
 raise_syntax_error(C)}
-TypeAliasCtx.prototype.ast=function(){var name=new ast.Name(this.name),params,value
+TypeAliasCtx.prototype.ast=function(){var name=new ast.Name(this.name),params,value=this.tree[0].ast()
 if(this.type_params){params=this.type_params.ast()}
-var ast_obj=new ast.TypeAlias(name)
+var ast_obj=new ast.TypeAlias(name,params,value)
 set_position(ast_obj,this.position)
 return ast_obj}
 var TypeParamsCtx=$B.parser.TypeParamsCtx=function(C){this.type='type_params'
@@ -4090,7 +4088,6 @@ this.expect='param'}
 TypeParamsCtx.prototype.check_duplicate=function(name){
 for(var item of this.tree){if(item.name==name){raise_syntax_error(this,`duplicate type parameter '${name}'`)}}}
 TypeParamsCtx.prototype.transition=function(token,value){var C=this
-console.log('TypeParams, expect:',C.expect,'got:',token,value)
 if(C.expect=='param'){if(token=='id'){C.check_duplicate(value)
 C.expect=','
 return new TypeVarCtx(C,value)}else if(token=='op'){if(value=='*'){C.expect=','
@@ -4109,8 +4106,7 @@ this.position=$token.value}
 TypeVarCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){return new AbstractExprCtx(C,false)}
 return transition(this.parent,token,value)}
-TypeVarCtx.prototype.ast=function(){console.log('typevar ast',this)
-var name=this.name,bound
+TypeVarCtx.prototype.ast=function(){var name=this.name,bound
 if(this.tree.length > 0){bound=this.tree[0].ast()}
 var ast_obj=new ast.TypeVar(name,bound)
 set_position(ast_obj,this.position)
@@ -5973,6 +5969,10 @@ $B.make_class=function(qualname,factory){
 var A={__class__:type,__bases__:[_b_.object],__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
 A.$factory=factory
 return A}
+$B.make_type_alias=function(name,type_params,value){$B.$import('typing')
+var t=$B.$call($B.$getattr($B.imported.typing,'TypeAliasType'))(name,value)
+t.__type_params__=type_params
+return t}
 var type=$B.make_class("type",function(kls,bases,cl_dict){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
 var kwarg={}
 for(var key in kw.$jsobj){kwarg[key]=kw.$jsobj[key]}
@@ -15487,15 +15487,14 @@ keywords.push(`["${keyword.arg}", `+
 $B.js_from_ast(keyword.value,scopes)+']')}
 var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
 var has_type_params=this.type_params.length > 0
-if(has_type_params){console.log('type params',this.type_params)
-js+=`$B.$import('typing')\n`+
+if(has_type_params){js+=`$B.$import('typing')\n`+
 `var typing = $B.imported.typing\n`
-var name=this.type_params[0].name
+var params=[]
+for(var item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`$B.$call(typing.TypeVar)('${item.name}')`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`$B.$call($B.$getattr(typing.Unpack, '__getitem__'))($B.$call(typing.TypeVarTuple)('${item.name.id}'))`)}else if(item instanceof $B.ast.ParamSpec){params.push(`$B.$call(typing.ParamSpec)('${item.name.id}')`)}}
 bases.push(`typing.Generic.__class_getitem__(typing.Generic,`+
-` $B.$call(typing.TypeVar)('${name}'))`)
+` $B.fast_tuple([${params}]))`)
 for(var item of this.type_params){var name,param_type=item.constructor.$name
-if(param_type=='TypeVar'){name=item.name}else{
-name=item.name.id}
+if(param_type=='TypeVar'){name=item.name}else{name=item.name.id}
 js+=`locals.${name} = $B.$call(typing.${param_type})('${name}')\n`}}
 var docstring=extract_docstring(this,scopes)
 js+=`var ${ref} = (function(name, module, bases){\n`+
@@ -15663,15 +15662,12 @@ decs+=`$B.set_lineno(frame, ${dec.lineno})\n`
 decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
 var docstring=extract_docstring(this,scopes)
 var has_type_params=this.type_params.length > 0,type_params=''
-if(has_type_params){console.log('type params',this.type_params)
-var type_params=`$B.$import('typing')\n`+
+if(has_type_params){var type_params=`$B.$import('typing')\n`+
 `var typing = $B.imported.typing\n`
 var name=this.type_params[0].name
 for(var item of this.type_params){var name,param_type=item.constructor.$name
-if(param_type=='TypeVar'){name=item.name}else{
-name=item.name.id}
-type_params+=`locals.${name} = $B.$call(typing.${param_type})('${name}')\n`}
-console.log('function',this.name,'type params',type_params)}
+if(param_type=='TypeVar'){name=item.name}else{name=item.name.id}
+type_params+=`locals.${name} = $B.$call(typing.${param_type})('${name}')\n`}}
 var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
 var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,kw_defaults=kw_default_names.length==0 ? '_b_.None' :
 `$B.obj_dict({${kw_defaults.join(', ')}})`
@@ -15691,8 +15687,7 @@ var is_generator=symtable_block.generator
 var id=$B.UUID(),name1=this.name+'$'+id,name2=this.name+id
 var parse_args=[name2]
 var js=decs+
-`$B.set_lineno(frame, ${this.lineno})\n`+
-type_params
+`$B.set_lineno(frame, ${this.lineno})\n`
 if(is_async && ! is_generator){js+='async '}
 js+=`function ${name2}(){\n`
 var locals_name=make_scope_name(scopes,func_scope),gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
@@ -15705,6 +15700,7 @@ var args_vararg=this.args.vararg===undefined ? 'null' :
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
+js+=type_params
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     if(locals.$has_generators){
@@ -16220,7 +16216,10 @@ js+='\n}\n' }else{js+='}\n' }
 scopes.pop()
 return js}
 $B.ast.Tuple.prototype.to_js=function(scopes){return list_or_tuple_to_js.bind(this)('$B.fast_tuple',scopes)}
-$B.ast.TypeAlias.prototype.to_js=function(scopes){return '// type alias\n'}
+$B.ast.TypeAlias.prototype.to_js=function(scopes){var value=this.value.to_js(scopes),type_params=this.type_params.map(x=> x.to_js(scopes))
+return `locals.${this.name.id} = $B.make_type_alias('${this.name.id}', `+
+`$B.fast_tuple([${type_params}]), ${value})\n`}
+$B.ast.TypeVar.prototype.to_js=function(){return `$B.$call($B.imported.typing.TypeVar)('${this.name}')`}
 $B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
 if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
 if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $B.ast.UAdd){return operand+''}else if(this.op instanceof $B.ast.USub){return-operand+''}}
