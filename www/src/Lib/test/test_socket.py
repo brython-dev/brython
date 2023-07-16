@@ -4,30 +4,31 @@ from test.support import os_helper
 from test.support import socket_helper
 from test.support import threading_helper
 
-import errno
-import io
-import itertools
-import socket
-import select
-import tempfile
-import time
-import traceback
-import queue
-import sys
-import os
-import platform
+import _thread as thread
 import array
 import contextlib
-from weakref import proxy
-import signal
+import errno
+import gc
+import io
+import itertools
 import math
+import os
 import pickle
-import struct
+import platform
+import queue
 import random
-import shutil
+import re
+import select
+import signal
+import socket
 import string
-import _thread as thread
+import struct
+import sys
+import tempfile
 import threading
+import time
+import traceback
+from weakref import proxy
 try:
     import multiprocessing
 except ImportError:
@@ -143,6 +144,17 @@ def _have_socket_bluetooth():
     return True
 
 
+def _have_socket_hyperv():
+    """Check whether AF_HYPERV sockets are supported on this host."""
+    try:
+        s = socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM, socket.HV_PROTOCOL_RAW)
+    except (AttributeError, OSError):
+        return False
+    else:
+        s.close()
+    return True
+
+
 @contextlib.contextmanager
 def socket_setdefaulttimeout(timeout):
     old_timeout = socket.getdefaulttimeout()
@@ -170,6 +182,8 @@ HAVE_SOCKET_VSOCK = _have_socket_vsock()
 HAVE_SOCKET_UDPLITE = hasattr(socket, "IPPROTO_UDPLITE")
 
 HAVE_SOCKET_BLUETOOTH = _have_socket_bluetooth()
+
+HAVE_SOCKET_HYPERV = _have_socket_hyperv()
 
 # Size in bytes of the int type
 SIZEOF_INT = array.array("i").itemsize
@@ -591,16 +605,17 @@ class SocketTestBase(unittest.TestCase):
 
     def setUp(self):
         self.serv = self.newSocket()
+        self.addCleanup(self.close_server)
         self.bindServer()
+
+    def close_server(self):
+        self.serv.close()
+        self.serv = None
 
     def bindServer(self):
         """Bind server socket and set self.serv_addr to its address."""
         self.bindSock(self.serv)
         self.serv_addr = self.serv.getsockname()
-
-    def tearDown(self):
-        self.serv.close()
-        self.serv = None
 
 
 class SocketListeningTestMixin(SocketTestBase):
@@ -686,15 +701,10 @@ class UnixSocketTestBase(SocketTestBase):
     # can't send anything that might be problematic for a privileged
     # user running the tests.
 
-    def setUp(self):
-        self.dir_path = tempfile.mkdtemp()
-        self.addCleanup(os.rmdir, self.dir_path)
-        super().setUp()
-
     def bindSock(self, sock):
-        path = tempfile.mktemp(dir=self.dir_path)
-        socket_helper.bind_unix_socket(sock, path)
+        path = socket_helper.create_unix_domain_name()
         self.addCleanup(os_helper.unlink, path)
+        socket_helper.bind_unix_socket(sock, path)
 
 class UnixStreamBase(UnixSocketTestBase):
     """Base class for Unix-domain SOCK_STREAM tests."""
@@ -826,6 +836,12 @@ def requireSocket(*args):
 ## Begin Tests
 
 class GeneralModuleTests(unittest.TestCase):
+
+    @unittest.skipUnless(_socket is not None, 'need _socket module')
+    def test_socket_type(self):
+        self.assertTrue(gc.is_tracked(_socket.socket))
+        with self.assertRaisesRegex(TypeError, "immutable"):
+            _socket.socket.foo = 1
 
     def test_SocketType_is_socketobject(self):
         import _socket
@@ -1591,6 +1607,54 @@ class GeneralModuleTests(unittest.TestCase):
             except socket.gaierror:
                 pass
 
+    def test_getaddrinfo_int_port_overflow(self):
+        # gh-74895: Test that getaddrinfo does not raise OverflowError on port.
+        #
+        # POSIX getaddrinfo() never specify the valid range for "service"
+        # decimal port number values. For IPv4 and IPv6 they are technically
+        # unsigned 16-bit values, but the API is protocol agnostic. Which values
+        # trigger an error from the C library function varies by platform as
+        # they do not all perform validation.
+
+        # The key here is that we don't want to produce OverflowError as Python
+        # prior to 3.12 did for ints outside of a [LONG_MIN, LONG_MAX] range.
+        # Leave the error up to the underlying string based platform C API.
+
+        from _testcapi import ULONG_MAX, LONG_MAX, LONG_MIN
+        try:
+            socket.getaddrinfo(None, ULONG_MAX + 1, type=socket.SOCK_STREAM)
+        except OverflowError:
+            # Platforms differ as to what values consitute a getaddrinfo() error
+            # return. Some fail for LONG_MAX+1, others ULONG_MAX+1, and Windows
+            # silently accepts such huge "port" aka "service" numeric values.
+            self.fail("Either no error or socket.gaierror expected.")
+        except socket.gaierror:
+            pass
+
+        try:
+            socket.getaddrinfo(None, LONG_MAX + 1, type=socket.SOCK_STREAM)
+        except OverflowError:
+            self.fail("Either no error or socket.gaierror expected.")
+        except socket.gaierror:
+            pass
+
+        try:
+            socket.getaddrinfo(None, LONG_MAX - 0xffff + 1, type=socket.SOCK_STREAM)
+        except OverflowError:
+            self.fail("Either no error or socket.gaierror expected.")
+        except socket.gaierror:
+            pass
+
+        try:
+            socket.getaddrinfo(None, LONG_MIN - 1, type=socket.SOCK_STREAM)
+        except OverflowError:
+            self.fail("Either no error or socket.gaierror expected.")
+        except socket.gaierror:
+            pass
+
+        socket.getaddrinfo(None, 0, type=socket.SOCK_STREAM)  # No error expected.
+        socket.getaddrinfo(None, 0xffff, type=socket.SOCK_STREAM)  # No error expected.
+
     def test_getnameinfo(self):
         # only IP addresses are allowed
         self.assertRaises(OSError, socket.getnameinfo, ('mail.python.org',0), 0)
@@ -1760,6 +1824,10 @@ class GeneralModuleTests(unittest.TestCase):
         )
         self.assertEqual(sockaddr, ('ff02::1de:c0:face:8d', 1234, 0, 0))
 
+    def test_getfqdn_filter_localhost(self):
+        self.assertEqual(socket.getfqdn(), socket.getfqdn("0.0.0.0"))
+        self.assertEqual(socket.getfqdn(), socket.getfqdn("::"))
+
     @unittest.skipUnless(socket_helper.IPV6_ENABLED, 'IPv6 required for this test.')
     @unittest.skipIf(sys.platform == 'win32', 'does not work on Windows')
     @unittest.skipIf(AIX, 'Symbolic scope id does not work')
@@ -1915,17 +1983,18 @@ class GeneralModuleTests(unittest.TestCase):
             self._test_socket_fileno(s, socket.AF_INET6, socket.SOCK_STREAM)
 
         if hasattr(socket, "AF_UNIX"):
-            tmpdir = tempfile.mkdtemp()
-            self.addCleanup(shutil.rmtree, tmpdir)
+            unix_name = socket_helper.create_unix_domain_name()
+            self.addCleanup(os_helper.unlink, unix_name)
+
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.addCleanup(s.close)
-            try:
-                s.bind(os.path.join(tmpdir, 'socket'))
-            except PermissionError:
-                pass
-            else:
-                self._test_socket_fileno(s, socket.AF_UNIX,
-                                         socket.SOCK_STREAM)
+            with s:
+                try:
+                    s.bind(unix_name)
+                except PermissionError:
+                    pass
+                else:
+                    self._test_socket_fileno(s, socket.AF_UNIX,
+                                             socket.SOCK_STREAM)
 
     def test_socket_fileno_rejects_float(self):
         with self.assertRaises(TypeError):
@@ -2481,6 +2550,58 @@ class BasicBluetoothTest(unittest.TestCase):
     def testCreateScoSocket(self):
         with socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_SCO) as s:
             pass
+
+
+@unittest.skipUnless(HAVE_SOCKET_HYPERV,
+                     'Hyper-V sockets required for this test.')
+class BasicHyperVTest(unittest.TestCase):
+
+    def testHyperVConstants(self):
+        socket.HVSOCKET_CONNECT_TIMEOUT
+        socket.HVSOCKET_CONNECT_TIMEOUT_MAX
+        socket.HVSOCKET_CONNECTED_SUSPEND
+        socket.HVSOCKET_ADDRESS_FLAG_PASSTHRU
+        socket.HV_GUID_ZERO
+        socket.HV_GUID_WILDCARD
+        socket.HV_GUID_BROADCAST
+        socket.HV_GUID_CHILDREN
+        socket.HV_GUID_LOOPBACK
+        socket.HV_GUID_LOOPBACK
+
+    def testCreateHyperVSocketWithUnknownProtoFailure(self):
+        expected = r"\[WinError 10041\]"
+        with self.assertRaisesRegex(OSError, expected):
+            socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM)
+
+    def testCreateHyperVSocketAddrNotTupleFailure(self):
+        expected = "connect(): AF_HYPERV address must be tuple, not str"
+        with socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM, socket.HV_PROTOCOL_RAW) as s:
+            with self.assertRaisesRegex(TypeError, re.escape(expected)):
+                s.connect(socket.HV_GUID_ZERO)
+
+    def testCreateHyperVSocketAddrNotTupleOf2StrsFailure(self):
+        expected = "AF_HYPERV address must be a str tuple (vm_id, service_id)"
+        with socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM, socket.HV_PROTOCOL_RAW) as s:
+            with self.assertRaisesRegex(TypeError, re.escape(expected)):
+                s.connect((socket.HV_GUID_ZERO,))
+
+    def testCreateHyperVSocketAddrNotTupleOfStrsFailure(self):
+        expected = "AF_HYPERV address must be a str tuple (vm_id, service_id)"
+        with socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM, socket.HV_PROTOCOL_RAW) as s:
+            with self.assertRaisesRegex(TypeError, re.escape(expected)):
+                s.connect((1, 2))
+
+    def testCreateHyperVSocketAddrVmIdNotValidUUIDFailure(self):
+        expected = "connect(): AF_HYPERV address vm_id is not a valid UUID string"
+        with socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM, socket.HV_PROTOCOL_RAW) as s:
+            with self.assertRaisesRegex(ValueError, re.escape(expected)):
+                s.connect(("00", socket.HV_GUID_ZERO))
+
+    def testCreateHyperVSocketAddrServiceIdNotValidUUIDFailure(self):
+        expected = "connect(): AF_HYPERV address service_id is not a valid UUID string"
+        with socket.socket(socket.AF_HYPERV, socket.SOCK_STREAM, socket.HV_PROTOCOL_RAW) as s:
+            with self.assertRaisesRegex(ValueError, re.escape(expected)):
+                s.connect((socket.HV_GUID_ZERO, "00"))
 
 
 class BasicTCPTest(SocketConnectedTest):
@@ -5377,10 +5498,10 @@ class TCPTimeoutTest(SocketTCPTest):
                 self.fail("caught timeout instead of Alarm")
             except Alarm:
                 pass
-            except:
+            except BaseException as e:
                 self.fail("caught other exception instead of Alarm:"
                           " %s(%s):\n%s" %
-                          (sys.exc_info()[:2] + (traceback.format_exc(),)))
+                          (type(e), e, traceback.format_exc()))
             else:
                 self.fail("nothing caught")
             finally:
