@@ -390,30 +390,6 @@
                 }
                 return obj
             }
-            /*
-            console.log('b_super', b_super)
-            var b_self = b_super.__self_class__,
-                proto = Object.getPrototypeOf(b_self),
-                parent = proto.constructor.$parent
-            var factory = function(){
-                var p = parent.bind(b_self),
-                    res
-                if(parent.toString().startsWith("class")){
-                    res = new p(...arguments)
-                }else{
-                    res = p(...arguments)
-                }
-                for(var key in res){
-                    b_self[key] = res[key]
-                }
-                return res
-            }
-            return {
-                __class__: super_class,
-                __init__: factory,
-                __self_class__: b_self
-            }
-            */
         }
     )
 
@@ -651,6 +627,11 @@
         },
         excepthook: function(exc_class, exc_value, traceback){
             $B.handle_error(exc_value)
+        },
+        exception: function(){
+            var frame = $B.last($B.frames_stack),
+                exc = frame[1].$current_exception
+            return exc === undefined ? _b_.None : exc
         },
         getrecursionlimit: function(){
             return $B.recursion_limit
