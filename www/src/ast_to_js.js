@@ -271,6 +271,7 @@ function name_scope(name, scopes){
         flags = _b_.dict.$getitem_string(block.symbols, name)
     }catch(err){
         console.log('name', name, 'not in symbols of block', block)
+        console.log('symtables', scopes.symtable)
         return {found: false, resolve: 'all'}
     }
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
@@ -1757,6 +1758,22 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
+    // Parse args
+    var parsed_args = transform_args.bind(this)(scopes),
+        default_names = parsed_args.default_names,
+        _defaults = parsed_args._defaults,
+        positional = parsed_args.positional,
+        has_posonlyargs = parsed_args.has_posonlyargs,
+        kw_defaults = parsed_args.kw_defaults,
+        kw_default_names = parsed_args.kw_default_names
+
+    var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,
+        kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
+            `$B.obj_dict({${kw_defaults.join(', ')}})`
+
+    var func_scope = new Scope(this.name, 'def', this)
+    scopes.push(func_scope)
+
     // Type params (PEP 695)
     var has_type_params = this.type_params.length > 0,
         type_params = ''
@@ -1772,24 +1789,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             }else{
                 name = item.name.id
             }
+            bind(name, scopes)
             type_params += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
         }
     }
-
-    // Parse args
-    var parsed_args = transform_args.bind(this)(scopes),
-        default_names = parsed_args.default_names,
-        _defaults = parsed_args._defaults,
-        positional = parsed_args.positional,
-        has_posonlyargs = parsed_args.has_posonlyargs,
-        kw_defaults = parsed_args.kw_defaults,
-        kw_default_names = parsed_args.kw_default_names
-
-    var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,
-        kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
-            `$B.obj_dict({${kw_defaults.join(', ')}})`
-    var func_scope = new Scope(this.name, 'def', this)
-    scopes.push(func_scope)
 
     var args = positional.concat(this.args.kwonlyargs),
         slots = [],
