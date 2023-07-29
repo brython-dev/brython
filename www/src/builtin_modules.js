@@ -629,9 +629,14 @@
             $B.handle_error(exc_value)
         },
         exception: function(){
-            var frame = $B.last($B.frames_stack),
-                exc = frame[1].$current_exception
-            return exc === undefined ? _b_.None : exc
+            for(var i = $B.frames_stack.length - 1; i >= 0; i--){
+                var frame = $B.frames_stack[i],
+                    exc = frame[1].$current_exception
+                if(exc !== undefined){
+                    return exc
+                }
+            }
+            return _b_.None
         },
         getrecursionlimit: function(){
             return $B.recursion_limit
@@ -639,6 +644,11 @@
         gettrace: function(){
             return $B.tracefunc || _b_.None
         },
+        last_exc: _b_.property.$factory(
+            function(){
+                return $B.imported._sys.exception()
+            }
+        ),
         modules: _b_.property.$factory(
             function(){
                 return $B.obj_dict($B.imported)
