@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-07-17 16:03:12.771385"
-__BRYTHON__.timestamp=1689602592771
+__BRYTHON__.compiled_date="2023-07-18 10:57:40.794703"
+__BRYTHON__.timestamp=1689670660793
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7983,12 +7983,15 @@ if(attr=="f_back"){var pos=$B.frames_stack.indexOf(_self)
 if(pos > 0){return frame.$factory($B.frames_stack[pos-1])}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
 if(_self.$f_trace===undefined){return _b_.None}
 return _self.$f_trace}
+console.log('no attr',attr,'in frame object',_self)
+alert()
 throw $B.attr_error(attr,_self)}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
 _self.$f_trace=value}}
 frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self.__file__+
 ', line '+_self.$lineno+', code '+
 frame.f_code.__get__(_self).co_name+'>'}
+frame.f_builtins={__get__:function(_self){return $B.$getattr(_self[3].__builtins__,'__dict__')}}
 frame.f_code={__get__:function(_self){var res
 if(_self[4]){res=_self[4].$infos.__code__}else if(_self.f_code){
 res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}
@@ -14862,8 +14865,11 @@ hook=$B.$getattr($B.imported[modname],funcname)}catch(err){console.warn("cannot 
 return _b_.None}
 return $B.$call(hook).apply(null,arguments)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},exception:function(){var frame=$B.last($B.frames_stack),exc=frame[1].$current_exception
-return exc===undefined ? _b_.None :exc},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},modules:_b_.property.$factory(
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},exception:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
+if(exc !==undefined){return exc}}
+return _b_.None},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},last_exc:_b_.property.$factory(
+function(){return $B.imported._sys.exception()}
+),modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
 function(){return $B.path},function(self,value){$B.path=value;}
@@ -15662,18 +15668,19 @@ decorators.push(dec_id)
 decs+=`$B.set_lineno(frame, ${dec.lineno})\n`
 decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
 var docstring=extract_docstring(this,scopes)
+var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
+var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,kw_defaults=kw_default_names.length==0 ? '_b_.None' :
+`$B.obj_dict({${kw_defaults.join(', ')}})`
+var func_scope=new Scope(this.name,'def',this)
+scopes.push(func_scope)
 var has_type_params=this.type_params.length > 0,type_params=''
 if(has_type_params){var type_params=`$B.$import('typing')\n`+
 `var typing = $B.imported.typing\n`
 var name=this.type_params[0].name
 for(var item of this.type_params){var name,param_type=item.constructor.$name
 if(param_type=='TypeVar'){name=item.name}else{name=item.name.id}
+bind(name,scopes)
 type_params+=`locals.${name} = $B.$call(typing.${param_type})('${name}')\n`}}
-var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
-var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,kw_defaults=kw_default_names.length==0 ? '_b_.None' :
-`$B.obj_dict({${kw_defaults.join(', ')}})`
-var func_scope=new Scope(this.name,'def',this)
-scopes.push(func_scope)
 var args=positional.concat(this.args.kwonlyargs),slots=[],arg_names=[]
 for(var arg of args){slots.push(arg.arg+': null')
 bind(arg.arg,scopes)}
@@ -16434,7 +16441,9 @@ DEF_FREE=2<<4 ,
 DEF_FREE_CLASS=2<<5,
 DEF_IMPORT=2<<6,
 DEF_ANNOT=2<<7,
-DEF_COMP_ITER=2<<8 
+DEF_COMP_ITER=2<<8,
+DEF_TYPE_PARAM=2<<9,
+DEF_COMP_CELL=2<<10 
 var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
 var SCOPE_OFFSET=11,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
 var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
@@ -16442,7 +16451,7 @@ var GENERATOR=1,GENERATOR_EXPRESSION=2
 var CO_FUTURE_ANNOTATIONS=0x1000000 
 var TYPE_CLASS=1,TYPE_FUNCTION=0,TYPE_MODULE=2
 var NULL=undefined
-var ModuleBlock=2,ClassBlock=1,FunctionBlock=0,AnnotationBlock=4
+var ModuleBlock=2,ClassBlock=1,FunctionBlock=0,AnnotationBlock=4,TypeVarBoundBlock=5,TypeAliasBlock=6,TypeParamBlock=7
 var PyExc_SyntaxError=_b_.SyntaxError
 function assert(test){if(! $B.$bool(test)){console.log('test fails',test)
 throw Error('test fails')}}
@@ -16708,6 +16717,22 @@ if(o==NULL){return 0}
 st.global[mangled]=o}
 return 1}
 function symtable_add_def(st,name,flag,_location){return symtable_add_def_helper(st,name,flag,st.cur,_location);}
+function symtable_enter_type_param_block(st,name,ast,has_defaults,has_kwdefaults,kind,_location){var current_type=st.cur.type;
+if(!symtable_enter_block(st,name,'TypeParam',ast,..._location)){return 0;}
+if(current_type==ClassBlock){st.cur.can_see_class_scope=1;
+if(!symtable_add_def(st,"__classdict__",USE,_location)){return 0;}}
+if(kind==$B.ast.ClassDef){_Py_DECLARE_STR(type_params,".type_params");
+if(!symtable_add_def(st,"type_params",DEF_LOCAL,_location)){return 0;}
+if(!symtable_add_def(st,"type_params",USE,_location)){return 0;}
+st.st_private=name;
+var generic_base=".generic_base";
+if(!symtable_add_def(st,generic_base,DEF_LOCAL,_location)){return 0;}
+if(!symtable_add_def(st,generic_base,USE,_location)){return 0;}}
+if(has_defaults){var defaults=".defaults";
+if(!symtable_add_def(st,defaults,DEF_PARAM,_location)){return 0;}}
+if(has_kwdefaults){var kwdefaults=".kwdefaults";
+if(!symtable_add_def(st,kwdefaults,DEF_PARAM,_location)){return 0;}}
+return 1;}
 function VISIT_QUIT(ST,X){return X}
 function VISIT(ST,TYPE,V){var f=visitor[TYPE]
 if(!f(ST,V)){VISIT_QUIT(ST,0);}}
@@ -16723,6 +16748,8 @@ if(!mangled){return 0;}
 data=$B.fast_tuple([mangled,lineno,col_offset,end_lineno,end_col_offset])
 st.cur.directives.push(data);
 return true}
+function has_kwonlydefaults(kwonlyargs,kw_defaults){for(var i=0,len=kwonlyargs.length;i < len;i++){if(kw_defaults[i]){return 1;}}
+return 0;}
 var visitor={}
 visitor.stmt=function(st,s){switch(s.constructor){case $B.ast.FunctionDef:
 if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
@@ -16731,6 +16758,9 @@ if(s.args.defaults)
 VISIT_SEQ(st,expr,s.args.defaults)
 if(s.args.kw_defaults)
 VISIT_SEQ_WITH_NULL(st,expr,s.args.kw_defaults)
+if(s.type_params.length > 0){if(!symtable_enter_type_param_block(
+st,s.name,s.type_params,s.args.defaults !=NULL,has_kwonlydefaults(s.args.kwonlyargs,s.args.kw_defaults),s.constructor,LOCATION(s))){VISIT_QUIT(st,0);}
+VISIT_SEQ(st,type_param,s.type_params);}
 if(!visitor.annotations(st,s,s.args,s.returns))
 VISIT_QUIT(st,0)
 if(s.decorator_list){VISIT_SEQ(st,expr,s.decorator_list)}
@@ -16901,6 +16931,9 @@ VISIT(st,expr,s.target)
 VISIT(st,expr,s.iter)
 VISIT_SEQ(st,stmt,s.body)
 if(s.orelse){VISIT_SEQ(st,stmt,s.orelse)}
+break
+default:
+console.log('unhandled',s)
 break}
 VISIT_QUIT(st,1)}
 function symtable_extend_namedexpr_scope(st,e){assert(st.stack);
@@ -16943,7 +16976,7 @@ return 0;}
 VISIT(st,expr,e.value);
 VISIT(st,expr,e.target);
 return 1;}
-const alias='alias',comprehension='comprehension',excepthandler='excepthandler',expr='expr',keyword='keyword',match_case='match_case',pattern='pattern',stmt='stmt',withitem='withitem'
+const alias='alias',comprehension='comprehension',excepthandler='excepthandler',expr='expr',keyword='keyword',match_case='match_case',pattern='pattern',stmt='stmt',type_param='type_param',withitem='withitem'
 visitor.expr=function(st,e){switch(e.constructor){case $B.ast.NamedExpr:
 if(!symtable_raise_if_annotation_block(st,"named expression",e)){VISIT_QUIT(st,0);}
 if(!symtable_handle_namedexpr(st,e))
@@ -17070,6 +17103,27 @@ VISIT_SEQ(st,expr,e.elts);
 break;
 case $B.ast.Tuple:
 VISIT_SEQ(st,expr,e.elts);
+break;}
+VISIT_QUIT(st,1);}
+visitor.type_param=function(st,tp){switch(tp.constructor){case $B.ast.TypeVar:
+if(!symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp)))
+VISIT_QUIT(st,0);
+if(tp.bound){var is_in_class=st.cur.can_see_class_scope;
+if(!symtable_enter_block(st,tp.name,TypeVarBoundBlock,tp,LOCATION(tp)))
+VISIT_QUIT(st,0);
+st.cur.can_see_class_scope=is_in_class;
+if(is_in_class && !symtable_add_def(st,"__classdict__",USE,LOCATION(tp.bound))){VISIT_QUIT(st,0);}
+VISIT(st,expr,tp.bound);
+if(!symtable_exit_block(st))
+VISIT_QUIT(st,0);}
+break;
+case $B.ast.TypeVarTuple:
+if(!symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp)))
+VISIT_QUIT(st,0);
+break;
+case $B.ast.ParamSpec:
+if(!symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp)))
+VISIT_QUIT(st,0);
 break;}
 VISIT_QUIT(st,1);}
 visitor.pattern=function(st,p){switch(p.constructor){case $B.ast.MatchValue:
