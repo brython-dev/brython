@@ -35,7 +35,9 @@ var DEF_GLOBAL = 1,           /* global stmt */
     DEF_FREE_CLASS = 2<<5,    /* free variable from class's method */
     DEF_IMPORT = 2<<6,        /* assignment occurred via import */
     DEF_ANNOT = 2<<7,         /* this name is annotated */
-    DEF_COMP_ITER = 2<<8      /* this name is a comprehension iteration variable */
+    DEF_COMP_ITER = 2<<8,     /* this name is a comprehension iteration variable */
+    DEF_TYPE_PARAM = 2<<9,    /* this name is a type parameter */
+    DEF_COMP_CELL = 2<<10       /* this name is a cell in an inlined comprehension */
 
 var DEF_BOUND = DEF_LOCAL | DEF_PARAM | DEF_IMPORT
 
@@ -66,7 +68,10 @@ var NULL = undefined
 var ModuleBlock = 2,
     ClassBlock = 1,
     FunctionBlock = 0,
-    AnnotationBlock = 4
+    AnnotationBlock = 4,
+    TypeVarBoundBlock = 5,
+    TypeAliasBlock = 6,
+    TypeParamBlock = 7
 
 var PyExc_SyntaxError = _b_.SyntaxError
 
@@ -896,6 +901,62 @@ function symtable_add_def(st, name, flag, _location){
     return symtable_add_def_helper(st, name, flag, st.cur, _location);
 }
 
+function symtable_enter_type_param_block(st, name,
+                               ast, has_defaults, has_kwdefaults,
+                               kind,
+                               _location){
+    var current_type = st.cur.type;
+    if(!symtable_enter_block(st, name, TypeParamBlock, ast, ..._location)) {
+        return 0;
+    }
+    if (current_type == ClassBlock) {
+        st.cur.can_see_class_scope = 1;
+        if (!symtable_add_def(st,"__classdict__", USE, _location)) {
+            return 0;
+        }
+    }
+    if (kind == $B.ast.ClassDef) {
+        _Py_DECLARE_STR(type_params, ".type_params");
+        // It gets "set" when we create the type params tuple and
+        // "used" when we build up the bases.
+        if (!symtable_add_def(st, "type_params", DEF_LOCAL,
+                              _location)) {
+            return 0;
+        }
+        if (!symtable_add_def(st, "type_params", USE,
+                              _location)) {
+            return 0;
+        }
+        st.st_private = name;
+        // This is used for setting the generic base
+        var generic_base = ".generic_base";
+        if (!symtable_add_def(st, generic_base, DEF_LOCAL,
+                              _location)) {
+            return 0;
+        }
+        if (!symtable_add_def(st, generic_base, USE,
+                              _location)) {
+            return 0;
+        }
+    }
+    if (has_defaults) {
+        var defaults = ".defaults";
+        if (!symtable_add_def(st, defaults, DEF_PARAM,
+                              _location)) {
+            return 0;
+        }
+    }
+    if (has_kwdefaults) {
+        var kwdefaults = ".kwdefaults";
+        if (!symtable_add_def(st, kwdefaults, DEF_PARAM,
+                              _location)) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+
 /* VISIT, VISIT_SEQ and VIST_SEQ_TAIL take an ASDL type as their second argument.
    They use the ASDL name to synthesize the name of the C type and the visit
    function.
@@ -961,6 +1022,15 @@ function symtable_record_directive(st, name, lineno,
     return true
 }
 
+function has_kwonlydefaults(kwonlyargs, kw_defaults){
+    for (var i = 0, len = kwonlyargs.length; i < len; i++) {
+        if(kw_defaults[i]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
 var visitor = {}
 
 visitor.stmt = function(st, s){
@@ -972,6 +1042,20 @@ visitor.stmt = function(st, s){
             VISIT_SEQ(st, expr, s.args.defaults)
         if (s.args.kw_defaults)
             VISIT_SEQ_WITH_NULL(st, expr, s.args.kw_defaults)
+        if (s.type_params.length > 0) {
+            if (!symtable_enter_type_param_block(
+                    st, s.name,
+                    s.type_params,
+                    s.args.defaults != NULL,
+                    has_kwonlydefaults(s.args.kwonlyargs,
+                                       s.args.kw_defaults),
+                    s.constructor,
+                    LOCATION(s))) {
+                VISIT_QUIT(st, 0);
+            }
+            VISIT_SEQ(st, type_param, s.type_params);
+        }
+
         if (!visitor.annotations(st, s, s.args,
                                         s.returns))
             VISIT_QUIT(st, 0)
@@ -1235,6 +1319,9 @@ visitor.stmt = function(st, s){
             VISIT_SEQ(st, stmt, s.orelse)
         }
         break
+    default:
+        console.log('unhandled', s)
+        break
     }
     VISIT_QUIT(st, 1)
 }
@@ -1332,6 +1419,7 @@ const alias = 'alias',
       match_case = 'match_case',
       pattern = 'pattern',
       stmt = 'stmt',
+      type_param = 'type_param',
       withitem = 'withitem'
 
 visitor.expr = function(st, e){
@@ -1485,6 +1573,38 @@ visitor.expr = function(st, e){
         break;
     case $B.ast.Tuple:
         VISIT_SEQ(st, expr, e.elts);
+        break;
+    }
+    VISIT_QUIT(st, 1);
+}
+
+visitor.type_param = function(st, tp){
+    switch(tp.constructor) {
+    case $B.ast.TypeVar:
+        if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
+            VISIT_QUIT(st, 0);
+        if (tp.bound) {
+            var is_in_class = st.cur.can_see_class_scope;
+            if (!symtable_enter_block(st, tp.name,
+                                      TypeVarBoundBlock, tp,
+                                      LOCATION(tp)))
+                VISIT_QUIT(st, 0);
+            st.cur.can_see_class_scope = is_in_class;
+            if (is_in_class && !symtable_add_def(st, "__classdict__", USE, LOCATION(tp.bound))) {
+                VISIT_QUIT(st, 0);
+            }
+            VISIT(st, expr, tp.bound);
+            if (!symtable_exit_block(st))
+                VISIT_QUIT(st, 0);
+        }
+        break;
+    case $B.ast.TypeVarTuple:
+        if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
+            VISIT_QUIT(st, 0);
+        break;
+    case $B.ast.ParamSpec:
+        if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
+            VISIT_QUIT(st, 0);
         break;
     }
     VISIT_QUIT(st, 1);
