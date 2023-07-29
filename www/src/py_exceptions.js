@@ -186,6 +186,8 @@ frame.__getattr__ = function(_self, attr){
         }
         return _self.$f_trace
     }
+    console.log('no attr', attr, 'in frame object', _self)
+    alert()
     throw $B.attr_error(attr, _self)
 }
 
@@ -200,6 +202,12 @@ frame.__str__ = frame.__repr__ = function(_self){
     return '<frame object, file ' + _self.__file__ +
         ', line ' + _self.$lineno + ', code ' +
         frame.f_code.__get__(_self).co_name + '>'
+}
+
+frame.f_builtins = {
+    __get__: function(_self){
+        return $B.$getattr(_self[3].__builtins__, '__dict__')
+    }
 }
 
 frame.f_code = {
@@ -1030,7 +1038,7 @@ $B.error_trace = function(err){
         }else if(err.__class__ === _b_.ImportError){
             if(err.$suggestion){
                 trace += `. Did you mean: '${err.$suggestion}'?`
-            }                
+            }
         }
     }else{
         trace = err + ""
