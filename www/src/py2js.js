@@ -8625,6 +8625,8 @@ function injectPythonScript(addedNode){
         }catch(err){
             $B.handle_error(err)
         }
+        var load_event = new Event('load')
+        addedNode.dispatchEvent(load_event)
    }
 }
 
@@ -8845,6 +8847,7 @@ var brython = $B.parser.brython = function(options){
                 // store source code
                 $B.file_cache[filename] = src
                 $B.url2name[filename] = module_name
+                $B.scripts[filename] = script
                 $B.tasks.push([$B.run_script, src, module_name,
                                filename, true])
             }
@@ -8865,6 +8868,11 @@ var brython = $B.parser.brython = function(options){
     */
 }
 
+$B.get_debug = function(filename){
+    var level = $B.scripts[filename].getAttribute('debug')
+    return level === null ? $B.debug : level
+}
+
 $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
@@ -8879,7 +8887,7 @@ $B.run_script = function(src, name, url, run_loop){
                 __name__: name,
                 __file__: url
             }
-        if($B.debug > 1){
+        if($B.get_debug(url) > 1){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){

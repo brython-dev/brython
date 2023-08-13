@@ -94,6 +94,9 @@ $B.file_cache = {}
 // Mapping between script url and script name
 $B.url2name = {}
 
+// Mapping between script url and script object
+$B.scripts = {}
+
 // __BRYTHON__.path is the list of paths where Python modules are searched
 $B.path = [$path + 'Lib', $path + 'libs', $script_dir,
     $path + 'Lib/site-packages']
