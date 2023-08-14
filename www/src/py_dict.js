@@ -1282,11 +1282,19 @@ dict.setdefault = function(){
         key = $.key,
         _default = $._default
     _default = _default === undefined ? _b_.None : _default
+    
     if(self.$all_str){
         if(! self.$strings.hasOwnProperty(key)){
             self.$strings[key] = _default
         }
         return self.$strings[key]
+    }
+
+    if(self.$jsobj){
+        if(! self.$jsobj.hasOwnProperty(key)){
+            self.$jsobj[key] = _default
+        }
+        return self.$jsobj[key]
     }
 
     var lookup = dict.$lookup_by_key(self, key)

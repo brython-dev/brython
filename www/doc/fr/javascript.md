@@ -69,6 +69,27 @@ javascript.import_modules(
 
 > Voir [dans la galerie](/gallery/three_webgl_interactive_cubes.html) un exemple d'utilisation avec les modules de three.js.
 
+**javascript**.`JSObject`
+> La classe des objets Javascript utilisés dans un programme Python. Si un
+> programme Javascript définit un objet par
+
+<blockquote>
+```javascript
+window.jsobj = {x: 1}
+```
+</blockquote>
+
+> il peut être testé dans un programme Python par
+
+<blockquote>
+```python
+from browser import window
+import javascript
+
+assert isinstance(window.jsobj, javascript.JSObject)
+```
+</blockquote>
+
 **javascript**.`py2js(`_src_`)`
 > Renvoie le code Javascript généré à partir du code source Python _src_.
 

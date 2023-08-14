@@ -9057,40 +9057,74 @@ $B.parse_options = function(options){
 // options are passed as attributes of the <script> tag, eg
 // <script type="text/python" debug=2>
 if(!($B.isWebWorker || $B.isNode)){
-    var observer = new MutationObserver(function(mutations){
-      for (var i=0; i < mutations.length; i++){
-        for (var j=0; j < mutations[i].addedNodes.length; j++){
-          checkPythonScripts(mutations[i].addedNodes[j]);
+    var startup_observer = new MutationObserver(function(mutations){
+      for(var mutation of mutations){
+        for(var addedNode of mutation.addedNodes){
+          addPythonScript(addedNode);
         }
       }
     });
 
-    observer.observe(document.documentElement, {
+    startup_observer.observe(document.documentElement, {
       childList: true,
       subtree: true
     });
 }
 
-function checkPythonScripts(addedNode) {
+var python_scripts = [],
+    brython_called = {status: false},
+    inject = {},
+    defined_ids = {}
+
+function addPythonScript(addedNode){
+    // callback function for the MutationObserver used before brython() is
+    // called (startup_obsrver)
+   if(addedNode.tagName == 'SCRIPT' &&
+           (addedNode.type == "text/python" || addedNode.type == "text/python3")){
+       python_scripts.push(addedNode)
+   }
+}
+
+function injectPythonScript(addedNode){
+    // callback function for the MutationObserver used after brython() has
+    // been called
    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
-       var options = {}
-       for(var attr of addedNode.attributes){
-           if(attr.nodeName == "type"){
-               continue
-           }else if(attr.nodeName == 'debug'){
-               options[attr.nodeName] = parseInt(attr.nodeValue)
-           }else{
-               options[attr.nodeName]  = attr.nodeValue
-           }
-       }
-       // process script here...
+        python_scripts.push(addedNode)
+        // call brython() to process the script.
+        try{
+            brython(inject)
+        }catch(err){
+            $B.handle_error(err)
+        }
+        var load_event = new Event('load')
+        addedNode.dispatchEvent(load_event)
    }
 }
 
 var brython = $B.parser.brython = function(options){
-    options = $B.parse_options(options)
+    if(options === inject){
+        options = $B.$options
+    }else{
+        options = $B.parse_options(options)
+    }
     if(!($B.isWebWorker || $B.isNode)){
-        observer.disconnect()
+        if(! brython_called.status){
+            brython_called.status = true
+            startup_observer.disconnect()
+            // observe subsequent injections (cf. issue 2215)
+            var inject_observer = new MutationObserver(function(mutations){
+              for(var mutation of mutations){
+                for(var addedNode of mutation.addedNodes){
+                  injectPythonScript(addedNode);
+                }
+              }
+            });
+
+            inject_observer.observe(document.documentElement, {
+              childList: true,
+              subtree: true
+            });
+        }
     }else if($B.isNode){
         return
     }
@@ -9101,8 +9135,7 @@ var brython = $B.parser.brython = function(options){
     var kk = Object.keys(_window)
 
     // Id sets to scripts
-    var defined_ids = {},
-        $elts = [],
+    var scripts = [],
         webworkers = []
 
     // Option to run code on demand and not all the scripts defined in a page
@@ -9114,50 +9147,45 @@ var brython = $B.parser.brython = function(options){
         if(!Array.isArray(ids)){
             throw _b_.ValueError.$factory("ids is not a list")
         }
-        var scripts = []
         for(var id of options.ids){
-            var elt = document.getElementById(id)
-            if(elt === null){
+            var found = false
+            for(var python_script of python_scripts){
+                if(python_script.id == id){
+                    scripts.push(python_script)
+                    found = true
+                    break
+                }
+            }
+            if(! found){
                 throw _b_.KeyError.$factory(`no script with id '${id}'`)
             }
-            if(elt.tagName !== "SCRIPT"){
-                throw _b_.KeyError.$factory(`element ${id} is not a script`)
-            }
-            scripts.push(elt)
         }
     }else if($B.isWebWorker){
-        var scripts = []
+        // ignore
     }else{
-        var scripts = document.getElementsByTagName('script')
+        var scripts = python_scripts.slice() // populated by startup_observer
     }
-    // Freeze the list of scripts here ; other scripts can be inserted on
-    // the fly by viruses
-    for(var i = 0; i < scripts.length; i++){
-        var script = scripts[i]
-        if(script.type == "text/python" || script.type == "text/python3"){
-            if(script.className == "webworker"){
-                if(script.id === undefined){
-                    throw _b_.AttributeError.$factory(
-                        "webworker script has no attribute 'id'")
-                }
-                webworkers.push(script)
-            }else{
-                $elts.push(script)
-            }
-        }
-    }
+    // clear scripts list
+    python_scripts.length = 0
 
-    // Get all scripts with type = text/python or text/python3 and run them
-    var first_script = true, module_name
+    // Freeze the list of scripts here; other scripts can be inserted on
+    // the fly by viruses
+    var webworkers = scripts.filter(script => script.className === 'webworker'),
+        scripts = scripts.filter(script => script.className !== 'webworker')
+
+    var first_script = true,
+        module_name
     if(options.ipy_id !== undefined){
         module_name = '__main__'
-        var $src = "", js, root
-        for(var elt of $elts){
-            $src += (elt.innerHTML || elt.textContent)
+        var src = "",
+            js,
+            root
+        for(var script of scripts){
+            src += (script.innerHTML || script.textContent)
         }
         try{
             // Conversion of Python source code to Javascript
-            var root = $B.py2js($src, module_name, module_name)
+            root = $B.py2js(src, module_name, module_name)
             js = root.to_js()
             if($B.debug > 1){
                 $log(js)
@@ -9199,28 +9227,36 @@ var brython = $B.parser.brython = function(options){
             throw $err
         }
     }else{
-        if($elts.length > 0 || $B.isWebWorker){
+        if(scripts.length > 0 || $B.isWebWorker){
             if(options.indexedDB && $B.has_indexedDB &&
                     $B.hasOwnProperty("VFS")){
                 $B.tasks.push([$B.idb_open])
             }
         }
         // Get all explicitely defined ids, to avoid overriding
-        for(var i = 0; i < $elts.length; i++){
-            var elt = $elts[i]
-            if(elt.id){
-                if(defined_ids[elt.id]){
+        for(script of scripts){
+            if(script.id){
+                if(defined_ids[script.id]){
                     throw Error("Brython error : Found 2 scripts with the " +
-                      "same id '" + elt.id + "'")
+                      "same id '" + script.id + "'")
                 }else{
-                    defined_ids[elt.id] = true
+                    defined_ids[script.id] = true
                 }
             }
         }
 
         var src
-        for(var i = 0, len = webworkers.length; i < len; i++){
-            var worker = webworkers[i]
+        for(var worker of webworkers){
+            if(worker.id === undefined){
+                throw _b_.AttributeError.$factory(
+                    "webworker script has no attribute 'id'")
+            }
+            if(defined_ids[worker.id]){
+                throw _b_.RuntimeError.$factory("Brython error : Found 2 scripts with the " +
+                  "same id '" + worker.id + "'")
+            }else{
+                defined_ids[worker.id] = true
+            }
             if(worker.src){
                 // format <script type="text/python" src="python_script.py">
                 // get source code by an Ajax call
@@ -9240,53 +9276,51 @@ var brython = $B.parser.brython = function(options){
             }
         }
 
-        for(var i = 0; i < $elts.length; i++){
-            var elt = $elts[i]
-            if(elt.type == "text/python" || elt.type == "text/python3"){
-                // Set the module name, ie the value of the builtin variable
-                // __name__.
-                // If the <script> tag has an attribute "id", it is taken as
-                // the module name.
-                if(elt.id){
-                    module_name = elt.id
+        for(var script of scripts){
+            // Set the module name, ie the value of the builtin variable
+            // __name__.
+            // If the <script> tag has an attribute "id", it is taken as
+            // the module name.
+            if(script.id){
+                module_name = script.id
+            }else{
+                // If no explicit name is given, the module name is
+                // "__main__" for the first script, and "__main__" + a
+                // random value for the next ones.
+                if(first_script){
+                    module_name = '__main__'
+                    first_script = false
                 }else{
-                    // If no explicit name is given, the module name is
-                    // "__main__" for the first script, and "__main__" + a
-                    // random value for the next ones.
-                    if(first_script){
-                        module_name = '__main__'
-                        first_script = false
-                    }else{
-                        module_name = '__main__' + $B.UUID()
-                    }
-                    while(defined_ids[module_name] !== undefined){
-                        module_name = '__main__' + $B.UUID()
-                    }
+                    module_name = '__main__' + $B.UUID()
                 }
+                while(defined_ids[module_name] !== undefined){
+                    module_name = '__main__' + $B.UUID()
+                }
+            }
 
-                // Get Python source code
-                if(elt.src){
-                    // format <script type="text/python" src="python_script.py">
-                    // get source code by an Ajax call
-                    $B.tasks.push([$B.ajax_load_script,
-                        {name: module_name, url: elt.src, id: elt.id}])
-                }else{
-                    // Get source code inside the script element
-                    src = (elt.innerHTML || elt.textContent)
-                    src = unindent(src) // remove global indentation
-                    // remove leading CR if any
-                    src = src.replace(/^\n/, '')
-                    // remove trailing \n
-                    if(src.endsWith('\n')){
-                        src = src.substr(0, src.length - 1)
-                    }
-                    var filename = $B.script_path + "#" + module_name
-                    // store source code
-                    $B.file_cache[filename] = src
-                    $B.url2name[filename] = module_name
-                    $B.tasks.push([$B.run_script, src, module_name,
-                                   filename, true])
+            // Get Python source code
+            if(script.src){
+                // format <script type="text/python" src="python_script.py">
+                // get source code by an Ajax call
+                $B.tasks.push([$B.ajax_load_script,
+                    {name: module_name, url: script.src, id: script.id}])
+            }else{
+                // Get source code inside the script element
+                src = (script.innerHTML || script.textContent)
+                src = unindent(src) // remove global indentation
+                // remove leading CR if any
+                src = src.replace(/^\n/, '')
+                // remove trailing \n
+                if(src.endsWith('\n')){
+                    src = src.substr(0, src.length - 1)
                 }
+                var filename = $B.script_path + "#" + module_name
+                // store source code
+                $B.file_cache[filename] = src
+                $B.url2name[filename] = module_name
+                $B.scripts[filename] = script
+                $B.tasks.push([$B.run_script, src, module_name,
+                               filename, true])
             }
         }
     }
@@ -9305,6 +9339,11 @@ var brython = $B.parser.brython = function(options){
     */
 }
 
+$B.get_debug = function(filename){
+    var level = $B.scripts[filename].getAttribute('debug')
+    return level === null ? $B.debug : level
+}
+
 $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
@@ -9319,7 +9358,7 @@ $B.run_script = function(src, name, url, run_loop){
                 __name__: name,
                 __file__: url
             }
-        if($B.debug > 1){
+        if($B.get_debug(url) > 1){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
