@@ -10,9 +10,9 @@ import javascript_minifier
 from version import version, implementation
 
 cpython_version = sys.version_info
-if cpython_version[0] < version[0] or \
-        cpython_version[1] < version [1]:
-    print("This script requires Python >= {}.{}".format(*version[:2]))
+if cpython_version[0] != version[0] or \
+        cpython_version[1] != version [1]:
+    print("This script requires Python {}.{}".format(*version[:2]))
     sys.exit()
 
 # version name
