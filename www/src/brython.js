@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-14 21:36:19.334906"
-__BRYTHON__.timestamp=1692041779334
+__BRYTHON__.compiled_date="2023-08-17 07:07:48.707115"
+__BRYTHON__.timestamp=1692248868707
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4572,22 +4572,22 @@ for(var worker of webworkers){if(worker.id===undefined){throw _b_.AttributeError
 if(defined_ids[worker.id]){throw _b_.RuntimeError.$factory("Brython error : Found 2 scripts with the "+
 "same id '"+worker.id+"'")}else{defined_ids[worker.id]=true}
 if(worker.src){
-$B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true}])}else{
+$B.tasks.push([$B.ajax_load_script,{script:worker,name:worker.id,url:worker.src,is_ww:true}])}else{
 var source=(worker.innerText ||worker.textContent)
 source=unindent(source)
 source=source.replace(/^\n/,'')
-worker.source=source
 $B.webworkers[worker.id]=worker
 var filename=$B.script_path+"#"+worker.id
 $B.url2name[filename]=worker.id
-$B.file_cache[filename]=source}}
+$B.file_cache[filename]=source
+$B.scripts[filename]=worker}}
 for(var script of scripts){
 if(script.id){module_name=script.id}else{
 if(first_script){module_name='__main__'
 first_script=false}else{module_name='__main__'+$B.UUID()}
 while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
 if(script.src){
-$B.tasks.push([$B.ajax_load_script,{name:module_name,url:script.src,id:script.id}])}else{
+$B.tasks.push([$B.ajax_load_script,{script,name:module_name,url:script.src,id:script.id}])}else{
 src=(script.innerHTML ||script.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
@@ -4596,13 +4596,14 @@ var filename=$B.script_path+"#"+module_name
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
-$B.tasks.push([$B.run_script,src,module_name,filename,true])}}}
+$B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.get_debug=function(filename){var level=$B.scripts[filename].getAttribute('debug')
 return level===null ? $B.debug :level}
-$B.run_script=function(src,name,url,run_loop){
+$B.run_script=function(script,src,name,url,run_loop){
 $B.file_cache[url]=src
 $B.url2name[url]=name
+$B.scripts[url]=script
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url}
 if($B.get_debug(url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
@@ -4739,14 +4740,17 @@ $B.idb_cx=null
 $B.idb_name=null
 $B.$options.indexedDB=false
 loop()}}
-$B.ajax_load_script=function(script){var url=script.url,name=script.name,rel_path=url.substr($B.script_dir.length+1)
+$B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_path=url.substr($B.script_dir.length+1)
 if($B.files && $B.files.hasOwnProperty(rel_path)){
-$B.tasks.splice(0,0,[$B.run_script,atob($B.files[rel_path].content),name,url,true])
+var src=atob($B.files[rel_path].content)
+$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])
 loop()}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :
 (url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
-if(script.is_ww){$B.webworkers[name]={source:src}}else{$B.tasks.splice(0,0,[$B.run_script,src,name,url,true])}
+if(s.is_ww){$B.webworkers[name]=script
+$B.file_cache[url]=src
+$B.scripts[url]=script}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
 loop()}else if(this.status==404){throw Error(url+" not found")}}}
 req.send()}else{throw _b_.IOError.$factory("can't load external script at "+
 script.url+" (Ajax calls not supported with protocol file:///)")}}

@@ -346,16 +346,17 @@ $B.idb_open = function(obj){
     }
 }
 
-$B.ajax_load_script = function(script){
-    var url = script.url,
-        name = script.name,
+$B.ajax_load_script = function(s){
+    var script = s.script,
+        url = s.url,
+        name = s.name,
         rel_path = url.substr($B.script_dir.length + 1)
 
     if($B.files && $B.files.hasOwnProperty(rel_path)){
         // File is present in Virtual File System
+        var src = atob($B.files[rel_path].content)
         $B.tasks.splice(0, 0, [$B.run_script,
-            atob($B.files[rel_path].content),
-            name, url, true])
+            script, src, name, url, true])
         loop()
     }else if($B.protocol != "file"){
         var req = new XMLHttpRequest(),
@@ -366,10 +367,12 @@ $B.ajax_load_script = function(script){
             if(this.readyState == 4){
                 if(this.status == 200){
                     var src = this.responseText
-                    if(script.is_ww){
-                        $B.webworkers[name] = {source: src}
+                    if(s.is_ww){
+                        $B.webworkers[name] = script
+                        $B.file_cache[url] = src
+                        $B.scripts[url] = script
                     }else{
-                        $B.tasks.splice(0, 0, [$B.run_script, src, name,
+                        $B.tasks.splice(0, 0, [$B.run_script, script, src, name,
                             url, true])
                     }
                     loop()

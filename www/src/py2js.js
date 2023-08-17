@@ -8790,18 +8790,18 @@ var brython = $B.parser.brython = function(options){
                 // format <script type="text/python" src="python_script.py">
                 // get source code by an Ajax call
                 $B.tasks.push([$B.ajax_load_script,
-                    {name: worker.id, url: worker.src, is_ww: true}])
+                    {script: worker, name: worker.id, url: worker.src, is_ww: true}])
             }else{
                 // Get source code inside the script element
                 var source = (worker.innerText || worker.textContent)
                 source = unindent(source) // remove global indentation
                 // remove leading CR if any
                 source = source.replace(/^\n/, '')
-                worker.source = source
                 $B.webworkers[worker.id] = worker
                 var filename = $B.script_path + "#" + worker.id
                 $B.url2name[filename] = worker.id
                 $B.file_cache[filename] = source
+                $B.scripts[filename] = worker
             }
         }
 
@@ -8832,7 +8832,7 @@ var brython = $B.parser.brython = function(options){
                 // format <script type="text/python" src="python_script.py">
                 // get source code by an Ajax call
                 $B.tasks.push([$B.ajax_load_script,
-                    {name: module_name, url: script.src, id: script.id}])
+                    {script, name: module_name, url: script.src, id: script.id}])
             }else{
                 // Get source code inside the script element
                 src = (script.innerHTML || script.textContent)
@@ -8848,7 +8848,7 @@ var brython = $B.parser.brython = function(options){
                 $B.file_cache[filename] = src
                 $B.url2name[filename] = module_name
                 $B.scripts[filename] = script
-                $B.tasks.push([$B.run_script, src, module_name,
+                $B.tasks.push([$B.run_script, script, src, module_name,
                                filename, true])
             }
         }
@@ -8873,11 +8873,12 @@ $B.get_debug = function(filename){
     return level === null ? $B.debug : level
 }
 
-$B.run_script = function(src, name, url, run_loop){
+$B.run_script = function(script, src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
     $B.file_cache[url] = src
     $B.url2name[url] = name
+    $B.scripts[url] = script
     try{
         var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),
