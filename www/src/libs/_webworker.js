@@ -8,7 +8,6 @@ var VFS = $B.brython_modules ? 'brython_modules' :
             $B.use_VFS ? 'brython_stdlib' : null
 
 function scripts_to_load(debug_level){
-    console.log('debug level for scripts to load', debug_level)
     if(debug_level > 2){
         var brython_scripts = [
             'brython_builtins',
@@ -50,7 +49,6 @@ function scripts_to_load(debug_level){
             'symtable',
             'builtins_docstrings'
             ]
-
     }else{
         var brython_scripts = ['brython']
     }
