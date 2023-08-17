@@ -79,6 +79,9 @@ $B.set_func_names(wclass, "browser.worker")
 
 
 var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
+    $B.warn(_b_.DeprecationWarning,
+        "worker.Worker is deprecated in version 3.12. " +
+        "Use worker.create_worker instead")
     var $ = $B.args("__init__", 3, {id: null, onmessage: null, onerror: null},
             ['id', 'onmessage', 'onerror'], arguments,
             {onmessage: _b_.None, onerror: _b_.None}, null, null),
@@ -88,7 +91,8 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     if(worker_script === undefined){
         throw _b_.KeyError.$factory(id)
     }
-    var src = worker_script.source
+    var filename = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
+        src = $B.file_cache[filename]
     var indexedDB = worker_script.attributes &&
             worker_script.attributes.getNamedItem('indexedDB')
     var script_id = "worker" + $B.UUID(),
@@ -97,6 +101,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
 
     var js = $B.py2js({src, filename}, script_id).to_js(),
         header = '';
+    var brython_scripts = scripts_to_load($B.get_debug(filename))
     brython_scripts.forEach(function(script){
         if(script != VFS || VFS == "brython_stdlib"){
             var url = $B.brython_path + script + ".js"
