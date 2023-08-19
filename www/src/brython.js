@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-17 16:18:25.781980"
-__BRYTHON__.timestamp=1692281905781
+__BRYTHON__.compiled_date="2023-08-19 21:45:02.857314"
+__BRYTHON__.timestamp=1692474302857
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4528,6 +4528,7 @@ addedNode.dispatchEvent(load_event)}}
 var brython=$B.parser.brython=function(options){if(options===inject){options=$B.$options}else{options=$B.parse_options(options)}
 if(!($B.isWebWorker ||$B.isNode)){if(! brython_called.status){brython_called.status=true
 startup_observer.disconnect()
+for(var script of document.querySelectorAll('script[type="text/python"]')){if(python_scripts.indexOf(script)==-1){python_scripts.push(script)}}
 var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode);}}});
 inject_observer.observe(document.documentElement,{childList:true,subtree:true});}}else if($B.isNode){return}
 if(options===undefined){options={}}

@@ -8640,6 +8640,13 @@ var brython = $B.parser.brython = function(options){
         if(! brython_called.status){
             brython_called.status = true
             startup_observer.disconnect()
+            // if brython.js is inserted in the page after scripts with
+            // type="text/python", add them to python_scripts
+            for(var script of document.querySelectorAll('script[type="text/python"]')){
+                if(python_scripts.indexOf(script) == -1){
+                    python_scripts.push(script)
+                }
+            }
             // observe subsequent injections (cf. issue 2215)
             var inject_observer = new MutationObserver(function(mutations){
               for(var mutation of mutations){
