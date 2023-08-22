@@ -8600,14 +8600,24 @@ if(!($B.isWebWorker || $B.isNode)){
     });
 }
 
-var python_scripts = [],
-    brython_called = {status: false},
+// store Python scripts already loaded in the page before loading this script
+var python_scripts = []
+
+if(typeof document !== 'undefined'){
+    // If this script is not called in a web worker by importScripts
+    python_scripts = python_scripts.concat(Array.from(
+        document.querySelectorAll('script[type="text/python"]'))).concat(
+        Array.from(
+        document.querySelectorAll('script[type="text/python3"]')))
+}
+
+var brython_called = {status: false},
     inject = {},
     defined_ids = {}
 
 function addPythonScript(addedNode){
-    // callback function for the MutationObserver used before brython() is
-    // called (startup_obsrver)
+    // callback function for the MutationObserver used once this script is
+    // loaded (startup_observer)
    if(addedNode.tagName == 'SCRIPT' &&
            (addedNode.type == "text/python" || addedNode.type == "text/python3")){
        python_scripts.push(addedNode)
@@ -8625,6 +8635,8 @@ function injectPythonScript(addedNode){
         }catch(err){
             $B.handle_error(err)
         }
+        // dispatch 'load' event to be able to use the script when loaded
+        // (cf issue 2215)
         var load_event = new Event('load')
         addedNode.dispatchEvent(load_event)
    }
@@ -8640,14 +8652,7 @@ var brython = $B.parser.brython = function(options){
         if(! brython_called.status){
             brython_called.status = true
             startup_observer.disconnect()
-            // if brython.js is inserted in the page after scripts with
-            // type="text/python", add them to python_scripts
-            for(var script of document.querySelectorAll('script[type="text/python"]')){
-                if(python_scripts.indexOf(script) == -1){
-                    python_scripts.push(script)
-                }
-            }
-            // observe subsequent injections (cf. issue 2215)
+            // observe subsequent injections
             var inject_observer = new MutationObserver(function(mutations){
               for(var mutation of mutations){
                 for(var addedNode of mutation.addedNodes){
@@ -8699,7 +8704,7 @@ var brython = $B.parser.brython = function(options){
     }else if($B.isWebWorker){
         // ignore
     }else{
-        var scripts = python_scripts.slice() // populated by startup_observer
+        var scripts = python_scripts.slice()
     }
     // clear scripts list
     python_scripts.length = 0
