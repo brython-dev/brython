@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-22 10:59:31.186011"
-__BRYTHON__.timestamp=1692694771186
+__BRYTHON__.compiled_date="2023-08-22 11:20:26.265997"
+__BRYTHON__.timestamp=1692696026265
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -11715,7 +11715,7 @@ if(Number.isInteger(self.value)){var res=BigInt(self.value),res_num=Number(res)
 return Number.isSafeInteger(res_num)?
 res_num :
 $B.fast_long_int(res)}
-return parseInt(self.value)}
+return Math.floor(self.value)}
 float.is_integer=function(self){return Number.isInteger(self.value)}
 float.__mod__=function(self,other){
 check_self_is_float(self,'__mod__')
