@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-22 07:56:21.699336"
-__BRYTHON__.timestamp=1692683781699
+__BRYTHON__.compiled_date="2023-08-22 10:59:31.186011"
+__BRYTHON__.timestamp=1692694771186
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5166,12 +5166,13 @@ return res}else{var method1=$B.op2method.operations[op1]
 if(method1===undefined){method1=$B.op2method.binary[op1]}
 return $B.rich_op(`__${method1}__`,left,right)}}
 $B.$is=function(a,b){
+if((a===undefined ||a===$B.Undefined)&&
+(b===undefined ||b===$B.Undefined)){return true}
+if(a===null){return b===null}
 if(a.__class__===_b_.float && b.__class__===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
 return a.value==b.value}
 if((a===_b_.int && b==$B.long_int)||
 (a===$B.long_int && b===_b_.int)){return true}
-if((a===undefined ||a===$B.Undefined)&&
-(b===undefined ||b===$B.Undefined)){return true}
 return a===b}
 $B.is_or_equals=function(x,y){
 return $B.$is(x,y)||$B.rich_comp('__eq__',x,y)}
@@ -13457,8 +13458,9 @@ return $B.JSObj.$factory(new _self.$js_func(...args))}}else{return function(){va
 return $B.JSObj.$factory(new _self(...args))}}}
 var js_attr=_self[attr]
 if(js_attr==undefined && typeof _self=="function" && _self.$js_func){js_attr=_self.$js_func[attr]}
-if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr.toString().startsWith('class '))}
-if(js_attr===undefined){if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
+if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :js_attr.toString().startsWith('class '))}
+if(js_attr===undefined){if(_self.hasOwnProperty(attr)){return $B.Undefined}
+if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
 if(res !==undefined){return $B.JSObj.$factory(res)}}
 var klass=$B.get_class(_self)
 if(klass && klass[attr]){var class_attr=klass[attr]

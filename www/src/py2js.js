@@ -8600,11 +8600,12 @@ if(!($B.isWebWorker || $B.isNode)){
     });
 }
 
-// store Python scripts already loaded in the page before loading this script
 var python_scripts = []
 
 if(typeof document !== 'undefined'){
-    // If this script is not called in a web worker by importScripts
+    // If this script is not called in a web worker by importScripts,
+    // store Python scripts already loaded in the page before loading this
+    // script
     python_scripts = python_scripts.concat(Array.from(
         document.querySelectorAll('script[type="text/python"]'))).concat(
         Array.from(

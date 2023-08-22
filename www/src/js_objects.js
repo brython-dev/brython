@@ -550,7 +550,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "Rectangle"
+    var test = false // attr == "undef"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -574,9 +574,12 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     }
     if(test){
         console.log('js_attr', js_attr, typeof js_attr,
-            '\n is JS class ?', js_attr.toString().startsWith('class '))
+            '\n is JS class ?', js_attr === undefined ? false : js_attr.toString().startsWith('class '))
     }
     if(js_attr === undefined){
+        if(_self.hasOwnProperty(attr)){
+            return $B.Undefined
+        }
         if(typeof _self.getNamedItem == 'function'){
             var res = _self.getNamedItem(attr)
             if(res !== undefined){

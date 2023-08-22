@@ -84,12 +84,16 @@ tableau suivant :
 <tr><td>Collection d’éléments DOM</td><td>liste d'instances de `DOMNode`</td>
 </tr>
 <tr><td>`true, false`</td><td>`True, False`</td></tr>
-<tr><td>`null`</td><td>inchangé (affiché comme '<Javascript null>')</td></tr>
+<tr><td>`null`</td><td>inchangé (1)</td></tr>
+<tr><td>`undefined`</td><td>inchangé (1)</td></tr>
 <tr><td>entier (Integer)</td><td>instance de `int`</td></tr>
 <tr><td>réel (Float)</td><td>instance de `float`</td></tr>
 <tr><td>chaîne (String)</td><td>instance de `str`</td></tr>
 <tr><td>tableau Javascript (Array)</td><td>instance de `list`</td></tr>
 </table>
+
+_(1) On peut tester la valeur en la comparant avec `is` aux constantes `NULL`_
+_et `UNDEFINED` du module [javascript](javascript.html)_
 
 Les autres objets Javascript sont convertis en une instance de la classe
 `JSObject` définie dans le module **javascript**. On peut les convertir

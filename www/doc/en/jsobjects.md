@@ -80,12 +80,16 @@ Javascript objects are converted into their Python equivalent in this way :
 <tr><td>Collection of DOM elements</td><td>list of `DOMNode` instances</td>
 </tr>
 <tr><td>`true, false`</td><td>`True, False`</td></tr>
-<tr><td>`null`</td><td>unchanged (printed as '<Javascript null>')</td></tr>
+<tr><td>`null`</td><td>unchanged (1)</td></tr>
+<tr><td>`undefined`</td><td>unchanged (1)</td></tr>
 <tr><td>Integer</td><td>instance of `int`</td></tr>
 <tr><td>Float</td><td>instance of `float`</td></tr>
 <tr><td>String</td><td>instance of `str`</td></tr>
 <tr><td>Array</td><td>instance of `list`</td></tr>
 </table>
+
+_(1) The value can be tested by comparing it with `is` to constants `NULL`_
+_and `UNDEFINED` in module [javascript](javascript.html)_
 
 The other Javascript objects are converted into an instance of the class
 `JSObject` defined in module **javascript**. They can be converted into

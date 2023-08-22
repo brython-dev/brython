@@ -1026,6 +1026,13 @@ $B.augm_assign = function(left, op, right){
 $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
+    if((a === undefined || a === $B.Undefined) &&
+            (b === undefined || b === $B.Undefined)){
+        return true
+    }
+    if(a === null){
+        return b === null
+    }
     if(a.__class__ === _b_.float && b.__class__ === _b_.float){
         if(isNaN(a.value) && isNaN(b.value)){
             return true
@@ -1034,10 +1041,6 @@ $B.$is = function(a, b){
     }
     if((a === _b_.int && b == $B.long_int) ||
             (a === $B.long_int && b === _b_.int)){
-        return true
-    }
-    if((a === undefined || a === $B.Undefined) &&
-            (b === undefined || b === $B.Undefined)){
         return true
     }
     return a === b
