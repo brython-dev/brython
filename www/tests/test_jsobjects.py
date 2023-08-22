@@ -12,6 +12,9 @@ for i in range(10):
     a[i] = i
     assert a[i] == i
 
+assert window.test_jsobj.null_value is javascript.NULL
+assert window.test_jsobj.undef_value is javascript.UNDEFINED
+
 # Test dict initialization from native js objects
 # JS objects are in script jsobj_tests.js
 pyobj = window.test_jsobj.to_dict()
