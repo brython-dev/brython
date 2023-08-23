@@ -8484,13 +8484,12 @@ $B.parse_options = function(options){
 
     $B.compile_time = 0
 
-    if(options.profile === undefined){options.profile = 0}
-    $B.profile = options.profile
-
     // If a VFS is present, Brython normally stores a precompiled version
     // in an indexedDB database. Setting options.indexedDB to false disables
     // this feature (cf issue #927)
-    if(options.indexedDB === undefined){options.indexedDB = true}
+    if(options.indexedDB === undefined){
+        options.indexedDB = true
+    }
 
     // For imports, default mode is to search modules of the standard library
     // using a static mapping stored in stdlib_paths.js
@@ -8581,8 +8580,6 @@ $B.parse_options = function(options){
     return options
 }
 
-// Reserved for future use : execute Python scripts as soon as they are
-// inserted in the page, instead of waiting for page load.
 // options are passed as attributes of the <script> tag, eg
 // <script type="text/python" debug=2>
 if(!($B.isWebWorker || $B.isNode)){
@@ -8610,7 +8607,34 @@ if(typeof document !== 'undefined'){
         document.querySelectorAll('script[type="text/python"]'))).concat(
         Array.from(
         document.querySelectorAll('script[type="text/python3"]')))
+
+
+    // handle content load
+    var onload
+
+    addEventListener('DOMContentLoaded',
+        function(ev){
+            if(ev.target.body){
+                onload = ev.target.body.onload
+            }
+            if(! onload){
+                // If no explicit "onload" is defined, default to brython
+                ev.target.body.onload = brython
+            }else{
+                // else, execute onload, and if brython() was not called,
+                // call it
+                ev.target.body.onload = function(ev){
+                    onload()
+                    if(! brython_called.status){
+                        brython()
+                    }
+                }
+            }
+        }
+    )
+
 }
+
 
 var brython_called = {status: false},
     inject = {},

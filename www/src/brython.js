@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-22 11:20:26.265997"
-__BRYTHON__.timestamp=1692696026265
+__BRYTHON__.compiled_date="2023-08-23 18:20:12.845880"
+__BRYTHON__.timestamp=1692807612845
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4481,8 +4481,6 @@ if(options.debug===undefined){options.debug=1}
 $B.debug=options.debug
 _b_.__debug__=$B.debug > 0
 $B.compile_time=0
-if(options.profile===undefined){options.profile=0}
-$B.profile=options.profile
 if(options.indexedDB===undefined){options.indexedDB=true}
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
@@ -4521,7 +4519,14 @@ if(typeof document !=='undefined'){
 python_scripts=python_scripts.concat(Array.from(
 document.querySelectorAll('script[type="text/python"]'))).concat(
 Array.from(
-document.querySelectorAll('script[type="text/python3"]')))}
+document.querySelectorAll('script[type="text/python3"]')))
+var onload
+addEventListener('DOMContentLoaded',function(ev){if(ev.target.body){onload=ev.target.body.onload}
+if(! onload){
+ev.target.body.onload=brython}else{
+ev.target.body.onload=function(ev){onload()
+if(! brython_called.status){brython()}}}}
+)}
 var brython_called={status:false},inject={},defined_ids={}
 function addPythonScript(addedNode){
 if(addedNode.tagName=='SCRIPT' &&
