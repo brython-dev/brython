@@ -242,14 +242,14 @@ for col in range(7):
             SVGRoot <= svg.circle(
                 id = f"hole{row}_{col}",
                 cx = left + col*dx,
-                cy = top  + row*dy, 
+                cy = top  + row*dy,
                 r  = ray,
                 style = {"fill": "white", "stroke":ball_color})
             if filled[col][row] == 2:
                 ball = svg.circle(
                     id = f"{col}_{row}",
                     cx = left + col*dx,
-                    cy = top  + row*dy, 
+                    cy = top  + row*dy,
                     r  = ray,
                     style = {"fill": ball_color})
                 SVGRoot <= ball
@@ -259,7 +259,9 @@ for col in range(7):
 
 </script>
 </head>
-<body onload="brython(1)">
+
+<body>
+
 <svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'
    id="svg_root">
 
