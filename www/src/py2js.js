@@ -697,7 +697,7 @@ $B.format_indent = function(js, indent){
             add_closing_brace = true
         }
         if(level < 0){
-            if($B.debug > 2){
+            if($B.get_option('debug') > 2){
                 console.log('wrong js indent')
                 console.log(res)
             }
@@ -8835,7 +8835,7 @@ var brython = $B.parser.brython = function(options){
                 // remove leading CR if any
                 source = source.replace(/^\n/, '')
                 $B.webworkers[worker.id] = worker
-                var filename = $B.script_path + "#" + worker.id
+                var filename = $B.script_filename = $B.script_path + "#" + worker.id
                 $B.url2name[filename] = worker.id
                 $B.file_cache[filename] = source
                 $B.scripts[filename] = worker
@@ -8880,7 +8880,7 @@ var brython = $B.parser.brython = function(options){
                 if(src.endsWith('\n')){
                     src = src.substr(0, src.length - 1)
                 }
-                var filename = $B.script_path + "#" + module_name
+                var filename = $B.script_filename = $B.script_path + "#" + module_name
                 // store source code
                 $B.file_cache[filename] = src
                 $B.url2name[filename] = module_name
@@ -8905,7 +8905,20 @@ var brython = $B.parser.brython = function(options){
     */
 }
 
+$B.get_option = function(option){
+    var filename = $B.script_filename
+    if((! filename) || ! $B.scripts[filename]){
+        return $B[option]
+    }
+    var value = $B.scripts[filename].getAttribute(option)
+    console.log('get option', option, 'from filename', filename, value)
+    return value === null ? $B[option] : value
+}
+
 $B.get_debug = function(filename){
+    if(! filename){
+        return $B.debug
+    }
     var level = $B.scripts[filename].getAttribute('debug')
     return level === null ? $B.debug : level
 }
@@ -8916,6 +8929,10 @@ $B.run_script = function(script, src, name, url, run_loop){
     $B.file_cache[url] = src
     $B.url2name[url] = name
     $B.scripts[url] = script
+
+    // set built-in variable __debug__
+    _b_.__debug__ = $B.get_option('debug') > 0
+
     try{
         var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),

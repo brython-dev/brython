@@ -16,7 +16,6 @@ function idb_load(evt, module){
     // If the module is precompiled and its timestamp is the same as in
     // brython_stdlib, use the precompiled Javascript.
     // Otherwise, get the source code from brython_stdlib.js.
-
     var res = evt.target.result
 
     var timestamp = $B.timestamp
@@ -54,7 +53,7 @@ function idb_load(evt, module){
                 }
                 // Delete temporary import
                 delete $B.imported[module]
-                if($B.debug > 1){
+                if($B.get_option('debug') > 1){
                     console.log("precompile", module)
                 }
             }else{
@@ -73,7 +72,7 @@ function idb_load(evt, module){
         if(res.imports.length > 0){
             // res.imports is a string with the modules imported by the current
             // modules, separated by commas
-            if($B.debug > 1){
+            if($B.get_option('debug') > 1){
                 console.log(module, "imports", res.imports)
             }
             var subimports = res.imports.split(",")
@@ -129,7 +128,7 @@ function store_precompiled(module, js, source_ts, imports, is_package){
             "is_package": is_package
             },
         request = store.put(data)
-        if($B.debug > 1){
+        if($B.get_option('debug') > 1){
             console.log("store precompiled", module, "package", is_package)
         }
         document.dispatchEvent(new CustomEvent('precompile',
@@ -274,7 +273,7 @@ $B.idb_open = function(obj){
                 store.onsuccess = loop
             }
         }else{
-            if($B.debug > 1){
+            if($B.get_option('debug') > 1){
                 console.info("using indexedDB for stdlib modules cache")
             }
             // Preload all compiled modules
@@ -307,7 +306,7 @@ $B.idb_open = function(obj){
                             }else{
                                 $B.precompiled[record.name] = record.content
                             }
-                            if($B.debug > 1){
+                            if($B.get_option('debug') > 1){
                                 console.info("load from cache", record.name)
                             }
                         }else{
@@ -321,7 +320,7 @@ $B.idb_open = function(obj){
                     }
                     cursor.continue()
                 }else{
-                    if($B.debug > 1){
+                    if($B.get_option('debug') > 1){
                         console.log("done")
                     }
                     $B.outdated = outdated
@@ -367,6 +366,7 @@ $B.ajax_load_script = function(s){
             if(this.readyState == 4){
                 if(this.status == 200){
                     var src = this.responseText
+                    $B.script_filename = url
                     if(s.is_ww){
                         $B.webworkers[name] = script
                         $B.file_cache[url] = src
@@ -451,7 +451,7 @@ var loop = $B.loop = function(){
                     req = store.delete(module)
                 req.onsuccess = (function(mod){
                     return function(event){
-                        if($B.debug > 1){
+                        if($B.get_option('debug') > 1){
                             console.info("delete outdated", mod)
                         }
                         report_precompile(mod)

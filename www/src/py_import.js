@@ -206,7 +206,7 @@ function run_py(module_contents, path, module, compiled) {
             root = $B.py2js(src, module,
                             module.__name__, $B.builtins_scope)
         }catch(err){
-            if($B.debug > 1){
+            if($B.get_option('debug') > 1){
                 console.log('error in imported module', module)
                 console.log('stack', $B.frames_stack.slice())
             }
@@ -231,12 +231,12 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = prefix + module.__name__.replace(/\./g, '_')
         var mod = (new Function(module_id, js))(module)
     }catch(err){
-        if($B.debug > 2){
+        if($B.get_option('debug') > 2){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
             console.log(root)
             // console.log(err)
-            if($B.debug > 1){
+            if($B.get_option('debug') > 1){
                 console.log($B.format_indent(js, 0))
             }
             for(var attr in err){
@@ -267,9 +267,12 @@ function run_py(module_contents, path, module, compiled) {
         }
     }catch(err){
         console.log("" + err + " " + " for module " + module.__name__)
-        for(var attr in err){console.log(attr + " " + err[attr])}
-
-        if($B.debug > 0){console.log("line info " + __BRYTHON__.line_info)}
+        for(var attr in err){
+            console.log(attr + " " + err[attr])
+        }
+        if($B.get_option('debug') > 0){
+            console.log("line info " + __BRYTHON__.line_info)
+        }
         throw err
     }
 }
@@ -388,7 +391,7 @@ VFSLoader.exec_module = function(self, modobj){
     if(ext == '.js'){
         run_js(module_contents, modobj.__path__, modobj)
     }else if($B.precompiled.hasOwnProperty(modobj.__name__)){
-        if($B.debug > 1){
+        if($B.get_option('debug') > 1){
             console.info("load", modobj.__name__, "from precompiled")
         }
         var parts = modobj.__name__.split(".")
@@ -429,12 +432,12 @@ VFSLoader.exec_module = function(self, modobj){
                 var $module = new Function(prefix + parent_id, mod_js)(
                     mod)
             }catch(err){
-                if($B.debug > 1){
+                if($B.get_option('debug') > 1){
                     console.log('error in module', mod)
                     console.log(err)
                     for(var k in err){console.log(k, err[k])}
                     console.log(Object.keys($B.imported))
-                    if($B.debug > 1){console.log(modobj, "mod_js", mod_js)}
+                    console.log(modobj, "mod_js", mod_js)
                 }
                 throw err
             }
@@ -454,7 +457,7 @@ VFSLoader.exec_module = function(self, modobj){
 
     }else{
         var mod_name = modobj.__name__
-        if($B.debug > 1){
+        if($B.get_option('debug') > 1){
             console.log("run Python code from VFS", mod_name)
         }
         var record = run_py(module_contents, modobj.__file__, modobj)
@@ -481,7 +484,7 @@ VFSLoader.exec_module = function(self, modobj){
                     cursor = store.openCursor(),
                 request = store.put(record)
                 request.onsuccess = function(){
-                    if($B.debug > 1){
+                    if($B.get_option('debug') > 1){
                         console.info(modobj.__name__, "stored in db")
                     }
                 }
@@ -520,7 +523,7 @@ var finder_cpython = {
         $B.file_cache[modobj.__file__] = content
         $B.url2file[modobj.__file__] = modobj.__name__
         var mod_name = modobj.__name__
-        if($B.debug > 1){
+        if($B.get_option('debug') > 1){
             console.log("run Python code from CPython", mod_name)
         }
         run_py(content, modobj.__path__, modobj)
@@ -1343,7 +1346,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if($err3.$py_error){
                             throw $err3
                         }
-                        if($B.debug > 1){
+                        if($B.get_option('debug') > 1){
                             console.log($err3)
                             console.log($B.last($B.frames_stack))
                         }

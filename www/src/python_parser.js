@@ -931,7 +931,7 @@ function make_ast(match, tokens){
                 //console.log(show_rule(rule, true))
                 ast = eval(rule.action)
             }catch(err){
-                if($B.debug > 2){
+                if($B.get_option('debug') > 2){
                     var rule_str = show_rule(rule, true)
                     console.log('error eval action of', rule_str)
                     console.log('p', p)

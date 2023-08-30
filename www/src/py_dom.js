@@ -1037,7 +1037,7 @@ DOMNode.__setattr__ = function(self, attr, value){
             if(! frame){
                 return
             }
-            if($B.debug > 0){
+            if($B.get_option('debug') > 0){
                 var file = frame.__file__,
                     lineno = frame.$lineno
                 console.log("module", frame[2], "line", lineno)

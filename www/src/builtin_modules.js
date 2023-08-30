@@ -203,11 +203,11 @@
                                     // If the argument is an iterable other than
                                     // str, add the items
                                     var items = _b_.list.$factory(first)
-                                    items.forEach(function(item){
+                                    for(var item of items){
                                         $B.DOMNode.__le__(self, item)
-                                    })
+                                    }
                                 }catch(err){
-                                    if($B.debug > 1){
+                                    if($B.get_option('debug', err) > 1){
                                         console.log(err, err.__class__, err.args)
                                         console.log("first", first)
                                         console.log(arguments)

@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-23 18:20:12.845880"
-__BRYTHON__.timestamp=1692807612845
+__BRYTHON__.compiled_date="2023-08-30 08:25:09.495795"
+__BRYTHON__.timestamp=1693376709495
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -748,7 +748,7 @@ add_spaces=false}
 last_is_closing_brace=line.endsWith('}')
 if(line.startsWith('}')){level--}else if(line.endsWith('}')){line=line.substr(0,line.length-1)
 add_closing_brace=true}
-if(level < 0){if($B.debug > 2){console.log('wrong js indent')
+if(level < 0){if($B.get_option('debug')> 2){console.log('wrong js indent')
 console.log(res)}
 level=0}
 try{res+=(add_spaces ? indentation.repeat(level):'')+line+'\n'}catch(err){console.log(res)
@@ -4588,7 +4588,7 @@ var source=(worker.innerText ||worker.textContent)
 source=unindent(source)
 source=source.replace(/^\n/,'')
 $B.webworkers[worker.id]=worker
-var filename=$B.script_path+"#"+worker.id
+var filename=$B.script_filename=$B.script_path+"#"+worker.id
 $B.url2name[filename]=worker.id
 $B.file_cache[filename]=source
 $B.scripts[filename]=worker}}
@@ -4603,18 +4603,25 @@ src=(script.innerHTML ||script.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
 if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
-var filename=$B.script_path+"#"+module_name
+var filename=$B.script_filename=$B.script_path+"#"+module_name
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
 $B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}}
 if(options.ipy_id===undefined){$B.loop()}}
-$B.get_debug=function(filename){var level=$B.scripts[filename].getAttribute('debug')
+$B.get_option=function(option){var filename=$B.script_filename
+if((! filename)||! $B.scripts[filename]){return $B[option]}
+var value=$B.scripts[filename].getAttribute(option)
+console.log('get option',option,'from filename',filename,value)
+return value===null ? $B[option]:value}
+$B.get_debug=function(filename){if(! filename){return $B.debug}
+var level=$B.scripts[filename].getAttribute('debug')
 return level===null ? $B.debug :level}
 $B.run_script=function(script,src,name,url,run_loop){
 $B.file_cache[url]=src
 $B.url2name[url]=name
 $B.scripts[url]=script
+_b_.__debug__=$B.get_option('debug')> 0
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url}
 if($B.get_debug(url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
@@ -4656,10 +4663,10 @@ $B.url2name[module]=module
 try{var root=$B.py2js(
 {src:source,filename:module},module,module),js=root.to_js()}catch(err){$B.handle_error(err)}
 delete $B.imported[module]
-if($B.debug > 1){console.log("precompile",module)}}else{console.log('bizarre',module,ext)}}else{}}else{
+if($B.get_option('debug')> 1){console.log("precompile",module)}}else{console.log('bizarre',module,ext)}}else{}}else{
 if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
 if(res.imports.length > 0){
-if($B.debug > 1){console.log(module,"imports",res.imports)}
+if($B.get_option('debug')> 1){console.log(module,"imports",res.imports)}
 var subimports=res.imports.split(",")
 for(var i=0;i < subimports.length;i++){var subimport=subimports[i]
 if(subimport.startsWith(".")){
@@ -4676,7 +4683,7 @@ if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodu
 loop()}
 function store_precompiled(module,js,source_ts,imports,is_package){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"origin":origin,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
-if($B.debug > 1){console.log("store precompiled",module,"package",is_package)}
+if($B.get_option('debug')> 1){console.log("store precompiled",module,"package",is_package)}
 document.dispatchEvent(new CustomEvent('precompile',{detail:'cache module '+module}))
 var ix=$B.outdated.indexOf(module)
 if(ix >-1){$B.outdated.splice(ix,1)}
@@ -4729,7 +4736,7 @@ store.onsuccess=loop}
 idb_cx.onversionchanged=function(){console.log("version changed")}
 idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}}else{if($B.debug > 1){console.info("using indexedDB for stdlib modules cache")}
+store.onsuccess=loop}}else{if($B.get_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(evt){console.log("open cursor error",evt)}
@@ -4738,9 +4745,9 @@ if(cursor){record=cursor.value
 if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
 if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}
-if($B.debug > 1){console.info("load from cache",record.name)}}else{
+if($B.get_option('debug')> 1){console.info("load from cache",record.name)}}else{
 outdated.push(record.name)}}else{outdated.push(record.name)}
-cursor.continue()}else{if($B.debug > 1){console.log("done")}
+cursor.continue()}else{if($B.get_option('debug')> 1){console.log("done")}
 $B.outdated=outdated
 loop()}}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
@@ -4759,6 +4766,7 @@ loop()}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options
 (url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
+$B.script_filename=url
 if(s.is_ww){$B.webworkers[name]=script
 $B.file_cache[url]=src
 $B.scripts[url]=script}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
@@ -4781,7 +4789,7 @@ function report_done(mod){if(typeof document !=='undefined'){document.dispatchEv
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
 while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
-req.onsuccess=(function(mod){return function(event){if($B.debug > 1){console.info("delete outdated",mod)}
+req.onsuccess=(function(mod){return function(event){if($B.get_option('debug')> 1){console.info("delete outdated",mod)}
 report_precompile(mod)}})(module)}
 report_close()
 $B.idb_cx.result.close()
@@ -5850,7 +5858,7 @@ result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.__na
 return result}else if(res.__class__ && res.__class__.__get__){
 if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
 if(typeof res=="function"){
-if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
+if(res.$infos===undefined && $B.get_option('debug')> 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
 if($test){console.log("res is function",res)}
 if(attr=="__new__" ||
 res.__class__===$B.builtin_function_or_method){res.$type="staticmethod"}
@@ -6436,11 +6444,10 @@ js=`var locals = ${local_name}\nreturn ${js}`}else if(src.single_expression){js=
 `if(result !== _b_.None){\n`+
 `_b_.print(result)\n`+
 `}`}
-try{var exec_func=new Function('$B','_b_',local_name,global_name,'frame','_frames',js)}catch(err){if(true){
-console.log('eval() error\n',$B.format_indent(js,0))
+try{var exec_func=new Function('$B','_b_',local_name,global_name,'frame','_frames',js)}catch(err){if($B.get_option('debug')> 1){console.log('eval() error\n',$B.format_indent(js,0))
 console.log('-- python source\n',src)}
 throw err}
-try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frames)}catch(err){if($B.debug > 2){console.log(
+try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frames)}catch(err){if($B.get_option('debug')> 2){console.log(
 'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
@@ -7651,7 +7658,7 @@ delete frame[1].$current_exception}
 $B.set_exc=function(exc,frame){
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
-if($B.debug > 1){console.log(exc.args)
+if($B.get_option('debug')> 1){console.log(exc.args)
 console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
@@ -8030,7 +8037,7 @@ for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
-$B.error_trace=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
+$B.error_trace=function(err){if($B.get_option('debug')> 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
 console.log(err.stack)}
 var trace=''
@@ -8043,7 +8050,7 @@ trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
 if(err.__class__ !==_b_.IndentationError &&
 err.text){
-if($B.debug > 1){console.log('error args',err.args[1])
+if($B.get_option('debug')> 1){console.log('error args',err.args[1])
 console.log('err line',line)
 console.log('indent',indent)}
 var start=err.offset-indent,end_offset=err.end_offset+
@@ -9268,7 +9275,7 @@ $B.url2name[path]=module.__name__
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 var src={src:module_contents,filename:path,imported:true}
-try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){if($B.debug > 1){console.log('error in imported module',module)
+try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){if($B.get_option('debug')> 1){console.log('error in imported module',module)
 console.log('stack',$B.frames_stack.slice())}
 err.$stack=$B.frames_stack.slice()
 throw err}}
@@ -9282,10 +9289,10 @@ js+='return '+prefix
 js+=module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id=prefix+module.__name__.replace(/\./g,'_')
-var mod=(new Function(module_id,js))(module)}catch(err){if($B.debug > 2){console.log(err+" for module "+module.__name__)
+var mod=(new Function(module_id,js))(module)}catch(err){if($B.get_option('debug')> 2){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
-if($B.debug > 1){console.log($B.format_indent(js,0))}
+if($B.get_option('debug')> 1){console.log($B.format_indent(js,0))}
 for(var attr in err){console.log(attr,err[attr])}
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
@@ -9299,7 +9306,7 @@ $B.imported[module.__name__]=module
 return{
 content:src,name:mod_name,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(var attr in err){console.log(attr+" "+err[attr])}
-if($B.debug > 0){console.log("line info "+__BRYTHON__.line_info)}
+if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
 $B.run_js=run_js
@@ -9348,7 +9355,7 @@ path+=modobj.$is_package ? "/__init__.py" :ext
 modobj.__file__=path
 $B.file_cache[modobj.__file__]=$B.VFS[modobj.__name__][1]
 $B.url2name[modobj.__file__]=modobj.__name__
-if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}else if($B.precompiled.hasOwnProperty(modobj.__name__)){if($B.debug > 1){console.info("load",modobj.__name__,"from precompiled")}
+if(ext=='.js'){run_js(module_contents,modobj.__path__,modobj)}else if($B.precompiled.hasOwnProperty(modobj.__name__)){if($B.get_option('debug')> 1){console.info("load",modobj.__name__,"from precompiled")}
 var parts=modobj.__name__.split(".")
 for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
@@ -9369,11 +9376,11 @@ mod.__file__=path
 try{var parent_id=parent.replace(/\./g,"_"),prefix='locals_'
 mod_js+="return "+prefix+parent_id
 var $module=new Function(prefix+parent_id,mod_js)(
-mod)}catch(err){if($B.debug > 1){console.log('error in module',mod)
+mod)}catch(err){if($B.get_option('debug')> 1){console.log('error in module',mod)
 console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
-if($B.debug > 1){console.log(modobj,"mod_js",mod_js)}}
+console.log(modobj,"mod_js",mod_js)}
 throw err}
 for(var attr in $module){mod[attr]=$module[attr]}
 $module.__file__=path
@@ -9381,7 +9388,7 @@ if(i > 0){
 $B.builtins.setattr(
 $B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{var mod_name=modobj.__name__
-if($B.debug > 1){console.log("run Python code from VFS",mod_name)}
+if($B.get_option('debug')> 1){console.log("run Python code from VFS",mod_name)}
 var record=run_py(module_contents,modobj.__file__,modobj)
 record.imports=imports.join(',')
 record.is_package=modobj.$is_package
@@ -9395,7 +9402,7 @@ if($B.$options.indexedDB && $B.indexedDB &&
 $B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
-request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}
+request.onsuccess=function(){if($B.get_option('debug')> 1){console.info(modobj.__name__,"stored in db")}}
 request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
 $B.set_func_names(VFSLoader,"builtins")
 var finder_cpython={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'CPythonFinder',$infos:{__module__:"builtins",__name__:"CPythonFinder"},create_module :function(cls,spec){
@@ -9408,7 +9415,7 @@ modobj.__file__=loader_state.__file__
 $B.file_cache[modobj.__file__]=content
 $B.url2file[modobj.__file__]=modobj.__name__
 var mod_name=modobj.__name__
-if($B.debug > 1){console.log("run Python code from CPython",mod_name)}
+if($B.get_option('debug')> 1){console.log("run Python code from CPython",mod_name)}
 run_py(content,modobj.__path__,modobj)},find_module:function(cls,name,path){return{
 __class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
 var mod=Module.$factory(name)
@@ -9687,7 +9694,7 @@ var exc=_b_.SyntaxError.$factory(
 "future feature "+name+" is not defined")
 throw exc}
 if($err3.$py_error){throw $err3}
-if($B.debug > 1){console.log($err3)
+if($B.get_option('debug')> 1){console.log($err3)
 console.log($B.last($B.frames_stack))}
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
@@ -10654,7 +10661,7 @@ if(klass===undefined){return $B.JSObj.__str__($B.JSObj.$factory(arg))}
 var method=$B.$getattr(klass,"__str__",null)
 if(method===null){method=$B.$getattr(klass,'__repr__')}}catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
-if($B.debug > 1){console.log(err)}
+if($B.get_option('debug')> 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
 throw err}
@@ -13982,7 +13989,7 @@ if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
 var frame=$B.last($B.frames_stack)
 if(! frame){return}
-if($B.debug > 0){var file=frame.__file__,lineno=frame.$lineno
+if($B.get_option('debug')> 0){var file=frame.__file__,lineno=frame.$lineno
 console.log("module",frame[2],"line",lineno)
 if($B.file_cache.hasOwnProperty(file)){var src=$B.file_cache[file]
 console.log(src.split("\n")[lineno-1])}}else{console.log("module",frame[2])}}
@@ -14455,7 +14462,7 @@ if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
 self.innerHTML=_b_.str.$factory(first)}else if(first.__class__===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.appendChild(first.children[i])}}else{if(_b_.isinstance(first,$B.DOMNode)){self.appendChild(first)}else{try{
 var items=_b_.list.$factory(first)
-items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){if($B.debug > 1){console.log(err,err.__class__,err.args)
+for(var item of items){$B.DOMNode.__le__(self,item)}}catch(err){if($B.get_option('debug',err)> 1){console.log(err,err.__class__,err.args)
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}

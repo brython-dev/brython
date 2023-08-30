@@ -14,7 +14,7 @@ $B.set_exc = function(exc, frame){
         console.error(['Traceback (most recent call last):',
             $B.print_stack(exc.$stack),
             msg].join('\n'))
-        if($B.debug > 1){
+        if($B.get_option('debug') > 1){
             console.log(exc.args)
             console.log(exc.stack)
         }
@@ -952,7 +952,7 @@ function trace_from_stack(err){
 }
 
 $B.error_trace = function(err){
-    if($B.debug > 1){
+    if($B.get_option('debug') > 1){
         console.log("handle error", err.__class__, err.args)
         console.log('stack', err.$stack)
         console.log(err.stack)
@@ -973,7 +973,7 @@ $B.error_trace = function(err){
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){
             // add ^ under the line
-            if($B.debug > 1){
+            if($B.get_option('debug') > 1){
                 console.log('error args', err.args[1])
                 console.log('err line', line)
                 console.log('indent', indent)
