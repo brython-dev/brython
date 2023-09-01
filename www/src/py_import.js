@@ -57,7 +57,7 @@ function $download_module(mod, url, $package){
     var timer = _window.setTimeout(function(){
             xhr.abort()
         }, 5000)
-    if($B.$options.cache){
+    if($B.get_option('cache')){
         xhr.open("GET", url, false)
     }else{
         xhr.open("GET", url + fake_qs, false)
@@ -206,11 +206,11 @@ function run_py(module_contents, path, module, compiled) {
             root = $B.py2js(src, module,
                             module.__name__, $B.builtins_scope)
         }catch(err){
-            if($B.get_option('debug') > 1){
+            err.$stack = $B.frames_stack.slice()
+            if($B.get_option('debug', err) > 1){
                 console.log('error in imported module', module)
                 console.log('stack', $B.frames_stack.slice())
             }
-            err.$stack = $B.frames_stack.slice()
             throw err
         }
 
@@ -231,12 +231,13 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = prefix + module.__name__.replace(/\./g, '_')
         var mod = (new Function(module_id, js))(module)
     }catch(err){
-        if($B.get_option('debug') > 2){
+        err.$stack = $B.frames_stack.slice()
+        if($B.get_option('debug', err) > 2){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
             console.log(root)
             // console.log(err)
-            if($B.get_option('debug') > 1){
+            if($B.get_option('debug', err) > 1){
                 console.log($B.format_indent(js, 0))
             }
             for(var attr in err){

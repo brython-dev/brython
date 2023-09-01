@@ -8905,14 +8905,30 @@ var brython = $B.parser.brython = function(options){
     */
 }
 
-$B.get_option = function(option){
+$B.get_option = function(option, err){
     var filename = $B.script_filename
+    if(err && err.$stack && err.$stack.length > 0){
+        filename = err.$stack[0].__file__
+    }else if($B.frames_stack.length > 0){
+        filename = $B.frames_stack[0].__file__
+    }
     if((! filename) || ! $B.scripts[filename]){
-        return $B[option]
+        return $B.$options[option]
     }
     var value = $B.scripts[filename].getAttribute(option)
-    console.log('get option', option, 'from filename', filename, value)
-    return value === null ? $B[option] : value
+    if(value !== null){
+        if(option == 'cache'){
+            if(value == '1' || value.toLowerCase() == 'true'){
+                value = true
+            }else if(value == '0' || value.toLowerCase() == 'false'){
+                value = false
+            }else{
+                console.debug('Invalid value for cache:', value)
+                value = null
+            }
+        }
+    }
+    return value === null ? $B.$options[option] : value
 }
 
 $B.get_debug = function(filename){
@@ -8942,7 +8958,7 @@ $B.run_script = function(script, src, name, url, run_loop){
                 __name__: name,
                 __file__: url
             }
-        if($B.get_debug(url) > 1){
+        if($B.get_option('debug') > 1){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){

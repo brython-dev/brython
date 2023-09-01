@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-08-30 08:25:09.495795"
-__BRYTHON__.timestamp=1693376709495
+__BRYTHON__.compiled_date="2023-09-01 08:35:04.926265"
+__BRYTHON__.timestamp=1693550104926
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4609,11 +4609,13 @@ $B.url2name[filename]=module_name
 $B.scripts[filename]=script
 $B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}}
 if(options.ipy_id===undefined){$B.loop()}}
-$B.get_option=function(option){var filename=$B.script_filename
-if((! filename)||! $B.scripts[filename]){return $B[option]}
+$B.get_option=function(option,err){var filename=$B.script_filename
+if(err && err.$stack && err.$stack.length > 0){filename=err.$stack[0].__file__}else if($B.frames_stack.length > 0){filename=$B.frames_stack[0].__file__}
+if((! filename)||! $B.scripts[filename]){return $B.$options[option]}
 var value=$B.scripts[filename].getAttribute(option)
-console.log('get option',option,'from filename',filename,value)
-return value===null ? $B[option]:value}
+if(value !==null){if(option=='cache'){if(value=='1' ||value.toLowerCase()=='true'){value=true}else if(value=='0' ||value.toLowerCase()=='false'){value=false}else{console.debug('Invalid value for cache:',value)
+value=null}}}
+return value===null ? $B.$options[option]:value}
 $B.get_debug=function(filename){if(! filename){return $B.debug}
 var level=$B.scripts[filename].getAttribute('debug')
 return level===null ? $B.debug :level}
@@ -4623,7 +4625,7 @@ $B.url2name[url]=name
 $B.scripts[url]=script
 _b_.__debug__=$B.get_option('debug')> 0
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url}
-if($B.get_debug(url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
+if($B.get_option('debug')> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 for(var name of Object.keys(imports)){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -4762,14 +4764,14 @@ $B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_pa
 if($B.files && $B.files.hasOwnProperty(rel_path)){
 var src=atob($B.files[rel_path].content)
 $B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])
-loop()}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :
+loop()}else if($B.protocol !="file"){$B.script_filename=url
+$B.scripts[url]=script
+var req=new XMLHttpRequest(),cache=$B.get_option('cache'),qs=cache ? '' :
 (url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
-$B.script_filename=url
 if(s.is_ww){$B.webworkers[name]=script
-$B.file_cache[url]=src
-$B.scripts[url]=script}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
+$B.file_cache[url]=src}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
 loop()}else if(this.status==404){throw Error(url+" not found")}}}
 req.send()}else{throw _b_.IOError.$factory("can't load external script at "+
 script.url+" (Ajax calls not supported with protocol file:///)")}}
@@ -7238,8 +7240,7 @@ bytes.push(cp)}
 result.content=_b_.bytes.$factory(bytes)
 if(! is_binary){
 try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}}
-var fake_qs=$B.$options.cache ? '' :
-'?foo='+(new Date().getTime())
+var cache=$B.get_option('cache'),fake_qs=cache ? '' :'?foo='+(new Date().getTime())
 req.open('GET',encodeURI(file+fake_qs),false)
 req.send()}else{throw _b_.FileNotFoundError.$factory(
 "cannot use 'open()' with protocol 'file'")}
@@ -7658,7 +7659,7 @@ delete frame[1].$current_exception}
 $B.set_exc=function(exc,frame){
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
-if($B.get_option('debug')> 1){console.log(exc.args)
+if($B.get_option('debug',exc)> 1){console.log(exc.args)
 console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
@@ -8037,7 +8038,7 @@ for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
-$B.error_trace=function(err){if($B.get_option('debug')> 1){console.log("handle error",err.__class__,err.args)
+$B.error_trace=function(err){if($B.get_option('debug',err)> 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
 console.log(err.stack)}
 var trace=''
@@ -8050,7 +8051,7 @@ trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
 if(err.__class__ !==_b_.IndentationError &&
 err.text){
-if($B.get_option('debug')> 1){console.log('error args',err.args[1])
+if($B.get_option('debug',err)> 1){console.log('error args',err.args[1])
 console.log('err line',line)
 console.log('indent',indent)}
 var start=err.offset-indent,end_offset=err.end_offset+
@@ -9221,7 +9222,7 @@ $B.set_func_names(Module,"builtins")
 function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
 if(mod_name=='exec'){console.log('download exec ???',$B.frames_stack.slice())}
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
-if($B.$options.cache){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
+if($B.get_option('cache')){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
 xhr.send()
 if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.ModuleNotFoundError.$factory("No module named '"+
 mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
@@ -9275,9 +9276,9 @@ $B.url2name[path]=module.__name__
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 var src={src:module_contents,filename:path,imported:true}
-try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){if($B.get_option('debug')> 1){console.log('error in imported module',module)
+try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){err.$stack=$B.frames_stack.slice()
+if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
 console.log('stack',$B.frames_stack.slice())}
-err.$stack=$B.frames_stack.slice()
 throw err}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.$options.debug==10){console.log("code for module "+module.__name__)
@@ -9289,10 +9290,11 @@ js+='return '+prefix
 js+=module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id=prefix+module.__name__.replace(/\./g,'_')
-var mod=(new Function(module_id,js))(module)}catch(err){if($B.get_option('debug')> 2){console.log(err+" for module "+module.__name__)
+var mod=(new Function(module_id,js))(module)}catch(err){err.$stack=$B.frames_stack.slice()
+if($B.get_option('debug',err)> 2){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
-if($B.get_option('debug')> 1){console.log($B.format_indent(js,0))}
+if($B.get_option('debug',err)> 1){console.log($B.format_indent(js,0))}
 for(var attr in err){console.log(attr,err[attr])}
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)

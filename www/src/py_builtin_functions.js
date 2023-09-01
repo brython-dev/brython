@@ -3118,8 +3118,8 @@ var $url_open = _b_.open = function(){
                 }
             }
             // add fake query string to avoid caching
-            var fake_qs = $B.$options.cache ? '' :
-                              '?foo=' + (new Date().getTime())
+            var cache = $B.get_option('cache'),
+                fake_qs = cache ? '' : '?foo=' + (new Date().getTime())
             req.open('GET', encodeURI(file + fake_qs), false)
             req.send()
         }else{

@@ -358,19 +358,20 @@ $B.ajax_load_script = function(s){
             script, src, name, url, true])
         loop()
     }else if($B.protocol != "file"){
+        $B.script_filename = url
+        $B.scripts[url] = script
         var req = new XMLHttpRequest(),
-            qs = $B.$options.cache ? '' :
+            cache = $B.get_option('cache'),
+            qs = cache ? '' :
                     (url.search(/\?/) > -1 ? '&' : '?') + Date.now()
         req.open("GET", url + qs, true)
         req.onreadystatechange = function(){
             if(this.readyState == 4){
                 if(this.status == 200){
                     var src = this.responseText
-                    $B.script_filename = url
                     if(s.is_ww){
                         $B.webworkers[name] = script
                         $B.file_cache[url] = src
-                        $B.scripts[url] = script
                     }else{
                         $B.tasks.splice(0, 0, [$B.run_script, script, src, name,
                             url, true])

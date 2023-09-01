@@ -110,7 +110,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
             // brython_modules.js by the script itself
             var url = $B.brython_modules
         }
-        if(! $B.$options.cache){ // cf. issue 1954
+        if(! $B.get_option('cache')){ // cf. issue 1954
             url += '?' + (new Date()).getTime()
         }
         header += 'importScripts("' + url + '")\n'
@@ -171,7 +171,7 @@ function create_worker(){
             // brython_modules.js by the script itself
             var url = $B.brython_modules
         }
-        if(! $B.$options.cache){ // cf. issue 1954
+        if(! $B.get_option('cache')){ // cf. issue 1954
             url += '?' + (new Date()).getTime()
         }
         header += 'importScripts("' + url + '")\n'
