@@ -9,7 +9,8 @@ Il faut gérer la période transitoire où Brython va cohabiter avec Javascript
 Brython n'expose par défaut que deux noms dans l'espace de noms global de
 Javascript :
 
-> `brython()` : la fonction exécutée au lancement de la page web.
+> `brython()` : fonction qui lance l'exécution des scripts Python de la page
+> (voir [Options d'exécution](/static_doc/fr/options.html))
 
 > `__BRYTHON__` : un objet utilisé en interne par Brython pour stocker les
 > objets nécessaires à l'exécution des scripts.
@@ -201,7 +202,7 @@ def show(i, obj):
 jq.each(jq('span'), show)
 </script>
 
-<body onload="brython(1)">
+<body>
 
 <select id="sel">
   <option value="one">one
@@ -253,7 +254,7 @@ charge pas jquery):
 <head>
 <script src="brython.js"></script>
 </head>
-<body onload="brython(1)">
+<body>
 <script type="text/python">
 import jquery
 

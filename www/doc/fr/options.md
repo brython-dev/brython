@@ -1,12 +1,57 @@
-Options de la fonction `brython()`
-----------------------------------
+Options d'exécution
+===================
 
-Pour que les scripts Python présents sur la page soient exécutés, il faut
-lancer la fonction `brython()` au chargement de la page.
+Un certain nombre d'options sont disponibles pour personnaliser l'exécution
+des scripts. Ces options peuvent être définies au niveau de la page HTML, ou
+par script.
 
-`<body onload="brython(`*[options]*`)">`
+Définition des options
+----------------------
 
-*options* peut être un entier, dans ce cas il s'agit du niveau de débogage :
+La déclaration d'options valables pour toute la page se fait par les attributs
+d'une balise spécifique `<brython-options>`. Par exemple pour définir
+les options `debug` et `cache`:
+
+```xml
+<brython-options debug="1" cache="true">
+</brython-options>
+```
+
+Pour définir une option pour un script spécifique, il faut la définir dans la
+balise `<script>`:
+
+```xml
+<script type="text/python" debug="2">
+```
+
+Options disponibles seulement au niveau page
+--------------------------------------------
+
+*ids*
+
+> par défaut, tous les scripts de la page sont exécutés. Cette option
+> spécifie la liste des identifiants des scripts à exécuter (attribut `id` de la
+> balise) sous forme d'une liste séparée par des espaces
+
+<blockquote>
+```xml
+<brython-options ids="scriptA scriptB"></brython-options>
+```
+</blockquote>
+
+*indexedDB*
+
+> indique si le programme peut utiliser la base indexedDB pour
+> stocker une version précompilée des modules situés dans __brython_stdlib.js__
+> ou __brython_modules.js__. Vaut `true` par défaut.
+
+Options disponibles au niveau page ou par script
+------------------------------------------------
+
+Une option définie pour un script a priorité sur une option définie au niveau
+de la page.
+
+*debug* : le mode de débogage
 
 - 0 (valeur par défaut) : aucun débogage. A utiliser quand l'application est
   au point, cela accélère légèrement l'exécution
@@ -17,33 +62,38 @@ lancer la fonction `brython()` au chargement de la page.
 - 10 : la traduction du code Python et des modules importés est affichée dans
   la console
 
-*options* peut être un objet Javascript, dont les clés possibles sont
+*cache* : utilisation du cache du navigateur
 
-- *debug* : le mode de débogage, comme indiqué ci-dessus
-- *cache* : si la valeur est `true`, les appels Ajax pour importer des
-  modules, charger des scripts externes par `<script src="foo.py">` ou lire
-  des fichiers avec `open()` utilisent le cache du navigateur. Vaut `false`
-  par défaut
-- *static\_stdlib\_import* : booléen qui indique si, pour importer des modules
-  ou des paquetages de la bibliothèque standard, on se sert du tableau de
-  correspondance statique du script __stdlib\_paths.js__. Vaut `true` par
-  défaut
-- *pythonpath* : une liste de chemins dans lesquels chercher les modules
-  importés
-- *ids* : par défaut, la fonction `brython()` exécute tous les scripts de
-  la page. Cette option spécifie la liste des identifiants des balises dont le
-  contenu texte doit être exécuté (attribut `id` de la balise)
-- *ipy_id* : identique à *ids*. Voir
-  [brythonmagic](https://github.com/kikocorreoso/brythonmagic) pour plus
-  d'informations
-- *indexedDB* : indique si le programme peut utiliser la base indexedDB pour
-  stocker une version précompilée des modules situés dans __brython_stdlib.js__
-  ou __brython_modules.js__. Vaut `true` par défaut.
+> si la valeur est `true`, les appels Ajax pour importer des
+> modules, charger des scripts externes par `<script src="foo.py">` ou lire
+> des fichiers avec `open()` utilisent le cache du navigateur. Vaut `false`
+> par défaut
 
-Exemple
--------
+*static\_stdlib\_import*
 
->    brython({debug:1, ids:['hello']})
+> booléen qui indique si, pour importer des modules
+> ou des paquetages de la bibliothèque standard, on se sert du tableau de
+> correspondance statique du script __stdlib\_paths.js__. Vaut `true` par
+> défaut
 
-exécutera le contenu de l'élement dont l'identifiant est "hello" avec le niveau de débogage 1
+*pythonpath*
 
+> une liste, séparée par des espaces, de chemins dans lesquels chercher les
+> modules importés
+
+La fonction <i>brython(options)</i>
+-----------------------------------
+
+Dans les versions de Brython antérieures à 3.12, les options ne pouvaient
+être définies que pour l'ensemble des scripts de la page, et étaient passées
+comme argument de la fonction `brython()` appelée explicitement au
+chargement de la page par la syntaxe
+
+```xml
+<body onload="brython({debug: 2})">
+```
+
+Cette syntaxe reste utilisable dans la version 3.12.
+
+Si la page définit une balise `<brython-options>`, les valeurs passées à la
+fonction `brython()` remplacent celles de la balise.
