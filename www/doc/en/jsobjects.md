@@ -8,7 +8,8 @@ Javascript ;-)
 
 By default, Brython only exposes two names in the global Javascript namespace:
 
-> `brython()` : the function run on page load
+> `brython()` : function that triggers execution of the Python scripts in the page
+> (see [Execution options](/static_doc/en/options.html))
 
 > `__BRYTHON__` : an object used internally by Brython to store the objects
 > needed for scripts execution
@@ -197,7 +198,7 @@ def show(i, obj):
 jq.each(jq('span'), show)
 </script>
 
-<body onload="brython(1)">
+<body>
 
 <select id="sel">
   <option value="one">one
@@ -250,7 +251,8 @@ jquery.js):
 <head>
 <script src="brython.js"></script>
 </head>
-<body onload="brython(1)">
+
+<body>
 <script type="text/python">
 import jquery
 
