@@ -18,7 +18,8 @@ function idb_load(evt, module){
     // Otherwise, get the source code from brython_stdlib.js.
     var res = evt.target.result
 
-    var timestamp = $B.timestamp
+    var timestamp = $B.timestamp,
+        debug = $B.get_page_option('debug')
 
     if(res === undefined || res.timestamp != $B.timestamp ||
             ($B.VFS[module] && res.source_ts !== $B.VFS[module].timestamp)){
@@ -53,7 +54,7 @@ function idb_load(evt, module){
                 }
                 // Delete temporary import
                 delete $B.imported[module]
-                if($B.get_option('debug') > 1){
+                if(debug > 1){
                     console.log("precompile", module)
                 }
             }else{
@@ -72,7 +73,7 @@ function idb_load(evt, module){
         if(res.imports.length > 0){
             // res.imports is a string with the modules imported by the current
             // modules, separated by commas
-            if($B.get_option('debug') > 1){
+            if(debug > 1){
                 console.log(module, "imports", res.imports)
             }
             var subimports = res.imports.split(",")
@@ -128,15 +129,15 @@ function store_precompiled(module, js, source_ts, imports, is_package){
             "is_package": is_package
             },
         request = store.put(data)
-        if($B.get_option('debug') > 1){
-            console.log("store precompiled", module, "package", is_package)
-        }
-        document.dispatchEvent(new CustomEvent('precompile',
-            {detail: 'cache module '  + module}))
-        var ix = $B.outdated.indexOf(module)
-        if(ix > -1){
-            $B.outdated.splice(ix, 1)
-        }
+    if($B.get_page_option('debug') > 1){
+        console.log("store precompiled", module, "package", is_package)
+    }
+    document.dispatchEvent(new CustomEvent('precompile',
+        {detail: 'cache module '  + module}))
+    var ix = $B.outdated.indexOf(module)
+    if(ix > -1){
+        $B.outdated.splice(ix, 1)
+    }
     request.onsuccess = function(evt){
         // Restart the task "idb_get", knowing that this time it will use
         // the compiled version.
@@ -252,7 +253,7 @@ $B.idb_open = function(obj){
 
     idb_cx.onsuccess = function(){
         var db = idb_cx.result
-        if(!db.objectStoreNames.contains("modules")){
+        if(! db.objectStoreNames.contains("modules")){
             var version = db.version
             db.close()
             console.info('create object store', version)
@@ -273,7 +274,7 @@ $B.idb_open = function(obj){
                 store.onsuccess = loop
             }
         }else{
-            if($B.get_option('debug') > 1){
+            if($B.get_page_option('debug') > 1){
                 console.info("using indexedDB for stdlib modules cache")
             }
             // Preload all compiled modules
@@ -306,7 +307,7 @@ $B.idb_open = function(obj){
                             }else{
                                 $B.precompiled[record.name] = record.content
                             }
-                            if($B.get_option('debug') > 1){
+                            if($B.get_page_option('debug') > 1){
                                 console.info("load from cache", record.name)
                             }
                         }else{
@@ -320,7 +321,7 @@ $B.idb_open = function(obj){
                     }
                     cursor.continue()
                 }else{
-                    if($B.get_option('debug') > 1){
+                    if($B.get_page_option('debug') > 1){
                         console.log("done")
                     }
                     $B.outdated = outdated
@@ -452,7 +453,7 @@ var loop = $B.loop = function(){
                     req = store.delete(module)
                 req.onsuccess = (function(mod){
                     return function(event){
-                        if($B.get_option('debug') > 1){
+                        if($B.get_page_option('debug') > 1){
                             console.info("delete outdated", mod)
                         }
                         report_precompile(mod)

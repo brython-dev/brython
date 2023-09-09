@@ -40,7 +40,7 @@ $B.webworkers={}
 $B.file_cache={}
 $B.url2name={}
 $B.scripts={}
-$B.path=[$path+'Lib',$path+'libs',$script_dir,$path+'Lib/site-packages']
+$B.import_info={}
 $B.imported={}
 $B.precompiled={}
 $B.frames_stack=[]
@@ -114,9 +114,7 @@ for(var token of $B.tokenizer(src,'<string>',mode ||'file')){console.log(token.t
 var py2js_magic=Math.random().toString(36).substr(2,8)
 $B.python_to_js=function(src,script_id){
 if(! $B.options_parsed){
-$B.parse_options()
-$B.meta_path=$B.$meta_path.slice()
-if(!$B.use_VFS){$B.meta_path.shift()}}
+$B.parse_options()}
 var filename='$python_to_js'+$B.UUID()
 $B.url2name[filename]=filename
 $B.imported[filename]={}
@@ -159,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-01 08:35:04.926265"
-__BRYTHON__.timestamp=1693550104926
+__BRYTHON__.compiled_date="2023-09-09 08:33:09.126526"
+__BRYTHON__.timestamp=1694241189126
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4461,59 +4459,19 @@ var js_obj=$B.js_from_root({ast:_ast,symtable,filename,imported})
 var js_from_ast=js_obj.js
 return{
 _ast,imports:js_obj.imports,to_js:function(){return js_from_ast}}}
-$B.set_import_paths=function(){
-var meta_path=[],path_hooks=[]
-if($B.use_VFS){meta_path.push($B.finders.VFS)}
-if($B.$options.static_stdlib_import !==false && $B.protocol !="file"){
-meta_path.push($B.finders.stdlib_static)
-if($B.path.length > 3){$B.path.shift()
-$B.path.shift()}}
-if($B.protocol !=="file"){meta_path.push($B.finders.path)
-path_hooks.push($B.url_hook)}
-if($B.$options.cpython_import){if($B.$options.cpython_import=="replace"){$B.path.pop()}
-meta_path.push($B.finders.CPython)}
-$B.meta_path=meta_path
-$B.path_hooks=path_hooks}
 $B.parse_options=function(options){
-if(options===undefined){options={debug:1}}else if(typeof options=='number'){options={debug:options}}else if(typeof options !=='object'){console.warn('ignoring invalid argument passed to brython():',options)
-options={debug:1}}
-if(options.debug===undefined){options.debug=1}
-$B.debug=options.debug
+if(options===undefined){options={}}else if(typeof options=='number'){
+options={debug:options}}else if(typeof options !=='object'){console.warn('ignoring invalid argument passed to brython():',options)
+options={}}
+$B.debug=options.debug===undefined ? 1 :options.debug
 _b_.__debug__=$B.debug > 0
-$B.compile_time=0
-if(options.indexedDB===undefined){options.indexedDB=true}
-if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
-$B.static_stdlib_import=options.static_stdlib_import
-$B.$options=options
-$B.set_import_paths()
-var $href=$B.script_path=_window.location.href.split('#')[0],$href_elts=$href.split('/')
-$href_elts.pop()
-if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
-$B.curdir=$href_elts.join('/')
-if(options.pythonpath !==undefined){$B.path=options.pythonpath
-$B.$options.static_stdlib_import=false}
 options.python_extension=options.python_extension ||'.py'
-if(options.python_paths){for(var path of options.python_paths){var lang,prefetch
-if(typeof path !=="string"){lang=path.lang
-prefetch=path.prefetch
-path=path.path}
-$B.path.push(path)
-if(path.slice(-7).toLowerCase()=='.vfs.js' &&
-(prefetch===undefined ||prefetch===true)){$B.path_importer_cache[path+'/']=
-$B.imported['_importlib'].VFSPathFinder(path)}
-if(lang){_importlib.optimize_import_for_path(path,lang)}}}
-if(!($B.isWebWorker ||$B.isNode)){
-var path_links=document.querySelectorAll('head link[rel~=pythonpath]'),_importlib=$B.imported['_importlib']
-for(var i=0,e;e=path_links[i];++i){var href=e.href;
-if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path.push(href);}
-var filetype=e.hreflang
-if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
-_importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 $B.options_parsed=true
 return options}
 if(!($B.isWebWorker ||$B.isNode)){var startup_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){addPythonScript(addedNode);}}});
 startup_observer.observe(document.documentElement,{childList:true,subtree:true});}
+var brython_options={}
 var python_scripts=[]
 if(typeof document !=='undefined'){
 python_scripts=python_scripts.concat(Array.from(
@@ -4523,38 +4481,62 @@ document.querySelectorAll('script[type="text/python3"]')))
 var onload
 addEventListener('DOMContentLoaded',function(ev){if(ev.target.body){onload=ev.target.body.onload}
 if(! onload){
-ev.target.body.onload=brython}else{
+ev.target.body.onload=function(ev){return brython()}}else{
 ev.target.body.onload=function(ev){onload()
-if(! brython_called.status){brython()}}}}
-)}
-var brython_called={status:false},inject={},defined_ids={}
+if(! status.brython_called){brython()}}}}
+)
+class BrythonOptions extends HTMLElement{
+constructor(){super()}
+connectedCallback(){for(var attr of this.getAttributeNames()){brython_options[attr]=convert_option(attr,this.getAttribute(attr))}}}
+customElements.define('brython-options',BrythonOptions)}
+var inject={},defined_ids={},script_to_id=new Map(),id_to_script={}
 function addPythonScript(addedNode){
 if(addedNode.tagName=='SCRIPT' &&
-(addedNode.type=="text/python" ||addedNode.type=="text/python3")){python_scripts.push(addedNode)}}
+(addedNode.type=="text/python" ||
+addedNode.type=="text/python3")){python_scripts.push(addedNode)}}
+function Injected(id){this.id=id}
+var status={brython_called:false,first_unnamed_script:true}
 function injectPythonScript(addedNode){
 if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){python_scripts.push(addedNode)
-try{brython(inject)}catch(err){$B.handle_error(err)}
+var script_id=set_script_id(addedNode)
+console.log('inject script',addedNode)
+try{var options=clone($B.$options)
+options.ids=[script_id]
+brython(options)}catch(err){$B.handle_error(err)}
 var load_event=new Event('load')
 addedNode.dispatchEvent(load_event)}}
-var brython=$B.parser.brython=function(options){if(options===inject){options=$B.$options}else{options=$B.parse_options(options)}
-if(!($B.isWebWorker ||$B.isNode)){if(! brython_called.status){brython_called.status=true
+function set_script_id(script){if(script_to_id.has(script)){}else if(script.id){if(defined_ids[script.id]){throw Error("Brython error : Found 2 scripts with the "+
+"same id '"+script.id+"'")}else{defined_ids[script.id]=true}
+script_to_id.set(script,script.id)}else{if(script.className==='webworker'){throw _b_.AttributeError.$factory(
+"webworker script has no attribute 'id'")}
+if(status.first_unnamed_script){script_to_id.set(script,'__main__')
+status.first_unnamed_script=false}else{script_to_id.set(script,'__main__'+$B.UUID())}}
+var id=script_to_id.get(script)
+id_to_script[id]=script
+return id}
+var brython=$B.parser.brython=function(options){if(!($B.isWebWorker ||$B.isNode)){if(! status.brython_called){
+status.brython_called=true
 startup_observer.disconnect()
 var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode);}}});
 inject_observer.observe(document.documentElement,{childList:true,subtree:true});}}else if($B.isNode){return}
-if(options===undefined){options={}}
-var kk=Object.keys(_window)
+for(var python_script of python_scripts){set_script_id(python_script)}
 var scripts=[],webworkers=[]
-var ids=options.ids ||options.ipy_id
-if(ids !==undefined){if(!Array.isArray(ids)){throw _b_.ValueError.$factory("ids is not a list")}
-for(var id of options.ids){var found=false
-for(var python_script of python_scripts){if(python_script.id==id){scripts.push(python_script)
-found=true
-break}}
-if(! found){throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{var scripts=python_scripts.slice()}
+$B.$options=$B.parse_options(options)
+var $href=$B.script_path=_window.location.href.split('#')[0],$href_elts=$href.split('/')
+$href_elts.pop()
+if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
+$B.curdir=$href_elts.join('/')
+var kk=Object.keys(_window)
+var ids=$B.get_page_option('ids')||$B.get_page_option('ipy_id')
+if(ids !==undefined){if(! Array.isArray(ids)){throw _b_.ValueError.$factory("ids is not a list")}
+if(ids.length==0){}
+for(var id of ids){var script=id_to_script[id]
+if(script){scripts.push(script)}else{throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{var scripts=python_scripts.slice()}
 python_scripts.length=0
 var webworkers=scripts.filter(script=> script.className==='webworker'),scripts=scripts.filter(script=> script.className !=='webworker')
-var first_script=true,module_name
-if(options.ipy_id !==undefined){module_name='__main__'
+var module_name
+if($B.get_page_option('ipy_id')!==undefined){
+module_name='__main__'
 var src="",js,root
 for(var script of scripts){src+=(script.innerHTML ||script.textContent)}
 try{
@@ -4573,16 +4555,13 @@ $err=_b_.RuntimeError.$factory($err+'')}
 var $trace=$B.$getattr($err,'info')+'\n'+$err.__name__+
 ': '+$err.args
 try{$B.$getattr($B.get_stderr(),'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{if(scripts.length > 0 ||$B.isWebWorker){if(options.indexedDB && $B.has_indexedDB &&
-$B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
-for(script of scripts){if(script.id){if(defined_ids[script.id]){throw Error("Brython error : Found 2 scripts with the "+
-"same id '"+script.id+"'")}else{defined_ids[script.id]=true}}}
+throw $err}}else{if(scripts.length > 0 ||$B.isWebWorker){if($B.get_page_option('indexedDB')&& $B.has_indexedDB &&
+$B.hasOwnProperty("VFS")){if($B.tasks.length > 0){console.log('bizarre',$B.tasks.slice())
+console.log('idbctx',$B.idb_cx)
+alert()}
+$B.tasks.push([$B.idb_open])}}
 var src
-for(var worker of webworkers){if(worker.id===undefined){throw _b_.AttributeError.$factory(
-"webworker script has no attribute 'id'")}
-if(defined_ids[worker.id]){throw _b_.RuntimeError.$factory("Brython error : Found 2 scripts with the "+
-"same id '"+worker.id+"'")}else{defined_ids[worker.id]=true}
-if(worker.src){
+for(var worker of webworkers){if(worker.src){
 $B.tasks.push([$B.ajax_load_script,{script:worker,name:worker.id,url:worker.src,is_ww:true}])}else{
 var source=(worker.innerText ||worker.textContent)
 source=unindent(source)
@@ -4592,11 +4571,7 @@ var filename=$B.script_filename=$B.script_path+"#"+worker.id
 $B.url2name[filename]=worker.id
 $B.file_cache[filename]=source
 $B.scripts[filename]=worker}}
-for(var script of scripts){
-if(script.id){module_name=script.id}else{
-if(first_script){module_name='__main__'
-first_script=false}else{module_name='__main__'+$B.UUID()}
-while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
+for(var script of scripts){module_name=script_to_id.get(script)
 if(script.src){
 $B.tasks.push([$B.ajax_load_script,{script,name:module_name,url:script.src,id:script.id}])}else{
 src=(script.innerHTML ||script.textContent)
@@ -4608,21 +4583,32 @@ $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
 $B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}}
-if(options.ipy_id===undefined){$B.loop()}}
+if($B.get_page_option('options.ipy_id')===undefined){$B.loop()}}
+function convert_option(option,value){
+if(option=='debug'){if(typeof value=='string' && value.match(/^\d+$/)){return parseInt(value)}else{if(value !==null && value !==undefined){console.debug(`Invalid value for debug: ${value}`)}}}else if(option=='cache' ||
+option=='indexeddb' ||
+option=='static_stdlib_import'){if(value=='1' ||value.toLowerCase()=='true'){return true}else if(value=='0' ||value.toLowerCase()=='false'){return false}else{console.debug(`Invalid value for ${option}: ${value}`)}}else if(option=='ids' ||option=='pythonpath'){
+if(typeof value=='string'){if(value.trim().length==0){return[]}
+return value.trim().split(/\s+/)}}
+return default_value[option]}
+const default_option={cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true}
+$B.get_filename=function(){
+if($B.frames_stack.length > 0){return $B.frames_stack[0].__file__}}
+$B.get_page_option=function(option){
+if($B.$options.hasOwnProperty(option)){
+return $B.$options[option]}else if(brython_options.hasOwnProperty(option.toLowerCase())){
+return brython_options[option.toLowerCase()]}else{return default_option[option]}}
 $B.get_option=function(option,err){var filename=$B.script_filename
-if(err && err.$stack && err.$stack.length > 0){filename=err.$stack[0].__file__}else if($B.frames_stack.length > 0){filename=$B.frames_stack[0].__file__}
-if((! filename)||! $B.scripts[filename]){return $B.$options[option]}
+if(err && err.$stack && err.$stack.length > 0){filename=err.$stack[0].__file__}else{filename=$B.get_filename()}
+return $B.get_option_from_filename(option,filename)}
+$B.get_option_from_filename=function(option,filename){if((! filename)||! $B.scripts[filename]){return $B.get_page_option(option)}
 var value=$B.scripts[filename].getAttribute(option)
-if(value !==null){if(option=='cache'){if(value=='1' ||value.toLowerCase()=='true'){value=true}else if(value=='0' ||value.toLowerCase()=='false'){value=false}else{console.debug('Invalid value for cache:',value)
-value=null}}}
-return value===null ? $B.$options[option]:value}
-$B.get_debug=function(filename){if(! filename){return $B.debug}
-var level=$B.scripts[filename].getAttribute('debug')
-return level===null ? $B.debug :level}
+if(value !==null){return convert_option(option,value)}else{return $B.get_page_option(option)}}
 $B.run_script=function(script,src,name,url,run_loop){
 $B.file_cache[url]=src
 $B.url2name[url]=name
 $B.scripts[url]=script
+$B.make_import_paths(url)
 _b_.__debug__=$B.get_option('debug')> 0
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url}
 if($B.get_option('debug')> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
@@ -4651,7 +4637,7 @@ if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
 $B.timestamp=$B.VFS_timestamp}
 function idb_load(evt,module){
 var res=evt.target.result
-var timestamp=$B.timestamp
+var timestamp=$B.timestamp,debug=$B.get_page_option('debug')
 if(res===undefined ||res.timestamp !=$B.timestamp ||
 ($B.VFS[module]&& res.source_ts !==$B.VFS[module].timestamp)){
 if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1]
@@ -4665,10 +4651,10 @@ $B.url2name[module]=module
 try{var root=$B.py2js(
 {src:source,filename:module},module,module),js=root.to_js()}catch(err){$B.handle_error(err)}
 delete $B.imported[module]
-if($B.get_option('debug')> 1){console.log("precompile",module)}}else{console.log('bizarre',module,ext)}}else{}}else{
+if(debug > 1){console.log("precompile",module)}}else{console.log('bizarre',module,ext)}}else{}}else{
 if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
 if(res.imports.length > 0){
-if($B.get_option('debug')> 1){console.log(module,"imports",res.imports)}
+if(debug > 1){console.log(module,"imports",res.imports)}
 var subimports=res.imports.split(",")
 for(var i=0;i < subimports.length;i++){var subimport=subimports[i]
 if(subimport.startsWith(".")){
@@ -4685,7 +4671,7 @@ if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodu
 loop()}
 function store_precompiled(module,js,source_ts,imports,is_package){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"origin":origin,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
-if($B.get_option('debug')> 1){console.log("store precompiled",module,"package",is_package)}
+if($B.get_page_option('debug')> 1){console.log("store precompiled",module,"package",is_package)}
 document.dispatchEvent(new CustomEvent('precompile',{detail:'cache module '+module}))
 var ix=$B.outdated.indexOf(module)
 if(ix >-1){$B.outdated.splice(ix,1)}
@@ -4728,7 +4714,7 @@ reject('could not open indexedDB database')}})}
 $B.idb_open=function(obj){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
-if(!db.objectStoreNames.contains("modules")){var version=db.version
+if(! db.objectStoreNames.contains("modules")){var version=db.version
 db.close()
 console.info('create object store',version)
 idb_cx=indexedDB.open($B.idb_name,version+1)
@@ -4738,7 +4724,7 @@ store.onsuccess=loop}
 idb_cx.onversionchanged=function(){console.log("version changed")}
 idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}}else{if($B.get_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
+store.onsuccess=loop}}else{if($B.get_page_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(evt){console.log("open cursor error",evt)}
@@ -4747,9 +4733,9 @@ if(cursor){record=cursor.value
 if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
 if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}
-if($B.get_option('debug')> 1){console.info("load from cache",record.name)}}else{
+if($B.get_page_option('debug')> 1){console.info("load from cache",record.name)}}else{
 outdated.push(record.name)}}else{outdated.push(record.name)}
-cursor.continue()}else{if($B.get_option('debug')> 1){console.log("done")}
+cursor.continue()}else{if($B.get_page_option('debug')> 1){console.log("done")}
 $B.outdated=outdated
 loop()}}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
@@ -4791,7 +4777,7 @@ function report_done(mod){if(typeof document !=='undefined'){document.dispatchEv
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
 while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
-req.onsuccess=(function(mod){return function(event){if($B.get_option('debug')> 1){console.info("delete outdated",mod)}
+req.onsuccess=(function(mod){return function(event){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
 report_precompile(mod)}})(module)}
 report_close()
 $B.idb_cx.result.close()
@@ -9219,6 +9205,24 @@ return res+">"}
 Module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
 $B.builtins[attr]=value}else{self[attr]=value}}
 $B.set_func_names(Module,"builtins")
+$B.make_import_paths=function(filename){
+var elts=filename.split('/')
+elts.pop()
+var script_dir=elts.join('/'),path=[$B.brython_path+'Lib',$B.brython_path+'libs',script_dir,$B.brython_path+'Lib/site-packages']
+var meta_path=[],path_hooks=[]
+if($B.use_VFS){meta_path.push($B.finders.VFS)}
+var static_stdlib_import=$B.get_option_from_filename('static_stdlib_import',filename)
+if(static_stdlib_import !==false && $B.protocol !="file"){
+meta_path.push($B.finders.stdlib_static)
+if(path.length > 3){path.shift()
+path.shift()}}
+var pythonpath=$B.get_option_from_filename('pythonpath',filename)
+if(pythonpath){
+var ix=path.indexOf($B.script_dir)
+if(ix===-1){console.log('bizarre',path,$B.script_dir)}else{path.splice(ix,1,...pythonpath)}}
+if($B.protocol !=="file"){meta_path.push($B.finders.path)
+path_hooks.push($B.url_hook)}
+$B.import_info[filename]={meta_path,path_hooks,path}}
 function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
 if(mod_name=='exec'){console.log('download exec ???',$B.frames_stack.slice())}
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
@@ -9441,7 +9445,7 @@ var StdlibStaticFinder=$B.make_class("StdlibStaticFinder",function(){return{
 __class__:StdlibStaticFinder}}
 )
 StdlibStaticFinder.find_spec=function(self,fullname,path){
-if($B.stdlib && $B.$options.static_stdlib_import){var address=$B.stdlib[fullname]
+if($B.stdlib && $B.get_option('static_stdlib_import')){var address=$B.stdlib[fullname]
 if(address===undefined){var elts=fullname.split(".")
 if(elts.length > 1){elts.pop()
 var $package=$B.stdlib[elts.join(".")]
@@ -9466,12 +9470,13 @@ __class__:PathFinder}}
 PathFinder.find_spec=function(cls,fullname,path){if($B.VFS && $B.VFS[fullname]){
 return _b_.None}
 if($B.is_none(path)){
-path=$B.path}
+path=get_path()}
 for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
 if(path_entry[path_entry.length-1]!="/"){path_entry+="/"}
 var finder=$B.path_importer_cache[path_entry]
 if(finder===undefined){
-for(var j=0,lj=$B.path_hooks.length;j < lj;++j){var hook=$B.path_hooks[j]
+var path_hooks=get_path_hooks()
+for(var j=0,lj=path_hooks.length;j < lj;++j){var hook=path_hooks[j]
 try{finder=$B.$call(hook)(path_entry)
 $B.path_importer_cache[path_entry]=finder
 break}catch(e){if(e.__class__ !==_b_.ImportError){throw e}}}}
@@ -9486,7 +9491,7 @@ var PathEntryFinder=$B.make_class("PathEntryFinder",function(path_entry,hint){re
 __class__:PathEntryFinder,path_entry:path_entry,hint:hint}}
 )
 PathEntryFinder.find_spec=function(self,fullname){
-var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[],py_ext=$B.$options.python_extension 
+var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[],py_ext=$B.get_option('python_extension')
 var tryall=hint===undefined
 if(tryall ||hint=='py'){
 modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true]])}
@@ -9520,8 +9525,14 @@ if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(me
 var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
+function get_path(){var filename=$B.get_filename()
+return $B.import_info[filename].path}
+function get_meta_path(){var filename=$B.get_filename()
+return $B.import_info[filename].meta_path}
+function get_path_hooks(){var filename=$B.get_filename()
+return $B.import_info[filename].path_hooks}
 function import_engine(mod_name,_path,from_stdlib){
-var meta_path=$B.meta_path.slice(),_sys_modules=$B.imported,_loader,spec
+var meta_path=get_meta_path().slice(),_sys_modules=$B.imported,_loader,spec
 if(from_stdlib){
 var path_ix=meta_path.indexOf($B.finders["path"])
 if(path_ix >-1){meta_path.splice(path_ix,1)}}
@@ -9662,7 +9673,8 @@ if(test){console.log('step 2, mod_name',mod_name,'fromlist',fromlist)
 alert()}
 if($B.$options.debug==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
-console.log("use static stdlib paths ? "+$B.static_stdlib_import)}
+console.log("use static stdlib paths ? "+
+$B.get_option('static_stdlib_import'))}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1],_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
 if(__import__===undefined){
 __import__=$B.$__import__}
@@ -9730,7 +9742,6 @@ locals[alias]=$B.imported[sub_module]}}}}else{
 $B.$import(module,names,aliases,locals)}}
 $B.import_all=function(locals,module){
 for(var attr in module){if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
-$B.$path_hooks=[url_hook]
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder,CPython:finder_cpython}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
@@ -14604,11 +14615,17 @@ if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__tracebac
 return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
-function(){return $B.path},function(self,value){$B.path=value;}
+function(){var filename=$B.get_filename()
+return $B.import_info[filename].path},function(self,value){var filename=$B.get_filename()
+$B.import_info[filename].path=value}
 ),meta_path:_b_.property.$factory(
-function(){return $B.meta_path},function(self,value){$B.meta_path=value}
+function(){var filename=$B.get_filename()
+return $B.import_info[filename].meta_path},function(self,value){var filename=$B.get_filename()
+$B.import_info[filename].meta_path=value}
 ),path_hooks:_b_.property.$factory(
-function(){return $B.path_hooks},function(self,value){$B.path_hooks=value}
+function(){var filename=$B.get_filename()
+return $B.import_info[filename].path_hooks},function(self,value){var filename=$B.get_filename()
+$B.import_info[filename].path_hooks=value}
 ),path_importer_cache:_b_.property.$factory(
 function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},function(self,value){throw _b_.TypeError.$factory("Read only property"+
 " 'sys.path_importer_cache'")}

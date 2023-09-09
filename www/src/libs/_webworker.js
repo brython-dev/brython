@@ -101,7 +101,8 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
 
     var js = $B.py2js({src, filename}, script_id).to_js(),
         header = '';
-    var brython_scripts = scripts_to_load($B.get_debug(filename))
+    var brython_scripts = scripts_to_load(
+        $B.get_option_from_filename('debug', filename))
     brython_scripts.forEach(function(script){
         if(script != VFS || VFS == "brython_stdlib"){
             var url = $B.brython_path + script + ".js"
@@ -124,10 +125,9 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     module.__doc__ = _b_.None
     $B.imported["${script_id}"] = module\n`
     // restore brython_path
-    header += '__BRYTHON__.brython_path = "' + $B.brython_path +
-        '"\n'
+    header += `$B.brython_path = "${$B.brython_path}"\n`
     // restore path for imports (cf. issue #1305)
-    header += '__BRYTHON__.path = "' + $B.path +'".split(",")\n'
+    header += `$B.make_import_paths("${filename}")\n`
     // Call brython() to initialize internal Brython values
     header += `brython(${JSON.stringify($B.$options)})\n`
     js = header + js
@@ -159,7 +159,8 @@ function create_worker(){
         src = $B.file_cache[filename]
     $B.url2name[filename] = script_id
 
-    var brython_scripts = scripts_to_load($B.get_debug(filename))
+    var brython_scripts = scripts_to_load(
+        $B.get_option_from_filename('debug', filename))
 
     var js = $B.py2js({src, filename}, script_id).to_js(),
         header = '';
@@ -187,10 +188,10 @@ function create_worker(){
 
     header += '$B.file_cache[module.__file__] = `' + src + '`\n'
     // restore brython_path
-    header += '__BRYTHON__.brython_path = "' + $B.brython_path +
-        '"\n'
+    header += `$B.brython_path = "${$B.brython_path}"\n`
     // restore path for imports (cf. issue #1305)
-    header += '__BRYTHON__.path = "' + $B.path +'".split(",")\n'
+    header += `$B.make_import_paths("${filename}")\n`
+
     // Call brython() to initialize internal Brython values
     header += `brython(${JSON.stringify($B.$options)})\n`
 

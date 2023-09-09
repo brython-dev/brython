@@ -55,7 +55,6 @@ if($B.brython_path === undefined){
         this_url = scripts[scripts.length - 1].src
     }
 
-
     var elts = this_url.split('/')
     elts.pop()
     // brython_path is the url of the directory holding brython core scripts
@@ -98,9 +97,9 @@ $B.url2name = {}
 // Mapping between script url and script object
 $B.scripts = {}
 
-// __BRYTHON__.path is the list of paths where Python modules are searched
-$B.path = [$path + 'Lib', $path + 'libs', $script_dir,
-    $path + 'Lib/site-packages']
+// Mapping between script url and import-related information (path, metapath, 
+// path hooks)
+$B.import_info = {}
 
 // Maps the name of imported modules to the module object
 $B.imported = {}
@@ -326,8 +325,6 @@ $B.python_to_js = function(src, script_id){
     if(! $B.options_parsed){
         // parse options so that imports succeed
         $B.parse_options()
-        $B.meta_path = $B.$meta_path.slice()
-        if(!$B.use_VFS){$B.meta_path.shift()}
     }
 
     // fake names

@@ -668,26 +668,32 @@
         ),
         path: _b_.property.$factory(
             function(){
-                return $B.path
+                var filename = $B.get_filename()
+                return $B.import_info[filename].path
             },
             function(self, value){
-                 $B.path = value;
+                var filename = $B.get_filename()
+                $B.import_info[filename].path = value
             }
         ),
         meta_path: _b_.property.$factory(
             function(){
-                return $B.meta_path
+                var filename = $B.get_filename()
+                return $B.import_info[filename].meta_path
             },
             function(self, value){
-                $B.meta_path = value
+                var filename = $B.get_filename()
+                $B.import_info[filename].meta_path = value
             }
         ),
         path_hooks: _b_.property.$factory(
             function(){
-                return $B.path_hooks
+                var filename = $B.get_filename()
+                return $B.import_info[filename].path_hooks
             },
             function(self, value){
-                $B.path_hooks = value
+                var filename = $B.get_filename()
+                $B.import_info[filename].path_hooks = value
             }
         ),
         path_importer_cache: _b_.property.$factory(

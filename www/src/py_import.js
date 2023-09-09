@@ -46,6 +46,69 @@ Module.__setattr__ = function(self, attr, value){
 
 $B.set_func_names(Module, "builtins")
 
+$B.make_import_paths = function(filename){
+    // Set $B.meta_path, the list of finders to use for imports
+    //
+    // The original list in $B.meta_path is made of 3 finders defined in
+    // py_import.js :
+    // - finder_VFS : in the Virtual File System : a Javascript object with
+    //   source of the standard distribution
+    // - finder_static_stlib : use the script stdlib_path.js to identify the
+    //   packages and modules in the standard distribution
+    // - finder_path : search module at different urls
+    var elts = filename.split('/')
+    elts.pop()
+    var script_dir = elts.join('/'),
+        path = [$B.brython_path + 'Lib',
+            $B.brython_path + 'libs',
+            script_dir,
+            $B.brython_path + 'Lib/site-packages']
+
+    var meta_path = [],
+        path_hooks = []
+
+    // $B.use_VFS is set to true if the script brython_stdlib.js or
+    // brython_modules.js has been loaded in the page. In this case we use the
+    // Virtual File System (VFS)
+    if($B.use_VFS){
+        meta_path.push($B.finders.VFS)
+    }
+    var static_stdlib_import = $B.get_option_from_filename('static_stdlib_import',
+        filename)
+    if(static_stdlib_import !== false && $B.protocol != "file"){
+        // Add finder using static paths
+        meta_path.push($B.finders.stdlib_static)
+        // Remove /Lib and /libs in sys.path :
+        // if we use the static list and the module
+        // was not find in it, it's no use searching twice in the same place
+        if(path.length > 3) {
+            path.shift()
+            path.shift()
+        }
+    }
+
+    // If option "pythonpath" is specified, use it instead of the current
+    // script directory
+    var pythonpath = $B.get_option_from_filename('pythonpath', filename)
+    if(pythonpath){
+        // replace script_dir by paths in pythonpath
+        var ix = path.indexOf($B.script_dir)
+        if(ix === -1){
+            console.log('bizarre', path, $B.script_dir)
+        }else{
+             path.splice(ix, 1, ...pythonpath)
+         }
+    }
+
+    // Use the defaut finder using sys.path if protocol is not file://
+    if($B.protocol !== "file"){
+        meta_path.push($B.finders.path)
+        path_hooks.push($B.url_hook)
+    }
+
+    $B.import_info[filename] = {meta_path, path_hooks, path}
+}
+
 function $download_module(mod, url, $package){
     var xhr = new XMLHttpRequest(),
         fake_qs = "?v=" + (new Date().getTime()),
@@ -603,7 +666,7 @@ StdlibStaticFinder.find_spec = function(self, fullname, path){
     // find_spec() relies on $B.stdlib, a precompiled list of the existing
     // modules in subdirectories Lib and libs below the directory where
     // brython.js stands. This list is in file stdlib_paths.js.
-    if($B.stdlib && $B.$options.static_stdlib_import){
+    if($B.stdlib && $B.get_option('static_stdlib_import')){
         var address = $B.stdlib[fullname]
         if(address === undefined){
             var elts = fullname.split(".")
@@ -679,8 +742,9 @@ PathFinder.find_spec = function(cls, fullname, path){
     }
     if($B.is_none(path)){
         // [Import spec] Top-level import , use sys.path
-        path = $B.path
+        path = get_path()
     }
+
     for(var i = 0, li = path.length; i < li; ++i){
         var path_entry = path[i]
         if(path_entry[path_entry.length - 1] != "/"){
@@ -692,8 +756,9 @@ PathFinder.find_spec = function(cls, fullname, path){
             // Use path hooks, a list of callables that return finders.
             // By default, the only path hook is function url_hook below,
             // which returns PathEntryFinder.
-            for(var j = 0, lj = $B.path_hooks.length; j < lj; ++j){
-                var hook = $B.path_hooks[j]
+            var path_hooks = get_path_hooks()
+            for(var j = 0, lj = path_hooks.length; j < lj; ++j){
+                var hook = path_hooks[j]
                 try{
                     finder = $B.$call(hook)(path_entry)
                     $B.path_importer_cache[path_entry] = finder
@@ -751,7 +816,7 @@ PathEntryFinder.find_spec = function(self, fullname){
         hint = self.hint,
         base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
         modpaths = [],
-        py_ext = $B.$options.python_extension // defaults to .py (issue #1748)
+        py_ext = $B.get_option('python_extension') // defaults to .py (issue #1748)
     var tryall = hint === undefined
     if(tryall || hint == 'py'){
         // either py or undefined , try py code
@@ -840,6 +905,21 @@ var url_hook = $B.url_hook = function(path_entry){
     return PathEntryFinder.$factory(path_entry)
 }
 
+function get_path(){
+    var filename = $B.get_filename()
+    return $B.import_info[filename].path
+}
+
+function get_meta_path(){
+    var filename = $B.get_filename()
+    return $B.import_info[filename].meta_path
+}
+
+function get_path_hooks(){
+    var filename = $B.get_filename()
+    return $B.import_info[filename].path_hooks
+}
+
 function import_engine(mod_name, _path, from_stdlib){
     /*
     Main import engine. Uses finders in sys.meta_math.
@@ -872,7 +952,7 @@ function import_engine(mod_name, _path, from_stdlib){
     If no spec was found, raise ModuleNotFoundError.
     If one of the methods raise an exception, raise it.
     */
-    var meta_path = $B.meta_path.slice(),
+    var meta_path = get_meta_path().slice(),
         _sys_modules = $B.imported,
         _loader,
         spec
@@ -1254,7 +1334,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     if($B.$options.debug == 10){
        console.log("$import "+mod_name)
        console.log("use VFS ? "+$B.use_VFS)
-       console.log("use static stdlib paths ? "+$B.static_stdlib_import)
+       console.log("use static stdlib paths ? " +
+           $B.get_option('static_stdlib_import'))
     }
     //if ($B.$options.debug == 10) {show_ns()}
 
@@ -1437,10 +1518,6 @@ $B.import_all = function(locals, module){
         }
     }
 }
-
-// List of path hooks. It is changed by function brython() depending
-// on the options passed
-$B.$path_hooks = [url_hook]
 
 // List of finders, also used by brython()
 $B.$meta_path = [VFSFinder, StdlibStaticFinder, PathFinder]
