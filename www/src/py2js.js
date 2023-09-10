@@ -8540,25 +8540,17 @@ var status = {
     first_unnamed_script: true
 }
 
+$B.dispatch_load_event = function(script){
+    // dispatch 'load' event to be able to use the script when loaded
+    // (cf issue 2215)
+    script.dispatchEvent(new Event('load'))
+}
+
 function injectPythonScript(addedNode){
     // callback function for the MutationObserver used after brython() has
     // been called
    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
-        python_scripts.push(addedNode)
-        var script_id = set_script_id(addedNode)
-        console.log('inject script', addedNode)
-        // call brython() to process the script.
-        try{
-            var options = clone($B.$options)
-            options.ids = [script_id]
-            brython(options)
-        }catch(err){
-            $B.handle_error(err)
-        }
-        // dispatch 'load' event to be able to use the script when loaded
-        // (cf issue 2215)
-        var load_event = new Event('load')
-        addedNode.dispatchEvent(load_event)
+       run_scripts([addedNode])
    }
 }
 
@@ -8594,6 +8586,8 @@ var brython = $B.parser.brython = function(options){
     if(!($B.isWebWorker || $B.isNode)){
         if(! status.brython_called){
             // first time brython() is called
+            $B.save_options = clone(options)
+            $B.$options = $B.parse_options(options)
             status.brython_called = true
             startup_observer.disconnect()
             // observe subsequent injections
@@ -8603,12 +8597,12 @@ var brython = $B.parser.brython = function(options){
                   injectPythonScript(addedNode);
                 }
               }
-            });
+            })
 
             inject_observer.observe(document.documentElement, {
               childList: true,
               subtree: true
-            });
+            })
         }
     }else if($B.isNode){
         return
@@ -8621,8 +8615,6 @@ var brython = $B.parser.brython = function(options){
 
     var scripts = [],
         webworkers = []
-
-    $B.$options = $B.parse_options(options)
 
     // URL of the script where function brython() is called
     // Remove part after # (cf. issue #2035)
@@ -8650,6 +8642,7 @@ var brython = $B.parser.brython = function(options){
             if(script){
                 scripts.push(script)
             }else{
+                console.log(`no script with id '${id}'`)
                 throw _b_.KeyError.$factory(`no script with id '${id}'`)
             }
         }
@@ -8659,132 +8652,11 @@ var brython = $B.parser.brython = function(options){
         var scripts = python_scripts.slice()
     }
 
-    // clear scripts list
-    python_scripts.length = 0
-
-    // Split between webworkers and other scripts
-    var webworkers = scripts.filter(script => script.className === 'webworker'),
-        scripts = scripts.filter(script => script.className !== 'webworker')
-
     var module_name
     if($B.get_page_option('ipy_id') !== undefined){
-        // The following lines are included to allow to run brython scripts in
-        // the IPython/Jupyter notebook using a cell magic. Have a look at
-        // https://github.com/kikocorreoso/brythonmagic for more info.
-        module_name = '__main__'
-        var src = "",
-            js,
-            root
-        for(var script of scripts){
-            src += (script.innerHTML || script.textContent)
-        }
-        try{
-            // Conversion of Python source code to Javascript
-            root = $B.py2js(src, module_name, module_name)
-            js = root.to_js()
-            if($B.debug > 1){
-                $log(js)
-            }
-
-            // Run resulting Javascript
-            eval(js)
-
-            root = null
-            js = null
-
-        }catch($err){
-            root = null
-            js = null
-            console.log($err)
-            if($B.debug > 1){
-                console.log($err)
-                for(var attr in $err){
-                   console.log(attr + ' : ', $err[attr])
-                }
-            }
-
-            // If the error was not caught by the Python runtime, build an
-            // instance of a Python exception
-            if($err.$py_error === undefined){
-                console.log('Javascript error', $err)
-                $err = _b_.RuntimeError.$factory($err + '')
-            }
-
-            // Print the error traceback on the standard error stream
-            var $trace = $B.$getattr($err, 'info') + '\n' + $err.__name__ +
-                ': ' + $err.args
-            try{
-                $B.$getattr($B.get_stderr(), 'write')($trace)
-            }catch(print_exc_err){
-                console.log($trace)
-            }
-            // Throw the error to stop execution
-            throw $err
-        }
+        run_brython_magic(scripts)
     }else{
-        if(scripts.length > 0 || $B.isWebWorker){
-            if($B.get_page_option('indexedDB') && $B.has_indexedDB &&
-                    $B.hasOwnProperty("VFS")){
-                if($B.tasks.length > 0){
-                    console.log('bizarre', $B.tasks.slice())
-                    console.log('idbctx', $B.idb_cx)
-                    alert()
-                }
-                $B.tasks.push([$B.idb_open])
-            }
-        }
-        var src
-        for(var worker of webworkers){
-            if(worker.src){
-                // format <script type="text/python" src="python_script.py">
-                // get source code by an Ajax call
-                $B.tasks.push([$B.ajax_load_script,
-                    {script: worker, name: worker.id, url: worker.src, is_ww: true}])
-            }else{
-                // Get source code inside the script element
-                var source = (worker.innerText || worker.textContent)
-                source = unindent(source) // remove global indentation
-                // remove leading CR if any
-                source = source.replace(/^\n/, '')
-                $B.webworkers[worker.id] = worker
-                var filename = $B.script_filename = $B.script_path + "#" + worker.id
-                $B.url2name[filename] = worker.id
-                $B.file_cache[filename] = source
-                $B.scripts[filename] = worker
-            }
-        }
-
-        for(var script of scripts){
-            module_name = script_to_id.get(script)
-            // Get Python source code
-            if(script.src){
-                // format <script type="text/python" src="python_script.py">
-                // get source code by an Ajax call
-                $B.tasks.push([$B.ajax_load_script,
-                    {script, name: module_name, url: script.src, id: script.id}])
-            }else{
-                // Get source code inside the script element
-                src = (script.innerHTML || script.textContent)
-                src = unindent(src) // remove global indentation
-                // remove leading CR if any
-                src = src.replace(/^\n/, '')
-                // remove trailing \n
-                if(src.endsWith('\n')){
-                    src = src.substr(0, src.length - 1)
-                }
-                var filename = $B.script_filename = $B.script_path + "#" + module_name
-                // store source code
-                $B.file_cache[filename] = src
-                $B.url2name[filename] = module_name
-                $B.scripts[filename] = script
-                $B.tasks.push([$B.run_script, script, src, module_name,
-                               filename, true])
-            }
-        }
-    }
-
-    if($B.get_page_option('options.ipy_id') === undefined){
-        $B.loop()
+        run_scripts(scripts)
     }
 
     /* Uncomment to check the names added in global Javascript namespace
@@ -8878,6 +8750,127 @@ $B.get_option_from_filename = function(option, filename){
         return convert_option(option, value)
     }else{
         return $B.get_page_option(option)
+    }
+}
+
+function run_scripts(scripts){
+    // Split between webworkers and other scripts
+    var webworkers = scripts.filter(script => script.className === 'webworker'),
+        scripts = scripts.filter(script => script.className !== 'webworker')
+
+    var module_name
+
+    if(scripts.length > 0 || $B.isWebWorker){
+        if($B.get_page_option('indexedDB') && $B.has_indexedDB &&
+                $B.hasOwnProperty("VFS")){
+            $B.tasks.push([$B.idb_open])
+        }
+    }
+    var src
+    for(var worker of webworkers){
+        if(worker.src){
+            // format <script type="text/python" src="python_script.py">
+            // get source code by an Ajax call
+            $B.tasks.push([$B.ajax_load_script,
+                {script: worker, name: worker.id, url: worker.src, is_ww: true}])
+        }else{
+            // Get source code inside the script element
+            var source = (worker.innerText || worker.textContent)
+            source = unindent(source) // remove global indentation
+            // remove leading CR if any
+            source = source.replace(/^\n/, '')
+            $B.webworkers[worker.id] = worker
+            var filename = $B.script_filename = $B.script_path + "#" + worker.id
+            $B.url2name[filename] = worker.id
+            $B.file_cache[filename] = source
+            $B.scripts[filename] = worker
+            $B.dispatch_load_event(worker)
+        }
+    }
+
+    for(var script of scripts){
+        module_name = script_to_id.get(script)
+        // Get Python source code
+        if(script.src){
+            // format <script type="text/python" src="python_script.py">
+            // get source code by an Ajax call
+            $B.tasks.push([$B.ajax_load_script,
+                {script, name: module_name, url: script.src, id: script.id}])
+        }else{
+            // Get source code inside the script element
+            src = (script.innerHTML || script.textContent)
+            src = unindent(src) // remove global indentation
+            // remove leading CR if any
+            src = src.replace(/^\n/, '')
+            // remove trailing \n
+            if(src.endsWith('\n')){
+                src = src.substr(0, src.length - 1)
+            }
+            var filename = $B.script_filename = $B.script_path + "#" + module_name
+            // store source code
+            $B.file_cache[filename] = src
+            $B.url2name[filename] = module_name
+            $B.scripts[filename] = script
+            $B.tasks.push([$B.run_script, script, src, module_name,
+                           filename, true])
+        }
+    }
+    $B.loop()
+}
+
+function run_brython_magic(scripts){
+    // The following lines are included to allow to run brython scripts in
+    // the IPython/Jupyter notebook using a cell magic. Have a look at
+    // https://github.com/kikocorreoso/brythonmagic for more info.
+    module_name = '__main__'
+    var src = "",
+        js,
+        root
+    for(var script of scripts){
+        src += (script.innerHTML || script.textContent)
+    }
+    try{
+        // Conversion of Python source code to Javascript
+        root = $B.py2js(src, module_name, module_name)
+        js = root.to_js()
+        if($B.debug > 1){
+            $log(js)
+        }
+
+        // Run resulting Javascript
+        eval(js)
+
+        root = null
+        js = null
+
+    }catch($err){
+        root = null
+        js = null
+        console.log($err)
+        if($B.debug > 1){
+            console.log($err)
+            for(var attr in $err){
+               console.log(attr + ' : ', $err[attr])
+            }
+        }
+
+        // If the error was not caught by the Python runtime, build an
+        // instance of a Python exception
+        if($err.$py_error === undefined){
+            console.log('Javascript error', $err)
+            $err = _b_.RuntimeError.$factory($err + '')
+        }
+
+        // Print the error traceback on the standard error stream
+        var $trace = $B.$getattr($err, 'info') + '\n' + $err.__name__ +
+            ': ' + $err.args
+        try{
+            $B.$getattr($B.get_stderr(), 'write')($trace)
+        }catch(print_exc_err){
+            console.log($trace)
+        }
+        // Throw the error to stop execution
+        throw $err
     }
 }
 
