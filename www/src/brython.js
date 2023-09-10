@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-09 11:30:04.076793"
-__BRYTHON__.timestamp=1694251804076
+__BRYTHON__.compiled_date="2023-09-10 09:59:52.128580"
+__BRYTHON__.timestamp=1694332792128
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4496,15 +4496,10 @@ if(addedNode.tagName=='SCRIPT' &&
 addedNode.type=="text/python3")){python_scripts.push(addedNode)}}
 function Injected(id){this.id=id}
 var status={brython_called:false,first_unnamed_script:true}
+$B.dispatch_load_event=function(script){
+script.dispatchEvent(new Event('load'))}
 function injectPythonScript(addedNode){
-if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){python_scripts.push(addedNode)
-var script_id=set_script_id(addedNode)
-console.log('inject script',addedNode)
-try{var options=clone($B.$options)
-options.ids=[script_id]
-brython(options)}catch(err){$B.handle_error(err)}
-var load_event=new Event('load')
-addedNode.dispatchEvent(load_event)}}
+if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){run_scripts([addedNode])}}
 function set_script_id(script){if(script_to_id.has(script)){}else if(script.id){if(defined_ids[script.id]){throw Error("Brython error : Found 2 scripts with the "+
 "same id '"+script.id+"'")}else{defined_ids[script.id]=true}
 script_to_id.set(script,script.id)}else{if(script.className==='webworker'){throw _b_.AttributeError.$factory(
@@ -4515,13 +4510,14 @@ var id=script_to_id.get(script)
 id_to_script[id]=script
 return id}
 var brython=$B.parser.brython=function(options){if(!($B.isWebWorker ||$B.isNode)){if(! status.brython_called){
+$B.save_options=clone(options)
+$B.$options=$B.parse_options(options)
 status.brython_called=true
 startup_observer.disconnect()
-var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode);}}});
-inject_observer.observe(document.documentElement,{childList:true,subtree:true});}}else if($B.isNode){return}
+var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode);}}})
+inject_observer.observe(document.documentElement,{childList:true,subtree:true})}}else if($B.isNode){return}
 for(var python_script of python_scripts){set_script_id(python_script)}
 var scripts=[],webworkers=[]
-$B.$options=$B.parse_options(options)
 var $href=$B.script_path=_window.location.href.split('#')[0],$href_elts=$href.split('/')
 $href_elts.pop()
 if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
@@ -4531,59 +4527,10 @@ var ids=$B.get_page_option('ids')||$B.get_page_option('ipy_id')
 if(ids !==undefined){if(! Array.isArray(ids)){throw _b_.ValueError.$factory("ids is not a list")}
 if(ids.length==0){}
 for(var id of ids){var script=id_to_script[id]
-if(script){scripts.push(script)}else{throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{var scripts=python_scripts.slice()}
-python_scripts.length=0
-var webworkers=scripts.filter(script=> script.className==='webworker'),scripts=scripts.filter(script=> script.className !=='webworker')
+if(script){scripts.push(script)}else{console.log(`no script with id '${id}'`)
+throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{var scripts=python_scripts.slice()}
 var module_name
-if($B.get_page_option('ipy_id')!==undefined){
-module_name='__main__'
-var src="",js,root
-for(var script of scripts){src+=(script.innerHTML ||script.textContent)}
-try{
-root=$B.py2js(src,module_name,module_name)
-js=root.to_js()
-if($B.debug > 1){$log(js)}
-eval(js)
-root=null
-js=null}catch($err){root=null
-js=null
-console.log($err)
-if($B.debug > 1){console.log($err)
-for(var attr in $err){console.log(attr+' : ',$err[attr])}}
-if($err.$py_error===undefined){console.log('Javascript error',$err)
-$err=_b_.RuntimeError.$factory($err+'')}
-var $trace=$B.$getattr($err,'info')+'\n'+$err.__name__+
-': '+$err.args
-try{$B.$getattr($B.get_stderr(),'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{if(scripts.length > 0 ||$B.isWebWorker){if($B.get_page_option('indexedDB')&& $B.has_indexedDB &&
-$B.hasOwnProperty("VFS")){if($B.tasks.length > 0){console.log('bizarre',$B.tasks.slice())
-console.log('idbctx',$B.idb_cx)
-alert()}
-$B.tasks.push([$B.idb_open])}}
-var src
-for(var worker of webworkers){if(worker.src){
-$B.tasks.push([$B.ajax_load_script,{script:worker,name:worker.id,url:worker.src,is_ww:true}])}else{
-var source=(worker.innerText ||worker.textContent)
-source=unindent(source)
-source=source.replace(/^\n/,'')
-$B.webworkers[worker.id]=worker
-var filename=$B.script_filename=$B.script_path+"#"+worker.id
-$B.url2name[filename]=worker.id
-$B.file_cache[filename]=source
-$B.scripts[filename]=worker}}
-for(var script of scripts){module_name=script_to_id.get(script)
-if(script.src){
-$B.tasks.push([$B.ajax_load_script,{script,name:module_name,url:script.src,id:script.id}])}else{
-src=(script.innerHTML ||script.textContent)
-src=unindent(src)
-src=src.replace(/^\n/,'')
-if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
-var filename=$B.script_filename=$B.script_path+"#"+module_name
-$B.file_cache[filename]=src
-$B.url2name[filename]=module_name
-$B.scripts[filename]=script
-$B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}}
-if($B.get_page_option('options.ipy_id')===undefined){$B.loop()}}
+if($B.get_page_option('ipy_id')!==undefined){run_brython_magic(scripts)}else{run_scripts(scripts)}}
 function convert_option(option,value){
 if(option=='debug'){if(typeof value=='string' && value.match(/^\d+$/)){return parseInt(value)}else{if(value !==null && value !==undefined){console.debug(`Invalid value for debug: ${value}`)}}}else if(option=='cache' ||
 option=='indexeddb' ||
@@ -4604,6 +4551,57 @@ return $B.get_option_from_filename(option,filename)}
 $B.get_option_from_filename=function(option,filename){if((! filename)||! $B.scripts[filename]){return $B.get_page_option(option)}
 var value=$B.scripts[filename].getAttribute(option)
 if(value !==null){return convert_option(option,value)}else{return $B.get_page_option(option)}}
+function run_scripts(scripts){
+var webworkers=scripts.filter(script=> script.className==='webworker'),scripts=scripts.filter(script=> script.className !=='webworker')
+var module_name
+if(scripts.length > 0 ||$B.isWebWorker){if($B.get_page_option('indexedDB')&& $B.has_indexedDB &&
+$B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
+var src
+for(var worker of webworkers){if(worker.src){
+$B.tasks.push([$B.ajax_load_script,{script:worker,name:worker.id,url:worker.src,is_ww:true}])}else{
+var source=(worker.innerText ||worker.textContent)
+source=unindent(source)
+source=source.replace(/^\n/,'')
+$B.webworkers[worker.id]=worker
+var filename=$B.script_filename=$B.script_path+"#"+worker.id
+$B.url2name[filename]=worker.id
+$B.file_cache[filename]=source
+$B.scripts[filename]=worker
+$B.dispatch_load_event(worker)}}
+for(var script of scripts){module_name=script_to_id.get(script)
+if(script.src){
+$B.tasks.push([$B.ajax_load_script,{script,name:module_name,url:script.src,id:script.id}])}else{
+src=(script.innerHTML ||script.textContent)
+src=unindent(src)
+src=src.replace(/^\n/,'')
+if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
+var filename=$B.script_filename=$B.script_path+"#"+module_name
+$B.file_cache[filename]=src
+$B.url2name[filename]=module_name
+$B.scripts[filename]=script
+$B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}
+$B.loop()}
+function run_brython_magic(scripts){
+module_name='__main__'
+var src="",js,root
+for(var script of scripts){src+=(script.innerHTML ||script.textContent)}
+try{
+root=$B.py2js(src,module_name,module_name)
+js=root.to_js()
+if($B.debug > 1){$log(js)}
+eval(js)
+root=null
+js=null}catch($err){root=null
+js=null
+console.log($err)
+if($B.debug > 1){console.log($err)
+for(var attr in $err){console.log(attr+' : ',$err[attr])}}
+if($err.$py_error===undefined){console.log('Javascript error',$err)
+$err=_b_.RuntimeError.$factory($err+'')}
+var $trace=$B.$getattr($err,'info')+'\n'+$err.__name__+
+': '+$err.args
+try{$B.$getattr($B.get_stderr(),'write')($trace)}catch(print_exc_err){console.log($trace)}
+throw $err}}
 $B.run_script=function(script,src,name,url,run_loop){
 $B.file_cache[url]=src
 $B.url2name[url]=name
@@ -4757,7 +4755,8 @@ var req=new XMLHttpRequest(),cache=$B.get_option('cache'),qs=cache ? '' :
 req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
 if(s.is_ww){$B.webworkers[name]=script
-$B.file_cache[url]=src}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
+$B.file_cache[url]=src
+$B.dispatch_load_event(script)}else{$B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])}
 loop()}else if(this.status==404){throw Error(url+" not found")}}}
 req.send()}else{throw _b_.IOError.$factory("can't load external script at "+
 script.url+" (Ajax calls not supported with protocol file:///)")}}

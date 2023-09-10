@@ -373,6 +373,8 @@ $B.ajax_load_script = function(s){
                     if(s.is_ww){
                         $B.webworkers[name] = script
                         $B.file_cache[url] = src
+                        // dispatch 'load' event (cf. issue 2215)
+                        $B.dispatch_load_event(script)
                     }else{
                         $B.tasks.splice(0, 0, [$B.run_script, script, src, name,
                             url, true])
