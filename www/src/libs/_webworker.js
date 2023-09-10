@@ -193,7 +193,8 @@ function create_worker(){
     header += `$B.make_import_paths("${filename}")\n`
 
     // Call brython() to initialize internal Brython values
-    header += `brython(${JSON.stringify($B.$options)})\n`
+    var save_option = JSON.stringify($B.save_options)
+    header += `brython(${save_option})\n`
 
     // send dummy message to trigger resolution of Promise
     var ok_token = Math.random().toString(36).substr(2, 8),
