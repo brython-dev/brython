@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-10 09:59:52.128580"
-__BRYTHON__.timestamp=1694332792128
+__BRYTHON__.compiled_date="2023-09-11 08:23:59.859542"
+__BRYTHON__.timestamp=1694413439859
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4534,11 +4534,11 @@ if($B.get_page_option('ipy_id')!==undefined){run_brython_magic(scripts)}else{run
 function convert_option(option,value){
 if(option=='debug'){if(typeof value=='string' && value.match(/^\d+$/)){return parseInt(value)}else{if(value !==null && value !==undefined){console.debug(`Invalid value for debug: ${value}`)}}}else if(option=='cache' ||
 option=='indexeddb' ||
-option=='static_stdlib_import'){if(value=='1' ||value.toLowerCase()=='true'){return true}else if(value=='0' ||value.toLowerCase()=='false'){return false}else{console.debug(`Invalid value for ${option}: ${value}`)}}else if(option=='ids' ||option=='pythonpath'){
+option=='static_stdlib_import'){if(value=='1' ||value.toLowerCase()=='true'){return true}else if(value=='0' ||value.toLowerCase()=='false'){return false}else{console.debug(`Invalid value for ${option}: ${value}`)}}else if(option=='ids' ||option=='pythonpath' ||option=='args'){
 if(typeof value=='string'){if(value.trim().length==0){return[]}
 return value.trim().split(/\s+/)}}
 return default_value[option]}
-const default_option={cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true}
+const default_option={args:[],cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true}
 $B.get_filename=function(){
 if($B.frames_stack.length > 0){return $B.frames_stack[0].__file__}}
 $B.get_page_option=function(option){
@@ -9247,8 +9247,8 @@ run_js(module_contents,path,mod)
 return true}
 function run_js(module_contents,path,_module){
 var module_id="$locals_"+_module.__name__.replace(/\./g,'_')
-try{var $module=new Function(module_id,module_contents+";\nreturn $module")(_module)
-if($B.$options.store){_module.$js=module_contents}}catch(err){console.log(err)
+try{var $module=new Function(module_id,module_contents+
+";\nreturn $module")(_module)}catch(err){console.log(err)
 console.log(path,_module)
 throw err}
 try{$module}catch(err){console.log("no $module")
@@ -9284,7 +9284,7 @@ if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
 console.log('stack',$B.frames_stack.slice())}
 throw err}}
 try{js=compiled ? module_contents :root.to_js()
-if($B.$options.debug==10){console.log("code for module "+module.__name__)
+if($B.get_option('debug')==10){console.log("code for module "+module.__name__)
 console.log($B.format_indent(js,0))}
 var src=js
 js="var $module = (function(){\n"+js
@@ -9670,7 +9670,7 @@ aliases=aliases===undefined ?{}:aliases
 locals=locals===undefined ?{}:locals
 if(test){console.log('step 2, mod_name',mod_name,'fromlist',fromlist)
 alert()}
-if($B.$options.debug==10){console.log("$import "+mod_name)
+if($B.get_option('debug')==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+
 $B.get_option('static_stdlib_import'))}

@@ -181,8 +181,8 @@ function run_js(module_contents, path, _module){
     var module_id = "$locals_" + _module.__name__.replace(/\./g, '_')
 
     try{
-        var $module = new Function(module_id, module_contents + ";\nreturn $module")(_module)
-        if($B.$options.store){_module.$js = module_contents}
+        var $module = new Function(module_id, module_contents + 
+            ";\nreturn $module")(_module)
     }catch(err){
         console.log(err)
         console.log(path, _module)
@@ -281,7 +281,7 @@ function run_py(module_contents, path, module, compiled) {
 
     try{
         js = compiled ? module_contents : root.to_js()
-        if($B.$options.debug == 10){
+        if($B.get_option('debug') == 10){
            console.log("code for module " + module.__name__)
            console.log($B.format_indent(js, 0))
         }
@@ -1331,13 +1331,12 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         alert()
     }
 
-    if($B.$options.debug == 10){
+    if($B.get_option('debug') == 10){
        console.log("$import "+mod_name)
        console.log("use VFS ? "+$B.use_VFS)
        console.log("use static stdlib paths ? " +
            $B.get_option('static_stdlib_import'))
     }
-    //if ($B.$options.debug == 10) {show_ns()}
 
     // [Import spec] Resolve __import__ in global namespace
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1],
