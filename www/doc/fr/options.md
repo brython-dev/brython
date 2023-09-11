@@ -31,7 +31,9 @@ Options disponibles seulement au niveau page
 
 > par défaut, tous les scripts de la page sont exécutés. Cette option
 > spécifie la liste des identifiants des scripts à exécuter (attribut `id` de la
-> balise) sous forme d'une liste séparée par des espaces
+> balise) sous forme d'une liste séparée par des espaces.
+>
+> Si la chaine est vide, aucun script n'est exécuté.
 
 <blockquote>
 ```xml
@@ -51,6 +53,18 @@ Options disponibles au niveau page ou par script
 Une option définie pour un script a priorité sur une option définie au niveau
 de la page.
 
+*args*
+
+> équivalent des arguments passés en ligne de commande, disponibles dans le
+> programme par `sys.argv`. Les valeurs sont des chaines de caractères.
+
+*cache* : utilisation du cache du navigateur
+
+> si la valeur est `true`, les appels Ajax pour importer des
+> modules, charger des scripts externes par `<script src="foo.py">` ou lire
+> des fichiers avec `open()` utilisent le cache du navigateur. Vaut `false`
+> par défaut
+
 *debug* : le mode de débogage
 
 - 0 (valeur par défaut) : aucun débogage. A utiliser quand l'application est
@@ -62,12 +76,10 @@ de la page.
 - 10 : la traduction du code Python et des modules importés est affichée dans
   la console
 
-*cache* : utilisation du cache du navigateur
+*pythonpath*
 
-> si la valeur est `true`, les appels Ajax pour importer des
-> modules, charger des scripts externes par `<script src="foo.py">` ou lire
-> des fichiers avec `open()` utilisent le cache du navigateur. Vaut `false`
-> par défaut
+> une liste, séparée par des espaces, de chemins dans lesquels chercher les
+> modules importés
 
 *static\_stdlib\_import*
 
@@ -75,11 +87,6 @@ de la page.
 > ou des paquetages de la bibliothèque standard, on se sert du tableau de
 > correspondance statique du script __stdlib\_paths.js__. Vaut `true` par
 > défaut
-
-*pythonpath*
-
-> une liste, séparée par des espaces, de chemins dans lesquels chercher les
-> modules importés
 
 La fonction <i>brython(options)</i>
 -----------------------------------

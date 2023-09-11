@@ -31,6 +31,8 @@ Options only available at page level
 > by default, all the scripts in the page are executed. This options specifies
 > a list of scripts to execute, as a space-separated list of identifiers
 > (attribute `id` of the `<script>` tag)
+>
+> If the string is empty, no script is executed.
 
 <blockquote>
 ```xml
@@ -48,7 +50,18 @@ Options available at page or script level
 -----------------------------------------
 
 An option defined at script level (attribute of `<script>`) has precedence
-over the same option defined at page level (attribyte of `<brython-options>`).
+over the same option defined at page level (attribute of `<brython-options>`).
+
+*args*
+
+> equivalent to command-line arguments, available in programs by `sys.argv`.
+> Values are strings.
+
+*cache*
+
+> if set to `true`, the Ajax calls to import modules, load external
+> scripts by `<script src="foo.py">` or read files with `open()` use the
+> browser cache. Defaults to `false`.
 
 *debug* : the debug mode
 
@@ -61,21 +74,15 @@ over the same option defined at page level (attribyte of `<brython-options>`).
 - 10 : the translation of Python code and of the imported modules is printed
   in the console
 
-*cache*
+*pythonpath*
 
-> if set to `true`, the Ajax calls to import modules, load external
-> scripts by `<script src="foo.py">` or read files with `open()` use the
-> browser cache. Defaults to `false`.
+> a space-separated list of paths where imported modules should be searched
 
 *static\_stdlib\_import*
 
 > boolean, indicates if, in order to import modules or packages from the
 > standard library, the static mapping table in the script
 > __stdlib\_paths.js__ should be used. Defaults to `true`
-
-*pythonpath*
-
-> a space-separated list of paths where imported modules should be searched
 
 The function <i>brython(options)</i>
 -----------------------------------

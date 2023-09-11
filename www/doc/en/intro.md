@@ -28,7 +28,7 @@ from browser.widgets.dialog import InfoDialog
 def click(ev):
     InfoDialog("Hello", f"Hello, {document['zone'].value} !")
 
-# bind event 'click' on button to function echo
+# bind event 'click' on button to callback function
 document["echo"].bind("click", click)
 </script>
 <input id="zone">
