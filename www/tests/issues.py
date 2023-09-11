@@ -3184,6 +3184,9 @@ assert x[0] == -1
 assert_raises(SyntaxError, exec, "def f():\n  await x")
 assert_raises(SyntaxError, exec, "await x")
 
+# issue 2217
+assert_raises(SyntaxError, exec, 'type(lambda))')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

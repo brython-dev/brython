@@ -4354,6 +4354,10 @@ LambdaCtx.prototype.transition = function(token, value){
         if(token == '('){
             raise_syntax_error(context,
                 'Lambda expression parameters cannot be parenthesized')
+        }else if(context.tree.length > 0 &&
+                context.tree[0].type == 'func_args'){
+            // cf issue #2217: infinite loop for type(lambda)
+            raise_syntax_error(context)
         }else{
             return transition(new FuncArgs(context), token, value)
         }
