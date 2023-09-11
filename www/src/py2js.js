@@ -8689,8 +8689,8 @@ function convert_option(option, value){
         }else{
             console.debug(`Invalid value for ${option}: ${value}`)
         }
-    }else if(option == 'ids' || option == 'pythonpath'){
-        // passed as a list of space-separated ids or paths
+    }else if(option == 'ids' || option == 'pythonpath' || option == 'args'){
+        // passed as a list of space-separated values
         if(typeof value == 'string'){
             if(value.trim().length == 0){
                 return []
@@ -8702,6 +8702,7 @@ function convert_option(option, value){
 }
 
 const default_option = {
+    args: [],
     cache: false,
     debug: 1,
     indexeddb: true,
