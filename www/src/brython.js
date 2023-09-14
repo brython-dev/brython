@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-14 09:11:02.747379"
-__BRYTHON__.timestamp=1694675462747
+__BRYTHON__.compiled_date="2023-09-14 09:30:56.058561"
+__BRYTHON__.timestamp=1694676656058
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9528,7 +9528,8 @@ var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
 function get_info(info){var filename=$B.get_filename(),import_info=$B.import_info[filename]
-if(import_info===undefined){$B.make_import_paths(filename)}
+if(import_info===undefined){$B.make_import_paths(filename)
+console.log('create import info for filename',filename,$B.import_info[filename])}
 return $B.import_info[filename][info]}
 function import_engine(mod_name,_path,from_stdlib){
 var meta_path=get_info('meta_path').slice(),_sys_modules=$B.imported,_loader,spec
