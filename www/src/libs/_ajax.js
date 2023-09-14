@@ -361,7 +361,6 @@ function _request_without_body(method){
         encoding = self.encoding = items.encoding
         qs = items.data,
         timeout = items.timeout
-    console.log('items', items)
     set_timeout(self, timeout)
     if(qs){
         url += "?" + qs
