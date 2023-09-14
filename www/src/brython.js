@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-14 08:11:30.740484"
-__BRYTHON__.timestamp=1694671890740
+__BRYTHON__.compiled_date="2023-09-14 09:11:02.747379"
+__BRYTHON__.timestamp=1694675462747
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9472,12 +9472,12 @@ __class__:PathFinder}}
 PathFinder.find_spec=function(cls,fullname,path){if($B.VFS && $B.VFS[fullname]){
 return _b_.None}
 if($B.is_none(path)){
-path=get_path()}
+path=get_info('path')}
 for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
 if(path_entry[path_entry.length-1]!="/"){path_entry+="/"}
 var finder=$B.path_importer_cache[path_entry]
 if(finder===undefined){
-var path_hooks=get_path_hooks()
+var path_hooks=get_info('path_hooks')
 for(var j=0,lj=path_hooks.length;j < lj;++j){var hook=path_hooks[j]
 try{finder=$B.$call(hook)(path_entry)
 $B.path_importer_cache[path_entry]=finder
@@ -9527,14 +9527,11 @@ if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(me
 var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
-function get_path(){var filename=$B.get_filename()
-return $B.import_info[filename].path}
-function get_meta_path(){var filename=$B.get_filename()
-return $B.import_info[filename].meta_path}
-function get_path_hooks(){var filename=$B.get_filename()
-return $B.import_info[filename].path_hooks}
+function get_info(info){var filename=$B.get_filename(),import_info=$B.import_info[filename]
+if(import_info===undefined){$B.make_import_paths(filename)}
+return $B.import_info[filename][info]}
 function import_engine(mod_name,_path,from_stdlib){
-var meta_path=get_meta_path().slice(),_sys_modules=$B.imported,_loader,spec
+var meta_path=get_info('meta_path').slice(),_sys_modules=$B.imported,_loader,spec
 if(from_stdlib){
 var path_ix=meta_path.indexOf($B.finders["path"])
 if(path_ix >-1){meta_path.splice(path_ix,1)}}

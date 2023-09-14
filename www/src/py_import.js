@@ -181,7 +181,7 @@ function run_js(module_contents, path, _module){
     var module_id = "$locals_" + _module.__name__.replace(/\./g, '_')
 
     try{
-        var $module = new Function(module_id, module_contents + 
+        var $module = new Function(module_id, module_contents +
             ";\nreturn $module")(_module)
     }catch(err){
         console.log(err)
@@ -742,7 +742,7 @@ PathFinder.find_spec = function(cls, fullname, path){
     }
     if($B.is_none(path)){
         // [Import spec] Top-level import , use sys.path
-        path = get_path()
+        path = get_info('path')
     }
 
     for(var i = 0, li = path.length; i < li; ++i){
@@ -756,7 +756,7 @@ PathFinder.find_spec = function(cls, fullname, path){
             // Use path hooks, a list of callables that return finders.
             // By default, the only path hook is function url_hook below,
             // which returns PathEntryFinder.
-            var path_hooks = get_path_hooks()
+            var path_hooks = get_info('path_hooks')
             for(var j = 0, lj = path_hooks.length; j < lj; ++j){
                 var hook = path_hooks[j]
                 try{
@@ -905,19 +905,13 @@ var url_hook = $B.url_hook = function(path_entry){
     return PathEntryFinder.$factory(path_entry)
 }
 
-function get_path(){
-    var filename = $B.get_filename()
-    return $B.import_info[filename].path
-}
-
-function get_meta_path(){
-    var filename = $B.get_filename()
-    return $B.import_info[filename].meta_path
-}
-
-function get_path_hooks(){
-    var filename = $B.get_filename()
-    return $B.import_info[filename].path_hooks
+function get_info(info){
+    var filename = $B.get_filename(),
+        import_info = $B.import_info[filename]
+    if(import_info === undefined){
+        $B.make_import_paths(filename)
+    }
+    return $B.import_info[filename][info]
 }
 
 function import_engine(mod_name, _path, from_stdlib){
@@ -952,7 +946,7 @@ function import_engine(mod_name, _path, from_stdlib){
     If no spec was found, raise ModuleNotFoundError.
     If one of the methods raise an exception, raise it.
     */
-    var meta_path = get_meta_path().slice(),
+    var meta_path = get_info('meta_path').slice(),
         _sys_modules = $B.imported,
         _loader,
         spec
