@@ -908,11 +908,8 @@ var url_hook = $B.url_hook = function(path_entry){
 function get_info(info){
     var filename = $B.get_filename(),
         import_info = $B.import_info[filename]
-    if(import_info === undefined){
+    if(import_info === undefined && info == 'meta_path'){
         $B.make_import_paths(filename)
-        console.log('get info', info,
-            'create import info for filename', filename,
-            'path', $B.import_info[filename].path)
     }
     return $B.import_info[filename][info]
 }

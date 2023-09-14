@@ -8715,10 +8715,7 @@ const default_option = {
 }
 
 $B.get_filename = function(){
-    // Get current filename from frames_stack
-     if($B.frames_stack.length > 0){
-        return $B.frames_stack[0].__file__
-    }
+    return $B.script_filename
 }
 
 $B.get_page_option = function(option){

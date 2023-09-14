@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-14 09:42:05.010957"
-__BRYTHON__.timestamp=1694677325010
+__BRYTHON__.compiled_date="2023-09-14 10:18:57.122784"
+__BRYTHON__.timestamp=1694679537122
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4541,8 +4541,7 @@ if(typeof value=='string'){if(value.trim().length==0){return[]}
 return value.trim().split(/\s+/)}}
 return default_value[option]}
 const default_option={args:[],cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true}
-$B.get_filename=function(){
-if($B.frames_stack.length > 0){return $B.frames_stack[0].__file__}}
+$B.get_filename=function(){return $B.script_filename}
 $B.get_page_option=function(option){
 if($B.$options.hasOwnProperty(option)){
 return $B.$options[option]}else if(brython_options.hasOwnProperty(option.toLowerCase())){
@@ -9528,8 +9527,7 @@ var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
 function get_info(info){var filename=$B.get_filename(),import_info=$B.import_info[filename]
-if(import_info===undefined){$B.make_import_paths(filename)
-console.log('get info',info,'create import info for filename',filename,'path',$B.import_info[filename].path)}
+if(import_info===undefined && info=='meta_path'){$B.make_import_paths(filename)}
 return $B.import_info[filename][info]}
 function import_engine(mod_name,_path,from_stdlib){
 var meta_path=get_info('meta_path').slice(),_sys_modules=$B.imported,_loader,spec
