@@ -910,7 +910,9 @@ function get_info(info){
         import_info = $B.import_info[filename]
     if(import_info === undefined){
         $B.make_import_paths(filename)
-        console.log('create import info for filename', filename, $B.import_info[filename])
+        console.log('get info', info,
+            'create import info for filename', filename,
+            'path', $B.import_info[filename].path)
     }
     return $B.import_info[filename][info]
 }
