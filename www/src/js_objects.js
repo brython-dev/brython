@@ -346,9 +346,6 @@ js_list_meta.__getattribute__ = function(_self, attr){
             for(var i = 1, len = arguments.length; i < len; i++){
                 args.push(pyobj2jsobj(arguments[i]))
             }
-            if(attr == '__contains__'){
-                console.log(attr, args)
-            }
             return _b_.list[attr].apply(null, args)
         }
     }else if(['__add__', '__contains__', '__eq__', '__getitem__', '__mul__',
@@ -371,7 +368,7 @@ js_list_meta.__getattribute__ = function(_self, attr){
 $B.set_func_names(js_list_meta, 'builtins')
 
 
-var js_list = $B.make_class('jslist')
+var js_list = $B.js_list = $B.make_class('jslist')
 js_list.__class__ = js_list_meta
 js_list.__mro__ = [_b_.list, _b_.object]
 
@@ -401,8 +398,9 @@ $B.set_func_names(js_list, 'builtins')
 $B.JSObj = $B.make_class("JSObject",
     function(jsobj){
         if(Array.isArray(jsobj)){
-            // Return a Python object that wraps the Javascript list
-            jsobj.__class__ = js_list
+            // Set a Brython-specific attribute to identify JS Arrays that
+            // come from JS code. Cf. discussion #2226
+            jsobj.$is_js_list = true
         }else if(typeof jsobj == "function"){
             jsobj.$is_js_func = true
             jsobj.__new__ = function(){

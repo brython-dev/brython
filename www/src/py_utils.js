@@ -442,7 +442,9 @@ $B.get_class = function(obj){
                 return $B.function
             case "object":
                 if(Array.isArray(obj)){
-                    if(Object.getPrototypeOf(obj) === Array.prototype){
+                    if(obj.$is_js_list){
+                        return $B.js_list
+                    }else if(Object.getPrototypeOf(obj) === Array.prototype){
                         obj.__class__ = _b_.list
                         return _b_.list
                     }
@@ -890,9 +892,12 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
 
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
+            ! obj.$is_js_list &&
             typeof item == "number" &&
-            !_b_.isinstance(obj, _b_.tuple)){
-        if(item < 0){item += obj.length}
+            ! _b_.isinstance(obj, _b_.tuple)){
+        if(item < 0){
+            item += obj.length
+        }
         if(obj[item] === undefined){
             throw _b_.IndexError.$factory("list assignment index out of range")
         }

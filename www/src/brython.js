@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-11 09:08:18.697914"
-__BRYTHON__.timestamp=1694416098697
+__BRYTHON__.compiled_date="2023-09-14 08:11:30.740484"
+__BRYTHON__.timestamp=1694671890740
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4963,7 +4963,7 @@ if(obj.$is_js_func){
 return $B.JSObj}
 return $B.function
 case "object":
-if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
+if(Array.isArray(obj)){if(obj.$is_js_list){return $B.js_list}else if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
 return _b_.list}}else if(obj instanceof $B.str_dict){return _b_.dict}else if(typeof Node !=="undefined" 
 && obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
 $B.DOMNode}
@@ -5114,8 +5114,9 @@ if(nb !=repl.length){throw _b_.ValueError.$factory(
 for(var i=start;test(i);i+=step){obj[i]=repl[j]
 j++}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
+! obj.$is_js_list &&
 typeof item=="number" &&
-!_b_.isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
+! _b_.isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
 obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
@@ -13409,13 +13410,12 @@ js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined
 if(['__delitem__','__setitem__'].indexOf(attr)>-1){
 return function(){var args=[arguments[0]]
 for(var i=1,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
-if(attr=='__contains__'){console.log(attr,args)}
 return _b_.list[attr].apply(null,args)}}else if(['__add__','__contains__','__eq__','__getitem__','__mul__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
 return function(){return jsobj2pyobj(_b_.list[attr].call(null,jsobj2pyobj(arguments[0]),...Array.from(arguments).slice(1)))}}
 return function(){var js_list=arguments[0],t=jsobj2pyobj(js_list),args=[t]
 return _b_.list[attr].apply(null,args)}}
 $B.set_func_names(js_list_meta,'builtins')
-var js_list=$B.make_class('jslist')
+var js_list=$B.js_list=$B.make_class('jslist')
 js_list.__class__=js_list_meta
 js_list.__mro__=[_b_.list,_b_.object]
 js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
@@ -13429,7 +13429,7 @@ return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 $B.set_func_names(js_list,'builtins')
 $B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){
-jsobj.__class__=js_list}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
+jsobj.$is_js_list=true}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
 jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
 return jsobj}
 )

@@ -65,6 +65,8 @@ assert len(t.headers) == 1
 
 t["headers"].append({})
 assert len(t["headers"]) == 2
+t["headers"].pop()
+assert len(t.headers) == 1
 t["headers"][0]["value"] = 9
 assert t.headers[0].value == 9
 
