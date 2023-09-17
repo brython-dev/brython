@@ -18,6 +18,13 @@ var Module = $B.module = $B.make_class("module",
     }
 )
 
+Module.__dir__ = function(self){
+    if(self.__dir__){
+        return $B.$call(self.__dir__)()
+    }
+    return _b_.object.__dir__(self)
+}
+
 Module.__new__ = function(cls, name, doc, $package){
     return {
         __class__: cls,
