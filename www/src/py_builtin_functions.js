@@ -482,7 +482,7 @@ var dir = _b_.dir = function(obj){
         return $B.$call(dir_func)(obj)
     }
     try{
-        var res = $B.$call($B.$getattr(obj, '__dir__'))()
+        var res = $B.$call($B.$getattr(klass, '__dir__'))(obj)
         res = _b_.list.$factory(res)
         return res
     }catch (err){
