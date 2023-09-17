@@ -23,6 +23,9 @@ class BrythonModuleTestCase(unittest.TestCase):
 
 def qunit_test(testName, test, result):
     def wrapped_test(qunit):
+        # reset sys.path because module tester is in /tests
+        import sys
+        sys.path = ['/tests']
         test(result)
         if result.details:
             msg = '[' + result.lastOutcome + '] - ' + result.details
