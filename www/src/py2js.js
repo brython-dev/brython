@@ -8715,7 +8715,17 @@ const default_option = {
 }
 
 $B.get_filename = function(){
-    return $B.script_filename
+    if($B.frames_stack.length > 0){
+        return $B.frames_stack[0].__file__
+    }
+}
+
+$B.get_filename_for_import = function(){
+    var filename = $B.get_filename()
+    if($B.import_info[filename] === undefined){
+        $B.make_import_paths(filename)
+    }
+    return filename
 }
 
 $B.get_page_option = function(option){
