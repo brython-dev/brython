@@ -390,30 +390,6 @@
                 }
                 return obj
             }
-            /*
-            console.log('b_super', b_super)
-            var b_self = b_super.__self_class__,
-                proto = Object.getPrototypeOf(b_self),
-                parent = proto.constructor.$parent
-            var factory = function(){
-                var p = parent.bind(b_self),
-                    res
-                if(parent.toString().startsWith("class")){
-                    res = new p(...arguments)
-                }else{
-                    res = p(...arguments)
-                }
-                for(var key in res){
-                    b_self[key] = res[key]
-                }
-                return res
-            }
-            return {
-                __class__: super_class,
-                __init__: factory,
-                __self_class__: b_self
-            }
-            */
         }
     )
 
@@ -433,8 +409,8 @@
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObj.$factory($B.js_this)
         },
-        "Date": self.Date && $B.JSObj.$factory(self.Date),
-        "extends": function(js_constr){
+        Date: self.Date && $B.JSObj.$factory(self.Date),
+        extends: function(js_constr){
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
                 console.log(js_constr)
@@ -537,10 +513,10 @@
             var content = $B.$getattr(file_obj, 'read')()
             eval(content)
         },
-        "Math": self.Math && $B.JSObj.$factory(self.Math),
+        Math: self.Math && $B.JSObj.$factory(self.Math),
         NULL: null,
         NullType: $B.make_class('NullType'),
-        "Number": self.Number && $B.JSObj.$factory(self.Number),
+        Number: self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -550,8 +526,8 @@
             return $B.format_indent(js, 0)
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
-        "RegExp": self.RegExp && $B.JSObj.$factory(self.RegExp),
-        "String": self.String && $B.JSObj.$factory(self.String),
+        RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
+        String: self.String && $B.JSObj.$factory(self.String),
         "super": super_class,
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedType
@@ -559,15 +535,6 @@
 
     modules.javascript.NullType.__module__ = 'javascript'
     modules.javascript.UndefinedType.__module__ = 'javascript'
-
-    var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
-        "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
-        "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
-    arraybuffers.forEach(function(ab){
-        if(self[ab] !== undefined){
-            modules['javascript'][ab] = $B.JSObj.$factory(self[ab])
-        }
-    })
 
     // Default standard output and error
     // Can be reset by sys.stdout or sys.stderr
@@ -668,11 +635,11 @@
         ),
         path: _b_.property.$factory(
             function(){
-                var filename = $B.get_filename()
+                var filename = $B.get_filename_for_import()
                 return $B.import_info[filename].path
             },
             function(self, value){
-                var filename = $B.get_filename()
+                var filename = $B.get_filename_for_import()
                 $B.import_info[filename].path = value
             }
         ),
@@ -892,8 +859,12 @@
         }
     }
 
-    for(var attr in modules){load(attr, modules[attr])}
-    if(!($B.isWebWorker || $B.isNode)){modules['browser'].html = modules['browser.html']}
+    for(var attr in modules){
+        load(attr, modules[attr])
+    }
+    if(!($B.isWebWorker || $B.isNode)){
+        modules['browser'].html = modules['browser.html']
+    }
 
     var _b_ = $B.builtins
 
