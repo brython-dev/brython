@@ -442,8 +442,8 @@ $B.get_class = function(obj){
                 return $B.function
             case "object":
                 if(Array.isArray(obj)){
-                    if(obj.$is_js_list){
-                        return $B.js_list
+                    if(obj.$is_js_array){
+                        return $B.js_array
                     }else if(Object.getPrototypeOf(obj) === Array.prototype){
                         obj.__class__ = _b_.list
                         return _b_.list
@@ -462,6 +462,11 @@ $B.get_class = function(obj){
         }
     }
     if(klass === undefined){
+        if(obj[Symbol.iterator] !== undefined){
+            return $B.IterableJSObj
+        }else if(obj.length !== undefined){
+            return $B.SizedJSObj
+        }
         return $B.JSObj
     }
     return klass
@@ -892,7 +897,7 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
 
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
-            ! obj.$is_js_list &&
+            ! obj.$is_js_array &&
             typeof item == "number" &&
             ! _b_.isinstance(obj, _b_.tuple)){
         if(item < 0){

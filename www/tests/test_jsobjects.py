@@ -41,12 +41,6 @@ for k, v in dict(jsobj).items():
     print(k, v) # Prints foo bar as would be expected
 
 test = {}
-try:
-    test.update(jsobj)
-    raise Exception("should have raised ValueError")
-except ValueError:
-    pass
-
 test.update(dict(jsobj))
 assert test == {"foo": "bar"}
 

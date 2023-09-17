@@ -653,7 +653,7 @@ dict.__init__ = function(self, first, second){
         return _b_.None
     }
     if(second === undefined){
-        if((! first.$kw) && $B.get_class(first) === $B.JSObj){
+        if((! first.$kw) && _b_.isinstance(first, $B.JSObj)){
             for(var key in first){
                 dict.$setitem(self, key, first[key])
             }
@@ -1282,7 +1282,7 @@ dict.setdefault = function(){
         key = $.key,
         _default = $._default
     _default = _default === undefined ? _b_.None : _default
-    
+
     if(self.$all_str){
         if(! self.$strings.hasOwnProperty(key)){
             self.$strings[key] = _default

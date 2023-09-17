@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-14 10:18:57.122784"
-__BRYTHON__.timestamp=1694679537122
+__BRYTHON__.compiled_date="2023-09-17 22:13:37.562776"
+__BRYTHON__.timestamp=1694981617562
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4541,7 +4541,10 @@ if(typeof value=='string'){if(value.trim().length==0){return[]}
 return value.trim().split(/\s+/)}}
 return default_value[option]}
 const default_option={args:[],cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true}
-$B.get_filename=function(){return $B.script_filename}
+$B.get_filename=function(){if($B.frames_stack.length > 0){return $B.frames_stack[0].__file__}}
+$B.get_filename_for_import=function(){var filename=$B.get_filename()
+if($B.import_info[filename]===undefined){$B.make_import_paths(filename)}
+return filename}
 $B.get_page_option=function(option){
 if($B.$options.hasOwnProperty(option)){
 return $B.$options[option]}else if(brython_options.hasOwnProperty(option.toLowerCase())){
@@ -4962,13 +4965,14 @@ if(obj.$is_js_func){
 return $B.JSObj}
 return $B.function
 case "object":
-if(Array.isArray(obj)){if(obj.$is_js_list){return $B.js_list}else if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
+if(Array.isArray(obj)){if(obj.$is_js_array){return $B.js_array}else if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
 return _b_.list}}else if(obj instanceof $B.str_dict){return _b_.dict}else if(typeof Node !=="undefined" 
 && obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
 $B.DOMNode}
 return $B.DOMNode}
 break}}
-if(klass===undefined){return $B.JSObj}
+if(klass===undefined){if(obj[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(obj.length !==undefined){return $B.SizedJSObj}
+return $B.JSObj}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
@@ -5113,7 +5117,7 @@ if(nb !=repl.length){throw _b_.ValueError.$factory(
 for(var i=start;test(i);i+=step){obj[i]=repl[j]
 j++}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
-! obj.$is_js_list &&
+! obj.$is_js_array &&
 typeof item=="number" &&
 ! _b_.isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
@@ -6341,7 +6345,7 @@ var klass=obj.__class__ ||$B.get_class(obj)
 if(obj.$is_class){
 var dir_func=$B.$getattr(obj.__class__,"__dir__")
 return $B.$call(dir_func)(obj)}
-try{var res=$B.$call($B.$getattr(obj,'__dir__'))()
+try{var res=$B.$call($B.$getattr(klass,'__dir__'))(obj)
 res=_b_.list.$factory(res)
 return res}catch(err){
 console.log('error in dir',obj,$B.$getattr(obj,'__dir__'),err.message)
@@ -9197,6 +9201,8 @@ _b_.frozenset=frozenset})(__BRYTHON__)
 var Module=$B.module=$B.make_class("module",function(name,doc,$package){return{
 __class__:Module,__builtins__:_b_.__builtins__,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 )
+Module.__dir__=function(self){if(self.__dir__){return $B.$call(self.__dir__)()}
+return _b_.object.__dir__(self)}
 Module.__new__=function(cls,name,doc,$package){return{
 __class__:cls,__builtins__:_b_.__builtins__,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 Module.__repr__=Module.__str__=function(self){var res="<module "+self.__name__
@@ -12436,7 +12442,7 @@ function init_from_list(self,args){for(var item of args){if(item.length !=2){thr
 `update sequence element #${i} has length ${item.length}; 2 is required`)}
 dict.$setitem(self,item[0],item[1])}}
 dict.__init__=function(self,first,second){if(first===undefined){return _b_.None}
-if(second===undefined){if((! first.$kw)&& $B.get_class(first)===$B.JSObj){for(var key in first){dict.$setitem(self,key,first[key])}
+if(second===undefined){if((! first.$kw)&& _b_.isinstance(first,$B.JSObj)){for(var key in first){dict.$setitem(self,key,first[key])}
 return _b_.None}else if(first.$jsobj){self.$jsobj={}
 for(var attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
 self.$all_str=false
@@ -13400,32 +13406,8 @@ throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
 "keyword arguments")}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
-var js_list_meta=$B.make_class('js_list_meta')
-js_list_meta.__mro__=[_b_.type,_b_.object]
-js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
-if(['__delitem__','__setitem__'].indexOf(attr)>-1){
-return function(){var args=[arguments[0]]
-for(var i=1,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
-return _b_.list[attr].apply(null,args)}}else if(['__add__','__contains__','__eq__','__getitem__','__mul__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
-return function(){return jsobj2pyobj(_b_.list[attr].call(null,jsobj2pyobj(arguments[0]),...Array.from(arguments).slice(1)))}}
-return function(){var js_list=arguments[0],t=jsobj2pyobj(js_list),args=[t]
-return _b_.list[attr].apply(null,args)}}
-$B.set_func_names(js_list_meta,'builtins')
-var js_list=$B.js_list=$B.make_class('jslist')
-js_list.__class__=js_list_meta
-js_list.__mro__=[_b_.list,_b_.object]
-js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
-var proto=Object.getPrototypeOf(_self),res=proto[attr]
-if(res !==undefined){
-return jsobj2pyobj(res,_self)}
-if(_self.hasOwnProperty(attr)){
-return $B.JSObj.$factory(_self[attr])}
-throw $B.attr_error(attr,_self)}
-return function(){var args=pyobj2jsobj(Array.from(arguments))
-return _b_.list[attr].call(null,_self,...args)}}
-$B.set_func_names(js_list,'builtins')
 $B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){
-jsobj.$is_js_list=true}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
+jsobj.$is_js_array=true}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
 jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
 return jsobj}
 )
@@ -13484,9 +13466,8 @@ if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr
 if(js_attr===undefined){if(_self.hasOwnProperty(attr)){return $B.Undefined}
 if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
 if(res !==undefined){return $B.JSObj.$factory(res)}}
-var klass=$B.get_class(_self)
-if(klass && klass[attr]){var class_attr=klass[attr]
-if(typeof class_attr=="function"){return function(){var args=[_self]
+var klass=$B.get_class(_self),class_attr=$B.$getattr(klass,attr,null)
+if(class_attr !==null){if(typeof class_attr=="function"){return function(){var args=[_self]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 throw $B.attr_error(attr,_self)}
@@ -13521,15 +13502,6 @@ for(var i=_slice.start;i < _slice.stop;i+=_slice.step){res.push(_self.item(i))}
 return res}
 throw _b_.KeyError.$factory(rank)}
 $B.JSObj.__setitem__=$B.JSObj.__setattr__
-var JSObj_iterator=$B.make_iterator_class('JS object iterator')
-$B.JSObj.__iter__=function(_self){var items=[]
-if(_window.Symbol && _self[Symbol.iterator]!==undefined){
-return JSObj_iterator.$factory(Array.from(_self))}else if(_self.length !==undefined && _self.item !==undefined){
-for(var i=0;i < _self.length;i++){items.push($B.JSObj.$factory(_self.js.item(i)))}
-return JSObj_iterator.$factory(items)}
-return JSObj_iterator.$factory(Object.keys(_self))}
-$B.JSObj.__len__=function(_self){if(typeof _self.length=='number'){return _self.length}
-throw $B.attr_error('__len__',_self)}
 $B.JSObj.__repr__=$B.JSObj.__str__=function(_self){var js_repr=Object.prototype.toString.call(_self)
 return `<Javascript object: ${js_repr}>`}
 $B.JSObj.bind=function(_self,evt,func){
@@ -13552,6 +13524,45 @@ if(events.length==0){delete _self.$brython_events[evt]}}}
 $B.JSObj.to_dict=function(_self){
 return $B.structuredclone2pyobj(_self)}
 $B.set_func_names($B.JSObj,"builtins")
+var js_list_meta=$B.make_class('js_list_meta')
+js_list_meta.__mro__=[_b_.type,_b_.object]
+js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
+if(['__delitem__','__setitem__'].indexOf(attr)>-1){
+return function(){var args=[arguments[0]]
+for(var i=1,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
+return _b_.list[attr].apply(null,args)}}else if(['__add__','__contains__','__eq__','__getitem__','__mul__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
+return function(){return jsobj2pyobj(_b_.list[attr].call(null,jsobj2pyobj(arguments[0]),...Array.from(arguments).slice(1)))}}
+return function(){var js_array=arguments[0],t=jsobj2pyobj(js_array),args=[t]
+return _b_.list[attr].apply(null,args)}}
+$B.set_func_names(js_list_meta,'builtins')
+var js_array=$B.js_array=$B.make_class('Array')
+js_array.__class__=js_list_meta
+js_array.__mro__=[$B.JSObj,_b_.object]
+js_array.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
+var proto=Object.getPrototypeOf(_self),res=proto[attr]
+if(res !==undefined){
+return jsobj2pyobj(res,_self)}
+if(_self.hasOwnProperty(attr)){
+return $B.JSObj.$factory(_self[attr])}
+throw $B.attr_error(attr,_self)}
+return function(){var args=pyobj2jsobj(Array.from(arguments))
+return _b_.list[attr].call(null,_self,...args)}}
+$B.set_func_names(js_array,'javascript')
+$B.SizedJSObj=$B.make_class('SizedJSobj')
+$B.SizedJSObj.__bases__=[$B.JSObj]
+$B.SizedJSObj.__mro__=[$B.JSObj,_b_.object]
+$B.SizedJSObj.__len__=function(_self){return _self.length}
+$B.set_func_names($B.SizedJSObj,'builtins')
+$B.IterableJSObj=$B.make_class('IterableJSObj')
+$B.IterableJSObj.__bases__=[$B.JSObj]
+$B.IterableJSObj.__mro__=[$B.JSObj,_b_.object]
+$B.IterableJSObj.__iter__=function(_self){return{
+__class__:$B.IterableJSObj,it:obj[Symbol.iterator]()}}
+$B.IterableJSObj.__len__=function(_self){return _self.length}
+$B.IterableJSObj.__next__=function(_self){var value=_self.it.next()
+if(! value.done){return jsobj2pyobj(value.value)}
+throw _b_.StopIteration.$factory('')}
+$B.set_func_names($B.IterableJSObj,'builtins')
 $B.JSMeta=$B.make_class("JSMeta")
 $B.JSMeta.__call__=function(cls){
 var extra_args=[],klass=arguments[0]
@@ -14542,7 +14553,7 @@ return $B.$getattr(self.__self_class__,attr)}
 $B.set_func_names(super_class,"javascript")
 modules['javascript']={"this":function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObj.$factory($B.js_this)},"Date":self.Date && $B.JSObj.$factory(self.Date),"extends":function(js_constr){if((!js_constr.$js_func)||
+return $B.JSObj.$factory($B.js_this)},Date:self.Date && $B.JSObj.$factory(self.Date),extends:function(js_constr){if((!js_constr.$js_func)||
 ! js_constr.$js_func.toString().startsWith('class ')){console.log(js_constr)
 throw _b_.TypeError.$factory(
 'argument of extend must be a Javascript class')}
@@ -14577,13 +14588,11 @@ JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
-eval(content)},"Math":self.Math && $B.JSObj.$factory(self.Math),NULL:null,NullType:$B.make_class('NullType'),"Number":self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
+eval(content)},Math:self.Math && $B.JSObj.$factory(self.Math),NULL:null,NullType:$B.make_class('NullType'),Number:self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
 var js=$B.py2js({src,filename:'<string>'},module_name,module_name,$B.builtins_scope).to_js()
-return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},"RegExp":self.RegExp && $B.JSObj.$factory(self.RegExp),"String":self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedType}
+return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),String:self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedType}
 modules.javascript.NullType.__module__='javascript'
 modules.javascript.UndefinedType.__module__='javascript'
-var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
-arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var $io=$B.$io=$B.make_class("io",function(out){return{
 __class__:$io,out,encoding:'utf-8'}}
 )
@@ -14612,8 +14621,8 @@ if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__tracebac
 return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
-function(){var filename=$B.get_filename()
-return $B.import_info[filename].path},function(self,value){var filename=$B.get_filename()
+function(){var filename=$B.get_filename_for_import()
+return $B.import_info[filename].path},function(self,value){var filename=$B.get_filename_for_import()
 $B.import_info[filename].path=value}
 ),meta_path:_b_.property.$factory(
 function(){var filename=$B.get_filename()
