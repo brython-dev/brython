@@ -15,7 +15,7 @@ def audit(event, *args):
     """For the moment, only here for compliance with Python."""
     pass
 
-brython_debug_mode = __BRYTHON__.debug
+brython_debug_mode = __BRYTHON__.get_option('debug')
 
 base_exec_prefix = __BRYTHON__.brython_path
 
