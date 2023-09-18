@@ -26,6 +26,7 @@ def qunit_test(testName, test, result):
         # reset sys.path because module tester is in /tests
         import sys
         sys.path = ['/tests']
+        import tester
         test(result)
         if result.details:
             msg = '[' + result.lastOutcome + '] - ' + result.details
