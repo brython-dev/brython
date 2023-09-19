@@ -3,13 +3,20 @@ function list1(){return [1, 2, 'a', ['b']]}
 function jsobj(){return {a:1}}
 
 // test if an object with length and item() supports subscription
-function subscriptable(data){
-    return {data: data,
-        length: data.length,
-        item: function(rank){
-            return data.charAt(rank)
+window.subscriptable = function(data){
+    this.data = data
+}
+
+Object.defineProperty(window.subscriptable.prototype, 'length',
+    {
+        get: function(){
+            return this.data.length
         }
     }
+)
+
+window.subscriptable.prototype.item = function(rank){
+    return this.data[rank]
 }
 
 // test constructors
