@@ -551,10 +551,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
             try{
                 var result = js_attr.apply(target, args)
             }catch(err){
-                console.log("error", err)
-                console.log("attribute", attr, "of _self", _self,
-                    js_attr, args, arguments)
-                throw err
+                throw $B.exception(err)
             }
             if(result === undefined){
                 return $B.Undefined
@@ -758,7 +755,7 @@ js_array.__getattribute__ = function(_self, attr){
 
 $B.set_func_names(js_array, 'javascript')
 
-$B.SizedJSObj = $B.make_class('SizedJSobj')
+$B.SizedJSObj = $B.make_class('SizedJavascriptObject')
 $B.SizedJSObj.__bases__ = [$B.JSObj]
 $B.SizedJSObj.__mro__ = [$B.JSObj, _b_.object]
 
@@ -768,7 +765,7 @@ $B.SizedJSObj.__len__ = function(_self){
 
 $B.set_func_names($B.SizedJSObj, 'builtins')
 
-$B.IterableJSObj = $B.make_class('IterableJSObj')
+$B.IterableJSObj = $B.make_class('IterableJavascriptObject')
 $B.IterableJSObj.__bases__ = [$B.JSObj]
 $B.IterableJSObj.__mro__ = [$B.JSObj, _b_.object]
 
@@ -793,6 +790,15 @@ $B.IterableJSObj.__next__ = function(_self){
 
 $B.set_func_names($B.IterableJSObj, 'builtins')
 
+$B.get_jsobj_class = function(obj){
+    var proto = Object.getPrototypeOf(obj)
+    if(proto[Symbol.iterator] !== undefined){
+        return $B.IterableJSObj
+    }else if(Object.getOwnPropertyNames(proto).indexOf('length') > -1){
+        return $B.SizedJSObj
+    }
+    return $B.JSObj
+}    
 // Class used as a metaclass for Brython classes that inherit a Javascript
 // constructor
 $B.JSMeta = $B.make_class("JSMeta")

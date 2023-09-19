@@ -462,12 +462,7 @@ $B.get_class = function(obj){
         }
     }
     if(klass === undefined){
-        if(obj[Symbol.iterator] !== undefined){
-            return $B.IterableJSObj
-        }else if(obj.length !== undefined){
-            return $B.SizedJSObj
-        }
-        return $B.JSObj
+        return $B.get_jsobj_class(obj)
     }
     return klass
 }
