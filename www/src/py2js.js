@@ -8908,7 +8908,7 @@ $B.run_script = function(script, src, name, url, run_loop){
                 __name__: name,
                 __file__: url
             }
-        if($B.get_option('debug') > 1){
+        if($B.get_option_from_filename('debug', url) > 1){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
