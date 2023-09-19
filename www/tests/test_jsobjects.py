@@ -253,4 +253,10 @@ send(1, 2, a="b", c="d")
 window.demo_array.test2172()
 window.demo_array.demo_array2.test2172()
 
+# issue in Google group
+# https://groups.google.com/g/brython/c/y3eAGcl1hfY
+try:
+    window.js_error()
+except Exception as exc:
+    assert exc.args[0] == 'catching JS error'
 print("all tests ok...")

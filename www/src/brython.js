@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-18 18:25:04.700738"
-__BRYTHON__.timestamp=1695054304678
+__BRYTHON__.compiled_date="2023-09-19 08:58:26.543476"
+__BRYTHON__.timestamp=1695106706543
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4613,7 +4613,7 @@ $B.scripts[url]=script
 $B.make_import_paths(url)
 _b_.__debug__=$B.get_option('debug')> 0
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url}
-if($B.get_option('debug')> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
+if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 for(var name of Object.keys(imports)){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -4971,8 +4971,7 @@ return _b_.list}}else if(obj instanceof $B.str_dict){return _b_.dict}else if(typ
 $B.DOMNode}
 return $B.DOMNode}
 break}}
-if(klass===undefined){if(obj[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(obj.length !==undefined){return $B.SizedJSObj}
-return $B.JSObj}
+if(klass===undefined){return $B.get_jsobj_class(obj)}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
@@ -7794,19 +7793,13 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc,in_ctx_manager){
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-console.log('Javascript error\n',js_exc)
-console.log('frames',$B.frames_stack.slice())
-var exc=_b_.Exception.$factory("Internal Javascript error: "+
-(js_exc.__name__ ||js_exc.name))
-exc.__name__="Internal Javascript error: "+
-(js_exc.__name__ ||js_exc.name)
+var exc=_b_.JavascriptError.$factory((js_exc.__name__ ||js_exc.name))
 exc.$js_exc=js_exc
 if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}
 exc.__cause__=_b_.None
 exc.__context__=_b_.None
 exc.__suppress_context__=false
-var $message="<Javascript "+js_exc.name+">: "+
-(js_exc.message ||"<"+js_exc+">")
+var $message=(js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
 js_exc.$py_exc=exc
@@ -7838,6 +7831,8 @@ _b_[name].$factory=Function($exc)
 _b_[name].$factory.$infos={__name__:name,__qualname__:name}
 $B.set_func_names(_b_[name],'builtins')}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
+$make_exc(["JavascriptError"],_b_.Exception)
+var js_errors={'Error':_b_.JavascriptError}
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","BufferError","EOFError",["ImportError","err.name = arguments[0]"],"LookupError","MemoryError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
 $make_exc(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 $make_exc([["ModuleNotFoundError","err.name = arguments[0]"]],_b_.ImportError)
@@ -8060,6 +8055,8 @@ trace+=name+(args_str ? ': '+args_str :'')
 if(err.__class__===_b_.NameError){var suggestion=offer_suggestions_for_name_error(err)
 if(suggestion){trace+=`. Did you mean '${suggestion}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=offer_suggestions_for_attribute_error(err)
 if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}}else{trace=err+""}
+if(err.$js_exc){trace+='\n\nJavascript error\n'+err.$js_exc+
+'\n'+err.$js_exc.stack}
 return trace}
 $B.get_stderr=function(){if($B.imported.sys){return $B.imported.sys.stderr}
 return $B.imported._sys.stderr}
@@ -13476,9 +13473,7 @@ js_attr.toString &&
 typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
-try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
-console.log("attribute",attr,"of _self",_self,js_attr,args,arguments)
-throw err}
+try{var result=js_attr.apply(target,args)}catch(err){throw $B.exception(err)}
 if(result===undefined){return $B.Undefined}else if(result===null){return _b_.None}
 return $B.JSObj.$factory(result)}
 res.prototype=js_attr.prototype
@@ -13548,12 +13543,12 @@ throw $B.attr_error(attr,_self)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 $B.set_func_names(js_array,'javascript')
-$B.SizedJSObj=$B.make_class('SizedJSobj')
+$B.SizedJSObj=$B.make_class('SizedJavascriptObject')
 $B.SizedJSObj.__bases__=[$B.JSObj]
 $B.SizedJSObj.__mro__=[$B.JSObj,_b_.object]
 $B.SizedJSObj.__len__=function(_self){return _self.length}
 $B.set_func_names($B.SizedJSObj,'builtins')
-$B.IterableJSObj=$B.make_class('IterableJSObj')
+$B.IterableJSObj=$B.make_class('IterableJavascriptObject')
 $B.IterableJSObj.__bases__=[$B.JSObj]
 $B.IterableJSObj.__mro__=[$B.JSObj,_b_.object]
 $B.IterableJSObj.__iter__=function(_self){return{
@@ -13563,6 +13558,9 @@ $B.IterableJSObj.__next__=function(_self){var value=_self.it.next()
 if(! value.done){return jsobj2pyobj(value.value)}
 throw _b_.StopIteration.$factory('')}
 $B.set_func_names($B.IterableJSObj,'builtins')
+$B.get_jsobj_class=function(obj){var proto=Object.getPrototypeOf(obj)
+if(proto[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(Object.getOwnPropertyNames(proto).indexOf('length')>-1){return $B.SizedJSObj}
+return $B.JSObj}
 $B.JSMeta=$B.make_class("JSMeta")
 $B.JSMeta.__call__=function(cls){
 var extra_args=[],klass=arguments[0]

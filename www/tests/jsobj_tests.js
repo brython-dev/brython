@@ -148,3 +148,9 @@ demo_array  = []
 demo_array.test2172()
 demo_array.demo_array2 = []
 demo_array.demo_array2.test2172()
+
+// issue in Google group
+// https://groups.google.com/g/brython/c/y3eAGcl1hfY
+window.js_error = function(){
+    throw Error('catching JS error')
+}

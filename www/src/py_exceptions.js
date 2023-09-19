@@ -412,12 +412,7 @@ $B.exception = function(js_exc, in_ctx_manager){
             // same Python exception
             return js_exc.$py_exc
         }
-        console.log('Javascript error\n', js_exc)
-        console.log('frames', $B.frames_stack.slice())
-        var exc = _b_.Exception.$factory("Internal Javascript error: " +
-            (js_exc.__name__ || js_exc.name))
-        exc.__name__ = "Internal Javascript error: " +
-            (js_exc.__name__ || js_exc.name)
+        var exc = _b_.JavascriptError.$factory((js_exc.__name__ || js_exc.name))
         exc.$js_exc = js_exc
         if($B.is_recursion_error(js_exc)){
             return _b_.RecursionError.$factory("too much recursion")
@@ -425,8 +420,7 @@ $B.exception = function(js_exc, in_ctx_manager){
         exc.__cause__ = _b_.None
         exc.__context__ = _b_.None
         exc.__suppress_context__ = false
-        var $message = "<Javascript " + js_exc.name + ">: " +
-            (js_exc.message || "<" + js_exc + ">")
+        var $message = (js_exc.message || "<" + js_exc + ">")
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
         js_exc.$py_exc = exc
@@ -507,6 +501,12 @@ var $make_exc = $B.$make_exc = function(names, parent){
 
 $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
     BaseException)
+
+// Brython-specific
+$make_exc(["JavascriptError"], _b_.Exception)
+
+var js_errors = {'Error': _b_.JavascriptError}
+
 
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],
     ["StopAsyncIteration","err.value = arguments[0]"],
@@ -1016,6 +1016,10 @@ $B.error_trace = function(err){
         }
     }else{
         trace = err + ""
+    }
+    if(err.$js_exc){
+        trace += '\n\nJavascript error\n' + err.$js_exc +
+            '\n' + err.$js_exc.stack
     }
     return trace
 }
