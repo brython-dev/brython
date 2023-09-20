@@ -710,7 +710,7 @@ function calculate_suggestions(dir, name){
     return suggestion
 }
 
-function offer_suggestions_for_attribute_error(exc){
+$B.offer_suggestions_for_attribute_error = function(exc){
     var name = exc.name,
         obj = exc.obj
     var dir = _b_.dir(obj),
@@ -718,7 +718,7 @@ function offer_suggestions_for_attribute_error(exc){
     return suggestions
 }
 
-function offer_suggestions_for_name_error(exc){
+$B.offer_suggestions_for_name_error = function(exc){
     var name = exc.name,
         frame = $B.last(exc.$stack)
     if(typeof name != 'string'){
@@ -1004,12 +1004,12 @@ $B.error_trace = function(err){
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
         if(err.__class__ === _b_.NameError){
-            var suggestion = offer_suggestions_for_name_error(err)
+            var suggestion = $B.offer_suggestions_for_name_error(err)
             if(suggestion){
                 trace += `. Did you mean '${suggestion}'?`
             }
         }else if(err.__class__ === _b_.AttributeError){
-            var suggestion = offer_suggestions_for_attribute_error(err)
+            var suggestion = $B.offer_suggestions_for_attribute_error(err)
             if(suggestion){
                 trace += `. Did you mean: '${suggestion}'?`
             }

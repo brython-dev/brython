@@ -14,10 +14,8 @@ class Trace:
 
 def format_exc():
     trace = Trace()
-    exc_info = sys.exc_info()
-    exc_class = exc_info[0].__name__
-    exc_msg = str(exc_info[1])
-    tb = exc_info[2]
+    exc_class, exc, tb = sys.exc_info()
+    exc_msg = str(exc)
 
     def handle_repeats(filename, lineno, count_repeats):
         if count_repeats > 0:
@@ -75,10 +73,20 @@ def format_exc():
 
     handle_repeats(filename, lineno, count_repeats)
 
-    if isinstance(exc_info[1], SyntaxError):
-        trace.write(syntax_error(exc_info[1].args))
+    if isinstance(exc, SyntaxError):
+        trace.write(syntax_error(exc.args))
     else:
-        trace.write(f"{exc_class}: {exc_msg}")
+        message = exc_msg
+        if isinstance(exc, AttributeError):
+            suggestion = __BRYTHON__.offer_suggestions_for_attribute_error(exc)
+            if suggestion is not None:
+                message += f". Did you mean: '{suggestion}'?"
+        elif isinstance(exc, NameError):
+            suggestion = __BRYTHON__.offer_suggestions_for_name_error(exc)
+            if suggestion is not None:
+                message += f". Did you mean: '{suggestion}'?"
+        trace.write(f"{exc_class}: {message}")
+
     return trace.format()
 
 def print_exc(file=None):

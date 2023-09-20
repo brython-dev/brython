@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-20 08:24:04.126132"
-__BRYTHON__.timestamp=1695191044126
+__BRYTHON__.compiled_date="2023-09-20 08:56:22.091411"
+__BRYTHON__.timestamp=1695192982091
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7919,10 +7919,10 @@ if(current_distance > max_distance){continue}
 if(!suggestion ||current_distance < suggestion_distance){suggestion=item
 suggestion_distance=current_distance}}
 return suggestion}
-function offer_suggestions_for_attribute_error(exc){var name=exc.name,obj=exc.obj
+$B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions}
-function offer_suggestions_for_name_error(exc){var name=exc.name,frame=$B.last(exc.$stack)
+$B.offer_suggestions_for_name_error=function(exc){var name=exc.name,frame=$B.last(exc.$stack)
 if(typeof name !='string'){return}
 var locals=Object.keys(frame[1]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(locals,name)
@@ -8052,8 +8052,8 @@ trace+=`${err.__class__.__name__}: ${err.args[0]}`}else if(err.__class__ !==unde
 trace+=trace_from_stack(err)
 var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
-if(err.__class__===_b_.NameError){var suggestion=offer_suggestions_for_name_error(err)
-if(suggestion){trace+=`. Did you mean '${suggestion}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=offer_suggestions_for_attribute_error(err)
+if(err.__class__===_b_.NameError){var suggestion=$B.offer_suggestions_for_name_error(err)
+if(suggestion){trace+=`. Did you mean '${suggestion}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=$B.offer_suggestions_for_attribute_error(err)
 if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}}else{trace=err+""}
 if(err.$js_exc){trace+='\n\nJavascript error\n'+err.$js_exc+
 '\n'+err.$js_exc.stack}
