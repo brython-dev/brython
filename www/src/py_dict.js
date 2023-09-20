@@ -249,7 +249,6 @@ dict.$iter_items_check = function*(d){
 
 var $copy_dict = function(left, right){
     // left and right are dicts
-    var t0 = window.performance.now()
     right.$version = right.$version || 0
     var right_version = right.$version
     if(right.$all_str){
