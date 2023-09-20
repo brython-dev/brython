@@ -150,6 +150,13 @@ alert(rectangle.new(10, 10, 30, 30).surface())
 </script>
 ```
 
+### Exceptions
+
+If an error happens in a Javascript script called by a Brython script, an
+exception instance of class `JavascriptError` is triggered and can be
+caught by the Brython code. The Javascript error trace is printed on
+`sys.stderr`.
+
 ### jQuery example
 
 Here is a more complete example of how you can use the popular library jQuery:
