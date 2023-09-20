@@ -947,7 +947,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
         case 'not':
             if(context.type == 'op' && context.op == 'is'){ // "is not"
                 context.op = 'is_not'
-                return context
+                return new AbstractExprCtx(context, true)
             }
             return new AbstractExprCtx(
                 new NotCtx(new ExprCtx(context, 'not', commas)), false)
