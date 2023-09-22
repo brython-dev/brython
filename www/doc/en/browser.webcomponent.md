@@ -10,7 +10,7 @@ A custom element can be used in the HTML page as
 
 The module exposes the following functions
 
-`define(`_tag_name, component_class_`)`
+`define(`_tag_name, component_class_[, _options_]`)`
 
 > _tag_name_ is the name of the custom tag name. The Web Component
 > specification mandates that the tag name includes a dash (the "`-`"
@@ -19,6 +19,41 @@ The module exposes the following functions
 > _component_class_ is the class that defines the component behaviour. Its
 > `__init__` method is called to create the component; the parameter `self`
 > references the DOM element for the custom component.
+
+> _options_ is a dictionary with the component options
+> (cf documentation for [define](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define)).
+> The only available option is "extends".
+
+<blockquote>
+```python
+class MyParagraph:
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow <= html.B('hello')
+
+define('my-paragraph', MyParagraph, {'extends': 'p'})
+```
+</blockquote>
+
+
+> If the component class inherits a class defined in module
+> [browser.html](browser.html.html), the option "extends" is automatically
+> added, with a value set to the class name. The code above can thus be
+> replaced by
+
+<blockquote>
+```python
+from browser import html
+
+class MyParagraph(html.P):
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow <= html.B('hello')
+
+define('my-paragraph', MyParagraph)
+```
+</blockquote>
+
 
 `get(`_tag_name_`)`
 
@@ -85,7 +120,7 @@ webcomponent.define("bold-italic", BoldItalic)
 
 To handle changes to some attributes, add list `observedAttributes` and method
 `attributeChangedCallback()` as in the example below (note that this time, a
-new custom element is created with the function `maketag` in module 
+new custom element is created with the function `maketag` in module
 [html](html.html) and dynamically added to the document):
 
 ```python
@@ -93,7 +128,7 @@ observed_tag = html.maketag("observed-element")
 
 class Observed:
 
-    observedAttributes(self) = ["data"]
+    observedAttributes = ["data"]
 
     def attributeChangedCallback(self, name, old, new, ns):
         print(f"attribute {name} changed from {old} to {new}")
