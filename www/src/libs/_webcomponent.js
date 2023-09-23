@@ -115,7 +115,6 @@ function define(tag_name, cls, options){
     var name = cls.__name__,
         code = src.replace(/WebComponent/g, name).
                    replace(/HTMLElement/, extend_dom_name)
-    console.log('code', code)
     var src = eval(code)
     var webcomp = eval(name) // JS class for component
     webcomp.$cls = cls
