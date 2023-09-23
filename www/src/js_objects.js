@@ -332,77 +332,12 @@ function pyargs2jsargs(pyargs){
     return args
 }
 
-var js_list_meta = $B.make_class('js_list_meta')
-js_list_meta.__mro__ = [_b_.type, _b_.object]
-
-js_list_meta.__getattribute__ = function(_self, attr){
-    if(_b_.list[attr] === undefined){
-        throw _b_.AttributeError.$factory(attr)
-    }
-    if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
-        // Transform Python values to Javascript values before setting item
-        return function(){
-            var args = [arguments[0]]
-            for(var i = 1, len = arguments.length; i < len; i++){
-                args.push(pyobj2jsobj(arguments[i]))
-            }
-            if(attr == '__contains__'){
-                console.log(attr, args)
-            }
-            return _b_.list[attr].apply(null, args)
-        }
-    }else if(['__add__', '__contains__', '__eq__', '__getitem__', '__mul__',
-              '__ge__', '__gt__', '__le__', '__lt__'].indexOf(attr) > -1){
-        // Apply to a Python copy of the JS list
-        return function(){
-            return jsobj2pyobj(_b_.list[attr].call(null,
-                jsobj2pyobj(arguments[0]),
-                ...Array.from(arguments).slice(1)))
-        }
-    }
-    return function(){
-        var js_list = arguments[0],
-            t = jsobj2pyobj(js_list),
-            args = [t]
-        return _b_.list[attr].apply(null, args)
-    }
-}
-
-$B.set_func_names(js_list_meta, 'builtins')
-
-
-var js_list = $B.make_class('jslist')
-js_list.__class__ = js_list_meta
-js_list.__mro__ = [_b_.list, _b_.object]
-
-js_list.__getattribute__ = function(_self, attr){
-    if(_b_.list[attr] === undefined){
-        // Methods of Python lists take precedence, but if they fail, try
-        // attributes of _self Javascript prototype
-        var proto = Object.getPrototypeOf(_self),
-            res = proto[attr]
-        if(res !== undefined){
-            // pass _self as `this` if res is a function
-            return jsobj2pyobj(res, _self)
-        }
-        if(_self.hasOwnProperty(attr)){ // issue 2172
-            return $B.JSObj.$factory(_self[attr])
-        }
-        throw $B.attr_error(attr, _self)
-    }
-    return function(){
-        var args = pyobj2jsobj(Array.from(arguments))
-        return _b_.list[attr].call(null, _self, ...args)
-    }
-}
-
-$B.set_func_names(js_list, 'builtins')
-
 $B.JSObj = $B.make_class("JSObject",
     function(jsobj){
         if(Array.isArray(jsobj)){
-            // Return a Python object that wraps the Javascript list
-            jsobj.__class__ = js_list
+            // Set a Brython-specific attribute to identify JS Arrays that
+            // come from JS code. Cf. discussion #2226
+            jsobj.$is_js_array = true
         }else if(typeof jsobj == "function"){
             jsobj.$is_js_func = true
             jsobj.__new__ = function(){
@@ -550,7 +485,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "Rectangle"
+    var test = false // attr == "Array"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -574,18 +509,21 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     }
     if(test){
         console.log('js_attr', js_attr, typeof js_attr,
-            '\n is JS class ?', js_attr.toString().startsWith('class '))
+            '\n is JS class ?', js_attr === undefined ? false : js_attr.toString().startsWith('class '))
     }
     if(js_attr === undefined){
+        if(_self.hasOwnProperty(attr)){
+            return $B.Undefined
+        }
         if(typeof _self.getNamedItem == 'function'){
             var res = _self.getNamedItem(attr)
             if(res !== undefined){
                 return $B.JSObj.$factory(res)
             }
         }
-        var klass = $B.get_class(_self)
-        if(klass && klass[attr]){
-            var class_attr = klass[attr]
+        var klass = $B.get_class(_self),
+            class_attr = $B.$getattr(klass, attr, null)
+        if(class_attr !== null){
             if(typeof class_attr == "function"){
                 return function(){
                     var args = [_self]
@@ -613,10 +551,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
             try{
                 var result = js_attr.apply(target, args)
             }catch(err){
-                console.log("error", err)
-                console.log("attribute", attr, "of _self", _self,
-                    js_attr, args, arguments)
-                throw err
+                throw $B.exception(err)
             }
             if(result === undefined){
                 return $B.Undefined
@@ -681,32 +616,6 @@ $B.JSObj.__getitem__ = function(_self, key){
 }
 
 $B.JSObj.__setitem__ = $B.JSObj.__setattr__
-
-var JSObj_iterator = $B.make_iterator_class('JS object iterator')
-
-$B.JSObj.__iter__ = function(_self){
-    var items = []
-    if(_window.Symbol && _self[Symbol.iterator] !== undefined){
-        // Javascript objects that support the iterable protocol, such as Map,
-        // views on ArrayBuffer, etc.
-        return JSObj_iterator.$factory(Array.from(_self))
-    }else if(_self.length !== undefined && _self.item !== undefined){
-        // collection
-        for(var i = 0; i < _self.length; i++){
-            items.push($B.JSObj.$factory(_self.js.item(i)))
-        }
-        return JSObj_iterator.$factory(items)
-    }
-    // Else iterate on the dictionary built from the JS object
-    return JSObj_iterator.$factory(Object.keys(_self))
-}
-
-$B.JSObj.__len__ = function(_self){
-    if(typeof _self.length == 'number'){
-        return _self.length
-    }
-    throw $B.attr_error('__len__', _self)
-}
 
 $B.JSObj.__repr__ = $B.JSObj.__str__ = function(_self){
     var js_repr = Object.prototype.toString.call(_self)
@@ -783,6 +692,113 @@ $B.JSObj.to_dict = function(_self){
 
 $B.set_func_names($B.JSObj, "builtins")
 
+var js_list_meta = $B.make_class('js_list_meta')
+js_list_meta.__mro__ = [_b_.type, _b_.object]
+
+js_list_meta.__getattribute__ = function(_self, attr){
+    if(_b_.list[attr] === undefined){
+        throw _b_.AttributeError.$factory(attr)
+    }
+    if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
+        // Transform Python values to Javascript values before setting item
+        return function(){
+            var args = [arguments[0]]
+            for(var i = 1, len = arguments.length; i < len; i++){
+                args.push(pyobj2jsobj(arguments[i]))
+            }
+            return _b_.list[attr].apply(null, args)
+        }
+    }else if(['__add__', '__contains__', '__eq__', '__getitem__', '__mul__',
+              '__ge__', '__gt__', '__le__', '__lt__'].indexOf(attr) > -1){
+        // Apply to a Python copy of the JS list
+        return function(){
+            return jsobj2pyobj(_b_.list[attr].call(null,
+                jsobj2pyobj(arguments[0]),
+                ...Array.from(arguments).slice(1)))
+        }
+    }
+    return function(){
+        var js_array = arguments[0],
+            t = jsobj2pyobj(js_array),
+            args = [t]
+        return _b_.list[attr].apply(null, args)
+    }
+}
+
+$B.set_func_names(js_list_meta, 'builtins')
+
+
+var js_array = $B.js_array = $B.make_class('Array')
+js_array.__class__ = js_list_meta
+js_array.__mro__ = [$B.JSObj, _b_.object]
+
+js_array.__getattribute__ = function(_self, attr){
+    if(_b_.list[attr] === undefined){
+        // Methods of Python lists take precedence, but if they fail, try
+        // attributes of _self Javascript prototype
+        var proto = Object.getPrototypeOf(_self),
+            res = proto[attr]
+        if(res !== undefined){
+            // pass _self as `this` if res is a function
+            return jsobj2pyobj(res, _self)
+        }
+        if(_self.hasOwnProperty(attr)){ // issue 2172
+            return $B.JSObj.$factory(_self[attr])
+        }
+        throw $B.attr_error(attr, _self)
+    }
+    return function(){
+        var args = pyobj2jsobj(Array.from(arguments))
+        return _b_.list[attr].call(null, _self, ...args)
+    }
+}
+
+$B.set_func_names(js_array, 'javascript')
+
+$B.SizedJSObj = $B.make_class('SizedJavascriptObject')
+$B.SizedJSObj.__bases__ = [$B.JSObj]
+$B.SizedJSObj.__mro__ = [$B.JSObj, _b_.object]
+
+$B.SizedJSObj.__len__ = function(_self){
+    return _self.length
+}
+
+$B.set_func_names($B.SizedJSObj, 'builtins')
+
+$B.IterableJSObj = $B.make_class('IterableJavascriptObject')
+$B.IterableJSObj.__bases__ = [$B.JSObj]
+$B.IterableJSObj.__mro__ = [$B.JSObj, _b_.object]
+
+$B.IterableJSObj.__iter__ = function(_self){
+    return {
+        __class__: $B.IterableJSObj,
+        it: obj[Symbol.iterator]()
+    }
+}
+
+$B.IterableJSObj.__len__ = function(_self){
+    return _self.length
+}
+
+$B.IterableJSObj.__next__ = function(_self){
+    var value = _self.it.next()
+    if(! value.done){
+        return jsobj2pyobj(value.value)
+    }
+    throw _b_.StopIteration.$factory('')
+}
+
+$B.set_func_names($B.IterableJSObj, 'builtins')
+
+$B.get_jsobj_class = function(obj){
+    var proto = Object.getPrototypeOf(obj)
+    if(proto[Symbol.iterator] !== undefined){
+        return $B.IterableJSObj
+    }else if(Object.getOwnPropertyNames(proto).indexOf('length') > -1){
+        return $B.SizedJSObj
+    }
+    return $B.JSObj
+}    
 // Class used as a metaclass for Brython classes that inherit a Javascript
 // constructor
 $B.JSMeta = $B.make_class("JSMeta")

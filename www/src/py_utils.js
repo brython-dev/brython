@@ -442,7 +442,9 @@ $B.get_class = function(obj){
                 return $B.function
             case "object":
                 if(Array.isArray(obj)){
-                    if(Object.getPrototypeOf(obj) === Array.prototype){
+                    if(obj.$is_js_array){
+                        return $B.js_array
+                    }else if(Object.getPrototypeOf(obj) === Array.prototype){
                         obj.__class__ = _b_.list
                         return _b_.list
                     }
@@ -460,7 +462,7 @@ $B.get_class = function(obj){
         }
     }
     if(klass === undefined){
-        return $B.JSObj
+        return $B.get_jsobj_class(obj)
     }
     return klass
 }
@@ -890,9 +892,12 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
 
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
+            ! obj.$is_js_array &&
             typeof item == "number" &&
-            !_b_.isinstance(obj, _b_.tuple)){
-        if(item < 0){item += obj.length}
+            ! _b_.isinstance(obj, _b_.tuple)){
+        if(item < 0){
+            item += obj.length
+        }
         if(obj[item] === undefined){
             throw _b_.IndexError.$factory("list assignment index out of range")
         }
@@ -1026,6 +1031,13 @@ $B.augm_assign = function(left, op, right){
 $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
+    if((a === undefined || a === $B.Undefined) &&
+            (b === undefined || b === $B.Undefined)){
+        return true
+    }
+    if(a === null){
+        return b === null
+    }
     if(a.__class__ === _b_.float && b.__class__ === _b_.float){
         if(isNaN(a.value) && isNaN(b.value)){
             return true
@@ -1034,10 +1046,6 @@ $B.$is = function(a, b){
     }
     if((a === _b_.int && b == $B.long_int) ||
             (a === $B.long_int && b === _b_.int)){
-        return true
-    }
-    if((a === undefined || a === $B.Undefined) &&
-            (b === undefined || b === $B.Undefined)){
         return true
     }
     return a === b

@@ -9,7 +9,7 @@ Un élément personnalisé est utilisé dans une page HTML sous la forme
 
 Le module expose les fonctions suivantes
 
-`define(`_nom_balise, classe_composant_`)`
+`define(`_nom_balise, classe_composant_[, _options]_`)`
 
 > _nom_balise_ est le nom de la balise personnalisée. La spécification
 > Web Component impose que ce nom inclue un tiret (le caractère "`-`").
@@ -17,6 +17,41 @@ Le module expose les fonctions suivantes
 > _classe_composant_ est la classe qui définit le comportement du composant.
 > Sa méthode `__init__` est appelée pour créer le composant; le paramètre
 > `self` référence l'élément DOM pour le composant personnalisé.
+
+> _options_ est un dictionnaire avec les options du composant
+> (cf la documentation de [define](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define)).
+> La seule option disponible actuellement est "extends".
+
+<blockquote>
+```python
+class MyParagraph:
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow <= html.B('hello')
+
+define('my-paragraph', MyParagraph, {'extends': 'p'})
+```
+</blockquote>
+
+
+> Si la classe du composant hérite d'une classe définie dans le module
+> [browser.html](browser.html.html), l'option "extends" est automatiquement
+> ajoutée avec comme valeur le nom de cette classe. Le code ci-dessus peut 
+> donc être remplacé par
+
+<blockquote>
+```python
+from browser import html
+
+class MyParagraph(html.P):
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow <= html.B('hello')
+
+define('my-paragraph', MyParagraph)
+```
+</blockquote>
+
 
 `get(`_nom_balise_`)`
 
@@ -86,7 +121,7 @@ webcomponent.define("bold-italic", BoldItalic)
 Pour gérer les changements apportés à certains attributs, ajouter la liste
 `observedAttributes` et la méthode  `attributeChangedCallback()` comme
 ci-dessous (notez que cette fois un nouveau composant personnalisé est créé
-en utilisant la fonction `maketag` du module [html](html.html) et ajouté 
+en utilisant la fonction `maketag` du module [html](html.html) et ajouté
 dynamiquement au document):
 
 ```python

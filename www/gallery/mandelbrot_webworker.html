@@ -30,7 +30,8 @@ td{
 <title>Brython mandelbrot</title>
 
 </head>
-<body onload="brython(2)">
+
+<body>
 
 <script type="text/python" class="webworker" id="line_maker">
 """Web Worker script. Computes the points that should be on or off in the
@@ -112,11 +113,10 @@ object_coords = {
     "height": 2
 }
 
-line_maker = worker.Worker("line_maker")
+line_maker = None
 
 distrib = {}
 
-@bind(line_maker, "message")
 def message(ev):
     if "coords" in ev.data:
         # Worker sent a message saying that the coordinates are set. Send a
@@ -142,8 +142,14 @@ def message(ev):
         # compute values for the next line.
         line_maker.send({"y": y})
 
-# Initiate work by sending coordinates to the worker.
-line_maker.send({"coords": {"pixel": pixel_coords, "object": object_coords}})
+def load(worker):
+    # Initiate work by sending coordinates to the worker.
+    global line_maker
+    line_maker = worker
+    line_maker.send({"coords": {"pixel": pixel_coords, "object": object_coords}})
+
+worker.create_worker("line_maker", load, message)
+
 </script>
 
 <script type="text/python">

@@ -12,6 +12,9 @@ for i in range(10):
     a[i] = i
     assert a[i] == i
 
+assert window.test_jsobj.null_value is javascript.NULL
+assert window.test_jsobj.undef_value is javascript.UNDEFINED
+
 # Test dict initialization from native js objects
 # JS objects are in script jsobj_tests.js
 pyobj = window.test_jsobj.to_dict()
@@ -38,12 +41,6 @@ for k, v in dict(jsobj).items():
     print(k, v) # Prints foo bar as would be expected
 
 test = {}
-try:
-    test.update(jsobj)
-    raise Exception("should have raised ValueError")
-except ValueError:
-    pass
-
 test.update(dict(jsobj))
 assert test == {"foo": "bar"}
 
@@ -62,6 +59,8 @@ assert len(t.headers) == 1
 
 t["headers"].append({})
 assert len(t["headers"]) == 2
+t["headers"].pop()
+assert len(t.headers) == 1
 t["headers"][0]["value"] = 9
 assert t.headers[0].value == 9
 
@@ -254,4 +253,10 @@ send(1, 2, a="b", c="d")
 window.demo_array.test2172()
 window.demo_array.demo_array2.test2172()
 
+# issue in Google group
+# https://groups.google.com/g/brython/c/y3eAGcl1hfY
+try:
+    window.js_error()
+except Exception as exc:
+    assert exc.args[0] == 'catching JS error'
 print("all tests ok...")

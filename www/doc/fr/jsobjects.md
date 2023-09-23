@@ -9,7 +9,8 @@ Il faut gérer la période transitoire où Brython va cohabiter avec Javascript
 Brython n'expose par défaut que deux noms dans l'espace de noms global de
 Javascript :
 
-> `brython()` : la fonction exécutée au lancement de la page web.
+> `brython()` : fonction qui lance l'exécution des scripts Python de la page
+> (voir [Options d'exécution](/static_doc/fr/options.html))
 
 > `__BRYTHON__` : un objet utilisé en interne par Brython pour stocker les
 > objets nécessaires à l'exécution des scripts.
@@ -84,12 +85,16 @@ tableau suivant :
 <tr><td>Collection d’éléments DOM</td><td>liste d'instances de `DOMNode`</td>
 </tr>
 <tr><td>`true, false`</td><td>`True, False`</td></tr>
-<tr><td>`null`</td><td>inchangé (affiché comme '<Javascript null>')</td></tr>
+<tr><td>`null`</td><td>inchangé (1)</td></tr>
+<tr><td>`undefined`</td><td>inchangé (1)</td></tr>
 <tr><td>entier (Integer)</td><td>instance de `int`</td></tr>
 <tr><td>réel (Float)</td><td>instance de `float`</td></tr>
 <tr><td>chaîne (String)</td><td>instance de `str`</td></tr>
 <tr><td>tableau Javascript (Array)</td><td>instance de `list`</td></tr>
 </table>
+
+_(1) On peut tester la valeur en la comparant avec `is` aux constantes `NULL`_
+_et `UNDEFINED` du module [javascript](javascript.html)_
 
 Les autres objets Javascript sont convertis en une instance de la classe
 `JSObject` définie dans le module **javascript**. On peut les convertir
@@ -148,6 +153,13 @@ alert(rectangle.new(10, 10, 30, 30).surface())
 </script>
 ```
 
+### Exceptions
+
+En cas d'erreur dans un script Javascript appelé par un script Brython, une
+exception de la classe `JavascriptError` est déclenchée et peut être
+interceptée par le code Brython. La trace d'erreur Javascript est affichée
+sur `sys.stderr`.
+
 ### Exemple d'interface avec jQuery
 
 Voici un exemple plus complet qui montre comment utiliser la populaire
@@ -197,7 +209,7 @@ def show(i, obj):
 jq.each(jq('span'), show)
 </script>
 
-<body onload="brython(1)">
+<body>
 
 <select id="sel">
   <option value="one">one
@@ -249,7 +261,7 @@ charge pas jquery):
 <head>
 <script src="brython.js"></script>
 </head>
-<body onload="brython(1)">
+<body>
 <script type="text/python">
 import jquery
 

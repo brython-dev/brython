@@ -203,11 +203,11 @@
                                     // If the argument is an iterable other than
                                     // str, add the items
                                     var items = _b_.list.$factory(first)
-                                    items.forEach(function(item){
+                                    for(var item of items){
                                         $B.DOMNode.__le__(self, item)
-                                    })
+                                    }
                                 }catch(err){
-                                    if($B.debug > 1){
+                                    if($B.get_option('debug', err) > 1){
                                         console.log(err, err.__class__, err.args)
                                         console.log("first", first)
                                         console.log(arguments)
@@ -409,8 +409,8 @@
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObj.$factory($B.js_this)
         },
-        "Date": self.Date && $B.JSObj.$factory(self.Date),
-        "extends": function(js_constr){
+        Date: self.Date && $B.JSObj.$factory(self.Date),
+        extends: function(js_constr){
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
                 console.log(js_constr)
@@ -513,10 +513,10 @@
             var content = $B.$getattr(file_obj, 'read')()
             eval(content)
         },
-        "Math": self.Math && $B.JSObj.$factory(self.Math),
+        Math: self.Math && $B.JSObj.$factory(self.Math),
         NULL: null,
         NullType: $B.make_class('NullType'),
-        "Number": self.Number && $B.JSObj.$factory(self.Number),
+        Number: self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -526,8 +526,8 @@
             return $B.format_indent(js, 0)
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
-        "RegExp": self.RegExp && $B.JSObj.$factory(self.RegExp),
-        "String": self.String && $B.JSObj.$factory(self.String),
+        RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
+        String: self.String && $B.JSObj.$factory(self.String),
         "super": super_class,
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedType
@@ -535,15 +535,6 @@
 
     modules.javascript.NullType.__module__ = 'javascript'
     modules.javascript.UndefinedType.__module__ = 'javascript'
-
-    var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
-        "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
-        "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
-    arraybuffers.forEach(function(ab){
-        if(self[ab] !== undefined){
-            modules['javascript'][ab] = $B.JSObj.$factory(self[ab])
-        }
-    })
 
     // Default standard output and error
     // Can be reset by sys.stdout or sys.stderr
@@ -659,26 +650,32 @@
         ),
         path: _b_.property.$factory(
             function(){
-                return $B.path
+                var filename = $B.get_filename_for_import()
+                return $B.import_info[filename].path
             },
             function(self, value){
-                 $B.path = value;
+                var filename = $B.get_filename_for_import()
+                $B.import_info[filename].path = value
             }
         ),
         meta_path: _b_.property.$factory(
             function(){
-                return $B.meta_path
+                var filename = $B.get_filename()
+                return $B.import_info[filename].meta_path
             },
             function(self, value){
-                $B.meta_path = value
+                var filename = $B.get_filename()
+                $B.import_info[filename].meta_path = value
             }
         ),
         path_hooks: _b_.property.$factory(
             function(){
-                return $B.path_hooks
+                var filename = $B.get_filename()
+                return $B.import_info[filename].path_hooks
             },
             function(self, value){
-                $B.path_hooks = value
+                var filename = $B.get_filename()
+                $B.import_info[filename].path_hooks = value
             }
         ),
         path_importer_cache: _b_.property.$factory(
@@ -877,8 +874,12 @@
         }
     }
 
-    for(var attr in modules){load(attr, modules[attr])}
-    if(!($B.isWebWorker || $B.isNode)){modules['browser'].html = modules['browser.html']}
+    for(var attr in modules){
+        load(attr, modules[attr])
+    }
+    if(!($B.isWebWorker || $B.isNode)){
+        modules['browser'].html = modules['browser.html']
+    }
 
     var _b_ = $B.builtins
 

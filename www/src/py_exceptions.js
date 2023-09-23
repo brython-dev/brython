@@ -14,7 +14,7 @@ $B.set_exc = function(exc, frame){
         console.error(['Traceback (most recent call last):',
             $B.print_stack(exc.$stack),
             msg].join('\n'))
-        if($B.debug > 1){
+        if($B.get_option('debug', exc) > 1){
             console.log(exc.args)
             console.log(exc.stack)
         }
@@ -420,12 +420,7 @@ $B.exception = function(js_exc, in_ctx_manager){
             // same Python exception
             return js_exc.$py_exc
         }
-        console.log('Javascript error\n', js_exc)
-        console.log('frames', $B.frames_stack.slice())
-        var exc = _b_.Exception.$factory("Internal Javascript error: " +
-            (js_exc.__name__ || js_exc.name))
-        exc.__name__ = "Internal Javascript error: " +
-            (js_exc.__name__ || js_exc.name)
+        var exc = _b_.JavascriptError.$factory((js_exc.__name__ || js_exc.name))
         exc.$js_exc = js_exc
         if($B.is_recursion_error(js_exc)){
             return _b_.RecursionError.$factory("too much recursion")
@@ -433,8 +428,7 @@ $B.exception = function(js_exc, in_ctx_manager){
         exc.__cause__ = _b_.None
         exc.__context__ = _b_.None
         exc.__suppress_context__ = false
-        var $message = "<Javascript " + js_exc.name + ">: " +
-            (js_exc.message || "<" + js_exc + ">")
+        var $message = (js_exc.message || "<" + js_exc + ">")
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
         js_exc.$py_exc = exc
@@ -515,6 +509,12 @@ var $make_exc = $B.$make_exc = function(names, parent){
 
 $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
     BaseException)
+
+// Brython-specific
+$make_exc(["JavascriptError"], _b_.Exception)
+
+var js_errors = {'Error': _b_.JavascriptError}
+
 
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],
     ["StopAsyncIteration","err.value = arguments[0]"],
@@ -718,7 +718,7 @@ function calculate_suggestions(dir, name){
     return suggestion
 }
 
-function offer_suggestions_for_attribute_error(exc){
+$B.offer_suggestions_for_attribute_error = function(exc){
     var name = exc.name,
         obj = exc.obj
     var dir = _b_.dir(obj),
@@ -726,7 +726,7 @@ function offer_suggestions_for_attribute_error(exc){
     return suggestions
 }
 
-function offer_suggestions_for_name_error(exc, frame){
+$B.offer_suggestions_for_name_error = function(exc, frame){
     var name = exc.name,
         frame = frame || $B.last(exc.$stack)
     if(typeof name != 'string'){
@@ -754,7 +754,6 @@ function offer_suggestions_for_name_error(exc, frame){
     }
 }
 
-$B.offer_suggestions_for_name_error = offer_suggestions_for_name_error
 
 // PEP 654
 var exc_group_code =
@@ -970,7 +969,7 @@ function trace_from_stack(err){
 }
 
 $B.error_trace = function(err){
-    if($B.debug > 1){
+    if($B.get_option('debug', err) > 1){
         console.log("handle error", err.__class__, err.args)
         console.log('stack', err.$stack)
         console.log(err.stack)
@@ -991,7 +990,7 @@ $B.error_trace = function(err){
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){
             // add ^ under the line
-            if($B.debug > 1){
+            if($B.get_option('debug', err) > 1){
                 console.log('error args', err.args[1])
                 console.log('err line', line)
                 console.log('indent', indent)
@@ -1022,7 +1021,7 @@ $B.error_trace = function(err){
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
         if(err.__class__ === _b_.NameError){
-            var suggestion = offer_suggestions_for_name_error(err)
+            var suggestion = $B.offer_suggestions_for_name_error(err)
             if(suggestion){
                 trace += `. Did you mean '${suggestion}'?`
             }
@@ -1031,7 +1030,7 @@ $B.error_trace = function(err){
                 trace += `. Did you forget to import '${err.name}'?`
             }
         }else if(err.__class__ === _b_.AttributeError){
-            var suggestion = offer_suggestions_for_attribute_error(err)
+            var suggestion = $B.offer_suggestions_for_attribute_error(err)
             if(suggestion){
                 trace += `. Did you mean: '${suggestion}'?`
             }
@@ -1042,6 +1041,10 @@ $B.error_trace = function(err){
         }
     }else{
         trace = err + ""
+    }
+    if(err.$js_exc){
+        trace += '\n\nJavascript error\n' + err.$js_exc +
+            '\n' + err.$js_exc.stack
     }
     return trace
 }

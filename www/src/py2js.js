@@ -697,7 +697,7 @@ $B.format_indent = function(js, indent){
             add_closing_brace = true
         }
         if(level < 0){
-            if($B.debug > 2){
+            if($B.get_option('debug') > 2){
                 console.log('wrong js indent')
                 console.log(res)
             }
@@ -947,7 +947,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
         case 'not':
             if(context.type == 'op' && context.op == 'is'){ // "is not"
                 context.op = 'is_not'
-                return context
+                return new AbstractExprCtx(context, true)
             }
             return new AbstractExprCtx(
                 new NotCtx(new ExprCtx(context, 'not', commas)), false)
@@ -4596,6 +4596,10 @@ LambdaCtx.prototype.transition = function(token, value){
         if(token == '('){
             raise_syntax_error(context,
                 'Lambda expression parameters cannot be parenthesized')
+        }else if(context.tree.length > 0 &&
+                context.tree[0].type == 'func_args'){
+            // cf issue #2217: infinite loop for type(lambda)
+            raise_syntax_error(context)
         }else{
             return transition(new FuncArgs(context), token, value)
         }
@@ -8881,166 +8885,27 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     }
 }
 
-$B.set_import_paths = function(){
-    // Set $B.meta_path, the list of finders to use for imports
-    //
-    // The original list in $B.meta_path is made of 3 finders defined in
-    // py_import.js :
-    // - finder_VFS : in the Virtual File System : a Javascript object with
-    //   source of the standard distribution
-    // - finder_static_stlib : use the script stdlib_path.js to identify the
-    //   packages and modules in the standard distribution
-    // - finder_path : search module at different urls
-
-    var meta_path = [],
-        path_hooks = []
-
-    // $B.use_VFS is set to true if the script brython_stdlib.js or
-    // brython_modules.js has been loaded in the page. In this case we use the
-    // Virtual File System (VFS)
-    if($B.use_VFS){
-        meta_path.push($B.finders.VFS)
-    }
-
-    if($B.$options.static_stdlib_import !== false && $B.protocol != "file"){
-        // Add finder using static paths
-        meta_path.push($B.finders.stdlib_static)
-        // Remove /Lib and /libs in sys.path :
-        // if we use the static list and the module
-        // was not find in it, it's no use searching twice in the same place
-        if($B.path.length > 3) {
-            $B.path.shift()
-            $B.path.shift()
-        }
-    }
-
-    // Use the defaut finder using sys.path if protocol is not file://
-    if($B.protocol !== "file"){
-        meta_path.push($B.finders.path)
-        path_hooks.push($B.url_hook)
-    }
-
-    // Finder using CPython modules
-    if($B.$options.cpython_import){
-        if($B.$options.cpython_import == "replace"){
-            $B.path.pop()
-        }
-        meta_path.push($B.finders.CPython)
-    }
-
-    $B.meta_path = meta_path
-    $B.path_hooks = path_hooks
-}
-
 $B.parse_options = function(options){
     // By default, only set debug level
     if(options === undefined){
-        options = {debug: 1}
+        options = {}
     }else if(typeof options == 'number'){
+        // If the argument provided to brython() is a number, it is the debug
+        // level
         options = {debug: options}
     }else if(typeof options !== 'object'){
         console.warn('ignoring invalid argument passed to brython():',
             options)
-        options = {debug: 1}
+        options = {}
     }
 
-    // If the argument provided to brython() is a number, it is the debug
-    // level
-
-    if(options.debug === undefined){options.debug = 1}
-    $B.debug = options.debug
+    $B.debug = options.debug === undefined ? 1 : options.debug
 
     // set built-in variable __debug__
     _b_.__debug__ = $B.debug > 0
 
-    $B.compile_time = 0
-
-    if(options.profile === undefined){options.profile = 0}
-    $B.profile = options.profile
-
-    // If a VFS is present, Brython normally stores a precompiled version
-    // in an indexedDB database. Setting options.indexedDB to false disables
-    // this feature (cf issue #927)
-    if(options.indexedDB === undefined){options.indexedDB = true}
-
-    // For imports, default mode is to search modules of the standard library
-    // using a static mapping stored in stdlib_paths.js
-    // This can be disabled by setting option "static_stdlib_import" to false
-    if(options.static_stdlib_import === undefined){
-        options.static_stdlib_import = true
-    }
-    $B.static_stdlib_import = options.static_stdlib_import
-
-    $B.$options = options
-
-    $B.set_import_paths()
-
-    // URL of the script where function brython() is called
-    // Remove part after # (cf. issue #2035)
-    var $href = $B.script_path = _window.location.href.split('#')[0],
-        $href_elts = $href.split('/')
-    $href_elts.pop()
-    if($B.isWebWorker || $B.isNode){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory
-    $B.curdir = $href_elts.join('/')
-
-    // List of URLs where imported modules should be searched
-    // A list can be provided as attribute of options
-    if(options.pythonpath !== undefined){
-        $B.path = options.pythonpath
-        $B.$options.static_stdlib_import = false
-    }
-
     // Default extension used in imports (cf. issue #1748)
     options.python_extension = options.python_extension || '.py'
-
-    // Or it can be provided as a list of strings or path objects
-    // where a path object has at least a path attribute and, optionally,
-    // a prefetch attribute and/or a lang attribute
-    // This corresponds to a python path specified via the link element
-    //
-    //    <link rel="prefetch" href=path hreflang=lang />
-    //
-    // where the prefetch attribute should be present & true if prefetching is required
-    // otherwise it should be present and false
-
-    if(options.python_paths){
-        for(var path of options.python_paths){
-            var lang, prefetch
-            if(typeof path !== "string"){
-                lang = path.lang
-                prefetch = path.prefetch
-                path = path.path
-            }
-            $B.path.push(path)
-            if(path.slice(-7).toLowerCase() == '.vfs.js' &&
-                    (prefetch === undefined || prefetch === true)){
-                $B.path_importer_cache[path + '/'] =
-                    $B.imported['_importlib'].VFSPathFinder(path)
-            }
-            if(lang){
-                _importlib.optimize_import_for_path(path, lang)
-            }
-        }
-    }
-
-    if(!($B.isWebWorker || $B.isNode)){
-        // Get all links with rel=pythonpath and add them to sys.path
-        var path_links = document.querySelectorAll('head link[rel~=pythonpath]'),
-            _importlib = $B.imported['_importlib']
-        for(var i = 0, e; e = path_links[i]; ++i) {
-            var href = e.href;
-            if((' ' + e.rel + ' ').indexOf(' prepend ') != -1) {
-                $B.path.unshift(href);  // support prepending to pythonpath
-            }else{
-                $B.path.push(href);
-            }
-            var filetype = e.hreflang
-            if(filetype){
-                if(filetype.slice(0,2) == 'x-'){filetype = filetype.slice(2)}
-                _importlib.optimize_import_for_path(e.href, filetype)
-            }
-        }
-    }
 
     if($B.$options.args){
         $B.__ARGV = $B.$options.args
@@ -9052,10 +8917,8 @@ $B.parse_options = function(options){
     return options
 }
 
-// Reserved for future use : execute Python scripts as soon as they are
-// inserted in the page, instead of waiting for page load.
-// options are passed as attributes of the <script> tag, eg
-// <script type="text/python" debug=2>
+// set mutation observer to capture the scripts added to the page
+// after this script (py2js.js)
 if(!($B.isWebWorker || $B.isNode)){
     var startup_observer = new MutationObserver(function(mutations){
       for(var mutation of mutations){
@@ -9071,262 +8934,204 @@ if(!($B.isWebWorker || $B.isNode)){
     });
 }
 
-var python_scripts = [],
-    brython_called = {status: false},
-    inject = {},
-    defined_ids = {}
+var brython_options = {}
+
+var python_scripts = []
+
+if(typeof document !== 'undefined'){
+    // If this script is not called in a web worker by importScripts,
+    // store Python scripts already loaded in the page before loading this
+    // script
+    python_scripts = python_scripts.concat(Array.from(
+        document.querySelectorAll('script[type="text/python"]'))).concat(
+        Array.from(
+        document.querySelectorAll('script[type="text/python3"]')))
+
+
+    // handle content load
+    var onload
+
+    addEventListener('DOMContentLoaded',
+        function(ev){
+            if(ev.target.body){
+                onload = ev.target.body.onload
+            }
+            if(! onload){
+                // If no explicit "onload" is defined, default to brython
+                ev.target.body.onload = function(ev){
+                    return brython()
+                }
+            }else{
+                // else, execute onload, and if brython() was not called,
+                // call it, using the options defined in the custom tag
+                // <brython_options>
+                ev.target.body.onload = function(ev){
+                    onload()
+                    if(! status.brython_called){
+                        brython()
+                    }
+                }
+            }
+        }
+    )
+
+    // define custom element <brython-options>
+    class BrythonOptions extends HTMLElement {
+        constructor(){
+            super()
+        }
+        connectedCallback() {
+            for(var attr of this.getAttributeNames()){
+                brython_options[attr] = convert_option(attr, this.getAttribute(attr))
+            }
+        }
+    }
+
+    customElements.define('brython-options', BrythonOptions)
+
+}
+
+var inject = {},
+    defined_ids = {},
+    script_to_id = new Map(),
+    id_to_script = {}
 
 function addPythonScript(addedNode){
-    // callback function for the MutationObserver used before brython() is
-    // called (startup_obsrver)
+    // callback function for the MutationObserver used once this script is
+    // loaded (startup_observer)
    if(addedNode.tagName == 'SCRIPT' &&
-           (addedNode.type == "text/python" || addedNode.type == "text/python3")){
+           (addedNode.type == "text/python" ||
+            addedNode.type == "text/python3")){
        python_scripts.push(addedNode)
    }
+}
+
+function Injected(id){
+    this.id = id
+}
+
+var status = {
+    brython_called: false,
+    first_unnamed_script: true
+}
+
+$B.dispatch_load_event = function(script){
+    // dispatch 'load' event to be able to use the script when loaded
+    // (cf issue 2215)
+    script.dispatchEvent(new Event('load'))
 }
 
 function injectPythonScript(addedNode){
     // callback function for the MutationObserver used after brython() has
     // been called
    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
-        python_scripts.push(addedNode)
-        // call brython() to process the script.
-        try{
-            brython(inject)
-        }catch(err){
-            $B.handle_error(err)
-        }
-        var load_event = new Event('load')
-        addedNode.dispatchEvent(load_event)
+       run_scripts([addedNode])
    }
 }
 
-var brython = $B.parser.brython = function(options){
-    if(options === inject){
-        options = $B.$options
+function set_script_id(script){
+    if(script_to_id.has(script)){
+        // ignore
+    }else if(script.id){
+        if(defined_ids[script.id]){
+            throw Error("Brython error : Found 2 scripts with the " +
+              "same id '" + script.id + "'")
+        }else{
+            defined_ids[script.id] = true
+        }
+        script_to_id.set(script, script.id)
     }else{
-        options = $B.parse_options(options)
+        if(script.className === 'webworker'){
+            throw _b_.AttributeError.$factory(
+                    "webworker script has no attribute 'id'")
+        }
+        if(status.first_unnamed_script){
+            script_to_id.set(script, '__main__')
+            status.first_unnamed_script = false
+        }else{
+            script_to_id.set(script, '__main__' + $B.UUID())
+        }
     }
+    var id = script_to_id.get(script)
+    id_to_script[id] = script
+    return id
+}
+
+var brython = $B.parser.brython = function(options){
     if(!($B.isWebWorker || $B.isNode)){
-        if(! brython_called.status){
-            brython_called.status = true
+        if(! status.brython_called){
+            // first time brython() is called
+            $B.save_options = clone(options)
+            $B.$options = $B.parse_options(options)
+            status.brython_called = true
             startup_observer.disconnect()
-            // observe subsequent injections (cf. issue 2215)
+            // observe subsequent injections
             var inject_observer = new MutationObserver(function(mutations){
               for(var mutation of mutations){
                 for(var addedNode of mutation.addedNodes){
                   injectPythonScript(addedNode);
                 }
               }
-            });
+            })
 
             inject_observer.observe(document.documentElement, {
               childList: true,
               subtree: true
-            });
+            })
         }
     }else if($B.isNode){
         return
     }
-    if(options === undefined){
-        options = {}
-    }
-    // Save initial Javascript namespace
-    var kk = Object.keys(_window)
 
-    // Id sets to scripts
+    // initialize Map object script_to_id and object id_to_script
+    for(var python_script of python_scripts){
+        set_script_id(python_script)
+    }
+
     var scripts = [],
         webworkers = []
 
-    // Option to run code on demand and not all the scripts defined in a page
-    // The following lines are included to allow to run brython scripts in
-    // the IPython/Jupyter notebook using a cell magic. Have a look at
-    // https://github.com/kikocorreoso/brythonmagic for more info.
-    var ids = options.ids || options.ipy_id
+    // URL of the script where function brython() is called
+    // Remove part after # (cf. issue #2035)
+    var $href = $B.script_path = _window.location.href.split('#')[0],
+        $href_elts = $href.split('/')
+    $href_elts.pop()
+    if($B.isWebWorker || $B.isNode){$href_elts.pop()}
+    $B.curdir = $href_elts.join('/')
+
+    // Save initial Javascript namespace
+    var kk = Object.keys(_window)
+
+    // Option to only run the scripts specified by their id
+    var ids = $B.get_page_option('ids') || $B.get_page_option('ipy_id')
     if(ids !== undefined){
-        if(!Array.isArray(ids)){
+        if(! Array.isArray(ids)){
             throw _b_.ValueError.$factory("ids is not a list")
         }
-        for(var id of options.ids){
-            var found = false
-            for(var python_script of python_scripts){
-                if(python_script.id == id){
-                    scripts.push(python_script)
-                    found = true
-                    break
-                }
-            }
-            if(! found){
+        if(ids.length == 0){
+            // no script to run: return immediately
+            //return
+        }
+        for(var id of ids){
+            var script = id_to_script[id]
+            if(script){
+                scripts.push(script)
+            }else{
+                console.log(`no script with id '${id}'`)
                 throw _b_.KeyError.$factory(`no script with id '${id}'`)
             }
         }
     }else if($B.isWebWorker){
         // ignore
     }else{
-        var scripts = python_scripts.slice() // populated by startup_observer
+        var scripts = python_scripts.slice()
     }
-    // clear scripts list
-    python_scripts.length = 0
 
-    // Freeze the list of scripts here; other scripts can be inserted on
-    // the fly by viruses
-    var webworkers = scripts.filter(script => script.className === 'webworker'),
-        scripts = scripts.filter(script => script.className !== 'webworker')
-
-    var first_script = true,
-        module_name
-    if(options.ipy_id !== undefined){
-        module_name = '__main__'
-        var src = "",
-            js,
-            root
-        for(var script of scripts){
-            src += (script.innerHTML || script.textContent)
-        }
-        try{
-            // Conversion of Python source code to Javascript
-            root = $B.py2js(src, module_name, module_name)
-            js = root.to_js()
-            if($B.debug > 1){
-                $log(js)
-            }
-
-            // Run resulting Javascript
-            eval(js)
-
-            root = null
-            js = null
-
-        }catch($err){
-            root = null
-            js = null
-            console.log($err)
-            if($B.debug > 1){
-                console.log($err)
-                for(var attr in $err){
-                   console.log(attr + ' : ', $err[attr])
-                }
-            }
-
-            // If the error was not caught by the Python runtime, build an
-            // instance of a Python exception
-            if($err.$py_error === undefined){
-                console.log('Javascript error', $err)
-                $err = _b_.RuntimeError.$factory($err + '')
-            }
-
-            // Print the error traceback on the standard error stream
-            var $trace = $B.$getattr($err, 'info') + '\n' + $err.__name__ +
-                ': ' + $err.args
-            try{
-                $B.$getattr($B.get_stderr(), 'write')($trace)
-            }catch(print_exc_err){
-                console.log($trace)
-            }
-            // Throw the error to stop execution
-            throw $err
-        }
+    var module_name
+    if($B.get_page_option('ipy_id') !== undefined){
+        run_brython_magic(scripts)
     }else{
-        if(scripts.length > 0 || $B.isWebWorker){
-            if(options.indexedDB && $B.has_indexedDB &&
-                    $B.hasOwnProperty("VFS")){
-                $B.tasks.push([$B.idb_open])
-            }
-        }
-        // Get all explicitely defined ids, to avoid overriding
-        for(script of scripts){
-            if(script.id){
-                if(defined_ids[script.id]){
-                    throw Error("Brython error : Found 2 scripts with the " +
-                      "same id '" + script.id + "'")
-                }else{
-                    defined_ids[script.id] = true
-                }
-            }
-        }
-
-        var src
-        for(var worker of webworkers){
-            if(worker.id === undefined){
-                throw _b_.AttributeError.$factory(
-                    "webworker script has no attribute 'id'")
-            }
-            if(defined_ids[worker.id]){
-                throw _b_.RuntimeError.$factory("Brython error : Found 2 scripts with the " +
-                  "same id '" + worker.id + "'")
-            }else{
-                defined_ids[worker.id] = true
-            }
-            if(worker.src){
-                // format <script type="text/python" src="python_script.py">
-                // get source code by an Ajax call
-                $B.tasks.push([$B.ajax_load_script,
-                    {name: worker.id, url: worker.src, is_ww: true}])
-            }else{
-                // Get source code inside the script element
-                var source = (worker.innerText || worker.textContent)
-                source = unindent(source) // remove global indentation
-                // remove leading CR if any
-                source = source.replace(/^\n/, '')
-                worker.source = source
-                $B.webworkers[worker.id] = worker
-                var filename = $B.script_path + "#" + worker.id
-                $B.url2name[filename] = worker.id
-                $B.file_cache[filename] = source
-            }
-        }
-
-        for(var script of scripts){
-            // Set the module name, ie the value of the builtin variable
-            // __name__.
-            // If the <script> tag has an attribute "id", it is taken as
-            // the module name.
-            if(script.id){
-                module_name = script.id
-            }else{
-                // If no explicit name is given, the module name is
-                // "__main__" for the first script, and "__main__" + a
-                // random value for the next ones.
-                if(first_script){
-                    module_name = '__main__'
-                    first_script = false
-                }else{
-                    module_name = '__main__' + $B.UUID()
-                }
-                while(defined_ids[module_name] !== undefined){
-                    module_name = '__main__' + $B.UUID()
-                }
-            }
-
-            // Get Python source code
-            if(script.src){
-                // format <script type="text/python" src="python_script.py">
-                // get source code by an Ajax call
-                $B.tasks.push([$B.ajax_load_script,
-                    {name: module_name, url: script.src, id: script.id}])
-            }else{
-                // Get source code inside the script element
-                src = (script.innerHTML || script.textContent)
-                src = unindent(src) // remove global indentation
-                // remove leading CR if any
-                src = src.replace(/^\n/, '')
-                // remove trailing \n
-                if(src.endsWith('\n')){
-                    src = src.substr(0, src.length - 1)
-                }
-                var filename = $B.script_path + "#" + module_name
-                // store source code
-                $B.file_cache[filename] = src
-                $B.url2name[filename] = module_name
-                $B.scripts[filename] = script
-                $B.tasks.push([$B.run_script, src, module_name,
-                               filename, true])
-            }
-        }
-    }
-
-    if(options.ipy_id === undefined){
-        $B.loop()
+        run_scripts(scripts)
     }
 
     /* Uncomment to check the names added in global Javascript namespace
@@ -9339,16 +9144,232 @@ var brython = $B.parser.brython = function(options){
     */
 }
 
-$B.get_debug = function(filename){
-    var level = $B.scripts[filename].getAttribute('debug')
-    return level === null ? $B.debug : level
+function convert_option(option, value){
+    // Convert the options defined in tag <brython-options>
+    if(option == 'debug'){
+        if(typeof value == 'string' && value.match(/^\d+$/)){
+            return parseInt(value)
+        }else{
+            if(value !== null && value !== undefined){
+                console.debug(`Invalid value for debug: ${value}`)
+            }
+        }
+    }else if(option == 'cache' ||
+            option == 'indexeddb' ||
+            option == 'static_stdlib_import'){
+        if(value == '1' || value.toLowerCase() == 'true'){
+            return true
+        }else if(value == '0' || value.toLowerCase() == 'false'){
+            return false
+        }else{
+            console.debug(`Invalid value for ${option}: ${value}`)
+        }
+    }else if(option == 'ids' || option == 'pythonpath' || option == 'args'){
+        // passed as a list of space-separated values
+        if(typeof value == 'string'){
+            if(value.trim().length == 0){
+                return []
+            }
+            return value.trim().split(/\s+/)
+        }
+    }
+    return default_value[option]
 }
 
-$B.run_script = function(src, name, url, run_loop){
+const default_option = {
+    args: [],
+    cache: false,
+    debug: 1,
+    indexeddb: true,
+    python_extension: '.py',
+    static_stdlib_import: true
+}
+
+$B.get_filename = function(){
+    if($B.frames_stack.length > 0){
+        return $B.frames_stack[0].__file__
+    }
+}
+
+$B.get_filename_for_import = function(){
+    var filename = $B.get_filename()
+    if($B.import_info[filename] === undefined){
+        $B.make_import_paths(filename)
+    }
+    return filename
+}
+
+$B.get_page_option = function(option){
+    // Get option defined at page level
+    // If brython is explicitely called in <body onload="brython(options)">,
+    // use these options first
+    if($B.$options.hasOwnProperty(option)){
+        // option passed to brython()
+        return $B.$options[option]
+    }else if(brython_options.hasOwnProperty(option.toLowerCase())){
+        // else use options defined in tag <brython-options>
+        return brython_options[option.toLowerCase()]
+    }else{
+        return default_option[option]
+    }
+}
+
+$B.get_option = function(option, err){
+    var filename = $B.script_filename
+    if(err && err.$stack && err.$stack.length > 0){
+        filename = err.$stack[0].__file__
+    }else{
+        filename = $B.get_filename()
+    }
+    return $B.get_option_from_filename(option, filename)
+}
+
+$B.get_option_from_filename = function(option, filename){
+    if((! filename) || ! $B.scripts[filename]){
+        return $B.get_page_option(option)
+    }
+    var value = $B.scripts[filename].getAttribute(option)
+    if(value !== null){
+        return convert_option(option, value)
+    }else{
+        return $B.get_page_option(option)
+    }
+}
+
+function run_scripts(scripts){
+    // Split between webworkers and other scripts
+    var webworkers = scripts.filter(script => script.className === 'webworker'),
+        scripts = scripts.filter(script => script.className !== 'webworker')
+
+    var module_name
+
+    if(scripts.length > 0 || $B.isWebWorker){
+        if($B.get_page_option('indexedDB') && $B.has_indexedDB &&
+                $B.hasOwnProperty("VFS")){
+            $B.tasks.push([$B.idb_open])
+        }
+    }
+    var src
+    for(var worker of webworkers){
+        if(worker.src){
+            // format <script type="text/python" src="python_script.py">
+            // get source code by an Ajax call
+            $B.tasks.push([$B.ajax_load_script,
+                {script: worker, name: worker.id, url: worker.src, is_ww: true}])
+        }else{
+            // Get source code inside the script element
+            var source = (worker.innerText || worker.textContent)
+            source = unindent(source) // remove global indentation
+            // remove leading CR if any
+            source = source.replace(/^\n/, '')
+            $B.webworkers[worker.id] = worker
+            var filename = $B.script_filename = $B.script_path + "#" + worker.id
+            $B.url2name[filename] = worker.id
+            $B.file_cache[filename] = source
+            $B.scripts[filename] = worker
+            $B.dispatch_load_event(worker)
+        }
+    }
+
+    for(var script of scripts){
+        module_name = script_to_id.get(script)
+        // Get Python source code
+        if(script.src){
+            // format <script type="text/python" src="python_script.py">
+            // get source code by an Ajax call
+            $B.tasks.push([$B.ajax_load_script,
+                {script, name: module_name, url: script.src, id: script.id}])
+        }else{
+            // Get source code inside the script element
+            src = (script.innerHTML || script.textContent)
+            src = unindent(src) // remove global indentation
+            // remove leading CR if any
+            src = src.replace(/^\n/, '')
+            // remove trailing \n
+            if(src.endsWith('\n')){
+                src = src.substr(0, src.length - 1)
+            }
+            var filename = $B.script_filename = $B.script_path + "#" + module_name
+            // store source code
+            $B.file_cache[filename] = src
+            $B.url2name[filename] = module_name
+            $B.scripts[filename] = script
+            $B.tasks.push([$B.run_script, script, src, module_name,
+                           filename, true])
+        }
+    }
+    $B.loop()
+}
+
+function run_brython_magic(scripts){
+    // The following lines are included to allow to run brython scripts in
+    // the IPython/Jupyter notebook using a cell magic. Have a look at
+    // https://github.com/kikocorreoso/brythonmagic for more info.
+    module_name = '__main__'
+    var src = "",
+        js,
+        root
+    for(var script of scripts){
+        src += (script.innerHTML || script.textContent)
+    }
+    try{
+        // Conversion of Python source code to Javascript
+        root = $B.py2js(src, module_name, module_name)
+        js = root.to_js()
+        if($B.debug > 1){
+            $log(js)
+        }
+
+        // Run resulting Javascript
+        eval(js)
+
+        root = null
+        js = null
+
+    }catch($err){
+        root = null
+        js = null
+        console.log($err)
+        if($B.debug > 1){
+            console.log($err)
+            for(var attr in $err){
+               console.log(attr + ' : ', $err[attr])
+            }
+        }
+
+        // If the error was not caught by the Python runtime, build an
+        // instance of a Python exception
+        if($err.$py_error === undefined){
+            console.log('Javascript error', $err)
+            $err = _b_.RuntimeError.$factory($err + '')
+        }
+
+        // Print the error traceback on the standard error stream
+        var $trace = $B.$getattr($err, 'info') + '\n' + $err.__name__ +
+            ': ' + $err.args
+        try{
+            $B.$getattr($B.get_stderr(), 'write')($trace)
+        }catch(print_exc_err){
+            console.log($trace)
+        }
+        // Throw the error to stop execution
+        throw $err
+    }
+}
+
+$B.run_script = function(script, src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
     $B.file_cache[url] = src
     $B.url2name[url] = name
+    $B.scripts[url] = script
+
+    // Initialize information for imports : path, meta_path, path_hooks
+    $B.make_import_paths(url) // in py_import.js
+
+    // set built-in variable __debug__
+    _b_.__debug__ = $B.get_option('debug') > 0
+
     try{
         var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),
@@ -9358,7 +9379,7 @@ $B.run_script = function(src, name, url, run_loop){
                 __name__: name,
                 __file__: url
             }
-        if($B.get_debug(url) > 1){
+        if($B.get_option_from_filename('debug', url) > 1){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){

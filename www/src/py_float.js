@@ -810,7 +810,7 @@ float.__int__ = function(self){
                    res_num :
                    $B.fast_long_int(res)
     }
-    return parseInt(self.value)
+    return Math.floor(self.value)
 }
 
 float.is_integer = function(self){

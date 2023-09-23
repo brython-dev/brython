@@ -2734,7 +2734,9 @@ str.$factory = function(arg, encoding, errors){
     }catch(err){
         console.log("no __str__ for", arg)
         console.log("err ", err)
-        if($B.debug > 1){console.log(err)}
+        if($B.get_option('debug') > 1){
+            console.log(err)
+        }
         console.log("Warning - no method __str__ or __repr__, " +
             "default to toString", arg)
         throw err

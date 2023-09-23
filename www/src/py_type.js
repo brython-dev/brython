@@ -709,7 +709,7 @@ type.__getattribute__ = function(klass, attr){
         }
         if(typeof res == "function"){
             // method
-            if(res.$infos === undefined && $B.debug > 1){
+            if(res.$infos === undefined && $B.get_option('debug') > 1){
                 console.log("warning: no attribute $infos for", res,
                     "klass", klass, "attr", attr)
             }

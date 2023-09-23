@@ -1,3 +1,6 @@
+import sys
+import os
+
 from browser import window
 import brython_test_utils as utils
 import unittest
@@ -23,6 +26,9 @@ class BrythonModuleTestCase(unittest.TestCase):
 
 def qunit_test(testName, test, result):
     def wrapped_test(qunit):
+        # reset sys.path because module tester is in /tests
+        sys.path[0] = os.path.dirname(os.path.dirname(__file__))
+        import tester
         test(result)
         if result.details:
             msg = '[' + result.lastOutcome + '] - ' + result.details

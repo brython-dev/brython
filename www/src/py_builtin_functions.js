@@ -482,7 +482,7 @@ var dir = _b_.dir = function(obj){
         return $B.$call(dir_func)(obj)
     }
     try{
-        var res = $B.$call($B.$getattr(obj, '__dir__'))()
+        var res = $B.$call($B.$getattr(klass, '__dir__'))(obj)
         res = _b_.list.$factory(res)
         return res
     }catch (err){
@@ -774,7 +774,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                                      local_name, global_name,
                                      'frame', '_frames', js)
     }catch(err){
-        if(true){ //$B.debug > 1){
+        if($B.get_option('debug') > 1){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
@@ -785,7 +785,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         var res = exec_func($B, _b_,
                             exec_locals, exec_globals, frame, _frames)
     }catch(err){
-        if($B.debug > 2){
+        if($B.get_option('debug') > 2){
             console.log(
                 'Python code\n', src,
                 '\ninitial stack before exec', save_frames_stack.slice(),
@@ -3118,8 +3118,8 @@ var $url_open = _b_.open = function(){
                 }
             }
             // add fake query string to avoid caching
-            var fake_qs = $B.$options.cache ? '' :
-                              '?foo=' + (new Date().getTime())
+            var cache = $B.get_option('cache'),
+                fake_qs = cache ? '' : '?foo=' + (new Date().getTime())
             req.open('GET', encodeURI(file + fake_qs), false)
             req.send()
         }else{

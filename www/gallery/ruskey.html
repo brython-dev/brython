@@ -5,7 +5,8 @@
 <script src="../src/brython.js"></script>
 <script type="text/python" src="show_source.py"></script>
 </head>
-<body onload="brython(1)">
+
+<body>
 <h1>Phonetic cyrillic on QWERTY keyboard</h1>
 Here is a little test, mapping latin characters on a keyboard to their phonetically equivalent characters in a cyrillic script, as used in Russian.
 <p>
@@ -53,7 +54,7 @@ def keydown(e):
     offset = 65 if e.shiftKey else 32
     e.preventDefault()
     e.stopPropagation()
-    if key == 8: 
+    if key == 8:
         deletekey()
     elif key == 32:
         printkey(" ")

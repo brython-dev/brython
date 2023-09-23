@@ -8,7 +8,8 @@ Javascript ;-)
 
 By default, Brython only exposes two names in the global Javascript namespace:
 
-> `brython()` : the function run on page load
+> `brython()` : function that triggers execution of the Python scripts in the page
+> (see [Execution options](/static_doc/en/options.html))
 
 > `__BRYTHON__` : an object used internally by Brython to store the objects
 > needed for scripts execution
@@ -80,12 +81,16 @@ Javascript objects are converted into their Python equivalent in this way :
 <tr><td>Collection of DOM elements</td><td>list of `DOMNode` instances</td>
 </tr>
 <tr><td>`true, false`</td><td>`True, False`</td></tr>
-<tr><td>`null`</td><td>unchanged (printed as '<Javascript null>')</td></tr>
+<tr><td>`null`</td><td>unchanged (1)</td></tr>
+<tr><td>`undefined`</td><td>unchanged (1)</td></tr>
 <tr><td>Integer</td><td>instance of `int`</td></tr>
 <tr><td>Float</td><td>instance of `float`</td></tr>
 <tr><td>String</td><td>instance of `str`</td></tr>
 <tr><td>Array</td><td>instance of `list`</td></tr>
 </table>
+
+_(1) The value can be tested by comparing it with `is` to constants `NULL`_
+_and `UNDEFINED` in module [javascript](javascript.html)_
 
 The other Javascript objects are converted into an instance of the class
 `JSObject` defined in module **javascript**. They can be converted into
@@ -145,6 +150,13 @@ alert(rectangle.new(10, 10, 30, 30).surface())
 </script>
 ```
 
+### Exceptions
+
+If an error happens in a Javascript script called by a Brython script, an
+exception instance of class `JavascriptError` is triggered and can be
+caught by the Brython code. The Javascript error trace is printed on
+`sys.stderr`.
+
 ### jQuery example
 
 Here is a more complete example of how you can use the popular library jQuery:
@@ -193,7 +205,7 @@ def show(i, obj):
 jq.each(jq('span'), show)
 </script>
 
-<body onload="brython(1)">
+<body>
 
 <select id="sel">
   <option value="one">one
@@ -246,7 +258,8 @@ jquery.js):
 <head>
 <script src="brython.js"></script>
 </head>
-<body onload="brython(1)">
+
+<body>
 <script type="text/python">
 import jquery
 

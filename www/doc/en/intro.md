@@ -15,10 +15,12 @@ A simple example :
 <td>
 ```xml
 <html>
+
 <head>
 <script src="/brython.js"></script>
 </head>
-<body onload="brython()">
+
+<body>
 <script type="text/python">
 from browser import document
 from browser.widgets.dialog import InfoDialog
@@ -26,12 +28,13 @@ from browser.widgets.dialog import InfoDialog
 def click(ev):
     InfoDialog("Hello", f"Hello, {document['zone'].value} !")
 
-# bind event 'click' on button to function echo
+# bind event 'click' on button to callback function
 document["echo"].bind("click", click)
 </script>
 <input id="zone">
 <button id="echo">click !</button>
 </body>
+
 </html>
 ```
 
@@ -47,7 +50,7 @@ from browser.widgets.dialog import InfoDialog
 def click(ev):
     InfoDialog("Hello", f"Hello, {document['zone'].value} !")
 
-# bind event 'click' on button to function echo
+# bind event 'click' on button to callback function
 document["echo"].bind("click", click)
 </script>
 
@@ -58,15 +61,11 @@ document["echo"].bind("click", click)
 </tr>
 </table>
 
-In order for the Python script to be processed, it is necessary to include
-__brython.js__ and to run the `brython()` function upon page load (using
-the _onload_ attribute of the `<BODY>` tag). While in the development phase,
-it is possible to pass an argument to the `brython()` function: 1 to have the
-error messages displayed to the web browser console, 2 to also get the
-Javascript code displayed along with the error.
+In order for the Python script to be processed, all there is to do is to
+include __brython.js__.
 
 If the Python program is large, another option is to write it in a separate
-file, and to load it using the _src_ attribute of the _script_ tag :
+file, and to load it using the _src_ attribute of the `<script>` tag :
 
 ```xml
 <html>
@@ -75,7 +74,7 @@ file, and to load it using the _src_ attribute of the _script_ tag :
 <script src="/brython.js"></script>
 </head>
 
-<body onload="brython()">
+<body>
 <script type="text/python" src="test.py"></script>
 <input id="zone" autocomplete="off">
 <button id="mybutton">click!</button>
@@ -96,9 +95,11 @@ __`.bry`__ as in the following example:
 <script type="text/python" src="test.bry"></script>
 ```
 
-In the above two examples of code, when we click on the button, the onclick
-event calls and run the `echo()` function, which was defined in the Python
-script. This function gets the value of the INPUT element, through its id
+In the above two examples of code, when we click on the button, the click
+event calls and runs the function `click()` defined in the Python
+script.
+
+This function gets the value of the INPUT element, through its id
 (_zone_). This is accomplished by the syntax `document["zone"]` : `document`,
 defined in module **browser**, is an object that represents the document
 currently displayed in the browser. It behaves like a dictionary whose keys
