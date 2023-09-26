@@ -13,7 +13,7 @@ cpython_version = sys.version_info
 if cpython_version[0] != version[0] or \
         cpython_version[1] != version [1]:
     print("This script requires Python {}.{}".format(*version[:2]))
-    sys.exit()
+    sys.exit(1)
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
