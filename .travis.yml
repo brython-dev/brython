@@ -16,6 +16,7 @@ jobs:
       before_install:
         - npm install testem
         - ./node_modules/.bin/testem launchers
+        - apt install python3.11
 
       before_script:
         - (cd scripts && python3.11 make_doc.py)
