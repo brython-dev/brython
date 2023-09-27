@@ -11,6 +11,7 @@ jobs:
         apt:
           packages:
             - libnss3
+            - python3.11
       services:
         - xvfb
       before_install:
@@ -18,8 +19,8 @@ jobs:
         - ./node_modules/.bin/testem launchers
 
       before_script:
-        - (cd scripts && python3.10 make_doc.py)
-        - (cd scripts && python3.10 make_dist.py)
+        - (cd scripts && python3.11 make_doc.py)
+        - (cd scripts && python3.11 make_dist.py)
 
       script:
         # Some day, put back Chrome or "Headless Chrome" as well. For some reason
@@ -29,7 +30,7 @@ jobs:
         - ./node_modules/.bin/testem --launch Firefox -t www/tests/run_tests.html ci
 
     - language: python
-      python: '3.10'
+      python: '3.11'
       before_install: pip install --upgrade pip
       before_script: pip install flake8
       script:
