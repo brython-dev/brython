@@ -112,18 +112,22 @@ return($B.files && $B.files.hasOwnProperty(file))}
 $B.show_tokens=function(src,mode){
 for(var token of $B.tokenizer(src,'<string>',mode ||'file')){console.log(token.type,token.string,token.start,token.end,token.line)}}
 var py2js_magic=Math.random().toString(36).substr(2,8)
-$B.python_to_js=function(src,script_id){
-if(! $B.options_parsed){
+function from_py(src,script_id){if(! $B.options_parsed){
 $B.parse_options()}
 var filename='$python_to_js'+$B.UUID()
 $B.url2name[filename]=filename
 $B.imported[filename]={}
-var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope),js=root.to_js()
-return "(function() {\n"+js+"\nreturn locals}())"}
-_window.py=function(src){
-var root=$B.py2js(src[0],"script","script"),js=root.to_js()
-$B.set_import_paths()
-new Function("$locals_script",js)({})}})(__BRYTHON__)
+var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope)
+return root.to_js()}
+$B.getPythonModule=function(name){return $B.imported[name]}
+$B.python_to_js=function(src,script_id){
+return "(function() {\n"+from_py(src,script_id)+"\nreturn locals}())"}
+$B.pythonToJS=$B.python_to_js
+$B.runPythonSource=function(src,script_id){if(script_id===undefined){script_id='python_script_'+$B.UUID()}
+var js=from_py(src,script_id)+'\nreturn locals'
+var func=new Function('$B','_b_',js)
+$B.imported[script_id]=func($B,$B.builtins)
+return $B.imported[script_id]}})(__BRYTHON__)
 ;
 __BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
 ;
@@ -157,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-23 22:13:44.565135"
-__BRYTHON__.timestamp=1695500024565
+__BRYTHON__.compiled_date="2023-09-28 17:39:34.403089"
+__BRYTHON__.timestamp=1695915574403
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4501,7 +4505,8 @@ var status={brython_called:false,first_unnamed_script:true}
 $B.dispatch_load_event=function(script){
 script.dispatchEvent(new Event('load'))}
 function injectPythonScript(addedNode){
-if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){run_scripts([addedNode])}}
+if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){set_script_id(addedNode)
+run_scripts([addedNode])}}
 function set_script_id(script){if(script_to_id.has(script)){}else if(script.id){if(defined_ids[script.id]){throw Error("Brython error : Found 2 scripts with the "+
 "same id '"+script.id+"'")}else{defined_ids[script.id]=true}
 script_to_id.set(script,script.id)}else{if(script.className==='webworker'){throw _b_.AttributeError.$factory(
@@ -4511,9 +4516,8 @@ status.first_unnamed_script=false}else{script_to_id.set(script,'__main__'+$B.UUI
 var id=script_to_id.get(script)
 id_to_script[id]=script
 return id}
-var brython=$B.parser.brython=function(options){if(!($B.isWebWorker ||$B.isNode)){if(! status.brython_called){
-$B.save_options=clone(options)
-$B.$options=$B.parse_options(options)
+var brython=$B.parser.brython=function(options){$B.$options=$B.parse_options(options)
+if(!($B.isWebWorker ||$B.isNode)){if(! status.brython_called){
 status.brython_called=true
 startup_observer.disconnect()
 var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode);}}})
@@ -4528,8 +4532,9 @@ var kk=Object.keys(_window)
 var ids=$B.get_page_option('ids')||$B.get_page_option('ipy_id')
 if(ids !==undefined){if(! Array.isArray(ids)){throw _b_.ValueError.$factory("ids is not a list")}
 if(ids.length==0){}
-for(var id of ids){var script=id_to_script[id]
-if(script){scripts.push(script)}else{console.log(`no script with id '${id}'`)
+for(var id of ids){var script=document.querySelector(`script[id="${id}"]`)
+if(script){set_script_id(script)
+scripts.push(script)}else{console.log(`no script with id '${id}'`)
 throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{var scripts=python_scripts.slice()}
 var module_name
 if($B.get_page_option('ipy_id')!==undefined){run_brython_magic(scripts)}else{run_scripts(scripts)}}
@@ -11741,7 +11746,7 @@ if(Number.isInteger(self.value)){var res=BigInt(self.value),res_num=Number(res)
 return Number.isSafeInteger(res_num)?
 res_num :
 $B.fast_long_int(res)}
-return Math.floor(self.value)}
+return Math.trunc(self.value)}
 float.is_integer=function(self){return Number.isInteger(self.value)}
 float.__mod__=function(self,other){
 check_self_is_float(self,'__mod__')
@@ -14466,7 +14471,9 @@ scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
 if(script.src){console.log(script.src)}}})
 for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},run_script:function(){var $=$B.args("run_script",2,{src:null,name:null},["src","name"],arguments,{name:"script_"+$B.UUID()},null,null)
-$B.run_script($.src,$.name,$B.script_path,true)},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
+var script=document.createElement('script')
+script.setAttribute('id',$.name)
+$B.run_script(script,$.src,$.name,$B.script_path,true)},URLParameter:function(name){name=name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]"+name+"=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" :
 decodeURIComponent(results[1].replace(/\+/g," "));
@@ -14502,26 +14509,27 @@ return res}
 dict.__rmul__=function(self,num){return $B.DOMNode.__mul__(self,num)}
 $B.set_func_names(dict,"browser.html")
 return dict}
-function makeFactory(klass){
-var factory=function(){if(klass.__name__=='SVG'){var res=$B.DOMNode.$factory(
-document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var res=document.createElement(klass.__name__)}
-var init=$B.$getattr(klass,"__init__",null)
+function makeFactory(klass,ComponentClass){
+return(function(k){return function(){if(k.__name__=='SVG'){var res=$B.DOMNode.$factory(
+document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{try{var res=document.createElement(k.__name__)}catch(err){console.log('error '+err)
+console.log('creating element',k.__name__)
+throw err}}
+var init=$B.$getattr(k,"__init__",null)
 if(init !==null){init(res,...arguments)}
-return res}
-return factory}
+return res}})(klass)}
 var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON','CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD','DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT','FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6','HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS','ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU','META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP','OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT','SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP','SVG','TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD','TITLE','TR','TT','U','UL','VAR',
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
 'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 var html={}
-html.tags=$B.jsobj_as_pydict.$factory(html,function(attr){return tags.indexOf(attr)==-1}
-)
-function maketag(tagName){
+html.tags=$B.empty_dict()
+function maketag(tagName,ComponentClass){
 if(!(typeof tagName=='string')){throw _b_.TypeError.$factory("html.maketag expects a string as argument")}
 if(html[tagName]!==undefined){throw _b_.ValueError.$factory("cannot reset class for "
 +tagName)}
 var klass=makeTagDict(tagName)
-klass.$factory=makeFactory(klass)
+klass.$factory=makeFactory(klass,ComponentClass)
 html[tagName]=klass
+_b_.dict.$setitem(html.tags,tagName,html[tagName])
 return klass}
 for(var tagName of tags){maketag(tagName)}
 html.maketag=maketag
