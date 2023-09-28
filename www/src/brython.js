@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-28 17:39:34.403089"
-__BRYTHON__.timestamp=1695915574403
+__BRYTHON__.compiled_date="2023-09-28 18:06:59.423910"
+__BRYTHON__.timestamp=1695917219423
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7873,7 +7873,7 @@ $B.set_func_names(_b_.NameError,'builtins')
 $make_exc(["UnboundLocalError"],_b_.NameError)
 _b_.UnboundLocalError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
-$B.name_error=function(name,obj){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
+$B.name_error=function(name){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
 exc.name=name
 exc.$stack=$B.frames_stack.slice()
 return exc}
@@ -14928,8 +14928,8 @@ for(var frame of _frames.slice().reverse()){var v=resolve_in_namespace(name,fram
 if(v.found){return v.value}
 if(frame.is_exec_top){break}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
-throw _b_.NameError.$factory(name)}
-$B.own_class_name=function(name){throw _b_.NameError.$factory(name)}
+throw $B.name_error(name)}
+$B.own_class_name=function(name){throw $B.name_error(name)}
 var $operators=$B.op2method.subset("all")
 var opname2opsign={}
 for(var key in $operators){opname2opsign[$operators[key]]=key}
