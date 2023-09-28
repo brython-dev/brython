@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-28 18:06:59.423910"
-__BRYTHON__.timestamp=1695917219423
+__BRYTHON__.compiled_date="2023-09-28 22:03:22.542504"
+__BRYTHON__.timestamp=1695931402542
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13409,6 +13409,7 @@ throw _b_.TypeError.$factory(
 return args}
 $B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){
 jsobj.$is_js_array=true}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
+jsobj.$infos={__name__:jsobj.name,__qualname__:jsobj.name}
 jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
 return jsobj}
 )
@@ -13458,9 +13459,12 @@ return klass}
 $B.JSObj.__getattribute__=function(_self,attr){var test=false 
 if(test){console.log("__ga__",_self,attr)}
 if(attr=="new" && typeof _self=="function"){
-if(_self.$js_func){return function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new _self.$js_func(...args))}}else{return function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new _self(...args))}}}
+var new_func
+if(_self.$js_func){new_func=function(){var args=pyargs2jsargs(arguments)
+return $B.JSObj.$factory(new _self.$js_func(...args))}}else{new_func=function(){var args=pyargs2jsargs(arguments)
+return $B.JSObj.$factory(new _self(...args))}}
+new_func.$infos={__name__:attr,__qualname__:attr}
+return new_func}
 var js_attr=_self[attr]
 if(js_attr==undefined && typeof _self=="function" && _self.$js_func){js_attr=_self.$js_func[attr]}
 if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :js_attr.toString().startsWith('class '))}
@@ -13483,8 +13487,8 @@ return $B.JSObj.$factory(result)}
 res.prototype=js_attr.prototype
 res.$js_func=js_attr
 res.__mro__=[_b_.object]
-res.$infos={__name__:js_attr.name,__qualname__:js_attr.name}
-if($B.frames_stack.length > 0){res.$infos.__module__=$B.last($B.frames_stack)[3].__name__}
+res.__name__=res.__qualname__=js_attr.name
+if($B.frames_stack.length > 0){res.__module__=$B.last($B.frames_stack)[3].__name__}
 return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
 $B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2structuredclone(value)
 return _b_.None}
@@ -13598,8 +13602,10 @@ var body=`
 var new_js_class=Function('cl_dict','bases',body)(cl_dict,bases)
 new_js_class.prototype=Object.create(bases[0].$js_func.prototype)
 new_js_class.prototype.constructor=new_js_class
+new_js_class.__class__=$B.JSMeta
+new_js_class.__bases__=[bases[0]]
 new_js_class.__mro__=[bases[0],_b_.type]
-new_js_class.__qualname__=class_name
+new_js_class.__qualname__=new_js_class.__name__=class_name
 new_js_class.$is_js_class=true
 return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)

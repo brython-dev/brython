@@ -340,6 +340,10 @@ $B.JSObj = $B.make_class("JSObject",
             jsobj.$is_js_array = true
         }else if(typeof jsobj == "function"){
             jsobj.$is_js_func = true
+            jsobj.$infos = {
+                __name__: jsobj.name,
+                __qualname__: jsobj.name
+            }
             jsobj.__new__ = function(){
                 return new jsobj.$js_func(...arguments)
             }
@@ -491,17 +495,23 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     }
     if(attr == "new" && typeof _self == "function"){
         // constructor
+        var new_func
         if(_self.$js_func){
-            return function(){
+            new_func = function(){
                 var args = pyargs2jsargs(arguments)
                 return $B.JSObj.$factory(new _self.$js_func(...args))
             }
         }else{
-            return function(){
+            new_func = function(){
                 var args = pyargs2jsargs(arguments)
                 return $B.JSObj.$factory(new _self(...args))
             }
         }
+        new_func.$infos = {
+            __name__: attr,
+            __qualname__: attr
+        }
+        return new_func
     }
     var js_attr = _self[attr]
     if(js_attr == undefined && typeof _self == "function" && _self.$js_func){
@@ -564,12 +574,9 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         res.prototype = js_attr.prototype
         res.$js_func = js_attr
         res.__mro__ = [_b_.object]
-        res.$infos = {
-            __name__: js_attr.name,
-            __qualname__: js_attr.name
-        }
+        res.__name__ = res.__qualname__ = js_attr.name
         if($B.frames_stack.length > 0){
-            res.$infos.__module__ = $B.last($B.frames_stack)[3].__name__
+            res.__module__ = $B.last($B.frames_stack)[3].__name__
         }
         return $B.JSObj.$factory(res)
     }else{
@@ -798,7 +805,7 @@ $B.get_jsobj_class = function(obj){
         return $B.SizedJSObj
     }
     return $B.JSObj
-}    
+}
 // Class used as a metaclass for Brython classes that inherit a Javascript
 // constructor
 $B.JSMeta = $B.make_class("JSMeta")
@@ -862,8 +869,10 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     var new_js_class = Function('cl_dict', 'bases', body)(cl_dict, bases)
     new_js_class.prototype = Object.create(bases[0].$js_func.prototype)
     new_js_class.prototype.constructor = new_js_class
+    new_js_class.__class__ = $B.JSMeta
+    new_js_class.__bases__ = [bases[0]]
     new_js_class.__mro__ = [bases[0], _b_.type]
-    new_js_class.__qualname__ = class_name
+    new_js_class.__qualname__ = new_js_class.__name__ = class_name
     new_js_class.$is_js_class = true
     return new_js_class
 }
