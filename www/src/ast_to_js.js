@@ -517,11 +517,11 @@ $B.resolve_global = function(name, _frames){
     if(builtins_scope.locals.has(name)){
         return _b_[name]
     }
-    throw _b_.NameError.$factory(name)
+    throw $B.name_error(name)
 }
 
 $B.own_class_name = function(name){
-    throw _b_.NameError.$factory(name)
+    throw $B.name_error(name)
 }
 
 var $operators = $B.op2method.subset("all") // in py2js.js
