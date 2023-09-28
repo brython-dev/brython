@@ -8554,6 +8554,7 @@ function injectPythonScript(addedNode){
     // callback function for the MutationObserver used after brython() has
     // been called
    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
+       set_script_id(addedNode)
        run_scripts([addedNode])
    }
 }
@@ -8587,11 +8588,11 @@ function set_script_id(script){
 }
 
 var brython = $B.parser.brython = function(options){
+    $B.$options = $B.parse_options(options)
+
     if(!($B.isWebWorker || $B.isNode)){
         if(! status.brython_called){
             // first time brython() is called
-            $B.save_options = clone(options)
-            $B.$options = $B.parse_options(options)
             status.brython_called = true
             startup_observer.disconnect()
             // observe subsequent injections
@@ -8642,8 +8643,9 @@ var brython = $B.parser.brython = function(options){
             //return
         }
         for(var id of ids){
-            var script = id_to_script[id]
+            var script = document.querySelector(`script[id="${id}"]`)
             if(script){
+                set_script_id(script)
                 scripts.push(script)
             }else{
                 console.log(`no script with id '${id}'`)
@@ -8655,7 +8657,6 @@ var brython = $B.parser.brython = function(options){
     }else{
         var scripts = python_scripts.slice()
     }
-
     var module_name
     if($B.get_page_option('ipy_id') !== undefined){
         run_brython_magic(scripts)
