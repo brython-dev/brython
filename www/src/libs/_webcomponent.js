@@ -63,6 +63,11 @@ function define(tag_name, cls, options){
       constructor(){
         // Always call super first in constructor
         super()
+        var html = $B.imported['browser.html']
+        // Create tag in module html
+        if(html['tag_name'] === undefined){
+            html.maketag('tag_name', WebComponent)
+        }
         var init = $B.$getattr(cls, "__init__", _b_.None)
         if(init !== _b_.None){
             try{
@@ -114,8 +119,8 @@ function define(tag_name, cls, options){
     `
     var name = cls.__name__,
         code = src.replace(/WebComponent/g, name).
+                   replace(/tag_name/g, tag_name).
                    replace(/HTMLElement/, extend_dom_name)
-    console.log('code', code)
     var src = eval(code)
     var webcomp = eval(name) // JS class for component
     webcomp.$cls = cls

@@ -154,7 +154,9 @@
                 var $ = $B.args("run_script", 2, {src: null, name: null},
                     ["src", "name"], arguments, {name: "script_" + $B.UUID()},
                     null, null)
-                $B.run_script($.src, $.name, $B.script_path, true)
+                var script = document.createElement('script')
+                script.setAttribute('id', $.name)
+                $B.run_script(script, $.src, $.name, $B.script_path, true)
             },
             URLParameter:function(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -267,23 +269,30 @@
                 return dict
             }
 
-            function makeFactory(klass){
+            function makeFactory(klass, ComponentClass){
                 // Create the factory function for HTML tags.
-                var factory = function(){
-                    if(klass.__name__ == 'SVG'){
-                        var res = $B.DOMNode.$factory(
-                            document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
-                    }else{
-                        var res = document.createElement(klass.__name__)
+                return (function(k){
+                    return function(){
+                        if(k.__name__ == 'SVG'){
+                            var res = $B.DOMNode.$factory(
+                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                        }else{
+                            try{
+                                var res = document.createElement(k.__name__)
+                            }catch(err){
+                                console.log('error ' + err)
+                                console.log('creating element', k.__name__)
+                                throw err
+                            }
+                        }
+                        // apply __init__
+                        var init = $B.$getattr(k, "__init__", null)
+                        if(init !== null){
+                            init(res, ...arguments)
+                        }
+                        return res
                     }
-                    // apply __init__
-                    var init = $B.$getattr(klass, "__init__", null)
-                    if(init !== null){
-                        init(res, ...arguments)
-                    }
-                    return res
-                }
-                return factory
+                })(klass)
             }
 
             // All HTML 4, 5.x extracted from
@@ -317,13 +326,9 @@
             // names to the matching tag class factory function.
             // Implemented as a wrapper around a Javascript object for
             // performance.
-            html.tags = $B.jsobj_as_pydict.$factory(html,
-                function(attr){
-                    return tags.indexOf(attr) == -1
-                }
-            )
+            html.tags = $B.empty_dict()
 
-            function maketag(tagName){
+            function maketag(tagName, ComponentClass){
                 // Create a new class associated with the custom HTML tag
                 // "tagName". For instance, "makeTag('P2')" creates the class
                 // that can be used to create tags "<P2></P2>"
@@ -335,8 +340,9 @@
                         + tagName)
                 }
                 var klass = makeTagDict(tagName)
-                klass.$factory = makeFactory(klass)
+                klass.$factory = makeFactory(klass, ComponentClass)
                 html[tagName] = klass
+                _b_.dict.$setitem(html.tags, tagName, html[tagName])
                 return klass
             }
 

@@ -100,6 +100,8 @@ def show(ev):
     else:
         scripts = document.select("script")
         for script in scripts:
+            if not script.type in ["text/python", "text/python3"]:
+                continue
             if not script.src:
                 show_source(script.text)
             else:

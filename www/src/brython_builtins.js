@@ -97,7 +97,7 @@ $B.url2name = {}
 // Mapping between script url and script object
 $B.scripts = {}
 
-// Mapping between script url and import-related information (path, metapath, 
+// Mapping between script url and import-related information (path, metapath,
 // path hooks)
 $B.import_info = {}
 
@@ -308,6 +308,28 @@ $B.show_tokens = function(src, mode){
 
 // Can be used in Javascript programs to run Python code
 var py2js_magic = Math.random().toString(36).substr(2, 8)
+
+function from_py(src, script_id){
+    if(! $B.options_parsed){
+        // parse options so that imports succeed
+        $B.parse_options()
+    }
+
+    // fake names
+    var filename = '$python_to_js' + $B.UUID()
+    $B.url2name[filename] = filename
+    $B.imported[filename] = {}
+
+    var root = __BRYTHON__.py2js({src, filename},
+                                 script_id, script_id,
+                                 __BRYTHON__.builtins_scope)
+    return root.to_js()
+}
+
+$B.getPythonModule = function(name){
+    return $B.imported[name]
+}
+
 $B.python_to_js = function(src, script_id){
     /*
 
@@ -322,30 +344,20 @@ $B.python_to_js = function(src, script_id){
         console.log(ns.x) // 3
 
     */
-    if(! $B.options_parsed){
-        // parse options so that imports succeed
-        $B.parse_options()
-    }
 
-    // fake names
-    var filename = '$python_to_js' + $B.UUID()
-    $B.url2name[filename] = filename
-    $B.imported[filename] = {}
-
-    var root = __BRYTHON__.py2js({src, filename},
-                                 script_id, script_id,
-                                 __BRYTHON__.builtins_scope),
-        js = root.to_js()
-
-    return "(function() {\n" + js + "\nreturn locals}())"
+    return "(function() {\n" + from_py(src, script_id) + "\nreturn locals}())"
 }
 
-_window.py = function(src){
-    // Used by JS scripts that start with py`
-    var root = $B.py2js(src[0], "script", "script"),
-        js = root.to_js()
-    $B.set_import_paths()
-    new Function("$locals_script", js)({})
+$B.pythonToJS = $B.python_to_js
+
+$B.runPythonSource = function(src, script_id){
+    if(script_id === undefined){
+        script_id = 'python_script_' + $B.UUID()
+    }
+    var js = from_py(src, script_id) + '\nreturn locals'
+    var func = new Function('$B', '_b_', js)
+    $B.imported[script_id] = func($B, $B.builtins)
+    return $B.imported[script_id]
 }
 
 })(__BRYTHON__)

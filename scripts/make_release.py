@@ -66,7 +66,7 @@ with open(README_page, encoding="utf-8") as f:
 with open(README_page, "w", encoding="utf-8") as out:
     out.write(content)
 
-for lang in ["en", "fr", "es"]:
+for lang in ["en", "fr"]:
     install_page = os.path.join(pdir, "www", "doc", lang, "install.md")
     with open(install_page, encoding="utf-8") as f:
         content = f.read()
@@ -163,6 +163,9 @@ for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
             arcname=os.path.join(name, path))
 
     arc.close()
+
+# update travis configuration file
+import make_travis_config
 
 # changelog file
 print('Write changelog file...')

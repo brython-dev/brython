@@ -1,7 +1,7 @@
-__BRYTHON__.implementation = [3, 12, 0, 'dev', 0]
-__BRYTHON__.version_info = [3, 12, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2023-09-23 22:12:07.582993"
-__BRYTHON__.timestamp = 1695499927582
+__BRYTHON__.implementation = [3, 11, 3, 'dev', 0]
+__BRYTHON__.version_info = [3, 11, 0, 'final', 0]
+__BRYTHON__.compiled_date = "2023-09-29 08:25:00.099840"
+__BRYTHON__.timestamp = 1695968700099
 __BRYTHON__.builtin_module_names = ["_aio",
     "_ajax",
     "_ast",
@@ -23,7 +23,6 @@ __BRYTHON__.builtin_module_names = ["_aio",
     "_strptime",
     "_svg",
     "_symtable",
-    "_tokenize",
     "_webcomponent",
     "_webworker",
     "_zlib_utils",

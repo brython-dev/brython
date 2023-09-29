@@ -598,7 +598,7 @@ _b_.UnboundLocalError.__str__ = function(self){
 $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 // Shortcut to create a NameError
-$B.name_error = function(name, obj){
+$B.name_error = function(name){
     var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
     exc.name = name
     exc.$stack = $B.frames_stack.slice()

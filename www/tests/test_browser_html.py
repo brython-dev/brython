@@ -7,7 +7,7 @@ class MyH1:
 
 html.tags['H1'] = MyH1
 
-assert html.tags['H1'] == html.H1
+assert html.tags['H1'] == MyH1
 
 assert html.tags == html.tags
 nb = len(html.tags)
