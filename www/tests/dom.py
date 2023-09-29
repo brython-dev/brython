@@ -155,6 +155,8 @@ assert getattr(dataset, 'value') == "coucou"
 assert 'value' in dataset
 
 # absent key
+assert elt.getAttribute('absent') is None
+
 try:
     dataset['absent']
     raise Exception('should have raised KeyError')
