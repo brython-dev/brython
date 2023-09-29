@@ -399,6 +399,10 @@ $B.JSObj.__bool__ = function(_self){
     return !! _self
 }
 
+$B.JSObj.__contains__ = function(_self, key){
+    return key in _self
+}
+
 $B.JSObj.__dir__ = function(_self){
     var attrs = []
     for(key in _self){
@@ -591,7 +595,14 @@ $B.JSObj.__setattr__ = function(_self, attr, value){
 
 $B.JSObj.__getitem__ = function(_self, key){
     if(typeof key == "string"){
-        return $B.JSObj.__getattribute__(_self, key)
+        try{
+            return $B.JSObj.__getattribute__(_self, key)
+        }catch(err){
+            if($B.is_exc(err, [_b_.AttributeError])){
+                throw _b_.KeyError.$factory(err.name)
+            }
+            throw err
+        }
     }else if(typeof key == "number"){
         if(_self[key] !== undefined){
             return $B.JSObj.$factory(_self[key])

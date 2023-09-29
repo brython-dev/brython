@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-28 22:03:22.542504"
-__BRYTHON__.timestamp=1695931402542
+__BRYTHON__.compiled_date="2023-09-29 08:25:00.099840"
+__BRYTHON__.timestamp=1695968700099
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13425,6 +13425,7 @@ for(var js_op in js_ops){$B.JSObj[js_op]=js_ops[js_op]}
 $B.JSObj.__bool__=function(_self){if(typeof _self=='object'){for(var key in _self){return true}
 return false}
 return !! _self}
+$B.JSObj.__contains__=function(_self,key){return key in _self}
 $B.JSObj.__dir__=function(_self){var attrs=[]
 for(key in _self){attrs.push(key)}
 attrs=attrs.sort()
@@ -13492,7 +13493,8 @@ if($B.frames_stack.length > 0){res.__module__=$B.last($B.frames_stack)[3].__name
 return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
 $B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2structuredclone(value)
 return _b_.None}
-$B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){return $B.JSObj.__getattribute__(_self,key)}else if(typeof key=="number"){if(_self[key]!==undefined){return $B.JSObj.$factory(_self[key])}
+$B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){try{return $B.JSObj.__getattribute__(_self,key)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){throw _b_.KeyError.$factory(err.name)}
+throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return $B.JSObj.$factory(_self[key])}
 if(typeof _self.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
 typeof _self.item=='function'){var rank=_b_.int.$factory(key)
 if(rank < 0){rank+=_self.length}

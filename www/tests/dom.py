@@ -1,4 +1,5 @@
 from browser import window, document, html, svg
+from tester import assert_raises
 
 assert window.empty_list() == []
 assert window.list1() == [1, 2, 'a', ['b']]
@@ -143,3 +144,29 @@ def func():
 
 element.foo = func
 assert element.foo == func
+
+# issue 2245
+elt = document['elt_with_dataset']
+dataset = elt.dataset
+
+# existing key
+assert dataset['value'] == "coucou"
+assert getattr(dataset, 'value') == "coucou"
+assert 'value' in dataset
+
+# absent key
+try:
+    dataset['absent']
+    raise Exception('should have raised KeyError')
+except KeyError:
+    pass
+assert_raises(AttributeError, getattr, dataset, 'absent')
+assert 'absent' not in dataset
+
+# set new key
+dataset.toto = "tutu"
+assert dataset.toto == 'tutu'
+
+assert dataset.to_dict() == {'value': 'coucou', 'toto': 'tutu'}
+
+print('all tests pass...')
