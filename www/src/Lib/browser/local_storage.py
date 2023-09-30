@@ -1,6 +1,7 @@
 # local storage in browser
 import sys
 from browser import window, console
+import javascript
 
 has_local_storage = hasattr(window, 'localStorage')
 
@@ -16,14 +17,14 @@ class LocalStorage():
         self.store = window.localStorage
 
     def __delitem__(self, key):
-        if (not isinstance(key, str)):
+        if not isinstance(key, str):
             raise TypeError("key must be string")
         if key not in self:
             raise KeyError(key)
         self.store.removeItem(key)
 
     def __getitem__(self, key):
-        if (not isinstance(key, str)):
+        if not isinstance(key, str):
             raise TypeError("key must be string")
         res = self.store.getItem(key)
         if res is not None:
@@ -39,10 +40,10 @@ class LocalStorage():
 
     # implement "in" functionality
     def __contains__(self, key):
-        if (not isinstance(key, str)):
+        if not isinstance(key, str):
             raise TypeError("key must be string")
         res = self.store.getItem(key)
-        if res is None:
+        if res is javascript.NULL:
             return False
         return True
 
@@ -51,12 +52,12 @@ class LocalStorage():
         return keys.__iter__()
 
     def get(self, key, default=None):
-        if (not isinstance(key, str)):
+        if not isinstance(key, str):
             raise TypeError("key must be string")
         return self.store.getItem(key) or default
 
     def pop(self, key, default=_UnProvided()):
-        if (not isinstance(key, str)):
+        if not isinstance(key, str):
             raise TypeError("key must be string")
         if type(default) is _UnProvided:
             ret = self.get(key)

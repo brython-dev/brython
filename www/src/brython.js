@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-30 18:14:03.080620"
-__BRYTHON__.timestamp=1696090443080
+__BRYTHON__.compiled_date="2023-09-30 21:45:31.781809"
+__BRYTHON__.timestamp=1696103131780
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5719,7 +5719,7 @@ var kwarg={}
 for(var key in kw.$jsobj){kwarg[key]=kw.$jsobj[key]}
 var kwargs={$kw:[kwarg]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
-return kls.__class__ ||$B.get_class(kls)}else{var module=$B.last($B.frames_stack)[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
+return $B.get_class(kls)}else{var module=$B.last($B.frames_stack)[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
 return type.__call__(metaclass,kls,resolved_bases,cl_dict,kwargs)}}
 )
 type.__class__=type
@@ -6697,7 +6697,7 @@ if(msg==ps1 ||msg==ps2){console.log(msg,res)}}
 return res}
 var isinstance=_b_.isinstance=function(obj,cls){check_nb_args_no_kw('isinstance',2,arguments)
 return $B.$isinstance(obj,cls)}
-$B.$isinstance=function(obj,cls){if(obj===null){return cls===None}
+$B.$isinstance=function(obj,cls){if(obj===null){return cls===$B.imported.javascript.NullType}
 if(obj===undefined){return false}
 if(Array.isArray(cls)){for(var kls of cls){if($B.$isinstance(obj,kls)){return true}}
 return false}
@@ -13472,7 +13472,8 @@ return new_func}
 var js_attr=_self[attr]
 if(js_attr==undefined && typeof _self=="function" && _self.$js_func){js_attr=_self.$js_func[attr]}
 if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :js_attr.toString().startsWith('class '))}
-if(js_attr===undefined){if(_self.hasOwnProperty(attr)){return $B.Undefined}
+if(js_attr===undefined){if(typeof _self=='object' && attr in _self){
+return $B.Undefined}
 if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
 if(res !==undefined){return $B.JSObj.$factory(res)}}
 var klass=$B.get_class(_self),class_attr=$B.$getattr(klass,attr,null)
@@ -13486,7 +13487,7 @@ typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
 try{var result=js_attr.apply(target,args)}catch(err){throw $B.exception(err)}
-if(result===undefined){return $B.Undefined}else if(result===null){return _b_.None}
+if(result===undefined){return $B.Undefined}
 return $B.JSObj.$factory(result)}
 res.prototype=js_attr.prototype
 res.$js_func=js_attr
@@ -13494,7 +13495,7 @@ res.__mro__=[_b_.object]
 res.__name__=res.__qualname__=js_attr.name
 if($B.frames_stack.length > 0){res.__module__=$B.last($B.frames_stack)[3].__name__}
 return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
-$B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2structuredclone(value)
+$B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}
 $B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){try{return $B.JSObj.__getattribute__(_self,key)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){throw _b_.KeyError.$factory(err.name)}
 throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return $B.JSObj.$factory(_self[key])}

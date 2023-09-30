@@ -260,6 +260,33 @@ try:
 except Exception as exc:
     assert exc.args[0] == 'catching JS error'
 
+# issue 2248
+assert type(javascript.NULL) is javascript.NullType
+assert type(javascript.UNDEFINED) is javascript.UndefinedType
+
+value = getattr(window, 'opener', None)
+assert value is javascript.NULL
+assert type(value) is javascript.NullType
+assert isinstance(javascript.NULL, javascript.NullType)
+
+assert bool(javascript.NULL) is False
+assert bool(javascript.UNDEFINED) is False
+
+assert window.func_returns_null() is javascript.NULL
+assert window.func_returns_undefined() is javascript.UNDEFINED
+
+assert window.obj_with_getters._null is javascript.NULL
+assert window.obj_with_getters._undefined is javascript.UNDEFINED
+
+def py_returns_undefined():
+	return javascript.UNDEFINED
+
+window.py_returns_undefined = py_returns_undefined
+
+assert py_returns_undefined() is javascript.UNDEFINED
+
+window.test_py_returns_undefined()
+
 # issue 2249
 assert window.Date == window.Date
 assert window.x2249 == window.x2249

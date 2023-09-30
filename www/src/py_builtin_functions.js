@@ -1522,7 +1522,7 @@ var isinstance = _b_.isinstance = function(obj, cls){
 
 $B.$isinstance = function(obj, cls){
     if(obj === null){
-        return cls === None
+        return cls === $B.imported.javascript.NullType
     }
     if(obj === undefined){
         return false

@@ -155,6 +155,25 @@ window.js_error = function(){
     throw Error('catching JS error')
 }
 
+// issue 2248
+window.func_returns_null = function() { return null }
+window.func_returns_undefined = function() { return undefined }
+
+class F2248 {
+    get _null() { return null }
+    get _undefined() { return undefined }
+}
+
+window.obj_with_getters = new F2248()
+
+window.test_py_returns_undefined = function(){
+    var res = window.py_returns_undefined()
+    if(res !== undefined){
+        throw Error('window.py_returns_undefined should return undefined, ' +
+            'returns ' + res)
+    }
+}
+
 // issue 2249
 class X2249 {}
 

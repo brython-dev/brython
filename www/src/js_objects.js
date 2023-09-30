@@ -498,7 +498,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "Array"
+    var test = false // attr == "b"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -531,7 +531,9 @@ $B.JSObj.__getattribute__ = function(_self, attr){
             '\n is JS class ?', js_attr === undefined ? false : js_attr.toString().startsWith('class '))
     }
     if(js_attr === undefined){
-        if(_self.hasOwnProperty(attr)){
+        if(typeof _self == 'object' && attr in _self){
+            // attr is in _self properties (possibly inherited) and the value
+            // is `undefined`
             return $B.Undefined
         }
         if(typeof _self.getNamedItem == 'function'){
@@ -574,8 +576,6 @@ $B.JSObj.__getattribute__ = function(_self, attr){
             }
             if(result === undefined){
                 return $B.Undefined
-            }else if(result === null){
-                return _b_.None
             }
             return $B.JSObj.$factory(result)
         }
@@ -594,7 +594,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
 }
 
 $B.JSObj.__setattr__ = function(_self, attr, value){
-    _self[attr] = $B.pyobj2structuredclone(value)
+    _self[attr] = $B.pyobj2jsobj(value)
     return _b_.None
 }
 
