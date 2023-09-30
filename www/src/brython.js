@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-30 17:38:31.759435"
-__BRYTHON__.timestamp=1696088311759
+__BRYTHON__.compiled_date="2023-09-30 17:40:52.151035"
+__BRYTHON__.timestamp=1696088452151
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -15754,11 +15754,11 @@ var func_scope=new Scope(this.name,'def',this)
 scopes.push(func_scope)
 var id=$B.UUID(),name1=this.name+'$'+id,name2=this.name+id
 var has_type_params=this.type_params.length > 0,type_params=''
-if(has_type_params){var tp_name='type_params'
+if(has_type_params){
+var tp_name='type_params'
 var type_params_scope=new Scope(tp_name,'type_params',this)
 var type_params_ref=qualified_scope_name(scopes,type_params_scope)
-console.log('type params ref',type_params_ref)}
-if(has_type_params){var type_params=`$B.$import('typing')\n`+
+var type_params=`$B.$import('typing')\n`+
 `var typing = $B.imported.typing\n`
 var name=this.type_params[0].name
 for(var item of this.type_params){var name,param_type=item.constructor.$name

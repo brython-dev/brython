@@ -1783,13 +1783,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         type_params = ''
 
     if(has_type_params){
+        // create a scope for type params
         var tp_name = 'type_params'
         var type_params_scope = new Scope(tp_name, 'type_params', this)
         var type_params_ref = qualified_scope_name(scopes, type_params_scope)
-        console.log('type params ref', type_params_ref)
-    }
 
-    if(has_type_params){
+        // generate code to store type params in the scope namespace
         var type_params = `$B.$import('typing')\n` +
               `var typing = $B.imported.typing\n`
         var name = this.type_params[0].name
