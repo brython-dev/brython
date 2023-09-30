@@ -22,7 +22,12 @@ var GLOBAL_PARAM = "name '%s' is parameter and global",
     "assignment expression cannot be used in a comprehension iterable expression",
     ANNOTATION_NOT_ALLOWED =
     "'%s' can not be used within an annotation",
-    DUPLICATE_ARGUMENT = "duplicate argument '%s' in function definition"
+    DUPLICATE_ARGUMENT = "duplicate argument '%s' in function definition",
+    TYPEVAR_BOUND_NOT_ALLOWED = "'%s' can not be used within a TypeVar bound",
+    TYPEALIAS_NOT_ALLOWED = "'%s' can not be used within a type alias",
+    TYPEPARAM_NOT_ALLOWED =
+        "'%s' can not be used within the definition of a generic",
+    DUPLICATE_TYPE_PARAM = "duplicate type parameter '%s'"
 
 /* Flags for def-use information */
 
@@ -274,6 +279,13 @@ function _PyST_GetScope(ste, name){
     return (symbol >> SCOPE_OFFSET) & SCOPE_MASK;
 }
 
+function _PyST_IsFunctionLike(ste){
+    return ste.type == FunctionBlock
+        || ste.type == TypeVarBoundBlock
+        || ste.type == TypeAliasBlock
+        || ste.type == TypeParamBlock;
+}
+
 function PyErr_Format(exc_type, message, arg){
     if(arg){
         message = _b_.str.__mod__(message, arg)
@@ -377,7 +389,7 @@ function is_free_in_any_child(entry, key){
     return 0
 }
 
-function inline_comprehension(ste, comp, scopes, comp_free){
+function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
     var pos = 0
 
     for (var item of _b_.dict.$iter_items_with_hash(comp.symbols)) {
@@ -389,8 +401,11 @@ function inline_comprehension(ste, comp, scopes, comp_free){
             continue;
         }
         var scope = (comp_flags >> SCOPE_OFFSET) & SCOPE_MASK;
-        var only_flags = comp_flags & ((1 << SCOPE_OFFSET) - 1),
-            existing = _b_.dict.$contains_string(ste.symbols, k)
+        var only_flags = comp_flags & ((1 << SCOPE_OFFSET) - 1)
+        if(scope == CELL || only_flags & DEF_COMP_CELL){
+           inlined_cells.add(k)
+        }
+        var existing = _b_.dict.$contains_string(ste.symbols, k)
         if (!existing) {
             // name does not exist in scope, copy from comprehension
             //assert(scope != FREE || PySet_Contains(comp_free, k) == 1);
@@ -399,9 +414,11 @@ function inline_comprehension(ste, comp, scopes, comp_free){
             SET_SCOPE(scopes, k, scope);
         } else {
             // free vars in comprehension that are locals in outer scope can
-            // now simply be locals, unless they are free in comp children
+            // now simply be locals, unless they are free in comp children,
+            // or if the outer scope is a class block
             if ((existing & DEF_BOUND) &&
-                    !is_free_in_any_child(comp, k)) {
+                    !is_free_in_any_child(comp, k) &&
+                    ste.type !== ClassBlock) {
                 _b_.set.remove(comp_free, k)
             }
         }
@@ -418,7 +435,7 @@ function inline_comprehension(ste, comp, scopes, comp_free){
 
 function analyze_name(ste, scopes, name, flags,
              bound, local, free,
-             global){
+             global, type_params, class_entry){
     if(flags & DEF_GLOBAL){
         if(flags & DEF_NONLOCAL){
             var exc = PyErr_Format(_b_.SyntaxError,
@@ -447,6 +464,13 @@ function analyze_name(ste, scopes, name, flags,
             error_at_directive(exc, ste, name)
             throw exc
         }
+        if(type_params.has(name)){
+            var exc = PyErr_Format(_b_.SyntaxError,
+                         "nonlocal binding not allowed for type parameter '%s'",
+                         name);
+            error_at_directive(exc, ste, name)
+            throw exc
+        }
         SET_SCOPE(scopes, name, FREE)
         ste.free = 1
         free.add(name)
@@ -456,7 +480,30 @@ function analyze_name(ste, scopes, name, flags,
         SET_SCOPE(scopes, name, LOCAL)
         local.add(name)
         global.delete(name)
+        if (flags & DEF_TYPE_PARAM) {
+            type_params.add(name)
+        }else{
+            type_params.delete(name)
+        }
         return 1
+    }
+    // If we were passed class_entry (i.e., we're in an ste_can_see_class_scope scope)
+    // and the bound name is in that set, then the name is potentially bound both by
+    // the immediately enclosing class namespace, and also by an outer function namespace.
+    // In that case, we want the runtime name resolution to look at only the class
+    // namespace and the globals (not the namespace providing the bound).
+    // Similarly, if the name is explicitly global in the class namespace (through the
+    // global statement), we want to also treat it as a global in this scope.
+    if (class_entry != NULL) {
+        var class_flags = _PyST_GetSymbol(class_entry, name);
+        if (class_flags & DEF_GLOBAL) {
+            SET_SCOPE(scopes, name, GLOBAL_EXPLICIT);
+            return 1;
+        }
+        else if (class_flags & DEF_BOUND && !(class_flags & DEF_NONLOCAL)) {
+            SET_SCOPE(scopes, name, GLOBAL_IMPLICIT);
+            return 1;
+        }
     }
     /* If an enclosing block has a binding for this name, it
        is a free variable rather than a global variable.
@@ -493,7 +540,7 @@ var SET_SCOPE
    That's safe because no name can be free and local in the same scope.
 */
 
-function analyze_cells(scopes, free){
+function analyze_cells(scopes, free, inlined_cells){
     var name, v, v_cell;
     var success = 0,
         pos = 0;
@@ -509,7 +556,7 @@ function analyze_cells(scopes, free){
         if (scope != LOCAL){
             continue;
         }
-        if (free.has(name)){
+        if (free.has(name) && ! inlined_cells.has(name)){
             continue;
         }
         /* Replace LOCAL with CELL for this name, and remove
@@ -527,6 +574,10 @@ function drop_class_free(ste, free){
     if(res){
         ste.needs_class_closure = 1
     }
+    var res = free.delete('__classdict__')
+    if(res){
+        ste.needs_class_classdict = 1
+    }
     return 1
 }
 
@@ -534,7 +585,7 @@ function drop_class_free(ste, free){
  *
  * All arguments are dicts.  Modifies symbols, others are read-only.
 */
-function update_symbols(symbols, scopes, bound, free, classflag){
+function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
     var name,
         itr,
         v,
@@ -546,6 +597,9 @@ function update_symbols(symbols, scopes, bound, free, classflag){
     /* Update scope information for all symbols in this scope */
     for(var name of _b_.dict.$keys_string(symbols)){
         var flags = _b_.dict.$getitem_string(symbols, name)
+        if(inlined_cells.has(name)){
+            flags |= DEF_COMP_CELL
+        }
         v_scope = scopes[name]
         var scope = v_scope
         flags |= (scope << SCOPE_OFFSET)
@@ -614,7 +668,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
 */
 
 
-function analyze_block(ste, bound, free, global){
+function analyze_block(ste, bound, free, global, typeparams, class_entry){
     var name, v, local = NULL, scopes = NULL, newbound = NULL,
         newglobal = NULL, newfree = NULL, allfree = NULL,
         temp, i, success = 0, pos = 0;
@@ -636,6 +690,7 @@ function analyze_block(ste, bound, free, global){
     newglobal = new Set()
     newfree = new Set()
     newbound = new Set()
+    inlined_cells = new Set()
 
     /* Class namespace has no effect on names visible in
        nested functions, so populate the global and bound
@@ -655,7 +710,8 @@ function analyze_block(ste, bound, free, global){
     for(var name of _b_.dict.$keys_string(ste.symbols)){
         var flags = _b_.dict.$getitem_string(ste.symbols, name)
         if (!analyze_name(ste, scopes, name, flags,
-                          bound, local, free, global)){
+                          bound, local, free, global,
+                          typeparams, class_entry)){
             return 0
         }
     }
@@ -664,7 +720,7 @@ function analyze_block(ste, bound, free, global){
     /* Populate global and bound sets to be passed to children. */
     if (ste.type != ClassBlock) {
         /* Add function locals to bound set */
-        if (ste.type == FunctionBlock) {
+        if (_PyST_IsFunctionLike(ste)) {
             Set_Union(newbound, local);
         }
         /* Pass down previously bound symbols */
@@ -675,8 +731,9 @@ function analyze_block(ste, bound, free, global){
         Set_Union(newglobal, global);
 
     }else{
-        /* Special-case __class__ */
+        /* Special-case __class__ and __classdict__ */
         newbound.add('__class__')
+        newbound.add('__classdict__')
     }
 
     /* Recursively call analyze_child_block() on each child block.
@@ -689,13 +746,24 @@ function analyze_block(ste, bound, free, global){
     for (var c of ste.children){
         var child_free = new Set()
         var entry = c
+
+        var new_class_entry = NULL;
+        if (entry.can_see_class_scope) {
+            if(ste.type == ClassBlock){
+                new_class_entry = ste
+            }else if(class_entry){
+                new_class_entry = class_entry
+            }
+        }
+
         var inline_comp = entry.comprehension && ! entry.generator;
         if (! analyze_child_block(entry, newbound, newfree, newglobal,
-                                 child_free)){
+                                 typeparams, new_class_entry, child_free)){
             return 0
         }
         if (inline_comp) {
-            if (! inline_comprehension(ste, entry, scopes, child_free)) {
+            if (! inline_comprehension(ste, entry, scopes, child_free,
+                    inlined_cells)) {
                 error();
             }
             entry.comp_inlined = 1;
@@ -718,14 +786,14 @@ function analyze_block(ste, bound, free, global){
     // Set_Union(newfree, child_free)
 
     /* Check if any local variables must be converted to cell variables */
-    if (ste.type === FunctionBlock && !analyze_cells(scopes, newfree)){
+    if (_PyST_IsFunctionLike(ste) && !analyze_cells(scopes, newfree, inlined_cells)){
         return 0
     }else if (ste.type === ClassBlock && !drop_class_free(ste, newfree)){
         return 0
     }
     /* Records the results of the analysis in the symbol table entry */
-    if (!update_symbols(ste.symbols, scopes, bound, newfree,
-                        ste.type === ClassBlock)){
+    if (!update_symbols(ste.symbols, scopes, bound, newfree, inlined_cells,
+                        ste.type === ClassBlock || ste.can_see_class_scope)){
         return 0
     }
     Set_Union(free, newfree)
@@ -748,7 +816,7 @@ function Set_Union(setA, setB) {
 }
 
 function analyze_child_block(entry, bound, free,
-                    global, child_free){
+                    global, typeparams, class_entry, child_free){
     /* Copy the bound and global dictionaries.
 
        These dictionaries are used by all blocks enclosed by the
@@ -758,9 +826,11 @@ function analyze_child_block(entry, bound, free,
     */
     var temp_bound = PySet_New(bound),
         temp_free = PySet_New(free),
-        temp_global = PySet_New(global)
+        temp_global = PySet_New(global),
+        temp_typeparams = PySet_New(typeparams)
 
-    if (!analyze_block(entry, temp_bound, temp_free, temp_global)){
+    if (!analyze_block(entry, temp_bound, temp_free, temp_global,
+            temp_typeparams, class_entry)){
         return 0
     }
     Set_Union(child_free, temp_free);
@@ -769,9 +839,10 @@ function analyze_child_block(entry, bound, free,
 
 function symtable_analyze(st){
     var free = new Set(),
-        global = new Set()
+        global = new Set(),
+        typeparams = new Set()
 
-    return analyze_block(st.top, NULL, free, global);
+    return analyze_block(st.top, NULL, free, global, typeparams, NULL);
 }
 
 /* symtable_enter_block() gets a reference via ste_new.
@@ -855,6 +926,11 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
             set_exc_info(exc, st.filename, ..._location)
             throw exc
         }
+        if ((flag & DEF_TYPE_PARAM) && (val & DEF_TYPE_PARAM)) {
+            var exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_TYPE_PARAM, name);
+            set_exc_info(exc, st.filename, ...location);
+            throw exc
+        }
         val |= flag
     }else{
         val = flag
@@ -905,18 +981,19 @@ function symtable_enter_type_param_block(st, name,
                                ast, has_defaults, has_kwdefaults,
                                kind,
                                _location){
-    var current_type = st.cur.type;
+    var prev = st.cur,
+        current_type = st.cur.type;
     if(!symtable_enter_block(st, name, TypeParamBlock, ast, ..._location)) {
         return 0;
     }
-    if (current_type == ClassBlock) {
+    prev.$type_param = st.cur
+    if (current_type === ClassBlock) {
         st.cur.can_see_class_scope = 1;
         if (!symtable_add_def(st,"__classdict__", USE, _location)) {
             return 0;
         }
     }
     if (kind == $B.ast.ClassDef) {
-        _Py_DECLARE_STR(type_params, ".type_params");
         // It gets "set" when we create the type params tuple and
         // "used" when we build up the bases.
         if (!symtable_add_def(st, "type_params", DEF_LOCAL,
@@ -1081,17 +1158,79 @@ visitor.stmt = function(st, s){
         VISIT_SEQ(st, keyword, s.keywords)
         if (s.decorator_list)
             VISIT_SEQ(st, expr, s.decorator_list);
+        if(s.type_params.length > 0){
+            if (!symtable_enter_type_param_block(st, s.name,
+                                                s.type_params,
+                                                false, false, s.constructor,
+                                                LOCATION(s))) {
+                VISIT_QUIT(st, 0);
+            }
+            VISIT_SEQ(st, type_param, s.type_params);
+        }
+        VISIT_SEQ(st, expr, s.bases);
+        VISIT_SEQ(st, keyword, s.keywords);
         if (!symtable_enter_block(st, s.name, ClassBlock,
                                   s, s.lineno, s.col_offset,
                                   s.end_lineno, s.end_col_offset))
             VISIT_QUIT(st, 0)
         tmp = st.private
         st.private = s.name
+        if(s.type_params.length > 0){
+            if (!symtable_add_def(st, '__type_params__',
+                                  DEF_LOCAL, LOCATION(s))) {
+                VISIT_QUIT(st, 0);
+            }
+            var type_params = ".type_params"
+            if (!symtable_add_def(st, 'type_params',
+                                  USE, LOCATION(s))) {
+                VISIT_QUIT(st, 0);
+            }
+        }
         VISIT_SEQ(st, stmt, s.body)
         st.private = tmp
         if(! symtable_exit_block(st))
             VISIT_QUIT(st, 0)
+        if(s.type_params.length > 0){
+            if (!symtable_exit_block(st))
+                VISIT_QUIT(st, 0);
+        }
         break
+
+    case $B.ast.TypeAlias:
+        VISIT(st, expr, s.name);
+        assert(s.name instanceof $B.ast.Name);
+        var name = s.name.id,
+            is_in_class = st.cur.type === ClassBlock,
+            is_generic = s.type_params.length > 0
+        if(is_generic){
+            if (!symtable_enter_type_param_block(
+                    st, name,
+                    s.type_params,
+                    false, false, s.kind,
+                    LOCATION(s))) {
+                VISIT_QUIT(st, 0);
+            }
+            VISIT_SEQ(st, type_param, s.type_params);
+        }
+        if (!symtable_enter_block(st, name, TypeAliasBlock,
+                                  s, LOCATION(s))){
+            VISIT_QUIT(st, 0);
+        }
+        st.cur.can_see_class_scope = is_in_class;
+        if(is_in_class && !symtable_add_def(st, '__classdict__',
+                USE, LOCATION(s.value))) {
+            VISIT_QUIT(st, 0);
+        }
+        VISIT(st, expr, s.value);
+        if (!symtable_exit_block(st)){
+            VISIT_QUIT(st, 0);
+        }
+        if (is_generic) {
+            if (!symtable_exit_block(st))
+                VISIT_QUIT(st, 0);
+        }
+        break
+
     case $B.ast.Return:
         if(s.value){
             VISIT(st, expr, s.value)
@@ -1296,6 +1435,21 @@ visitor.stmt = function(st, s){
             VISIT_QUIT(st, 0)
         if (s.decorator_list)
             VISIT_SEQ(st, expr, s.decorator_list)
+        if (s.type_params.length > 0) {
+            if (!symtable_enter_type_param_block(
+                    st, s.name,
+                    s.type_params,
+                    s.args.defaults != NULL,
+                    has_kwonlydefaults(s.args.kwonlyargs,
+                                       s.args.kw_defaults),
+                    s.constructor,
+                    LOCATION(s))) {
+                VISIT_QUIT(st, 0);
+            }
+            VISIT_SEQ(st, type_param, s.type_params);
+        }
+        if (!visitor.annotations(st, s, s.args, s.returns))
+            VISIT_QUIT(st, 0);
         if (!symtable_enter_block(st, s.name,
                                   FunctionBlock, s,
                                   s.lineno, s.col_offset,
@@ -1306,6 +1460,10 @@ visitor.stmt = function(st, s){
         VISIT_SEQ(st, stmt, s.body)
         if(! symtable_exit_block(st))
             VISIT_QUIT(st, 0)
+        if (s.type_params.length > 0) {
+            if (!symtable_exit_block(st))
+                VISIT_QUIT(st, 0);
+        }
         break
     case $B.ast.AsyncWith:
         VISIT_SEQ(st, withitem, s.items)
@@ -1354,7 +1512,7 @@ function symtable_extend_namedexpr_scope(st, e){
         }
 
         /* If we find a FunctionBlock entry, add as GLOBAL/LOCAL or NONLOCAL/LOCAL */
-        if (ste.type == FunctionBlock) {
+        if (_PyST_IsFunctionLike(ste)) {
             var target_in_scope = _PyST_GetSymbol(ste, target_name);
             if (target_in_scope & DEF_GLOBAL) {
                 if (!symtable_add_def(st, target_name, DEF_GLOBAL, LOCATION(e)))
@@ -1386,7 +1544,7 @@ function symtable_extend_namedexpr_scope(st, e){
         }
     }
 
-    /* We should always find either a FunctionBlock, ModuleBlock or ClassBlock
+    /* We should always find either a function-like block, ModuleBlock or ClassBlock
        and should never fall to this case
     */
     assert(0);
@@ -1560,7 +1718,7 @@ visitor.expr = function(st, e){
             VISIT_QUIT(st, 0);
         /* Special-case super: it counts as a use of __class__ */
         if (e.ctx instanceof $B.ast.Load &&
-                st.cur.type === $B.ast.FunctionDef &&
+                _PyST_IsFunctionLike(st.cur) &&
                 e.id == "super") {
             if (!GET_IDENTIFIER('__class__') ||
                 !symtable_add_def(st, '__class__', USE, LOCATION(e)))
@@ -1927,11 +2085,19 @@ visitor.dictcomp = function(st, e){
 }
 
 function symtable_raise_if_annotation_block(st, name, e){
-    if (st.cur.type != AnnotationBlock) {
+    var type = st.cur.type,
+        exc
+    if (type == AnnotationBlock)
+        exc = PyErr_Format(PyExc_SyntaxError, ANNOTATION_NOT_ALLOWED, name);
+    else if (type == TypeVarBoundBlock)
+        exc = PyErr_Format(PyExc_SyntaxError, TYPEVAR_BOUND_NOT_ALLOWED, name);
+    else if (type == TypeAliasBlock)
+        exc = PyErr_Format(PyExc_SyntaxError, TYPEALIAS_NOT_ALLOWED, name);
+    else if (type == TypeParamBlock)
+        exc = PyErr_Format(PyExc_SyntaxError, TYPEPARAM_NOT_ALLOWED, name);
+    else
         return 1;
-    }
 
-    var exc = PyErr_Format(PyExc_SyntaxError, ANNOTATION_NOT_ALLOWED, name);
     set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                                    e.end_lineno, e.end_col_offset);
     throw exc
