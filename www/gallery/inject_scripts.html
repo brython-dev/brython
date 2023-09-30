@@ -89,7 +89,7 @@ def add_script(ev):
 document.getElementById('btn').addEventListener('click',
   function(ev){
     console.log('click')
-    var res = __BRYTHON__.run_python(document.getElementById('s1').textContent)
+    var res = __BRYTHON__.runPythonSource(document.getElementById('s1').textContent)
     console.log('js', res)
 
     // brython({ids:['s1']})
