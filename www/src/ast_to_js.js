@@ -1774,9 +1774,21 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
 
+    var id = $B.UUID(),
+        name1 = this.name + '$' + id,
+        name2 = this.name + id
+
     // Type params (PEP 695)
     var has_type_params = this.type_params.length > 0,
         type_params = ''
+
+    if(has_type_params){
+        var tp_name = 'type_params'
+        var type_params_scope = new Scope(tp_name, 'type_params', this)
+        var type_params_ref = qualified_scope_name(scopes, type_params_scope)
+        console.log('type params ref', type_params_ref)
+    }
+
     if(has_type_params){
         var type_params = `$B.$import('typing')\n` +
               `var typing = $B.imported.typing\n`
@@ -1790,7 +1802,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 name = item.name.id
             }
             bind(name, scopes)
-            type_params += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
+            type_params += `locals_${type_params_ref}.${name} = ` +
+                `$B.$call(typing.${param_type})('${name}')\n`
         }
     }
 
@@ -1829,10 +1842,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var is_generator = symtable_block.generator
 
-    var id = $B.UUID(),
-        name1 = this.name + '$' + id,
-        name2 = this.name + id
-
     var parse_args = [name2]
 
     var js = decs +
@@ -1864,8 +1873,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
-
-    js += type_params
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]
@@ -2031,6 +2038,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `${func_ref} = ${name2}\n`
     if(this.returns || parsed_args.annotations){
+        if(has_type_params){
+            scopes.push(type_params_scope)
+            type_params_scope.name = this.name + '_' + type_params_scope.name
+        }
         var ann_items = []
         if(this.returns){
             ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
@@ -2043,6 +2054,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 }
                 ann_items.push(`['${arg_ann}', ${value}]`)
             }
+        }
+        if(has_type_params){
+            scopes.pop()
         }
         js += `${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`
     }else{
@@ -2057,6 +2071,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += decorate
     }
 
+    if(has_type_params){
+        js = `var locals_${type_params_ref} = {\n}\n` + type_params + js
+    }
     return js
 }
 
