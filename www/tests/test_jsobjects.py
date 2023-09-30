@@ -259,4 +259,11 @@ try:
     window.js_error()
 except Exception as exc:
     assert exc.args[0] == 'catching JS error'
+
+# issue 2249
+assert window.Date == window.Date
+assert window.x2249 == window.x2249
+assert window.x2249 != window.x2249.me
+assert window.x2249.me == window.x2249.me
+
 print("all tests ok...")

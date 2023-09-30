@@ -429,6 +429,11 @@ $B.JSObj.__eq__ = function(_self, other){
                     return false
                 }
             }
+        case 'function':
+            if(_self.$is_js_func && other.$is_js_func){
+                return _self.$js_func === other.$js_func
+            }
+            return _self === other
         default:
             return _self === other
     }
