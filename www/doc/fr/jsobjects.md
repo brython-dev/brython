@@ -55,8 +55,9 @@ tableau suivant :
 <tr><td>`null`</td><td>inchangé (1)</td></tr>
 <tr><td>`undefined`</td><td>inchangé (1)</td></tr>
 <tr><td>nombre (Number)</td><td>instance de `int` ou `float`</td></tr>
+<tr><td>big integer (BigInt)</td><td>instance de `int`</td></tr>
 <tr><td>chaîne (String)</td><td>instance de `str`</td></tr>
-<tr><td>tableau Javascript (Array)</td><td>instance de `list` (2)</td></tr>
+<tr><td>tableau Javascript (Array)</td><td>inchangé (2)</td></tr>
 <tr><td>fonction (Function)</td><td>fonction (3)</td></tr>
 </table>
 
@@ -335,7 +336,7 @@ document.getElementById('btn').addEventListener('click',
 > exécute le code source Python `src` comme s'il s'agissait d'un script avec
 > comme identifiant optionnel _script_id_. Retourne l'objet Javascript qui
 > représente le module (également accessible par
-> `__BRYTHON__.imported[script_id]`)
+> `__BRYTHON__.getPythonModule(script_id)`)
 
 <blockquote>
 ```xml
