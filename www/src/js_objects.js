@@ -912,6 +912,7 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     var new_js_class = Function('cl_dict', 'bases', body)(cl_dict, bases)
     new_js_class.prototype = Object.create(bases[0].$js_func.prototype)
     new_js_class.prototype.constructor = new_js_class
+    new_js_class.$js_func = bases[0].$js_func
     new_js_class.__class__ = $B.JSMeta
     new_js_class.__bases__ = [bases[0]]
     new_js_class.__mro__ = [bases[0], _b_.type]
