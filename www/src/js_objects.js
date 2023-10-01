@@ -268,7 +268,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         return pyobj.value
 
     }else if(klass === $B.function || klass === $B.method){
-        // Transform arguments
         if(pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&
                 ! pyobj.$is_func){
@@ -276,17 +275,21 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             // javascript.extends. Cf. issue #1439
             return pyobj
         }
+        if(pyobj.$is_async){
+            // issue 2251 : calling the Python async function in Javascript
+            // returns a Promise
+            return function(){
+                var res = pyobj.apply(null, arguments)
+                return $B.coroutine.send(res)
+            }
+        }
         // Transform into a Javascript function
-        return function(){
+        var f = function(){
             try{
                 // transform JS arguments to Python arguments
                 var args = []
                 for(var i = 0; i < arguments.length; i++){
-                    if(arguments[i] === undefined){
-                        args.push(_b_.None)
-                    }else{
-                        args.push(jsobj2pyobj(arguments[i]))
-                    }
+                    args.push(jsobj2pyobj(arguments[i]))
                 }
                 // Apply Python arguments to Python function
                 if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
@@ -300,6 +303,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 $B.handle_error(err)
             }
         }
+        return f
     }else{
         // other types are left unchanged
         return pyobj

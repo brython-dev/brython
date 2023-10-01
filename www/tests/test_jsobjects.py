@@ -301,4 +301,10 @@ assert window.x2249 == window.x2249
 assert window.x2249 != window.x2249.me
 assert window.x2249.me == window.x2249.me
 
+# issue 2251
+async def py_callback(a):
+	print(a, 'toto')
+
+window.async_func_with_python_callback(py_callback, "a")
+
 print("all tests ok...")

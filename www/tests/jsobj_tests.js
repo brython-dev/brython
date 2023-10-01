@@ -195,3 +195,14 @@ console.log(window.Date === window.Date)
 console.log(window.x2249 == window.x2249)
 console.log(window.x2249 === window.x2249.me)
 console.log(window.x2249.me === window.x2249.me)
+
+// issue 2251
+var m = new Map()
+window.async_func_with_python_callback = async function(faa, c) {
+    m.set(faa, 'faa')
+    p = faa(c)
+    if(! p instanceof Promise){
+        throw Error('p is not a Promise')
+    }
+    await p.then(e => e)
+}

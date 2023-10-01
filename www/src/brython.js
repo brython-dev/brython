@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-01 08:18:10.367235"
-__BRYTHON__.timestamp=1696141090367
+__BRYTHON__.compiled_date="2023-10-01 09:01:57.183286"
+__BRYTHON__.timestamp=1696143717183
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13387,16 +13387,19 @@ entry.value.bind(jsobj)}
 jsobj[key]=pyobj2jsobj(entry.value)}
 return jsobj}else if(klass===_b_.str){
 return pyobj.valueOf()}else if(klass===_b_.float){
-return pyobj.value}else if(klass===$B.function ||klass===$B.method){
-if(pyobj.prototype &&
+return pyobj.value}else if(klass===$B.function ||klass===$B.method){if(pyobj.prototype &&
 pyobj.prototype.constructor===pyobj &&
 ! pyobj.$is_func){
 return pyobj}
-return function(){try{
+if(pyobj.$is_async){
+return function(){var res=pyobj.apply(null,arguments)
+return $B.coroutine.send(res)}}
+var f=function(){try{
 var args=[]
-for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}else{args.push(jsobj2pyobj(arguments[i]))}}
+for(var i=0;i < arguments.length;i++){args.push(jsobj2pyobj(arguments[i]))}
 if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
-return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}}else{
+return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}
+return f}else{
 return pyobj}}
 $B.JSConstructor=JSConstructor
 function pyargs2jsargs(pyargs){var args=[]
@@ -14438,6 +14441,8 @@ var f=function(){var args=arguments
 return{
 __class__:coroutine,$args:args,$func:func}}
 f.$infos=func.$infos
+f.$is_func=true
+f.$is_async=true
 return f}
 $B.promise=function(obj){if(obj.__class__===coroutine){
 obj.$frames=$B.frames_stack.slice()
