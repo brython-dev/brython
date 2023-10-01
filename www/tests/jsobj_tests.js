@@ -158,6 +158,7 @@ window.js_error = function(){
 // issue 2248
 window.func_returns_null = function() { return null }
 window.func_returns_undefined = function() { return undefined }
+window.func_returns_nothing = function() { }
 
 class F2248 {
     get _null() { return null }
@@ -178,13 +179,13 @@ window.test_py_returns_undefined = function(){
 class X2249 {}
 
 class Z2249 {
-	constructor() {
-	    this.x = new X2249()
-	}
+    constructor() {
+        this.x = new X2249()
+    }
 
-	get me() {
-		return this.x
-	}
+    get me() {
+        return this.x
+    }
 }
 
 let z2249 = new Z2249();

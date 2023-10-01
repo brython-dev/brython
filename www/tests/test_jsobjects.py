@@ -281,6 +281,7 @@ assert bool(javascript.UNDEFINED) is False
 
 assert window.func_returns_null() is javascript.NULL
 assert window.func_returns_undefined() is javascript.UNDEFINED
+assert window.func_returns_nothing() is javascript.UNDEFINED
 
 assert window.obj_with_getters._null is javascript.NULL
 assert window.obj_with_getters._undefined is javascript.UNDEFINED
