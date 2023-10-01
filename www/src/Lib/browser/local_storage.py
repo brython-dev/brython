@@ -27,7 +27,7 @@ class LocalStorage():
         if not isinstance(key, str):
             raise TypeError("key must be string")
         res = self.store.getItem(key)
-        if res is not None:
+        if res is not javascript.NULL:
             return res
         raise KeyError(key)
 
