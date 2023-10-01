@@ -750,6 +750,9 @@ js_list_meta.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
         throw _b_.AttributeError.$factory(attr)
     }
+    if(js_array[attr]){
+        return js_array[attr]
+    }
     if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
         // Transform Python values to Javascript values before setting item
         return function(){
@@ -777,7 +780,6 @@ js_list_meta.__getattribute__ = function(_self, attr){
 }
 
 $B.set_func_names(js_list_meta, 'builtins')
-
 
 var js_array = $B.js_array = $B.make_class('Array')
 js_array.__class__ = js_list_meta
