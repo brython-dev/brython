@@ -17,8 +17,11 @@ del sys.path[0]
 # path of markdown files
 md_doc_path = os.path.join(os.path.dirname(os.getcwd()), 'www', 'doc')
 
-static_doc_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_doc', major)
+# static doc is in static_doc/en/... and in static_doc/3.x/en/...
+static_doc_paths = [os.path.join(os.path.dirname(os.getcwd()), 'www',
+    'static_doc', major),
+    os.path.join(os.path.dirname(os.getcwd()), 'www',
+    'static_doc')]
 
 md_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
     'tutorial')
@@ -26,39 +29,42 @@ md_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
 static_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
     'static_tutorial')
 
-src_paths = [static_doc_path,
-    os.path.join(static_doc_path,'cookbook'),
-    static_tutorial_path]
+src_paths = (static_doc_paths +
+    [os.path.join(p,'cookbook') for p in static_doc_paths] +
+    [static_tutorial_path])
 
 for path in src_paths:
     if not os.path.exists(path):
         os.mkdir(path)
 
 # copy css
-shutil.copy(os.path.join(md_doc_path,'doc_brython.css'),
-    os.path.join(static_doc_path,'doc_brython.css'))
+for static_doc_path in static_doc_paths:
+    shutil.copy(os.path.join(md_doc_path,'doc_brython.css'),
+        os.path.join(static_doc_path,'doc_brython.css'))
 
 # copy images
 images_dir_src = os.path.join(md_doc_path,'images')
-images_dir_dest = os.path.join(static_doc_path,'images')
-if not os.path.exists(images_dir_dest):
-    os.mkdir(images_dir_dest)
+for static_doc_path in static_doc_paths:
+    images_dir_dest = os.path.join(static_doc_path,'images')
+    if not os.path.exists(images_dir_dest):
+        os.mkdir(images_dir_dest)
 
-for img in os.listdir(images_dir_src):
-    shutil.copy(os.path.join(images_dir_src, img), images_dir_dest)
+    for img in os.listdir(images_dir_src):
+        shutil.copy(os.path.join(images_dir_src, img), images_dir_dest)
 
 with open(os.path.join(md_tutorial_path, "index.html"),
         encoding="utf-8") as f:
     index_tutorial = f.read()
 
 # documentation
-for lang in ['fr', 'en']:
+def make_static_doc(lang, static_doc_path):
     dest_path = os.path.join(static_doc_path, lang)
     dest_paths = [dest_path, os.path.join(dest_path,'cookbook')]
 
     index = open(os.path.join(md_doc_path, lang,
         'index_static.html'), 'rb').read()
     index = index.decode('utf-8')
+    index = index.replace('[[version]]', major)
 
     for path in dest_paths:
         if not os.path.exists(path):
@@ -93,6 +99,10 @@ for lang in ['fr', 'en']:
                 if os.path.exists(dest_dir):
                     shutil.rmtree(dest_dir)
                 shutil.copytree(os.path.join(src_path, filename), dest_dir)
+
+for lang in ['fr', 'en']:
+    for static_doc_path in static_doc_paths:
+        make_static_doc(lang, static_doc_path)
 
 # tutorial
 for lang in ['br', 'fr', 'en', 'es', 'it', 'pt-br']:
