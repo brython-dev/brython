@@ -24,8 +24,7 @@ var $path
 if($B.brython_path===undefined){
 var this_url;
 if($B.isWebWorker){this_url=_window.location.href;
-if(this_url.startsWith("blob:")){this_url=this_url.substr(5)}}else{var scripts=document.getElementsByTagName('script')
-this_url=scripts[scripts.length-1].src}
+if(this_url.startsWith("blob:")){this_url=this_url.substr(5)}}else{this_url=document.currentScript.src}
 var elts=this_url.split('/')
 elts.pop()
 $path=$B.brython_path=elts.join('/')+'/'}else{if(! $B.brython_path.endsWith("/")){$B.brython_path+="/"}
@@ -161,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-01 09:01:57.183286"
-__BRYTHON__.timestamp=1696143717183
+__BRYTHON__.compiled_date="2023-10-01 09:28:40.357475"
+__BRYTHON__.timestamp=1696145320357
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins

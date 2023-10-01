@@ -51,8 +51,7 @@ if($B.brython_path === undefined){
             this_url = this_url.substr(5)
         }
     }else{
-        var scripts = document.getElementsByTagName('script')
-        this_url = scripts[scripts.length - 1].src
+        this_url = document.currentScript.src
     }
 
     var elts = this_url.split('/')
