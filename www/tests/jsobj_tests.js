@@ -154,3 +154,55 @@ demo_array.demo_array2.test2172()
 window.js_error = function(){
     throw Error('catching JS error')
 }
+
+// issue 2248
+window.func_returns_null = function() { return null }
+window.func_returns_undefined = function() { return undefined }
+window.func_returns_nothing = function() { }
+
+class F2248 {
+    get _null() { return null }
+    get _undefined() { return undefined }
+}
+
+window.obj_with_getters = new F2248()
+
+window.test_py_returns_undefined = function(){
+    var res = window.py_returns_undefined()
+    if(res !== undefined){
+        throw Error('window.py_returns_undefined should return undefined, ' +
+            'returns ' + res)
+    }
+}
+
+// issue 2249
+class X2249 {}
+
+class Z2249 {
+    constructor() {
+        this.x = new X2249()
+    }
+
+    get me() {
+        return this.x
+    }
+}
+
+let z2249 = new Z2249();
+window.x2249 = z2249
+
+console.log(window.Date === window.Date)
+console.log(window.x2249 == window.x2249)
+console.log(window.x2249 === window.x2249.me)
+console.log(window.x2249.me === window.x2249.me)
+
+// issue 2251
+var m = new Map()
+window.async_func_with_python_callback = async function(faa, c) {
+    m.set(faa, 'faa')
+    p = faa(c)
+    if(! p instanceof Promise){
+        throw Error('p is not a Promise')
+    }
+    await p.then(e => e)
+}

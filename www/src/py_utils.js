@@ -573,7 +573,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         })()
     }
-    if(iterator[Symbol.iterator]){
+    if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
         var it = iterator[Symbol.iterator](),
             nb = 0
         return {
@@ -817,7 +817,7 @@ $B.getitem_slice = function(obj, slice){
     }else if(typeof obj == "string"){
         return _b_.str.__getitem__(obj, slice)
     }
-    return $B.$getattr(obj, "__getitem__")(slice)
+    return $B.$getattr($B.get_class(obj), "__getitem__")(obj, slice)
 }
 
 $B.$getattr_pep657 = function(obj, attr, position){

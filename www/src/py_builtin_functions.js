@@ -1522,7 +1522,7 @@ var isinstance = _b_.isinstance = function(obj, cls){
 
 $B.$isinstance = function(obj, cls){
     if(obj === null){
-        return cls === None
+        return cls === $B.imported.javascript.NullType
     }
     if(obj === undefined){
         return false
@@ -1661,8 +1661,11 @@ iterator_class.__next__ = function(self){
     if(self.len !== null && self.counter == self.len){
         throw _b_.StopIteration.$factory('')
     }
-    try{return self.getitem(self.counter)}
-    catch(err){throw _b_.StopIteration.$factory('')}
+    try{
+        return self.getitem(self.counter)
+    }catch(err){
+        throw _b_.StopIteration.$factory('')
+    }
 }
 
 $B.set_func_names(iterator_class, "builtins")
@@ -1707,7 +1710,8 @@ $B.$iter = function(obj, sentinel){
                     try{
                         len = len(obj)
                     }catch(err){
-                        len = null
+                        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+                            "' object is not iterable")
                     }
                     return iterator_class.$factory(gi, len)
                 }catch(err){

@@ -1,6 +1,9 @@
 from browser import bind, console, html, window, document, alert
 import browser.widgets.menu as menu
 
+import sys
+version = f'{sys.implementation.version.major}.{sys.implementation.version.minor}'
+
 href = document.location.href
 protocol, rest = href.split("://")
 host, addr = rest.split("/", 1)
@@ -31,7 +34,7 @@ links = {
     "demo": "/demo.html",
     "editor": "/tests/editor.html",
     "gallery": "/gallery/gallery_{language}.html",
-    "doc": "/static_doc/{language}/intro.html",
+    "doc": "/static_doc/{version}/{language}/intro.html",
     "download": "https://github.com/brython-dev/brython/releases",
     "dev": "https://github.com/brython-dev/brython",
     "groups": "/groups.html",
@@ -107,7 +110,7 @@ def show(language=None):
         href=links["demo"] + f"?lang={language}")
 
     menu.add_link(trans_menu["menu_doc"][language],
-        href=links["doc"].format(language=language))
+        href=links["doc"].format(language=language, version=version))
 
     menu.add_link(trans_menu["menu_console"][language],
         href=links["console"] + f"?lang={language}")
@@ -148,7 +151,10 @@ def show(language=None):
             new_href = f"{head}/index.html?lang={new_lang}"
         elif addr.startswith(("static_tutorial", "static_doc")):
             elts = addr.split("/")
-            elts[1] = new_lang
+            for i, elt in enumerate(elts):
+                if elt == 'en' or elt == 'fr':
+                    elts[i] = new_lang
+                    break
             new_href = f"{head}/{'/'.join(elts)}"
         elif addr.startswith("gallery"):
             new_href = links["gallery"].format(language=new_lang)
