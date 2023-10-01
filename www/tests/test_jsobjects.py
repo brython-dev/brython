@@ -26,10 +26,17 @@ assert len(list(pyobj.items())) == 3
 assert len(list(pyobj.values())) == 3
 assert len(list(pyobj.keys())) == 3
 
-# Test that setting jsobject dict value to None
-# makes it a javascript undefined
-pyobj['python_none'] = None
-#assert window.test_null('python_none')
+# iteration on arbitrary JS objects produces object keys
+for key in window.test_jsobj:
+    print(key)
+
+# Test setting jsobject dict value to None
+window.test_jsobj['python_none'] = None
+assert window.test_jsobj['python_none'] is None
+
+# Test setting jsobject dict value to javascript.NULL
+window.test_jsobj['js_null'] = javascript.NULL
+assert window.test_null('js_null')
 
 # Test setdefault
 assert pyobj.setdefault('default') is None
@@ -279,7 +286,7 @@ assert window.obj_with_getters._null is javascript.NULL
 assert window.obj_with_getters._undefined is javascript.UNDEFINED
 
 def py_returns_undefined():
-	return javascript.UNDEFINED
+    return javascript.UNDEFINED
 
 window.py_returns_undefined = py_returns_undefined
 

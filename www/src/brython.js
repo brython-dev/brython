@@ -161,8 +161,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-09-30 21:45:31.781809"
-__BRYTHON__.timestamp=1696103131780
+__BRYTHON__.compiled_date="2023-10-01 07:52:39.850976"
+__BRYTHON__.timestamp=1696139559850
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6745,8 +6745,7 @@ __class__:iterator_class,getitem:getitem,len:len,counter:-1}}
 )
 iterator_class.__next__=function(self){self.counter++
 if(self.len !==null && self.counter==self.len){throw _b_.StopIteration.$factory('')}
-try{return self.getitem(self.counter)}
-catch(err){throw _b_.StopIteration.$factory('')}}
+try{return self.getitem(self.counter)}catch(err){throw _b_.StopIteration.$factory('')}}
 $B.set_func_names(iterator_class,"builtins")
 callable_iterator=$B.make_class("callable_iterator",function(func,sentinel){return{
 __class__:callable_iterator,func:func,sentinel:sentinel}}
@@ -6759,7 +6758,8 @@ $B.set_func_names(callable_iterator,"builtins")
 $B.$iter=function(obj,sentinel){
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},len
-try{len=len(obj)}catch(err){len=null}
+try{len=len(obj)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object is not iterable")}
 return iterator_class.$factory(gi,len)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not iterable")}}
 throw err}
@@ -13367,7 +13367,7 @@ if(jsobj.$kw){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
 return $B.JSObj.$factory(jsobj)}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
-if(pyobj===true ||pyobj===false){return pyobj}else if(pyobj===_b_.None){return null}else if(pyobj===$B.Undefined){return undefined}
+if(pyobj===true ||pyobj===false){return pyobj}else if(pyobj===$B.Undefined){return undefined}
 var klass=$B.get_class(pyobj)
 if(klass===undefined){
 return pyobj}
@@ -13440,6 +13440,14 @@ if(_self.$is_js_func && other.$is_js_func){return _self.$js_func===other.$js_fun
 return _self===other
 default:
 return _self===other}}
+var iterator=$B.make_class('js_iterator',function(obj){return{
+__class__:iterator,keys:Object.keys(obj),values:Object.values(obj),length:Object.keys(obj).length,counter:-1}}
+)
+iterator.__next__=function(_self){_self.counter++
+if(_self.counter==_self.length){throw _b_.StopIteration.$factory('')}
+return _self.keys[_self.counter]}
+$B.set_func_names(iterator,'builtins')
+$B.JSObj.__iter__=function(_self){return iterator.$factory(_self)}
 $B.JSObj.__ne__=function(_self,other){return ! $B.JSObj.__eq__(_self,other)}
 function jsclass2pyclass(js_class){
 var proto=js_class.prototype,klass=$B.make_class(js_class.name)
@@ -13509,7 +13517,7 @@ typeof _self.item=='function'){var _slice=_b_.slice.$conv_for_seq(key,_self.leng
 var res=[]
 for(var i=_slice.start;i < _slice.stop;i+=_slice.step){res.push(_self.item(i))}
 return res}
-throw _b_.KeyError.$factory(rank)}
+throw _b_.KeyError.$factory(key)}
 $B.JSObj.__setitem__=$B.JSObj.__setattr__
 $B.JSObj.__repr__=$B.JSObj.__str__=function(_self){var js_repr=Object.prototype.toString.call(_self)
 return `<Javascript object: ${js_repr}>`}
@@ -13573,6 +13581,7 @@ if(! value.done){return jsobj2pyobj(value.value)}
 throw _b_.StopIteration.$factory('')}
 $B.set_func_names($B.IterableJSObj,'builtins')
 $B.get_jsobj_class=function(obj){var proto=Object.getPrototypeOf(obj)
+if(proto===null){return $B.JSObj}
 if(proto[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(Object.getOwnPropertyNames(proto).indexOf('length')>-1){return $B.SizedJSObj}
 return $B.JSObj}
 $B.JSMeta=$B.make_class("JSMeta")

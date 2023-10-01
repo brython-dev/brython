@@ -201,8 +201,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     // conversion of a Python object into a Javascript object
     if(pyobj === true || pyobj === false){
         return pyobj
-    }else if(pyobj === _b_.None){
-        return null
     }else if(pyobj === $B.Undefined){
         return undefined
     }
@@ -439,6 +437,32 @@ $B.JSObj.__eq__ = function(_self, other){
     }
 }
 
+var iterator = $B.make_class('js_iterator',
+    function(obj){
+        return {
+            __class__: iterator,
+            keys: Object.keys(obj),
+            values: Object.values(obj),
+            length: Object.keys(obj).length,
+            counter: -1
+        }
+    }
+)
+
+iterator.__next__ = function(_self){
+    _self.counter++
+    if(_self.counter == _self.length){
+        throw _b_.StopIteration.$factory('')
+    }
+    return _self.keys[_self.counter]
+}
+
+$B.set_func_names(iterator, 'builtins')
+
+$B.JSObj.__iter__ = function(_self){
+    return iterator.$factory(_self)
+}
+
 $B.JSObj.__ne__ = function(_self, other){
     return ! $B.JSObj.__eq__(_self, other)
 }
@@ -498,7 +522,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "b"
+    var test = false // attr == "null_value"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -635,7 +659,7 @@ $B.JSObj.__getitem__ = function(_self, key){
         }
         return res
     }
-    throw _b_.KeyError.$factory(rank)
+    throw _b_.KeyError.$factory(key)
 }
 
 $B.JSObj.__setitem__ = $B.JSObj.__setattr__
@@ -815,6 +839,9 @@ $B.set_func_names($B.IterableJSObj, 'builtins')
 
 $B.get_jsobj_class = function(obj){
     var proto = Object.getPrototypeOf(obj)
+    if(proto === null){
+        return $B.JSObj
+    }
     if(proto[Symbol.iterator] !== undefined){
         return $B.IterableJSObj
     }else if(Object.getOwnPropertyNames(proto).indexOf('length') > -1){
