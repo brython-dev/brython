@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,3,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-01 09:28:40.357475"
-__BRYTHON__.timestamp=1696145320357
+__BRYTHON__.compiled_date="2023-10-01 14:47:56.274321"
+__BRYTHON__.timestamp=1696164476274
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5009,7 +5009,7 @@ string_ix++
 surrogate_ix++}else{yield iterator[string_ix]}
 string_ix++
 pos++}})()}
-if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator](),nb=0
+if(iterator[Symbol.iterator]&& ! iterator.$is_js_array){var it=iterator[Symbol.iterator](),nb=0
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}
@@ -5095,7 +5095,7 @@ res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
 res.__brython__=true
 return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
-return $B.$getattr(obj,"__getitem__")(slice)}
+return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
 $B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,position)
 throw err}}
 $B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}else{start=$B.$GetInt(start)
@@ -13546,6 +13546,7 @@ $B.set_func_names($B.JSObj,"builtins")
 var js_list_meta=$B.make_class('js_list_meta')
 js_list_meta.__mro__=[_b_.type,_b_.object]
 js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
+if(js_array[attr]){return js_array[attr]}
 if(['__delitem__','__setitem__'].indexOf(attr)>-1){
 return function(){var args=[arguments[0]]
 for(var i=1,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
