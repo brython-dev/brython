@@ -5,6 +5,7 @@ import sys
 from version import implementation
 
 impl_name = '.'.join(str(x) for x in implementation[:3])
+major = '.'.join(str(x) for x in implementation[:2])
 
 # hack sys.path to be able to import markdown
 sys.path.insert(0, os.path.join(os.path.dirname(os.getcwd()),
@@ -17,7 +18,7 @@ del sys.path[0]
 md_doc_path = os.path.join(os.path.dirname(os.getcwd()), 'www', 'doc')
 
 static_doc_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_doc')
+    'static_doc', major)
 
 md_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
     'tutorial')
