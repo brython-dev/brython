@@ -17,7 +17,7 @@ Em um editor de texto, crie um arquivo HTML com o seguinte conteúdo:
     </script>
 </head>
 
-<body onload="brython()">
+<body>
 
 <script type="text/python">
     from browser import document
@@ -40,8 +40,6 @@ Quando você abrir a página, deverá ver a mensagem "Hello !" exibida na janela
 Estrutra da página
 ==================
 Vamos dar uma olhada no conteúdo da página. Na seção HTML `<head>`, nós carregamos o script __`brython.js`__, que é biblioteca Brython que encontrará e executará os scripts Python incluídos na página. Neste exemplo nós usamos o script armazenado no CDN, desta forma não precisamos instalar nada localmente. A versão (`brython@{implementation}`) pode ser atualizada para cada nova versão do Brython.
-
-A tag `<body>` tem um atributo `onload="brython()"`. Isso significa que quando a página tiver carregado todo conteúdo, o browser chamará a função `brython()`, que está definido na biblioteca Brython já carregada na página. Essa função busca por todas as tags `<script>` que contêm o atributo `type="text/python"` e executa o código contido nelas.
 
 Nossa página __`index.html`__ contem esse script:
 

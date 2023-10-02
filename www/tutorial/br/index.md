@@ -20,7 +20,7 @@ E-barzh ar skridtreterezh, krouit ur bajenn HTML, enni ar c'hod a-dreñv:
     </script>
 </head>
 
-<body onload="brython()">
+<body>
 
 <script type="text/python">
 from browser import document
@@ -44,8 +44,6 @@ Pa vo digoret ar bajenn, emichañs e vo gwelet "Hopala !" moullet war prenestr a
 Framm ur bajenn
 ===============
 Taolomp ur sell ouzh ar pezh a zo er bajenn. E-barzh al lodenn `<head>` e kargomp ar skript __`brython.js`__ : ar c'heflusker Brython eo, ar programm a ra war-dro an holl skriptoù Python er bajenn. Karget eo amañ diwar ur CDN, kuit da staliañ tra ebet war ar PC. Taolit evezh ouzh an niverenn doare (`brython@{implementation}`) : gallout a raer he hizivaat pep gwech ez a un doare Brython nevez er-maez.
-
-Ar valizenn `<body>` he deus un doareenn `onload="brython()"`. Gourc'hemenn a ra ar merdeer kas an arc'hwel `brython()` en-dro pa vo echuet kargañ an holl bajenn. An arc'hwel a zo termenet e-barzh ar c'heflusker Brython. Klask a ra an holl balizennoù `<script>` gant an doareenn `type="text/python"` ha seveniñ a ra anezho.
 
 E-barzh hor pajenn __`index.html`__ e kaver ar skript-mañ:
 

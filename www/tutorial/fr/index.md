@@ -20,7 +20,7 @@ Dans l'éditeur de texte, créez une page html avec le contenu suivant :
     </script>
 </head>
 
-<body onload="brython()">
+<body>
 
 <script type="text/python">
 from browser import document
@@ -44,8 +44,6 @@ En ouvrant la page, vous devriez voir le message "Bonjour !" s'afficher sur la p
 Structure d'une page
 ====================
 Analysons le contenu de cette page. Dans la zone `<head>` nous chargeons le script __`brython.js`__ : c'est le moteur Brython, c'est-à-dire le programme qui va permettre d'exécuter les scripts Python qui se trouvent sur la page. Dans cet exemple nous allons le chercher sur un CDN, pour ne rien avoir à installer sur le PC. Notez le numéro de version (`brython@{implementation}`) : à chaque nouvelle version de Brython vous pourrez mettre à jour cette partie de l'adresse.
-
-La balise `<body>` possède un attribut `onload="brython()"`. Ceci indique au navigateur qu'une fois la page complètement chargée, il faut appeler la fonction `brython()`; celle-ci est définie par le moteur Brython chargé dans la page. Elle recherche dans la page tous les scripts qui ont le type `type="text/python"` et les exécute.
 
 Notre page __`index.html`__ comporte ce script:
 
