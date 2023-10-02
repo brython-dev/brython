@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-02 15:28:38.108038"
-__BRYTHON__.timestamp=1696253318108
+__BRYTHON__.compiled_date="2023-10-02 16:12:33.774370"
+__BRYTHON__.timestamp=1696255953774
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8221,9 +8221,9 @@ suggestion_distance=current_distance}}
 return suggestion}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
-return suggestions}
+return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name,frame=frame ||$B.last(exc.$stack)
-if(typeof name !='string'){return}
+if(typeof name !='string'){return _b_.None}
 var locals=Object.keys(frame[1]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(locals,name)
 if(suggestion){return suggestion}
@@ -8232,7 +8232,8 @@ var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}
 if(frame[4]&& frame[4].$is_method){
 var instance_name=frame[4].$infos.__code__.co_varnames[0],instance=frame[1][instance_name]
-if(_b_.hasattr(instance,name)){return `self.${name}`}}}
+if(_b_.hasattr(instance,name)){return `self.${name}`}}
+return _b_.None}
 var exc_group_code=
 '\nvar missing = {},\n'+
 '    $ = $B.args("[[name]]", 2, {message: null, exceptions: null}, '+

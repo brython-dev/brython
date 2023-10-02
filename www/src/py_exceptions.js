@@ -723,14 +723,14 @@ $B.offer_suggestions_for_attribute_error = function(exc){
         obj = exc.obj
     var dir = _b_.dir(obj),
         suggestions = calculate_suggestions(dir, name)
-    return suggestions
+    return suggestions || _b_.None
 }
 
 $B.offer_suggestions_for_name_error = function(exc, frame){
     var name = exc.name,
         frame = frame || $B.last(exc.$stack)
     if(typeof name != 'string'){
-        return
+        return _b_.None
     }
     var locals = Object.keys(frame[1]).filter(x => ! (x.startsWith('$')))
     var suggestion = calculate_suggestions(locals, name)
@@ -752,6 +752,7 @@ $B.offer_suggestions_for_name_error = function(exc, frame){
             return `self.${name}`
         }
     }
+    return _b_.None
 }
 
 

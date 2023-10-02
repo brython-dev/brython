@@ -85,6 +85,8 @@ def format_exc():
             suggestion = __BRYTHON__.offer_suggestions_for_name_error(exc)
             if suggestion is not None:
                 message += f". Did you mean: '{suggestion}'?"
+            elif exc.name in __BRYTHON__.stdlib_module_names:
+                message += f". Did you forget to import '{exc.name}'?"
         trace.write(f"{exc_class}: {message}")
 
     return trace.format()

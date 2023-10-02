@@ -105,6 +105,20 @@ def show_console(ev):
     document["console"].value = output
     document["console"].cols = 60
 
+def suggestion(exc):
+    message = ''
+    if isinstance(exc, AttributeError):
+        suggestion = __BRYTHON__.offer_suggestions_for_attribute_error(exc)
+        if suggestion is not None:
+            message += f". Did you mean: '{suggestion}'?"
+    elif isinstance(exc, NameError):
+        suggestion = __BRYTHON__.offer_suggestions_for_name_error(exc)
+        if suggestion is not None:
+            message += f". Did you mean: '{suggestion}'?"
+        elif exc.name in __BRYTHON__.stdlib_module_names:
+            message += f". Did you forget to import '{exc.name}'?"
+    return message
+
 # load a Python script
 def load_script(evt):
     _name = evt.target.value
@@ -178,7 +192,8 @@ def trace_exc(run_frame, src, ns):
             col_offset = exc_value.args[1][2]
             result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
 
-    result_lines.append(f'{exc_type.__name__}: {exc_value}')
+    message = str(exc_value) + suggestion(exc_value)
+    result_lines.append(f'{exc_type.__name__}: {message}')
     return '\n'.join(result_lines)
 
 def run(src, filename='editor'):
