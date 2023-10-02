@@ -1060,4 +1060,9 @@ def f2167_3(x='a', /, **kwargs):
 
 f2167_3('A', x='b')
 
+# argument with "is not"
+def f(x, y, z):
+    return z
+
+assert f(1, True is not False, 'ok') == 'ok'
 print('passed all tests...')
