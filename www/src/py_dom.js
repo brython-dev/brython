@@ -770,7 +770,7 @@ DOMNode.__getattribute__ = function(self, attr){
 
     if(res !== undefined){
         if(res === null){
-            return _b_.None
+            return res
         }
         if(typeof res === "function"){
             if(self.__class__ && self.__class__.$webcomponent){
