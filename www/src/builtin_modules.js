@@ -226,10 +226,7 @@
                         var value = $ns.kw.$jsobj[arg]
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
-                            // Better use method bind of DOMNode objects
-                            $B.DOMNode.bind(self,
-                                            arg.toLowerCase().substr(2),
-                                            value)
+                            $B.DOMNode.__setattr__(self, arg, value)
                         }else if(arg.toLowerCase() == "style"){
                             $B.DOMNode.set_style(self, value)
                         }else{

@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-02 17:16:39.180069"
-__BRYTHON__.timestamp=1696259799180
+__BRYTHON__.compiled_date="2023-10-03 07:46:04.210388"
+__BRYTHON__.timestamp=1696311964194
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14330,9 +14330,10 @@ return res+$NodeTypes[self.nodeType]+"' name '"+
 self.nodeName+"'"+attrs_str+">"}
 DOMNode.__setattr__=function(self,attr,value){
 if(attr.substr(0,2)=="on" && attr.length > 2){
-if(!$B.$bool(value)){
-DOMNode.unbind(self,attr.substr(2))}else{
-DOMNode.bind(self,attr.substr(2),value)}}else{switch(attr){case "left":
+DOMNode.unbind(self,attr.substr(2))
+if($B.$bool(value)){
+if(! _b_.callable(value)){throw _b_.TypeError.$factory(`'${attr}' value should be a `+
+`callable, got '${$B.class_name(value)}'`)}else{DOMNode.bind(self,attr.substr(2),value)}}}else{switch(attr){case "left":
 case "top":
 case "width":
 case "height":
@@ -14372,7 +14373,7 @@ DOMNode.bind=function(self,event){
 var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{func:_b_.None,options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
 if(func===_b_.None){
 return function(f){return DOMNode.bind(self,event,f)}}
-var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}
+var callback=(function(f){return function(ev){try{return $B.$call(f)($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}
 catch(err1){console.log(err)}}}}}
 )(func)
 callback.$infos=func.$infos
@@ -14538,9 +14539,9 @@ return _b_.None}
 for(var i=2;i < arguments.length;i++){var callback=arguments[i],flag=false,func=callback.$func
 if(func===undefined){
 var found=false
-for(var j=0;j < events.length;j++){if(events[j][0]===callback){var func=callback,found=true
+for(var j=0;j < events.length;j++){if($B.is_or_equals(events[j][0],callback)){var func=callback,found=true
 break}}
-if(!found){throw _b_.TypeError.$factory("function is not an event callback")}}
+if(! found){throw _b_.TypeError.$factory("function is not an event callback")}}
 for(var j=0;j < events.length;j++){if($B.$getattr(func,'__eq__')(events[j][0])){var callback=events[j][1]
 self.removeEventListener(event,callback,false)
 events.splice(j,1)
@@ -14828,7 +14829,7 @@ throw err}}}}
 for(var arg in $ns.kw.$jsobj){
 var value=$ns.kw.$jsobj[arg]
 if(arg.toLowerCase().substr(0,2)=="on"){
-$B.DOMNode.bind(self,arg.toLowerCase().substr(2),value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
+$B.DOMNode.__setattr__(self,arg,value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{
 arg=$B.imported["browser.html"].
 attribute_mapper(arg)

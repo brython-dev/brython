@@ -1005,12 +1005,17 @@ DOMNode.__setattr__ = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
 
-    if(attr.substr(0,2) == "on" && attr.length > 2){ // event
-        if(!$B.$bool(value)){ // remove all callbacks attached to event
-            DOMNode.unbind(self, attr.substr(2))
-        }else{
+    if(attr.substr(0, 2) == "on" && attr.length > 2){ // event
+        // remove all callbacks previously attached to event
+        DOMNode.unbind(self, attr.substr(2))
+        if($B.$bool(value)){
             // value is a function taking an event as argument
-            DOMNode.bind(self, attr.substr(2), value)
+            if(! _b_.callable(value)){
+                throw _b_.TypeError.$factory(`'${attr}' value should be a ` +
+                    `callable, got '${$B.class_name(value)}'`)
+            }else{
+                DOMNode.bind(self, attr.substr(2), value)
+            }
         }
     }else{
         switch(attr){
@@ -1143,7 +1148,7 @@ DOMNode.bind = function(self, event){
     var callback = (function(f){
         return function(ev){
             try{
-                return f($DOMEvent(ev))
+                return $B.$call(f)($DOMEvent(ev))
             }catch(err){
                 if(err.__class__ !== undefined){
                     $B.handle_error(err)
@@ -1524,7 +1529,9 @@ DOMNode.unbind = function(self, event){
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
     self.$events = self.$events || {}
-    if(self.$events === {}){return _b_.None}
+    if(self.$events === {}){
+        return _b_.None
+    }
 
     if(event === undefined){
         for(var event in self.$events){
@@ -1558,13 +1565,13 @@ DOMNode.unbind = function(self, event){
             // function
             var found = false
             for(var j = 0; j < events.length; j++){
-                if(events[j][0] === callback){
+                if($B.is_or_equals(events[j][0], callback)){
                     var func = callback,
                         found = true
                     break
                 }
             }
-            if(!found){
+            if(! found){
                 throw _b_.TypeError.$factory("function is not an event callback")
             }
         }
