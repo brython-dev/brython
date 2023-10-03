@@ -14,7 +14,7 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 > réponse (ok/annuler). Retourne `True` si ok, `False` sinon.
 
 **browser**.`console`
-> un objet avec des méthods pour interagir avec la console du navigateur. Son
+> un objet avec des méthodes pour interagir avec la console du navigateur. Son
 > interface est propre à chaque navigateur. Il expose au moins la méthode
 > `log(msg)`, qui imprime le message _msg_ dans la console.
 
