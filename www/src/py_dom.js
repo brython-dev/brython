@@ -499,7 +499,7 @@ dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
 // Class for DOM nodes
 
-var DOMNode = $B.make_class('browser',
+var DOMNode = $B.make_class('DOMNode',
     function(elt){
         return elt
     }
@@ -576,6 +576,11 @@ DOMNode.__dir__ = function(self){
     // generic DOM attributes
     for(var attr in self){
         if(attr.charAt(0) != "$"){res.push(attr)}
+    }
+    for(var attr in DOMNode){
+        if(res.indexOf(attr) == -1){
+            res.push(attr)
+        }
     }
     res.sort()
     return res
@@ -1591,7 +1596,7 @@ DOMNode.unbind = function(self, event){
     }
 }
 
-$B.set_func_names(DOMNode, "browser")
+$B.set_func_names(DOMNode, "builtins")
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
