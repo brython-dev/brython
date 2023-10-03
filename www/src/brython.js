@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-03 07:46:04.210388"
-__BRYTHON__.timestamp=1696311964194
+__BRYTHON__.compiled_date="2023-10-03 16:03:10.799457"
+__BRYTHON__.timestamp=1696341790799
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8357,10 +8357,10 @@ trace+=trace_from_stack(err)
 var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
 if(err.__class__===_b_.NameError){var suggestion=$B.offer_suggestions_for_name_error(err)
-if(suggestion){trace+=`. Did you mean '${suggestion}'?`}
+if(suggestion !==_b_.None){trace+=`. Did you mean '${suggestion}'?`}
 if($B.stdlib_module_names.indexOf(err.name)>-1){
 trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=$B.offer_suggestions_for_attribute_error(err)
-if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion){trace+=`. Did you mean: '${err.$suggestion}'?`}}}else{trace=err+""}
+if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion){trace+=`. Did you mean: '${err.$suggestion}'?`}}}else{trace=err+""}
 if(err.$js_exc){trace+='\n\nJavascript error\n'+err.$js_exc+
 '\n'+err.$js_exc.stack}
 return trace}

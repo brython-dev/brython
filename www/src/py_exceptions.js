@@ -1023,7 +1023,7 @@ $B.error_trace = function(err){
         trace += name + (args_str ? ': ' + args_str : '')
         if(err.__class__ === _b_.NameError){
             var suggestion = $B.offer_suggestions_for_name_error(err)
-            if(suggestion){
+            if(suggestion !== _b_.None){
                 trace += `. Did you mean '${suggestion}'?`
             }
             if($B.stdlib_module_names.indexOf(err.name) > -1){
@@ -1032,7 +1032,7 @@ $B.error_trace = function(err){
             }
         }else if(err.__class__ === _b_.AttributeError){
             var suggestion = $B.offer_suggestions_for_attribute_error(err)
-            if(suggestion){
+            if(suggestion !== _b_.None){
                 trace += `. Did you mean: '${suggestion}'?`
             }
         }else if(err.__class__ === _b_.ImportError){
