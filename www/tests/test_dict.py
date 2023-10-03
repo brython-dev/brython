@@ -254,5 +254,15 @@ assert d == {True: 'y'}
 d = {"Corriger les erreurs d'extraction" : 1}
 d[list(d.keys())[0]]
 
+# issue 2256
+t = [('-1', ' Alle'),
+     ('6', 'Radio'),
+     ('7', 'TV'), 
+     ('0', 'HTV')]
+
+d = dict(t)
+
+assert list(d) == ['-1', '6', '7', '0']
+
 
 print("passed all tests..")

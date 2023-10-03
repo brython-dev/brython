@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-03 16:21:58.932009"
-__BRYTHON__.timestamp=1696342918932
+__BRYTHON__.compiled_date="2023-10-03 23:02:38.568913"
+__BRYTHON__.timestamp=1696366958568
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12843,8 +12843,10 @@ function convert_all_str(d){
 d.$all_str=false
 for(var key in d.$strings){dict.$setitem(d,key,d.$strings[key])}}
 dict.$setitem=function(self,key,value,$hash,from_setdefault){
-if(self.$all_str){if(typeof key=='string'){self.$strings[key]=value
-return _b_.None}else{convert_all_str(self)}}
+if(self.$all_str){if(typeof key=='string'){var int=parseInt(key)
+if(isNaN(int)||int >=0){self.$strings[key]=value
+return _b_.None}else{
+convert_all_str(self)}}else{convert_all_str(self)}}
 if(self.$jsobj){if(self.$from_js){
 value=$B.pyobj2jsobj(value)}
 if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=value

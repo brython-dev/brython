@@ -925,8 +925,15 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
     // Set a dictionary item mapping key and value.
     if(self.$all_str){
         if(typeof key == 'string'){
-            self.$strings[key] = value
-            return _b_.None
+            var int = parseInt(key)
+            if(isNaN(int) || int >= 0){
+                self.$strings[key] = value
+                return _b_.None
+            }else{
+                // string parsed as negative integer: insertion order
+                // not preserved (issue 2256)
+                convert_all_str(self)
+            }
         }else{
             convert_all_str(self)
         }

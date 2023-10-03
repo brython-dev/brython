@@ -475,7 +475,7 @@ var dir = _b_.dir = function(obj){
     check_nb_args_no_kw('dir', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
-    
+
     if(obj.$is_class){
         // Use metaclass __dir__
         var dir_func = $B.$getattr(obj.__class__, "__dir__")
