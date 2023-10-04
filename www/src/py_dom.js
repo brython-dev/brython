@@ -1009,92 +1009,78 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
 DOMNode.__setattr__ = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
-
-    if(attr.substr(0, 2) == "on" && attr.length > 2){ // event
-        // remove all callbacks previously attached to event
-        DOMNode.unbind(self, attr.substr(2))
-        if($B.$bool(value)){
-            // value is a function taking an event as argument
-            if(! _b_.callable(value)){
-                throw _b_.TypeError.$factory(`'${attr}' value should be a ` +
-                    `callable, got '${$B.class_name(value)}'`)
+    switch(attr){
+        case "left":
+        case "top":
+        case "width":
+        case "height":
+            if(_b_.isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
+                self.style[attr] = value + "px"
+                return _b_.None
             }else{
-                DOMNode.bind(self, attr.substr(2), value)
+                throw _b_.ValueError.$factory(attr + " value should be" +
+                    " an integer or float, not " + $B.class_name(value))
             }
-        }
-    }else{
-        switch(attr){
-            case "left":
-            case "top":
-            case "width":
-            case "height":
-                if(_b_.isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
-                    self.style[attr] = value + "px"
-                    return _b_.None
-                }else{
-                    throw _b_.ValueError.$factory(attr + " value should be" +
-                        " an integer or float, not " + $B.class_name(value))
-                }
-                break
-        }
-        if(DOMNode["set_" + attr] !== undefined) {
-          return DOMNode["set_" + attr](self, value)
-        }
-
-        function warn(msg){
-            console.log(msg)
-            var frame = $B.last($B.frames_stack)
-            if(! frame){
-                return
-            }
-            if($B.get_option('debug') > 0){
-                var file = frame.__file__,
-                    lineno = frame.$lineno
-                console.log("module", frame[2], "line", lineno)
-                if($B.file_cache.hasOwnProperty(file)){
-                    var src = $B.file_cache[file]
-                    console.log(src.split("\n")[lineno - 1])
-                }
-            }else{
-                console.log("module", frame[2])
-            }
-        }
-
-        // Warns if attr is a descriptor of the element's prototype
-        // and it is not writable
-        var proto = Object.getPrototypeOf(self),
-            nb = 0
-        while(!!proto && proto !== Object.prototype && nb++ < 10){
-            var descriptors = Object.getOwnPropertyDescriptors(proto)
-            if(!!descriptors &&
-                    typeof descriptors.hasOwnProperty == "function"){
-                if(descriptors.hasOwnProperty(attr)){
-                    if(!descriptors[attr].writable &&
-                            descriptors[attr].set === undefined){
-                        warn("Warning: property '" + attr +
-                            "' is not writable. Use element.attrs['" +
-                            attr +"'] instead.")
-                    }
-                    break
-                }
-            }else{
-                break
-            }
-            proto = Object.getPrototypeOf(proto)
-        }
-
-        // Warns if attribute is a property of style
-        if(self.style && self.style[attr] !== undefined &&
-                attr != 'src' // set by Chrome
-                ){
-            warn("Warning: '" + attr + "' is a property of element.style")
-        }
-
-        // Set the property
-        self[attr] = py_immutable_to_js(value)
-
-        return _b_.None
+            break
     }
+    if(DOMNode["set_" + attr] !== undefined) {
+      return DOMNode["set_" + attr](self, value)
+    }
+
+    function warn(msg){
+        console.log(msg)
+        var frame = $B.last($B.frames_stack)
+        if(! frame){
+            return
+        }
+        if($B.get_option('debug') > 0){
+            var file = frame.__file__,
+                lineno = frame.$lineno
+            console.log("module", frame[2], "line", lineno)
+            if($B.file_cache.hasOwnProperty(file)){
+                var src = $B.file_cache[file]
+                console.log(src.split("\n")[lineno - 1])
+            }
+        }else{
+            console.log("module", frame[2])
+        }
+    }
+
+    // Warns if attr is a descriptor of the element's prototype
+    // and it is not writable
+    var proto = Object.getPrototypeOf(self),
+        nb = 0
+    while(!!proto && proto !== Object.prototype && nb++ < 10){
+        var descriptors = Object.getOwnPropertyDescriptors(proto)
+        if(!!descriptors &&
+                typeof descriptors.hasOwnProperty == "function"){
+            if(descriptors.hasOwnProperty(attr)){
+                if(!descriptors[attr].writable &&
+                        descriptors[attr].set === undefined){
+                    warn("Warning: property '" + attr +
+                        "' is not writable. Use element.attrs['" +
+                        attr +"'] instead.")
+                }
+                break
+            }
+        }else{
+            break
+        }
+        proto = Object.getPrototypeOf(proto)
+    }
+
+    // Warns if attribute is a property of style
+    if(self.style && self.style[attr] !== undefined &&
+            attr != 'src' // set by Chrome
+            ){
+        warn("Warning: '" + attr + "' is a property of element.style")
+    }
+
+    // Set the property
+    self[attr] = py_immutable_to_js(value)
+
+    return _b_.None
+
 }
 
 DOMNode.__setitem__ = function(self, key, value){

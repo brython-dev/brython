@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-03 23:02:38.568913"
-__BRYTHON__.timestamp=1696366958568
+__BRYTHON__.compiled_date="2023-10-04 09:19:12.784278"
+__BRYTHON__.timestamp=1696403952784
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14332,11 +14332,7 @@ var res="<DOMNode object type '"
 return res+$NodeTypes[self.nodeType]+"' name '"+
 self.nodeName+"'"+attrs_str+">"}
 DOMNode.__setattr__=function(self,attr,value){
-if(attr.substr(0,2)=="on" && attr.length > 2){
-DOMNode.unbind(self,attr.substr(2))
-if($B.$bool(value)){
-if(! _b_.callable(value)){throw _b_.TypeError.$factory(`'${attr}' value should be a `+
-`callable, got '${$B.class_name(value)}'`)}else{DOMNode.bind(self,attr.substr(2),value)}}}else{switch(attr){case "left":
+switch(attr){case "left":
 case "top":
 case "width":
 case "height":
@@ -14365,7 +14361,7 @@ if(self.style && self.style[attr]!==undefined &&
 attr !='src' 
 ){warn("Warning: '"+attr+"' is a property of element.style")}
 self[attr]=py_immutable_to_js(value)
-return _b_.None}}
+return _b_.None}
 DOMNode.__setitem__=function(self,key,value){if(typeof key=="number"){self.childNodes[key]=value}else if(typeof key=="string"){if(self.attributes){if(self instanceof SVGElement){self.setAttributeNS(null,key,value)}else if(typeof self.setAttribute=="function"){self.setAttribute(key,value)}}}}
 DOMNode.abs_left={__get__:function(self){return $getPosition(self).left},__set__:function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute "+
 "'abs_left' is read-only")}}
