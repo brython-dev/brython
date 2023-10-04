@@ -271,18 +271,6 @@ function m_lgamma(x){
     return r;
 }
 
-function __getattr__(attr){
-    $B.check_nb_args('__getattr__ ', 1, arguments)
-    $B.check_no_kw('__getattr__ ', attr)
-
-    var res = this[attr]
-    if(res === undefined){
-        throw _b_.AttributeError.$factory(
-            'module math has no attribute ' + attr)
-    }
-    return res
-}
-
 function acos(x){
     $B.check_nb_args('acos', 1, arguments)
     $B.check_no_kw('acos', x)
@@ -2127,7 +2115,6 @@ function ulp(){
 }
 
 var _mod = {
-    __getattr__,
     acos,
     acosh,
     asin,

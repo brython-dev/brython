@@ -995,7 +995,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "Rectangle" // && obj === _b_.list // "Point"
+    var $test = false // attr == "sumprod" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass,
@@ -1254,16 +1254,23 @@ $B.$getattr = function(obj, attr, _default){
         if($test){console.log("result of attr_func", res)}
     }catch(err){
         if($test){
-            console.log('attr_func raised error', err.args)
+            console.log('attr_func raised error', err.args, err.name)
         }
         var getattr
         if(klass === $B.module){
             // try __getattr__ at module level (PEP 562)
             getattr = obj.__getattr__
+            if($test){
+                console.log('use module getattr', getattr)
+                console.log(getattr + '')
+            }
             if(getattr){
                 try{
                     return getattr(attr)
                 }catch(err){
+                    if($test){
+                        console.log('encore erreur', err)
+                    }
                     if(_default !== undefined){
                         return _default
                     }
@@ -1272,6 +1279,9 @@ $B.$getattr = function(obj, attr, _default){
             }
         }
         var getattr = in_mro(klass, '__getattr__')
+        if($test){
+            console.log('try getattr', getattr)
+        }
         if(getattr){
             if($test){
                 console.log('try with getattr', getattr)

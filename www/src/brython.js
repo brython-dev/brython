@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-04 09:19:12.784278"
-__BRYTHON__.timestamp=1696403952784
+__BRYTHON__.compiled_date="2023-10-04 15:44:58.929510"
+__BRYTHON__.timestamp=1696427098929
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6903,13 +6903,17 @@ if(res.$is_property){return _b_.property.__get__(res)}
 if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,res+'',res.__set__,res.$is_class)}
 return res}}}
 try{res=attr_func(obj,attr)
-if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr_func raised error',err.args)}
+if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr_func raised error',err.args,err.name)}
 var getattr
 if(klass===$B.module){
 getattr=obj.__getattr__
-if(getattr){try{return getattr(attr)}catch(err){if(_default !==undefined){return _default}
+if($test){console.log('use module getattr',getattr)
+console.log(getattr+'')}
+if(getattr){try{return getattr(attr)}catch(err){if($test){console.log('encore erreur',err)}
+if(_default !==undefined){return _default}
 throw err}}}
 var getattr=in_mro(klass,'__getattr__')
+if($test){console.log('try getattr',getattr)}
 if(getattr){if($test){console.log('try with getattr',getattr)}
 try{return getattr(obj,attr)}catch(err){if(_default !==undefined){return _default}
 throw err}}
