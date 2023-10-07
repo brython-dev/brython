@@ -1914,12 +1914,12 @@ str.isidentifier = function(){
         return false
     }
     var chars = to_chars(_self)
-    if(unicode_tables.XID_Start[_b_.ord(chars[0])] === undefined){
+    if(! $B.is_XID_Start(_b_.ord(chars[0]))){
         return false
     }else{
         for(var char of chars){
             var cp = _b_.ord(char)
-            if(unicode_tables.XID_Continue[cp] === undefined){
+            if(! $B.is_XID_Continue(cp)){
                 return false
             }
         }

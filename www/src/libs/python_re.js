@@ -1028,12 +1028,12 @@ function transform_repl(data, pattern){
                         }catch(err){
                             if(! _b_.str.isidentifier(group_name)){
                                 var cps = to_codepoint_list(group_name)
-                                if($B.unicode_tables.XID_Start[cps[0]] === undefined){
+                                if(! $B.is_XID_Start(cps[0])){
                                     fail("bad character in group name '" +
                                         group_name + "'", pos)
                                 }else{
                                     for(cp of cps.slice(1)){
-                                        if($B.unicode_tables.XID_Continue[cp] === undefined){
+                                        if(! $B.is_XID_Continue(cp)){
                                             fail("bad character in group name '" +
                                                 group_name + "'", pos)
                                         }

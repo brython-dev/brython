@@ -2,6 +2,77 @@
 
 var _b_ = $B.builtins
 
+$B.is_identifier = function(category, cp){
+    // category is "XID_Start" or "XID_COntinue"
+    var table = $B.unicode_identifiers[category],
+        start = 0,
+        end = table.length - 1,
+        len = table.length,
+        ix = Math.floor(len / 2),
+        nb = 0
+    var first = table[start],
+        item = typeof first == 'number' ? first : first[0]
+    if(cp < item){
+        return false
+    }
+    var last = table[end]
+    if(typeof last == 'number'){
+        if(cp > last){
+            return false
+        }
+    }else if(last[0] + last[1] < cp){
+        return false
+    }
+
+    while(true){
+        nb++
+        if(nb > 100){
+            console.log('infinite loop for', cp)
+            alert()
+        }
+        var item = table[ix]
+        if(typeof item != 'number'){
+            item = item[0]
+        }
+        if(item == cp){
+            return true
+        }else if(item > cp){
+            end = ix
+        }else{
+            start = ix
+        }
+        len = Math.floor((end - start) / 2)
+        if(end - start == 1){
+            break
+        }
+        ix = start + len
+    }
+    return table[start][0] + table[start][1] > cp
+}
+
+$B.is_XID_Start = function(cp){
+    // 99% of cases
+    if((cp >= 97 && cp <= 122) // a-z
+        || (cp <= 5 && cp <= 90) // A-Z
+        || cp == 95 // _
+       ){
+        return true
+    }
+    return $B.is_identifier("XID_Start", cp)
+}
+
+$B.is_XID_Continue = function(cp){
+    // 99% of cases
+    if((cp >= 97 && cp <= 122) // a-z
+        || (cp <= 5 && cp <= 90) // A-Z
+        || cp == 95 // _
+        || (cp >= 48 && cp <= 57) // 0-9
+       ){
+        return true
+    }
+    return $B.is_identifier("XID_Continue", cp)
+}
+
 const FSTRING_START = 'FSTRING_START',
       FSTRING_MIDDLE = 'FSTRING_MIDDLE',
       FSTRING_END = 'FSTRING_END'
@@ -596,7 +667,7 @@ $B.tokenizer = function*(src, filename, mode){
                         }
                         break
                     default:
-                        if(unicode_tables.XID_Start[ord(char)]){
+                        if($B.is_XID_Start(ord(char))){
                             // start name
                             state = 'NAME'
                             name = char
@@ -689,7 +760,7 @@ $B.tokenizer = function*(src, filename, mode){
               break
 
             case 'NAME':
-                if(unicode_tables.XID_Continue[ord(char)]){
+                if($B.is_XID_Continue(ord(char))){
                     name += char
                 }else if(char == '"' || char == "'"){
                     if(string_prefix.exec(name) || bytes_prefix.exec(name)){

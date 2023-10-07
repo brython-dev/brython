@@ -106,6 +106,7 @@ for key in xid:
                 start[-1][1] += 1
             else:
                 start.append(value)
+    start.sort(key=lambda item: item if isinstance(item, int) else item[0])
     identifiers[key] = start
 
 tables = {}
@@ -198,19 +199,6 @@ for(const gc in $B.unicode){
             $B.unicode_tables[gc][item] = true
         }
     })
-}
-
-for(const key in $B.unicode_identifiers){
-    $B.unicode_tables[key] = {}
-    for(const item of $B.unicode_identifiers[key]){
-        if(Array.isArray(item)){
-            for(var i = 0; i < item[1]; i++){
-                $B.unicode_tables[key][item[0] + i] = true
-            }
-        }else{
-            $B.unicode_tables[key][item] = true
-        }
-    }
 }
 
 $B.is_unicode_cn = function(i){
