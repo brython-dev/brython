@@ -638,12 +638,14 @@ dict.$getitem = function(self, key, ignore_missing){
 dict.__hash__ = _b_.None
 
 function init_from_list(self, args){
+    var i = 0
     for(var item of args){
         if(item.length != 2){
             throw _b_.ValueError.$factory("dictionary " +
                 `update sequence element #${i} has length ${item.length}; 2 is required`)
         }
         dict.$setitem(self, item[0], item[1])
+        i++
     }
 }
 
