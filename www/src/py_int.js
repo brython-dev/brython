@@ -849,9 +849,16 @@ int.$factory = function(value, base){
         res = 0
         var coef = 1
         for(var char of _value){
-            var cp = char.codePointAt(0),
-                digit = $B.digits_mapping[cp]
-            if(digit === undefined){
+            if(/\p{Nd}/u.test(char)){
+                // get value from table $B.digit_starts in unicode_data.js
+                var cp = char.codePointAt(0)
+                for(var start of $B.digits_starts){
+                    if(cp - start < 10){
+                        digit = cp - start
+                        break
+                    }
+                }
+            }else{
                 if(base > 10 && _digits.indexOf(char.toUpperCase()) > -1){
                     digit = char.toUpperCase().charCodeAt(0) - 55
                 }else{

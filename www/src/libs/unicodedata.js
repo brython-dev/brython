@@ -57,7 +57,7 @@ var $module = (function($B){
     function category(chr){
         // Returns the general category assigned to the character chr as
         // string.
-        if($B.is_unicode_cn(chr.codePointAt(0))){ // in unicode_data.js
+        if(/\p{Cn}/u.test(chr.charAt(0))){
             return "Cn"
         }
         var search = _info(chr)

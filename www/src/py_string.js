@@ -1205,7 +1205,7 @@ str.__repr__ = function(_self){
         var cp = _b_.ord(chars[i])
         if(t[cp] !== undefined){
             repl += t[cp]
-        }else if($B.is_unicode_cn(cp)){
+        }else if(/\p{Cn}/u.test(chars[i])){
             var s = cp.toString(16)
             while(s.length < 4){
                 s = '0' + s
@@ -1830,17 +1830,11 @@ str.isalnum = function(){
         _self = to_string($.self)
     for(var char of _self){
         cp = _b_.ord(char)
-        if(unicode_tables.Ll[cp] ||
-                unicode_tables.Lu[cp] ||
-                unicode_tables.Lm[cp] ||
-                unicode_tables.Lt[cp] ||
-                unicode_tables.Lo[cp] ||
-                unicode_tables.Nd[cp] ||
-                unicode_tables.digits[cp] ||
-                unicode_tables.numeric[cp]){
-            continue
+        for(var cat of ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd', 'digits', 'numeric']){
+            if(! $B.in_unicode_category(cat, cp)){
+                return false
+            }
         }
-        return false
     }
     return true
 }
@@ -1857,14 +1851,11 @@ str.isalpha = function(){
         _self = to_string($.self)
     for(var char of _self){
         cp = _b_.ord(char)
-        if(unicode_tables.Ll[cp] ||
-                unicode_tables.Lu[cp] ||
-                unicode_tables.Lm[cp] ||
-                unicode_tables.Lt[cp] ||
-                unicode_tables.Lo[cp]){
-            continue
+        for(var cat of ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']){
+            if(! $B.in_unicode_category(cat, cp)){
+                return false
+            }
         }
-        return false
     }
     return true
 }
@@ -1881,7 +1872,7 @@ str.isdecimal = function(){
         _self = to_string($.self)
     for(var char of _self){
         cp = _b_.ord(char)
-        if(! unicode_tables.Nd[cp]){
+        if(! $B.in_unicode_category('Nd', cp)){
             return false
         }
     }
@@ -1896,8 +1887,12 @@ str.isdigit = function(){
         cp,
         _self = to_string($.self)
     for(var char of _self){
+        if(/\p{Nd}/u.test(char)){
+            continue
+        }
+        // might be in unicode category 'No'
         cp = _b_.ord(char)
-        if(! unicode_tables.digits[cp]){
+        if(! $B.in_unicode_category('No_digits', cp)){
             return false
         }
     }
@@ -1938,15 +1933,18 @@ str.islower = function(){
 
     for(var char of _self){
         cp = _b_.ord(char)
-        if(unicode_tables.Ll[cp]){
+        if($B.in_unicode_category('Ll', cp)){
             has_cased = true
             continue
-        }else if(unicode_tables.Lu[cp] || unicode_tables.Lt[cp]){
+        }else if($B.in_unicode_category('Lu', cp) ||
+                 $B.in_unicode_category('Lt', cp)){
             return false
         }
     }
     return has_cased
 }
+
+const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 
 str.isnumeric = function(){
     /* Return true if all characters in the string are numeric characters, and
@@ -1959,15 +1957,15 @@ str.isnumeric = function(){
             arguments, {}, null, null),
         _self = to_string($.self)
     for(var char of _self){
-        if(! unicode_tables.numeric[_b_.ord(char)]){
+        if((! numeric_re.test(char)) &&
+               ! $B.in_unicode_category('Lo_numeric', _b_.ord(char))){
             return false
         }
     }
     return _self.length > 0
 }
 
-var unprintable = {},
-    unprintable_gc = ['Cc', 'Cf', 'Co', 'Cs','Zl', 'Zp', 'Zs']
+var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
 str.isprintable = function(){
     /* Return true if all characters in the string are printable or the string
@@ -1975,21 +1973,14 @@ str.isprintable = function(){
     defined in the Unicode character database as "Other" or "Separator",
     excepting the ASCII space (0x20) which is considered printable. */
 
-    // Set unprintable if not set yet
-    if(Object.keys(unprintable).length == 0){
-        for(var i = 0; i < unprintable_gc.length; i++){
-            var table = unicode_tables[unprintable_gc[i]]
-            for(var cp in table){
-                unprintable[cp] = true
-            }
-        }
-        unprintable[32] = true
-    }
     var $ = $B.args("isprintable", 1, {self: null}, ["self"],
             arguments, {}, null, null),
         _self = to_string($.self)
     for(var char of _self){
-        if(unprintable[_b_.ord(char)]){
+        if(char == ' '){
+            continue
+        }
+        if(unprintable_re.test(char)){
             return false
         }
     }
@@ -2009,7 +2000,7 @@ str.isspace = function(self){
         _self = to_string($.self)
     for(var char of _self){
         cp = _b_.ord(char)
-        if(! unicode_tables.Zs[cp] &&
+        if(! $B.in_unicode_category('Zs', cp) &&
                 $B.unicode_bidi_whitespace.indexOf(cp) == -1){
             return false
         }
@@ -2039,10 +2030,11 @@ str.isupper = function(self){
 
     for(var char of _self){
         cp = _b_.ord(char)
-        if(unicode_tables.Lu[cp]){
+        if($B.in_unicode_category('Lu', cp)){
             is_upper = true
             continue
-        }else if(unicode_tables.Ll[cp] || unicode_tables.Lt[cp]){
+        }else if($B.in_unicode_category('Ll', cp) ||
+                 $B.in_unicode_category('Lt', cp)){
             return false
         }
     }
@@ -2601,9 +2593,9 @@ str.swapcase = function(self){
         _self = to_string($.self)
     for(var char of _self){
         cp = _b_.ord(char)
-        if(unicode_tables.Ll[cp]){
+        if($B.in_unicode_category('Ll', cp)){
             res += char.toUpperCase()
-        }else if(unicode_tables.Lu[cp]){
+        }else if($B.in_unicode_category('Lu', cp)){
             res += char.toLowerCase()
         }else{
             res += char
@@ -2621,14 +2613,15 @@ str.title = function(self){
         _self = to_string($.self)
     for(var char of _self){
         cp = _b_.ord(char)
-        if(unicode_tables.Ll[cp]){
+        if($B.in_unicode_category('Ll', cp)){
             if(! state){
                 res += char.toUpperCase()
                 state = "word"
             }else{
                 res += char
             }
-        }else if(unicode_tables.Lu[cp] || unicode_tables.Lt[cp]){
+        }else if($B.in_unicode_category('Lu', cp) ||
+                 $B.in_unicode_category('Lt', cp)){
             res += state ? char.toLowerCase() : char
             state = "word"
         }else{

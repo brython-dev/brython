@@ -9,37 +9,46 @@ var $B = __BRYTHON__,
 var MAXGROUPS = 2147483647,
     MAXREPEAT = 2147483648
 
-var is_word = {}
 var word_gcs = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo',
                 'Nd',
                 'Mc', 'Me', 'Mn',
                 'Pc']
-for(var word_gc of word_gcs){
-    for(var cp in $B.unicode_tables[word_gc]){
-        is_word[cp] = true
+
+function is_word(cp){
+    if((cp >= 97 && cp <= 122) // a-z
+            || (cp >= 65 && cp <= 90) // A-Z
+        ){
+            return true
     }
+    for(var word_gc of word_gcs){
+        if(! $B.in_unicode_category(word_gc, cp)){
+            return false
+        }
+    }
+    return true
 }
 
-var is_ascii_word = {}
+var ascii_word = {}
 
 for(var cp = 0; cp <= 127; cp++){
-    if(is_word[cp]){
-        is_ascii_word[cp] = true
+    if(is_word(cp)){
+        ascii_word[cp] = true
     }
 }
 
-var is_digit = {}
-
-for(var cp in $B.unicode_tables['Nd']){
-    is_digit[cp] = true
+function is_ascii_word(cp){
+    return ascii_word[cp] !== undefined
 }
 
-var is_ascii_digit = {}
-
-for(var cp = 0; cp <= 127; cp++){
-    if(is_digit[cp]){
-        is_ascii_digit[cp] = true
+function is_digit(cp){
+    if(cp >= 48 && cp <= 57){
+        return true
     }
+    return $B.in_unicode_category('Nd', cp)
+}
+
+function is_ascii_digit(cp){
+    return cp <= 127 && is_digit(cp)
 }
 
 var $error_2 = {
@@ -2022,7 +2031,7 @@ function CharacterClass(pos, cp, length, groups){
         case 's':
             this.test_func = function(string, pos){
                 var cp = string.cp_at(pos)
-                return $B.unicode_tables.Zs[cp] !== undefined ||
+                return $B.in_unicode_category('Zs', cp) ||
                     $B.unicode_bidi_whitespace.indexOf(cp) > -1
             }
             break
@@ -2030,7 +2039,7 @@ function CharacterClass(pos, cp, length, groups){
             this.test_func = function(string, pos){
                 var cp = string.cp_at(pos)
                 return cp !== undefined &&
-                    $B.unicode_tables.Zs[cp] === undefined &&
+                    ! $B.in_unicode_category('Zs', cp) &&
                     $B.unicode_bidi_whitespace.indexOf(cp) == -1
             }
             break
@@ -2052,39 +2061,39 @@ function CharacterClass(pos, cp, length, groups){
                     console.log("\\d, no flags", this)
                 }
                 var cp = string.cp_at(pos),
-                    table = (this.flags.value & ASCII.value) ?
+                    tester = (this.flags.value & ASCII.value) ?
                         is_ascii_digit : is_digit
-                return table[cp]
+                return tester(cp)
             }
             break
         case 'D':
             this.test_func = function(string, pos){
                 var cp = string.cp_at(pos),
-                    table = (this.flags.value & ASCII.value) ?
+                    tester = (this.flags.value & ASCII.value) ?
                         is_ascii_digit : is_digit
-                return ! table[cp]
+                return ! tester(cp)
             }
             break
         case 'b':
             this.test_func = function(string, pos){
-                var table = is_word
+                var tester = is_word
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
-                    table = is_ascii_word
+                    tester = is_ascii_word
                 }
                 var cp = string.cp_at(pos),
                     ok = {nb_min: 0, nb_max: 0}
 
                 // return true if char at pos is at the beginning or start
                 // of a word
-                if(pos == 0 && table[cp]){
+                if(pos == 0 && tester(cp)){
                     return ok
                 }
-                if(string.cp_at(pos) === undefined && table[string.cp_at(pos - 1)]){
+                if(string.cp_at(pos) === undefined && tester(string.cp_at(pos - 1))){
                     return ok
                 }
                 if(pos > 0 && string.cp_at(pos) !== undefined){
-                    if((table[string.cp_at(pos - 1)]) !==
-                            table[cp]){
+                    if((tester(string.cp_at(pos - 1))) !==
+                            tester(cp)){
                         return ok
                     }
                 }
@@ -2093,9 +2102,9 @@ function CharacterClass(pos, cp, length, groups){
             break
         case 'B':
             this.test_func = function(string, pos){
-                var table = is_word
+                var tester = is_word
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
-                    table = is_ascii_word
+                    tester = is_ascii_word
                 }
 
                 var cp = string.cp_at(pos),
@@ -2106,15 +2115,15 @@ function CharacterClass(pos, cp, length, groups){
                     // empty string
                     return false
                 }
-                if(pos == 0 && table[cp]){
+                if(pos == 0 && tester(cp)){
                     return false
                 }
                 if(cp === undefined &&
-                        table[string.cp_at(pos - 1)]){
+                        tester(string.cp_at(pos - 1))){
                     return false
                 }
                 if(pos > 0 && cp !== undefined){
-                    if(table[string.cp_at(pos - 1)] !== table[cp]){
+                    if(tester(string.cp_at(pos - 1)) !== tester(cp)){
                         return false
                     }
                 }
@@ -2123,20 +2132,20 @@ function CharacterClass(pos, cp, length, groups){
             break
         case 'w':
             this.test_func = function(string, pos){
-                var table = is_word
+                var tester = is_word
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
-                    table = is_ascii_word
+                    tester = is_ascii_word
                 }
-                return table[string.cp_at(pos)]
+                return tester(string.cp_at(pos))
             }
             break
         case 'W':
             this.test_func = function(string, pos){
-                var table = is_word
+                var tester = is_word
                 if(this.is_bytes || (this.flags.value & ASCII.value)){
-                    table = is_ascii_word
+                    tester = is_ascii_word
                 }
-                return ! table[string.cp_at(pos)]
+                return ! tester(string.cp_at(pos))
             }
             break
         case 'Z':
@@ -2165,7 +2174,7 @@ CharacterClass.prototype.match = function(string, pos, endpos){
 
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
-    var i = 0 
+    var i = 0
     while(i < this.repeat.max && i < len){
         var test = this.test_func(string, pos + i, this.flags)
         if(! test){

@@ -3,6 +3,7 @@ unicode.org by script downloads.py.
 """
 
 import os
+import unicodedata
 
 dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
 
@@ -13,7 +14,6 @@ dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
 # - a list with 3 elements : [start, number, step] such that all Unicode code
 #   points of the form start + i * step for i in range(number) has this GC
 # - a list with 2 elements [start, number] when step is 1
-letters = {}
 digits_mapping = {}
 
 start = None
@@ -34,36 +34,32 @@ with open(os.path.join("ucd", "UnicodeData.txt")) as f:
         bidi_class = parts[4]
         if gc == 'Nd':
             digits_mapping[char] = int(parts[6])
+            int(chr(char))
+        elif gc == 'No':
+            try:
+                print('to int', int(chr(char)))
+            except:
+                pass
         if bidi_class in ["WS", "B", "S"]:
             bidi_ws.append(char)
-        if gc in letters:
-            sequence = letters[gc]
-            if isinstance(sequence[-1], list):
-                start, nb, step = sequence[-1]
-                if char - (start + nb * step) == 0:
-                    sequence[-1][1] += 1
-                else:
-                    sequence.append(char)
-            elif len(sequence) < 2:
-                sequence.append(char)
-            else:
-                if isinstance(sequence[-2], int):
-                    step = char - sequence[-1]
-                    if sequence[-1] - sequence[-2] == step:
-                        sequence[-2:] = [[sequence[-2], 3, step]]
-                    else:
-                        sequence.append(char)
-                else:
-                    sequence.append(char)
-        else:
-            letters[gc] = [char]
 
-last_char = char
-
-for start, nb, step in letters['Nd']:
-    for nd in range(0, nb, step):
-        if nd != digits_mapping[start + nd]:
-            print(hex(start + nd), nd, digits_mapping[start + nd])
+# check that digits_mapping groups codepoints by sequences of 10, each
+# sequence mapping codepoint #i to integer i
+# Store the start of each sequence in digits_starts
+# Used in py_int.js to get the correct result for int(char) where char
+# is a digit in any alphabet
+digits = sorted(list(digits_mapping))
+digits_starts = []
+i = 0
+while True:
+    start = digits[i]
+    digits_starts.append(start)
+    for j in range(10):
+        if digits_mapping[start + j] != j:
+            print(start, start + j, digits_mapping[start + j])
+    i += 10
+    if i >= len(digits):
+        break
 
 casefold = {}
 with open(os.path.join("ucd", "CaseFolding.txt")) as f:
@@ -75,39 +71,6 @@ with open(os.path.join("ucd", "CaseFolding.txt")) as f:
         if status == "F" or status == "S":
             casefold[to_int(parts[0])] = [to_int(x) for x in
                 parts[2].split()]
-
-# XID_Start and XID_Continue
-xid = {"XID_Start": [str(hex(ord("_")))[2:]], "XID_Continue": []}
-
-with open(os.path.join("ucd", "DerivedCoreProperties.txt")) as f:
-    for line in f:
-        if not line.strip() or line.startswith("#"):
-            continue
-        parts = [x.strip() for x in line.split(";")]
-        prop = parts[1].split("#")[0].strip()
-        if prop in xid:
-            xid[prop].append(parts[0])
-
-identifiers = {}
-for key in xid:
-    start = []
-    for cp in xid[key]:
-        if '..' in cp:
-            first, last = [int("0x" + part, 16) for part in cp.split("..")]
-            if start and isinstance(start[-1], list) and \
-                    start[-1][0] + start[-1][1] == first:
-                start[-1][1] += last - first + 1
-            else:
-                start.append([first, last - first + 1])
-        else:
-            value = int("0x" + cp, 16)
-            if start and isinstance(start[-1], list) \
-                    and start[-1][0] + start[-1][1] == value:
-                start[-1][1] += 1
-            else:
-                start.append(value)
-    start.sort(key=lambda item: item if isinstance(item, int) else item[0])
-    identifiers[key] = start
 
 tables = {}
 
@@ -135,42 +98,26 @@ def add(char, key):
         else:
             sequence.append(char)
 
-# Use str methods for digits, numeric
+# Only store the codepoints where isdigit() is True and category is 'No'
+# and those where isnumeric() is True and category is 'Lo'
+# Used in py_string.js in methods .isdigit() and .isnumeric()
 for i in range(918000):
     if chr(i).isdigit():
-        add(i, "digits")
+        if unicodedata.category(chr(i)) == 'No':
+            add(i, "No_digits")
     if chr(i).isnumeric():
-        add(i, "numeric")
-
-letters.update(tables)
-
-# Category Cn: unassigned
-start = None
-cn_ranges = []
-
-import unicodedata
-for i in range(last_char):
-    if unicodedata.category(chr(i)) == "Cn":
-        if start is None:
-            start = i
-            cn_ranges.append([i])
-    elif start is not None:
-        cn_ranges[-1].append(i - start)
-        start = None
+        if unicodedata.category(chr(i)) == 'Lo':
+            add(i, "Lo_numeric")
 
 import json
 data = {}
-for letter in letters:
-    data[letter] = []
-    for item in letters[letter]:
+for cat in tables:
+    data[cat] = []
+    for item in tables[cat]:
         if isinstance(item, list) and item[2] == 1:
-            data[letter].append(item[:2])
+            data[cat].append(item[:2])
         else:
-            data[letter].append(item)
-
-print(sorted(list(letters)))
-
-data["Cn"] = cn_ranges
+            data[cat].append(item)
 
 with open(os.path.join(dest_dir, "unicode_data.js"), "w",
         encoding="utf-8") as out:
@@ -178,40 +125,9 @@ with open(os.path.join(dest_dir, "unicode_data.js"), "w",
     out.write("var $B = __BRYTHON__\n")
     out.write("$B.unicode = ")
     json.dump(data, out, separators=[",", ":"])
-    out.write('\n$B.digits_mapping = ')
-    json.dump(digits_mapping, out, separators=[",", ":"])
+    out.write('\n$B.digits_starts = ')
+    json.dump(digits_starts, out, separators=[",", ":"])
     out.write("\n$B.unicode_casefold = " +
         str(casefold).replace(" ", ""))
     out.write("\n$B.unicode_bidi_whitespace = " +
         str(bidi_ws).replace(" ", ""))
-    out.write("\n$B.unicode_identifiers = ")
-    json.dump(identifiers, out, separators=[",", ":"])
-    out.write("""\n$B.unicode_tables = {}
-for(const gc in $B.unicode){
-    $B.unicode_tables[gc] = {}
-    $B.unicode[gc].forEach(function(item){
-        if(Array.isArray(item)){
-            var step = item[2] || 1
-            for(var i = 0, nb = item[1]; i < nb; i += 1){
-                $B.unicode_tables[gc][item[0] + i * step] = true
-            }
-        }else{
-            $B.unicode_tables[gc][item] = true
-        }
-    })
-}
-
-$B.is_unicode_cn = function(i){
-    // Check if i is inside a range in $B.unicode["Cn"], ie unassigned
-    var cn = $B.unicode.Cn
-    for(var j = 0, len = cn.length; j < len; j++){
-        if(i >= cn[j][0]){
-            if(i < cn[j][0] + cn[j][1]){
-                return true
-            }
-        }
-        return false
-    }
-    return false
-}
-""")

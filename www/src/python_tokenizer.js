@@ -3,7 +3,7 @@
 var _b_ = $B.builtins
 
 $B.is_identifier = function(category, cp){
-    // category is "XID_Start" or "XID_COntinue"
+    // category is "XID_Start" or "XID_Continue"
     var table = $B.unicode_identifiers[category],
         start = 0,
         end = table.length - 1,
@@ -50,27 +50,127 @@ $B.is_identifier = function(category, cp){
     return table[start][0] + table[start][1] > cp
 }
 
+const XID_Start_re = /\p{XID_Start}/u
+
+const Other_ID_Start = [0x1885, 0x1886, 0x2118, 0x212E, 0x309B, 0x309C].map(
+                           x => String.fromCodePoint(x))
+
+function is_ID_Start(char){
+    return /\p{Letter}/u.test(char) ||
+           /\p{Nl}/u.test(char) ||
+           char == '_' ||
+           Other_ID_Start.indexOf(char) > -1
+
+}
+
+const Other_ID_Continue = [0x00B7, 0x0387, 0x1369, 0x1370, 0x1371, 0x19DA,
+                           0x200C, 0x200D, 0x30FB, 0xFF65].
+                           map(x => String.fromCodePoint(x))
+
+function is_ID_Continue(char){
+    return is_ID_Start(char) ||
+           /\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}/u.test(char) ||
+           Other_ID_Continue.indexOf(char) > -1
+}
+
 $B.is_XID_Start = function(cp){
-    // 99% of cases
-    if((cp >= 97 && cp <= 122) // a-z
-        || (cp <= 5 && cp <= 90) // A-Z
-        || cp == 95 // _
-       ){
-        return true
+    var char = String.fromCodePoint(cp)
+    if(! is_ID_Start(char)){
+        return false
     }
-    return $B.is_identifier("XID_Start", cp)
+    var norm = char.normalize('NFKC')
+    if(! is_ID_Start(norm[0])){
+        return false
+    }
+    for(var char of norm.substr(1)){
+        if(! is_ID_Continue(char)){
+            return false
+        }
+    }
+    return true
 }
 
 $B.is_XID_Continue = function(cp){
-    // 99% of cases
-    if((cp >= 97 && cp <= 122) // a-z
-        || (cp <= 5 && cp <= 90) // A-Z
-        || cp == 95 // _
-        || (cp >= 48 && cp <= 57) // 0-9
-       ){
-        return true
+    var char = String.fromCodePoint(cp)
+    if(! is_ID_Continue(char)){
+        return false
     }
-    return $B.is_identifier("XID_Continue", cp)
+    var norm = char.normalize('NFKC')
+    for(var char of norm.substr(1)){
+        if(! is_ID_Continue(char)){
+            return false
+        }
+    }
+    return true
+}
+
+$B.in_unicode_category = function(category, cp){
+    if(isNaN(cp)){
+        return false
+    }
+    try{
+        var re = new RegExp('\\p{' + category + '}', 'u')
+        return re.test(String.fromCodePoint(cp))
+    }catch(err){
+        // invalid category
+        return in_unicode_category(category, cp)
+    }
+}
+
+function in_unicode_category(category, cp){
+    // categories used internally but not valid as General Category
+    // eg 'numeric' in str.isnumeric
+    console.log('test if', cp, String.fromCodePoint(cp), 'in category', category)
+    var table = $B.unicode[category],
+        start = 0,
+        end = table.length - 1,
+        len = table.length,
+        ix = Math.floor(len / 2),
+        nb = 0
+    console.log('table', table)
+    var first = table[start],
+        item = typeof first == 'number' ? first : first[0]
+    if(cp < item){
+        return false
+    }
+    var last = table[end]
+    if(typeof last == 'number'){
+        if(cp > last){
+            return false
+        }
+    }else if(last[0] + last[1] < cp){
+        return false
+    }
+
+    while(true){
+        nb++
+        if(nb > 100){
+            console.log('infinite loop for', cp)
+            alert()
+        }
+        var item = table[ix]
+        if(typeof item != 'number'){
+            item = item[0]
+        }
+        if(item == cp){
+            return true
+        }else if(item > cp){
+            end = ix
+        }else{
+            start = ix
+        }
+        len = Math.floor((end - start) / 2)
+        if(end - start == 1){
+            break
+        }
+        ix = start + len
+    }
+    var step = table[start][2]
+    if(step === undefined){
+        return table[start][0] + table[start][1] > cp
+    }
+    return (table[start][0] + step * table[start][1] > cp) &&
+        ((cp - table[start][0]) % step) == 0
 }
 
 const FSTRING_START = 'FSTRING_START',
@@ -189,7 +289,7 @@ function get_comment(src, pos, line_num, line_start, token_name, line){
 function test_num(num_type, char){
     switch(num_type){
         case '':
-            return $B.unicode_tables.Nd[ord(char)] !== undefined
+            return $B.in_unicode_category('Nd', ord(char))
         case 'x':
             return '0123456789abcdef'.indexOf(char.toLowerCase()) > -1
         case 'b':
@@ -251,8 +351,7 @@ function update_braces(braces, char){
 }
 
 $B.tokenizer = function*(src, filename, mode){
-    var unicode_tables = $B.unicode_tables,
-        whitespace = ' \t\n',
+    var whitespace = ' \t\n',
         operators = '*+-/%&^~=<>',
         allowed_after_identifier = ',.()[]:;',
         string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
@@ -602,7 +701,7 @@ $B.tokenizer = function*(src, filename, mode){
                         }
                         break
                     case '.':
-                        if(src[pos] && unicode_tables.Nd[ord(src[pos])]){
+                        if(src[pos] && $B.in_unicode_category('Nd', ord(src[pos]))){
                             state = 'NUMBER'
                             num_type = ''
                             number = char
@@ -671,7 +770,7 @@ $B.tokenizer = function*(src, filename, mode){
                             // start name
                             state = 'NAME'
                             name = char
-                        }else if(unicode_tables.Nd[ord(char)]){
+                        }else if($B.in_unicode_category('Nd', ord(char))){
                             state = 'NUMBER'
                             num_type = ''
                             number = char
@@ -922,7 +1021,7 @@ $B.tokenizer = function*(src, filename, mode){
                 }else if(char.toLowerCase() == 'e' &&
                         number.toLowerCase().indexOf('e') == -1){
                     if('+-'.indexOf(src[pos]) > -1 ||
-                            unicode_tables.Nd[ord(src[pos])]){
+                            $B.in_unicode_category('Nd', ord(src[pos]))){
                         number += char
                     }else{
                         yield Token('NUMBER', number,
