@@ -87,7 +87,7 @@ def format_exc():
                 message += f". Did you mean: '{suggestion}'?"
             elif exc.name in __BRYTHON__.stdlib_module_names:
                 message += f". Did you forget to import '{exc.name}'?"
-        trace.write(f"{exc_class}: {message}")
+        trace.write(f"{exc_class.__name__}: {message}")
 
     return trace.format()
 
