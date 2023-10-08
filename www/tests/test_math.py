@@ -1,6 +1,6 @@
 import math
 
-from tester import assertRaises, assert_raises
+from tester import assertRaises, assert_raises, self
 
 def almost_equal(actual, expected):
     return abs(actual - expected) < 0.00001
@@ -306,5 +306,32 @@ assert_raises(ValueError, math.log, 10, -1, msg='math domain error')
 assert_raises(ValueError, math.log, 10, 0, msg='math domain error')
 
 assert_raises(ZeroDivisionError, math.log, 10, 1)
+
+# issue 2259 (sumprod, new in Python 3.12)
+# Core functionality
+sumprod = math.sumprod
+
+self.assertEqual(sumprod(iter([10, 20, 30]), (1, 2, 3)), 140)
+self.assertEqual(sumprod([1.5, 2.5], [3.5, 4.5]), 16.5)
+self.assertEqual(sumprod([], []), 0)
+
+from fractions import Fraction
+from decimal import Decimal
+# Type preservation and coercion
+for v in [
+    (10, 20, 30),
+    (1.5, -2.5),
+    (Fraction(3, 5), Fraction(4, 5)),
+    (Decimal(3.5), Decimal(4.5)),
+    (2.5, 10),             # float/int
+    (2.5, Fraction(3, 5)), # float/fraction
+    (25, Fraction(3, 5)),  # int/fraction
+    (25, Decimal(4.5)),    # int/decimal
+]:
+    for p, q in [(v, v), (v, v[::-1])]:
+        expected = sum(p_i * q_i for p_i, q_i in zip(p, q, strict=True))
+        actual = sumprod(p, q)
+        self.assertEqual(expected, actual)
+        self.assertEqual(type(expected), type(actual))
 
 print("passed all tests..")
