@@ -229,11 +229,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     }else if([_b_.list, _b_.tuple].indexOf(klass) > -1){
 
         // Python list : transform its elements
-        var res = []
-        pyobj.forEach(function(item){
-            res.push(pyobj2jsobj(item))
-        })
-        return res
+        return pyobj.map(pyobj2jsobj)
 
     }else if(klass === _b_.dict || _b_.issubclass(klass, _b_.dict)){
 
