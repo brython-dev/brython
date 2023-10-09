@@ -303,8 +303,17 @@ assert window.x2249.me == window.x2249.me
 
 # issue 2251
 async def py_callback(a):
-	print(a, 'toto')
+    print(a, 'toto')
 
 window.async_func_with_python_callback(py_callback, "a")
+
+# NULL and UNDEFINED
+assert javascript.NULL == javascript.NULL
+assert javascript.NULL is javascript.NULL
+assert bool(javascript.NULL) is False
+assert javascript.UNDEFINED is javascript.UNDEFINED
+assert javascript.UNDEFINED == javascript.UNDEFINED
+assert bool(javascript.UNDEFINED) is False
+
 
 print("all tests ok...")

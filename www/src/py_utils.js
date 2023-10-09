@@ -1423,8 +1423,8 @@ $B.rich_comp = function(op, x, y){
     if(x === undefined){
         throw _b_.RuntimeError.$factory('error in rich comp')
     }
-    var x1 = x.valueOf ? x.valueOf() : x,
-        y1 = y.valueOf ? y.valueOf() : y
+    var x1 = x !== null && x.valueOf ? x.valueOf() : x,
+        y1 = y !== null && y.valueOf ? y.valueOf() : y
     if(typeof x1 == "number" && typeof y1 == "number" &&
             x.__class__ === undefined && y.__class__ === undefined){
         switch(op){
@@ -1444,7 +1444,7 @@ $B.rich_comp = function(op, x, y){
     }
     var res
 
-    if(x.$is_class || x.$factory) {
+    if(x !== null && (x.$is_class || x.$factory)) {
         if(op == "__eq__"){
             return (x === y)
         }else if(op == "__ne__"){
@@ -1456,10 +1456,10 @@ $B.rich_comp = function(op, x, y){
         }
     }
 
-    var x_class_op = $B.$call($B.$getattr(x.__class__ || $B.get_class(x), op)),
+    var x_class_op = $B.$call($B.$getattr($B.get_class(x), op)),
         rev_op = reversed_op[op] || op,
         y_rev_func
-    if(x.__class__ && y.__class__){
+    if(x !== null && x.__class__ && y !== null && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
         // "If the operands are of different types, and right operand's type

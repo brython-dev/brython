@@ -299,7 +299,7 @@ int.__floordiv__ = function(self, other){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
         return self
-    }else if(other.__class__ === $B.long_int){
+    }else if(other !== null && other.__class__ === $B.long_int){
         return Math.floor(self / Number(other.value))
     }else if(_b_.isinstance(other, _b_.int)){
         return int.__floordiv__(self, other.$brython_value)
@@ -626,7 +626,7 @@ int.__ge__ = function(self, other){
     self = int_value(self)
     if(typeof other == "number"){
         return self >= other
-    }else if(other.__class__ === $B.long_int){
+    }else if(other !== null && other.__class__ === $B.long_int){
         return self >= other.value
     }else if(typeof other == "boolean"){
         return self >= other ? 1 : 0
@@ -645,7 +645,7 @@ int.__le__ = function(self, other){
     self = int_value(self)
     if(typeof other == "number"){
         return self <= other
-    }else if(other.__class__ === $B.long_int){
+    }else if(other !== null && other.__class__ === $B.long_int){
         return self <= other.value
     }else if(typeof other == "boolean"){
         return self <= other ? 1 : 0
@@ -932,7 +932,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
             if(obj.$is_class){
                 return true
             }
-            var klass = obj.__class__ || $B.get_class(obj),
+            var klass = $B.get_class(obj),
                 missing = {},
                 bool_method = bool_class ?
                               $B.$getattr(klass, "__bool__", missing):

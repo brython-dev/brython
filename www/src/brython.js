@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-09 15:49:49.442336"
-__BRYTHON__.timestamp=1696859389442
+__BRYTHON__.compiled_date="2023-10-09 22:17:18.072073"
+__BRYTHON__.timestamp=1696882638072
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5657,7 +5657,7 @@ Number.isSafeInteger(z)){return Math.floor(z)}else{return $B.long_int.__floordiv
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
 $B.rich_comp=function(op,x,y){if(x===undefined){throw _b_.RuntimeError.$factory('error in rich comp')}
-var x1=x.valueOf ? x.valueOf():x,y1=y.valueOf ? y.valueOf():y
+var x1=x !==null && x.valueOf ? x.valueOf():x,y1=y !==null && y.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
 x.__class__===undefined && y.__class__===undefined){switch(op){case "__eq__":
 return x1==y1
@@ -5672,11 +5672,11 @@ return x1 >=y1
 case "__gt__":
 return x1 > y1}}
 var res
-if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
+if(x !==null &&(x.$is_class ||x.$factory)){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
-var x_class_op=$B.$call($B.$getattr(x.__class__ ||$B.get_class(x),op)),rev_op=reversed_op[op]||op,y_rev_func
-if(x.__class__ && y.__class__){
+var x_class_op=$B.$call($B.$getattr($B.get_class(x),op)),rev_op=reversed_op[op]||op,y_rev_func
+if(x !==null && x.__class__ && y !==null && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){y_rev_func=$B.$getattr(y,rev_op)
 res=$B.$call(y_rev_func)(x)
 if(res !==_b_.NotImplemented){return res}}}
@@ -10256,8 +10256,15 @@ return s.split("").reduce(function(a,b){a=((a << 5)-a)+b.charCodeAt(0);
 return a & a;},0)}
 str.__init__=function(self,arg){
 return _b_.None}
-var str_iterator=$B.make_iterator_class("str_iterator")
-str.__iter__=function(_self){return str_iterator.$factory(to_chars(_self))}
+var str_iterator=$B.make_class("str_iterator",function(s){return{
+__class__:str_iterator,it:s[Symbol.iterator]()}}
+)
+str_iterator.__iter__=function(_self){return _self}
+str_iterator.__next__=function(_self){var res=_self.it.next()
+if(res.done){throw _b_.StopIteration.$factory('')}
+return res.value}
+$B.set_func_names(str_iterator,'builtins')
+str.__iter__=function(_self){return str_iterator.$factory(_self)}
 str.__len__=function(_self){_self=to_string(_self)
 if(_self.surrogates===undefined){return _self.length}
 if(_self.len !==undefined){return _self.len}
@@ -11340,7 +11347,7 @@ res=sign+chunks.join(",")}
 return $B.format_width(res,fmt)}
 int.__floordiv__=function(self,other){if(typeof other=="number"){if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return Math.floor(self/other)}else if(typeof other=="boolean"){if(other===false){throw _b_.ZeroDivisionError.$factory("division by zero")}
-return self}else if(other.__class__===$B.long_int){return Math.floor(self/Number(other.value))}else if(_b_.isinstance(other,_b_.int)){return int.__floordiv__(self,other.$brython_value)}
+return self}else if(other !==null && other.__class__===$B.long_int){return Math.floor(self/Number(other.value))}else if(_b_.isinstance(other,_b_.int)){return int.__floordiv__(self,other.$brython_value)}
 return _b_.NotImplemented}
 int.$getnewargs=function(self){return $B.fast_tuple([int_value(self)])}
 int.__getnewargs__=function(){return int.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
@@ -11459,12 +11466,12 @@ int.__rshift__=Function('self','other',model.replace(/&/g,'>>').replace(/__and__
 int.__or__=Function('self','other',model.replace(/&/g,'|').replace(/__and__/g,'__or__'))
 int.__xor__=Function('self','other',model.replace(/&/g,'^').replace(/__and__/g,'__xor__'))
 int.__ge__=function(self,other){self=int_value(self)
-if(typeof other=="number"){return self >=other}else if(other.__class__===$B.long_int){return self >=other.value}else if(typeof other=="boolean"){return self >=other ? 1 :0}else if(_b_.isinstance(other,_b_.int)){return self >=other.$brython_value}
+if(typeof other=="number"){return self >=other}else if(other !==null && other.__class__===$B.long_int){return self >=other.value}else if(typeof other=="boolean"){return self >=other ? 1 :0}else if(_b_.isinstance(other,_b_.int)){return self >=other.$brython_value}
 return _b_.NotImplemented}
 int.__gt__=function(self,other){var res=int.__le__(self,other)
 return res===_b_.NotImplemented ? res :! res}
 int.__le__=function(self,other){self=int_value(self)
-if(typeof other=="number"){return self <=other}else if(other.__class__===$B.long_int){return self <=other.value}else if(typeof other=="boolean"){return self <=other ? 1 :0}else if(_b_.isinstance(other,_b_.int)){return self <=other.$brython_value}
+if(typeof other=="number"){return self <=other}else if(other !==null && other.__class__===$B.long_int){return self <=other.value}else if(typeof other=="boolean"){return self <=other ? 1 :0}else if(_b_.isinstance(other,_b_.int)){return self <=other.$brython_value}
 return _b_.NotImplemented}
 int.__lt__=function(self,other){var res=int.__ge__(self,other)
 return res===_b_.NotImplemented ? res :! res}
@@ -11570,7 +11577,7 @@ if(obj){return true}
 return false
 default:
 if(obj.$is_class){return true}
-var klass=obj.__class__ ||$B.get_class(obj),missing={},bool_method=bool_class ?
+var klass=$B.get_class(obj),missing={},bool_method=bool_class ?
 $B.$getattr(klass,"__bool__",missing):
 $B.$getattr(obj,"__bool__",missing)
 var test=false 
