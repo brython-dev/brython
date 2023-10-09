@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-09 22:17:18.072073"
-__BRYTHON__.timestamp=1696882638072
+__BRYTHON__.compiled_date="2023-10-09 22:27:26.170022"
+__BRYTHON__.timestamp=1696883246170
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5336,21 +5336,7 @@ if(obj.ix <=iterator.stop){return{done:true,value:null}}
 var value=obj.ix
 obj.ix+=iterator.step
 return{done:false,value}}}}}
-if(typeof iterator=='string'){
-var it=iterator[Symbol.iterator](),gen=(function*(){for(var char of iterator){if(char.length==2){yield char[0]
-yield char[1]}else{yield char}}})()
-return{
-[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
-return gen.next()}}}
-if(iterator instanceof String){
-return(function*(){var len=iterator.length,pos=0,string_ix=0,surrogate_ix=0
-while(string_ix < len){if(pos==iterator.surrogates[surrogate_ix]){var res=$B.make_String(iterator.substr(string_ix,2),[0])
-yield res
-string_ix++
-surrogate_ix++}else{yield iterator[string_ix]}
-string_ix++
-pos++}})()}
-if(iterator[Symbol.iterator]&& ! iterator.$is_js_array){var it=iterator[Symbol.iterator](),nb=0
+if(iterator[Symbol.iterator]&& ! iterator.$is_js_array){var it=iterator[Symbol.iterator]()
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}

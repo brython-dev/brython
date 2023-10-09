@@ -389,10 +389,31 @@ str.__init__ = function(self, arg){
     return _b_.None
 }
 
-var str_iterator = $B.make_iterator_class("str_iterator")
+var str_iterator = $B.make_class("str_iterator",
+    function(s){
+        return {
+            __class__: str_iterator,
+            it: s[Symbol.iterator]()
+        }
+    }
+)
+
+str_iterator.__iter__ = function(_self){
+    return _self
+}
+
+str_iterator.__next__ = function(_self){
+    var res = _self.it.next()
+    if(res.done){
+        throw _b_.StopIteration.$factory('')
+    }
+    return res.value
+}
+
+$B.set_func_names(str_iterator, 'builtins')
 
 str.__iter__ = function(_self){
-    return str_iterator.$factory(to_chars(_self))
+    return str_iterator.$factory(_self)
 }
 
 str.__len__ = function(_self){

@@ -524,58 +524,8 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
-    if(typeof iterator == 'string'){
-        // Python strings that don't have "astral plane" characters are
-        // implemented as plain JS strings. If they have characters in the
-        // range 0xD800 - 0xDBFF, iteration on the JS string yields a 2-elt
-        // string made of this character + the next one.
-        // Python strings with "astral plane" characters are implemented as
-        // instances of the String class.
-        var it = iterator[Symbol.iterator](),
-            gen = (function*(){
-                for(var char of iterator){
-                    if(char.length == 2){
-                        yield char[0]
-                        yield char[1]
-                    }else{
-                        yield char
-                    }
-                }
-            })()
-        return {
-            [Symbol.iterator](){
-                return this
-            },
-            next(){
-                set_lineno(frame, lineno)
-                return gen.next()
-            }
-        }
-    }
-    if(iterator instanceof String){
-        // produces one-char strings or instances of String
-        return (function*(){
-            var len = iterator.length,
-                pos = 0,
-                string_ix = 0,
-                surrogate_ix = 0
-            while(string_ix < len){
-                if(pos == iterator.surrogates[surrogate_ix]){
-                    var res = $B.make_String(iterator.substr(string_ix, 2), [0])
-                    yield res
-                    string_ix++
-                    surrogate_ix++
-                }else{
-                    yield iterator[string_ix]
-                }
-                string_ix++
-                pos++
-            }
-        })()
-    }
     if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
-        var it = iterator[Symbol.iterator](),
-            nb = 0
+        var it = iterator[Symbol.iterator]()
         return {
             [Symbol.iterator](){
                 return this
