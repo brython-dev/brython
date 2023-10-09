@@ -66,6 +66,8 @@ function nextUp(x){
     }
     if(_b_.isinstance(x, $B.long_int)){
         x = Number(x.value)
+    }else if(_b_.isinstance(x, _b_.float)){
+        x = x.value
     }
 
     if(x == +MAX_VALUE){
@@ -1796,12 +1798,147 @@ function modf(x){
 
 var nan = _b_.float.$factory('nan')
 
+function _nextafter(x, y){
+    // always returns a Javascript number
+    if($B.rich_comp('__lt__', y, x)){
+        var nu = nextUp($B.rich_op('__mul__', -1, x))
+        return -nu
+    }else if($B.rich_comp('__gt__', y, x)){
+        return nextUp(x)
+    }else{
+        var res = x !== x ? x : y
+        res = typeof res == 'number' ? res : res.value
+        return res
+    }
+}
+
+function make_float(x){
+    return typeof x == 'number' ? $B.fast_float(x) : x
+}
+
+function make_number(x){
+    return typeof x == 'number' ? x : x.value
+}
+
+function doubleToByteArray(number) {
+    // adapted from https://stackoverflow.com/questions/
+    // 25942516/double-to-byte-array-conversion-in-javascript
+    var buffer = new ArrayBuffer(8);         // JS numbers are 8 bytes long, or 64 bits
+    var longNum = new Float64Array(buffer);  // so equivalent to Float64
+
+    longNum[0] = number;
+
+    return Array.from(new Uint8Array(buffer)).reverse();  // reverse to get little endian
+}
+
+function byteArrayToDouble(bytearray) {
+    // adapted from https://stackoverflow.com/questions/
+    // 42699162/javascript-convert-array-of-4-bytes-into-a-float-value-from-modbustcp-read
+    // Create a buffer
+    var buf = new ArrayBuffer(8);
+    // Create a data view of it
+    var view = new DataView(buf);
+
+    // set bytes
+    bytearray.forEach(function (b, i) {
+        view.setUint8(i, b);
+    });
+
+    // Read the bits as a float
+    var num = view.getFloat64(0);
+    // Done
+    return num
+}
+
+function addSteps(array, steps){
+    // convert to BigInt, avoids issue when steps >= 2 ** 32
+    if(steps.__class__ == $B.long_int){
+        steps = steps.value
+    }else{
+        steps = BigInt(steps)
+    }
+    var positive = steps > 0n
+    if(steps < 0n){
+        steps = -steps
+    }
+    var x1 = steps >> 32n,
+        x2 = steps - x1 * 2n ** 32n
+    var buffer = new ArrayBuffer(8)
+    var longStep = new BigInt64Array(buffer)
+    longStep[0] = steps
+    var stepArray = Array.from(new Uint8Array(buffer)).reverse()
+    if(positive){
+        var carry = 0
+        for(var i = 7; i >= 0; i--){
+            array[i] += stepArray[i] + carry
+            if(array[i] > 255){
+                carry = 1
+                array[i] -= 256
+            }else{
+                carry = 0
+            }
+        }
+    }else{
+        var carry = 0
+        for(var i = 7; i >= 0; i--){
+            array[i] -= stepArray[i] - carry
+            if(array[i] < 0){
+                carry = -1
+                array[i] += 256
+            }else{
+                carry = 0
+            }
+        }
+    }
+}
+
 function nextafter(){
-    var $ = $B.args("nextafter", 2, {x: null, y: null}, ['x', 'y'],
-                arguments, {}, null, null),
+    var $ = $B.args("nextafter", 3, {x: null, y: null, steps: null},
+                ['x', 'y', 'steps'], arguments, {steps: _b_.None}, null, null),
         x = $.x,
-        y = $.y
-    return y < x ? -nextUp(-x) : (y > x ? nextUp(x) : (x !== x ? x : y))
+        y = $.y,
+        steps = $.steps
+    if(! _b_.isinstance(x, [_b_.int, _b_.float])){
+        throw _b_.TypeError.$factory('must be a real number, not ' +
+            $B.class_name(x))
+    }
+    if(! _b_.isinstance(y, [_b_.int, _b_.float])){
+        throw _b_.TypeError.$factory('must be a real number, not ' +
+            $B.class_name(y))
+    }
+    if(steps === _b_.None){
+        return $B.fast_float(_nextafter(x, y))
+    }
+    steps = $B.PyNumber_Index(steps);
+    if(steps < 0) {
+        throw _b_.ValueError.$factory(
+                        "steps must be a non-negative integer");
+    }
+    if(steps == 0){
+        return make_float(x)
+    }
+    if(isnan(x)){
+        return make_float(x)
+    }
+    if(isnan(y)){
+        return make_float(y)
+    }
+    var x1 = make_number(x),
+        y1 = make_number(y)
+
+    if(y1 == x1){
+        return make_float(y)
+    }else if(y1 > x1){
+        var x_uint64 = doubleToByteArray(x1)
+        addSteps(x_uint64, steps)
+        var res = byteArrayToDouble(x_uint64)
+        return res >= y1 ? y : make_float(res)
+    }else{
+        var x_uint64 = doubleToByteArray(x1)
+        addSteps(x_uint64, -steps)
+        var res = byteArrayToDouble(x_uint64)
+        return res <= y1 ? y : make_float(res)
+    }
 }
 
 function perm(n, k){

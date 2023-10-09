@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-08 16:12:08.678831"
-__BRYTHON__.timestamp=1696774328674
+__BRYTHON__.compiled_date="2023-10-09 15:49:49.442336"
+__BRYTHON__.timestamp=1696859389442
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13735,9 +13735,7 @@ if(pyobj.js_func !==undefined){return pyobj.js_func}
 return pyobj.js}else if(klass===$B.DOMNode ||
 klass.__mro__.indexOf($B.DOMNode)>-1){
 return pyobj}else if([_b_.list,_b_.tuple].indexOf(klass)>-1){
-var res=[]
-pyobj.forEach(function(item){res.push(pyobj2jsobj(item))})
-return res}else if(klass===_b_.dict ||_b_.issubclass(klass,_b_.dict)){
+return pyobj.map(pyobj2jsobj)}else if(klass===_b_.dict ||_b_.issubclass(klass,_b_.dict)){
 var jsobj={}
 for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){var key=entry.key
 if(typeof key !="string"){key=_b_.str.$factory(key)}

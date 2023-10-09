@@ -334,4 +334,28 @@ for v in [
         self.assertEqual(expected, actual)
         self.assertEqual(type(expected), type(actual))
 
+# issue 2264
+nextafter = math.nextafter
+
+assert nextafter(4, 5) == 4.000000000000001
+assert nextafter(4.5, 5) == 4.500000000000001
+assert nextafter(4.5, 4) == 4.499999999999999
+assert nextafter(4, 4.0) == 4.0
+
+assert nextafter(4.5, 4.6, steps=5) == 4.500000000000004
+assert nextafter(4.5, 4.8, steps=10) == 4.500000000000009
+
+assert nextafter(4.5, 4.1, steps=10) == 4.499999999999991
+
+assert nextafter(23.53, 30, steps=10) == 23.530000000000037
+assert nextafter(23.53, 30, steps=50000) == 23.530000000177637
+
+assert nextafter(23.53, 30, steps=4000000000) == 23.530014210854716
+assert nextafter(23.53, 30, steps=5000000000) == 23.530017763568395
+
+assert nextafter(23.53, 20, steps=4000000000) == 23.529985789145286
+assert nextafter(23.53, 20, steps=5000000000) == 23.529982236431607
+
+assert nextafter(4, 3.999999, steps=5000000000000) == 3.999999
+
 print("passed all tests..")
