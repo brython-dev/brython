@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-10 10:03:26.963088"
-__BRYTHON__.timestamp=1696925006963
+__BRYTHON__.compiled_date="2023-10-10 22:41:08.853206"
+__BRYTHON__.timestamp=1696970468853
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13919,6 +13919,13 @@ return $B.JSObj.$factory(_self[attr])}
 throw $B.attr_error(attr,_self)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
+js_array.__repr__=function(_self){if($B.repr.enter(_self)){
+return '[...]'}
+var _r=[],res
+for(var i=0;i < _self.length;i++){_r[_r.length]=_b_.str.$factory(_self[i])}
+res="["+_r.join(", ")+"]"
+$B.repr.leave(_self)
+return res}
 $B.set_func_names(js_array,'javascript')
 $B.SizedJSObj=$B.make_class('SizedJavascriptObject')
 $B.SizedJSObj.__bases__=[$B.JSObj]

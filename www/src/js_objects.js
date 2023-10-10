@@ -802,6 +802,22 @@ js_array.__getattribute__ = function(_self, attr){
     }
 }
 
+js_array.__repr__ = function(_self){
+    if($B.repr.enter(_self)){ // in py_utils.js
+        return '[...]'
+    }
+    var _r = [],
+        res
+
+    for(var i = 0; i < _self.length; i++){
+        _r[_r.length] = _b_.str.$factory(_self[i])
+    }
+
+    res = "[" + _r.join(", ") + "]"
+    $B.repr.leave(_self)
+    return res
+}
+
 $B.set_func_names(js_array, 'javascript')
 
 $B.SizedJSObj = $B.make_class('SizedJavascriptObject')

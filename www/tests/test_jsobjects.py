@@ -315,5 +315,10 @@ assert javascript.UNDEFINED is javascript.UNDEFINED
 assert javascript.UNDEFINED == javascript.UNDEFINED
 assert bool(javascript.UNDEFINED) is False
 
+# issue 2262
+window.xv = 5.6
+window.init_array()
+a = window.array
+assert str(a) == '[[...], 1, 5.6]'
 
 print("all tests ok...")

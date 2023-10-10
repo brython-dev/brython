@@ -206,3 +206,11 @@ window.async_func_with_python_callback = async function(faa, c) {
     }
     await p.then(e => e)
 }
+
+// issue 2262 : recursive array
+function init_array(){
+  let array = [0, 1];
+  array[0] = array;
+  array[2] = window.xv
+  window.array = array;
+}
