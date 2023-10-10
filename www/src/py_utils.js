@@ -571,7 +571,7 @@ $B.unpacker = function(obj, nb_targets, has_starred){
         position_rank++
     }
     if($B.pep657){
-        position = arguments[position_rank]
+        position = $B.decode_position(arguments[position_rank])
     }
     var t = _b_.list.$factory(obj),
         right_length = t.length,
@@ -725,7 +725,7 @@ $B.$getitem = function(obj, item, position){
     var exc = _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
     if(position){
-        $B.set_exception_offsets(exc, position)
+        $B.set_exception_offsets(exc, $B.decode_position(position))
     }
     throw exc
 }
@@ -774,7 +774,7 @@ $B.$getattr_pep657 = function(obj, attr, position){
     try{
         return $B.$getattr(obj, attr)
     }catch(err){
-        $B.set_exception_offsets(err, position)
+        $B.set_exception_offsets(err, $B.decode_position(position))
         throw err
     }
 }
@@ -1064,6 +1064,7 @@ $B.$is_member = function(item, _set){
 $B.$call = function(callable, position){
     callable = $B.$call1(callable)
     if(position){
+        position = $B.decode_position(position)
         return function(){
             try{
                 return callable.apply(null, arguments)
@@ -1459,7 +1460,7 @@ $B.rich_op = function(op, x, y, position){
         return $B.rich_op1(op, x, y)
     }catch(exc){
         if(position){
-            $B.set_exception_offsets(exc, position)
+            $B.set_exception_offsets(exc, $B.decode_position(position))
         }
         throw exc
     }

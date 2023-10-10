@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-09 22:27:26.170022"
-__BRYTHON__.timestamp=1696883246170
+__BRYTHON__.compiled_date="2023-10-10 10:03:26.963088"
+__BRYTHON__.timestamp=1696925006963
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5350,7 +5350,7 @@ $B.unpacker=function(obj,nb_targets,has_starred){
 var position,position_rank=3
 if(has_starred){var nb_after_starred=arguments[3]
 position_rank++}
-if($B.pep657){position=arguments[position_rank]}
+if($B.pep657){position=$B.decode_position(arguments[position_rank])}
 var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
 if(right_length < left_length){var exc=_b_.ValueError.$factory(`not enough values to unpack `+
 `(expected ${left_length}, got ${right_length})`)
@@ -5410,7 +5410,7 @@ var gi=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__getitem__",_b_.None)
 if(gi !==_b_.None){return gi(obj,item)}
 var exc=_b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")
-if(position){$B.set_exception_offsets(exc,position)}
+if(position){$B.set_exception_offsets(exc,$B.decode_position(position))}
 throw exc}
 $B.getitem_slice=function(obj,slice){var res
 if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
@@ -5423,7 +5423,7 @@ if(res){res.__class__=obj.__class__
 res.__brython__=true
 return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
-$B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,position)
+$B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,$B.decode_position(position))
 throw err}}
 $B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}else{start=$B.$GetInt(start)
 if(start < 0){start=Math.max(0,start+obj.length)}}
@@ -5528,7 +5528,8 @@ throw err}}}}else{throw _b_.TypeError.$factory('argument of type '+
 `'${$B.class_name(obj)}' is not iterable`)}}}
 $B.$is_member=function(item,_set){return $B.member_func(_set)(item)}
 $B.$call=function(callable,position){callable=$B.$call1(callable)
-if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
+if(position){position=$B.decode_position(position)
+return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
 throw exc}}}
 return callable}
 $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
@@ -5677,7 +5678,7 @@ throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
 var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*"}
-$B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,position)}
+$B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,$B.decode_position(position))}
 throw exc}}
 $B.rich_op1=function(op,x,y){
 var res_is_int,res_is_float,x_num,y_num
@@ -15148,6 +15149,8 @@ function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
+function encode_position(a,b,c,d){if(d===undefined){return `[${[a, b, c]}]`}else{return `[${[a, b, c, d]}]`}}
+$B.decode_position=function(pos){return pos}
 function last_scope(scopes){var ix=scopes.length-1
 while(scopes[ix].parent){ix--}
 return scopes[ix]}
@@ -15466,8 +15469,8 @@ var iter_id='it_'+$B.UUID()
 js+=`var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, `+
 `${has_starred}`
 if(nb_after_starred !==undefined){js+=`, ${nb_after_starred}`}
-if($B.pep657){js+=`, [${target.col_offset}, ${target.col_offset}, ${target.end_col_offset}]`}
-js+=`)\n`
+var position=encode_position(target.col_offset,target.col_offset,target.end_col_offset)
+js+=`, ${position})\n`
 var assigns=[]
 for(var elt of target.elts){if(elt instanceof $B.ast.Starred){assigns.push(assign_one(elt,`${iter_id}.read_rest()`))}else if(elt instanceof $B.ast.List ||
 elt instanceof $B.ast.Tuple){assigns.push(assign_many(elt,`${iter_id}.read_one()`))}else{assigns.push(assign_one(elt,`${iter_id}.read_one()`))}}
@@ -15526,12 +15529,9 @@ for(var item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
 if(this.value instanceof $B.ast.Name && this.value.id=='axw'){return `${$B.js_from_ast(this.value, scopes)}.${attr}`}
-if($B.pep657){return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
-`'${attr}', `+
-`[${this.value.col_offset}, ${this.value.col_offset}, `+
-`${this.end_col_offset}])`}
-return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, `+
-`'${attr}')`}
+var position=encode_position(this.value.col_offset,this.value.col_offset,this.end_col_offset)
+return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
+`'${attr}', ${position})`}
 $B.ast.AugAssign.prototype.to_js=function(scopes){var js,op_class=this.op.$name ? this.op :this.op.constructor
 for(var op in $B.op2ast_class){if($B.op2ast_class[op][1]===op_class){var iop=op+'='
 break}}
@@ -15565,9 +15565,8 @@ var name=this.op.$name ? this.op.$name :this.op.constructor.$name
 var op=opclass2dunder[name]
 var res=`$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
 `${$B.js_from_ast(this.right, scopes)}`
-if($B.pep657){res+=`, [${this.left.col_offset}, ${this.col_offset}, `+
-`${this.end_col_offset}, ${this.right.end_col_offset}]`}
-return res+')'}
+var position=encode_position(this.left.col_offset,this.col_offset,this.end_col_offset,this.right.end_col_offset)
+return res+`, ${position})`}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
 var op=this.op instanceof $B.ast.And ? '! ' :''
 var tests=[]
@@ -15585,10 +15584,8 @@ scope.ast instanceof $B.ast.While){js+=`no_break_${scope.id} = false\n`
 break}}
 js+=`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),js='$B.$call('+func+
-`, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
-var args=make_args.bind(this)(scopes)
-return js+')'+(args.has_starred ? `.apply(null, ${args.js})` :
+$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),position=encode_position(this.col_offset,this.col_offset,this.end_col_offset),js=`$B.$call(${func}, ${position})`,args=make_args.bind(this)(scopes)
+return js+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
 for(var arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
@@ -16240,10 +16237,8 @@ return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
 if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
-if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{if($B.pep657){return `$B.$getitem(${value}, ${slice}, `+
-`[${this.value.col_offset}, ${this.slice.col_offset}, `+
-`${this.slice.end_col_offset}])`}
-return `$B.$getitem(${value}, ${slice})`}}
+if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position(this.value.col_offset,this.slice.col_offset,this.slice.end_col_offset)
+return `$B.$getitem(${value}, ${slice},${position})`}}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
 var id=$B.UUID(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
 var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`

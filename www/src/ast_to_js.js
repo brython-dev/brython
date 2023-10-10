@@ -39,6 +39,18 @@ function copy_position(target, origin){
     target.end_col_offset = origin.end_col_offset
 }
 
+function encode_position(a, b, c, d){
+    if(d === undefined){
+        return `[${[a, b, c]}]`
+    }else{
+        return `[${[a, b, c, d]}]`
+    }
+}
+
+$B.decode_position = function(pos){
+    return pos
+}
+
 function last_scope(scopes){
     var ix = scopes.length - 1
     while(scopes[ix].parent){
@@ -911,10 +923,9 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         if(nb_after_starred !== undefined){
             js += `, ${nb_after_starred}`
         }
-        if($B.pep657){
-            js += `, [${target.col_offset}, ${target.col_offset}, ${target.end_col_offset}]`
-        }
-        js += `)\n`
+        var position = encode_position(target.col_offset, target.col_offset,
+                       target.end_col_offset)
+        js += `, ${position})\n`
         var assigns = []
         for(var elt of target.elts){
             if(elt instanceof $B.ast.Starred){
@@ -1058,14 +1069,11 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
     if(this.value instanceof $B.ast.Name && this.value.id == 'axw'){
         return `${$B.js_from_ast(this.value, scopes)}.${attr}`
     }
-    if($B.pep657){
-        return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
-               `'${attr}', ` +
-               `[${this.value.col_offset}, ${this.value.col_offset}, ` +
-               `${this.end_col_offset}])`
-    }
-    return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, ` +
-        `'${attr}')`
+    var position = encode_position(this.value.col_offset,
+                                this.value.col_offset,
+                                this.end_col_offset)
+    return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
+           `'${attr}', ${position})`
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
@@ -1140,11 +1148,9 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
     var op = opclass2dunder[name]
     var res = `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
         `${$B.js_from_ast(this.right, scopes)}`
-    if($B.pep657){
-        res += `, [${this.left.col_offset}, ${this.col_offset}, ` +
-               `${this.end_col_offset}, ${this.right.end_col_offset}]`
-    }
-    return res + ')'
+    var position = encode_position(this.left.col_offset, this.col_offset,
+                                    this.end_col_offset, this.right.end_col_offset)
+    return res + `, ${position})`
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){
@@ -1198,12 +1204,12 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
-        js = '$B.$call(' + func +
-             `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
+        position = encode_position(this.col_offset, this.col_offset,
+                                this.end_col_offset),
+        js = `$B.$call(${func}, ${position})`,
+        args = make_args.bind(this)(scopes)
 
-    var args = make_args.bind(this)(scopes)
-
-    return js + ')' + (args.has_starred ? `.apply(null, ${args.js})` :
+    return js + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
 }
 
@@ -2725,12 +2731,10 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     if(this.slice instanceof $B.ast.Slice){
         return `$B.getitem_slice(${value}, ${slice})`
     }else{
-        if($B.pep657){
-            return `$B.$getitem(${value}, ${slice}, ` +
-                `[${this.value.col_offset}, ${this.slice.col_offset}, ` +
-                `${this.slice.end_col_offset}])`
-        }
-        return `$B.$getitem(${value}, ${slice})`
+        var position = encode_position(this.value.col_offset,
+                                    this.slice.col_offset,
+                                    this.slice.end_col_offset)
+        return `$B.$getitem(${value}, ${slice},${position})`
     }
 }
 
