@@ -856,7 +856,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         }
         if(typeof v == "function"){
             if(v.$infos === undefined){
-                console.log("type new", v, v + "")
+                //console.log("type new", v, v + "")
                 console.log($B.frames_stack.slice())
             }else{
                 v.$infos.$class = class_dict

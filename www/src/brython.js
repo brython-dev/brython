@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-11 09:38:22.616409"
-__BRYTHON__.timestamp=1697009902616
+__BRYTHON__.compiled_date="2023-10-11 21:35:58.220363"
+__BRYTHON__.timestamp=1697052958204
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6236,7 +6236,7 @@ class_dict[key]=v
 if(v.__class__){
 var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
 if(set_name !==_b_.None){set_name(v,class_dict,key)}}
-if(typeof v=="function"){if(v.$infos===undefined){console.log("type new",v,v+"")
+if(typeof v=="function"){if(v.$infos===undefined){
 console.log($B.frames_stack.slice())}else{v.$infos.$class=class_dict
 v.$infos.__qualname__=name+'.'+v.$infos.__name__
 if(v.$infos.$defaults){
@@ -13709,13 +13709,17 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj,_this){
 switch(jsobj){case true:
 case false:
 return jsobj}
-if(jsobj===undefined){return $B.Undefined}else if(jsobj===null){return _b_.None}
-if(Array.isArray(jsobj)){return jsobj }else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
+if(jsobj===undefined){return $B.Undefined}else if(jsobj===null){return null}
+if(Array.isArray(jsobj)){jsobj.$is_js_array=true
+return jsobj }else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}else if(typeof jsobj=="string"){return $B.String(jsobj)}else if(typeof jsobj=="function"){
 _this=_this===undefined ? null :_this
-return function(){var args=[]
+var res=function(){var args=[]
 for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
-return jsobj2pyobj(jsobj.apply(_this,args))}}
+try{return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
+res.$js_func=jsobj
+res.$is_js_func=true
+return res}
 if(jsobj.$kw){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
 return $B.JSObj.$factory(jsobj)}
@@ -13762,9 +13766,7 @@ throw _b_.TypeError.$factory(
 "keyword arguments")}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
 $B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){
-jsobj.$is_js_array=true}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
-jsobj.$infos={__name__:jsobj.name,__qualname__:jsobj.name}
-jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
+jsobj.$is_js_array=true}else if(typeof jsobj=="function"){return jsobj2pyobj(jsobj)}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
 return jsobj}
 )
 function check_big_int(x,y){if(typeof x !="bigint" ||typeof y !="bigint"){throw _b_.TypeError.$factory("unsupported operand type(s) for - : '"+
@@ -13847,16 +13849,9 @@ if(js_attr !==null &&
 js_attr.toString &&
 typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
-return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
-try{var result=js_attr.apply(target,args)}catch(err){throw $B.exception(err)}
-if(result===undefined){return $B.Undefined}
-return $B.JSObj.$factory(result)}
-res.prototype=js_attr.prototype
-res.$js_func=js_attr
-res.__mro__=[_b_.object]
-res.__name__=res.__qualname__=js_attr.name
-if($B.frames_stack.length > 0){res.__module__=$B.last($B.frames_stack)[3].__name__}
-return $B.JSObj.$factory(res)}else{if(test){console.log('use JSObj.$factory on',js_attr)}
+return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
+var res=jsobj2pyobj(js_attr,_self.$js_func ||_self)
+return res}else{if(test){console.log('use JSObj.$factory on',js_attr)}
 return $B.JSObj.$factory(js_attr)}}
 $B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}

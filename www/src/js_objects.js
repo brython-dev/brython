@@ -161,10 +161,11 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     if(jsobj === undefined){
         return $B.Undefined
     }else if(jsobj === null){
-        return _b_.None
+        return null
     }
 
     if(Array.isArray(jsobj)){
+        jsobj.$is_js_array = true
         return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
     }else if(typeof jsobj === 'number'){
        if(jsobj.toString().indexOf('.') == -1){
@@ -177,13 +178,20 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     }else if(typeof jsobj == "function"){
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
-        return function(){
+        var res = function(){
             var args = []
             for(var i = 0, len = arguments.length; i < len; i++){
                 args.push(pyobj2jsobj(arguments[i]))
             }
-            return jsobj2pyobj(jsobj.apply(_this, args))
+            try{
+                return jsobj2pyobj(jsobj.apply(_this, args))
+            }catch(err){
+                throw $B.exception(err)
+            }
         }
+        res.$js_func = jsobj
+        res.$is_js_func = true
+        return res
     }
 
     if(jsobj.$kw) {
@@ -337,6 +345,8 @@ $B.JSObj = $B.make_class("JSObject",
             // come from JS code. Cf. discussion #2226
             jsobj.$is_js_array = true
         }else if(typeof jsobj == "function"){
+            return jsobj2pyobj(jsobj)
+            /*
             jsobj.$is_js_func = true
             jsobj.$infos = {
                 __name__: jsobj.name,
@@ -345,6 +355,7 @@ $B.JSObj = $B.make_class("JSObject",
             jsobj.__new__ = function(){
                 return new jsobj.$js_func(...arguments)
             }
+            */
         }else if(typeof jsobj == "number" && ! Number.isInteger(jsobj)){
             return {__class__: _b_.float, value: jsobj}
         }
@@ -522,7 +533,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "foo"
+    var test = false // attr == "Date"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -590,6 +601,12 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         // Javascript class
         return jsclass2pyclass(js_attr)
     }else if(typeof js_attr === 'function'){
+        // The second argument is the value passed as "this" when the JS
+        // function is executed. If _self is a wrapper around a JS function,
+        // pass the JS function, not the wrapper
+        var res = jsobj2pyobj(js_attr, _self.$js_func || _self)
+        return res
+        /*
         var res = function(){
             var args = pyargs2jsargs(arguments),
                 target = _self.$js_func || _self
@@ -612,6 +629,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
             res.__module__ = $B.last($B.frames_stack)[3].__name__
         }
         return $B.JSObj.$factory(res)
+        */
     }else{
         if(test){
             console.log('use JSObj.$factory on', js_attr)

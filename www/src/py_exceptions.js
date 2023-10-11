@@ -515,7 +515,6 @@ $make_exc(["JavascriptError"], _b_.Exception)
 
 var js_errors = {'Error': _b_.JavascriptError}
 
-
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "BufferError", "EOFError",

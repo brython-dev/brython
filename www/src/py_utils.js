@@ -434,7 +434,6 @@ $B.get_class = function(obj){
             case "boolean":
                 return _b_.bool
             case "function":
-                // Functions defined in Brython have an attribute $infos
                 if(obj.$is_js_func){
                     // Javascript function or constructor
                     return $B.JSObj
