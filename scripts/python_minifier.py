@@ -53,11 +53,13 @@ def minify(src, preserve_lines=False):
     token_generator = tokenize.tokenize(file_obj.readline)
 
     for item in token_generator:
+        string = item.string
+
         # update brackets stack if necessary
         if token.tok_name[item.type] == 'OP':
-            if item.string in '([{':
+            if string in '([{':
                 brackets.append(item.string)
-            elif item.string in '}])':
+            elif string in '}])':
                 brackets.pop()
 
         sline = item.start[0] # start line
@@ -70,6 +72,9 @@ def minify(src, preserve_lines=False):
         elif item.type == tokenize.DEDENT:
             indent -= 1
             continue
+
+        if token.tok_name[item.type] == 'FSTRING_MIDDLE':
+            string = string.replace('{', '{{').replace('}', '}}')
 
         if sline > line: # first token in a line
 
@@ -86,16 +91,16 @@ def minify(src, preserve_lines=False):
                     # indentation.
                     out += ' ' * indent + "''"
                     if preserve_lines:
-                        out += '\n' * item.string.count('\n')
+                        out += '\n' * string.count('\n')
                     continue
             out += ' ' * indent # start with current indentation
             if item.type not in [tokenize.INDENT, tokenize.COMMENT]:
-                out += item.string
+                out += string
             elif (item.type == tokenize.COMMENT and
                     line <= 2 and item.line.startswith('#!')):
                 # Ignore comments starting a line, except in one of the first
                 # 2 lines, for interpreter path and/or encoding declaration
-                out += item.string
+                out += string
         else:
             if item.type == tokenize.COMMENT: # ignore comments in a line
                 continue
@@ -105,23 +110,23 @@ def minify(src, preserve_lines=False):
                 # indent
                 out += "''"
                 if preserve_lines:
-                    out += '\n'*item.string.count('\n')
+                    out += '\n' * string.count('\n')
                 continue
             previous_types = [tokenize.NAME, tokenize.NUMBER] + async_types
             if item.type in [tokenize.NAME, tokenize.NUMBER, tokenize.OP] and \
                 last_type in previous_types:
                 # insert a space when needed
                 if (item.type != tokenize.OP \
-                        or item.string not in ',()[].=:{}+&' \
+                        or string not in ',()[].=:{}+&' \
                         or (last_type == tokenize.NAME and
-                        last_item.string in kwlist)):
+                        string in kwlist)):
                     out += ' '
             elif (item.type in [tokenize.STRING, tokenize.FSTRING_START] and
                     last_type in [tokenize.NAME, tokenize.NUMBER]):
                 # for cases like "return b'x'"
                 out += ' '
             elif (item.type == tokenize.NAME and
-                    item.string == "import" and
+                    string == "import" and
                     last_item.type == tokenize.OP and
                     last_item.string == '.'):
                 # special case : from . import X
@@ -129,7 +134,7 @@ def minify(src, preserve_lines=False):
             elif (item.type in async_types and
                     last_item.type in previous_types):
                 out += ' '
-            out += item.string
+            out += string
 
         line = item.end[0]
         last_item = item
@@ -152,8 +157,8 @@ def minify(src, preserve_lines=False):
         # remove lines with an empty string followed by a line that starts with
         # the same indent
         def repl(mo):
-            if mo.groups()[0]==mo.groups()[1]:
-                return '\n'+mo.groups()[1]
+            if mo.groups()[0] == mo.groups()[1]:
+                return '\n' + mo.groups()[1]
             return mo.string[mo.start(): mo.end()]
         out = re.sub("\n( *)''\n( *)", repl, out)
 
