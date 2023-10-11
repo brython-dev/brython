@@ -1392,7 +1392,7 @@ class C:
 assert '{}'.format(C) == "<class '__main__.C'>"
 
 import javascript
-assert javascript.jsobj2pyobj(javascript.NULL) is None
+assert javascript.jsobj2pyobj(javascript.NULL) is javascript.NULL
 undef = javascript.jsobj2pyobj(javascript.UNDEFINED)
 assert not undef
 
