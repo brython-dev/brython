@@ -346,16 +346,6 @@ $B.JSObj = $B.make_class("JSObject",
             jsobj.$is_js_array = true
         }else if(typeof jsobj == "function"){
             return jsobj2pyobj(jsobj)
-            /*
-            jsobj.$is_js_func = true
-            jsobj.$infos = {
-                __name__: jsobj.name,
-                __qualname__: jsobj.name
-            }
-            jsobj.__new__ = function(){
-                return new jsobj.$js_func(...arguments)
-            }
-            */
         }else if(typeof jsobj == "number" && ! Number.isInteger(jsobj)){
             return {__class__: _b_.float, value: jsobj}
         }
@@ -604,32 +594,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         // The second argument is the value passed as "this" when the JS
         // function is executed. If _self is a wrapper around a JS function,
         // pass the JS function, not the wrapper
-        var res = jsobj2pyobj(js_attr, _self.$js_func || _self)
-        return res
-        /*
-        var res = function(){
-            var args = pyargs2jsargs(arguments),
-                target = _self.$js_func || _self
-            try{
-                var result = js_attr.apply(target, args)
-            }catch(err){
-                throw $B.exception(err)
-            }
-            if(result === undefined){
-                return $B.Undefined
-            }
-            return $B.JSObj.$factory(result)
-        }
-        // this is very important for class-emulating functions
-        res.prototype = js_attr.prototype
-        res.$js_func = js_attr
-        res.__mro__ = [_b_.object]
-        res.__name__ = res.__qualname__ = js_attr.name
-        if($B.frames_stack.length > 0){
-            res.__module__ = $B.last($B.frames_stack)[3].__name__
-        }
-        return $B.JSObj.$factory(res)
-        */
+        return jsobj2pyobj(js_attr, _self.$js_func || _self)
     }else{
         if(test){
             console.log('use JSObj.$factory on', js_attr)
