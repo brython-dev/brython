@@ -207,6 +207,17 @@ window.async_func_with_python_callback = async function(faa, c) {
     await p.then(e => e)
 }
 
+// issue 2261
+var aws = [[false, false], false];
+
+window.array_with_subitem = aws;
+window.array_with_subitem0 = aws[0];
+
+window.set_subitem_value = function(){
+    aws[0][0] = true
+    aws[1] = true
+}
+
 // issue 2262 : recursive array
 function init_array(){
   let array = [0, 1];

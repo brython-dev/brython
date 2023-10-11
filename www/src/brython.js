@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-10 22:41:08.853206"
-__BRYTHON__.timestamp=1696970468853
+__BRYTHON__.compiled_date="2023-10-11 09:38:22.616409"
+__BRYTHON__.timestamp=1697009902616
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13362,7 +13362,7 @@ return _b_.None}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(arg))}
 list.append=function(self,x){$B.check_nb_args_no_kw("append",2,arguments)
-self.push(x)
+self[self.length]=x
 return _b_.None}
 list.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 while($.self.length){$.self.pop()}
@@ -13710,7 +13710,7 @@ switch(jsobj){case true:
 case false:
 return jsobj}
 if(jsobj===undefined){return $B.Undefined}else if(jsobj===null){return _b_.None}
-if(Array.isArray(jsobj)){return $B.$list(jsobj.map(jsobj2pyobj))}else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
+if(Array.isArray(jsobj)){return jsobj }else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}else if(typeof jsobj=="string"){return $B.String(jsobj)}else if(typeof jsobj=="function"){
 _this=_this===undefined ? null :_this
 return function(){var args=[]
@@ -13856,7 +13856,8 @@ res.$js_func=js_attr
 res.__mro__=[_b_.object]
 res.__name__=res.__qualname__=js_attr.name
 if($B.frames_stack.length > 0){res.__module__=$B.last($B.frames_stack)[3].__name__}
-return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
+return $B.JSObj.$factory(res)}else{if(test){console.log('use JSObj.$factory on',js_attr)}
+return $B.JSObj.$factory(js_attr)}}
 $B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}
 $B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){try{return $B.JSObj.__getattribute__(_self,key)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){throw _b_.KeyError.$factory(err.name)}
@@ -13903,7 +13904,8 @@ if(['__delitem__','__setitem__'].indexOf(attr)>-1){
 return function(){var args=[arguments[0]]
 for(var i=1,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
 return _b_.list[attr].apply(null,args)}}else if(['__add__','__contains__','__eq__','__getitem__','__mul__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
-return function(){return jsobj2pyobj(_b_.list[attr].call(null,jsobj2pyobj(arguments[0]),...Array.from(arguments).slice(1)))}}
+return function(){var pylist=$B.$list(arguments[0].map(jsobj2pyobj))
+return jsobj2pyobj(_b_.list[attr].call(null,pylist,...Array.from(arguments).slice(1)))}}
 return function(){var js_array=arguments[0],t=jsobj2pyobj(js_array),args=[t]
 return _b_.list[attr].apply(null,args)}}
 $B.set_func_names(js_list_meta,'builtins')
@@ -13919,6 +13921,8 @@ return $B.JSObj.$factory(_self[attr])}
 throw $B.attr_error(attr,_self)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
+js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
+return $B.jsobj2pyobj(_self[i])}
 js_array.__repr__=function(_self){if($B.repr.enter(_self)){
 return '[...]'}
 var _r=[],res

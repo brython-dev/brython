@@ -315,6 +315,18 @@ assert javascript.UNDEFINED is javascript.UNDEFINED
 assert javascript.UNDEFINED == javascript.UNDEFINED
 assert bool(javascript.UNDEFINED) is False
 
+# issue 2261
+a = window.array_with_subitem
+assert a is window.array_with_subitem
+a0 = window.array_with_subitem[0]
+assert a0 is window.array_with_subitem[0]
+
+window.set_subitem_value()
+
+assert (a[0][0], a0[0], a[1]) == (True, True, True)
+assert window.array_with_subitem[0] is a0
+
+
 # issue 2262
 window.xv = 5.6
 window.init_array()

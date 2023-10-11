@@ -535,7 +535,7 @@ list.$setitem = function(self, arg, value){
 
 list.append = function(self, x){
     $B.check_nb_args_no_kw("append", 2, arguments)
-    self.push(x)
+    self[self.length] = x
     return _b_.None
 }
 

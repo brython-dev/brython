@@ -165,7 +165,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     }
 
     if(Array.isArray(jsobj)){
-        return $B.$list(jsobj.map(jsobj2pyobj))
+        return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
     }else if(typeof jsobj === 'number'){
        if(jsobj.toString().indexOf('.') == -1){
            return _b_.int.$factory(jsobj)
@@ -522,7 +522,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "null_value"
+    var test = false // attr == "foo"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -613,6 +613,9 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         }
         return $B.JSObj.$factory(res)
     }else{
+        if(test){
+            console.log('use JSObj.$factory on', js_attr)
+        }
         return $B.JSObj.$factory(js_attr)
     }
 }
@@ -762,8 +765,9 @@ js_list_meta.__getattribute__ = function(_self, attr){
               '__ge__', '__gt__', '__le__', '__lt__'].indexOf(attr) > -1){
         // Apply to a Python copy of the JS list
         return function(){
+            var pylist = $B.$list(arguments[0].map(jsobj2pyobj))
             return jsobj2pyobj(_b_.list[attr].call(null,
-                jsobj2pyobj(arguments[0]),
+                pylist,
                 ...Array.from(arguments).slice(1)))
         }
     }
@@ -780,6 +784,7 @@ $B.set_func_names(js_list_meta, 'builtins')
 var js_array = $B.js_array = $B.make_class('Array')
 js_array.__class__ = js_list_meta
 js_array.__mro__ = [$B.JSObj, _b_.object]
+
 
 js_array.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
@@ -800,6 +805,11 @@ js_array.__getattribute__ = function(_self, attr){
         var args = pyobj2jsobj(Array.from(arguments))
         return _b_.list[attr].call(null, _self, ...args)
     }
+}
+
+js_array.__getitem__ = function(_self, i){
+    i = $B.PyNumber_Index(i)
+    return $B.jsobj2pyobj(_self[i])
 }
 
 js_array.__repr__ = function(_self){
