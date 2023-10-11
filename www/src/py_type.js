@@ -476,8 +476,6 @@ type.__call__ = function(){
     return instance
 }
 
-type.__class__ = type
-
 type.__class_getitem__ = function(kls, origin, args){
     // subclasses of type that don't define __class_getitem__ are
     // not subscriptable, but type[] is valid

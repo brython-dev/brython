@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-11 21:35:58.220363"
-__BRYTHON__.timestamp=1697052958204
+__BRYTHON__.compiled_date="2023-10-11 22:32:11.561598"
+__BRYTHON__.timestamp=1697056331561
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6100,7 +6100,6 @@ if(init_func !==_b_.object.__init__){
 var args=[instance].concat(extra_args)
 init_func.apply(null,args)}}
 return instance}
-type.__class__=type
 type.__class_getitem__=function(kls,origin,args){
 if(kls !==type){throw _b_.TypeError.$factory(`type '${kls.__qualname__}' `+
 "is not subscriptable")}
