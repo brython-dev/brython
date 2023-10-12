@@ -1431,8 +1431,7 @@ $B.rich_comp = function(op, x, y){
     if(y_rev_func === undefined){
         // If y_rev_func is defined, it was called above, so don't try
         // a second time
-        y_rev_func = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),
-            rev_op))
+        y_rev_func = $B.$call($B.$getattr($B.get_class(y), rev_op))
         res = y_rev_func(y, x)
         if(res !== _b_.NotImplemented ){
             return res

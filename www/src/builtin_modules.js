@@ -537,6 +537,14 @@
     }
 
     modules.javascript.NullType.__module__ = 'javascript'
+
+    modules.javascript.NullType.__eq__ = function(_self, other){
+        // in Javascript, null == undefined is true...
+        return other === null || other === $B.Undefined
+    }
+
+    $B.set_func_names(modules.javascript.NullType, 'javascript')
+
     modules.javascript.UndefinedType.__module__ = 'javascript'
 
     // Default standard output and error

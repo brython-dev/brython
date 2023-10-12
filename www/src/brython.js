@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-11 22:32:11.561598"
-__BRYTHON__.timestamp=1697056331561
+__BRYTHON__.compiled_date="2023-10-12 21:27:22.411504"
+__BRYTHON__.timestamp=1697138842407
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5670,7 +5670,7 @@ if(res !==_b_.NotImplemented){return res}}}
 res=x_class_op(x,y)
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
-y_rev_func=$B.$call($B.$getattr(y.__class__ ||$B.get_class(y),rev_op))
+y_rev_func=$B.$call($B.$getattr($B.get_class(y),rev_op))
 res=y_rev_func(y,x)
 if(res !==_b_.NotImplemented ){return res}}
 if(op=="__eq__"){return _b_.False}else if(op=="__ne__"){return _b_.True}
@@ -13849,8 +13849,7 @@ js_attr.toString &&
 typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
-var res=jsobj2pyobj(js_attr,_self.$js_func ||_self)
-return res}else{if(test){console.log('use JSObj.$factory on',js_attr)}
+return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{if(test){console.log('use JSObj.$factory on',js_attr)}
 return $B.JSObj.$factory(js_attr)}}
 $B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}
@@ -14979,6 +14978,9 @@ eval(content)},Math:self.Math && $B.JSObj.$factory(self.Math),NULL:null,NullType
 var js=$B.py2js({src,filename:'<string>'},module_name,module_name,$B.builtins_scope).to_js()
 return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},RegExp:self.RegExp && $B.JSObj.$factory(self.RegExp),String:self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedType}
 modules.javascript.NullType.__module__='javascript'
+modules.javascript.NullType.__eq__=function(_self,other){
+return other===null ||other===$B.Undefined}
+$B.set_func_names(modules.javascript.NullType,'javascript')
 modules.javascript.UndefinedType.__module__='javascript'
 var $io=$B.$io=$B.make_class("io",function(out){return{
 __class__:$io,out,encoding:'utf-8'}}
