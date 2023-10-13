@@ -2785,8 +2785,8 @@ $B.ast.Try.prototype.to_js = function(scopes){
         js += `catch(${err}){\n` +
               `$B.set_exc(${err}, frame)\n`
         if(trace){
-              `if(frame.$f_trace !== _b_.None){\n` +
-              `frame.$f_trace = $B.trace_exception()}\n`
+            js += `if(frame.$f_trace !== _b_.None){\n` +
+                  `frame.$f_trace = $B.trace_exception()}\n`
         }
         if(has_else){
             js += `failed${id} = true\n`
