@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-13 10:05:51.198635"
-__BRYTHON__.timestamp=1697184351198
+__BRYTHON__.compiled_date="2023-10-13 11:41:46.614518"
+__BRYTHON__.timestamp=1697190106614
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5611,7 +5611,8 @@ $B.frames_stack.pop()
 err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
-$B.trace_exception=function(){var frame=$B.last($B.frames_stack)
+$B.trace_exception=function(){console.log('trace exception')
+var frame=$B.last($B.frames_stack)
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 var trace_func=frame.$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
@@ -5828,11 +5829,11 @@ var __get__=get===undefined ? null :
 $B.$getattr(res,"__get__",null)
 if($test){console.log("__get__",__get__)}
 if(__get__ !==null){if($test){console.log('apply __get__',[obj,klass])}
-try{return __get__.apply(null,[obj,klass])}catch(err){console.log('error in get.apply',err)
+try{return __get__.apply(null,[obj,klass])}catch(err){if($B.get_option('debug')> 2){console.log('error in get.apply',err)
 console.log("get attr",attr,"of",obj)
 console.log('res',res)
 console.log('__get__',__get__)
-console.log(__get__+'')
+console.log(__get__+'')}
 throw err}}
 if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
 if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
@@ -6085,8 +6086,8 @@ var data_descriptors=['__abstractmethods__','__annotations__','__base__','__base
 '__dictoffset__','__doc__','__flags__','__itemsize__','__module__','__mro__','__name__','__qualname__','__text_signature__','__weakrefoffset__'
 ]
 type.$call=function(klass,new_func,init_func){return function(){
-var instance=new_func.bind(null,klass).apply(null,arguments),instance_class=instance.__class__ ||$B.get_class(instance)
-if(instance_class===klass){
+var instance=new_func.bind(null,klass).apply(null,arguments)
+if(_b_.isinstance(instance,klass)){
 if(init_func !==_b_.object.__init__){
 init_func.bind(null,instance).apply(null,arguments)}}
 return instance}}
@@ -6382,7 +6383,7 @@ member_descriptor.__delete__=function(self,kls){if(kls.$slot_values===undefined 
 kls.$slot_values.delete(self.attr)}
 member_descriptor.__get__=function(self,kls,obj_type){if(kls===_b_.None){return self}
 if(kls.$slot_values===undefined ||
-! kls.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+! kls.$slot_values.has(self.attr)){throw $B.attr_error(self.attr,kls)}
 return kls.$slot_values.get(self.attr)}
 member_descriptor.__set__=function(self,kls,value){if(kls.$slot_values===undefined){kls.$slot_values=new Map()}
 kls.$slot_values.set(self.attr,value)}
@@ -8263,6 +8264,7 @@ suggestion_distance=current_distance}}
 return suggestion}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
+console.log('suggestions for',name,dir,suggestions)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name,frame=frame ||$B.last(exc.$stack)
 if(typeof name !='string'){return _b_.None}
@@ -16262,7 +16264,7 @@ if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
 `$B.set_exc(${err}, frame)\n`
-if(trace){`if(frame.$f_trace !== _b_.None){\n`+
+if(trace){js+=`if(frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()}\n`}
 if(has_else){js+=`failed${id} = true\n`}
 var first=true,has_untyped_except=false

@@ -1272,6 +1272,7 @@ $B.enter_frame = function(frame){
 }
 
 $B.trace_exception = function(){
+    console.log('trace exception')
     var frame = $B.last($B.frames_stack)
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None

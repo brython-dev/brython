@@ -14,6 +14,7 @@ function _randint(a, b){
 
 var stat_result = $B.make_class("stat_result",
     function(filename){
+        filename = _b_.str.$factory(filename)
         if($B.file_cache && $B.file_cache.hasOwnProperty(filename)){
             var f = $B.file_cache[filename],
                 res = {
@@ -41,7 +42,6 @@ var stat_result = $B.make_class("stat_result",
                 throw err
             }
             xhr.open('HEAD', filename, false)
-            console.log('send head', $B.frames_stack.slice())
             var infos = {}
             xhr.onreadystatechange = function(){
                 if(this.readyState == 4){
