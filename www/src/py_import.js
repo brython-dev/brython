@@ -316,6 +316,7 @@ function run_py(module_contents, path, module, compiled) {
             console.log("message: " + err.$message)
             console.log("filename: " + err.fileName)
             console.log("linenum: " + err.lineNumber)
+            console.log(js.split('\n').slice(err.lineNumber - 3, err.lineNumber + 3).join('\n'))
             console.log(err.stack)
         }
         throw err
@@ -1425,7 +1426,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 "future feature " + name + " is not defined")
                             throw exc
                         }
-                        // calculate suggestion based on module namespace 
+                        // calculate suggestion based on module namespace
                         // (new in Python 3.12)
                         var $frame = [mod_name, modobj, mod_name, modobj],
                             suggestion = $B.offer_suggestions_for_name_error({name}, $frame)
