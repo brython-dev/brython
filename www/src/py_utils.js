@@ -1068,11 +1068,11 @@ $B.$is_member = function(item, _set){
 $B.$call = function(callable, position){
     callable = $B.$call1(callable)
     if(position){
-        position = $B.decode_position(position)
         return function(){
             try{
                 return callable.apply(null, arguments)
             }catch(exc){
+                position = $B.decode_position(position)
                 $B.set_exception_offsets(exc, position)
                 throw exc
             }
