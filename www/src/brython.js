@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-12 21:27:22.411504"
-__BRYTHON__.timestamp=1697138842407
+__BRYTHON__.compiled_date="2023-10-14 08:13:25.820691"
+__BRYTHON__.timestamp=1697264005820
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5300,7 +5300,8 @@ if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case "number":
-return Number.isInteger(obj)? _b_.int :undefined
+if(Number.isInteger(obj)){return _b_.int}
+break
 case "string":
 return _b_.str
 case "boolean":
@@ -5505,6 +5506,7 @@ $B.$is=function(a,b){
 if((a===undefined ||a===$B.Undefined)&&
 (b===undefined ||b===$B.Undefined)){return true}
 if(a===null){return b===null}
+if(b===null){return a===null}
 if(a.__class__===_b_.float && b.__class__===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
 return a.value==b.value}
 if((a===_b_.int && b==$B.long_int)||
@@ -11016,8 +11018,7 @@ str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
-if(typeof arg=="string" ||arg instanceof String ||
-typeof arg=="number"){if(isFinite(arg)){return arg.toString()}}
+if(typeof arg=="string" ||arg instanceof String){return arg.toString()}else if(typeof arg=="number" && Number.isInteger(arg)){return arg.toString()}
 try{if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}

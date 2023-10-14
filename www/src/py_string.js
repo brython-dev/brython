@@ -2721,11 +2721,10 @@ str.$factory = function(arg, encoding, errors){
             encoding = $.encoding,
             errors = $.errors
     }
-    if(typeof arg == "string" || arg instanceof String ||
-            typeof arg == "number"){
-        if(isFinite(arg)){
-            return arg.toString()
-        }
+    if(typeof arg == "string" || arg instanceof String){
+        return arg.toString()
+    }else if(typeof arg == "number" && Number.isInteger(arg)){
+        return arg.toString()
     }
 
     try{
