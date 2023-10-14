@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-14 08:18:31.758309"
-__BRYTHON__.timestamp=1697264311758
+__BRYTHON__.compiled_date="2023-10-14 12:42:15.820996"
+__BRYTHON__.timestamp=1697280135820
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5613,8 +5613,7 @@ $B.frames_stack.pop()
 err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
-$B.trace_exception=function(){console.log('trace exception')
-var frame=$B.last($B.frames_stack)
+$B.trace_exception=function(){var frame=$B.last($B.frames_stack)
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 var trace_func=frame.$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
@@ -13722,6 +13721,7 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]
 try{return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
 res.$js_func=jsobj
 res.$is_js_func=true
+res.$infos={__name__:jsobj.name,__qualname__:jsobj.name}
 return res}
 if(jsobj.$kw){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
@@ -13871,7 +13871,8 @@ for(var i=_slice.start;i < _slice.stop;i+=_slice.step){res.push(_self.item(i))}
 return res}
 throw _b_.KeyError.$factory(key)}
 $B.JSObj.__setitem__=$B.JSObj.__setattr__
-$B.JSObj.__repr__=$B.JSObj.__str__=function(_self){var js_repr=Object.prototype.toString.call(_self)
+$B.JSObj.__repr__=$B.JSObj.__str__=function(_self){if(typeof _self=='number'){return _self+''}
+var js_repr=Object.prototype.toString.call(_self)
 return `<Javascript object: ${js_repr}>`}
 $B.JSObj.bind=function(_self,evt,func){
 var js_func=function(ev){try{return func(jsobj2pyobj(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}catch(err1){console.log(err)}}}}
