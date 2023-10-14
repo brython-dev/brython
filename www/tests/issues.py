@@ -3190,6 +3190,24 @@ assert_raises(SyntaxError, exec, 'type(lambda))')
 # issue 2232
 assert_raises(SyntaxError, exec, 'if x is not in y: pass')
 
+# issue 2258
+import pathlib
+import os
+
+module_path = "/py/elephas/test_mdl.py"
+path = pathlib.Path(module_path)
+
+assert os.fspath(path) == r'/py/elephas/test_mdl.py'
+
+path = path.with_suffix('')
+stem = path.stem
+assert stem == 'test_mdl'
+
+assert str(pathlib.Path('.')) == '.'
+
+pathlib.Path.cwd()
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -438,9 +438,8 @@ var data_descriptors = ['__abstractmethods__',
 type.$call = function(klass, new_func, init_func){
     return function(){
         // create an instance with __new__
-        var instance = new_func.bind(null, klass).apply(null, arguments),
-            instance_class = instance.__class__ || $B.get_class(instance)
-        if(instance_class === klass){
+        var instance = new_func.bind(null, klass).apply(null, arguments)
+        if(_b_.isinstance(instance, klass)){
             // call __init__ with the same parameters
             if(init_func !== _b_.object.__init__){
                 // object.__init__ is not called in this case (it would raise an
@@ -1248,7 +1247,7 @@ member_descriptor.__get__ = function(self, kls, obj_type){
     }
     if(kls.$slot_values === undefined ||
             ! kls.$slot_values.has(self.attr)){
-        throw _b_.AttributeError.$factory(self.attr)
+        throw $B.attr_error(self.attr, kls)
     }
     return kls.$slot_values.get(self.attr)
 }

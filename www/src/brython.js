@@ -138,19 +138,19 @@ $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-14 08:15:22.356255"
-__BRYTHON__.timestamp=1697264122356
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
+__BRYTHON__.compiled_date="2023-10-13 11:41:46.614518"
+__BRYTHON__.timestamp=1697190106614
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 $B.is_identifier=function(category,cp){
@@ -5300,8 +5300,7 @@ if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case "number":
-if(Number.isInteger(obj)){return _b_.int}
-break
+return Number.isInteger(obj)? _b_.int :undefined
 case "string":
 return _b_.str
 case "boolean":
@@ -5506,7 +5505,6 @@ $B.$is=function(a,b){
 if((a===undefined ||a===$B.Undefined)&&
 (b===undefined ||b===$B.Undefined)){return true}
 if(a===null){return b===null}
-if(b===null){return a===null}
 if(a.__class__===_b_.float && b.__class__===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
 return a.value==b.value}
 if((a===_b_.int && b==$B.long_int)||
@@ -5530,8 +5528,8 @@ throw err}}}}else{throw _b_.TypeError.$factory('argument of type '+
 `'${$B.class_name(obj)}' is not iterable`)}}}
 $B.$is_member=function(item,_set){return $B.member_func(_set)(item)}
 $B.$call=function(callable,position){callable=$B.$call1(callable)
-if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){position=$B.decode_position(position)
-$B.set_exception_offsets(exc,position)
+if(position){position=$B.decode_position(position)
+return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
 throw exc}}}
 return callable}
 $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
@@ -5613,7 +5611,8 @@ $B.frames_stack.pop()
 err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
-$B.trace_exception=function(){var frame=$B.last($B.frames_stack)
+$B.trace_exception=function(){console.log('trace exception')
+var frame=$B.last($B.frames_stack)
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 var trace_func=frame.$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
@@ -5830,11 +5829,11 @@ var __get__=get===undefined ? null :
 $B.$getattr(res,"__get__",null)
 if($test){console.log("__get__",__get__)}
 if(__get__ !==null){if($test){console.log('apply __get__',[obj,klass])}
-try{return __get__.apply(null,[obj,klass])}catch(err){console.log('error in get.apply',err)
+try{return __get__.apply(null,[obj,klass])}catch(err){if($B.get_option('debug')> 2){console.log('error in get.apply',err)
 console.log("get attr",attr,"of",obj)
 console.log('res',res)
 console.log('__get__',__get__)
-console.log(__get__+'')
+console.log(__get__+'')}
 throw err}}
 if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
 if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
@@ -6087,8 +6086,8 @@ var data_descriptors=['__abstractmethods__','__annotations__','__base__','__base
 '__dictoffset__','__doc__','__flags__','__itemsize__','__module__','__mro__','__name__','__qualname__','__text_signature__','__weakrefoffset__'
 ]
 type.$call=function(klass,new_func,init_func){return function(){
-var instance=new_func.bind(null,klass).apply(null,arguments),instance_class=instance.__class__ ||$B.get_class(instance)
-if(instance_class===klass){
+var instance=new_func.bind(null,klass).apply(null,arguments)
+if(_b_.isinstance(instance,klass)){
 if(init_func !==_b_.object.__init__){
 init_func.bind(null,instance).apply(null,arguments)}}
 return instance}}
@@ -6384,7 +6383,7 @@ member_descriptor.__delete__=function(self,kls){if(kls.$slot_values===undefined 
 kls.$slot_values.delete(self.attr)}
 member_descriptor.__get__=function(self,kls,obj_type){if(kls===_b_.None){return self}
 if(kls.$slot_values===undefined ||
-! kls.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+! kls.$slot_values.has(self.attr)){throw $B.attr_error(self.attr,kls)}
 return kls.$slot_values.get(self.attr)}
 member_descriptor.__set__=function(self,kls,value){if(kls.$slot_values===undefined){kls.$slot_values=new Map()}
 kls.$slot_values.set(self.attr,value)}
@@ -8265,6 +8264,7 @@ suggestion_distance=current_distance}}
 return suggestion}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
+console.log('suggestions for',name,dir,suggestions)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name,frame=frame ||$B.last(exc.$stack)
 if(typeof name !='string'){return _b_.None}
@@ -9657,6 +9657,7 @@ for(var attr in err){console.log(attr,err[attr])}
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)
+console.log(js.split('\n').slice(err.lineNumber-3,err.lineNumber+3).join('\n'))
 console.log(err.stack)}
 throw err}
 try{
@@ -11018,7 +11019,8 @@ str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
-if(typeof arg=="string" ||arg instanceof String){return arg.toString()}else if(typeof arg=="number" && Number.isInteger(arg)){return arg.toString()}
+if(typeof arg=="string" ||arg instanceof String ||
+typeof arg=="number"){if(isFinite(arg)){return arg.toString()}}
 try{if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
@@ -15138,6 +15140,7 @@ return js_node}}}
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
+var trace=1
 function compiler_error(ast_obj,message,end){var exc=_b_.SyntaxError.$factory(message)
 exc.filename=state.filename
 if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
@@ -15666,18 +15669,18 @@ js+=`locals = ${locals_name}\n`+
 `frame.__file__ = '${scopes.filename}'\n`+
 `frame.$lineno = ${this.lineno}\n`+
 `frame.$f_trace = $B.enter_frame(frame)\n`+
-`var _frames = $B.frames_stack.slice()\n`+
-`if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
+`var _frames = $B.frames_stack.slice()\n`
+if(trace){js+=`if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`}
 scopes.push(class_scope)
 js+=add_body(this.body,scopes)
 scopes.pop()
 var keywords=[]
 for(var keyword of this.keywords){keywords.push(`["${keyword.arg}", `+
 $B.js_from_ast(keyword.value,scopes)+']')}
-js+='\nif(frame.$f_trace !== _b_.None){\n'+
+if(trace){js+='\nif(frame.$f_trace !== _b_.None){\n'+
 '$B.trace_return(_b_.None)\n'+
-'}\n'+
-'$B.leave_frame()\n'+
+'}'}
+js+='\n$B.leave_frame()\n'+
 `return $B.$class_constructor('${this.name}', locals, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}])\n`+
 `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
@@ -15883,10 +15886,10 @@ js+=`locals.__class__ =  `+
 `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`}
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
-js+='var result = _b_.None\n'+
-'if(frame.$f_trace !== _b_.None){\n'+
-'$B.trace_return(_b_.None)\n}\n'+
-'$B.leave_frame()\n'+
+js+='var result = _b_.None\n'
+if(trace){js+='if(frame.$f_trace !== _b_.None){\n'+
+'$B.trace_return(_b_.None)\n}\n'}
+js+='$B.leave_frame()\n'+
 'return result\n'}
 js+=`}catch(err){
     $B.set_exc(err, frame)\n`
@@ -15894,10 +15897,10 @@ if(func_scope.needs_frames){
 js+=`err.$stack = _frames\n`+
 `_linenos[_linenos.length - 1] = frame.$lineno\n`+
 `err.$linenos = _linenos\n`}
-js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
-    frame.$f_trace = $B.trace_exception()
-    }
-    $B.leave_frame();throw err
+if(trace){js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
+        frame.$f_trace = $B.trace_exception()
+        }\n`}
+js+=`$B.leave_frame();throw err
     }
     }\n`
 if(is_generator){js+=`, '${this.name}')\n`+
@@ -16189,11 +16192,11 @@ js+=`$B.set_lineno(frame, 1)\n`+
 add_body(this.body,scopes)+'\n'+
 (namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
 `}catch(err){\n`+
-`$B.set_exc(err, frame)\n`+
-`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
+`$B.set_exc(err, frame)\n`
+if(trace){js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()\n`+
-`}\n`+
-(namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
+`}\n`}
+js+=(namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
 'throw err\n'+
 `}`
 scopes.pop()
@@ -16228,10 +16231,11 @@ $B.ast.Return.prototype.to_js=function(scopes){
 compiler_check(this)
 var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 'var result = '+
-(this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')
-js+=`\nif(frame.$f_trace !== _b_.None){\n`+
-`$B.trace_return(result)\n}\n`+
-`$B.leave_frame()\nreturn result\n`
+(this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')+
+'\n'
+if(trace){js+=`if(frame.$f_trace !== _b_.None){\n`+
+`$B.trace_return(result)\n}\n`}
+js+=`$B.leave_frame()\nreturn result\n`
 return js}
 $B.ast.Set.prototype.to_js=function(scopes){var elts=[]
 for(var elt of this.elts){var js
@@ -16259,9 +16263,9 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc(${err}, frame)\n`+
-`if(frame.$f_trace !== _b_.None){\n`+
-`frame.$f_trace = $B.trace_exception()}\n`
+`$B.set_exc(${err}, frame)\n`
+if(trace){js+=`if(frame.$f_trace !== _b_.None){\n`+
+`frame.$f_trace = $B.trace_exception()}\n`}
 if(has_else){js+=`failed${id} = true\n`}
 var first=true,has_untyped_except=false
 for(var handler of this.handlers){if(first){js+='if'
@@ -16315,11 +16319,11 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc(${err}, frame)\n`+
-`if(frame.$f_trace !== _b_.None){\n`+
+`$B.set_exc(${err}, frame)\n`
+if(trace){js+=`if(frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()\n`+
-`}\n`+
-`if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
+`}\n`}
+js+=`if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
 `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
 '}\n'+
 `function fake_split(exc, condition){\n`+

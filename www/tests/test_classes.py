@@ -1054,4 +1054,20 @@ class B(A):
 
 assert B().m == 2
 
+# if A.__new__ returns a instance of a subclass of A, call A.__init__
+t = []
+class A:
+
+  def __new__(cls):
+      return object.__new__(B)
+
+  def __init__(self, *args):
+      t.append('init A')
+
+class B(A):
+  pass
+
+A()
+assert t == ['init A']
+
 print('passed all tests..')

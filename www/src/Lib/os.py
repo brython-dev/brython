@@ -82,8 +82,10 @@ def fsdecode(filename):
         raise TypeError("expect bytes or str, not %s" % type(filename).__name__)
 
 def fspath(path):
-    return path
-
+    if isinstance(path, [str, bytes]):
+        return path
+    return path.__fspath__()
+    
 def getcwd():
     return __BRYTHON__.curdir
 

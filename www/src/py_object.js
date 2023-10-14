@@ -223,13 +223,13 @@ object.__getattribute__ = function(obj, attr){
             try{
                 return __get__.apply(null, [obj, klass])
             }catch(err){
-
-                console.log('error in get.apply', err)
-                console.log("get attr", attr, "of", obj)
-                console.log('res', res)
-                console.log('__get__', __get__)
-                console.log(__get__ + '')
-
+                if($B.get_option('debug') > 2){
+                    console.log('error in get.apply', err)
+                    console.log("get attr", attr, "of", obj)
+                    console.log('res', res)
+                    console.log('__get__', __get__)
+                    console.log(__get__ + '')
+                }
                 throw err
             }
         }
