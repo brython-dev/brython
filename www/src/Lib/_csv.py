@@ -63,7 +63,7 @@ SETTINGS:
 
 __version__ = "1.0"
 
-QUOTE_MINIMAL, QUOTE_ALL, QUOTE_NONNUMERIC, QUOTE_NONE = range(4)
+QUOTE_MINIMAL, QUOTE_ALL, QUOTE_NONNUMERIC, QUOTE_NONE, QUOTE_STRINGS, QUOTE_NOTNULL = range(6)
 _dialects = {}
 _field_limit = 128 * 1024 # max parsed field size
 

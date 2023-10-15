@@ -40,4 +40,13 @@ with open('../brython.png', 'rb') as f:
     assert isinstance(content, bytes)
     assert len(content) == 2011
 
+# issue 2278
+import csv
+with open('files/biostats.csv', newline='') as f:
+    reader = csv.DictReader(f)
+    nb = 0
+    for row in reader:
+        nb += 1
+    assert nb == 18, nb
+    
 print("passed all tests...")
