@@ -1036,7 +1036,7 @@ $B.error_trace = function(err){
                 trace += `. Did you mean: '${suggestion}'?`
             }
         }else if(err.__class__ === _b_.ImportError){
-            if(err.$suggestion){
+            if(err.$suggestion !== _b_.None){
                 trace += `. Did you mean: '${err.$suggestion}'?`
             }
         }
