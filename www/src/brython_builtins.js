@@ -316,9 +316,9 @@ function from_py(src, script_id){
 
     // fake names
     script_id = script_id  || 'python_script_' + $B.UUID()
-    var filename = script_id
-    $B.url2name[filename] = filename
-    $B.imported[filename] = {}
+    var filename = $B.script_path + '#' + script_id
+    $B.url2name[filename] = script_id
+    $B.imported[script_id] = {}
 
     var root = __BRYTHON__.py2js({src, filename},
                                  script_id, script_id,
