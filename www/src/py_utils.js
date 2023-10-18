@@ -1230,6 +1230,23 @@ $B.int_or_bool = function(v){
     }
 }
 
+function check_frames(line){
+    if($B.frames_stack.length !== $B.count_frames()){
+        console.log($B.frames_stack.slice(), $B.frames_stack.length,
+            $B.clone($B.frame_obj), $B.count_frames())
+        throw Error('frames ' + line)
+    }
+}
+
+$B.check_frames_show = function(line){
+    return [`line ${line}`, $B.frames_stack.length, $B.count_frames()]
+    //if($B.frames_stack.length !== $B.count_frames()){
+        console.log($B.frames_stack.slice(), $B.clone($B.frame_obj))
+        alert()
+        return 'ok'
+    //}
+}
+
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     if($B.frames_stack.length > 1000){
@@ -1238,7 +1255,9 @@ $B.enter_frame = function(frame){
         throw exc
     }
     frame.__class__ = $B.frame
+    check_frames(1247)
     $B.frames_stack.push(frame)
+    $B.frame_obj = {prev: $B.frame_obj, frame}
     if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
                 ($B.tracefunc.$infos && frame[4] &&
@@ -1266,6 +1285,7 @@ $B.enter_frame = function(frame){
             }catch(err){
                 $B.set_exc(err, frame)
                 $B.frames_stack.pop()
+                $B.frame_obj = $B.frame_obj.prev
                 err.$in_trace_func = true
                 throw err
             }
@@ -1277,47 +1297,52 @@ $B.enter_frame = function(frame){
 }
 
 $B.trace_exception = function(){
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame // $B.last($B.frames_stack)
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
     var trace_func = frame.$f_trace,
-        exc = frame[1].$current_exception,
-        frame_obj = $B.last($B.frames_stack)
-    return trace_func(frame_obj, 'exception', $B.fast_tuple([
+        exc = frame[1].$current_exception
+    return trace_func(frame, 'exception', $B.fast_tuple([
         exc.__class__, exc, $B.traceback.$factory(exc)]))
 }
 
 $B.trace_line = function(){
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
-    var trace_func = frame.$f_trace,
-        frame_obj = $B.last($B.frames_stack)
+    var trace_func = frame.$f_trace
     if(trace_func === undefined){
         console.log('trace line, frame', frame)
     }
-    return trace_func(frame_obj, 'line', _b_.None)
+    return trace_func(frame, 'line', _b_.None)
 }
 
 $B.trace_return = function(value){
-    var frame = $B.last($B.frames_stack),
-        trace_func = frame.$f_trace,
-        frame_obj = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame,
+        trace_func = frame.$f_trace
     if(frame[0] == $B.tracefunc.$current_frame_id){
         // don't call trace func when returning from the frame where
         // sys.settrace was called
         return _b_.None
     }
-    trace_func(frame_obj, 'return', value)
+    trace_func(frame, 'return', value)
 }
 
 $B.leave_frame = function(arg){
+    check_frames(1323)
     // Leave execution frame
     if($B.frames_stack.length == 0){
-        //console.log("empty stack");
+        if($B.frame_obj !== null){
+            console.log($B.frame_obj)
+            throw Error('incohérent !')
+
+        }
         return
+    }
+    if($B.frame_obj === null){
+        console.log('leave frame, frame_obj null', $B.frames_stack.slice())
     }
 
     // When leaving a module, arg is set as an object of the form
@@ -1331,6 +1356,10 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frames_stack.pop()
+    $B.frame_obj = $B.frame_obj.prev
+    if($B.frames_stack.length == 0 && $B.frame_obj !== null){
+        alert('tiens bizarre !')
+    }
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
     // generator is garbage-collected.

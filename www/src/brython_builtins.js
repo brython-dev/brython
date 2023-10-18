@@ -109,6 +109,19 @@ $B.precompiled = {}
 // Frames stack
 $B.frames_stack = []
 
+// Current frame
+$B.frame_obj = null
+
+$B.count_frames = function(){
+    var nb = 0,
+        frame = $B.frame_obj
+    while(frame !== null){
+        nb++
+        frame = frame.prev
+    }
+    return nb
+}
+
 // Python __builtins__
 // Set to Object.create(null) instead of {}
 // to avoid conflicts with JS attributes such as "constructor"

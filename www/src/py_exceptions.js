@@ -355,6 +355,7 @@ $B.save_stack = function(){
 }
 
 $B.restore_stack = function(stack, locals){
+    console.log('restore stack')
     $B.frames_stack = stack
     $B.frames_stack[$B.frames_stack.length - 1][1] = locals
 }
@@ -420,6 +421,7 @@ $B.exception = function(js_exc, in_ctx_manager){
             // same Python exception
             return js_exc.$py_exc
         }
+        console.log('exception', js_exc)
         var exc = _b_.JavascriptError.$factory((js_exc.__name__ || js_exc.name))
         exc.$js_exc = js_exc
         if($B.is_recursion_error(js_exc)){

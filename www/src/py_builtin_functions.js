@@ -699,7 +699,8 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         }
     }
 
-    var save_frames_stack = $B.frames_stack.slice()
+    var save_frames_stack = $B.frames_stack.slice(),
+        save_frame_obj = $B.clone($B.frame_obj)
 
     var _ast
 
@@ -756,6 +757,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
             console.log('JS Error', err.message)
         }
         $B.frames_stack = save_frames_stack
+        $B.frame_obj = save_frame_obj
         throw err
     }
 
@@ -802,6 +804,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 '\n    js', js)
         }
         $B.frames_stack = save_frames_stack
+        $B.frame_obj = save_frame_obj
         throw err
     }
     if(_globals !== _b_.None && ! _globals.$jsobj){
@@ -812,6 +815,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         }
     }
     $B.frames_stack = save_frames_stack
+    $B.frame_obj = save_frame_obj
     return res
 }
 

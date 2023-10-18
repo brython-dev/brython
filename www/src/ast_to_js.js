@@ -23,6 +23,10 @@ function compiler_error(ast_obj, message, end){
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     exc.$stack = $B.frames_stack.slice()
+    exc.$frame_obj = $B.frame_obj
+    if($B.frame_obj === null){
+        alert('tiens !')
+    }
     throw exc
 }
 
@@ -2838,6 +2842,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
                         `if($B.frames_stack.length < stack_length_${id}){\n` +
                             `exit = true\n` +
                             `$B.frames_stack.push(frame)\n` +
+                            `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
                         `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
@@ -2961,6 +2966,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                         `if($B.frames_stack.length < stack_length_${id}){\n` +
                             `exit = true\n` +
                             `$B.frames_stack.push(frame)\n` +
+                            `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
                         `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
@@ -3139,6 +3145,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                           // modified by a "return" in the "with" block)
                           `if($B.frames_stack.length < stack_length){\n` +
                               `$B.frames_stack.push(frame)\n` +
+                              `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
                           `}\n` +
                           `throw err\n` +
                       `}\n` +
@@ -3250,6 +3257,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         $B.leave_frame()
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push(frame)
+                        $B.frame_obj = {prev: $B.frame_obj, frame}
                     }catch(_e){
                         $B.set_exc(_e, frame)
                         if(_e.__class__ === _b_.GeneratorExit){

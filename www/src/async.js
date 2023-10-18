@@ -15,8 +15,22 @@ coroutine.send = function(self){
     }
     var res = self.$func.apply(null, self.$args)
     // restore frames after resolution
-    res.then(function(){if(self.$frames){$B.frames_stack = self.$frames}}).
-        catch(function(err){if(self.$frames){$B.frames_stack = self.$frames}})
+    res.then(function(){
+        if(self.$frames){
+            $B.frames_stack = self.$frames
+        }
+        if(self.$frame_obj){
+            $B.frame_obj = self.$frame_obj
+        }
+    }).
+        catch(function(err){
+            if(self.$frames){
+                $B.frames_stack = self.$frames
+            }
+            if(self.$frame_obj){
+                $B.frame_obj = self.$frame_obj
+            }
+        })
     return res
 }
 
@@ -55,6 +69,7 @@ $B.promise = function(obj){
         // store current frames stack, to be able to restore it when the
         // promise resolves
         obj.$frames = $B.frames_stack.slice()
+        obj.$frame_obj = $B.clone($B.frame_obj)
         return coroutine.send(obj)
     }
     if(typeof obj == "function"){
