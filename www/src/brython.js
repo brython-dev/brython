@@ -113,7 +113,8 @@ for(var token of $B.tokenizer(src,'<string>',mode ||'file')){console.log(token.t
 var py2js_magic=Math.random().toString(36).substr(2,8)
 function from_py(src,script_id){if(! $B.options_parsed){
 $B.parse_options()}
-var filename='$python_to_js'+$B.UUID()
+script_id=script_id ||'python_script_'+$B.UUID()
+var filename=script_id
 $B.url2name[filename]=filename
 $B.imported[filename]={}
 var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope)
@@ -122,8 +123,7 @@ $B.getPythonModule=function(name){return $B.imported[name]}
 $B.python_to_js=function(src,script_id){
 return "(function() {\n"+from_py(src,script_id)+"\nreturn locals}())"}
 $B.pythonToJS=$B.python_to_js
-$B.runPythonSource=function(src,script_id){if(script_id===undefined){script_id='python_script_'+$B.UUID()}
-var js=from_py(src,script_id)+'\nreturn locals'
+$B.runPythonSource=function(src,script_id){var js=from_py(src,script_id)+'\nreturn locals'
 var func=new Function('$B','_b_',js)
 $B.imported[script_id]=func($B,$B.builtins)
 return $B.imported[script_id]}})(__BRYTHON__)
@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-18 13:51:56.233268"
-__BRYTHON__.timestamp=1697629916233
+__BRYTHON__.compiled_date="2023-10-18 14:09:03.606558"
+__BRYTHON__.timestamp=1697630943606
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins

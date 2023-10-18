@@ -315,7 +315,8 @@ function from_py(src, script_id){
     }
 
     // fake names
-    var filename = '$python_to_js' + $B.UUID()
+    script_id = script_id  || 'python_script_' + $B.UUID()
+    var filename = script_id
     $B.url2name[filename] = filename
     $B.imported[filename] = {}
 
@@ -350,9 +351,6 @@ $B.python_to_js = function(src, script_id){
 $B.pythonToJS = $B.python_to_js
 
 $B.runPythonSource = function(src, script_id){
-    if(script_id === undefined){
-        script_id = 'python_script_' + $B.UUID()
-    }
     var js = from_py(src, script_id) + '\nreturn locals'
     var func = new Function('$B', '_b_', js)
     $B.imported[script_id] = func($B, $B.builtins)
