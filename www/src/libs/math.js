@@ -1906,6 +1906,12 @@ function nextafter(){
         throw _b_.TypeError.$factory('must be a real number, not ' +
             $B.class_name(y))
     }
+    if(isnan(x)){
+        return make_float(x)
+    }
+    if(isnan(y)){
+        return make_float(y)
+    }
     if(steps === _b_.None){
         return $B.fast_float(_nextafter(x, y))
     }
