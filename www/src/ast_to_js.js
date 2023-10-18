@@ -471,7 +471,7 @@ $B.resolve = function(name){
 $B.resolve_local = function(name, position){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame[1].hasOwnProperty){
         if(frame[1].hasOwnProperty(name)){
             return frame[1][name]
@@ -3242,7 +3242,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
             }catch(_e){
                 $B.set_exc(_e, frame)
                 failed${n} = true
-                $B.pmframe = $B.last($B.frames_stack)
+                $B.pmframe = $B.frame_obj.frame
                 _e = $B.exception(_e)
                 if(_e.__class__ === _b_.StopIteration){
                     var _r${n} = $B.$getattr(_e, "value")

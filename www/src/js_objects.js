@@ -519,7 +519,7 @@ function jsclass2pyclass(js_class){
         var py_parent = jsclass2pyclass(js_parent)
         klass.__mro__ = [py_parent].concat(klass.__mro__)
     }
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame){
         $B.set_func_names(klass, frame[2])
     }

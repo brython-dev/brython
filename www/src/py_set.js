@@ -131,8 +131,7 @@ function set_difference_update(so, other){
             set_discard_entry(so, entry.key, entry.hash)
         }
     }else{
-        var frame = $B.last($B.frames_stack)
-        var iterator = $B.make_js_iterator(other, frame, frame.$lineno)
+        var iterator = $B.make_js_iterator(other)
         for(var key of iterator){
             set_discard_key(so, key)
         }
@@ -212,9 +211,7 @@ function set_intersection(so, other){
             }
         }
     }else{
-        var frame = $B.last($B.frames_stack),
-            lineno = frame.$lineno
-        iterator = $B.make_js_iterator(other, frame, lineno)
+        var iterator = $B.make_js_iterator(other)
 
         for(var other_item of iterator){
             var test = set_contains(so, other_item)
@@ -754,8 +751,7 @@ set.update = function(self){
                 set_add(self, entry.key, entry.hash)
             }
         }else{
-            var frame = $B.last($B.frames_stack),
-                iterator = $B.make_js_iterator(iterable, frame, frame.$lineno)
+            var iterator = $B.make_js_iterator(iterable)
             for(var item of iterator){
                 set_add(self, item)
             }

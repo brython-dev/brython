@@ -446,7 +446,7 @@ $B.$delete = function(name, is_global){
         }
     }
     var found = false,
-        frame = $B.last($B.frames_stack)
+        frame = $B.frame_obj.frame
     if(! is_global){
         if(frame[1][name] !== undefined){
             found = true
@@ -586,7 +586,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
     }
     $B.url2name[filename] = __name__
 
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     var lineno = frame.$lineno
 
     $B.exec_scope = $B.exec_scope || {}
@@ -1320,7 +1320,7 @@ var globals = _b_.globals = function(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args_no_kw('globals', 0, arguments)
-    var res = $B.obj_dict($B.last($B.frames_stack)[3])
+    var res = $B.obj_dict($B.frame_obj.frame[3])
     res.$jsobj.__BRYTHON__ = $B.JSObj.$factory($B) // issue 1181
     res.$is_namespace = true
     return res
@@ -1779,7 +1779,7 @@ var locals = _b_.locals = function(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments)
-    var locals_obj = $B.last($B.frames_stack)[1]
+    var locals_obj = $B.frame_obj.frame[1]
     // In a class body, locals() is a proxy around a dict(-like) object
     var class_locals = locals_obj.$target
     if(class_locals){
@@ -2576,7 +2576,7 @@ var $$super = _b_.super = $B.make_class("super",
     function (_type, object_or_type){
         var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
-            var frame = $B.last($B.frames_stack),
+            var frame = $B.frame_obj.frame,
                 pyframe = $B.imported["_sys"].Getframe(),
                 code = $B.frame.f_code.__get__(pyframe),
                 co_varnames = code.co_varnames

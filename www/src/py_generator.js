@@ -121,7 +121,7 @@ $B.generator.send = function(self, value){
         throw err
     }
     // Call leave_frame to handle context managers
-    if($B.last($B.frames_stack) === self.$frame){
+    if($B.frame_obj !== null && $B.frame_obj.frame === self.$frame){
         $B.leave_frame()
     }
     // restore stack
@@ -246,7 +246,7 @@ $B.async_generator.asend = async function(self, value){
         throw err
     }
     // Call leave_frame to handle context managers
-    if($B.last($B.frames_stack) === self.$frame){
+    if($B.frame_obj !== null && $B.frame_obj.frame === self.$frame){
         $B.leave_frame()
     }
     // restore stack

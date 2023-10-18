@@ -313,7 +313,7 @@ var type = $B.make_class("type",
             }
             return $B.get_class(kls)
         }else{
-            var module = $B.last($B.frames_stack)[2],
+            var module = $B.frame_obj.frame[2],
                 resolved_bases = $B.resolve_mro_entries(bases),
                 metaclass = $B.get_metaclass(kls, module, resolved_bases)
             return type.__call__(metaclass, kls, resolved_bases, cl_dict, kwargs)
@@ -802,7 +802,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     }
     var module = _b_.dict.$get_string(cl_dict, '__module__')
     if(module === _b_.dict.$missing){
-        module = $B.last($B.frames_stack)[2]
+        module = $B.frame_obj.frame[2]
     }
     var qualname = _b_.dict.$get_string(cl_dict, '__qualname__')
     if(qualname === _b_.dict.$missing){

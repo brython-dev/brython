@@ -3,12 +3,10 @@
 var _b_ = $B.builtins
 
 $B.del_exc = function(frame){
-    // var frame = $B.last($B.frames_stack)
     delete frame[1].$current_exception
 }
 
 $B.set_exc = function(exc, frame){
-    // var frame = $B.last($B.frames_stack)
     if(frame === undefined){
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
         console.error(['Traceback (most recent call last):',
@@ -25,7 +23,7 @@ $B.set_exc = function(exc, frame){
 }
 
 $B.get_exc = function(){
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     return frame[1].$current_exception
 }
 
@@ -49,7 +47,7 @@ $B.$raise = function(arg, cause){
     }else{
         if(_b_.isinstance(arg, BaseException)){
             if(arg.__class__ === _b_.StopIteration &&
-                    $B.last($B.frames_stack)[1].$is_generator){
+                    $B.frame_obj.frame.$is_generator){
                 // PEP 479
                 arg = _b_.RuntimeError.$factory("generator raised StopIteration")
             }
@@ -59,7 +57,7 @@ $B.$raise = function(arg, cause){
             throw arg
         }else if(arg.$is_class && _b_.issubclass(arg, BaseException)){
             if(arg === _b_.StopIteration){
-                if($B.last($B.frames_stack)[1].$is_generator){
+                if($B.frame_obj.frame[1].$is_generator){
                     // PEP 479
                     throw _b_.RuntimeError.$factory("generator raised StopIteration")
                 }
@@ -97,7 +95,7 @@ $B.print_stack = function(stack){
 }
 
 $B.last_frame = function(){
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     return `file ${frame.__file__} line ${frame.$lineno}`
 }
 
@@ -309,7 +307,7 @@ BaseException.__new__ = function(cls){
 
 BaseException.__getattr__ = function(self, attr){
     if(attr == '__context__'){
-        var frame = $B.last($B.frames_stack),
+        var frame = $B.frame_obj.frame,
             ctx = frame[1].$current_exception
         return ctx || _b_.None
     }else{

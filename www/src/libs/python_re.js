@@ -106,7 +106,7 @@ function fail(message, pos, pattern){
 }
 
 function warn(klass, message, pos, text){
-    var frame = $B.last($B.frames_stack),
+    var frame = $B.frame_obj.frame,
         file = frame[3].__file__,
         src = $B.file_cache[file]
     if(text === undefined){

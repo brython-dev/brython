@@ -1286,7 +1286,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         return
     }
     var level = 0,
-        frame = $B.last($B.frames_stack),
+        frame = $B.frame_obj.frame,
         current_module = frame[2],
         parts = current_module.split('.')
     while(mod_name.length > 0 && mod_name.startsWith('.')){
@@ -1439,7 +1439,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         }
                         if($B.get_option('debug') > 1){
                             console.log($err3)
-                            console.log($B.last($B.frames_stack))
+                            console.log($B.frame_obj.frame)
                         }
                         throw _b_.ImportError.$factory(
                             "cannot import name '" + name + "'")
@@ -1454,7 +1454,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
 $B.$import_from = function(module, names, aliases, level, locals){
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var current_module_name = $B.last($B.frames_stack)[2],
+    var current_module_name = $B.frame_obj.frame[2],
         parts = current_module_name.split('.'),
         relative = level > 0
     if(relative){

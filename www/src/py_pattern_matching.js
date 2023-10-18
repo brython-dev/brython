@@ -2,7 +2,7 @@
 
 $B.pattern_match = function(subject, pattern){
     var _b_ = $B.builtins,
-        frame = $B.last($B.frames_stack),
+        frame = $B.frame_obj.frame,
         locals = frame[1]
 
     function bind(pattern, subject){

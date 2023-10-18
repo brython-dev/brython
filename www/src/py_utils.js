@@ -487,7 +487,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                 // does nothing
             }
         }else{
-            frame = $B.last($B.frames_stack)
+            frame = $B.frame_obj.frame
             lineno = frame.$lineno
         }
     }
@@ -1104,7 +1104,7 @@ $B.$call1 = function(callable){
     }else if(callable.$is_func || typeof callable == "function"){
         if(callable.$infos && callable.$infos.__code__ &&
                 (callable.$infos.__code__.co_flags & 32)){
-            $B.last($B.frames_stack).$has_generators = true
+            $B.frame_obj.frame.$has_generators = true
         }
         return callable
     }
@@ -1297,7 +1297,7 @@ $B.enter_frame = function(frame){
 }
 
 $B.trace_exception = function(){
-    var frame = $B.frame_obj.frame // $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
@@ -1348,10 +1348,10 @@ $B.leave_frame = function(arg){
     // When leaving a module, arg is set as an object of the form
     // {$locals, value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
-        if($B.last($B.frames_stack).$f_trace === undefined){
-            $B.last($B.frames_stack).$f_trace = $B.tracefunc
+        if($B.frame_obj.frame.$f_trace === undefined){
+            $B.frame_obj.frame.$f_trace = $B.tracefunc
         }
-        if($B.last($B.frames_stack).$f_trace !== _b_.None){
+        if($B.frame_obj.frame.$f_trace !== _b_.None){
             $B.trace_return(arg.value)
         }
     }

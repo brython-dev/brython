@@ -43,6 +43,11 @@ $B.import_info={}
 $B.imported={}
 $B.precompiled={}
 $B.frames_stack=[]
+$B.frame_obj=null
+$B.count_frames=function(){var nb=0,frame=$B.frame_obj
+while(frame !==null){nb++
+frame=frame.prev}
+return nb}
 $B.builtins=Object.create(null)
 $B.builtins_scope={id:'__builtins__',module:'__builtins__',binding:{}}
 $B.builtin_funcs={}
@@ -148,8 +153,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-18 14:59:09.719037"
-__BRYTHON__.timestamp=1697633949719
+__BRYTHON__.compiled_date="2023-10-18 21:50:41.386792"
+__BRYTHON__.timestamp=1697658641386
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5323,7 +5328,7 @@ $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
-if(frame===undefined){if($B.frames_stack.length==0){function set_lineno(){}}else{frame=$B.last($B.frames_stack)
+if(frame===undefined){if($B.frames_stack.length==0){function set_lineno(){}}else{frame=$B.frame_obj.frame
 lineno=frame.$lineno}}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
 if(iterator.step > 0){return{
@@ -5539,7 +5544,7 @@ return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_
 return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$in_js_module){
 return function(){var res=callable(...arguments)
 return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$infos && callable.$infos.__code__ &&
-(callable.$infos.__code__.co_flags & 32)){$B.last($B.frames_stack).$has_generators=true}
+(callable.$infos.__code__.co_flags & 32)){$B.frame_obj.frame.$has_generators=true}
 return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
@@ -5594,12 +5599,20 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
+function check_frames(line){if($B.frames_stack.length !==$B.count_frames()){console.log($B.frames_stack.slice(),$B.frames_stack.length,$B.clone($B.frame_obj),$B.count_frames())
+throw Error('frames '+line)}}
+$B.check_frames_show=function(line){return[`line ${line}`,$B.frames_stack.length,$B.count_frames()]
+console.log($B.frames_stack.slice(),$B.clone($B.frame_obj))
+alert()
+return 'ok'}
 $B.enter_frame=function(frame){
 if($B.frames_stack.length > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
+check_frames(1247)
 $B.frames_stack.push(frame)
+$B.frame_obj={prev:$B.frame_obj,frame}
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
@@ -5610,28 +5623,33 @@ try{var res=$B.tracefunc(frame,'call',_b_.None)
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][4]==res){return _b_.None}}
 return res}catch(err){$B.set_exc(err,frame)
 $B.frames_stack.pop()
+$B.frame_obj=$B.frame_obj.prev
 err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
-$B.trace_exception=function(){var frame=$B.last($B.frames_stack)
+$B.trace_exception=function(){var frame=$B.frame_obj.frame
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=frame.$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
-return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
-$B.trace_line=function(){var frame=$B.last($B.frames_stack)
+var trace_func=frame.$f_trace,exc=frame[1].$current_exception
+return trace_func(frame,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
+$B.trace_line=function(){var frame=$B.frame_obj.frame
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=frame.$f_trace,frame_obj=$B.last($B.frames_stack)
+var trace_func=frame.$f_trace
 if(trace_func===undefined){console.log('trace line, frame',frame)}
-return trace_func(frame_obj,'line',_b_.None)}
-$B.trace_return=function(value){var frame=$B.last($B.frames_stack),trace_func=frame.$f_trace,frame_obj=$B.last($B.frames_stack)
+return trace_func(frame,'line',_b_.None)}
+$B.trace_return=function(value){var frame=$B.frame_obj.frame,trace_func=frame.$f_trace
 if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
-trace_func(frame_obj,'return',value)}
-$B.leave_frame=function(arg){
-if($B.frames_stack.length==0){
+trace_func(frame,'return',value)}
+$B.leave_frame=function(arg){check_frames(1323)
+if($B.frames_stack.length==0){if($B.frame_obj !==null){console.log($B.frame_obj)
+throw Error('incohérent !')}
 return}
-if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack).$f_trace===undefined){$B.last($B.frames_stack).$f_trace=$B.tracefunc}
-if($B.last($B.frames_stack).$f_trace !==_b_.None){$B.trace_return(arg.value)}}
+if($B.frame_obj===null){console.log('leave frame, frame_obj null',$B.frames_stack.slice())}
+if(arg && arg.value !==undefined && $B.tracefunc){if($B.frame_obj.frame.$f_trace===undefined){$B.frame_obj.frame.$f_trace=$B.tracefunc}
+if($B.frame_obj.frame.$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
+$B.frame_obj=$B.frame_obj.prev
+if($B.frames_stack.length==0 && $B.frame_obj !==null){alert('tiens bizarre !')}
 if(frame.$has_generators){for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
 if(gen.$frame===undefined){continue}
 var ctx_managers=gen.$frame[1].$context_managers
@@ -6052,7 +6070,7 @@ var kwarg={}
 for(var key in kw.$jsobj){kwarg[key]=kw.$jsobj[key]}
 var kwargs={$kw:[kwarg]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
-return $B.get_class(kls)}else{var module=$B.last($B.frames_stack)[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
+return $B.get_class(kls)}else{var module=$B.frame_obj.frame[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
 return type.__call__(metaclass,kls,resolved_bases,cl_dict,kwargs)}}
 )
 type.__class__=type
@@ -6221,7 +6239,7 @@ extra_kwargs
 if(! _b_.isinstance(cl_dict,_b_.dict)){console.log('bizarre',meta,name,bases,cl_dict)
 alert()}
 var module=_b_.dict.$get_string(cl_dict,'__module__')
-if(module===_b_.dict.$missing){module=$B.last($B.frames_stack)[2]}
+if(module===_b_.dict.$missing){module=$B.frame_obj.frame[2]}
 var qualname=_b_.dict.$get_string(cl_dict,'__qualname__')
 if(qualname===_b_.dict.$missing){qualname=name}
 var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,__dict__ :cl_dict,__qualname__:qualname,__module__:module,__name__:name,$is_class:true}
@@ -6666,7 +6684,7 @@ return $B.$getattr(obj,'__delattr__')(attr)}
 $B.$delete=function(name,is_global){
 function del(obj){if(obj.__class__===$B.generator){
 obj.js_gen.return()}}
-var found=false,frame=$B.last($B.frames_stack)
+var found=false,frame=$B.frame_obj.frame
 if(! is_global){if(frame[1][name]!==undefined){found=true
 del(frame[1][name])
 delete frame[1][name]}}else{if(frame[2]!=frame[0]&& frame[3][name]!==undefined){found=true
@@ -6715,7 +6733,7 @@ var __name__='exec'
 if(_globals !==_b_.None && _globals.__class__==_b_.dict &&
 _b_.dict.$contains_string(_globals,'__name__')){__name__=_b_.dict.$getitem_string(_globals,'__name__')}
 $B.url2name[filename]=__name__
-var frame=$B.last($B.frames_stack)
+var frame=$B.frame_obj.frame
 var lineno=frame.$lineno
 $B.exec_scope=$B.exec_scope ||{}
 if(typeof src=='string' && src.endsWith('\\\n')){var exc=_b_.SyntaxError.$factory('unexpected EOF while parsing')
@@ -6748,7 +6766,7 @@ global_name+='_globals'
 exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{var klass=$B.get_class(_locals),getitem=$B.$call($B.$getattr(klass,'__getitem__')),setitem=$B.$call($B.$getattr(klass,'__setitem__'))
 exec_locals=new Proxy(_locals,{get(target,prop){if(prop=='$target'){return target}
 try{return getitem(target,prop)}catch(err){return undefined}},set(target,prop,value){return setitem(target,prop,value)}})}}}}
-var save_frames_stack=$B.frames_stack.slice()
+var save_frames_stack=$B.frames_stack.slice(),save_frame_obj=$B.clone($B.frame_obj)
 var _ast
 var frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
@@ -6767,6 +6785,7 @@ _ast=root.ast()}}
 var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root({ast:_ast,symtable,filename,namespaces:{local_name,exec_locals,global_name,exec_globals}}),js=js_obj.js}catch(err){if(err.args){if(err.args[1]){var lineno=err.args[1][1]
 exec_locals.$lineno=lineno}}else{console.log('JS Error',err.message)}
 $B.frames_stack=save_frames_stack
+$B.frame_obj=save_frame_obj
 throw err}
 if(mode=='eval'){
 js=`var locals = ${local_name}\nreturn ${js}`}else if(src.single_expression){js=`var result = ${js}\n`+
@@ -6779,9 +6798,11 @@ throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frames)}catch(err){if($B.get_option('debug')> 2){console.log(
 'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
+$B.frame_obj=save_frame_obj
 throw err}
 if(_globals !==_b_.None && ! _globals.$jsobj){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
 $B.frames_stack=save_frames_stack
+$B.frame_obj=save_frame_obj
 return res}
 $$eval.$is_func=true
 var exec=_b_.exec=function(src,globals,locals){var missing={}
@@ -6966,7 +6987,7 @@ if(is_class){cname=obj.__name__}
 attr_error(rawname,is_class ? obj :klass)}
 var globals=_b_.globals=function(){
 check_nb_args_no_kw('globals',0,arguments)
-var res=$B.obj_dict($B.last($B.frames_stack)[3])
+var res=$B.obj_dict($B.frame_obj.frame[3])
 res.$jsobj.__BRYTHON__=$B.JSObj.$factory($B)
 res.$is_namespace=true
 return res}
@@ -7115,7 +7136,7 @@ $B.class_name(obj)+"' has no len()")}
 return $B.$call(method)(obj)}
 var locals=_b_.locals=function(){
 check_nb_args('locals',0,arguments)
-var locals_obj=$B.last($B.frames_stack)[1]
+var locals_obj=$B.frame_obj.frame[1]
 var class_locals=locals_obj.$target
 if(class_locals){return class_locals}
 var res=$B.obj_dict($B.clone(locals_obj))
@@ -7392,7 +7413,7 @@ return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
 var $$super=_b_.super=$B.make_class("super",function(_type,object_or_type){var no_object_or_type=object_or_type===undefined
-if(_type===undefined && object_or_type===undefined){var frame=$B.last($B.frames_stack),pyframe=$B.imported["_sys"].Getframe(),code=$B.frame.f_code.__get__(pyframe),co_varnames=code.co_varnames
+if(_type===undefined && object_or_type===undefined){var frame=$B.frame_obj.frame,pyframe=$B.imported["_sys"].Getframe(),code=$B.frame.f_code.__get__(pyframe),co_varnames=code.co_varnames
 if(co_varnames.length > 0){_type=frame[1].__class__
 if(_type===undefined){throw _b_.RuntimeError.$factory("super(): no arguments")}
 object_or_type=frame[1][code.co_varnames[0]]}else{throw _b_.RuntimeError.$factory("super(): no arguments")}}
@@ -7985,15 +8006,13 @@ $B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-$B.del_exc=function(frame){
-delete frame[1].$current_exception}
-$B.set_exc=function(exc,frame){
-if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
+$B.del_exc=function(frame){delete frame[1].$current_exception}
+$B.set_exc=function(exc,frame){if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
 if($B.get_option('debug',exc)> 1){console.log(exc.args)
 console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
-$B.get_exc=function(){var frame=$B.last($B.frames_stack)
+$B.get_exc=function(){var frame=$B.frame_obj.frame
 return frame[1].$current_exception}
 $B.set_exception_offsets=function(exc,position){
 exc.$positions=exc.$positions ||{}
@@ -8003,12 +8022,12 @@ $B.$raise=function(arg,cause){
 var active_exc=$B.get_exc()
 if(arg===undefined){if(active_exc !==undefined){throw active_exc}
 throw _b_.RuntimeError.$factory("No active exception to reraise")}else{if(_b_.isinstance(arg,BaseException)){if(arg.__class__===_b_.StopIteration &&
-$B.last($B.frames_stack)[1].$is_generator){
+$B.frame_obj.frame.$is_generator){
 arg=_b_.RuntimeError.$factory("generator raised StopIteration")}
 arg.__context__=active_exc===undefined ? _b_.None :active_exc
 arg.__cause__=cause ||_b_.None
 arg.__suppress_context__=cause !==undefined
-throw arg}else if(arg.$is_class && _b_.issubclass(arg,BaseException)){if(arg===_b_.StopIteration){if($B.last($B.frames_stack)[1].$is_generator){
+throw arg}else if(arg.$is_class && _b_.issubclass(arg,BaseException)){if(arg===_b_.StopIteration){if($B.frame_obj.frame[1].$is_generator){
 throw _b_.RuntimeError.$factory("generator raised StopIteration")}}
 var exc=$B.$call(arg)()
 exc.__context__=active_exc===undefined ? _b_.None :active_exc
@@ -8025,7 +8044,7 @@ var src=$B.file_cache[filename]
 if(src){var lines=src.split("\n"),line=lines[lineno-1]
 trace.push("    "+line.trim())}}}
 return trace.join("\n")}
-$B.last_frame=function(){var frame=$B.last($B.frames_stack)
+$B.last_frame=function(){var frame=$B.frame_obj.frame
 return `file ${frame.__file__} line ${frame.$lineno}`}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc){var stack=exc.$stack ||$B.frames_stack.slice()
 if(_b_.isinstance(exc,_b_.SyntaxError)){stack.pop()}
@@ -8093,7 +8112,7 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=$B.empty_dict()
 return err}
-BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
+BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
 return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
 BaseException.add_note=function(self,note){
 if(! _b_.isinstance(note,_b_.str)){throw _b_.TypeError.$factory('note must be a str, not '+
@@ -8108,7 +8127,8 @@ for(const i of[1,3]){for(var key in s[i]){item[i][key]=s[i][key]}}
 res.push(item)}
 return res}
 $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
-$B.restore_stack=function(stack,locals){$B.frames_stack=stack
+$B.restore_stack=function(stack,locals){console.log('restore stack')
+$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
 $B.freeze=function(err){if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()
 err.$linenos=$B.frames_stack.map(x=> x.$lineno)}
@@ -8137,6 +8157,7 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc,in_ctx_manager){
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
+console.log('exception',js_exc)
 var exc=_b_.JavascriptError.$factory((js_exc.__name__ ||js_exc.name))
 exc.$js_exc=js_exc
 if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}
@@ -9243,8 +9264,7 @@ for(var entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entr
 result.__class__=so.__class__
 return result}
 function set_difference_update(so,other){if(so===other){return set.clear(so);}
-if(_b_.isinstance(other,[set,frozenset])){for(var entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack)
-var iterator=$B.make_js_iterator(other,frame,frame.$lineno)
+if(_b_.isinstance(other,[set,frozenset])){for(var entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(other)
 for(var key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0,DISCARD_FOUND=1
 function set_discard_entry(so,key,hash){var entry=set_lookkey(so,key,hash)
@@ -9264,8 +9284,7 @@ var result=make_new_set_base_type(so),iterator
 if(_b_.isinstance(other,[set,frozenset])){if(other.$used > so.$used){var tmp=so
 so=other
 other=tmp}
-for(var entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
-iterator=$B.make_js_iterator(other,frame,lineno)
+for(var entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{var iterator=$B.make_js_iterator(other)
 for(var other_item of iterator){var test=set_contains(so,other_item)
 if(test){set_add(result,other_item)}}}
 return result}
@@ -9444,7 +9463,7 @@ var $=$B.args("symmetric_difference_update",2,{self:null,s:null},["self","s"],ar
 return set_symmetric_difference_update(self,s)}
 set.update=function(self){
 var $=$B.args("update",1,{self:null},["self"],arguments,{},"args",null)
-for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if(_b_.isinstance(iterable,[set,frozenset])){for(var entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if(_b_.isinstance(iterable,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(iterable)){set_add(self,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack),iterator=$B.make_js_iterator(iterable,frame,frame.$lineno)
+for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if(_b_.isinstance(iterable,[set,frozenset])){for(var entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if(_b_.isinstance(iterable,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(iterable)){set_add(self,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(iterable)
 for(var item of iterator){set_add(self,item)}}}
 self.$version++
 return _b_.None}
@@ -10000,7 +10019,7 @@ _bootstrap._bootstap_external=_bootstrap_external
 var _frozen_importlib=$B.imported._frozen_importlib
 if(_frozen_importlib){_frozen_importlib._bootstrap_external=_bootstrap_external}
 return}
-var level=0,frame=$B.last($B.frames_stack),current_module=frame[2],parts=current_module.split('.')
+var level=0,frame=$B.frame_obj.frame,current_module=frame[2],parts=current_module.split('.')
 while(mod_name.length > 0 && mod_name.startsWith('.')){level++
 mod_name=mod_name.substr(1)
 if(parts.length==0){throw _b_.ImportError.$factory("Parent module '' not loaded, "+
@@ -10067,12 +10086,12 @@ $err3.args[0]=`cannot import name '${name}' `+
 $err3.$suggestion=suggestion
 throw $err3}
 if($B.get_option('debug')> 1){console.log($err3)
-console.log($B.last($B.frames_stack))}
+console.log($B.frame_obj.frame)}
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
 return locals}}
 $B.$import_from=function(module,names,aliases,level,locals){
-var current_module_name=$B.last($B.frames_stack)[2],parts=current_module_name.split('.'),relative=level > 0
+var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0
 if(relative){
 var current_module=$B.imported[parts.join('.')]
 if(current_module===undefined){throw _b_.ImportError.$factory(
@@ -13582,11 +13601,14 @@ $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
 $B.generator.__str__=function(self){var name=self.js_gen.$name ||'generator'
 if(self.js_gen.$func && self.js_gen.$func.$infos){name=self.js_gen.$func.$infos.__qualname__}
 return `<generator object ${name}>`}
-$B.generator.close=function(self){var save_stack=$B.frames_stack.slice()
-if(self.$frame){$B.frames_stack.push(self.$frame)}
+$B.generator.close=function(self){var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.clone($B.frame_obj)
+if(self.$frame){$B.frames_stack.push(self.$frame)
+$B.frame_obj={prev:$B.frame_obj,frame:self.$frame}}
 try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){$B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj
 throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}
-$B.frames_stack=save_stack}
+$B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj}
 function trace(){return $B.frames_stack.slice()}
 $B.generator.send=function(self,value){
 var gen=self.js_gen
@@ -13594,13 +13616,16 @@ gen.$has_run=true
 if(gen.$finished){throw _b_.StopIteration.$factory(value)}
 if(gen.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
 gen.gi_running=true
-var save_stack=$B.frames_stack.slice()
-if(self.$frame){$B.frames_stack.push(self.$frame)}
+var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.clone($B.frame_obj)
+if(self.$frame){$B.frames_stack.push(self.$frame)
+$B.frame_obj={prev:$B.frame_obj,frame:self.$frame}}
 try{var res=gen.next(value)}catch(err){gen.$finished=true
 $B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj
 throw err}
-if($B.last($B.frames_stack)===self.$frame){$B.leave_frame()}
+if($B.frame_obj !==null && $B.frame_obj.frame===self.$frame){$B.leave_frame()}
 $B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj
 if(res.value && res.value.__class__===$GeneratorReturn){gen.$finished=true
 throw _b_.StopIteration.$factory(res.value.value)}
 gen.gi_running=false
@@ -13611,10 +13636,12 @@ var gen=self.js_gen,exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined ||value===_b_.None){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===_b_.None){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==_b_.None){exc.$traceback=traceback}
-var save_stack=$B.frames_stack.slice()
-if(self.$frame){$B.frames_stack.push(self.$frame)}
+var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.clone($B.frame_obj)
+if(self.$frame){$B.frames_stack.push(self.$frame)
+$B.frame_obj={prev:$B.frame_obj,frame:self.$frame}}
 var res=gen.throw(exc)
 $B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj
 if(res.done){throw _b_.StopIteration.$factory(res.value)}
 return res.value}
 $B.set_func_names($B.generator,"builtins")
@@ -13634,13 +13661,16 @@ $B.async_generator.asend=async function(self,value){var gen=self.js_gen
 if(gen.$finished){throw _b_.StopAsyncIteration.$factory(value)}
 if(gen.ag_running===true){throw _b_.ValueError.$factory("generator already executing")}
 gen.ag_running=true
-var save_stack=$B.frames_stack.slice()
-if(self.$frame){$B.frames_stack.push(self.$frame)}
+var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.clone($B.frame_obj)
+if(self.$frame){$B.frames_stack.push(self.$frame)
+$B.frame_obj={prev:$B.frame_obj,frame:self.$frame}}
 try{var res=await gen.next(value)}catch(err){gen.$finished=true
 $B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj
 throw err}
-if($B.last($B.frames_stack)===self.$frame){$B.leave_frame()}
+if($B.frame_obj !==null && $B.frame_obj.frame===self.$frame){$B.leave_frame()}
 $B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj
 if(res.done){throw _b_.StopAsyncIteration.$factory(value)}
 if(res.value.__class__===$GeneratorReturn){gen.$finished=true
 throw _b_.StopAsyncIteration.$factory(res.value.value)}
@@ -13650,10 +13680,12 @@ $B.async_generator.athrow=async function(self,type,value,traceback){var gen=self
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
-var save_stack=$B.frames_stack.slice()
-if(self.$frame){$B.frames_stack.push(self.$frame)}
+var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.clone($B.frame_obj)
+if(self.$frame){$B.frames_stack.push(self.$frame)
+$B.frame_obj={prev:$B.frame_obj,frame:self.$frame}}
 await gen.throw(value)
-$B.frames_stack=save_stack}
+$B.frames_stack=save_stack
+$B.frame_obj=save_frame_obj}
 $B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13824,7 +13856,7 @@ return proto[m].apply(self.__dict__.$jsobj,args)}})(key)}}
 var js_parent=Object.getPrototypeOf(proto).constructor
 if(js_parent.toString().startsWith('class ')){var py_parent=jsclass2pyclass(js_parent)
 klass.__mro__=[py_parent].concat(klass.__mro__)}
-var frame=$B.last($B.frames_stack)
+var frame=$B.frame_obj.frame
 if(frame){$B.set_func_names(klass,frame[2])}
 return klass}
 $B.JSObj.__getattribute__=function(_self,attr){var test=false 
@@ -14284,7 +14316,7 @@ var show_message=true
 for(var base of bases){if(base.__module__=="browser.html"){show_message=false
 break}}
 if(show_message){var from_class=$B.$getattr(self.__class__,attr,_b_.None)
-if(from_class !==_b_.None){var frame=$B.last($B.frames_stack),line=frame.$lineno
+if(from_class !==_b_.None){var frame=$B.frame_obj.frame,line=frame.$lineno
 console.info("Warning: line "+line+", "+self.tagName+
 " element has instance attribute '"+attr+"' set."+
 " Attribute of class "+$B.class_name(self)+
@@ -14394,7 +14426,7 @@ return _b_.None}else{throw _b_.ValueError.$factory(attr+" value should be"+
 break}
 if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
-var frame=$B.last($B.frames_stack)
+var frame=$B.frame_obj.frame
 if(! frame){return}
 if($B.get_option('debug')> 0){var file=frame.__file__,lineno=frame.$lineno
 console.log("module",frame[2],"line",lineno)
@@ -14657,7 +14689,7 @@ return _window.postMessage(msg,targetOrigin)}
 $B.DOMNode=DOMNode
 $B.win=win})(__BRYTHON__)
 ;
-(function($B){$B.pattern_match=function(subject,pattern){var _b_=$B.builtins,frame=$B.last($B.frames_stack),locals=frame[1]
+(function($B){$B.pattern_match=function(subject,pattern){var _b_=$B.builtins,frame=$B.frame_obj.frame,locals=frame[1]
 function bind(pattern,subject){if(pattern.alias){locals[pattern.alias]=subject}}
 if(pattern.sequence){
 if(_b_.isinstance(subject,[_b_.str,_b_.bytes,_b_.bytearray])){
@@ -14789,8 +14821,10 @@ if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
 self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
 throw _b_.TypeError.$factory(msg)}
 var res=self.$func.apply(null,self.$args)
-res.then(function(){if(self.$frames){$B.frames_stack=self.$frames}}).
-catch(function(err){if(self.$frames){$B.frames_stack=self.$frames}})
+res.then(function(){if(self.$frames){$B.frames_stack=self.$frames}
+if(self.$frame_obj){$B.frame_obj=self.$frame_obj}}).
+catch(function(err){if(self.$frames){$B.frames_stack=self.$frames}
+if(self.$frame_obj){$B.frame_obj=self.$frame_obj}})
 return res}
 coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
@@ -14805,6 +14839,7 @@ f.$is_async=true
 return f}
 $B.promise=function(obj){if(obj.__class__===coroutine){
 obj.$frames=$B.frames_stack.slice()
+obj.$frame_obj=$B.clone($B.frame_obj)
 return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
@@ -14968,7 +15003,7 @@ if(alias.length > 1){alias.pop()}
 alias=alias.join('.')
 result.__name__=alias}
 $B.imported[alias]=result
-var frame=$B.last($B.frames_stack)
+var frame=$B.frame_obj.frame
 frame[1][alias]=result}},import_modules:function(refs,callback,loaded){
 if(loaded===undefined){loaded=[]}
 if(! Array.isArray(refs)){throw _b_.TypeError.$factory(
@@ -15037,8 +15072,8 @@ function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},
 " 'sys.path_importer_cache'")}
 ),setrecursionlimit:function(value){$B.recursion_limit=value},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
 $B.tracefunc=$.tracefunc
-$B.last($B.frames_stack).$f_trace=$B.tracefunc
-$B.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
+$B.frame_obj.frame.$f_trace=$B.tracefunc
+$B.tracefunc.$current_frame_id=$B.frame_obj.frame[0]
 return _b_.None},stderr:console.error !==undefined ? $io.$factory("error"):
 $io.$factory("log"),stdout:$io.$factory("log"),stdin:_b_.property.$factory(
 function(){return $B.stdin},function(self,value){$B.stdin=value}
@@ -15156,6 +15191,8 @@ exc.end_lineno=end.end_lineno
 exc.end_offset=end.end_col_offset
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 exc.$stack=$B.frames_stack.slice()
+exc.$frame_obj=$B.frame_obj
+if($B.frame_obj===null){alert('tiens !')}
 throw exc}
 function fast_id(obj){
 if(obj.$id !==undefined){return obj.$id}
@@ -15306,7 +15343,7 @@ if(v.found){return v.value}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
 throw $B.name_error(name)}
 $B.resolve_local=function(name,position){
-var frame=$B.last($B.frames_stack)
+var frame=$B.frame_obj.frame
 if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][name]}}else{var value=frame[1][name]
 if(value !==undefined){return value}}
 var exc=_b_.UnboundLocalError.$factory(`cannot access local variable `+
@@ -16294,6 +16331,7 @@ var finalbody=`var exit = false\n`+
 `if($B.frames_stack.length < stack_length_${id}){\n`+
 `exit = true\n`+
 `$B.frames_stack.push(frame)\n`+
+`$B.frame_obj = {prev: $B.frame_obj, frame}\n`+
 `}\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
@@ -16366,6 +16404,7 @@ var finalbody=`var exit = false\n`+
 `if($B.frames_stack.length < stack_length_${id}){\n`+
 `exit = true\n`+
 `$B.frames_stack.push(frame)\n`+
+`$B.frame_obj = {prev: $B.frame_obj, frame}\n`+
 `}\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
@@ -16450,6 +16489,7 @@ s+=`}\nfinally{\n`+
 `}catch(err){\n`+
 `if($B.frames_stack.length < stack_length){\n`+
 `$B.frames_stack.push(frame)\n`+
+`$B.frame_obj = {prev: $B.frame_obj, frame}\n`+
 `}\n`+
 `throw err\n`+
 `}\n`+
@@ -16483,7 +16523,7 @@ return `yield* (function* f(){
             }catch(_e){
                 $B.set_exc(_e, frame)
                 failed${n} = true
-                $B.pmframe = $B.last($B.frames_stack)
+                $B.pmframe = $B.frame_obj.frame
                 _e = $B.exception(_e)
                 if(_e.__class__ === _b_.StopIteration){
                     var _r${n} = $B.$getattr(_e, "value")
@@ -16498,6 +16538,7 @@ return `yield* (function* f(){
                         $B.leave_frame()
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push(frame)
+                        $B.frame_obj = {prev: $B.frame_obj, frame}
                     }catch(_e){
                         $B.set_exc(_e, frame)
                         if(_e.__class__ === _b_.GeneratorExit){

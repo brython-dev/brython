@@ -736,7 +736,7 @@ DOMNode.__getattribute__ = function(self, attr){
             if(show_message){
                 var from_class = $B.$getattr(self.__class__, attr, _b_.None)
                 if(from_class !== _b_.None){
-                    var frame = $B.last($B.frames_stack),
+                    var frame = $B.frame_obj.frame,
                         line = frame.$lineno
                     console.info("Warning: line " + line + ", " + self.tagName +
                         " element has instance attribute '" + attr + "' set." +
@@ -1029,7 +1029,7 @@ DOMNode.__setattr__ = function(self, attr, value){
 
     function warn(msg){
         console.log(msg)
-        var frame = $B.last($B.frames_stack)
+        var frame = $B.frame_obj.frame
         if(! frame){
             return
         }
