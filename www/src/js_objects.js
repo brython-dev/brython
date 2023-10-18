@@ -191,6 +191,10 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         }
         res.$js_func = jsobj
         res.$is_js_func = true
+        res.$infos = {
+            __name__: jsobj.name,
+            __qualname__: jsobj.name
+        }
         return res
     }
 
@@ -651,6 +655,9 @@ $B.JSObj.__getitem__ = function(_self, key){
 $B.JSObj.__setitem__ = $B.JSObj.__setattr__
 
 $B.JSObj.__repr__ = $B.JSObj.__str__ = function(_self){
+    if(typeof _self == 'number'){
+        return _self + ''
+    }
     var js_repr = Object.prototype.toString.call(_self)
     return `<Javascript object: ${js_repr}>`
 }

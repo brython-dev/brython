@@ -481,6 +481,11 @@
             if(loaded === undefined){
                 loaded = []
             }
+            if(! Array.isArray(refs)){
+                throw _b_.TypeError.$factory(
+                    `first argument mus be a list, got ${$B.class_name(refs)}`)
+            }
+
             if(refs.length > 1){
                 var ref = refs.shift()
                 import(ref).then(function(module){

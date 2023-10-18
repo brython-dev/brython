@@ -417,7 +417,6 @@ $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
     // don't have this attribute so we must return it
-
     if(obj === null){
         return $B.imported.javascript.NullType // in builtin_modules.js
     }
@@ -428,7 +427,10 @@ $B.get_class = function(obj){
     if(klass === undefined){
         switch(typeof obj) {
             case "number":
-                return Number.isInteger(obj) ? _b_.int : undefined
+                if(Number.isInteger(obj)){
+                    return _b_.int
+                }
+                break
             case "string":
                 return _b_.str
             case "boolean":
@@ -987,6 +989,9 @@ $B.$is = function(a, b){
     if(a === null){
         return b === null
     }
+    if(b === null){
+        return a === null
+    }
     if(a.__class__ === _b_.float && b.__class__ === _b_.float){
         if(isNaN(a.value) && isNaN(b.value)){
             return true
@@ -1063,11 +1068,11 @@ $B.$is_member = function(item, _set){
 $B.$call = function(callable, position){
     callable = $B.$call1(callable)
     if(position){
-        position = $B.decode_position(position)
         return function(){
             try{
                 return callable.apply(null, arguments)
             }catch(exc){
+                position = $B.decode_position(position)
                 $B.set_exception_offsets(exc, position)
                 throw exc
             }
@@ -1272,7 +1277,6 @@ $B.enter_frame = function(frame){
 }
 
 $B.trace_exception = function(){
-    console.log('trace exception')
     var frame = $B.last($B.frames_stack)
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
