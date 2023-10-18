@@ -358,4 +358,14 @@ assert nextafter(23.53, 20, steps=5000000000) == 23.529982236431607
 
 assert nextafter(4, 3.999999, steps=5000000000000) == 3.999999
 
+# issue 2277
+nan, inf = float('nan'), float('inf')
+assert math.isnan(nextafter(nan, 0))
+assert math.isnan(nextafter(0, nan))
+assert math.isnan(nextafter(inf, nan))
+assert math.isnan(nextafter(nan, inf))
+assert nextafter(inf, 0) == 1.7976931348623157e+308
+
+assert nextafter(0, inf) == 5e-324
+
 print("passed all tests..")
