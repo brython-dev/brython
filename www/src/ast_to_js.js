@@ -22,7 +22,6 @@ function compiler_error(ast_obj, message, end){
     exc.end_offset = end.end_col_offset
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
-    exc.$stack = $B.frames_stack.slice()
     exc.$frame_obj = $B.frame_obj
     if($B.frame_obj === null){
         alert('tiens !')
@@ -439,8 +438,12 @@ function resolve_in_namespace(name, ns){
 
 $B.resolve = function(name){
     var checked = new Set(),
-        current_globals
-    for(var frame of $B.frames_stack.slice().reverse()){
+        current_globals,
+        frame_obj = $B.frame_obj,
+        frame
+
+    while(frame_obj !== null){
+        frame = frame_obj.frame
         if(current_globals === undefined){
             current_globals = frame[3]
         }else if(frame[3] !== current_globals){
@@ -455,6 +458,7 @@ $B.resolve = function(name){
         if(v.found){
             return v.value
         }
+        frame_obj = frame_obj.prev
     }
     if(! checked.has(frame[3])){
         var v = resolve_in_namespace(name, frame[3])
@@ -493,12 +497,16 @@ $B.resolve_local = function(name, position){
 $B.resolve_in_scopes = function(name, namespaces, position){
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
-            var exec_top
-            for(var frame of $B.frames_stack.slice().reverse()){
+            var exec_top,
+                frame_obj = $B.frame_obj,
+                frame
+            while(frame_obj !== null){
+                frame = frame_obj.frame
                 if(frame.is_exec_top){
                     exec_top = frame
                     break
                 }
+                frame_obj = frame_obj.prev
             }
             if(exec_top){
                 for(var ns of [exec_top[1], exec_top[3]]){
@@ -732,7 +740,7 @@ function make_comp(scopes){
     // Use it to make the function aync or not
     js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
 
-    js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
+    js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
     if(this instanceof $B.ast.ListComp){
         js += `result_${id}.push(${elt})\n`
     }else if(this instanceof $B.ast.SetComp){
@@ -745,10 +753,10 @@ function make_comp(scopes){
         js += '}\n'
     }
     js += `}catch(err){\n` +
-          (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
+          (has_await ? '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
           `$B.set_exc(err, frame)\n` +
           `throw err\n}\n` +
-          (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
+          (has_await ? '\n$B.restore_frame_obj(save_frame_obj, locals);' : '')
 
     if(comp_iter_scope.found){
         js += `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
@@ -1898,12 +1906,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     frame.$f_trace = $B.enter_frame(frame)\n`
 
     if(func_scope.needs_stack_length){
-        js += `var stack_length = $B.frames_stack.length\n`
+        js += `var stack_length = $B.count_frames()\n`
     }
 
     if(func_scope.needs_frames || is_async){
-        js += `var _frames = $B.frames_stack.slice(),\n` +
-                  `_linenos = $B.frames_stack.map(x => x.$lineno)\n`
+        js += `var _frame_obj = $B.frame_obj\n` +
+                  `_linenums = $B.make_linenums()\n`
     }
 
     if(is_async){
@@ -1949,10 +1957,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     $B.set_exc(err, frame)\n`
 
     if(func_scope.needs_frames){
-        // set exception $stack and $linenos
-        js += `err.$stack = _frames\n` +
-              `_linenos[_linenos.length - 1] = frame.$lineno\n` +
-              `err.$linenos = _linenos\n`
+        // set exception $frame_obj and $linenums
+        js += `err.$frame_obj = _frame_obj\n` +
+              `_linenums[_linenums.length - 1] = frame.$lineno\n` +
+              `err.$linenums = _linenums\n`
     }
     if(trace){
         js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
@@ -2152,13 +2160,13 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     // Use it to make the function aync or not
     js = `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n` + js
 
-    js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
+    js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
     js += `try{\n` +
           ` yield ${elt}\n` +
           `}catch(err){\n` +
-          (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
+          (has_await ? '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
           `$B.leave_frame()\nthrow err\n}\n` +
-          (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
+          (has_await ? '\n$B.restore_frame_obj(save_frame_obj, locals);' : '')
 
     for(var i = 0; i < nb_paren - 1; i++){
         js += '}\n'
@@ -2610,7 +2618,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     js += `$B.set_lineno(frame, 1)\n` +
           '\nvar _frames = $B.frames_stack.slice()\n' +
-          `var stack_length = $B.frames_stack.length\n` +
+          `var stack_length = $B.count_frames()\n` +
           `try{\n` +
               add_body(this.body, scopes) + '\n' +
               (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
@@ -2769,7 +2777,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
     // don't execute the 'else' clause
-    js += `var stack_length_${id} = $B.frames_stack.length\n`
+    js += `var stack_length_${id} = $B.count_frames()\n`
 
     // Save execution stack in case there are return statements and a finally
     // block
@@ -2839,7 +2847,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         js += '}\n' // close try
         js += 'finally{\n'
         var finalbody = `var exit = false\n` +
-                        `if($B.frames_stack.length < stack_length_${id}){\n` +
+                        `if($B.count_frames() < stack_length_${id}){\n` +
                             `exit = true\n` +
                             `$B.frames_stack.push(frame)\n` +
                             `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
@@ -2854,7 +2862,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
-        var elsebody = `if($B.frames_stack.length == stack_length_${id} ` +
+        var elsebody = `if($B.count_frames() == stack_length_${id} ` +
                        `&& ! failed${id}){\n` +
                        add_body(this.orelse, scopes) +
                        '\n}' // close "if"
@@ -2888,12 +2896,13 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
     // don't execute the 'else' clause
-    js += `var stack_length_${id} = $B.frames_stack.length\n`
+    js += `var stack_length_${id} = $B.count_frames()\n`
 
     // Save execution stack in case there are return statements and a finally
     // block
     if(has_finally){
-        js += `var save_stack_${id} = $B.frames_stack.slice()\n`
+        js += `var save_stack_${id} = $B.frames_stack.slice(),\n` +
+                  `save_frame_obj_${id} = $B.frame_obj\n`
     }
     if(has_else){
         js += `var failed${id} = false\n`
@@ -2963,7 +2972,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         js += '}\n' // close try
         js += 'finally{\n'
         var finalbody = `var exit = false\n` +
-                        `if($B.frames_stack.length < stack_length_${id}){\n` +
+                        `if($B.count_frames() < stack_length_${id}){\n` +
                             `exit = true\n` +
                             `$B.frames_stack.push(frame)\n` +
                             `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
@@ -2978,7 +2987,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
-        var elsebody = `if($B.frames_stack.length == stack_length_${id} ` +
+        var elsebody = `if($B.count_frames() == stack_length_${id} ` +
                        `&& ! failed${id}){\n` +
                        add_body(this.orelse, scopes) +
                        '\n}' // close "if"
@@ -3143,7 +3152,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                           // If an error occurs in __exit__, make sure the
                           // stack frame is preserved (it may have been
                           // modified by a "return" in the "with" block)
-                          `if($B.frames_stack.length < stack_length){\n` +
+                          `if($B.count_frames() < stack_length){\n` +
                               `$B.frames_stack.push(frame)\n` +
                               `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
                           `}\n` +

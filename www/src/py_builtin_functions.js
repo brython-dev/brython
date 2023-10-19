@@ -700,7 +700,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
     }
 
     var save_frames_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
 
     var _ast
 

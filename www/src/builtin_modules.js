@@ -594,9 +594,13 @@
         Getframe : function(){
             var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
                     arguments, {depth: 0}, null, null),
-                depth = $.depth
-            var res = $B.frames_stack[$B.frames_stack.length - depth - 1]
-            res.$pos = $B.frames_stack.indexOf(res)
+                depth = $.depth,
+                frame_obj = $B.frame_obj
+            for(var i = 0; i < depth; i++){
+                frame_obj = frame_obj.prev
+            }
+            var res = frame_obj.frame
+            res.$pos = $B.count_frames() - depth - 1
             return res
         },
         breakpointhook: function(){
@@ -622,13 +626,17 @@
             return $B.$call(hook).apply(null, arguments)
         },
         exc_info: function(){
-            for(var i = $B.frames_stack.length - 1; i >=0; i--){
-                var frame = $B.frames_stack[i],
-                    exc = frame[1].$current_exception
+            var frame_obj = $B.frame_obj,
+                frame,
+                exc
+            while(frame_obj !== null){
+                frame = frame_obj.frame
+                exc = frame[1].$current_exception
                 if(exc){
                     return _b_.tuple.$factory([exc.__class__, exc,
                         $B.$getattr(exc, "__traceback__")])
                 }
+                frame_obj = frame_obj.prev
             }
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
         },
@@ -636,12 +644,16 @@
             $B.handle_error(exc_value)
         },
         exception: function(){
-            for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-                var frame = $B.frames_stack[i],
-                    exc = frame[1].$current_exception
+            var frame_obj = $B.frame_obj,
+                frame,
+                exc
+            while(frame_obj !== null){
+                frame = frame_obj.frame
+                exc = frame[1].$current_exception
                 if(exc !== undefined){
                     return exc
                 }
+                frame_obj = frame_obj.prev
             }
             return _b_.None
         },
@@ -828,8 +840,8 @@
                     _category_name: category.__name__
                 }
             }else{
-                var frame_rank = Math.max(0, $B.frames_stack.length - stacklevel),
-                    frame = $B.frames_stack[frame_rank],
+                var frame_rank = Math.max(0, $B.count_frames() - stacklevel),
+                    frame = $B.get_frame_at(frame_rank),
                     file = frame.__file__,
                     f_code = $B._frame.f_code.__get__(frame),
                     lineno = frame.$lineno,

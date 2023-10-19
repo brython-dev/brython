@@ -2111,6 +2111,7 @@ function symtable_raise_if_comprehension_block(st, e) {
             (type == DictComprehension) ? "'yield' inside dict comprehension" :
             "'yield' inside generator expression");
     exc.$stack = $B.frames_stack.slice()
+    exc.$frame_obj = $B.frame_obj
     set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                                       e.end_lineno, e.end_col_offset);
     throw exc

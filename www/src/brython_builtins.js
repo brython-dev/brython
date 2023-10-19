@@ -112,16 +112,6 @@ $B.frames_stack = []
 // Current frame
 $B.frame_obj = null
 
-$B.count_frames = function(){
-    var nb = 0,
-        frame = $B.frame_obj
-    while(frame !== null){
-        nb++
-        frame = frame.prev
-    }
-    return nb
-}
-
 // Python __builtins__
 // Set to Object.create(null) instead of {}
 // to avoid conflicts with JS attributes such as "constructor"
@@ -259,7 +249,7 @@ if(has_storage){
 
 $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
-    return $B.frames_stack[$B.frames_stack.length - 1][3]
+    return $B.frame_obj.frame[3]
 }
 
 $B.scripts = {} // for Python scripts embedded in a JS file

@@ -67,7 +67,7 @@ $B.generator.__str__ = function(self){
 
 $B.generator.close = function(self){
     var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
         $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
@@ -105,7 +105,7 @@ $B.generator.send = function(self, value){
     gen.gi_running = true
     // save frames before resuming the generator
     var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
     // put generator frame on top of stack
     // generator expressions don't have $frame
     if(self.$frame){
@@ -172,7 +172,7 @@ $B.generator.throw = function(self, type, value, traceback){
         exc.$traceback = traceback
     }
     var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
         $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
@@ -230,7 +230,7 @@ $B.async_generator.asend = async function(self, value){
     gen.ag_running = true
     // save frames before resuming the generator
     var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
     // put generator frame on top of stack
     // generator expressions don't have $frame
     if(self.$frame){
@@ -283,7 +283,7 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
     }
     if(traceback !== undefined){exc.$traceback = traceback}
     var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
         $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}

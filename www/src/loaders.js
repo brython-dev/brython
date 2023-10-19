@@ -497,7 +497,8 @@ var loop = $B.loop = function(){
                 }else{
                     $B.freeze(err)
                     var stack = err.$stack,
-                        linenos = err.$linenos
+                        frame_obj = err.$frame_obj,
+                        linenums = err.$linenums
                     var lineNumber = err.lineNumber
                     if(lineNumber !== undefined){
                         console.log('around line', lineNumber)
@@ -508,7 +509,8 @@ var loop = $B.loop = function(){
                     $B.print_stack()
                     err = _b_.RuntimeError.$factory(err + '')
                     err.$stack = stack
-                    err.$linenos = linenos
+                    err.$frame_obj = frame_obj
+                    err.$linenums = linenums
                 }
             }
             $B.handle_error(err)

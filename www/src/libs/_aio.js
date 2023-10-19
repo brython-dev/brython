@@ -239,7 +239,7 @@ function run(coro){
     }
 
     var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.clone($B.frame_obj)
+        save_frame_obj = $B.frame_obj
     $B.coroutine.send(coro).then(onsuccess).catch(error_func)
     $B.frames_stack = save_stack
     $B.frame_obj = save_frame_obj

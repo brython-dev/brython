@@ -1386,6 +1386,27 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
+$B.count_frames = function(frame_obj){
+    var nb = 0
+    frame_obj = frame_obj || $B.frame_obj
+    while(frame_obj !== null){
+        nb++
+        frame_obj = frame_obj.prev
+    }
+    return nb
+}
+
+$B.get_frame_at = function(pos, frame_obj){
+    frame_obj = frame_obj || $B.frame_obj
+    var nb = $B.count_frames() - pos - 1
+    for(var i = 0; i < nb; i++){
+        frame_obj = frame_obj.prev
+    }
+    return frame_obj.frame
+}
+
+
+
 $B.floordiv = function(x, y){
     var z = x / y
     if(Number.isSafeInteger(x) &&

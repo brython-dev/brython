@@ -277,6 +277,7 @@ function run_py(module_contents, path, module, compiled) {
                             module.__name__, $B.builtins_scope)
         }catch(err){
             err.$stack = $B.frames_stack.slice()
+            err.$frame_obj = $B.frame_obj
             if($B.get_option('debug', err) > 1){
                 console.log('error in imported module', module)
                 console.log('stack', $B.frames_stack.slice())
@@ -302,6 +303,7 @@ function run_py(module_contents, path, module, compiled) {
         var mod = (new Function(module_id, js))(module)
     }catch(err){
         err.$stack = $B.frames_stack.slice()
+        err.$frame_obj = $B.frame_obj
         if($B.get_option('debug', err) > 2){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
