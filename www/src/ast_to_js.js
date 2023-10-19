@@ -234,7 +234,7 @@ function make_ref(name, scopes, scope, position){
     }else if(scope.resolve == 'local'){
         return `$B.resolve_local('${name}', [${position}])`
     }else if(scope.resolve == 'global'){
-        return `$B.resolve_global('${name}', _frames)`
+        return `$B.resolve_global('${name}', _frame_obj)`
     }else if(Array.isArray(scope.resolve)){
         return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`
     }else if(scope.resolve == 'own_class_name'){
@@ -530,16 +530,18 @@ $B.resolve_in_scopes = function(name, namespaces, position){
     throw exc
 }
 
-$B.resolve_global = function(name, _frames){
+$B.resolve_global = function(name, frame_obj){
     // Resolve in globals or builtins
-    for(var frame of _frames.slice().reverse()){
-        var v = resolve_in_namespace(name, frame[3])
+    while(frame_obj !== null){
+        var frame = frame_obj.frame,
+            v = resolve_in_namespace(name, frame[3])
         if(v.found){
             return v.value
         }
         if(frame.is_exec_top){
             break
         }
+        frame_obj = frame_obj.prev
     }
     if(builtins_scope.locals.has(name)){
         return _b_[name]
@@ -657,7 +659,7 @@ function init_genexpr(comp, scopes){
            `}\n` +
            `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
            `frame.$f_trace = _b_.None\n` +
-           `var _frames = $B.frames_stack.slice()\n`
+           `var _frame_obj = $B.frame_obj\n`
 }
 
 
@@ -1393,7 +1395,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var docstring = extract_docstring(this, scopes)
 
     js += `var ${ref} = (function(name, module, bases){\n` +
-              `var _frames = $B.frames_stack.slice(),\n` +
+              `var _frame_obj = $B.frame_obj,\n` +
                   `resolved_bases = $B.resolve_mro_entries(bases),\n` +
                   `metaclass = $B.get_metaclass(name, module, ` +
                   `resolved_bases`
@@ -1412,7 +1414,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `frame.$f_trace = $B.enter_frame(frame)\n` +
-          `var _frames = $B.frames_stack.slice()\n`
+          `var _frame_obj = $B.frame_obj\n`
           if(trace){
                 js += `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
           }
@@ -2617,8 +2619,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
         js += `frame.$f_trace = $B.enter_frame(frame)\n`
     }
     js += `$B.set_lineno(frame, 1)\n` +
-          '\nvar _frames = $B.frames_stack.slice()\n' +
-          `var stack_length = $B.count_frames()\n` +
+          '\nvar _frame_obj = $B.frame_obj,\n' +
+                'stack_length = $B.count_frames()\n' +
           `try{\n` +
               add_body(this.body, scopes) + '\n' +
               (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
