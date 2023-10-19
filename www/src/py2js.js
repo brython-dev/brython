@@ -363,7 +363,6 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     exc.text = line
     exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset])
-    exc.$stack = $B.frames_stack.slice()
     exc.$frame_obj = $B.frame_obj
     throw exc
 }

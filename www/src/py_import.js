@@ -121,9 +121,6 @@ function $download_module(mod, url, $package){
         fake_qs = "?v=" + (new Date().getTime()),
         res = null,
         mod_name = mod.__name__
-    if(mod_name == 'exec'){
-        console.log('download exec ???', $B.frames_stack.slice())
-    }
     var timer = _window.setTimeout(function(){
             xhr.abort()
         }, 5000)
@@ -276,11 +273,10 @@ function run_py(module_contents, path, module, compiled) {
             root = $B.py2js(src, module,
                             module.__name__, $B.builtins_scope)
         }catch(err){
-            err.$stack = $B.frames_stack.slice()
             err.$frame_obj = $B.frame_obj
             if($B.get_option('debug', err) > 1){
                 console.log('error in imported module', module)
-                console.log('stack', $B.frames_stack.slice())
+                console.log('stack', $B.make_frames_stack())
             }
             throw err
         }
@@ -302,7 +298,6 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = prefix + module.__name__.replace(/\./g, '_')
         var mod = (new Function(module_id, js))(module)
     }catch(err){
-        err.$stack = $B.frames_stack.slice()
         err.$frame_obj = $B.frame_obj
         if($B.get_option('debug', err) > 2){
             console.log(err + " for module " + module.__name__)
@@ -1343,7 +1338,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
 
     // [Import spec] Resolve __import__ in global namespace
-    var current_frame = $B.frames_stack[$B.frames_stack.length - 1],
+    var current_frame = $B.frame_obj.frame,
         _globals = current_frame[3],
         __import__ = _globals["__import__"],
         globals = $B.obj_dict(_globals)

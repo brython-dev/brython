@@ -790,8 +790,6 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         if($B.get_option('debug') > 2){
             console.log(
                 'Python code\n', src,
-                '\ninitial stack before exec', save_frames_stack.slice(),
-                '\nstack', $B.frames_stack.slice(),
                 '\nexec func', $B.format_indent(exec_func + '', 0),
                 '\n    filename', filename,
                 '\n    name from filename', $B.url2name[filename],

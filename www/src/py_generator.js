@@ -70,7 +70,7 @@ $B.generator.close = function(self){
         save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
-        $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
         $B.generator.throw(self, _b_.GeneratorExit.$factory())
@@ -110,7 +110,7 @@ $B.generator.send = function(self, value){
     // generator expressions don't have $frame
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
-        $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
         var res = gen.next(value)
@@ -175,7 +175,7 @@ $B.generator.throw = function(self, type, value, traceback){
         save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
-        $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     var res = gen.throw(exc)
     $B.frames_stack = save_stack
@@ -235,7 +235,7 @@ $B.async_generator.asend = async function(self, value){
     // generator expressions don't have $frame
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
-        $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
         var res = await gen.next(value)
@@ -286,7 +286,7 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
         save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frames_stack.push(self.$frame)
-        $B.frame_obj = {prev: $B.frame_obj, frame: self.$frame}
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     await gen.throw(value)
     $B.frames_stack = save_stack

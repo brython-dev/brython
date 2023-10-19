@@ -2784,7 +2784,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
     // Save execution stack in case there are return statements and a finally
     // block
     if(has_finally){
-        js += `var save_stack_${id} = $B.frames_stack.slice()\n`
+        js += `var save_frame_obj_${id} = $B.frames_obj\n`
     }
     if(has_else){
         js += `var failed${id} = false\n`
@@ -2852,7 +2852,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
                         `if($B.count_frames() < stack_length_${id}){\n` +
                             `exit = true\n` +
                             `$B.frames_stack.push(frame)\n` +
-                            `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
+                            `$B.frame_obj = $B.push_frame(frame)\n` +
                         `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
@@ -2903,8 +2903,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
     // Save execution stack in case there are return statements and a finally
     // block
     if(has_finally){
-        js += `var save_stack_${id} = $B.frames_stack.slice(),\n` +
-                  `save_frame_obj_${id} = $B.frame_obj\n`
+        js += `var save_frame_obj_${id} = $B.frame_obj\n`
     }
     if(has_else){
         js += `var failed${id} = false\n`
@@ -2977,7 +2976,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                         `if($B.count_frames() < stack_length_${id}){\n` +
                             `exit = true\n` +
                             `$B.frames_stack.push(frame)\n` +
-                            `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
+                            `$B.frame_obj = $B.push_frame(frame)\n` +
                         `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
@@ -3156,7 +3155,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                           // modified by a "return" in the "with" block)
                           `if($B.count_frames() < stack_length){\n` +
                               `$B.frames_stack.push(frame)\n` +
-                              `$B.frame_obj = {prev: $B.frame_obj, frame}\n` +
+                              `$B.frame_obj = $B.push_frame(frame)\n` +
                           `}\n` +
                           `throw err\n` +
                       `}\n` +
@@ -3268,7 +3267,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         $B.leave_frame()
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push(frame)
-                        $B.frame_obj = {prev: $B.frame_obj, frame}
+                        $B.frame_obj = $B.push_frame(frame)
                     }catch(_e){
                         $B.set_exc(_e, frame)
                         if(_e.__class__ === _b_.GeneratorExit){

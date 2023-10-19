@@ -369,7 +369,7 @@ $B.make_linenums = function(frame_obj){
     return res.reverse()
 }
 
-function make_frames_stack(frame_obj){
+var make_frames_stack = $B.make_frames_stack = function(frame_obj){
     var stack = []
     while(frame_obj !== null){
         stack[stack.length] = frame_obj.frame
@@ -381,19 +381,10 @@ function make_frames_stack(frame_obj){
 
 $B.freeze = function(err){
     if(err.$frame_obj === undefined){
-        err.$stack = $B.frames_stack.slice()
-        err.$linenos = $B.frames_stack.map(x => x.$lineno)
         err.$frame_obj = $B.frame_obj
         err.$linenums = $B.make_linenums()
     }
     err.__traceback__ = traceback.$factory(err)
-}
-
-var show_stack = $B.show_stack = function(stack){
-    stack = stack || $B.frames_stack
-    for(const frame of stack){
-        console.log(frame[2], frame[0], frame.$lineno)
-    }
 }
 
 // Source code for BaseException. Used in make_exc to generate all the
@@ -411,9 +402,7 @@ var be_factory = `
     err.__class__ = _b_.BaseException
     err.__traceback__ = _b_.None
     err.$py_error = true
-    err.$stack = $B.frames_stack.slice()
     err.$frame_obj = $B.frame_obj
-    err.$linenos = $B.frames_stack.map(x => x.$lineno)
     err.$linenums = $B.make_linenums()
     // placeholder
     err.__cause__ = _b_.None // XXX fix me
@@ -625,7 +614,6 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 $B.name_error = function(name){
     var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
     exc.name = name
-    exc.$stack = $B.frames_stack.slice()
     exc.$frame_obj = $B.frame_obj
     return exc
 }

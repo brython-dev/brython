@@ -1257,7 +1257,7 @@ $B.enter_frame = function(frame){
     frame.__class__ = $B.frame
     check_frames(1247)
     $B.frames_stack.push(frame)
-    $B.frame_obj = {prev: $B.frame_obj, frame}
+    $B.frame_obj = $B.push_frame(frame)
     if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
                 ($B.tracefunc.$infos && frame[4] &&
@@ -1355,11 +1355,9 @@ $B.leave_frame = function(arg){
             $B.trace_return(arg.value)
         }
     }
-    var frame = $B.frames_stack.pop()
+    $B.frames_stack.pop()
+    var frame = $B.frame_obj.frame
     $B.frame_obj = $B.frame_obj.prev
-    if($B.frames_stack.length == 0 && $B.frame_obj !== null){
-        alert('tiens bizarre !')
-    }
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
     // generator is garbage-collected.
@@ -1386,14 +1384,18 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
-$B.count_frames = function(frame_obj){
-    var nb = 0
-    frame_obj = frame_obj || $B.frame_obj
-    while(frame_obj !== null){
-        nb++
-        frame_obj = frame_obj.prev
+$B.push_frame = function(frame){
+    var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
+    return {
+        prev: $B.frame_obj,
+        frame,
+        count: count + 1
     }
-    return nb
+}
+
+$B.count_frames = function(frame_obj){
+    frame_obj = frame_obj || $B.frame_obj
+    return frame_obj == null ? 0 : frame_obj.count
 }
 
 $B.get_frame_at = function(pos, frame_obj){
