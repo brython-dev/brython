@@ -42,7 +42,6 @@ $B.scripts={}
 $B.import_info={}
 $B.imported={}
 $B.precompiled={}
-$B.frames_stack=[]
 $B.frame_obj=null
 $B.builtins=Object.create(null)
 $B.builtins_scope={id:'__builtins__',module:'__builtins__',binding:{}}
@@ -149,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-19 10:15:41.630844"
-__BRYTHON__.timestamp=1697703341630
+__BRYTHON__.compiled_date="2023-10-19 11:53:14.204074"
+__BRYTHON__.timestamp=1697709194204
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -677,7 +676,7 @@ $B.parser={}
 var clone=$B.clone=function(obj){var res={}
 for(var attr in obj){res[attr]=obj[attr]}
 return res}
-$B.last=function(table){if(table===undefined){console.log($B.frames_stack.slice())}
+$B.last=function(table){if(table===undefined){console.log($B.make_frames_stack())}
 return table[table.length-1]}
 $B.list2obj=function(list,value){var res={},i=list.length
 if(value===undefined){value=true}
@@ -5325,7 +5324,7 @@ $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
-if(frame===undefined){if($B.frames_stack.length==0){function set_lineno(){}}else{frame=$B.frame_obj.frame
+if(frame===undefined){if($B.frame_obj===null){function set_lineno(){}}else{frame=$B.frame_obj.frame
 lineno=frame.$lineno}}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
 if(iterator.step > 0){return{
@@ -5596,30 +5595,25 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-function check_frames(line){if($B.frames_stack.length !==$B.count_frames()){console.log($B.frames_stack.slice(),$B.frames_stack.length,$B.clone($B.frame_obj),$B.count_frames())
-throw Error('frames '+line)}}
-$B.check_frames_show=function(line){return[`line ${line}`,$B.frames_stack.length,$B.count_frames()]
-console.log($B.frames_stack.slice(),$B.clone($B.frame_obj))
-alert()
-return 'ok'}
 $B.enter_frame=function(frame){
-if($B.frames_stack.length > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
+if($B.frame_obj !==null && $B.frame_obj.count > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
-check_frames(1247)
-$B.frames_stack.push(frame)
 $B.frame_obj=$B.push_frame(frame)
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
 $B.tracefunc.$frame_id=frame[0]
 return _b_.None}else{
-for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.tracefunc.$frame_id){return _b_.None}}
+var frame_obj=$B.frame_obj
+while(frame_obj !==null){if(frame_obj.frame[0]==$B.tracefunc.$frame_id){return _b_.None}
+frame_obj=frame_obj.prev}
 try{var res=$B.tracefunc(frame,'call',_b_.None)
-for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][4]==res){return _b_.None}}
+var frame_obj=$B.frame_obj
+while(frame_obj !==null){if(frame_obj.frame[4]==res){return _b_.None}
+frame_obj=frame_obj.prev}
 return res}catch(err){$B.set_exc(err,frame)
-$B.frames_stack.pop()
 $B.frame_obj=$B.frame_obj.prev
 err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
@@ -5637,14 +5631,10 @@ $B.trace_return=function(value){var frame=$B.frame_obj.frame,trace_func=frame.$f
 if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame,'return',value)}
-$B.leave_frame=function(arg){check_frames(1323)
-if($B.frames_stack.length==0){if($B.frame_obj !==null){console.log($B.frame_obj)
-throw Error('incohérent !')}
-return}
-if($B.frame_obj===null){console.log('leave frame, frame_obj null',$B.frames_stack.slice())}
+$B.leave_frame=function(arg){
+if($B.frame_obj===null){return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.frame_obj.frame.$f_trace===undefined){$B.frame_obj.frame.$f_trace=$B.tracefunc}
 if($B.frame_obj.frame.$f_trace !==_b_.None){$B.trace_return(arg.value)}}
-$B.frames_stack.pop()
 var frame=$B.frame_obj.frame
 $B.frame_obj=$B.frame_obj.prev
 if(frame.$has_generators){for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
@@ -6772,7 +6762,7 @@ global_name+='_globals'
 exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{var klass=$B.get_class(_locals),getitem=$B.$call($B.$getattr(klass,'__getitem__')),setitem=$B.$call($B.$getattr(klass,'__setitem__'))
 exec_locals=new Proxy(_locals,{get(target,prop){if(prop=='$target'){return target}
 try{return getitem(target,prop)}catch(err){return undefined}},set(target,prop,value){return setitem(target,prop,value)}})}}}}
-var save_frames_stack=$B.frames_stack.slice(),save_frame_obj=$B.frame_obj
+var save_frame_obj=$B.frame_obj
 var _ast
 var frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
@@ -6790,7 +6780,6 @@ $B.parser.dispatch_tokens(root)
 _ast=root.ast()}}
 var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root({ast:_ast,symtable,filename,namespaces:{local_name,exec_locals,global_name,exec_globals}}),js=js_obj.js}catch(err){if(err.args){if(err.args[1]){var lineno=err.args[1][1]
 exec_locals.$lineno=lineno}}else{console.log('JS Error',err.message)}
-$B.frames_stack=save_frames_stack
 $B.frame_obj=save_frame_obj
 throw err}
 if(mode=='eval'){
@@ -6804,11 +6793,9 @@ console.log('-- python source\n',src)}
 throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frame_obj)}catch(err){if($B.get_option('debug')> 2){console.log(
 'Python code\n',src,'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
-$B.frames_stack=save_frames_stack
 $B.frame_obj=save_frame_obj
 throw err}
 if(_globals !==_b_.None && ! _globals.$jsobj){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
-$B.frames_stack=save_frames_stack
 $B.frame_obj=save_frame_obj
 return res}
 $$eval.$is_func=true
@@ -8136,8 +8123,7 @@ if(s[4]!==undefined){item.push(s[4])}
 for(const i of[1,3]){for(var key in s[i]){item[i][key]=s[i][key]}}
 res.push(item)}
 return res}
-$B.restore_frame_obj=function(frame_obj,locals){console.log('restore frame obj')
-$B.frame_obj=frame_obj
+$B.restore_frame_obj=function(frame_obj,locals){$B.frame_obj=frame_obj
 $B.frame_obj.frame[1]=locals}
 $B.make_linenums=function(frame_obj){var res=[],frame_obj=frame_obj ||$B.frame_obj
 while(frame_obj !==null){res.push(frame_obj.frame.$lineno)
@@ -13616,30 +13602,23 @@ $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
 $B.generator.__str__=function(self){var name=self.js_gen.$name ||'generator'
 if(self.js_gen.$func && self.js_gen.$func.$infos){name=self.js_gen.$func.$infos.__qualname__}
 return `<generator object ${name}>`}
-$B.generator.close=function(self){var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.frame_obj
-if(self.$frame){$B.frames_stack.push(self.$frame)
-$B.frame_obj=$B.push_frame(self.$frame)}
-try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){$B.frames_stack=save_stack
-$B.frame_obj=save_frame_obj
+$B.generator.close=function(self){var save_frame_obj=$B.frame_obj
+if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
+try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){$B.frame_obj=save_frame_obj
 throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj}
-function trace(){return $B.frames_stack.slice()}
 $B.generator.send=function(self,value){
 var gen=self.js_gen
 gen.$has_run=true
 if(gen.$finished){throw _b_.StopIteration.$factory(value)}
 if(gen.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
 gen.gi_running=true
-var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.frame_obj
-if(self.$frame){$B.frames_stack.push(self.$frame)
-$B.frame_obj=$B.push_frame(self.$frame)}
+var save_frame_obj=$B.frame_obj
+if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
 try{var res=gen.next(value)}catch(err){gen.$finished=true
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj
 throw err}
 if($B.frame_obj !==null && $B.frame_obj.frame===self.$frame){$B.leave_frame()}
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj
 if(res.value && res.value.__class__===$GeneratorReturn){gen.$finished=true
 throw _b_.StopIteration.$factory(res.value.value)}
@@ -13651,11 +13630,9 @@ var gen=self.js_gen,exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined ||value===_b_.None){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===_b_.None){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==_b_.None){exc.$traceback=traceback}
-var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.frame_obj
-if(self.$frame){$B.frames_stack.push(self.$frame)
-$B.frame_obj=$B.push_frame(self.$frame)}
+var save_frame_obj=$B.frame_obj
+if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
 var res=gen.throw(exc)
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj
 if(res.done){throw _b_.StopIteration.$factory(res.value)}
 return res.value}
@@ -13676,15 +13653,12 @@ $B.async_generator.asend=async function(self,value){var gen=self.js_gen
 if(gen.$finished){throw _b_.StopAsyncIteration.$factory(value)}
 if(gen.ag_running===true){throw _b_.ValueError.$factory("generator already executing")}
 gen.ag_running=true
-var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.frame_obj
-if(self.$frame){$B.frames_stack.push(self.$frame)
-$B.frame_obj=$B.push_frame(self.$frame)}
+var save_frame_obj=$B.frame_obj
+if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
 try{var res=await gen.next(value)}catch(err){gen.$finished=true
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj
 throw err}
 if($B.frame_obj !==null && $B.frame_obj.frame===self.$frame){$B.leave_frame()}
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj
 if(res.done){throw _b_.StopAsyncIteration.$factory(value)}
 if(res.value.__class__===$GeneratorReturn){gen.$finished=true
@@ -13695,11 +13669,9 @@ $B.async_generator.athrow=async function(self,type,value,traceback){var gen=self
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
-var save_stack=$B.frames_stack.slice(),save_frame_obj=$B.frame_obj
-if(self.$frame){$B.frames_stack.push(self.$frame)
-$B.frame_obj=$B.push_frame(self.$frame)}
+var save_frame_obj=$B.frame_obj
+if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
 await gen.throw(value)
-$B.frames_stack=save_stack
 $B.frame_obj=save_frame_obj}
 $B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__)
 ;
@@ -14836,10 +14808,8 @@ if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
 self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
 throw _b_.TypeError.$factory(msg)}
 var res=self.$func.apply(null,self.$args)
-res.then(function(){if(self.$frames){$B.frames_stack=self.$frames}
-if(self.$frame_obj){$B.frame_obj=self.$frame_obj}}).
-catch(function(err){if(self.$frames){$B.frames_stack=self.$frames}
-if(self.$frame_obj){$B.frame_obj=self.$frame_obj}})
+res.then(function(){if(self.$frame_obj){$B.frame_obj=self.$frame_obj}}).
+catch(function(err){if(self.$frame_obj){$B.frame_obj=self.$frame_obj}})
 return res}
 coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
@@ -14853,7 +14823,6 @@ f.$is_func=true
 f.$is_async=true
 return f}
 $B.promise=function(obj){if(obj.__class__===coroutine){
-obj.$frames=$B.frames_stack.slice()
 obj.$frame_obj=$B.frame_obj
 return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
@@ -16356,7 +16325,6 @@ js+='finally{\n'
 var finalbody=`var exit = false\n`+
 `if($B.count_frames() < stack_length_${id}){\n`+
 `exit = true\n`+
-`$B.frames_stack.push(frame)\n`+
 `$B.frame_obj = $B.push_frame(frame)\n`+
 `}\n`+
 add_body(this.finalbody,scopes)
@@ -16429,7 +16397,6 @@ js+='finally{\n'
 var finalbody=`var exit = false\n`+
 `if($B.count_frames() < stack_length_${id}){\n`+
 `exit = true\n`+
-`$B.frames_stack.push(frame)\n`+
 `$B.frame_obj = $B.push_frame(frame)\n`+
 `}\n`+
 add_body(this.finalbody,scopes)
@@ -16514,7 +16481,6 @@ s+=`}\nfinally{\n`+
 `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n`+
 `}catch(err){\n`+
 `if($B.count_frames() < stack_length){\n`+
-`$B.frames_stack.push(frame)\n`+
 `$B.frame_obj = $B.push_frame(frame)\n`+
 `}\n`+
 `throw err\n`+
@@ -16563,7 +16529,6 @@ return `yield* (function* f(){
                     try{
                         $B.leave_frame()
                         var _s${n} = yield _y${n}
-                        $B.frames_stack.push(frame)
                         $B.frame_obj = $B.push_frame(frame)
                     }catch(_e){
                         $B.set_exc(_e, frame)
@@ -17587,7 +17552,6 @@ var exc=PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' in
 (type==SetComprehension)? "'yield' inside set comprehension" :
 (type==DictComprehension)? "'yield' inside dict comprehension" :
 "'yield' inside generator expression");
-exc.$stack=$B.frames_stack.slice()
 exc.$frame_obj=$B.frame_obj
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
 throw exc}

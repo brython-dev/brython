@@ -482,7 +482,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     // "for(item of $B.make_js_iterator(...)){"
     var set_lineno = $B.set_lineno
     if(frame === undefined){
-        if($B.frames_stack.length == 0){
+        if($B.frame_obj === null){
             function set_lineno(){
                 // does nothing
             }
@@ -1230,33 +1230,14 @@ $B.int_or_bool = function(v){
     }
 }
 
-function check_frames(line){
-    if($B.frames_stack.length !== $B.count_frames()){
-        console.log($B.frames_stack.slice(), $B.frames_stack.length,
-            $B.clone($B.frame_obj), $B.count_frames())
-        throw Error('frames ' + line)
-    }
-}
-
-$B.check_frames_show = function(line){
-    return [`line ${line}`, $B.frames_stack.length, $B.count_frames()]
-    //if($B.frames_stack.length !== $B.count_frames()){
-        console.log($B.frames_stack.slice(), $B.clone($B.frame_obj))
-        alert()
-        return 'ok'
-    //}
-}
-
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
-    if($B.frames_stack.length > 1000){
+    if($B.frame_obj !== null && $B.frame_obj.count > 1000){
         var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
         $B.set_exc(exc, frame)
         throw exc
     }
     frame.__class__ = $B.frame
-    check_frames(1247)
-    $B.frames_stack.push(frame)
     $B.frame_obj = $B.push_frame(frame)
     if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
@@ -1269,22 +1250,25 @@ $B.enter_frame = function(frame){
             // also to avoid recursion, don't run the trace function in the
             // frame "below" it (ie in functions that the trace function
             // calls)
-            for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-                if($B.frames_stack[i][0] == $B.tracefunc.$frame_id){
+            var frame_obj = $B.frame_obj
+            while(frame_obj !== null){
+                if(frame_obj.frame[0] == $B.tracefunc.$frame_id){
                     return _b_.None
                 }
+                frame_obj = frame_obj.prev
             }
             try{
                 var res = $B.tracefunc(frame, 'call', _b_.None)
-                for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-                    if($B.frames_stack[i][4] == res){
+                var frame_obj = $B.frame_obj
+                while(frame_obj !== null){
+                    if(frame_obj.frame[4] == res){
                         return _b_.None
                     }
+                    frame_obj = frame_obj.prev
                 }
                 return res
             }catch(err){
                 $B.set_exc(err, frame)
-                $B.frames_stack.pop()
                 $B.frame_obj = $B.frame_obj.prev
                 err.$in_trace_func = true
                 throw err
@@ -1331,18 +1315,9 @@ $B.trace_return = function(value){
 }
 
 $B.leave_frame = function(arg){
-    check_frames(1323)
     // Leave execution frame
-    if($B.frames_stack.length == 0){
-        if($B.frame_obj !== null){
-            console.log($B.frame_obj)
-            throw Error('incohérent !')
-
-        }
-        return
-    }
     if($B.frame_obj === null){
-        console.log('leave frame, frame_obj null', $B.frames_stack.slice())
+        return
     }
 
     // When leaving a module, arg is set as an object of the form
@@ -1355,7 +1330,6 @@ $B.leave_frame = function(arg){
             $B.trace_return(arg.value)
         }
     }
-    $B.frames_stack.pop()
     var frame = $B.frame_obj.frame
     $B.frame_obj = $B.frame_obj.prev
     // For generators in locals, if their execution frame has context

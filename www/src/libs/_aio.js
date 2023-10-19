@@ -238,10 +238,8 @@ function run(coro){
         error_func = handle_error
     }
 
-    var save_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.frame_obj
+    var save_frame_obj = $B.frame_obj
     $B.coroutine.send(coro).then(onsuccess).catch(error_func)
-    $B.frames_stack = save_stack
     $B.frame_obj = save_frame_obj
     return _b_.None
 }

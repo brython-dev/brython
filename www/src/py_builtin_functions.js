@@ -699,8 +699,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         }
     }
 
-    var save_frames_stack = $B.frames_stack.slice(),
-        save_frame_obj = $B.frame_obj
+    var save_frame_obj = $B.frame_obj
 
     var _ast
 
@@ -756,7 +755,6 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         }else{
             console.log('JS Error', err.message)
         }
-        $B.frames_stack = save_frames_stack
         $B.frame_obj = save_frame_obj
         throw err
     }
@@ -801,7 +799,6 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 '\n    _ast', _ast,
                 '\n    js', js)
         }
-        $B.frames_stack = save_frames_stack
         $B.frame_obj = save_frame_obj
         throw err
     }
@@ -812,7 +809,6 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
             }
         }
     }
-    $B.frames_stack = save_frames_stack
     $B.frame_obj = save_frame_obj
     return res
 }
@@ -1315,7 +1311,7 @@ $B.$getattr = function(obj, attr, _default){
 //globals() (built in function)
 
 var globals = _b_.globals = function(){
-    // The last item in __BRYTHON__.frames_stack is
+    // $B.frame_obj.frame is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args_no_kw('globals', 0, arguments)
     var res = $B.obj_dict($B.frame_obj.frame[3])
@@ -1774,7 +1770,7 @@ var len = _b_.len = function(obj){
 }
 
 var locals = _b_.locals = function(){
-    // The last item in __BRYTHON__.frames_stack is
+    // $B.frame_obj.frame is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments)
     var locals_obj = $B.frame_obj.frame[1]

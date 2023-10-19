@@ -106,9 +106,6 @@ $B.imported = {}
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
-// Frames stack
-$B.frames_stack = []
-
 // Current frame
 $B.frame_obj = null
 

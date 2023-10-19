@@ -44,7 +44,7 @@ var clone = $B.clone = function(obj){
 // Last element in a list
 $B.last = function(table){
     if(table === undefined){
-        console.log($B.frames_stack.slice())
+        console.log($B.make_frames_stack())
     }
     return table[table.length - 1]
 }

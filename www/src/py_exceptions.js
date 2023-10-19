@@ -354,7 +354,6 @@ $B.deep_copy = function(stack){
 }
 
 $B.restore_frame_obj = function(frame_obj, locals){
-    console.log('restore frame obj')
     $B.frame_obj = frame_obj
     $B.frame_obj.frame[1] = locals
 }

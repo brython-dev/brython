@@ -935,7 +935,7 @@ function make_ast(match, tokens){
                     var rule_str = show_rule(rule, true)
                     console.log('error eval action of', rule_str)
                     console.log('p', p)
-                    console.log($B.frames_stack.slice())
+                    console.log($B.make_frames_stack())
                     console.log(err.message)
                     console.log(err.stack)
                 }
