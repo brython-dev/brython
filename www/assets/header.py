@@ -46,17 +46,19 @@ languages = [
     ["fr", "Français"]
 ]
 
-doc_versions = ["3.12", "3.11"]
-current_version = version
+doc_versions = ["3.12", "3.11", "3.10"]
 
 if 'static_doc' in window.location.href:
+
+    current_version = window.location.href.split('/')[4]
 
     # insert SELECT with available documentation versions
     table = document.select_one(".main-table")
     td = table.select_one('tr').select_one('td')
     sel_version = html.SELECT(id="version")
     for doc_version in doc_versions:
-        sel_version <= html.OPTION(doc_version, selected=doc_version==version)
+        sel_version <= html.OPTION(doc_version, 
+            selected=doc_version==current_version)
     td.insertBefore(html.H5("Version " + sel_version), td.firstChild)
 
     @bind(sel_version, 'change')
