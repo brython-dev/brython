@@ -44,11 +44,11 @@
                     }
                     $.elt.addEventListener($.evt, f, options)
                     return callback
-                }else if(_b_.isinstance($.elt, $B.DOMNode)){
+                }else if($B.$isinstance($.elt, $B.DOMNode)){
                     // DOM element
                     $B.DOMNode.bind($.elt, $.evt, callback, options)
                     return callback
-                }else if(_b_.isinstance($.elt, _b_.str)){
+                }else if($B.$isinstance($.elt, _b_.str)){
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
                     for(var i = 0; i < items.length; i++){
@@ -64,14 +64,14 @@
                             var elt = _b_.next(it)
                             $B.DOMNode.bind(elt, $.evt, callback)
                         }catch(err){
-                            if(_b_.isinstance(err, _b_.StopIteration)){
+                            if($B.$isinstance(err, _b_.StopIteration)){
                                 break
                             }
                             throw err
                         }
                     }
                 }catch(err){
-                    if(_b_.isinstance(err, _b_.AttributeError)){
+                    if($B.$isinstance(err, _b_.AttributeError)){
                         $B.DOMNode.bind($.elt, $.evt, callback)
                     }
                     throw err
@@ -190,7 +190,7 @@
                         args = $ns['args']
                     if(args.length == 1){
                         var first = args[0]
-                        if(_b_.isinstance(first,[_b_.str, _b_.int, _b_.float])){
+                        if($B.$isinstance(first,[_b_.str, _b_.int, _b_.float])){
                             // set "first" as HTML content (not text)
                             self.innerHTML = _b_.str.$factory(first)
                         }else if(first.__class__ === TagSum){
@@ -198,7 +198,7 @@
                                 self.appendChild(first.children[i])
                             }
                         }else{
-                            if(_b_.isinstance(first, $B.DOMNode)){
+                            if($B.$isinstance(first, $B.DOMNode)){
                                 self.appendChild(first)
                             }else{
                                 try{
@@ -458,7 +458,7 @@
                 }
             }
             xhr.send()
-            if(_b_.isinstance(result, _b_.BaseException)){
+            if($B.$isinstance(result, _b_.BaseException)){
                 $B.handle_error(result)
             }else{
                 if(alias === _b_.None){
@@ -804,7 +804,7 @@
                     message = $.message,
                     category = $.category,
                     stacklevel = $.stacklevel
-            if(_b_.isinstance(message, _b_.Warning)){
+            if($B.$isinstance(message, _b_.Warning)){
                 category = $B.get_class(message)
             }
             var filters
@@ -999,7 +999,7 @@
         var op = "__" + comp + "__"
         $B.cell[op] = (function(op){
             return function(self, other){
-                if(! _b_.isinstance(other, $B.cell)){
+                if(! $B.$isinstance(other, $B.cell)){
                     return _b_.NotImplemented
                 }
                 if(self.$cell_contents === null){

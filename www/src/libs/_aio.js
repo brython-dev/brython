@@ -30,7 +30,7 @@ function handle_kwargs(kw, method){
             var params = kw.$jsobj[key]
             if(typeof params == "string"){
                 data = params
-            }else if(_b_.isinstance(params, _b_.bytes)){
+            }else if($B.$isinstance(params, _b_.bytes)){
                 data = new ArrayBuffer(params.source.length)
                 var array = new Int8Array(data)
                 for(var i = 0, len = params.source.length; i < len; i++){
@@ -52,7 +52,7 @@ function handle_kwargs(kw, method){
             }
         }else if(key == "headers"){
             var value = kw.$jsobj[key]
-            if(! _b_.isinstance(value, _b_.dict)){
+            if(! $B.$isinstance(value, _b_.dict)){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
             }

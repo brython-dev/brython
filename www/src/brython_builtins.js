@@ -259,9 +259,8 @@ $B.builtins_repr_check = function(builtin, args){
     // the builtin class
     var $ = $B.args('__repr__', 1, {self: null}, ['self'], args,
             {}, null, null),
-        self = $.self,
-        _b_ = $B.builtins
-    if(! _b_.isinstance(self, builtin)){
+        self = $.self
+    if(! $B.$isinstance(self, builtin)){
         throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
             `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)

@@ -9,7 +9,7 @@ var _b_ = $B.builtins,
 var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
         return {
-            __class__: Module,
+            $tp_class: Module,
             __builtins__: _b_.__builtins__,
             __name__: name,
             __doc__: doc || _b_.None,
@@ -22,7 +22,14 @@ Module.__dir__ = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)()
     }
-    return _b_.object.__dir__(self)
+    var res = []
+    for(var key in self){
+        if(key.startsWith('$') || key == '__class__'){
+            continue
+        }
+        res[res.length] = key
+    }
+    return res.sort()
 }
 
 Module.__new__ = function(cls, name, doc, $package){
@@ -209,7 +216,7 @@ function run_js(module_contents, path, _module){
                 __qualname__: attr
             }
             $module[attr].$in_js_module = true
-        }else if(_b_.isinstance($module[attr], _b_.type) &&
+        }else if($B.$isinstance($module[attr], _b_.type) &&
                 ! $module[attr].hasOwnProperty('__module__')){
             $module[attr].__module__ = _module.__name__
         }

@@ -167,7 +167,7 @@ function $builtin_base_convert_helper(obj, base) {
 function bin_hex_oct(base, obj){
     // Used by built-in function bin, hex and oct
     // base is respectively 2, 16 and 8
-    if(isinstance(obj, _b_.int)){
+    if($B.$isinstance(obj, _b_.int)){
         return $builtin_base_convert_helper(obj, base)
     }else{
         try{
@@ -260,7 +260,7 @@ var compile = _b_.compile = function() {
     $B.file_cache[filename] = $.source
     $B.url2name[filename] = module_name
 
-    if(_b_.isinstance($.source, _b_.bytes)){
+    if($B.$isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
             lfpos = $.source.source.indexOf(10),
             first_line,
@@ -295,7 +295,7 @@ var compile = _b_.compile = function() {
         $.source = _b_.bytes.decode($.source, encoding)
     }
 
-    if(!_b_.isinstance(filename, [_b_.bytes, _b_.str])){
+    if(! $B.$isinstance(filename, [_b_.bytes, _b_.str])){
         // module _warning is in builtin_modules.js
         $B.warn(_b_.DeprecationWarning,
             `path should be string, bytes, or os.PathLike, ` +
@@ -902,7 +902,7 @@ var getattr = _b_.getattr = function(){
     var $ = $B.args("getattr", 3, {obj: null, attr: null, _default: null},
         ["obj", "attr", "_default"], arguments, {_default: missing},
         null, null)
-    if(! isinstance($.attr, _b_.str)){
+    if(! $B.$isinstance($.attr, _b_.str)){
         throw _b_.TypeError.$factory("attribute name must be string, " +
             `not '${$B.class_name($.attr)}'`)
     }
@@ -1041,7 +1041,7 @@ $B.$getattr = function(obj, attr, _default){
           // attribute __class__ is set for all Python objects
           if(klass.__dict__){
               var klass_from_dict = _b_.None
-              if(_b_.isinstance(klass.__dict__, _b_.dict)){
+              if($B.$isinstance(klass.__dict__, _b_.dict)){
                   klass_from_dict = $B.$call($B.$getattr(klass.__dict__, 'get'))('__class__')
               }
               if(klass_from_dict !== _b_.None){
@@ -1488,8 +1488,8 @@ var id = _b_.id = function(obj){
    check_nb_args_no_kw('id', 1, arguments)
    if(obj.$id !== undefined){
        return obj.$id
-   }else if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
-           !isinstance(obj, $B.long_int)){
+   }else if($B.$isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
+           ! $B.$isinstance(obj, $B.long_int)){
        return $B.$getattr(_b_.str.$factory(obj), '__hash__')()
    }else{
        return obj.$id = $B.UUID()
@@ -1626,7 +1626,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
     }else{
         mro = klass.__mro__
     }
-    if(isinstance(classinfo, _b_.tuple)){
+    if($B.$isinstance(classinfo, _b_.tuple)){
         for(var i = 0; i < classinfo.length; i++){
            if(issubclass(klass, classinfo[i])){return true}
         }
@@ -1733,7 +1733,7 @@ $B.$iter = function(obj, sentinel){
         try{
             $B.$getattr(res, '__next__')
         }catch(err){
-            if(isinstance(err, _b_.AttributeError)){
+            if($B.$isinstance(err, _b_.AttributeError)){
                 throw _b_.TypeError.$factory(
                     "iter() returned non-iterator of type '" +
                      $B.class_name(res) + "'")
@@ -1779,9 +1779,13 @@ var locals = _b_.locals = function(){
     if(class_locals){
         return class_locals
     }
-    var res = $B.obj_dict($B.clone(locals_obj))
+    var res = $B.obj_dict($B.clone(locals_obj),
+        function(key){
+            return key.startsWith('$')
+        }
+    )
     res.$is_namespace = true
-    delete res.$jsobj.__annotations__
+    // delete res.$jsobj.__annotations__
     return res
 }
 
@@ -1957,7 +1961,7 @@ memoryview.__eq__ = function(self, other){
 }
 
 memoryview.__getitem__ = function(self, key){
-    if(isinstance(key, _b_.int)){
+    if($B.$isinstance(key, _b_.int)){
         var start = key * self.itemsize
         if(self.format == "I"){
             var res = self.obj.source[start],
@@ -2145,22 +2149,22 @@ var pow = _b_.pow = function() {
     if(z === _b_.None){
         return $B.rich_op('__pow__', x, y)
     }else{
-        if(_b_.isinstance(x, _b_.int)){
-            if(_b_.isinstance(y, _b_.float)){
+        if($B.$isinstance(x, _b_.int)){
+            if($B.$isinstance(y, _b_.float)){
                 throw all_ints()
-            }else if(_b_.isinstance(y, _b_.complex)){
+            }else if($B.$isinstance(y, _b_.complex)){
                 throw complex_modulo()
-            }else if(_b_.isinstance(y, _b_.int)){
-                if(_b_.isinstance(z, _b_.complex)){
+            }else if($B.$isinstance(y, _b_.int)){
+                if($B.$isinstance(z, _b_.complex)){
                     throw complex_modulo()
-                }else if(! _b_.isinstance(z, _b_.int)){
+                }else if(! $B.$isinstance(z, _b_.int)){
                     throw all_ints()
                 }
             }
             return _b_.int.__pow__(x, y, z)
-        }else if(_b_.isinstance(x, _b_.float)){
+        }else if($B.$isinstance(x, _b_.float)){
             throw all_ints()
-        }else if(_b_.isinstance(x, _b_.complex)){
+        }else if($B.$isinstance(x, _b_.complex)){
             throw complex_modulo()
         }
     }
@@ -2259,7 +2263,7 @@ var round = _b_.round = function(){
         arg = $.number,
         n = $.ndigits === None ? 0 : $.ndigits
 
-    if(! isinstance(arg,[_b_.int, _b_.float])){
+    if(! $B.$isinstance(arg,[_b_.int, _b_.float])){
         var klass = arg.__class__ || $B.get_class(arg)
         try{
             return $B.$call($B.$getattr(klass, "__round__")).apply(null, arguments)
@@ -2273,14 +2277,14 @@ var round = _b_.round = function(){
         }
     }
 
-    if(! isinstance(n, _b_.int)){
+    if(! $B.$isinstance(n, _b_.int)){
         throw _b_.TypeError.$factory("'" + $B.class_name(n) +
             "' object cannot be interpreted as an integer")
     }
 
     var klass = $B.get_class(arg)
 
-    if(isinstance(arg, _b_.float)){
+    if($B.$isinstance(arg, _b_.float)){
         return _b_.float.__round__(arg, $.ndigits)
     }
 
@@ -2331,7 +2335,7 @@ $B.$setattr = function(obj, attr, value){
     if(attr == '__dict__'){
         // set attribute __dict__
         // remove previous attributes
-        if(! isinstance(value, _b_.dict)){
+        if(! $B.$isinstance(value, _b_.dict)){
             throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
                 "not a '" + $B.class_name(value) + "'")
         }
@@ -2538,7 +2542,7 @@ var sum = _b_.sum = function(iterable, start){
         iterable = $.iterable,
         start = $.start
 
-    if(_b_.isinstance(start, [_b_.str, _b_.bytes])){
+    if($B.$isinstance(start, [_b_.str, _b_.bytes])){
         throw _b_.TypeError.$factory("sum() can't sum bytes" +
             " [use b''.join(seq) instead]")
     }
@@ -2594,7 +2598,7 @@ var $$super = _b_.super = $B.make_class("super",
                     (object_or_type.$is_class &&
                     _b_.issubclass(object_or_type, _type))){
                 $arg2 = 'type'
-            }else if(_b_.isinstance(object_or_type, _type)){
+            }else if($B.$isinstance(object_or_type, _type)){
                 $arg2 = 'object'
             }else{
                 throw _b_.TypeError.$factory(
@@ -2971,7 +2975,7 @@ $Reader.write = function(_self, data){
         }
         _self.$content += data
     }else{
-        if(! _b_.isinstance(data, [_b_.bytes, _b_.bytearray])){
+        if(! $B.$isinstance(data, [_b_.bytes, _b_.bytearray])){
             throw _b_.TypeError.$factory('write() argument must be bytes,' +
                 ` not ${class_name(data)}`)
         }
@@ -3066,7 +3070,7 @@ var $url_open = _b_.open = function(){
     }else if(['r', 'rb'].indexOf(mode) == -1){
         throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
     }
-    if(isinstance(file, _b_.str)){
+    if($B.$isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
         if($B.file_cache.hasOwnProperty($.file)){
             var f = $B.file_cache[$.file] // string
@@ -3421,7 +3425,7 @@ $B.function.__setattr__ = function(self, attr, value){
         // function attribute $defaults
         if(value === _b_.None){
             value = []
-        }else if(! isinstance(value, _b_.tuple)){
+        }else if(! $B.$isinstance(value, _b_.tuple)){
             throw _b_.TypeError.$factory(
                 "__defaults__ must be set to a tuple object")
         }
@@ -3435,7 +3439,7 @@ $B.function.__setattr__ = function(self, attr, value){
     }else if(attr == "__kwdefaults__"){
         if(value === _b_.None){
             value = $B.empty_dict
-        }else if(! isinstance(value, _b_.dict)){
+        }else if(! $B.$isinstance(value, _b_.dict)){
             throw _b_.TypeError.$factory(
                 "__kwdefaults__ must be set to a dict object")
         }

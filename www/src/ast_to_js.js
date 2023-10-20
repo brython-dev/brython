@@ -2921,7 +2921,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                   `frame.$f_trace = $B.trace_exception()\n`+
               `}\n`
         }
-        js += `if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
+        js += `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
                   `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
               '}\n' +
               `function fake_split(exc, condition){\n` +
@@ -2937,7 +2937,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
             js += `$B.set_lineno(frame, ${handler.lineno})\n`
             if(handler.type){
                 js += "var condition = function(exc){\n" +
-                      "    return _b_.isinstance(exc, " +
+                      "    return $B.$isinstance(exc, " +
                       `${$B.js_from_ast(handler.type, scopes)})\n` +
                       "}\n" +
                       `var klass = $B.get_class(${err}),\n` +

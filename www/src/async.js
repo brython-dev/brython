@@ -5,7 +5,7 @@ var coroutine = $B.coroutine = $B.make_class("coroutine")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
-    if(! _b_.isinstance(self, coroutine)){
+    if(! $B.$isinstance(self, coroutine)){
         var msg = "object is not a coroutine"
         if(typeof self == "function" && self.$infos && self.$infos.__code__ &&
                 self.$infos.__code__.co_flags & 128){

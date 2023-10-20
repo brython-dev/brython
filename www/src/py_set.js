@@ -32,7 +32,7 @@ function make_new_set(type){
     return res
 }
 function make_new_set_base_type(so){
-    return _b_.isinstance(so, set) ?
+    return $B.$isinstance(so, set) ?
                set.$factory() :
                frozenset.$factory()
 }
@@ -81,9 +81,9 @@ function set_difference(so, other){
         rv,
         other_is_dict
 
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         other_size = set.__len__(other)
-    }else if(_b_.isinstance(other, _b_.dict)){
+    }else if($B.$isinstance(other, _b_.dict)){
         other_size = _b_.dict.__len__(other)
         other_is_dict = true
     }else{
@@ -122,11 +122,11 @@ function set_difference_update(so, other){
     if (so === other){
         return set.clear(so);
     }
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         for(var entry of set_iter_with_hash(other)){
             set_discard_entry(so, entry.item, entry.hash)
         }
-    }else if(_b_.isinstance(other, _b_.dict)){
+    }else if($B.$isinstance(other, _b_.dict)){
         for(var entry of _b_.dict.$iter_items_with_hash(other)){
             set_discard_entry(so, entry.key, entry.hash)
         }
@@ -193,7 +193,7 @@ function set_intersection(so, other){
     }
     var result = make_new_set_base_type(so),
         iterator
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         if(other.$used > so.$used){
             var tmp = so
             so = other
@@ -204,7 +204,7 @@ function set_intersection(so, other){
                 set_add(result, entry.item, entry.hash)
             }
         }
-    }else if(_b_.isinstance(other, _b_.dict)){
+    }else if($B.$isinstance(other, _b_.dict)){
         for(var entry of _b_.dict.$iter_items_with_hash(other)){
             if(set_contains(so, entry.key, entry.hash)){
                 set_add(result, entry.key, entry.hash)
@@ -243,7 +243,7 @@ function set_lookkey(so, key, hash){
         try{
             hash = $B.$hash(key)
         }catch(err){
-            if(_b_.isinstance(key, set)){
+            if($B.$isinstance(key, set)){
                 hash = $B.$hash(frozenset.$factory(key))
             }else{
                 throw err
@@ -282,14 +282,14 @@ function set_symmetric_difference_update(so, other){
     if(so == other){
         return set.clear(so)
     }
-    if(_b_.isinstance(other, _b_.dict)){
+    if($B.$isinstance(other, _b_.dict)){
         for(var entry of _b_.dict.$iter_items_with_hash(other)){
             rv = set_discard_entry(so, entry.key, entry.hash)
             if(rv == DISCARD_NOTFOUND){
                 set_add(so, entry.key, entry.hash)
             }
         }
-    }else if(_b_.isinstance(other, [set, frozenset])){
+    }else if($B.$isinstance(other, [set, frozenset])){
         for(var entry of set_iter_with_hash(other)){
             rv = set_discard_entry(so, entry.item, entry.hash)
             if(rv == DISCARD_NOTFOUND){
@@ -303,7 +303,7 @@ function set_symmetric_difference_update(so, other){
 }
 
 set.__and__ = function(self, other){
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     return set_intersection(self, other)
@@ -323,7 +323,7 @@ set.__contains__ = function(self, item){
 }
 
 set.__eq__ = function(self, other){
-    if(_b_.isinstance(other, [_b_.set, _b_.frozenset])){
+    if($B.$isinstance(other, [_b_.set, _b_.frozenset])){
       if(self.$used != other.$used){
           return false
       }
@@ -391,14 +391,14 @@ set.__format__ = function(self, format_string){
 }
 
 set.__ge__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         return set.__le__(other, self)
     }
     return _b_.NotImplemented
 }
 
 set.__gt__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         return set.__lt__(other, self)
     }
     return _b_.NotImplemented
@@ -496,7 +496,7 @@ function make_hash_iter(obj, hash){
 
 set.__le__ = function(self, other){
     // Test whether every element in the set is in other.
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         return set.issubset(self, other)
     }
     return _b_.NotImplemented
@@ -507,7 +507,7 @@ set.__len__ = function(self){
 }
 
 set.__lt__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         return set.__le__(self, other) &&
             set.__len__(self) < set.__len__(other)
     }else{
@@ -532,7 +532,7 @@ set.__new__ = function(cls, iterable){
 }
 
 set.__or__ = function(self, other){
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         return set.union(self, other)
     }
     return _b_.NotImplemented
@@ -598,7 +598,7 @@ set.__rxor__ = function(self, other){
 
 set.__sub__ = function(self, other, accept_iter){
     // Return a new set with elements in the set that are not in the others
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     return set_difference(self, other)
@@ -606,7 +606,7 @@ set.__sub__ = function(self, other, accept_iter){
 
 set.__xor__ = function(self, other, accept_iter){
     // Return a new set with elements in either the set or other but not both
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     var res = make_new_set()
@@ -742,11 +742,11 @@ set.update = function(self){
             for(var i = 0; i < iterable.length; i++){
                 set_add(self, iterable[i])
             }
-        }else if(_b_.isinstance(iterable, [set, frozenset])){
+        }else if($B.$isinstance(iterable, [set, frozenset])){
             for(var entry of set_iter_with_hash(iterable)){
                 set_add(self, entry.item, entry.hash)
             }
-        }else if(_b_.isinstance(iterable, _b_.dict)){
+        }else if($B.$isinstance(iterable, _b_.dict)){
             for(var entry of _b_.dict.$iter_items_with_hash(iterable)){
                 set_add(self, entry.key, entry.hash)
             }
@@ -779,7 +779,7 @@ set.difference = function(){
 
     var res = set_copy($.self)
     for(var arg of $.args){
-        if(_b_.isinstance(arg, [set, frozenset])){
+        if($B.$isinstance(arg, [set, frozenset])){
             for(var entry of set_iter_with_hash(arg)){
                 set_discard_entry(res, entry.item, entry.hash)
             }
@@ -819,7 +819,7 @@ set.union = function(self){
     }
 
     for(var arg of $.args){
-        if(_b_.isinstance(arg, [set, frozenset])){
+        if($B.$isinstance(arg, [set, frozenset])){
             for(var entry of set_iter_with_hash(arg)){
                 set_add(res, entry.item, entry.hash)
             }
@@ -842,7 +842,7 @@ set.issubset = function(){
             ["self", "other"], arguments, {}, "args", null),
         self = $.self,
         other = $.other
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         if(set.__len__(self) > set.__len__(other)){
             return false
         }
@@ -852,7 +852,7 @@ set.issubset = function(){
             }
         }
         return true
-    }else if(_b_.isinstance(other, _b_.dict)){
+    }else if($B.$isinstance(other, _b_.dict)){
         for(var entry of _b_.dict.$iter_items_with_hash(self)){
             if(! set_lookkey(other, entry.key, entry.hash)){
                 return false
@@ -876,7 +876,7 @@ set.issuperset = function(){
             ["self", "other"], arguments, {}, "args", null),
         self = $.self,
         other = $.other
-    if(_b_.isinstance(other, [set, frozenset])){
+    if($B.$isinstance(other, [set, frozenset])){
         return set.issubset(other, self)
     }else{
         return set.issubset(set.$factory(other), self)
@@ -884,7 +884,7 @@ set.issuperset = function(){
 }
 
 set.__iand__ = function(self, other){
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set.intersection_update(self, other)
@@ -892,7 +892,7 @@ set.__iand__ = function(self, other){
 }
 
 set.__isub__ = function(self, other){
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set_difference_update(self, other)
@@ -900,7 +900,7 @@ set.__isub__ = function(self, other){
 }
 
 set.__ixor__ = function(self, other){
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set.symmetric_difference_update(self, other)
@@ -908,7 +908,7 @@ set.__ixor__ = function(self, other){
 }
 
 set.__ior__ = function(self, other){
-    if(! _b_.isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set.update(self, other)

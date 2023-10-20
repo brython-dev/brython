@@ -16,7 +16,7 @@ $B.pattern_match = function(subject, pattern){
 
         // First, check that the subject is an instance of a class that
         // supports sequence pattern matching
-        if(_b_.isinstance(subject, [_b_.str, _b_.bytes, _b_.bytearray])){
+        if($B.$isinstance(subject, [_b_.str, _b_.bytes, _b_.bytearray])){
             // PEP 634 :
             // Although str, bytes, and bytearray are usually considered
             // sequences, they are not included in the above list and do not
@@ -240,10 +240,10 @@ $B.pattern_match = function(subject, pattern){
 
     if(pattern.class){
         var klass = pattern.class
-        if(! _b_.isinstance(klass, _b_.type)){
+        if(! $B.$isinstance(klass, _b_.type)){
             throw _b_.TypeError.$factory('called match pattern must be a type')
         }
-        if(! _b_.isinstance(subject, klass)){
+        if(! $B.$isinstance(subject, klass)){
             return false
         }
         if(pattern.args.length > 0){
@@ -263,7 +263,7 @@ $B.pattern_match = function(subject, pattern){
                 // Get attribute __match_args__ of class
                 var match_args = $B.$getattr(klass, '__match_args__',
                     $B.fast_tuple([]))
-                if(! _b_.isinstance(match_args, _b_.tuple)){
+                if(! $B.$isinstance(match_args, _b_.tuple)){
                     throw _b_.TypeError.$factory(
                         '__match_args__() did not return a tuple')
                 }
