@@ -371,6 +371,18 @@ object.__lt__ = function(){return _b_.NotImplemented}
 
 object.__mro__ = []
 
+object.$new = function(cls){
+    return function(){
+        if(arguments.length > 0){
+            throw _b_.TypeError.$factory("object() takes no parameters")
+        }
+        var res = Object.create(null)
+        res.__class__ = cls
+        res.__dict__ = $B.obj_dict({})
+        return res
+    }
+}
+
 object.__new__ = function(cls, ...args){
     if(cls === undefined){
         throw _b_.TypeError.$factory("object.__new__(): not enough arguments")

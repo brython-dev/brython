@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-20 09:10:30.839156"
-__BRYTHON__.timestamp=1697785830839
+__BRYTHON__.compiled_date="2023-10-20 09:29:54.665708"
+__BRYTHON__.timestamp=1697786994665
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5888,6 +5888,11 @@ return _b_.None}
 object.__le__=function(){return _b_.NotImplemented}
 object.__lt__=function(){return _b_.NotImplemented}
 object.__mro__=[]
+object.$new=function(cls){return function(){if(arguments.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}
+var res=Object.create(null)
+res.__class__=cls
+res.__dict__=$B.obj_dict({})
+return res}}
 object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
 var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
@@ -6100,12 +6105,14 @@ $B.set_func_names($B.getset_descriptor,"builtins")
 var data_descriptors=['__abstractmethods__','__annotations__','__base__','__bases__','__basicsize__',
 '__dictoffset__','__doc__','__flags__','__itemsize__','__module__','__mro__','__name__','__qualname__','__text_signature__','__weakrefoffset__'
 ]
-type.$call=function(klass,new_func,init_func){return function(){
+type.$call=function(klass,new_func,init_func){
+return function(){
 var instance=new_func.bind(null,klass).apply(null,arguments)
 if($B.$isinstance(instance,klass)){
-if(init_func !==_b_.object.__init__){
-init_func.bind(null,instance).apply(null,arguments)}}
+init_func.bind(null,instance).apply(null,arguments)}
 return instance}}
+type.$call_no_init=function(klass,new_func){
+return new_func.bind(null,klass)}
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
 var new_func=_b_.type.__getattribute__(klass,"__new__")
@@ -6370,7 +6377,7 @@ throw _b_.TypeError.$factory(
 "with abstract method"+msg)}}
 var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
 if(metaclass===_b_.type){var new_func=type.__getattribute__(klass,'__new__'),init_func=type.__getattribute__(klass,'__init__')
-factory=type.$call(klass,new_func,init_func)}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
+if(init_func===_b_.object.__init__){if(new_func===_b_.object.__new__){factory=_b_.object.$new(klass)}else{factory=new_func.bind(null,klass)}}else{factory=type.$call(klass,new_func,init_func)}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
 if(call_func.$is_class){factory=$B.$call(call_func)}else{factory=call_func.bind(null,klass)}}
 factory.__class__=$B.function
 factory.$infos={__name__:klass.__name__,__module__:klass.__module__}

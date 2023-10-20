@@ -435,19 +435,21 @@ var data_descriptors = ['__abstractmethods__',
                         ]
 
 type.$call = function(klass, new_func, init_func){
+    // return factory function for classes with __init__ method
     return function(){
         // create an instance with __new__
         var instance = new_func.bind(null, klass).apply(null, arguments)
         if($B.$isinstance(instance, klass)){
             // call __init__ with the same parameters
-            if(init_func !== _b_.object.__init__){
-                // object.__init__ is not called in this case (it would raise
-                // an exception if there are parameters).
-                init_func.bind(null, instance).apply(null, arguments)
-            }
+            init_func.bind(null, instance).apply(null, arguments)
         }
         return instance
     }
+}
+
+type.$call_no_init = function(klass, new_func){
+    // return factory function for classes without __init__
+    return new_func.bind(null, klass)
 }
 
 type.__call__ = function(){
@@ -1147,7 +1149,15 @@ var $instance_creator = $B.$instance_creator = function(klass){
     if(metaclass === _b_.type){
         var new_func = type.__getattribute__(klass, '__new__'),
             init_func = type.__getattribute__(klass, '__init__')
-        factory = type.$call(klass, new_func, init_func)
+        if(init_func === _b_.object.__init__){
+            if(new_func === _b_.object.__new__){
+                factory = _b_.object.$new(klass)
+            }else{
+                factory = new_func.bind(null, klass)
+            }
+        }else{
+            factory = type.$call(klass, new_func, init_func)
+        }
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
         if(call_func.$is_class){
