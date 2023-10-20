@@ -996,7 +996,6 @@ $B.error_trace = function(err){
     }
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
-        err.$stack.pop()
         err.$frame_obj = err.$frame_obj.prev
         trace += trace_from_stack(err)
         var filename = err.filename,
