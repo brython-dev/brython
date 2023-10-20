@@ -305,7 +305,7 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = prefix + module.__name__.replace(/\./g, '_')
         var mod = (new Function(module_id, js))(module)
     }catch(err){
-        err.$frame_obj = $B.frame_obj
+        err.$frame_obj = err.$frame_obj || $B.frame_obj
         if($B.get_option('debug', err) > 2){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
