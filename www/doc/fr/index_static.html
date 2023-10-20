@@ -11,11 +11,12 @@
 <script src="/assets/header.brython.js"></script>
 
 <script type="text/python">
-from browser import window, document, html, highlight
+from browser import window, document, html, highlight, bind
 import html_parser
 
 import header
 header.show('fr')
+
 
 def run(ev):
     # run the code in the element after the button
@@ -92,7 +93,7 @@ for elt in document[target].select('.xml'):
 <table class="main-table">
 <tr>
 <td style="width:25%;vertical-align:top;">
-Documentation de la version [[version]]
+
 <h4><a class="navig" href="intro.html">Introduction</a></h4>
 <h4><a class="navig" href="install.html">Installation</a></h4>
 <h4><a class="navig" href="file_or_http.html">Limitations du protocole "file"</a></h4>

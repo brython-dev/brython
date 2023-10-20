@@ -46,6 +46,28 @@ languages = [
     ["fr", "Français"]
 ]
 
+doc_versions = ["3.12", "3.11"]
+current_version = version
+
+if 'static_doc' in window.location.href:
+
+    # insert SELECT with available documentation versions
+    table = document.select_one(".main-table")
+    td = table.select_one('tr').select_one('td')
+    sel_version = html.SELECT(id="version")
+    for doc_version in doc_versions:
+        sel_version <= html.OPTION(doc_version, selected=doc_version==version)
+    td.insertBefore(html.H5("Version " + sel_version), td.firstChild)
+
+    @bind(sel_version, 'change')
+    def change(ev):
+        global current_version
+        new_version = ev.target.selectedOptions[0].value
+        new_href = window.location.href.replace(current_version, new_version)
+        current_version = new_version
+        window.location.href = new_href
+
+
 def show(language=None):
     """Detect language, either from the key "lang" in the query string or
     from the browser settings."""
@@ -166,3 +188,5 @@ def show(language=None):
         document.location.href = new_href
 
     return qs_lang, language
+
+
