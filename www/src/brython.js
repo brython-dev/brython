@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-20 09:29:54.665708"
-__BRYTHON__.timestamp=1697786994665
+__BRYTHON__.compiled_date="2023-10-20 14:32:02.011367"
+__BRYTHON__.timestamp=1697805122011
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6156,8 +6156,8 @@ return method_wrapper.$factory(attr,klass,func)
 case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
-var res=klass[attr]
-var $test=false 
+var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
+var $test=attr=="toString" 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
 if(klass.__class__ &&
 klass.__class__[attr]&&
@@ -6166,23 +6166,22 @@ klass.__class__[attr].__set__){
 if($test){console.log("data descriptor")}
 return klass.__class__[attr].__get__(klass)}
 if(res===undefined){
-var v=klass[attr]
+var v=klass.hasOwnProperty(attr)? klass[attr]:undefined
 if(v===undefined){if($test){console.log(attr,'not in klass[attr], search in __dict__',klass.__dict__)}
 if(klass.__dict__ && klass.__dict__.__class__===_b_.dict &&
 _b_.dict.$contains_string(klass.__dict__,attr)){res=klass[attr]=_b_.dict.$getitem_string(klass.__dict__,attr)
 if($test){console.log('found in __dict__',v)}}else{var mro=klass.__mro__
 if(mro===undefined){console.log("no mro for",klass)}
-for(var i=0;i < mro.length;i++){var v=mro[i][attr]
-if(v !==undefined){res=v
+for(var i=0;i < mro.length;i++){if(mro[i].hasOwnProperty(attr)){res=mro[i][attr]
 break}}}}else{res=v}
 if($test){console.log('search in class mro',res)
-if(res !==undefined){if(klass[attr]){console.log('found in klass',klass)}else{console.log('found in',mro[i])}}}}
+if(res !==undefined){if(klass.hasOwnProperty(attr)){console.log('found in klass',klass)}else{console.log('found in',mro[i])}}}}
 if(res===undefined){
-if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass),res=meta[attr]
+if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass),res=meta.hasOwnProperty(attr)? meta[attr]:undefined
 if($test){console.log("search in meta",meta,res)}
 if(res===undefined){var meta_mro=meta.__mro__
-for(var i=0;i < meta_mro.length;i++){var res=meta_mro[i][attr]
-if(res !==undefined){break}}}
+for(var i=0;i < meta_mro.length;i++){if(meta_mro[i].hasOwnProperty(attr)){res=meta_mro[i][attr]
+break}}}
 if(res !==undefined){if($test){console.log("found in meta",res,typeof res)}
 if(res.__class__===_b_.property){return res.fget(klass)}
 if(typeof res=="function"){

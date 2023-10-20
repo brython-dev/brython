@@ -550,8 +550,9 @@ type.__getattribute__ = function(klass, attr){
             return method_wrapper.$factory(attr, klass,
                 function(key){delete klass[key]})
     }
-    var res = klass[attr]
-    var $test = false // attr == "__new__" // && klass.__name__ == 'Pattern'
+
+    var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
+    var $test = attr == "toString" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -569,7 +570,7 @@ type.__getattribute__ = function(klass, attr){
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
-        var v = klass[attr]
+        var v = klass.hasOwnProperty(attr) ? klass[attr] : undefined
         if(v === undefined){
             if($test){
                 console.log(attr, 'not in klass[attr], search in __dict__',
@@ -587,9 +588,8 @@ type.__getattribute__ = function(klass, attr){
                     console.log("no mro for", klass)
                 }
                 for(var i = 0; i < mro.length; i++){
-                    var v = mro[i][attr]
-                    if(v !== undefined){
-                        res = v
+                    if(mro[i].hasOwnProperty(attr)){
+                        res = mro[i][attr]
                         break
                     }
                 }
@@ -600,7 +600,7 @@ type.__getattribute__ = function(klass, attr){
         if($test){
             console.log('search in class mro', res)
             if(res !== undefined){
-                if(klass[attr]){
+                if(klass.hasOwnProperty(attr)){
                     console.log('found in klass', klass)
                 }else{
                     console.log('found in', mro[i])
@@ -613,13 +613,15 @@ type.__getattribute__ = function(klass, attr){
         // search in metaclass
         if(res === undefined){
             var meta = klass.__class__ || $B.get_class(klass),
-                res = meta[attr]
+                res = meta.hasOwnProperty(attr) ? meta[attr] : undefined
             if($test){console.log("search in meta", meta, res)}
             if(res === undefined){
                 var meta_mro = meta.__mro__
                 for(var i = 0; i < meta_mro.length; i++){
-                    var res = meta_mro[i][attr]
-                    if(res !== undefined){break}
+                    if(meta_mro[i].hasOwnProperty(attr)){
+                        res = meta_mro[i][attr]
+                        break
+                    }
                 }
             }
 
