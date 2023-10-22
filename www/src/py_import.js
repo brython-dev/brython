@@ -9,7 +9,7 @@ var _b_ = $B.builtins,
 var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
         return {
-            __class__: Module,
+            $tp_class: Module,
             __builtins__: _b_.__builtins__,
             __name__: name,
             __doc__: doc || _b_.None,
@@ -22,7 +22,14 @@ Module.__dir__ = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)()
     }
-    return _b_.object.__dir__(self)
+    var res = []
+    for(var key in self){
+        if(key.startsWith('$') || key == '__class__'){
+            continue
+        }
+        res[res.length] = key
+    }
+    return res.sort()
 }
 
 Module.__new__ = function(cls, name, doc, $package){
@@ -121,9 +128,6 @@ function $download_module(mod, url, $package){
         fake_qs = "?v=" + (new Date().getTime()),
         res = null,
         mod_name = mod.__name__
-    if(mod_name == 'exec'){
-        console.log('download exec ???', $B.frames_stack.slice())
-    }
     var timer = _window.setTimeout(function(){
             xhr.abort()
         }, 5000)
@@ -212,7 +216,7 @@ function run_js(module_contents, path, _module){
                 __qualname__: attr
             }
             $module[attr].$in_js_module = true
-        }else if(_b_.isinstance($module[attr], _b_.type) &&
+        }else if($B.$isinstance($module[attr], _b_.type) &&
                 ! $module[attr].hasOwnProperty('__module__')){
             $module[attr].__module__ = _module.__name__
         }
@@ -276,10 +280,10 @@ function run_py(module_contents, path, module, compiled) {
             root = $B.py2js(src, module,
                             module.__name__, $B.builtins_scope)
         }catch(err){
-            err.$stack = $B.frames_stack.slice()
+            err.$frame_obj = $B.frame_obj
             if($B.get_option('debug', err) > 1){
                 console.log('error in imported module', module)
-                console.log('stack', $B.frames_stack.slice())
+                console.log('stack', $B.make_frames_stack())
             }
             throw err
         }
@@ -301,7 +305,7 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = prefix + module.__name__.replace(/\./g, '_')
         var mod = (new Function(module_id, js))(module)
     }catch(err){
-        err.$stack = $B.frames_stack.slice()
+        err.$frame_obj = err.$frame_obj || $B.frame_obj
         if($B.get_option('debug', err) > 2){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
@@ -1286,7 +1290,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         return
     }
     var level = 0,
-        frame = $B.last($B.frames_stack),
+        frame = $B.frame_obj.frame,
         current_module = frame[2],
         parts = current_module.split('.')
     while(mod_name.length > 0 && mod_name.startsWith('.')){
@@ -1341,7 +1345,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
 
     // [Import spec] Resolve __import__ in global namespace
-    var current_frame = $B.frames_stack[$B.frames_stack.length - 1],
+    var current_frame = $B.frame_obj.frame,
         _globals = current_frame[3],
         __import__ = _globals["__import__"],
         globals = $B.obj_dict(_globals)
@@ -1439,7 +1443,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         }
                         if($B.get_option('debug') > 1){
                             console.log($err3)
-                            console.log($B.last($B.frames_stack))
+                            console.log($B.frame_obj.frame)
                         }
                         throw _b_.ImportError.$factory(
                             "cannot import name '" + name + "'")
@@ -1454,7 +1458,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
 $B.$import_from = function(module, names, aliases, level, locals){
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var current_module_name = $B.last($B.frames_stack)[2],
+    var current_module_name = $B.frame_obj.frame[2],
         parts = current_module_name.split('.'),
         relative = level > 0
     if(relative){

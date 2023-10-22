@@ -423,9 +423,9 @@ $B.get_class = function(obj){
     if(obj === undefined){
         return $B.imported.javascript.UndefinedType // idem
     }
-    var klass = obj.__class__
+    var klass = obj.__class__ || obj.$tp_class
     if(klass === undefined){
-        switch(typeof obj) {
+        switch(typeof obj){
             case "number":
                 if(Number.isInteger(obj)){
                     return _b_.int
@@ -482,12 +482,12 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     // "for(item of $B.make_js_iterator(...)){"
     var set_lineno = $B.set_lineno
     if(frame === undefined){
-        if($B.frames_stack.length == 0){
+        if($B.frame_obj === null){
             function set_lineno(){
                 // does nothing
             }
         }else{
-            frame = $B.last($B.frames_stack)
+            frame = $B.frame_obj.frame
             lineno = frame.$lineno
         }
     }
@@ -845,7 +845,7 @@ $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             ! obj.$is_js_array &&
             typeof item == "number" &&
-            ! _b_.isinstance(obj, _b_.tuple)){
+            ! $B.$isinstance(obj, _b_.tuple)){
         if(item < 0){
             item += obj.length
         }
@@ -873,7 +873,7 @@ $B.$setitem = function(obj, item, value){
 $B.$delitem = function(obj, item){
     if(Array.isArray(obj) && obj.__class__ === _b_.list &&
             typeof item == "number" &&
-            !_b_.isinstance(obj, _b_.tuple)){
+            !$B.$isinstance(obj, _b_.tuple)){
         if(item < 0){item += obj.length}
         if(obj[item] === undefined){
             throw _b_.IndexError.$factory("list deletion index out of range")
@@ -1104,7 +1104,7 @@ $B.$call1 = function(callable){
     }else if(callable.$is_func || typeof callable == "function"){
         if(callable.$infos && callable.$infos.__code__ &&
                 (callable.$infos.__code__.co_flags & 32)){
-            $B.last($B.frames_stack).$has_generators = true
+            $B.frame_obj.frame.$has_generators = true
         }
         return callable
     }
@@ -1145,8 +1145,8 @@ $B.$GetInt = function(value) {
   // convert value to an integer
   if(typeof value == "number" || value.constructor === Number){return value}
   else if(typeof value === "boolean"){return value ? 1 : 0}
-  else if(_b_.isinstance(value, _b_.int)){return value}
-  else if(_b_.isinstance(value, _b_.float)){return value.valueOf()}
+  else if($B.$isinstance(value, _b_.int)){return value}
+  else if($B.$isinstance(value, _b_.float)){return value.valueOf()}
   if(! value.$is_class){
       try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
       try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
@@ -1171,7 +1171,7 @@ $B.to_num = function(obj, methods){
             method = $B.$getattr(klass, methods[i], missing)
         if(method !== missing){
             var res = method(obj)
-            if(!_b_.isinstance(res, expected_class[methods[i]])){
+            if(!$B.$isinstance(res, expected_class[methods[i]])){
                 throw _b_.TypeError.$factory(methods[i] + "returned non-" +
                     expected_class[methods[i]].__name__ +
                     "(type " + $B.get_class(res) +")")
@@ -1193,7 +1193,7 @@ $B.PyNumber_Index = function(item){
             if(item.__class__ === $B.long_int){
                 return item
             }
-            if(_b_.isinstance(item, _b_.int)){
+            if($B.$isinstance(item, _b_.int)){
                 // int subclass
                 return item.$brython_value
             }
@@ -1232,13 +1232,13 @@ $B.int_or_bool = function(v){
 
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
-    if($B.frames_stack.length > 1000){
+    if($B.frame_obj !== null && $B.frame_obj.count > 1000){
         var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
         $B.set_exc(exc, frame)
         throw exc
     }
     frame.__class__ = $B.frame
-    $B.frames_stack.push(frame)
+    $B.frame_obj = $B.push_frame(frame)
     if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
                 ($B.tracefunc.$infos && frame[4] &&
@@ -1250,22 +1250,26 @@ $B.enter_frame = function(frame){
             // also to avoid recursion, don't run the trace function in the
             // frame "below" it (ie in functions that the trace function
             // calls)
-            for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-                if($B.frames_stack[i][0] == $B.tracefunc.$frame_id){
+            var frame_obj = $B.frame_obj
+            while(frame_obj !== null){
+                if(frame_obj.frame[0] == $B.tracefunc.$frame_id){
                     return _b_.None
                 }
+                frame_obj = frame_obj.prev
             }
             try{
                 var res = $B.tracefunc(frame, 'call', _b_.None)
-                for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-                    if($B.frames_stack[i][4] == res){
+                var frame_obj = $B.frame_obj
+                while(frame_obj !== null){
+                    if(frame_obj.frame[4] == res){
                         return _b_.None
                     }
+                    frame_obj = frame_obj.prev
                 }
                 return res
             }catch(err){
                 $B.set_exc(err, frame)
-                $B.frames_stack.pop()
+                $B.frame_obj = $B.frame_obj.prev
                 err.$in_trace_func = true
                 throw err
             }
@@ -1277,60 +1281,57 @@ $B.enter_frame = function(frame){
 }
 
 $B.trace_exception = function(){
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
     var trace_func = frame.$f_trace,
-        exc = frame[1].$current_exception,
-        frame_obj = $B.last($B.frames_stack)
-    return trace_func(frame_obj, 'exception', $B.fast_tuple([
+        exc = frame[1].$current_exception
+    return trace_func(frame, 'exception', $B.fast_tuple([
         exc.__class__, exc, $B.traceback.$factory(exc)]))
 }
 
 $B.trace_line = function(){
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
-    var trace_func = frame.$f_trace,
-        frame_obj = $B.last($B.frames_stack)
+    var trace_func = frame.$f_trace
     if(trace_func === undefined){
         console.log('trace line, frame', frame)
     }
-    return trace_func(frame_obj, 'line', _b_.None)
+    return trace_func(frame, 'line', _b_.None)
 }
 
 $B.trace_return = function(value){
-    var frame = $B.last($B.frames_stack),
-        trace_func = frame.$f_trace,
-        frame_obj = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame,
+        trace_func = frame.$f_trace
     if(frame[0] == $B.tracefunc.$current_frame_id){
         // don't call trace func when returning from the frame where
         // sys.settrace was called
         return _b_.None
     }
-    trace_func(frame_obj, 'return', value)
+    trace_func(frame, 'return', value)
 }
 
 $B.leave_frame = function(arg){
     // Leave execution frame
-    if($B.frames_stack.length == 0){
-        //console.log("empty stack");
+    if($B.frame_obj === null){
         return
     }
 
     // When leaving a module, arg is set as an object of the form
     // {$locals, value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
-        if($B.last($B.frames_stack).$f_trace === undefined){
-            $B.last($B.frames_stack).$f_trace = $B.tracefunc
+        if($B.frame_obj.frame.$f_trace === undefined){
+            $B.frame_obj.frame.$f_trace = $B.tracefunc
         }
-        if($B.last($B.frames_stack).$f_trace !== _b_.None){
+        if($B.frame_obj.frame.$f_trace !== _b_.None){
             $B.trace_return(arg.value)
         }
     }
-    var frame = $B.frames_stack.pop()
+    var frame = $B.frame_obj.frame
+    $B.frame_obj = $B.frame_obj.prev
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
     // generator is garbage-collected.
@@ -1356,6 +1357,31 @@ $B.leave_frame = function(arg){
     delete frame[1].$current_exception
     return _b_.None
 }
+
+$B.push_frame = function(frame){
+    var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
+    return {
+        prev: $B.frame_obj,
+        frame,
+        count: count + 1
+    }
+}
+
+$B.count_frames = function(frame_obj){
+    frame_obj = frame_obj || $B.frame_obj
+    return frame_obj == null ? 0 : frame_obj.count
+}
+
+$B.get_frame_at = function(pos, frame_obj){
+    frame_obj = frame_obj || $B.frame_obj
+    var nb = $B.count_frames() - pos - 1
+    for(var i = 0; i < nb; i++){
+        frame_obj = frame_obj.prev
+    }
+    return frame_obj.frame
+}
+
+
 
 $B.floordiv = function(x, y){
     var z = x / y
@@ -1591,7 +1617,7 @@ $B.rich_op1 = function(op, x, y){
     }
     if((op == '__add__' || op == '__mul__') &&
             (Array.isArray(x) || typeof x == 'string' ||
-            _b_.isinstance(x, [_b_.str, _b_.bytes,
+            $B.$isinstance(x, [_b_.str, _b_.bytes,
                           _b_.bytearray, _b_.memoryview]))){
         // Special case for addition and repetition of sequences:
         // if type(x).__add__(y) raises an exception, use type(y).__radd__(x),

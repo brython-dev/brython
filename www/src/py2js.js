@@ -44,7 +44,7 @@ var clone = $B.clone = function(obj){
 // Last element in a list
 $B.last = function(table){
     if(table === undefined){
-        console.log($B.frames_stack.slice())
+        console.log($B.make_frames_stack())
     }
     return table[table.length - 1]
 }
@@ -363,7 +363,7 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     exc.text = line
     exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset])
-    exc.$stack = $B.frames_stack.slice()
+    exc.$frame_obj = $B.frame_obj
     throw exc
 }
 
@@ -9187,8 +9187,8 @@ const default_option = {
 }
 
 $B.get_filename = function(){
-    if($B.frames_stack.length > 0){
-        return $B.frames_stack[0].__file__
+    if($B.count_frames() > 0){
+        return $B.get_frame_at(0).__file__
     }
 }
 
@@ -9217,8 +9217,8 @@ $B.get_page_option = function(option){
 
 $B.get_option = function(option, err){
     var filename = $B.script_filename
-    if(err && err.$stack && err.$stack.length > 0){
-        filename = err.$stack[0].__file__
+    if(err && err.$frame_obj !== null){
+        filename = $B.get_frame_at(0, err.$frame_obj).__file__
     }else{
         filename = $B.get_filename()
     }

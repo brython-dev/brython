@@ -106,7 +106,7 @@ function fail(message, pos, pattern){
 }
 
 function warn(klass, message, pos, text){
-    var frame = $B.last($B.frames_stack),
+    var frame = $B.frame_obj.frame,
         file = frame[3].__file__,
         src = $B.file_cache[file]
     if(text === undefined){
@@ -1180,7 +1180,7 @@ Flag.__or__ = function(self, other){
 }
 
 Flag.__rand__ = function(self, other){
-    if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
+    if(typeof other == "number" || $B.$isinstance(other, _b_.int)){
         if(other == 0){
             return false // Flag.$factory(self.value)
         }
@@ -1190,7 +1190,7 @@ Flag.__rand__ = function(self, other){
 }
 
 Flag.__ror__ = function(self, other){
-    if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
+    if(typeof other == "number" || $B.$isinstance(other, _b_.int)){
         if(other == 0){
             return self.value
         }
@@ -2991,7 +2991,7 @@ function show(node, indent){
 
 function to_codepoint_list(s){
     var items = []
-    if(typeof s == "string" || _b_.isinstance(s, _b_.str)){
+    if(typeof s == "string" || $B.$isinstance(s, _b_.str)){
         if(typeof s != "string"){
             s = s.valueOf()
         }
@@ -2999,8 +2999,8 @@ function to_codepoint_list(s){
             items.push(char.codePointAt(0))
         }
         items.type = "unicode"
-    }else if(_b_.isinstance(s, [_b_.bytes, _b_.bytearray, _b_.memoryview])){
-        if(_b_.isinstance(s, _b_.memoryview)){
+    }else if($B.$isinstance(s, [_b_.bytes, _b_.bytearray, _b_.memoryview])){
+        if($B.$isinstance(s, _b_.memoryview)){
             items = s.obj.source
         }else{
             items = s.source
@@ -3079,16 +3079,16 @@ function StringObj(obj){
         this.codepoints = obj.codepoints
         this.index_map = obj.index_map
         this.length = _b_.str.__len__(obj)
-    }else if(_b_.isinstance(obj, _b_.str)){ // str subclass
+    }else if($B.$isinstance(obj, _b_.str)){ // str subclass
         var so = new StringObj(_b_.str.$factory(obj))
         this.string = so.string
         this.codepoints = so.codepoints
         this.length = _b_.str.__len__(obj)
-    }else if(_b_.isinstance(obj, [_b_.bytes, _b_.bytearray])){
+    }else if($B.$isinstance(obj, [_b_.bytes, _b_.bytearray])){
         this.string = _b_.bytes.decode(obj, 'latin1')
         this.codepoints = obj.source
         this.type = "bytes"
-    }else if(_b_.isinstance(obj, _b_.memoryview)){
+    }else if($B.$isinstance(obj, _b_.memoryview)){
         this.string = _b_.bytes.decode(obj.obj, 'latin1')
         this.codepoints = obj.obj.source
         this.type = "bytes"
@@ -3969,7 +3969,7 @@ var $module = {
             res.push(cp)
         }
         res = from_codepoint_list(res, data.type)
-        if(data.type == "bytes" && _b_.isinstance(res, _b_.str)){
+        if(data.type == "bytes" && $B.$isinstance(res, _b_.str)){
             res = _b_.str.encode(res, 'latin1')
         }
         return res
@@ -4042,7 +4042,7 @@ var $module = {
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
-        if(_b_.isinstance(string, [_b_.bytearray, _b_.memoryview])){
+        if($B.$isinstance(string, [_b_.bytearray, _b_.memoryview])){
             string.in_iteration = true
         }
         var original_string = string,
@@ -4238,7 +4238,7 @@ var $module = {
         if(data.type === "bytes"){
             res = res.map(
                 function(x){
-                    return _b_.isinstance(x, _b_.bytes) ?
+                    return $B.$isinstance(x, _b_.bytes) ?
                                x :
                                _b_.str.encode(x, "latin-1")
                 }

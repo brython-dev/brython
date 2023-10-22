@@ -46,7 +46,7 @@ $B.pyobj2structuredclone = function(obj, strict){
             res.push($B.pyobj2structuredclone(obj[i]))
         }
         return res
-    }else if(_b_.isinstance(obj, _b_.dict)){
+    }else if($B.$isinstance(obj, _b_.dict)){
         if(strict){
             for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){
                 if(typeof key !== 'string'){
@@ -519,7 +519,7 @@ function jsclass2pyclass(js_class){
         var py_parent = jsclass2pyclass(js_parent)
         klass.__mro__ = [py_parent].concat(klass.__mro__)
     }
-    var frame = $B.last($B.frames_stack)
+    var frame = $B.frame_obj.frame
     if(frame){
         $B.set_func_names(klass, frame[2])
     }

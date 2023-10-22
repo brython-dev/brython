@@ -23,7 +23,7 @@ var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
 var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
-    if(self.__dict__ && _b_.isinstance(self.__dict__, _b_.dict) &&
+    if(self.__dict__ && $B.$isinstance(self.__dict__, _b_.dict) &&
             _b_.dict.$contains_string(self.__dict__, attr)){
         _b_.dict.$delete_string(self.__dict__, attr)
         return _b_.None
@@ -370,6 +370,18 @@ object.__le__ = function(){return _b_.NotImplemented}
 object.__lt__ = function(){return _b_.NotImplemented}
 
 object.__mro__ = []
+
+object.$new = function(cls){
+    return function(){
+        if(arguments.length > 0){
+            throw _b_.TypeError.$factory("object() takes no parameters")
+        }
+        var res = Object.create(null)
+        res.__class__ = cls
+        res.__dict__ = $B.obj_dict({})
+        return res
+    }
+}
 
 object.__new__ = function(cls, ...args){
     if(cls === undefined){

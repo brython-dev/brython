@@ -121,7 +121,7 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
     if(kw_meta === undefined && bases.length == 0){
         return _b_.type
     }else if(kw_meta){
-        if(! _b_.isinstance(kw_meta, _b_.type)){
+        if(! $B.$isinstance(kw_meta, _b_.type)){
             return kw_meta
         }
         metaclass = kw_meta
@@ -238,7 +238,7 @@ $B.resolve_mro_entries = function(bases){
     var new_bases = [],
         has_mro_entries = false
     for(var base of bases){
-        if(! _b_.isinstance(base, _b_.type)){
+        if(! $B.$isinstance(base, _b_.type)){
             var mro_entries = $B.$getattr(base, "__mro_entries__",
                 _b_.None)
             if(mro_entries !== _b_.None){
@@ -313,7 +313,7 @@ var type = $B.make_class("type",
             }
             return $B.get_class(kls)
         }else{
-            var module = $B.last($B.frames_stack)[2],
+            var module = $B.frame_obj.frame[2],
                 resolved_bases = $B.resolve_mro_entries(bases),
                 metaclass = $B.get_metaclass(kls, module, resolved_bases)
             return type.__call__(metaclass, kls, resolved_bases, cl_dict, kwargs)
@@ -434,21 +434,22 @@ var data_descriptors = ['__abstractmethods__',
                         '__weakrefoffset__'
                         ]
 
-
 type.$call = function(klass, new_func, init_func){
+    // return factory function for classes with __init__ method
     return function(){
         // create an instance with __new__
         var instance = new_func.bind(null, klass).apply(null, arguments)
-        if(_b_.isinstance(instance, klass)){
+        if($B.$isinstance(instance, klass)){
             // call __init__ with the same parameters
-            if(init_func !== _b_.object.__init__){
-                // object.__init__ is not called in this case (it would raise an
-                // exception if there are parameters).
-                init_func.bind(null, instance).apply(null, arguments)
-            }
+            init_func.bind(null, instance).apply(null, arguments)
         }
         return instance
     }
+}
+
+type.$call_no_init = function(klass, new_func){
+    // return factory function for classes without __init__
+    return new_func.bind(null, klass)
 }
 
 type.__call__ = function(){
@@ -549,8 +550,9 @@ type.__getattribute__ = function(klass, attr){
             return method_wrapper.$factory(attr, klass,
                 function(key){delete klass[key]})
     }
-    var res = klass[attr]
-    var $test = false // attr == "__new__" // && klass.__name__ == 'Pattern'
+
+    var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
+    var $test = attr == "toString" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -568,7 +570,7 @@ type.__getattribute__ = function(klass, attr){
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
-        var v = klass[attr]
+        var v = klass.hasOwnProperty(attr) ? klass[attr] : undefined
         if(v === undefined){
             if($test){
                 console.log(attr, 'not in klass[attr], search in __dict__',
@@ -586,9 +588,8 @@ type.__getattribute__ = function(klass, attr){
                     console.log("no mro for", klass)
                 }
                 for(var i = 0; i < mro.length; i++){
-                    var v = mro[i][attr]
-                    if(v !== undefined){
-                        res = v
+                    if(mro[i].hasOwnProperty(attr)){
+                        res = mro[i][attr]
                         break
                     }
                 }
@@ -599,7 +600,7 @@ type.__getattribute__ = function(klass, attr){
         if($test){
             console.log('search in class mro', res)
             if(res !== undefined){
-                if(klass[attr]){
+                if(klass.hasOwnProperty(attr)){
                     console.log('found in klass', klass)
                 }else{
                     console.log('found in', mro[i])
@@ -612,13 +613,15 @@ type.__getattribute__ = function(klass, attr){
         // search in metaclass
         if(res === undefined){
             var meta = klass.__class__ || $B.get_class(klass),
-                res = meta[attr]
+                res = meta.hasOwnProperty(attr) ? meta[attr] : undefined
             if($test){console.log("search in meta", meta, res)}
             if(res === undefined){
                 var meta_mro = meta.__mro__
                 for(var i = 0; i < meta_mro.length; i++){
-                    var res = meta_mro[i][attr]
-                    if(res !== undefined){break}
+                    if(meta_mro[i].hasOwnProperty(attr)){
+                        res = meta_mro[i][attr]
+                        break
+                    }
                 }
             }
 
@@ -796,13 +799,13 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         extra_kwargs
 
     // Create the class dictionary
-    if(! _b_.isinstance(cl_dict, _b_.dict)){
+    if(! $B.$isinstance(cl_dict, _b_.dict)){
         console.log('bizarre', meta, name, bases, cl_dict)
         alert()
     }
     var module = _b_.dict.$get_string(cl_dict, '__module__')
     if(module === _b_.dict.$missing){
-        module = $B.last($B.frames_stack)[2]
+        module = $B.frame_obj.frame[2]
     }
     var qualname = _b_.dict.$get_string(cl_dict, '__qualname__')
     if(qualname === _b_.dict.$missing){
@@ -854,7 +857,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         if(typeof v == "function"){
             if(v.$infos === undefined){
                 //console.log("type new", v, v + "")
-                console.log($B.frames_stack.slice())
+                console.log($B.make_frames_stack())
             }else{
                 v.$infos.$class = class_dict
                 v.$infos.__qualname__ = name + '.' + v.$infos.__name__
@@ -881,7 +884,7 @@ type.__or__ = function(){
                 arguments, {}, null, null),
         cls = $.cls,
         other = $.other
-    if(other !== _b_.None && ! _b_.isinstance(other, [type, $B.GenericAlias])){
+    if(other !== _b_.None && ! $B.$isinstance(other, [type, $B.GenericAlias])){
         return _b_.NotImplemented
     }
     return $B.UnionType.$factory([cls, other])
@@ -1145,51 +1148,18 @@ var $instance_creator = $B.$instance_creator = function(klass){
     var metaclass = klass.__class__ || $B.get_class(klass),
         call_func,
         factory
-    if(metaclass === _b_.type && (!klass.__bases__ || klass.__bases__.length == 0)){
-        if(klass.hasOwnProperty("__new__")){
-            if(klass.hasOwnProperty("__init__")){
-                factory = function(){
-                    // Call __new__ with klass as first argument
-                    var kls = klass.__new__.bind(null, klass).
-                                            apply(null, arguments)
-                    klass.__init__.bind(null, kls).apply(null, arguments)
-                    return kls
-                }
-            }else{
-                factory = function(){
-                    return klass.__new__.bind(null, klass).
-                                         apply(null, arguments)
-                }
-            }
-        }else if(klass.hasOwnProperty("__init__")){
-            factory = function(){
-                var kls = {
-                    __class__: klass,
-                    __dict__: $B.obj_dict({})
-                }
-                klass.__init__.bind(null, kls).apply(null, arguments)
-                return kls
-            }
-        }else{
-            factory = function(){
-                if(arguments.length > 0){
-                    if(arguments.length == 1 && arguments[0].$kw &&
-                        Object.keys(arguments[0].$kw).length == 0){
-                    }else{
-                        throw _b_.TypeError.$factory("object() takes no parameters")
-                    }
-                }
-                var res = Object.create(null)
-                $B.update_obj(res, {__class__: klass,
-                                    __dict__: $B.obj_dict({})})
-                return res
-            }
-        }
-
-    }else if(metaclass === _b_.type){
+    if(metaclass === _b_.type){
         var new_func = type.__getattribute__(klass, '__new__'),
             init_func = type.__getattribute__(klass, '__init__')
-        factory = type.$call(klass, new_func, init_func)
+        if(init_func === _b_.object.__init__){
+            if(new_func === _b_.object.__new__){
+                factory = _b_.object.$new(klass)
+            }else{
+                factory = new_func.bind(null, klass)
+            }
+        }else{
+            factory = type.$call(klass, new_func, init_func)
+        }
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
         if(call_func.$is_class){
@@ -1437,7 +1407,7 @@ $B.GenericAlias.__call__ = function(self, ...args){
 }
 
 $B.GenericAlias.__eq__ = function(self, other){
-    if(! _b_.isinstance(other, $B.GenericAlias)){
+    if(! $B.$isinstance(other, $B.GenericAlias)){
         return false
     }
     return $B.rich_comp("__eq__", self.origin_class, other.origin_class) &&
@@ -1517,7 +1487,7 @@ $B.UnionType.__args__ = _b_.property.$factory(
 )
 
 $B.UnionType.__eq__ = function(self, other){
-    if(! _b_.isinstance(other, $B.UnionType)){
+    if(! $B.$isinstance(other, $B.UnionType)){
         return _b_.NotImplemented
     }
     return _b_.list.__eq__(self.items, other.items)

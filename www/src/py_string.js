@@ -140,7 +140,7 @@ function normalize_start_end($){
         $.end = Math.max(0, $.end)
     }
 
-    if(! _b_.isinstance($.start, _b_.int) || ! _b_.isinstance($.end, _b_.int)){
+    if(! $B.$isinstance($.start, _b_.int) || ! $B.$isinstance($.end, _b_.int)){
         throw _b_.TypeError.$factory("slice indices must be integers " +
             "or None or have an __index__ method")
     }
@@ -159,7 +159,7 @@ function check_str(obj, prefix){
     if(obj instanceof String || typeof obj == "string"){
         return
     }
-    if(! _b_.isinstance(obj, str)){
+    if(! $B.$isinstance(obj, str)){
         throw _b_.TypeError.$factory((prefix || '') +
             "must be str, not " + $B.class_name(obj))
     }
@@ -194,7 +194,7 @@ function to_codepoints(s){
 }
 
 str.__add__ = function(_self, other){
-    if(! _b_.isinstance(other, str)){
+    if(! $B.$isinstance(other, str)){
         try{
             return $B.$getattr(other, "__radd__")(_self)
         }catch(err){
@@ -207,13 +207,13 @@ str.__add__ = function(_self, other){
 }
 
 str.__contains__ = function(_self, item){
-    if(! _b_.isinstance(item, str)){
+    if(! $B.$isinstance(item, str)){
         throw _b_.TypeError.$factory("'in <string>' requires " +
             "string as left operand, not " + $B.class_name(item))
     }
     [_self, item] = to_string([_self, item])
 
-    if(item.__class__ === str || _b_.isinstance(item, str)){
+    if(item.__class__ === str || $B.$isinstance(item, str)){
         var nbcar = item.length
     }else{
         var nbcar = _b_.len(item)
@@ -243,7 +243,7 @@ str.__delitem__ = function(){
 str.__dir__ = _b_.object.__dir__
 
 str.__eq__ = function(_self, other){
-    if(_b_.isinstance(other, str)){
+    if($B.$isinstance(other, str)){
         [_self, other] = to_string([_self, other])
         if(typeof _self == 'string' && typeof other == 'string'){
             return _self == other
@@ -290,7 +290,7 @@ str.__format__ = function(_self, format_spec) {
 
 str.__getitem__ = function(_self, arg){
     _self = to_string(_self)
-    if(_b_.isinstance(arg, _b_.int)){
+    if($B.$isinstance(arg, _b_.int)){
         var len = str.__len__(_self)
         var pos = arg
         if(arg < 0){
@@ -306,10 +306,10 @@ str.__getitem__ = function(_self, arg){
         }
         throw _b_.IndexError.$factory("string index out of range")
     }
-    if(_b_.isinstance(arg, _b_.slice)){
+    if($B.$isinstance(arg, _b_.slice)){
         return _b_.str.$getitem_slice(_self, arg)
     }
-    if(_b_.isinstance(arg, _b_.bool)){
+    if($B.$isinstance(arg, _b_.bool)){
         return _self.__getitem__(_b_.int.$factory(arg))
     }
     throw _b_.TypeError.$factory("string indices must be integers")
@@ -437,7 +437,7 @@ var NotANumber = function() {
 }
 
 var number_check = function(s, flags){
-    if(! _b_.isinstance(s, [_b_.int, _b_.float])){
+    if(! $B.$isinstance(s, [_b_.int, _b_.float])){
         var type = flags.conversion_type
         throw _b_.TypeError.$factory(`%${type} format: a real number ` +
             `is required, not ${$B.class_name(s)}`)
@@ -537,9 +537,9 @@ var str_format = function(val, flags) {
 
 var num_format = function(val, flags) {
     number_check(val, flags)
-    if(_b_.isinstance(val, _b_.float)){
+    if($B.$isinstance(val, _b_.float)){
         val = parseInt(val.value)
-    }else if(! _b_.isinstance(val, _b_.int)){
+    }else if(! $B.$isinstance(val, _b_.int)){
         val = parseInt(val)
     }
 
@@ -589,7 +589,7 @@ var _float_helper = function(val, flags){
         flags.precision = parseInt(flags.precision, 10)
         validate_precision(flags.precision)
     }
-    return _b_.isinstance(val, _b_.int) ? val : val.value
+    return $B.$isinstance(val, _b_.int) ? val : val.value
 }
 
 // used to capture and remove trailing zeroes
@@ -788,7 +788,7 @@ $B.formatters = {
     }
 var signed_hex_format = function(val, upper, flags){
     var ret
-    if(! _b_.isinstance(val, _b_.int)){
+    if(! $B.$isinstance(val, _b_.int)){
         throw _b_.TypeError.$factory(
             `%X format: an integer is required, not ${$B.class_name(val)}`)
     }
@@ -886,11 +886,11 @@ function series_of_bytes(val, flags){
 
 var single_char_format = function(val, flags, type){
     if(type == 'bytes'){
-        if(_b_.isinstance(val, _b_.int)){
+        if($B.$isinstance(val, _b_.int)){
             if(val.__class__ === $B.long_int || val < 0 || val > 255){
                 throw _b_.OverflowError.$factory("%c arg not in range(256)")
             }
-        }else if(_b_.isinstance(val, [_b_.bytes, _b_.bytearray])){
+        }else if($B.$isinstance(val, [_b_.bytes, _b_.bytearray])){
             if(val.source.length > 1){
                 throw _b_.TypeError.$factory(
                     "%c requires an integer in range(256) or a single byte")
@@ -898,12 +898,12 @@ var single_char_format = function(val, flags, type){
             val = val.source[0]
         }
     }else{
-        if(_b_.isinstance(val, _b_.str)){
+        if($B.$isinstance(val, _b_.str)){
             if(_b_.str.__len__(val) == 1){
                 return val
             }
             throw _b_.TypeError.$factory("%c requires int or char")
-        }else if(! _b_.isinstance(val, _b_.int)){
+        }else if(! $B.$isinstance(val, _b_.int)){
             throw _b_.TypeError.$factory("%c requires int or char")
         }
         if((val.__class__ === $B.long_int &&
@@ -1094,7 +1094,7 @@ $B.printf_format = function(s, type, args){
         pos = 0,
         argpos = null,
         getitem
-    if(_b_.isinstance(args, _b_.tuple)){
+    if($B.$isinstance(args, _b_.tuple)){
         argpos = 0
     }else{
         getitem = $B.$getattr(args, "__getitem__", _b_.None)
@@ -1118,7 +1118,7 @@ $B.printf_format = function(s, type, args){
             nbph++
             if(nbph > 1){
                 // issue 2184
-                if((! _b_.isinstance(args, _b_.tuple)) &&
+                if((! $B.$isinstance(args, _b_.tuple)) &&
                         ! is_mapping(args)){
                     throw _b_.TypeError.$factory(
                         "not enough arguments for format string")
@@ -1189,7 +1189,7 @@ str.__mul__ = function(){
     var $ = $B.args("__mul__", 2, {self: null, other: null},
             ["self", "other"], arguments, {}, null, null),
         _self = to_string($.self)
-    if(! _b_.isinstance($.other, _b_.int)){
+    if(! $B.$isinstance($.other, _b_.int)){
         throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
             $B.class_name($.other) + "'")
@@ -1260,7 +1260,7 @@ str.__repr__ = function(_self){
 str.__rmod__ = function(){
     var $ = $B.args('__rmod__', 2, {self: null, other: null},
                     ['self', 'other'], arguments, {}, null, null)
-    if(! _b_.isinstance($.other, str)){
+    if(! $B.$isinstance($.other, str)){
         return _b_.NotImplemented
     }
     return str.__mod__($.other, $.self)
@@ -1268,7 +1268,7 @@ str.__rmod__ = function(){
 
 str.__rmul__ = function(_self, other){
     _self = to_string(_self)
-    if(_b_.isinstance(other, _b_.int)){
+    if($B.$isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
         var res = ''
         while(other > 0){
@@ -1397,7 +1397,7 @@ str.count = function(){
         _self,
         sub
 
-    if(! _b_.isinstance($.sub, str)){
+    if(! $B.$isinstance($.sub, str)){
         throw _b_.TypeError.$factory("Can't convert '" + $B.class_name($.sub) +
             "' object to str implicitly")
     }
@@ -1477,7 +1477,7 @@ str.endswith = function(){
     _self = to_string($.self)
 
     var suffixes = $.suffix
-    if(! _b_.isinstance(suffixes, _b_.tuple)){
+    if(! $B.$isinstance(suffixes, _b_.tuple)){
         suffixes = [suffixes]
     }
 
@@ -1485,7 +1485,7 @@ str.endswith = function(){
         s = chars.slice($.start, $.end)
     for(var i = 0, len = suffixes.length; i < len; i++){
         var suffix = suffixes[i]
-        if(! _b_.isinstance(suffix, str)){
+        if(! $B.$isinstance(suffix, str)){
             throw _b_.TypeError.$factory(
                 "endswith first arg must be str or a tuple of str, not int")
         }
@@ -2074,14 +2074,14 @@ str.join = function(){
     while(1){
         try{
             var obj2 = _b_.next(iterable)
-            if(! _b_.isinstance(obj2, str)){
+            if(! $B.$isinstance(obj2, str)){
                 throw _b_.TypeError.$factory("sequence item " + count +
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
             }
             res.push(obj2)
         }catch(err){
-            if(_b_.isinstance(err, _b_.StopIteration)){
+            if($B.$isinstance(err, _b_.StopIteration)){
                 break
             }
             else{throw err}
@@ -2147,7 +2147,7 @@ str.maketrans = function() {
         // Unicode ordinals (integers) or characters (strings of length 1) to
         // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
-        if(! _b_.isinstance($.x, _b_.dict)){
+        if(! $B.$isinstance($.x, _b_.dict)){
             throw _b_.TypeError.$factory(
                 "maketrans only argument must be a dict")
         }
@@ -2155,13 +2155,13 @@ str.maketrans = function() {
         for(var i = 0, len = items.length; i < len; i++){
             var k = items[i][0],
                 v = items[i][1]
-            if(! _b_.isinstance(k, _b_.int)){
-                if(_b_.isinstance(k, _b_.str) && k.length == 1){
+            if(! $B.$isinstance(k, _b_.int)){
+                if($B.$isinstance(k, _b_.str) && k.length == 1){
                     k = _b_.ord(k)
                 }else{throw _b_.TypeError.$factory("dictionary key " + k +
                     " is not int or 1-char string")}
             }
-            if(v !== _b_.None && ! _b_.isinstance(v, [_b_.int, _b_.str])){
+            if(v !== _b_.None && ! $B.$isinstance(v, [_b_.int, _b_.str])){
                 throw _b_.TypeError.$factory("dictionary value " + v +
                     " is not None, integer or string")
             }
@@ -2172,7 +2172,7 @@ str.maketrans = function() {
         // If there are two arguments, they must be strings of equal length,
         // and in the resulting dictionary, each character in x will be mapped
         // to the character at the same position in y
-        if(! (_b_.isinstance($.x, _b_.str) && _b_.isinstance($.y, _b_.str))){
+        if(! ($B.$isinstance($.x, _b_.str) && $B.$isinstance($.y, _b_.str))){
             throw _b_.TypeError.$factory("maketrans arguments must be strings")
         }else if($.x.length !== $.y.length){
             throw _b_.TypeError.$factory(
@@ -2182,7 +2182,7 @@ str.maketrans = function() {
             if($.z !== null){
                 // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
-                if(! _b_.isinstance($.z, _b_.str)){
+                if(! $B.$isinstance($.z, _b_.str)){
                     throw _b_.TypeError.$factory(
                         "maketrans third argument must be a string")
                 }
@@ -2227,7 +2227,7 @@ str.removeprefix = function(){
     var $ = $B.args("removeprefix", 2, {self: null, prefix: null},
             ["self", "prefix"], arguments, {}, null, null),
         _self
-    if(!_b_.isinstance($.prefix, str)){
+    if(!$B.$isinstance($.prefix, str)){
         throw _b_.ValueError.$factory("prefix should be str, not " +
             `'${$B.class_name($.prefix)}'`)
     }
@@ -2242,7 +2242,7 @@ str.removesuffix = function(){
     var $ = $B.args("removesuffix", 2, {self: null, suffix: null},
                 ["self", "suffix"], arguments, {}, null, null),
         _self
-    if(!_b_.isinstance($.suffix, str)){
+    if(!$B.$isinstance($.suffix, str)){
         throw _b_.ValueError.$factory("suffix should be str, not " +
             `'${$B.class_name($.prefix)}'`)
     }
@@ -2278,10 +2278,10 @@ str.replace = function(self, old, _new, count) {
     check_str(old, "replace() argument 1 ")
     check_str(_new, "replace() argument 2 ")
     // Validate instance type of 'count'
-    if(! _b_.isinstance(count, [_b_.int, _b_.float])){
+    if(! $B.$isinstance(count, [_b_.int, _b_.float])){
         throw _b_.TypeError.$factory("'" + $B.class_name(count) +
             "' object cannot be interpreted as an integer")
-    }else if(_b_.isinstance(count, _b_.float)){
+    }else if($B.$isinstance(count, _b_.float)){
         throw _b_.TypeError.$factory("integer argument expected, got float")
     }
     if(count == 0){
@@ -2536,7 +2536,7 @@ str.splitlines = function(self) {
     var $ = $B.args('splitlines', 2, {self: null, keepends: null},
                     ['self','keepends'], arguments, {keepends: false},
                     null, null)
-    if(!_b_.isinstance($.keepends, [_b_.bool, _b_.int])){
+    if(!$B.$isinstance($.keepends, [_b_.bool, _b_.int])){
         throw _b_.TypeError('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
@@ -2579,14 +2579,14 @@ str.startswith = function(){
     normalize_start_end($)
 
     var prefixes = $.prefix
-    if(! _b_.isinstance(prefixes, _b_.tuple)){
+    if(! $B.$isinstance(prefixes, _b_.tuple)){
         prefixes = [prefixes]
     }
     _self = to_string($.self)
     prefixes = to_string(prefixes)
     var s = _self.substring($.start, $.end)
     for(var prefix of prefixes){
-        if(! _b_.isinstance(prefix, str)){
+        if(! $B.$isinstance(prefix, str)){
             throw _b_.TypeError.$factory("endswith first arg must be str " +
                 "or a tuple of str, not int")
         }
@@ -2755,7 +2755,7 @@ str.$factory = function(arg, encoding, errors){
         throw err
     }
     var res = $B.$call(method)(arg)
-    if(typeof res == "string" || _b_.isinstance(res, str)){
+    if(typeof res == "string" || $B.$isinstance(res, str)){
         return res
     }
     throw _b_.TypeError.$factory("__str__ returned non-string " +

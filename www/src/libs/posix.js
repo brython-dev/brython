@@ -38,7 +38,7 @@ var stat_result = $B.make_class("stat_result",
                 var xhr = new XMLHttpRequest()
             }catch(err){
                 console.log('err', filename, err.message)
-                console.log('stack', $B.frames_stack.slice())
+                console.log('stack', $B.make_frames_stack())
                 throw err
             }
             xhr.open('HEAD', filename, false)

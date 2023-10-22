@@ -66,23 +66,19 @@ $B.generator.__str__ = function(self){
 }
 
 $B.generator.close = function(self){
-    var save_stack = $B.frames_stack.slice()
+    var save_frame_obj = $B.frame_obj
     if(self.$frame){
-        $B.frames_stack.push(self.$frame)
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
         $B.generator.throw(self, _b_.GeneratorExit.$factory())
     }catch(err){
         if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
-            $B.frames_stack = save_stack
+            $B.frame_obj = save_frame_obj
             throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")
         }
     }
-    $B.frames_stack = save_stack
-}
-
-function trace(){
-    return $B.frames_stack.slice()
+    $B.frame_obj = save_frame_obj
 }
 
 $B.generator.send = function(self, value){
@@ -100,25 +96,25 @@ $B.generator.send = function(self, value){
     }
     gen.gi_running = true
     // save frames before resuming the generator
-    var save_stack = $B.frames_stack.slice()
+    var save_frame_obj = $B.frame_obj
     // put generator frame on top of stack
     // generator expressions don't have $frame
     if(self.$frame){
-        $B.frames_stack.push(self.$frame)
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
         var res = gen.next(value)
     }catch(err){
         gen.$finished = true
-        $B.frames_stack = save_stack
+        $B.frame_obj = save_frame_obj
         throw err
     }
     // Call leave_frame to handle context managers
-    if($B.last($B.frames_stack) === self.$frame){
+    if($B.frame_obj !== null && $B.frame_obj.frame === self.$frame){
         $B.leave_frame()
     }
     // restore stack
-    $B.frames_stack = save_stack
+    $B.frame_obj = save_frame_obj
     if(res.value && res.value.__class__ === $GeneratorReturn){
         gen.$finished = true
         throw _b_.StopIteration.$factory(res.value.value)
@@ -150,7 +146,7 @@ $B.generator.throw = function(self, type, value, traceback){
                 "instance of BaseException")
         }else if(value === undefined || value === _b_.None){
             exc = $B.$call(exc)()
-        }else if(_b_.isinstance(value, type)){
+        }else if($B.$isinstance(value, type)){
             exc = value
         }
     }else{
@@ -163,12 +159,12 @@ $B.generator.throw = function(self, type, value, traceback){
     if(traceback !== _b_.None){
         exc.$traceback = traceback
     }
-    var save_stack = $B.frames_stack.slice()
+    var save_frame_obj = $B.frame_obj
     if(self.$frame){
-        $B.frames_stack.push(self.$frame)
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     var res = gen.throw(exc)
-    $B.frames_stack = save_stack
+    $B.frame_obj = save_frame_obj
     if(res.done){
         throw _b_.StopIteration.$factory(res.value)
     }
@@ -218,25 +214,25 @@ $B.async_generator.asend = async function(self, value){
     }
     gen.ag_running = true
     // save frames before resuming the generator
-    var save_stack = $B.frames_stack.slice()
+    var save_frame_obj = $B.frame_obj
     // put generator frame on top of stack
     // generator expressions don't have $frame
     if(self.$frame){
-        $B.frames_stack.push(self.$frame)
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
         var res = await gen.next(value)
     }catch(err){
         gen.$finished = true
-        $B.frames_stack = save_stack
+        $B.frame_obj = save_frame_obj
         throw err
     }
     // Call leave_frame to handle context managers
-    if($B.last($B.frames_stack) === self.$frame){
+    if($B.frame_obj !== null && $B.frame_obj.frame === self.$frame){
         $B.leave_frame()
     }
     // restore stack
-    $B.frames_stack = save_stack
+    $B.frame_obj = save_frame_obj
     if(res.done){
         throw _b_.StopAsyncIteration.$factory(value)
     }
@@ -267,12 +263,12 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
         }
     }
     if(traceback !== undefined){exc.$traceback = traceback}
-    var save_stack = $B.frames_stack.slice()
+    var save_frame_obj = $B.frame_obj
     if(self.$frame){
-        $B.frames_stack.push(self.$frame)
+        $B.frame_obj = $B.push_frame(self.$frame)
     }
     await gen.throw(value)
-    $B.frames_stack = save_stack
+    $B.frame_obj = save_frame_obj
 }
 
 

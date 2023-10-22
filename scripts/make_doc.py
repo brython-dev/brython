@@ -19,9 +19,9 @@ md_doc_path = os.path.join(os.path.dirname(os.getcwd()), 'www', 'doc')
 
 # static doc is in static_doc/en/... and in static_doc/3.x/en/...
 static_doc_paths = [os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_doc', major),
+    'static_doc'),
     os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_doc')]
+    'static_doc', major)]
 
 md_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
     'tutorial')

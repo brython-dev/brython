@@ -5,7 +5,7 @@ var coroutine = $B.coroutine = $B.make_class("coroutine")
 
 coroutine.close = function(self){}
 coroutine.send = function(self){
-    if(! _b_.isinstance(self, coroutine)){
+    if(! $B.$isinstance(self, coroutine)){
         var msg = "object is not a coroutine"
         if(typeof self == "function" && self.$infos && self.$infos.__code__ &&
                 self.$infos.__code__.co_flags & 128){
@@ -15,8 +15,16 @@ coroutine.send = function(self){
     }
     var res = self.$func.apply(null, self.$args)
     // restore frames after resolution
-    res.then(function(){if(self.$frames){$B.frames_stack = self.$frames}}).
-        catch(function(err){if(self.$frames){$B.frames_stack = self.$frames}})
+    res.then(function(){
+        if(self.$frame_obj){
+            $B.frame_obj = self.$frame_obj
+        }
+    }).
+        catch(function(err){
+            if(self.$frame_obj){
+                $B.frame_obj = self.$frame_obj
+            }
+        })
     return res
 }
 
@@ -54,7 +62,7 @@ $B.promise = function(obj){
     if(obj.__class__ === coroutine){
         // store current frames stack, to be able to restore it when the
         // promise resolves
-        obj.$frames = $B.frames_stack.slice()
+        obj.$frame_obj = $B.frame_obj
         return coroutine.send(obj)
     }
     if(typeof obj == "function"){

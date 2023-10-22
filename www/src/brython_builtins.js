@@ -106,8 +106,8 @@ $B.imported = {}
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
-// Frames stack
-$B.frames_stack = []
+// Current frame
+$B.frame_obj = null
 
 // Python __builtins__
 // Set to Object.create(null) instead of {}
@@ -246,7 +246,7 @@ if(has_storage){
 
 $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
-    return $B.frames_stack[$B.frames_stack.length - 1][3]
+    return $B.frame_obj.frame[3]
 }
 
 $B.scripts = {} // for Python scripts embedded in a JS file
@@ -259,9 +259,8 @@ $B.builtins_repr_check = function(builtin, args){
     // the builtin class
     var $ = $B.args('__repr__', 1, {self: null}, ['self'], args,
             {}, null, null),
-        self = $.self,
-        _b_ = $B.builtins
-    if(! _b_.isinstance(self, builtin)){
+        self = $.self
+    if(! $B.$isinstance(self, builtin)){
         throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
             `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)
@@ -315,9 +314,10 @@ function from_py(src, script_id){
     }
 
     // fake names
-    var filename = '$python_to_js' + $B.UUID()
-    $B.url2name[filename] = filename
-    $B.imported[filename] = {}
+    script_id = script_id  || 'python_script_' + $B.UUID()
+    var filename = $B.script_path + '#' + script_id
+    $B.url2name[filename] = script_id
+    $B.imported[script_id] = {}
 
     var root = __BRYTHON__.py2js({src, filename},
                                  script_id, script_id,
@@ -350,9 +350,6 @@ $B.python_to_js = function(src, script_id){
 $B.pythonToJS = $B.python_to_js
 
 $B.runPythonSource = function(src, script_id){
-    if(script_id === undefined){
-        script_id = 'python_script_' + $B.UUID()
-    }
     var js = from_py(src, script_id) + '\nreturn locals'
     var func = new Function('$B', '_b_', js)
     $B.imported[script_id] = func($B, $B.builtins)

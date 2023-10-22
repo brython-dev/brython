@@ -44,11 +44,11 @@
                     }
                     $.elt.addEventListener($.evt, f, options)
                     return callback
-                }else if(_b_.isinstance($.elt, $B.DOMNode)){
+                }else if($B.$isinstance($.elt, $B.DOMNode)){
                     // DOM element
                     $B.DOMNode.bind($.elt, $.evt, callback, options)
                     return callback
-                }else if(_b_.isinstance($.elt, _b_.str)){
+                }else if($B.$isinstance($.elt, _b_.str)){
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
                     for(var i = 0; i < items.length; i++){
@@ -64,14 +64,14 @@
                             var elt = _b_.next(it)
                             $B.DOMNode.bind(elt, $.evt, callback)
                         }catch(err){
-                            if(_b_.isinstance(err, _b_.StopIteration)){
+                            if($B.$isinstance(err, _b_.StopIteration)){
                                 break
                             }
                             throw err
                         }
                     }
                 }catch(err){
-                    if(_b_.isinstance(err, _b_.AttributeError)){
+                    if($B.$isinstance(err, _b_.AttributeError)){
                         $B.DOMNode.bind($.elt, $.evt, callback)
                     }
                     throw err
@@ -190,7 +190,7 @@
                         args = $ns['args']
                     if(args.length == 1){
                         var first = args[0]
-                        if(_b_.isinstance(first,[_b_.str, _b_.int, _b_.float])){
+                        if($B.$isinstance(first,[_b_.str, _b_.int, _b_.float])){
                             // set "first" as HTML content (not text)
                             self.innerHTML = _b_.str.$factory(first)
                         }else if(first.__class__ === TagSum){
@@ -198,7 +198,7 @@
                                 self.appendChild(first.children[i])
                             }
                         }else{
-                            if(_b_.isinstance(first, $B.DOMNode)){
+                            if($B.$isinstance(first, $B.DOMNode)){
                                 self.appendChild(first)
                             }else{
                                 try{
@@ -458,7 +458,7 @@
                 }
             }
             xhr.send()
-            if(_b_.isinstance(result, _b_.BaseException)){
+            if($B.$isinstance(result, _b_.BaseException)){
                 $B.handle_error(result)
             }else{
                 if(alias === _b_.None){
@@ -471,7 +471,7 @@
                     result.__name__ = alias
                 }
                 $B.imported[alias] = result
-                var frame = $B.last($B.frames_stack)
+                var frame = $B.frame_obj.frame
                 frame[1][alias] = result
             }
         },
@@ -594,9 +594,13 @@
         Getframe : function(){
             var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
                     arguments, {depth: 0}, null, null),
-                depth = $.depth
-            var res = $B.frames_stack[$B.frames_stack.length - depth - 1]
-            res.$pos = $B.frames_stack.indexOf(res)
+                depth = $.depth,
+                frame_obj = $B.frame_obj
+            for(var i = 0; i < depth; i++){
+                frame_obj = frame_obj.prev
+            }
+            var res = frame_obj.frame
+            res.$pos = $B.count_frames() - depth - 1
             return res
         },
         breakpointhook: function(){
@@ -622,13 +626,17 @@
             return $B.$call(hook).apply(null, arguments)
         },
         exc_info: function(){
-            for(var i = $B.frames_stack.length - 1; i >=0; i--){
-                var frame = $B.frames_stack[i],
-                    exc = frame[1].$current_exception
+            var frame_obj = $B.frame_obj,
+                frame,
+                exc
+            while(frame_obj !== null){
+                frame = frame_obj.frame
+                exc = frame[1].$current_exception
                 if(exc){
                     return _b_.tuple.$factory([exc.__class__, exc,
                         $B.$getattr(exc, "__traceback__")])
                 }
+                frame_obj = frame_obj.prev
             }
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
         },
@@ -636,12 +644,16 @@
             $B.handle_error(exc_value)
         },
         exception: function(){
-            for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-                var frame = $B.frames_stack[i],
-                    exc = frame[1].$current_exception
+            var frame_obj = $B.frame_obj,
+                frame,
+                exc
+            while(frame_obj !== null){
+                frame = frame_obj.frame
+                exc = frame[1].$current_exception
                 if(exc !== undefined){
                     return exc
                 }
+                frame_obj = frame_obj.prev
             }
             return _b_.None
         },
@@ -710,13 +722,13 @@
             var $ = $B.args("settrace", 1, {tracefunc: null}, ['tracefunc'],
                     arguments, {}, null, null)
             $B.tracefunc = $.tracefunc
-            $B.last($B.frames_stack).$f_trace = $B.tracefunc
+            $B.frame_obj.frame.$f_trace = $B.tracefunc
             // settrace() does not activite the trace function on the current
             // frame (the one sys.settrace() was called in); we set an
             // attribute to identify this frame. It is used in the functions
             // in py_utils.js that manage tracing (enter_frame, trace_call,
             // etc.)
-            $B.tracefunc.$current_frame_id = $B.last($B.frames_stack)[0]
+            $B.tracefunc.$current_frame_id = $B.frame_obj.frame[0]
             return _b_.None
         },
         stderr: console.error !== undefined ? $io.$factory("error") :
@@ -792,7 +804,7 @@
                     message = $.message,
                     category = $.category,
                     stacklevel = $.stacklevel
-            if(_b_.isinstance(message, _b_.Warning)){
+            if($B.$isinstance(message, _b_.Warning)){
                 category = $B.get_class(message)
             }
             var filters
@@ -828,8 +840,8 @@
                     _category_name: category.__name__
                 }
             }else{
-                var frame_rank = Math.max(0, $B.frames_stack.length - stacklevel),
-                    frame = $B.frames_stack[frame_rank],
+                var frame_rank = Math.max(0, $B.count_frames() - stacklevel),
+                    frame = $B.get_frame_at(frame_rank),
                     file = frame.__file__,
                     f_code = $B._frame.f_code.__get__(frame),
                     lineno = frame.$lineno,
@@ -987,7 +999,7 @@
         var op = "__" + comp + "__"
         $B.cell[op] = (function(op){
             return function(self, other){
-                if(! _b_.isinstance(other, $B.cell)){
+                if(! $B.$isinstance(other, $B.cell)){
                     return _b_.NotImplemented
                 }
                 if(self.$cell_contents === null){
