@@ -387,7 +387,7 @@ class Interpreter:
                     self._status = "block"
                 elif str(msg).endswith('was never closed'):
                     self.insert_continuation()
-                    self._status = "block"
+                    self._status = "parenth_expr"
                 else:
                     self.insert_cr()
                     try:
@@ -424,12 +424,25 @@ class Interpreter:
             block = [block[0]] + [b[4:] for b in block[1:]]
             block_src = '\n'.join(block)
             self.insert_cr()
+            mode = eval if self._status == "parenth_expr" else exec
             # status must be set before executing code in globals()
             self._status = "main"
-            try:
-                exec(block_src, self.globals, self.locals)
-            except Exception as exc:
-                self.print_tb(exc)
+            if mode is eval:
+                try:
+                    self.globals['_'] = eval(block_src,
+                                              self.globals,
+                                              self.locals)
+                    if self.globals['_'] is not None:
+                        self.write(repr(self.globals['_']) + '\n')
+                    self._status = "main"
+                except Exception as exc:
+                    self.print_tb(exc)
+                    self._status = "main"
+            else:                
+                try:
+                    mode(block_src, self.globals, self.locals)
+                except Exception as exc:
+                    self.print_tb(exc)
             self.insert_prompt()
 
         else:
