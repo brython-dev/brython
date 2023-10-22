@@ -1054,7 +1054,6 @@ $B.tokenizer = function*(src, filename, mode){
     }
 
     if(braces.length > 0){
-        console.log('braces', braces)
         throw SyntaxError('EOF in multi-line statement')
     }
 
