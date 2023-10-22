@@ -1070,4 +1070,17 @@ class B(A):
 A()
 assert t == ['init A']
 
+# report error when a property has no setter
+class A:
+
+  @property
+  def x(self):
+    return 'I am x'
+
+a = A()
+assert a.x == 'I am x'
+
+assert_raises(AttributeError, setattr, a, 'x', 'coucou',
+  msg="property 'x' of 'A' object has no setter")
+  
 print('passed all tests..')

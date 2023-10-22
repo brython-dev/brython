@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-22 10:56:56.615527"
-__BRYTHON__.timestamp=1697965016611
+__BRYTHON__.compiled_date="2023-10-22 11:36:16.180276"
+__BRYTHON__.timestamp=1697967376180
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6356,8 +6356,11 @@ property.__get__=function(self,kls){if(self.fget===undefined){throw _b_.Attribut
 return $B.$call(self.fget)(kls)}
 property.__new__=function(cls){return{
 __class__:cls}}
-property.__set__=function(self,kls,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
-$B.$getattr(self.fset,'__call__')(kls,value)}
+property.__set__=function(self,obj,value){if(self.fset===undefined){var name=self.fget.$infos.__name__
+var msg=`property '${name}' of '${$B.class_name(obj)}' object `+
+'has no setter'
+throw _b_.AttributeError.$factory(msg)}
+$B.$getattr(self.fset,'__call__')(obj,value)}
 $B.set_func_names(property,"builtins")
 var wrapper_descriptor=$B.wrapper_descriptor=
 $B.make_class("wrapper_descriptor")
@@ -7323,7 +7326,7 @@ var setattr=_b_.setattr=function(){var $=$B.args('setattr',3,{obj:null,attr:null
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
 return $B.$setattr(obj,attr,value)}
 $B.$setattr=function(obj,attr,value){if(obj===undefined){console.log('obj undef',attr,value)}
-var $test=attr==="_member_names_" 
+var $test=false 
 if(attr=='__dict__'){
 if(! $B.$isinstance(value,_b_.dict)){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, "+
 "not a '"+$B.class_name(value)+"'")}
@@ -8281,6 +8284,7 @@ if(!suggestion ||current_distance < suggestion_distance){suggestion=item
 suggestion_distance=current_distance}}
 return suggestion}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
+if(name===_b_.None){return _b_.None}
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name,frame=frame ||exc.$frame_obj.frame

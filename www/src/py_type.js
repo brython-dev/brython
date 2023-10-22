@@ -1104,11 +1104,14 @@ property.__new__ = function(cls){
     }
 }
 
-property.__set__ = function(self, kls, value){
+property.__set__ = function(self, obj, value){
     if(self.fset === undefined){
-        throw _b_.AttributeError.$factory("can't set attribute")
+        var name = self.fget.$infos.__name__
+        var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
+                  'has no setter'
+        throw _b_.AttributeError.$factory(msg)
     }
-    $B.$getattr(self.fset, '__call__')(kls, value)
+    $B.$getattr(self.fset, '__call__')(obj, value)
 }
 
 $B.set_func_names(property, "builtins")

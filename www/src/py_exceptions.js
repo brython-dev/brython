@@ -733,6 +733,9 @@ function calculate_suggestions(dir, name){
 $B.offer_suggestions_for_attribute_error = function(exc){
     var name = exc.name,
         obj = exc.obj
+    if(name === _b_.None){
+        return _b_.None
+    }
     var dir = _b_.dir(obj),
         suggestions = calculate_suggestions(dir, name)
     return suggestions || _b_.None
