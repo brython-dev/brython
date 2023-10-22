@@ -666,6 +666,9 @@
         last_exc: _b_.property.$factory(
             function(){
                 return $B.imported._sys.exception()
+            },
+            function(value){
+                $B.frame_obj.frame.$current_exception = value
             }
         ),
         modules: _b_.property.$factory(

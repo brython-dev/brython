@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-22 08:32:22.988621"
-__BRYTHON__.timestamp=1697956342988
+__BRYTHON__.compiled_date="2023-10-22 10:56:56.615527"
+__BRYTHON__.timestamp=1697965016611
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -581,8 +581,7 @@ state=null}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.leng
 state=null
 pos--}
 break}}
-if(braces.length > 0){console.log('braces',braces)
-throw SyntaxError('EOF in multi-line statement')}
+if(braces.length > 0){throw SyntaxError('EOF in multi-line statement')}
 switch(state){case 'line_start':
 line_num++
 break
@@ -8357,7 +8356,7 @@ count_repeats--
 if(count_repeats==0){break}}
 if(count_repeats > 0){trace.push(`[Previous line repeated ${count_repeats} more`+
 ` time${count_repeats > 1 ? 's' : ''}]`)}}}
-var trace=[],save_filename,save_lineno,save_scope,count_repeats=0,stack=make_frames_stack(err.$frame_obj),linenos=err.$linenums
+var trace=[],save_filename,save_lineno,save_scope,count_repeats=0,stack=err.$frame_obj===undefined ?[]:make_frames_stack(err.$frame_obj),linenos=err.$linenums
 for(var frame_num=0,len=stack.length;frame_num < len;frame_num++){var frame=stack[frame_num],lineno=linenos[frame_num],filename=frame.__file__,scope=frame[0]==frame[2]? '<module>' :frame[0]
 if(filename==save_filename && scope==save_scope && lineno==save_lineno){count_repeats++
 continue}
@@ -8390,13 +8389,13 @@ for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
-$B.error_trace=function(err){if($B.get_option('debug',err)> 1){console.log("handle error",err.__class__,err.args)
-console.log('stack',make_frames_stack(err.$frame_obj))
+$B.error_trace=function(err){var trace='',stack=err.$frame_obj===undefined ?[]:make_frames_stack(err.$frame_obj)
+if($B.get_option('debug',err)> 1){console.log("handle error",err.__class__,err.args)
+console.log('stack',stack)
 console.log(err.stack)}
-var trace='',stack=make_frames_stack(err.$frame_obj)
 if(stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
-err.__class__===_b_.IndentationError){err.$frame_obj=err.$frame_obj.prev
+err.__class__===_b_.IndentationError){err.$frame_obj=err.$frame_obj===null ? null :err.$frame_obj.prev
 trace+=trace_from_stack(err)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
 trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
@@ -15041,7 +15040,7 @@ exc=frame[1].$current_exception
 if(exc !==undefined){return exc}
 frame_obj=frame_obj.prev}
 return _b_.None},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},last_exc:_b_.property.$factory(
-function(){return $B.imported._sys.exception()}
+function(){return $B.imported._sys.exception()},function(value){$B.frame_obj.frame.$current_exception=value}
 ),modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
