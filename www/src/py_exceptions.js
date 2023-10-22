@@ -908,7 +908,7 @@ function trace_from_stack(err){
         save_lineno,
         save_scope,
         count_repeats = 0,
-        stack = make_frames_stack(err.$frame_obj),
+        stack = err.$frame_obj === undefined ? [] : make_frames_stack(err.$frame_obj),
         linenos = err.$linenums
 
     for(var frame_num = 0, len = stack.length; frame_num < len; frame_num++){
@@ -984,19 +984,21 @@ function trace_from_stack(err){
 }
 
 $B.error_trace = function(err){
+    var trace = '',
+        stack = err.$frame_obj === undefined ? [] : make_frames_stack(err.$frame_obj)
+
     if($B.get_option('debug', err) > 1){
         console.log("handle error", err.__class__, err.args)
-        console.log('stack', make_frames_stack(err.$frame_obj))
+        console.log('stack', stack)
         console.log(err.stack)
     }
-    var trace = '',
-        stack = make_frames_stack(err.$frame_obj)
+
     if(stack.length > 0){
         trace = 'Traceback (most recent call last):\n'
     }
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
-        err.$frame_obj = err.$frame_obj.prev
+        err.$frame_obj = err.$frame_obj === null ? null : err.$frame_obj.prev
         trace += trace_from_stack(err)
         var filename = err.filename,
             line = err.text,
