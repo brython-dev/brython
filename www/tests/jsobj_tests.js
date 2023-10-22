@@ -225,3 +225,14 @@ function init_array(){
   array[2] = window.xv
   window.array = array;
 }
+
+// using Javascript non-integers numbers in Python
+window.test_py_func_from_javascript = function(){
+    console.log(window.py_func(null)) // 'x is null'
+    console.log(window.py_func(3.14)) // JS representation of Brython None
+}
+
+window.test_pyfunc_receives_js_number = function(){
+    console.log('py module name', window.py_module_name)
+    __BRYTHON__.imported[window.py_module_name].pyfunc_receives_js_number(3.14)
+}

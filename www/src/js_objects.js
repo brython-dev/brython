@@ -557,7 +557,8 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     }
     if(test){
         console.log('js_attr', js_attr, typeof js_attr,
-            '\n is JS class ?', js_attr === undefined ? false : js_attr.toString().startsWith('class '))
+            '\n is JS class ?', js_attr === undefined ? false :
+            js_attr.toString().startsWith('class '))
     }
     if(js_attr === undefined){
         if(typeof _self == 'object' && attr in _self){

@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-15 18:18:01.240825"
-__BRYTHON__.timestamp=1697386681240
+__BRYTHON__.compiled_date="2023-10-22 08:30:18.574184"
+__BRYTHON__.timestamp=1697956218574
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13838,7 +13838,8 @@ new_func.$infos={__name__:attr,__qualname__:attr}
 return new_func}
 var js_attr=_self[attr]
 if(js_attr==undefined && typeof _self=="function" && _self.$js_func){js_attr=_self.$js_func[attr]}
-if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :js_attr.toString().startsWith('class '))}
+if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :
+js_attr.toString().startsWith('class '))}
 if(js_attr===undefined){if(typeof _self=='object' && attr in _self){
 return $B.Undefined}
 if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)

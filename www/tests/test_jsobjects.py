@@ -333,4 +333,26 @@ window.init_array()
 a = window.array
 assert str(a) == '[[...], 1, 5.6]'
 
+# using Javascript non-integers numbers
+window.py_module_name = __name__
+
+def py_func(x):
+    if x is javascript.NULL:
+        return 'x is null'
+
+window.py_func = py_func
+
+window.test_py_func_from_javascript()
+
+def pyfunc_receives_js_number(num):
+    assert str(num) == "3.14"
+    assert type(num) is javascript.JSObject
+
+# force insertion in sys.modules[__name__] to make the Python function
+# available in JS script by 
+# __BRYTHON__.imported[__name__].pyfunc_receives_js_number
+import sys
+sys.modules[__name__].pyfunc_receives_js_number = pyfunc_receives_js_number
+window.test_pyfunc_receives_js_number()
+
 print("all tests ok...")
