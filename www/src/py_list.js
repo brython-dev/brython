@@ -1027,6 +1027,9 @@ tuple.__new__ = function(cls, ...args){
     self.__class__ = cls
     self.__brython__ = true
     self.__dict__ = $B.empty_dict()
+    if(args.length == 0){
+        return self
+    }
     var arg = $B.$iter(args[0]),
         next_func = $B.$call($B.$getattr(arg, "__next__"))
     while(1){
