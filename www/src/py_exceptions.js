@@ -30,7 +30,7 @@ $B.get_exc = function(){
 $B.set_exception_offsets = function(exc, position){
     // Used for PEP 657
     exc.$positions = exc.$positions || {}
-    exc.$positions[$B.count_frames() - 1] = position
+    exc.$positions[$B.frame_obj.count - 1] = position
     return exc
 }
 

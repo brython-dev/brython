@@ -1220,10 +1220,14 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
-        position = encode_position(this.col_offset, this.col_offset,
-                                this.end_col_offset),
-        js = `$B.$call(${func}, ${position})`,
-        args = make_args.bind(this)(scopes)
+        js = `$B.$call(${func}`
+    if(this.end_lineno == this.lineno){
+        var position = encode_position(this.col_offset, this.col_offset,
+                                this.end_col_offset)
+        js += `, ${position}`
+    }
+    js += ')'
+    var args = make_args.bind(this)(scopes)
 
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)

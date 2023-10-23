@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-23 13:01:17.755848"
-__BRYTHON__.timestamp=1698058877755
+__BRYTHON__.compiled_date="2023-10-23 17:57:43.238719"
+__BRYTHON__.timestamp=1698076663238
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5151,8 +5151,7 @@ err.$frame_obj=frame_obj
 err.$linenums=linenums}}
 $B.handle_error(err)}
 loop()}else{
-try{func.apply(null,args)}catch(err){console.log('err',err)
-$B.handle_error(err)}}}
+try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 function required_stdlib_imports(imports,start){
@@ -8008,7 +8007,7 @@ $B.get_exc=function(){var frame=$B.frame_obj.frame
 return frame[1].$current_exception}
 $B.set_exception_offsets=function(exc,position){
 exc.$positions=exc.$positions ||{}
-exc.$positions[$B.count_frames()-1]=position
+exc.$positions[$B.frame_obj.count-1]=position
 return exc}
 $B.$raise=function(arg,cause){
 var active_exc=$B.get_exc()
@@ -15634,7 +15633,11 @@ scope.ast instanceof $B.ast.While){js+=`no_break_${scope.id} = false\n`
 break}}
 js+=`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),position=encode_position(this.col_offset,this.col_offset,this.end_col_offset),js=`$B.$call(${func}, ${position})`,args=make_args.bind(this)(scopes)
+$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`
+if(this.end_lineno==this.lineno){var position=encode_position(this.col_offset,this.col_offset,this.end_col_offset)
+js+=`, ${position}`}
+js+=')'
+var args=make_args.bind(this)(scopes)
 return js+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
