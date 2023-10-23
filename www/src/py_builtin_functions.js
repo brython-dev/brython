@@ -2575,7 +2575,7 @@ var $$super = _b_.super = $B.make_class("super",
         var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
             var frame = $B.frame_obj.frame,
-                pyframe = $B.imported["_sys"].Getframe(),
+                pyframe = $B.imported["_sys"]._getframe(),
                 code = $B.frame.f_code.__get__(pyframe),
                 co_varnames = code.co_varnames
             if(co_varnames.length > 0){

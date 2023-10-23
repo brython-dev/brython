@@ -591,7 +591,7 @@
     modules['_sys'] = {
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
-        Getframe : function(){
+        _getframe : function(){
             var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
                     arguments, {depth: 0}, null, null),
                 depth = $.depth,
@@ -657,11 +657,22 @@
             }
             return _b_.None
         },
+        float_repr_style: 'short',
+        getdefaultencoding: function(){
+            return 'utf-8'
+        },
         getrecursionlimit: function(){
             return $B.recursion_limit
         },
+        getrefcount: function(){
+            return 0
+        },
         gettrace: function(){
             return $B.tracefunc || _b_.None
+        },
+        getunicodeinternedsize: function(){
+            // compliance with Python3.12
+            return 0
         },
         last_exc: _b_.property.$factory(
             function(){
@@ -758,8 +769,6 @@
             }
         )
     }
-
-    modules._sys.__breakpointhook__ = modules._sys.breakpointhook
 
     var WarningMessage = $B.make_class("WarningMessage",
         function(){
