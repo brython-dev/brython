@@ -283,7 +283,7 @@ function run_py(module_contents, path, module, compiled) {
             err.$frame_obj = $B.frame_obj
             if($B.get_option('debug', err) > 1){
                 console.log('error in imported module', module)
-                console.log('stack', $B.make_frames_stack())
+                console.log('stack', $B.make_frames_stack(err.$frame_obj))
             }
             throw err
         }

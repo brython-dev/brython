@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-22 11:36:16.180276"
-__BRYTHON__.timestamp=1697967376180
+__BRYTHON__.compiled_date="2023-10-23 13:01:17.755848"
+__BRYTHON__.timestamp=1698058877755
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5151,7 +5151,8 @@ err.$frame_obj=frame_obj
 err.$linenums=linenums}}
 $B.handle_error(err)}
 loop()}else{
-try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
+try{func.apply(null,args)}catch(err){console.log('err',err)
+$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 function required_stdlib_imports(imports,start){
@@ -7404,7 +7405,7 @@ return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
 var $$super=_b_.super=$B.make_class("super",function(_type,object_or_type){var no_object_or_type=object_or_type===undefined
-if(_type===undefined && object_or_type===undefined){var frame=$B.frame_obj.frame,pyframe=$B.imported["_sys"].Getframe(),code=$B.frame.f_code.__get__(pyframe),co_varnames=code.co_varnames
+if(_type===undefined && object_or_type===undefined){var frame=$B.frame_obj.frame,pyframe=$B.imported["_sys"]._getframe(),code=$B.frame.f_code.__get__(pyframe),co_varnames=code.co_varnames
 if(co_varnames.length > 0){_type=frame[1].__class__
 if(_type===undefined){throw _b_.RuntimeError.$factory("super(): no arguments")}
 object_or_type=frame[1][code.co_varnames[0]]}else{throw _b_.RuntimeError.$factory("super(): no arguments")}}
@@ -8007,7 +8008,7 @@ $B.get_exc=function(){var frame=$B.frame_obj.frame
 return frame[1].$current_exception}
 $B.set_exception_offsets=function(exc,position){
 exc.$positions=exc.$positions ||{}
-exc.$positions[$B.count_frames()]=position
+exc.$positions[$B.count_frames()-1]=position
 return exc}
 $B.$raise=function(arg,cause){
 var active_exc=$B.get_exc()
@@ -9657,7 +9658,7 @@ if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 var src={src:module_contents,filename:path,imported:true}
 try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){err.$frame_obj=$B.frame_obj
 if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
-console.log('stack',$B.make_frames_stack())}
+console.log('stack',$B.make_frames_stack(err.$frame_obj))}
 throw err}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.get_option('debug')==10){console.log("code for module "+module.__name__)
@@ -13566,6 +13567,7 @@ var self=[]
 self.__class__=cls
 self.__brython__=true
 self.__dict__=$B.empty_dict()
+if(args.length==0){return self}
 var arg=$B.$iter(args[0]),next_func=$B.$call($B.$getattr(arg,"__next__"))
 while(1){try{var item=next_func()
 self.push(item)}
@@ -15022,7 +15024,7 @@ self.buf.push(msg)
 return _b_.None}
 var _b_=$B.builtins
 modules['_sys']={
-Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth,frame_obj=$B.frame_obj
+_getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth,frame_obj=$B.frame_obj
 for(var i=0;i < depth;i++){frame_obj=frame_obj.prev}
 var res=frame_obj.frame
 res.$pos=$B.count_frames()-depth-1
@@ -15043,7 +15045,8 @@ while(frame_obj !==null){frame=frame_obj.frame
 exc=frame[1].$current_exception
 if(exc !==undefined){return exc}
 frame_obj=frame_obj.prev}
-return _b_.None},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},last_exc:_b_.property.$factory(
+return _b_.None},float_repr_style:'short',getdefaultencoding:function(){return 'utf-8'},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
+return 0},last_exc:_b_.property.$factory(
 function(){return $B.imported._sys.exception()},function(value){$B.frame_obj.frame.$current_exception=value}
 ),modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
@@ -15072,7 +15075,6 @@ function(){return $B.stdin},function(self,value){$B.stdin=value}
 ),vfs:_b_.property.$factory(
 function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
 )}
-modules._sys.__breakpointhook__=modules._sys.breakpointhook
 var WarningMessage=$B.make_class("WarningMessage",function(){var $=$B.make_args("WarningMessage",8,{message:null,category:null,filename:null,lineno:null,file:null,line:null,source:null},['message','category','filename','lineno','file','line','source'],arguments,{file:_b_.None,line:_b_.None,source:_b_.None},null,null)
 return{
 __class__:WarningMessage,message:$.message,category:$.category,filename:$.filename,lineno:$.lineno,file:$.file,line:$.line,source:$.source,_category_name:_b_.bool.$factory($.category)?
