@@ -158,5 +158,7 @@ assert t == []
 for attr in ['name', 'cache_tag', 'version', 'hexversion']:
     assert hasattr(sys.implementation, attr)
 
+assert hasattr(sys, 'pycache_prefix')
+
 # remove trace for next tests
 sys.settrace(None)

@@ -50,6 +50,18 @@ builtin_module_names = __BRYTHON__.builtin_module_names
 
 byteorder = 'little'
 
+copyright = """Copyright (c) 2001-2023 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved."""
+
 dont_write_bytecode = True
 
 exec_prefix = __BRYTHON__.brython_path
@@ -128,7 +140,14 @@ platlibdir = __BRYTHON__.brython_path + 'Lib'
 
 prefix = __BRYTHON__.brython_path
 
+pycache_prefix = None
+
 stdlib_module_names = frozenset(__BRYTHON__.stdlib_module_names)
+
+def unraisablehook(unraisable, /):
+    pass # not applicable to Brython, here for compliance
+
+__unraisablehook__ = unraisablehook
 
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" \
@@ -209,13 +228,15 @@ class SimpleNamespace:
 
 SimpleNamespace.__module__ = "types"
 
+hexversion = ((__BRYTHON__.version_info[0] << 24) +
+                  ( __BRYTHON__.version_info[1] << 16) +
+                  ( __BRYTHON__.version_info[2] << 8))
+
 implementation = SimpleNamespace(
     name = 'Brython',
     cache_tag = f'cpython-{__BRYTHON__.version_info[0]}{__BRYTHON__.version_info[1]}',
     version = version_info,
-    hexversion = ((__BRYTHON__.version_info[0] << 24) +
-                  ( __BRYTHON__.version_info[1] << 16) +
-                  ( __BRYTHON__.version_info[2] << 8))
+    hexversion = hexversion
     )
 
 hash_info = make_dataclass('hash_info')(
