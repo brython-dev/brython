@@ -120,14 +120,12 @@ $B.in_unicode_category = function(category, cp){
 function in_unicode_category(category, cp){
     // categories used internally but not valid as General Category
     // eg 'numeric' in str.isnumeric
-    console.log('test if', cp, String.fromCodePoint(cp), 'in category', category)
     var table = $B.unicode[category],
         start = 0,
         end = table.length - 1,
         len = table.length,
         ix = Math.floor(len / 2),
         nb = 0
-    console.log('table', table)
     var first = table[start],
         item = typeof first == 'number' ? first : first[0]
     if(cp < item){
