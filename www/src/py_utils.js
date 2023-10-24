@@ -234,12 +234,14 @@ function args0_NEW(fct, args) {
     // Optimize : I'd need an object containing ALL default values instead of having to build one...
     // If not done, I can work on it to remove the construction of this object (which cost a little).
     // Note: I should exclude posonly default parameters... (we don't need them as remaining positional only parameters'd be consumed next)
-    const kargs_defaults= { ... kwargs_defaults } //costly
+    /* const kargs_defaults= { ... kwargs_defaults } //costly
     for(let i = 0; i < PARAMS_POS_DEFAULTS_COUNT; ++i)          // costly
-        kargs_defaults[PARAMS_NAMES[PARAMS_POS_DEFAULTS_OFFSET+i]] = PARAMS_POS_DEFAULTS[i];
-        
+        kargs_defaults[PARAMS_NAMES[PARAMS_POS_DEFAULTS_OFFSET+i]] = PARAMS_POS_DEFAULTS[i]; */
     // Consume remaining positional only parameters (no positional arguments given, so expect default value).
     const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount;
+    const PARAMS_POS_DEFAULTS_MAXID =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+    
+    
     if( offset < PARAMS_POSONLY_COUNT ) {
 
         if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
@@ -289,14 +291,22 @@ function args0_NEW(fct, args) {
             const key = PARAMS_NAMES[ioffset];
             if( key in result )
                 continue;
+                
+       	    if( ioffset >= PARAMS_POS_DEFAULTS_OFFSET && ioffset < PARAMS_POS_DEFAULTS_MAXID ) {
+            
+	   	result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+		++found;
+		    
+            } else {
 
-            if( ! (key in kargs_defaults) ) {
-        	args0(fct, args);
-        	throw new Error('Missing a named arguments (args0 should have raised an error) !');
-            }
-
-            result[key] = kargs_defaults[key];
-            ++found;
+		    if( ! (key in kwargs_defaults) ) {
+		    	console.log(key, kwargs_defaults, PARAMS_POS_DEFAULTS);
+			args0(fct, args);
+			throw new Error('Missing a named arguments (args0 should have raised an error) !');
+		    }
+		    result[key] = kwargs_defaults[key];
+		    ++found;
+	    }
         }
 
 	// PARAMS_NAMES.length - offset = the number of expected named arguments.
@@ -355,13 +365,20 @@ function args0_NEW(fct, args) {
         if( key in result )
 	    continue;
 
-        if( ! (key in kargs_defaults) ) {
-	    args0(fct, args);
-	    throw new Error('Missing a named arguments (args0 should have raised an error) !');
-        }
+        if( ioffset >= PARAMS_POS_DEFAULTS_OFFSET && ioffset < PARAMS_POS_DEFAULTS_MAXID ) {
+            
+	    result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+	    ++found;
+		    
+        } else {
 
-        result[key] = kargs_defaults[key];
-        ++found;
+	    if( ! (key in kwargs_defaults) ) {
+		args0(fct, args);
+		throw new Error('Missing a named arguments (args0 should have raised an error) !');
+	    }
+	    result[key] = kwargs_defaults[key];
+	    ++found;
+	}
     }
 
     // Same as "No **kwargs parameter".
@@ -382,7 +399,7 @@ function args0_NEW(fct, args) {
     }
 
     result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra);
-
+	
     return result;
 }
 
