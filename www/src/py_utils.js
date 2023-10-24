@@ -110,13 +110,23 @@ function args0(f, args){
 // Notation :
 // - params = in the function declaration.
 // - args   = in the function call.
-function args0_NEW(fct, _args) {
+function args0_NEW(fct, args) {
 
     // Last argument should either be "null" or named arguments "[{}, ...]".
     // This enables to remove the strange "{$kw:[{}, ...]}" structure.
     // Below a way to convert the currently passed arguments to the format I use.
     // If you don't want to change it, I can modify the code to remove the costly convertion.
     /**/
+    //const args = _args; // should remove this line...
+    const HAS_KW 		= args[args.length-1]?.$kw !== undefined;
+    let ARGS_POS_COUNT        = args.length;
+    let ARGS_NAMED            = null;
+    
+    if( HAS_KW ) {
+    	--ARGS_POS_COUNT;
+    	ARGS_NAMED = args[ARGS_POS_COUNT].$kw
+    }
+    /*
     const args = [..._args];
     if(args[args.length-1]?.$kw === undefined)
         args.push(null);
@@ -141,8 +151,6 @@ function args0_NEW(fct, _args) {
     const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
     const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
     
-    const ARGS_POS_COUNT      = args.length-1;
-    const ARGS_NAMED          = args[ARGS_POS_COUNT];
     const PARAMS_POS_DEFAULTS_OFFSET= PARAMS_POS_COUNT - PARAMS_POS_DEFAULTS_COUNT;
 
     // process positional arguments => positional parameters...
@@ -153,10 +161,12 @@ function args0_NEW(fct, _args) {
 
     // process positional arguments => vargargs parameters...
     if( PARAMS_VARARGS_NAME !== null )
-        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( args.slice( PARAMS_POS_COUNT, -1 ) );
+    	// can be speed up if arguments is an array in the first place
+        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, HAS_KW ? -1 : undefined ) );
+        //result[PARAMS_VARARGS_NAME] = $B.fast_tuple( args.slice( PARAMS_POS_COUNT, HAS_KW ? -1 : undefined ) );
         // maybe there is a faster way to build a tuple from a subset of an array.
     else if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
-        args0(fct, _args);
+        args0(fct, args);
         throw new Error('Too much positional arguments given (args0 should have raised an error) !');
     }
     
@@ -167,7 +177,7 @@ function args0_NEW(fct, _args) {
 	// Handle default positional parameters...
 
         if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
-            args0(fct, _args);
+            args0(fct, args);
             throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
         }
 
@@ -190,7 +200,7 @@ function args0_NEW(fct, _args) {
         const kwargs_defaults= $INFOS.__kwdefaults__?.$jsobj ?? $INFOS.__kwdefaults__?.$strings ?? {}; // costs a little...
         const named_default_keys = Object.keys(kwargs_defaults); // this operation is costly...
         if( named_default_keys.length < PARAMS_NAMED_COUNT ) {
-            args0(fct, _args);
+            args0(fct, args);
             throw new Error('Named argument expected (args0 should have raised an error) !');
         }
         
@@ -219,7 +229,7 @@ function args0_NEW(fct, _args) {
     if( offset < PARAMS_POSONLY_COUNT ) {
 
         if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
-            args0(fct, _args);
+            args0(fct, args);
             throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
         }
         
@@ -262,7 +272,7 @@ function args0_NEW(fct, _args) {
                 continue;
 
             if( ! (key in kargs_defaults) ) {
-        	args0(fct, _args);
+        	args0(fct, args);
         	throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
 
@@ -274,7 +284,7 @@ function args0_NEW(fct, _args) {
 	// found + nb_named_args = the number of given named arguments + the number of named arguments we found a default value for.
 	// If they aren't equal, we either gave several times the same argument or gave an inexisting name.
         if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-            args0(fct, _args);
+            args0(fct, args);
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
         }
 
@@ -322,7 +332,7 @@ function args0_NEW(fct, _args) {
 	    continue;
 
         if( ! (key in kargs_defaults) ) {
-	    args0(fct, _args);
+	    args0(fct, args);
 	    throw new Error('Missing a named arguments (args0 should have raised an error) !');
         }
 
@@ -336,14 +346,14 @@ function args0_NEW(fct, _args) {
     // If they aren't equal, we either gave several times the same argument or gave an inexisting name.
 
     if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-        args0(fct, _args);
+        args0(fct, args);
         throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
     }
 
     // verify if the number of extra arguments (**kargs) found matches the numbers of elements in extra.
     // if not, it means that the same name has been given several times.
     if( Object.keys(extra).length !== nb_extra_args ) {
-        args0(fct, _args);
+        args0(fct, args);
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
     }
 
