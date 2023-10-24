@@ -197,7 +197,14 @@ function args0_NEW(fct, args) {
 	// Handle defaults value for named parameters.
         // Optimize: precompute the number of named parameters with a default value, or just a boolean ?
         
-        let kwargs_defaults= $INFOS.__kwdefaults__.$jsobj ?? $INFOS.__kwdefaults__.$strings ?? {}; // costs a little...
+        let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
+        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
+        
+        	kwargs_defaults = $INFOS.__kwdefaults__.$strings;
+        	if( kwargs_defaults === undefined || kwargs_defaults === null )
+        		throw new Error('Named argument expected (args0 should have raised an error) !');
+        }
+        
         const named_default_keys = Object.keys(kwargs_defaults); // this operation is costly...
         if( named_default_keys.length < PARAMS_NAMED_COUNT ) {
             args0(fct, args);
@@ -214,7 +221,14 @@ function args0_NEW(fct, args) {
         return result;
     }
 
-    const kwargs_defaults= $INFOS.__kwdefaults__.$jsobj ?? $INFOS.__kwdefaults__.$strings ?? {}; // costs a little...
+    let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
+        if( kwargs_defaults === undefined  || kwargs_defaults == null ) {
+        
+        	kwargs_defaults = $INFOS.__kwdefaults__.$strings;
+        	if( kwargs_defaults === undefined  || kwargs_defaults == null )
+        		kwargs_defaults = {}
+        }
+    //const kwargs_defaults= $INFOS.__kwdefaults__.$jsobj ?? $INFOS.__kwdefaults__.$strings ?? {}; // costs a little...
     
     // Construct the list of default values...
     // Optimize : I'd need an object containing ALL default values instead of having to build one...
@@ -250,7 +264,12 @@ function args0_NEW(fct, args) {
         for(let id = 0; id < ARGS_NAMED.length; ++id ) {
 
             const _kargs = ARGS_NAMED[id]
-            const kargs  = _kargs.$jsobj ?? _kargs.$strings ?? _kargs; // I don't think I can do better.
+            let kargs  = _kargs.$jsobj;
+            if( kargs === undefined || kargs === null) {
+            	kargs = _kargs.$strings
+            	if(kargs === undefined || kargs === null) 
+            		kargs= _kargs; // I don't think I can do better.
+            }
             
             const keys   = Object.keys(kargs);
             nb_named_args += keys.length;
@@ -303,7 +322,12 @@ function args0_NEW(fct, args) {
     for(let id = 0; id < ARGS_NAMED.length; ++id ) {
 
         const _kargs = ARGS_NAMED[id]
-        const kargs = _kargs.$jsobj ?? _kargs.$strings ?? _kargs;
+        let kargs  = _kargs.$jsobj;
+            if( kargs === undefined || kargs === null) {
+            	kargs = _kargs.$strings
+            	if(kargs === undefined || kargs === null) 
+            		kargs= _kargs; // I don't think I can do better.
+            }
         const keys = Object.keys(kargs);
 
         for(let k = 0; k < keys.length; ++k) {
