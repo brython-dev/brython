@@ -154,5 +154,9 @@ sys.settrace(traceFn)
 
 assert t == []
 
+# issue 2286
+for attr in ['name', 'cache_tag', 'version', 'hexversion']:
+    assert hasattr(sys.implementation, attr)
+
 # remove trace for next tests
 sys.settrace(None)

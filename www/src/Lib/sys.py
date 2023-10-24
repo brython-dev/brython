@@ -22,7 +22,7 @@ class _dataclass(tuple):
         return len(self.keys)
 
     def __repr__(self):
-        s = ', '.join(f'{k}={self.__dict__[k]}' for k in self.keys)
+        s = ', '.join(f'{k}={self.__dict__[k]!r}' for k in self.keys)
         return f'sys.{self.__class__.__name__}({s})'
 
 
@@ -133,15 +133,8 @@ stdlib_module_names = frozenset(__BRYTHON__.stdlib_module_names)
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" \
     % __BRYTHON__.compiled_date
-hexversion = 0x030800f0   # python 3.8
 
 class _comparable:
-
-    def hexversion(self):
-        try:
-            return '0%d0%d0%d' % (self.major, self.minor, self.micro)
-        finally:  #probably some invalid char in minor (rc, etc)
-            return '0%d0000' % (self.major)
 
     def __eq__(self, other):
         if isinstance(other, tuple):
@@ -213,15 +206,17 @@ class SimpleNamespace:
            return self.__dict__ == other.__dict__
         return NotImplemented
 
+
 SimpleNamespace.__module__ = "types"
 
 implementation = SimpleNamespace(
+    name = 'Brython',
+    cache_tag = f'cpython-{__BRYTHON__.version_info[0]}{__BRYTHON__.version_info[1]}',
     version = version_info,
-    major = __BRYTHON__.version_info[0],
-    minor = __BRYTHON__.version_info[1],
-    micro = __BRYTHON__.version_info[2],
-    releaselevel = __BRYTHON__.version_info[3],
-    serial = __BRYTHON__.version_info[4])
+    hexversion = ((__BRYTHON__.version_info[0] << 24) +
+                  ( __BRYTHON__.version_info[1] << 16) +
+                  ( __BRYTHON__.version_info[2] << 8))
+    )
 
 hash_info = make_dataclass('hash_info')(
       width = 32,
