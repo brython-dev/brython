@@ -162,7 +162,7 @@ function args0_NEW(fct, args) {
     // process positional arguments => vargargs parameters...
     if( PARAMS_VARARGS_NAME !== null )
     	// can be speed up if arguments is an array in the first place
-        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, HAS_KW ? -1 : undefined ) );
+        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) );
         //result[PARAMS_VARARGS_NAME] = $B.fast_tuple( args.slice( PARAMS_POS_COUNT, HAS_KW ? -1 : undefined ) );
         // maybe there is a faster way to build a tuple from a subset of an array.
     else if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
