@@ -264,6 +264,7 @@ function args0_NEW(fct, args) {
 
     // No **kwargs parameter (i.e. unknown name = error).
     if( PARAMS_KWARGS_NAME === null ) {
+    
 
         let nb_named_args = 0;       
 
@@ -283,35 +284,43 @@ function args0_NEW(fct, args) {
 	    }
         }
 
-        // Checks default values...
-        // What is quicker ? An object or 1 array of name (with indexOf) and 1 array of values ?
         let found = 0;
-        for(let ioffset = offset; ioffset < PARAMS_NAMES.length; ++ioffset) {
-
+        let ioffset = offset;
+        for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
+        	
+            const key = PARAMS_NAMES[ioffset];
+            if( key in result ) // maybe could be speed up using "!(key in result)"
+                continue;
+                
+            args0(fct, args);
+            throw new Error('Missing a named arguments (args0 should have raised an error) !');
+        }
+        for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset) {
+        	
             const key = PARAMS_NAMES[ioffset];
             if( key in result )
                 continue;
                 
-            if( ioffset < PARAMS_POS_DEFAULTS_MAXID) {
-            	
-            	if( ioffset < PARAMS_POS_DEFAULTS_OFFSET ) {
-            	    args0(fct, args);
-		    throw new Error('Missing a named arguments (args0 should have raised an error) !');
-            	}
-            	
-            	result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
-		++found;
-            	
-            } else {
-            
-            	if( ioffset < PARAMS_NAMED_DEFAULTS_OFFSET ) {
-            	    args0(fct, args);
-		    throw new Error('Missing a named arguments (args0 should have raised an error) !');
-		}
-            	
-		result[key] = PARAMS_NAMED_DEFAULTS[PARAMS_NAMED_DEFAULTS_OFFSET - ioffset]; // should be quicker
-		++found;
-	    }
+            result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+	    ++found;
+        }
+        for( ; ioffset < PARAMS_NAMED_DEFAULTS_OFFSET; ++ioffset) {
+        	
+            const key = PARAMS_NAMES[ioffset];
+            if( key in result ) // maybe could be speed up using "!(key in result)"
+                continue;
+                
+            args0(fct, args);
+            throw new Error('Missing a named arguments (args0 should have raised an error) !');
+        }
+        for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
+        	
+            const key = PARAMS_NAMES[ioffset];
+            if( key in result )
+                continue;
+                
+	    result[key] = PARAMS_NAMED_DEFAULTS[ioffset - PARAMS_NAMED_DEFAULTS_OFFSET]; // should be quicker
+	    ++found;
         }
 
 	// PARAMS_NAMES.length - offset = the number of expected named arguments.
@@ -361,32 +370,41 @@ function args0_NEW(fct, args) {
     // Checks default values...
     // What is quicker ? An object or 1 array of name (with indexOf) and 1 array of values ?
     let found = 0;
-    for(let ioffset = offset; ioffset < PARAMS_NAMES.length; ++ioffset) {
-
+    let ioffset = offset;
+    for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
+        	
+        const key = PARAMS_NAMES[ioffset];
+        if( key in result ) // maybe could be speed up using "!(key in result)"
+            continue;
+                
+        args0(fct, args);
+        throw new Error('Missing a named arguments (args0 should have raised an error) !');
+    }
+    for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset) {
+        	
         const key = PARAMS_NAMES[ioffset];
         if( key in result )
-	    continue;
-
-        if( ioffset < PARAMS_POS_DEFAULTS_MAXID) {
-            	
-	    if( ioffset < PARAMS_POS_DEFAULTS_OFFSET ) {
-	        args0(fct, args);
-		throw new Error('Missing a named arguments (args0 should have raised an error) !');
-	    }
-	    	    	
-	    result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
-	    ++found;
-	    	
-	 } else {
-	    
-	     if( ioffset < PARAMS_NAMED_DEFAULTS_OFFSET ) {
-	         args0(fct, args);
-	         throw new Error('Missing a named arguments (args0 should have raised an error) !');
-	     }
-	    	
-	     result[key] = PARAMS_NAMED_DEFAULTS[PARAMS_NAMED_DEFAULTS_OFFSET - ioffset]; // should be quicker
-	     ++found;
-	 }
+            continue;
+                
+        result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+	++found;
+    }
+    for( ; ioffset < PARAMS_NAMED_DEFAULTS_OFFSET; ++ioffset) {
+       	
+        const key = PARAMS_NAMES[ioffset];
+        if( key in result ) // maybe could be speed up using "!(key in result)"
+            continue;
+                
+        args0(fct, args);
+        throw new Error('Missing a named arguments (args0 should have raised an error) !');
+    }
+    for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
+        	
+        const key = PARAMS_NAMES[ioffset];
+        if( key in result )
+            continue;
+	result[key] = PARAMS_NAMED_DEFAULTS[ioffset - PARAMS_NAMED_DEFAULTS_OFFSET]; // should be quicker
+	++found;
     }
 
     // Same as "No **kwargs parameter".
