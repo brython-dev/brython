@@ -162,7 +162,7 @@ function args0_NEW(fct, args) {
     // process positional arguments => vargargs parameters...
     if( PARAMS_VARARGS_NAME !== null )
     	// can be speed up if arguments is an array in the first place
-        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) );
+        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
         //result[PARAMS_VARARGS_NAME] = $B.fast_tuple( args.slice( PARAMS_POS_COUNT, HAS_KW ? -1 : undefined ) );
         // maybe there is a faster way to build a tuple from a subset of an array.
     else if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
@@ -201,22 +201,22 @@ function args0_NEW(fct, args) {
         if( kwargs_defaults === undefined || kwargs_defaults === null ) {
         
         	kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-        	if( kwargs_defaults === undefined || kwargs_defaults === null )
+        	if( kwargs_defaults === undefined || kwargs_defaults === null ){
+        		args0(fct, args);
         		throw new Error('Named argument expected (args0 should have raised an error) !');
+        	}
         }
         
-        const named_default_keys = Object.keys(kwargs_defaults); // this operation is costly...
-        if( named_default_keys.length < PARAMS_NAMED_COUNT ) {
+        const named_default_values = Object.values(kwargs_defaults); // TODO: precompute this plz.
+     	const nb_named_defaults = named_default_values.length;
+        
+        if( nb_named_defaults < PARAMS_NAMED_COUNT ) {
             args0(fct, args);
             throw new Error('Named argument expected (args0 should have raised an error) !');
         }
         
-        // The loop is a little costly...
-        // Test if using an array of name and values is faster than using an object...
-        for(let i = 0; i < named_default_keys.length; ++i) {
-            const key = named_default_keys[i];
-            result[key] = kwargs_defaults[key];
-        }
+        for(let i = 0; i < nb_named_defaults; ++i)    
+            result[ PARAMS_NAMES[offset++] ] = named_default_values[i];
         
         return result;
     }
@@ -237,10 +237,11 @@ function args0_NEW(fct, args) {
     /* const kargs_defaults= { ... kwargs_defaults } //costly
     for(let i = 0; i < PARAMS_POS_DEFAULTS_COUNT; ++i)          // costly
         kargs_defaults[PARAMS_NAMES[PARAMS_POS_DEFAULTS_OFFSET+i]] = PARAMS_POS_DEFAULTS[i]; */
+    
+    
     // Consume remaining positional only parameters (no positional arguments given, so expect default value).
     const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount;
     const PARAMS_POS_DEFAULTS_MAXID =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
-    
     
     if( offset < PARAMS_POSONLY_COUNT ) {
 
@@ -276,7 +277,7 @@ function args0_NEW(fct, args) {
             const keys   = Object.keys(kargs);
             nb_named_args += keys.length;
 
-            for(let k = 0; k < keys.length; ++k) {
+            for(let k = 0; k < keys.length; ++k) { //TODO: for in = quicker... [x2]
 
                 const argname = keys[k];
                 result[ argname ] = kargs[argname];
@@ -299,8 +300,7 @@ function args0_NEW(fct, args) {
 		    
             } else {
 
-		    if( ! (key in kwargs_defaults) ) {
-		    	console.log(key, kwargs_defaults, PARAMS_POS_DEFAULTS);
+		    if( ! (key in kwargs_defaults) ) { // TODO values (play with indexes) + split in 4 loops ?
 			args0(fct, args);
 			throw new Error('Missing a named arguments (args0 should have raised an error) !');
 		    }
@@ -340,7 +340,7 @@ function args0_NEW(fct, args) {
             }
         const keys = Object.keys(kargs);
 
-        for(let k = 0; k < keys.length; ++k) {
+        for(let k = 0; k < keys.length; ++k) { //TODO for in
 
             const argname = keys[k];
             
@@ -372,7 +372,7 @@ function args0_NEW(fct, args) {
 		    
         } else {
 
-	    if( ! (key in kwargs_defaults) ) {
+	    if( ! (key in kwargs_defaults) ) { //TODO: values
 		args0(fct, args);
 		throw new Error('Missing a named arguments (args0 should have raised an error) !');
 	    }
