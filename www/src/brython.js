@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-24 21:38:02.419675"
-__BRYTHON__.timestamp=1698176282419
+__BRYTHON__.compiled_date="2023-10-25 17:30:35.091710"
+__BRYTHON__.timestamp=1698247835091
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5203,11 +5203,139 @@ return _b_.TypeError.$factory(fname+'() takes '+
 function unexpected_keyword(fname,k){return _b_.TypeError.$factory(fname+
 `() got an unexpected keyword argument '${k}'`)}
 var empty={}
-$B.args0=function(f,args){
+function args0(f,args){
 var arg_names=f.$infos.arg_names,code=f.$infos.__code__,slots={}
 for(var arg_name of arg_names){slots[arg_name]=empty}
 return $B.parse_args(
 args,f.$infos.__name__,code.co_argcount,slots,arg_names,f.$infos.__defaults__,f.$infos.__kwdefaults__,f.$infos.vararg,f.$infos.kwarg,code.co_posonlyargcount,code.co_kwonlyargcount)}
+function args0_NEW(fct,args){
+const HAS_KW=args[args.length-1]?.$kw !==undefined;
+let ARGS_POS_COUNT=args.length;
+let ARGS_NAMED=null;
+if(HAS_KW ){--ARGS_POS_COUNT;
+ARGS_NAMED=args[ARGS_POS_COUNT].$kw}
+const result={};
+const $INFOS=fct.$infos;
+const $CODE=$INFOS.__code__;
+const PARAMS_NAMES=$INFOS.arg_names;
+const PARAMS_POS_COUNT=$CODE.co_argcount;
+const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount;
+const PARAMS_VARARGS_NAME=$INFOS.vararg;
+const PARAMS_KWARGS_NAME=$INFOS.kwarg;
+const PARAMS_POS_DEFAULTS=$INFOS.__defaults__;
+const PARAMS_POS_DEFAULTS_COUNT=PARAMS_POS_DEFAULTS.length;
+const PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT-PARAMS_POS_DEFAULTS_COUNT;
+const min=Math.min(ARGS_POS_COUNT,PARAMS_POS_COUNT );
+let offset=0;
+for(;offset < min ;++offset)
+result[PARAMS_NAMES[offset]]=args[offset];
+if(PARAMS_VARARGS_NAME !==null )
+result[PARAMS_VARARGS_NAME]=$B.fast_tuple(Array.prototype.slice.call(args,PARAMS_POS_COUNT,ARGS_POS_COUNT ));
+else if(ARGS_POS_COUNT > PARAMS_POS_COUNT ){args0(fct,args);
+throw new Error('Too much positional arguments given (args0 should have raised an error) !');}
+if(ARGS_NAMED===null ){
+if(offset < PARAMS_POS_DEFAULTS_OFFSET ){args0(fct,args);
+throw new Error('Not enough positional arguments given (args0 should have raised an error) !');}
+for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
+i < PARAMS_POS_DEFAULTS_COUNT;
+++i)
+result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i];
+if(PARAMS_KWARGS_NAME !==null )
+result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict({});
+if(PARAMS_NAMED_COUNT===0 )
+return result;
+let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj;
+if(kwargs_defaults===undefined || kwargs_defaults===null ){kwargs_defaults=$INFOS.__kwdefaults__.$strings;
+if(kwargs_defaults===undefined || kwargs_defaults===null ){args0(fct,args);
+throw new Error('Named argument expected (args0 should have raised an error) !');}}
+const named_default_values=Object.values(kwargs_defaults);
+const nb_named_defaults=named_default_values.length;
+if(nb_named_defaults < PARAMS_NAMED_COUNT ){args0(fct,args);
+throw new Error('Named argument expected (args0 should have raised an error) !');}
+for(let i=0;i < nb_named_defaults;++i)
+result[PARAMS_NAMES[offset++]]=named_default_values[i];
+return result;}
+let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj;
+if(kwargs_defaults===undefined || kwargs_defaults==null ){kwargs_defaults=$INFOS.__kwdefaults__.$strings;
+if(kwargs_defaults===undefined || kwargs_defaults==null )
+kwargs_defaults={}}
+const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
+const PARAMS_POS_DEFAULTS_MAXID=PARAMS_POS_DEFAULTS_COUNT+PARAMS_POS_DEFAULTS_OFFSET;
+if(offset < PARAMS_POSONLY_COUNT ){if(offset < PARAMS_POS_DEFAULTS_OFFSET ){args0(fct,args);
+throw new Error('Not enough positional parameters given (args0 should have raised an error) !');}
+const max=PARAMS_POS_DEFAULTS_COUNT-(PARAMS_POS_COUNT-PARAMS_POSONLY_COUNT);
+for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
+i < max;
+++i)
+result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i];}
+if(PARAMS_KWARGS_NAME===null ){let nb_named_args=0;
+for(let id=0;id < ARGS_NAMED.length;++id ){const _kargs=ARGS_NAMED[id]
+let kargs=_kargs.$jsobj;
+if(kargs===undefined ||kargs===null){kargs=_kargs.$strings
+if(kargs===undefined ||kargs===null)
+kargs=_kargs;}
+for(let argname in kargs){result[argname ]=kargs[argname];
+++nb_named_args;}}
+let found=0;
+let ioffset=offset;
+for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset];
+if(key in result )
+continue;
+args0(fct,args);
+throw new Error('Missing a named arguments (args0 should have raised an error) !');}
+for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset];
+if(key in result )
+continue;
+result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET];
+++found;}
+for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset];
+if(key in result )
+continue;
+if(!(key in kwargs_defaults)){args0(fct,args);
+throw new Error('Missing a named arguments (args0 should have raised an error) !');}
+result[key]=kwargs_defaults[key];
+++found;}
+if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args);
+throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');}
+return result;}
+const extra={};
+let nb_named_args=0;
+let nb_extra_args=0;
+for(let id=0;id < ARGS_NAMED.length;++id ){const _kargs=ARGS_NAMED[id]
+let kargs=_kargs.$jsobj;
+if(kargs===undefined ||kargs===null){kargs=_kargs.$strings
+if(kargs===undefined ||kargs===null)
+kargs=_kargs;}
+for(let argname in kargs){if(PARAMS_NAMES.indexOf(argname,PARAMS_POSONLY_COUNT)!==-1 ){result[argname ]=kargs[argname];
+++nb_named_args;}else{
+extra[argname ]=kargs[argname];
+++nb_extra_args;}}}
+let found=0;
+let ioffset=offset;
+for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset];
+if(key in result )
+continue;
+args0(fct,args);
+throw new Error('Missing a named arguments (args0 should have raised an error) !');}
+for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset];
+if(key in result )
+continue;
+result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET];
+++found;}
+for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset];
+if(key in result )
+continue;
+if(!(key in kwargs_defaults)){args0(fct,args);
+throw new Error('Missing a named arguments (args0 should have raised an error) !');}
+result[key]=kwargs_defaults[key];
+++found;}
+if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args);
+throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');}
+if(Object.keys(extra).length !==nb_extra_args ){args0(fct,args);
+throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');}
+result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict(extra);
+return result;}
+$B.args0=args0_NEW;
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,vararg,kwarg,nb_posonly){
 var nb_posonly=nb_posonly ||0,nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults={$jsobj:{}}
 for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
@@ -5219,7 +5347,8 @@ slots[arg]=null
 var $=$B.args(fname,1,slots,[arg],args,{},null,null)
 return $[arg]}
 $B.parse_args=function(args,fname,argcount,slots,arg_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly){
-var nb_passed=args.length,nb_passed_pos=nb_passed,nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set={},nb_def=defaults.length,varargs=[],extra_kw={},kw
+var nb_passed=args.length,nb_passed_pos=nb_passed,
+nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set={},nb_def=defaults.length,varargs=[],extra_kw={},kw
 for(var i=0;i < nb_passed;i++){var arg=args[i]
 if(arg && arg.__class__===$B.generator){slots.$has_generators=true}
 if(arg && arg.$kw){
@@ -5239,7 +5368,7 @@ def_value=defaults[j-(nb_pos_or_kw-nb_def)]
 if(def_value !==undefined){slots[arg_name]=def_value
 if(j < nb_posonly){
 if(kw && kw.hasOwnProperty(arg_name)&& kwarg){extra_kw[arg_name]=kw[arg_name]
-kw[arg_name]=empty}}}else{var missing_pos=arg_names.slice(j,nb_expected-nb_kwonly)
+kw[arg_name]=empty}}}else{var missing_pos=arg_names.slice(j,nb_pos_or_kw-nb_def)
 throw missing_required_pos(fname,missing_pos)}}}
 var missing_kwonly=[]
 for(var i=nb_pos_or_kw;i < nb_expected;i++){var arg_name=arg_names[i]

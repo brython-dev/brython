@@ -960,6 +960,35 @@ assert_raises(TypeError, f, 1, h=2, k=4,
 def f(f=5, *g: 6, h):
     pass
 
+def f(x, y=0):
+    pass
+
+assert_raises(TypeError, f,
+    msg="f() missing 1 required positional argument: 'x'")
+
+def f(x, y=0, *args):
+    pass
+
+assert_raises(TypeError, f,
+    msg="f() missing 1 required positional argument: 'x'")
+
+def f(x, y, z=0, /):
+    pass
+
+assert_raises(TypeError, f,
+    msg="f() missing 2 required positional arguments: 'x' and 'y'")
+
+
+def f(x, y, /, z):
+    pass
+
+assert_raises(TypeError, f,
+    msg="f() missing 3 required positional arguments: 'x', 'y', and 'z'")
+
+assert_raises(TypeError, f, 1,
+    msg="f() missing 2 required positional arguments: 'y' and 'z'")
+
+
 # issue 2041
 def optional_keyword_only_arg(*, a, b=None):
     assert b is None
