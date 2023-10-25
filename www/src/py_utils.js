@@ -243,9 +243,6 @@ function args0_NEW(fct, args) {
     const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
     const PARAMS_POS_DEFAULTS_MAXID    =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
     
-    const PARAMS_NAMED_DEFAULTS        = Object.values(kwargs_defaults); //TODO: precompute this plz
-    const PARAMS_NAMED_DEFAULTS_OFFSET = PARAMS_NAMES.length - PARAMS_NAMED_DEFAULTS.length;
-    
     if( offset < PARAMS_POSONLY_COUNT ) {
 
         if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
@@ -304,22 +301,18 @@ function args0_NEW(fct, args) {
             result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
 	    ++found;
         }
-        for( ; ioffset < PARAMS_NAMED_DEFAULTS_OFFSET; ++ioffset) {
-        	
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result ) // maybe could be speed up using "!(key in result)"
-                continue;
-                
-            args0(fct, args);
-            throw new Error('Missing a named arguments (args0 should have raised an error) !');
-        }
         for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
         	
             const key = PARAMS_NAMES[ioffset];
             if( key in result )
                 continue;
                 
-	    result[key] = PARAMS_NAMED_DEFAULTS[ioffset - PARAMS_NAMED_DEFAULTS_OFFSET]; // should be quicker
+            if( ! (key in kwargs_defaults) ) {
+                args0(fct, args);
+                throw new Error('Missing a named arguments (args0 should have raised an error) !');
+	    }
+                
+	    result[key] = kwargs_defaults[key];
 	    ++found;
         }
 
@@ -389,22 +382,19 @@ function args0_NEW(fct, args) {
         result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
 	++found;
     }
-    for( ; ioffset < PARAMS_NAMED_DEFAULTS_OFFSET; ++ioffset) {
-       	
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result ) // maybe could be speed up using "!(key in result)"
-            continue;
-                
-        args0(fct, args);
-        throw new Error('Missing a named arguments (args0 should have raised an error) !');
-    }
     for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
         	
         const key = PARAMS_NAMES[ioffset];
         if( key in result )
             continue;
-	result[key] = PARAMS_NAMED_DEFAULTS[ioffset - PARAMS_NAMED_DEFAULTS_OFFSET]; // should be quicker
-	++found;
+        
+        if( ! (key in kwargs_defaults) ) {
+            args0(fct, args);
+            throw new Error('Missing a named arguments (args0 should have raised an error) !');
+        }
+        
+        result[key] = kwargs_defaults[key];
+        ++found;
     }
 
     // Same as "No **kwargs parameter".
