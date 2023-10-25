@@ -274,14 +274,10 @@ function args0_NEW(fct, args) {
             		kargs= _kargs; // I don't think I can do better.
             }
             
-            const keys   = Object.keys(kargs);
-            nb_named_args += keys.length;
-
-            for(let k = 0; k < keys.length; ++k) { //TODO: for in = quicker... [x2]
-
-                const argname = keys[k];
-                result[ argname ] = kargs[argname];
-            }
+	    for(let argname in kargs) {
+	    	result[ argname ] = kargs[argname];
+	    	++nb_named_args;
+	    }
         }
 
         // Checks default values...
@@ -338,21 +334,18 @@ function args0_NEW(fct, args) {
             	if(kargs === undefined || kargs === null) 
             		kargs= _kargs; // I don't think I can do better.
             }
-        const keys = Object.keys(kargs);
-
-        for(let k = 0; k < keys.length; ++k) { //TODO for in
-
-            const argname = keys[k];
             
-            // We search the name starting from non-positional only parameters.
-            if( PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1 ) {
+        
+	for(let argname in kargs) {
+	
+	    if( PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1 ) {
                 result[ argname ] = kargs[argname];
                 ++nb_named_args;
             } else {
                 extra[ argname ] = kargs[argname];
                 ++nb_extra_args;
             }
-        }
+	}
     }
     
     // Same as "No **kwargs parameter".
