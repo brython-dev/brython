@@ -240,8 +240,11 @@ function args0_NEW(fct, args) {
     
     
     // Consume remaining positional only parameters (no positional arguments given, so expect default value).
-    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount;
-    const PARAMS_POS_DEFAULTS_MAXID =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+    const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
+    const PARAMS_POS_DEFAULTS_MAXID    =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+    
+    const PARAMS_NAMED_DEFAULTS        = Object.values(kwargs_defaults); //TODO: precompute this plz
+    const PARAMS_NAMED_DEFAULTS_OFFSET = PARAMS_NAMES.length - PARAMS_NAMED_DEFAULTS.length;
     
     if( offset < PARAMS_POSONLY_COUNT ) {
 
@@ -289,19 +292,25 @@ function args0_NEW(fct, args) {
             if( key in result )
                 continue;
                 
-       	    if( ioffset >= PARAMS_POS_DEFAULTS_OFFSET && ioffset < PARAMS_POS_DEFAULTS_MAXID ) {
-            
-	   	result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+            if( ioffset < PARAMS_POS_DEFAULTS_MAXID) {
+            	
+            	if( ioffset < PARAMS_POS_DEFAULTS_OFFSET ) {
+            	    args0(fct, args);
+		    throw new Error('Missing a named arguments (args0 should have raised an error) !');
+            	}
+            	
+            	result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
 		++found;
-		    
+            	
             } else {
-
-		    if( ! (key in kwargs_defaults) ) { // TODO values (play with indexes) + split in 4 loops ?
-			args0(fct, args);
-			throw new Error('Missing a named arguments (args0 should have raised an error) !');
-		    }
-		    result[key] = kwargs_defaults[key];
-		    ++found;
+            
+            	if( ioffset < PARAMS_NAMED_DEFAULTS_OFFSET ) {
+            	    args0(fct, args);
+		    throw new Error('Missing a named arguments (args0 should have raised an error) !');
+		}
+            	
+		result[key] = PARAMS_NAMED_DEFAULTS[PARAMS_NAMED_DEFAULTS_OFFSET - ioffset]; // should be quicker
+		++found;
 	    }
         }
 
@@ -358,20 +367,26 @@ function args0_NEW(fct, args) {
         if( key in result )
 	    continue;
 
-        if( ioffset >= PARAMS_POS_DEFAULTS_OFFSET && ioffset < PARAMS_POS_DEFAULTS_MAXID ) {
-            
-	    result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
-	    ++found;
-		    
-        } else {
-
-	    if( ! (key in kwargs_defaults) ) { //TODO: values
-		args0(fct, args);
+        if( ioffset < PARAMS_POS_DEFAULTS_MAXID) {
+            	
+	    if( ioffset < PARAMS_POS_DEFAULTS_OFFSET ) {
+	        args0(fct, args);
 		throw new Error('Missing a named arguments (args0 should have raised an error) !');
 	    }
-	    result[key] = kwargs_defaults[key];
+	    	    	
+	    result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
 	    ++found;
-	}
+	    	
+	 } else {
+	    
+	     if( ioffset < PARAMS_NAMED_DEFAULTS_OFFSET ) {
+	         args0(fct, args);
+	         throw new Error('Missing a named arguments (args0 should have raised an error) !');
+	     }
+	    	
+	     result[key] = PARAMS_NAMED_DEFAULTS[PARAMS_NAMED_DEFAULTS_OFFSET - ioffset]; // should be quicker
+	     ++found;
+	 }
     }
 
     // Same as "No **kwargs parameter".
