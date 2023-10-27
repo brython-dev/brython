@@ -198,10 +198,10 @@ function args0_NEW(fct, args) {
         // Optimize: precompute the number of named parameters with a default value, or just a boolean ?
 
         let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
+        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
 
             kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-            if( kwargs_defaults === undefined || kwargs_defaults === null ){
+            if( kwargs_defaults === undefined || kwargs_defaults === null ){
                 args0(fct, args);
                 throw new Error('Named argument expected (args0 should have raised an error) !');
             }

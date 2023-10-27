@@ -9361,6 +9361,12 @@ function run_brython_magic(scripts){
 $B.run_script = function(script, src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
+
+    // set script dir
+    var script_elts = url.split('/')
+    script_elts.pop()
+    $B.script_dir = script_elts.join('/')
+
     $B.file_cache[url] = src
     $B.url2name[url] = name
     $B.scripts[url] = script
