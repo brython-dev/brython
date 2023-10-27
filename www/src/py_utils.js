@@ -222,11 +222,11 @@ function args0_NEW(fct, args) {
     }
 
     let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-        if( kwargs_defaults === undefined  || kwargs_defaults == null ) {
+        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
 
             kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-            if( kwargs_defaults === undefined  || kwargs_defaults == null )
-                kwargs_defaults = {}
+            if( kwargs_defaults === undefined || kwargs_defaults === null )
+                kwargs_defaults = {};
         }
     //const kwargs_defaults= $INFOS.__kwdefaults__.$jsobj ?? $INFOS.__kwdefaults__.$strings ?? {}; // costs a little...
 

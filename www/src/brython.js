@@ -148,9 +148,9 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-27 16:05:37.816388"
-__BRYTHON__.timestamp=1698415537816
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
+__BRYTHON__.compiled_date="2023-10-27 20:11:25.832720"
+__BRYTHON__.timestamp=1698430285832
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 $B.is_identifier=function(category,cp){
@@ -5259,9 +5259,9 @@ for(let i=0;i < nb_named_defaults;++i)
 result[PARAMS_NAMES[offset++]]=named_default_values[i];
 return result;}
 let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj;
-if(kwargs_defaults===undefined || kwargs_defaults==null ){kwargs_defaults=$INFOS.__kwdefaults__.$strings;
-if(kwargs_defaults===undefined || kwargs_defaults==null )
-kwargs_defaults={}}
+if(kwargs_defaults===undefined ||kwargs_defaults===null ){kwargs_defaults=$INFOS.__kwdefaults__.$strings;
+if(kwargs_defaults===undefined ||kwargs_defaults===null )
+kwargs_defaults={};}
 const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
 const PARAMS_POS_DEFAULTS_MAXID=PARAMS_POS_DEFAULTS_COUNT+PARAMS_POS_DEFAULTS_OFFSET;
 if(offset < PARAMS_POSONLY_COUNT ){if(offset < PARAMS_POS_DEFAULTS_OFFSET ){args0(fct,args);
