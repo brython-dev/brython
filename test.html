@@ -1,0 +1,31 @@
+<html>
+
+<head>
+    <script src="./src/brython.js"
+            crossorigin="anonymous" defer></script>
+    <script type="text/python">
+        
+        from browser import html, webcomponent;
+
+        class MyDivA(html.DIV):
+            def __init__(self):
+                self <= "A"
+
+        class MyDivB(MyDivA):
+            def __init__(self):
+                self <= "B"
+
+        class MyDivC:
+            def __init__(self):
+                pass
+
+        webcomponent.define("my-div_a", MyDivA)
+
+        webcomponent.define("my-div_b", MyDivB)
+
+        webcomponent.define("my-div_c", MyDivC)
+    </script>
+</head>
+    <div is="my-div_a"></div>
+    <div is="my-div_b"></div>
+</html>

@@ -33,7 +33,6 @@ function define(tag_name, cls, options){
 		    
 		stack.push(...base.__bases__);
 	}
-	console.log("FOUND", _extends);
     }
 
     if(_extends){
