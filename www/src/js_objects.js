@@ -148,7 +148,6 @@ JSConstructor.$factory = function(obj){
 }
 
 
-
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     // If _this is passed and jsobj is a function, the function is called
     // with built-in value `this` set to _this
@@ -160,7 +159,8 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
 
     if(jsobj === undefined){
         return $B.Undefined
-    }else if(jsobj === null){
+    }
+    if(jsobj === null){
         return null
     }
 
@@ -183,9 +183,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
         var res = function(){
-            var args = []
-            for(var i = 0, len = arguments.length; i < len; i++){
-                args.push(pyobj2jsobj(arguments[i]))
+            var args = new Array(arguments.length);
+            for(var i = 0, len = arguments.length; i < len; ++i){
+                args[i] = pyobj2jsobj(arguments[i]);
             }
             try{
                 return jsobj2pyobj(jsobj.apply(_this, args))
@@ -261,10 +261,10 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         var jsobj = {}
         for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
             var key = entry.key
-            if(typeof key != "string"){
+            if(typeof key !== "string"){
                 key = _b_.str.$factory(key)
             }
-            if(typeof entry.value == 'function'){
+            if(typeof entry.value === 'function'){
                 // set "this" to jsobj
                 entry.value.bind(jsobj)
             }
@@ -306,9 +306,9 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         var f = function(){
             try{
                 // transform JS arguments to Python arguments
-                var args = []
-                for(var i = 0; i < arguments.length; i++){
-                    args.push(jsobj2pyobj(arguments[i]))
+                var args = new Array(arguments.length);
+                for(var i = 0; i < arguments.length; ++i){
+                    args[i] = jsobj2pyobj(arguments[i]);
                 }
                 // Apply Python arguments to Python function
                 if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
