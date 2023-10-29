@@ -111,10 +111,10 @@ JSConstructor.__call__ = function(_self){
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
     return function(){
-        var args = new Array(arguments.length+1);
-        args[0] = null;
+        var args = new Array(arguments.length+1)
+        args[0] = null
         for(var i = 0, len = arguments.length; i < len; i++){
-            args[i+1] = pyobj2jsobj(arguments[i]);
+            args[i+1] = pyobj2jsobj(arguments[i])
         }
         var factory = _self.func.bind.apply(_self.func, args)
         var res = new factory()
@@ -149,10 +149,10 @@ JSConstructor.$factory = function(obj){
     }
 }
 
-const JSOBJ = Symbol();
-const PYOBJ = Symbol();
-const PYOBJFCT = Symbol();
-const PYOBJFCTS = Symbol();
+const JSOBJ = Symbol()
+const PYOBJ = Symbol()
+const PYOBJFCT = Symbol()
+const PYOBJFCTS = Symbol()
 
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     // If _this is passed and jsobj is a function, the function is called
@@ -171,7 +171,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     }
 
     if(Array.isArray(jsobj)){
-    	// set it as non-enumerable, prevents issues when looping on it in JS.
+        // set it as non-enumerable, prevents issues when looping on it in JS.
         Object.defineProperty(jsobj, "$is_js_array", {value: true});
         return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
     }
@@ -186,37 +186,37 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return $B.String(jsobj)
     }
     
-    let pyobj = jsobj[PYOBJ];
+    let pyobj = jsobj[PYOBJ]
     if(pyobj !== undefined) {
-    	return pyobj;
+        return pyobj;
     }
     
     if(typeof jsobj === "function"){
         
         // transform Python arguments to equivalent JS arguments
-        _this = _this === undefined ? null : _this;
+        _this = _this === undefined ? null : _this
         
-    	if( _this === null) {
-	    const pyobj = jsobj[PYOBJFCT];
-	    if(pyobj !== undefined) {
-	    	return pyobj;
-	    }
-    	} else {
-    	    const pyobjfcts = _this[PYOBJFCTS];
-	    if(pyobjfcts !== undefined) {
-	    	const pyobj = pyobjfcts.get(jsobj);
-	    	if( pyobj !== undefined ) {
-	    		return pyobj;
-	    	}
-	    } else {
-	    	_this[PYOBJFCTS] = new Map();
-	    }
-    	}
+        if(_this === null){
+            const pyobj = jsobj[PYOBJFCT];
+            if(pyobj !== undefined){
+                return pyobj
+            }
+        }else{
+            const pyobjfcts = _this[PYOBJFCTS]
+            if(pyobjfcts !== undefined) {
+                const pyobj = pyobjfcts.get(jsobj)
+                if(pyobj !== undefined){
+                    return pyobj
+                }
+            }else{
+                _this[PYOBJFCTS] = new Map()
+            }
+        }
         
         var res = function(){
-            var args = new Array(arguments.length);
+            var args = new Array(arguments.length)
             for(var i = 0, len = arguments.length; i < len; ++i){
-                args[i] = pyobj2jsobj(arguments[i]);
+                args[i] = pyobj2jsobj(arguments[i])
             }
             try{
                 return jsobj2pyobj(jsobj.apply(_this, args))
@@ -225,12 +225,12 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             }
         }
         
-        if( _this === null) {
-	    jsobj[PYOBJFCT] = res;
-    	} else {
-    	    _this[PYOBJFCTS].set(jsobj, res);
-    	}
-    	
+        if(_this === null){
+            jsobj[PYOBJFCT] = res;
+        }else{
+            _this[PYOBJFCTS].set(jsobj, res)
+        }
+        
         res[JSOBJ] = jsobj
         res.$js_func = jsobj
         res.$is_js_func = true
@@ -241,20 +241,20 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return res
     }
 
-    if(jsobj.$kw) {
+    if(jsobj.$kw){
         return jsobj
     }
 
     if($B.$isNode(jsobj)){
-    	const res = $B.DOMNode.$factory(jsobj);
-    	jsobj[PYOBJ] = res;
-    	res[JSOBJ] = jsobj;
-        return res;
+        const res = $B.DOMNode.$factory(jsobj)
+        jsobj[PYOBJ] = res
+        res[JSOBJ] = jsobj
+        return res
     }
 
-    const _res = $B.JSObj.$factory(jsobj);
-    jsobj[PYOBJ] = _res;
-    _res[JSOBJ] = jsobj;
+    const _res = $B.JSObj.$factory(jsobj)
+    jsobj[PYOBJ] = _res
+    _res[JSOBJ] = jsobj
     
     return _res;
 }
@@ -268,13 +268,13 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         return undefined
     }
     if(pyobj === null) {
-    	return null
+        return null
     }
     
-    let _jsobj = pyobj[JSOBJ];
-    if(_jsobj !== undefined)
-    	return _jsobj;
-    
+    let _jsobj = pyobj[JSOBJ]
+    if(_jsobj !== undefined){
+        return _jsobj
+    }
     var klass = $B.get_class(pyobj)
     if(klass === undefined){
         // not a Python object, consider arg as Javascript object instead
@@ -353,10 +353,10 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             const jsobj = function(){
                 var res = pyobj.apply(null, arguments)
                 return $B.coroutine.send(res)
-            };
+            }
             
-            pyobj[JSOBJ] = jsobj;
-            jsobj[PYOBJ] = pyobj;
+            pyobj[JSOBJ] = jsobj
+            jsobj[PYOBJ] = pyobj
             
             return jsobj
         }
@@ -364,9 +364,9 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         var jsobj = function(){
             try{
                 // transform JS arguments to Python arguments
-                var args = new Array(arguments.length);
+                var args = new Array(arguments.length)
                 for(var i = 0; i < arguments.length; ++i){
-                    args[i] = jsobj2pyobj(arguments[i]);
+                    args[i] = jsobj2pyobj(arguments[i])
                 }
                 // Apply Python arguments to Python function
                 if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
@@ -381,8 +381,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }
         }
         
-        pyobj[JSOBJ] = jsobj;
-        jsobj[PYOBJ] = pyobj;
+        pyobj[JSOBJ] = jsobj
+        jsobj[PYOBJ] = pyobj
         
         return jsobj
     }
