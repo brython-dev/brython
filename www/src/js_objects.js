@@ -41,9 +41,9 @@ $B.pyobj2structuredclone = function(obj, strict){
         return null // _b_.None
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
             obj.__class__ === _b_.tuple){
-        var res = []
-        for(var i = 0, len = obj.length; i < len; i++){
-            res.push($B.pyobj2structuredclone(obj[i]))
+        var res = new Array(obj.length);
+        for(var i = 0, len = obj.length; i < len; ++i){
+            res[i] = $B.pyobj2structuredclone(obj[i]);
         }
         return res
     }else if($B.$isinstance(obj, _b_.dict)){
@@ -111,9 +111,10 @@ JSConstructor.__call__ = function(_self){
     // It takes Javascript arguments so we must convert
     // those passed to the Python function
     return function(){
-        var args = [null]
+        var args = new Array(arguments.length+1);
+        args[0] = null;
         for(var i = 0, len = arguments.length; i < len; i++){
-            args.push(pyobj2jsobj(arguments[i]))
+            args[i+1] = pyobj2jsobj(arguments[i]);
         }
         var factory = _self.func.bind.apply(_self.func, args)
         var res = new factory()
@@ -126,9 +127,10 @@ JSConstructor.__getattribute__ = function(_self, attr){
     // Attributes of a constructor are taken from the original JS object
     if(attr == "__call__"){
         return function(){
-            var args = [null]
+            var args = new Array(arguments.length+1)
+            args[0] = null
             for(var i = 0, len = arguments.length; i < len; i++){
-                args.push(pyobj2jsobj(arguments[i]))
+                args[i+1] = pyobj2jsobj(arguments[i])
             }
             var factory = _self.func.bind.apply(_self.func, args)
             var res = new factory()
@@ -359,7 +361,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             return jsobj
         }
         // Transform into a Javascript function
-        var f = function(){
+        var jsobj = function(){
             try{
                 // transform JS arguments to Python arguments
                 var args = new Array(arguments.length);
@@ -378,7 +380,11 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 $B.handle_error(err)
             }
         }
-        return f
+        
+        pyobj[JSOBJ] = jsobj;
+        jsobj[PYOBJ] = pyobj;
+        
+        return jsobj
     }
     return pyobj
 }
@@ -386,7 +392,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 $B.JSConstructor = JSConstructor
 
 function pyargs2jsargs(pyargs){
-    var args = []
+    var args = new Array(pyargs.length);
     for(var i = 0, len = pyargs.length; i < len; i++){
         var arg = pyargs[i]
         if(arg !== undefined && arg !== null &&
@@ -400,9 +406,10 @@ function pyargs2jsargs(pyargs){
             throw _b_.TypeError.$factory(
                 "A Javascript function can't take " +
                     "keyword arguments")
-        }else{
-            args.push($B.pyobj2jsobj(arg))
         }
+        
+        args[i] = $B.pyobj2jsobj(arg)
+
     }
     return args
 }
@@ -472,10 +479,7 @@ $B.JSObj.__contains__ = function(_self, key){
 }
 
 $B.JSObj.__dir__ = function(_self){
-    var attrs = []
-    for(key in _self){
-        attrs.push(key)
-    }
+    var attrs = Object.keys(_self);
     attrs = attrs.sort()
     return attrs
 }
@@ -642,9 +646,10 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         if(class_attr !== null){
             if(typeof class_attr == "function"){
                 return function(){
-                    var args = [_self]
+                    var args = new Array(arguments.length+1);
+                    args[0] = _self;
                     for(var i = 0, len = arguments.length; i < len; i++){
-                        args.push(arguments[i])
+                        args[i+1] = arguments[i];
                     }
                     return $B.JSObj.$factory(class_attr.apply(null, args))
                 }
@@ -709,9 +714,10 @@ $B.JSObj.__getitem__ = function(_self, key){
     }else if(key.__class__ === _b_.slice &&
             typeof _self.item == 'function'){
         var _slice = _b_.slice.$conv_for_seq(key, _self.length)
-        var res = []
+        var res = new Array( Math.floor( (_slice.stop - _slice.start) / _slice.step) );
+        let offset = 0;
         for(var i = _slice.start; i < _slice.stop; i += _slice.step){
-            res.push(_self.item(i))
+            res[offset++] = _self.item(i);
         }
         return res
     }
@@ -811,9 +817,10 @@ js_list_meta.__getattribute__ = function(_self, attr){
     if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
         // Transform Python values to Javascript values before setting item
         return function(){
-            var args = [arguments[0]]
+            var args = new Array(arguments.length)
+            args[0] = arguments[0]
             for(var i = 1, len = arguments.length; i < len; i++){
-                args.push(pyobj2jsobj(arguments[i]))
+                args[i] = pyobj2jsobj(arguments[i])
             }
             return _b_.list[attr].apply(null, args)
         }
@@ -872,11 +879,11 @@ js_array.__repr__ = function(_self){
     if($B.repr.enter(_self)){ // in py_utils.js
         return '[...]'
     }
-    var _r = [],
+    var _r = new Array(_self.length),
         res
 
-    for(var i = 0; i < _self.length; i++){
-        _r[_r.length] = _b_.str.$factory(_self[i])
+    for(var i = 0; i < _self.length; ++i){
+        _r[i] = _b_.str.$factory(_self[i])
     }
 
     res = "[" + _r.join(", ") + "]"
@@ -939,10 +946,10 @@ $B.JSMeta = $B.make_class("JSMeta")
 
 $B.JSMeta.__call__ = function(cls){
     // Create an instance of a class that inherits a Javascript contructor
-    var extra_args = [],
+    var extra_args = new Array(arguments.length-1),
         klass = arguments[0]
     for(var i = 1, len = arguments.length; i < len; i++){
-        extra_args.push(arguments[i])
+        extra_args[i-1] = arguments[i]
     }
     var new_func = _b_.type.__getattribute__(klass, "__new__")
     // create an instance with __new__
