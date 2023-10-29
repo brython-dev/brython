@@ -168,7 +168,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         jsobj.$is_js_array = true
         return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
     }else if(typeof jsobj === 'number'){
-       if(jsobj.toString().indexOf('.') == -1){
+       if(jsobj % 1 === 0){ //TODO: dangerous, it can also be a float with no decimals.
            return _b_.int.$factory(jsobj)
        }
        // for now, lets assume a float
