@@ -348,10 +348,15 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         if(pyobj.$is_async){
             // issue 2251 : calling the Python async function in Javascript
             // returns a Promise
-            return function(){
+            const jsobj = function(){
                 var res = pyobj.apply(null, arguments)
                 return $B.coroutine.send(res)
-            }
+            };
+            
+            pyobj[JSOBJ] = jsobj;
+            jsobj[PYOBJ] = pyobj;
+            
+            return jsobj
         }
         // Transform into a Javascript function
         var f = function(){
