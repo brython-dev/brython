@@ -165,7 +165,8 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     }
 
     if(Array.isArray(jsobj)){
-        jsobj.$is_js_array = true
+    	// set it as non-enumerable, prevent issue when looping on it in JS.
+        Object.defineProperty(jsobj, "$is_js_array", {value: true});
         return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
     }else if(typeof jsobj === 'number'){
        if(jsobj % 1 === 0){ //TODO: dangerous, it can also be a float with no decimals.
