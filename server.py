@@ -219,6 +219,7 @@ class CompressedHandler(CGIHTTPRequestHandler):
 # port to be used when the server runs locally
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', help="The port to be used by the local server")
+parser.add_argument('--ip', help="The IP address to be used by the local server")
 
 # generate docs?
 # when testing new code on your repo it is not necessary to generate docs all
@@ -231,6 +232,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 port = int(args.port) if args.port else 8000
+ip   = str(args.ip) if args.port else "127.0.0.1"
 
 if not args.no_docs:
     # generate static doc pages if not already present
@@ -246,7 +248,7 @@ os.chdir(os.path.join(os.getcwd(), 'www'))
 
 cgi_dir = os.path.join(os.path.dirname(os.getcwd()), 'cgi-bin')
 
-server_address, handler = ('', port), CompressedHandler
+server_address, handler = (ip, port), CompressedHandler
 httpd = socketserver.ThreadingTCPServer(server_address, handler)
 httpd.server_name = "Brython built-in server"
 httpd.server_port = port
