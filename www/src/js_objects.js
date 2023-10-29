@@ -168,15 +168,18 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     	// set it as non-enumerable, prevent issue when looping on it in JS.
         Object.defineProperty(jsobj, "$is_js_array", {value: true});
         return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
-    }else if(typeof jsobj === 'number'){
+    }
+    if(typeof jsobj === 'number'){
        if(jsobj % 1 === 0){ //TODO: dangerous, it can also be a float with no decimals.
            return _b_.int.$factory(jsobj)
        }
        // for now, lets assume a float
        return _b_.float.$factory(jsobj)
-    }else if(typeof jsobj == "string"){
+    }
+    if(typeof jsobj == "string"){
         return $B.String(jsobj)
-    }else if(typeof jsobj == "function"){
+    }
+    if(typeof jsobj == "function"){
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
         var res = function(){
@@ -214,7 +217,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     // conversion of a Python object into a Javascript object
     if(pyobj === true || pyobj === false){
         return pyobj
-    }else if(pyobj === $B.Undefined){
+    }
+    if(pyobj === $B.Undefined){
         return undefined
     }
 
@@ -232,19 +236,22 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         }
         return pyobj.js
 
-    }else if(klass === $B.DOMNode ||
+    }
+    if(klass === $B.DOMNode ||
             klass.__mro__.indexOf($B.DOMNode) > -1){
 
         // instances of DOMNode or its subclasses are transformed into the
         // underlying DOM element
         return pyobj
 
-    }else if([_b_.list, _b_.tuple].indexOf(klass) > -1){
+    }
+    if([_b_.list, _b_.tuple].indexOf(klass) > -1){
 
         // Python list : transform its elements
         return pyobj.map(pyobj2jsobj)
 
-    }else if(klass === _b_.dict || _b_.issubclass(klass, _b_.dict)){
+    }
+    if(klass === _b_.dict || _b_.issubclass(klass, _b_.dict)){
 
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
@@ -265,18 +272,21 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         }
         return jsobj
 
-    }else if(klass === _b_.str){
+    }
+    if(klass === _b_.str){
 
         // Python strings are converted to the underlying value
         return pyobj.valueOf()
 
-    }else if(klass === _b_.float){
+    }
+    if(klass === _b_.float){
 
         // floats are implemented as
         // {__class__: _b_.float, value: <JS number>}
         return pyobj.value
 
-    }else if(klass === $B.function || klass === $B.method){
+    }
+    if(klass === $B.function || klass === $B.method){
         if(pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&
                 ! pyobj.$is_func){
@@ -313,10 +323,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }
         }
         return f
-    }else{
-        // other types are left unchanged
-        return pyobj
     }
+    return pyobj
 }
 
 $B.JSConstructor = JSConstructor
