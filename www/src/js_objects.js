@@ -149,6 +149,8 @@ JSConstructor.$factory = function(obj){
 
 const JSOBJ = Symbol();
 const PYOBJ = Symbol();
+const PYOBJFCT = Symbol();
+const PYOBJFCTS = Symbol();
 
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     // If _this is passed and jsobj is a function, the function is called
@@ -188,8 +190,27 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     }
     
     if(typeof jsobj === "function"){
+        
         // transform Python arguments to equivalent JS arguments
-        _this = _this === undefined ? null : _this
+        _this = _this === undefined ? null : _this;
+        
+    	if( _this === null) {
+	    const pyobj = jsobj[PYOBJFCT];
+	    if(pyobj !== undefined) {
+	    	return pyobj;
+	    }
+    	} else {
+    	    const pyobjfcts = _this[PYOBJFCTS];
+	    if(pyobjfcts !== undefined) {
+	    	const pyobj = pyobjfcts.get(jsobj);
+	    	if( pyobj !== undefined ) {
+	    		return pyobj;
+	    	}
+	    } else {
+	    	_this[PYOBJFCTS] = new Map();
+	    }
+    	}
+        
         var res = function(){
             var args = new Array(arguments.length);
             for(var i = 0, len = arguments.length; i < len; ++i){
@@ -201,8 +222,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
                 throw $B.exception(err)
             }
         }
-        //jsobj[PYOBJ] = res <= cause issues because of _this...
-        // needs prototype substitution...
+        
+        if( _this === null) {
+	    jsobj[PYOBJFCT] = res;
+    	} else {
+    	    _this[PYOBJFCTS].set(jsobj, res);
+    	}
+    	
         res[JSOBJ] = jsobj
         res.$js_func = jsobj
         res.$is_js_func = true
