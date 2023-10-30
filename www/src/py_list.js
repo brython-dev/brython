@@ -572,8 +572,9 @@ list.count = function(){
 list.extend = function(){
     var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
         arguments, {}, null, null)
-    var other = list.$factory(_b_.iter($.t))
-    for(var i = 0; i < other.length; i++){$.self.push(other[i])}
+    for(var item of $B.make_js_iterator($.t)){
+        $.self[$.self.length] = item
+    }
     return _b_.None
 }
 
