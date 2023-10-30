@@ -9,6 +9,8 @@ jobs:
         chrome: "stable"
         firefox: "latest"
         apt:
+          sources:
+            - deadsnakes
           packages:
             - libnss3
             - python3.12
