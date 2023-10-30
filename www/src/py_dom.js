@@ -505,6 +505,22 @@ var DOMNode = $B.make_class('DOMNode',
     }
 )
 
+
+$B.addJS2PyWrapper(Node, function(jsobj, _this) {
+
+        const res = $B.DOMNode.$factory(jsobj)
+        jsobj[PYOBJ] = res
+        res[JSOBJ] = jsobj
+        return res
+});
+
+$B.addPy2JSWrapper(DOMNode, function(pyobj) {
+	
+        // instances of DOMNode or its subclasses are transformed into the
+        // underlying DOM element
+        return pyobj
+});
+
 DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()

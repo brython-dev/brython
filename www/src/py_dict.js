@@ -153,6 +153,30 @@ var dict = {
     $match_mapping_pattern: true // for pattern matching (PEP 634)
 }
 
+
+$B.addPy2JSWrapper(dict, function(pyobj) {
+	
+        // Python dictionaries are transformed into a Javascript object
+        // whose attributes are the dictionary keys
+        // Non-string keys are converted to strings by str(key). This will
+        // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
+        // be the Javascript object {1: "b"}
+        let jsobj = {}
+        for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
+            var key = entry.key
+            if(typeof key !== "string"){
+                key = _b_.str.$factory(key)
+            }
+            if(typeof entry.value === 'function'){
+                // set "this" to jsobj
+                entry.value.bind(jsobj)
+            }
+            jsobj[key] = $B.pyobj2jsobj(entry.value)
+        }
+        return jsobj
+});
+
+
 dict.$to_obj = function(d){
     // Function applied to dictionary that only has string keys,
     // return a Javascript objects with the keys mapped to the value,

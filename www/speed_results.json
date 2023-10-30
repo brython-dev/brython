@@ -1,0 +1,182 @@
+[
+    {
+        "test": "assignment.py",
+        "description": "simple assignment",
+        "src": "for i in range(1000000):\n    a = 1",
+        "ratio": 81
+    },
+    {
+        "test": "augm_assign.py",
+        "description": "augmented assignment",
+        "src": "a = 0\nfor i in range(1000000):\n    a  = 1",
+        "ratio": 59
+    },
+    {
+        "test": "augm_assign_and_append.py",
+        "description": "augmented assignment and list append",
+        "src": "t = []\ni = 0\nwhile i < 100000:\n    t.append(i)\n    i  = 1",
+        "ratio": 677
+    },
+    {
+        "test": "assignment_float.py",
+        "description": "simple assignment to float",
+        "src": "for i in range(1000000):\n    a = 1.0",
+        "ratio": 82
+    },
+    {
+        "test": "big_integers.py",
+        "description": "big integers",
+        "src": "n = 60\nfor i in range(10000):\n    2 ** n",
+        "ratio": 179
+    },
+    {
+        "test": "hash_string.py",
+        "description": "hash string",
+        "src": "for i in range(1000000):\n    hash('abcdef')",
+        "ratio": 608
+    },
+    {
+        "test": "hash_float.py",
+        "description": "hash float",
+        "src": "for i in range(1000000):\n    hash(86.55)",
+        "ratio": 454
+    },
+    {
+        "test": "build_dict.py",
+        "description": "build dictionary",
+        "src": "for i in range(1000000):\n    a = {0: 0, 'a': 'a'}",
+        "ratio": 368
+    },
+    {
+        "test": "add_dict.py",
+        "description": "build dictionary 2",
+        "src": "d = {}\nfor i in range(100000):\n    d[i] = i",
+        "ratio": 156
+    },
+    {
+        "test": "set_dict_item.py",
+        "description": "set dictionary item",
+        "src": "a = {0: 0}\nfor i in range(1000000):\n    a[0] = i",
+        "ratio": 210
+    },
+    {
+        "test": "build_set.py",
+        "description": "build set",
+        "src": "for i in range(1000000):\n    a = {0, 2.7, \"x\"}",
+        "ratio": 932
+    },
+    {
+        "test": "build_list.py",
+        "description": "build list",
+        "src": "for i in range(1000000):\n    a = [1, 2, 3]",
+        "ratio": 78
+    },
+    {
+        "test": "set_list_item.py",
+        "description": "set list item",
+        "src": "a = [0]\nfor i in range(1000000):\n    a[0] = i",
+        "ratio": 96
+    },
+    {
+        "test": "list_slice.py",
+        "description": "list slice",
+        "src": "a = [1, 2, 3]\nfor i in range(100000):\n    a[:]",
+        "ratio": 195
+    },
+    {
+        "test": "add_integers.py",
+        "description": "integer addition",
+        "src": "a, b, c = 1, 2, 3\nfor i in range(1000000):\n    a   b   c",
+        "ratio": 88
+    },
+    {
+        "test": "add_int_float.py",
+        "description": "integer   float",
+        "src": "a, b = 1, 2.0\nfor i in range(1000000):\n    a   b",
+        "ratio": 71
+    },
+    {
+        "test": "add_floats.py",
+        "description": "float addition",
+        "src": "a, b = 1.0, 2.0\nfor i in range(1000000):\n    a   b",
+        "ratio": 92
+    },
+    {
+        "test": "add_strings.py",
+        "description": "string addition",
+        "src": "a, b, c = 'a', 'b', 'c'\nfor i in range(1000000):\n    a   b   c",
+        "ratio": 58
+    },
+    {
+        "test": "str_of_int.py",
+        "description": "cast int to string",
+        "src": "for i in range(100000):\n    str(i)",
+        "ratio": 212
+    },
+    {
+        "test": "create_function_no_arg.py",
+        "description": "create function without arguments",
+        "src": "for i in range(1000000):\n    def f():\n        pass",
+        "ratio": 875
+    },
+    {
+        "test": "create_function_single_pos_arg.py",
+        "description": "create function, single positional argument",
+        "src": "for i in range(1000000):\n    def f(x):\n        pass",
+        "ratio": 936
+    },
+    {
+        "test": "create_function_complex_args.py",
+        "description": "create function, complex arguments",
+        "src": "for i in range(1000000):\n    def f(x, y=1, *args, **kw):\n        pass",
+        "ratio": 910
+    },
+    {
+        "test": "function_call.py",
+        "description": "function call",
+        "src": "def f(x):\n    return x\nfor i in range(1000000):\n    f(i)",
+        "ratio": 730
+    },
+    {
+        "test": "function_call_complex.py",
+        "description": "function call, complex arguments",
+        "src": "def f(x, y=0, *args, **kw):\n    return x\nfor i in range(100000):\n    f(i, 5, 6, a=8)",
+        "ratio": 767
+    },
+    {
+        "test": "create_class_simple.py",
+        "description": "create simple class",
+        "src": "for i in range(10000):\n    class A:\n        pass",
+        "ratio": 114
+    },
+    {
+        "test": "create_class_with_init.py",
+        "description": "create class with init",
+        "src": "for i in range(10000):\n    class A:\n        def __init__(self, x):\n            self.x = x",
+        "ratio": 136
+    },
+    {
+        "test": "create_instance_simple_class.py",
+        "description": "create instance of simple class",
+        "src": "class A:\n    pass\n\nfor i in range(1000000):\n    A()",
+        "ratio": 556
+    },
+    {
+        "test": "create_instance_with_init.py",
+        "description": "create instance of class with init",
+        "src": "class A:\n    def __init__(self):\n        pass\n\nfor i in range(100000):\n    A()",
+        "ratio": 1133
+    },
+    {
+        "test": "call_instance_method.py",
+        "description": "call instance method",
+        "src": "class A:\n    \n    def f(self):\n        pass\n\na = A()\nfor i in range(100000):\n    a.f()",
+        "ratio": 911
+    },
+    {
+        "test": "set_instance_attribute.py",
+        "description": "set instance attribute",
+        "src": "class A:\n    pass\n\na = A()\nfor i in range(100000):\n    a.x = i",
+        "ratio": 261
+    }
+]

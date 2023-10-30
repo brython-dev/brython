@@ -149,50 +149,41 @@ JSConstructor.$factory = function(obj){
     }
 }
 
-const JSOBJ = Symbol()
-const PYOBJ = Symbol()
+const JSOBJ = $B.SYMBOL_JSOBJ;
+const PYOBJ = $B.SYMBOL_PYOBJ;
+
+const JSOBJ_FCT = $B.SYMBOL_PY2JS_WRAPPER;
+const PYOBJ_FCT = $B.SYMBOL_JS2PY_WRAPPER;
+
 const PYOBJFCT = Symbol()
 const PYOBJFCTS = Symbol()
 
-var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
-    // If _this is passed and jsobj is a function, the function is called
-    // with built-in value `this` set to _this
-    switch(jsobj) {
-      case true:
-      case false:
-        return jsobj
-    }
-
-    if(jsobj === undefined){
-        return $B.Undefined
-    }
-    if(jsobj === null){
-        return null
-    }
-
-    if(Array.isArray(jsobj)){
-        // set it as non-enumerable, prevents issues when looping on it in JS.
-        Object.defineProperty(jsobj, "$is_js_array", {value: true});
-        return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
-    }
-    if(typeof jsobj === 'number'){
-       if(jsobj % 1 === 0){ //TODO: dangerous, it can also be a float with no decimals.
+//TODO: optimize unwrap...
+$B.addJS2PyWrapper(Boolean, function(jsobj){
+	return jsobj;
+});
+$B.addJS2PyWrapper(Number, function(jsobj){
+	if(jsobj % 1 === 0){ //TODO: DANGEROUS! It can also be a float with no decimals.
            return _b_.int.$factory(jsobj)
        }
        // for now, lets assume a float
        return _b_.float.$factory(jsobj)
-    }
-    if(typeof jsobj == "string"){
-        return $B.String(jsobj)
-    }
-    
-    let pyobj = jsobj[PYOBJ]
-    if(pyobj !== undefined) {
-        return pyobj;
-    }
-    
-    if(typeof jsobj === "function"){
-        
+});
+
+
+
+$B.addPy2JSWrapper(_b_.float, function(pyobj) {
+
+        // floats are implemented as
+        // {__class__: _b_.float, value: <JS number>}
+        return pyobj.value // dangerous => can be later converted as int when browser fetch it back.
+});
+
+$B.addJS2PyWrapper(String, function(jsobj){ //TODO: move 2 py_str ?
+	return $B.String(jsobj);
+});
+$B.addJS2PyWrapper(Function, function(jsobj, _this) {
+	
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
         
@@ -239,107 +230,19 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             __qualname__: jsobj.name
         }
         return res
-    }
+});
 
-    if(jsobj.$kw){
-        return jsobj
-    }
-
-    if($B.$isNode(jsobj)){
-        const res = $B.DOMNode.$factory(jsobj)
-        jsobj[PYOBJ] = res
-        res[JSOBJ] = jsobj
-        return res
-    }
-
-    const _res = $B.JSObj.$factory(jsobj)
-    jsobj[PYOBJ] = _res
-    _res[JSOBJ] = jsobj
-    
-    return _res;
-}
-
-var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
-    // conversion of a Python object into a Javascript object
-    if(pyobj === true || pyobj === false){
-        return pyobj
-    }
-    if(pyobj === $B.Undefined){
-        return undefined
-    }
-    if(pyobj === null) {
-        return null
-    }
-    
-    let _jsobj = pyobj[JSOBJ]
-    if(_jsobj !== undefined){
-        return _jsobj
-    }
-    var klass = $B.get_class(pyobj)
-    if(klass === undefined){
-        // not a Python object, consider arg as Javascript object instead
-        return pyobj
-    }
-    
-    if(klass === JSConstructor){
-        // Instances of JSConstructor are transformed into the
+$B.addPy2JSWrapper(JSConstructor, function(pyobj) {
+	// Instances of JSConstructor are transformed into the
         // underlying Javascript object
 
         if(pyobj.js_func !== undefined){
             return pyobj.js_func
         }
         return pyobj.js
-    }
-    if(klass === $B.DOMNode ||
-            klass.__mro__.indexOf($B.DOMNode) > -1){
+});
 
-        // instances of DOMNode or its subclasses are transformed into the
-        // underlying DOM element
-        return pyobj
-
-    }
-    if([_b_.list, _b_.tuple].indexOf(klass) > -1){
-
-        // Python list : transform its elements
-        return pyobj.map(pyobj2jsobj)
-
-    }
-    if(klass === _b_.dict || _b_.issubclass(klass, _b_.dict)){
-
-        // Python dictionaries are transformed into a Javascript object
-        // whose attributes are the dictionary keys
-        // Non-string keys are converted to strings by str(key). This will
-        // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
-        // be the Javascript object {1: "b"}
-        var jsobj = {}
-        for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
-            var key = entry.key
-            if(typeof key !== "string"){
-                key = _b_.str.$factory(key)
-            }
-            if(typeof entry.value === 'function'){
-                // set "this" to jsobj
-                entry.value.bind(jsobj)
-            }
-            jsobj[key] = pyobj2jsobj(entry.value)
-        }
-        return jsobj
-
-    }
-    if(klass === _b_.str){
-
-        // Python strings are converted to the underlying value
-        return pyobj.valueOf()
-
-    }
-    if(klass === _b_.float){
-
-        // floats are implemented as
-        // {__class__: _b_.float, value: <JS number>}
-        return pyobj.value
-
-    }
-    if(klass === $B.function || klass === $B.method){
+function convertMethodsOrFunctions(pyobj, _this) {
         if(pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&
                 ! pyobj.$is_func){
@@ -361,7 +264,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             return jsobj
         }
         // Transform into a Javascript function
-        var jsobj = function(){
+        const jsobj = function(){
             try{
                 // transform JS arguments to Python arguments
                 var args = new Array(arguments.length)
@@ -385,8 +288,72 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         jsobj[PYOBJ] = pyobj
         
         return jsobj
+}
+
+$B.addPy2JSWrapper($B.function, convertMethodsOrFunctions);
+$B.addPy2JSWrapper($B.method  , convertMethodsOrFunctions);
+
+$B.addJS2PyWrapper(Object, function(jsobj, _this) { //TODO: exclude isNode...
+
+    if(jsobj.$kw){ // we really shouldn't be doing that...
+        return jsobj
     }
-    return pyobj
+
+    const _res = $B.JSObj.$factory(jsobj)
+    jsobj[PYOBJ] = _res
+    _res[JSOBJ] = jsobj
+    
+    return _res;
+});
+
+var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){	
+    // If _this is passed and jsobj is a function, the function is called
+    // with built-in value `this` set to _this
+    
+    // handle undefined and null first => cause issues...
+    if(jsobj === undefined)
+        return $B.Undefined;
+    if(jsobj === null)
+        return null;
+    
+    const pyobj = jsobj[PYOBJ];
+    if(pyobj !== undefined)
+    	return pyobj;
+    
+    return jsobj[PYOBJ_FCT](jsobj, _this);
+}
+
+var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
+    // conversion of a Python object into a Javascript object
+    
+    // handle undefined and null first => cause issues...
+    if(pyobj === $B.Undefined)
+        return undefined
+    
+    if( ! (pyobj instanceof Object) ) // not a python type (not even an object)...
+    	return pyobj;
+    
+    const klass = $B.get_class(pyobj)
+    if(klass === undefined){
+        // not a Python object, consider arg as Javascript object instead
+        return pyobj
+    }
+    
+    let jsobj = pyobj[JSOBJ]
+    if(jsobj !== undefined)
+        return jsobj
+
+    const mro = klass.__mro__;
+    let jsobj_fct = klass[JSOBJ_FCT];
+    let offset = 0;
+    while ( jsobj_fct === undefined && offset < mro.length ) {
+    	jsobj_fct = mro[offset++][JSOBJ_FCT];
+    } 
+    
+    if(jsobj_fct !== undefined)
+    	return jsobj_fct(pyobj);
+    
+    return pyobj // no convertion known...
 }
 
 $B.JSConstructor = JSConstructor

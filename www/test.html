@@ -1,0 +1,25 @@
+<html>
+
+<head>
+    <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"
+            crossorigin="anonymous"></script>
+    <script type="text/python">
+        
+        from browser import window
+
+        async def foo():
+            pass
+
+        window.foo = foo
+        print(foo is window.foo)
+        print(window.foo is window.foo)
+    </script>
+    <script>
+        setTimeout( () => {
+            console.log(window.foo === window.foo)
+        }, 1000);
+    </script>
+</head>
+    <div is="my-div_a"></div>
+    <div is="my-div_b"></div>
+</html>
