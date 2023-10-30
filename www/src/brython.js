@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-30 15:52:06.578396"
-__BRYTHON__.timestamp=1698677526578
+__BRYTHON__.compiled_date="2023-10-30 17:11:51.863373"
+__BRYTHON__.timestamp=1698682311863
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13379,12 +13379,12 @@ return factory(res)}}
 throw _b_.TypeError.$factory($B.class_name(self)+
 " indices must be integer, not "+$B.class_name(key))}
 list.__ge__=function(self,other){
-if(! $B.$isinstance(other,list)){return _b_.NotImplemented}
+if(! isinstance(other,list)){return _b_.NotImplemented}
 var res=list.__le__(other,self)
 if(res===_b_.NotImplemented){return res}
 return res}
 list.__gt__=function(self,other){
-if(! $B.$isinstance(other,list)){return _b_.NotImplemented}
+if(! isinstance(other,list)){return _b_.NotImplemented}
 var res=list.__lt__(other,self)
 if(res===_b_.NotImplemented){return res}
 return res}
@@ -13445,7 +13445,7 @@ var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 if(self.__brython__){res.__brython__=self.__brython__}
-return res}else if($B.$isinstance(other,$B.long_int)){throw _b_.OverflowError.$factory(`cannot fit `+
+return res}else if(isinstance(other,$B.long_int)){throw _b_.OverflowError.$factory(`cannot fit `+
 `'${$B.class_name(other)}' into an index-sized integer`)}}
 list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
@@ -13466,7 +13466,7 @@ if($B.repr.enter(self)){
 return '[...]'}
 var _r=[],res
 for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
-if($B.$isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
+if(isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
 $B.repr.leave(self)
 return res}
 list.__rmul__=function(self,other){return list.__mul__(self,other)}
@@ -13835,10 +13835,10 @@ return $B.$JS2Py(res)}}
 return JSObject.__getattribute__(_self,attr)}
 JSConstructor.$factory=function(obj){return{
 __class__:JSConstructor,js:obj,func:obj.js_func}}
-const JSOBJ=Symbol()
-const PYOBJ=Symbol()
-const PYOBJFCT=Symbol()
-const PYOBJFCTS=Symbol()
+const JSOBJ=Symbol('JSOBJ')
+const PYOBJ=Symbol('PYOBJ')
+const PYOBJFCT=Symbol('PYOBJFCT')
+const PYOBJFCTS=Symbol('PYOBJFCTS')
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj,_this){
 switch(jsobj){case true:
 case false:
@@ -13956,11 +13956,14 @@ $B.JSObj.__contains__=function(_self,key){return key in _self}
 $B.JSObj.__dir__=function(_self){var attrs=Object.keys(_self);
 attrs=attrs.sort()
 return attrs}
-$B.JSObj.__eq__=function(_self,other){switch(typeof _self){case "object":
+$B.JSObj.__eq__=function(_self,other){switch(typeof _self){case "string":
+return _self==other
+case "object":
 if(_self.__eq__ !==undefined){return _self.__eq__(other)}
 if(Object.keys(_self).length !==Object.keys(other).length){return false}
 if(_self===other){return true}
-for(var key in _self){if(! $B.JSObj.__eq__(_self[key],other[key])){return false}}
+for(var key in _self){if(! $B.rich_comp('__eq__',_self[key],other[key])){return false}}
+return true
 case 'function':
 if(_self.$is_js_func && other.$is_js_func){return _self.$js_func===other.$js_func}
 return _self===other

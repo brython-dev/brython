@@ -149,10 +149,10 @@ JSConstructor.$factory = function(obj){
     }
 }
 
-const JSOBJ = Symbol()
-const PYOBJ = Symbol()
-const PYOBJFCT = Symbol()
-const PYOBJFCTS = Symbol()
+const JSOBJ = Symbol('JSOBJ')
+const PYOBJ = Symbol('PYOBJ')
+const PYOBJFCT = Symbol('PYOBJFCT')
+const PYOBJFCTS = Symbol('PYOBJFCTS')
 
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     // If _this is passed and jsobj is a function, the function is called
@@ -486,6 +486,8 @@ $B.JSObj.__dir__ = function(_self){
 
 $B.JSObj.__eq__ = function(_self, other){
     switch(typeof _self){
+        case "string":
+            return _self == other
         case "object":
             if(_self.__eq__ !== undefined){
                 return _self.__eq__(other)
@@ -497,10 +499,11 @@ $B.JSObj.__eq__ = function(_self, other){
                 return true
             }
             for(var key in _self){
-                if(! $B.JSObj.__eq__(_self[key], other[key])){
+                if(! $B.rich_comp('__eq__', _self[key], other[key])){
                     return false
                 }
             }
+            return true
         case 'function':
             if(_self.$is_js_func && other.$is_js_func){
                 return _self.$js_func === other.$js_func
