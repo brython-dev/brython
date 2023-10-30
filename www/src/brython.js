@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-29 21:46:13.187760"
-__BRYTHON__.timestamp=1698612373187
+__BRYTHON__.compiled_date="2023-10-30 15:52:06.578396"
+__BRYTHON__.timestamp=1698677526578
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5212,132 +5212,109 @@ for(var arg_name of arg_names){slots[arg_name]=empty}
 return $B.parse_args(
 args,f.$infos.__name__,code.co_argcount,slots,arg_names,f.$infos.__defaults__,f.$infos.__kwdefaults__,f.$infos.vararg,f.$infos.kwarg,code.co_posonlyargcount,code.co_kwonlyargcount)}
 function args0_NEW(fct,args){
-const HAS_KW=args[args.length-1]?.$kw !==undefined;
-let ARGS_POS_COUNT=args.length;
-let ARGS_NAMED=null;
-if(HAS_KW ){--ARGS_POS_COUNT;
+const HAS_KW=args[args.length-1]?.$kw !==undefined
+let ARGS_POS_COUNT=args.length,ARGS_NAMED=null;
+if(HAS_KW){--ARGS_POS_COUNT
 ARGS_NAMED=args[ARGS_POS_COUNT].$kw}
-const result={};
-const $INFOS=fct.$infos;
-const $CODE=$INFOS.__code__;
-const PARAMS_NAMES=$INFOS.arg_names;
-const PARAMS_POS_COUNT=$CODE.co_argcount;
-const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount;
-const PARAMS_VARARGS_NAME=$INFOS.vararg;
-const PARAMS_KWARGS_NAME=$INFOS.kwarg;
-const PARAMS_POS_DEFAULTS=$INFOS.__defaults__;
-const PARAMS_POS_DEFAULTS_COUNT=PARAMS_POS_DEFAULTS.length;
-const PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT-PARAMS_POS_DEFAULTS_COUNT;
-const min=Math.min(ARGS_POS_COUNT,PARAMS_POS_COUNT );
-let offset=0;
-for(;offset < min ;++offset)
-result[PARAMS_NAMES[offset]]=args[offset];
-if(PARAMS_VARARGS_NAME !==null )
-result[PARAMS_VARARGS_NAME]=$B.fast_tuple(Array.prototype.slice.call(args,PARAMS_POS_COUNT,ARGS_POS_COUNT ));
-else if(ARGS_POS_COUNT > PARAMS_POS_COUNT ){args0(fct,args);
-throw new Error('Too much positional arguments given (args0 should have raised an error) !');}
-if(ARGS_NAMED===null ){
-if(offset < PARAMS_POS_DEFAULTS_OFFSET ){args0(fct,args);
-throw new Error('Not enough positional arguments given (args0 should have raised an error) !');}
+const result={}
+const $INFOS=fct.$infos,$CODE=$INFOS.__code__,PARAMS_NAMES=$INFOS.arg_names,PARAMS_POS_COUNT=$CODE.co_argcount,PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_VARARGS_NAME=$INFOS.vararg,PARAMS_KWARGS_NAME=$INFOS.kwarg,PARAMS_POS_DEFAULTS=$INFOS.__defaults__,PARAMS_POS_DEFAULTS_COUNT=PARAMS_POS_DEFAULTS.length,PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT-PARAMS_POS_DEFAULTS_COUNT
+const min=Math.min(ARGS_POS_COUNT,PARAMS_POS_COUNT)
+let offset=0
+for(;offset < min;++offset){result[PARAMS_NAMES[offset]]=args[offset]}
+if(PARAMS_VARARGS_NAME !==null ){
+result[PARAMS_VARARGS_NAME]=$B.fast_tuple(
+Array.prototype.slice.call(args,PARAMS_POS_COUNT,ARGS_POS_COUNT ));}else if(ARGS_POS_COUNT > PARAMS_POS_COUNT){args0(fct,args)
+throw new Error('Too much positional arguments given (args0 should have raised an error) !')}
+if(ARGS_NAMED===null){
+if(offset < PARAMS_POS_DEFAULTS_OFFSET){args0(fct,args)
+throw new Error('Not enough positional arguments given (args0 should have raised an error) !')}
 for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
 i < PARAMS_POS_DEFAULTS_COUNT;
-++i)
-result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i];
-if(PARAMS_KWARGS_NAME !==null )
-result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict({});
-if(PARAMS_NAMED_COUNT===0 )
-return result;
+++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}
+if(PARAMS_KWARGS_NAME !==null){result[PARAMS_KWARGS_NAME]=$B.obj_dict({})}
+if(PARAMS_NAMED_COUNT===0 ){return result}
+let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj
+if(kwargs_defaults===undefined ||kwargs_defaults===null){kwargs_defaults=$INFOS.__kwdefaults__.$strings
+if(kwargs_defaults===undefined ||kwargs_defaults===null){args0(fct,args)
+throw new Error('Named argument expected (args0 should have raised an error) !')}}
+const named_default_values=Object.values(kwargs_defaults),
+nb_named_defaults=named_default_values.length
+if(nb_named_defaults < PARAMS_NAMED_COUNT){args0(fct,args)
+throw new Error('Named argument expected (args0 should have raised an error) !')}
+for(let i=0;i < nb_named_defaults;++i){result[PARAMS_NAMES[offset++]]=named_default_values[i]}
+return result}
 let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj;
-if(kwargs_defaults===undefined ||kwargs_defaults===null ){kwargs_defaults=$INFOS.__kwdefaults__.$strings;
-if(kwargs_defaults===undefined ||kwargs_defaults===null ){args0(fct,args);
-throw new Error('Named argument expected (args0 should have raised an error) !');}}
-const named_default_values=Object.values(kwargs_defaults);
-const nb_named_defaults=named_default_values.length;
-if(nb_named_defaults < PARAMS_NAMED_COUNT ){args0(fct,args);
-throw new Error('Named argument expected (args0 should have raised an error) !');}
-for(let i=0;i < nb_named_defaults;++i)
-result[PARAMS_NAMES[offset++]]=named_default_values[i];
-return result;}
-let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj;
-if(kwargs_defaults===undefined || kwargs_defaults==null ){kwargs_defaults=$INFOS.__kwdefaults__.$strings;
-if(kwargs_defaults===undefined || kwargs_defaults==null )
-kwargs_defaults={}}
-const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
-const PARAMS_POS_DEFAULTS_MAXID=PARAMS_POS_DEFAULTS_COUNT+PARAMS_POS_DEFAULTS_OFFSET;
-if(offset < PARAMS_POSONLY_COUNT ){if(offset < PARAMS_POS_DEFAULTS_OFFSET ){args0(fct,args);
-throw new Error('Not enough positional parameters given (args0 should have raised an error) !');}
-const max=PARAMS_POS_DEFAULTS_COUNT-(PARAMS_POS_COUNT-PARAMS_POSONLY_COUNT);
+if(kwargs_defaults===undefined ||kwargs_defaults==null){kwargs_defaults=$INFOS.__kwdefaults__.$strings
+if(kwargs_defaults===undefined ||kwargs_defaults==null ){kwargs_defaults={}}}
+const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount,PARAMS_POS_DEFAULTS_MAXID=PARAMS_POS_DEFAULTS_COUNT+
+PARAMS_POS_DEFAULTS_OFFSET
+if(offset < PARAMS_POSONLY_COUNT){if(offset < PARAMS_POS_DEFAULTS_OFFSET){args0(fct,args)
+throw new Error('Not enough positional parameters given (args0 should have raised an error) !')}
+const max=PARAMS_POS_DEFAULTS_COUNT-
+(PARAMS_POS_COUNT-PARAMS_POSONLY_COUNT)
 for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
 i < max;
-++i)
-result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i];}
-if(PARAMS_KWARGS_NAME===null ){let nb_named_args=0;
-for(let id=0;id < ARGS_NAMED.length;++id ){const _kargs=ARGS_NAMED[id]
-let kargs=_kargs.$jsobj;
+++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}}
+if(PARAMS_KWARGS_NAME===null){let nb_named_args=0
+for(let id=0,len=ARGS_NAMED.length;id < len;++id){const _kargs=ARGS_NAMED[id]
+let kargs=_kargs.$jsobj
 if(kargs===undefined ||kargs===null){kargs=_kargs.$strings
-if(kargs===undefined ||kargs===null)
-kargs=_kargs;}
-for(let argname in kargs){result[argname ]=kargs[argname];
-++nb_named_args;}}
-let found=0;
-let ioffset=offset;
-for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset];
-if(key in result )
-continue;
-args0(fct,args);
+if(kargs===undefined ||kargs===null){kargs=_kargs}}
+for(let argname in kargs){result[argname ]=kargs[argname]
+++nb_named_args}}
+let found=0
+let ioffset=offset
+for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset]
+if(key in result ){
+continue}
+args0(fct,args)
+throw new Error('Missing a named arguments (args0 should have raised an error) !')}
+for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset]
+if(key in result){continue}
+result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET]
+++found}
+for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset]
+if(key in result ){continue}
+if(!(key in kwargs_defaults)){args0(fct,args)
 throw new Error('Missing a named arguments (args0 should have raised an error) !');}
-for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset];
-if(key in result )
-continue;
-result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET];
-++found;}
-for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset];
-if(key in result )
-continue;
-if(!(key in kwargs_defaults)){args0(fct,args);
-throw new Error('Missing a named arguments (args0 should have raised an error) !');}
-result[key]=kwargs_defaults[key];
-++found;}
-if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args);
-throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');}
-return result;}
-const extra={};
-let nb_named_args=0;
-let nb_extra_args=0;
-for(let id=0;id < ARGS_NAMED.length;++id ){const _kargs=ARGS_NAMED[id]
-let kargs=_kargs.$jsobj;
+result[key]=kwargs_defaults[key]
+++found}
+if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
+throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
+return result}
+const extra={}
+let nb_named_args=0
+let nb_extra_args=0
+for(let id=0;id < ARGS_NAMED.length;++id){const _kargs=ARGS_NAMED[id]
+let kargs=_kargs.$jsobj
 if(kargs===undefined ||kargs===null){kargs=_kargs.$strings
-if(kargs===undefined ||kargs===null)
-kargs=_kargs;}
-for(let argname in kargs){if(PARAMS_NAMES.indexOf(argname,PARAMS_POSONLY_COUNT)!==-1 ){result[argname ]=kargs[argname];
-++nb_named_args;}else{
-extra[argname ]=kargs[argname];
-++nb_extra_args;}}}
-let found=0;
-let ioffset=offset;
-for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset];
-if(key in result )
-continue;
-args0(fct,args);
-throw new Error('Missing a named arguments (args0 should have raised an error) !');}
-for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset];
-if(key in result )
-continue;
-result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET];
-++found;}
-for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset];
-if(key in result )
-continue;
-if(!(key in kwargs_defaults)){args0(fct,args);
-throw new Error('Missing a named arguments (args0 should have raised an error) !');}
-result[key]=kwargs_defaults[key];
-++found;}
-if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args);
-throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');}
-if(Object.keys(extra).length !==nb_extra_args ){args0(fct,args);
-throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');}
-result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict(extra);
-return result;}
+if(kargs===undefined ||kargs===null){kargs=_kargs}}
+for(let argname in kargs){if(PARAMS_NAMES.indexOf(argname,PARAMS_POSONLY_COUNT)!==-1){result[argname ]=kargs[argname]
+++nb_named_args}else{extra[argname ]=kargs[argname]
+++nb_extra_args}}}
+let found=0
+let ioffset=offset
+for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset]
+if(key in result){
+continue}
+args0(fct,args)
+throw new Error('Missing a named arguments (args0 should have raised an error) !')}
+for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset]
+if(key in result){continue}
+result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET]
+++found}
+for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset]
+if(key in result ){continue}
+if(!(key in kwargs_defaults)){args0(fct,args)
+throw new Error('Missing a named arguments (args0 should have raised an error) !')}
+result[key]=kwargs_defaults[key]
+++found}
+if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
+throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
+if(Object.keys(extra).length !==nb_extra_args){args0(fct,args)
+throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !')}
+result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict(extra)
+return result}
 $B.args0=args0_NEW;
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,vararg,kwarg,nb_posonly){
 var nb_posonly=nb_posonly ||0,nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults={$jsobj:{}}
@@ -13529,8 +13506,7 @@ var res=0
 for(var _item of $.self){if($B.is_or_equals(_item,$.x)){res++}}
 return res}
 list.extend=function(){var $=$B.args("extend",2,{self:null,t:null},["self","t"],arguments,{},null,null)
-var other=list.$factory(_b_.iter($.t))
-for(var i=0;i < other.length;i++){$.self.push(other[i])}
+for(var item of $B.make_js_iterator($.t)){$.self[$.self.length]=item}
 return _b_.None}
 list.index=function(){var missing={},$=$B.args("index",4,{self:null,x:null,start:null,stop:null},["self","x","start" ,"stop"],arguments,{start:0,stop:missing},null,null),self=$.self,start=$.start,stop=$.stop
 var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
@@ -14091,7 +14067,7 @@ $B.set_func_names($B.JSObj,"builtins")
 var js_list_meta=$B.make_class('js_list_meta')
 js_list_meta.__mro__=[_b_.type,_b_.object]
 js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
-if(js_array[attr]){return js_array[attr]}
+if(js_array.hasOwnProperty(attr)){return js_array[attr]}
 if(['__delitem__','__setitem__'].indexOf(attr)>-1){
 return function(){var args=new Array(arguments.length)
 args[0]=arguments[0]
@@ -14102,6 +14078,21 @@ return jsobj2pyobj(_b_.list[attr].call(null,pylist,...Array.from(arguments).slic
 return function(){var js_array=arguments[0],t=jsobj2pyobj(js_array),args=[t]
 return _b_.list[attr].apply(null,args)}}
 $B.set_func_names(js_list_meta,'builtins')
+$B.SizedJSObj=$B.make_class('SizedJavascriptObject')
+$B.SizedJSObj.__bases__=[$B.JSObj]
+$B.SizedJSObj.__mro__=[$B.JSObj,_b_.object]
+$B.SizedJSObj.__len__=function(_self){return _self.length}
+$B.set_func_names($B.SizedJSObj,'builtins')
+$B.IterableJSObj=$B.make_class('IterableJavascriptObject')
+$B.IterableJSObj.__bases__=[$B.JSObj]
+$B.IterableJSObj.__mro__=[$B.JSObj,_b_.object]
+$B.IterableJSObj.__iter__=function(_self){return{
+__class__:$B.IterableJSObj,it:_self[Symbol.iterator]()}}
+$B.IterableJSObj.__len__=function(_self){return _self.length}
+$B.IterableJSObj.__next__=function(_self){var value=_self.it.next()
+if(! value.done){return jsobj2pyobj(value.value)}
+throw _b_.StopIteration.$factory('')}
+$B.set_func_names($B.IterableJSObj,'builtins')
 var js_array=$B.js_array=$B.make_class('Array')
 js_array.__class__=js_list_meta
 js_array.__mro__=[$B.JSObj,_b_.object]
@@ -14116,6 +14107,14 @@ return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return $B.jsobj2pyobj(_self[i])}
+var js_array_iterator=$B.make_class('JSArray_iterator',function(obj){return{
+__class__:js_array_iterator,it:obj[Symbol.iterator]()}}
+)
+js_array_iterator.__next__=function(_self){var v=_self.it.next()
+if(v.done){throw _b_.StopIteration.$factory('')}
+return $B.jsobj2pyobj(v.value)}
+$B.set_func_names(js_array_iterator,'builtins')
+js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
 js_array.__repr__=function(_self){if($B.repr.enter(_self)){
 return '[...]'}
 var _r=new Array(_self.length),res
@@ -14124,21 +14123,6 @@ res="["+_r.join(", ")+"]"
 $B.repr.leave(_self)
 return res}
 $B.set_func_names(js_array,'javascript')
-$B.SizedJSObj=$B.make_class('SizedJavascriptObject')
-$B.SizedJSObj.__bases__=[$B.JSObj]
-$B.SizedJSObj.__mro__=[$B.JSObj,_b_.object]
-$B.SizedJSObj.__len__=function(_self){return _self.length}
-$B.set_func_names($B.SizedJSObj,'builtins')
-$B.IterableJSObj=$B.make_class('IterableJavascriptObject')
-$B.IterableJSObj.__bases__=[$B.JSObj]
-$B.IterableJSObj.__mro__=[$B.JSObj,_b_.object]
-$B.IterableJSObj.__iter__=function(_self){return{
-__class__:$B.IterableJSObj,it:obj[Symbol.iterator]()}}
-$B.IterableJSObj.__len__=function(_self){return _self.length}
-$B.IterableJSObj.__next__=function(_self){var value=_self.it.next()
-if(! value.done){return jsobj2pyobj(value.value)}
-throw _b_.StopIteration.$factory('')}
-$B.set_func_names($B.IterableJSObj,'builtins')
 $B.get_jsobj_class=function(obj){var proto=Object.getPrototypeOf(obj)
 if(proto===null){return $B.JSObj}
 if(proto[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(Object.getOwnPropertyNames(proto).indexOf('length')>-1){return $B.SizedJSObj}
