@@ -118,311 +118,290 @@ function args0_NEW(fct, args) {
     // If you don't want to change it, I can modify the code to remove the costly convertion.
     /**/
     //const args = _args; // should remove this line...
-    const HAS_KW         = args[args.length-1]?.$kw !== undefined;
-    let ARGS_POS_COUNT        = args.length;
-    let ARGS_NAMED            = null;
+    const HAS_KW = args[args.length-1]?.$kw !== undefined
+    let ARGS_POS_COUNT = args.length,
+        ARGS_NAMED = null;
 
-    if( HAS_KW ) {
-        --ARGS_POS_COUNT;
+    if(HAS_KW){
+        --ARGS_POS_COUNT
         ARGS_NAMED = args[ARGS_POS_COUNT].$kw
     }
-    /*
-    const args = [..._args];
-    if(args[args.length-1]?.$kw === undefined)
-        args.push(null);
-    else
-        args[args.length-1] = args[args.length-1].$kw;
-    /**/
-    //const args = _args;
 
-    const result = {};
+    const result = {}
 
     // using const should enable the browser to perform some optimisation.
-    const $INFOS = fct.$infos;
-    const $CODE  = $INFOS.__code__;
+    const $INFOS = fct.$infos,
+          $CODE  = $INFOS.__code__,
 
-    const PARAMS_NAMES        = $INFOS.arg_names;
-    const PARAMS_POS_COUNT    = $CODE.co_argcount;
-    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
+          PARAMS_NAMES        = $INFOS.arg_names,
+          PARAMS_POS_COUNT    = $CODE.co_argcount,
+          PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount,
 
-    const PARAMS_VARARGS_NAME = $INFOS.vararg;
-    const PARAMS_KWARGS_NAME  = $INFOS.kwarg;
+          PARAMS_VARARGS_NAME = $INFOS.vararg,
+          PARAMS_KWARGS_NAME  = $INFOS.kwarg,
 
-    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
-    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
+          PARAMS_POS_DEFAULTS = $INFOS.__defaults__,
+          PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length,
 
-    const PARAMS_POS_DEFAULTS_OFFSET= PARAMS_POS_COUNT - PARAMS_POS_DEFAULTS_COUNT;
+          PARAMS_POS_DEFAULTS_OFFSET= PARAMS_POS_COUNT - PARAMS_POS_DEFAULTS_COUNT
 
     // process positional arguments => positional parameters...
-    const min = Math.min( ARGS_POS_COUNT, PARAMS_POS_COUNT );
-    let offset = 0;
-    for( ; offset < min ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
+    const min = Math.min(ARGS_POS_COUNT, PARAMS_POS_COUNT)
 
+    let offset = 0
+    for(; offset < min; ++offset){
+        result[PARAMS_NAMES[offset]] = args[offset]
+    }
     // process positional arguments => vargargs parameters...
-    if( PARAMS_VARARGS_NAME !== null )
+    if( PARAMS_VARARGS_NAME !== null ){
         // can be speed up if arguments is an array in the first place
-        result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
-        //result[PARAMS_VARARGS_NAME] = $B.fast_tuple( args.slice( PARAMS_POS_COUNT, HAS_KW ? -1 : undefined ) );
+        // TODO: opti, better way to construct tuple from subarray ?
+        result[PARAMS_VARARGS_NAME] = $B.fast_tuple(
+            Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) );
         // maybe there is a faster way to build a tuple from a subset of an array.
-    else if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
-        args0(fct, args);
-        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
+    }else if( ARGS_POS_COUNT > PARAMS_POS_COUNT){
+        args0(fct, args)
+        throw new Error('Too much positional arguments given (args0 should have raised an error) !')
     }
 
-
     // if no named arguments has been given...
-    if( ARGS_NAMED === null ) {
+    if(ARGS_NAMED === null){
 
-    // Handle default positional parameters...
-
-        if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
-            args0(fct, args);
-            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
+        // Handle default positional parameters...
+        if(offset < PARAMS_POS_DEFAULTS_OFFSET){
+            args0(fct, args)
+            throw new Error('Not enough positional arguments given (args0 should have raised an error) !')
         }
 
         for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
                 i < PARAMS_POS_DEFAULTS_COUNT;
-                ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
+                ++i){
+            result[PARAMS_NAMES[offset++]] = PARAMS_POS_DEFAULTS[i]
+        }
+        // Handle kwargs parameters...
+        if(PARAMS_KWARGS_NAME !== null){
+            result[PARAMS_KWARGS_NAME] = $B.obj_dict({})
+        }
+        // Shortcut : no named parameters.
+        if( PARAMS_NAMED_COUNT === 0 ){
+            return result
+        }
 
-    // Handle kwargs parameters...
-        if( PARAMS_KWARGS_NAME !== null )
-            result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict({});
-
-    // Shortcut : no named parameters.
-        if( PARAMS_NAMED_COUNT === 0 )
-            return result;
-
-    // Handle defaults value for named parameters.
+        // Handle defaults value for named parameters.
         // Optimize: precompute the number of named parameters with a default value, or just a boolean ?
 
-        let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
+        let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj
+        if(kwargs_defaults === undefined || kwargs_defaults === null){
 
-            kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-            if( kwargs_defaults === undefined || kwargs_defaults === null ){
-                args0(fct, args);
-                throw new Error('Named argument expected (args0 should have raised an error) !');
+            kwargs_defaults = $INFOS.__kwdefaults__.$strings
+            if(kwargs_defaults === undefined || kwargs_defaults === null){
+                args0(fct, args)
+                throw new Error('Named argument expected (args0 should have raised an error) !')
             }
         }
 
-        const named_default_values = Object.values(kwargs_defaults); // TODO: precompute this plz.
-         const nb_named_defaults = named_default_values.length;
+        const named_default_values = Object.values(kwargs_defaults), // TODO: precompute this plz.
+              nb_named_defaults = named_default_values.length
 
-        if( nb_named_defaults < PARAMS_NAMED_COUNT ) {
-            args0(fct, args);
-            throw new Error('Named argument expected (args0 should have raised an error) !');
+        if(nb_named_defaults < PARAMS_NAMED_COUNT){
+            args0(fct, args)
+            throw new Error('Named argument expected (args0 should have raised an error) !')
         }
 
-        for(let i = 0; i < nb_named_defaults; ++i)
-            result[ PARAMS_NAMES[offset++] ] = named_default_values[i];
-
-        return result;
+        for(let i = 0; i < nb_named_defaults; ++i){
+            result[PARAMS_NAMES[offset++]] = named_default_values[i]
+        }
+        return result
     }
 
     let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-        if( kwargs_defaults === undefined  || kwargs_defaults == null ) {
-
-            kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-            if( kwargs_defaults === undefined  || kwargs_defaults == null )
-                kwargs_defaults = {}
+    if(kwargs_defaults === undefined || kwargs_defaults == null){
+        kwargs_defaults = $INFOS.__kwdefaults__.$strings
+        if( kwargs_defaults === undefined || kwargs_defaults == null ){
+            kwargs_defaults = {}
         }
-    //const kwargs_defaults= $INFOS.__kwdefaults__.$jsobj ?? $INFOS.__kwdefaults__.$strings ?? {}; // costs a little...
+    }
 
     // Construct the list of default values...
-    // Optimize : I'd need an object containing ALL default values instead of having to build one...
-    // If not done, I can work on it to remove the construction of this object (which cost a little).
-    // Note: I should exclude posonly default parameters... (we don't need them as remaining positional only parameters'd be consumed next)
-    /* const kargs_defaults= { ... kwargs_defaults } //costly
-    for(let i = 0; i < PARAMS_POS_DEFAULTS_COUNT; ++i)          // costly
-        kargs_defaults[PARAMS_NAMES[PARAMS_POS_DEFAULTS_OFFSET+i]] = PARAMS_POS_DEFAULTS[i]; */
+    // Optimize : I'd need an object containing ALL default values instead of
+    // having to build one...
+    // If not done, I can work on it to remove the construction of this object
+    // (which cost a little).
+    // Note: I should exclude posonly default parameters... (we don't need
+    // them as remaining positional only parameters'd be consumed next)
 
+    // Consume remaining positional only parameters (no positional arguments
+    // given, so expect default value).
+    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount,
+          PARAMS_POS_DEFAULTS_MAXID = PARAMS_POS_DEFAULTS_COUNT +
+                                      PARAMS_POS_DEFAULTS_OFFSET
 
-    // Consume remaining positional only parameters (no positional arguments given, so expect default value).
-    const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-    const PARAMS_POS_DEFAULTS_MAXID    =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
-
-    if( offset < PARAMS_POSONLY_COUNT ) {
-
-        if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
-            args0(fct, args);
-            throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+    if(offset < PARAMS_POSONLY_COUNT){
+        if(offset < PARAMS_POS_DEFAULTS_OFFSET){
+            args0(fct, args)
+            throw new Error('Not enough positional parameters given (args0 should have raised an error) !')
         }
 
-        const max = PARAMS_POS_DEFAULTS_COUNT - (PARAMS_POS_COUNT - PARAMS_POSONLY_COUNT);
+        const max = PARAMS_POS_DEFAULTS_COUNT -
+                        (PARAMS_POS_COUNT - PARAMS_POSONLY_COUNT)
 
         // default parameters
         for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
                 i < max;
-                ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
+                ++i){
+            result[PARAMS_NAMES[offset++]] = PARAMS_POS_DEFAULTS[i]
+        }
     }
 
     // No **kwargs parameter (i.e. unknown name = error).
-    if( PARAMS_KWARGS_NAME === null ) {
-
-
-        let nb_named_args = 0;
-
-        for(let id = 0; id < ARGS_NAMED.length; ++id ) {
-
+    if(PARAMS_KWARGS_NAME === null){
+        let nb_named_args = 0
+        for(let id = 0, len = ARGS_NAMED.length; id < len; ++id){
             const _kargs = ARGS_NAMED[id]
-            let kargs  = _kargs.$jsobj;
-            if( kargs === undefined || kargs === null) {
+            let kargs  = _kargs.$jsobj
+            if(kargs === undefined || kargs === null){
                 kargs = _kargs.$strings
-                if(kargs === undefined || kargs === null)
-                    kargs= _kargs; // I don't think I can do better.
+                if(kargs === undefined || kargs === null){
+                    kargs= _kargs
+                }
+            }
+            for(let argname in kargs) {
+                result[ argname ] = kargs[argname]
+                ++nb_named_args
+            }
+        }
+
+        let found = 0
+        let ioffset = offset
+        for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
+            const key = PARAMS_NAMES[ioffset]
+            if( key in result ){ // maybe could be speed up using "!(key in result)"
+                continue
+            }
+            args0(fct, args)
+            throw new Error('Missing a named arguments (args0 should have raised an error) !')
+        }
+        for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset){
+            const key = PARAMS_NAMES[ioffset]
+            if(key in result){
+                continue
+            }
+            result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET]
+            ++found
+        }
+        for( ; ioffset < PARAMS_NAMES.length; ++ioffset){
+            const key = PARAMS_NAMES[ioffset]
+            if( key in result ){
+                continue
+            }
+            if(! (key in kwargs_defaults)){
+                args0(fct, args)
+                throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
 
-        for(let argname in kargs) {
-            result[ argname ] = kargs[argname];
-            ++nb_named_args;
-        }
+            result[key] = kwargs_defaults[key]
+            ++found
         }
 
-        let found = 0;
-        let ioffset = offset;
-        for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
-
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result ) // maybe could be speed up using "!(key in result)"
-                continue;
-
-            args0(fct, args);
-            throw new Error('Missing a named arguments (args0 should have raised an error) !');
+        // PARAMS_NAMES.length - offset = the number of expected named arguments.
+        // found + nb_named_args = the number of given named arguments + the
+        // number of named arguments we found a default value for.
+        // If they aren't equal, we either gave several times the same
+        // argument or gave an inexisting name.
+        if(found + nb_named_args !== PARAMS_NAMES.length - offset){
+            args0(fct, args)
+            throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
-        for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset) {
-
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result )
-                continue;
-
-            result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
-        ++found;
-        }
-        for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
-
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result )
-                continue;
-
-            if( ! (key in kwargs_defaults) ) {
-                args0(fct, args);
-                throw new Error('Missing a named arguments (args0 should have raised an error) !');
-        }
-
-        result[key] = kwargs_defaults[key];
-        ++found;
-        }
-
-    // PARAMS_NAMES.length - offset = the number of expected named arguments.
-    // found + nb_named_args = the number of given named arguments + the number of named arguments we found a default value for.
-    // If they aren't equal, we either gave several times the same argument or gave an inexisting name.
-        if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-            args0(fct, args);
-            throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
-        }
-
-        return result;
+        return result
     }
-
 
     // With **kwargs parameter (i.e. unknown name = put in extra).
-
-    const extra = {};
+    const extra = {}
 
     // we count the number of arguments given to normal named parameters and the number given to **kwargs.
-    let nb_named_args = 0;
-    let nb_extra_args = 0;
+    let nb_named_args = 0
+    let nb_extra_args = 0
 
-    for(let id = 0; id < ARGS_NAMED.length; ++id ) {
-
+    for(let id = 0; id < ARGS_NAMED.length; ++id){
         const _kargs = ARGS_NAMED[id]
-        let kargs  = _kargs.$jsobj;
-            if( kargs === undefined || kargs === null) {
-                kargs = _kargs.$strings
-                if(kargs === undefined || kargs === null)
-                    kargs= _kargs; // I don't think I can do better.
+        let kargs  = _kargs.$jsobj
+        if(kargs === undefined || kargs === null){
+            kargs = _kargs.$strings
+            if(kargs === undefined || kargs === null){
+                kargs= _kargs
             }
-
-
-    for(let argname in kargs) {
-
-        if( PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1 ) {
-                result[ argname ] = kargs[argname];
-                ++nb_named_args;
-            } else {
-                extra[ argname ] = kargs[argname];
-                ++nb_extra_args;
+        }
+        for(let argname in kargs){
+            if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
+                result[ argname ] = kargs[argname]
+                ++nb_named_args
+            }else{
+                extra[ argname ] = kargs[argname]
+                ++nb_extra_args
             }
-    }
+        }
     }
 
     // Same as "No **kwargs parameter".
     // Checks default values...
     // What is quicker ? An object or 1 array of name (with indexOf) and 1 array of values ?
-    let found = 0;
-    let ioffset = offset;
-    for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result ) // maybe could be speed up using "!(key in result)"
-            continue;
-
-        args0(fct, args);
-        throw new Error('Missing a named arguments (args0 should have raised an error) !');
-    }
-    for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result )
-            continue;
-
-        result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
-    ++found;
-    }
-    for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result )
-            continue;
-
-        if( ! (key in kwargs_defaults) ) {
-            args0(fct, args);
-            throw new Error('Missing a named arguments (args0 should have raised an error) !');
+    let found = 0
+    let ioffset = offset
+    for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset){
+        const key = PARAMS_NAMES[ioffset]
+        if(key in result){ // maybe could be speed up using "!(key in result)"
+            continue
         }
-
-        result[key] = kwargs_defaults[key];
-        ++found;
+        args0(fct, args)
+        throw new Error('Missing a named arguments (args0 should have raised an error) !')
+    }
+    for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset){
+        const key = PARAMS_NAMES[ioffset]
+        if(key in result){
+            continue
+        }
+        result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET]
+        ++found
+    }
+    for( ; ioffset < PARAMS_NAMES.length; ++ioffset){
+        const key = PARAMS_NAMES[ioffset]
+        if( key in result ){
+            continue
+        }
+        if(! (key in kwargs_defaults)){
+            args0(fct, args)
+            throw new Error('Missing a named arguments (args0 should have raised an error) !')
+        }
+        result[key] = kwargs_defaults[key]
+        ++found
     }
 
     // Same as "No **kwargs parameter".
     // PARAMS_NAMES.length - offset = the number of expected named arguments.
-    // found + nb_named_args = the number of given named arguments + the number of named arguments we found a default value for.
-    // If they aren't equal, we either gave several times the same argument or gave an inexisting name.
+    // found + nb_named_args = the number of given named arguments + the
+    // number of named arguments we found a default value for.
+    // If they aren't equal, we either gave several times the same argument or
+    // gave an inexisting name.
 
-    if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-        args0(fct, args);
-        throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
+    if(found + nb_named_args !== PARAMS_NAMES.length - offset){
+        args0(fct, args)
+        throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
     }
 
-    // verify if the number of extra arguments (**kargs) found matches the numbers of elements in extra.
+    // verify if the number of extra arguments (**kargs) found matches the
+    // numbers of elements in extra.
     // if not, it means that the same name has been given several times.
-    if( Object.keys(extra).length !== nb_extra_args ) {
-        args0(fct, args);
-        throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
+    if(Object.keys(extra).length !== nb_extra_args){
+        args0(fct, args)
+        throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !')
     }
 
-    result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra);
+    result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra)
 
-    return result;
+    return result
 }
 
-
-//$B.args0 = args0;
 $B.args0 = args0_NEW;
-
 
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                    vararg, kwarg, nb_posonly){
