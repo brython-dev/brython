@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-10-30 14:31:12.565194"
-__BRYTHON__.timestamp=1698672672565
+__BRYTHON__.compiled_date="2023-10-30 15:52:06.578396"
+__BRYTHON__.timestamp=1698677526578
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13506,8 +13506,7 @@ var res=0
 for(var _item of $.self){if($B.is_or_equals(_item,$.x)){res++}}
 return res}
 list.extend=function(){var $=$B.args("extend",2,{self:null,t:null},["self","t"],arguments,{},null,null)
-var other=list.$factory(_b_.iter($.t))
-for(var i=0;i < other.length;i++){$.self.push(other[i])}
+for(var item of $B.make_js_iterator($.t)){$.self[$.self.length]=item}
 return _b_.None}
 list.index=function(){var missing={},$=$B.args("index",4,{self:null,x:null,start:null,stop:null},["self","x","start" ,"stop"],arguments,{start:0,stop:missing},null,null),self=$.self,start=$.start,stop=$.stop
 var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
@@ -14068,7 +14067,7 @@ $B.set_func_names($B.JSObj,"builtins")
 var js_list_meta=$B.make_class('js_list_meta')
 js_list_meta.__mro__=[_b_.type,_b_.object]
 js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
-if(js_array[attr]){return js_array[attr]}
+if(js_array.hasOwnProperty(attr)){return js_array[attr]}
 if(['__delitem__','__setitem__'].indexOf(attr)>-1){
 return function(){var args=new Array(arguments.length)
 args[0]=arguments[0]
@@ -14079,6 +14078,21 @@ return jsobj2pyobj(_b_.list[attr].call(null,pylist,...Array.from(arguments).slic
 return function(){var js_array=arguments[0],t=jsobj2pyobj(js_array),args=[t]
 return _b_.list[attr].apply(null,args)}}
 $B.set_func_names(js_list_meta,'builtins')
+$B.SizedJSObj=$B.make_class('SizedJavascriptObject')
+$B.SizedJSObj.__bases__=[$B.JSObj]
+$B.SizedJSObj.__mro__=[$B.JSObj,_b_.object]
+$B.SizedJSObj.__len__=function(_self){return _self.length}
+$B.set_func_names($B.SizedJSObj,'builtins')
+$B.IterableJSObj=$B.make_class('IterableJavascriptObject')
+$B.IterableJSObj.__bases__=[$B.JSObj]
+$B.IterableJSObj.__mro__=[$B.JSObj,_b_.object]
+$B.IterableJSObj.__iter__=function(_self){return{
+__class__:$B.IterableJSObj,it:_self[Symbol.iterator]()}}
+$B.IterableJSObj.__len__=function(_self){return _self.length}
+$B.IterableJSObj.__next__=function(_self){var value=_self.it.next()
+if(! value.done){return jsobj2pyobj(value.value)}
+throw _b_.StopIteration.$factory('')}
+$B.set_func_names($B.IterableJSObj,'builtins')
 var js_array=$B.js_array=$B.make_class('Array')
 js_array.__class__=js_list_meta
 js_array.__mro__=[$B.JSObj,_b_.object]
@@ -14093,6 +14107,14 @@ return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return $B.jsobj2pyobj(_self[i])}
+var js_array_iterator=$B.make_class('JSArray_iterator',function(obj){return{
+__class__:js_array_iterator,it:obj[Symbol.iterator]()}}
+)
+js_array_iterator.__next__=function(_self){var v=_self.it.next()
+if(v.done){throw _b_.StopIteration.$factory('')}
+return $B.jsobj2pyobj(v.value)}
+$B.set_func_names(js_array_iterator,'builtins')
+js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
 js_array.__repr__=function(_self){if($B.repr.enter(_self)){
 return '[...]'}
 var _r=new Array(_self.length),res
@@ -14101,21 +14123,6 @@ res="["+_r.join(", ")+"]"
 $B.repr.leave(_self)
 return res}
 $B.set_func_names(js_array,'javascript')
-$B.SizedJSObj=$B.make_class('SizedJavascriptObject')
-$B.SizedJSObj.__bases__=[$B.JSObj]
-$B.SizedJSObj.__mro__=[$B.JSObj,_b_.object]
-$B.SizedJSObj.__len__=function(_self){return _self.length}
-$B.set_func_names($B.SizedJSObj,'builtins')
-$B.IterableJSObj=$B.make_class('IterableJavascriptObject')
-$B.IterableJSObj.__bases__=[$B.JSObj]
-$B.IterableJSObj.__mro__=[$B.JSObj,_b_.object]
-$B.IterableJSObj.__iter__=function(_self){return{
-__class__:$B.IterableJSObj,it:obj[Symbol.iterator]()}}
-$B.IterableJSObj.__len__=function(_self){return _self.length}
-$B.IterableJSObj.__next__=function(_self){var value=_self.it.next()
-if(! value.done){return jsobj2pyobj(value.value)}
-throw _b_.StopIteration.$factory('')}
-$B.set_func_names($B.IterableJSObj,'builtins')
 $B.get_jsobj_class=function(obj){var proto=Object.getPrototypeOf(obj)
 if(proto===null){return $B.JSObj}
 if(proto[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(Object.getOwnPropertyNames(proto).indexOf('length')>-1){return $B.SizedJSObj}

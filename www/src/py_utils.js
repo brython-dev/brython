@@ -827,6 +827,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+
     if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
         var it = iterator[Symbol.iterator]()
         return {
