@@ -1225,7 +1225,7 @@ class CGIHTTPRequestHandler(SimpleHTTPRequestHandler):
                 if ispy:
                 	args[0] = scriptfile
                 	args = ["python3"] + args
-                	scriptfile = "/usr/bin/python3"
+                	scriptfile = sys.executable
                 os.dup2(self.rfile.fileno(), 0)
                 os.dup2(self.wfile.fileno(), 1)
                 os.execve(scriptfile, args, env)
