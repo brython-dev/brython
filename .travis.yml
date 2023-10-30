@@ -10,7 +10,7 @@ jobs:
         firefox: "latest"
         apt:
           sources:
-            - deadsnakes
+            - deadsnakes: 'ppa:deadsnakes/ppa'
           packages:
             - libnss3
             - python3.12
