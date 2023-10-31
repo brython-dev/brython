@@ -1119,6 +1119,9 @@ AnnotationCtx.prototype.transition = function(token, value){
     }else if(token == "op"){
         raise_syntax_error(context, "operator as annotation")
     }
+    if(context.parent.type == 'expr'){
+        context.parent.with_commas = false
+    }
     return transition(context.parent, token)
 }
 

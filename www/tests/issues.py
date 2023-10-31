@@ -3207,6 +3207,8 @@ assert str(pathlib.Path('.')) == '.'
 
 pathlib.Path.cwd()
 
+# issue 2303
+assert_raises(SyntaxError, exec, "x:1,")
 
 # ==========================================
 # Finally, report that all tests have passed
