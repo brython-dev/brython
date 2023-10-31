@@ -5225,6 +5225,9 @@ NotCtx.prototype.transition = function(token, value){
             return transition(expr, token, value)
           }
     }
+    if(this.tree.length == 0 || this.tree[0] instanceof AbstractExprCtx){
+        raise_syntax_error(context)
+    }
     return transition(context.parent, token)
 }
 
@@ -9220,7 +9223,7 @@ $B.get_page_option = function(option){
 
 $B.get_option = function(option, err){
     var filename = $B.script_filename
-    if(err && err.$frame_obj !== null){
+    if(err && err.$frame_obj){
         filename = $B.get_frame_at(0, err.$frame_obj).__file__
     }else{
         filename = $B.get_filename()

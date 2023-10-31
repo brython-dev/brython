@@ -3210,6 +3210,9 @@ pathlib.Path.cwd()
 # issue 2303
 assert_raises(SyntaxError, exec, "x:1,")
 
+# issue 2304
+assert_raises(SyntaxError, exec, "if True:\n not")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

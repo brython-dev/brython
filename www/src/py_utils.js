@@ -1679,6 +1679,9 @@ $B.get_frame_at = function(pos, frame_obj){
     frame_obj = frame_obj || $B.frame_obj
     var nb = $B.count_frames() - pos - 1
     for(var i = 0; i < nb; i++){
+        if(frame_obj.prev === null){
+            break
+        }
         frame_obj = frame_obj.prev
     }
     return frame_obj.frame
