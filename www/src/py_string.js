@@ -378,10 +378,10 @@ str.__hash__ = function(_self){
     // copied from
     // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
     var s = to_string(_self)
-    return s.split("").reduce(function(a, b) {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-      }, 0)
+    for(var i = 0, h = 0, len = s.length; i < len; i++){
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    }
+    return h;
 }
 
 str.__init__ = function(self, arg){
