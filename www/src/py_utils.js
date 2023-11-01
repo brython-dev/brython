@@ -687,7 +687,7 @@ $B.check_no_kw = function(name, x, y){
     if(x === undefined){
         console.log("x undef", name, x, y)
     }
-    if((x.$kw && x.$kw[0] && x.$kw[0].length > 0) ||
+    if((x.$kw && x.$kw[0] && Object.keys(x.$kw[0]).length > 0) ||
             (y !== undefined && y.$kw)){
         throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
 }
