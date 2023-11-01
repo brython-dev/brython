@@ -1,22 +1,15 @@
 from browser import self as window
 
-def wrap(func, *args):
-    # Transforms a function f into another function that prints a
-    # traceback in case of exception
-    def f():
-        return func(*args)
-
-    return f
 
 clear_interval = window.clearInterval
 
 clear_timeout = window.clearTimeout
 
 def set_interval(func, interval, *args):
-    return window.setInterval(wrap(func, *args), interval)
+    return window.setInterval(func, interval, *args)
 
 def set_timeout(func, interval, *args):
-    return int(window.setTimeout(wrap(func, *args), interval))
+    return int(window.setTimeout(func, interval, *args))
 
 def request_animation_frame(func):
     if func.__code__.co_argcount == 0:
