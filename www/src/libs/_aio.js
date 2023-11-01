@@ -316,14 +316,16 @@ Future.set_result = function(self, value){
     var $ = $B.args('set_result', 2, {self:null, value: null},
                     ['self', 'value'], arguments, {}, null, null)
     self._done = true
-    return self._methods.resolve(value)
+    self._methods.resolve(value)
+    return _b_.None
 }
 
 Future.set_exception = function(self, exception){
     var $ = $B.args('set_exception', 2, {self:null, exception: null},
                     ['self', 'exception'], arguments, {}, null, null)
     self._done = true
-    return self._methods.reject(exception)
+    self._methods.reject(exception)
+    return _b_.None
 }
 
 $B.set_func_names(Future, 'browser.aio')
