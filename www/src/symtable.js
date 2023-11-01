@@ -552,7 +552,7 @@ function analyze_cells(scopes, free, inlined_cells){
     for(var name in scopes){
         v = scopes[name]
         //assert(PyLong_Check(v));
-        scope = v;
+        var scope = v;
         if (scope != LOCAL){
             continue;
         }
@@ -671,7 +671,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 function analyze_block(ste, bound, free, global, typeparams, class_entry){
     var name, v, local = NULL, scopes = NULL, newbound = NULL,
         newglobal = NULL, newfree = NULL, allfree = NULL,
-        temp, i, success = 0, pos = 0;
+        inlined_cells = NULL, temp, i, success = 0, pos = 0;
 
     local = new Set()  /* collect new names bound in block */
     scopes = {}  /* collect scopes defined for each name */

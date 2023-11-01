@@ -404,7 +404,9 @@ $B.tokenizer = function*(src, filename, mode){
         fstring_start,
         fstring_escape,
         format_specifier,
-        nesting
+        nesting,
+        line,
+        quote
 
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 
@@ -933,7 +935,6 @@ $B.tokenizer = function*(src, filename, mode){
                                 // For triple-quoted strings, if it spans over
                                 // several lines, "line" is extended until the
                                 // last quote
-                                triple_quote_line = line
                                 yield Token('STRING', full_string,
                                     string_start,
                                     [line_num, pos - line_start + 3],

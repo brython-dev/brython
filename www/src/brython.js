@@ -148,8 +148,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-01 22:15:36.959559"
-__BRYTHON__.timestamp=1698873336959
+__BRYTHON__.compiled_date="2023-11-01 22:58:35.843963"
+__BRYTHON__.timestamp=1698875915843
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -293,7 +293,7 @@ var lines=src.split('\n'),linenum=0,line_at={}
 for(var i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
-var state="line_start",char,cp,mo,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_escape,format_specifier,nesting
+var state="line_start",char,cp,mo,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_escape,format_specifier,nesting,line,quote
 yield Token('ENCODING','utf-8',[0,0],[0,0],'')
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
@@ -526,7 +526,6 @@ yield Token('STRING',full_string,string_start,[line_num,pos-line_start+1],string
 state=null}else if(char+src.substr(pos,2)==
 quote.repeat(3)){var full_string=prefix+quote.repeat(3)+
 string+quote.repeat(3)
-triple_quote_line=line
 yield Token('STRING',full_string,string_start,[line_num,pos-line_start+3],string_line)
 pos+=2
 state=null}else{string+=char}}else{string+=char}
@@ -4530,7 +4529,7 @@ throw Error(
 "\\uXXXX escape")}else{var value=parseInt(mo[0],16)
 if(value > 0x10FFFF){throw Error('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
 $B.test_escape=test_escape
-function prepare_string(C,s,position){var len=s.length,pos=0,string_modifier,_type="string"
+function prepare_string(C,s,position){var len=s.length,pos=0,string_modifier,quote,inner,_type="string"
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
 if(s.substr(pos,3)==quote.repeat(3)){_type="triple_string"
@@ -5346,7 +5345,7 @@ if(j < nb_posonly){
 if(! kwarg){throw pos_only_passed_as_keyword(fname,arg_name)}}else{slots[arg_name]=kw[arg_name]
 kw[arg_name]=empty}}
 if(slots[arg_name]===empty){
-def_value=defaults[j-(nb_pos_or_kw-nb_def)]
+var def_value=defaults[j-(nb_pos_or_kw-nb_def)]
 if(def_value !==undefined){slots[arg_name]=def_value
 if(j < nb_posonly){
 if(kw && kw.hasOwnProperty(arg_name)&& kwarg){extra_kw[arg_name]=kw[arg_name]
@@ -15533,7 +15532,7 @@ var p={$parent:node,'type':'except_handler'}
 for(var child of node.handlers){child.$parent=p
 mark_parents(child)}}}
 function add_body(body,scopes){var res=''
-for(var item of body){js=$B.js_from_ast(item,scopes)
+for(var item of body){var js=$B.js_from_ast(item,scopes)
 if(js.length > 0){res+=js+'\n'}}
 return res.trimRight()}
 function extract_docstring(ast_obj,scopes){
@@ -16166,6 +16165,8 @@ var decorate=func_ref
 for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}
 if(has_type_params){js=`var locals_${type_params_ref} = {\n}\n`+type_params+js}
+if(window.js===js){console.log('leaking ??')
+alert()}
 return js}
 $B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var expr=this.elt,first_for=this.generators[0],
@@ -16751,8 +16752,7 @@ return `yield* (function* f(){
             return _r${n}
         })()`}
 var state={}
-$B.js_from_root=function(arg){var ast_root=arg.ast,symtable=arg.symtable,filename=arg.filename
-namespaces=arg.namespaces,imported=arg.imported
+$B.js_from_root=function(arg){var ast_root=arg.ast,symtable=arg.symtable,filename=arg.filename,namespaces=arg.namespaces,imported=arg.imported
 if($B.show_ast_dump){console.log($B.ast_dump(ast_root))}
 if($B.compiler_check){$B.compiler_check(ast_root,symtable)}
 var scopes=[]
@@ -16968,7 +16968,7 @@ var success=0,pos=0;
 v_cell=CELL;
 if(!v_cell){return 0;}
 for(var name in scopes){v=scopes[name]
-scope=v;
+var scope=v;
 if(scope !=LOCAL){continue;}
 if(free.has(name)&& ! inlined_cells.has(name)){continue;}
 scopes[name]=v_cell
@@ -17000,7 +17000,7 @@ continue;}
 if(bound && !bound.has(name)){continue;}
 _b_.dict.$setitem_string(symbols,name,v_free)}
 return 1}
-function analyze_block(ste,bound,free,global,typeparams,class_entry){var name,v,local=NULL,scopes=NULL,newbound=NULL,newglobal=NULL,newfree=NULL,allfree=NULL,temp,i,success=0,pos=0;
+function analyze_block(ste,bound,free,global,typeparams,class_entry){var name,v,local=NULL,scopes=NULL,newbound=NULL,newglobal=NULL,newfree=NULL,allfree=NULL,inlined_cells=NULL,temp,i,success=0,pos=0;
 local=new Set()
 scopes={}
 newglobal=new Set()

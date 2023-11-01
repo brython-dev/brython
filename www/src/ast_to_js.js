@@ -597,7 +597,7 @@ function mark_parents(node){
 function add_body(body, scopes){
     var res = ''
     for(var item of body){
-        js = $B.js_from_ast(item, scopes)
+        var js = $B.js_from_ast(item, scopes)
         if(js.length > 0){
             res += js + '\n'
         }
@@ -2106,6 +2106,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(has_type_params){
         js = `var locals_${type_params_ref} = {\n}\n` + type_params + js
     }
+    if(window.js === js){
+        console.log('leaking ??')
+        alert()
+    }
     return js
 }
 
@@ -3335,7 +3339,7 @@ var state = {}
 $B.js_from_root = function(arg){
     var ast_root = arg.ast,
         symtable = arg.symtable,
-        filename = arg.filename
+        filename = arg.filename,
         namespaces = arg.namespaces,
         imported = arg.imported
 

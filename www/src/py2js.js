@@ -8217,6 +8217,8 @@ function prepare_string(context, s, position){
     var len = s.length,
         pos = 0,
         string_modifier,
+        quote,
+        inner,
         _type = "string"
 
     while(pos < len){
@@ -9146,6 +9148,7 @@ var brython = $B.parser.brython = function(options){
     for (var i = 0; i < kk1.length; i++){
         if(kk[i] === undefined){
             console.log("leaking", kk1[i])
+            console.log(window[kk1[i]])
         }
     }
     */

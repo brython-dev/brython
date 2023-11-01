@@ -520,7 +520,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
         }
         if(slots[arg_name] === empty){
             // search in defaults
-            def_value = defaults[j - (nb_pos_or_kw - nb_def)]
+            var def_value = defaults[j - (nb_pos_or_kw - nb_def)]
             if(def_value !== undefined){
                 slots[arg_name] = def_value
                 if(j < nb_posonly){
