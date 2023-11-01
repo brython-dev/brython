@@ -277,11 +277,106 @@ list.__imul__ = function() {
     return $.self
 }
 
-list.__init__ = function(self, arg){
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
-            'args', null),
-        self = $.self,
-        args = $.args
+function generateArgs(fct, name, args_str, defaults = {}) {
+	
+	const $INFOS = fct.$infos = {};
+	const $CODE = $INFOS.__code__ = {};
+	
+	let args  = args_str.split(',');
+	args = args.map( e => e.trim() );
+	
+	$INFOS.arg_names    = new Array(args.length);
+	$INFOS.__defaults__ = new Array(args.length);
+	$INFOS.__kwdefaults__ = {};
+	const KWDEFAULTS = $INFOS.__kwdefaults__.$jsobj = {};
+	
+	let offset_arg = 0;
+	let offset_argnames = 0;
+	let offset_posdef = 0;
+	
+	let posonly_end = args.indexOf('/');
+	if( posonly_end === -1 )
+		$CODE.co_posonlyargcount = 0;
+	else {
+		$CODE.co_posonlyargcount = posonly_end;
+		offset_arg = posonly_end+1;
+	}
+	
+	for(let i = 0 ; i < $CODE.co_posonlyargcount ; ++i) {
+	
+		const argname = args[i];
+		$INFOS.arg_names[offset_argnames++] = argname;
+		
+		if( argname in defaults)
+			$INFOS.__defaults__[offset_posdef++] = defaults[name];
+	}
+	
+	
+	let pos_end = args.findIndex( function(e) { return e[0] === "*" } );
+
+	if(pos_end === -1) {
+		$INFOS.vararg     = null;
+		$CODE.co_argcount = args.length;
+	} else {
+	
+		$CODE.co_argcount = pos_end;
+	
+		if(args[pos_end].length > 1 && args[pos_end] !== '*')
+			$INFOS.vararg = args[pos_end].slice(1);
+		
+	}
+	
+	
+	for(let i = offset_arg ; i < $CODE.co_argcount ; ++i) {
+	
+		const argname = args[i];
+		$INFOS.arg_names[offset_argnames++] = argname;
+		
+		if( argname in defaults)
+			$INFOS.__defaults__[offset_posdef++] = defaults[name];
+	}
+	
+	if( offset_arg !== 0)
+		--$CODE.co_argcount;
+
+	offset_arg = pos_end + 1;
+	$CODE.co_kwonlyargcount = pos_end === -1 ? 0 : args.length - offset_arg;
+
+	const last = args[args.length - 1];
+	if( last[0] === "*" && last[1] === "*") {
+		
+		--$CODE.co_kwonlyargcount;
+		$INFOS.kwarg = last;
+	} else {
+		$INFOS.kwarg = null;
+	}
+	
+	for(let i = 0 ; i < $CODE.co_kwonlyargcount ; ++i) {
+
+		const argname = args[offset_arg + i];
+		$INFOS.arg_names[offset_argnames++] = argname;
+		
+		if( argname in defaults)
+			KWDEFAULTS[argname] = defaults[name];
+	}
+	
+	$INFOS.arg_names.length    = offset_argnames;
+	$INFOS.__defaults__.length = offset_posdef;
+	
+	return fct
+}
+
+const __args__init__ = generateArgs({}, "__init__", "self, *args");
+
+
+list.__init__ = function(_self, _arg){
+    
+    const {self, args} = $B.args0(__args__init__, arguments);
+    
+    //var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
+    //        'args', null),
+    //    self = $.self,
+    //    args = $.args
     if(args.length > 1){
         throw _b_.TypeError.$factory('expected at most 1 argument, got ' +
             args.length)
