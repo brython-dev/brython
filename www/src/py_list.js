@@ -277,7 +277,20 @@ list.__imul__ = function() {
     return $.self
 }
 
-function generateArgs(fct, name, args_str, defaults = {}) {
+
+//const __args__init__ = generateArgs({}, "self, *args");
+function addMethod(klass, fct, args_str, defaults = {}) {
+
+	const __args__ = generateArgs(fct, args_str, defaults);
+
+	const method = function(...args) {
+		return fct( $B.args0(__args__, args) );
+	};
+	
+	klass[fct.name] = method;
+}
+
+function generateArgs(fct, args_str, defaults = {}) {
 	
 	const $INFOS = fct.$infos = {};
 	const $CODE = $INFOS.__code__ = {};
@@ -366,12 +379,11 @@ function generateArgs(fct, name, args_str, defaults = {}) {
 	return fct
 }
 
-const __args__init__ = generateArgs({}, "__init__", "self, *args");
 
 
-list.__init__ = function(_self, _arg){
+function __init__({self, args}){
     
-    const {self, args} = $B.args0(__args__init__, arguments);
+    //const {self, args} = $B.args0(__args__init__, arguments);
     
     //var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
     //        'args', null),
@@ -407,6 +419,9 @@ list.__init__ = function(_self, _arg){
     }
     return _b_.None
 }
+
+
+addMethod(list, __init__, "self, *args");
 
 var list_iterator = $B.make_iterator_class("list_iterator")
 list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
