@@ -523,8 +523,17 @@ object.__reduce_ex__ = function(self, protocol){
         d = _b_.None
     }
     res.push(d)
-    res.push(_b_.None) // XXX fix me
-    res.push(_b_.None) // XXX fix me
+    var list_like_iterator = _b_.None
+    if($B.$getattr(klass, 'append', null) !== null &&
+            $B.$getattr(klass, 'extend', null) !== null){
+        list_like_iterator = _b_.iter(self)
+    }
+    res.push(list_like_iterator)
+    var key_value_iterator = _b_.None
+    if($B.$isinstance(self, _b_.dict)){
+        key_value_iterator = _b_.dict.items(self)
+    }
+    res.push(key_value_iterator)
     return _b_.tuple.$factory(res)
 }
 

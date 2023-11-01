@@ -277,38 +277,29 @@ list.__imul__ = function() {
     return $.self
 }
 
-list.__init__ = function(self, arg){
+list.__init__ = function(){
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
-            'args', null),
+            'args', 'kw'),
         self = $.self,
-        args = $.args
+        args = $.args,
+        kw = $.kw
     if(args.length > 1){
         throw _b_.TypeError.$factory('expected at most 1 argument, got ' +
             args.length)
     }
-    var arg = args[0]
-    var len_func = $B.$call($B.$getattr(self, "__len__")),
-        pop_func = $B.$getattr(self, "pop", _b_.None)
-    if(pop_func !== _b_.None){
-        pop_func = $B.$call(pop_func)
-        while(len_func()){pop_func()}
+    if(_b_.dict.__len__(kw) > 0){
+        throw _b_.TypeError.$factory('list() takes no keyword arguments')
     }
+    while(self.length > 0){
+        self.pop()
+    }
+    var arg = args[0]
     if(arg === undefined){
         return _b_.None
     }
-    var arg = $B.$iter(arg),
-        next_func = $B.$call($B.$getattr(arg, "__next__")),
-        pos = len_func()
-    while(1){
-        try{
-            var res = next_func()
-            self[pos++] = res
-        }catch(err){
-            if(err.__class__ === _b_.StopIteration){
-                break
-            }
-            else{throw err}
-        }
+    var pos = 0
+    for(var item of $B.make_js_iterator(arg)){
+        self[pos++] = item
     }
     return _b_.None
 }
@@ -420,25 +411,6 @@ list.__new__ = function(cls, ...args){
     res.__brython__ = true
     res.__dict__ = $B.empty_dict()
     return res
-}
-
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    // args for list.__reduce_ex__ is just (klass,)
-    // for tuple.__reduce_ex__ it is (klass, ...items)
-    var res = args.slice(1)
-    res.__class__ = args[0]
-    return res
-}
-
-list.__reduce_ex__ = function(self){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__]),
-        _b_.None,
-        _b_.iter(self)])
 }
 
 list.__repr__ = function(self){
@@ -998,7 +970,7 @@ function c_mul(a, b){
 }
 
 tuple.$getnewargs = function(self){
-    return $B.fast_tuple([self])
+    return $B.fast_tuple([$B.fast_tuple(self.slice())])
 }
 
 tuple.__getnewargs__ = function(){
@@ -1046,14 +1018,6 @@ tuple.__new__ = function(cls, ...args){
         }
     }
     return self
-}
-
-tuple.__reduce_ex__ = function(self){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__].concat(self.slice())),
-        _b_.None,
-        _b_.None])
 }
 
 tuple.__repr__ = function(self){

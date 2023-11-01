@@ -788,24 +788,6 @@ dict.__or__ = function(self, other){
     return res
 }
 
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    var res = $B.empty_dict()
-    res.__class__ = args[0]
-    return res
-}
-
-dict.__reduce_ex__ = function(self, protocol){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__]),
-        _b_.None,
-        _b_.None,
-        dict.items(self)])
-}
-
 dict.__repr__ = function(self){
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
     if(self.$jsobj){ // wrapper around Javascript object
