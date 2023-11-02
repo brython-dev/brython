@@ -101,56 +101,6 @@ $B.structuredclone2pyobj = function(obj){
 
 }
 
-// Transforms a Javascript constructor into a Python function
-// that returns instances of the constructor, converted to Python objects
-
-var JSConstructor = $B.make_class('JSConstructor')
-
-JSConstructor.__module__ = "<javascript>"
-
-JSConstructor.__call__ = function(_self){
-    // _self.func is a constructor
-    // It takes Javascript arguments so we must convert
-    // those passed to the Python function
-    return function(){
-        var args = new Array(arguments.length+1)
-        args[0] = null
-        for(var i = 0, len = arguments.length; i < len; i++){
-            args[i+1] = pyobj2jsobj(arguments[i])
-        }
-        var factory = _self.func.bind.apply(_self.func, args)
-        var res = new factory()
-        // res is a Javascript object
-        return $B.$JS2Py(res)
-    }
-}
-
-JSConstructor.__getattribute__ = function(_self, attr){
-    // Attributes of a constructor are taken from the original JS object
-    if(attr == "__call__"){
-        return function(){
-            var args = new Array(arguments.length+1)
-            args[0] = null
-            for(var i = 0, len = arguments.length; i < len; i++){
-                args[i+1] = pyobj2jsobj(arguments[i])
-            }
-            var factory = _self.func.bind.apply(_self.func, args)
-            var res = new factory()
-            // res is a Javascript object
-            return $B.$JS2Py(res)
-        }
-    }
-    return JSObject.__getattribute__(_self, attr)
-}
-
-JSConstructor.$factory = function(obj){
-    return {
-        __class__: JSConstructor,
-        js: obj,
-        func: obj.js_func
-    }
-}
-
 const JSOBJ = Symbol('JSOBJ')
 const PYOBJ = Symbol('PYOBJ')
 const PYOBJFCT = Symbol('PYOBJFCT')
@@ -286,15 +236,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         return pyobj
     }
 
-    if(klass === JSConstructor){
-        // Instances of JSConstructor are transformed into the
-        // underlying Javascript object
-
-        if(pyobj.js_func !== undefined){
-            return pyobj.js_func
-        }
-        return pyobj.js
-    }
     if(klass === $B.DOMNode ||
             klass.__mro__.indexOf($B.DOMNode) > -1){
 
@@ -393,8 +334,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     }
     return pyobj
 }
-
-$B.JSConstructor = JSConstructor
 
 function pyargs2jsargs(pyargs){
     var args = new Array(pyargs.length);
