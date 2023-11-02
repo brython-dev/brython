@@ -153,6 +153,8 @@ zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.
 }
 for(var key in docs){
     if(__BRYTHON__.builtins[key]){
-        __BRYTHON__.builtins[key].__doc__ = docs[key]
+        if(['object', 'function'].indexOf(typeof __BRYTHON__.builtins[key]) > -1){
+            __BRYTHON__.builtins[key].__doc__ = docs[key]
+        }
     }
 }
