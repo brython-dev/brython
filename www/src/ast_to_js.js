@@ -260,7 +260,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'x'
+    var test = false // name == 'list'
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -3024,7 +3024,8 @@ $B.ast.Tuple.prototype.to_js = function(scopes){
 $B.ast.TypeAlias.prototype.to_js = function(scopes){
     var value = this.value.to_js(scopes),
         type_params = this.type_params.map(x => x.to_js(scopes))
-    return `locals.${this.name.id} = $B.make_type_alias('${this.name.id}', ` +
+    return `$B.$import('typing')\n` +
+           `locals.${this.name.id} = $B.make_type_alias('${this.name.id}', ` +
            `$B.fast_tuple([${type_params}]), ${value})\n`// type alias\n`
 }
 
