@@ -1,5 +1,6 @@
 // built-in functions
 ;(function($B){
+"use strict";
 
 var _b_ = $B.builtins
 _b_.__debug__ = false
@@ -1678,7 +1679,7 @@ iterator_class.__next__ = function(self){
 
 $B.set_func_names(iterator_class, "builtins")
 
-callable_iterator = $B.make_class("callable_iterator",
+var callable_iterator = $B.make_class("callable_iterator",
     function(func, sentinel){
         return {
             __class__: callable_iterator,
@@ -2814,7 +2815,8 @@ $Reader.read = function(){
     if(size < 0){
         size = self.$length - self.$counter
     }
-    var content = self.$content
+    var content = self.$content,
+        res
     if(self.$binary){
         res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
             self.$counter + size))

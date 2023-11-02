@@ -1,6 +1,6 @@
 // Python to Javascript translation engine
-
 ;(function($B){
+"use strict";
 
 $B.produce_ast = false
 
@@ -5648,7 +5648,7 @@ PatternCaptureCtx.prototype.transition = function(token, value){
     return transition(context.parent, token, value)
 }
 
-PatternClassCtx = function(context){
+var PatternClassCtx = function(context){
     this.type = "class_pattern"
     this.tree = []
     this.parent = context.parent

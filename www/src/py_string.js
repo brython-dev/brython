@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -2208,7 +2209,8 @@ str.maketrans.$type = "staticmethod"
 str.partition = function() {
     var $ = $B.args("partition", 2, {self: null, sep: null}, ["self", "sep"],
             arguments, {}, null, null),
-        _self
+        _self,
+        sep
     if($.sep == ""){
         throw _b_.ValueError.$factory("empty separator")
     }
@@ -2342,7 +2344,8 @@ str.rfind = function(self, substr){
             {self: null, sub: null, start: null, end: null},
             ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
-        _self
+        _self,
+        sub
 
     normalize_start_end($)
     check_str($.sub);

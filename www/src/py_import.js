@@ -1,4 +1,5 @@
 // import modules
+"use strict";
 
 ;(function($B){
 
@@ -437,7 +438,7 @@ for(var method in VFSFinder){
 }
 
 // Loader for VFS modules
-VFSLoader = $B.make_class("VFSLoader",
+var VFSLoader = $B.make_class("VFSLoader",
     function(){
         return {
             __class__: VFSLoader
@@ -1005,7 +1006,7 @@ function import_engine(mod_name, _path, from_stdlib){
 
     if(_loader === undefined){
         // No import spec found
-        message = mod_name
+        var message = mod_name
         if($B.protocol == "file"){
             message += " (warning: cannot import local files with protocol 'file')"
         }
@@ -1226,19 +1227,19 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         return $B.imported[mod_name]
     }else{
         // Return module object for top-level package
-        var package = mod_name
+        var _package = mod_name
         while(parsed_name.length > 1){
             var module = parsed_name.pop(),
-                package = parsed_name.join('.')
-            if($B.imported[package] === undefined){
+                _package = parsed_name.join('.')
+            if($B.imported[_package] === undefined){
                 // may happen if the modules defines __name__ = "X.Y" and package
                 // X has not been imported
-                $B.$import(package, globals, locals, [])
-                $B.imported[package][module] = $B.imported[mod_name]
+                $B.$import(_package, globals, locals, [])
+                $B.imported[_package][module] = $B.imported[mod_name]
                 mod_name = module
             }
         }
-        return $B.imported[package]
+        return $B.imported[_package]
     }
 }
 

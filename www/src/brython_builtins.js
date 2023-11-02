@@ -1,3 +1,5 @@
+"use strict";
+
 var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
 
 try{

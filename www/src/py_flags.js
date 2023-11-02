@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 $B.builtin_class_flags = {
     builtins: {

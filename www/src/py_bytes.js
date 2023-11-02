@@ -1,3 +1,5 @@
+"use strict";
+
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -1319,7 +1321,7 @@ bytes.swapcase = function(self) {
 
 bytes.title = function(self) {
     var src = self.source,
-        len = src.length
+        len = src.length,
         buffer = src.slice(),
         current_char_is_letter = false,
         prev_char_was_letter = false,

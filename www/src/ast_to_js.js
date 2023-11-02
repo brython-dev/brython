@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 var _b_ = $B.builtins
@@ -1072,7 +1073,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         }
     }
 
-    js = add_body(this.body, scopes) + '\n'
+    var js = add_body(this.body, scopes) + '\n'
     var has_generator = scope.is_generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
@@ -2396,7 +2397,7 @@ function pattern_bindings(pattern){
             break
         case $B.ast.MatchOr:
             bindings = pattern_bindings(pattern.patterns[0])
-            err_msg = 'alternative patterns bind different names'
+            var err_msg = 'alternative patterns bind different names'
             for(var i = 1; i < pattern.patterns.length; i++){
                 var _bindings = pattern_bindings(pattern.patterns[i])
                 if(_bindings.length != bindings.length){
@@ -3175,7 +3176,7 @@ $B.ast.With.prototype.to_js = function(scopes){
 
     scope.needs_stack_length = true
 
-    js = add_body(this.body, scopes) + '\n'
+    var js = add_body(this.body, scopes) + '\n'
     var in_generator = scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)

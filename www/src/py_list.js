@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins,
@@ -270,7 +271,7 @@ list.__imul__ = function() {
         return $.self
     }
     for(var i = 1; i < x; i++){
-        for(j = 0; j < len; j++){
+        for(var j = 0; j < len; j++){
             $.self[pos++] = $.self[j]
         }
     }
@@ -965,7 +966,7 @@ tuple.__eq__ = function(self, other){
 }
 
 function c_mul(a, b){
-    s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
+    var s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
     return parseInt(s.substr(0, s.length - 1), 16)
 }
 

@@ -1,4 +1,7 @@
 ;(function($B) {
+
+"use strict";
+
 var _b_ = $B.builtins
 
 var coroutine = $B.coroutine = $B.make_class("coroutine")

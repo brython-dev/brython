@@ -1,4 +1,5 @@
-;(function($B){
+"use strict";
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -405,8 +406,7 @@ $B.tokenizer = function*(src, filename, mode){
         fstring_escape,
         format_specifier,
         nesting,
-        line,
-        quote
+        line
 
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 

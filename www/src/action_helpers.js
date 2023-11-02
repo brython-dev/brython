@@ -1,5 +1,6 @@
 // Adapted from CPython Parser/action_helpers.c
 (function($B){
+"use strict";
 
 var _b_ = $B.builtins,
     NULL = undefined,

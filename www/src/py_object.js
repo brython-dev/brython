@@ -1,3 +1,4 @@
+"use strict";
 __BRYTHON__.builtins.object = (function($B){
 
 var _b_ = $B.builtins

@@ -1,3 +1,4 @@
+"use strict";
  ;(function($B) {
      var _b_ = $B.builtins
     var update = $B.update_obj = function(mod, data) {
@@ -433,7 +434,7 @@
             // module named "name"
             var $ = $B.args('import_js', 2, {url: null, alias: null},
                     ['url', 'alias'], arguments, {alias: _b_.None}, null, null),
-                url = $.url
+                url = $.url,
                 alias = $.alias
             var xhr = new XMLHttpRequest(),
                 result
@@ -441,7 +442,10 @@
             xhr.onreadystatechange = function(){
                 if(this.readyState == 4){
                     if(this.status == 200){
-                        eval(this.responseText)
+                        var js = this.responseText + '\nreturn $module',
+                            f = new Function(js)
+                        console.log('f', f, f+'')
+                        var $module = f()
                         if(typeof $module !== 'undefined'){
                             result = $B.module.$factory(name)
                             for(var key in $module){
@@ -449,6 +453,7 @@
                             }
                             result.__file__ = url
                         }else{
+                            console.log(this.responseText)
                             result = _b_.ImportError.$factory('Javascript ' +
                                 `module at ${url} doesn't define $module`)
                         }

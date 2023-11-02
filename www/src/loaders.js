@@ -1,5 +1,5 @@
 // Script with function to load scripts and modules, including indexedDB cache
-
+"use strict";
 (function($B){
 
 var _b_ = $B.builtins

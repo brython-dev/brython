@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -73,10 +74,10 @@ float.as_integer_ratio = function(self){
             exponent--
         }
     }
-    numerator = _b_.int.$factory(fp)
-    py_exponent = _b_.abs(exponent)
-    denominator = 1
-    var x
+    var numerator = _b_.int.$factory(fp),
+        py_exponent = _b_.abs(exponent),
+        denominator = 1,
+        x
     if($B.shift1_cache[py_exponent] !== undefined){
         x = $B.shift1_cache[py_exponent]
     }else{
@@ -984,7 +985,7 @@ float.__repr__ = function(self){
         var mant = split_e[0],
             exp = split_e[1]
         if(exp.startsWith('-')){
-            exp_str = parseInt(exp.substr(1)) + ''
+            var exp_str = parseInt(exp.substr(1)) + ''
             if(exp_str.length < 2){
                 exp_str = '0' + exp_str
             }
@@ -1258,7 +1259,7 @@ function to_digits(s){
     return res
 }
 
-$B.fast_float = fast_float = function(value){
+var fast_float = $B.fast_float = function(value){
     return {__class__: _b_.float, value}
 }
 

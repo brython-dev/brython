@@ -1,3 +1,5 @@
+"use strict";
+
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -184,6 +186,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     }
     if(typeof jsobj == "string"){
         return $B.String(jsobj)
+    }
+    if(typeof jsobj == 'bigint'){
+        return _b_.int.$int_or_long(jsobj)
     }
 
     let pyobj = jsobj[PYOBJ]
