@@ -391,6 +391,12 @@ $B.is_recursion_error = function(js_exc){
 // built-in exceptions
 
 function make_builtin_exception(exc_name, base, set_value){
+    if(Array.isArray(exc_name)){
+        for(var name of exc_name){
+            make_builtin_exception(name, base, set_value)
+        }
+        return
+    }
     var exc_class = $B.make_class(exc_name,
         function(){
             var err = Error()
@@ -477,72 +483,56 @@ _b_.BaseException.with_traceback = function(_self, tb){
 
 $B.set_func_names(_b_.BaseException, 'builtins')
 
-for(var exc_name of ["SystemExit", "KeyboardInterrupt", "GeneratorExit",
-        "Exception"]){
-    make_builtin_exception(exc_name, _b_.BaseException)
-}
+make_builtin_exception(["SystemExit", "KeyboardInterrupt", "GeneratorExit",
+    "Exception"], _b_.BaseException)
 
 // Brython-specific
 make_builtin_exception("JavascriptError", _b_.Exception)
 
 
-for(var exc_name of ["ArithmeticError", "AssertionError", "BufferError",
-        "EOFError", "LookupError", "MemoryError", "OSError", "ReferenceError",
-        "RuntimeError", "SystemError", "TypeError", "ValueError", "Warning"]){
-    make_builtin_exception(exc_name, _b_.Exception)
-}
+make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
+    "EOFError", "LookupError", "MemoryError", "OSError", "ReferenceError",
+    "RuntimeError", "SystemError", "TypeError", "ValueError", "Warning"],
+    _b_.Exception)
 
 make_builtin_exception("StopIteration", _b_.Exception, "value")
 make_builtin_exception("StopAsyncIteration", _b_.Exception, "value")
 make_builtin_exception("ImportError", _b_.Exception, "name")
 make_builtin_exception("SyntaxError", _b_.Exception, "msg")
 
-for(var exc_name of ["FloatingPointError", "OverflowError",
-        "ZeroDivisionError"]){
-    make_builtin_exception(exc_name, _b_.ArithmeticError)
-}
+make_builtin_exception(["FloatingPointError", "OverflowError",
+    "ZeroDivisionError"], _b_.ArithmeticError)
 
 make_builtin_exception("ModuleNotFoundError", _b_.ImportError, "name")
 
-for(var exc_name of ["IndexError","KeyError"]){
-    make_builtin_exception(exc_name, _b_.LookupError)
-}
+make_builtin_exception(["IndexError","KeyError"], _b_.LookupError)
 
-for(var exc_name of ["BlockingIOError", "ChildProcessError",
-        "ConnectionError", "FileExistsError", "FileNotFoundError",
-        "InterruptedError", "IsADirectoryError", "NotADirectoryError",
-        "PermissionError", "ProcessLookupError", "TimeoutError"]){
-    make_builtin_exception(exc_name, _b_.OSError)
-}
+make_builtin_exception(["BlockingIOError", "ChildProcessError",
+    "ConnectionError", "FileExistsError", "FileNotFoundError",
+    "InterruptedError", "IsADirectoryError", "NotADirectoryError",
+    "PermissionError", "ProcessLookupError", "TimeoutError"],
+    _b_.OSError)
 
-for(var exc_name of ["BrokenPipeError", "ConnectionAbortedError",
-        "ConnectionRefusedError", "ConnectionResetError"]){
-    make_builtin_exception(exc_name, _b_.ConnectionError)
-}
+make_builtin_exception(["BrokenPipeError", "ConnectionAbortedError",
+    "ConnectionRefusedError", "ConnectionResetError"],
+    _b_.ConnectionError)
 
-for(var exc_name of ["NotImplementedError", "RecursionError"]){
-    make_builtin_exception(exc_name, _b_.RuntimeError)
-}
+make_builtin_exception(["NotImplementedError", "RecursionError"], 
+    _b_.RuntimeError)
 
 make_builtin_exception("IndentationError", _b_.SyntaxError, "msg")
 make_builtin_exception("TabError", _b_.IndentationError)
 make_builtin_exception("UnicodeError", _b_.ValueError)
-for(var exc_name of ["UnicodeDecodeError", "UnicodeEncodeError",
-        "UnicodeTranslateError"]){
-    make_builtin_exception(exc_name, _b_.UnicodeError)
-}
+make_builtin_exception(["UnicodeDecodeError", "UnicodeEncodeError",
+    "UnicodeTranslateError"], _b_.UnicodeError)
 
-for(var exc_name of ["DeprecationWarning", "PendingDeprecationWarning",
-        "RuntimeWarning", "SyntaxWarning", "UserWarning", "FutureWarning",
-        "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning",
-        "EncodingWarning"]){
-    make_builtin_exception(exc_name, _b_.Warning)
-}
+make_builtin_exception(["DeprecationWarning", "PendingDeprecationWarning",
+    "RuntimeWarning", "SyntaxWarning", "UserWarning", "FutureWarning",
+    "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning",
+    "EncodingWarning"], _b_.Warning)
 
-for(var exc_name of ["EnvironmentError", "IOError", "VMSError",
-        "WindowsError"]){
-    make_builtin_exception(exc_name, _b_.OSError)
-}
+make_builtin_exception(["EnvironmentError", "IOError", "VMSError",
+        "WindowsError"], _b_.OSError)
 
 // AttributeError supports keyword-only "name" and "obj" parameters
 _b_.AttributeError = $B.make_class('AttributeError',
@@ -799,7 +789,7 @@ _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGFroup",
         var missing = {},
             $ = $B.args("BaseExceptionGroup", 2,
                         {message: null, exceptions: null},
-                        ['message', 'exceptions'], arguments, 
+                        ['message', 'exceptions'], arguments,
                         {exceptions: missing}, null, null)
         var err = Error()
         err.args = $B.fast_tuple(Array.from(arguments))

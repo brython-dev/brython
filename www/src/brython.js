@@ -150,8 +150,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-03 07:53:00.864800"
-__BRYTHON__.timestamp=1698994380864
+__BRYTHON__.compiled_date="2023-11-03 08:01:41.285892"
+__BRYTHON__.timestamp=1698994901285
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 "use strict";
@@ -8266,7 +8266,9 @@ var msg=js_exc+"",parts=msg.split(":"),err_type=parts[0].trim(),err_msg=parts[1]
 return(err_type=='InternalError' && err_msg=='too much recursion')||
 (err_type=='Error' && err_msg=='Out of stack space')||
 (err_type=='RangeError' && err_msg=='Maximum call stack size exceeded')}
-function make_builtin_exception(exc_name,base,set_value){var exc_class=$B.make_class(exc_name,function(){var err=Error()
+function make_builtin_exception(exc_name,base,set_value){if(Array.isArray(exc_name)){for(var name of exc_name){make_builtin_exception(name,base,set_value)}
+return}
+var exc_class=$B.make_class(exc_name,function(){var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=exc_class
 err.__traceback__=_b_.None
@@ -8305,25 +8307,25 @@ if(self.__notes__ !==undefined){self.__notes__.push(note)}else{self.__notes__=[n
 _b_.BaseException.with_traceback=function(_self,tb){_self.__traceback__=tb
 return _self}
 $B.set_func_names(_b_.BaseException,'builtins')
-for(var exc_name of["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"]){make_builtin_exception(exc_name,_b_.BaseException)}
+make_builtin_exception(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],_b_.BaseException)
 make_builtin_exception("JavascriptError",_b_.Exception)
-for(var exc_name of["ArithmeticError","AssertionError","BufferError","EOFError","LookupError","MemoryError","OSError","ReferenceError","RuntimeError","SystemError","TypeError","ValueError","Warning"]){make_builtin_exception(exc_name,_b_.Exception)}
+make_builtin_exception(["ArithmeticError","AssertionError","BufferError","EOFError","LookupError","MemoryError","OSError","ReferenceError","RuntimeError","SystemError","TypeError","ValueError","Warning"],_b_.Exception)
 make_builtin_exception("StopIteration",_b_.Exception,"value")
 make_builtin_exception("StopAsyncIteration",_b_.Exception,"value")
 make_builtin_exception("ImportError",_b_.Exception,"name")
 make_builtin_exception("SyntaxError",_b_.Exception,"msg")
-for(var exc_name of["FloatingPointError","OverflowError","ZeroDivisionError"]){make_builtin_exception(exc_name,_b_.ArithmeticError)}
+make_builtin_exception(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 make_builtin_exception("ModuleNotFoundError",_b_.ImportError,"name")
-for(var exc_name of["IndexError","KeyError"]){make_builtin_exception(exc_name,_b_.LookupError)}
-for(var exc_name of["BlockingIOError","ChildProcessError","ConnectionError","FileExistsError","FileNotFoundError","InterruptedError","IsADirectoryError","NotADirectoryError","PermissionError","ProcessLookupError","TimeoutError"]){make_builtin_exception(exc_name,_b_.OSError)}
-for(var exc_name of["BrokenPipeError","ConnectionAbortedError","ConnectionRefusedError","ConnectionResetError"]){make_builtin_exception(exc_name,_b_.ConnectionError)}
-for(var exc_name of["NotImplementedError","RecursionError"]){make_builtin_exception(exc_name,_b_.RuntimeError)}
+make_builtin_exception(["IndexError","KeyError"],_b_.LookupError)
+make_builtin_exception(["BlockingIOError","ChildProcessError","ConnectionError","FileExistsError","FileNotFoundError","InterruptedError","IsADirectoryError","NotADirectoryError","PermissionError","ProcessLookupError","TimeoutError"],_b_.OSError)
+make_builtin_exception(["BrokenPipeError","ConnectionAbortedError","ConnectionRefusedError","ConnectionResetError"],_b_.ConnectionError)
+make_builtin_exception(["NotImplementedError","RecursionError"],_b_.RuntimeError)
 make_builtin_exception("IndentationError",_b_.SyntaxError,"msg")
 make_builtin_exception("TabError",_b_.IndentationError)
 make_builtin_exception("UnicodeError",_b_.ValueError)
-for(var exc_name of["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"]){make_builtin_exception(exc_name,_b_.UnicodeError)}
-for(var exc_name of["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"]){make_builtin_exception(exc_name,_b_.Warning)}
-for(var exc_name of["EnvironmentError","IOError","VMSError","WindowsError"]){make_builtin_exception(exc_name,_b_.OSError)}
+make_builtin_exception(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
+make_builtin_exception(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"],_b_.Warning)
+make_builtin_exception(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
 _b_.AttributeError=$B.make_class('AttributeError',function(){var $=$B.args("AttributeError",3,{"msg":null,"name":null,"obj":null},["msg","name","obj"],arguments,{msg:_b_.None,name:_b_.None,obj:_b_.None},"*",null)
 var err=Error()
 err.__class__=_b_.AttributeError
