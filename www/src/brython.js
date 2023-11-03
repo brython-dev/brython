@@ -150,8 +150,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-02 15:33:56.946840"
-__BRYTHON__.timestamp=1698935636946
+__BRYTHON__.compiled_date="2023-11-03 07:53:00.864800"
+__BRYTHON__.timestamp=1698994380864
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 "use strict";
@@ -8137,13 +8137,13 @@ return exc}
 $B.$raise=function(arg,cause){
 var active_exc=$B.get_exc()
 if(arg===undefined){if(active_exc !==undefined){throw active_exc}
-throw _b_.RuntimeError.$factory("No active exception to reraise")}else{if($B.$isinstance(arg,BaseException)){if(arg.__class__===_b_.StopIteration &&
+throw _b_.RuntimeError.$factory("No active exception to reraise")}else{if($B.$isinstance(arg,_b_.BaseException)){if(arg.__class__===_b_.StopIteration &&
 $B.frame_obj.frame.$is_generator){
 arg=_b_.RuntimeError.$factory("generator raised StopIteration")}
 arg.__context__=active_exc===undefined ? _b_.None :active_exc
 arg.__cause__=cause ||_b_.None
 arg.__suppress_context__=cause !==undefined
-throw arg}else if(arg.$is_class && _b_.issubclass(arg,BaseException)){if(arg===_b_.StopIteration){if($B.frame_obj.frame[1].$is_generator){
+throw arg}else if(arg.$is_class && _b_.issubclass(arg,_b_.BaseException)){if(arg===_b_.StopIteration){if($B.frame_obj.frame[1].$is_generator){
 throw _b_.RuntimeError.$factory("generator raised StopIteration")}}
 var exc=$B.$call(arg)()
 exc.__context__=active_exc===undefined ? _b_.None :active_exc
@@ -8218,27 +8218,6 @@ if(_self.f_locals){return _self.f_locals}else if(_self.f_globals && _self[1]==_s
 frame.f_trace={__get__:function(_self){return _self.$f_trace}}
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
-var BaseException=_b_.BaseException=$B.make_class('BaseException')
-BaseException.__init__=function(self){var args=arguments[1]===undefined ?[]:[arguments[1]]
-self.args=_b_.tuple.$factory(args)}
-BaseException.__repr__=function(self){var res=self.__class__.__name__+'('
-if(self.args[0]!==undefined){res+=_b_.repr(self.args[0])}
-if(self.args.length > 1){res+=', '+_b_.repr($B.fast_tuple(self.args.slice(1)))}
-return res+')'}
-BaseException.__str__=function(self){if(self.args.length > 0 && self.args[0]!==_b_.None){return _b_.str.$factory(self.args[0])}
-return ''}
-BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
-err.__class__=cls
-err.__dict__=$B.empty_dict()
-return err}
-BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
-return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
-BaseException.add_note=function(self,note){
-if(! $B.$isinstance(note,_b_.str)){throw _b_.TypeError.$factory('note must be a str, not '+
-`'${$B.class_name(note)}'`)}
-if(self.__notes__ !==undefined){self.__notes__.push(note)}else{self.__notes__=[note]}}
-BaseException.with_traceback=function(_self,tb){_self.__traceback__=tb
-return _self}
 $B.deep_copy=function(stack){var res=[]
 for(const s of stack){var item=[s[0],{},s[2],{}]
 if(s[4]!==undefined){item.push(s[4])}
@@ -8259,29 +8238,9 @@ return stack}
 $B.freeze=function(err){if(err.$frame_obj===undefined){err.$frame_obj=$B.frame_obj
 err.$linenums=$B.make_linenums()}
 err.__traceback__=traceback.$factory(err)}
-var be_factory=`
-    var _b_ = __BRYTHON__.builtins
-    var err = Error()
-    err.args = $B.fast_tuple(Array.from(arguments))
-    err.__class__ = _b_.BaseException
-    err.__traceback__ = _b_.None
-    err.$py_error = true
-    err.$frame_obj = $B.frame_obj
-    err.$linenums = $B.make_linenums()
-    // placeholder
-    err.__cause__ = _b_.None // XXX fix me
-    err.__context__ = _b_.None // XXX fix me
-    err.__suppress_context__ = false // XXX fix me
-    return err
-`
-BaseException.$factory=Function(be_factory)
-BaseException.$factory.$infos={__name__:"BaseException",__qualname__:"BaseException"}
-$B.set_func_names(BaseException)
-_b_.BaseException=BaseException
 $B.exception=function(js_exc,in_ctx_manager){
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-console.log('exception',js_exc)
 var exc=_b_.JavascriptError.$factory((js_exc.__name__ ||js_exc.name))
 exc.$js_exc=js_exc
 if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}
@@ -8307,54 +8266,106 @@ var msg=js_exc+"",parts=msg.split(":"),err_type=parts[0].trim(),err_msg=parts[1]
 return(err_type=='InternalError' && err_msg=='too much recursion')||
 (err_type=='Error' && err_msg=='Out of stack space')||
 (err_type=='RangeError' && err_msg=='Maximum call stack size exceeded')}
-var $make_exc=$B.$make_exc=function(names,parent){
-var _str=[],pos=0
-for(var name of names){var code=""
-if(Array.isArray(name)){
-var code=name[1],name=name[0]}
-$B.builtins_scope[name]=true
-var $exc=be_factory.replace(/BaseException/g,name)
-$exc=$exc.replace("// placeholder",code)
-_b_[name]={__class__:_b_.type,__bases__:[_b_[parent.__name__]],__name__:name,__qualname__:name,__mro__:[_b_[parent.__name__]].concat(parent.__mro__),$is_class:true}
-_b_[name].$factory=Function($exc)
-_b_[name].$factory.$infos={__name__:name,__qualname__:name}
-$B.set_func_names(_b_[name],'builtins')}}
-$make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
-$make_exc(["JavascriptError"],_b_.Exception)
-var js_errors={'Error':_b_.JavascriptError}
-$make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","BufferError","EOFError",["ImportError","err.name = arguments[0]"],"LookupError","MemoryError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
-$make_exc(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
-$make_exc([["ModuleNotFoundError","err.name = arguments[0]"]],_b_.ImportError)
-$make_exc(["IndexError","KeyError"],_b_.LookupError)
-$make_exc(["BlockingIOError","ChildProcessError","ConnectionError","FileExistsError","FileNotFoundError","InterruptedError","IsADirectoryError","NotADirectoryError","PermissionError","ProcessLookupError","TimeoutError"],_b_.OSError)
-$make_exc(["BrokenPipeError","ConnectionAbortedError","ConnectionRefusedError","ConnectionResetError"],_b_.ConnectionError)
-$make_exc(["NotImplementedError","RecursionError"],_b_.RuntimeError)
-$make_exc([["IndentationError","err.msg = arguments[0]"]],_b_.SyntaxError)
-$make_exc(["TabError"],_b_.IndentationError)
-$make_exc(["UnicodeError"],_b_.ValueError)
-$make_exc(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
-$make_exc(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"],_b_.Warning)
-$make_exc(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
-var js='\nvar $ = $B.args("AttributeError", 3, {"msg": null, "name":null, "obj":null}, '+
-'["msg", "name", "obj"], arguments, '+
-'{msg: _b_.None, name: _b_.None, obj: _b_.None}, "*", null);\n'+
-'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;'+
-'err.name = $.name\nerr.obj = $.obj\n'
-$make_exc([["AttributeError",js]],_b_.Exception)
+function make_builtin_exception(exc_name,base,set_value){var exc_class=$B.make_class(exc_name,function(){var err=Error()
+err.args=$B.fast_tuple(Array.from(arguments))
+err.__class__=exc_class
+err.__traceback__=_b_.None
+err.$py_error=true
+err.$frame_obj=$B.frame_obj
+err.$linenums=$B.make_linenums()
+if(set_value){err[set_value]=arguments[0]||_b_.None}
+err.__cause__=_b_.None 
+err.__context__=_b_.None 
+err.__suppress_context__=false 
+return err}
+)
+exc_class.__bases__=[base]
+exc_class.__mro__=_b_.type.mro(exc_class).slice(1)
+$B.set_func_names(exc_class,'builtins')
+_b_[exc_name]=exc_class}
+make_builtin_exception("BaseException",_b_.object)
+_b_.BaseException.__init__=function(self){var args=arguments[1]===undefined ?[]:[arguments[1]]
+self.args=_b_.tuple.$factory(args)}
+_b_.BaseException.__repr__=function(self){var res=self.__class__.__name__+'('
+if(self.args[0]!==undefined){res+=_b_.repr(self.args[0])}
+if(self.args.length > 1){res+=', '+_b_.repr($B.fast_tuple(self.args.slice(1)))}
+return res+')'}
+_b_.BaseException.__str__=function(self){if(self.args.length > 0 && self.args[0]!==_b_.None){return _b_.str.$factory(self.args[0])}
+return ''}
+_b_.BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
+err.__class__=cls
+err.__dict__=$B.empty_dict()
+return err}
+_b_.BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
+return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
+_b_.BaseException.add_note=function(self,note){
+if(! $B.$isinstance(note,_b_.str)){throw _b_.TypeError.$factory('note must be a str, not '+
+`'${$B.class_name(note)}'`)}
+if(self.__notes__ !==undefined){self.__notes__.push(note)}else{self.__notes__=[note]}}
+_b_.BaseException.with_traceback=function(_self,tb){_self.__traceback__=tb
+return _self}
+$B.set_func_names(_b_.BaseException,'builtins')
+for(var exc_name of["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"]){make_builtin_exception(exc_name,_b_.BaseException)}
+make_builtin_exception("JavascriptError",_b_.Exception)
+for(var exc_name of["ArithmeticError","AssertionError","BufferError","EOFError","LookupError","MemoryError","OSError","ReferenceError","RuntimeError","SystemError","TypeError","ValueError","Warning"]){make_builtin_exception(exc_name,_b_.Exception)}
+make_builtin_exception("StopIteration",_b_.Exception,"value")
+make_builtin_exception("StopAsyncIteration",_b_.Exception,"value")
+make_builtin_exception("ImportError",_b_.Exception,"name")
+make_builtin_exception("SyntaxError",_b_.Exception,"msg")
+for(var exc_name of["FloatingPointError","OverflowError","ZeroDivisionError"]){make_builtin_exception(exc_name,_b_.ArithmeticError)}
+make_builtin_exception("ModuleNotFoundError",_b_.ImportError,"name")
+for(var exc_name of["IndexError","KeyError"]){make_builtin_exception(exc_name,_b_.LookupError)}
+for(var exc_name of["BlockingIOError","ChildProcessError","ConnectionError","FileExistsError","FileNotFoundError","InterruptedError","IsADirectoryError","NotADirectoryError","PermissionError","ProcessLookupError","TimeoutError"]){make_builtin_exception(exc_name,_b_.OSError)}
+for(var exc_name of["BrokenPipeError","ConnectionAbortedError","ConnectionRefusedError","ConnectionResetError"]){make_builtin_exception(exc_name,_b_.ConnectionError)}
+for(var exc_name of["NotImplementedError","RecursionError"]){make_builtin_exception(exc_name,_b_.RuntimeError)}
+make_builtin_exception("IndentationError",_b_.SyntaxError,"msg")
+make_builtin_exception("TabError",_b_.IndentationError)
+make_builtin_exception("UnicodeError",_b_.ValueError)
+for(var exc_name of["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"]){make_builtin_exception(exc_name,_b_.UnicodeError)}
+for(var exc_name of["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"]){make_builtin_exception(exc_name,_b_.Warning)}
+for(var exc_name of["EnvironmentError","IOError","VMSError","WindowsError"]){make_builtin_exception(exc_name,_b_.OSError)}
+_b_.AttributeError=$B.make_class('AttributeError',function(){var $=$B.args("AttributeError",3,{"msg":null,"name":null,"obj":null},["msg","name","obj"],arguments,{msg:_b_.None,name:_b_.None,obj:_b_.None},"*",null)
+var err=Error()
+err.__class__=_b_.AttributeError
+err.__traceback__=_b_.None
+err.$py_error=true
+err.$frame_obj=$B.frame_obj
+err.$linenums=$B.make_linenums()
+err.args=$B.fast_tuple($.msg===_b_.None ?[]:[$.msg])
+err.name=$.name
+err.obj=$.obj
+if(err.obj===undefined){console.log('pas de obj',$)}
+err.__cause__=_b_.None 
+err.__context__=_b_.None 
+err.__suppress_context__=false 
+return err}
+)
+_b_.AttributeError.__bases__=[_b_.Exception]
+_b_.AttributeError.__mro__=_b_.type.mro(_b_.AttributeError)
 _b_.AttributeError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){if(obj.$is_class){var msg=`type object '${obj.__name__}'`}else{var msg=`'${$B.class_name(obj)}' object`}
 msg+=` has no attribute '${name}'`
 return _b_.AttributeError.$factory({$kw:[{name,obj,msg}]})}
-var js='\nvar $ = $B.args("NameError", 2, {"message":null, "name": null}, '+
-'["message", "name"], arguments, '+
-'{message: _b_.None, name: _b_.None}, "*", null, 1);\n'+
-'err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])\n'+
-'err.name = $.name;\n'
-$make_exc([["NameError",js]],_b_.Exception)
+_b_.NameError=$B.make_class('NameError',function(){var $=$B.args("NameError",2,{"message":null,"name":null},["message","name"],arguments,{message:_b_.None,name:_b_.None},"*",null,1)
+var err=Error()
+err.__class__=_b_.NameError
+err.__traceback__=_b_.None
+err.$py_error=true
+err.$frame_obj=$B.frame_obj
+err.$linenums=$B.make_linenums()
+err.args=$B.fast_tuple($.message===_b_.None ?[]:[$.message])
+err.name=$.name
+err.__cause__=_b_.None 
+err.__context__=_b_.None 
+err.__suppress_context__=false 
+return err}
+)
+_b_.NameError.__bases__=[_b_.Exception]
+_b_.NameError.__mro__=_b_.type.mro(_b_.NameError).slice(1)
 _b_.NameError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.NameError,'builtins')
-$make_exc(["UnboundLocalError"],_b_.NameError)
+make_builtin_exception("UnboundLocalError",_b_.NameError)
 _b_.UnboundLocalError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
 $B.name_error=function(name){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
@@ -8424,28 +8435,28 @@ if(frame[4]&& frame[4].$is_method){
 var instance_name=frame[4].$infos.__code__.co_varnames[0],instance=frame[1][instance_name]
 if(_b_.hasattr(instance,name)){return `self.${name}`}}
 return _b_.None}
-var exc_group_code=
-'\nvar missing = {},\n'+
-'    $ = $B.args("[[name]]", 2, {message: null, exceptions: null}, '+
-"['message', 'exceptions'], arguments, {exceptions: missing}, "+
-'null, null)\n'+
-'err.message = $.message\n'+
-'err.exceptions = $.exceptions === missing ? [] : $.exceptions\n'
-var js=exc_group_code.replace('[[name]]','BaseExceptionGroup')
-js+=`if(err.exceptions !== _b_.None){
-    var exc_list = _b_.list.$factory(err.exceptions)
-    var all_exceptions = true
-    for(var exc of exc_list){
-        if(! $B.$isinstance(exc, _b_.Exception)){
-            all_exceptions = false
-            break
-        }
-    }
-    if(all_exceptions){
-        err.__class__ = _b_.ExceptionGroup
-    }}
-`
-$make_exc([['BaseExceptionGroup',js]],_b_.BaseException)
+_b_.BaseExceptionGroup=$B.make_class("BaseExceptionGFroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
+var err=Error()
+err.args=$B.fast_tuple(Array.from(arguments))
+err.__class__=_b_.BaseExceptionGroup
+err.__traceback__=_b_.None
+err.$py_error=true
+err.$frame_obj=$B.frame_obj
+err.$linenums=$B.make_linenums()
+err.message=$.message
+err.exceptions=$.exceptions===missing ?[]:$.exceptions
+if(err.exceptions !==_b_.None){var exc_list=_b_.list.$factory(err.exceptions)
+var all_exceptions=true
+for(var exc of exc_list){if(! $B.$isinstance(exc,_b_.Exception)){all_exceptions=false
+break}}
+if(all_exceptions){err.__class__=_b_.ExceptionGroup}}
+err.__cause__=_b_.None 
+err.__context__=_b_.None 
+err.__suppress_context__=false 
+return err}
+)
+_b_.BaseExceptionGroup.__bases__=[_b_.BaseException]
+_b_.BaseExceptionGroup.__mro__=_b_.type.mro(_b_.BaseExceptionGroup)
 _b_.BaseExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
 `${self.exceptions.length > 1 ? 's' : ''})`}
 _b_.BaseExceptionGroup.split=function(self,condition){
@@ -8464,19 +8475,26 @@ res.push(eg)}
 return $B.fast_tuple(res)}
 _b_.BaseExceptionGroup.subgroup=function(self,condition){return _b_.BaseExceptionGroup.split(self,condition)[0]}
 $B.set_func_names(_b_.BaseExceptionGroup,"builtins")
-var js=exc_group_code.replace('[[name]]','ExceptionGroup')
-js+=`if(err.exceptions !== _b_.None){
-    var exc_list = _b_.list.$factory(err.exceptions)
-    for(var exc of exc_list){
-        if(! $B.$isinstance(exc, _b_.Exception)){
-            throw _b_.TypeError.$factory(
-                'Cannot nest BaseExceptions in an ExceptionGroup')
-        }
-    }}
-`
-$make_exc([['ExceptionGroup',js]],_b_.Exception)
-_b_.ExceptionGroup.__bases__.splice(0,0,_b_.BaseExceptionGroup)
-_b_.ExceptionGroup.__mro__.splice(0,0,_b_.BaseExceptionGroup)
+_b_.ExceptionGroup=$B.make_class("ExceptionGFroup",function(){var missing={},$=$B.args("ExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
+var err=Error()
+err.args=$B.fast_tuple(Array.from(arguments))
+err.__class__=_b_.ExceptionGroup
+err.__traceback__=_b_.None
+err.$py_error=true
+err.$frame_obj=$B.frame_obj
+err.$linenums=$B.make_linenums()
+err.message=$.message
+err.exceptions=$.exceptions===missing ?[]:$.exceptions
+if(err.exceptions !==_b_.None){var exc_list=_b_.list.$factory(err.exceptions)
+for(var exc of exc_list){if(! $B.$isinstance(exc,_b_.Exception)){throw _b_.TypeError.$factory(
+'Cannot nest BaseExceptions in an ExceptionGroup')}}}
+err.__cause__=_b_.None 
+err.__context__=_b_.None 
+err.__suppress_context__=false 
+return err}
+)
+_b_.ExceptionGroup.__bases__=[_b_.BaseExceptionGroup,_b_.Exception]
+_b_.ExceptionGroup.__mro__=_b_.type.mro(_b_.ExceptionGroup)
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
@@ -14357,7 +14375,8 @@ var DOMNode=$B.make_class('DOMNode',function(elt){return elt}
 )
 DOMNode.__add__=function(self,other){
 var res=TagSum.$factory()
-res.children=[self],pos=1
+res.children=[self]
+var pos=1
 if($B.$isinstance(other,TagSum)){res.children=res.children.concat(other.children)}else if($B.$isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(
 document.createTextNode(_b_.str.$factory(other)))}else if($B.$isinstance(other,DOMNode)){res.children[pos++]=other}else{
 try{res.children=res.children.concat(_b_.list.$factory(other))}
