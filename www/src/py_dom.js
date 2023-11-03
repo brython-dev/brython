@@ -509,7 +509,8 @@ var DOMNode = $B.make_class('DOMNode',
 DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()
-    res.children = [self], pos = 1
+    res.children = [self]
+    var pos = 1
     if($B.$isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
     }else if($B.$isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
