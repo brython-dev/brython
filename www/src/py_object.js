@@ -114,7 +114,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'method' // false // attr == "__args__"
+    var $test = false // attr == 'st_size' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -344,6 +344,9 @@ object.__getattribute__ = function(obj, attr){
         }
         // attribute is not a descriptor : return it unchanged
         return res
+    }else if(obj.hasOwnProperty && obj.hasOwnProperty(attr) &&
+            ! Array.isArray(obj)){
+        return $B.Undefined
     }else{
         throw $B.attr_error(attr, obj)
     }
