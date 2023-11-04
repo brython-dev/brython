@@ -90,6 +90,12 @@ def main():
         help="Make a virtual file system",
         description="Make a virtual file system")
 
+    make_file_system_parser.add_argument('vfs_name',
+        help='Name of the file system')
+    make_file_system_parser.add_argument('prefix', nargs='?',
+        help='Prefix for file paths')
+
+
     # # Note: This may be uncommented when compat mode is removed
     # parser.add_argument('--version', help='Brython version number',
     #     action="store_true")
@@ -126,6 +132,8 @@ def main():
         action="store_true")
 
     args = parser.parse_args()
+
+    print('args', args)
 
     match args.subcommand:
 
@@ -242,14 +250,9 @@ def main():
 
         case 'make_file_system':
             print('Create a Javascript file for all the files in the directory')
-            args_fs = args.make_file_system.split("#")
-            if len(args_fs) > 2:
-                raise ValueError("--make_file_systems expects at most 2 "
-                    "arguments, got " + str(len(args_fs)))
-            vfs_name = args_fs[0]
-            prefix = args_fs[1] if len(args_fs) > 1 else None
+            print('make file system args', args)
             from .make_file_system import make
-            make(vfs_name, prefix)
+            make(args.vfs_name, args.prefix)
             print('done')
 
         case 'make_package':
@@ -488,3 +491,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
