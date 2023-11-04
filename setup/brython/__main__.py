@@ -133,8 +133,6 @@ def main():
 
     args = parser.parse_args()
 
-    print('args', args)
-
     match args.subcommand:
 
         case 'add_package':
@@ -250,7 +248,6 @@ def main():
 
         case 'make_file_system':
             print('Create a Javascript file for all the files in the directory')
-            print('make file system args', args)
             from .make_file_system import make
             make(args.vfs_name, args.prefix)
             print('done')
