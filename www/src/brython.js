@@ -150,8 +150,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-03 08:01:41.285892"
-__BRYTHON__.timestamp=1698994901285
+__BRYTHON__.compiled_date="2023-11-04 09:39:30.613065"
+__BRYTHON__.timestamp=1699087170613
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 "use strict";
@@ -5992,7 +5992,8 @@ if(is_own_class_instance_method){obj.$method_cache=obj.$method_cache ||{}
 obj.$method_cache[attr]=[method,res]}
 return method}}else{
 return res1}}
-return res}else{throw $B.attr_error(attr,obj)}}
+return res}else if(obj.hasOwnProperty && obj.hasOwnProperty(attr)&&
+! Array.isArray(obj)){return $B.Undefined}else{throw $B.attr_error(attr,obj)}}
 object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
@@ -6818,7 +6819,7 @@ return $B.$call(dir_func)(obj)}
 try{var res=$B.$call($B.$getattr(klass,'__dir__'))(obj)
 res=_b_.list.$factory(res)
 return res}catch(err){
-console.log('error in dir',obj,$B.$getattr(obj,'__dir__'),err.message)
+if($B.get_option('debug')> 2){console.log('error in dir, obj',obj,'klass',klass,$B.$getattr(klass,'__dir__'),err.message)}
 throw err}
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr !=='__class__' &&
@@ -8566,11 +8567,14 @@ trace+=`${err.__class__.__name__}: ${err.args[0]}`}else if(err.__class__ !==unde
 trace+=trace_from_stack(err)
 var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
+var save_frame_obj=$B.frame_obj
+$B.frame_obj=err.$frame_obj
 if(err.__class__===_b_.NameError){var suggestion=$B.offer_suggestions_for_name_error(err)
 if(suggestion !==_b_.None){trace+=`. Did you mean '${suggestion}'?`}
 if($B.stdlib_module_names.indexOf(err.name)>-1){
 trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=$B.offer_suggestions_for_attribute_error(err)
-if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}}else{trace=err+""}
+if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}
+$B.frame_obj=save_frame_obj}else{trace=err+""}
 if(err.$js_exc){trace+='\n\nJavascript error\n'+err.$js_exc+
 '\n'+err.$js_exc.stack}
 return trace}

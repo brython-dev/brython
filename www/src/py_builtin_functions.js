@@ -488,8 +488,10 @@ var dir = _b_.dir = function(obj){
         return res
     }catch (err){
         // ignore, default
-        //console.log(err)
-        console.log('error in dir', obj, $B.$getattr(obj, '__dir__'), err.message)
+        if($B.get_option('debug') > 2){
+            console.log('error in dir, obj', obj, 'klass', klass,
+                $B.$getattr(klass, '__dir__'), err.message)
+        }
         throw err
     }
 
@@ -986,10 +988,7 @@ $B.$getattr = function(obj, attr, _default){
     if(obj === undefined){
         console.log("get attr", attr, "of undefined")
     }
-    /*
-    console.log('attr', attr, 'of', obj)
-    console.log('getattr1 from getattr', $B.$getattr1(obj, attr, _default))
-    */
+
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__

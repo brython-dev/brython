@@ -4,7 +4,7 @@ standardized by the C Standard and the POSIX standard (a thinly
 disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls.
 */
-
+"use strict";
 var $B = __BRYTHON__,
     _b_ = $B.builtins
 
@@ -33,6 +33,24 @@ var stat_result = $B.make_class("stat_result",
                         res["st_" + item] = res.st_atime
                     });
             return res
+        }else if($B.files && $B.files.hasOwnProperty(filename)){
+            var f = $B.files[filename],
+                res = {
+                    __class__: stat_result,
+                    st_atime: __BRYTHON__.timestamp,
+                    st_ctime: f.ctime,
+                    st_mtime: f.mtime,
+                    st_uid: -1,
+                    st_gid: -1,
+                    st_ino: -1,
+                    st_mode: 0,
+                    st_size: f.content.length
+                };
+            for(var item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
+                res["st_" + item] = res.st_atime
+            }
+            return res
+
         }else{
             try{
                 var xhr = new XMLHttpRequest()
