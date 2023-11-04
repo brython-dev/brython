@@ -517,7 +517,7 @@ make_builtin_exception(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"],
     _b_.ConnectionError)
 
-make_builtin_exception(["NotImplementedError", "RecursionError"], 
+make_builtin_exception(["NotImplementedError", "RecursionError"],
     _b_.RuntimeError)
 
 make_builtin_exception("IndentationError", _b_.SyntaxError, "msg")
@@ -1082,6 +1082,8 @@ $B.error_trace = function(err){
         trace += trace_from_stack(err)
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
+        var save_frame_obj = $B.frame_obj
+        $B.frame_obj = err.$frame_obj
         if(err.__class__ === _b_.NameError){
             var suggestion = $B.offer_suggestions_for_name_error(err)
             if(suggestion !== _b_.None){
@@ -1101,6 +1103,7 @@ $B.error_trace = function(err){
                 trace += `. Did you mean: '${err.$suggestion}'?`
             }
         }
+        $B.frame_obj = save_frame_obj
     }else{
         trace = err + ""
     }
