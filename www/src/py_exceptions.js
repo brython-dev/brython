@@ -178,7 +178,7 @@ frame.__getattr__ = function(_self, attr){
             frame_obj = frame_obj.prev
         }
         if(frame_obj.prev !== null){
-            return frame.$factory(frame_obj.prev)
+            return frame.$factory(frame_obj.prev.frame)
         }
         return _b_.None
     }else if(attr == "clear"){
@@ -192,6 +192,8 @@ frame.__getattr__ = function(_self, attr){
         }
         return _self.$f_trace
     }
+        
+    console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
 

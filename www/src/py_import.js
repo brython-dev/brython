@@ -1438,7 +1438,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if($err3.$py_error){
                             $err3.__class__ = _b_.ImportError
                             $err3.args[0] = `cannot import name '${name}' ` +
-                                `from '${mod_name}' (${modobj.__file__})`
+                                `from '${mod_name}'`
+                            if(modobj.__file__){
+                                $err3.args[0] += ` (${modobj.__file__})`
+                            }
                             $err3.$suggestion = suggestion
                             throw $err3
                         }

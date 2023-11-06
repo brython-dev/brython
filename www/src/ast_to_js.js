@@ -260,7 +260,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'list'
+    var test = false // name == 'T'
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -295,7 +295,7 @@ function name_scope(name, scopes){
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
         is_local = [LOCAL, CELL].indexOf(__scope) > -1
     if(test){
-        console.log('block', block, 'is local', is_local)
+        console.log('block', block, 'is local', is_local, '__scope', __scope)
     }
     if(up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name){
         return {found: false, resolve: 'own_class_name'}
@@ -3022,15 +3022,73 @@ $B.ast.Tuple.prototype.to_js = function(scopes){
 }
 
 $B.ast.TypeAlias.prototype.to_js = function(scopes){
+    // For type aliases, symtable creates 2 blocks, one for the type params
+    // and another one for the type alias. We create the 2 matching scopes
+    var type_param_scope = new Scope('type_params', 'type_params', this.type_params)
+    scopes.push(type_param_scope)
+    var type_alias_scope = new Scope('type_alias', 'type_alias', this)
+    scopes.push(type_alias_scope)
+
+    var type_params_names = []
+
+    for(var type_param of this.type_params){
+        if(type_param instanceof $B.ast.TypeVar){
+            type_params_names.push(type_param.name)
+        }else if(type_param instanceof $B.ast.TypeVarTuple ||
+                type_param instanceof $B.ast.ParamSpec){
+            type_params_names.push(type_param.name.id)
+        }
+    }
+
+    var type_params_list = type_params_names.map(x => `'${x}'`)
+
+    for(var name of type_params_names){
+        bind(name, scopes)
+    }
+
+    var qualified_name = qualified_scope_name(scopes, type_alias_scope)
     var value = this.value.to_js(scopes),
-        type_params = this.type_params.map(x => x.to_js(scopes))
-    return `$B.$import('typing')\n` +
-           `locals.${this.name.id} = $B.make_type_alias('${this.name.id}', ` +
-           `$B.fast_tuple([${type_params}]), ${value})\n`// type alias\n`
+        type_params = [] //this.type_params.map(x => x.to_js(scopes))
+    scopes.pop()
+    scopes.pop()
+    var js = `$B.$import('_typing')\n`
+    // create locals for the type param scope
+    js += `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+    // emulate the function that creates the instance of TypeAliasType
+    // as explained in Python Reference
+    // https://docs.python.org/3/reference/compound_stmts.html#generic-type-aliases
+    js += `function TYPE_PARAMS_OF_${this.name.id}(){\n` +
+               `var locals_${qualified_name} = {},\n` +
+               `    locals = locals_${qualified_name}, \n` +
+               `    type_params = $B.fast_tuple([])\n`
+    for(var i = 0, len = this.type_params.length; i < len; i++){
+        js += `type_params.push(locals.${type_params_names[i]} = ` +
+                  `${this.type_params[i].to_js()})\n`
+    }
+    // create the function called when the attribute __value__ of the
+    // TypeAliasType instance is resolved ("lazy evaluation")
+    js += `function get_value(){\nreturn ${value}\n}\n`
+    // The function returns an instance of _typing.TypeAliasType
+    js += `var res = $B.$call($B.imported._typing.TypeAliasType)` +
+          `('${this.name.id}', get_value)\n` +
+          `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
+          `$B.$setattr(res, '__type_params__', type_params)\n` +
+          `return res\n` +
+          `}\n` +
+          `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
+    return js
 }
 
 $B.ast.TypeVar.prototype.to_js = function(){
-    return `$B.$call($B.imported.typing.TypeVar)('${this.name}')`
+    return `$B.$call($B.imported._typing.TypeVar)('${this.name}')`
+}
+
+$B.ast.TypeVarTuple.prototype.to_js = function(){
+    return `$B.$call($B.imported._typing.TypeVarTuple)('${this.name.id}')`
+}
+
+$B.ast.ParamSpec.prototype.to_js = function(){
+    return `$B.$call($B.imported._typing.ParamSpec)('${this.name.id}')`
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){

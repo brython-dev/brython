@@ -150,8 +150,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-04 09:39:30.613065"
-__BRYTHON__.timestamp=1699087170613
+__BRYTHON__.compiled_date="2023-11-06 08:56:18.159521"
+__BRYTHON__.timestamp=1699257378159
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 "use strict";
@@ -6184,10 +6184,6 @@ $B.make_class=function(qualname,factory){
 var A={__class__:type,__bases__:[_b_.object],__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
 A.$factory=factory
 return A}
-$B.make_type_alias=function(name,type_params,value){$B.$import('typing')
-var t=$B.$call($B.$getattr($B.imported.typing,'TypeAliasType'))(name,value)
-t.__type_params__=type_params
-return t}
 var type=$B.make_class("type",function(kls,bases,cl_dict){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
 var kwarg={}
 for(var key in kw.$jsobj){kwarg[key]=kw.$jsobj[key]}
@@ -8195,10 +8191,11 @@ if(attr=="f_back"){
 var frame_obj=$B.frame_obj
 while(frame_obj !==null){if(frame_obj.frame===_self){break}
 frame_obj=frame_obj.prev}
-if(frame_obj.prev !==null){return frame.$factory(frame_obj.prev)}
+if(frame_obj.prev !==null){return frame.$factory(frame_obj.prev.frame)}
 return _b_.None}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
 if(_self.$f_trace===undefined){return _b_.None}
 return _self.$f_trace}
+console.log('no attr',attr,'for frame',_self)
 throw $B.attr_error(attr,_self)}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
 _self.$f_trace=value}}
@@ -10235,7 +10232,8 @@ throw exc}
 var $frame=[mod_name,modobj,mod_name,modobj],suggestion=$B.offer_suggestions_for_name_error({name},$frame)
 if($err3.$py_error){$err3.__class__=_b_.ImportError
 $err3.args[0]=`cannot import name '${name}' `+
-`from '${mod_name}' (${modobj.__file__})`
+`from '${mod_name}'`
+if(modobj.__file__){$err3.args[0]+=` (${modobj.__file__})`}
 $err3.$suggestion=suggestion
 throw $err3}
 if($B.get_option('debug')> 1){console.log($err3)
@@ -15051,7 +15049,12 @@ update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
-eval(content)},mouseCoords:function(ev){return $B.JSObj.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObj.$factory(window.prompt(message,default_value||''))},reload:function(){
+console.log('content',content.length)
+eval(content)},load1:function(script_url,callback){
+var script=document.createElement('SCRIPT')
+script.src=script_url
+if(callback){script.addEventListener('load',function(ev){callback()})}
+document.body.appendChild(script)},mouseCoords:function(ev){return $B.JSObj.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObj.$factory(window.prompt(message,default_value||''))},reload:function(){
 var scripts=document.getElementsByTagName('script'),js_scripts=[]
 scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
@@ -15174,11 +15177,24 @@ var frame=$B.frame_obj.frame
 frame[1][alias]=result}},import_modules:function(refs,callback,loaded){
 if(loaded===undefined){loaded=[]}
 if(! Array.isArray(refs)){throw _b_.TypeError.$factory(
-`first argument mus be a list, got ${$B.class_name(refs)}`)}
+`first argument must be a list, got ${$B.class_name(refs)}`)}
 if(refs.length > 1){var ref=refs.shift()
 import(ref).then(function(module){loaded.push(module)
 $B.imported.javascript.import_modules(refs,callback,loaded)}).catch($B.show_error)}else{import(refs[0]).then(function(module){loaded.push(module)
-return $B.$call(callback).apply(null,loaded)}).catch($B.show_error)}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
+return $B.$call(callback).apply(null,loaded)}).catch($B.show_error)}},import_scripts:function(refs,callback,loaded){
+console.log('import scripts',refs)
+if(loaded===undefined){loaded=[]}
+if(! Array.isArray(refs)){throw _b_.TypeError.$factory(
+`first argument must be a list, got ${$B.class_name(refs)}`)}
+if(refs.length > 0){var ref=refs.shift()
+var script=document.createElement('script')
+script.src=ref
+script.addEventListener('load',function(ev){console.log('script loaded')
+loaded.push(script)
+$B.imported.javascript.import_scripts(refs,callback,loaded)}
+)
+document.body.appendChild(script)}else{console.log('appel callback',loaded)
+return $B.$call(callback).apply(null,loaded)}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
@@ -15467,7 +15483,7 @@ try{flags=_b_.dict.$getitem_string(block.symbols,name)}catch(err){console.log('n
 console.log('symtables',scopes.symtable)
 return{found:false,resolve:'all'}}
 var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK,is_local=[LOCAL,CELL].indexOf(__scope)>-1
-if(test){console.log('block',block,'is local',is_local)}
+if(test){console.log('block',block,'is local',is_local,'__scope',__scope)}
 if(up_scope.ast instanceof $B.ast.ClassDef && name==up_scope.name){return{found:false,resolve:'own_class_name'}}
 if(name=='__annotations__'){if(block.type==TYPE_CLASS && up_scope.has_annotation){is_local=true}else if(block.type==TYPE_MODULE){is_local=true}}
 if(is_local){
@@ -16606,11 +16622,40 @@ js+='\n}\n' }else{js+='}\n' }
 scopes.pop()
 return js}
 $B.ast.Tuple.prototype.to_js=function(scopes){return list_or_tuple_to_js.bind(this)('$B.fast_tuple',scopes)}
-$B.ast.TypeAlias.prototype.to_js=function(scopes){var value=this.value.to_js(scopes),type_params=this.type_params.map(x=> x.to_js(scopes))
-return `$B.$import('typing')\n`+
-`locals.${this.name.id} = $B.make_type_alias('${this.name.id}', `+
-`$B.fast_tuple([${type_params}]), ${value})\n`}
-$B.ast.TypeVar.prototype.to_js=function(){return `$B.$call($B.imported.typing.TypeVar)('${this.name}')`}
+$B.ast.TypeAlias.prototype.to_js=function(scopes){
+var type_param_scope=new Scope('type_params','type_params',this.type_params)
+scopes.push(type_param_scope)
+var type_alias_scope=new Scope('type_alias','type_alias',this)
+scopes.push(type_alias_scope)
+var type_params_names=[]
+for(var type_param of this.type_params){if(type_param instanceof $B.ast.TypeVar){type_params_names.push(type_param.name)}else if(type_param instanceof $B.ast.TypeVarTuple ||
+type_param instanceof $B.ast.ParamSpec){type_params_names.push(type_param.name.id)}}
+var type_params_list=type_params_names.map(x=> `'${x}'`)
+for(var name of type_params_names){bind(name,scopes)}
+var qualified_name=qualified_scope_name(scopes,type_alias_scope)
+var value=this.value.to_js(scopes),type_params=[]
+scopes.pop()
+scopes.pop()
+var js=`$B.$import('_typing')\n`
+js+=`var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+js+=`function TYPE_PARAMS_OF_${this.name.id}(){\n`+
+`var locals_${qualified_name} = {},\n`+
+`    locals = locals_${qualified_name}, \n`+
+`    type_params = $B.fast_tuple([])\n`
+for(var i=0,len=this.type_params.length;i < len;i++){js+=`type_params.push(locals.${type_params_names[i]} = `+
+`${this.type_params[i].to_js()})\n`}
+js+=`function get_value(){\nreturn ${value}\n}\n`
+js+=`var res = $B.$call($B.imported._typing.TypeAliasType)`+
+`('${this.name.id}', get_value)\n`+
+`$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n`+
+`$B.$setattr(res, '__type_params__', type_params)\n`+
+`return res\n`+
+`}\n`+
+`locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
+return js}
+$B.ast.TypeVar.prototype.to_js=function(){return `$B.$call($B.imported._typing.TypeVar)('${this.name}')`}
+$B.ast.TypeVarTuple.prototype.to_js=function(){return `$B.$call($B.imported._typing.TypeVarTuple)('${this.name.id}')`}
+$B.ast.ParamSpec.prototype.to_js=function(){return `$B.$call($B.imported._typing.ParamSpec)('${this.name.id}')`}
 $B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
 if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
 if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $B.ast.UAdd){return operand+''}else if(this.op instanceof $B.ast.USub){return-operand+''}}
