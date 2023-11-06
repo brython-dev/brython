@@ -76,7 +76,8 @@ def run():
         'builtin_modules',
         'ast_to_js',
         'symtable',
-        'builtins_docstrings'
+        'builtins_docstrings',
+        'brython_ready'
     ]
 
     res = f"""// brython.js brython.info
