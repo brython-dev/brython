@@ -198,6 +198,7 @@ function ste_new(st, name, block,
         end_lineno: end_lineno,
         end_col_offset: end_col_offset
     }
+    
     if(st.cur != NULL &&
             (st.cur.nested ||
              st.cur.type == FunctionBlock)){
@@ -717,7 +718,6 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         }
     }
 
-
     /* Populate global and bound sets to be passed to children. */
     if (ste.type != ClassBlock) {
         /* Add function locals to bound set */
@@ -775,7 +775,6 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
             ste.child_free = 1
         }
     }
-
     /* Splice children of inlined comprehensions into our children list */
     for (var i = ste.children.length - 1; i >= 0; i--) {
         var entry = ste.children[i];
@@ -873,7 +872,6 @@ function symtable_enter_block(st, name, block,
     }
     var ste = ste_new(st, name, block, ast,
                       lineno, col_offset, end_lineno, end_col_offset)
-
     st.stack.push(ste)
     prev = st.cur
     /* bpo-37757: For now, disallow *all* assignment expressions in the
@@ -994,7 +992,7 @@ function symtable_enter_type_param_block(st, name,
             return 0;
         }
     }
-    if (kind == $B.ast.ClassDef) {
+    if(kind == $B.ast.ClassDef) {
         // It gets "set" when we create the type params tuple and
         // "used" when we build up the bases.
         if (!symtable_add_def(st, "type_params", DEF_LOCAL,
