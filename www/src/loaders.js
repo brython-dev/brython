@@ -488,6 +488,8 @@ var loop = $B.loop = function(){
                     $B.imported[script_id][key] = module[key]
                 }
             }
+            // dispatch "load" event on the <script> element
+            $B.dispatch_load_event(script.script_element)
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception

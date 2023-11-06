@@ -9393,7 +9393,8 @@ $B.run_script = function(script, src, name, url, run_loop){
                 __doc__: get_docstring(root._ast),
                 js: js,
                 __name__: name,
-                __file__: url
+                __file__: url,
+                script_element: script
             }
         if($B.get_option_from_filename('debug', url) > 1){
             console.log($B.format_indent(js, 0))
