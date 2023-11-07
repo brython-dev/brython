@@ -150,8 +150,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-06 18:56:19.994965"
-__BRYTHON__.timestamp=1699293379994
+__BRYTHON__.compiled_date="2023-11-06 23:00:37.112422"
+__BRYTHON__.timestamp=1699308037112
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 "use strict";
@@ -5049,7 +5049,7 @@ store.onsuccess=resolve}}else{
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(evt){reject("open cursor error")}
-openCursor.onsuccess=function(evt){cursor=evt.target.result
+openCursor.onsuccess=function(evt){var cursor=evt.target.result
 if(cursor){record=cursor.value
 if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
@@ -11782,7 +11782,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 "use strict";
 ;(function($B){
 var _b_=$B.builtins
-if($B.isWebWorker){window=self}
+if($B.isWebWorker){var window=self}
 var long_int={__class__:_b_.type,__mro__:[_b_.int,_b_.object],__qualname__:'int',$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 var max_safe_divider=$B.max_int/9
 var int_or_long=_b_.int.$int_or_long
