@@ -183,7 +183,9 @@ def process(filename, exclude_dirs=['test','site-packages']):
                     else:
                         VFS[mod_name] = [ext, data, imports]
                 else:
-                   VFS[mod_name] = [ext, data]
+                    # remove strict mode, avoids unexpected errors
+                    data = re.sub('"use strict";\n', "", data)
+                    VFS[mod_name] = [ext, data]
                 print("adding {}".format(mod_name))
 
     print('{} files, {} errors'.format(nb, nb_err))
