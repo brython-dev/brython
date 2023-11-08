@@ -381,7 +381,8 @@ slice.$conv_for_seq = function(self, len){
     // start, stop, step to integers
     var step = self.step === None ? 1 : $B.PyNumber_Index(self.step),
         step_is_neg = $B.rich_comp('__gt__', 0, step),
-        len_1 = $B.rich_op('__sub__', len, 1)
+        len_1 = $B.rich_op('__sub__', len, 1),
+        stop
     if(step == 0){
         throw _b_.ValueError.$factory('slice step cannot be zero')
     }

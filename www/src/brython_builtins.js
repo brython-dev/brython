@@ -16,6 +16,10 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
 
+if ($B.isWebWorker) {
+    self.window = self
+}
+
 $B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
     && (process.__nwjs!==1)
 
