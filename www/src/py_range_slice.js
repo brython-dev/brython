@@ -385,8 +385,7 @@ slice.$conv_for_seq = function(self, len){
     if(step == 0){
         throw _b_.ValueError.$factory('slice step cannot be zero')
     }
-    var start,
-        stop
+    var start
     if(self.start === None){
         start = step_is_neg ? len_1 : 0
     }else{

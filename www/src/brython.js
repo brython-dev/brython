@@ -150,8 +150,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-07 15:27:27.095865"
-__BRYTHON__.timestamp=1699367247095
+__BRYTHON__.compiled_date="2023-11-06 23:00:37.112422"
+__BRYTHON__.timestamp=1699308037112
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 "use strict";
@@ -8709,7 +8709,7 @@ return res}
 slice.$conv_for_seq=function(self,len){
 var step=self.step===None ? 1 :$B.PyNumber_Index(self.step),step_is_neg=$B.rich_comp('__gt__',0,step),len_1=$B.rich_op('__sub__',len,1)
 if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
-var start,stop
+var start
 if(self.start===None){start=step_is_neg ? len_1 :0}else{start=$B.PyNumber_Index(self.start)
 if($B.rich_comp('__gt__',0,start)){start=$B.rich_op('__add__',start,len)
 if($B.rich_comp('__gt__',0,start)){start=0}}
@@ -16212,6 +16212,8 @@ var decorate=func_ref
 for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}
 if(has_type_params){js=`var locals_${type_params_ref} = {\n}\n`+type_params+js}
+if(window.js===js){console.log('leaking ??')
+alert()}
 return js}
 $B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var expr=this.elt,first_for=this.generators[0],

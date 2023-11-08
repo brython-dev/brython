@@ -2107,6 +2107,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(has_type_params){
         js = `var locals_${type_params_ref} = {\n}\n` + type_params + js
     }
+    if(window.js === js){
+        console.log('leaking ??')
+        alert()
+    }
     return js
 }
 
