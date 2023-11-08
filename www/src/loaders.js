@@ -198,7 +198,7 @@ $B.idb_open_promise = function(){
                 }
 
                 openCursor.onsuccess = function(evt){
-                    var cursor = evt.target.result
+                    cursor = evt.target.result
                     if(cursor){
                         record = cursor.value
                         // A record is valid if the Brython engine timestamp is

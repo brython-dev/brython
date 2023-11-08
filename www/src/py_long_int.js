@@ -7,7 +7,7 @@ Module to manipulate long integers
 var _b_ = $B.builtins
 
 if($B.isWebWorker){
-    var window = self
+    window = self
 }
 
 var long_int = {
