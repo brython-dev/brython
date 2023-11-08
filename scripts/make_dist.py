@@ -104,10 +104,6 @@ def run():
         else:
             res_no_static += mini
 
-    # remove strict mode for brython.js - better to silently ignore than to
-    # get weird errors at runtime
-    res = re.sub('"use strict";\n', "", res)
-
     res = re.sub(r'\bcontext\b', 'C', res)
     res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)
 
