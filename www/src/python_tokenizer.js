@@ -395,6 +395,7 @@ $B.tokenizer = function*(src, filename, mode){
         indent,
         indents = [],
         braces = [],
+        line,
         line_num = 0,
         line_start = 1,
         token_modes = ['regular'],
@@ -558,10 +559,6 @@ $B.tokenizer = function*(src, filename, mode){
                 continue
             }
         }
-
-	    let line;
-	    let line_num;
-	    let line_start;
 	    
         switch(state){
 	    
