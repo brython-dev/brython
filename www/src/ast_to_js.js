@@ -595,7 +595,8 @@ function mark_parents(node){
 }
 
 function add_body(body, scopes){
-    var res = ''
+    var res = '';
+    let js;
     for(var item of body){
         js = $B.js_from_ast(item, scopes)
         if(js.length > 0){
@@ -781,8 +782,6 @@ function init_scopes(type, scopes){
     // namespaces can be passed by exec() or eval()
     var filename = scopes?.symtable?.table?.filename,
         name = $B.url2name[filename]
-        
-    console.log(scopes);
 
     if(name){
         name = name.replace(/-/g, '_') // issue 1958
@@ -3341,8 +3340,6 @@ var state = {}
 
 $B.js_from_root = function(arg){
 
-	console.log('arg', arg);
-
     var ast_root = arg.ast,
         symtable = arg.symtable,
         filename = arg.filename,
@@ -3362,7 +3359,6 @@ $B.js_from_root = function(arg){
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}
-    console.log('TF???', scopes, filename);
     var js = ast_root.to_js(scopes)
     return {js, imports: scopes.imports}
 }
