@@ -9393,6 +9393,7 @@ $B.run_script = function(script, src, name, url, run_loop){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
+    	console.log('!', err);
         return $B.handle_error(err) // in loaders.js
     }
     if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
