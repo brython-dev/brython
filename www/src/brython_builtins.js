@@ -25,8 +25,6 @@ _window.location ||= {
             origin: '',
             pathname: ''
         };
-        
-console.log(_window.location);
 
 _window.navigator ||= {userLanguage: ''}
 
@@ -36,8 +34,9 @@ _window.document  ||= {
 	querySelectorAll: () => []
 }
 
-_window.HTMLElement = class HTMLElement {};
+_window.HTMLElement ||= class HTMLElement {};
 _window.MutationObserver ||= function() { this.observe = () => {};  };
+console.log( "===", _window.customElements ); 
 _window.customElements   ||= {define: () => {} };
 
 var href = _window.location.href
