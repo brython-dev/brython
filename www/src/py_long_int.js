@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 /*
 Module to manipulate long integers
@@ -6,7 +7,7 @@ Module to manipulate long integers
 var _b_ = $B.builtins
 
 if($B.isWebWorker){
-    window = self
+    var window = self
 }
 
 var long_int = {
@@ -180,7 +181,7 @@ long_int.__gt__ = function(self, other){
 
 long_int.__hash__ = function(self){
     var modulus = 2305843009213693951n,
-        sign = self.value >= 0 ? 1n : -1n
+        sign = self.value >= 0 ? 1n : -1n,
         self_pos = self.value * sign
     var _hash = sign * (self_pos % modulus)
     return self.__hashvalue__ = int_or_long(_hash)

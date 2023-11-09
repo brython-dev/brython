@@ -83,5 +83,6 @@ for key in keys:
 dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
 
 with open(os.path.join(dest_dir, 'py_ast_classes.js'), 'w', encoding='utf-8') as out:
+    out.write('"use strict";\n')
     out.write('__BRYTHON__.ast_classes = {\n' + ',\n'.join(lines) + '\n}\n')
 

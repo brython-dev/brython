@@ -23,12 +23,16 @@ function define(tag_name, cls, options){
             // ignore
         }
     }else{
-        for(var base of cls.__bases__){
-            if(base.__module__ == 'browser.html'){
-                _extends = base.__name__.toLowerCase()
-                break
-            }
-        }
+        let stack = [...cls.__bases__];
+        while(stack.length) {
+        	base = stack.pop();
+		if(base.__module__ === 'browser.html'){
+		        _extends = base.__name__.toLowerCase()
+		        break
+		}
+		    
+		stack.push(...base.__bases__);
+	}
     }
 
     if(_extends){

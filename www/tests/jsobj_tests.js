@@ -236,3 +236,10 @@ window.test_pyfunc_receives_js_number = function(){
     console.log('py module name', window.py_module_name)
     __BRYTHON__.imported[window.py_module_name].pyfunc_receives_js_number(3.14)
 }
+
+// consistency between function calls and reference
+window.get_array_from_func_call = function(){
+  return [4.5, 'a', {x: 'abc'}]
+}
+
+window.array_by_reference = [4.5, 'a', {x: 'abc'}]

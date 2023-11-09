@@ -67,4 +67,46 @@ if script_loc[0] == brython_loc[0]:
 
 import import_bug
 
+# issue 2310
+# A virtual file system filesystem/test_filesystem.vfs.js is loaded in the
+# test page. It simulates the presence of a file at address
+# /plugins/plugin.py.
+# The test checks that standard Python import machinery (importlib)
+# successfully loads the file as a module.
+import os
+import sys
+import platform
+from browser import console
+import browser.aio
+import pathlib
+import importlib.util
+
+
+def load_plugin(module_path, add_to_sys_modules=True):
+    stem = os.path.splitext(os.path.basename(module_path))[0]
+    if stem[0].isdigit():
+        tmp = stem.split("_", 1)
+        if len(tmp) == 2:
+            stem = tmp[1]
+    module_name =  "ui_plugin_" + stem
+    if module_name in sys.modules:
+        print("{} already loaded".format(module_name))
+        return sys.modules[module_name]
+    if platform.python_implementation() == "Brython":
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+    else:
+        spec = spec_from_file_location(module_name, module_path)
+    if spec is None:
+        raise FileNotFoundError(module_path)
+    module = importlib.util.module_from_spec(spec)
+    module.is_plugin = True
+    if add_to_sys_modules:
+        sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    assert module.name == "brython"
+    return module
+
+
+load_plugin("/plugins/plugin.py")
+
 print('passed all tests')

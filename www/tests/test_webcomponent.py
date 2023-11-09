@@ -211,5 +211,25 @@ class DemoComponent2181:
 webcomponent.define("demo-component2181", DemoComponent2181)
 assert ann == [('x', str)], ann
 
+# PR 2295
+from browser import html
+
+class MyDivA2295(html.DIV):
+    def __init__(self):
+        self <= "A"
+
+class MyDivB2295(MyDivA2295):
+    def __init__(self):
+        self <= "B"
+
+class MyDivC2295:
+    def __init__(self):
+        pass
+
+webcomponent.define("my-div_a_2295", MyDivA2295)
+
+webcomponent.define("my-div_b_2295", MyDivB2295)
+
+webcomponent.define("my-div_c_2295", MyDivC2295)
 
 print('all tests passed...')

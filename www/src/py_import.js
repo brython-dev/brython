@@ -1,4 +1,5 @@
 // import modules
+"use strict";
 
 ;(function($B){
 
@@ -1005,7 +1006,7 @@ function import_engine(mod_name, _path, from_stdlib){
 
     if(_loader === undefined){
         // No import spec found
-        message = mod_name
+        var message = mod_name
         if($B.protocol == "file"){
             message += " (warning: cannot import local files with protocol 'file')"
         }
@@ -1317,7 +1318,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         var p = parts[i]
         if(prefix && p == ""){
             // Move up in package hierarchy
-            elt = norm_parts.pop()
+            var elt = norm_parts.pop()
             if(elt === undefined){
                 throw _b_.ImportError.$factory("Parent module '' not loaded, "+
                     "cannot perform relative import")
@@ -1437,7 +1438,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if($err3.$py_error){
                             $err3.__class__ = _b_.ImportError
                             $err3.args[0] = `cannot import name '${name}' ` +
-                                `from '${mod_name}' (${modobj.__file__})`
+                                `from '${mod_name}'`
+                            if(modobj.__file__){
+                                $err3.args[0] += ` (${modobj.__file__})`
+                            }
                             $err3.$suggestion = suggestion
                             throw $err3
                         }

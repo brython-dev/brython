@@ -1,3 +1,4 @@
+"use strict";
  ;(function($B) {
      var _b_ = $B.builtins
     var update = $B.update_obj = function(mod, data) {
@@ -121,9 +122,26 @@
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
                 var content = $B.$getattr(file_obj, 'read')()
+                console.log('content', content.length)
                 eval(content)
             },
-            mouseCoords: function(ev){return $B.JSObj.$factory($mouseCoords(ev))},
+            load1:function(script_url, callback){
+                // Load and eval() the Javascript file at script_url
+                //var file_obj = $B.builtins.open(script_url)
+                //var content = $B.$getattr(file_obj, 'read')()
+                //console.log('content', content.length)
+                var script = document.createElement('SCRIPT')
+                script.src = script_url
+                if(callback){
+                    script.addEventListener('load', function(ev){
+                        callback()
+                    })
+                }
+                document.body.appendChild(script)
+            },
+            mouseCoords: function(ev){
+                return $B.JSObj.$factory($B.$mouseCoords(ev))
+            },
             prompt: function(message, default_value){
                 return $B.JSObj.$factory(window.prompt(message, default_value||''))
             },
@@ -433,7 +451,7 @@
             // module named "name"
             var $ = $B.args('import_js', 2, {url: null, alias: null},
                     ['url', 'alias'], arguments, {alias: _b_.None}, null, null),
-                url = $.url
+                url = $.url,
                 alias = $.alias
             var xhr = new XMLHttpRequest(),
                 result
@@ -441,7 +459,10 @@
             xhr.onreadystatechange = function(){
                 if(this.readyState == 4){
                     if(this.status == 200){
-                        eval(this.responseText)
+                        var js = this.responseText + '\nreturn $module',
+                            f = new Function(js)
+                        console.log('f', f, f+'')
+                        var $module = f()
                         if(typeof $module !== 'undefined'){
                             result = $B.module.$factory(name)
                             for(var key in $module){
@@ -449,6 +470,7 @@
                             }
                             result.__file__ = url
                         }else{
+                            console.log(this.responseText)
                             result = _b_.ImportError.$factory('Javascript ' +
                                 `module at ${url} doesn't define $module`)
                         }
@@ -476,14 +498,14 @@
             }
         },
         import_modules: function(refs, callback, loaded){
-            // loads the Javascript modules referenced by module_refs, then
-            // calls callback with arguments = the module objects
+            // loads the Javascript ES6 modules referenced by module_refs,
+            // then calls callback with arguments = the module objects
             if(loaded === undefined){
                 loaded = []
             }
             if(! Array.isArray(refs)){
                 throw _b_.TypeError.$factory(
-                    `first argument mus be a list, got ${$B.class_name(refs)}`)
+                    `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
             if(refs.length > 1){
@@ -499,6 +521,36 @@
                 }).catch($B.show_error)
             }
         },
+        import_scripts:  function(refs, callback, loaded){
+            // loads the Javascript ES6 modules referenced by module_refs,
+            // then calls callback with arguments = the module objects
+            console.log('import scripts', refs)
+            if(loaded === undefined){
+                loaded = []
+            }
+            if(! Array.isArray(refs)){
+                throw _b_.TypeError.$factory(
+                    `first argument must be a list, got ${$B.class_name(refs)}`)
+            }
+
+            if(refs.length > 0){
+                var ref = refs.shift()
+                var script = document.createElement('script')
+                script.src = ref
+                script.addEventListener('load',
+                    function(ev){
+                        console.log('script loaded')
+                        loaded.push(script)
+                        $B.imported.javascript.import_scripts(refs, callback, loaded)
+                    }
+                )
+                document.body.appendChild(script)
+            }else{
+                console.log('appel callback', loaded)
+                return $B.$call(callback).apply(null, loaded)
+            }
+        },
+
         JSObject: $B.JSObj,
         JSON: {
             __class__: $B.make_class("JSON"),
