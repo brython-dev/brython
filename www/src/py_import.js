@@ -3,7 +3,7 @@
 ;(function($B){
 
 var _b_ = $B.builtins,
-    _window = self
+    _window = globalThis
 
 // Class for modules
 var Module = $B.module = $B.make_class("module",

@@ -1,4 +1,4 @@
-var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
+var __BRYTHON__ = globalThis.__BRYTHON__ || {}  // global object with brython built-ins
 
 try{
     // "async function*" is not supported in old versions of Microsoft Edge
@@ -31,7 +31,7 @@ if($B.isNode){
         }
     }
 } else {
-    _window = self
+    _window = globalThis
 }
 
 var href = _window.location.href

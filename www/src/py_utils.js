@@ -1,7 +1,7 @@
 ;(function($B){
 
 var _b_ = $B.builtins,
-    _window = self,
+    _window = globalThis,
     isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
