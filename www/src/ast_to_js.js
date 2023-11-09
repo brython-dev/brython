@@ -1763,6 +1763,349 @@ function transform_args(scopes){
             kw_defaults, kw_default_names, annotations}
 }
 
+
+const DEFAULTS = {
+	NONE: 1,
+	SOME: 2,
+	ALL: 3
+}
+
+// deno run generator.js
+// hasPos / posDefaults are pos parameters excluding posOnly parameters.
+function generate_args0(...args) {
+
+
+	return new Function('fct', 'args', generate_args0_str(...args) );
+}
+
+
+function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
+
+	let fct = 
+//`function args0_NEW(fct, args) {
+`
+    const HAS_KW 		= args[args.length-1]?.$kw !== undefined;
+    let ARGS_POS_COUNT        = args.length;
+    let ARGS_NAMED            = null;
+    
+    if( HAS_KW ) {
+    	--ARGS_POS_COUNT;
+    	ARGS_NAMED = args[ARGS_POS_COUNT].$kw
+    }
+
+    const result = {};
+
+    // using const should enable the browser to perform some optimisation.
+    const $INFOS = fct.$infos;
+    const $CODE  = $INFOS.__code__;
+
+    const PARAMS_NAMES        = $INFOS.arg_names;
+    const PARAMS_POS_COUNT    = $CODE.co_argcount;
+    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
+
+    const PARAMS_VARARGS_NAME = $INFOS.vararg;
+    const PARAMS_KWARGS_NAME  = $INFOS.kwarg;
+    
+    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
+    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
+    
+    const PARAMS_POS_DEFAULTS_OFFSET= PARAMS_POS_COUNT - PARAMS_POS_DEFAULTS_COUNT;
+
+    let offset = 0;
+`;
+
+	if( hasPosOnly || hasPos ) {
+		fct +=
+`
+	const min = Math.min( ARGS_POS_COUNT, PARAMS_POS_COUNT );
+    for( ; offset < min ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+	}
+
+	if( hasVargars ) {
+		fct +=
+`
+    result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
+`
+	} else {
+		fct +=
+`
+	if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
+        args0(fct, args);
+        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
+    }
+`
+	}
+
+	fct += `
+	if( ARGS_NAMED === null ) {
+	`
+
+	if( hasPos || hasPosOnly ) {
+
+		if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
+
+			fct += `
+		if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
+            args0(fct, args);
+            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
+        }
+`
+		}
+
+		if( posOnlyDefaults !== DEFAULTS.NONE && posDefaults !== DEFAULTS.NONE) {
+			fct += `
+		for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
+			i < PARAMS_POS_DEFAULTS_COUNT;
+			++i)
+			result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`
+		}
+
+		if( hasKWargs ) {
+			fct += `
+		result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict({});`
+		}
+
+		if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
+			fct += `
+		args0(fct, args);
+		throw new Error('Named argument expected (args0 should have raised an error) !');
+`
+		} else {
+			fct += `
+		let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
+        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
+        	kwargs_defaults = $INFOS.__kwdefaults__.$strings;
+        }
+		for(let key in kwargs_defaults)    
+        	result[ key ] = kwargs_defaults[key];
+`
+		}
+	}
+
+	fct += `
+		return result;
+	}
+`
+	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
+		fct += `
+	args0(fct, args);
+	throw new Error('No named arguments expected !!!');
+`;
+// fct += '}'
+		return fct;
+	}
+
+	if( namedOnlyDefaults !== DEFAULTS.NONE) {
+		fct += `
+	let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
+	if( kwargs_defaults === undefined  || kwargs_defaults == null ) {
+
+		kwargs_defaults = $INFOS.__kwdefaults__.$strings;
+		if( kwargs_defaults === undefined  || kwargs_defaults == null )
+			kwargs_defaults = {}
+	}
+`
+	}
+
+	if( hasPosOnly ) {
+		fct += `
+	const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
+    const PARAMS_POS_DEFAULTS_MAXID    =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+
+	if( offset < PARAMS_POSONLY_COUNT ) {
+
+		`;
+		if( posOnlyDefaults !== DEFAULTS.SOME) {
+			fct += `
+		if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
+			args0(fct, args);
+			throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+		}
+`
+		}
+		if( posOnlyDefaults === DEFAULTS.NONE) {
+			fct += `
+		args0(fct, args);
+		throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+`;
+		}
+
+		fct += `
+		const max = PARAMS_POS_DEFAULTS_COUNT - (PARAMS_POS_COUNT - PARAMS_POSONLY_COUNT);
+
+		// default parameters
+		for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
+				i < max;
+				++i)
+			result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
+	}
+`
+	}
+
+	if( hasKWargs) {
+
+		fct += `
+    const extra = {};
+
+    let nb_extra_args = 0;
+`
+	}
+
+	fct += `
+
+	let nb_named_args = 0;       
+
+	for(let id = 0; id < ARGS_NAMED.length; ++id ) {
+
+		const _kargs = ARGS_NAMED[id]
+		let kargs  = _kargs.$jsobj;
+		if( kargs === undefined || kargs === null) {
+			kargs = _kargs.$strings
+			if(kargs === undefined || kargs === null) 
+				kargs= _kargs; // I don't think I can do better.
+		}
+
+		for(let argname in kargs) {
+			`;
+
+			if( ! hasKWargs ) {
+				fct += `
+			result[ argname ] = kargs[argname];
+			++nb_named_args;
+`;
+			}
+
+			if( hasKWargs ) {
+				if( ! hasNamedOnly && ! hasPos ) {
+
+					fct += `
+			extra[ argname ] = kargs[argname];
+			++nb_extra_args;
+`
+				} else {
+					fct += `
+			if( PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1 ) {
+				result[ argname ] = kargs[argname];
+				++nb_named_args;
+			} else {
+				extra[ argname ] = kargs[argname];
+				++nb_extra_args;
+			}
+`
+				}
+			}
+
+			fct += `
+		}
+	}
+`
+
+	fct += `
+	let found = 0;
+    let ioffset = offset;
+`;
+
+	if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.ALL) || (hasPos && posDefaults !== DEFAULTS.ALL) ) {
+		fct += `
+	for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
+		
+		const key = PARAMS_NAMES[ioffset];
+		if( key in result ) // maybe could be speed up using "!(key in result)"
+			continue;
+
+		args0(fct, args);
+		throw new Error('Missing a named arguments (args0 should have raised an error) !');
+	}
+`
+	}
+	if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.NONE) || (hasPos && posDefaults !== DEFAULTS.NONE) ) {
+		fct += `
+	for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset) {
+		
+		const key = PARAMS_NAMES[ioffset];
+		if( key in result )
+			continue;
+
+		result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+	++found;
+	}
+`
+	}
+
+	if( hasNamedOnly ) {
+
+		fct += `
+		for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
+			
+			const key = PARAMS_NAMES[ioffset];
+			if( key in result )
+				continue;
+`
+		if( namedOnlyDefaults === DEFAULTS.SOME) {
+			fct += `
+			if( ! (key in kwargs_defaults) ) {
+				args0(fct, args);
+				throw new Error('Missing a named arguments (args0 should have raised an error) !');
+			}
+`
+		}
+		if( namedOnlyDefaults === DEFAULTS.NONE ) {
+			fct += `
+			args0(fct, args);
+			throw new Error('Missing a named arguments (args0 should have raised an error) !');
+`
+		}
+		
+		if( namedOnlyDefaults !== DEFAULTS.NONE) {
+			fct += `
+
+			result[key] = kwargs_defaults[key];
+			++found;
+`;
+		}
+
+		fct += `
+		}
+`;
+	}
+
+	fct += `
+		if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
+			args0(fct, args);
+			throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
+		}
+`;
+
+	if( hasKWargs ) {
+		fct += `
+	if( Object.keys(extra).length !== nb_extra_args ) {
+		args0(fct, args);
+		throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
+	}
+	result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra);
+`
+	}
+
+	fct += `
+	return result
+	`;
+
+	//fct += `}`;
+	return fct;
+}
+
+//TODO: here functions for test
+$B.args0_ftest1 = generate_args0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest2 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest3 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest4 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest5 = generate_args0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, true, false, DEFAULTS.NONE, false);
+$B.args0_ftest6 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.ALL, false, false, DEFAULTS.NONE, false);
+
+const USE_PERSO_ARGS0 = true;
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
@@ -1894,11 +2237,18 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
-    if(positional.length == 0 && slots.length == 0 &&
+	//TODO: HERE
+	if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
-            this.args.kwarg === undefined){
-        js += `${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`
-    }else{
+            this.args.kwarg === undefined) {
+            
+            js += `${locals_name} = locals = {};\n`;
+            js += `if( arguments.length) $B.args0(${parse_args.join(', ')})\n;` // generate error message
+        }
+	else if( USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
+		
+		js += `${locals_name} = locals = $B.args0_${this.name}(${parse_args.join(', ')})\n`
+	} else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
 
