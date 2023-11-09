@@ -599,7 +599,7 @@ function add_body(body, scopes){
     var res = '';
     let js;
     for(var item of body){
-        var js = $B.js_from_ast(item, scopes)
+        js = $B.js_from_ast(item, scopes)
         if(js.length > 0){
             res += js + '\n'
         }
@@ -787,7 +787,7 @@ function init_scopes(type, scopes){
     if(name){
         name = name.replace(/-/g, '_') // issue 1958
     } else if(filename === undefined) {
-    	name = 'exec' //TODO: ???
+        name = 'exec' //TODO: ???
     }else if(filename.startsWith('<') && filename.endsWith('>')){
         name = 'exec'
     }else{
@@ -2590,9 +2590,6 @@ $B.ast.MatchValue.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
-
-	console.log('scopes module', scopes);
-
     mark_parents(this)
     // create top scope; namespaces can be passed by exec()
     var name = init_scopes.bind(this)('module', scopes),

@@ -8272,8 +8272,6 @@ function prepare_string(context, s, position){
     var len = s.length,
         pos = 0,
         string_modifier,
-        quote,
-        inner,
         _type = "string"
 
     let quote;
