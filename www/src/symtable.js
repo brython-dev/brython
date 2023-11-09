@@ -125,10 +125,11 @@ function _Py_Mangle(privateobj, ident){
     }
     /* Strip leading underscores from class name */
     ipriv = 0;
-    while (privateobj[ipriv] == '_')
-        ipriv++;
-    if (ipriv == plen) {
-        return ident; /* Don't mangle if class is just underscores */
+    while(privateobj[ipriv] == '_'){
+        ipriv++
+    }
+    if(ipriv == plen){
+        return ident /* Don't mangle if class is just underscores */
     }
     var prefix = privateobj.substr(ipriv)
     return '_' + prefix + ident
@@ -198,7 +199,7 @@ function ste_new(st, name, block,
         end_lineno: end_lineno,
         end_col_offset: end_col_offset
     }
-    
+
     if(st.cur != NULL &&
             (st.cur.nested ||
              st.cur.type == FunctionBlock)){
@@ -262,11 +263,7 @@ $B._PySymtable_Build = function(mod, filename, future){
 }
 
 function PySymtable_Lookup(st, key){
-    var v = st.blocks.get(key)
-    if(v){
-        assert(PySTEntry_Check(v))
-    }
-    return v
+    return st.blocks.get(key)
 }
 
 function _PyST_GetSymbol(ste, name){
@@ -326,9 +323,8 @@ function error_at_directive(exc, ste, name){
             return 0
         }
     }
-    PyErr_SetString(PyExc_RuntimeError,
-                    "BUG: internal directive bookkeeping broken")
-    return 0
+    throw _b_.RuntimeError.$factory(
+        "BUG: internal directive bookkeeping broken")
 }
 
 
@@ -454,7 +450,7 @@ function analyze_name(ste, scopes, name, flags,
         return 1
     }
     if (flags & DEF_NONLOCAL) {
-        if (!bound) {
+        if(!bound){
             var exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal declaration not allowed at module level");
             error_at_directive(exc, ste, name)
@@ -765,7 +761,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         if (inline_comp) {
             if (! inline_comprehension(ste, entry, scopes, child_free,
                     inlined_cells)) {
-                error();
+                // error
             }
             entry.comp_inlined = 1;
         }
@@ -2113,33 +2109,6 @@ function symtable_raise_if_comprehension_block(st, e) {
     set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                                       e.end_lineno, e.end_col_offset);
     throw exc
-}
-
-function _Py_SymtableStringObjectFlags(str, filename,
-                              start, flags){
-    var st,
-        mod,
-        arena;
-
-    arena = _PyArena_New();
-    if (arena == NULL)
-        return NULL;
-
-    mod = _PyParser_ASTFromString(str, filename, start, flags, arena);
-    if (mod == NULL) {
-        _PyArena_Free(arena);
-        return NULL;
-    }
-    var future = _PyFuture_FromAST(mod, filename);
-    if (future == NULL) {
-        _PyArena_Free(arena);
-        return NULL;
-    }
-    future.features |= flags.cf_flags;
-    st = _PySymtable_Build(mod, filename, future);
-    PyObject_Free(future);
-    _PyArena_Free(arena);
-    return st;
 }
 
 })(__BRYTHON__)

@@ -1061,7 +1061,7 @@ $B.error_trace = function(err){
             }
             var start = err.offset - indent,
                 end_offset = err.end_offset +
-                    (err.end_offset == err.offset ? 1 : 0)
+                    (err.end_offset == err.offset ? 1 : 0),
                 marks = '    ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){

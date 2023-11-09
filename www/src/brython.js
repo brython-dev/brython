@@ -12,7 +12,7 @@ $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
-&&(process.__nwjs!==1)
+&&(process.__nwjs !==1)
 var _window
 if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
 _window=self}
@@ -93,7 +93,8 @@ $B.scripts={}
 $B.$options={}
 $B.builtins_repr_check=function(builtin,args){
 var $=$B.args('__repr__',1,{self:null},['self'],args,{},null,null),self=$.self
-if(! $B.$isinstance(self,builtin)){throw _b_.TypeError.$factory("descriptor '__repr__' requires a "+
+if(! $B.$isinstance(self,builtin)){var _b_=$B.builtins
+throw _b_.TypeError.$factory("descriptor '__repr__' requires a "+
 `'${builtin.__name__}' object but received a `+
 `'${$B.class_name(self)}'`)}}
 $B.update_VFS=function(scripts){$B.VFS=$B.VFS ||{}
@@ -148,8 +149,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-07 15:56:35.766331"
-__BRYTHON__.timestamp=1699368995766
+__BRYTHON__.compiled_date="2023-11-09 11:54:56.409472"
+__BRYTHON__.timestamp=1699527296409
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -706,7 +707,8 @@ if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)
 copy_position(child_ast,child_ast.value)}
 body.push(child_ast)}
 return body}
-var ast_dump=$B.ast_dump=function(tree,indent){indent=indent ||0
+var ast_dump=$B.ast_dump=function(tree,indent){var attr,value
+indent=indent ||0
 if(tree===_b_.None){
 return 'None'}else if(typeof tree=='string'){return `'${tree}'`}else if(typeof tree=='number'){return tree+''}else if(tree.imaginary){return tree.value+'j'}else if(Array.isArray(tree)){if(tree.length==0){return '[]'}
 res='[\n'
@@ -715,7 +717,7 @@ for(var x of tree){try{items.push(ast_dump(x,indent+1))}catch(err){console.log('
 console.log('for item',x)
 throw err}}
 res+=items.join(',\n')
-return res+']'}else if(tree.$name){return tree.$name+'()'}else if(tree instanceof ast.MatchSingleton){return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`}else if(tree instanceof ast.Constant){var value=tree.value
+return res+']'}else if(tree.$name){return tree.$name+'()'}else if(tree instanceof ast.MatchSingleton){return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`}else if(tree instanceof ast.Constant){value=tree.value
 if(value.imaginary){return `Constant(value=${_b_.repr(value.value)}j)`}
 return `Constant(value=${$B.AST.$convert(value)})`}
 var proto=Object.getPrototypeOf(tree).constructor
@@ -724,9 +726,9 @@ if($B.ast_classes[proto.$name]===undefined){console.log('no ast class',proto)}
 var attr_names=$B.ast_classes[proto.$name].split(','),attrs=[]
 attr_names=attr_names.map(x=>(x.endsWith('*')||x.endsWith('?'))?
 x.substr(0,x.length-1):x)
-if([ast.Name].indexOf(proto)>-1){for(var attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
+if([ast.Name].indexOf(proto)>-1){for(attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
 return res+attrs.join(', ')+')'}
-for(var attr of attr_names){if(tree[attr]!==undefined){var value=tree[attr]
+for(attr of attr_names){if(tree[attr]!==undefined){value=tree[attr]
 attrs.push(attr+'='+
 ast_dump(tree[attr],indent+1).trimStart())}}
 if(attrs.length > 0){res+='\n'
@@ -838,7 +840,7 @@ if(! parent_match(C,{type:'list_or_tuple'})){msg+=" here. Maybe you meant '==' i
 raise_syntax_error_known_range(
 C,a,b,`cannot ${action} ${msg}`)}}
 if(C.type=='expr'){var upper_expr=C
-var ctx=C
+ctx=C
 while(ctx.parent){if(ctx.parent.type=='expr'){upper_expr=ctx.parent}
 ctx=ctx.parent}}
 if(in_left_side(C,'augm_assign')){raise_syntax_error(C)}
@@ -1039,13 +1041,16 @@ new ExprCtx(C,'not',commas))
 case '...':
 return new EllipsisCtx(new ExprCtx(C,'ellipsis',commas))}
 raise_syntax_error(C)
+break
 case 'in':
 if(C.parent.type=='op' && C.parent.op=='not'){C.parent.op='not_in'
 return C}
 raise_syntax_error(C)
+break
 case '=':
-if(C.parent.type=="yield"){raise_syntax_error(C,"assignment to yield expression not possible",C.parent.position,)}
+if(C.parent.type=="yield"){raise_syntax_error(C,"assignment to yield expression not possible",C.parent.position)}
 raise_syntax_error(C)
+break
 case 'yield':
 return new AbstractExprCtx(new YieldCtx(C),true)
 case ':':
@@ -1320,6 +1325,7 @@ case '**':
 C.parent.tree.pop()
 return new DoubleStarArgCtx(C.parent)}}
 raise_syntax_error(C)
+break
 case ')':
 return transition(C.parent,token)
 case ':':
@@ -1402,6 +1408,7 @@ case '**':
 C.has_dstar=true
 return new DoubleStarArgCtx(C)}
 raise_syntax_error(C)
+break
 case 'yield':
 raise_syntax_error(C)}
 return transition(C.parent,token,value)}
@@ -1441,8 +1448,10 @@ break
 case 'op':
 if(value=='|'){return new PatternCtx(new PatternOrCtx(C))}
 raise_syntax_error(C,'expected :')
+break
 case ',':
 if(C.expect==':' ||C.expect=='as'){return new PatternCtx(new PatternSequenceCtx(C))}
+break
 case 'if':
 C.has_guard=true
 return new AbstractExprCtx(new ConditionCtx(C,token),false)
@@ -1655,7 +1664,9 @@ return C
 case 'annotation':
 return new AbstractExprCtx(new AnnotationCtx(C),true)
 case ':':
-if(C.has_args){return BodyCtx(C)}else{raise_syntax_error(C,"missing function parameters")}
+if(C.has_args){return BodyCtx(C)}
+raise_syntax_error(C,"missing function parameters")
+break
 case 'eol':
 if(C.has_args){raise_syntax_error(C,"expected ':'")}}
 raise_syntax_error(C)}
@@ -1756,21 +1767,23 @@ var last=$B.last(C.tree)
 if(last.type=="expr" && last.tree[0].type=="kwd"){C.nb_items+=2}else if(last.type=="abstract_expr"){C.tree.pop()}else{C.nb_items++}
 check_last()
 C.end_position=$token.value
-switch(C.real){case 'dict_or_set':
+if(C.real=='dict_or_set'){
 C.real=C.tree.length==0 ?
-'dict' :'set'
-case 'set':
+'dict' :'set'}
+switch(C.real){case 'set':
 C.items=C.tree
 C.tree=[]
 C.closed=true
 return C
 case 'dict':
-if($B.last(C.tree).type=='abstract_expr'){raise_syntax_error(C,"expression expected after dictionary key and ':'")}else{if(C.nb_items % 2 !=0){raise_syntax_error(C,"':' expected after dictionary key")}}
+if(C.tree.length &&
+$B.last(C.tree).type=='abstract_expr'){raise_syntax_error(C,"expression expected after dictionary key and ':'")}else{if(C.nb_items % 2 !=0){raise_syntax_error(C,"':' expected after dictionary key")}}
 C.items=C.tree
 C.tree=[]
 C.closed=true
 return C}
 raise_syntax_error(C)
+break
 case ',':
 check_last()
 var last=$B.last(C.tree)
@@ -1786,6 +1799,7 @@ if(C.real=='dict'){C.expect='value'
 this.nb_items++
 C.value_pos=$token.value
 return C}else{raise_syntax_error(C)}
+break
 case 'for':
 if(C.real=="set" && C.tree.length > 1){$token.value=C.tree[0].position
 raise_syntax_error(C,"did you forget "+
@@ -1872,7 +1886,7 @@ if(token=='op' && value=='*'){
 if(C.is_first_child){
 C.try_node.C.is_trystar=true
 C.expect='id'
-return C}else if(! C.expect=='*'){
+return C}else if(C.expect !='*'){
 raise_syntax_error(C,"cannot have both 'except' and 'except*' "+
 "on the same 'try'")}else{C.expect='id'
 return C}}else if(C.expect=='*'){
@@ -1891,12 +1905,13 @@ case '{':
 case 'not':
 case 'lambda':
 if(C.expect=='id'){C.expect='as'
-return transition(new AbstractExprCtx(C,false),token,value)}
-case 'as':
+return transition(new AbstractExprCtx(C,false),token,value)}}
+switch(token){case 'as':
 if(C.expect=='as' &&
 C.has_alias===undefined){C.expect='alias'
 C.has_alias=true
 return C}
+break
 case 'id':
 if(C.expect=='alias'){C.expect=':'
 C.set_alias(value)
@@ -1913,11 +1928,13 @@ break
 case ')':
 if(C.expect==',' ||C.expect=='as'){C.expect='as'
 return C}
+break
 case ',':
 if(C.parenth !==undefined &&
 C.has_alias===undefined &&
 (C.expect=='as' ||C.expect==',')){C.expect='id'
 return C}else if(C.parenth===undefined){raise_syntax_error(C,"multiple exception types must be parenthesized")}
+break
 case 'eol':
 raise_syntax_error(C,"expected ':'")}
 raise_syntax_error(C)}
@@ -1969,6 +1986,7 @@ case 'in':
 if(C.parent.type=='target_list'){
 return transition(C.parent,token)}
 if(C.expect==','){return transition(C,'op','in')}
+break
 case ',':
 if(C.expect==','){if(C.name=='iterator' &&
 C.parent.parent.type !='node'){
@@ -2128,6 +2146,7 @@ if(['None','True','False'].indexOf(name)>-1){raise_syntax_error(C,`cannot use as
 while(scope.comprehension){scope=scope.parent_block}
 return new AbstractExprCtx(new NamedExprCtx(C),false)}
 raise_syntax_error(C)
+break
 case 'if':
 var in_comp=false,ctx=C.parent
 while(ctx){if(ctx.comprehension){in_comp=true
@@ -2208,8 +2227,8 @@ return new AbstractExprCtx(
 new ExprCtx(C,'iterator',true),false)
 case ':':
 check_assignment(C.tree[0])
-if(C.tree.length < 2 
-||C.tree[1].tree[0].type=="abstract_expr"){raise_syntax_error(C)}
+if(C.tree.length < 2 ||
+C.tree[1].tree[0].type=="abstract_expr"){raise_syntax_error(C)}
 return BodyCtx(C)}
 if(this.parent.comprehension){switch(token){case ']':
 if(this.parent.type=='listcomp'){return transition(this.parent,token,value)}
@@ -2280,15 +2299,18 @@ if(C.names.length > 0){
 raise_syntax_error(C,"only one 'import' allowed after 'from'")}
 if(C.expect=='module'){C.expect='id'
 return C}
+break
 case 'op':
-if(value=='*' && C.expect=='id'
-&& C.names.length==0){if(get_scope(C).ntype !=='module'){raise_syntax_error(C,"import * only allowed at module level")}
+if(value=='*' && C.expect=='id' &&
+C.names.length==0){if(get_scope(C).ntype !=='module'){raise_syntax_error(C,"import * only allowed at module level")}
 C.add_name('*')
 C.expect='eol'
 return C}else{raise_syntax_error(C)}
+break
 case ',':
 if(C.expect==','){C.expect='id'
 return C}
+break
 case 'eol':
 switch(C.expect){case ',':
 case 'eol':
@@ -2296,14 +2318,18 @@ return transition(C.parent,token)
 case 'id':
 raise_syntax_error(C,'trailing comma not allowed without '+
 'surrounding parentheses')
+break
 default:
 raise_syntax_error(C)}
+break
 case 'as':
 if(C.expect==',' ||C.expect=='eol'){C.expect='alias'
 return C}
+break
 case '(':
 if(C.expect=='id'){C.expect='id'
 return C}
+break
 case ')':
 if(C.expect==',' ||C.expect=='id'){C.expect='eol'
 return C}}
@@ -2434,6 +2460,7 @@ if(C.expect==','){check()
 C.expect='id'
 return C}
 raise_syntax_error(C)
+break
 case ')':
 check()
 check_last()
@@ -2447,6 +2474,7 @@ return new FuncStarArgCtx(C,'*')}else if(op=='**'){return new FuncStarArgCtx(C,'
 if(C.has_end_positional){raise_syntax_error(C,'/ may appear only once')}else if(C.has_star_arg){raise_syntax_error(C,'/ must be ahead of *')}
 return new EndOfPositionalCtx(C)}
 raise_syntax_error(C)
+break
 case ':':
 if(C.parent.type=="lambda"){return transition(C.parent,token)}}
 raise_syntax_error(C)}
@@ -2472,6 +2500,7 @@ case ',':
 case ')':
 if(C.parent.has_default && C.tree.length==0 &&
 C.parent.has_star_arg===undefined){raise_syntax_error(C,'non-default argument follows default argument')}else{return transition(C.parent,token)}
+break
 case ':':
 if(C.parent.parent.type=="lambda"){
 return transition(C.parent.parent,":")}
@@ -2904,8 +2933,10 @@ if(C.real=='tuple' &&
 C.implicit===true){
 return transition(C.parent,token,value)}else{break}
 raise_syntax_error(C,'(unexpected "if" inside list)')
+break
 case ',':
 raise_syntax_error(C,'(unexpected comma inside list)')
+break
 case 'str':
 case 'JoinedStr':
 case 'int':
@@ -2929,6 +2960,7 @@ if('+-~*'.indexOf(value)>-1 ||value=='**'){C.expect=','
 var expr=new AbstractExprCtx(C,false)
 return transition(expr,token,value)}
 raise_syntax_error(C,`(unexpected operator: ${value})`)
+break
 default:
 raise_syntax_error(C)}}else{return transition(C.parent,token,value)}}}
 ListOrTupleCtx.prototype.close=function(){this.closed=true
@@ -3231,8 +3263,8 @@ function is_literal(expr){return expr.type=='expr' &&
 OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){console.log('C has no op',C)
 raise_syntax_error(C)}
-if((C.op=='is' ||C.op=='is_not')
-&& C.tree.length > 1){for(var operand of C.tree){if(is_literal(operand)){var head=C.op=='is' ? 'is' :'is not'
+if((C.op=='is' ||C.op=='is_not')&&
+C.tree.length > 1){for(var operand of C.tree){if(is_literal(operand)){var head=C.op=='is' ? 'is' :'is not'
 $B.warn(_b_.SyntaxWarning,`"${head}" with a literal. Did you mean "=="?"`,get_module(C).filename,$token.value)
 break}}}
 switch(token){case 'id':
@@ -3254,6 +3286,7 @@ switch(value){case '+':
 case '-':
 case '~':
 return new UnaryCtx(C,value)}
+break
 default:
 if(C.tree[C.tree.length-1].type==
 'abstract_expr'){raise_syntax_error(C)}}
@@ -3294,6 +3327,7 @@ C.expect='starred_id'
 return C
 default:
 raise_syntax_error(C)}
+break
 case 'id':
 C.expect=','
 if(['None','True','False'].indexOf(value)>-1){return new PatternLiteralCtx(C,token,value)}else{return new PatternCaptureCtx(C,value)}
@@ -3315,6 +3349,7 @@ if(token=='id'){var capture=new PatternCaptureCtx(C,value)
 capture.starred=true
 return capture}
 raise_syntax_error(C,"(expected id after '*')")
+break
 case 'number':
 switch(token){case 'int':
 case 'float':
@@ -3323,6 +3358,7 @@ C.expect=','
 return new PatternLiteralCtx(C,token,value,C.sign)
 default:
 raise_syntax_error(C)}
+break
 case ',':
 switch(token){case ',':
 if(C.parent instanceof PatternSequenceCtx){return new PatternCtx(C.parent)}
@@ -3376,6 +3412,7 @@ C.expect='id'
 return C}else if(token=='('){
 return new PatternCtx(new PatternClassCtx(C))}else if(C.parent instanceof PatternMappingCtx){return C.parent.transition(token,value)}else{C.expect='as'
 return C.transition(token,value)}
+break
 case 'as':
 case 'alias':
 var res=as_pattern(C,token,value)
@@ -3442,6 +3479,7 @@ current.tree[0])}
 current.is_keyword=true
 return new PatternCtx(current)}
 raise_syntax_error(this,"'=' after non-capture")
+break
 case ',':
 check_last_arg()
 return new PatternCtx(this)
@@ -3452,6 +3490,7 @@ C.expect='as'
 return C
 default:
 raise_syntax_error(C)}
+break
 case 'as':
 case 'alias':
 return as_pattern(C,token,value)}
@@ -3487,6 +3526,7 @@ return C}else if(token=='op' && value=='|'){var opctx=new PatternOrCtx(C.parent)
 opctx.parenthese=true
 return new PatternCtx(opctx)}else if(this.token===undefined){return transition(C.parent,token,value)}
 raise_syntax_error(C)
+break
 case 'as':
 case 'alias':
 return as_pattern(C,token,value)
@@ -3541,6 +3581,7 @@ this.tree.push(value)
 C.num_sign=value
 return C}
 raise_syntax_error(C,'patterns cannot include operators')
+break
 default:
 return transition(C.parent,token,value)}}
 break
@@ -3554,14 +3595,17 @@ last.type=token
 last.value=value
 C.expect='op'
 return C}
+break
 default:
 raise_syntax_error(C)}
+break
 case 'imaginary':
 switch(token){case 'imaginary':
 C.tree.push({type:token,value,sign:C.num_sign})
 return C.parent
 default:
 raise_syntax_error(C,'(expected imaginary)')}
+break
 case 'as':
 case 'alias':
 return as_pattern(C,token,value)}
@@ -3620,6 +3664,7 @@ C.tree.pop()
 new PatternKeyValueCtx(C,lit_or_val)
 C.expect='.'
 return this}else{raise_syntax_error(C,'(expected key or **)')}
+break
 case 'capture_pattern':
 var p=new PatternCtx(C)
 var capture=transition(p,token,value)
@@ -3631,11 +3676,13 @@ capture.double_star=true
 C.double_star=capture
 C.expect=','
 return C}else{raise_syntax_error(C,'(expected identifier)')}
+break
 case ',':
 if(token==','){C.expect='key_value_pattern'
 return C}else if(token=='}'){C.expect='key_value_pattern'
 return C.transition(token,value)}
 raise_syntax_error(C)
+break
 case '.':
 if(C.tree.length > 0){var last=$B.last(C.tree)
 if(last instanceof PatternKeyValueCtx){
@@ -3663,6 +3710,7 @@ this.expect=','
 return new PatternCtx(this)
 default:
 raise_syntax_error(C,'(expected :)')}
+break
 case ',':
 switch(token){case '}':
 return transition(C.parent,token,value)
@@ -3772,7 +3820,7 @@ check_duplicate_names()
 return transition(C.parent,token,value)}
 raise_syntax_error(C)}else if(C.expect=='as'){if(token=='as'){this.expect='alias'
 return C}
-return transition(C.parent,token,value)}else if(C.expect=='alias'){if(token='id'){C.alias=value
+return transition(C.parent,token,value)}else if(C.expect=='alias'){if(token=='id'){C.alias=value
 return C.parent}
 raise_syntax_error(C,'expected alias')}else if(C.expect=='id'){C.expect=','
 return transition(new PatternCtx(C),token,value)}}
@@ -3903,8 +3951,9 @@ this.position=C.position
 if(C.parent.type=='list_or_tuple' &&
 C.parent.parent.type=="node"){
 for(var i=0;i < C.parent.tree.length;i++){var child=C.parent.tree[i]
-if(child.type=='expr' && child.tree.length > 0
-&& child.tree[0].type=='starred'){raise_syntax_error(C,"two starred expressions in assignment")}}}
+if(child.type=='expr' &&
+child.tree.length > 0 &&
+child.tree[0].type=='starred'){raise_syntax_error(C,"two starred expressions in assignment")}}}
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
@@ -4045,19 +4094,23 @@ switch(token){case 'id':
 if(C.expect=='id'){C.expect=','
 return new IdCtx(
 new ExprCtx(C,'target',false),value)}
+break
 case 'op':
 if(C.expect=='id' && value=='*'){
 this.nb_packed++
 C.expect=','
 return new AbstractExprCtx(
 new StarredCtx(C),false)}
+break
 case '(':
 case '[':
 if(C.expect=='id'){C.expect=','
 return new ListOrTupleCtx(C,token=='(' ? 'tuple' :'list')}
+break
 case ')':
 case ']':
 if(C.expect==','){return C.parent}
+break
 case ',':
 if(C.expect==','){C.expect='id'
 C.implicit_tuple=true
@@ -4214,6 +4267,7 @@ UnaryCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'op':
 if('+'==value ||'-'==value){if(C.op===value){C.op='+'}else{C.op='-'}
 return C}
+break
 case 'int':
 case 'float':
 case 'imaginary':
@@ -4256,6 +4310,7 @@ C.expect=','
 return transition(
 new AbstractExprCtx(new withitem(C),false),token,value)}
 raise_syntax_error(C)
+break
 case ':':
 if((! C.parenth)||C.parenth=='implicit'){check_last()}
 return BodyCtx(C)
@@ -4510,6 +4565,7 @@ throw Error(
 "(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\xXX escape")}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
+break
 case "u":
 var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=4){seq_end=antislash_pos+mo[0].length+1
@@ -4518,6 +4574,7 @@ throw Error(
 "(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape")}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
+break
 case "U":
 var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=8){seq_end=antislash_pos+mo[0].length+1
@@ -4581,7 +4638,7 @@ var end_lit=end_lit+search[0].length
 if(src.charAt(end_lit)!="}"){raise_syntax_error(C," (unicode error) "+
 "malformed \\N character escape")}
 var description=search[0].toUpperCase()
-if($B.unicodedb===undefined){var xhr=new XMLHttpRequest
+if($B.unicodedb===undefined){var xhr=new XMLHttpRequest()
 xhr.open("GET",$B.brython_path+"unicode.txt",false)
 xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){$B.unicodedb=this.responseText}else{console.log("Warning - could not "+
 "load unicode.txt")}}}
@@ -4661,7 +4718,8 @@ var C=null,expect_indent=false,indent=0
 var line2pos={0:0,1:0},line_num=1
 for(var pos=0,len=src.length;pos < len;pos++){if(src[pos]=='\n'){line_num++
 line2pos[line_num]=pos+1}}
-while(true){try{var token=root.token_reader.read()}catch(err){C=C ||new NodeCtx(node)
+var token
+while(true){try{token=root.token_reader.read()}catch(err){C=C ||new NodeCtx(node)
 if(err.type=='IndentationError'){raise_indentation_error(C,err.message)}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
 $token.value=last_brace
 raise_syntax_error(C,`'${last_brace.string}'`+
@@ -4783,19 +4841,23 @@ src=src.replace(/\r\n/gm,"\n")
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope){
-if(typeof module=="object"){var __package__=module.__package__
-module=module.__name__}else{var __package__=""}
+var __package__
+if(typeof module=="object"){__package__=module.__package__
+module=module.__name__}else{__package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
 var t0=Date.now(),ix,
 filename,imported
-if(typeof src=='object'){var ix=src.ix,filename=src.filename,imported=src.imported
+if(typeof src=='object'){ix=src.ix
+filename=src.filename
+imported=src.imported
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
+var _ast
 if($B.parser_to_ast){console.log('use parser to ast')
-var _ast=new $B.Parser(src,filename,'file').parse()}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
+_ast=new $B.Parser(src,filename,'file').parse()}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
-var _ast=root.ast()}
+_ast=root.ast()}
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root({ast:_ast,symtable,filename,imported})
@@ -4872,7 +4934,7 @@ if(ids.length==0){}
 for(var id of ids){var script=document.querySelector(`script[id="${id}"]`)
 if(script){set_script_id(script)
 scripts.push(script)}else{console.log(`no script with id '${id}'`)
-throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{var scripts=python_scripts.slice()}
+throw _b_.KeyError.$factory(`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{scripts=python_scripts.slice()}
 var module_name
 if($B.get_page_option('ipy_id')!==undefined){run_brython_magic(scripts)}else{run_scripts(scripts)}}
 function convert_option(option,value){
@@ -4897,9 +4959,9 @@ return $B.get_option_from_filename(option,filename)}
 $B.get_option_from_filename=function(option,filename){if((! filename)||! $B.scripts[filename]){return $B.get_page_option(option)}
 var value=$B.scripts[filename].getAttribute(option)
 if(value !==null){return convert_option(option,value)}else{return $B.get_page_option(option)}}
-function run_scripts(scripts){
-var webworkers=scripts.filter(script=> script.className==='webworker'),scripts=scripts.filter(script=> script.className !=='webworker')
-var module_name
+function run_scripts(_scripts){
+var webworkers=_scripts.filter(script=> script.className==='webworker'),scripts=_scripts.filter(script=> script.className !=='webworker')
+var module_name,filename
 if(scripts.length > 0 ||$B.isWebWorker){if($B.get_page_option('indexedDB')&& $B.has_indexedDB &&
 $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 var src
@@ -4909,7 +4971,7 @@ var source=(worker.innerText ||worker.textContent)
 source=unindent(source)
 source=source.replace(/^\n/,'')
 $B.webworkers[worker.id]=worker
-var filename=$B.script_filename=$B.script_path+"#"+worker.id
+filename=$B.script_filename=$B.script_path+"#"+worker.id
 $B.url2name[filename]=worker.id
 $B.file_cache[filename]=source
 $B.scripts[filename]=worker
@@ -4921,7 +4983,7 @@ src=(script.innerHTML ||script.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
 if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
-var filename=$B.script_filename=$B.script_path+"#"+module_name
+filename=$B.script_filename=$B.script_path+"#"+module_name
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
@@ -4957,18 +5019,21 @@ $B.url2name[url]=name
 $B.scripts[url]=script
 $B.make_import_paths(url)
 _b_.__debug__=$B.get_option('debug')> 0
-try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
+var root,js
+try{root=$B.py2js({src:src,filename:url},name,name)
+js=root.to_js()
 if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
+var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
-for(var name of Object.keys(imports)){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
-if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
+for(var _name of Object.keys(imports)){if($B.VFS.hasOwnProperty(_name)){var submodule=$B.VFS[_name],type=submodule[0]
+if(type==".py"){var subimports=submodule[2],is_package=submodule.length==4
 if(type==".py"){
 required_stdlib_imports(subimports)}
 for(var mod of subimports){if(imports.indexOf(mod)==-1){imports.push(mod)}}}}}
 for(var j=0;j < imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
 root=null}
-$B.tasks.push(["execute",script])
+$B.tasks.push(["execute",_script])
 if(run_loop){$B.loop()}}
 var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i+1,":",line)})}
 $B.$operators=$operators
@@ -5017,7 +5082,7 @@ if($B.VFS.hasOwnProperty(subimport)){var submodule=$B.VFS[subimport],ext=submodu
 if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
 loop()}
 function store_precompiled(module,js,source_ts,imports,is_package){
-var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"origin":origin,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
+var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
 if($B.get_page_option('debug')> 1){console.log("store precompiled",module,"package",is_package)}
 document.dispatchEvent(new CustomEvent('precompile',{detail:'cache module '+module}))
 var ix=$B.outdated.indexOf(module)
@@ -5027,8 +5092,7 @@ $B.tasks.splice(0,0,[idb_get,module])
 loop()}}
 function idb_get(module){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
-try{var store=tx.objectStore("modules")
-req=store.get(module)
+try{var store=tx.objectStore("modules"),req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
 $B.idb_open_promise=function(){return new Promise(function(resolve,reject){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
@@ -5075,7 +5139,7 @@ store.onsuccess=loop}}else{if($B.get_page_option('debug')> 1){console.info("usin
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(evt){console.log("open cursor error",evt)}
-openCursor.onsuccess=function(evt){cursor=evt.target.result
+openCursor.onsuccess=function(evt){var cursor=evt.target.result
 if(cursor){record=cursor.value
 if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
@@ -5958,7 +6022,6 @@ console.log('res',res)
 console.log('__get__',__get__)
 console.log(__get__+'')}
 throw err}}
-if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
 if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
 if(__get__ !==null){
 res.__name__=attr
@@ -6392,7 +6455,7 @@ type.__ror__=function(){var len=arguments.length
 if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
 return _b_.NotImplemented}
 type.__setattr__=function(kls,attr,value){var $test=false
-if($test){console.log("kls is class",type,types[attr])}
+if($test){console.log("kls is class",type)}
 if(type[attr]&& type[attr].__get__ &&
 type[attr].__set__){type[attr].__set__(kls,value)
 return _b_.None}
@@ -6542,7 +6605,7 @@ method.__repr__=method.__str__=function(self){return "<bound method "+self.$info
 method.__setattr__=function(self,key,value){
 if(key=="__class__"){throw _b_.TypeError.$factory("__class__ assignment only supported "+
 "for heap types or ModuleType subclasses")}
-throw $B.attr_error(attr,self)}
+throw $B.attr_error(key,self)}
 $B.set_func_names(method,"builtins")
 $B.method_descriptor=$B.make_class("method_descriptor")
 $B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
@@ -7824,7 +7887,7 @@ _b_[name].$infos={__module__:'builtins',__name__:orig_name,__qualname__:orig_nam
 _b_.object.__init__.__class__=$B.wrapper_descriptor 
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;
-;(function($B){
+;(function($B){var _b_=$B.builtins
 var DEFAULT_MIN_MERGE=32
 var DEFAULT_MIN_GALLOPING=7
 var DEFAULT_TMP_STORAGE_LENGTH=256
@@ -7841,8 +7904,7 @@ if(a < 0 ||b < 0){if(b >=0){return-1}
 if(a >=0){return 1}
 a=-a
 b=-b}
-al=log10(a)
-bl=log10(b)
+var al=log10(a),bl=log10(b)
 var t=0
 if(al < bl){a*=POWERS_OF_TEN[bl-al-1]
 b/=10
@@ -8542,8 +8604,7 @@ if($B.get_option('debug',err)> 1){console.log('error args',err.args[1])
 console.log('err line',line)
 console.log('indent',indent)}
 var start=err.offset-indent,end_offset=err.end_offset+
-(err.end_offset==err.offset ? 1 :0)
-marks='    '+' '.repeat(start),nb_marks=1
+(err.end_offset==err.offset ? 1 :0),marks='    '+' '.repeat(start),nb_marks=1
 if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=end_offset-start-indent}
 if(nb_marks==0 &&
 err.end_offset==line.substr(indent).length){nb_marks=1}}
@@ -10168,7 +10229,7 @@ if(mod_name[mod_name.length-1]=="."){parts.pop()}
 var norm_parts=[],prefix=true
 for(var i=0,len=parts.length;i < len;i++){var p=parts[i]
 if(prefix && p==""){
-elt=norm_parts.pop()
+var elt=norm_parts.pop()
 if(elt===undefined){throw _b_.ImportError.$factory("Parent module '' not loaded, "+
 "cannot perform relative import")}}else{prefix=false;
 norm_parts.push(p)}}
@@ -10269,7 +10330,7 @@ $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var unicode_tables=$B.unicode_tables
 $B.has_surrogate=function(s){
-for(var i=0;i < s.length;i++){code=s.charCodeAt(i)
+for(var i=0;i < s.length;i++){var code=s.charCodeAt(i)
 if(code >=0xD800 && code <=0xDBFF){return true}}
 return false}
 var escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
@@ -10572,7 +10633,7 @@ return format_padding(ret,flags)}
 function series_of_bytes(val,flags){if(val.__class__ && val.__class__.$buffer_protocol){var it=_b_.iter(val),ints=[]
 while(true){try{ints.push(_b_.next(it))}catch(err){if(err.__class__===_b_.StopIteration){var b=_b_.bytes.$factory(ints)
 return format_padding(_b_.bytes.decode(b,"ascii"),flags)}
-throw err}}}else{try{bytes_obj=$B.$getattr(val,"__bytes__")()
+throw err}}}else{try{var bytes_obj=$B.$getattr(val,"__bytes__")()
 return format_padding(_b_.bytes.decode(bytes_obj),flags)}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("%b does not accept '"+
 $B.class_name(val)+"'")}
 throw err}}}
@@ -11276,7 +11337,7 @@ this.start=start
 this.expression=""
 this.conversion=null
 this.fmt=null}
-function fstring_error(msg,pos){error=Error(msg)
+function fstring_error(msg,pos){var error=Error(msg)
 error.position=pos
 throw error}
 $B.parse_fstring=function(string){
@@ -11355,7 +11416,7 @@ string.charAt(i+1)=="=" ||
 "=!<>:".search(last_char_re)>-1){
 current.expression+=car
 i+=1}else{
-tail=car
+var tail=car
 while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
 i++}
 elts.push(current.expression+tail)
@@ -11572,8 +11633,7 @@ return x.toString()}
 int.__setattr__=function(self,attr,value){if(typeof self=="number" ||typeof self=="boolean"){var cl_name=$B.class_name(self)
 if(_b_.dir(self).indexOf(attr)>-1){throw _b_.AttributeError.$factory("attribute '"+attr+
 `' of '${cl_name}' objects is not writable`)}else{throw _b_.AttributeError.$factory(`'${cl_name}' object`+
-` has no attribute '${attr}'`)}
-throw _b_.AttributeError.$factory(msg)}
+` has no attribute '${attr}'`)}}
 _b_.dict.$setitem(self.__dict__,attr,value)
 return _b_.None}
 int.__sub__=Function('self','other',op_model.replace(/\+/g,'-').replace(/__add__/g,'__sub__'))
@@ -12043,12 +12103,11 @@ negate=1;}else if(s[pos]=='+'){pos++}
 if(s.substr(pos,2).toLowerCase()=='0x'){pos+=2}
 var coeff_start=pos,coeff_end
 while(hex_from_char(s[pos])>=0){pos++;}
-save_pos=pos;
+var save_pos=pos;
 if(s[pos]=='.'){pos++;
 while(hex_from_char(s[pos])>=0){pos++;}
 coeff_end=pos-1;}else{coeff_end=pos;}
-ndigits=coeff_end-coeff_start;
-fdigits=coeff_end-save_pos;
+var ndigits=coeff_end-coeff_start,fdigits=coeff_end-save_pos;
 if(ndigits==0){throw parse_error()}
 if(ndigits > Math.min(DBL_MIN_EXP-DBL_MANT_DIG-LONG_MIN/2,LONG_MAX/2+1-DBL_MAX_EXP)/4){throw insane_length_error()}
 var exp
@@ -12692,9 +12751,6 @@ return "("+real+sign+imag+"j)"}
 complex.__rmul__=function(self,other){if($B.$isinstance(other,_b_.bool)){other=other ? 1 :0}
 if($B.$isinstance(other,_b_.int)){return make_complex(other*self.$real.value,other*self.$imag.value)}else if($B.$isinstance(other,_b_.float)){return make_complex(other.value*self.$real.value,other.value*self.$imag.value)}
 return _b_.NotImplemented}
-complex.__sqrt__=function(self){if(self.$imag==0){return complex(Math.sqrt(self.$real.value))}
-var r=self.$real.value,i=self.$imag.value,_a=Math.sqrt((r+sqrt)/2),_b=Number.sign(i)*Math.sqrt((-r+sqrt)/2)
-return make_complex(_a,_b)}
 complex.__sub__=function(self,other){if($B.$isinstance(other,complex)){return make_complex(self.$real.value-other.$real.value,self.$imag.value-other.$imag.value)}
 if($B.$isinstance(other,_b_.int)){other=_b_.int.numerator(other)
 return make_complex(self.$real.value-other.valueOf(),self.$imag.value)}
@@ -12769,8 +12825,7 @@ break}}
 if(! flag){return false}}
 return true}
 var dict_view_op={__eq__:function(t1,t2){return t1.length==t2.length && is_sublist(t1,t2)},__ne__:function(t1,t2){return ! dict_view_op.__eq__(t1,t2)},__lt__:function(t1,t2){return t1.length < t2.length && is_sublist(t1,t2)},__gt__:function(t1,t2){return dict_view_op.__lt__(t2,t1)},__le__:function(t1,t2){return t1.length <=t2.length && is_sublist(t1,t2)},__ge__:function(t1,t2){return dict_view_op.__le__(t2,t1)},__and__:function(t1,t2){var items=[]
-for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i]
-flag=false
+for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i],flag=false
 for(var j=0,jlen=t2.length;j < jlen;j++){if($B.rich_comp("__eq__",x,t2[j])){t2.splice(j,1)
 items.push(x)
 break}}}
@@ -13175,7 +13230,7 @@ if(args.length > 0){var o=args[0]
 if($B.$isinstance(o,dict)){if(o.$jsobj){o=jsobj2dict(o.$jsobj)}
 $copy_dict(self,o)}else if(_b_.hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys"))())
 for(var i=0,len=_keys.length;i < len;i++){var _value=$B.$getattr(o,"__getitem__")(_keys[i])
-dict.$setitem(self,_keys[i],_value)}}else{var it=_b_.iter(o),i=0
+dict.$setitem(self,_keys[i],_value)}}else{var it=_b_.iter(o),i=0,key_value
 while(true){try{var item=_b_.next(it)}catch(err){if(err.__class__===_b_.StopIteration){break}
 throw err}
 try{key_value=_b_.list.$factory(item)}catch(err){throw _b_.TypeError.$factory("cannot convert dictionary"+
@@ -13262,8 +13317,7 @@ var ix=self.new_keys.indexOf(key)
 if(ix >-1){self.new_keys.splice(ix,1)}}
 jsobj_as_pydict.__eq__=function(self,other){if(other.__class__ !==jsobj_as_pydict &&
 ! $B.$isinstance(other,_b_.dict)){return _b_.NotImplemented}
-var self1=$B.empty_dict()
-other1=$B.empty_dict()
+var self1=$B.empty_dict(),other1=$B.empty_dict()
 dict.__init__(self1,jsobj_as_pydict.items(self))
 dict.__init__(other1,$B.get_class(other).items(other))
 return dict.__eq__(self1,other1)}
@@ -14180,7 +14234,7 @@ top+=parent_pos.top}
 return{left:left,top:top,width:width,height:height}}
 function trace(msg){var elt=document.getElementById("trace")
 if(elt){elt.innerText+=msg}}
-function $mouseCoords(ev){if(ev.type.startsWith("touch")){var res={}
+var $mouseCoords=$B.$mouseCoords=function(ev){if(ev.type.startsWith("touch")){var res={}
 res.x=_b_.int.$factory(ev.touches[0].screenX)
 res.y=_b_.int.$factory(ev.touches[0].screenY)
 res.__getattr__=function(attr){return this[attr]}
@@ -14333,18 +14387,6 @@ this.callback.splice(i,1)
 this.elt.removeEventListener(this.evt,callback,false)
 break}}
 if(! found){throw _b_.KeyError.$factory("not found")}}}
-var OpenFile=$B.OpenFile=$B.make_class('OpenFile')
-OpenFile.__module__="<pydom>"
-OpenFile.$factory=function(file,mode,encoding){var res={__class__:$OpenFileDict,file:file,reader:new FileReader()}
-if(mode==="r"){res.reader.readAsText(file,encoding)}else if(mode==="rb"){res.reader.readAsBinaryString(file)}
-return res}
-OpenFile.__getattr__=function(self,attr){if(self["get_"+attr]!==undefined){return self["get_"+attr]}
-return self.reader[attr]}
-OpenFile.__setattr__=function(self,attr,value){var obj=self.reader
-if(attr.substr(0,2)=="on"){
-var callback=function(ev){return value($DOMEvent(ev))}
-obj.addEventListener(attr.substr(2),callback)}else if("set_"+attr in obj){return obj["set_"+attr](value)}else if(attr in obj){obj[attr]=value}else{_b_.setattr(obj,attr,value)}}
-$B.set_func_names(OpenFile,"<dom>")
 var dom={File :function(){},FileReader :function(){}}
 dom.File.__class__=_b_.type
 dom.File.__str__=function(){return "<class 'File'>"}
@@ -14610,7 +14652,7 @@ for(var child of self.children){res.push(DOMNode.$factory(child))}
 return res}
 DOMNode.child_nodes=function(self){var res=[]
 if(self.nodeType==9){self=self.body}
-for(child of self.childNodes){res.push(DOMNode.$factory(child))}
+for(var child of self.childNodes){res.push(DOMNode.$factory(child))}
 return res}
 DOMNode.clear=function(self){
 var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
@@ -14662,7 +14704,7 @@ return[DOMNode.$factory(id_res)]}
 if($dict["selector"]!==undefined){if(self.querySelectorAll===undefined){throw _b_.TypeError.$factory("DOMNode object doesn't support "+
 "selection by selector")}
 return make_list(self.querySelectorAll($dict['selector']))}
-return res}
+return[]}
 DOMNode.getContext=function(self){
 if(!("getContext" in self)){throw _b_.AttributeError.$factory("object has no attribute 'getContext'")}
 return function(ctx){return $B.JSObj.$factory(self.getContext(ctx))}}
@@ -14681,8 +14723,6 @@ var elt=self
 while(true){if(other===elt){return true}
 elt=elt.parentNode
 if(! elt){return false}}}
-DOMNode.options=function(self){
-return new $OptionsClass(self)}
 DOMNode.parent=function(self){if(self.parentElement){return DOMNode.$factory(self.parentElement)}
 return _b_.None}
 DOMNode.reset=function(self){
@@ -14819,7 +14859,7 @@ return res}
 $B.set_func_names(TagSum,"<dom>")
 $B.TagSum=TagSum 
 var win=$B.JSObj.$factory(_window)
-win.get_postMessage=function(msg,targetOrigin){if($B.$isinstance(msg,dict)){var temp={__class__:"dict"},items=_b_.list.$factory(_b_.dict.items(msg))
+win.get_postMessage=function(msg,targetOrigin){if($B.$isinstance(msg,_b_.dict)){var temp={__class__:"dict"},items=_b_.list.$factory(_b_.dict.items(msg))
 items.forEach(function(item){temp[item[0]]=item[1]})
 msg=temp}
 return _window.postMessage(msg,targetOrigin)}
@@ -15025,7 +15065,7 @@ eval(content)},load1:function(script_url,callback){
 var script=document.createElement('SCRIPT')
 script.src=script_url
 if(callback){script.addEventListener('load',function(ev){callback()})}
-document.body.appendChild(script)},mouseCoords:function(ev){return $B.JSObj.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObj.$factory(window.prompt(message,default_value||''))},reload:function(){
+document.body.appendChild(script)},mouseCoords:function(ev){return $B.JSObj.$factory($B.$mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObj.$factory(window.prompt(message,default_value||''))},reload:function(){
 var scripts=document.getElementsByTagName('script'),js_scripts=[]
 scripts.forEach(function(script){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
@@ -16862,9 +16902,8 @@ nlen=ident.length
 plen=privateobj.length
 if(ident.endsWith('__')||ident.search(/\./)!=-1){return ident;}
 ipriv=0;
-while(privateobj[ipriv]=='_')
-ipriv++;
-if(ipriv==plen){return ident;}
+while(privateobj[ipriv]=='_'){ipriv++}
+if(ipriv==plen){return ident }
 var prefix=privateobj.substr(ipriv)
 return '_'+prefix+ident}
 var top=NULL,lambda=NULL,genexpr=NULL,listcomp=NULL,setcomp=NULL,dictcomp=NULL,__class__=NULL,_annotation=NULL
@@ -16917,9 +16956,7 @@ for(var item of seq){visitor.stmt(st,item)}
 break}
 symtable_analyze(st)
 return st.top;}
-function PySymtable_Lookup(st,key){var v=st.blocks.get(key)
-if(v){assert(PySTEntry_Check(v))}
-return v}
+function PySymtable_Lookup(st,key){return st.blocks.get(key)}
 function _PyST_GetSymbol(ste,name){if(! _b_.dict.$contains_string(ste.symbols,name)){return 0}
 return _b_.dict.$getitem_string(ste.symbols,name)}
 function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name);
@@ -16944,8 +16981,8 @@ function error_at_directive(exc,ste,name){var data
 assert(ste.directives)
 for(var data of ste.directives){if(data[0]==name){set_exc_info(exc,ste.table.filename,data[1],data[2],data[3],data[4])
 return 0}}
-PyErr_SetString(PyExc_RuntimeError,"BUG: internal directive bookkeeping broken")
-return 0}
+throw _b_.RuntimeError.$factory(
+"BUG: internal directive bookkeeping broken")}
 function SET_SCOPE(DICT,NAME,I){DICT[NAME]=I}
 function is_free_in_any_child(entry,key){for(var child_ste of entry.ste_children){var scope=_PyST_GetScope(child_ste,key)
 if(scope==FREE){return 1}}
@@ -17068,7 +17105,7 @@ var new_class_entry=NULL;
 if(entry.can_see_class_scope){if(ste.type==ClassBlock){new_class_entry=ste}else if(class_entry){new_class_entry=class_entry}}
 var inline_comp=entry.comprehension && ! entry.generator;
 if(! analyze_child_block(entry,newbound,newfree,newglobal,typeparams,new_class_entry,child_free)){return 0}
-if(inline_comp){if(! inline_comprehension(ste,entry,scopes,child_free,inlined_cells)){error();}
+if(inline_comp){if(! inline_comprehension(ste,entry,scopes,child_free,inlined_cells)){}
 entry.comp_inlined=1;}
 Set_Union(newfree,child_free);
 if(entry.free ||entry.child_free){ste.child_free=1}}
@@ -17757,22 +17794,7 @@ var exc=PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' in
 "'yield' inside generator expression");
 exc.$frame_obj=$B.frame_obj
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
-throw exc}
-function _Py_SymtableStringObjectFlags(str,filename,start,flags){var st,mod,arena;
-arena=_PyArena_New();
-if(arena==NULL)
-return NULL;
-mod=_PyParser_ASTFromString(str,filename,start,flags,arena);
-if(mod==NULL){_PyArena_Free(arena);
-return NULL;}
-var future=_PyFuture_FromAST(mod,filename);
-if(future==NULL){_PyArena_Free(arena);
-return NULL;}
-future.features |=flags.cf_flags;
-st=_PySymtable_Build(mod,filename,future);
-PyObject_Free(future);
-_PyArena_Free(arena);
-return st;}})(__BRYTHON__)
+throw exc}})(__BRYTHON__)
 ;
 var docs={ArithmeticError:"Base class for arithmetic errors.",AssertionError:"Assertion failed.",AttributeError:"Attribute not found.",BaseException:"Common base class for all exceptions",BaseExceptionGroup:"A combination of multiple unrelated exceptions.",BlockingIOError:"I/O operation would block.",BrokenPipeError:"Broken pipe.",BufferError:"Buffer error.",BytesWarning:"Base class for warnings about bytes and buffer related problems, mostly\nrelated to conversion from str or comparing to str.",ChildProcessError:"Child process error.",ConnectionAbortedError:"Connection aborted.",ConnectionError:"Connection error.",ConnectionRefusedError:"Connection refused.",ConnectionResetError:"Connection reset.",DeprecationWarning:"Base class for warnings about deprecated features.",EOFError:"Read beyond end of file.",Ellipsis:"",EncodingWarning:"Base class for warnings about encodings.",EnvironmentError:"Base class for I/O related errors.",Exception:"Common base class for all non-exit exceptions.",ExceptionGroup:"",False:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",FileExistsError:"File already exists.",FileNotFoundError:"File not found.",FloatingPointError:"Floating point operation failed.",FutureWarning:"Base class for warnings about constructs that will change semantically\nin the future.",GeneratorExit:"Request that a generator exit.",IOError:"Base class for I/O related errors.",ImportError:"Import can't find module, or can't find name in module.",ImportWarning:"Base class for warnings about probable mistakes in module imports",IndentationError:"Improper indentation.",IndexError:"Sequence index out of range.",InterruptedError:"Interrupted by signal.",IsADirectoryError:"Operation doesn't work on directories.",KeyError:"Mapping key not found.",KeyboardInterrupt:"Program interrupted by user.",LookupError:"Base class for lookup errors.",MemoryError:"Out of memory.",ModuleNotFoundError:"Module not found.",NameError:"Name not found globally.",None:"",NotADirectoryError:"Operation only works on directories.",NotImplemented:"",NotImplementedError:"Method or function hasn't been implemented yet.",OSError:"Base class for I/O related errors.",OverflowError:"Result too large to be represented.",PendingDeprecationWarning:"Base class for warnings about features which will be deprecated\nin the future.",PermissionError:"Not enough permissions.",ProcessLookupError:"Process not found.",RecursionError:"Recursion limit exceeded.",ReferenceError:"Weak ref proxy used after referent went away.",ResourceWarning:"Base class for warnings about resource usage.",RuntimeError:"Unspecified run-time error.",RuntimeWarning:"Base class for warnings about dubious runtime behavior.",StopAsyncIteration:"Signal the end from iterator.__anext__().",StopIteration:"Signal the end from iterator.__next__().",SyntaxError:"Invalid syntax.",SyntaxWarning:"Base class for warnings about dubious syntax.",SystemError:"Internal error in the Python interpreter.\n\nPlease report this to the Python maintainer, along with the traceback,\nthe Python version, and the hardware/OS platform and version.",SystemExit:"Request to exit from the interpreter.",TabError:"Improper mixture of spaces and tabs.",TimeoutError:"Timeout expired.",True:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",TypeError:"Inappropriate argument type.",UnboundLocalError:"Local name referenced but not bound to a value.",UnicodeDecodeError:"Unicode decoding error.",UnicodeEncodeError:"Unicode encoding error.",UnicodeError:"Unicode related error.",UnicodeTranslateError:"Unicode translation error.",UnicodeWarning:"Base class for warnings about Unicode related problems, mostly\nrelated to conversion problems.",UserWarning:"Base class for warnings generated by user code.",ValueError:"Inappropriate argument value (of correct type).",Warning:"Base class for warning categories.",WindowsError:"Base class for I/O related errors.",ZeroDivisionError:"Second argument to a division or modulo operation was zero.",__debug__:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",abs:"Return the absolute value of the argument.",aiter:"Return an AsyncIterator for an AsyncIterable object.",all:"Return True if bool(x) is True for all values x in the iterable.\n\nIf the iterable is empty, return True.",anext:"async anext(aiterator[, default])\n\nReturn the next item from the async iterator.  If default is given and the async\niterator is exhausted, it is returned instead of raising StopAsyncIteration.",any:"Return True if bool(x) is True for any x in the iterable.\n\nIf the iterable is empty, return False.",ascii:"Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2.",bin:"Return the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'",bool:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",breakpoint:"breakpoint(*args, **kws)\n\nCall sys.breakpointhook(*args, **kws).  sys.breakpointhook() must accept\nwhatever arguments are passed.\n\nBy default, this drops you into the pdb debugger.",bytearray:"bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer",bytes:"bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",callable:"Return whether the object is callable (i.e., some kind of function).\n\nNote that classes are callable, as are instances of classes with a\n__call__() method.",chr:"Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.",classmethod:"classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      @classmethod\n      def f(cls, arg1, arg2, argN):\n          ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.",compile:"Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified.",complex:"Create a complex number from a real part and an optional imaginary part.\n\nThis is equivalent to (real + imag*1j) where imag defaults to 0.",copyright:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",credits:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",delattr:"Deletes the named attribute from the given object.\n\ndelattr(x, 'y') is equivalent to ``del x.y``",dict:"dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",dir:"Show attributes of an object.\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes.",divmod:"Return the tuple (x//y, x%y).  Invariant: div*y + mod == x.",enumerate:"Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",eval:"Evaluate the given source in the C of globals and locals.\n\nThe source may be a string representing a Python expression\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",exec:"Execute the given source in the C of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.\nThe closure must be a tuple of cellvars, and can only be used\nwhen source is a code object requiring exactly that many cellvars.",exit:"",filter:"filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",float:"Convert a string or number to a floating point number, if possible.",format:"Return type(value).__format__(value, format_spec)\n\nMany built-in types implement format_spec according to the\nFormat Specification Mini-language. See help('FORMATTING').\n\nIf type(value) does not supply a method named __format__\nand format_spec is empty, then str(value) is returned.\nSee also help('SPECIALMETHODS').",frozenset:"frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.",getattr:"Get a named attribute from an object.\n\ngetattr(x, 'y') is equivalent to x.y\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case.",globals:"Return the dictionary containing the current scope's global variables.\n\nNOTE: Updates to this dictionary *will* affect name lookups in the current\nglobal scope and vice-versa.",hasattr:"Return whether the object has an attribute with the given name.\n\nThis is done by calling getattr(obj, name) and catching AttributeError.",hash:"Return the hash value for the given object.\n\nTwo objects that compare equal must also have the same hash value, but the\nreverse is not necessarily true.",help:"Define the builtin 'help'.\n\n    This is a wrapper around pydoc.help that provides a helpful message\n    when 'help' is typed at the Python interactive prompt.\n\n    Calling help() at the Python prompt starts an interactive help session.\n    Calling help(thing) prints help for the python object 'thing'.\n    ",hex:"Return the hexadecimal representation of an integer.\n\n   >>> hex(12648430)\n   '0xc0ffee'",id:"Return the identity of an object.\n\nThis is guaranteed to be unique among simultaneously existing objects.\n(CPython uses the object's memory address.)",input:"Read a string from standard input.  The trailing newline is stripped.\n\nThe prompt string, if given, is printed to standard output without a\ntrailing newline before reading input.\n\nIf the user hits EOF (*nix: Ctrl-D, Windows: Ctrl-Z+Return), raise EOFError.\nOn *nix systems, readline is used if available.",int:"int([x]) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",isinstance:"Return whether an object is an instance of a class or of a subclass thereof.\n\nA tuple, as in ``isinstance(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``isinstance(x, A) or isinstance(x, B)\nor ...`` etc.",issubclass:"Return whether 'cls' is derived from another class or is the same class.\n\nA tuple, as in ``issubclass(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``issubclass(x, A) or issubclass(x, B)\nor ...``.",iter:"Get an iterator from an object.\n\nIn the first form, the argument must supply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.",len:"Return the number of items in a container.",license:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",list:"Built-in mutable sequence.\n\nIf no argument is given, the constructor creates a new empty list.\nThe argument must be an iterable if specified.",locals:"Return a dictionary containing the current scope's local variables.\n\nNOTE: Whether or not updates to this dictionary will affect name lookups in\nthe local scope and vice-versa is *implementation dependent* and not\ncovered by any backwards compatibility guarantees.",map:"map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",max:"max(iterable, *[, default=obj, key=func]) -> value\nmax(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its biggest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the largest argument.",memoryview:"Create a new memoryview object which references the given object.",min:"min(iterable, *[, default=obj, key=func]) -> value\nmin(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the smallest argument.",next:"Return the next item from the iterator.\n\nIf default is given and the iterator is exhausted,\nit is returned instead of raising StopIteration.",object:"The base class of the class hierarchy.\n\nWhen called, it accepts no arguments and returns a new featureless\ninstance that has no instance attributes and cannot be given any.\n",oct:"Return the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'",open:"Open file and return a stream.  Raise OSError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory) of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped. (If a file descriptor is given, it is closed when the\nreturned I/O object is closed, unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode.  Other common values are 'w' for writing (truncating the file if\nit already exists), 'x' for creating and writing to a new file, and\n'a' for appending (which on some Unix systems, means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode, if encoding is not specified the encoding used is platform\ndependent: locale.getencoding() is called to get the current locale encoding.\n(For reading and writing raw bytes use binary mode and leave encoding\nunspecified.) The available modes are:\n\n========= ===============================================================\nCharacter Meaning\n--------- ---------------------------------------------------------------\n'r'       open for reading (default)\n'w'       open for writing, truncating the file first\n'x'       create a new file and open it for writing\n'a'       open for writing, appending to the end of the file if it exists\n'b'       binary mode\n't'       text mode (default)\n'+'       open a disk file for updating (reading and writing)\n========= ===============================================================\n\nThe default mode is 'rt' (open for reading text). For binary random\naccess, the mode 'w+b' opens and truncates the file to 0 bytes, while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n  \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.",ord:"Return the Unicode code point for a one-character string.",pow:"Equivalent to base**exp with 2 arguments or base**exp % mod with 3 arguments\n\nSome types, such as ints, are able to use a more efficient algorithm when\ninvoked using the three argument form.",print:"Prints the values to a stream, or to sys.stdout by default.\n\n  sep\n    string inserted between values, default a space.\n  end\n    string appended after the last value, default a newline.\n  file\n    a file-like object (stream); defaults to the current sys.stdout.\n  flush\n    whether to forcibly flush the stream.",property:"Property attribute.\n\n  fget\n    function to be used for getting an attribute value\n  fset\n    function to be used for setting an attribute value\n  fdel\n    function to be used for del'ing an attribute\n  doc\n    docstring\n\nTypical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",repr:"Return the canonical string representation of the object.\n\nFor many object types, including most builtins, eval(repr(obj)) == obj.",reversed:"Return a reverse iterator over the values of the given sequence.",round:"Round a number to a given precision in decimal digits.\n\nThe return value is an integer if ndigits is omitted or None.  Otherwise\nthe return value has the same type as the number.  ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"Sets the named attribute on the given object to the specified value.\n\nsetattr(x, 'y', v) is equivalent to ``x.y = v``",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"Return a new list containing all items from the iterable in ascending order.\n\nA custom key function can be supplied to customize the sort order, and the\nreverse flag can be set to request the result in descending order.",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n         @staticmethod\n         def f(arg1, arg2, argN):\n             ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()). Both the class and the instance are ignored, and\nneither is passed implicitly as the first argument to the method.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"Return the sum of a 'start' value (default: 0) plus an iterable of numbers\n\nWhen the iterable is empty, return the start value.\nThis function is intended specifically for use with numeric values and may\nreject non-numeric types.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object) -> the object's type\ntype(name, bases, dict, **kwds) -> a new type",vars:"Show vars.\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]\n\nThe zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.",}
 for(var key in docs){if(__BRYTHON__.builtins[key]){if(['object','function'].includes(typeof __BRYTHON__.builtins[key])){__BRYTHON__.builtins[key].__doc__=docs[key]}}}

@@ -74,7 +74,7 @@ var dict_view_op = {
     __and__: function(t1, t2){
         var items = []
         for(var i = 0, ilen = t1.length; i < ilen; i++){
-            var x = t1[i]
+            var x = t1[i],
                 flag = false
             for(var j = 0, jlen = t2.length; j < jlen; j++){
                 if($B.rich_comp("__eq__", x, t2[j])){
@@ -1320,7 +1320,8 @@ dict.update = function(self){
             }
         }else{
             var it = _b_.iter(o),
-                i = 0
+                i = 0,
+                key_value
             while(true){
                 try{
                     var item = _b_.next(it)
@@ -1591,7 +1592,7 @@ jsobj_as_pydict.__eq__ = function(self, other){
     }
 
     // create true Python dicts with the items in self and other
-    var self1 = $B.empty_dict()
+    var self1 = $B.empty_dict(),
         other1 = $B.empty_dict()
 
     dict.__init__(self1, jsobj_as_pydict.items(self))

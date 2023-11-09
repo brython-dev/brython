@@ -1,5 +1,6 @@
 "use strict";
 ;(function($B){
+var _b_ = $B.builtins
 
 // Code adapted from https://github.com/mziccard/node-timsort
 // Which is licensed under the MIT license
@@ -94,8 +95,8 @@ function alphabeticalCompare(a, b){
             b = -b
         }
 
-        al = log10(a)
-        bl = log10(b)
+        var al = log10(a),
+            bl = log10(b)
 
         var t = 0
 

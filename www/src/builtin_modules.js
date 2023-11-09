@@ -139,7 +139,9 @@
                 }
                 document.body.appendChild(script)
             },
-            mouseCoords: function(ev){return $B.JSObj.$factory($mouseCoords(ev))},
+            mouseCoords: function(ev){
+                return $B.JSObj.$factory($B.$mouseCoords(ev))
+            },
             prompt: function(message, default_value){
                 return $B.JSObj.$factory(window.prompt(message, default_value||''))
             },

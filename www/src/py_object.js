@@ -235,14 +235,6 @@ object.__getattribute__ = function(obj, attr){
             }
         }
 
-        if(typeof res == "object"){
-            if(__get__ && (typeof __get__ == "function")){
-                get_func = function(x, y){
-                    return __get__.apply(x, [y, klass.$factory])
-                }
-            }
-        }
-
         if(__get__ === null && (typeof res == "function")){
             __get__ = function(x){return x}
         }

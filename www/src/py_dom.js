@@ -69,7 +69,7 @@ function trace(msg){
     }
 }
 
-function $mouseCoords(ev){
+var $mouseCoords = $B.$mouseCoords = function(ev){
     if(ev.type.startsWith("touch")){
         var res = {}
         res.x = _b_.int.$factory(ev.touches[0].screenX)
@@ -449,44 +449,6 @@ function $EventsList(elt, evt, arg){
         if(! found){throw _b_.KeyError.$factory("not found")}
     }
 }
-
-var OpenFile = $B.OpenFile = $B.make_class('OpenFile')
-OpenFile.__module__ = "<pydom>"
-
-OpenFile.$factory = function(file, mode, encoding) {
-    var res = {
-        __class__: $OpenFileDict,
-        file: file,
-        reader: new FileReader()
-    }
-    if(mode === "r"){
-        res.reader.readAsText(file, encoding)
-    }else if(mode === "rb"){
-        res.reader.readAsBinaryString(file)
-    }
-    return res
-}
-
-OpenFile.__getattr__ = function(self, attr) {
-    if(self["get_" + attr] !== undefined){return self["get_" + attr]}
-    return self.reader[attr]
-}
-
-OpenFile.__setattr__ = function(self, attr, value) {
-    var obj = self.reader
-    if(attr.substr(0,2) == "on"){ // event
-        var callback = function(ev) { return value($DOMEvent(ev)) }
-        obj.addEventListener(attr.substr(2), callback)
-    }else if("set_" + attr in obj){
-        return obj["set_" + attr](value)
-    }else if(attr in obj){
-        obj[attr] = value
-    }else{
-        _b_.setattr(obj, attr, value)
-    }
-}
-
-$B.set_func_names(OpenFile, "<dom>")
 
 var dom = {
     File : function(){},
@@ -1182,8 +1144,10 @@ DOMNode.children = function(self){
 
 DOMNode.child_nodes = function(self){
     var res = []
-    if(self.nodeType == 9){self = self.body}
-    for(child of self.childNodes){
+    if(self.nodeType == 9){
+        self = self.body
+    }
+    for(var child of self.childNodes){
         res.push(DOMNode.$factory(child))
     }
     return res
@@ -1307,7 +1271,7 @@ DOMNode.get = function(self){
         }
         return make_list(self.querySelectorAll($dict['selector']))
     }
-    return res
+    return []
 }
 
 DOMNode.getContext = function(self){ // for CANVAS tag
@@ -1359,10 +1323,6 @@ DOMNode.inside = function(self, other){
         elt = elt.parentNode
         if(! elt){return false}
     }
-}
-
-DOMNode.options = function(self){ // for SELECT tag
-    return new $OptionsClass(self)
 }
 
 DOMNode.parent = function(self){
@@ -1723,8 +1683,8 @@ $B.TagSum = TagSum // used in _html.js and _svg.js
 var win = $B.JSObj.$factory(_window)
 
 win.get_postMessage = function(msg,targetOrigin){
-    if($B.$isinstance(msg, dict)){
-        var temp = {__class__:"dict"},
+    if($B.$isinstance(msg, _b_.dict)){
+        var temp = {__class__: "dict"},
             items = _b_.list.$factory(_b_.dict.items(msg))
         items.forEach(function(item){
             temp[item[0]] = item[1]

@@ -1318,7 +1318,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         var p = parts[i]
         if(prefix && p == ""){
             // Move up in package hierarchy
-            elt = norm_parts.pop()
+            var elt = norm_parts.pop()
             if(elt === undefined){
                 throw _b_.ImportError.$factory("Parent module '' not loaded, "+
                     "cannot perform relative import")

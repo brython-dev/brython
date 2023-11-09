@@ -533,7 +533,6 @@ int.__setattr__ = function(self, attr, value){
             throw _b_.AttributeError.$factory(`'${cl_name}' object` +
                 ` has no attribute '${attr}'`)
         }
-        throw _b_.AttributeError.$factory(msg)
     }
     // subclasses of int can have attributes set
     _b_.dict.$setitem(self.__dict__, attr, value)

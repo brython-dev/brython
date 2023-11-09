@@ -257,7 +257,7 @@ float.fromhex = function(klass, s){
     while (hex_from_char(s[pos]) >= 0){
         pos++;
     }
-    save_pos = pos;
+    var save_pos = pos;
     if (s[pos] == '.') {
         pos++;
         while (hex_from_char(s[pos]) >= 0){
@@ -269,12 +269,12 @@ float.fromhex = function(klass, s){
     }
 
     /* ndigits = total # of hex digits; fdigits = # after point */
-    ndigits = coeff_end - coeff_start;
-    fdigits = coeff_end - save_pos;
-    if (ndigits == 0){
+    var ndigits = coeff_end - coeff_start,
+        fdigits = coeff_end - save_pos;
+    if(ndigits == 0){
         throw parse_error()
     }
-    if (ndigits > Math.min(DBL_MIN_EXP - DBL_MANT_DIG - LONG_MIN/2,
+    if(ndigits > Math.min(DBL_MIN_EXP - DBL_MANT_DIG - LONG_MIN/2,
                          LONG_MAX/2 + 1 - DBL_MAX_EXP)/4){
         throw insane_length_error()
     }

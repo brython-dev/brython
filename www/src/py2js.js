@@ -175,6 +175,8 @@ function ast_body(block_ctx){
 }
 
 var ast_dump = $B.ast_dump = function(tree, indent){
+    var attr,
+        value
     indent = indent || 0
     if(tree === _b_.None){
         // happens in dictionary keys for **kw
@@ -207,7 +209,7 @@ var ast_dump = $B.ast_dump = function(tree, indent){
     }else if(tree instanceof ast.MatchSingleton){
         return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
     }else if(tree instanceof ast.Constant){
-        var value = tree.value
+        value = tree.value
         // For imaginary numbers, value is an object with
         // attribute "imaginary" set
         if(value.imaginary){
@@ -226,16 +228,16 @@ var ast_dump = $B.ast_dump = function(tree, indent){
     attr_names = attr_names.map(x => (x.endsWith('*') || x.endsWith('?')) ?
                                      x.substr(0, x.length - 1) : x)
     if([ast.Name].indexOf(proto) > -1){
-        for(var attr of attr_names){
+        for(attr of attr_names){
             if(tree[attr] !== undefined){
                 attrs.push(`${attr}=${ast_dump(tree[attr])}`)
             }
         }
         return res + attrs.join(', ') + ')'
     }
-    for(var attr of attr_names){
+    for(attr of attr_names){
         if(tree[attr] !== undefined){
-            var value = tree[attr]
+            value = tree[attr]
             attrs.push(attr + '=' +
                 ast_dump(tree[attr], indent + 1).trimStart())
         }
@@ -504,14 +506,13 @@ function check_assignment(context, kwargs){
 
     if(context.type == 'expr'){
         var upper_expr = context
-        var ctx = context
+        ctx = context
         while(ctx.parent){
             if(ctx.parent.type == 'expr'){
                 upper_expr = ctx.parent
             }
             ctx = ctx.parent
         }
-        // context = upper_expr
     }
 
     // no assign in left side of augmented assignment
@@ -998,19 +999,22 @@ AbstractExprCtx.prototype.transition = function(token, value){
                     return new EllipsisCtx(new ExprCtx(context, 'ellipsis', commas))
             }
             raise_syntax_error(context)
+            break
         case 'in':
             if(context.parent.type == 'op' && context.parent.op == 'not'){
                 context.parent.op = 'not_in'
                 return context
             }
             raise_syntax_error(context)
+            break
         case '=':
             if(context.parent.type == "yield"){
                 raise_syntax_error(context,
                     "assignment to yield expression not possible",
-                    context.parent.position,)
+                    context.parent.position)
             }
             raise_syntax_error(context)
+            break
         case 'yield':
             return new AbstractExprCtx(new YieldCtx(context), true)
         case ':':
@@ -1535,6 +1539,7 @@ CallArgCtx.prototype.transition = function(token, value){
                }
             }
             raise_syntax_error(context)
+            break
         case ')':
             return transition(context.parent,token)
         case ':':
@@ -1695,6 +1700,7 @@ CallCtx.prototype.transition = function(token, value){
                     return new DoubleStarArgCtx(context)
             }
             raise_syntax_error(context)
+            break
         case 'yield':
             raise_syntax_error(context)
     }
@@ -1775,10 +1781,12 @@ CaseCtx.prototype.transition = function(token, value){
                 return new PatternCtx(new PatternOrCtx(context))
             }
             raise_syntax_error(context, 'expected :')
+            break
         case ',':
             if(context.expect == ':' || context.expect == 'as'){
                 return new PatternCtx(new PatternSequenceCtx(context))
             }
+            break
         case 'if':
             // guard
             context.has_guard = true
@@ -2238,9 +2246,9 @@ DefCtx.prototype.transition = function(token, value){
         case ':':
             if(context.has_args){
                 return BodyCtx(context)
-            }else{
-                raise_syntax_error(context, "missing function parameters")
             }
+            raise_syntax_error(context, "missing function parameters")
+            break
         case 'eol':
             if(context.has_args){
                 raise_syntax_error(context, "expected ':'")
@@ -2444,18 +2452,20 @@ DictOrSetCtx.prototype.transition = function(token, value){
                     }
                     check_last()
                     context.end_position = $token.value
+                    if(context.real == 'dict_or_set'){
+                        // for "{}" or {1}
+                        context.real = context.tree.length == 0 ?
+                            'dict' : 'set'
+                    }
                     switch(context.real) {
-                        case 'dict_or_set':
-                            // for "{}" or {1}
-                            context.real = context.tree.length == 0 ?
-                                'dict' : 'set'
                         case 'set':
                             context.items = context.tree
                             context.tree = []
                             context.closed = true
                             return context
                         case 'dict':
-                            if($B.last(context.tree).type == 'abstract_expr'){
+                            if(context.tree.length &&
+                                    $B.last(context.tree).type == 'abstract_expr'){
                                 raise_syntax_error(context,
                                     "expression expected after dictionary key and ':'")
                             }else{
@@ -2470,6 +2480,7 @@ DictOrSetCtx.prototype.transition = function(token, value){
                             return context
                       }
                       raise_syntax_error(context)
+                      break
                 case ',':
                     check_last()
                     var last = $B.last(context.tree)
@@ -2500,6 +2511,7 @@ DictOrSetCtx.prototype.transition = function(token, value){
                     }else{
                         raise_syntax_error(context)
                     }
+                    break
                 case 'for':
                     // comprehension
                     if(context.real == "set" && context.tree.length > 1){
@@ -2673,7 +2685,7 @@ ExceptCtx.prototype.transition = function(token, value){
             context.try_node.context.is_trystar = true
             context.expect = 'id'
             return context
-        }else if(! context.expect == '*'){
+        }else if(context.expect != '*'){
             // if "try" already has non-starred excepts, raise SyntaxError
             raise_syntax_error(context,
                 "cannot have both 'except' and 'except*' " +
@@ -2707,6 +2719,8 @@ ExceptCtx.prototype.transition = function(token, value){
                return transition(new AbstractExprCtx(context, false),
                    token, value)
             }
+     }
+     switch(token){
         case 'as':
             // only one alias allowed
             if(context.expect == 'as' &&
@@ -2715,6 +2729,7 @@ ExceptCtx.prototype.transition = function(token, value){
                 context.has_alias = true
                 return context
             }
+            break
         case 'id':
             if(context.expect == 'alias'){
                 context.expect = ':'
@@ -2739,6 +2754,7 @@ ExceptCtx.prototype.transition = function(token, value){
                 context.expect = 'as'
                 return context
             }
+            break
         case ',':
             if(context.parenth !== undefined &&
                     context.has_alias === undefined &&
@@ -2749,6 +2765,7 @@ ExceptCtx.prototype.transition = function(token, value){
                 raise_syntax_error(context,
                     "multiple exception types must be parenthesized")
             }
+            break
         case 'eol':
             raise_syntax_error(context, "expected ':'")
     }
@@ -2846,6 +2863,7 @@ ExprCtx.prototype.transition = function(token, value){
             if(context.expect == ','){
                 return transition(context, 'op', 'in')
             }
+            break
         case ',':
             if(context.expect == ','){
                 if(context.name == 'iterator' &&
@@ -3197,6 +3215,7 @@ ExprCtx.prototype.transition = function(token, value){
               return new AbstractExprCtx(new NamedExprCtx(context), false)
           }
           raise_syntax_error(context)
+          break
       case 'if':
           var in_comp = false,
               ctx = context.parent
@@ -3366,8 +3385,8 @@ ForExpr.prototype.transition = function(token, value){
                 new ExprCtx(context, 'iterator', true), false)
         case ':':
             check_assignment(context.tree[0])
-            if(context.tree.length < 2 // issue 638
-                    || context.tree[1].tree[0].type == "abstract_expr"){
+            if(context.tree.length < 2  || // issue 638
+                    context.tree[1].tree[0].type == "abstract_expr"){
                 raise_syntax_error(context)
             }
             return BodyCtx(context)
@@ -3501,9 +3520,10 @@ FromCtx.prototype.transition = function(token, value){
                 context.expect = 'id'
                 return context
             }
+            break
         case 'op':
-            if(value == '*' && context.expect == 'id'
-                    && context.names.length == 0){
+            if(value == '*' && context.expect == 'id' &&
+                    context.names.length == 0){
                if(get_scope(context).ntype !== 'module'){
                    raise_syntax_error(context,
                        "import * only allowed at module level")
@@ -3514,11 +3534,13 @@ FromCtx.prototype.transition = function(token, value){
             }else{
                 raise_syntax_error(context)
             }
+            break
         case ',':
             if(context.expect == ','){
                 context.expect = 'id'
                 return context
             }
+            break
         case 'eol':
             switch(context.expect) {
                 case ',':
@@ -3528,20 +3550,23 @@ FromCtx.prototype.transition = function(token, value){
                     raise_syntax_error(context,
                         'trailing comma not allowed without ' +
                             'surrounding parentheses')
+                    break
                 default:
                     raise_syntax_error(context)
             }
+            break
         case 'as':
           if(context.expect == ',' || context.expect == 'eol'){
              context.expect = 'alias'
              return context
           }
+          break
         case '(':
-
             if(context.expect == 'id'){
                 context.expect = 'id'
                 return context
             }
+            break
         case ')':
           if(context.expect == ',' || context.expect == 'id'){
              context.expect = 'eol'
@@ -3861,6 +3886,7 @@ FuncArgs.prototype.transition = function(token, value){
                 return context
             }
             raise_syntax_error(context)
+            break
         case ')':
             check()
             check_last()
@@ -3887,6 +3913,7 @@ FuncArgs.prototype.transition = function(token, value){
                 return new EndOfPositionalCtx(context)
             }
             raise_syntax_error(context)
+            break
         case ':':
             if(context.parent.type == "lambda"){
                 return transition(context.parent, token)
@@ -3944,6 +3971,7 @@ FuncArgIdCtx.prototype.transition = function(token, value){
             }else{
                 return transition(context.parent, token)
             }
+            break
         case ':':
             if(context.parent.parent.type == "lambda"){
                 // end of parameters
@@ -4810,8 +4838,10 @@ ListOrTupleCtx.prototype.transition = function(token, value){
                         break
                     }
                     raise_syntax_error(context, '(unexpected "if" inside list)')
+                    break
                 case ',':
                     raise_syntax_error(context, '(unexpected comma inside list)')
+                    break
                 case 'str':
                 case 'JoinedStr':
                 case 'int':
@@ -4838,6 +4868,7 @@ ListOrTupleCtx.prototype.transition = function(token, value){
                     }
                     raise_syntax_error(context,
                         `(unexpected operator: ${value})`)
+                    break
                 default:
                     raise_syntax_error(context)
             }
@@ -5354,8 +5385,8 @@ OpCtx.prototype.transition = function(token, value){
         console.log('context has no op', context)
         raise_syntax_error(context)
     }
-    if((context.op == 'is' || context.op == 'is_not')
-            && context.tree.length > 1){
+    if((context.op == 'is' || context.op == 'is_not') &&
+            context.tree.length > 1){
         for(var operand of context.tree){
             if(is_literal(operand)){
                 var head = context.op == 'is' ? 'is' : 'is not'
@@ -5391,6 +5422,7 @@ OpCtx.prototype.transition = function(token, value){
                 case '~':
                     return new UnaryCtx(context, value)
             }
+            break
         default:
             if(context.tree[context.tree.length - 1].type ==
                     'abstract_expr'){
@@ -5456,6 +5488,7 @@ PatternCtx.prototype.transition = function(token, value){
                         default:
                             raise_syntax_error(context)
                     }
+                    break
                 case 'id':
                     context.expect = ','
                     if(['None', 'True', 'False'].indexOf(value) > -1){
@@ -5484,6 +5517,7 @@ PatternCtx.prototype.transition = function(token, value){
                 return capture
             }
             raise_syntax_error(context, "(expected id after '*')")
+            break
         case 'number':
             // if pattern starts with unary - or +
             switch(token){
@@ -5496,6 +5530,7 @@ PatternCtx.prototype.transition = function(token, value){
                 default:
                     raise_syntax_error(context)
             }
+            break
         case ',':
             switch(token){
                 case ',':
@@ -5632,6 +5667,7 @@ PatternCaptureCtx.prototype.transition = function(token, value){
                 context.expect = 'as'
                 return context.transition(token, value)
             }
+            break
         case 'as':
         case 'alias':
             var res = as_pattern(context, token, value)
@@ -5778,6 +5814,7 @@ PatternClassCtx.prototype.transition = function(token, value){
                         return new PatternCtx(current)
                     }
                     raise_syntax_error(this, "'=' after non-capture")
+                    break
                 case ',':
                     check_last_arg()
                     return new PatternCtx(this)
@@ -5791,6 +5828,7 @@ PatternClassCtx.prototype.transition = function(token, value){
                 default:
                     raise_syntax_error(context)
             }
+            break
         case 'as':
         case 'alias':
             return as_pattern(context, token, value)
@@ -5864,6 +5902,7 @@ PatternGroupCtx.prototype.transition = function(token, value){
                 return transition(context.parent, token, value)
             }
             raise_syntax_error(context)
+            break
         case 'as':
         case 'alias':
             return as_pattern(context, token, value)
@@ -5979,6 +6018,7 @@ PatternLiteralCtx.prototype.transition = function(token, value){
                         }
                         raise_syntax_error(context,
                             'patterns cannot include operators')
+                        break
                     default:
                         return transition(context.parent, token, value)
                 }
@@ -5997,10 +6037,11 @@ PatternLiteralCtx.prototype.transition = function(token, value){
                         context.expect = 'op'
                         return context
                     }
+                    break
                 default:
                     raise_syntax_error(context)
             }
-
+            break
         case 'imaginary':
             switch(token){
                 case 'imaginary':
@@ -6010,6 +6051,7 @@ PatternLiteralCtx.prototype.transition = function(token, value){
                     raise_syntax_error(context, '(expected imaginary)')
 
             }
+            break
         case 'as':
         case 'alias':
             return as_pattern(context, token, value)
@@ -6143,6 +6185,7 @@ PatternMappingCtx.prototype.transition = function(token, value){
             }else{
                 raise_syntax_error(context, '(expected key or **)')
             }
+            break
         case 'capture_pattern':
             var p = new PatternCtx(context)
             var capture = transition(p, token, value)
@@ -6165,6 +6208,7 @@ PatternMappingCtx.prototype.transition = function(token, value){
             }else{
                 raise_syntax_error(context, '(expected identifier)')
             }
+            break
         case ',':
             // after a **rest item
             if(token == ','){
@@ -6175,6 +6219,7 @@ PatternMappingCtx.prototype.transition = function(token, value){
                 return context.transition(token, value)
             }
             raise_syntax_error(context)
+            break
         case '.':
             // value pattern
             if(context.tree.length > 0){
@@ -6224,6 +6269,7 @@ PatternKeyValueCtx.prototype.transition = function(token, value){
                 default:
                     raise_syntax_error(context, '(expected :)')
             }
+            break
         case ',':
             switch(token){
                 case '}':
@@ -6459,7 +6505,7 @@ PatternSequenceCtx.prototype.transition = function(token, value){
         }
         return transition(context.parent, token, value)
     }else if(context.expect == 'alias'){
-        if(token =  'id'){
+        if(token == 'id'){
             context.alias = value
             return context.parent
         }
@@ -6723,8 +6769,9 @@ var StarredCtx = $B.parser.StarredCtx = function(context){
         // SyntaxError for a, *b, *c = ...
         for(var i = 0; i < context.parent.tree.length; i++){
             var child = context.parent.tree[i]
-            if(child.type == 'expr' && child.tree.length > 0
-                    && child.tree[0].type == 'starred'){
+            if(child.type == 'expr' &&
+                    child.tree.length > 0 &&
+                    child.tree[0].type == 'starred'){
                 raise_syntax_error(context,
                     "two starred expressions in assignment")
             }
@@ -6995,6 +7042,7 @@ TargetListCtx.prototype.transition = function(token, value){
                     new ExprCtx(context, 'target', false),
                         value)
             }
+            break
         case 'op':
             if(context.expect == 'id' && value == '*'){
                 // form "for a, *b in X"
@@ -7003,6 +7051,7 @@ TargetListCtx.prototype.transition = function(token, value){
                 return new AbstractExprCtx(
                     new StarredCtx(context), false)
             }
+            break
         case '(':
         case '[':
             if(context.expect == 'id'){
@@ -7010,11 +7059,13 @@ TargetListCtx.prototype.transition = function(token, value){
               return new ListOrTupleCtx(context,
                   token == '(' ? 'tuple' : 'list')
             }
+            break
         case ')':
         case ']':
             if(context.expect == ','){
                 return context.parent
             }
+            break
         case ',':
             if(context.expect == ','){
                 context.expect = 'id'
@@ -7375,6 +7426,7 @@ UnaryCtx.prototype.transition = function(token, value){
                }
                return context
             }
+            break
         case 'int':
         case 'float':
         case 'imaginary':
@@ -7456,6 +7508,7 @@ WithCtx.prototype.transition = function(token, value){
                         value)
             }
             raise_syntax_error(context)
+            break
         case ':':
             if((! context.parenth) || context.parenth == 'implicit'){
                 check_last()
@@ -8177,6 +8230,7 @@ function test_escape(text, antislash_pos){
             }else{
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
+            break
         case "u":
             var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 4){
@@ -8189,6 +8243,7 @@ function test_escape(text, antislash_pos){
             }else{
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
+            break
         case "U":
             var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 8){
@@ -8327,7 +8382,7 @@ function prepare_string(context, s, position){
                     var description = search[0].toUpperCase()
                     // Load unicode table if not already loaded
                     if($B.unicodedb === undefined){
-                        var xhr = new XMLHttpRequest
+                        var xhr = new XMLHttpRequest()
                         xhr.open("GET",
                             $B.brython_path + "unicode.txt", false)
                         xhr.onreadystatechange = function(){
@@ -8563,9 +8618,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
         }
     }
 
+    var token
+
     while(true){
         try{
-            var token = root.token_reader.read()
+            token = root.token_reader.read()
         }catch(err){
             context = context || new NodeCtx(node)
             if(err.type == 'IndentationError'){
@@ -8844,12 +8901,12 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     // parent_scope = the scope where the code is created
     //
     // Returns the Javascript code
-
+    var __package__
     if(typeof module == "object"){
-        var __package__ = module.__package__
+        __package__ = module.__package__
         module = module.__name__
     }else{
-        var __package__ = ""
+        __package__ = ""
     }
 
     parent_scope = parent_scope || $B.builtins_scope
@@ -8859,9 +8916,9 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         filename,
         imported
     if(typeof src == 'object'){
-        var ix = src.ix,
-            filename = src.filename,
-            imported = src.imported
+        ix = src.ix
+        filename = src.filename
+        imported = src.imported
         src = src.src
     }
     var locals_is_module = Array.isArray(locals_id)
@@ -8869,14 +8926,16 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         locals_id = locals_id[0]
     }
 
+    var _ast
+
     if($B.parser_to_ast){
         console.log('use parser to ast')
-        var _ast = new $B.Parser(src, filename, 'file').parse()
+        _ast = new $B.Parser(src, filename, 'file').parse()
     }else{
         var root = create_root_node({src, filename},
                                      module, locals_id, parent_scope)
         dispatch_tokens(root)
-        var _ast = root.ast()
+        _ast = root.ast()
     }
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
@@ -9134,7 +9193,7 @@ var brython = $B.parser.brython = function(options){
     }else if($B.isWebWorker){
         // ignore
     }else{
-        var scripts = python_scripts.slice()
+        scripts = python_scripts.slice()
     }
     var module_name
     if($B.get_page_option('ipy_id') !== undefined){
@@ -9246,12 +9305,13 @@ $B.get_option_from_filename = function(option, filename){
     }
 }
 
-function run_scripts(scripts){
+function run_scripts(_scripts){
     // Split between webworkers and other scripts
-    var webworkers = scripts.filter(script => script.className === 'webworker'),
-        scripts = scripts.filter(script => script.className !== 'webworker')
+    var webworkers = _scripts.filter(script => script.className === 'webworker'),
+        scripts = _scripts.filter(script => script.className !== 'webworker')
 
-    var module_name
+    var module_name,
+        filename
 
     if(scripts.length > 0 || $B.isWebWorker){
         if($B.get_page_option('indexedDB') && $B.has_indexedDB &&
@@ -9273,7 +9333,7 @@ function run_scripts(scripts){
             // remove leading CR if any
             source = source.replace(/^\n/, '')
             $B.webworkers[worker.id] = worker
-            var filename = $B.script_filename = $B.script_path + "#" + worker.id
+            filename = $B.script_filename = $B.script_path + "#" + worker.id
             $B.url2name[filename] = worker.id
             $B.file_cache[filename] = source
             $B.scripts[filename] = worker
@@ -9299,7 +9359,7 @@ function run_scripts(scripts){
             if(src.endsWith('\n')){
                 src = src.substr(0, src.length - 1)
             }
-            var filename = $B.script_filename = $B.script_path + "#" + module_name
+            filename = $B.script_filename = $B.script_path + "#" + module_name
             // store source code
             $B.file_cache[filename] = src
             $B.url2name[filename] = module_name
@@ -9386,35 +9446,37 @@ $B.run_script = function(script, src, name, url, run_loop){
     // set built-in variable __debug__
     _b_.__debug__ = $B.get_option('debug') > 0
 
+    var root,
+        js
+
     try{
-        var root = $B.py2js({src: src, filename: url}, name, name),
-            js = root.to_js(),
-            script = {
-                __doc__: get_docstring(root._ast),
-                js: js,
-                __name__: name,
-                __file__: url,
-                script_element: script
-            }
+        root = $B.py2js({src: src, filename: url}, name, name)
+        js = root.to_js()
         if($B.get_option_from_filename('debug', url) > 1){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
         return $B.handle_error(err) // in loaders.js
     }
+    var _script = {
+            __doc__: get_docstring(root._ast),
+            js: js,
+            __name__: name,
+            __file__: url,
+            script_element: script
+        }
     if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
         // Build the list of stdlib modules required by the
         // script
         var imports1 = Object.keys(root.imports).slice(),
             imports = imports1.filter(function(item){
                 return $B.VFS.hasOwnProperty(item)})
-        for(var name of Object.keys(imports)){
-            if($B.VFS.hasOwnProperty(name)){
-                var submodule = $B.VFS[name],
+        for(var _name of Object.keys(imports)){
+            if($B.VFS.hasOwnProperty(_name)){
+                var submodule = $B.VFS[_name],
                     type = submodule[0]
                 if(type==".py"){
-                    var src = submodule[1],
-                        subimports = submodule[2],
+                    var subimports = submodule[2],
                         is_package = submodule.length == 4
                     // "subimports" is the list of stdlib modules
                     // directly imported by the module.
@@ -9436,7 +9498,7 @@ $B.run_script = function(script, src, name, url, run_loop){
         }
         root = null
     }
-    $B.tasks.push(["execute", script])
+    $B.tasks.push(["execute", _script])
     if(run_loop){
         $B.loop()
     }

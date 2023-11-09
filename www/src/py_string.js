@@ -9,7 +9,7 @@ var unicode_tables = $B.unicode_tables
 $B.has_surrogate = function(s){
     // Check if there are "surrogate pairs" characters in string s
     for(var i = 0; i < s.length; i++){
-        code = s.charCodeAt(i)
+        var code = s.charCodeAt(i)
         if(code >= 0xD800 && code <= 0xDBFF){
             return true
         }
@@ -873,7 +873,7 @@ function series_of_bytes(val, flags){
         }
     }else{
         try{
-            bytes_obj = $B.$getattr(val, "__bytes__")()
+            var bytes_obj = $B.$getattr(val, "__bytes__")()
             return format_padding(_b_.bytes.decode(bytes_obj), flags)
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
@@ -2935,7 +2935,7 @@ function fstring_expression(start){
 }
 
 function fstring_error(msg, pos){
-    error = Error(msg)
+    var error = Error(msg)
     error.position = pos
     throw error
 }
@@ -3137,7 +3137,7 @@ $B.parse_fstring = function(string){
                         i += 1
                     }else{
                         // add debug string
-                        tail = car
+                        var tail = car
                         while(string.charAt(i + 1).match(/\s/)){
                             tail += string.charAt(i + 1)
                             i++

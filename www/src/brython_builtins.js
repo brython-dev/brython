@@ -16,8 +16,8 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
 
-$B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
-    && (process.__nwjs!==1)
+$B.isNode = (typeof process !=='undefined') && (process.release.name === 'node')
+    && (process.__nwjs !== 1)
 
 
 var _window
@@ -263,6 +263,7 @@ $B.builtins_repr_check = function(builtin, args){
             {}, null, null),
         self = $.self
     if(! $B.$isinstance(self, builtin)){
+        var _b_ = $B.builtins
         throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
             `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)

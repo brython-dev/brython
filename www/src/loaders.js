@@ -123,7 +123,6 @@ function store_precompiled(module, js, source_ts, imports, is_package){
         data = {"name": module,
             "content": js,
             "imports": imports,
-            "origin": origin,
             "timestamp": __BRYTHON__.timestamp,
             "source_ts": source_ts,
             "is_package": is_package
@@ -152,7 +151,7 @@ function idb_get(module){
     var db = $B.idb_cx.result,
         tx = db.transaction("modules", "readonly")
     try{
-        var store = tx.objectStore("modules")
+        var store = tx.objectStore("modules"),
             req = store.get(module)
         req.onsuccess = function(evt){
             idb_load(evt, module)
@@ -291,7 +290,7 @@ $B.idb_open = function(obj){
             }
 
             openCursor.onsuccess = function(evt){
-                cursor = evt.target.result
+                var cursor = evt.target.result
                 if(cursor){
                     record = cursor.value
                     // A record is valid if the Brython engine timestamp is
