@@ -1,9 +1,16 @@
 import os
 import re
 
-src_dir = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
+this_dir = os.getcwd()
+parent_dir = os.path.dirname(this_dir)
+src_dir = os.path.join(parent_dir, 'www', 'src')
+libs_dir = os.path.join(src_dir, 'libs')
 
-os.chdir(src_dir)
+config_path = os.path.join(this_dir, 'jshint_config.json')
+report_file = os.path.join(this_dir, 'jshint_report.txt')
+
+if os.path.exists(report_file):
+    os.remove(report_file)
 
 core_scripts = [
     'brython_builtins',
@@ -53,20 +60,38 @@ undefined = []
 
 ignore = ['__BRYTHON__', 'console', 'alert', 'document', 'window',
           'indexedDB', 'localStorage', 'sessionStorage', 'XMLHttpRequest',
-          'SVGElement', 'SVGSVGElement', 'atob', 'navigator',
-          'WorkerNavigator', 'Node', 'Event', 'location', 'self', 
+          'SVGElement', 'SVGSVGElement', 'atob', 'navigator', 'crypto',
+          'WorkerNavigator', 'Node', 'Event', 'location', 'self',
           'CustomEvent', 'customElements', 'Intl']
 
-for script in core_scripts:
-    os.remove('jshint_report.txt')
-    print(script)
-    os.system(f'jshint --config jshint_config.json {script}.js >> jshint_report.txt')
-    with open('jshint_report.txt', encoding='utf-8') as f:
+def get_undefined(path):
+    if os.path.exists(report_file):
+        os.remove(report_file)
+    found = []
+    os.system(f'jshint --config {config_path} {path} >> {report_file}')
+    with open(report_file, encoding='utf-8') as f:
         for line in f:
             if mo := re.search("'(.*)' is not defined", line):
                 undef = mo.groups()[0]
                 if undef not in ignore:
-                    undefined.append(line)
+                    found.append(line)
+    return found
+
+# apply to core Brython scripts
+for script in core_scripts:
+    print(script)
+    path = os.path.join(src_dir, f'{script}.js')
+    undefined += get_undefined(path)
+
+# apply to standard libray modules implemented in Javascript
+libs_dir = os.path.join(parent_dir, 'www', 'src', 'libs')
+
+for filename in os.listdir(libs_dir):
+    if not filename.endswith('.js'):
+        continue
+    print(filename)
+    path = os.path.join(libs_dir, filename)
+    undefined += get_undefined(path)
 
 with open('jshint_undefined.txt', 'w', encoding='utf-8') as out:
     for line in undefined:
