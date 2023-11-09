@@ -437,7 +437,7 @@ for(var method in VFSFinder){
 }
 
 // Loader for VFS modules
-VFSLoader = $B.make_class("VFSLoader",
+const VFSLoader = $B.make_class("VFSLoader",
     function(){
         return {
             __class__: VFSLoader

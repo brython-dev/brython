@@ -152,7 +152,8 @@ vars:"Show vars.\n\nWithout arguments, equivalent to locals().\nWith an argument
 zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]\n\nThe zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.",
 }
 for(var key in docs){
-    if(__BRYTHON__.builtins[key]){
-        __BRYTHON__.builtins[key].__doc__ = docs[key]
+	const builtin = __BRYTHON__.builtins[key];
+    if( builtin && builtin instanceof Object ){
+        builtin.__doc__ = docs[key]
     }
 }

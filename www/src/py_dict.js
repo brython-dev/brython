@@ -51,7 +51,7 @@ function is_sublist(t1, t2){
     return true
 }
 
-dict_view_op = {
+const dict_view_op = {
     __eq__: function(t1, t2){
         return t1.length == t2.length && is_sublist(t1, t2)
     },
@@ -893,7 +893,7 @@ function make_reverse_iterator(name, iter_func){
     return klass
 }
 
-dict_reversekeyiterator = make_reverse_iterator(
+const dict_reversekeyiterator = make_reverse_iterator(
     'dict_reversekeyiterator',
     dict.$iter_keys_reversed)
 
@@ -1116,7 +1116,7 @@ dict_items.__repr__ = function(self){
     return 'dict_items(' + _b_.repr(items) + ')'
 }
 
-dict_reverseitemiterator = make_reverse_iterator(
+const dict_reverseitemiterator = make_reverse_iterator(
     'dict_reverseitemiterator',
     dict.$iter_items_reversed)
 
@@ -1393,7 +1393,7 @@ dict_values.__repr__ = function(self){
     return 'dict_values(' + _b_.repr(items) + ')'
 }
 
-dict_reversevalueiterator = make_reverse_iterator(
+const dict_reversevalueiterator = make_reverse_iterator(
     'dict_reversevalueiterator',
     dict.$iter_values_reversed)
 
