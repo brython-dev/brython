@@ -559,7 +559,12 @@ $B.tokenizer = function*(src, filename, mode){
             }
         }
 
+	    let line;
+	    let line_num;
+	    let line_start;
+	    
         switch(state){
+	    
             case "line_start":
                 line = get_line_at(pos - 1)
                 line_start = pos

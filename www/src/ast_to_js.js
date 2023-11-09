@@ -779,11 +779,15 @@ function init_scopes(type, scopes){
     // Common to Expression and Module
     // Initializes the first scope in scopes
     // namespaces can be passed by exec() or eval()
-    var filename = scopes.symtable.table.filename,
+    var filename = scopes?.symtable?.table?.filename,
         name = $B.url2name[filename]
+        
+    console.log(scopes);
 
     if(name){
         name = name.replace(/-/g, '_') // issue 1958
+    } else if(filename === undefined) {
+    	name = 'exec' //TODO: ???
     }else if(filename.startsWith('<') && filename.endsWith('>')){
         name = 'exec'
     }else{
@@ -2586,6 +2590,9 @@ $B.ast.MatchValue.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
+
+	console.log('scopes module', scopes);
+
     mark_parents(this)
     // create top scope; namespaces can be passed by exec()
     var name = init_scopes.bind(this)('module', scopes),
@@ -3333,9 +3340,12 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
 var state = {}
 
 $B.js_from_root = function(arg){
+
+	console.log('arg', arg);
+
     var ast_root = arg.ast,
         symtable = arg.symtable,
-        filename = arg.filename
+        filename = arg.filename,
         namespaces = arg.namespaces,
         imported = arg.imported
 
@@ -3352,6 +3362,7 @@ $B.js_from_root = function(arg){
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}
+    console.log('TF???', scopes, filename);
     var js = ast_root.to_js(scopes)
     return {js, imports: scopes.imports}
 }

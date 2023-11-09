@@ -8213,6 +8213,9 @@ function prepare_string(context, s, position){
         string_modifier,
         _type = "string"
 
+    let quote;
+    let inner;
+
     while(pos < len){
         if(s[pos] == '"' || s[pos] == "'"){
             quote = s[pos]
