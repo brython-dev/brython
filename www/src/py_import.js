@@ -4,7 +4,7 @@
 ;(function($B){
 
 var _b_ = $B.builtins,
-    _window = self
+    _window = globalThis
 
 // Class for modules
 var Module = $B.module = $B.make_class("module",
@@ -438,7 +438,7 @@ for(var method in VFSFinder){
 }
 
 // Loader for VFS modules
-var VFSLoader = $B.make_class("VFSLoader",
+const VFSLoader = $B.make_class("VFSLoader",
     function(){
         return {
             __class__: VFSLoader
@@ -1227,19 +1227,19 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         return $B.imported[mod_name]
     }else{
         // Return module object for top-level package
-        var _package = mod_name
+        let package_name = mod_name
         while(parsed_name.length > 1){
-            var module = parsed_name.pop(),
-                _package = parsed_name.join('.')
-            if($B.imported[_package] === undefined){
+            var module = parsed_name.pop();
+            package_name = parsed_name.join('.')
+            if($B.imported[package_name] === undefined){
                 // may happen if the modules defines __name__ = "X.Y" and package
                 // X has not been imported
-                $B.$import(_package, globals, locals, [])
-                $B.imported[_package][module] = $B.imported[mod_name]
+                $B.$import(package_name, globals, locals, [])
+                $B.imported[package_name][module] = $B.imported[mod_name]
                 mod_name = module
             }
         }
-        return $B.imported[_package]
+        return $B.imported[package_name]
     }
 }
 

@@ -6,7 +6,7 @@ var _b_ = $B.builtins
 
 var object = _b_.object
 
-var _window = self;
+var _window = globalThis;
 
 function to_simple(value){
     switch(typeof value){

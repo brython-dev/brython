@@ -667,12 +667,12 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 
 
 function analyze_block(ste, bound, free, global, typeparams, class_entry){
-    var name, v, local = NULL, scopes = NULL, newbound = NULL,
-        newglobal = NULL, newfree = NULL, allfree = NULL,
-        inlined_cells = NULL, temp, i, success = 0, pos = 0;
+    var name, v,
+        allfree = NULL,
+        temp, i, success = 0, pos = 0;
 
-    local = new Set()  /* collect new names bound in block */
-    scopes = {}  /* collect scopes defined for each name */
+    let local = new Set()  /* collect new names bound in block */
+    let scopes = {}  /* collect scopes defined for each name */
 
     /* Allocate new global, bound and free variable sets.  hese
        sets hold the names visible in nested blocks.  For
@@ -685,10 +685,10 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
     /* TODO(jhylton): Package these dicts in a struct so that we
        can write reasonable helper functions?
     */
-    newglobal = new Set()
-    newfree = new Set()
-    newbound = new Set()
-    inlined_cells = new Set()
+    let newglobal = new Set()
+    let newfree = new Set()
+    let newbound = new Set()
+    let inlined_cells = new Set()
 
     /* Class namespace has no effect on names visible in
        nested functions, so populate the global and bound

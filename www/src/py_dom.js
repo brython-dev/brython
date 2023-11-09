@@ -3,7 +3,7 @@
 
 var _b_ = $B.builtins,
     object = _b_.object,
-    _window = self
+    _window = globalThis
 
 // Conversion of immutable types between Javascript and Python
 var py_immutable_to_js = $B.py_immutable_to_js = function (pyobj){

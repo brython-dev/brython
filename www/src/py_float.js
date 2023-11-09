@@ -1259,7 +1259,7 @@ function to_digits(s){
     return res
 }
 
-var fast_float = $B.fast_float = function(value){
+const fast_float = $B.fast_float  = function(value){
     return {__class__: _b_.float, value}
 }
 

@@ -5684,7 +5684,7 @@ PatternCaptureCtx.prototype.transition = function(token, value){
     return transition(context.parent, token, value)
 }
 
-var PatternClassCtx = function(context){
+const PatternClassCtx = function(context){
     this.type = "class_pattern"
     this.tree = []
     this.parent = context.parent
@@ -8275,6 +8275,9 @@ function prepare_string(context, s, position){
         quote,
         inner,
         _type = "string"
+
+    let quote;
+    let inner;
 
     while(pos < len){
         if(s[pos] == '"' || s[pos] == "'"){

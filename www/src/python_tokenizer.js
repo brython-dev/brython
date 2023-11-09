@@ -396,6 +396,7 @@ $B.tokenizer = function*(src, filename, mode){
         indent,
         indents = [],
         braces = [],
+        line,
         line_num = 0,
         line_start = 1,
         token_modes = ['regular'],
@@ -560,8 +561,9 @@ $B.tokenizer = function*(src, filename, mode){
                 continue
             }
         }
-
+	    
         switch(state){
+	    
             case "line_start":
                 line = get_line_at(pos - 1)
                 line_start = pos

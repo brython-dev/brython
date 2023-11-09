@@ -6,7 +6,7 @@
             mod[attr] = data[attr]
         }
     }
-    var _window = self;
+    var _window = globalThis;
     var modules = {}
     var browser = {
         $package: true,

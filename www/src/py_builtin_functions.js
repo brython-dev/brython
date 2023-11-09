@@ -1678,7 +1678,7 @@ iterator_class.__next__ = function(self){
 
 $B.set_func_names(iterator_class, "builtins")
 
-var callable_iterator = $B.make_class("callable_iterator",
+const callable_iterator = $B.make_class("callable_iterator",
     function(func, sentinel){
         return {
             __class__: callable_iterator,
