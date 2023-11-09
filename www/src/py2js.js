@@ -5642,7 +5642,7 @@ PatternCaptureCtx.prototype.transition = function(token, value){
     return transition(context.parent, token, value)
 }
 
-PatternClassCtx = function(context){
+const PatternClassCtx = function(context){
     this.type = "class_pattern"
     this.tree = []
     this.parent = context.parent
