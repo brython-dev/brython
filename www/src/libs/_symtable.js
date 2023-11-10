@@ -1,8 +1,8 @@
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
-return {
+var module = {
     CELL: 5,
     DEF_ANNOT: 256,
     DEF_BOUND: 134,
@@ -35,5 +35,7 @@ return {
         return $B._PySymtable_Build(ast.$js_ast, $.filename)
     }
 }
+
+$B.addToImported('_symtable', module)
 
 })(__BRYTHON__)

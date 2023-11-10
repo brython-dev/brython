@@ -1,6 +1,6 @@
-var $module=(function($B){
+(function($B){
 
-    return {
+    $B.imported._posixsubprocess = {
        cloexec_pipe: function() {},   // fixme
        fork_exec: function(){}
     }

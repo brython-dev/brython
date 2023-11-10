@@ -87,7 +87,7 @@ var stat_result = $B.make_class("stat_result",
 )
 $B.set_func_names(stat_result, "posix")
 
-var $module = {
+var module = {
     F_OK: 0,
     O_APPEND: 8,
     O_BINARY: 32768,
@@ -138,12 +138,12 @@ var $module = {
 };
 
 ["WCOREDUMP", "WIFCONTINUED", "WIFSTOPPED", "WIFSIGNALED", "WIFEXITED"].forEach(function(funcname){
-        $module[funcname] = function(){return false}
+        module[funcname] = function(){return false}
     });
 
 ["WEXITSTATUS", "WSTOPSIG", "WTERMSIG"].
     forEach(function(funcname){
-        $module[funcname] = function(){return _b_.None}
+        module[funcname] = function(){return _b_.None}
     });
 
 ["_exit", "_getdiskusage", "_getfileinformation", "_getfinalpathname",
@@ -156,8 +156,10 @@ var $module = {
     "statvfs_result", "strerror", "symlink", "system", "terminal_size",
     "times", "times_result", "umask", "uname_result", "unlink", "utime",
     "waitpid", "write"].forEach(function(funcname){
-        $module[funcname] = function(){
+        module[funcname] = function(){
             throw _b_.NotImplementedError.$factory("posix." + funcname +
                 " is not implemented")
         }
     });
+
+$B.addToImported('posix', module)

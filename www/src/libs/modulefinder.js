@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var _b_=$B.builtins
 var _mod = {}
@@ -28,7 +28,7 @@ $ModuleFinderDict.run_script = function(self, pathname){
                 modules.push(ctx.module)
             }
         }
-        
+
         for(var i=0, _len_i = node.children.length; i < _len_i;i++){
             mods = walk(node.children[i])
             for(var j=0, _len_j = mods.length; j < _len_j;j++){
@@ -46,5 +46,6 @@ _mod.ModuleFinder.$dict = $ModuleFinderDict
 _mod.ModuleFinder.__class__ = $B.$factory
 $ModuleFinderDict.$factory = _mod.ModuleFinder
 
-return _mod
+$B.addToImported('modulefinder', _mod)
+
 })(__BRYTHON__)

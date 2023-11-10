@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
@@ -164,7 +164,7 @@ var Base64 = {
 
 }
 
-return {Base64:Base64}
+$B.addToImported('_base64', {Base64:Base64})
 }
 
 )(__BRYTHON__)

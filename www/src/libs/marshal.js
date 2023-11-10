@@ -1,8 +1,8 @@
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
-return {
+var module = {
     loads: function(){
         var $ = $B.args('loads', 1, {obj:null}, ['obj'], arguments, {},
             null, null)
@@ -31,5 +31,7 @@ return {
         return JSON.stringify($B.pyobj2structuredclone($.obj))
     }
 }
+
+$B.addToImported('marshal', module)
 
 })(__BRYTHON__)

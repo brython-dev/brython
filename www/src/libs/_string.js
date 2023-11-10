@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -19,7 +19,7 @@ function Tuple(){
     return _b_.tuple.$factory(args)
 }
 
-return{
+$B.imported._string = {
 
     formatter_field_name_split: function(fieldname){
         // Split the argument as a field name

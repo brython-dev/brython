@@ -1,4 +1,4 @@
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -2637,6 +2637,6 @@ for(var $attr in _mod){
     }
 }
 
-return _mod
+$B.addToImported('math', _mod)
 
 })(__BRYTHON__)

@@ -1,12 +1,14 @@
-var $module=(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
 var $mod = {
 
     __getattr__ : function(attr){
-        if(attr == 'new'){return hash.$factory}
-        return this[attr]
+        if(attr == 'new'){
+            return hash.$factory
+        }
+        throw $B.attr_error(attr, $mod)
     },
     md5: function(obj){return hash.$factory('md5', obj)},
     sha1: function(obj){return hash.$factory('sha1', obj)},
@@ -121,6 +123,6 @@ hash.$factory = function(alg, obj) {
     return res
 }
 
-return $mod
+$B.addToImported('hashlib', $mod)
 
 })(__BRYTHON__)

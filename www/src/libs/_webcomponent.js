@@ -1,5 +1,5 @@
 // module for Web Components
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -25,14 +25,14 @@ function define(tag_name, cls, options){
     }else{
         let stack = [...cls.__bases__];
         while(stack.length) {
-        	base = stack.pop();
-		if(base.__module__ === 'browser.html'){
-		        _extends = base.__name__.toLowerCase()
-		        break
-		}
-		    
-		stack.push(...base.__bases__);
-	}
+            base = stack.pop();
+        if(base.__module__ === 'browser.html'){
+                _extends = base.__name__.toLowerCase()
+                break
+        }
+
+        stack.push(...base.__bases__);
+    }
     }
 
     if(_extends){
@@ -189,9 +189,11 @@ function get(name){
     return _b_.None
 }
 
-return {
+var module = {
     define: define,
     get: get
 }
+
+$B.addToImported('_webcomponent', module)
 
 })(__BRYTHON__)

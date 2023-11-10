@@ -8,4 +8,4 @@ if(value !== null){
 }
 decoding_table[_table[i]] = _table[i + 1]
 }
-$module = {encoding_table, decoding_table}
+__BRYTHON__.imported.encoding_cp932 = {encoding_table, decoding_table}

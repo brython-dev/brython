@@ -1,6 +1,5 @@
 // Implementation of unicodedata
-
-var $module = (function($B){
+(function($B){
 
     var _b_ = $B.builtins
 
@@ -240,6 +239,6 @@ var $module = (function($B){
             module.ucd_3_2_0[key] = module[key] // approximation...
         }
     }
-    return module
+    $B.addToImported('unicodedata', module)
 
 })(__BRYTHON__)
