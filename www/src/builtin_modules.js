@@ -953,7 +953,7 @@
         "binary": "arraybuffer",
         "dataURL": "arraybuffer"
     }
-    
+
     function handle_kwargs(kw, method){
         // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
         var data,
@@ -1024,9 +1024,9 @@
             headers
         }
     }
-    
+
     var HTTPRequest = $B.make_class("Request")
-    
+
     HTTPRequest.data = _b_.property.$factory(function(self){
         if(self.format == "binary"){
             var view = new Uint8Array(self.response)
@@ -1040,7 +1040,7 @@
                 ";base64," + base64String
         }
     })
-    
+
     HTTPRequest.response_headers = _b_.property.$factory(function(self){
         var headers = self.getAllResponseHeaders()
         if(headers === null){return _b_.None}
@@ -1059,7 +1059,7 @@
         }
         return res
     })
-    
+
     var Future = $B.make_class("Future",
         function(){
             var methods = {}
@@ -1073,13 +1073,13 @@
             return promise
         }
     )
-    
+
     Future.done = function(){
         var $ = $B.args('done', 1, {self:null},
                         ['self'], arguments, {}, null, null)
         return !! self._done
     }
-    
+
     Future.set_result = function(self, value){
         var $ = $B.args('set_result', 2, {self:null, value: null},
                         ['self', 'value'], arguments, {}, null, null)
@@ -1087,7 +1087,7 @@
         self._methods.resolve(value)
         return _b_.None
     }
-    
+
     Future.set_exception = function(self, exception){
         var $ = $B.args('set_exception', 2, {self:null, exception: null},
                         ['self', 'exception'], arguments, {}, null, null)
@@ -1095,7 +1095,7 @@
         self._methods.reject(exception)
         return _b_.None
     }
-    
+
     $B.set_func_names(Future, 'browser.aio')
 
     modules['browser.aio'] = {
@@ -1194,7 +1194,8 @@
                     null, null),
                 coro = $.coro,
                 onsuccess = $.onsuccess,
-                onerror = $.onerror
+                onerror = $.onerror,
+                error_func = onerror
 
             if(onerror !== handle_error){
                 function error_func(exc){
@@ -1205,7 +1206,7 @@
                     }
                 }
             }
-
+            
             var save_frame_obj = $B.frame_obj
             $B.coroutine.send(coro).then(onsuccess).catch(error_func)
             $B.frame_obj = save_frame_obj

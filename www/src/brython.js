@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-10 18:38:20.745064"
-__BRYTHON__.timestamp=1699637900745
+__BRYTHON__.compiled_date="2023-11-10 19:06:31.847363"
+__BRYTHON__.timestamp=1699639591847
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -15397,7 +15397,7 @@ callbacks.forEach(function(items){$B.DOMNode.unbind(element,items[0],items[1])})
 resolve($B.$DOMEvent(evt))}
 callbacks.push([name,callback])
 $B.DOMNode.bind(element,name,callback)})})},get:function(){return $B.imported['browser.aio'].ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return f.__class__===$B.coroutine},iscoroutinefunction:function(f){return(f.$infos.__code__.co_flags & 128)!=0},post:function(){return $B.imported['browser.aio'].ajax.bind(null,"POST").apply(null,arguments)},run:function(coro){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error,error_func=handle_error
-var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},["coro","onsuccess","onerror"],arguments,{onsuccess:handle_success,onerror:handle_error},null,null),coro=$.coro,onsuccess=$.onsuccess,onerror=$.onerror
+var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},["coro","onsuccess","onerror"],arguments,{onsuccess:handle_success,onerror:handle_error},null,null),coro=$.coro,onsuccess=$.onsuccess,onerror=$.onerror,error_func=onerror
 if(onerror !==handle_error){function error_func(exc){try{onerror(exc)}catch(err){handle_error(err)}}}
 var save_frame_obj=$B.frame_obj
 $B.coroutine.send(coro).then(onsuccess).catch(error_func)
@@ -15476,7 +15476,6 @@ if(['False','None','True'].indexOf(js_node.value)>-1){return _b_[js_node.value]}
 break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}
-console.log('modules',modules)
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
