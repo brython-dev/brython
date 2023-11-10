@@ -1857,7 +1857,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		fct +=
 `
 	if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
-        args0(fct, args);
+        $B.args0_old(fct, args);
         throw new Error('Too much positional arguments given (args0 should have raised an error) !');
     }
 `
@@ -1873,7 +1873,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 			fct += `
 		if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
-            args0(fct, args);
+            $B.args0_old(fct, args);
             throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
         }
 `
@@ -1894,7 +1894,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 		if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
 			fct += `
-		args0(fct, args);
+		$B.args0_old(fct, args);
 		throw new Error('Named argument expected (args0 should have raised an error) !');
 `
 		} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
@@ -1915,7 +1915,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
 		fct += `
-	args0(fct, args);
+	$B.args0_old(fct, args);
 	throw new Error('No named arguments expected !!!');
 `;
 // fct += '}'
@@ -1952,14 +1952,14 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( posOnlyDefaults !== DEFAULTS.SOME) {
 			fct += `
 		if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
-			args0(fct, args);
+			$B.args0_old(fct, args);
 			throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
 		}
 `
 		}
 		if( posOnlyDefaults === DEFAULTS.NONE) {
 			fct += `
-		args0(fct, args);
+		$B.args0_old(fct, args);
 		throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
 `;
 		}
@@ -2047,7 +2047,8 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( key in result ) // maybe could be speed up using "!(key in result)"
 			continue;
 
-		args0(fct, args);
+		$B.args0_old(fct, args);
+		console.log("A", fct, args);
 		throw new Error('Missing a named arguments (args0 should have raised an error) !');
 	}
 `
@@ -2078,14 +2079,18 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( namedOnlyDefaults === DEFAULTS.SOME) {
 			fct += `
 			if( ! (key in kwargs_defaults) ) {
-				args0(fct, args);
+				$B.args0_old(fct, args);
+				
+		console.log("B", fct, args);
 				throw new Error('Missing a named arguments (args0 should have raised an error) !');
 			}
 `
 		}
 		if( namedOnlyDefaults === DEFAULTS.NONE ) {
 			fct += `
-			args0(fct, args);
+			$B.args0_old(fct, args);
+			
+		console.log("C", fct, args);
 			throw new Error('Missing a named arguments (args0 should have raised an error) !');
 `
 		}
@@ -2105,7 +2110,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	fct += `
 		if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-			args0(fct, args);
+			$B.args0_old(fct, args);
 			throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
 		}
 `;
@@ -2113,7 +2118,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( hasKWargs ) {
 		fct += `
 	if( Object.keys(extra).length !== nb_extra_args ) {
-		args0(fct, args);
+		$B.args0_old(fct, args);
 		throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
 	}
 	result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra);
@@ -2462,7 +2467,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     	let named_defaults   = DEFAULTS.NONE;
     	if( nb_named_defaults > 0 )
-    		pos_defaults = nb_named_defaults >= nb_named ? DEFAULTS.ALL : DEFAULTS.SOME;
+    		named_defaults = nb_named_defaults >= nb_named ? DEFAULTS.ALL : DEFAULTS.SOME;
 
     	const IDX = getArgs0( 
     		nb_posOnly !== 0,
@@ -2488,8 +2493,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		/**/
     	//console.log(this.name);
     	js += `${name2}.$infos.args_parser = ${name2}.args_parser = $B.args_parsers[${IDX}];\n`;
-    	if( name2 === "run15" ) {
+    	if( name2 === "assert_raises2224" ) {
     		console.log(js);
+    		console.log("defaults", named_defaults, "has kwonly", nb_named !== 0 );
     		console.log(IDX, $B.args_parsers[IDX]);
     		//js += `${this.name}.args_parser = $B.args_parsers[${IDX}]\n`;
     	}
