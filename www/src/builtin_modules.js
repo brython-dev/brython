@@ -1454,7 +1454,6 @@
         }
     }
 
-
 $B.stdin = {
     __class__: $io,
     __original__: true,
