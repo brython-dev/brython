@@ -421,7 +421,7 @@ var inImported = $B.inImported = function(module){
 }
 
 function report_precompile(mod){
-    if(typeof document !== 'undefined'){
+    if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent('precompile',
             {detail: 'remove outdated ' + mod +
              ' from cache'}))
@@ -429,14 +429,14 @@ function report_precompile(mod){
 }
 
 function report_close(){
-    if(typeof document !== 'undefined'){
+    if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent('precompile',
             {detail: "close"}))
     }
 }
 
 function report_done(mod){
-    if(typeof document !== 'undefined'){
+    if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent("brython_done",
             {detail: $B.obj_dict($B.$options)}))
     }
