@@ -1765,12 +1765,12 @@ function transform_args(scopes){
 
 
 const DEFAULTS = {
-	NONE: 1,
-	SOME: 2,
-	ALL: 3
+	NONE: 0,
+	SOME: 1,
+	ALL : 3
 }
 
-const args0_fcts = [];
+const args0_fcts = $B.args_parsers = [];
 
 function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
 
@@ -1788,7 +1788,11 @@ function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, 
 	if(args0 !== undefined)
 		return args0;
 	
-	return args0_fcts[IDX] = generate_args0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs);
+	const fct = args0_fcts[IDX] = generate_args0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs);
+	
+	fct.id = IDX;
+	
+	return fct;
 }
 
 // deno run generator.js
@@ -2117,14 +2121,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	return fct;
 }
 
-//TODO: here functions for test
-$B.args0_ftest1 = getArgs0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest2 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest3 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest4 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest5 = getArgs0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, true, false, DEFAULTS.NONE, false);
-$B.args0_ftest6 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.ALL, false, false, DEFAULTS.NONE, false);
-
 const USE_PERSO_ARGS0 = true;
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
@@ -2267,8 +2263,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             js += `if( arguments.length) $B.args0(${parse_args.join(', ')})\n;` // generate error message
         }
 	else if( USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
-		
-		js += `${locals_name} = locals = $B.args0_${this.name}(${parse_args.join(', ')})\n`
+		console.log(this.name);
+		js += `${locals_name} = locals = ${parse_args[0]}.args_parser(${parse_args.join(', ')})\n`
 	} else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
@@ -2424,6 +2420,52 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `vararg: ${args_vararg},\n` +
         `kwarg: ${args_kwarg}\n` +
         `}\n`
+
+//TODO:
+    if( USE_PERSO_ARGS0 && this.name.startsWith('ftest') ) {
+
+    	const nb_posOnly = this.args.posonlyargs.length;
+    	const nb_pos = positional.length - nb_posOnly;
+    	const nb_named = this.args.kwonlyargs.length;
+	const nb_named_defaults = kw_default_names.length;
+    
+    	const defaults = this.args.defaults;
+    
+    	let pos_defaults     = DEFAULTS.NONE;
+    	if( defaults.length > 0 )
+    		pos_defaults = defaults.length >= nb_pos ? DEFAULTS.ALL : DEFAULTS.SOME;
+
+    	let posonly_defaults = DEFAULTS.NONE;
+    	if( defaults.length > nb_pos )
+    		posonly_defaults = defaults.length >= positional.length ? DEFAULTS.ALL : DEFAULTS.SOME;
+
+    	let named_defaults   = DEFAULTS.NONE;
+    	if( nb_named_defaults > 0 )
+    		pos_defaults = nb_named_defaults >= nb_named ? DEFAULTS.ALL : DEFAULTS.SOME;
+
+    	const IDX = getArgs0( 
+    		nb_posOnly !== 0,
+    		posonly_defaults,
+    		nb_pos !== 0,
+    		pos_defaults,
+    		this.args.vararg !== undefined,
+    		nb_named !== 0,
+    		named_defaults,
+    		this.args.kwarg !== undefined
+    	 ).id;
+    	 
+    	  /* console.log(this.name,
+    	  	nb_posOnly !== 0,
+    		posonly_defaults,
+    		nb_pos !== 0,
+    		pos_defaults,
+    		this.args.vararg !== undefined, //OK
+    		nb_named !== 0,
+    		named_defaults,
+    		 this.args.kwarg !== undefined); //OK
+    		*/
+    	js += `${name2}.args_parser = $B.args_parsers[${IDX}]\n`;
+    }
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
