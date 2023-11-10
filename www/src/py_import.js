@@ -188,66 +188,57 @@ function import_js(mod, path){
     return true
 }
 
+$B.addToImported = function(name, modobj){
+    $B.imported[name] = modobj
+    if(modobj === undefined){
+        throw _b_.ImportError.$factory('imported not set by module')
+    }
+    modobj.__class__ = Module
+    modobj.__name__ = name
+    for(var attr in modobj){
+        if(typeof modobj[attr] == "function"){
+            modobj[attr].$infos = {
+                __module__: name,
+                __name__: attr,
+                __qualname__: attr
+            }
+            modobj[attr].$in_js_module = true
+        }else if($B.$isinstance(modobj[attr], _b_.type) &&
+                ! modobj[attr].hasOwnProperty('__module__')){
+            modobj[attr].__module__ = name
+        }
+    }
+}
+
 function run_js(module_contents, path, _module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
     var module_id = "$locals_" + _module.__name__.replace(/\./g, '_')
 
     try{
-        var $module = new Function(module_id, module_contents +
-            ";\nreturn $module")(_module)
+        new Function(module_contents)()
     }catch(err){
-        console.log(err)
-        console.log(path, _module)
-        throw err
+        throw $B.exception(err)
     }
-    // check that module name is in namespace
-    try{
-        $module
-    }catch(err){
-        console.log("no $module")
-        throw _b_.ImportError.$factory("name '$module' not defined in module")
+    var modobj = $B.imported[_module.__name__]
+    if(modobj === undefined){
+        throw _b_.ImportError.$factory('imported not set by module')
     }
-
-    $module.__name__ = _module.__name__
-    for(var attr in $module){
-        if(typeof $module[attr] == "function"){
-            $module[attr].$infos = {
+    modobj.__class__ = Module
+    modobj.__name__ = _module.__name__
+    for(var attr in modobj){
+        if(typeof modobj[attr] == "function"){
+            modobj[attr].$infos = {
                 __module__: _module.__name__,
                 __name__: attr,
                 __qualname__: attr
             }
-            $module[attr].$in_js_module = true
-        }else if($B.$isinstance($module[attr], _b_.type) &&
-                ! $module[attr].hasOwnProperty('__module__')){
-            $module[attr].__module__ = _module.__name__
+            modobj[attr].$in_js_module = true
+        }else if($B.$isinstance(modobj[attr], _b_.type) &&
+                ! modobj[attr].hasOwnProperty('__module__')){
+            modobj[attr].__module__ = _module.__name__
         }
     }
-
-    if(_module !== undefined){
-        // FIXME : This might not be efficient . Refactor js modules instead.
-        // Overwrite original module object . Needed e.g. for reload()
-        for(var attr in $module){
-            _module[attr] = $module[attr]
-        }
-        $module = _module
-        $module.__class__ = Module // in case $module has __class__ (issue #838)
-    }else{
-        // add class and __str__
-        $module.__class__ = Module
-        $module.__name__ = _module.__name__
-        $module.__repr__ = $module.__str__ = function(){
-          if($B.builtin_module_names.indexOf(_module.name) > -1){
-             return "<module '" + _module.__name__ + "' (built-in)>"
-          }
-          return "<module '" + _module.__name__ + "' from " + path + " >"
-        }
-
-        if(_module.name != "builtins") { // builtins do not have a __file__ attribute
-            $module.__file__ = path
-        }
-    }
-    $B.imported[_module.__name__] = $module
-
+    // $B.set_func_names(modobj, _module.__name__)
     return true
 }
 

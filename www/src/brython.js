@@ -145,9 +145,9 @@ $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
@@ -155,9 +155,9 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-09 21:32:41.229543"
-__BRYTHON__.timestamp=1699561961228
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
+__BRYTHON__.compiled_date="2023-11-10 18:15:46.738505"
+__BRYTHON__.timestamp=1699636546738
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
 $B.is_identifier=function(category,cp){
@@ -9826,29 +9826,23 @@ $B.$download_module=$download_module
 function import_js(mod,path){try{var module_contents=$download_module(mod,path,undefined)}catch(err){return null}
 run_js(module_contents,path,mod)
 return true}
+$B.addToImported=function(name,modobj){$B.imported[name]=modobj
+if(modobj===undefined){throw _b_.ImportError.$factory('imported not set by module')}
+modobj.__class__=Module
+modobj.__name__=name
+for(var attr in modobj){if(typeof modobj[attr]=="function"){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr}
+modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
+! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=name}}}
 function run_js(module_contents,path,_module){
 var module_id="$locals_"+_module.__name__.replace(/\./g,'_')
-try{var $module=new Function(module_id,module_contents+
-";\nreturn $module")(_module)}catch(err){console.log(err)
-console.log(path,_module)
-throw err}
-try{$module}catch(err){console.log("no $module")
-throw _b_.ImportError.$factory("name '$module' not defined in module")}
-$module.__name__=_module.__name__
-for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
-$module[attr].$in_js_module=true}else if($B.$isinstance($module[attr],_b_.type)&&
-! $module[attr].hasOwnProperty('__module__')){$module[attr].__module__=_module.__name__}}
-if(_module !==undefined){
-for(var attr in $module){_module[attr]=$module[attr]}
-$module=_module
-$module.__class__=Module }else{
-$module.__class__=Module
-$module.__name__=_module.__name__
-$module.__repr__=$module.__str__=function(){if($B.builtin_module_names.indexOf(_module.name)>-1){return "<module '"+_module.__name__+"' (built-in)>"}
-return "<module '"+_module.__name__+"' from "+path+" >"}
-if(_module.name !="builtins"){
-$module.__file__=path}}
-$B.imported[_module.__name__]=$module
+try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
+var modobj=$B.imported[_module.__name__]
+if(modobj===undefined){throw _b_.ImportError.$factory('imported not set by module')}
+modobj.__class__=Module
+modobj.__name__=_module.__name__
+for(var attr in modobj){if(typeof modobj[attr]=="function"){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
+modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
+! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=_module.__name__}}
 return true}
 function show_ns(){var kk=Object.keys(_window)
 for(var i=0,len=kk.length;i < len;i++){console.log(kk[i])
@@ -15324,13 +15318,107 @@ $B.$getattr(stderr,'write')(trace+'\n')
 var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}},warn_explicit:function(){
 console.log("warn_explicit",arguments)}}
+var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
+function handle_kwargs(kw,method){
+var data,cache=false,format="text",headers={},timeout={}
+for(var key in kw.$jsobj){if(key=="data"){var params=kw.$jsobj[key]
+if(typeof params=="string"){data=params}else if($B.$isinstance(params,_b_.bytes)){data=new ArrayBuffer(params.source.length)
+var array=new Int8Array(data)
+for(var i=0,len=params.source.length;i < len;i++){array[i]=params.source[i]}}else{if(params.__class__ !==_b_.dict){throw _b_.TypeError.$factory("wrong type for data, "+
+"expected dict, bytes or str, got "+
+$B.class_name(params))}
+var items=[]
+for(var key of _b_.dict.$keys_string(params)){var value=_b_.dict.$getitem_string(params,key)
+items.push(encodeURIComponent(key)+"="+
+encodeURIComponent($B.pyobj2jsobj(value)))}
+data=items.join("&")}}else if(key=="headers"){var value=kw.$jsobj[key]
+if(! $B.$isinstance(value,_b_.dict)){throw _b_.ValueError.$factory(
+"headers must be a dict, not "+$B.class_name(value))}
+for(var key of _b_.dict.$keys_string(value)){headers[key.toLowerCase()]=_b_.dict.$getitem_string(value,key)}}else if(key.startsWith("on")){var event=key.substr(2)
+if(event=="timeout"){timeout.func=kw.$jsobj[key]}else{ajax.bind(self,event,kw.$jsobj[key])}}else if(key=="timeout"){timeout.seconds=kw.$jsobj[key]}else if(key=="cache"){cache=kw.$jsobj[key]}else if(key=="format"){format=kw.$jsobj[key]}}
+if(method=="post"){
+if(! headers.hasOwnProperty("Content-type")){headers["Content-Type"]="application/x-www-form-urlencoded"}}
+return{
+body:data,cache,format,timeout,headers}}
+var HTTPRequest=$B.make_class("Request")
+HTTPRequest.data=_b_.property.$factory(function(self){if(self.format=="binary"){var view=new Uint8Array(self.response)
+return _b_.bytes.$factory(Array.from(view))}else if(self.format=="text"){return self.responseText}else if(self.format=="dataURL"){var base64String=btoa(String.fromCharCode.apply(null,new Uint8Array(self.response)))
+return "data:"+self.getResponseHeader("Content-Type")+
+";base64,"+base64String}})
+HTTPRequest.response_headers=_b_.property.$factory(function(self){var headers=self.getAllResponseHeaders()
+if(headers===null){return _b_.None}
+var res=$B.empty_dict()
+if(headers.length > 0){
+var lines=headers.trim().split(/[\r\n]+/)
+lines.forEach(function(line){var parts=line.split(': ')
+var header=parts.shift()
+var value=parts.join(': ')
+_b_.dict.$setitem(res,header,value)})}
+return res})
+var Future=$B.make_class("Future",function(){var methods={}
+var promise=new Promise(function(resolve,reject){methods.resolve=resolve
+methods.reject=reject})
+promise._methods=methods
+promise._done=false
+promise.__class__=Future
+return promise}
+)
+Future.done=function(){var $=$B.args('done',1,{self:null},['self'],arguments,{},null,null)
+return !! self._done}
+Future.set_result=function(self,value){var $=$B.args('set_result',2,{self:null,value:null},['self','value'],arguments,{},null,null)
+self._done=true
+self._methods.resolve(value)
+return _b_.None}
+Future.set_exception=function(self,exception){var $=$B.args('set_exception',2,{self:null,exception:null},['self','exception'],arguments,{},null,null)
+self._done=true
+self._methods.reject(exception)
+return _b_.None}
+$B.set_func_names(Future,'browser.aio')
+modules['browser.aio']={ajax:function(){var $=$B.args("ajax",2,{method:null,url:null},["method","url"],arguments,{},null,"kw"),method=$.method.toUpperCase(),url=$.url,kw=$.kw
+var args=handle_kwargs(kw,"get")
+if(method=="GET" && ! args.cache){url=url+"?ts"+(new Date()).getTime()+"=0"}
+if(args.body && method=="GET"){url=url+(args.cache ? "?" :"&")+args.body}
+var func=function(){return new Promise(function(resolve,reject){var xhr=new XMLHttpRequest()
+xhr.open(method,url,true)
+for(var key in args.headers){xhr.setRequestHeader(key,args.headers[key])}
+xhr.format=args.format
+xhr.responseType=responseType[args.format]
+xhr.onreadystatechange=function(){if(this.readyState==4){this.__class__=HTTPRequest
+resolve(this)}}
+if(args.body &&
+['POST','PUT','DELETE','PATCH'].indexOf(method)>-1){xhr.send(args.body)}else{xhr.send()}})}
+func.$infos={__name__:"ajax_"+method}
+return{
+__class__:$B.coroutine,$args:[url,args],$func:func}},event:function(){
+var $=$B.args("event",1,{element:null},["element"],arguments,{},"names",null),element=$.element,names=$.names
+return new Promise(function(resolve){var callbacks=[]
+names.forEach(function(name){var callback=function(evt){
+callbacks.forEach(function(items){$B.DOMNode.unbind(element,items[0],items[1])})
+resolve($B.$DOMEvent(evt))}
+callbacks.push([name,callback])
+$B.DOMNode.bind(element,name,callback)})})},get:function(){return $B.imported['browser.aio'].ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return f.__class__===$B.coroutine},iscoroutinefunction:function(f){return(f.$infos.__code__.co_flags & 128)!=0},post:function(){return $B.imported['browser.aio'].ajax.bind(null,"POST").apply(null,arguments)},run:function(coro){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error,error_func=handle_error
+var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},["coro","onsuccess","onerror"],arguments,{onsuccess:handle_success,onerror:handle_error},null,null),coro=$.coro,onsuccess=$.onsuccess,onerror=$.onerror
+if(onerror !==handle_error){function error_func(exc){try{onerror(exc)}catch(err){handle_error(err)}}}
+var save_frame_obj=$B.frame_obj
+$B.coroutine.send(coro).then(onsuccess).catch(error_func)
+$B.frame_obj=save_frame_obj
+return _b_.None},sleep:function(seconds){if(seconds.__class__===_b_.float){seconds=seconds.value}else if(typeof seconds !="number"){throw _b_.TypeError.$factory("'sleep' argument must be "+
+"int or float, not "+$B.class_name(seconds))}
+var func=function(){return new Promise(resolve=> setTimeout(
+function(){resolve(_b_.None)},1000*seconds))}
+func.$infos={__name__:"sleep"}
+return{
+__class__:$B.coroutine,$args:[seconds],$func:func}},Future,__getattr__:function(attr){
+$B.$import('_aio')
+return $B.$getattr($B.imported._aio,attr)}}
 function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
 $B.imported[name]=module_obj
 for(var attr in module_obj){if(typeof module_obj[attr]=='function'){module_obj[attr].$infos={__module__:name,__name__:attr,__qualname__:name+'.'+attr}}}}
 for(var attr in modules){load(attr,modules[attr])}
-if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']}
+if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']
+modules['browser'].aio=modules['browser.aio']}
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]
