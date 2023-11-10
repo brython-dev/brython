@@ -2273,11 +2273,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 	else if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
 	
 		const fct_name = parse_args[0];
-		if( fct_name === "run15") {
+		if( false && fct_name === "run15") {
 			//if( ! fct_name.startsWith('write') && ! fct_name.startsWith('handle_repeat') && ! fct_name.startsWith('flush') ) { 
 	
 		    /**/
-		    js += `console.log("${fct_name}", ${fct_name}.args_parser );\n`;
+		    js += `console.log("${fct_name}", ${fct_name}.args_parser, );\n`;
 		    js += `console.log("${this.name}", ${this.name}.args_parser);\n`;
 		    
 		    js += `console.log("${fct_name}", ${fct_name}.args_parser.id.toString(16), ${fct_name}, ${parse_args[1]});\n`;
@@ -2285,7 +2285,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 		    js += `console.log(${fct_name}.args_parser(${parse_args.join(', ')}) )\n`;
 		    /**/
 		}
-		js += `${locals_name} = locals = ${parse_args[0]}.args_parser(${parse_args.join(', ')})\n`
+		js += `${locals_name} = locals = ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n`
 	} else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
@@ -2486,12 +2486,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		named_defaults,
     		 this.args.kwarg !== undefined); //OK
     		/**/
-    	if( name2 === "run15" ) {
-    		console.log(IDX, $B.args_parsers[IDX]);
-    		js += `${this.name}.args_parser = $B.args_parsers[${IDX}]\n`;
-    	}
     	//console.log(this.name);
-    	js += `${name2}.args_parser = $B.args_parsers[${IDX}]\n`;
+    	js += `${name2}.$infos.args_parser = ${name2}.args_parser = $B.args_parsers[${IDX}];\n`;
+    	if( name2 === "run15" ) {
+    		console.log(js);
+    		console.log(IDX, $B.args_parsers[IDX]);
+    		//js += `${this.name}.args_parser = $B.args_parsers[${IDX}]\n`;
+    	}
     }
 
     if(is_async && ! is_generator){
