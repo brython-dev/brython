@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-10 18:15:46.738505"
-__BRYTHON__.timestamp=1699636546738
+__BRYTHON__.compiled_date="2023-11-10 18:38:20.745064"
+__BRYTHON__.timestamp=1699637900745
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -4888,7 +4888,7 @@ if(!($B.isWebWorker ||$B.isNode)){var startup_observer=new MutationObserver(func
 startup_observer.observe(document.documentElement,{childList:true,subtree:true});}
 var brython_options={}
 var python_scripts=[]
-if(typeof document !=='undefined'){
+if(!$B.isWebWorker){
 python_scripts=python_scripts.concat(Array.from(
 document.querySelectorAll('script[type="text/python"]'))).concat(
 Array.from(
@@ -5192,10 +5192,10 @@ if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
 if(ext==".py"){if($B.idb_cx && !$B.idb_cx.$closed){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
-function report_precompile(mod){if(typeof document !=='undefined'){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
+function report_precompile(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
 ' from cache'}))}}
-function report_close(){if(typeof document !=='undefined'){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
-function report_done(mod){if(typeof document !=='undefined'){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
+function report_close(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
+function report_done(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
 while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
@@ -15476,6 +15476,7 @@ if(['False','None','True'].indexOf(js_node.value)>-1){return _b_[js_node.value]}
 break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}
+console.log('modules',modules)
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
