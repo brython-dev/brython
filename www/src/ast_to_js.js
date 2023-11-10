@@ -1770,6 +1770,27 @@ const DEFAULTS = {
 	ALL: 3
 }
 
+const args0_fcts = [];
+
+function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
+
+	const IDX =	  hasPosOnly
+			| posOnlyDefaults	<< 1
+			| hasPos		<< 3
+			| posDefaults		<< 4
+			| hasVargars		<< 6
+			| hasNamedOnly		<< 7
+			| namedOnlyDefaults	<< 8
+			| hasKWargs		<< 10;
+			
+	const args0 = args0_fcts[IDX];
+	
+	if(args0 !== undefined)
+		return args0;
+	
+	return args0_fcts[IDX] = generate_args0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs);
+}
+
 // deno run generator.js
 // hasPos / posDefaults are pos parameters excluding posOnly parameters.
 function generate_args0(...args) {
@@ -2097,12 +2118,12 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 }
 
 //TODO: here functions for test
-$B.args0_ftest1 = generate_args0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest2 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest3 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest4 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
-$B.args0_ftest5 = generate_args0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, true, false, DEFAULTS.NONE, false);
-$B.args0_ftest6 = generate_args0(false, DEFAULTS.NONE, true, DEFAULTS.ALL, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest1 = getArgs0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest2 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest3 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest4 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false);
+$B.args0_ftest5 = getArgs0(false, DEFAULTS.NONE, false, DEFAULTS.NONE, true, false, DEFAULTS.NONE, false);
+$B.args0_ftest6 = getArgs0(false, DEFAULTS.NONE, true, DEFAULTS.ALL, false, false, DEFAULTS.NONE, false);
 
 const USE_PERSO_ARGS0 = true;
 
