@@ -3418,18 +3418,18 @@ $B.make_function_defaults = function(f){
 	const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
         const PARAMS_NAMED_DEFAULTS_COUNT = Object.keys($defaults).length - value.length;
         let named_defaults = DEFAULTS.NONE;
-        if( PARAMS_NAMED_DEFAULTS_COUNT >= 0)
+        if( PARAMS_NAMED_DEFAULTS_COUNT > 0)
         	named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
         
         const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
         const PARAMS_POS_COUNT		   = $CODE.co_argcount - PARAMS_POSONLY_COUNT;
         
         let pos_defaults = DEFAULTS.NONE;
-        if( value.length >= 0)
+        if( value.length > 0)
         	pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
         
         let posonly_defaults = DEFAULTS.NONE;
-        if( value.length >= PARAMS_POS_COUNT)
+        if( value.length > PARAMS_POS_COUNT)
         	posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL : DEFAULTS.SOME;
         
         f.args_parser = f.$infos.args_parser = $B.getArgs0(
@@ -3442,11 +3442,6 @@ $B.make_function_defaults = function(f){
     		named_defaults,
     		$INFOS.kwarg !== null
         );
-        
-        if( f.name === "f1936") {
-	        console.log("==== HERE ====", f.name, f.$infos.args_parser.id);
-	        console.log(PARAMS_NAMED_COUNT, PARAMS_NAMED_DEFAULTS_COUNT, named_defaults);
-        }
         
         return _b_.None
     }else{

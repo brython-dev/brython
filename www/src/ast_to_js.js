@@ -1812,22 +1812,13 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	let fct = 
 //`function args0_NEW(fct, args) {
 `
-    let HAS_KW 		= args[args.length-1]?.$kw !== undefined;
+    const HAS_KW	      = args[args.length-1]?.$kw !== undefined;
     let ARGS_POS_COUNT        = args.length;
     let ARGS_NAMED            = null;
     
     if( HAS_KW ) {
     	--ARGS_POS_COUNT;
     	ARGS_NAMED = args[ARGS_POS_COUNT].$kw;
-    	
-    	if( ARGS_NAMED[1] === undefined ) {//TODO: remove when bug fixed
-    	
-    		HAS_KW = false;
-    		for(let key in ARGS_NAMED[0] ) {
-	    		HAS_KW = true;
-	    		break;
-	    	}
-    	}
     }
     
 
@@ -1899,19 +1890,20 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 			++i)
 			result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`
 		}
-
-		if( hasKWargs ) {
-			fct += `
+	}
+	
+	if( hasKWargs ) {
+		fct += `
 		result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict({});`
-		}
+	}
 
-		if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
-			fct += `
+	if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
+		fct += `
 		$B.args0_old(fct, args);
 		throw new Error('Named argument expected (args0 should have raised an error) !');
 `
-		} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
-			fct += `
+	} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
+		fct += `
 		let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
         if( kwargs_defaults === undefined || kwargs_defaults === null ) {
         	kwargs_defaults = $INFOS.__kwdefaults__.$strings;
@@ -1919,17 +1911,35 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		for(let key in kwargs_defaults)    
         	result[ key ] = kwargs_defaults[key];
 `
-		}
 	}
 
 	fct += `
 		return result;
 	}
 `
+
+	// verify if it truly has no kw arguments.
 	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
 		fct += `
-	$B.args0_old(fct, args);
-	throw new Error('No named arguments expected !!!');
+		
+		for(let id = 0; id < ARGS_NAMED.length; ++id ) {
+
+			const _kargs = ARGS_NAMED[id];
+				
+			let kargs  = _kargs.$jsobj;
+			if( kargs === undefined || kargs === null) {
+				kargs = _kargs.$strings
+				if(kargs === undefined || kargs === null) 
+					kargs= _kargs; // I don't think I can do better.
+			}
+
+			for(let argname in kargs) {
+				$B.args0_old(fct, args);
+				throw new Error('No named arguments expected !!!');
+			}
+		}
+		    	
+	    	return result;
 `;
 // fct += '}'
 		return fct;
@@ -2005,8 +2015,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	for(let id = 0; id < ARGS_NAMED.length; ++id ) {
 
 		const _kargs = ARGS_NAMED[id];
-		if( _kargs === undefined ) //TODO: remove when fixed
-			continue;
 			
 		let kargs  = _kargs.$jsobj;
 		if( kargs === undefined || kargs === null) {
@@ -2064,7 +2072,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 			continue;
 
 		$B.args0_old(fct, args);
-		console.log("A", fct, args);
 		throw new Error('Missing a named arguments (args0 should have raised an error) !');
 	}
 `
@@ -2096,8 +2103,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 			fct += `
 			if( ! (key in kwargs_defaults) ) {
 				$B.args0_old(fct, args);
-				
-		console.log("B", fct, args);
 				throw new Error('Missing a named arguments (args0 should have raised an error) !');
 			}
 `
@@ -2105,8 +2110,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( namedOnlyDefaults === DEFAULTS.NONE ) {
 			fct += `
 			$B.args0_old(fct, args);
-			
-		console.log("C", fct, args);
 			throw new Error('Missing a named arguments (args0 should have raised an error) !');
 `
 		}
@@ -2123,8 +2126,9 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		}
 `;
 	}
-
-	fct += `
+	
+	if( hasNamedOnly || hasPos )
+		fct += `
 		if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
 			$B.args0_old(fct, args);
 			throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
@@ -2283,20 +2287,28 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
-	//TODO: HERE
+//TODO: HERE
 	if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined) {
-            
+           
             js += `${locals_name} = locals = {};\n`;
-            js += `if( arguments.length) $B.args0(${parse_args.join(', ')})\n;` // generate error message
+            js += `if( arguments.length) ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n;` // generate error message
         }
 	else if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
 	
 		const fct_name = parse_args[0];
-		if( true && fct_name === "__init__3760") {
-			js += `console.log( ${parse_args.join(', ')} );`;
-			js += `console.log("IDX", ${parse_args[0]}.$infos.args_parser.id);`;
+		
+		//js += `console.log("calling ${fct_name}");`;
+		
+		if( false && fct_name === "f1921") {
+		js += `console.log("=== HERE ===");`;
+		js += `console.log( ${parse_args.join(', ')} );`;
+		
+		js += `console.log( $B.args0(${parse_args.join(', ')}) );`;
+		js += `console.log( ${parse_args[0]}.$infos.args_parser.id.toString(16) );`;
+		js += `console.log( ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')}) );`;
+		js += `console.log( ${parse_args[0]}.$infos.args_parser.toString() );\n`
 		}
 		js += `${locals_name} = locals = ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n`
 	} else{
@@ -2487,7 +2499,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		named_defaults,
     		this.args.kwarg !== undefined
     	 ).id;
-    	 
+    	     	 
     	 /*
     	  console.log(this.name,
     	  	nb_posOnly !== 0,
@@ -2501,12 +2513,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		/**/
     	//console.log(this.name);
     	js += `${name2}.$infos.args_parser = ${name2}.args_parser = $B.args_parsers[${IDX}];\n`;
-    	if( name2 === "assert_raises2224" ) {
-    		console.log(js);
-    		console.log("defaults", named_defaults, "has kwonly", nb_named !== 0 );
-    		console.log(IDX, $B.args_parsers[IDX]);
-    		//js += `${this.name}.args_parser = $B.args_parsers[${IDX}]\n`;
-    	}
     }
 
     if(is_async && ! is_generator){
