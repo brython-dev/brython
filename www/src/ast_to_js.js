@@ -1764,11 +1764,6 @@ function transform_args(scopes){
 }
 
 
-const DEFAULTS = {
-	NONE: 0,
-	SOME: 1,
-	ALL : 3
-}
 
 const args0_fcts = $B.args_parsers = [];
 
@@ -1794,6 +1789,14 @@ function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, 
 	
 	return fct;
 }
+$B.getArgs0 = getArgs0;
+
+const DEFAULTS = getArgs0.DEFAULTS = {
+	NONE: 0,
+	SOME: 1,
+	ALL : 3
+}
+
 
 // deno run generator.js
 // hasPos / posDefaults are pos parameters excluding posOnly parameters.
@@ -2278,17 +2281,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 	else if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
 	
 		const fct_name = parse_args[0];
-		if( false && fct_name === "run15") {
-			//if( ! fct_name.startsWith('write') && ! fct_name.startsWith('handle_repeat') && ! fct_name.startsWith('flush') ) { 
-	
-		    /**/
-		    js += `console.log("${fct_name}", ${fct_name}.args_parser, );\n`;
-		    js += `console.log("${this.name}", ${this.name}.args_parser);\n`;
-		    
-		    js += `console.log("${fct_name}", ${fct_name}.args_parser.id.toString(16), ${fct_name}, ${parse_args[1]});\n`;
-		    js += `console.log(${fct_name}.args_parser.toString() )\n`;
-		    js += `console.log(${fct_name}.args_parser(${parse_args.join(', ')}) )\n`;
-		    /**/
+		if( true && fct_name === "f1936") {
+			js += `console.log("IDX", ${parse_args[0]}.$infos.args_parser.id);`;
 		}
 		js += `${locals_name} = locals = ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n`
 	} else{
