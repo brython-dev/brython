@@ -9006,7 +9006,7 @@ var brython_options = {}
 
 var python_scripts = []
 
-if(typeof document !== 'undefined'){
+if(!$B.isWebWorker){
     // If this script is not called in a web worker by importScripts,
     // store Python scripts already loaded in the page before loading this
     // script
