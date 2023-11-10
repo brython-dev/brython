@@ -1812,14 +1812,24 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	let fct = 
 //`function args0_NEW(fct, args) {
 `
-    const HAS_KW 		= args[args.length-1]?.$kw !== undefined;
+    let HAS_KW 		= args[args.length-1]?.$kw !== undefined;
     let ARGS_POS_COUNT        = args.length;
     let ARGS_NAMED            = null;
     
     if( HAS_KW ) {
     	--ARGS_POS_COUNT;
-    	ARGS_NAMED = args[ARGS_POS_COUNT].$kw
+    	ARGS_NAMED = args[ARGS_POS_COUNT].$kw;
+    	
+    	if( ARGS_NAMED[1] === undefined ) {//TODO: remove when bug fixed
+    	
+    		HAS_KW = false;
+    		for(let key in ARGS_NAMED[0] ) {
+	    		HAS_KW = true;
+	    		break;
+	    	}
+    	}
     }
+    
 
     const result = {};
 
@@ -1867,7 +1877,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	}
 
 	fct += `
-	if( ARGS_NAMED === null ) {
+	if( HAS_KW === false ) {
 	`
 
 	if( hasPos || hasPosOnly ) {
@@ -1994,7 +2004,10 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	for(let id = 0; id < ARGS_NAMED.length; ++id ) {
 
-		const _kargs = ARGS_NAMED[id]
+		const _kargs = ARGS_NAMED[id];
+		if( _kargs === undefined ) //TODO: remove when fixed
+			continue;
+			
 		let kargs  = _kargs.$jsobj;
 		if( kargs === undefined || kargs === null) {
 			kargs = _kargs.$strings
@@ -2281,7 +2294,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 	else if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
 	
 		const fct_name = parse_args[0];
-		if( true && fct_name === "f1936") {
+		if( true && fct_name === "__init__3760") {
+			js += `console.log( ${parse_args.join(', ')} );`;
 			js += `console.log("IDX", ${parse_args[0]}.$infos.args_parser.id);`;
 		}
 		js += `${locals_name} = locals = ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n`
