@@ -1879,7 +1879,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 		}
 
-		if( posOnlyDefaults !== DEFAULTS.NONE && posDefaults !== DEFAULTS.NONE) {
+		if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE) {
 			fct += `
 		for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
 			i < PARAMS_POS_DEFAULTS_COUNT;
@@ -1897,7 +1897,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		args0(fct, args);
 		throw new Error('Named argument expected (args0 should have raised an error) !');
 `
-		} else {
+		} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
 			fct += `
 		let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
         if( kwargs_defaults === undefined || kwargs_defaults === null ) {
@@ -1934,6 +1934,13 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 	}
 
+	if( ! hasPosOnly) {
+		fct += `
+	const PARAMS_POSONLY_COUNT         = 0;
+	const PARAMS_POS_DEFAULTS_MAXID    = PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+`;
+	}
+	
 	if( hasPosOnly ) {
 		fct += `
 	const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
@@ -2121,6 +2128,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	return fct;
 }
 
+const USE_PERSO_ARGS0_EVERYWHERE = true;
 const USE_PERSO_ARGS0 = true;
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
@@ -2262,8 +2270,21 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             js += `${locals_name} = locals = {};\n`;
             js += `if( arguments.length) $B.args0(${parse_args.join(', ')})\n;` // generate error message
         }
-	else if( USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
-		console.log(this.name);
+	else if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
+	
+		const fct_name = parse_args[0];
+		if( fct_name === "run15") {
+			//if( ! fct_name.startsWith('write') && ! fct_name.startsWith('handle_repeat') && ! fct_name.startsWith('flush') ) { 
+	
+		    /**/
+		    js += `console.log("${fct_name}", ${fct_name}.args_parser );\n`;
+		    js += `console.log("${this.name}", ${this.name}.args_parser);\n`;
+		    
+		    js += `console.log("${fct_name}", ${fct_name}.args_parser.id.toString(16), ${fct_name}, ${parse_args[1]});\n`;
+		    js += `console.log(${fct_name}.args_parser.toString() )\n`;
+		    js += `console.log(${fct_name}.args_parser(${parse_args.join(', ')}) )\n`;
+		    /**/
+		}
 		js += `${locals_name} = locals = ${parse_args[0]}.args_parser(${parse_args.join(', ')})\n`
 	} else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
@@ -2422,7 +2443,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `}\n`
 
 //TODO:
-    if( USE_PERSO_ARGS0 && this.name.startsWith('ftest') ) {
+    if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith('ftest') ) {
 
     	const nb_posOnly = this.args.posonlyargs.length;
     	const nb_pos = positional.length - nb_posOnly;
@@ -2454,7 +2475,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		this.args.kwarg !== undefined
     	 ).id;
     	 
-    	  /* console.log(this.name,
+    	 /*
+    	  console.log(this.name,
     	  	nb_posOnly !== 0,
     		posonly_defaults,
     		nb_pos !== 0,
@@ -2463,7 +2485,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		nb_named !== 0,
     		named_defaults,
     		 this.args.kwarg !== undefined); //OK
-    		*/
+    		/**/
+    	if( name2 === "run15" ) {
+    		console.log(IDX, $B.args_parsers[IDX]);
+    		js += `${this.name}.args_parser = $B.args_parsers[${IDX}]\n`;
+    	}
+    	//console.log(this.name);
     	js += `${name2}.args_parser = $B.args_parsers[${IDX}]\n`;
     }
 
