@@ -63,6 +63,16 @@
 <!-- script type="text/javascript" src="../src/brython_stdlib.js"></script -->
 <script src="/assets/header.brython.js"></script>
 
+<script type="text/python" class="webworker" id="test_web_worker">
+from browser import self, bind
+
+@bind(self, 'message')
+def message(ev):
+    assert ev.data == 'hello'
+    self.send('sent by web worker')
+    
+</script>
+
 <script type="text/python3">
 import time
 import sys
