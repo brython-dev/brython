@@ -3425,7 +3425,7 @@ $B.make_function_defaults = function(f){
         const PARAMS_POS_COUNT		   = $CODE.co_argcount - PARAMS_POSONLY_COUNT;
         
         let pos_defaults = DEFAULTS.NONE;
-        if( value.length > 0)
+        if( PARAMS_POS_COUNT !== 0 && value.length > 0)
         	pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
         
         let posonly_defaults = DEFAULTS.NONE;
@@ -3442,6 +3442,10 @@ $B.make_function_defaults = function(f){
     		named_defaults,
     		$INFOS.kwarg !== null
         );
+        
+        if( false && f.name === "f1921" ) {
+        	console.log('===== HERE DEF ======', f.args_parser.id.toString(16) );
+        }
         
         return _b_.None
     }else{

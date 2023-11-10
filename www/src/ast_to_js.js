@@ -1802,8 +1802,7 @@ const DEFAULTS = getArgs0.DEFAULTS = {
 // hasPos / posDefaults are pos parameters excluding posOnly parameters.
 function generate_args0(...args) {
 
-
-	return new Function('fct', 'args', generate_args0_str(...args) );
+	return new Function('fct', 'args',  generate_args0_str(...args) );
 }
 
 
@@ -1812,7 +1811,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	let fct = 
 //`function args0_NEW(fct, args) {
 `
-    const HAS_KW	      = args[args.length-1]?.$kw !== undefined;
+    let HAS_KW	      = args[args.length-1]?.$kw !== undefined;
     let ARGS_POS_COUNT        = args.length;
     let ARGS_NAMED            = null;
     
@@ -1866,11 +1865,36 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     }
 `
 	}
+	
+	// verify if it truly has no kw arguments.
+	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
+		fct += `
+	if( HAS_KW === true ) {
+		for(let id = 0; id < ARGS_NAMED.length; ++id ) {
 
-	fct += `
+			const _kargs = ARGS_NAMED[id];
+				
+			let kargs  = _kargs.$jsobj;
+			if( kargs === undefined || kargs === null) {
+				kargs = _kargs.$strings
+				if(kargs === undefined || kargs === null) 
+					kargs= _kargs; // I don't think I can do better.
+			}
+
+			for(let argname in kargs) {
+				$B.args0_old(fct, args);
+				throw new Error('No named arguments expected !!!');
+			}
+		}
+		HAS_KW = false;
+	}
+`;
+	} else {
+		fct += `
 	if( HAS_KW === false ) {
-	`
-
+	`;
+	}
+	
 	if( hasPos || hasPosOnly ) {
 
 		if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
@@ -1915,34 +1939,15 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	fct += `
 		return result;
-	}
 `
 
 	// verify if it truly has no kw arguments.
 	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
-		fct += `
-		
-		for(let id = 0; id < ARGS_NAMED.length; ++id ) {
-
-			const _kargs = ARGS_NAMED[id];
-				
-			let kargs  = _kargs.$jsobj;
-			if( kargs === undefined || kargs === null) {
-				kargs = _kargs.$strings
-				if(kargs === undefined || kargs === null) 
-					kargs= _kargs; // I don't think I can do better.
-			}
-
-			for(let argname in kargs) {
-				$B.args0_old(fct, args);
-				throw new Error('No named arguments expected !!!');
-			}
-		}
-		    	
-	    	return result;
-`;
-// fct += '}'
 		return fct;
+	} else {
+		fct += `
+	}
+`;
 	}
 
 	if( namedOnlyDefaults !== DEFAULTS.NONE) {
@@ -2103,6 +2108,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 			fct += `
 			if( ! (key in kwargs_defaults) ) {
 				$B.args0_old(fct, args);
+				
 				throw new Error('Missing a named arguments (args0 should have raised an error) !');
 			}
 `
@@ -2110,6 +2116,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( namedOnlyDefaults === DEFAULTS.NONE ) {
 			fct += `
 			$B.args0_old(fct, args);
+			
 			throw new Error('Missing a named arguments (args0 should have raised an error) !');
 `
 		}
@@ -2299,16 +2306,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 	
 		const fct_name = parse_args[0];
 		
-		//js += `console.log("calling ${fct_name}");`;
-		
 		if( false && fct_name === "f1921") {
-		js += `console.log("=== HERE ===");`;
-		js += `console.log( ${parse_args.join(', ')} );`;
-		
-		js += `console.log( $B.args0(${parse_args.join(', ')}) );`;
-		js += `console.log( ${parse_args[0]}.$infos.args_parser.id.toString(16) );`;
-		js += `console.log( ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')}) );`;
-		js += `console.log( ${parse_args[0]}.$infos.args_parser.toString() );\n`
+			js += `console.log("=== HERE ===");`;
+			js += `console.log( ${parse_args.join(', ')} );`;
+			
+			//js += `console.log( $B.args0(${parse_args.join(', ')}) );`; //carefull, can launch exception during unit test.
+			js += `console.log( ${parse_args[0]}.$infos.args_parser.id.toString(16) );`;
+			js += `console.log( ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')}) );`;
+			js += `console.log( ${parse_args[0]}.$infos.args_parser.toString() );\n`
 		}
 		js += `${locals_name} = locals = ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n`
 	} else{
@@ -2478,7 +2483,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     	const defaults = this.args.defaults;
     
     	let pos_defaults     = DEFAULTS.NONE;
-    	if( defaults.length > 0 )
+    	if( nb_pos !== 0 && defaults.length > 0 )
     		pos_defaults = defaults.length >= nb_pos ? DEFAULTS.ALL : DEFAULTS.SOME;
 
     	let posonly_defaults = DEFAULTS.NONE;
@@ -2499,7 +2504,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		named_defaults,
     		this.args.kwarg !== undefined
     	 ).id;
-    	     	 
+    	 
     	 /*
     	  console.log(this.name,
     	  	nb_posOnly !== 0,
