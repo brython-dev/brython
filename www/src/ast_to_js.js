@@ -1900,18 +1900,15 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
 		fct += `
 	if( HAS_KW === true ) {
-		for(let id = 0; id < ARGS_NAMED.length; ++id ) {
+	
+		for(let argname in ARGS_NAMED[0] ) {
+			$B.args0_old(fct, args);
+			throw new Error('No named arguments expected !!!');
+		}
+	
+		for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
-			const _kargs = ARGS_NAMED[id];
-				
-			let kargs  = _kargs.$jsobj;
-			if( kargs === undefined || kargs === null) {
-				kargs = _kargs.$strings
-				if(kargs === undefined || kargs === null) 
-					kargs= _kargs; // I don't think I can do better.
-			}
-
-			for(let argname in kargs) {
+			for(let argname of $B.make_js_iterator(ARGS_NAMED[id]) ) { //TODO: not optimal
 				$B.args0_old(fct, args);
 				throw new Error('No named arguments expected !!!');
 			}
@@ -2035,23 +2032,56 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	let nb_named_args = 0;       
 
-	for(let id = 0; id < ARGS_NAMED.length; ++id ) {
+	
+	const kargs = ARGS_NAMED[0];
 
-		const _kargs = ARGS_NAMED[id];
-			
-		let kargs  = _kargs.$jsobj;
-		if( kargs === undefined || kargs === null) {
-			kargs = _kargs.$strings
-			if(kargs === undefined || kargs === null) 
-				kargs= _kargs; // I don't think I can do better.
+	for(let argname in kargs) {
+		`;
+
+		if( ! hasKWargs ) {
+			fct += `
+		result[ argname ] = kargs[argname];
+		++nb_named_args;
+`;
 		}
 
-		for(let argname in kargs) {
+		if( hasKWargs ) {
+			if( ! hasNamedOnly && ! hasPos ) {
+				fct += `
+		extra[ argname ] = kargs[argname];
+		++nb_extra_args;
+`
+			} else {
+				fct += `
+		if( PARAMS_NAMES.indexOf(argname, ${PARAMS_POSONLY_COUNT}) !== -1 ) {
+			result[ argname ] = kargs[argname];
+			++nb_named_args;
+		} else {
+			extra[ argname ] = kargs[argname];
+			++nb_extra_args;
+		}
+`
+			}
+		}
+
+		fct += `
+	}
+	
+	for(let id = 1; id < ARGS_NAMED.length; ++id ) {
+
+		const kargs = ARGS_NAMED[id];
+
+		for(let argname of $B.make_js_iterator(kargs) ) {
+		
+			if( typeof argname !== "string") {
+				$B.args0_old(fct, args);
+				throw new Error('Non string key passed in **kargs');
+			}
 			`;
 
 			if( ! hasKWargs ) {
 				fct += `
-			result[ argname ] = kargs[argname];
+			result[ argname ] = $B.$getitem(kargs, argname);
 			++nb_named_args;
 `;
 			}
@@ -2060,16 +2090,16 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 				if( ! hasNamedOnly && ! hasPos ) {
 
 					fct += `
-			extra[ argname ] = kargs[argname];
+			extra[ argname ] = $B.$getitem(kargs, argname);
 			++nb_extra_args;
 `
 				} else {
 					fct += `
 			if( PARAMS_NAMES.indexOf(argname, ${PARAMS_POSONLY_COUNT}) !== -1 ) {
-				result[ argname ] = kargs[argname];
+				result[ argname ] = $B.$getitem(kargs, argname);
 				++nb_named_args;
 			} else {
-				extra[ argname ] = kargs[argname];
+				extra[ argname ] = $B.$getitem(kargs, argname);
 				++nb_extra_args;
 			}
 `
