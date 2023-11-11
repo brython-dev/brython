@@ -2084,7 +2084,9 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     let ioffset = offset;
 `;
 
-	if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.ALL) || (hasPos && posDefaults !== DEFAULTS.ALL) ) {
+	if(	(hasPosOnly || hasPos)
+		&& (! hasPosOnly || posOnlyDefaults !== DEFAULTS.ALL)
+		&& (! hasPos     || posDefaults !== DEFAULTS.ALL) ) {
 		fct += `
 	for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
 		
@@ -2177,7 +2179,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 }
 
 
-console.log("pos", generate_args0_str(false, DEFAULTS.NONE, true, DEFAULTS.SOME, false, false, DEFAULTS.NONE, false) );
+console.log("pos", generate_args0_str(false, DEFAULTS.NONE, true, DEFAULTS.FULL, false, false, DEFAULTS.NONE, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
