@@ -1811,7 +1811,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	let fct = 
 //`function args0_NEW(fct, args) {
 `
-    let HAS_KW	      = args[args.length-1]?.$kw !== undefined;
+    const HAS_KW	      = args[args.length-1]?.$kw !== undefined;
     let ARGS_POS_COUNT        = args.length;
     let ARGS_NAMED            = null;
     
@@ -1893,7 +1893,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 				throw new Error('No named arguments expected !!!');
 			}
 		}
-		HAS_KW = false;
 	}
 `;
 	} else {
