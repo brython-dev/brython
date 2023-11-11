@@ -1981,17 +1981,26 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 	}
 
-	if( ! hasPosOnly) {
+	let PARAMS_POSONLY_COUNT      = "0";
+	let PARAMS_POS_DEFAULTS_MAXID = PARAMS_POS_DEFAULTS_OFFSET;
+	
+	if( ! hasPosOnly && PARAMS_POS_DEFAULTS_COUNT !== "0" ) {
+	
+		PARAMS_POS_DEFAULTS_MAXID = "PARAMS_POS_DEFAULTS_MAXID";
 		fct += `
-	const PARAMS_POSONLY_COUNT         = 0;
-	const PARAMS_POS_DEFAULTS_MAXID    = ${PARAMS_POS_DEFAULTS_COUNT} + ${PARAMS_POS_DEFAULTS_OFFSET};
-`;
+    	const PARAMS_POS_DEFAULTS_MAXID    =  ${PARAMS_POS_DEFAULTS_COUNT} + ${PARAMS_POS_DEFAULTS_OFFSET};
+		`;
 	}
 	
+	
 	if( hasPosOnly ) {
+	
+		PARAMS_POSONLY_COUNT = "PARAMS_POSONLY_COUNT";
+		PARAMS_POS_DEFAULTS_MAXID = "PARAMS_POS_DEFAULTS_MAXID";
+	
 		fct += `
 	const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-    const PARAMS_POS_DEFAULTS_MAXID    =  ${PARAMS_POS_DEFAULTS_COUNT} + ${PARAMS_POS_DEFAULTS_OFFSET};
+    	const PARAMS_POS_DEFAULTS_MAXID    =  ${PARAMS_POS_DEFAULTS_COUNT} + ${PARAMS_POS_DEFAULTS_OFFSET};
 
 	if( offset < PARAMS_POSONLY_COUNT ) {
 
@@ -2066,7 +2075,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 				} else {
 					fct += `
-			if( PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1 ) {
+			if( PARAMS_NAMES.indexOf(argname, ${PARAMS_POSONLY_COUNT}) !== -1 ) {
 				result[ argname ] = kargs[argname];
 				++nb_named_args;
 			} else {
@@ -2102,7 +2111,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	}
 	if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.NONE) || (hasPos && posDefaults !== DEFAULTS.NONE) ) {
 		fct += `
-	for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset) {
+	for( ; ioffset < ${PARAMS_POS_DEFAULTS_MAXID}; ++ioffset) {
 		
 		const key = PARAMS_NAMES[ioffset];
 		if( key in result )
@@ -2180,7 +2189,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 }
 
 
-console.log("only pos", generate_args0_str(true, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
+console.log("pos", generate_args0_str(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
