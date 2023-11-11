@@ -3404,13 +3404,15 @@ $B.make_function_defaults = function(f){
             if(pos < 0){break}
             $defaults[params[pos]] = value[i]
         }
+        const $kw_defaults = {}
         if(f.$infos.__kwdefaults__ !== _b_.None){
             var kwdef = f.$infos.__kwdefaults__
             for(var kw of $B.make_js_iterator(kwdef)){
-                $defaults[kw] = $B.$getitem(kwdef, kw)
+                $defaults[kw] = $kw_defaults[kw] = $B.$getitem(kwdef, kw)
             }
         }
         f.$defaults = $defaults
+        f.$kw_defaults = $kw_defaults;
         
         const $INFOS = f.$infos;
     	const $CODE  = $INFOS.__code__;

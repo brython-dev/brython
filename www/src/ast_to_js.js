@@ -1957,10 +1957,8 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 	} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
 		fct += `
-		let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-        if( kwargs_defaults === undefined || kwargs_defaults === null ) {
-        	kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-        }
+		const kwargs_defaults = fct.$kw_defaults;
+		
 		for(let key in kwargs_defaults)    
         	result[ key ] = kwargs_defaults[key];
 `
@@ -1981,11 +1979,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	if( namedOnlyDefaults !== DEFAULTS.NONE) {
 		fct += `
-	let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-	if( kwargs_defaults === undefined  || kwargs_defaults == null ) {
-
-		kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-	}
+	const kwargs_defaults = fct.$kw_defaults;
 `
 	}
 
@@ -2186,8 +2180,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	return fct;
 }
 
-
-console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.ALL, false) );
+// console.log("pos", generate_args0_str(true, DEFAULTS.ALL, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
