@@ -2472,7 +2472,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `kwarg: ${args_kwarg}\n` +
         `}\n`
 
-//TODO:
+/*
     if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith('ftest') ) {
 
     	const nb_posOnly = this.args.posonlyargs.length;
@@ -2515,10 +2515,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     		nb_named !== 0,
     		named_defaults,
     		 this.args.kwarg !== undefined); //OK
-    		/**/
+    		/**
     	//console.log(this.name);
     	js += `${name2}.$infos.args_parser = ${name2}.args_parser = $B.args_parsers[${IDX}];\n`;
-    }
+    }*/
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
