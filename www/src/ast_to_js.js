@@ -1830,9 +1830,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     const PARAMS_NAMES        = $INFOS.arg_names;
     const PARAMS_POS_COUNT    = $CODE.co_argcount;
     const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
-
-    const PARAMS_VARARGS_NAME = $INFOS.vararg;
-    const PARAMS_KWARGS_NAME  = $INFOS.kwarg;
     
     const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
     const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
@@ -1854,7 +1851,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( hasVargars ) {
 		fct +=
 `
-    result[PARAMS_VARARGS_NAME] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
+    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
 `
 	} else {
 		fct +=
@@ -1918,7 +1915,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	
 	if( hasKWargs ) {
 		fct += `
-		result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict({});`
+		result[$INFOS.kwarg] = __BRYTHON__.obj_dict({});`
 	}
 
 	if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
@@ -2148,7 +2145,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		$B.args0_old(fct, args);
 		throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
 	}
-	result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra);
+	result[$INFOS.kwarg] = __BRYTHON__.obj_dict(extra);
 `
 	}
 
@@ -2159,6 +2156,9 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	//fct += `}`;
 	return fct;
 }
+
+
+console.log("only pos", generate_args0_str(true, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
