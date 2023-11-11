@@ -1839,20 +1839,21 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     let offset = 0;
 `;
 
-	if( hasPosOnly || hasPos ) {
-		fct +=
-`
-	const min = Math.min( ARGS_POS_COUNT, PARAMS_POS_COUNT );
-    for( ; offset < min ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`
-	}
-
 	if( hasVargars ) {
 		fct +=
 `
     result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
 `
+		
+		if( hasPosOnly || hasPos ) {
+		
+			fct +=
+`
+	const min = Math.min( ARGS_POS_COUNT, PARAMS_POS_COUNT );
+    for( ; offset < min ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+		}
 	} else {
 		fct +=
 `
@@ -1861,7 +1862,16 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         throw new Error('Too much positional arguments given (args0 should have raised an error) !');
     }
 `
+		if( hasPosOnly || hasPos ) {
+		
+			fct +=
+`
+    for( ; offset < ARGS_POS_COUNT ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+		}
 	}
+
 	
 	// verify if it truly has no kw arguments.
 	if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
