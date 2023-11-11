@@ -1829,12 +1829,26 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
     const PARAMS_NAMES        = $INFOS.arg_names;
     const PARAMS_POS_COUNT    = $CODE.co_argcount;
-    
+`;
+
+	let PARAMS_POS_DEFAULTS_OFFSET = "PARAMS_POS_COUNT";
+	let PARAMS_POS_DEFAULTS_COUNT = "0";
+	
+	if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE ) {
+
+		PARAMS_POS_DEFAULTS_OFFSET = "PARAMS_POS_DEFAULTS_OFFSET";
+		PARAMS_POS_DEFAULTS_COUNT  = "PARAMS_POS_DEFAULTS_COUNT";
+		
+		fct += `
     const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
     const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
     
     const PARAMS_POS_DEFAULTS_OFFSET= PARAMS_POS_COUNT - PARAMS_POS_DEFAULTS_COUNT;
+	
+`;
+	}
 
+	fct += `
     let offset = 0;
 `;
 
@@ -1905,7 +1919,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
 
 			fct += `
-		if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
+		if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
             $B.args0_old(fct, args);
             throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
         }
@@ -1970,21 +1984,21 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( ! hasPosOnly) {
 		fct += `
 	const PARAMS_POSONLY_COUNT         = 0;
-	const PARAMS_POS_DEFAULTS_MAXID    = PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+	const PARAMS_POS_DEFAULTS_MAXID    = ${PARAMS_POS_DEFAULTS_COUNT} + ${PARAMS_POS_DEFAULTS_OFFSET};
 `;
 	}
 	
 	if( hasPosOnly ) {
 		fct += `
 	const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-    const PARAMS_POS_DEFAULTS_MAXID    =  PARAMS_POS_DEFAULTS_COUNT + PARAMS_POS_DEFAULTS_OFFSET;
+    const PARAMS_POS_DEFAULTS_MAXID    =  ${PARAMS_POS_DEFAULTS_COUNT} + ${PARAMS_POS_DEFAULTS_OFFSET};
 
 	if( offset < PARAMS_POSONLY_COUNT ) {
 
 		`;
 		if( posOnlyDefaults !== DEFAULTS.SOME) {
 			fct += `
-		if( offset < PARAMS_POS_DEFAULTS_OFFSET ) {
+		if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
 			$B.args0_old(fct, args);
 			throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
 		}
@@ -1998,10 +2012,10 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		}
 
 		fct += `
-		const max = PARAMS_POS_DEFAULTS_COUNT - (PARAMS_POS_COUNT - PARAMS_POSONLY_COUNT);
+		const max = ${PARAMS_POS_DEFAULTS_COUNT} - (PARAMS_POS_COUNT - PARAMS_POSONLY_COUNT);
 
 		// default parameters
-		for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
+		for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
 				i < max;
 				++i)
 			result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
@@ -2075,7 +2089,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.ALL) || (hasPos && posDefaults !== DEFAULTS.ALL) ) {
 		fct += `
-	for( ; ioffset < PARAMS_POS_DEFAULTS_OFFSET; ++ioffset) {
+	for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
 		
 		const key = PARAMS_NAMES[ioffset];
 		if( key in result ) // maybe could be speed up using "!(key in result)"
@@ -2094,7 +2108,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( key in result )
 			continue;
 
-		result[key] = PARAMS_POS_DEFAULTS[ioffset - PARAMS_POS_DEFAULTS_OFFSET];
+		result[key] = PARAMS_POS_DEFAULTS[ioffset - ${PARAMS_POS_DEFAULTS_OFFSET}];
 	++found;
 	}
 `
