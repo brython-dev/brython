@@ -2161,7 +2161,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 }
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
-const USE_PERSO_ARGS0 = true;
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
@@ -2294,18 +2293,17 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
-//TODO: HERE
 	if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined) {
            
             js += `${locals_name} = locals = {};\n`;
-            js += `if( arguments.length) ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n;` // generate error message
+            js += `if( arguments.length) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;` // generate error message
         }
-	else if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith("ftest") ) {
+	else if( USE_PERSO_ARGS0_EVERYWHERE ) {
 	
 		const fct_name = parse_args[0];
-		
+//TODO: HERE
 		if( false && fct_name === "f1921") {
 			js += `console.log("=== HERE ===");`;
 			js += `console.log( ${parse_args.join(', ')} );`;
@@ -2315,7 +2313,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 			js += `console.log( ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')}) );`;
 			js += `console.log( ${parse_args[0]}.$infos.args_parser.toString() );\n`
 		}
-		js += `${locals_name} = locals = ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')})\n`
+		js += `${locals_name} = locals = ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n`
 	} else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
@@ -2471,54 +2469,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `vararg: ${args_vararg},\n` +
         `kwarg: ${args_kwarg}\n` +
         `}\n`
-
-/*
-    if( USE_PERSO_ARGS0_EVERYWHERE || USE_PERSO_ARGS0 && this.name.startsWith('ftest') ) {
-
-    	const nb_posOnly = this.args.posonlyargs.length;
-    	const nb_pos = positional.length - nb_posOnly;
-    	const nb_named = this.args.kwonlyargs.length;
-	const nb_named_defaults = kw_default_names.length;
-    
-    	const defaults = this.args.defaults;
-    
-    	let pos_defaults     = DEFAULTS.NONE;
-    	if( nb_pos !== 0 && defaults.length > 0 )
-    		pos_defaults = defaults.length >= nb_pos ? DEFAULTS.ALL : DEFAULTS.SOME;
-
-    	let posonly_defaults = DEFAULTS.NONE;
-    	if( defaults.length > nb_pos )
-    		posonly_defaults = defaults.length >= positional.length ? DEFAULTS.ALL : DEFAULTS.SOME;
-
-    	let named_defaults   = DEFAULTS.NONE;
-    	if( nb_named_defaults > 0 )
-    		named_defaults = nb_named_defaults >= nb_named ? DEFAULTS.ALL : DEFAULTS.SOME;
-
-    	const IDX = getArgs0( 
-    		nb_posOnly !== 0,
-    		posonly_defaults,
-    		nb_pos !== 0,
-    		pos_defaults,
-    		this.args.vararg !== undefined,
-    		nb_named !== 0,
-    		named_defaults,
-    		this.args.kwarg !== undefined
-    	 ).id;
-    	 
-    	 /*
-    	  console.log(this.name,
-    	  	nb_posOnly !== 0,
-    		posonly_defaults,
-    		nb_pos !== 0,
-    		pos_defaults,
-    		this.args.vararg !== undefined, //OK
-    		nb_named !== 0,
-    		named_defaults,
-    		 this.args.kwarg !== undefined); //OK
-    		/**
-    	//console.log(this.name);
-    	js += `${name2}.$infos.args_parser = ${name2}.args_parser = $B.args_parsers[${IDX}];\n`;
-    }*/
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`

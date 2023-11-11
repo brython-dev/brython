@@ -3390,6 +3390,7 @@ $B.function.__repr__ = function(self){
 
 $B.function.__mro__ = [_b_.object]
 
+
 $B.make_function_defaults = function(f){
     if(f.$infos && f.$infos.__code__){
         // Make the new $defaults Javascript object
@@ -3431,8 +3432,9 @@ $B.make_function_defaults = function(f){
         let posonly_defaults = DEFAULTS.NONE;
         if( value.length > PARAMS_POS_COUNT)
         	posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL : DEFAULTS.SOME;
+
         
-        f.args_parser = f.$infos.args_parser = $B.getArgs0(
+        f.$args_parser = f.$infos.args_parser = $B.getArgs0(
         	PARAMS_POSONLY_COUNT !== 0,
     		posonly_defaults,
     		PARAMS_POS_COUNT !== 0,
@@ -3442,11 +3444,7 @@ $B.make_function_defaults = function(f){
     		named_defaults,
     		$INFOS.kwarg !== null
         );
-        
-        if( false && f.name === "f1921" ) {
-        	console.log('===== HERE DEF ======', f.args_parser.id.toString(16) );
-        }
-        
+
         return _b_.None
     }else{
         throw _b_.AttributeError.$factory("cannot set attribute " + attr +
