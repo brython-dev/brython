@@ -1829,7 +1829,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
     const PARAMS_NAMES        = $INFOS.arg_names;
     const PARAMS_POS_COUNT    = $CODE.co_argcount;
-    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
     
     const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
     const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
