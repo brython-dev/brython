@@ -1985,8 +1985,6 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( kwargs_defaults === undefined  || kwargs_defaults == null ) {
 
 		kwargs_defaults = $INFOS.__kwdefaults__.$strings;
-		if( kwargs_defaults === undefined  || kwargs_defaults == null )
-			kwargs_defaults = {}
 	}
 `
 	}
@@ -2189,7 +2187,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 }
 
 
-console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, true) );
+console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.ALL, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
