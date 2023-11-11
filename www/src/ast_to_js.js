@@ -1826,12 +1826,22 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     // using const should enable the browser to perform some optimisation.
     const $INFOS = fct.$infos;
     const $CODE  = $INFOS.__code__;
-
-    const PARAMS_NAMES        = $INFOS.arg_names;
-    const PARAMS_POS_COUNT    = $CODE.co_argcount;
 `;
 
-	let PARAMS_POS_DEFAULTS_OFFSET = "PARAMS_POS_COUNT";
+	if( hasPos || hasPosOnly || hasNamedOnly )
+		fct += `
+    const PARAMS_NAMES        = $INFOS.arg_names;	
+`;
+
+	let PARAMS_POS_COUNT = "0";
+	if( hasPos || hasPosOnly ) {
+		PARAMS_POS_COUNT = "PARAMS_POS_COUNT";
+		fct += `
+    const PARAMS_POS_COUNT    = $CODE.co_argcount;
+`;
+	}
+
+	let PARAMS_POS_DEFAULTS_OFFSET = PARAMS_POS_COUNT;
 	let PARAMS_POS_DEFAULTS_COUNT = "0";
 	
 	if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE ) {
@@ -1843,7 +1853,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
     const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
     
-    const PARAMS_POS_DEFAULTS_OFFSET= PARAMS_POS_COUNT - PARAMS_POS_DEFAULTS_COUNT;
+    const PARAMS_POS_DEFAULTS_OFFSET= ${PARAMS_POS_COUNT} - PARAMS_POS_DEFAULTS_COUNT;
 	
 `;
 	}
@@ -1855,14 +1865,14 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( hasVargars ) {
 		fct +=
 `
-    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, PARAMS_POS_COUNT, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
+    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, ${PARAMS_POS_COUNT}, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
 `
 		
 		if( hasPosOnly || hasPos ) {
 		
 			fct +=
 `
-	const min = Math.min( ARGS_POS_COUNT, PARAMS_POS_COUNT );
+	const min = Math.min( ARGS_POS_COUNT, ${PARAMS_POS_COUNT} );
     for( ; offset < min ; ++offset)
         result[ PARAMS_NAMES[offset] ] = args[offset];
 `
@@ -1870,7 +1880,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	} else {
 		fct +=
 `
-	if( ARGS_POS_COUNT > PARAMS_POS_COUNT ) {
+	if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
         $B.args0_old(fct, args);
         throw new Error('Too much positional arguments given (args0 should have raised an error) !');
     }
@@ -2009,7 +2019,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		}
 
 		fct += `
-		const max = ${PARAMS_POS_DEFAULTS_COUNT} - (PARAMS_POS_COUNT - PARAMS_POSONLY_COUNT);
+		const max = ${PARAMS_POS_DEFAULTS_COUNT} - (${PARAMS_POS_COUNT} - PARAMS_POSONLY_COUNT);
 
 		// default parameters
 		for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
@@ -2179,7 +2189,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 }
 
 
-console.log("pos", generate_args0_str(false, DEFAULTS.NONE, true, DEFAULTS.FULL, false, false, DEFAULTS.NONE, false) );
+console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, true) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
