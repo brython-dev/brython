@@ -317,7 +317,7 @@ function args0_NEW(fct, args) {
     	let kargs = ARGS_NAMED[0];
 	for(let argname in kargs) {
 		
-		if( HAS_PARAMS[argname] === true ) {
+		if( HAS_PARAMS.has(argname) ) {
 			result[ argname ] = kargs[argname]
 			++nb_named_args
 		}else{
@@ -336,7 +336,7 @@ function args0_NEW(fct, args) {
 			throw new Error('Non string key passed in **kargs');
 		}
 		
-		if( HAS_PARAMS[argname] === true ){
+		if( HAS_PARAMS.has(argname) ){
 			result[ argname ] = $B.$getitem(kargs, argname);
 			++nb_named_args
 		}else{

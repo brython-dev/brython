@@ -3414,9 +3414,9 @@ $B.make_function_defaults = function(f){
 	f.$kwdefaults = $kwdefaults
 	f.$kwdefaults_values = Object.values($kwdefaults);
 	
-	f.$hasParams = {}
-        for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i )
-        	f.$hasParams[varnames[i]] = true;
+	f.$hasParams = new Set();
+	for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i )
+		f.$hasParams.add(varnames[i]);
         		
 	return _b_.None;
 }
