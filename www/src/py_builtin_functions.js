@@ -3446,11 +3446,11 @@ $B.make_function_defaults = function(f){
     		$INFOS.kwarg !== null
         );
       
-        if( $INFOS.kwarg !== null && (PARAMS_POS_COUNT !== 0 || PARAMS_NAMED_COUNT !== 0) ) {
+        //if( $INFOS.kwarg !== null && (PARAMS_POS_COUNT !== 0 || PARAMS_NAMED_COUNT !== 0) ) {
         	f.$hasParams = new Set();
 		for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i )
 			f.$hasParams.add(varnames[i]);
-        }
+        //}
 
         return _b_.None
     }else{
