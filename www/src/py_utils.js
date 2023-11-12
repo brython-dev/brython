@@ -238,18 +238,26 @@ function args0_NEW(fct, args) {
 
     // No **kwargs parameter (i.e. unknown name = error).
     if(PARAMS_KWARGS_NAME === null){
-        let nb_named_args = 0
-        for(let id = 0, len = ARGS_NAMED.length; id < len; ++id){
-            const _kargs = ARGS_NAMED[id]
-            let kargs  = _kargs.$jsobj
-            if(kargs === undefined || kargs === null){
-                kargs = _kargs.$strings
-                if(kargs === undefined || kargs === null){
-                    kargs= _kargs
-                }
-            }
-            for(let argname in kargs) {
-                result[ argname ] = kargs[argname]
+        let nb_named_args = 0;
+        
+        let kargs = ARGS_NAMED[0];
+        
+        for(let argname in kargs) {
+		result[ argname ] = kargs[argname]
+		++nb_named_args
+	}
+        
+        for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
+            
+            kargs = ARGS_NAMED[id];
+            for(let argname of $B.make_js_iterator(kargs) ) {
+            
+            	if( typeof argname !== "string") {
+			$B.args0_old(fct, args);
+			throw new Error('Non string key passed in **kargs');
+		}
+		
+                result[ argname ] = $B.$getitem(kargs, argname);
                 ++nb_named_args
             }
         }
@@ -304,26 +312,38 @@ function args0_NEW(fct, args) {
     // we count the number of arguments given to normal named parameters and the number given to **kwargs.
     let nb_named_args = 0
     let nb_extra_args = 0
-
-    for(let id = 0; id < ARGS_NAMED.length; ++id){
-        const _kargs = ARGS_NAMED[id]
-        let kargs  = _kargs.$jsobj
-        if(kargs === undefined || kargs === null){
-            kargs = _kargs.$strings
-            if(kargs === undefined || kargs === null){
-                kargs= _kargs
-            }
-        }
-        for(let argname in kargs){
-            if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
-                result[ argname ] = kargs[argname]
-                ++nb_named_args
-            }else{
-                extra[ argname ] = kargs[argname]
-                ++nb_extra_args
-            }
-        }
-    }
+    
+    	let kargs = ARGS_NAMED[0];
+	for(let argname in kargs) {
+		
+		if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
+			result[ argname ] = kargs[argname]
+			++nb_named_args
+		}else{
+		        extra[ argname ] = kargs[argname]
+		        ++nb_extra_args
+		}
+	}
+        
+	for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
+	
+            kargs = ARGS_NAMED[id];
+	    for(let argname of $B.make_js_iterator(kargs) ) {
+	    
+	    	if( typeof argname !== "string") {
+			$B.args0_old(fct, args);
+			throw new Error('Non string key passed in **kargs');
+		}
+		
+		if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
+			result[ argname ] = $B.$getitem(kargs, argname);
+			++nb_named_args
+		}else{
+		        extra[ argname ] = $B.$getitem(kargs, argname);
+		        ++nb_extra_args
+		}
+	    }
+	}
 
     // Same as "No **kwargs parameter".
     // Checks default values...
