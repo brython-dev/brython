@@ -3446,9 +3446,9 @@ $B.make_function_defaults = function(f){
         );
       
         if( $INFOS.kwarg !== null && (PARAMS_POS_COUNT !== 0 || PARAMS_NAMED_COUNT !== 0) ) {
-        	f.$hasParams = {}
+        	f.$hasParams = new Set();
 		for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i )
-			f.$hasParams[varnames[i]] = true;
+			f.$hasParams.add(varnames[i]);
         }
 
         return _b_.None

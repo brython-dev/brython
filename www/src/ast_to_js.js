@@ -2061,7 +2061,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 			} else {
 				fct += `
-		if( HAS_PARAMS[argname] === true ) {
+		if( HAS_PARAMS.has(argname) ) {
 			result[ argname ] = kargs[argname];
 			++nb_named_args;
 		} else {
@@ -2103,7 +2103,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 				} else {
 					fct += `
-			if( HAS_PARAMS[argname] === true ) {
+			if( HAS_PARAMS.has(argname) ) {
 				result[ argname ] = $B.$getitem(kargs, argname);
 				++nb_named_args;
 			} else {
