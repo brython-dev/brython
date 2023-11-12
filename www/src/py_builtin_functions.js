@@ -3394,19 +3394,17 @@ $B.function.__mro__ = [_b_.object]
 $B.make_function_defaults = function(f){
     if(f.$infos && f.$infos.__code__){
         // Make the new $defaults Javascript object
-        var argcount = f.$infos.__code__.co_argcount,
+        const argcount = f.$infos.__code__.co_argcount,
             varnames = f.$infos.__code__.co_varnames,
-            params = varnames.slice(0, argcount),
             value = f.$infos.__defaults__,
+            offset   = argcount - value.length,
             $defaults = {}
-        for(var i = value.length - 1; i >= 0; i--){
-            var pos = params.length - value.length + i
-            if(pos < 0){break}
-            $defaults[params[pos]] = value[i]
+        for(var i = 0; i < value.length; ++i) {
+            $defaults[varnames[i + offset]] = value[i]
         }
         const $kw_defaults = {}
         if(f.$infos.__kwdefaults__ !== _b_.None){
-            var kwdef = f.$infos.__kwdefaults__
+            const kwdef = f.$infos.__kwdefaults__
             for(var kw of $B.make_js_iterator(kwdef)){
                 $defaults[kw] = $kw_defaults[kw] = $B.$getitem(kwdef, kw)
             }
@@ -3446,6 +3444,12 @@ $B.make_function_defaults = function(f){
     		named_defaults,
     		$INFOS.kwarg !== null
         );
+      
+        if( $INFOS.kwarg !== null && (PARAMS_POS_COUNT !== 0 || PARAMS_NAMED_COUNT !== 0) ) {
+        	f.$hasParams = {}
+        	for(let name of $INFOS.__code__.co_varnames)
+        		f.$hasParams[name] = true;
+        }
 
         return _b_.None
     }else{
