@@ -307,7 +307,8 @@ function args0_NEW(fct, args) {
     }
 
     // With **kwargs parameter (i.e. unknown name = put in extra).
-    const extra = {}
+    const extra = {};
+    const HAS_PARAMS = fct.$hasParams;
 
     // we count the number of arguments given to normal named parameters and the number given to **kwargs.
     let nb_named_args = 0
@@ -316,7 +317,7 @@ function args0_NEW(fct, args) {
     	let kargs = ARGS_NAMED[0];
 	for(let argname in kargs) {
 		
-		if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
+		if( HAS_PARAMS[argname] === true ) {
 			result[ argname ] = kargs[argname]
 			++nb_named_args
 		}else{
@@ -335,7 +336,7 @@ function args0_NEW(fct, args) {
 			throw new Error('Non string key passed in **kargs');
 		}
 		
-		if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
+		if( HAS_PARAMS[argname] === true ){
 			result[ argname ] = $B.$getitem(kargs, argname);
 			++nb_named_args
 		}else{
