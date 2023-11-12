@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-10 19:06:31.847363"
-__BRYTHON__.timestamp=1699639591847
+__BRYTHON__.compiled_date="2023-11-12 13:33:00.148569"
+__BRYTHON__.timestamp=1699792380148
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8823,9 +8823,9 @@ return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
 var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_class:true}
 var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse"]
-mutable_methods.forEach(function(method){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
+for(var method of mutable_methods){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
-return _b_.list[m].apply(null,args)}})(method)})
+return _b_.list[m].apply(null,args)}})(method)}
 bytearray.__hash__=_b_.None
 var bytearray_iterator=$B.make_iterator_class('bytearray_iterator')
 bytearray.__iter__=function(self){return bytearray_iterator.$factory(self.source)}
@@ -8834,8 +8834,7 @@ bytearray.__repr__=bytearray.__str__=function(self){return 'bytearray('+bytes.__
 bytearray.__setitem__=function(self,arg,value){if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){throw _b_.TypeError.$factory('an integer is required')}else if(value > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
 var pos=arg
 if(arg < 0){pos=self.source.length+pos}
-if(pos >=0 && pos < self.source.length){self.source[pos]=value}
-else{throw _b_.IndexError.$factory('list index out of range')}}else if($B.$isinstance(arg,_b_.slice)){var start=arg.start===_b_.None ? 0 :arg.start
+if(pos >=0 && pos < self.source.length){self.source[pos]=value}else{throw _b_.IndexError.$factory('list index out of range')}}else if($B.$isinstance(arg,_b_.slice)){var start=arg.start===_b_.None ? 0 :arg.start
 var stop=arg.stop===_b_.None ? self.source.length :arg.stop
 if(start < 0){start=self.source.length+start}
 if(stop < 0){stop=self.source.length+stop}
@@ -8853,11 +8852,9 @@ self.source[self.source.length]=b}
 bytearray.extend=function(self,b){if(self.in_iteration){
 throw _b_.BufferError.$factory("Existing exports of data: object "+
 "cannot be re-sized")}
-if(b.__class__===bytearray ||b.__class__===bytes){b.source.forEach(function(item){self.source.push(item)})
+if(b.__class__===bytearray ||b.__class__===bytes){self.source=self.source.concat(b.source)
 return _b_.None}
-var it=_b_.iter(b)
-while(true){try{bytearray.__add__(self,_b_.next(it))}catch(err){if(err===_b_.StopIteration){break}
-throw err}}
+for(var item of $B.make_js_iterator(b)){bytearray.append(self,$B.PyNumber_Index(item))}
 return _b_.None}
 bytearray.insert=function(self,pos,b){if(arguments.length !=3){throw _b_.TypeError.$factory(
 "insert takes exactly 2 arguments ("+(arguments.length-1)+
