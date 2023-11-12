@@ -202,6 +202,7 @@ function args0_NEW(fct, args) {
         for(let i = 0; i < nb_named_defaults; ++i){
             result[PARAMS_NAMES[offset++]] = kwargs_defaults_values[i]
         }
+        
         return result
     }
 
@@ -285,12 +286,12 @@ function args0_NEW(fct, args) {
             if( key in result ){
                 continue
             }
-            if(! (key in kwargs_defaults)){
+            if(! kwargs_defaults.has(key) ){
                 args0(fct, args)
                 throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
-
-            result[key] = kwargs_defaults[key]
+            
+            result[key] = kwargs_defaults.get(key)
             ++found
         }
 
@@ -303,6 +304,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
+        
         return result
     }
 
@@ -372,11 +374,11 @@ function args0_NEW(fct, args) {
         if( key in result ){
             continue
         }
-        if(! (key in kwargs_defaults)){
+        if(! kwargs_defaults.has(key) ){
             args0(fct, args)
             throw new Error('Missing a named arguments (args0 should have raised an error) !')
         }
-        result[key] = kwargs_defaults[key]
+        result[key] = kwargs_defaults.get(key)
         ++found
     }
 

@@ -3400,19 +3400,19 @@ $B.make_function_defaults = function(f){
 	    value = f.$infos.__defaults__,
 	    offset   = f.$infos.__code__.co_argcount - value.length,
 	    $defaults = {},
-	    $kwdefaults = {};
+	    $kwdefaults = new Map();
 	for(let i = 0; i < value.length ; ++i){
 	    $defaults[varnames[i+offset]] = value[i]
 	}
 	if(f.$infos.__kwdefaults__ !== _b_.None){
 	    const kwdef = f.$infos.__kwdefaults__
 	    for(let kw of $B.make_js_iterator(kwdef)){
-		$defaults[kw] = $kwdefaults[kw] = $B.$getitem(kwdef, kw)
+		$kwdefaults.set(kw, $defaults[kw] = $B.$getitem(kwdef, kw));
 	    }
 	}
 	f.$defaults = $defaults
 	f.$kwdefaults = $kwdefaults
-	f.$kwdefaults_values = Object.values($kwdefaults);
+	f.$kwdefaults_values = [...$kwdefaults.values()];
 	
 	f.$hasParams = new Set();
 	for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i )
