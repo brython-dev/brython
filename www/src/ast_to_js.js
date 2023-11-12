@@ -2022,10 +2022,16 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	if( hasKWargs) {
 
 		fct += `
-    const extra = {};
+	const extra = {};
 
-    let nb_extra_args = 0;
+	let nb_extra_args = 0;
 `
+
+		if(hasPos || hasNamedOnly ) {
+			fct += `
+	const HAS_PARAMS = fct.$hasParams;
+`;
+		}
 	}
 
 	fct += `
@@ -2053,7 +2059,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 			} else {
 				fct += `
-		if( PARAMS_NAMES.indexOf(argname, ${PARAMS_POSONLY_COUNT}) !== -1 ) {
+		if( HAS_PARAMS[argname] === true ) {
 			result[ argname ] = kargs[argname];
 			++nb_named_args;
 		} else {
@@ -2095,7 +2101,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 				} else {
 					fct += `
-			if( PARAMS_NAMES.indexOf(argname, ${PARAMS_POSONLY_COUNT}) !== -1 ) {
+			if( HAS_PARAMS[argname] === true ) {
 				result[ argname ] = $B.$getitem(kargs, argname);
 				++nb_named_args;
 			} else {
@@ -2210,7 +2216,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	return fct;
 }
 
-// console.log("pos", generate_args0_str(true, DEFAULTS.ALL, false, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
+console.log("pos", generate_args0_str(false, DEFAULTS.ALL, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
