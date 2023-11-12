@@ -2216,7 +2216,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	return fct;
 }
 
-console.log("pos", generate_args0_str(false, DEFAULTS.ALL, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
+//console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
