@@ -232,9 +232,7 @@ function args0_NEW(fct, args) {
 
     // Consume remaining positional only parameters (no positional arguments
     // given, so expect default value).
-    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount,
-          PARAMS_POS_DEFAULTS_MAXID = PARAMS_POS_DEFAULTS_COUNT +
-                                      PARAMS_POS_DEFAULTS_OFFSET
+    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount;
 
     if(offset < PARAMS_POSONLY_COUNT){
         if(offset < PARAMS_POS_DEFAULTS_OFFSET){
@@ -281,7 +279,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Missing a named arguments (args0 should have raised an error) !')
         }
-        for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset){
+        for( ; ioffset < PARAMS_POS_COUNT; ++ioffset){
             const key = PARAMS_NAMES[ioffset]
             if(key in result){
                 continue
@@ -355,7 +353,7 @@ function args0_NEW(fct, args) {
         args0(fct, args)
         throw new Error('Missing a named arguments (args0 should have raised an error) !')
     }
-    for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset){
+    for( ; ioffset < PARAMS_POS_COUNT; ++ioffset){
         const key = PARAMS_NAMES[ioffset]
         if(key in result){
             continue
