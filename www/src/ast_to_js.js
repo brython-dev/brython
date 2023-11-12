@@ -2218,7 +2218,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 //console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
 
-const USE_PERSO_ARGS0_EVERYWHERE = true;
+const USE_PERSO_ARGS0_EVERYWHERE = false;
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
@@ -2356,21 +2356,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             this.args.kwarg === undefined) {
            
             js += `${locals_name} = locals = {};\n`;
-            js += `if( arguments.length) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;` // generate error message
+            // generate error message
+            js += `if( arguments.length !== 0) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;`
         }
 	else if( USE_PERSO_ARGS0_EVERYWHERE ) {
-	
-		const fct_name = parse_args[0];
-//TODO: HERE
-		if( false && fct_name === "f1921") {
-			js += `console.log("=== HERE ===");`;
-			js += `console.log( ${parse_args.join(', ')} );`;
-			
-			//js += `console.log( $B.args0(${parse_args.join(', ')}) );`; //carefull, can launch exception during unit test.
-			js += `console.log( ${parse_args[0]}.$infos.args_parser.id.toString(16) );`;
-			js += `console.log( ${parse_args[0]}.$infos.args_parser(${parse_args.join(', ')}) );`;
-			js += `console.log( ${parse_args[0]}.$infos.args_parser.toString() );\n`
-		}
 		js += `${locals_name} = locals = ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n`
 	} else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
