@@ -119,7 +119,7 @@ function args0_NEW(fct, args) {
     /**/
     //const args = _args; // should remove this line...
     const LAST_ARGS = args[args.length-1];
-    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS.$kw !== undefined;
+    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
     let ARGS_POS_COUNT = args.length,
         ARGS_NAMED = null;
 
