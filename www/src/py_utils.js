@@ -118,13 +118,14 @@ function args0_NEW(fct, args) {
     // If you don't want to change it, I can modify the code to remove the costly convertion.
     /**/
     //const args = _args; // should remove this line...
-    const HAS_KW = args[args.length-1]?.$kw !== undefined
+    const LAST_ARGS = args[args.length-1];
+    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS.$kw !== undefined;
     let ARGS_POS_COUNT = args.length,
         ARGS_NAMED = null;
 
     if(HAS_KW){
         --ARGS_POS_COUNT
-        ARGS_NAMED = args[ARGS_POS_COUNT].$kw
+        ARGS_NAMED = LAST_ARGS.$kw
     }
 
     const result = {}
