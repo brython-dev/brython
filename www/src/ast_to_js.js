@@ -1811,13 +1811,15 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	let fct = 
 //`function args0_NEW(fct, args) {
 `
-    const HAS_KW	      = args[args.length-1]?.$kw !== undefined;
+    const LAST_ARGS = args[args.length-1];
+    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
+    
     let ARGS_POS_COUNT        = args.length;
     let ARGS_NAMED            = null;
     
     if( HAS_KW ) {
     	--ARGS_POS_COUNT;
-    	ARGS_NAMED = args[ARGS_POS_COUNT].$kw;
+    	ARGS_NAMED = LAST_ARGS.$kw;
     }
     
 
