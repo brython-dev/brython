@@ -3402,15 +3402,16 @@ $B.make_function_defaults = function(f){
         for(var i = 0; i < value.length; ++i) {
             $defaults[varnames[i + offset]] = value[i]
         }
-        const $kw_defaults = {}
+        const $kw_defaults = new Map();
         if(f.$infos.__kwdefaults__ !== _b_.None){
             const kwdef = f.$infos.__kwdefaults__
             for(var kw of $B.make_js_iterator(kwdef)){
-                $defaults[kw] = $kw_defaults[kw] = $B.$getitem(kwdef, kw)
+                $kw_defaults.set(kw, $defaults[kw] = $B.$getitem(kwdef, kw) );
             }
         }
         f.$defaults = $defaults
         f.$kw_defaults = $kw_defaults;
+        f.$kw_defaults_values = [...$kw_defaults.values()];
         
         const $INFOS = f.$infos;
     	const $CODE  = $INFOS.__code__;

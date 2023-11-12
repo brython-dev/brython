@@ -1956,10 +1956,10 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 	} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
 		fct += `
-		const kwargs_defaults = fct.$kw_defaults;
+		const kwargs_defaults_values = fct.$kw_defaults_values;
 		
-		for(let key in kwargs_defaults)    
-        	result[ key ] = kwargs_defaults[key];
+		for(let i = 0; i < kwargs_defaults_values.length; ++i )    
+        		result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
 `
 	}
 
@@ -2164,7 +2164,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 		if( namedOnlyDefaults === DEFAULTS.SOME) {
 			fct += `
-			if( ! (key in kwargs_defaults) ) {
+			if( ! kwargs_defaults.has(key) ) {
 				$B.args0_old(fct, args);
 				
 				throw new Error('Missing a named arguments (args0 should have raised an error) !');
@@ -2182,7 +2182,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 		if( namedOnlyDefaults !== DEFAULTS.NONE) {
 			fct += `
 
-			result[key] = kwargs_defaults[key];
+			result[key] = kwargs_defaults.get(key);
 			++found;
 `;
 		}
