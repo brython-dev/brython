@@ -3391,30 +3391,26 @@ $B.function.__repr__ = function(self){
 $B.function.__mro__ = [_b_.object]
 
 $B.make_function_defaults = function(f){
-    if(f.$infos && f.$infos.__code__){
-        // Make the new $defaults Javascript object
-        var argcount = f.$infos.__code__.co_argcount,
-            varnames = f.$infos.__code__.co_varnames,
-            params = varnames.slice(0, argcount),
-            value = f.$infos.__defaults__,
-            $defaults = {}
-        for(var i = value.length - 1; i >= 0; i--){
-            var pos = params.length - value.length + i
-            if(pos < 0){break}
-            $defaults[params[pos]] = value[i]
-        }
-        if(f.$infos.__kwdefaults__ !== _b_.None){
-            var kwdef = f.$infos.__kwdefaults__
-            for(var kw of $B.make_js_iterator(kwdef)){
-                $defaults[kw] = $B.$getitem(kwdef, kw)
-            }
-        }
-        f.$defaults = $defaults
-        return _b_.None
-    }else{
-        throw _b_.AttributeError.$factory("cannot set attribute " + attr +
-            " of " + _b_.str.$factory(self))
-    }
+	if( f.$infos === undefined || f.$infos.__code__ === undefined) {
+	        throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
+	}
+    
+	// Make the new $defaults Javascript object
+	const varnames = f.$infos.__code__.co_varnames,
+	    value = f.$infos.__defaults__,
+	    offset   = f.$infos.__code__.co_argcount - value.length,
+	    $defaults = {}
+	for(let i = 0; i < value.length ; ++i){
+	    $defaults[varnames[i+offset]] = value[i]
+	}
+	if(f.$infos.__kwdefaults__ !== _b_.None){
+	    const kwdef = f.$infos.__kwdefaults__
+	    for(let kw of $B.make_js_iterator(kwdef)){
+		$defaults[kw] = $B.$getitem(kwdef, kw)
+	    }
+	}
+	f.$defaults = $defaults
+	return _b_.None;
 }
 
 $B.function.__setattr__ = function(self, attr, value){
