@@ -3399,17 +3399,20 @@ $B.make_function_defaults = function(f){
 	const varnames = f.$infos.__code__.co_varnames,
 	    value = f.$infos.__defaults__,
 	    offset   = f.$infos.__code__.co_argcount - value.length,
-	    $defaults = {}
+	    $defaults = {},
+	    $kwdefaults = {};
 	for(let i = 0; i < value.length ; ++i){
 	    $defaults[varnames[i+offset]] = value[i]
 	}
 	if(f.$infos.__kwdefaults__ !== _b_.None){
 	    const kwdef = f.$infos.__kwdefaults__
 	    for(let kw of $B.make_js_iterator(kwdef)){
-		$defaults[kw] = $B.$getitem(kwdef, kw)
+		$defaults[kw] = $kwdefaults[kw] = $B.$getitem(kwdef, kw)
 	    }
 	}
 	f.$defaults = $defaults
+	f.$kwdefaults = $kwdefaults
+	f.$kwdefaults_values = Object.values($kwdefaults);
 	return _b_.None;
 }
 

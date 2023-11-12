@@ -191,18 +191,8 @@ function args0_NEW(fct, args) {
         // Handle defaults value for named parameters.
         // Optimize: precompute the number of named parameters with a default value, or just a boolean ?
 
-        let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj
-        if(kwargs_defaults === undefined || kwargs_defaults === null){
-
-            kwargs_defaults = $INFOS.__kwdefaults__.$strings
-            if(kwargs_defaults === undefined || kwargs_defaults === null){
-                args0(fct, args)
-                throw new Error('Named argument expected (args0 should have raised an error) !')
-            }
-        }
-
-        const named_default_values = Object.values(kwargs_defaults), // TODO: precompute this plz.
-              nb_named_defaults = named_default_values.length
+        const kwargs_defaults_values = fct.$kwdefaults_values;
+        const nb_named_defaults = kwargs_defaults_values.length;
 
         if(nb_named_defaults < PARAMS_NAMED_COUNT){
             args0(fct, args)
@@ -210,18 +200,12 @@ function args0_NEW(fct, args) {
         }
 
         for(let i = 0; i < nb_named_defaults; ++i){
-            result[PARAMS_NAMES[offset++]] = named_default_values[i]
+            result[PARAMS_NAMES[offset++]] = kwargs_defaults_values[i]
         }
         return result
     }
 
-    let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-    if(kwargs_defaults === undefined || kwargs_defaults == null){
-        kwargs_defaults = $INFOS.__kwdefaults__.$strings
-        if( kwargs_defaults === undefined || kwargs_defaults == null ){
-            kwargs_defaults = {}
-        }
-    }
+    const kwargs_defaults = fct.$kwdefaults;
 
     // Construct the list of default values...
     // Optimize : I'd need an object containing ALL default values instead of
