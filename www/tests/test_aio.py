@@ -311,7 +311,7 @@ async def main(secs, urls):
     await test_fstring_with_global()
 
     await test_issue_1906()
-    
+
     await test_issue_2158()
 
     await raise_error()
@@ -333,3 +333,19 @@ async def main():
 
 exec(src, globals())
 aio.run(main())
+
+# issue 2320
+from tester import async_tester
+async def a():
+  await ""
+  try:
+    info = ""
+  except:
+    ...
+  async_tester.assertEqual(b(info), "ok")
+  print('ok 2320')
+
+def b(info):
+  return "ok"
+
+aio.run(a())

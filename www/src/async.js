@@ -71,7 +71,20 @@ $B.promise = function(obj){
     if(typeof obj == "function"){
         return obj()
     }
-    return obj
+    if(obj instanceof Promise){
+        return obj
+    }
+    // obj is a non-awaitable. Call an async function that awaits the object
+    // and restores frame_obj before returning
+    // cf. issue #2320
+    var save_frame_obj = $B.frame_obj
+    async function f(){
+        await obj
+        // restore frame obj
+        $B.frame_obj = save_frame_obj
+        return obj
+    }
+    f()
 }
 
 })(__BRYTHON__)

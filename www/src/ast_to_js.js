@@ -476,20 +476,23 @@ $B.resolve = function(name){
 $B.resolve_local = function(name, position){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
-    var frame = $B.frame_obj.frame
-    if(frame[1].hasOwnProperty){
-        if(frame[1].hasOwnProperty(name)){
-            return frame[1][name]
-        }
-    }else{
-        var value = frame[1][name]
-        if(value !== undefined){
-            return value
+    if($B.frame_obj !== null){
+
+        var frame = $B.frame_obj.frame
+        if(frame[1].hasOwnProperty){
+            if(frame[1].hasOwnProperty(name)){
+                return frame[1][name]
+            }
+        }else{
+            var value = frame[1][name]
+            if(value !== undefined){
+                return value
+            }
         }
     }
     var exc = _b_.UnboundLocalError.$factory(`cannot access local variable ` +
               `'${name}' where it is not associated with a value`)
-    if(position){
+    if(position && $B.frame_obj){
         $B.set_exception_offsets(exc, position)
     }
     throw exc

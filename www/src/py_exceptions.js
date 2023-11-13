@@ -192,7 +192,7 @@ frame.__getattr__ = function(_self, attr){
         }
         return _self.$f_trace
     }
-        
+
     console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
