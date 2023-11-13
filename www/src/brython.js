@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-13 20:24:56.125751"
-__BRYTHON__.timestamp=1699903496125
+__BRYTHON__.compiled_date="2023-11-13 21:15:16.814974"
+__BRYTHON__.timestamp=1699906516814
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -15022,11 +15022,14 @@ obj.$frame_obj=$B.frame_obj
 return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 if(obj instanceof Promise){return obj}
-var save_frame_obj=$B.frame_obj
-async function f(){await obj
-$B.frame_obj=save_frame_obj
-return obj}
-f()}})(__BRYTHON__)
+var awaitable=$B.$getattr(obj,'__await__',null)
+if(awaitable !==null){
+awaitable=$B.$call(awaitable)()
+if($B.$getattr(awaitable,'__next__',null)===null){throw _b_.TypeError.$factory('__await__() returned non-iterator'+
+` of type '${$B.class_name(awaitable)}'`)}
+return awaitable}
+throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
+`can't be used in 'await' expression`)}})(__BRYTHON__)
 ;
 (function($B){$B.builtin_class_flags={builtins:{1074287874:['ChildProcessError','StopIteration','IOError','AssertionError','FileExistsError','RecursionError','UnicodeTranslateError','UnicodeWarning','FileNotFoundError','MemoryError','KeyboardInterrupt','EOFError','FloatingPointError','ImportWarning','DeprecationWarning','ReferenceError','UnboundLocalError','UserWarning','IndexError','OSError','TypeError','ConnectionResetError','BlockingIOError','BufferError','IndentationError','NotImplementedError','BrokenPipeError','KeyError','PermissionError','TabError','ImportError','ResourceWarning','ConnectionRefusedError','ModuleNotFoundError','ProcessLookupError','EncodingWarning','EnvironmentError','InterruptedError','UnicodeError','Warning','UnicodeDecodeError','BaseExceptionGroup','SyntaxWarning','GeneratorExit','BaseException','NameError','Exception','WindowsError','TimeoutError','BytesWarning','ValueError','ConnectionError','OverflowError','RuntimeError','ArithmeticError','StopAsyncIteration','ZeroDivisionError','PendingDeprecationWarning','UnicodeEncodeError','SystemExit','FutureWarning','ConnectionAbortedError','NotADirectoryError','LookupError','AttributeError','SyntaxError','SystemError','RuntimeWarning','IsADirectoryError'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['float','bytearray'],138941698:['bytes'],546050:['filter','map','property','classmethod','reversed','staticmethod','enumerate','zip','super'],529666:['complex','object'],541611330:['dict'],4740354:['set','frozenset'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['async_generator','method-wrapper','getset_descriptor','classmethod_descriptor','member_descriptor','frame','coroutine','generator'],547202:['builtin_function_or_method'],545026:['cell','traceback'],528642:['code','ellipsis','NoneType','NotImplementedType'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;

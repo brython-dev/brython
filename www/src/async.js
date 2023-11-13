@@ -74,17 +74,18 @@ $B.promise = function(obj){
     if(obj instanceof Promise){
         return obj
     }
-    // obj is a non-awaitable. Call an async function that awaits the object
-    // and restores frame_obj before returning
-    // cf. issue #2320
-    var save_frame_obj = $B.frame_obj
-    async function f(){
-        await obj
-        // restore frame obj
-        $B.frame_obj = save_frame_obj
-        return obj
+    var awaitable = $B.$getattr(obj, '__await__', null)
+    if(awaitable !== null){
+        // must be an iterator
+        awaitable = $B.$call(awaitable)()
+        if($B.$getattr(awaitable, '__next__', null) === null){
+            throw _b_.TypeError.$factory('__await__() returned non-iterator' +
+                ` of type '${$B.class_name(awaitable)}'`)
+        }
+        return awaitable
     }
-    f()
+    throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} ` +
+        `can't be used in 'await' expression`)
 }
 
 })(__BRYTHON__)

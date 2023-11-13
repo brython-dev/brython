@@ -336,16 +336,16 @@ aio.run(main())
 
 # issue 2320
 from tester import async_tester
+
+from tester import async_tester
 async def a():
   await ""
-  try:
-    info = ""
-  except:
-    ...
-  async_tester.assertEqual(b(info), "ok")
-  print('ok 2320')
 
-def b(info):
-  return "ok"
+async def wait_error():
+    try:
+        await a()
+        input('should have raised TypeError')
+    except Exception as exc:
+        async_tester.assertIs(type(exc), TypeError)
 
-aio.run(a())
+aio.run(wait_error())
