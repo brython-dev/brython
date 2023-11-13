@@ -360,4 +360,24 @@ for x1, x2 in zip(t1, t2):
   assert x1 == x2
   assert type(x1) is type(x2)
 
+# issue 2321
+from browser import aio
+from tester import async_tester
+
+y = window.js_returns_float()
+print(y, type(y))
+
+async def call_js_async():
+    x = await window.js_async_returns_float()
+    async_tester.assertEqual(x, 3.5)
+    async_tester.assertIs(type(x), float, 'type should be float')
+
+    try:
+        await window.js_async_raises_error()
+        input('should have raised error')
+    except Exception as exc:
+        print(exc)
+
+aio.run(call_js_async())
+
 print("all tests ok...")

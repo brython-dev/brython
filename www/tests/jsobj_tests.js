@@ -243,3 +243,19 @@ window.get_array_from_func_call = function(){
 }
 
 window.array_by_reference = [4.5, 'a', {x: 'abc'}]
+
+// issue 2321
+function js_returns_float(){
+  return 3.5
+}
+window.js_returns_float = js_returns_float
+
+async function js_async_returns_float(){
+    return 3.5
+}
+window.js_async_returns_float = js_async_returns_float
+
+async function js_async_raises_error(){
+    blabla
+}
+window.js_async_raises_error = js_async_raises_error

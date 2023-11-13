@@ -146,8 +146,15 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return pyobj;
     }
 
-    if(typeof jsobj === "function"){
+    if(jsobj instanceof Promise){
+        // cf. issue #2321
+        return jsobj.then(x => jsobj2pyobj(x)).catch(
+            function(err){
+                throw $B.exception(err)
+            })
+    }
 
+    if(typeof jsobj === "function"){
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
 
