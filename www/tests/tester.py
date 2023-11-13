@@ -379,6 +379,26 @@ class Support:
 
 support = Support()
 
+# tester for async functions: stops execution with input() in case of error
+class AsyncTester(Tester):
+    pass
+
+def async_wrapper(method):
+    def f(*args):
+        try:
+            method(*args)
+        except AssertionError as exc:
+            input(str(exc))
+    return f
+
+for method_name in dir(Tester):
+    if method_name.startswith('assert'):
+        setattr(AsyncTester, method_name,
+                async_wrapper(getattr(Tester, method_name)))
+
+async_tester = AsyncTester()
+
+
 def assert_raises(exc_type, func, *args, msg=None, nb_args=None, **kw):
     try:
         func(*args, **kw)
