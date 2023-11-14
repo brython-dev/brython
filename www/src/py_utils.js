@@ -89,6 +89,7 @@ var empty = {}
 
 // Original args0 used to construct error message when raising an exception.
 function args0(f, args){
+
     // Called by user-defined functions / methods
     var arg_names = f.$infos.arg_names,
         code = f.$infos.__code__,
@@ -252,7 +253,7 @@ function args0_NEW(fct, args) {
         for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
             
             kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator(kargs) ) {
+            for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
             
             	if( typeof argname !== "string") {
 			$B.args0_old(fct, args);
@@ -332,7 +333,7 @@ function args0_NEW(fct, args) {
 	for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
 	
             kargs = ARGS_NAMED[id];
-	    for(let argname of $B.make_js_iterator(kargs) ) {
+	    for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) {
 	    
 	    	if( typeof argname !== "string") {
 			$B.args0_old(fct, args);
