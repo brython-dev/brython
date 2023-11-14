@@ -89,6 +89,7 @@ var empty = {}
 
 // Original args0 used to construct error message when raising an exception.
 function args0(f, args){
+
     // Called by user-defined functions / methods
     var arg_names = f.$infos.arg_names,
         code = f.$infos.__code__,
@@ -119,13 +120,14 @@ function args0_NEW(fct, args) {
     // If you don't want to change it, I can modify the code to remove the costly convertion.
     /**/
     //const args = _args; // should remove this line...
-    const HAS_KW = args[args.length-1]?.$kw !== undefined
+    const LAST_ARGS = args[args.length-1];
+    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
     let ARGS_POS_COUNT = args.length,
         ARGS_NAMED = null;
 
     if(HAS_KW){
         --ARGS_POS_COUNT
-        ARGS_NAMED = args[ARGS_POS_COUNT].$kw
+        ARGS_NAMED = LAST_ARGS.$kw
     }
 
     const result = {}
@@ -191,18 +193,8 @@ function args0_NEW(fct, args) {
         // Handle defaults value for named parameters.
         // Optimize: precompute the number of named parameters with a default value, or just a boolean ?
 
-        let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj
-        if(kwargs_defaults === undefined || kwargs_defaults === null){
-
-            kwargs_defaults = $INFOS.__kwdefaults__.$strings
-            if(kwargs_defaults === undefined || kwargs_defaults === null){
-                args0(fct, args)
-                throw new Error('Named argument expected (args0 should have raised an error) !')
-            }
-        }
-
-        const named_default_values = Object.values(kwargs_defaults), // TODO: precompute this plz.
-              nb_named_defaults = named_default_values.length
+        const kwargs_defaults_values = fct.$kwdefaults_values;
+        const nb_named_defaults = kwargs_defaults_values.length;
 
         if(nb_named_defaults < PARAMS_NAMED_COUNT){
             args0(fct, args)
@@ -210,18 +202,13 @@ function args0_NEW(fct, args) {
         }
 
         for(let i = 0; i < nb_named_defaults; ++i){
-            result[PARAMS_NAMES[offset++]] = named_default_values[i]
+            result[PARAMS_NAMES[offset++]] = kwargs_defaults_values[i]
         }
+        
         return result
     }
 
-    let kwargs_defaults = $INFOS.__kwdefaults__.$jsobj;
-    if(kwargs_defaults === undefined || kwargs_defaults == null){
-        kwargs_defaults = $INFOS.__kwdefaults__.$strings
-        if( kwargs_defaults === undefined || kwargs_defaults == null ){
-            kwargs_defaults = {}
-        }
-    }
+    const kwargs_defaults = fct.$kwdefaults;
 
     // Construct the list of default values...
     // Optimize : I'd need an object containing ALL default values instead of
@@ -233,9 +220,7 @@ function args0_NEW(fct, args) {
 
     // Consume remaining positional only parameters (no positional arguments
     // given, so expect default value).
-    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount,
-          PARAMS_POS_DEFAULTS_MAXID = PARAMS_POS_DEFAULTS_COUNT +
-                                      PARAMS_POS_DEFAULTS_OFFSET
+    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount;
 
     if(offset < PARAMS_POSONLY_COUNT){
         if(offset < PARAMS_POS_DEFAULTS_OFFSET){
@@ -256,18 +241,26 @@ function args0_NEW(fct, args) {
 
     // No **kwargs parameter (i.e. unknown name = error).
     if(PARAMS_KWARGS_NAME === null){
-        let nb_named_args = 0
-        for(let id = 0, len = ARGS_NAMED.length; id < len; ++id){
-            const _kargs = ARGS_NAMED[id]
-            let kargs  = _kargs.$jsobj
-            if(kargs === undefined || kargs === null){
-                kargs = _kargs.$strings
-                if(kargs === undefined || kargs === null){
-                    kargs= _kargs
-                }
-            }
-            for(let argname in kargs) {
-                result[ argname ] = kargs[argname]
+        let nb_named_args = 0;
+        
+        let kargs = ARGS_NAMED[0];
+        
+        for(let argname in kargs) {
+		result[ argname ] = kargs[argname]
+		++nb_named_args
+	}
+        
+        for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
+            
+            kargs = ARGS_NAMED[id];
+            for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+            
+            	if( typeof argname !== "string") {
+			$B.args0_old(fct, args);
+			throw new Error('Non string key passed in **kargs');
+		}
+		
+                result[ argname ] = $B.$getitem(kargs, argname);
                 ++nb_named_args
             }
         }
@@ -282,7 +275,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Missing a named arguments (args0 should have raised an error) !')
         }
-        for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset){
+        for( ; ioffset < PARAMS_POS_COUNT; ++ioffset){
             const key = PARAMS_NAMES[ioffset]
             if(key in result){
                 continue
@@ -295,12 +288,12 @@ function args0_NEW(fct, args) {
             if( key in result ){
                 continue
             }
-            if(! (key in kwargs_defaults)){
+            if(! kwargs_defaults.has(key) ){
                 args0(fct, args)
                 throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
-
-            result[key] = kwargs_defaults[key]
+            
+            result[key] = kwargs_defaults.get(key)
             ++found
         }
 
@@ -313,35 +306,49 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
+        
         return result
     }
 
     // With **kwargs parameter (i.e. unknown name = put in extra).
-    const extra = {}
+    const extra = {};
+    const HAS_PARAMS = fct.$hasParams;
 
     // we count the number of arguments given to normal named parameters and the number given to **kwargs.
     let nb_named_args = 0
     let nb_extra_args = 0
-
-    for(let id = 0; id < ARGS_NAMED.length; ++id){
-        const _kargs = ARGS_NAMED[id]
-        let kargs  = _kargs.$jsobj
-        if(kargs === undefined || kargs === null){
-            kargs = _kargs.$strings
-            if(kargs === undefined || kargs === null){
-                kargs= _kargs
-            }
-        }
-        for(let argname in kargs){
-            if(PARAMS_NAMES.indexOf(argname, PARAMS_POSONLY_COUNT) !== -1){
-                result[ argname ] = kargs[argname]
-                ++nb_named_args
-            }else{
-                extra[ argname ] = kargs[argname]
-                ++nb_extra_args
-            }
-        }
-    }
+    
+    	let kargs = ARGS_NAMED[0];
+	for(let argname in kargs) {
+		
+		if( HAS_PARAMS.has(argname) ) {
+			result[ argname ] = kargs[argname]
+			++nb_named_args
+		}else{
+		        extra[ argname ] = kargs[argname]
+		        ++nb_extra_args
+		}
+	}
+        
+	for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
+	
+            kargs = ARGS_NAMED[id];
+	    for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) {
+	    
+	    	if( typeof argname !== "string") {
+			$B.args0_old(fct, args);
+			throw new Error('Non string key passed in **kargs');
+		}
+		
+		if( HAS_PARAMS.has(argname) ){
+			result[ argname ] = $B.$getitem(kargs, argname);
+			++nb_named_args
+		}else{
+		        extra[ argname ] = $B.$getitem(kargs, argname);
+		        ++nb_extra_args
+		}
+	    }
+	}
 
     // Same as "No **kwargs parameter".
     // Checks default values...
@@ -356,7 +363,7 @@ function args0_NEW(fct, args) {
         args0(fct, args)
         throw new Error('Missing a named arguments (args0 should have raised an error) !')
     }
-    for( ; ioffset < PARAMS_POS_DEFAULTS_MAXID; ++ioffset){
+    for( ; ioffset < PARAMS_POS_COUNT; ++ioffset){
         const key = PARAMS_NAMES[ioffset]
         if(key in result){
             continue
@@ -369,11 +376,11 @@ function args0_NEW(fct, args) {
         if( key in result ){
             continue
         }
-        if(! (key in kwargs_defaults)){
+        if(! kwargs_defaults.has(key) ){
             args0(fct, args)
             throw new Error('Missing a named arguments (args0 should have raised an error) !')
         }
-        result[key] = kwargs_defaults[key]
+        result[key] = kwargs_defaults.get(key)
         ++found
     }
 

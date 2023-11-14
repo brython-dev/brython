@@ -1904,7 +1904,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
-        js += `${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`
+        js += `${locals_name} = locals = {};
+if( arguments.length !== 0)
+	$B.args0(${parse_args.join(', ')})\n`; // build error message
     }else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
