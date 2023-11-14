@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 var _b_ = $B.builtins
@@ -259,7 +260,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'x'
+    var test = false // name == 'T'
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -294,7 +295,7 @@ function name_scope(name, scopes){
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
         is_local = [LOCAL, CELL].indexOf(__scope) > -1
     if(test){
-        console.log('block', block, 'is local', is_local)
+        console.log('block', block, 'is local', is_local, '__scope', __scope)
     }
     if(up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name){
         return {found: false, resolve: 'own_class_name'}
@@ -475,20 +476,23 @@ $B.resolve = function(name){
 $B.resolve_local = function(name, position){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
-    var frame = $B.frame_obj.frame
-    if(frame[1].hasOwnProperty){
-        if(frame[1].hasOwnProperty(name)){
-            return frame[1][name]
-        }
-    }else{
-        var value = frame[1][name]
-        if(value !== undefined){
-            return value
+    if($B.frame_obj !== null){
+
+        var frame = $B.frame_obj.frame
+        if(frame[1].hasOwnProperty){
+            if(frame[1].hasOwnProperty(name)){
+                return frame[1][name]
+            }
+        }else{
+            var value = frame[1][name]
+            if(value !== undefined){
+                return value
+            }
         }
     }
     var exc = _b_.UnboundLocalError.$factory(`cannot access local variable ` +
               `'${name}' where it is not associated with a value`)
-    if(position){
+    if(position && $B.frame_obj){
         $B.set_exception_offsets(exc, position)
     }
     throw exc
@@ -595,7 +599,8 @@ function mark_parents(node){
 }
 
 function add_body(body, scopes){
-    var res = ''
+    var res = '';
+    let js;
     for(var item of body){
         js = $B.js_from_ast(item, scopes)
         if(js.length > 0){
@@ -779,11 +784,13 @@ function init_scopes(type, scopes){
     // Common to Expression and Module
     // Initializes the first scope in scopes
     // namespaces can be passed by exec() or eval()
-    var filename = scopes.symtable.table.filename,
+    var filename = scopes?.symtable?.table?.filename,
         name = $B.url2name[filename]
 
     if(name){
         name = name.replace(/-/g, '_') // issue 1958
+    } else if(filename === undefined) {
+        name = 'exec' //TODO: ???
     }else if(filename.startsWith('<') && filename.endsWith('>')){
         name = 'exec'
     }else{
@@ -1072,7 +1079,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         }
     }
 
-    js = add_body(this.body, scopes) + '\n'
+    var js = add_body(this.body, scopes) + '\n'
     var has_generator = scope.is_generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
@@ -2394,7 +2401,7 @@ function pattern_bindings(pattern){
             break
         case $B.ast.MatchOr:
             bindings = pattern_bindings(pattern.patterns[0])
-            err_msg = 'alternative patterns bind different names'
+            var err_msg = 'alternative patterns bind different names'
             for(var i = 1; i < pattern.patterns.length; i++){
                 var _bindings = pattern_bindings(pattern.patterns[i])
                 if(_bindings.length != bindings.length){
@@ -3019,14 +3026,73 @@ $B.ast.Tuple.prototype.to_js = function(scopes){
 }
 
 $B.ast.TypeAlias.prototype.to_js = function(scopes){
+    // For type aliases, symtable creates 2 blocks, one for the type params
+    // and another one for the type alias. We create the 2 matching scopes
+    var type_param_scope = new Scope('type_params', 'type_params', this.type_params)
+    scopes.push(type_param_scope)
+    var type_alias_scope = new Scope('type_alias', 'type_alias', this)
+    scopes.push(type_alias_scope)
+
+    var type_params_names = []
+
+    for(var type_param of this.type_params){
+        if(type_param instanceof $B.ast.TypeVar){
+            type_params_names.push(type_param.name)
+        }else if(type_param instanceof $B.ast.TypeVarTuple ||
+                type_param instanceof $B.ast.ParamSpec){
+            type_params_names.push(type_param.name.id)
+        }
+    }
+
+    var type_params_list = type_params_names.map(x => `'${x}'`)
+
+    for(var name of type_params_names){
+        bind(name, scopes)
+    }
+
+    var qualified_name = qualified_scope_name(scopes, type_alias_scope)
     var value = this.value.to_js(scopes),
-        type_params = this.type_params.map(x => x.to_js(scopes))
-    return `locals.${this.name.id} = $B.make_type_alias('${this.name.id}', ` +
-           `$B.fast_tuple([${type_params}]), ${value})\n`// type alias\n`
+        type_params = [] //this.type_params.map(x => x.to_js(scopes))
+    scopes.pop()
+    scopes.pop()
+    var js = `$B.$import('_typing')\n`
+    // create locals for the type param scope
+    js += `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+    // emulate the function that creates the instance of TypeAliasType
+    // as explained in Python Reference
+    // https://docs.python.org/3/reference/compound_stmts.html#generic-type-aliases
+    js += `function TYPE_PARAMS_OF_${this.name.id}(){\n` +
+               `var locals_${qualified_name} = {},\n` +
+               `    locals = locals_${qualified_name}, \n` +
+               `    type_params = $B.fast_tuple([])\n`
+    for(var i = 0, len = this.type_params.length; i < len; i++){
+        js += `type_params.push(locals.${type_params_names[i]} = ` +
+                  `${this.type_params[i].to_js()})\n`
+    }
+    // create the function called when the attribute __value__ of the
+    // TypeAliasType instance is resolved ("lazy evaluation")
+    js += `function get_value(){\nreturn ${value}\n}\n`
+    // The function returns an instance of _typing.TypeAliasType
+    js += `var res = $B.$call($B.imported._typing.TypeAliasType)` +
+          `('${this.name.id}', get_value)\n` +
+          `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
+          `$B.$setattr(res, '__type_params__', type_params)\n` +
+          `return res\n` +
+          `}\n` +
+          `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
+    return js
 }
 
 $B.ast.TypeVar.prototype.to_js = function(){
-    return `$B.$call($B.imported.typing.TypeVar)('${this.name}')`
+    return `$B.$call($B.imported._typing.TypeVar)('${this.name}')`
+}
+
+$B.ast.TypeVarTuple.prototype.to_js = function(){
+    return `$B.$call($B.imported._typing.TypeVarTuple)('${this.name.id}')`
+}
+
+$B.ast.ParamSpec.prototype.to_js = function(){
+    return `$B.$call($B.imported._typing.ParamSpec)('${this.name.id}')`
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){
@@ -3173,7 +3239,7 @@ $B.ast.With.prototype.to_js = function(scopes){
 
     scope.needs_stack_length = true
 
-    js = add_body(this.body, scopes) + '\n'
+    var js = add_body(this.body, scopes) + '\n'
     var in_generator = scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
@@ -3335,9 +3401,10 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
 var state = {}
 
 $B.js_from_root = function(arg){
+
     var ast_root = arg.ast,
         symtable = arg.symtable,
-        filename = arg.filename
+        filename = arg.filename,
         namespaces = arg.namespaces,
         imported = arg.imported
 

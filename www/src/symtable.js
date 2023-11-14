@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 var _b_ = $B.builtins
@@ -124,10 +125,11 @@ function _Py_Mangle(privateobj, ident){
     }
     /* Strip leading underscores from class name */
     ipriv = 0;
-    while (privateobj[ipriv] == '_')
-        ipriv++;
-    if (ipriv == plen) {
-        return ident; /* Don't mangle if class is just underscores */
+    while(privateobj[ipriv] == '_'){
+        ipriv++
+    }
+    if(ipriv == plen){
+        return ident /* Don't mangle if class is just underscores */
     }
     var prefix = privateobj.substr(ipriv)
     return '_' + prefix + ident
@@ -197,6 +199,7 @@ function ste_new(st, name, block,
         end_lineno: end_lineno,
         end_col_offset: end_col_offset
     }
+
     if(st.cur != NULL &&
             (st.cur.nested ||
              st.cur.type == FunctionBlock)){
@@ -260,11 +263,7 @@ $B._PySymtable_Build = function(mod, filename, future){
 }
 
 function PySymtable_Lookup(st, key){
-    var v = st.blocks.get(key)
-    if(v){
-        assert(PySTEntry_Check(v))
-    }
-    return v
+    return st.blocks.get(key)
 }
 
 function _PyST_GetSymbol(ste, name){
@@ -324,9 +323,8 @@ function error_at_directive(exc, ste, name){
             return 0
         }
     }
-    PyErr_SetString(PyExc_RuntimeError,
-                    "BUG: internal directive bookkeeping broken")
-    return 0
+    throw _b_.RuntimeError.$factory(
+        "BUG: internal directive bookkeeping broken")
 }
 
 
@@ -452,7 +450,7 @@ function analyze_name(ste, scopes, name, flags,
         return 1
     }
     if (flags & DEF_NONLOCAL) {
-        if (!bound) {
+        if(!bound){
             var exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal declaration not allowed at module level");
             error_at_directive(exc, ste, name)
@@ -552,7 +550,7 @@ function analyze_cells(scopes, free, inlined_cells){
     for(var name in scopes){
         v = scopes[name]
         //assert(PyLong_Check(v));
-        scope = v;
+        var scope = v;
         if (scope != LOCAL){
             continue;
         }
@@ -669,12 +667,12 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 
 
 function analyze_block(ste, bound, free, global, typeparams, class_entry){
-    var name, v, local = NULL, scopes = NULL, newbound = NULL,
-        newglobal = NULL, newfree = NULL, allfree = NULL,
+    var name, v,
+        allfree = NULL,
         temp, i, success = 0, pos = 0;
 
-    local = new Set()  /* collect new names bound in block */
-    scopes = {}  /* collect scopes defined for each name */
+    let local = new Set()  /* collect new names bound in block */
+    let scopes = {}  /* collect scopes defined for each name */
 
     /* Allocate new global, bound and free variable sets.  hese
        sets hold the names visible in nested blocks.  For
@@ -687,10 +685,10 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
     /* TODO(jhylton): Package these dicts in a struct so that we
        can write reasonable helper functions?
     */
-    newglobal = new Set()
-    newfree = new Set()
-    newbound = new Set()
-    inlined_cells = new Set()
+    let newglobal = new Set()
+    let newfree = new Set()
+    let newbound = new Set()
+    let inlined_cells = new Set()
 
     /* Class namespace has no effect on names visible in
        nested functions, so populate the global and bound
@@ -715,7 +713,6 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
             return 0
         }
     }
-
 
     /* Populate global and bound sets to be passed to children. */
     if (ste.type != ClassBlock) {
@@ -764,7 +761,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         if (inline_comp) {
             if (! inline_comprehension(ste, entry, scopes, child_free,
                     inlined_cells)) {
-                error();
+                // error
             }
             entry.comp_inlined = 1;
         }
@@ -774,7 +771,6 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
             ste.child_free = 1
         }
     }
-
     /* Splice children of inlined comprehensions into our children list */
     for (var i = ste.children.length - 1; i >= 0; i--) {
         var entry = ste.children[i];
@@ -872,7 +868,6 @@ function symtable_enter_block(st, name, block,
     }
     var ste = ste_new(st, name, block, ast,
                       lineno, col_offset, end_lineno, end_col_offset)
-
     st.stack.push(ste)
     prev = st.cur
     /* bpo-37757: For now, disallow *all* assignment expressions in the
@@ -993,7 +988,7 @@ function symtable_enter_type_param_block(st, name,
             return 0;
         }
     }
-    if (kind == $B.ast.ClassDef) {
+    if(kind == $B.ast.ClassDef) {
         // It gets "set" when we create the type params tuple and
         // "used" when we build up the bases.
         if (!symtable_add_def(st, "type_params", DEF_LOCAL,
@@ -2114,33 +2109,6 @@ function symtable_raise_if_comprehension_block(st, e) {
     set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                                       e.end_lineno, e.end_col_offset);
     throw exc
-}
-
-function _Py_SymtableStringObjectFlags(str, filename,
-                              start, flags){
-    var st,
-        mod,
-        arena;
-
-    arena = _PyArena_New();
-    if (arena == NULL)
-        return NULL;
-
-    mod = _PyParser_ASTFromString(str, filename, start, flags, arena);
-    if (mod == NULL) {
-        _PyArena_Free(arena);
-        return NULL;
-    }
-    var future = _PyFuture_FromAST(mod, filename);
-    if (future == NULL) {
-        _PyArena_Free(arena);
-        return NULL;
-    }
-    future.features |= flags.cf_flags;
-    st = _PySymtable_Build(mod, filename, future);
-    PyObject_Free(future);
-    _PyArena_Free(arena);
-    return st;
 }
 
 })(__BRYTHON__)

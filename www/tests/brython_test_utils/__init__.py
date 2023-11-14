@@ -35,7 +35,8 @@ def discover_brython_test_modules():
         ]),
         ("DOM interface", [
             ("dom.py", "DOM"),
-            ("test_webcomponent.py", "Web component")
+            ("test_webcomponent.py", "Web component"),
+            ("test_web_worker.py", "Web Worker")
         ]),
         ("Issues", [
           ("issues_gc.py", "issues (GC)"),
@@ -72,6 +73,7 @@ def discover_brython_test_modules():
           ("test_struct.py", "struct"),
           ("test_sys.py", "sys"),
           ("test_types.py", "types"),
+          ("test_typing.py", "typing"),
           ("test_unicodedata.py", "unicodedata"),
           ("test_unittest.py", "unittest"),
           ("test_urllib.py", "urllib"),

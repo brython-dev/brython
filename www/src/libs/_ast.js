@@ -1,4 +1,4 @@
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins,
     ast = $B.ast, // created in py2js
@@ -743,7 +743,8 @@ mod._validate = function(ast_obj){
         // No default case so compiler emits warning for unhandled cases
     }
 }
-return mod
+
+$B.imported._ast = mod
 
 }
 )(__BRYTHON__)

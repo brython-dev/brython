@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins,
@@ -225,7 +226,7 @@ list.$getitem = function(self, key){
 
 list.__ge__ = function(self, other){
     // self >= other is the same as other <= self
-    if(! $B.$isinstance(other, list)){
+    if(! isinstance(other, list)){
         return _b_.NotImplemented
     }
     var res = list.__le__(other, self)
@@ -237,7 +238,7 @@ list.__ge__ = function(self, other){
 
 list.__gt__ = function(self, other){
     // self > other is the same as other < self
-    if(! $B.$isinstance(other, list)){
+    if(! isinstance(other, list)){
         return _b_.NotImplemented
     }
     var res = list.__lt__(other, self)
@@ -270,45 +271,36 @@ list.__imul__ = function() {
         return $.self
     }
     for(var i = 1; i < x; i++){
-        for(j = 0; j < len; j++){
+        for(var j = 0; j < len; j++){
             $.self[pos++] = $.self[j]
         }
     }
     return $.self
 }
 
-list.__init__ = function(self, arg){
+list.__init__ = function(){
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
-            'args', null),
+            'args', 'kw'),
         self = $.self,
-        args = $.args
+        args = $.args,
+        kw = $.kw
     if(args.length > 1){
         throw _b_.TypeError.$factory('expected at most 1 argument, got ' +
             args.length)
     }
-    var arg = args[0]
-    var len_func = $B.$call($B.$getattr(self, "__len__")),
-        pop_func = $B.$getattr(self, "pop", _b_.None)
-    if(pop_func !== _b_.None){
-        pop_func = $B.$call(pop_func)
-        while(len_func()){pop_func()}
+    if(_b_.dict.__len__(kw) > 0){
+        throw _b_.TypeError.$factory('list() takes no keyword arguments')
     }
+    while(self.length > 0){
+        self.pop()
+    }
+    var arg = args[0]
     if(arg === undefined){
         return _b_.None
     }
-    var arg = $B.$iter(arg),
-        next_func = $B.$call($B.$getattr(arg, "__next__")),
-        pos = len_func()
-    while(1){
-        try{
-            var res = next_func()
-            self[pos++] = res
-        }catch(err){
-            if(err.__class__ === _b_.StopIteration){
-                break
-            }
-            else{throw err}
-        }
+    var pos = 0
+    for(var item of $B.make_js_iterator(arg)){
+        self[pos++] = item
     }
     return _b_.None
 }
@@ -405,7 +397,7 @@ list.__mul__ = function(self, other){
             res.__brython__ = self.__brython__
         }
         return res
-    }else if($B.$isinstance(other, $B.long_int)){
+    }else if(isinstance(other, $B.long_int)){
         throw _b_.OverflowError.$factory(`cannot fit ` +
         `'${$B.class_name(other)}' into an index-sized integer`)
     }
@@ -420,25 +412,6 @@ list.__new__ = function(cls, ...args){
     res.__brython__ = true
     res.__dict__ = $B.empty_dict()
     return res
-}
-
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    // args for list.__reduce_ex__ is just (klass,)
-    // for tuple.__reduce_ex__ it is (klass, ...items)
-    var res = args.slice(1)
-    res.__class__ = args[0]
-    return res
-}
-
-list.__reduce_ex__ = function(self){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__]),
-        _b_.None,
-        _b_.iter(self)])
 }
 
 list.__repr__ = function(self){
@@ -458,7 +431,7 @@ function list_repr(self){
         _r.push(_b_.repr(self[i]))
     }
 
-    if($B.$isinstance(self, tuple)){
+    if(isinstance(self, tuple)){
         if(self.length == 1){
             res = "(" + _r[0] + ",)"
         }else{
@@ -572,8 +545,9 @@ list.count = function(){
 list.extend = function(){
     var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
         arguments, {}, null, null)
-    var other = list.$factory(_b_.iter($.t))
-    for(var i = 0; i < other.length; i++){$.self.push(other[i])}
+    for(var item of $B.make_js_iterator($.t)){
+        $.self[$.self.length] = item
+    }
     return _b_.None
 }
 
@@ -992,12 +966,12 @@ tuple.__eq__ = function(self, other){
 }
 
 function c_mul(a, b){
-    s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
+    var s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
     return parseInt(s.substr(0, s.length - 1), 16)
 }
 
 tuple.$getnewargs = function(self){
-    return $B.fast_tuple([self])
+    return $B.fast_tuple([$B.fast_tuple(self.slice())])
 }
 
 tuple.__getnewargs__ = function(){
@@ -1045,14 +1019,6 @@ tuple.__new__ = function(cls, ...args){
         }
     }
     return self
-}
-
-tuple.__reduce_ex__ = function(self){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__].concat(self.slice())),
-        _b_.None,
-        _b_.None])
 }
 
 tuple.__repr__ = function(self){

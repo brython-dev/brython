@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -550,18 +551,6 @@ complex.__rmul__ = function(self, other){
                             other.value * self.$imag.value)
     }
     return _b_.NotImplemented
-}
-
-complex.__sqrt__ = function(self) {
-    if(self.$imag == 0){
-        return complex(Math.sqrt(self.$real.value))
-    }
-    var r = self.$real.value,
-        i = self.$imag.value,
-        _a = Math.sqrt((r + sqrt) / 2),
-        _b = Number.sign(i) * Math.sqrt((-r + sqrt) / 2)
-
-    return make_complex(_a, _b)
 }
 
 complex.__sub__ = function(self, other){

@@ -1,7 +1,8 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins,
-    _window = self,
+    _window = globalThis,
     isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
@@ -526,7 +527,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
         }
         if(slots[arg_name] === empty){
             // search in defaults
-            def_value = defaults[j - (nb_pos_or_kw - nb_def)]
+            var def_value = defaults[j - (nb_pos_or_kw - nb_def)]
             if(def_value !== undefined){
                 slots[arg_name] = def_value
                 if(j < nb_posonly){
@@ -693,7 +694,7 @@ $B.check_no_kw = function(name, x, y){
     if(x === undefined){
         console.log("x undef", name, x, y)
     }
-    if((x.$kw && x.$kw[0] && x.$kw[0].length > 0) ||
+    if((x.$kw && x.$kw[0] && Object.keys(x.$kw[0]).length > 0) ||
             (y !== undefined && y.$kw)){
         throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
 }
@@ -833,6 +834,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+
     if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
         var it = iterator[Symbol.iterator]()
         return {
@@ -1684,6 +1686,9 @@ $B.get_frame_at = function(pos, frame_obj){
     frame_obj = frame_obj || $B.frame_obj
     var nb = $B.count_frames() - pos - 1
     for(var i = 0; i < nb; i++){
+        if(frame_obj.prev === null){
+            break
+        }
         frame_obj = frame_obj.prev
     }
     return frame_obj.frame

@@ -1,6 +1,6 @@
 // Web Worker implementation
 
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -247,9 +247,11 @@ function create_worker(){
     return _b_.None
 }
 
-return {
+var module = {
     Worker: _Worker,
     create_worker
 }
+
+$B.addToImported('_webworker', module)
 
 })(__BRYTHON__)

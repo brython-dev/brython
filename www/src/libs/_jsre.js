@@ -1,4 +1,4 @@
-var $module = (function($B){
+(function($B){
 
     var _b_ = $B.builtins
 
@@ -41,7 +41,7 @@ var $module = (function($B){
 
     $B.set_func_names(MatchObject, '_jsre')
 
-    var obj = {__class__: $module,
+    var obj = {
         __str__: function(){return "<module 're'>"}
     }
     obj.A = obj.ASCII = 256
@@ -279,6 +279,6 @@ var $module = (function($B){
         }
     })(obj.search)
 
-    return obj
+    $B.addToImported('_jsre', obj)
 }
 )(__BRYTHON__)

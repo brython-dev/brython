@@ -469,4 +469,8 @@ class TypeAliasType:
     def __init__(self, name, value):
         self.__name__ = name
         self.__type_params__ = ()
-        self.__value__ = value
+        self._value = value
+
+    @property
+    def __value__(self):
+        return self._value()

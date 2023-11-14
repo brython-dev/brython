@@ -53,10 +53,25 @@
 
 <!-- Javascript code needed to run tests included in dom.py -->
 <script src="dom_js_tests.js"></script>
+
+<!-- Javascript code needed to run tests included in test_jsobjects.py -->
 <script src="jsobj_tests.js"></script>
+
+<!-- Javascript code needed to run tests included in test_import.py -->
+<script src="filesystem/test_filesystem.vfs.js"></script>
 
 <!-- script type="text/javascript" src="../src/brython_stdlib.js"></script -->
 <script src="/assets/header.brython.js"></script>
+
+<script type="text/python" class="webworker" id="test_web_worker">
+from browser import self, bind
+
+@bind(self, 'message')
+def message(ev):
+    assert ev.data == 'hello'
+    self.send('sent by web worker')
+    
+</script>
 
 <script type="text/python3">
 import time
@@ -255,6 +270,9 @@ for key in trans:
        <demo-component2082></demo-component2082>
        <ui-demo-component2169>TEST</ui-demo-component2169>
        <demo-component2181></demo-component2181>
+       <div is="my-div_a_2295"></div>
+       <div is="my-div_b_2295"></div>
+       <div is="my-div_c_2295"></div>
 </body>
 </html>
 

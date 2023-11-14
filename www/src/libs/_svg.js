@@ -1,5 +1,5 @@
-// creation of an HTML element
-var $module = (function($B){
+// creation of a SVG element
+(function($B){
 
 var _b_ = $B.builtins
 var TagSum = $B.TagSum // defined in py_dom.js
@@ -129,5 +129,5 @@ for(var i = 0, len = $svg_tags.length; i < len; i++){
     obj[tag] = makeTagDict(tag)
 }
 
-return obj
+$B.imported._svg = obj
 })(__BRYTHON__)

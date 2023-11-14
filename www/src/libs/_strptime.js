@@ -1,7 +1,7 @@
-var _b_ = __BRYTHON__.builtins
 
-var $module = (function($B){
-    return {
+(function($B){
+    var _b_ = __BRYTHON__.builtins
+    $B.imported._strptime = {
         _strptime_datetime: function(cls, s, fmt){
             var pos_s = 0,
                 pos_fmt = 0,

@@ -1,4 +1,7 @@
 ;(function($B) {
+
+"use strict";
+
 var _b_ = $B.builtins
 
 var coroutine = $B.coroutine = $B.make_class("coroutine")
@@ -68,7 +71,21 @@ $B.promise = function(obj){
     if(typeof obj == "function"){
         return obj()
     }
-    return obj
+    if(obj instanceof Promise){
+        return obj
+    }
+    var awaitable = $B.$getattr(obj, '__await__', null)
+    if(awaitable !== null){
+        // must be an iterator
+        awaitable = $B.$call(awaitable)()
+        if($B.$getattr(awaitable, '__next__', null) === null){
+            throw _b_.TypeError.$factory('__await__() returned non-iterator' +
+                ` of type '${$B.class_name(awaitable)}'`)
+        }
+        return awaitable
+    }
+    throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} ` +
+        `can't be used in 'await' expression`)
 }
 
 })(__BRYTHON__)

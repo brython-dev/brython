@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -532,7 +533,6 @@ int.__setattr__ = function(self, attr, value){
             throw _b_.AttributeError.$factory(`'${cl_name}' object` +
                 ` has no attribute '${attr}'`)
         }
-        throw _b_.AttributeError.$factory(msg)
     }
     // subclasses of int can have attributes set
     _b_.dict.$setitem(self.__dict__, attr, value)
@@ -847,7 +847,8 @@ int.$factory = function(value, base){
     if(match === null){
         // try with number in non-latin alphabets
         res = 0
-        var coef = 1
+        var coef = 1,
+            digit
         for(var char of _value){
             if(/\p{Nd}/u.test(char)){
                 // get value from table $B.digit_starts in unicode_data.js

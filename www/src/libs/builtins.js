@@ -1,8 +1,5 @@
-var $module = (function(){
-    var obj = {
-        __class__: __BRYTHON__.module,
-        __name__: 'builtins'
-    },
+(function(){
+    var obj = {},
         builtin_names = ['ArithmeticError', 'AssertionError',
             'AttributeError', 'BaseException', 'BaseExceptionGroup',
             'BlockingIOError', 'BrokenPipeError', 'BufferError',
@@ -47,5 +44,6 @@ var $module = (function(){
     obj.copyright = 'CPython copyright'
     obj.credits = 'CPython builtins credits'
     obj.license = 'CPython license'
-    return obj
+    
+    $B.addToImported('builtins', obj)
 })()

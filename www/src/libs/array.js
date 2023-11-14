@@ -1,4 +1,4 @@
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -303,9 +303,11 @@ array.typecode = function(self){
 
 $B.set_func_names(array, "array")
 
-return {
+var module = {
     array: array,
     typecodes: Object.keys(typecodes).join('')
 }
+
+$B.addToImported('array', module)
 
 })(__BRYTHON__)

@@ -310,7 +310,7 @@ def show_square(x):
     alert(x ** 2)
 </script>
 
-Square of <input id="num"><button id="btn">show</show>
+Square of <input id="num" value="2"><button id="btn">show</show>
 
 <script>
 document.getElementById('btn').addEventListener('click',

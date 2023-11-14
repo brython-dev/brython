@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -571,7 +571,7 @@ JSONDecoder.decode = function(self, s){
     return to_py(parse(s), self)
 }
 
-return {
+$B.imported._json = {
     dumps: function(){
         return _b_.str.$factory(to_json.apply(null, arguments))
     },
