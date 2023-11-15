@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-13 21:15:16.814974"
-__BRYTHON__.timestamp=1699906516814
+__BRYTHON__.compiled_date="2023-11-15 08:36:12.187589"
+__BRYTHON__.timestamp=1700033772187
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5287,10 +5287,11 @@ for(var arg_name of arg_names){slots[arg_name]=empty}
 return $B.parse_args(
 args,f.$infos.__name__,code.co_argcount,slots,arg_names,f.$infos.__defaults__,f.$infos.__kwdefaults__,f.$infos.vararg,f.$infos.kwarg,code.co_posonlyargcount,code.co_kwonlyargcount)}
 function args0_NEW(fct,args){
-const HAS_KW=args[args.length-1]?.$kw !==undefined
+const LAST_ARGS=args[args.length-1];
+const HAS_KW=LAST_ARGS !==undefined && LAST_ARGS !==null && LAST_ARGS.$kw !==undefined;
 let ARGS_POS_COUNT=args.length,ARGS_NAMED=null;
 if(HAS_KW){--ARGS_POS_COUNT
-ARGS_NAMED=args[ARGS_POS_COUNT].$kw}
+ARGS_NAMED=LAST_ARGS.$kw}
 const result={}
 const $INFOS=fct.$infos,$CODE=$INFOS.__code__,PARAMS_NAMES=$INFOS.arg_names,PARAMS_POS_COUNT=$CODE.co_argcount,PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_VARARGS_NAME=$INFOS.vararg,PARAMS_KWARGS_NAME=$INFOS.kwarg,PARAMS_POS_DEFAULTS=$INFOS.__defaults__,PARAMS_POS_DEFAULTS_COUNT=PARAMS_POS_DEFAULTS.length,PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT-PARAMS_POS_DEFAULTS_COUNT
 const min=Math.min(ARGS_POS_COUNT,PARAMS_POS_COUNT)
@@ -5308,21 +5309,14 @@ i < PARAMS_POS_DEFAULTS_COUNT;
 ++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}
 if(PARAMS_KWARGS_NAME !==null){result[PARAMS_KWARGS_NAME]=$B.obj_dict({})}
 if(PARAMS_NAMED_COUNT===0 ){return result}
-let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj
-if(kwargs_defaults===undefined ||kwargs_defaults===null){kwargs_defaults=$INFOS.__kwdefaults__.$strings
-if(kwargs_defaults===undefined ||kwargs_defaults===null){args0(fct,args)
-throw new Error('Named argument expected (args0 should have raised an error) !')}}
-const named_default_values=Object.values(kwargs_defaults),
-nb_named_defaults=named_default_values.length
+const kwargs_defaults_values=fct.$kwdefaults_values;
+const nb_named_defaults=kwargs_defaults_values.length;
 if(nb_named_defaults < PARAMS_NAMED_COUNT){args0(fct,args)
 throw new Error('Named argument expected (args0 should have raised an error) !')}
-for(let i=0;i < nb_named_defaults;++i){result[PARAMS_NAMES[offset++]]=named_default_values[i]}
+for(let i=0;i < nb_named_defaults;++i){result[PARAMS_NAMES[offset++]]=kwargs_defaults_values[i]}
 return result}
-let kwargs_defaults=$INFOS.__kwdefaults__.$jsobj;
-if(kwargs_defaults===undefined ||kwargs_defaults==null){kwargs_defaults=$INFOS.__kwdefaults__.$strings
-if(kwargs_defaults===undefined ||kwargs_defaults==null ){kwargs_defaults={}}}
-const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount,PARAMS_POS_DEFAULTS_MAXID=PARAMS_POS_DEFAULTS_COUNT+
-PARAMS_POS_DEFAULTS_OFFSET
+const kwargs_defaults=fct.$kwdefaults;
+const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
 if(offset < PARAMS_POSONLY_COUNT){if(offset < PARAMS_POS_DEFAULTS_OFFSET){args0(fct,args)
 throw new Error('Not enough positional parameters given (args0 should have raised an error) !')}
 const max=PARAMS_POS_DEFAULTS_COUNT-
@@ -5330,12 +5324,17 @@ const max=PARAMS_POS_DEFAULTS_COUNT-
 for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
 i < max;
 ++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}}
-if(PARAMS_KWARGS_NAME===null){let nb_named_args=0
-for(let id=0,len=ARGS_NAMED.length;id < len;++id){const _kargs=ARGS_NAMED[id]
-let kargs=_kargs.$jsobj
-if(kargs===undefined ||kargs===null){kargs=_kargs.$strings
-if(kargs===undefined ||kargs===null){kargs=_kargs}}
-for(let argname in kargs){result[argname ]=kargs[argname]
+if(PARAMS_KWARGS_NAME===null){let nb_named_args=0;
+let kargs=ARGS_NAMED[0];
+for(let argname in kargs){		result[argname ]=kargs[argname]
+		++nb_named_args
+	}
+for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
+for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){	if(typeof argname !=="string"){			$B.args0_old(fct,args);
+			throw new Error('Non string key passed in **kargs');
+		}
+		
+result[argname ]=$B.$getitem(kargs,argname);
 ++nb_named_args}}
 let found=0
 let ioffset=offset
@@ -5344,29 +5343,45 @@ if(key in result ){
 continue}
 args0(fct,args)
 throw new Error('Missing a named arguments (args0 should have raised an error) !')}
-for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset]
+for(;ioffset < PARAMS_POS_COUNT;++ioffset){const key=PARAMS_NAMES[ioffset]
 if(key in result){continue}
 result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET]
 ++found}
 for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset]
 if(key in result ){continue}
-if(!(key in kwargs_defaults)){args0(fct,args)
+if(! kwargs_defaults.has(key)){args0(fct,args)
 throw new Error('Missing a named arguments (args0 should have raised an error) !');}
-result[key]=kwargs_defaults[key]
+result[key]=kwargs_defaults.get(key)
 ++found}
 if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
 throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
 return result}
-const extra={}
+const extra={};
+const HAS_PARAMS=fct.$hasParams;
 let nb_named_args=0
 let nb_extra_args=0
-for(let id=0;id < ARGS_NAMED.length;++id){const _kargs=ARGS_NAMED[id]
-let kargs=_kargs.$jsobj
-if(kargs===undefined ||kargs===null){kargs=_kargs.$strings
-if(kargs===undefined ||kargs===null){kargs=_kargs}}
-for(let argname in kargs){if(PARAMS_NAMES.indexOf(argname,PARAMS_POSONLY_COUNT)!==-1){result[argname ]=kargs[argname]
-++nb_named_args}else{extra[argname ]=kargs[argname]
-++nb_extra_args}}}
+	let kargs=ARGS_NAMED[0];
+	for(let argname in kargs){		
+		if(HAS_PARAMS.has(argname)){			result[argname ]=kargs[argname]
+			++nb_named_args
+		}else{		 extra[argname ]=kargs[argname]
+		++nb_extra_args
+		}
+	}
+	for(let id=1,len=ARGS_NAMED.length;id < len;++id){	
+kargs=ARGS_NAMED[id];
+	 for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){	 
+	 	if(typeof argname !=="string"){			$B.args0_old(fct,args);
+			throw new Error('Non string key passed in **kargs');
+		}
+		
+		if(HAS_PARAMS.has(argname)){			result[argname ]=$B.$getitem(kargs,argname);
+			++nb_named_args
+		}else{		 extra[argname ]=$B.$getitem(kargs,argname);
+		++nb_extra_args
+		}
+	 }
+	}
 let found=0
 let ioffset=offset
 for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset]
@@ -5374,15 +5389,15 @@ if(key in result){
 continue}
 args0(fct,args)
 throw new Error('Missing a named arguments (args0 should have raised an error) !')}
-for(;ioffset < PARAMS_POS_DEFAULTS_MAXID;++ioffset){const key=PARAMS_NAMES[ioffset]
+for(;ioffset < PARAMS_POS_COUNT;++ioffset){const key=PARAMS_NAMES[ioffset]
 if(key in result){continue}
 result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET]
 ++found}
 for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset]
 if(key in result ){continue}
-if(!(key in kwargs_defaults)){args0(fct,args)
+if(! kwargs_defaults.has(key)){args0(fct,args)
 throw new Error('Missing a named arguments (args0 should have raised an error) !')}
-result[key]=kwargs_defaults[key]
+result[key]=kwargs_defaults.get(key)
 ++found}
 if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
 throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
@@ -7848,16 +7863,25 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_defaults=function(f){if(f.$infos && f.$infos.__code__){
-var argcount=f.$infos.__code__.co_argcount,varnames=f.$infos.__code__.co_varnames,params=varnames.slice(0,argcount),value=f.$infos.__defaults__,$defaults={}
-for(var i=value.length-1;i >=0;i--){var pos=params.length-value.length+i
-if(pos < 0){break}
-$defaults[params[pos]]=value[i]}
-if(f.$infos.__kwdefaults__ !==_b_.None){var kwdef=f.$infos.__kwdefaults__
-for(var kw of $B.make_js_iterator(kwdef)){$defaults[kw]=$B.$getitem(kwdef,kw)}}
-f.$defaults=$defaults
-return _b_.None}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
-" of "+_b_.str.$factory(self))}}
+$B.make_function_defaults=function(f){	if(f.$infos===undefined ||f.$infos.__code__===undefined){	 throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
+	}
+	
+	const varnames=f.$infos.__code__.co_varnames,	 value=f.$infos.__defaults__,	 offset=f.$infos.__code__.co_argcount-value.length,	 $defaults={},	 $kwdefaults=new Map();
+	for(let i=0;i < value.length ;++i){	 $defaults[varnames[i+offset]]=value[i]
+	}
+	if(f.$infos.__kwdefaults__ !==_b_.None){	 const kwdef=f.$infos.__kwdefaults__
+	 for(let kw of $B.make_js_iterator(kwdef)){		$kwdefaults.set(kw,$defaults[kw]=$B.$getitem(kwdef,kw));
+	 }
+	}
+	f.$defaults=$defaults
+	f.$kwdefaults=$kwdefaults
+	f.$kwdefaults_values=[...$kwdefaults.values()];
+	
+	f.$hasParams=new Set();
+	for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i )
+		f.$hasParams.add(varnames[i]);
+		
+	return _b_.None;}
 $B.function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
@@ -16219,7 +16243,9 @@ var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.kwarg.arg+"'"
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
+this.args.kwarg===undefined){js+=`${locals_name} = locals = {};
+if( arguments.length !== 0)
+	$B.args0(${parse_args.join(', ')})\n`;}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     if(locals.$has_generators){

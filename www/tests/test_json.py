@@ -81,4 +81,8 @@ assert list(ComplexEncoder().iterencode(2 + 1j)) == ['[2.0', ', 1.0', ']']
 # issue 1944
 assert json.loads('{"a":[]}') == {'a': []}
 
+# detected in issue 2322
+d = "0.000000000000000"
+assert json.loads(d) == 0.0
+
 print('all tests ok..')
