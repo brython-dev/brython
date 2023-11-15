@@ -125,7 +125,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     if(Array.isArray(jsobj)){
         // set it as non-enumerable, prevents issues when looping on it in JS.
         Object.defineProperty(jsobj, "$is_js_array", {value: true});
-        return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
+        return jsobj
     }
     if(typeof jsobj === 'number'){
        if(jsobj % 1 === 0){ //TODO: dangerous, it can also be a float with no decimals.
@@ -148,10 +148,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
 
     if(jsobj instanceof Promise){
         // cf. issue #2321
-        return jsobj.then(x => jsobj2pyobj(x)).catch(
-            function(err){
-                throw $B.exception(err)
-            })
+        return jsobj.then(x => jsobj2pyobj(x)).catch($B.handle_error)
     }
 
     if(typeof jsobj === "function"){

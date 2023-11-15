@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-15 18:24:59.888245"
-__BRYTHON__.timestamp=1700069099888
+__BRYTHON__.compiled_date="2023-11-15 23:02:02.362232"
+__BRYTHON__.timestamp=1700085722362
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5326,14 +5326,11 @@ i < max;
 ++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}}
 if(PARAMS_KWARGS_NAME===null){let nb_named_args=0;
 let kargs=ARGS_NAMED[0];
-for(let argname in kargs){		result[argname ]=kargs[argname]
-		++nb_named_args
-	}
+for(let argname in kargs){result[argname ]=kargs[argname]
+++nb_named_args}
 for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
-for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){	if(typeof argname !=="string"){			$B.args0_old(fct,args);
-			throw new Error('Non string key passed in **kargs');
-		}
-		
+for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
+throw new Error('Non string key passed in **kargs');}
 result[argname ]=$B.$getitem(kargs,argname);
 ++nb_named_args}}
 let found=0
@@ -5360,28 +5357,16 @@ const extra={};
 const HAS_PARAMS=fct.$hasParams;
 let nb_named_args=0
 let nb_extra_args=0
-	let kargs=ARGS_NAMED[0];
-	for(let argname in kargs){		
-		if(HAS_PARAMS.has(argname)){			result[argname ]=kargs[argname]
-			++nb_named_args
-		}else{		 extra[argname ]=kargs[argname]
-		++nb_extra_args
-		}
-	}
-	for(let id=1,len=ARGS_NAMED.length;id < len;++id){	
-kargs=ARGS_NAMED[id];
-	 for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){	 
-	 	if(typeof argname !=="string"){			$B.args0_old(fct,args);
-			throw new Error('Non string key passed in **kargs');
-		}
-		
-		if(HAS_PARAMS.has(argname)){			result[argname ]=$B.$getitem(kargs,argname);
-			++nb_named_args
-		}else{		 extra[argname ]=$B.$getitem(kargs,argname);
-		++nb_extra_args
-		}
-	 }
-	}
+let kargs=ARGS_NAMED[0];
+for(let argname in kargs){if(HAS_PARAMS.has(argname)){result[argname ]=kargs[argname]
+++nb_named_args}else{extra[argname ]=kargs[argname]
+++nb_extra_args}}
+for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
+for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
+throw new Error('Non string key passed in **kargs');}
+if(HAS_PARAMS.has(argname)){result[argname ]=$B.$getitem(kargs,argname);
+++nb_named_args}else{extra[argname ]=$B.$getitem(kargs,argname);
+++nb_extra_args}}}
 let found=0
 let ioffset=offset
 for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset]
@@ -13909,7 +13894,7 @@ if(jsobj===undefined){return $B.Undefined}
 if(jsobj===null){return null}
 if(Array.isArray(jsobj)){
 Object.defineProperty(jsobj,"$is_js_array",{value:true});
-return jsobj }
+return jsobj}
 if(typeof jsobj==='number'){if(jsobj % 1===0){
 return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}
@@ -13918,8 +13903,7 @@ if(typeof jsobj=='bigint'){return _b_.int.$int_or_long(jsobj)}
 let pyobj=jsobj[PYOBJ]
 if(pyobj !==undefined){return pyobj;}
 if(jsobj instanceof Promise){
-return jsobj.then(x=> jsobj2pyobj(x)).catch(
-function(err){throw $B.exception(err)})}
+return jsobj.then(x=> jsobj2pyobj(x)).catch($B.handle_error)}
 if(typeof jsobj==="function"){
 _this=_this===undefined ? null :_this
 if(_this===null){const pyobj=jsobj[PYOBJFCT];
@@ -15188,7 +15172,7 @@ return $B.$getattr(self.__self_class__,attr)}
 $B.set_func_names(super_class,"javascript")
 modules['javascript']={"this":function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObj.$factory($B.js_this)},Date:self.Date && $B.JSObj.$factory(self.Date),extends:function(js_constr){if((!js_constr.$js_func)||
+return $B.JSObj.$factory($B.js_this)},Array:$B.js_array,Date:self.Date && $B.JSObj.$factory(self.Date),extends:function(js_constr){if((!js_constr.$js_func)||
 ! js_constr.$js_func.toString().startsWith('class ')){console.log(js_constr)
 throw _b_.TypeError.$factory(
 'argument of extend must be a Javascript class')}
