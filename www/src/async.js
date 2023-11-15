@@ -71,7 +71,8 @@ $B.promise = function(obj){
     if(typeof obj == "function"){
         return obj()
     }
-    if(obj instanceof Promise){
+    // check if obj is an instance of Promise or supports the Thenable interface
+    if(obj instanceof Promise || typeof obj.then == "function"){
         return obj
     }
     var awaitable = $B.$getattr(obj, '__await__', null)
