@@ -809,12 +809,21 @@ dict.__repr__ = function(self){
 
 dict.$iter_items_reversed = function*(d){
     var version = d.$version
-    for(var i = d._keys.length - 1; i >= 0; i--){
-        var key = d._keys[i]
-        if(key !== undefined){
-            yield $B.fast_tuple([key, d._values[i]])
+    if(d.$all_str){
+        for(var item of Object.entries(d.$strings).reverse()){
+            yield $B.fast_tuple(item)
             if(d.$version !== version){
                 throw _b_.RuntimeError.$factory('changed in iteration')
+            }
+        }
+    }else{
+        for(var i = d._keys.length - 1; i >= 0; i--){
+            var key = d._keys[i]
+            if(key !== undefined){
+                yield $B.fast_tuple([key, d._values[i]])
+                if(d.$version !== version){
+                    throw _b_.RuntimeError.$factory('changed in iteration')
+                }
             }
         }
     }

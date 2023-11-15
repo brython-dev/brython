@@ -257,12 +257,24 @@ d[list(d.keys())[0]]
 # issue 2256
 t = [('-1', ' Alle'),
      ('6', 'Radio'),
-     ('7', 'TV'), 
+     ('7', 'TV'),
      ('0', 'HTV')]
 
 d = dict(t)
 
 assert list(d) == ['-1', '6', '7', '0']
 
+# issue 2323
+data = {
+    "values": {
+        "first": 1,
+        "second": 2,
+        "third": 3,
+        "final": 100
+    }
+}
+
+d = dict(reversed(data['values'].items()))
+assert str(d) == "{'final': 100, 'third': 3, 'second': 2, 'first': 1}"
 
 print("passed all tests..")

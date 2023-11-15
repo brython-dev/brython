@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-15 08:36:12.187589"
-__BRYTHON__.timestamp=1700033772187
+__BRYTHON__.compiled_date="2023-11-15 13:55:01.727879"
+__BRYTHON__.timestamp=1700052901727
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -7863,25 +7863,17 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_defaults=function(f){	if(f.$infos===undefined ||f.$infos.__code__===undefined){	 throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
-	}
-	
-	const varnames=f.$infos.__code__.co_varnames,	 value=f.$infos.__defaults__,	 offset=f.$infos.__code__.co_argcount-value.length,	 $defaults={},	 $kwdefaults=new Map();
-	for(let i=0;i < value.length ;++i){	 $defaults[varnames[i+offset]]=value[i]
-	}
-	if(f.$infos.__kwdefaults__ !==_b_.None){	 const kwdef=f.$infos.__kwdefaults__
-	 for(let kw of $B.make_js_iterator(kwdef)){		$kwdefaults.set(kw,$defaults[kw]=$B.$getitem(kwdef,kw));
-	 }
-	}
-	f.$defaults=$defaults
-	f.$kwdefaults=$kwdefaults
-	f.$kwdefaults_values=[...$kwdefaults.values()];
-	
-	f.$hasParams=new Set();
-	for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i )
-		f.$hasParams.add(varnames[i]);
-		
-	return _b_.None;}
+$B.make_function_defaults=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);}
+const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$defaults={},$kwdefaults=new Map()
+for(let i=0;i < value.length ;++i){$defaults[varnames[i+offset]]=value[i]}
+if(f.$infos.__kwdefaults__ !==_b_.None){const kwdef=f.$infos.__kwdefaults__
+for(let kw of $B.make_js_iterator(kwdef)){$kwdefaults.set(kw,$defaults[kw]=$B.$getitem(kwdef,kw))}}
+f.$defaults=$defaults
+f.$kwdefaults=$kwdefaults
+f.$kwdefaults_values=[...$kwdefaults.values()]
+f.$hasParams=new Set()
+for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i){f.$hasParams.add(varnames[i])}
+return _b_.None}
 $B.function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
@@ -13084,9 +13076,10 @@ for(var entry of dict.$iter_items_with_hash(self)){res.push(_b_.repr(entry.key)+
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
 dict.$iter_items_reversed=function*(d){var version=d.$version
-for(var i=d._keys.length-1;i >=0;i--){var key=d._keys[i]
+if(d.$all_str){for(var item of Object.entries(d.$strings).reverse()){yield $B.fast_tuple(item)
+if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}else{for(var i=d._keys.length-1;i >=0;i--){var key=d._keys[i]
 if(key !==undefined){yield $B.fast_tuple([key,d._values[i]])
-if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
+if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}}
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}
 dict.$iter_keys_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[0]}}
 dict.$iter_values_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[1]}}
