@@ -204,7 +204,7 @@ function args0_NEW(fct, args) {
         for(let i = 0; i < nb_named_defaults; ++i){
             result[PARAMS_NAMES[offset++]] = kwargs_defaults_values[i]
         }
-        
+
         return result
     }
 
@@ -242,24 +242,24 @@ function args0_NEW(fct, args) {
     // No **kwargs parameter (i.e. unknown name = error).
     if(PARAMS_KWARGS_NAME === null){
         let nb_named_args = 0;
-        
+
         let kargs = ARGS_NAMED[0];
-        
+
         for(let argname in kargs) {
-		result[ argname ] = kargs[argname]
-		++nb_named_args
-	}
-        
+        result[ argname ] = kargs[argname]
+        ++nb_named_args
+    }
+
         for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
-            
+
             kargs = ARGS_NAMED[id];
             for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
-            
-            	if( typeof argname !== "string") {
-			$B.args0_old(fct, args);
-			throw new Error('Non string key passed in **kargs');
-		}
-		
+
+                if( typeof argname !== "string") {
+            $B.args0_old(fct, args);
+            throw new Error('Non string key passed in **kargs');
+        }
+
                 result[ argname ] = $B.$getitem(kargs, argname);
                 ++nb_named_args
             }
@@ -292,7 +292,7 @@ function args0_NEW(fct, args) {
                 args0(fct, args)
                 throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
-            
+
             result[key] = kwargs_defaults.get(key)
             ++found
         }
@@ -306,7 +306,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
-        
+
         return result
     }
 
@@ -317,38 +317,38 @@ function args0_NEW(fct, args) {
     // we count the number of arguments given to normal named parameters and the number given to **kwargs.
     let nb_named_args = 0
     let nb_extra_args = 0
-    
-    	let kargs = ARGS_NAMED[0];
-	for(let argname in kargs) {
-		
-		if( HAS_PARAMS.has(argname) ) {
-			result[ argname ] = kargs[argname]
-			++nb_named_args
-		}else{
-		        extra[ argname ] = kargs[argname]
-		        ++nb_extra_args
-		}
-	}
-        
-	for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
-	
+
+        let kargs = ARGS_NAMED[0];
+    for(let argname in kargs) {
+
+        if( HAS_PARAMS.has(argname) ) {
+            result[ argname ] = kargs[argname]
+            ++nb_named_args
+        }else{
+                extra[ argname ] = kargs[argname]
+                ++nb_extra_args
+        }
+    }
+
+    for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
+
             kargs = ARGS_NAMED[id];
-	    for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) {
-	    
-	    	if( typeof argname !== "string") {
-			$B.args0_old(fct, args);
-			throw new Error('Non string key passed in **kargs');
-		}
-		
-		if( HAS_PARAMS.has(argname) ){
-			result[ argname ] = $B.$getitem(kargs, argname);
-			++nb_named_args
-		}else{
-		        extra[ argname ] = $B.$getitem(kargs, argname);
-		        ++nb_extra_args
-		}
-	    }
-	}
+        for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) {
+
+            if( typeof argname !== "string") {
+            $B.args0_old(fct, args);
+            throw new Error('Non string key passed in **kargs');
+        }
+
+        if( HAS_PARAMS.has(argname) ){
+            result[ argname ] = $B.$getitem(kargs, argname);
+            ++nb_named_args
+        }else{
+                extra[ argname ] = $B.$getitem(kargs, argname);
+                ++nb_extra_args
+        }
+        }
+    }
 
     // Same as "No **kwargs parameter".
     // Checks default values...
