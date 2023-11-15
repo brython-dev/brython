@@ -430,6 +430,7 @@
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObj.$factory($B.js_this)
         },
+        Array: $B.js_array,
         Date: self.Date && $B.JSObj.$factory(self.Date),
         extends: function(js_constr){
             if((!js_constr.$js_func) ||
@@ -563,7 +564,9 @@
                     $B.JSObj.$factory(replacer), space)
             }
         },
-        jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},
+        jsobj2pyobj:function(obj){
+            return $B.jsobj2pyobj(obj)
+        },
         load:function(script_url){
             console.log('"javascript.load" is deprecrated. ' +
                 'Use browser.load instead.')
@@ -585,7 +588,9 @@
                 $B.builtins_scope).to_js()
             return $B.format_indent(js, 0)
         },
-        pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
+        pyobj2jsobj:function(obj){
+            return $B.pyobj2jsobj(obj)
+        },
         RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
         String: self.String && $B.JSObj.$factory(self.String),
         "super": super_class,
@@ -1206,7 +1211,7 @@
                     }
                 }
             }
-            
+
             var save_frame_obj = $B.frame_obj
             $B.coroutine.send(coro).then(onsuccess).catch(error_func)
             $B.frame_obj = save_frame_obj
