@@ -1917,7 +1917,8 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 	
 		for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
-			for(let argname of $B.make_js_iterator(ARGS_NAMED[id]) ) { //TODO: not optimal
+			const kargs = ARGS_NAMED[id];
+			for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) { //TODO: not optimal
 				$B.args0_old(fct, args);
 				throw new Error('No named arguments expected !!!');
 			}
@@ -1963,7 +1964,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 	} else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
 		fct += `
-		const kwargs_defaults_values = fct.$kw_defaults_values;
+		const kwargs_defaults_values = fct.$kwdefaults_values;
 		
 		for(let i = 0; i < kwargs_defaults_values.length; ++i )    
         		result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
@@ -1985,7 +1986,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	if( namedOnlyDefaults !== DEFAULTS.NONE) {
 		fct += `
-	const kwargs_defaults = fct.$kw_defaults;
+	const kwargs_defaults = fct.$kwdefaults;
 `
 	}
 
@@ -2086,7 +2087,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 		const kargs = ARGS_NAMED[id];
 
-		for(let argname of $B.make_js_iterator(kargs) ) {
+		for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
 		
 			if( typeof argname !== "string") {
 				$B.args0_old(fct, args);
@@ -2227,7 +2228,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 //console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
 
-const USE_PERSO_ARGS0_EVERYWHERE = false;
+const USE_PERSO_ARGS0_EVERYWHERE = true;
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
