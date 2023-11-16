@@ -1,5 +1,5 @@
 (function($B){
-
+"use strict";
 $B.pattern_match = function(subject, pattern){
     var _b_ = $B.builtins,
         frame = $B.frame_obj.frame,

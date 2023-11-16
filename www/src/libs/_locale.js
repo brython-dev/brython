@@ -813,7 +813,8 @@ var x_format = {
 }
 
 
-var $module=(function($B){
+
+__BRYTHON__.imported._locale = (function($B){
     var _b_ = $B.builtins
     return {
         CHAR_MAX: 127,
@@ -878,7 +879,7 @@ var $module=(function($B){
              for(var key in conv){
                  _b_.dict.$setitem(res, key, conv[key])
              }
-             
+
              return res
          },
 

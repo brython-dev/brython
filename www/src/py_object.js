@@ -1,3 +1,4 @@
+"use strict";
 __BRYTHON__.builtins.object = (function($B){
 
 var _b_ = $B.builtins
@@ -113,7 +114,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'method' // false // attr == "__args__"
+    var $test = false // attr == 'st_size' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -234,14 +235,6 @@ object.__getattribute__ = function(obj, attr){
             }
         }
 
-        if(typeof res == "object"){
-            if(__get__ && (typeof __get__ == "function")){
-                get_func = function(x, y){
-                    return __get__.apply(x, [y, klass.$factory])
-                }
-            }
-        }
-
         if(__get__ === null && (typeof res == "function")){
             __get__ = function(x){return x}
         }
@@ -343,6 +336,9 @@ object.__getattribute__ = function(obj, attr){
         }
         // attribute is not a descriptor : return it unchanged
         return res
+    }else if(obj.hasOwnProperty && obj.hasOwnProperty(attr) &&
+            ! Array.isArray(obj)){
+        return $B.Undefined
     }else{
         throw $B.attr_error(attr, obj)
     }
@@ -523,8 +519,17 @@ object.__reduce_ex__ = function(self, protocol){
         d = _b_.None
     }
     res.push(d)
-    res.push(_b_.None) // XXX fix me
-    res.push(_b_.None) // XXX fix me
+    var list_like_iterator = _b_.None
+    if($B.$getattr(klass, 'append', null) !== null &&
+            $B.$getattr(klass, 'extend', null) !== null){
+        list_like_iterator = _b_.iter(self)
+    }
+    res.push(list_like_iterator)
+    var key_value_iterator = _b_.None
+    if($B.$isinstance(self, _b_.dict)){
+        key_value_iterator = _b_.dict.items(self)
+    }
+    res.push(key_value_iterator)
     return _b_.tuple.$factory(res)
 }
 

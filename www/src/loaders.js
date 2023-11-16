@@ -1,5 +1,5 @@
 // Script with function to load scripts and modules, including indexedDB cache
-
+"use strict";
 (function($B){
 
 var _b_ = $B.builtins
@@ -123,7 +123,6 @@ function store_precompiled(module, js, source_ts, imports, is_package){
         data = {"name": module,
             "content": js,
             "imports": imports,
-            "origin": origin,
             "timestamp": __BRYTHON__.timestamp,
             "source_ts": source_ts,
             "is_package": is_package
@@ -152,7 +151,7 @@ function idb_get(module){
     var db = $B.idb_cx.result,
         tx = db.transaction("modules", "readonly")
     try{
-        var store = tx.objectStore("modules")
+        var store = tx.objectStore("modules"),
             req = store.get(module)
         req.onsuccess = function(evt){
             idb_load(evt, module)
@@ -198,7 +197,7 @@ $B.idb_open_promise = function(){
                 }
 
                 openCursor.onsuccess = function(evt){
-                    cursor = evt.target.result
+                    var cursor = evt.target.result
                     if(cursor){
                         record = cursor.value
                         // A record is valid if the Brython engine timestamp is
@@ -291,7 +290,7 @@ $B.idb_open = function(obj){
             }
 
             openCursor.onsuccess = function(evt){
-                cursor = evt.target.result
+                var cursor = evt.target.result
                 if(cursor){
                     record = cursor.value
                     // A record is valid if the Brython engine timestamp is
@@ -422,7 +421,7 @@ var inImported = $B.inImported = function(module){
 }
 
 function report_precompile(mod){
-    if(typeof document !== 'undefined'){
+    if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent('precompile',
             {detail: 'remove outdated ' + mod +
              ' from cache'}))
@@ -430,14 +429,14 @@ function report_precompile(mod){
 }
 
 function report_close(){
-    if(typeof document !== 'undefined'){
+    if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent('precompile',
             {detail: "close"}))
     }
 }
 
 function report_done(mod){
-    if(typeof document !== 'undefined'){
+    if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent("brython_done",
             {detail: $B.obj_dict($B.$options)}))
     }
@@ -488,6 +487,8 @@ var loop = $B.loop = function(){
                     $B.imported[script_id][key] = module[key]
                 }
             }
+            // dispatch "load" event on the <script> element
+            $B.dispatch_load_event(script.script_element)
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception

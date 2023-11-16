@@ -1,5 +1,5 @@
 // ajax
-var $module = (function($B){
+__BRYTHON__.imported._ajax = (function($B){
 
 
 var $N = $B.builtins.None,

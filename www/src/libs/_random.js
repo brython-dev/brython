@@ -1,7 +1,7 @@
 // Javascript implementation of the _random module
 // Based on Ian Bicking's implementation of the Mersenne twister
 
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -408,6 +408,6 @@ Random.setstate = function(){
 
 $B.set_func_names(Random, "_random")
 
-return { Random }
+$B.imported._random = { Random }
 
 })(__BRYTHON__)

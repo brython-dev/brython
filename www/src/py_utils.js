@@ -1,7 +1,8 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins,
-    _window = self,
+    _window = globalThis,
     isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
@@ -88,6 +89,7 @@ var empty = {}
 
 // Original args0 used to construct error message when raising an exception.
 function args0(f, args){
+
     // Called by user-defined functions / methods
     var arg_names = f.$infos.arg_names,
         code = f.$infos.__code__,
@@ -191,7 +193,7 @@ function args0_NEW(fct, args) {
         // Handle defaults value for named parameters.
         // Optimize: precompute the number of named parameters with a default value, or just a boolean ?
 
-        const kwargs_defaults_values = fct.$kw_defaults_values;
+        const kwargs_defaults_values = fct.$kwdefaults_values;
         const nb_named_defaults = kwargs_defaults_values.length;
 
         if(nb_named_defaults < PARAMS_NAMED_COUNT){
@@ -202,11 +204,11 @@ function args0_NEW(fct, args) {
         for(let i = 0; i < nb_named_defaults; ++i){
             result[PARAMS_NAMES[offset++]] = kwargs_defaults_values[i]
         }
-        
+
         return result
     }
 
-    const kwargs_defaults = fct.$kw_defaults;
+    const kwargs_defaults = fct.$kwdefaults;
 
     // Construct the list of default values...
     // Optimize : I'd need an object containing ALL default values instead of
@@ -240,24 +242,24 @@ function args0_NEW(fct, args) {
     // No **kwargs parameter (i.e. unknown name = error).
     if(PARAMS_KWARGS_NAME === null){
         let nb_named_args = 0;
-        
+
         let kargs = ARGS_NAMED[0];
-        
+
         for(let argname in kargs) {
-		result[ argname ] = kargs[argname]
-		++nb_named_args
-	}
-        
+        result[ argname ] = kargs[argname]
+        ++nb_named_args
+    }
+
         for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
-            
+
             kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator(kargs) ) {
-            
-            	if( typeof argname !== "string") {
-			$B.args0_old(fct, args);
-			throw new Error('Non string key passed in **kargs');
-		}
-		
+            for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+
+                if( typeof argname !== "string") {
+            $B.args0_old(fct, args);
+            throw new Error('Non string key passed in **kargs');
+        }
+
                 result[ argname ] = $B.$getitem(kargs, argname);
                 ++nb_named_args
             }
@@ -290,7 +292,7 @@ function args0_NEW(fct, args) {
                 args0(fct, args)
                 throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
-            
+
             result[key] = kwargs_defaults.get(key)
             ++found
         }
@@ -304,7 +306,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
-        
+      
         return result
     }
 
@@ -315,38 +317,38 @@ function args0_NEW(fct, args) {
     // we count the number of arguments given to normal named parameters and the number given to **kwargs.
     let nb_named_args = 0
     let nb_extra_args = 0
-    
-    	let kargs = ARGS_NAMED[0];
-	for(let argname in kargs) {
-		
-		if( HAS_PARAMS.has(argname) ) {
-			result[ argname ] = kargs[argname]
-			++nb_named_args
-		}else{
-		        extra[ argname ] = kargs[argname]
-		        ++nb_extra_args
-		}
-	}
-        
-	for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
-	
+
+        let kargs = ARGS_NAMED[0];
+    for(let argname in kargs) {
+
+        if( HAS_PARAMS.has(argname) ) {
+            result[ argname ] = kargs[argname]
+            ++nb_named_args
+        }else{
+                extra[ argname ] = kargs[argname]
+                ++nb_extra_args
+        }
+    }
+
+    for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
+
             kargs = ARGS_NAMED[id];
-	    for(let argname of $B.make_js_iterator(kargs) ) {
-	    
-	    	if( typeof argname !== "string") {
-			$B.args0_old(fct, args);
-			throw new Error('Non string key passed in **kargs');
-		}
-		
-		if( HAS_PARAMS.has(argname) ){
-			result[ argname ] = $B.$getitem(kargs, argname);
-			++nb_named_args
-		}else{
-		        extra[ argname ] = $B.$getitem(kargs, argname);
-		        ++nb_extra_args
-		}
-	    }
-	}
+        for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) {
+
+            if( typeof argname !== "string") {
+            $B.args0_old(fct, args);
+            throw new Error('Non string key passed in **kargs');
+        }
+
+        if( HAS_PARAMS.has(argname) ){
+            result[ argname ] = $B.$getitem(kargs, argname);
+            ++nb_named_args
+        }else{
+                extra[ argname ] = $B.$getitem(kargs, argname);
+                ++nb_extra_args
+        }
+        }
+    }
 
     // Same as "No **kwargs parameter".
     // Checks default values...
@@ -528,7 +530,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
         }
         if(slots[arg_name] === empty){
             // search in defaults
-            def_value = defaults[j - (nb_pos_or_kw - nb_def)]
+            var def_value = defaults[j - (nb_pos_or_kw - nb_def)]
             if(def_value !== undefined){
                 slots[arg_name] = def_value
                 if(j < nb_posonly){
@@ -695,7 +697,7 @@ $B.check_no_kw = function(name, x, y){
     if(x === undefined){
         console.log("x undef", name, x, y)
     }
-    if((x.$kw && x.$kw[0] && x.$kw[0].length > 0) ||
+    if((x.$kw && x.$kw[0] && Object.keys(x.$kw[0]).length > 0) ||
             (y !== undefined && y.$kw)){
         throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
 }
@@ -835,6 +837,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+
     if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
         var it = iterator[Symbol.iterator]()
         return {
@@ -1686,6 +1689,9 @@ $B.get_frame_at = function(pos, frame_obj){
     frame_obj = frame_obj || $B.frame_obj
     var nb = $B.count_frames() - pos - 1
     for(var i = 0; i < nb; i++){
+        if(frame_obj.prev === null){
+            break
+        }
         frame_obj = frame_obj.prev
     }
     return frame_obj.frame

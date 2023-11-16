@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins,
@@ -560,7 +561,7 @@ set.__repr__ = function(self){
 
 function set_repr(self){
     // shared between set and frozenset
-    klass_name = $B.class_name(self)
+    var klass_name = $B.class_name(self)
     if(self.$used === 0){
         return klass_name + "()"
     }

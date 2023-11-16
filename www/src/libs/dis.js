@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var dict = $B.builtins.dict
 var mod = {
@@ -32,6 +32,6 @@ mod.COMPILER_FLAG_NAMES = dict.$factory([
    [512, "ASYNC_GENERATOR"]
 ])
 
-return mod
+$B.addToImported('dis', mod)
 
 })(__BRYTHON__)

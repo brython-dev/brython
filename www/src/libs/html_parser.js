@@ -1,4 +1,4 @@
-var $module = (function($B){
+(function($B){
 
 _b_ = $B.builtins
 
@@ -137,12 +137,14 @@ function* tokenize(src){
     }
     yield node
 }
-return  {
+var module = {
     ELEMENT_NODE: 1,
     TEXT_NODE: 3,
     COMMENT_NODE:    8,
     DOCUMENT_TYPE_NODE:    10,
     tokenize: tokenize
 }
+
+$B.addToImported('html_parser', module)
 
 })(__BRYTHON__)

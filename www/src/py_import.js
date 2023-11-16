@@ -1,9 +1,10 @@
 // import modules
+"use strict";
 
 ;(function($B){
 
 var _b_ = $B.builtins,
-    _window = self
+    _window = globalThis
 
 // Class for modules
 var Module = $B.module = $B.make_class("module",
@@ -187,66 +188,57 @@ function import_js(mod, path){
     return true
 }
 
+$B.addToImported = function(name, modobj){
+    $B.imported[name] = modobj
+    if(modobj === undefined){
+        throw _b_.ImportError.$factory('imported not set by module')
+    }
+    modobj.__class__ = Module
+    modobj.__name__ = name
+    for(var attr in modobj){
+        if(typeof modobj[attr] == "function"){
+            modobj[attr].$infos = {
+                __module__: name,
+                __name__: attr,
+                __qualname__: attr
+            }
+            modobj[attr].$in_js_module = true
+        }else if($B.$isinstance(modobj[attr], _b_.type) &&
+                ! modobj[attr].hasOwnProperty('__module__')){
+            modobj[attr].__module__ = name
+        }
+    }
+}
+
 function run_js(module_contents, path, _module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
     var module_id = "$locals_" + _module.__name__.replace(/\./g, '_')
 
     try{
-        var $module = new Function(module_id, module_contents +
-            ";\nreturn $module")(_module)
+        new Function(module_contents)()
     }catch(err){
-        console.log(err)
-        console.log(path, _module)
-        throw err
+        throw $B.exception(err)
     }
-    // check that module name is in namespace
-    try{
-        $module
-    }catch(err){
-        console.log("no $module")
-        throw _b_.ImportError.$factory("name '$module' not defined in module")
+    var modobj = $B.imported[_module.__name__]
+    if(modobj === undefined){
+        throw _b_.ImportError.$factory('imported not set by module')
     }
-
-    $module.__name__ = _module.__name__
-    for(var attr in $module){
-        if(typeof $module[attr] == "function"){
-            $module[attr].$infos = {
+    modobj.__class__ = Module
+    modobj.__name__ = _module.__name__
+    for(var attr in modobj){
+        if(typeof modobj[attr] == "function"){
+            modobj[attr].$infos = {
                 __module__: _module.__name__,
                 __name__: attr,
                 __qualname__: attr
             }
-            $module[attr].$in_js_module = true
-        }else if($B.$isinstance($module[attr], _b_.type) &&
-                ! $module[attr].hasOwnProperty('__module__')){
-            $module[attr].__module__ = _module.__name__
+            modobj[attr].$in_js_module = true
+        }else if($B.$isinstance(modobj[attr], _b_.type) &&
+                ! modobj[attr].hasOwnProperty('__module__')){
+            modobj[attr].__module__ = _module.__name__
         }
     }
-
-    if(_module !== undefined){
-        // FIXME : This might not be efficient . Refactor js modules instead.
-        // Overwrite original module object . Needed e.g. for reload()
-        for(var attr in $module){
-            _module[attr] = $module[attr]
-        }
-        $module = _module
-        $module.__class__ = Module // in case $module has __class__ (issue #838)
-    }else{
-        // add class and __str__
-        $module.__class__ = Module
-        $module.__name__ = _module.__name__
-        $module.__repr__ = $module.__str__ = function(){
-          if($B.builtin_module_names.indexOf(_module.name) > -1){
-             return "<module '" + _module.__name__ + "' (built-in)>"
-          }
-          return "<module '" + _module.__name__ + "' from " + path + " >"
-        }
-
-        if(_module.name != "builtins") { // builtins do not have a __file__ attribute
-            $module.__file__ = path
-        }
-    }
-    $B.imported[_module.__name__] = $module
-
+    // $B.set_func_names(modobj, _module.__name__)
     return true
 }
 
@@ -437,7 +429,7 @@ for(var method in VFSFinder){
 }
 
 // Loader for VFS modules
-VFSLoader = $B.make_class("VFSLoader",
+const VFSLoader = $B.make_class("VFSLoader",
     function(){
         return {
             __class__: VFSLoader
@@ -1005,7 +997,7 @@ function import_engine(mod_name, _path, from_stdlib){
 
     if(_loader === undefined){
         // No import spec found
-        message = mod_name
+        var message = mod_name
         if($B.protocol == "file"){
             message += " (warning: cannot import local files with protocol 'file')"
         }
@@ -1226,19 +1218,19 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         return $B.imported[mod_name]
     }else{
         // Return module object for top-level package
-        var package = mod_name
+        let package_name = mod_name
         while(parsed_name.length > 1){
-            var module = parsed_name.pop(),
-                package = parsed_name.join('.')
-            if($B.imported[package] === undefined){
+            var module = parsed_name.pop();
+            package_name = parsed_name.join('.')
+            if($B.imported[package_name] === undefined){
                 // may happen if the modules defines __name__ = "X.Y" and package
                 // X has not been imported
-                $B.$import(package, globals, locals, [])
-                $B.imported[package][module] = $B.imported[mod_name]
+                $B.$import(package_name, globals, locals, [])
+                $B.imported[package_name][module] = $B.imported[mod_name]
                 mod_name = module
             }
         }
-        return $B.imported[package]
+        return $B.imported[package_name]
     }
 }
 
@@ -1317,7 +1309,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         var p = parts[i]
         if(prefix && p == ""){
             // Move up in package hierarchy
-            elt = norm_parts.pop()
+            var elt = norm_parts.pop()
             if(elt === undefined){
                 throw _b_.ImportError.$factory("Parent module '' not loaded, "+
                     "cannot perform relative import")
@@ -1437,7 +1429,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if($err3.$py_error){
                             $err3.__class__ = _b_.ImportError
                             $err3.args[0] = `cannot import name '${name}' ` +
-                                `from '${mod_name}' (${modobj.__file__})`
+                                `from '${mod_name}'`
+                            if(modobj.__file__){
+                                $err3.args[0] += ` (${modobj.__file__})`
+                            }
                             $err3.$suggestion = suggestion
                             throw $err3
                         }
