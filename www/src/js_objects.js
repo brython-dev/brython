@@ -113,7 +113,7 @@ const PYOBJFCTS = Symbol()
 //TODO: optimize unwrap...
 $B.addJS2PyWrapper(Boolean, function(jsobj){
 	return jsobj;
-});
+}, 'Boolean => Boolean');
 $B.addJS2PyWrapper(Number, function(jsobj){
 	if(jsobj % 1 === 0){ //TODO: DANGEROUS! It can also be a float with no decimals.
            return _b_.int.$factory(jsobj)
@@ -121,8 +121,7 @@ $B.addJS2PyWrapper(Number, function(jsobj){
        // for now, lets assume a float
        return _b_.float.$factory(jsobj)
 
-});
-
+}, 'Number => PyInt or PyFloat');
 
 
 $B.addPy2JSWrapper(_b_.float, function(pyobj) {
@@ -130,18 +129,16 @@ $B.addPy2JSWrapper(_b_.float, function(pyobj) {
         // floats are implemented as
         // {__class__: _b_.float, value: <JS number>}
         return pyobj.value // dangerous => can be later converted as int when browser fetch it back.
-});
+}, 'Number <= PyFloat');
 
-$B.addJS2PyWrapper(String, function(jsobj){ //TODO: move 2 py_str ?
+$B.addJS2PyWrapper(String, function(jsobj){
 	return $B.String(jsobj);
-});
+}, "String => PyString");
   
-  /*
-if(jsobj instanceof Promise){
+$B.addJS2PyWrapper(Promise, function(jsobj) {
         // cf. issue #2321
         return jsobj.then(x => jsobj2pyobj(x)).catch($B.handle_error)
-    }
-*/
+}, "Promise => Promise Wrapper");
   
 $B.addJS2PyWrapper(Function, function(jsobj, _this) {
 	
@@ -171,8 +168,10 @@ $B.addJS2PyWrapper(Function, function(jsobj, _this) {
                 args[i] = pyobj2jsobj(arguments[i])
             }
             try{
-                return jsobj2pyobj(jsobj.apply(_this, args))
+            	const ret = jsobj.apply(_this, args);
+                return jsobj2pyobj(ret);
             }catch(err){
+            	console.log(err);
                 throw $B.exception(err)
             }
         }
@@ -191,7 +190,7 @@ $B.addJS2PyWrapper(Function, function(jsobj, _this) {
             __qualname__: jsobj.name
         }
         return res
-});
+}, "Function => Wrapper");
 
 
 function convertMethodsOrFunctions(pyobj, _this) {
@@ -243,12 +242,16 @@ function convertMethodsOrFunctions(pyobj, _this) {
 }
 
 $B.addPy2JSWrapper($B.function, convertMethodsOrFunctions);
-$B.addPy2JSWrapper($B.method  , convertMethodsOrFunctions);
+$B.addPy2JSWrapper($B.method  , convertMethodsOrFunctions, "? <= method or function");
 
 $B.addJS2PyWrapper(Object, function(jsobj, _this) { //TODO: exclude isNode...
 
     if(jsobj.$kw){ // we really shouldn't be doing that...
         return jsobj
+    }
+    
+    if( typeof jsobj === "bigint") { // bigint is in fact converted to an object...
+    	return _b_.int.$int_or_long(jsobj);
     }
 
     const _res = $B.JSObj.$factory(jsobj)
@@ -256,7 +259,7 @@ $B.addJS2PyWrapper(Object, function(jsobj, _this) { //TODO: exclude isNode...
     _res[JSOBJ] = jsobj
     
     return _res;
-});
+}, "Object => PyObj + BigInt => Number");
 
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){	
     // If _this is passed and jsobj is a function, the function is called
@@ -272,7 +275,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     if(pyobj !== undefined)
     	return pyobj;
     
-    return jsobj[PYOBJ_FCT](jsobj, _this);
+    const fct = jsobj[PYOBJ_FCT];
+    
+    return fct(jsobj, _this);
 }
 
 var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
@@ -284,6 +289,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     
     if( ! (pyobj instanceof Object) ) // not a python type (not even an object)...
     	return pyobj;
+    	
     
     const klass = $B.get_class(pyobj)
     if(klass === undefined){
