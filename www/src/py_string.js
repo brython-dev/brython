@@ -119,12 +119,6 @@ var str = {
     $native: true
 }
 
-
-$B.addPy2JSWrapper(str, function(pyobj) {
-        // Python strings are converted to the underlying value
-        return pyobj.valueOf()
-});
-
 str.$to_string = to_string
 
 function normalize_start_end($){

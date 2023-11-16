@@ -30,19 +30,6 @@ var list = {
 }
 
 
-
-$B.addJS2PyWrapper(Array, function(jsobj) {
-        // set it as non-enumerable, prevents issues when looping on it in JS.
-        Object.defineProperty(jsobj, "$is_js_array", {value: true});
-        return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
-});
-
-$B.addPy2JSWrapper(list, function(pyobj) {
-	
-        // Python list : transform its elements
-        return pyobj.map($B.pyobj2jsobj);
-});
-
 list.__add__ = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
         var this_name = $B.class_name(self) // can be tuple
@@ -916,12 +903,6 @@ var tuple = {
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
 }
-
-$B.addPy2JSWrapper(tuple, function(pyobj) {
-	
-        // Python list : transform its elements
-        return pyobj.map($B.pyobj2jsobj);
-});
 
 var tuple_iterator = $B.make_iterator_class("tuple_iterator")
 tuple.__iter__ = function(self){

@@ -110,6 +110,54 @@ const PYOBJ_FCT = $B.SYMBOL_JS2PY_WRAPPER;
 const PYOBJFCT = Symbol()
 const PYOBJFCTS = Symbol()
 
+
+$B.addJS2PyWrapper(Array, function(jsobj) {
+        // set it as non-enumerable, prevents issues when looping on it in JS.
+        Object.defineProperty(jsobj, "$is_js_array", {value: true});
+        return jsobj // $B.$list(jsobj.map(jsobj2pyobj))
+}, "Array => JSArray");
+
+$B.addPy2JSWrapper(_b_.list, function(pyobj) {
+	
+        // Python list : transform its elements
+        return pyobj.map($B.pyobj2jsobj);
+}, "list => Array (clone)");
+
+
+$B.addPy2JSWrapper(_b_.str, function(pyobj) {
+        // Python strings are converted to the underlying value
+        return pyobj.valueOf()
+}, "string <= str");
+
+
+$B.addPy2JSWrapper(_b_.dict, function(pyobj) {
+	
+        // Python dictionaries are transformed into a Javascript object
+        // whose attributes are the dictionary keys
+        // Non-string keys are converted to strings by str(key). This will
+        // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
+        // be the Javascript object {1: "b"}
+        let jsobj = {}
+        for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
+            var key = entry.key
+            if(typeof key !== "string"){
+                key = _b_.str.$factory(key)
+            }
+            if(typeof entry.value === 'function'){
+                // set "this" to jsobj
+                entry.value.bind(jsobj)
+            }
+            jsobj[key] = $B.pyobj2jsobj(entry.value)
+        }
+        return jsobj
+}, "JSObj <= dict");
+
+$B.addPy2JSWrapper(_b_.tuple, function(pyobj) {
+	
+        // Python list : transform its elements
+        return pyobj.map($B.pyobj2jsobj);
+}, "tuple => Array (clone)");
+
 //TODO: optimize unwrap...
 $B.addJS2PyWrapper(Boolean, function(jsobj){
 	return jsobj;
