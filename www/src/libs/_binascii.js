@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
@@ -174,6 +174,6 @@ var module = {
 module.hexlify = module.b2a_hex
 module.unhexlify = module.a2b_hex
 
-return module
+$B.imported._binascii = module
 }
 )(__BRYTHON__)

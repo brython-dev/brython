@@ -1,9 +1,8 @@
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
 $B.$import('token')
-
 
 var TokenizerIter = $B.make_class('TokenizerIter',
     function(it){
@@ -62,6 +61,7 @@ TokenizerIter.__next__ = function*(self){
 
 $B.set_func_names(TokenizerIter, '_tokenize')
 
-return {TokenizerIter}
+$B.addToImported('_tokenize', {TokenizerIter})
+
 
 })(__BRYTHON__)

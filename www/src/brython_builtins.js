@@ -1,4 +1,5 @@
-var __BRYTHON__ = __BRYTHON__ || {}  // global object with brython built-ins
+"use strict";
+var __BRYTHON__ = globalThis.__BRYTHON__ || {}  // global object with brython built-ins
 
 try{
     // "async function*" is not supported in old versions of Microsoft Edge
@@ -14,25 +15,29 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
 
-$B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
-    && (process.__nwjs!==1)
+$B.isNode = (typeof process !=='undefined') && (process.release.name === 'node')
+    && (process.__nwjs !== 1)
 
 
-var _window
-if($B.isNode){
-    _window = {
-        location: {
+var _window = globalThis;
+
+_window.location ||= {
             href:'',
             origin: '',
             pathname: ''
-        },
-        navigator: {
-            userLanguage: ''
-        }
-    }
-} else {
-    _window = self
+        };
+
+_window.navigator ||= {userLanguage: ''}
+
+_window.document  ||= {
+	getElementsByTagName: () => [{src: "http://localhost/"}],  // TODO: maybe needs some adaptations
+	currentScript: {src: "http://localhost/"}, // TODO: maybe needs some adaptations
+	querySelectorAll: () => []
 }
+
+_window.HTMLElement ||= class HTMLElement {};
+_window.MutationObserver ||= function() { this.observe = () => {};  }; 
+_window.customElements   ||= {define: () => {} };
 
 var href = _window.location.href
 $B.protocol = href.split(':')[0]
@@ -53,8 +58,8 @@ if($B.brython_path === undefined){
     }else{
         this_url = document.currentScript.src
     }
-
-    var elts = this_url.split('/')
+    
+    var elts = this_url.split('/');
     elts.pop()
     // brython_path is the url of the directory holding brython core scripts
     // It is used to import modules of the standard library
@@ -287,6 +292,7 @@ $B.builtins_repr_check = function(builtin, args){
             {}, null, null),
         self = $.self
     if(! $B.$isinstance(self, builtin)){
+        var _b_ = $B.builtins
         throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
             `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)

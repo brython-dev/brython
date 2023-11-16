@@ -1,10 +1,9 @@
 // Regular expression
-
+(function($B){
 
 var _debug = {value: 0}
 
-var $B = __BRYTHON__,
-    _b_ = $B.builtins
+var _b_ = $B.builtins
 
 var MAXGROUPS = 2147483647,
     MAXREPEAT = 2147483648
@@ -1258,7 +1257,7 @@ Scanner.match = function(self){
 
 Scanner.search = function(self){
     if(! self.$iterator){
-        self.$iterator = $module.finditer(self.pattern, self.$string)
+        self.$iterator = module.finditer(self.pattern, self.$string)
     }
     // return last match
     var mo = _b_.None
@@ -1346,7 +1345,7 @@ Pattern.__reduce_ex__ = function(self, protocol){
 function _reconstructor(cls, base, state){
     var pattern = _b_.dict.$getitem(state, 'pattern'),
         flags = Flag.$factory(_b_.dict.$getitem(state, 'flags'))
-    return $module.compile(pattern, flags)
+    return module.compile(pattern, flags)
 }
 
 Pattern.__repr__ = Pattern.__str__ = function(self){
@@ -1494,7 +1493,7 @@ Pattern.search = function(self, string){
 }
 
 Pattern.split = function(){
-    return $module.split.apply(null, arguments)
+    return module.split.apply(null, arguments)
 }
 
 Pattern.sub = function(){
@@ -1508,7 +1507,7 @@ Pattern.sub = function(){
             "and string")
     }
 
-    return $module.sub($.self, $.repl, $.string, $.count)
+    return module.sub($.self, $.repl, $.string, $.count)
 }
 
 $B.set_func_names(Pattern, "re")
@@ -3199,7 +3198,7 @@ function subn(pattern, repl, string, count, flags){
     }
     pos = 0
     var s = string.to_str()
-    for(var bmo of $module.finditer(Pattern.$factory(pattern), s).js_gen){
+    for(var bmo of module.finditer(Pattern.$factory(pattern), s).js_gen){
         // finditer yields instances of MatchObject
         var mo = bmo.mo // instance of MO
         res += from_codepoint_list(string.codepoints.slice(pos, mo.start))
@@ -3934,7 +3933,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
 }
 
 // expose re module API
-var $module = {
+var module = {
     cache: cache,
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
@@ -4007,7 +4006,7 @@ var $module = {
             }
         }
 
-        var iter = $module.finditer.apply(null, arguments).js_gen,
+        var iter = module.finditer.apply(null, arguments).js_gen,
             res = []
         while(true){
             var next = iter.next()
@@ -4211,7 +4210,7 @@ var $module = {
         }else{
             data = {pattern, string}
         }
-        for(var bmo of $module.finditer(pattern, $.string).js_gen){
+        for(var bmo of module.finditer(pattern, $.string).js_gen){
             var mo = bmo.mo, // finditer returns instances of MatchObject
                 groupobj = mo.$groups
             res.push(data.string.substring(pos, mo.start))
@@ -4304,15 +4303,15 @@ var $module = {
 
 }
 
-var ASCII = $module.A = $module.ASCII = Flag.$factory(256)
-var IGNORECASE = $module.I = $module.IGNORECASE = Flag.$factory(2)
-var LOCALE = $module.L = $module.LOCALE = Flag.$factory(4)
-var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory(8)
-var DOTALL = $module.S = $module.DOTALL = Flag.$factory(16)
-var U = $module.U = $module.UNICODE = Flag.$factory(32)
-var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory(64)
-$module.cache = cache
-$module._compile = $module.compile
+var ASCII = module.A = module.ASCII = Flag.$factory(256)
+var IGNORECASE = module.I = module.IGNORECASE = Flag.$factory(2)
+var LOCALE = module.L = module.LOCALE = Flag.$factory(4)
+var MULTILINE = module.M = module.MULTILINE = Flag.$factory(8)
+var DOTALL = module.S = module.DOTALL = Flag.$factory(16)
+var U = module.U = module.UNICODE = Flag.$factory(32)
+var VERBOSE = module.X = module.VERBOSE = Flag.$factory(64)
+module.cache = cache
+module._compile = module.compile
 
 
 var inline_flags = {
@@ -4334,3 +4333,7 @@ var flag_names = {
     x: 'VERBOSE',
     a: 'ASCII'
 }
+
+$B.addToImported('python_re', module)
+
+})(__BRYTHON__)

@@ -1,4 +1,4 @@
-var $module=(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -235,7 +235,7 @@ function to_py(obj, kw){
             if(kw.parse_float !== _b_.None){
                 return $B.$call(kw.parse_float)(obj.value)
             }
-            return $B.fast_float(obj.value)
+            return $B.fast_float(parseFloat(obj.value))
         }else{
             // integer
             if(kw.parse_int !== _b_.None){
@@ -347,14 +347,23 @@ function num_at(s, i){
   return [{type: 'num', value: s.substring(i, j)}, j]
 }
 
+var JSONError = $B.make_class('json.decoder.JSONError')
+JSONError.__bases__ = [_b_.Exception]
+JSONError.__mro__ = _b_.type.mro(JSONError)
+
+
 function* tokenize(s){
   var i = 0,
       len = s.length,
+      line_num = 1,
+      column_start = 0,
       value,
       end
   while(i < len){
     if(s[i] == " " || s[i] == '\r' || s[i] == '\n' || s[i] == '\t'){
       i++
+      line_num++
+      column_start = i
     }else if('[]{}:,'.indexOf(s[i]) > -1){
       yield [s[i], i]
       i++
@@ -385,7 +394,8 @@ function* tokenize(s){
       yield value
       i = value[1]
     }else{
-      throw Error('unexpected: ' + s[i] + s.charCodeAt(i))
+      throw $B.$call(JSONError)('Extra data: ' +
+          `line ${line_num} column ${1 + i - column_start}`)
     }
   }
 }
@@ -571,7 +581,7 @@ JSONDecoder.decode = function(self, s){
     return to_py(parse(s), self)
 }
 
-return {
+$B.imported._json = {
     dumps: function(){
         return _b_.str.$factory(to_json.apply(null, arguments))
     },

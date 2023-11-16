@@ -1,5 +1,6 @@
 // built-in functions
 ;(function($B){
+"use strict";
 
 var _b_ = $B.builtins
 _b_.__debug__ = false
@@ -487,8 +488,10 @@ var dir = _b_.dir = function(obj){
         return res
     }catch (err){
         // ignore, default
-        //console.log(err)
-        console.log('error in dir', obj, $B.$getattr(obj, '__dir__'), err.message)
+        if($B.get_option('debug') > 2){
+            console.log('error in dir, obj', obj, 'klass', klass,
+                $B.$getattr(klass, '__dir__'), err.message)
+        }
         throw err
     }
 
@@ -985,10 +988,7 @@ $B.$getattr = function(obj, attr, _default){
     if(obj === undefined){
         console.log("get attr", attr, "of undefined")
     }
-    /*
-    console.log('attr', attr, 'of', obj)
-    console.log('getattr1 from getattr', $B.$getattr1(obj, attr, _default))
-    */
+
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__
@@ -1678,7 +1678,7 @@ iterator_class.__next__ = function(self){
 
 $B.set_func_names(iterator_class, "builtins")
 
-callable_iterator = $B.make_class("callable_iterator",
+const callable_iterator = $B.make_class("callable_iterator",
     function(func, sentinel){
         return {
             __class__: callable_iterator,
@@ -2814,7 +2814,8 @@ $Reader.read = function(){
     if(size < 0){
         size = self.$length - self.$counter
     }
-    var content = self.$content
+    var content = self.$content,
+        res
     if(self.$binary){
         res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
             self.$counter + size))
@@ -3391,30 +3392,34 @@ $B.function.__repr__ = function(self){
 $B.function.__mro__ = [_b_.object]
 
 $B.make_function_defaults = function(f){
-    if(f.$infos && f.$infos.__code__){
-        // Make the new $defaults Javascript object
-        var argcount = f.$infos.__code__.co_argcount,
-            varnames = f.$infos.__code__.co_varnames,
-            params = varnames.slice(0, argcount),
-            value = f.$infos.__defaults__,
-            $defaults = {}
-        for(var i = value.length - 1; i >= 0; i--){
-            var pos = params.length - value.length + i
-            if(pos < 0){break}
-            $defaults[params[pos]] = value[i]
-        }
-        if(f.$infos.__kwdefaults__ !== _b_.None){
-            var kwdef = f.$infos.__kwdefaults__
-            for(var kw of $B.make_js_iterator(kwdef)){
-                $defaults[kw] = $B.$getitem(kwdef, kw)
-            }
-        }
-        f.$defaults = $defaults
-        return _b_.None
-    }else{
-        throw _b_.AttributeError.$factory("cannot set attribute " + attr +
-            " of " + _b_.str.$factory(self))
+    if( f.$infos === undefined || f.$infos.__code__ === undefined) {
+            throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
     }
+    
+    // Make the new $defaults Javascript object
+    const varnames = f.$infos.__code__.co_varnames,
+          value = f.$infos.__defaults__,
+          offset   = f.$infos.__code__.co_argcount - value.length,
+          $defaults = {},
+          $kwdefaults = new Map()
+    for(let i = 0; i < value.length ; ++i){
+        $defaults[varnames[i+offset]] = value[i]
+    }
+    if(f.$infos.__kwdefaults__ !== _b_.None){
+        const kwdef = f.$infos.__kwdefaults__
+        for(let kw of $B.make_js_iterator(kwdef)){
+            $kwdefaults.set(kw, $defaults[kw] = $B.$getitem(kwdef, kw))
+        }
+    }
+    f.$defaults = $defaults
+    f.$kwdefaults = $kwdefaults
+    f.$kwdefaults_values = [...$kwdefaults.values()]
+    
+    f.$hasParams = new Set()
+    for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i){
+        f.$hasParams.add(varnames[i])
+    }    
+    return _b_.None
 }
 
 $B.function.__setattr__ = function(self, attr, value){

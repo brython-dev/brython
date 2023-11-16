@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -282,13 +283,6 @@ $B.make_class = function(qualname, factory){
     A.$factory = factory
 
     return A
-}
-
-$B.make_type_alias = function(name, type_params, value){
-    $B.$import('typing')
-    var t = $B.$call($B.$getattr($B.imported.typing, 'TypeAliasType'))(name, value)
-    t.__type_params__ = type_params
-    return t
 }
 
 var type = $B.make_class("type",
@@ -917,7 +911,7 @@ type.__ror__ = function(){
 
 type.__setattr__ = function(kls, attr, value){
     var $test = false
-    if($test){console.log("kls is class", type, types[attr])}
+    if($test){console.log("kls is class", type)}
     if(type[attr] && type[attr].__get__ &&
             type[attr].__set__){
         type[attr].__set__(kls, value)
@@ -1309,7 +1303,7 @@ method.__setattr__ = function(self, key, value){
         throw _b_.TypeError.$factory("__class__ assignment only supported " +
             "for heap types or ModuleType subclasses")
     }
-    throw $B.attr_error(attr, self)
+    throw $B.attr_error(key, self)
 }
 
 $B.set_func_names(method, "builtins")

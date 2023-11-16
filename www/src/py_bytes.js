@@ -1,3 +1,5 @@
+"use strict";
+
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -67,7 +69,7 @@ var bytearray = {
 var mutable_methods = ["__delitem__", "clear", "copy", "count", "index",
     "pop", "remove", "reverse"]
 
-mutable_methods.forEach(function(method){
+for(var method of mutable_methods){
     bytearray[method] = (function(m){
         return function(self){
             var args = [self.source], pos = 1
@@ -77,7 +79,7 @@ mutable_methods.forEach(function(method){
             return _b_.list[m].apply(null, args)
         }
     })(method)
-})
+}
 
 bytearray.__hash__ = _b_.None
 
@@ -100,15 +102,24 @@ bytearray.__setitem__ = function(self, arg, value){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
         }
         var pos = arg
-        if(arg < 0){pos = self.source.length + pos}
-        if(pos >= 0 && pos < self.source.length){self.source[pos] = value}
-        else{throw _b_.IndexError.$factory('list index out of range')}
+        if(arg < 0){
+            pos = self.source.length + pos
+        }
+        if(pos >= 0 && pos < self.source.length){
+            self.source[pos] = value
+        }else{
+            throw _b_.IndexError.$factory('list index out of range')
+        }
     }else if($B.$isinstance(arg, _b_.slice)){
         var start = arg.start === _b_.None ? 0 : arg.start
         var stop = arg.stop === _b_.None ? self.source.length : arg.stop
 
-        if(start < 0){start = self.source.length + start}
-        if(stop < 0){stop = self.source.length + stop}
+        if(start < 0){
+            start = self.source.length + start
+        }
+        if(stop < 0){
+            stop = self.source.length + stop
+        }
 
         self.source.splice(start, stop - start)
 
@@ -141,7 +152,9 @@ bytearray.append = function(self, b){
     if(! $B.$isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
-    if(b > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
+    if(b > 255){
+        throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+    }
     self.source[self.source.length] = b
 }
 
@@ -152,32 +165,27 @@ bytearray.extend = function(self, b){
             "cannot be re-sized")
     }
     if(b.__class__ === bytearray || b.__class__ === bytes){
-        b.source.forEach(function(item){
-            self.source.push(item)
-        })
+        self.source = self.source.concat(b.source)
         return _b_.None
     }
-    var it = _b_.iter(b)
-    while(true){
-        try{
-            bytearray.__add__(self, _b_.next(it))
-        }catch(err){
-            if(err === _b_.StopIteration){break}
-            throw err
-        }
+    for(var item of $B.make_js_iterator(b)){
+        bytearray.append(self, $B.PyNumber_Index(item))
     }
     return _b_.None
 }
 
 bytearray.insert = function(self, pos, b){
-    if(arguments.length != 3){throw _b_.TypeError.$factory(
-        "insert takes exactly 2 arguments (" + (arguments.length - 1) +
-        " given)")
+    if(arguments.length != 3){
+        throw _b_.TypeError.$factory(
+            "insert takes exactly 2 arguments (" + (arguments.length - 1) +
+            " given)")
     }
     if(! $B.$isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
-    if(b > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
+    if(b > 255){
+        throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+    }
     _b_.list.insert(self.source, pos, b)
 }
 
@@ -223,7 +231,9 @@ bytes.__contains__ = function(self, other){
     if(typeof other == "number"){
         return self.source.indexOf(other) > -1
     }
-    if(self.source.length < other.source.length){return false}
+    if(self.source.length < other.source.length){
+        return false
+    }
     var len = other.source.length
     for(var i = 0; i < self.source.length - other.source.length + 1; i++){
         var flag = true
@@ -233,7 +243,9 @@ bytes.__contains__ = function(self, other){
                 break
             }
         }
-        if(flag){return true}
+        if(flag){
+            return true
+        }
     }
     return false
 }
@@ -251,7 +263,9 @@ bytes.__eq__ = function(self, other){
 }
 
 bytes.__ge__ = function(self, other){
-    if(invalid(other)){return _b_.NotImplemented}
+    if(invalid(other)){
+        return _b_.NotImplemented
+    }
     return _b_.list.__ge__(self.source, other.source)
 }
 
@@ -307,7 +321,9 @@ bytes.__getnewargs__ = function(){
 }
 
 bytes.__gt__ = function(self, other){
-    if(invalid(other)){return _b_.NotImplemented}
+    if(invalid(other)){
+        return _b_.NotImplemented
+    }
     return _b_.list.__gt__(self.source, other.source)
 }
 
@@ -331,21 +347,27 @@ bytes.__init__ = function(){
 }
 
 bytes.__le__ = function(self, other){
-    if(invalid(other)){return _b_.NotImplemented}
+    if(invalid(other)){
+        return _b_.NotImplemented
+    }
     return _b_.list.__le__(self.source, other.source)
 }
 
-bytes.__len__ = function(self){return self.source.length}
+bytes.__len__ = function(self){
+    return self.source.length
+}
 
 bytes.__lt__ = function(self, other){
-    if(invalid(other)){return _b_.NotImplemented}
+    if(invalid(other)){
+        return _b_.NotImplemented
+    }
     return _b_.list.__lt__(self.source, other.source)
 }
 
 bytes.__mod__ = function(self, args){
     // PEP 461
     var s = decode(self, "latin-1", "strict"),
-        res = $B.printf_format(s, 'bytes', args) // _b_.str.__mod__(s, args)
+        res = $B.printf_format(s, 'bytes', args)
     return _b_.str.encode(res, "ascii")
 }
 
@@ -456,7 +478,9 @@ bytes.$new = function(cls, source, encoding, errors){
         // empty list
     }else if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
         var i = source
-        while(i--){int_list[pos++] = 0}
+        while(i--){
+            int_list[pos++] = 0
+        }
     }else{
         if(typeof source == "string" || $B.$isinstance(source, _b_.str)){
             if(encoding === undefined){
@@ -628,7 +652,7 @@ bytes.endswith = function() {
             res = $.self.source[end - len + i] == $.suffix.source[i]
         }
         return res
-    }else if ($B.$isinstance($.suffix, _b_.tuple)){
+    }else if($B.$isinstance($.suffix, _b_.tuple)){
         for(var i = 0; i < $.suffix.length; ++i){
             if($B.$isinstance($.suffix[i], bytes)){
                 if(bytes.endswith($.self, $.suffix[i], $.start, $.end)){
@@ -671,9 +695,9 @@ bytes.expandtabs = function() {
 bytes.find = function(self, sub){
     if(arguments.length != 2){
         var $ = $B.args('find', 4,
-            {self: null, sub: null, start: null, end: null},
-            ['self', 'sub', 'start', 'end'],
-            arguments, {start: 0, end: -1}, null, null),
+                {self: null, sub: null, start: null, end: null},
+                ['self', 'sub', 'start', 'end'],
+                arguments, {start: 0, end: -1}, null, null),
             sub = $.sub,
             start = $.start,
             end = $.end
@@ -1319,7 +1343,7 @@ bytes.swapcase = function(self) {
 
 bytes.title = function(self) {
     var src = self.source,
-        len = src.length
+        len = src.length,
         buffer = src.slice(),
         current_char_is_letter = false,
         prev_char_was_letter = false,

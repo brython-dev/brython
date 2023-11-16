@@ -210,3 +210,5 @@ var $module = (function($B){
     }
 })(__BRYTHON__)
 $module._IOBase.__doc__ = "_IOBase"
+
+__BRYTHON__.imported._io_classes = $module

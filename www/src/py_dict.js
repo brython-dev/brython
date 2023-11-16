@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 /*
@@ -51,7 +52,7 @@ function is_sublist(t1, t2){
     return true
 }
 
-dict_view_op = {
+const dict_view_op = {
     __eq__: function(t1, t2){
         return t1.length == t2.length && is_sublist(t1, t2)
     },
@@ -73,7 +74,7 @@ dict_view_op = {
     __and__: function(t1, t2){
         var items = []
         for(var i = 0, ilen = t1.length; i < ilen; i++){
-            var x = t1[i]
+            var x = t1[i],
                 flag = false
             for(var j = 0, jlen = t2.length; j < jlen; j++){
                 if($B.rich_comp("__eq__", x, t2[j])){
@@ -812,24 +813,6 @@ dict.__or__ = function(self, other){
     return res
 }
 
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    var res = $B.empty_dict()
-    res.__class__ = args[0]
-    return res
-}
-
-dict.__reduce_ex__ = function(self, protocol){
-    return $B.fast_tuple([
-        __newobj__,
-        $B.fast_tuple([self.__class__]),
-        _b_.None,
-        _b_.None,
-        dict.items(self)])
-}
-
 dict.__repr__ = function(self){
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
     if(self.$jsobj){ // wrapper around Javascript object
@@ -850,12 +833,21 @@ dict.__repr__ = function(self){
 
 dict.$iter_items_reversed = function*(d){
     var version = d.$version
-    for(var i = d._keys.length - 1; i >= 0; i--){
-        var key = d._keys[i]
-        if(key !== undefined){
-            yield $B.fast_tuple([key, d._values[i]])
+    if(d.$all_str){
+        for(var item of Object.entries(d.$strings).reverse()){
+            yield $B.fast_tuple(item)
             if(d.$version !== version){
                 throw _b_.RuntimeError.$factory('changed in iteration')
+            }
+        }
+    }else{
+        for(var i = d._keys.length - 1; i >= 0; i--){
+            var key = d._keys[i]
+            if(key !== undefined){
+                yield $B.fast_tuple([key, d._values[i]])
+                if(d.$version !== version){
+                    throw _b_.RuntimeError.$factory('changed in iteration')
+                }
             }
         }
     }
@@ -917,7 +909,7 @@ function make_reverse_iterator(name, iter_func){
     return klass
 }
 
-dict_reversekeyiterator = make_reverse_iterator(
+const dict_reversekeyiterator = make_reverse_iterator(
     'dict_reversekeyiterator',
     dict.$iter_keys_reversed)
 
@@ -1140,7 +1132,7 @@ dict_items.__repr__ = function(self){
     return 'dict_items(' + _b_.repr(items) + ')'
 }
 
-dict_reverseitemiterator = make_reverse_iterator(
+const dict_reverseitemiterator = make_reverse_iterator(
     'dict_reverseitemiterator',
     dict.$iter_items_reversed)
 
@@ -1361,7 +1353,8 @@ dict.update = function(self){
             }
         }else{
             var it = _b_.iter(o),
-                i = 0
+                i = 0,
+                key_value
             while(true){
                 try{
                     var item = _b_.next(it)
@@ -1417,7 +1410,7 @@ dict_values.__repr__ = function(self){
     return 'dict_values(' + _b_.repr(items) + ')'
 }
 
-dict_reversevalueiterator = make_reverse_iterator(
+const dict_reversevalueiterator = make_reverse_iterator(
     'dict_reversevalueiterator',
     dict.$iter_values_reversed)
 
@@ -1632,7 +1625,7 @@ jsobj_as_pydict.__eq__ = function(self, other){
     }
 
     // create true Python dicts with the items in self and other
-    var self1 = $B.empty_dict()
+    var self1 = $B.empty_dict(),
         other1 = $B.empty_dict()
 
     dict.__init__(self1, jsobj_as_pydict.items(self))

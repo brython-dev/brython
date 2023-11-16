@@ -158,11 +158,8 @@ b3 = window.BigInt('2')
 assert b1 ** b3 == window.BigInt(str(23456 ** 2))
 
 for num in [1, 4.7]:
-    try:
-        b1 + num
-        raise Exception("should have raised TypeError")
-    except TypeError:
-        pass
+    b1 + num # should not raise exception
+
 
 # inheriting a Javascript class
 class Square2(window.Rectangle):
@@ -349,10 +346,38 @@ def pyfunc_receives_js_number(num):
     assert type(num) is javascript.JSObject
 
 # force insertion in sys.modules[__name__] to make the Python function
-# available in JS script by 
+# available in JS script by
 # __BRYTHON__.imported[__name__].pyfunc_receives_js_number
 import sys
 sys.modules[__name__].pyfunc_receives_js_number = pyfunc_receives_js_number
 window.test_pyfunc_receives_js_number()
+
+# consistency between function call and direct reference
+t1 = window.get_array_from_func_call()
+t2 = window.array_by_reference
+
+for x1, x2 in zip(t1, t2):
+  assert x1 == x2
+  assert type(x1) is type(x2)
+
+# issue 2321
+from browser import aio
+from tester import async_tester
+
+y = window.js_returns_float()
+print(y, type(y))
+
+async def call_js_async():
+    x = await window.js_async_returns_float()
+    async_tester.assertEqual(x, 3.5)
+    async_tester.assertIs(type(x), float, 'type should be float')
+
+    try:
+        await window.js_async_raises_error()
+        input('should have raised error')
+    except Exception as exc:
+        print(exc)
+
+aio.run(call_js_async())
 
 print("all tests ok...")

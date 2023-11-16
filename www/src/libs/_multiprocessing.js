@@ -1,5 +1,5 @@
 // multiprocessing
-var $module = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -214,6 +214,6 @@ Pool.$factory = function(){
 
 $B.set_func_names(Pool, "multiprocessing")
 
-return {Process:Process, Pool:Pool}
+$B.imported._multiprocessing = {Process:Process, Pool:Pool}
 
 })(__BRYTHON__)

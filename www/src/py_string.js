@@ -1,3 +1,4 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins
@@ -8,7 +9,7 @@ var unicode_tables = $B.unicode_tables
 $B.has_surrogate = function(s){
     // Check if there are "surrogate pairs" characters in string s
     for(var i = 0; i < s.length; i++){
-        code = s.charCodeAt(i)
+        var code = s.charCodeAt(i)
         if(code >= 0xD800 && code <= 0xDBFF){
             return true
         }
@@ -384,10 +385,10 @@ str.__hash__ = function(_self){
     // copied from
     // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
     var s = to_string(_self)
-    return s.split("").reduce(function(a, b) {
-        a = ((a << 5) - a) + b.charCodeAt(0);
-        return a & a;
-      }, 0)
+    for(var i = 0, h = 0, len = s.length; i < len; i++){
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    }
+    return h;
 }
 
 str.__init__ = function(self, arg){
@@ -878,7 +879,7 @@ function series_of_bytes(val, flags){
         }
     }else{
         try{
-            bytes_obj = $B.$getattr(val, "__bytes__")()
+            var bytes_obj = $B.$getattr(val, "__bytes__")()
             return format_padding(_b_.bytes.decode(bytes_obj), flags)
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
@@ -2214,7 +2215,8 @@ str.maketrans.$type = "staticmethod"
 str.partition = function() {
     var $ = $B.args("partition", 2, {self: null, sep: null}, ["self", "sep"],
             arguments, {}, null, null),
-        _self
+        _self,
+        sep
     if($.sep == ""){
         throw _b_.ValueError.$factory("empty separator")
     }
@@ -2348,7 +2350,8 @@ str.rfind = function(self, substr){
             {self: null, sub: null, start: null, end: null},
             ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
-        _self
+        _self,
+        sub
 
     normalize_start_end($)
     check_str($.sub);
@@ -2938,7 +2941,7 @@ function fstring_expression(start){
 }
 
 function fstring_error(msg, pos){
-    error = Error(msg)
+    var error = Error(msg)
     error.position = pos
     throw error
 }
@@ -3140,7 +3143,7 @@ $B.parse_fstring = function(string){
                         i += 1
                     }else{
                         // add debug string
-                        tail = car
+                        var tail = car
                         while(string.charAt(i + 1).match(/\s/)){
                             tail += string.charAt(i + 1)
                             i++

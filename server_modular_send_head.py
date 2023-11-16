@@ -1121,7 +1121,7 @@ class CGIHTTPRequestHandler(SimpleHTTPRequestHandler):
                 "CGI script is not a plain file (%r)" % scriptname)
             return
         ispy = self.is_python(scriptname)
-        if self.have_fork or not ispy:
+        if not ispy:
             if not self.is_executable(scriptfile):
                 self.send_error(
                     HTTPStatus.FORBIDDEN,
@@ -1222,6 +1222,10 @@ class CGIHTTPRequestHandler(SimpleHTTPRequestHandler):
                     os.setuid(nobody)
                 except OSError:
                     pass
+                if ispy:
+                	args[0] = scriptfile
+                	args = ["python3"] + args
+                	scriptfile = sys.executable
                 os.dup2(self.rfile.fileno(), 0)
                 os.dup2(self.wfile.fileno(), 1)
                 os.execve(scriptfile, args, env)

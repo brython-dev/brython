@@ -4,7 +4,7 @@ standardized by the C Standard and the POSIX standard (a thinly
 disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls.
 */
-
+"use strict";
 var $B = __BRYTHON__,
     _b_ = $B.builtins
 
@@ -33,6 +33,24 @@ var stat_result = $B.make_class("stat_result",
                         res["st_" + item] = res.st_atime
                     });
             return res
+        }else if($B.files && $B.files.hasOwnProperty(filename)){
+            var f = $B.files[filename],
+                res = {
+                    __class__: stat_result,
+                    st_atime: __BRYTHON__.timestamp,
+                    st_ctime: f.ctime,
+                    st_mtime: f.mtime,
+                    st_uid: -1,
+                    st_gid: -1,
+                    st_ino: -1,
+                    st_mode: 0,
+                    st_size: f.content.length
+                };
+            for(var item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
+                res["st_" + item] = res.st_atime
+            }
+            return res
+
         }else{
             try{
                 var xhr = new XMLHttpRequest()
@@ -69,7 +87,7 @@ var stat_result = $B.make_class("stat_result",
 )
 $B.set_func_names(stat_result, "posix")
 
-var $module = {
+var module = {
     F_OK: 0,
     O_APPEND: 8,
     O_BINARY: 32768,
@@ -120,12 +138,12 @@ var $module = {
 };
 
 ["WCOREDUMP", "WIFCONTINUED", "WIFSTOPPED", "WIFSIGNALED", "WIFEXITED"].forEach(function(funcname){
-        $module[funcname] = function(){return false}
+        module[funcname] = function(){return false}
     });
 
 ["WEXITSTATUS", "WSTOPSIG", "WTERMSIG"].
     forEach(function(funcname){
-        $module[funcname] = function(){return _b_.None}
+        module[funcname] = function(){return _b_.None}
     });
 
 ["_exit", "_getdiskusage", "_getfileinformation", "_getfinalpathname",
@@ -138,8 +156,10 @@ var $module = {
     "statvfs_result", "strerror", "symlink", "system", "terminal_size",
     "times", "times_result", "umask", "uname_result", "unlink", "utime",
     "waitpid", "write"].forEach(function(funcname){
-        $module[funcname] = function(){
+        module[funcname] = function(){
             throw _b_.NotImplementedError.$factory("posix." + funcname +
                 " is not implemented")
         }
     });
+
+$B.addToImported('posix', module)

@@ -76,7 +76,8 @@ def run():
         'builtin_modules',
         'ast_to_js',
         'symtable',
-        'builtins_docstrings'
+        'builtins_docstrings',
+        'brython_ready'
     ]
 
     res = f"""// brython.js brython.info
@@ -102,6 +103,10 @@ def run():
             res_no_static += "__BRYTHON__.stdlib = {}\n"
         else:
             res_no_static += mini
+
+    # remove strict mode for brython.js - better to silently ignore than to
+    # get weird errors at runtime
+    res = re.sub('"use strict";\n', "", res)
 
     res = re.sub(r'\bcontext\b', 'C', res)
     res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)

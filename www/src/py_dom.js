@@ -1,8 +1,9 @@
+"use strict";
 ;(function($B){
 
 var _b_ = $B.builtins,
     object = _b_.object,
-    _window = self
+    _window = globalThis
 
 // Conversion of immutable types between Javascript and Python
 var py_immutable_to_js = $B.py_immutable_to_js = function (pyobj){
@@ -68,7 +69,7 @@ function trace(msg){
     }
 }
 
-function $mouseCoords(ev){
+var $mouseCoords = $B.$mouseCoords = function(ev){
     if(ev.type.startsWith("touch")){
         var res = {}
         res.x = _b_.int.$factory(ev.touches[0].screenX)
@@ -449,44 +450,6 @@ function $EventsList(elt, evt, arg){
     }
 }
 
-var OpenFile = $B.OpenFile = $B.make_class('OpenFile')
-OpenFile.__module__ = "<pydom>"
-
-OpenFile.$factory = function(file, mode, encoding) {
-    var res = {
-        __class__: $OpenFileDict,
-        file: file,
-        reader: new FileReader()
-    }
-    if(mode === "r"){
-        res.reader.readAsText(file, encoding)
-    }else if(mode === "rb"){
-        res.reader.readAsBinaryString(file)
-    }
-    return res
-}
-
-OpenFile.__getattr__ = function(self, attr) {
-    if(self["get_" + attr] !== undefined){return self["get_" + attr]}
-    return self.reader[attr]
-}
-
-OpenFile.__setattr__ = function(self, attr, value) {
-    var obj = self.reader
-    if(attr.substr(0,2) == "on"){ // event
-        var callback = function(ev) { return value($DOMEvent(ev)) }
-        obj.addEventListener(attr.substr(2), callback)
-    }else if("set_" + attr in obj){
-        return obj["set_" + attr](value)
-    }else if(attr in obj){
-        obj[attr] = value
-    }else{
-        _b_.setattr(obj, attr, value)
-    }
-}
-
-$B.set_func_names(OpenFile, "<dom>")
-
 var dom = {
     File : function(){},
     FileReader : function(){}
@@ -524,7 +487,8 @@ $B.addPy2JSWrapper(DOMNode, function(pyobj) {
 DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()
-    res.children = [self], pos = 1
+    res.children = [self]
+    var pos = 1
     if($B.$isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
     }else if($B.$isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
@@ -1196,8 +1160,10 @@ DOMNode.children = function(self){
 
 DOMNode.child_nodes = function(self){
     var res = []
-    if(self.nodeType == 9){self = self.body}
-    for(child of self.childNodes){
+    if(self.nodeType == 9){
+        self = self.body
+    }
+    for(var child of self.childNodes){
         res.push(DOMNode.$factory(child))
     }
     return res
@@ -1321,7 +1287,7 @@ DOMNode.get = function(self){
         }
         return make_list(self.querySelectorAll($dict['selector']))
     }
-    return res
+    return []
 }
 
 DOMNode.getContext = function(self){ // for CANVAS tag
@@ -1373,10 +1339,6 @@ DOMNode.inside = function(self, other){
         elt = elt.parentNode
         if(! elt){return false}
     }
-}
-
-DOMNode.options = function(self){ // for SELECT tag
-    return new $OptionsClass(self)
 }
 
 DOMNode.parent = function(self){
@@ -1737,8 +1699,8 @@ $B.TagSum = TagSum // used in _html.js and _svg.js
 var win = $B.JSObj.$factory(_window)
 
 win.get_postMessage = function(msg,targetOrigin){
-    if($B.$isinstance(msg, dict)){
-        var temp = {__class__:"dict"},
+    if($B.$isinstance(msg, _b_.dict)){
+        var temp = {__class__: "dict"},
             items = _b_.list.$factory(_b_.dict.items(msg))
         items.forEach(function(item){
             temp[item[0]] = item[1]

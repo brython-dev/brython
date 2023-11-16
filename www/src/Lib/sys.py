@@ -234,7 +234,7 @@ hexversion = ((__BRYTHON__.version_info[0] << 24) +
 
 implementation = SimpleNamespace(
     name = 'Brython',
-    cache_tag = f'cpython-{__BRYTHON__.version_info[0]}{__BRYTHON__.version_info[1]}',
+    cache_tag = None,
     version = version_info,
     hexversion = hexversion
     )
