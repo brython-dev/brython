@@ -145,19 +145,19 @@ $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-15 23:02:02.362232"
-__BRYTHON__.timestamp=1700085722362
-__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
+__BRYTHON__.compiled_date="2023-11-18 10:40:27.351694"
+__BRYTHON__.timestamp=1700300427351
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
 $B.is_identifier=function(category,cp){
@@ -5390,6 +5390,7 @@ if(Object.keys(extra).length !==nb_extra_args){args0(fct,args)
 throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !')}
 result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict(extra)
 return result}
+$B.args0_old=args0;
 $B.args0=args0_NEW;
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,vararg,kwarg,nb_posonly){
 var nb_posonly=nb_posonly ||0,nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults={$jsobj:{}}
@@ -6683,12 +6684,12 @@ return t.join(' | ')}
 $B.set_func_names($B.UnionType,"types")})(__BRYTHON__)
 ;
 
-;(function($B){var _b_=$B.builtins
+(function($B){var _b_=$B.builtins
 _b_.__debug__=false
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
 $B.$inv_comps={'>':'lt','>=':'le','<':'gt','<=':'ge'}
 var check_nb_args=$B.check_nb_args,check_no_kw=$B.check_no_kw,check_nb_args_no_kw=$B.check_nb_args_no_kw
-var NoneType=$B.NoneType={$factory:function(){return None},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__module__:'builtins',__mro__:[_b_.object],__name__:'NoneType',__qualname__:'NoneType',__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
+var NoneType=$B.NoneType={$factory:function(){return None},__bool__:function(){return False},__class__:_b_.type,__hash__:function(){return 0},__module__:'builtins',__mro__:[_b_.object],__name__:'NoneType',__qualname__:'NoneType',__repr__:function(){return 'None'},__str__:function(){return 'None'},$is_class:true}
 NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
 var None=_b_.None={__class__:NoneType}
 None.__doc__=None
@@ -6699,25 +6700,28 @@ switch(key){case 'ge':
 case 'gt':
 case 'le':
 case 'lt':
-NoneType['__'+key+'__']=(function(op){return function(other){return _b_.NotImplemented}})($op)}}
+NoneType['__'+key+'__']=(function(){return function(){return _b_.NotImplemented}})($op)}}
 for(var $func in None){if(typeof None[$func]=='function'){None[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+
 " of NoneType object>"}})($func)}}
 $B.set_func_names(NoneType,"builtins")
 _b_.__build_class__=function(){throw _b_.NotImplementedError.$factory('__build_class__')}
-var abs=_b_.abs=function(obj){check_nb_args_no_kw('abs',1,arguments)
+_b_.abs=function(obj){check_nb_args_no_kw('abs',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
 try{var method=$B.$getattr(klass,"__abs__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
 $B.class_name(obj)+"'")}
 throw err}
 return $B.$call(method)(obj)}
-var aiter=_b_.aiter=function(async_iterable){return $B.$call($B.$getattr(async_iterable,'__aiter__'))()}
-var all=_b_.all=function(obj){check_nb_args_no_kw('all',1,arguments)
+_b_.aiter=function(async_iterable){return $B.$call($B.$getattr(async_iterable,'__aiter__'))()}
+_b_.all=function(obj){check_nb_args_no_kw('all',1,arguments)
 var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(!$B.$bool(elt)){return false}}catch(err){return true}}}
-var anext=_b_.anext=function(async_iterator,_default){var missing={},$=$B.args('anext',2,{async_iterator:null,_default:null},['async_iterator','_default'],arguments,{_default:missing},null,null)
-var awaitable=$B.$call($B.$getattr(async_iterator,'__anext__'))()
-return awaitable}
+_b_.anext=function(async_iterator,_default){var missing={},$=$B.args('anext',2,{async_iterator:null,_default:null},['async_iterator','_default'],arguments,{_default:missing},null,null)
+var awaitable=$B.$call($B.$getattr($.async_iterator,'__anext__'))()
+return awaitable.catch(
+function(err){if($B.is_exc(err,[_b_.StopAsyncIteration])){if($._default !==missing){return $._default}}
+throw err}
+)}
 var any=_b_.any=function(obj){check_nb_args_no_kw('any',1,arguments)
 for(var elt of $B.make_js_iterator(obj)){if($B.$bool(elt)){return true}}
 return false}
@@ -6753,7 +6757,7 @@ if($B.$isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,base)}el
 throw err}
 var res=$B.$call(method)(obj)
 return $builtin_base_convert_helper(res,base)}}
-var bin=_b_.bin=function(obj){check_nb_args_no_kw('bin',1,arguments)
+_b_.bin=function(obj){check_nb_args_no_kw('bin',1,arguments)
 return bin_hex_oct(2,obj)}
 var breakpoint=_b_.breakpoint=function(){
 $B.$import('sys',[])
@@ -7858,6 +7862,25 @@ f.$kwdefaults=$kwdefaults
 f.$kwdefaults_values=[...$kwdefaults.values()]
 f.$hasParams=new Set()
 for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i){f.$hasParams.add(varnames[i])}
+const $INFOS=f.$infos;
+const $CODE=$INFOS.__code__;
+const DEFAULTS=$B.getArgs0.DEFAULTS;
+const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount;
+const PARAMS_NAMED_DEFAULTS_COUNT=Object.keys($defaults).length-value.length;
+let named_defaults=DEFAULTS.NONE;
+if(PARAMS_NAMED_DEFAULTS_COUNT > 0)
+named_defaults=PARAMS_NAMED_DEFAULTS_COUNT >=PARAMS_NAMED_COUNT ? DEFAULTS.ALL :DEFAULTS.SOME;
+const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
+const PARAMS_POS_COUNT=$CODE.co_argcount-PARAMS_POSONLY_COUNT;
+let pos_defaults=DEFAULTS.NONE;
+if(PARAMS_POS_COUNT !==0 && value.length > 0)
+pos_defaults=value.length >=PARAMS_POS_COUNT ? DEFAULTS.ALL :DEFAULTS.SOME;
+let posonly_defaults=DEFAULTS.NONE;
+if(value.length > PARAMS_POS_COUNT)
+posonly_defaults=value.length >=$CODE.co_argcount ? DEFAULTS.ALL :DEFAULTS.SOME;
+f.$args_parser=f.$infos.args_parser=$B.getArgs0(
+PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
+);
 return _b_.None}
 $B.function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
@@ -16166,6 +16189,356 @@ kw_defaults.push(`${arg.arg}: ${v}`)}}
 var kw_default_names=[]
 for(var kw of this.args.kwonlyargs){kw_default_names.push(`'${kw.arg}'`)}
 return{default_names,_defaults,positional,has_posonlyargs,kw_defaults,kw_default_names,annotations}}
+const args0_fcts=$B.args_parsers=[];
+function getArgs0(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs){	const IDX=	 hasPosOnly
+			|posOnlyDefaults	<< 1
+			|hasPos		<< 3
+			|posDefaults		<< 4
+			|hasVargars		<< 6
+			|hasNamedOnly		<< 7
+			|namedOnlyDefaults	<< 8
+			|hasKWargs		<< 10;
+			
+	const args0=args0_fcts[IDX];
+	
+	if(args0 !==undefined)
+		return args0;
+	
+	const fct=args0_fcts[IDX]=generate_args0(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs);
+	
+	fct.id=IDX;
+	
+	return fct;}
+$B.getArgs0=getArgs0;
+const DEFAULTS=getArgs0.DEFAULTS={	NONE:0,	SOME:1,	ALL :3}
+function generate_args0(...args){	return new Function('fct','args',generate_args0_str(...args));}
+function generate_args0_str(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs){	let fct=
+`
+    const LAST_ARGS = args[args.length-1];
+    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
+    
+    let ARGS_POS_COUNT        = args.length;
+    let ARGS_NAMED            = null;
+    
+    if( HAS_KW ) {
+    	--ARGS_POS_COUNT;
+    	ARGS_NAMED = LAST_ARGS.$kw;
+    }
+    
+    const result = {};
+    // using const should enable the browser to perform some optimisation.
+    const $INFOS = fct.$infos;
+    const $CODE  = $INFOS.__code__;
+`;
+	if(hasPos ||hasPosOnly ||hasNamedOnly )
+		fct+=`
+    const PARAMS_NAMES        = $INFOS.arg_names;	
+`;
+	let PARAMS_POS_COUNT="0";
+	if(hasPos ||hasPosOnly ){		PARAMS_POS_COUNT="PARAMS_POS_COUNT";
+		fct+=`
+    const PARAMS_POS_COUNT    = $CODE.co_argcount;
+`;
+	}
+	let PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT;
+	let PARAMS_POS_DEFAULTS_COUNT="0";
+	
+	if(posOnlyDefaults !==DEFAULTS.NONE ||posDefaults !==DEFAULTS.NONE ){		PARAMS_POS_DEFAULTS_OFFSET="PARAMS_POS_DEFAULTS_OFFSET";
+		PARAMS_POS_DEFAULTS_COUNT="PARAMS_POS_DEFAULTS_COUNT";
+		
+		fct+=`
+    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
+    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
+    
+    const PARAMS_POS_DEFAULTS_OFFSET= ${PARAMS_POS_COUNT} - PARAMS_POS_DEFAULTS_COUNT;
+	
+`;
+	}
+	fct+=`
+    let offset = 0;
+`;
+	if(hasVargars ){		fct+=
+`
+    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, ${PARAMS_POS_COUNT}, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
+`
+		
+		if(hasPosOnly ||hasPos ){		
+			fct+=
+`
+	const min = Math.min( ARGS_POS_COUNT, ${PARAMS_POS_COUNT} );
+    for( ; offset < min ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+		}
+	}else{
+		fct+=
+`
+	if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
+        $B.args0_old(fct, args);
+        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
+    }
+`
+		if(hasPosOnly ||hasPos ){		
+			fct+=
+`
+    for( ; offset < ARGS_POS_COUNT ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+		}
+	}
+	
+	
+	if(! hasPos && ! hasNamedOnly && ! hasKWargs ){		fct+=`
+	if( HAS_KW === true ) {
+	
+		for(let argname in ARGS_NAMED[0] ) {
+			$B.args0_old(fct, args);
+			throw new Error('No named arguments expected !!!');
+		}
+	
+		for(let id = 1; id < ARGS_NAMED.length; ++id ) {
+			const kargs = ARGS_NAMED[id];
+			for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) { //TODO: not optimal
+				$B.args0_old(fct, args);
+				throw new Error('No named arguments expected !!!');
+			}
+		}
+	}
+`;
+	}else{
+		fct+=`
+	if( HAS_KW === false ) {
+	`;
+	}
+	
+	if(hasPos ||hasPosOnly ){		if(posOnlyDefaults !==DEFAULTS.ALL && posDefaults !==DEFAULTS.ALL ){			fct+=`
+		if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
+            $B.args0_old(fct, args);
+            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
+        }
+`
+		}
+		if(posOnlyDefaults !==DEFAULTS.NONE ||posDefaults !==DEFAULTS.NONE){			fct+=`
+		for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
+			i < PARAMS_POS_DEFAULTS_COUNT;
+			++i)
+			result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`
+		}
+	}
+	
+	if(hasKWargs ){		fct+=`
+		result[$INFOS.kwarg] = __BRYTHON__.obj_dict({});`
+	}
+	if(hasNamedOnly && namedOnlyDefaults !==DEFAULTS.ALL){		fct+=`
+		$B.args0_old(fct, args);
+		throw new Error('Named argument expected (args0 should have raised an error) !');
+`
+	}else if(namedOnlyDefaults !==DEFAULTS.NONE ){		fct+=`
+		const kwargs_defaults_values = fct.$kwdefaults_values;
+		
+		for(let i = 0; i < kwargs_defaults_values.length; ++i )    
+        		result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
+`
+	}
+	fct+=`
+		return result;
+`
+	
+	if(! hasPos && ! hasNamedOnly && ! hasKWargs ){		return fct;
+	}else{
+		fct+=`
+	}
+`;
+	}
+	if(namedOnlyDefaults !==DEFAULTS.NONE){		fct+=`
+	const kwargs_defaults = fct.$kwdefaults;
+`
+	}
+	let PARAMS_POSONLY_COUNT="0";
+	
+	if(hasPosOnly ){	
+		PARAMS_POSONLY_COUNT="PARAMS_POSONLY_COUNT";
+	
+		fct+=`
+	const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
+	if( offset < PARAMS_POSONLY_COUNT ) {
+		`;
+		if(posOnlyDefaults !==DEFAULTS.SOME){			fct+=`
+		if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
+			$B.args0_old(fct, args);
+			throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+		}
+`
+		}
+		if(posOnlyDefaults===DEFAULTS.NONE){			fct+=`
+		$B.args0_old(fct, args);
+		throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+`;
+		}
+		fct+=`
+		const max = ${PARAMS_POS_DEFAULTS_COUNT} - (${PARAMS_POS_COUNT} - PARAMS_POSONLY_COUNT);
+		// default parameters
+		for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
+				i < max;
+				++i)
+			result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
+	}
+`
+	}
+	if(hasKWargs){		fct+=`
+	const extra = {};
+	let nb_extra_args = 0;
+`
+		if(hasPos ||hasNamedOnly ){			fct+= `
+	const HAS_PARAMS = fct.$hasParams;
+`;
+		}
+	}
+	fct+=`
+	let nb_named_args = 0;       
+	
+	const kargs = ARGS_NAMED[0];
+	for(let argname in kargs) {
+		`;
+		if(! hasKWargs ){			fct+=`
+		result[ argname ] = kargs[argname];
+		++nb_named_args;
+`;
+		}
+		if(hasKWargs ){			if(! hasNamedOnly && ! hasPos ){				fct+=`
+		extra[ argname ] = kargs[argname];
+		++nb_extra_args;
+`
+			}else{
+				fct+=`
+		if( HAS_PARAMS.has(argname) ) {
+			result[ argname ] = kargs[argname];
+			++nb_named_args;
+		} else {
+			extra[ argname ] = kargs[argname];
+			++nb_extra_args;
+		}
+`
+			}
+		}
+		fct+=`
+	}
+	
+	for(let id = 1; id < ARGS_NAMED.length; ++id ) {
+		const kargs = ARGS_NAMED[id];
+		for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+		
+			if( typeof argname !== "string") {
+				$B.args0_old(fct, args);
+				throw new Error('Non string key passed in **kargs');
+			}
+			`;
+			if(! hasKWargs ){				fct+=`
+			result[ argname ] = $B.$getitem(kargs, argname);
+			++nb_named_args;
+`;
+			}
+			if(hasKWargs ){				if(! hasNamedOnly && ! hasPos ){					fct+=`
+			extra[ argname ] = $B.$getitem(kargs, argname);
+			++nb_extra_args;
+`
+				}else{
+					fct+=`
+			if( HAS_PARAMS.has(argname) ) {
+				result[ argname ] = $B.$getitem(kargs, argname);
+				++nb_named_args;
+			} else {
+				extra[ argname ] = $B.$getitem(kargs, argname);
+				++nb_extra_args;
+			}
+`
+				}
+			}
+			fct+=`
+		}
+	}
+`
+	fct+=`
+	let found = 0;
+    let ioffset = offset;
+`;
+	if(	(hasPosOnly ||hasPos)
+		&&(! hasPosOnly ||posOnlyDefaults !==DEFAULTS.ALL)
+		&&(! hasPos ||posDefaults !==DEFAULTS.ALL)){		fct+=`
+	for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
+		
+		const key = PARAMS_NAMES[ioffset];
+		if( key in result ) // maybe could be speed up using "!(key in result)"
+			continue;
+		$B.args0_old(fct, args);
+		throw new Error('Missing a named arguments (args0 should have raised an error) !');
+	}
+`
+	}
+	if((hasPosOnly && posOnlyDefaults !==DEFAULTS.NONE)||(hasPos && posDefaults !==DEFAULTS.NONE)){		fct+=`
+	for( ; ioffset < PARAMS_POS_COUNT; ++ioffset) {
+		
+		const key = PARAMS_NAMES[ioffset];
+		if( key in result )
+			continue;
+		result[key] = PARAMS_POS_DEFAULTS[ioffset - ${PARAMS_POS_DEFAULTS_OFFSET}];
+	++found;
+	}
+`
+	}
+	if(hasNamedOnly ){		fct+=`
+		for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
+			
+			const key = PARAMS_NAMES[ioffset];
+			if( key in result )
+				continue;
+`
+		if(namedOnlyDefaults===DEFAULTS.SOME){			fct+=`
+			if( ! kwargs_defaults.has(key) ) {
+				$B.args0_old(fct, args);
+				
+				throw new Error('Missing a named arguments (args0 should have raised an error) !');
+			}
+`
+		}
+		if(namedOnlyDefaults===DEFAULTS.NONE ){			fct+=`
+			$B.args0_old(fct, args);
+			
+			throw new Error('Missing a named arguments (args0 should have raised an error) !');
+`
+		}
+		
+		if(namedOnlyDefaults !==DEFAULTS.NONE){			fct+=`
+			result[key] = kwargs_defaults.get(key);
+			++found;
+`;
+		}
+		fct+=`
+		}
+`;
+	}
+	
+	if(hasNamedOnly ||hasPos )
+		fct+=`
+		if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
+			$B.args0_old(fct, args);
+			throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
+		}
+`;
+	if(hasKWargs ){		fct+=`
+	if( Object.keys(extra).length !== nb_extra_args ) {
+		$B.args0_old(fct, args);
+		throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
+	}
+	result[$INFOS.kwarg] = __BRYTHON__.obj_dict(extra);
+`
+	}
+	fct+=`
+	return result
+	`;
+	
+	return fct;}
+const USE_PERSO_ARGS0_EVERYWHERE=true;
 $B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
 if(in_class){var class_scope=last_scope(scopes)}
@@ -16218,11 +16591,12 @@ parse_args.push('arguments')
 var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.vararg.arg+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+this.args.kwarg.arg+"'"
-if(positional.length==0 && slots.length==0 &&
+	if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=`${locals_name} = locals = {};
-if( arguments.length !== 0)
-	$B.args0(${parse_args.join(', ')})\n`;}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
+this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`;
+js+=`if( arguments.length !== 0) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;`}
+	else if(USE_PERSO_ARGS0_EVERYWHERE ){		js+=`${locals_name} = locals = ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n`
+	}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     if(locals.$has_generators){

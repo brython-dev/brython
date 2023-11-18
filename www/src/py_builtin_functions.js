@@ -108,8 +108,17 @@ _b_.anext = function(async_iterator, _default){
         $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 ['async_iterator', '_default'], arguments,
                 {_default: missing}, null, null)
-    var awaitable = $B.$call($B.$getattr(async_iterator, '__anext__'))()
-    return awaitable
+    var awaitable = $B.$call($B.$getattr($.async_iterator, '__anext__'))()
+    return awaitable.catch(
+        function(err){
+            if($B.is_exc(err, [_b_.StopAsyncIteration])){
+                if($._default !== missing){
+                    return $._default
+                }
+            }
+            throw err
+        }
+    )
 }
 
 var any = _b_.any = function(obj){
