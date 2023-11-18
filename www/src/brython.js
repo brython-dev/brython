@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-18 10:40:27.351694"
-__BRYTHON__.timestamp=1700300427351
+__BRYTHON__.compiled_date="2023-11-18 15:58:13.473309"
+__BRYTHON__.timestamp=1700319493473
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -6716,7 +6716,7 @@ _b_.all=function(obj){check_nb_args_no_kw('all',1,arguments)
 var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(!$B.$bool(elt)){return false}}catch(err){return true}}}
-_b_.anext=function(async_iterator,_default){var missing={},$=$B.args('anext',2,{async_iterator:null,_default:null},['async_iterator','_default'],arguments,{_default:missing},null,null)
+_b_.anext=function(){var missing={},$=$B.args('anext',2,{async_iterator:null,_default:null},['async_iterator','_default'],arguments,{_default:missing},null,null)
 var awaitable=$B.$call($B.$getattr($.async_iterator,'__anext__'))()
 return awaitable.catch(
 function(err){if($B.is_exc(err,[_b_.StopAsyncIteration])){if($._default !==missing){return $._default}}
@@ -7680,28 +7680,37 @@ if(ix==-1){lines.push({__class__:_b_.bytes,source:source.slice(pos)})
 break}else{lines.push({__class__:_b_.bytes,source:source.slice(pos,ix+1)})
 pos=ix+1}}
 self.$lines=lines}}}
-$Reader.readline=function(self,size){var $=$B.args("readline",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
+$Reader.readline=function(){var $=$B.args("readline",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$.size,result,rest,ix
+if(size===_b_.None){size=-1}else if(! _b_.isinstance(size,_b_.int)){throw _b_.TypeError.$factory('argument should be integer or None, '+
+`not '${$B.class_name(size)}'`)}else{size=_b_.int.$int_value(size)}
 self.$lc=self.$lc===undefined ?-1 :self.$lc
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-if(self.$binary){var ix=self.$content.source.indexOf(10,self.$counter)
-if(ix==-1){var rest=self.$content.source.slice(self.$counter)
+if(self.$binary){
+ix=self.$content.source.indexOf(10,self.$counter)
+if(ix==-1){rest=self.$content.source.slice(self.$counter)
+if(size >-1){rest=rest.slice(0,size)}
 self.$counter=self.$content.source.length
-return _b_.bytes.$factory(rest)}else{var res={__class__:_b_.bytes,source :self.$content.source.slice(self.$counter,ix+1)}
+return _b_.bytes.$factory(rest)}else{var line_source=self.$content.source.slice(self.$counter,ix+1)
+if(size >-1){line_source=line_source.slice(0,size)}
+result={__class__:_b_.bytes,source :line_source}
 self.$counter=ix+1
-return res}}else{if(self.$counter==self.$content.length){return ''}
-var ix=self.$content.indexOf("\n",self.$counter)
-if(ix==-1){var rest=self.$content.substr(self.$counter)
+return result}}else{if(self.$counter==self.$content.length){return ''}
+ix=self.$content.indexOf("\n",self.$counter)
+if(ix==-1){rest=self.$content.substr(self.$counter)
+if(size >-1){rest=rest.substr(0,size)}
 self.$counter=self.$content.length
-return rest}else{var res=self.$content.substring(self.$counter,ix+1)
+return rest}else{result=self.$content.substring(self.$counter,ix+1)
+if(size >-1){result=result.substr(0,size)}
 self.$counter=ix+1
 self.$lc+=1
-return res}}}
+return result}}}
 $Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},["self","hint"],arguments,{hint:-1},null,null),self=$.self,hint=$B.$GetInt($.hint)
 var nb_read=0
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 self.$lc=self.$lc===undefined ?-1 :self.$lc
 make_lines(self)
-if(hint < 0){var lines=self.$lines.slice(self.$lc+1)}else{var lines=[]
+var lines
+if(hint < 0){lines=self.$lines.slice(self.$lc+1)}else{lines=[]
 while(self.$lc < self.$lines.length &&
 nb_read < hint){self.$lc++
 lines.push(self.$lines[self.$lc])}}
@@ -7710,19 +7719,19 @@ $Reader.seek=function(self,offset,whence){if(self.closed===True){throw _b_.Value
 if(whence===undefined){whence=0}
 if(whence===0){self.$counter=offset}else if(whence===1){self.$counter+=offset}else if(whence===2){self.$counter=self.$length+offset}
 return None}
-$Reader.seekable=function(self){return true}
+$Reader.seekable=function(){return true}
 $Reader.tell=function(self){return self.$counter}
 $Reader.write=function(_self,data){if(_self.mode.indexOf('w')==-1){if($B.$io.UnsupportedOperation===undefined){$B.$io.UnsupportedOperation=$B.$class_constructor(
 "UnsupportedOperation",{},[_b_.Exception],["Exception"])}
 throw $B.$call($B.$io.UnsupportedOperation)('not writable')}
 if(_self.mode.indexOf('b')==-1){
 if(typeof data !="string"){throw _b_.TypeError.$factory('write() argument must be str,'+
-` not ${class_name(data)}`)}
+` not ${$B.class_name(data)}`)}
 _self.$content+=data}else{if(! $B.$isinstance(data,[_b_.bytes,_b_.bytearray])){throw _b_.TypeError.$factory('write() argument must be bytes,'+
-` not ${class_name(data)}`)}
+` not ${$B.class_name(data)}`)}
 _self.$content.source=_self.$content.source.concat(data.source)}
 $B.file_cache[_self.name]=_self.$content}
-$Reader.writable=function(self){return false}
+$Reader.writable=function(){return false}
 $B.set_func_names($Reader,"builtins")
 var $BufferedReader=$B.make_class('_io.BufferedReader',function(content){return{
 __class__:$BufferedReader,$binary:true,$content:content,$read_func:$B.$getattr(content,'read')}}
@@ -7739,16 +7748,16 @@ $B.set_func_names($TextIOWrapper,"builtins")
 $B.Reader=$Reader
 $B.TextIOWrapper=$TextIOWrapper
 $B.BufferedReader=$BufferedReader
-var $url_open=_b_.open=function(){
+_b_.open=function(){
 var $=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),file=$.file,mode=$.mode,encoding=$.encoding,result={}
 if(encoding=='locale'){
 encoding='utf-8'}
 var is_binary=mode.search('b')>-1
 if(mode.search('w')>-1){
-var res={$binary:is_binary,$content:is_binary ? _b_.bytes.$factory():'',$encoding:encoding,closed:False,mode,name:file}
-res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
-$B.file_cache[file]=res.$content
-return res}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
+result={$binary:is_binary,$content:is_binary ? _b_.bytes.$factory():'',$encoding:encoding,closed:False,mode,name:file}
+result.__class__=is_binary ? $BufferedReader :$TextIOWrapper
+$B.file_cache[file]=result.$content
+return result}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if($B.$isinstance(file,_b_.str)){
 if($B.file_cache.hasOwnProperty($.file)){var f=$B.file_cache[$.file]
 result.content=f
@@ -7781,26 +7790,21 @@ result.content.length,closed:False,mode,name:file}
 res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
 return res}else{throw _b_.TypeError.$factory("invalid argument for open(): "+
 _b_.str.$factory(file))}}
-function*zip_iter(args){var t=[]
-for(var arg in args){t.push($B.make_js_iterator(arg))}
-return t}
 var zip=_b_.zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args'],strict=$B.$bool($ns.kw.$jsobj.strict ||false)
-var nexts=[],only_lists=true,min_len
 var iters=[]
 for(var arg of _args){iters.push($B.make_js_iterator(arg))}
 return{
 __class__:zip,iters,strict}}
 )
-var zip_iterator=$B.make_iterator_class('zip')
 zip.__iter__=function(self){return self}
 zip.__next__=function(self){var res=[],len=self.iters.length
 for(var i=0;i < len;i++){var v=self.iters[i].next()
 if(v.done){if(self.strict){if(i > 0){throw _b_.ValueError.$factory(
-`zip() argument ${i + 1} is longer than argument ${i}`)}else{for(var j=1;j < len;j++){var v=self.iters[j].next()
-if(! v.done){throw _b_.ValueError.$factory(
+`zip() argument ${i + 1} is longer than argument ${i}`)}else{for(var j=1;j < len;j++){var v1=self.iters[j].next()
+if(! v1.done){throw _b_.ValueError.$factory(
 `zip() argument ${j + 1} is longer than argument ${i + 1}`)}}}}
 throw _b_.StopIteration.$factory('')}
 res.push(v.value)}
@@ -7812,17 +7816,15 @@ var True=_b_.True=true
 var False=_b_.False=false
 var ellipsis=$B.ellipsis=$B.make_class("ellipsis",function(){return Ellipsis}
 )
-ellipsis.__repr__=function(self){return 'Ellipsis'}
+ellipsis.__repr__=function(){return 'Ellipsis'}
 var Ellipsis=_b_.Ellipsis={__class__:ellipsis}
-for(var $key in $B.$comps){
-switch($B.$comps[$key]){case 'ge':
+for(var comp in $B.$comps){
+switch($B.$comps[comp]){case 'ge':
 case 'gt':
 case 'le':
 case 'lt':
-ellipsis['__'+$B.$comps[$key]+'__']=(function(k){return function(other){throw _b_.TypeError.$factory("unorderable types: ellipsis() "+
-k+" "+$B.class_name(other))}})($key)}}
-for(var $func in Ellipsis){if(typeof Ellipsis[$func]=='function'){Ellipsis[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+
-" of Ellipsis object>"}})($func)}}
+ellipsis['__'+$B.$comps[comp]+'__']=
+function(){return _b_.NotImplemented}}}
 $B.set_func_names(ellipsis)
 var FunctionCode=$B.make_class("function code")
 var FunctionGlobals=$B.make_class("function globals")
@@ -7837,7 +7839,7 @@ if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
 $B.function.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
-for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
+for(var _attr in self.$infos.__code__){res[_attr]=self.$infos.__code__[_attr]}
 res.name=self.$infos.__name__
 res.filename=self.$infos.__code__.co_filename
 res.co_code=self+"" 
@@ -7852,7 +7854,7 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_defaults=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);}
+$B.make_function_defaults=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$defaults={},$kwdefaults=new Map()
 for(let i=0;i < value.length ;++i){$defaults[varnames[i+offset]]=value[i]}
 if(f.$infos.__kwdefaults__ !==_b_.None){const kwdef=f.$infos.__kwdefaults__
@@ -7917,7 +7919,7 @@ var builtin_names=$B.builtin_funcs.
 concat($B.builtin_classes).
 concat(other_builtins)
 for(var name of builtin_names){try{if($B.builtin_funcs.indexOf(name)>-1){_b_[name].__class__=builtin_function
-_b_[name].$infos={__module__:'builtins',__name__:orig_name,__qualname__:orig_name}}}catch(err){}}
+_b_[name].$infos={__module__:'builtins',__name__:name,__qualname__:name}}}catch(err){}}
 _b_.object.__init__.__class__=$B.wrapper_descriptor 
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;

@@ -103,7 +103,7 @@ _b_.all = function(obj){
     }
 }
 
-_b_.anext = function(async_iterator, _default){
+_b_.anext = function(){
     var missing = {},
         $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 ['async_iterator', '_default'], arguments,
@@ -2875,11 +2875,23 @@ function make_lines(self){
     }
 }
 
-$Reader.readline = function(self, size){
+$Reader.readline = function(){
     var $ = $B.args("readline", 2, {self: null, size: null},
             ["self", "size"], arguments, {size: -1}, null, null),
             self = $.self,
-            size = $B.$GetInt($.size)
+            size = $.size,
+            result,
+            rest,
+            ix
+
+    if(size === _b_.None){
+        size = -1
+    }else if(! _b_.isinstance(size, _b_.int)){
+        throw _b_.TypeError.$factory('argument should be integer or None, ' +
+            `not '${$B.class_name(size)}'`)
+    }else{
+        size = _b_.int.$int_value(size)
+    }
     // set line counter
     self.$lc = self.$lc === undefined ? -1 : self.$lc
 
@@ -2887,36 +2899,49 @@ $Reader.readline = function(self, size){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
 
-    //make_content(self)
     if(self.$binary){
-        var ix = self.$content.source.indexOf(10, self.$counter)
+        // search next \n
+        ix = self.$content.source.indexOf(10, self.$counter)
         if(ix == -1){
-            var rest = self.$content.source.slice(self.$counter)
+            rest = self.$content.source.slice(self.$counter)
+            if(size > -1){
+                rest = rest.slice(0, size)
+            }
             self.$counter = self.$content.source.length
             return _b_.bytes.$factory(rest)
         }else{
-            var res = {
-                __class__: _b_.bytes,
-                source : self.$content.source.slice(self.$counter,
+            var line_source = self.$content.source.slice(self.$counter,
                     ix + 1)
+            if(size > -1){
+                line_source = line_source.slice(0, size)
+            }
+            result = {
+                __class__: _b_.bytes,
+                source : line_source
             }
             self.$counter = ix + 1
-            return res
+            return result
         }
     }else{
         if(self.$counter == self.$content.length){
             return ''
         }
-        var ix = self.$content.indexOf("\n", self.$counter)
+        ix = self.$content.indexOf("\n", self.$counter)
         if(ix == -1){
-            var rest = self.$content.substr(self.$counter)
+            rest = self.$content.substr(self.$counter)
+            if(size > -1){
+                rest = rest.substr(0, size)
+            }
             self.$counter = self.$content.length
             return rest
         }else{
-            var res = self.$content.substring(self.$counter, ix + 1)
+            result = self.$content.substring(self.$counter, ix + 1)
+            if(size > -1){
+                result = result.substr(0, size)
+            }
             self.$counter = ix + 1
             self.$lc += 1
-            return res
+            return result
         }
     }
 }
@@ -2933,10 +2958,11 @@ $Reader.readlines = function(){
     self.$lc = self.$lc === undefined ? -1 : self.$lc
     make_lines(self)
 
+    var lines
     if(hint < 0){
-        var lines = self.$lines.slice(self.$lc + 1)
+        lines = self.$lines.slice(self.$lc + 1)
     }else{
-        var lines = []
+        lines = []
         while(self.$lc < self.$lines.length &&
                 nb_read < hint){
             self.$lc++
@@ -2963,7 +2989,7 @@ $Reader.seek = function(self, offset, whence){
     return None
 }
 
-$Reader.seekable = function(self){
+$Reader.seekable = function(){
     return true
 }
 
@@ -2985,20 +3011,20 @@ $Reader.write = function(_self, data){
         // text mode
         if(typeof data != "string"){
             throw _b_.TypeError.$factory('write() argument must be str,' +
-                ` not ${class_name(data)}`)
+                ` not ${$B.class_name(data)}`)
         }
         _self.$content += data
     }else{
         if(! $B.$isinstance(data, [_b_.bytes, _b_.bytearray])){
             throw _b_.TypeError.$factory('write() argument must be bytes,' +
-                ` not ${class_name(data)}`)
+                ` not ${$B.class_name(data)}`)
         }
         _self.$content.source = _self.$content.source.concat(data.source)
     }
     $B.file_cache[_self.name] = _self.$content
 }
 
-$Reader.writable = function(self){
+$Reader.writable = function(){
     return false
 }
 
@@ -3053,7 +3079,7 @@ $B.Reader = $Reader
 $B.TextIOWrapper = $TextIOWrapper
 $B.BufferedReader = $BufferedReader
 
-var $url_open = _b_.open = function(){
+_b_.open = function(){
     // first argument is file : can be a string, or an instance of a DOM File object
     var $ = $B.args('open', 3, {file: null, mode: null, encoding: null},
         ['file', 'mode', 'encoding'], arguments,
@@ -3070,7 +3096,7 @@ var $url_open = _b_.open = function(){
 
     if(mode.search('w') > -1){
         // return the file-like object
-        var res = {
+        result = {
             $binary: is_binary,
             $content: is_binary ? _b_.bytes.$factory() : '',
             $encoding: encoding,
@@ -3078,9 +3104,9 @@ var $url_open = _b_.open = function(){
             mode,
             name: file
         }
-        res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
-        $B.file_cache[file] = res.$content
-        return res
+        result.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
+        $B.file_cache[file] = result.$content
+        return result
     }else if(['r', 'rb'].indexOf(mode) == -1){
         throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
     }
@@ -3181,14 +3207,6 @@ var $url_open = _b_.open = function(){
     }
 }
 
-function* zip_iter(args){
-    var t = []
-    for(var arg in args){
-        t.push($B.make_js_iterator(arg))
-    }
-    return t
-}
-
 var zip = _b_.zip = $B.make_class("zip",
     function(){
         var res = {
@@ -3201,9 +3219,6 @@ var zip = _b_.zip = $B.make_class("zip",
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
         var _args = $ns['args'],
             strict = $B.$bool($ns.kw.$jsobj.strict || false)
-        var nexts = [],
-            only_lists = true,
-            min_len
         var iters = []
         for(var arg of _args){
             iters.push($B.make_js_iterator(arg))
@@ -3215,8 +3230,6 @@ var zip = _b_.zip = $B.make_class("zip",
         }
     }
 )
-
-var zip_iterator = $B.make_iterator_class('zip')
 
 zip.__iter__ = function(self){
     return self
@@ -3234,8 +3247,8 @@ zip.__next__ = function(self){
                         `zip() argument ${i + 1} is longer than argument ${i}`)
                 }else{
                     for(var j = 1; j < len; j++){
-                        var v = self.iters[j].next()
-                        if(! v.done){
+                        var v1 = self.iters[j].next()
+                        if(! v1.done){
                             throw _b_.ValueError.$factory(
                                 `zip() argument ${j + 1} is longer than argument ${i + 1}`)
                         }
@@ -3271,34 +3284,22 @@ var ellipsis = $B.ellipsis = $B.make_class("ellipsis",
     function(){return Ellipsis}
 )
 
-ellipsis.__repr__ = function(self){
+ellipsis.__repr__ = function(){
     return 'Ellipsis'
 }
 
 var Ellipsis = _b_.Ellipsis = {__class__: ellipsis}
 
-for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
-    switch($B.$comps[$key]) {
+for(var comp in $B.$comps){ // Ellipsis is not orderable with any type
+    switch($B.$comps[comp]) {
       case 'ge':
       case 'gt':
       case 'le':
       case 'lt':
-        ellipsis['__' + $B.$comps[$key] + '__'] = (function(k){
-            return function(other){
-                throw _b_.TypeError.$factory("unorderable types: ellipsis() " +
-                    k + " " + $B.class_name(other))
+        ellipsis['__' + $B.$comps[comp] + '__'] =
+            function(){
+                return _b_.NotImplemented
             }
-        })($key)
-    }
-}
-
-for(var $func in Ellipsis){
-    if(typeof Ellipsis[$func] == 'function'){
-        Ellipsis[$func].__str__ = (function(f){
-            return function(){return "<method-wrapper " + f +
-                " of Ellipsis object>"
-            }
-        })($func)
     }
 }
 
@@ -3349,8 +3350,8 @@ $B.function.__getattribute__ = function(self, attr){
     if(self.$infos && self.$infos[attr] !== undefined){
         if(attr == '__code__'){
             var res = {__class__: code}
-            for(var attr in self.$infos.__code__){
-                res[attr] = self.$infos.__code__[attr]
+            for(var _attr in self.$infos.__code__){
+                res[_attr] = self.$infos.__code__[_attr]
             }
             res.name = self.$infos.__name__
             res.filename = self.$infos.__code__.co_filename
@@ -3404,13 +3405,10 @@ $B.function.__repr__ = function(self){
 
 $B.function.__mro__ = [_b_.object]
 
-
 $B.make_function_defaults = function(f){
-
-    if( f.$infos === undefined || f.$infos.__code__ === undefined) {
-            throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
+    if(f.$infos === undefined || f.$infos.__code__ === undefined){
+        throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);
     }
-
     // Make the new $defaults Javascript object
     const varnames = f.$infos.__code__.co_varnames,
           value = f.$infos.__defaults__,
@@ -3577,8 +3575,8 @@ for(var name of builtin_names){
             // used by inspect module
             _b_[name].$infos = {
                 __module__: 'builtins',
-                __name__: orig_name,
-                __qualname__: orig_name
+                __name__: name,
+                __qualname__: name
             }
         }
     }catch(err){
@@ -3586,7 +3584,6 @@ for(var name of builtin_names){
         // eg int, str, float, etc.
     }
 }
-
 
 _b_.object.__init__.__class__ = $B.wrapper_descriptor // in py_type.js
 _b_.object.__new__.__class__ = builtin_function
