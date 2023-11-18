@@ -1,5 +1,5 @@
 // built-in functions
-;(function($B){
+(function($B){
 "use strict";
 
 var _b_ = $B.builtins
@@ -17,15 +17,15 @@ var NoneType = $B.NoneType = {
     $factory: function(){
         return None
     },
-    __bool__: function(self){return False},
+    __bool__: function(){return False},
     __class__: _b_.type,
-    __hash__: function(self){return 0},
+    __hash__: function(){return 0},
     __module__: 'builtins',
     __mro__: [_b_.object],
     __name__: 'NoneType',
     __qualname__: 'NoneType',
-    __repr__: function(self){return 'None'},
-    __str__: function(self){return 'None'},
+    __repr__: function(){return 'None'},
+    __str__: function(){return 'None'},
     $is_class: true
 }
 
@@ -47,8 +47,8 @@ for(var $op in $B.$comps){ // None is not orderable with any type
       case 'gt':
       case 'le':
       case 'lt':
-        NoneType['__' + key + '__'] = (function(op){
-            return function(other){return _b_.NotImplemented}
+        NoneType['__' + key + '__'] = (function(){
+            return function(){return _b_.NotImplemented}
         })($op)
     }
 }
@@ -68,7 +68,7 @@ _b_.__build_class__ = function(){
     throw _b_.NotImplementedError.$factory('__build_class__')
 }
 
-var abs = _b_.abs = function(obj){
+_b_.abs = function(obj){
     check_nb_args_no_kw('abs', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
@@ -84,22 +84,26 @@ var abs = _b_.abs = function(obj){
     return $B.$call(method)(obj)
 }
 
-var aiter = _b_.aiter = function(async_iterable){
+_b_.aiter = function(async_iterable){
     return $B.$call($B.$getattr(async_iterable, '__aiter__'))()
 }
 
-var all = _b_.all = function(obj){
+_b_.all = function(obj){
     check_nb_args_no_kw('all', 1, arguments)
     var iterable = iter(obj)
     while(1){
         try{
             var elt = next(iterable)
-            if(!$B.$bool(elt)){return false}
-        }catch(err){return true}
+            if(!$B.$bool(elt)){
+                return false
+            }
+        }catch(err){
+            return true
+        }
     }
 }
 
-var anext = _b_.anext = function(async_iterator, _default){
+_b_.anext = function(async_iterator, _default){
     var missing = {},
         $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 ['async_iterator', '_default'], arguments,
@@ -187,7 +191,7 @@ function bin_hex_oct(base, obj){
 }
 
 // bin() (built in function)
-var bin = _b_.bin = function(obj) {
+_b_.bin = function(obj) {
     check_nb_args_no_kw('bin', 1, arguments)
     return bin_hex_oct(2, obj)
 }
@@ -3397,7 +3401,7 @@ $B.make_function_defaults = function(f){
     if( f.$infos === undefined || f.$infos.__code__ === undefined) {
             throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
     }
-    
+
     // Make the new $defaults Javascript object
     const varnames = f.$infos.__code__.co_varnames,
           value = f.$infos.__defaults__,
@@ -3416,47 +3420,47 @@ $B.make_function_defaults = function(f){
     f.$defaults = $defaults
     f.$kwdefaults = $kwdefaults
     f.$kwdefaults_values = [...$kwdefaults.values()]
-    
+
     f.$hasParams = new Set()
     for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i){
         f.$hasParams.add(varnames[i])
-    }    
-  
-        
+    }
+
+
         const $INFOS = f.$infos;
-    	const $CODE  = $INFOS.__code__;
-    	const DEFAULTS = $B.getArgs0.DEFAULTS;
-    	
-	const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
+        const $CODE  = $INFOS.__code__;
+        const DEFAULTS = $B.getArgs0.DEFAULTS;
+
+    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
         const PARAMS_NAMED_DEFAULTS_COUNT = Object.keys($defaults).length - value.length;
         let named_defaults = DEFAULTS.NONE;
         if( PARAMS_NAMED_DEFAULTS_COUNT > 0)
-        	named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
-        
+            named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
+
         const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-        const PARAMS_POS_COUNT		   = $CODE.co_argcount - PARAMS_POSONLY_COUNT;
-        
+        const PARAMS_POS_COUNT           = $CODE.co_argcount - PARAMS_POSONLY_COUNT;
+
         let pos_defaults = DEFAULTS.NONE;
         if( PARAMS_POS_COUNT !== 0 && value.length > 0)
-        	pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
-        
+            pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
+
         let posonly_defaults = DEFAULTS.NONE;
         if( value.length > PARAMS_POS_COUNT)
-        	posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL : DEFAULTS.SOME;
+            posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL : DEFAULTS.SOME;
 
-        
+
         f.$args_parser = f.$infos.args_parser = $B.getArgs0(
-        	PARAMS_POSONLY_COUNT !== 0,
-    		posonly_defaults,
-    		PARAMS_POS_COUNT !== 0,
-    		pos_defaults,
-    		$INFOS.vararg !== null,
-    		PARAMS_NAMED_COUNT !== 0,
-    		named_defaults,
-    		$INFOS.kwarg !== null
+            PARAMS_POSONLY_COUNT !== 0,
+            posonly_defaults,
+            PARAMS_POS_COUNT !== 0,
+            pos_defaults,
+            $INFOS.vararg !== null,
+            PARAMS_NAMED_COUNT !== 0,
+            named_defaults,
+            $INFOS.kwarg !== null
         );
-      
-  
+
+
     return _b_.None
 }
 
