@@ -3391,7 +3391,9 @@ $B.function.__repr__ = function(self){
 
 $B.function.__mro__ = [_b_.object]
 
+
 $B.make_function_defaults = function(f){
+
     if( f.$infos === undefined || f.$infos.__code__ === undefined) {
             throw _b_.AttributeError.$factory(`cannot set attribute ${attr} of ${_b_.str.$factory(self)}`);
     }
@@ -3419,6 +3421,42 @@ $B.make_function_defaults = function(f){
     for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i){
         f.$hasParams.add(varnames[i])
     }    
+  
+        
+        const $INFOS = f.$infos;
+    	const $CODE  = $INFOS.__code__;
+    	const DEFAULTS = $B.getArgs0.DEFAULTS;
+    	
+	const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
+        const PARAMS_NAMED_DEFAULTS_COUNT = Object.keys($defaults).length - value.length;
+        let named_defaults = DEFAULTS.NONE;
+        if( PARAMS_NAMED_DEFAULTS_COUNT > 0)
+        	named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
+        
+        const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
+        const PARAMS_POS_COUNT		   = $CODE.co_argcount - PARAMS_POSONLY_COUNT;
+        
+        let pos_defaults = DEFAULTS.NONE;
+        if( PARAMS_POS_COUNT !== 0 && value.length > 0)
+        	pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
+        
+        let posonly_defaults = DEFAULTS.NONE;
+        if( value.length > PARAMS_POS_COUNT)
+        	posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL : DEFAULTS.SOME;
+
+        
+        f.$args_parser = f.$infos.args_parser = $B.getArgs0(
+        	PARAMS_POSONLY_COUNT !== 0,
+    		posonly_defaults,
+    		PARAMS_POS_COUNT !== 0,
+    		pos_defaults,
+    		$INFOS.vararg !== null,
+    		PARAMS_NAMED_COUNT !== 0,
+    		named_defaults,
+    		$INFOS.kwarg !== null
+        );
+      
+  
     return _b_.None
 }
 
