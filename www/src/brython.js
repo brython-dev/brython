@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-18 18:00:05.656676"
-__BRYTHON__.timestamp=1700326805656
+__BRYTHON__.compiled_date="2023-11-19 08:24:00.201361"
+__BRYTHON__.timestamp=1700378640201
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5059,19 +5059,18 @@ if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
 $B.timestamp=$B.VFS_timestamp}
 function idb_load(evt,module){
 var res=evt.target.result
-var timestamp=$B.timestamp,debug=$B.get_page_option('debug')
+var debug=$B.get_page_option('debug')
 if(res===undefined ||res.timestamp !=$B.timestamp ||
 ($B.VFS[module]&& res.source_ts !==$B.VFS[module].timestamp)){
 if($B.VFS[module]!==undefined){var elts=$B.VFS[module],ext=elts[0],source=elts[1]
-if(ext==".py"){var imports=elts[2],is_package=elts.length==4,source_ts=elts.timestamp,__package__
+if(ext==".py"){var is_package=elts.length==4,__package__
 if(is_package){__package__=module}
 else{var parts=module.split(".")
 parts.pop()
 __package__=parts.join(".")}
 $B.imported[module]=$B.module.$factory(module,"",__package__)
 $B.url2name[module]=module
-try{var root=$B.py2js(
-{src:source,filename:module},module,module),js=root.to_js()}catch(err){$B.handle_error(err)}
+try{$B.py2js({src:source,filename:module},module,module)}catch(err){$B.handle_error(err)}
 delete $B.imported[module]
 if(debug > 1){console.log("precompile",module)}}else{console.log('bizarre',module,ext)}}else{}}else{
 if(res.is_package){$B.precompiled[module]=[res.content]}else{$B.precompiled[module]=res.content}
@@ -5083,23 +5082,14 @@ if(subimport.startsWith(".")){
 var url_elts=module.split("."),nb_dots=0
 while(subimport.startsWith(".")){nb_dots++
 subimport=subimport.substr(1)}
-var elts=url_elts.slice(0,nb_dots)
+let elts=url_elts.slice(0,nb_dots)
 if(subimport){elts=elts.concat([subimport])}
 subimport=elts.join(".")}
 if(!$B.imported.hasOwnProperty(subimport)&&
 !$B.precompiled.hasOwnProperty(subimport)){
-if($B.VFS.hasOwnProperty(subimport)){var submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
+if($B.VFS.hasOwnProperty(subimport)){let submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
 if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
 loop()}
-function store_precompiled(module,js,source_ts,imports,is_package){
-var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),data={"name":module,"content":js,"imports":imports,"timestamp":__BRYTHON__.timestamp,"source_ts":source_ts,"is_package":is_package},request=store.put(data)
-if($B.get_page_option('debug')> 1){console.log("store precompiled",module,"package",is_package)}
-document.dispatchEvent(new CustomEvent('precompile',{detail:'cache module '+module}))
-var ix=$B.outdated.indexOf(module)
-if(ix >-1){$B.outdated.splice(ix,1)}
-request.onsuccess=function(evt){
-$B.tasks.splice(0,0,[idb_get,module])
-loop()}}
 function idb_get(module){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules"),req=store.get(module)
@@ -5116,7 +5106,7 @@ idb_cx.onsuccess=function(){var db=idb_cx.result,store=db.createObjectStore("mod
 store.onsuccess=resolve}}else{
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
-openCursor.onerror=function(evt){reject("open cursor error")}
+openCursor.onerror=function(){reject("open cursor error")}
 openCursor.onsuccess=function(evt){var cursor=evt.target.result
 if(cursor){record=cursor.value
 if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
@@ -5132,7 +5122,7 @@ $B.idb_cx=null
 $B.idb_name=null
 $B.$options.indexedDB=false
 reject('could not open indexedDB database')}})}
-$B.idb_open=function(obj){$B.idb_name="brython-cache"
+$B.idb_open=function(){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
 if(! db.objectStoreNames.contains("modules")){var version=db.version
@@ -5187,15 +5177,15 @@ function add_jsmodule(module,source){
 source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
-var inImported=$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
+$B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 if(elts===undefined){console.log('bizarre',module)}
-var ext=elts[0],source=elts[1],is_package=elts.length==4
+var ext=elts[0],source=elts[1]
 if(ext==".py"){if($B.idb_cx && !$B.idb_cx.$closed){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
 function report_precompile(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
 ' from cache'}))}}
 function report_close(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
-function report_done(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
+function report_done(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
 while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
@@ -5229,20 +5219,7 @@ $B.handle_error(err)}
 loop()}else{
 try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
-$B.has_indexedDB=self.indexedDB !==undefined
-function required_stdlib_imports(imports,start){
-var nb_added=0
-start=start ||0
-for(var i=start;i < imports.length;i++){var module=imports[i]
-if($B.imported.hasOwnProperty(module)){continue}
-var mod_obj=$B.VFS[module]
-if(mod_obj===undefined){console.log("undef",module)}
-if(mod_obj[0]==".py"){var subimports=mod_obj[2]
-subimports.forEach(function(subimport){if(!$B.imported.hasOwnProperty(subimport)&&
-imports.indexOf(subimport)==-1){if($B.VFS.hasOwnProperty(subimport)){imports.push(subimport)
-nb_added++}}})}}
-if(nb_added){required_stdlib_imports(imports,imports.length-nb_added)}
-return imports}})(__BRYTHON__)
+$B.has_indexedDB=self.indexedDB !==undefined})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,_window=globalThis,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
