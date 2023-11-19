@@ -1144,6 +1144,11 @@ visitor.stmt = function(st, s){
         if(!symtable_exit_block(st)){
             VISIT_QUIT(st, 0)
         }
+        if(s.type_params.length > 0) {
+            if (!symtable_exit_block(st)){
+                VISIT_QUIT(st, 0)
+            }
+        }
         break;
     case $B.ast.ClassDef:
         var tmp;
