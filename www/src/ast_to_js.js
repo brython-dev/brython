@@ -204,7 +204,7 @@ var CELL = 5,
     GLOBAL_EXPLICIT = 2,
     GLOBAL_IMPLICIT = 3,
     SCOPE_MASK = 15,
-    SCOPE_OFF = 11
+    SCOPE_OFF = 12
 
 var TYPE_CLASS = 1,
     TYPE_FUNCTION = 0,
@@ -219,7 +219,7 @@ var DEF_GLOBAL = 1,           /* global stmt */
     DEF_FREE_CLASS = 2<<5,    /* free variable from class's method */
     DEF_IMPORT = 2<<6,        /* assignment occurred via import */
     DEF_ANNOT = 2<<7,         /* this name is annotated */
-    DEF_COMP_ITER = 2<<8     /* this name is a comprehension iteration variable */
+    DEF_COMP_ITER = 2<<8      /* this name is a comprehension iteration variable */
 
 function name_reference(name, scopes, position){
     var scope = name_scope(name, scopes)
@@ -260,7 +260,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'T'
+    var test = false // name == 'x'
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -290,6 +290,7 @@ function name_scope(name, scopes){
     }catch(err){
         console.log('name', name, 'not in symbols of block', block)
         console.log('symtables', scopes.symtable)
+        console.log('scopes', scopes.slice())
         return {found: false, resolve: 'all'}
     }
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
@@ -1375,19 +1376,19 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
     if(has_type_params){
-        js += `$B.$import('typing')\n` +
-              `var typing = $B.imported.typing\n`
+        js += `$B.$import('_typing')\n` +
+              `var _typing = $B.imported._typing\n`
         var params = []
         for(var item of this.type_params){
             if(item instanceof $B.ast.TypeVar){
-                params.push(`$B.$call(typing.TypeVar)('${item.name}')`)
+                params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)
             }else if(item instanceof $B.ast.TypeVarTuple){
-                params.push(`$B.$call($B.$getattr(typing.Unpack, '__getitem__'))($B.$call(typing.TypeVarTuple)('${item.name.id}'))`)
+                params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)
             }else if(item instanceof $B.ast.ParamSpec){
-                params.push(`$B.$call(typing.ParamSpec)('${item.name.id}')`)
+                params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)
             }
         }
-        bases.push(`typing.Generic.__class_getitem__(typing.Generic,` +
+        bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,` +
                 ` $B.fast_tuple([${params}]))`)
         for(var item of this.type_params){
             var name,
@@ -1397,7 +1398,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
             }else{
                 name = item.name.id
             }
-            js += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
+            js += `locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`
         }
     }
 
@@ -2243,6 +2244,10 @@ function type_param_in_def(tp, ref, scopes){
     }
     bind(name, scopes)
     if(tp.bound){
+        // symtable defines a block of type 'TypeVarBoundBlock' associated
+        // with tp
+        var typevarscope = new Scope(name, 'typevarbound', tp)
+        scopes.push(typevarscope)
         js += `function BOUND_OF_${name}(){\n` +
               `var current_frame = $B.frame_obj.frame,\n` +
               `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
@@ -2255,12 +2260,12 @@ function type_param_in_def(tp, ref, scopes){
               `}catch(err){\n` +
               `$B.leave_frame()\n` +
               `throw err\n}\n}\n`
+        scopes.pop()
     }
     js += `locals_${ref}.${name} = ` +
         `$B.$call(_typing.${param_type})('${name}')\n` +
         `type_params.push(locals_${ref}.${name})\n`
     if(tp.bound){
-        console.log('tp.bound', tp.bound)
         if(! tp.bound.elts){
             js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
                 `'__bound__', BOUND_OF_${name})\n`

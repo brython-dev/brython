@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-19 21:27:45.250485"
-__BRYTHON__.timestamp=1700425665250
+__BRYTHON__.compiled_date="2023-11-20 22:13:43.833982"
+__BRYTHON__.timestamp=1700514823833
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -4982,7 +4982,7 @@ if(run_loop){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.brython=brython})(__BRYTHON__)
-window.brython=__BRYTHON__.brython
+globalThis.brython=__BRYTHON__.brython
 if(__BRYTHON__.isNode){global.__BRYTHON__=__BRYTHON__
 module.exports={__BRYTHON__ }}
 ;
@@ -10116,8 +10116,7 @@ mod_name=module}}
 return $B.imported[package_name]}}
 $B.$import=function(mod_name,fromlist,aliases,locals){
 var test=false 
-if(test){console.log('mod name',mod_name,'fromlist',fromlist)
-alert()}
+if(test){alert()}
 if(mod_name=='_frozen_importlib_external'){
 var alias=aliases[mod_name]||mod_name
 var imp=$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals);
@@ -15472,7 +15471,7 @@ name=mangle(scopes,up_scope,name)
 if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)){return scopes[i]}}}
 scope.locals.add(name)
 return scope}
-var CELL=5,FREE=4,LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,SCOPE_MASK=15,SCOPE_OFF=11
+var CELL=5,FREE=4,LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,SCOPE_MASK=15,SCOPE_OFF=12
 var TYPE_CLASS=1,TYPE_FUNCTION=0,TYPE_MODULE=2
 var DEF_GLOBAL=1,
 DEF_LOCAL=2 ,
@@ -15508,6 +15507,7 @@ console.log('scopes',scopes.slice())
 console.log('symtable',scopes.symtable)}
 try{flags=_b_.dict.$getitem_string(block.symbols,name)}catch(err){console.log('name',name,'not in symbols of block',block)
 console.log('symtables',scopes.symtable)
+console.log('scopes',scopes.slice())
 return{found:false,resolve:'all'}}
 var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK,is_local=[LOCAL,CELL].indexOf(__scope)>-1
 if(test){console.log('block',block,'is local',is_local,'__scope',__scope)}
@@ -15911,15 +15911,15 @@ keywords.push(`["${keyword.arg}", `+
 $B.js_from_ast(keyword.value,scopes)+']')}
 var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
 var has_type_params=this.type_params.length > 0
-if(has_type_params){js+=`$B.$import('typing')\n`+
-`var typing = $B.imported.typing\n`
+if(has_type_params){js+=`$B.$import('_typing')\n`+
+`var _typing = $B.imported._typing\n`
 var params=[]
-for(var item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`$B.$call(typing.TypeVar)('${item.name}')`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`$B.$call($B.$getattr(typing.Unpack, '__getitem__'))($B.$call(typing.TypeVarTuple)('${item.name.id}'))`)}else if(item instanceof $B.ast.ParamSpec){params.push(`$B.$call(typing.ParamSpec)('${item.name.id}')`)}}
-bases.push(`typing.Generic.__class_getitem__(typing.Generic,`+
+for(var item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)}else if(item instanceof $B.ast.ParamSpec){params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)}}
+bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,`+
 ` $B.fast_tuple([${params}]))`)
 for(var item of this.type_params){var name,param_type=item.constructor.$name
 if(param_type=='TypeVar'){name=item.name}else{name=item.name.id}
-js+=`locals.${name} = $B.$call(typing.${param_type})('${name}')\n`}}
+js+=`locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`}}
 var docstring=extract_docstring(this,scopes)
 js+=`var ${ref} = (function(name, module, bases){\n`+
 `var _frame_obj = $B.frame_obj,\n`+
@@ -16356,7 +16356,10 @@ var js=''
 var name,param_type=tp.constructor.$name
 if(param_type=='TypeVar'){name=tp.name}else{name=tp.name.id}
 bind(name,scopes)
-if(tp.bound){js+=`function BOUND_OF_${name}(){\n`+
+if(tp.bound){
+var typevarscope=new Scope(name,'typevarbound',tp)
+scopes.push(typevarscope)
+js+=`function BOUND_OF_${name}(){\n`+
 `var current_frame = $B.frame_obj.frame,\n`+
 `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n`+
 `frame.$f_trace = $B.enter_frame(frame)\n`+
@@ -16367,12 +16370,12 @@ if(tp.bound){js+=`function BOUND_OF_${name}(){\n`+
 `$B.leave_frame()\nreturn res\n`+
 `}catch(err){\n`+
 `$B.leave_frame()\n`+
-`throw err\n}\n}\n`}
+`throw err\n}\n}\n`
+scopes.pop()}
 js+=`locals_${ref}.${name} = `+
 `$B.$call(_typing.${param_type})('${name}')\n`+
 `type_params.push(locals_${ref}.${name})\n`
-if(tp.bound){console.log('tp.bound',tp.bound)
-if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
+if(tp.bound){if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__bound__', BOUND_OF_${name})\n`}else{js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__constraints__', BOUND_OF_${name})\n`}}
 return js}
@@ -17207,18 +17210,18 @@ var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' i
 "'%s' can not be used within the definition of a generic",DUPLICATE_TYPE_PARAM="duplicate type parameter '%s'"
 var DEF_GLOBAL=1,
 DEF_LOCAL=2 ,
-DEF_PARAM=2<<1,
-DEF_NONLOCAL=2<<2,
-USE=2<<3 ,
-DEF_FREE=2<<4 ,
-DEF_FREE_CLASS=2<<5,
-DEF_IMPORT=2<<6,
-DEF_ANNOT=2<<7,
-DEF_COMP_ITER=2<<8,
-DEF_TYPE_PARAM=2<<9,
-DEF_COMP_CELL=2<<10 
+DEF_PARAM=2 << 1,
+DEF_NONLOCAL=2 << 2,
+USE=2 << 3 ,
+DEF_FREE=2 << 4 ,
+DEF_FREE_CLASS=2 << 5,
+DEF_IMPORT=2 << 6,
+DEF_ANNOT=2 << 7,
+DEF_COMP_ITER=2 << 8,
+DEF_TYPE_PARAM=2 << 9,
+DEF_COMP_CELL=2 << 10 
 var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
-var SCOPE_OFFSET=11,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
+var SCOPE_OFFSET=12,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
 var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
 var GENERATOR=1,GENERATOR_EXPRESSION=2
 var CO_FUTURE_ANNOTATIONS=0x1000000 
@@ -17398,13 +17401,17 @@ var res=free.delete('__classdict__')
 if(res){ste.needs_class_classdict=1}
 return 1}
 function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var name,itr,v,v_scope,v_new,v_free,pos=0
-for(var name of _b_.dict.$keys_string(symbols)){var flags=_b_.dict.$getitem_string(symbols,name)
+for(var name of _b_.dict.$keys_string(symbols)){var test=false 
+var flags=_b_.dict.$getitem_string(symbols,name)
+if(test){console.log('in update symbols, name',name,'flags',flags,flags & DEF_COMP_CELL)}
 if(inlined_cells.has(name)){flags |=DEF_COMP_CELL}
 v_scope=scopes[name]
 var scope=v_scope
+if(test){console.log('name',name,'scopes[name]',scopes[name],' flags |=',scope << SCOPE_OFFSET)}
 flags |=(scope << SCOPE_OFFSET)
 v_new=flags
 if(!v_new){return 0;}
+if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',DEF_COMP_CELL,v_new & DEF_COMP_CELL)}
 _b_.dict.$setitem_string(symbols,name,v_new)}
 v_free=FREE << SCOPE_OFFSET
 for(var name of free){v=_b_.dict.$get_string(symbols,name)
