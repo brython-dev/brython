@@ -1145,6 +1145,9 @@ $B.show_error = function(err){
 }
 
 $B.handle_error = function(err){
+
+	console.log(err);
+
     // Print the error traceback on the standard error stream
     if(err.$handled){
         return

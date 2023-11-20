@@ -127,6 +127,34 @@ $B.builtin_funcs = {}
 // Builtin classes
 $B.builtin_classes = []
 
+// enable to list the wrappers
+
+$B.wrappers_JS2Py = new Map();
+$B.wrappers_Py2JS = new Map();
+
+$B.SYMBOL_JS2PY_WRAPPER = Symbol("JS2PY");
+$B.SYMBOL_PY2JS_WRAPPER = Symbol("PY2JS");
+
+$B.SYMBOL_JSOBJ = Symbol("JSOBJ");
+$B.SYMBOL_PYOBJ = Symbol("PYOBJ");
+
+$B.addJS2PyWrapper = function(jsclass, fct, desc = "") {
+	if( Object.hasOwnProperty(jsclass.prototype, $B.SYMBOL_JS2PY_WRAPPER) ) {
+		console.log(jsclass);
+		throw new Error("A JS2PY Wrapper already has been defined for", jsclass.constructor.name);
+	}
+	jsclass.prototype[$B.SYMBOL_JS2PY_WRAPPER] = fct;
+	fct.desc = desc;
+	$B.wrappers_JS2Py.set(jsclass, fct);
+}
+$B.addPy2JSWrapper = function (pyclass, fct, desc = "") {
+	if( pyclass[$B.SYMBOL_PY2JS_WRAPPER] !== undefined )
+		throw new Error("A PY2JS Wrapper already has been defined for", pyclass.__name__);
+	pyclass[$B.SYMBOL_PY2JS_WRAPPER] = fct;
+	fct.desc = desc;
+	$B.wrappers_Py2JS.set(pyclass, fct);
+}
+
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr, value){
     // limited to some attributes

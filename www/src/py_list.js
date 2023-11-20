@@ -29,6 +29,7 @@ var list = {
     __dir__: object.__dir__
 }
 
+
 list.__add__ = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
         var this_name = $B.class_name(self) // can be tuple
@@ -1035,5 +1036,6 @@ _b_.tuple = tuple
 // set object.__bases__ to an empty tuple
 _b_.object.__bases__ = tuple.$factory()
 _b_.type.__bases__ = $B.fast_tuple([_b_.object])
+
 
 })(__BRYTHON__)
