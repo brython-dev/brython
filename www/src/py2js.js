@@ -9329,7 +9329,7 @@ $B.brython = brython
 
 })(__BRYTHON__)
 
-window.brython = __BRYTHON__.brython
+globalThis.brython = __BRYTHON__.brython
 
 if (__BRYTHON__.isNode) {
     global.__BRYTHON__ = __BRYTHON__
