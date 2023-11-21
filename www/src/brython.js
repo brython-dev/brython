@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-20 22:13:43.833982"
-__BRYTHON__.timestamp=1700514823833
+__BRYTHON__.compiled_date="2023-11-21 14:00:40.973897"
+__BRYTHON__.timestamp=1700571640973
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -321,7 +321,7 @@ char=token_mode.quote.repeat(3)
 pos+=2}
 if(fstring_buffer.length > 0){
 yield Token(FSTRING_MIDDLE,fstring_buffer,[line_num,fstring_start],[line_num,fstring_start+fstring_buffer.length],line)}
-yield Token(FSTRING_END,char,[line_num,fstring_start+fstring_buffer.length],[line_num,fstring_start+fstring_buffer.length+token_mode.quote.length],line)
+yield Token(FSTRING_END,char,[line_num,pos],[line_num,pos],line)
 token_modes.pop()
 token_mode=$B.last(token_modes)
 state=null
@@ -361,9 +361,7 @@ token_modes.pop()
 token_mode=$B.last(token_modes)
 continue}else{format_specifier+=char
 continue}}
-	 
-switch(state){	 
-case "line_start":
+switch(state){case "line_start":
 line=get_line_at(pos-1)
 line_start=pos
 line_num++
@@ -4975,7 +4973,7 @@ _b_.__debug__=$B.get_option('debug')> 0
 var root,js
 try{root=$B.py2js({src:src,filename:url},name,name)
 js=root.to_js()
-if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
+if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error($B.exception(err))}
 var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
 $B.tasks.push(["execute",_script])
 if(run_loop){$B.loop()}}

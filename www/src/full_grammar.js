@@ -43,12 +43,6 @@ func_type:
       {type: 'ENDMARKER'}
     ], action: '$B._PyAST.FunctionType(a, b, p.arena)'
   },
-fstring:
-  {
-    items: [
-      {type: 'rule', name: 'star_expressions'}
-    ]
-  },
 statements:
   {
     items: [
@@ -123,6 +117,12 @@ simple_stmt:
       {
         items: [
           {type: 'rule', name: 'assignment'}
+        ]
+      },
+      {
+        items: [
+          {type: 'string', value: 'type', lookahead: 'positive'},
+          {type: 'rule', name: 'type_alias'}
         ]
       },
       {
@@ -596,6 +596,11 @@ import_stmt:
    choices: [
       {
         items: [
+          {type: 'rule', name: 'invalid_import'}
+        ]
+      },
+      {
+        items: [
           {type: 'rule', name: 'import_name'}
         ]
       },
@@ -810,6 +815,12 @@ class_def_raw:
           {type: 'NAME', alias: 'a'},
           {
             items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?', alias: 't'
+          },
+          {
+            items: [
               {type: 'string', value: '('},
               {
                 items: [
@@ -823,7 +834,7 @@ class_def_raw:
           },
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'c'}
-        ], action: '$B._PyAST.ClassDef(a.id, (b) ? b.args : NULL, (b) ? b.keywords : NULL, c, NULL, EXTRA)'
+        ], action: '$B._PyAST.ClassDef(a.id, (b) ? b.args : NULL, (b) ? b.keywords : NULL, c, NULL, t, EXTRA)'
       }]
   },
 function_def:
@@ -853,6 +864,12 @@ function_def_raw:
         items: [
           {type: 'string', value: 'def'},
           {type: 'NAME', alias: 'n'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?', alias: 't'
+          },
           {type: 'string', value: '('},
           {
             items: [
@@ -876,13 +893,19 @@ function_def_raw:
             repeat: '?', alias: 'tc'
           },
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: '$B._PyAST.FunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA)'
+        ], action: '$B._PyAST.FunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), t, EXTRA)'
       },
       {
         items: [
           {type: 'ASYNC'},
           {type: 'string', value: 'def'},
           {type: 'NAME', alias: 'n'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?', alias: 't'
+          },
           {type: 'string', value: '('},
           {
             items: [
@@ -906,7 +929,7 @@ function_def_raw:
             repeat: '?', alias: 'tc'
           },
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: 'CHECK_VERSION( $B.ast.stmt, 5, "Async functions are", $B._PyAST.AsyncFunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA) )'
+        ], action: 'CHECK_VERSION( $B.ast.stmt, 5, "Async functions are", $B._PyAST.AsyncFunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), t, EXTRA) )'
       }]
   },
 params:
@@ -2210,6 +2233,91 @@ keyword_pattern:
       {type: 'rule', name: 'pattern', alias: 'value'}
     ], action: '$B._PyPegen.key_pattern_pair(p, arg, value)'
   },
+type_alias:
+  {
+    items: [
+      {type: 'string', value: 'type'},
+      {type: 'NAME', alias: 'n'},
+      {
+        items: [
+          {type: 'rule', name: 'type_params'}
+        ],
+        repeat: '?', alias: 't'
+      },
+      {type: 'string', value: '='},
+      {type: 'rule', name: 'expression', alias: 'b'}
+    ], action: 'CHECK_VERSION($B.ast.stmt, 12, "Type statement is", $B._PyAST.TypeAlias(CHECK($B.ast.expr, $B._PyPegen.set_expr_context(p, n, Store)), t, b, EXTRA))'
+  },
+type_params:
+  {
+    items: [
+      {type: 'string', value: '['},
+      {type: 'rule', name: 'type_param_seq', alias: 't'},
+      {type: 'string', value: ']'}
+    ], action: 'CHECK_VERSION(asdl_type_param_seq *, 12, "Type parameter lists are", t)'
+  },
+type_param_seq:
+  {
+    items: [
+      {type: 'rule', name: 'type_param', join: ',', alias: 'a', repeat: '+'},
+      {
+        items: [
+          {type: 'string', value: ','}
+        ],
+        repeat: '?'
+      }
+    ], action: 'a'
+  },
+type_param:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'NAME', alias: 'a'},
+          {
+            items: [
+              {type: 'rule', name: 'type_param_bound'}
+            ],
+            repeat: '?', alias: 'b'
+          }
+        ], action: '$B._PyAST.TypeVar(a.id, b, EXTRA)'
+      },
+      {
+        items: [
+          {type: 'string', value: '*'},
+          {type: 'NAME', alias: 'a'},
+          {type: 'string', value: ':', alias: 'colon'},
+          {type: 'rule', name: 'expression', alias: 'e'}
+        ], action: 'RAISE_SYNTAX_ERROR_STARTING_FROM(colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple")'
+      },
+      {
+        items: [
+          {type: 'string', value: '*'},
+          {type: 'NAME', alias: 'a'}
+        ], action: '$B._PyAST.TypeVarTuple(a.id, EXTRA)'
+      },
+      {
+        items: [
+          {type: 'string', value: '**'},
+          {type: 'NAME', alias: 'a'},
+          {type: 'string', value: ':', alias: 'colon'},
+          {type: 'rule', name: 'expression', alias: 'e'}
+        ], action: 'RAISE_SYNTAX_ERROR_STARTING_FROM(colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec")'
+      },
+      {
+        items: [
+          {type: 'string', value: '**'},
+          {type: 'NAME', alias: 'a'}
+        ], action: '$B._PyAST.ParamSpec(a.id, EXTRA)'
+      }]
+  },
+type_param_bound:
+  {
+    items: [
+      {type: 'string', value: ':'},
+      {type: 'rule', name: 'expression', alias: 'e'}
+    ], action: 'e'
+  },
 expressions:
   {
    choices: [
@@ -2940,7 +3048,19 @@ atom:
       },
       {
         items: [
-          {type: 'STRING', lookahead: 'positive'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'STRING'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'FSTRING_START'}
+                ]
+              }], lookahead: 'positive'
+          },
           {type: 'rule', name: 'strings'}
         ]
       },
@@ -3288,11 +3408,121 @@ lambda_param:
       {type: 'NAME', alias: 'a'}
     ], action: '$B._PyAST.arg(a.id, NULL, NULL, EXTRA)'
   },
+fstring_middle:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'rule', name: 'fstring_replacement_field'}
+        ]
+      },
+      {
+        items: [
+          {type: 'FSTRING_MIDDLE', alias: 't'}
+        ], action: '$B._PyPegen.constant_from_token(p, t)'
+      }]
+  },
+fstring_replacement_field:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }], alias: 'a'
+          },
+          {type: 'string', value: '=', repeat: '?', alias: 'debug_expr'},
+          {
+            items: [
+              {type: 'rule', name: 'fstring_conversion'}
+            ],
+            repeat: '?', alias: 'conversion'
+          },
+          {
+            items: [
+              {type: 'rule', name: 'fstring_full_format_spec'}
+            ],
+            repeat: '?', alias: 'format'
+          },
+          {type: 'string', value: '}', alias: 'rbrace'}
+        ], action: '$B._PyPegen.formatted_value(p, a, debug_expr, conversion, format, rbrace, EXTRA)'
+      },
+      {
+        items: [
+          {type: 'rule', name: 'invalid_replacement_field'}
+        ]
+      }]
+  },
+fstring_conversion:
+  {
+    items: [
+      {type: 'string', value: '!', alias: 'conv_token'},
+      {type: 'NAME', alias: 'conv'}
+    ], action: '$B._PyPegen.check_fstring_conversion(p, conv_token, conv)'
+  },
+fstring_full_format_spec:
+  {
+    items: [
+      {type: 'string', value: ':', alias: 'colon'},
+      {type: 'rule', name: 'fstring_format_spec', repeat: '*', alias: 'spec'}
+    ], action: '$B._PyPegen.setup_full_format_spec(p, colon,  spec, EXTRA)'
+  },
+fstring_format_spec:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'FSTRING_MIDDLE', alias: 't'}
+        ], action: '$B._PyPegen.decoded_constant_from_token(p, t)'
+      },
+      {
+        items: [
+          {type: 'rule', name: 'fstring_replacement_field'}
+        ]
+      }]
+  },
+fstring:
+  {
+    items: [
+      {type: 'FSTRING_START', alias: 'a'},
+      {type: 'rule', name: 'fstring_middle', repeat: '*', alias: 'b'},
+      {type: 'FSTRING_END', alias: 'c'}
+    ], action: '$B._PyPegen.joined_str(p, a, b, c)'
+  },
+string:
+  {
+    items: [
+      {type: 'STRING', alias: 's'}
+    ], action: '$B._PyPegen.constant_from_string(p, s)'
+  },
 strings:
   {
     items: [
-      {type: 'STRING', repeat: '+', alias: 'a'}
-    ], action: '$B._PyPegen.concatenate_strings(p, a)'
+      {
+       choices: [
+          {
+            items: [
+              {type: 'rule', name: 'fstring'}
+            ]
+          },
+          {
+            items: [
+              {type: 'rule', name: 'string'}
+            ]
+          }],
+        repeat: '+', alias: 'a'
+      }
+    ], action: '$B._PyPegen.concatenate_strings(p, a, EXTRA)'
   },
 list:
   {
@@ -3614,10 +3844,18 @@ kwargs:
   },
 starred_expression:
   {
-    items: [
-      {type: 'string', value: '*'},
-      {type: 'rule', name: 'expression', alias: 'a'}
-    ], action: '$B._PyAST.Starred(a, Load, EXTRA)'
+   choices: [
+      {
+        items: [
+          {type: 'rule', name: 'invalid_starred_expression'}
+        ]
+      },
+      {
+        items: [
+          {type: 'string', value: '*'},
+          {type: 'rule', name: 'expression', alias: 'a'}
+        ], action: '$B._PyAST.Starred(a, Load, EXTRA)'
+      }]
   },
 kwarg_or_starred:
   {
@@ -4091,10 +4329,55 @@ invalid_arguments:
    choices: [
       {
         items: [
-          {type: 'rule', name: 'args', alias: 'a'},
+          {
+           choices: [
+              {
+                items: [
+                  {
+                    items: [
+                      {
+                       choices: [
+                          {
+                            items: [
+                              {type: 'rule', name: 'starred_expression'}
+                            ]
+                          },
+                          {
+                            items: [
+                              {
+                               choices: [
+                                  {
+                                    items: [
+                                      {type: 'rule', name: 'assignment_expression'}
+                                    ]
+                                  },
+                                  {
+                                    items: [
+                                      {type: 'rule', name: 'expression'},
+                                      {type: 'string', value: ':=', lookahead: 'negative'}
+                                    ]
+                                  }]
+                              },
+                              {type: 'string', value: '=', lookahead: 'negative'}
+                            ]
+                          }], join: ',',
+                        repeat: '+'
+                      },
+                      {type: 'string', value: ','},
+                      {type: 'rule', name: 'kwargs'}
+                    ]
+                  }
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'kwargs'}
+                ]
+              }]
+          },
           {type: 'string', value: ','},
-          {type: 'string', value: '*'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "iterable argument unpacking follows keyword argument unpacking")'
+          {type: 'string', value: '*', alias: 'b'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(b, "iterable argument unpacking follows keyword argument unpacking")'
       },
       {
         items: [
@@ -4119,6 +4402,32 @@ invalid_arguments:
           {type: 'rule', name: 'expression'},
           {type: 'rule', name: 'for_if_clauses'}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")'
+      },
+      {
+        items: [
+          {
+            items: [
+              {type: 'rule', name: 'args'},
+              {type: 'string', value: ','}
+            ],
+            repeat: '?'
+          },
+          {type: 'NAME', alias: 'a'},
+          {type: 'string', value: '=', alias: 'b'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: ','}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: ')'}
+                ]
+              }], lookahead: 'positive'
+          }
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "expected argument value expression")'
       },
       {
         items: [
@@ -4187,6 +4496,14 @@ invalid_kwarg:
           {type: 'rule', name: 'expression', alias: 'a'},
           {type: 'string', value: '=', alias: 'b'}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE( a, b, "expression cannot contain assignment, perhaps you meant \"==\"?")'
+      },
+      {
+        items: [
+          {type: 'string', value: '**', alias: 'a'},
+          {type: 'rule', name: 'expression'},
+          {type: 'string', value: '='},
+          {type: 'rule', name: 'expression', alias: 'b'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot assign to keyword argument unpacking")'
       }]
   },
 expression_without_invalid:
@@ -4262,6 +4579,19 @@ invalid_expression:
               }], lookahead: 'negative'
           }
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "expected \'else\' after \'if\' expression")'
+      },
+      {
+        items: [
+          {type: 'string', value: 'lambda', alias: 'a'},
+          {
+            items: [
+              {type: 'rule', name: 'lambda_params'}
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: ':', alias: 'b'},
+          {type: 'FSTRING_MIDDLE', lookahead: 'positive'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "f-string: lambda expressions are not allowed without parentheses")'
       }]
   },
 invalid_named_expression:
@@ -4539,22 +4869,6 @@ invalid_parameters:
    choices: [
       {
         items: [
-          {type: 'rule', name: 'param_no_default', repeat: '*'},
-          {type: 'rule', name: 'invalid_parameters_helper'},
-          {type: 'rule', name: 'param_no_default', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'
-      },
-      {
-        items: [
-          {type: 'rule', name: 'param_no_default', repeat: '*'},
-          {type: 'string', value: '(', alias: 'a'},
-          {type: 'rule', name: 'param_no_default', repeat: '+'},
-          {type: 'string', value: ',', repeat: '?'},
-          {type: 'string', value: ')', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Function parameters cannot be parenthesized")'
-      },
-      {
-        items: [
           {type: 'string', value: '/', alias: 'a'},
           {type: 'string', value: ','}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "at least one argument must precede /")'
@@ -4577,6 +4891,23 @@ invalid_parameters:
           {type: 'rule', name: 'param_maybe_default', repeat: '*'},
           {type: 'string', value: '/', alias: 'a'}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ may appear only once")'
+      },
+      {
+        items: [
+          {type: 'rule', name: 'slash_no_default', repeat: '?'},
+          {type: 'rule', name: 'param_no_default', repeat: '*'},
+          {type: 'rule', name: 'invalid_parameters_helper'},
+          {type: 'rule', name: 'param_no_default', alias: 'a'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "parameter without a default follows parameter with a default")'
+      },
+      {
+        items: [
+          {type: 'rule', name: 'param_no_default', repeat: '*'},
+          {type: 'string', value: '(', alias: 'a'},
+          {type: 'rule', name: 'param_no_default', repeat: '+'},
+          {type: 'string', value: ',', repeat: '?'},
+          {type: 'string', value: ')', alias: 'b'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Function parameters cannot be parenthesized")'
       },
       {
         items: [
@@ -4785,22 +5116,6 @@ invalid_lambda_parameters:
    choices: [
       {
         items: [
-          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
-          {type: 'rule', name: 'invalid_lambda_parameters_helper'},
-          {type: 'rule', name: 'lambda_param_no_default', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'
-      },
-      {
-        items: [
-          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
-          {type: 'string', value: '(', alias: 'a'},
-          {type: 'rule', name: 'lambda_param', join: ',', repeat: '+'},
-          {type: 'string', value: ',', repeat: '?'},
-          {type: 'string', value: ')', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Lambda expression parameters cannot be parenthesized")'
-      },
-      {
-        items: [
           {type: 'string', value: '/', alias: 'a'},
           {type: 'string', value: ','}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "at least one argument must precede /")'
@@ -4823,6 +5138,23 @@ invalid_lambda_parameters:
           {type: 'rule', name: 'lambda_param_maybe_default', repeat: '*'},
           {type: 'string', value: '/', alias: 'a'}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ may appear only once")'
+      },
+      {
+        items: [
+          {type: 'rule', name: 'lambda_slash_no_default', repeat: '?'},
+          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
+          {type: 'rule', name: 'invalid_lambda_parameters_helper'},
+          {type: 'rule', name: 'lambda_param_no_default', alias: 'a'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "parameter without a default follows parameter with a default")'
+      },
+      {
+        items: [
+          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
+          {type: 'string', value: '(', alias: 'a'},
+          {type: 'rule', name: 'lambda_param', join: ',', repeat: '+'},
+          {type: 'string', value: ',', repeat: '?'},
+          {type: 'string', value: ')', alias: 'b'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Lambda expression parameters cannot be parenthesized")'
       },
       {
         items: [
@@ -5063,6 +5395,15 @@ invalid_group:
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use double starred expression here")'
       }]
   },
+invalid_import:
+  {
+    items: [
+      {type: 'string', value: 'import', alias: 'a'},
+      {type: 'rule', name: 'dotted_name', join: ',', repeat: '+'},
+      {type: 'string', value: 'from'},
+      {type: 'rule', name: 'dotted_name'}
+    ], action: 'RAISE_SYNTAX_ERROR_STARTING_FROM(a, "Did you mean to use \'from ... import ...\' instead?")'
+  },
 invalid_import_from_targets:
   {
     items: [
@@ -5222,33 +5563,44 @@ invalid_try_stmt:
       },
       {
         items: [
-          {type: 'string', value: 'try', alias: 'a'},
+          {type: 'string', value: 'try'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', repeat: '*'},
+          {type: 'rule', name: 'except_block', repeat: '+'},
+          {type: 'string', value: 'except', alias: 'a'},
+          {type: 'string', value: '*', alias: 'b'},
+          {type: 'rule', name: 'expression'},
           {
-           choices: [
-              {
-                items: [
-                  {
-                    items: [
-                      {type: 'rule', name: 'except_block', repeat: '+'},
-                      {type: 'rule', name: 'except_star_block'}
-                    ]
-                  }
-                ]
-              },
-              {
-                items: [
-                  {
-                    items: [
-                      {type: 'rule', name: 'except_star_block', repeat: '+'},
-                      {type: 'rule', name: 'except_block'}
-                    ]
-                  }
-                ]
-              }]
+            items: [
+              {type: 'string', value: 'as'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
           },
-          {type: 'rule', name: 'block', repeat: '*'}
+          {type: 'string', value: ':'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot have both \'except\' and \'except\' on the same \'try\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: 'try'},
+          {type: 'string', value: ':'},
+          {type: 'rule', name: 'block', repeat: '*'},
+          {type: 'rule', name: 'except_star_block', repeat: '+'},
+          {type: 'string', value: 'except', alias: 'a'},
+          {
+            items: [
+              {type: 'rule', name: 'expression'},
+              {
+                items: [
+                  {type: 'string', value: 'as'},
+                  {type: 'NAME'}
+                ],
+                repeat: '?'
+              }
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: ':'}
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot have both \'except\' and \'except\' on the same \'try\'")'
       }]
   },
@@ -5568,6 +5920,12 @@ invalid_def_raw:
       },
       {type: 'string', value: 'def', alias: 'a'},
       {type: 'NAME'},
+      {
+        items: [
+          {type: 'rule', name: 'type_params'}
+        ],
+        repeat: '?'
+      },
       {type: 'string', value: '('},
       {
         items: [
@@ -5597,6 +5955,12 @@ invalid_class_def_raw:
           {type: 'NAME'},
           {
             items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?'
+          },
+          {
+            items: [
               {type: 'string', value: '('},
               {
                 items: [
@@ -5615,6 +5979,12 @@ invalid_class_def_raw:
         items: [
           {type: 'string', value: 'class', alias: 'a'},
           {type: 'NAME'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?'
+          },
           {
             items: [
               {type: 'string', value: '('},
@@ -5711,6 +6081,282 @@ invalid_kvpair:
               }], lookahead: 'positive'
           }
         ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expression expected after dictionary key and \':\'")'
+      }]
+  },
+invalid_starred_expression:
+  {
+    items: [
+      {type: 'string', value: '*', alias: 'a'},
+      {type: 'rule', name: 'expression'},
+      {type: 'string', value: '='},
+      {type: 'rule', name: 'expression', alias: 'b'}
+    ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot assign to iterable argument unpacking")'
+  },
+invalid_replacement_field:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: '=', alias: 'a'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "f-string: valid expression required before \'=\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: '!', alias: 'a'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "f-string: valid expression required before \'!\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: ':', alias: 'a'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "f-string: valid expression required before \':\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: '}', alias: 'a'}
+        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "f-string: valid expression required before \'}\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: 'RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting a valid expression after \'{\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: '='}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '!'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: 'PyErr_Occurred() ? NULL : RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'=\', or \'!\', or \':\', or \'}\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '='},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: '!'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: 'PyErr_Occurred() ? NULL : RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'!\', or \':\', or \'}\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {type: 'rule', name: 'invalid_conversion_character'}
+        ]
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {
+            items: [
+              {type: 'string', value: '!'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
+          },
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: 'PyErr_Occurred() ? NULL : RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \':\' or \'}\'")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {
+            items: [
+              {type: 'string', value: '!'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: ':'},
+          {type: 'rule', name: 'fstring_format_spec', repeat: '*'},
+          {type: 'string', value: '}', lookahead: 'negative'}
+        ], action: 'PyErr_Occurred() ? NULL : RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\', or format specs")'
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {
+            items: [
+              {type: 'string', value: '!'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: '}', lookahead: 'negative'}
+        ], action: 'PyErr_Occurred() ? NULL : RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\'")'
+      }]
+  },
+invalid_conversion_character:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'string', value: '!'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'positive'
+          }
+        ], action: 'RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: missing conversion character")'
+      },
+      {
+        items: [
+          {type: 'string', value: '!'},
+          {type: 'NAME', lookahead: 'negative'}
+        ], action: 'RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: invalid conversion character")'
       }]
   },
 }

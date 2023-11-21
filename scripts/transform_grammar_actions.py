@@ -51,6 +51,16 @@ for mo in action_re.finditer(src):
     action8 = re.sub('_PyAST_', '$B._PyAST.', action7)
     #action9 = re.sub(operators_re, r'$B.ast.\1', action8)
     action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
+
+    args_mo = re.search(r'\(.*\)', action9)
+    if args_mo:
+        s = action9[args_mo.start() + 1:args_mo.end() - 1]
+        s1 = re.sub(r'\((.*?)\)(\w+)', r'\2', s)
+        if s1 != s:
+            action10 = action9.replace(s, s1)
+            print('replace', action9, 'by', action10)
+            action9 = action10
+
     new_src += action9
 
 new_src += src[pos:]

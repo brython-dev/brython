@@ -168,6 +168,46 @@ function _seq_number_of_starred_exprs(seq){
 
 $B._PyPegen = {}
 
+$B._PyPegen.constant_from_string = function(p, s){
+    return {string: s.value, start:[p.arena.lineno, p.arena.col_offset],
+        end: [p.arena.end_lineno, p.arena.end_col_offset]}
+}
+
+$B._PyPegen.constant_from_token = function(p, t){
+    var ast_obj = new $B.ast.Constant(t.string)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
+$B._PyPegen.decoded_constant_from_token = function(p, t){
+    var ast_obj = new $B.ast.Constant(t.string)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
+$B._PyPegen.formatted_value = function(p,
+        expression, debug,  conversion, format, closing_brace,
+        arena){
+    var ast_obj = new $B.ast.FormattedValue(expression, conversion, format)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
+$B._PyPegen.joined_str = function(p, a, items, c){
+    var ast_obj = new $B.ast.JoinedStr(items)
+    ast_obj.lineno = a.start[0]
+    ast_obj.col_offset = a.start[1]
+    ast_obj.end_lineno = c.end[0]
+    ast_obj.end_col_offset = c.end[1]
+    return ast_obj
+}
+
+$B._PyPegen.setup_full_format_spec = function(p, colon, spec, arena){
+    var ast_obj = new $B.ast.JoinedStr(spec)
+    set_position_from_obj(ast_obj, arena)
+    return ast_obj
+}
+
 $B._PyPegen.seq_count_dots = function(seq){
     if(seq === undefined){
         return 0
@@ -696,10 +736,10 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     }
 
     function set_position(ast_obj){
-        ast_obj.lineno = first.start[0]
-        ast_obj.col_offset = first.start[1]
-        ast_obj.end_lineno = last.end[0]
-        ast_obj.end_col_offset = last.end[1]
+        ast_obj.lineno = first.lineno
+        ast_obj.col_offset = first.col_offset
+        ast_obj.end_lineno = last.end_lineno
+        ast_obj.end_col_offset = last.end_col_offset
     }
 
     // make a single list with all the strings
@@ -707,22 +747,24 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         has_fstring = false,
         state
     for(var token of strings){
-        var s = $B.prepare_string(token), // in string_parser.js
-            v = s.value
-        if(Array.isArray(v)){ // fstring
+        if(token instanceof $B.ast.JoinedStr){ // fstring
             has_fstring = true
             if(state == 'bytestring'){
                 error('cannot mix bytes and nonbytes literals')
             }
-            for(var fs_item of v){
-                if(typeof fs_item == 'string'){
+            for(var fs_item of token.values){
+                /*
+                if(typeof fs_item.value == 'string'){
                     // add quotes
-                    fs_item = `'${fs_item.replace(/'/g, "\\'")}'`
+                    fs_item = `'${fs_item.value.replace(/'/g, "\\'")}'`
                 }
+                */
                 items.push(fs_item)
             }
             state = 'string'
         }else{
+            var s = $B.prepare_string(token), // in string_parser.js
+                v = s.value
             if((state == 'string' && s.bytes) ||
                     (state == 'bytestring' && ! s.bytes)){
                 error('cannot mix bytes and nonbytes literals')
@@ -761,46 +803,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         return ast_obj
     }
 
-    // concatenate consecutive strings
-    var items1 = [],
-        has_fstring,
-        i = 0
-    while(i < items.length){
-        if(typeof items[i] != 'string'){
-            items1.push(items[i])
-            i++
-        }else{
-            items1.push($B.make_string_for_ast_value(items[i]))
-            i++
-            while(i < items.length & typeof items[i] == 'string'){
-                items1[items1.length - 1] += $B.make_string_for_ast_value(items[i])
-                i++
-            }
-        }
-    }
-
-    var jstr_values = []
-
-    for(var item of items1){
-        if(typeof item == 'string'){
-            var quoted = `"${item.replace(/"/g, '\\"')}"`
-            var ast_obj = new $B.ast.Constant(item)
-            set_position_from_token(ast_obj, token)
-            jstr_values.push(ast_obj)
-        }else{
-            if(item.format !== undefined){
-                var _format = make_formatted_value(p, item.format)
-            }
-            var src = item.expression.trimStart() // ignore leading whitespace
-            var _ast = new $B.Parser(src, p.filename, 'eval').parse()
-            var raw_value = _ast.body
-            var formatted = new $B.ast.FormattedValue(raw_value,
-                make_conversion_code(item.conversion),
-                _format)
-            set_position(formatted)
-            jstr_values.push(formatted)
-        }
-    }
+    var jstr_values = items
 
     var ast_obj = new $B.ast.JoinedStr(jstr_values)
     set_position(ast_obj)

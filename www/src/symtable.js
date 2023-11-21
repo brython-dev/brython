@@ -616,7 +616,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
         }
         if(test){
             console.log('set symbol', name, 'v_new', v_new, 'def comp cell',
-                DEF_COMP_CELL, 
+                DEF_COMP_CELL,
                 v_new & DEF_COMP_CELL)
         }
         _b_.dict.$setitem_string(symbols, name, v_new)

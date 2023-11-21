@@ -6,7 +6,7 @@
 (function($B){
 
 var _b_ = $B.builtins,
-    debug = 1
+    debug = null
 
 // ---- Define names used by grammar actions
 
@@ -442,6 +442,9 @@ Parser.prototype.set_memo = function(rule, position, value){
 
 Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
+    if(debug){
+        console.log('apply rule', rule, 'at position', position, this.tokens[position])
+    }
     var memoized = this.RECALL(rule, position),
         result
     if(memoized === null){
@@ -631,6 +634,9 @@ Parser.prototype.eval_option_once = function(rule, position){
 
 Parser.prototype.eval_body = function(rule, position){
     // Only for grammar rules
+    if(debug){
+        console.log('eval body', rule, position, this.tokens[position])
+    }
     var start = position
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
@@ -799,6 +805,8 @@ function make_ast(match, tokens){
                  }
     p.arena = EXTRA
 
+    var FSTRING_MIDDLE = 'fstring_middle'
+
     if(rule.repeat){
         // If a repeated rule has an alias, it applies to the repetition list
         // The number of repetitions is len(match.matches)
@@ -920,7 +928,6 @@ function make_ast(match, tokens){
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
                 eval('var ' + rule.items[i].alias + ' = _make')
-                // console.log('alias', rule.items[i].alias, show_rule(rule.items[i]), _make)
             }
             if(! rule.items[i].lookahead){
                 nb_consuming++
@@ -931,11 +938,12 @@ function make_ast(match, tokens){
                 //console.log(show_rule(rule, true))
                 ast = eval(rule.action)
             }catch(err){
-                if($B.get_option('debug') > 2){
+                if(debug){
                     var rule_str = show_rule(rule, true)
                     console.log('error eval action of', rule_str)
+                    console.log('rule.action', rule.action)
                     console.log('p', p)
-                    console.log($B.make_frames_stack())
+                    //console.log($B.make_frames_stack())
                     console.log(err.message)
                     console.log(err.stack)
                 }
@@ -971,7 +979,14 @@ function make_ast(match, tokens){
             var ast_obj = new $B.ast.Constant(s)
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
+        }else if(rule.type == 'FSTRING_START'){
+            return token
+        }else if(rule.type == 'FSTRING_MIDDLE'){
+            return token
+        }else if(rule.type == 'FSTRING_END'){
+            return token
         }
+
         // ignore other rules such as DEDENT, NEWLINE etc.
     }
 }
