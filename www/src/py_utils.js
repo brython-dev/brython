@@ -253,7 +253,7 @@ function args0_NEW(fct, args) {
         for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
 
             kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+            for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
 
                 if( typeof argname !== "string") {
             $B.args0_old(fct, args);
@@ -333,7 +333,7 @@ function args0_NEW(fct, args) {
     for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
 
             kargs = ARGS_NAMED[id];
-        for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) {
+        for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) {
 
             if( typeof argname !== "string") {
             $B.args0_old(fct, args);
