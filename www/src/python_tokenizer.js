@@ -456,10 +456,8 @@ $B.tokenizer = function*(src, filename, mode){
                         [line_num, fstring_start + fstring_buffer.length],
                         line)
                 }
-                yield Token(FSTRING_END, char,
-                    [line_num, fstring_start + fstring_buffer.length],
-                    [line_num, fstring_start + fstring_buffer.length + token_mode.quote.length],
-                    line)
+                yield Token(FSTRING_END, char, [line_num, pos], 
+                            [line_num, pos], line)
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
@@ -561,9 +559,9 @@ $B.tokenizer = function*(src, filename, mode){
                 continue
             }
         }
-	    
+
         switch(state){
-	    
+
             case "line_start":
                 line = get_line_at(pos - 1)
                 line_start = pos
