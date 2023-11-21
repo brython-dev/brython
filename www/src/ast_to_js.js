@@ -1918,7 +1918,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
             const kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) { //TODO: not optimal
+            for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) { //TODO: not optimal
                 $B.args0_old(fct, args);
                 throw new Error('No named arguments expected !!!');
             }
@@ -2087,7 +2087,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
         const kargs = ARGS_NAMED[id];
 
-        for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+        for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
 
             if( typeof argname !== "string") {
                 $B.args0_old(fct, args);
