@@ -33,12 +33,12 @@ def parse(line):
     alias = None
     while pos < len(line):
         if line[pos] == "'" or line[pos] == '"':
-            end = line[pos + 1:].find(line[pos])
-            s = line[pos + 1:pos + end + 1]
+            end = line.find(line[pos], pos + 1)
+            s = line[pos + 1:end]
             if re.match(r'^[a-z]+$', s):
                 keywords.add(s)
             yield ['string', s]
-            pos += end + 2
+            pos = end + 1
         elif line[pos] in '()[]?!*+|~.=':
             yield ['op', line[pos]]
             pos += 1
@@ -49,7 +49,7 @@ def parse(line):
             else:
                 yield ['op', line[pos]]
                 pos += 1
-        elif mo := re.match('\w+', line[pos:]):
+        elif mo := re.match(r'\w+', line[pos:]):
             s = line[pos:pos + mo.end()]
             end_pos = pos + mo.end()
             annotation = None
@@ -76,13 +76,22 @@ def parse(line):
         elif line[pos] == '{':
             start = pos + 1
             pos += 1
-            while line[pos] != '}':
+            quote = False
+            while True:
+                if line[pos] == '"' or line[pos] == "'":
+                    quote = line[pos]
+                    pos += 1
+                    while line[pos] != quote:
+                        pos += 1
+                if line[pos] == '}':
+                    break
                 pos += 1
             yield ['action', line[start:pos]]
             pos += 1
         else:
             yield ['unknown', line[pos]]
-            print('line', line, 'unknown', line[pos])
+            print('line', line, 'unknown at pos', pos, line[pos])
+            print(line[pos - 40:pos + 40])
             input()
             pos += 1
 
@@ -214,6 +223,9 @@ class GrammarExpression:
         self.sequence.append(item)
 
     def feed(self, token):
+        test = False #self.name == 'simple_stmts'
+        if test:
+            print(self.name, 'feed', token)
         if token == ['op', '|']:
             if self.sequence:
                 ge = GrammarExpression(parent=self)
@@ -221,6 +233,8 @@ class GrammarExpression:
                 ge.action = self.action
                 self.action = None
                 self.options.append(ge)
+                if test:
+                    print('add option', ge.show())
             self.sequence = []
         elif token == ['op', '*']: # repeat 0 or more
             self.sequence[-1].repeat = '*' #[0, float('inf')]
@@ -257,6 +271,10 @@ class GrammarExpression:
             self.parent.add(self)
             return self.parent
         elif token[0] == 'eol':
+            self.got_eol = True
+            if test:
+                print(self.name, 'eol, sequence', self.sequence,
+                    'options', self.options)
             if self.sequence and self.options:
                 ge = GrammarExpression()
                 ge.sequence = self.sequence
@@ -266,7 +284,7 @@ class GrammarExpression:
                 self.options.append(ge)
                 self.sequence = []
         elif token[0] == 'action':
-            token[1] = re.sub("^\(.*?\)", "", token[1].strip())
+            token[1] = re.sub(r"^\(.*?\)", "", token[1].strip())
             self.action = Literal(*token)
         else:
             if token[0] == 'id':
@@ -276,6 +294,8 @@ class GrammarExpression:
                 self.add(Alias(*token[1:]))
             else:
                 self.add(Literal(*token))
+        if test:
+            print(self.name, self.sequence, self.options)
         return self
 
     def joining(self):
@@ -336,6 +356,9 @@ def generate_javascript():
             ge = GrammarExpression(token)
             for x in parse(descr):
                 ge = ge.feed(x)
+            if token == 'simple_stmts':
+                print(ge.show())
+                input()
             out.write(token + ':\n')
             out.write(ge.show(indent=2) + ',\n')
         out.write('}\n')
@@ -350,7 +373,7 @@ def generate_javascript():
     src = ''
     for fname in ['string_parser', 'number_parser', 'action_helpers',
             'python_parser', 'full_grammar']:
-        src = open(make_dist.abs_path(fname)+'.js').read() + '\n'
+        src = open(make_dist.abs_path(fname) + '.js').read() + '\n'
         try:
             mini = javascript_minifier.minify(src) + ";\n"
         except:
