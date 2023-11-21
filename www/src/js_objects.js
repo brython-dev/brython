@@ -146,7 +146,8 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return pyobj;
     }
 
-    if(jsobj instanceof Promise){
+    // check if obj is an instance of Promise or supports the Thenable interface
+    if(jsobj instanceof Promise || typeof jsobj.then == "function"){
         // cf. issue #2321
         return jsobj.then(x => jsobj2pyobj(x)).catch($B.handle_error)
     }
