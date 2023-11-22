@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-21 14:00:40.973897"
-__BRYTHON__.timestamp=1700571640973
+__BRYTHON__.compiled_date="2023-11-22 10:31:59.936738"
+__BRYTHON__.timestamp=1700645519915
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -17192,10 +17192,10 @@ scopes=scopes ||[]
 if(ast.to_js !==undefined){if(ast.col_offset===undefined){var klass=ast.constructor.$name
 if(['match_case'].indexOf(klass)==-1){console.log('pas de col offset pour',klass)
 console.log(ast)
-throw Error('ccc')
+throw Error('no col offset')
 alert()}}
 return ast.to_js(scopes)}
-console.log("unhandled",ast.constructor.$name,ast)
+console.log("unhandled",ast.constructor.$name,ast,typeof ast)
 return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins

@@ -44,6 +44,7 @@ function to_json(obj, level){
         sort_keys = kw.sort_keys,
         allow_nan = kw.allow_nan,
         check_circular = kw.check_circular
+    
     var item_separator = separators[0],
         key_separator = separators[1]
     if(indent !== _b_.None){
@@ -95,6 +96,9 @@ function to_json(obj, level){
             return obj.toString()
     }
     if(obj instanceof String){
+        if(! ensure_ascii){
+            return $B.String(obj)
+        }
         // string with surrogate pairs. cf. issue #1903.
         var res = ''
         if(obj.surrogates){
