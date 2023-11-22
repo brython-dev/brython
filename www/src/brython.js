@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-22 10:31:59.936738"
-__BRYTHON__.timestamp=1700645519915
+__BRYTHON__.compiled_date="2023-11-22 21:23:00.761398"
+__BRYTHON__.timestamp=1700684580761
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -13777,7 +13777,7 @@ return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var key of $B.ma
 "keys does not support structured clone")}}}
 var res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
-return res}else{return obj}}
+return res}else if(obj.__class__===$B.long_int){return obj.value}else{return obj}}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||
 typeof obj=="string"){return obj}else if(typeof obj=="number"){return Number.isInteger(obj)?
 obj :
@@ -13858,6 +13858,7 @@ jsobj[key]=pyobj2jsobj(entry.value)}
 return jsobj}
 if(klass===_b_.str){
 return pyobj.valueOf()}
+if(klass===$B.long_int){return pyobj.value}
 if(klass===_b_.float){
 return pyobj.value}
 if(klass===$B.function ||klass===$B.method){if(pyobj.prototype &&
