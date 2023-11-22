@@ -3968,13 +3968,13 @@ $B.js_from_ast = function(ast, scopes){
             if(['match_case'].indexOf(klass) == -1){
                 console.log('pas de col offset pour', klass)
                 console.log(ast)
-                throw Error('ccc')
+                throw Error('no col offset')
                 alert()
             }
         }
         return ast.to_js(scopes)
     }
-    console.log("unhandled", ast.constructor.$name, ast)
+    console.log("unhandled", ast.constructor.$name, ast, typeof ast)
     return '// unhandled class ast.' + ast.constructor.$name
 }
 

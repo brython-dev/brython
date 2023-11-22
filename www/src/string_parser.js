@@ -8,6 +8,29 @@ for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
+function escaped_to_byte(char){
+    var table = {a: 7, b: 8, f: 12, n: 10, r: 13, t: 9, v: 11}
+    if(table[char] !== undefined){
+        return table[char]
+    }
+    return char.charCodeAt(0)
+}
+
+function to_bytes(s){
+    var pos = 0,
+        bytes = []
+    while(pos < s.length){
+        if(s[pos] == '\\'){
+            bytes[bytes.length] = escaped_to_byte(s[pos + 1])
+            pos += 2
+        }else{
+            bytes[bytes.length] = s.charCodeAt(pos)
+            pos++
+        }
+    }
+    return bytes
+}
+
 function string_error(token, msg){
     var a = {
         lineno: token.start[0],
@@ -150,6 +173,10 @@ $B.prepare_string = function(token){
         zone = '',
         end = 0,
         src = inner
+
+    if(bytes){
+        var source = []
+    }
     while(end < src.length){
         if(escaped){
             if(src.charAt(end) == "a" && ! raw){
@@ -292,6 +319,7 @@ $B.prepare_string = function(token){
 
     if(bytes){
         result.value = 'b' + quote + string + quote
+        result.bytes = to_bytes(string)
     }else if(fstring){
         result.value = elts
     }else{

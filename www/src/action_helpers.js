@@ -67,7 +67,7 @@ function _make_posonlyargs(p,
     if (slash_without_default != NULL) {
         set_list(posonlyargs, slash_without_default)
     }else if (slash_with_default != NULL) {
-        slash_with_default_names =
+        var slash_with_default_names =
                 _get_names(p, slash_with_default.names_with_defaults);
         if (!slash_with_default_names) {
             return -1;
@@ -85,7 +85,7 @@ function _make_posargs(p,
               names_with_default,
               posargs) {
     if (plain_names != NULL && names_with_default != NULL) {
-        names_with_default_names = _get_names(p, names_with_default);
+        var names_with_default_names = _get_names(p, names_with_default);
         if (!names_with_default_names) {
             return -1;
         }
@@ -169,8 +169,9 @@ function _seq_number_of_starred_exprs(seq){
 $B._PyPegen = {}
 
 $B._PyPegen.constant_from_string = function(p, s){
-    return {string: s.value, start:[p.arena.lineno, p.arena.col_offset],
-        end: [p.arena.end_lineno, p.arena.end_col_offset]}
+    var ast_obj = new $B.ast.Constant(s.value)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
 }
 
 $B._PyPegen.constant_from_token = function(p, t){
@@ -206,6 +207,21 @@ $B._PyPegen.setup_full_format_spec = function(p, colon, spec, arena){
     var ast_obj = new $B.ast.JoinedStr(spec)
     set_position_from_obj(ast_obj, arena)
     return ast_obj
+}
+
+function result_token_with_metadata(p, result, metadata){
+    return {metadata, result}
+}
+
+$B._PyPegen.check_fstring_conversion = function(p, conv_token, conv){
+    if(conv_token.lineno != conv.lineno ||
+            conv_token.end_col_offset != conv.col_offset){
+        $B._PyPegen.raise_error_known_location(p, _b_.SyntaxError,
+            conv.lineno, conv.col_offset, conv.end_lineno, conv.end_col_offset,
+            "f-string: conversion type must come right after the exclamanation mark"
+        )
+    }
+    return result_token_with_metadata(p, conv, conv_token.metadata)
 }
 
 $B._PyPegen.seq_count_dots = function(seq){
@@ -291,6 +307,7 @@ function _set_list_context(p, e, ctx){
 }
 
 function _set_subscript_context(p, e, ctx){
+    console.log('set subscritp cntext', p, e)
     return $B._PyAST.Subscript(e.value, e.slice,
                             ctx, EXTRA_EXPR(e, e));
 }
@@ -716,6 +733,7 @@ function make_formatted_value(p, fmt_values){
 }
 
 $B._PyPegen.concatenate_strings = function(p, strings){
+    console.log('concat strings', strings)
     // strings is a list of tokens
     var res = '',
         first = strings[0],
@@ -735,7 +753,9 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
     }
 
-    function set_position(ast_obj){
+    function set_position_from_list(ast_obj, items){
+        var first = items[0],
+            last = items[items.length - 1]
         ast_obj.lineno = first.lineno
         ast_obj.col_offset = first.col_offset
         ast_obj.end_lineno = last.end_lineno
@@ -753,60 +773,75 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                 error('cannot mix bytes and nonbytes literals')
             }
             for(var fs_item of token.values){
-                /*
-                if(typeof fs_item.value == 'string'){
-                    // add quotes
-                    fs_item = `'${fs_item.value.replace(/'/g, "\\'")}'`
+                if(fs_item instanceof $B.ast.Constant){
+                    // in a FSTRING_MIDDLE, value is unquoted
+                    fs_item.value = '`' + fs_item.value + '`'
                 }
-                */
                 items.push(fs_item)
             }
             state = 'string'
         }else{
-            var s = $B.prepare_string(token), // in string_parser.js
-                v = s.value
-            if((state == 'string' && s.bytes) ||
-                    (state == 'bytestring' && ! s.bytes)){
+            items.push(token)
+            var is_bytes = token.value.startsWith('b')
+            if((is_bytes && state == 'string') ||
+                    (state == 'bytestring' && ! is_bytes)){
                 error('cannot mix bytes and nonbytes literals')
             }
-
-            var is_bytes = v.charAt(0) == 'b',
-                value
             state = is_bytes ? 'bytestring' : 'string'
-            if(! is_bytes){
-                value = v
-            }else{
-                value = $B.make_string_for_ast_value(v.substr(1))
-                value = `'${value}'`
-                value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
-            }
-            items.push(value)
         }
     }
 
     if(state == 'bytestring'){
         // only bytestrings
-        var source = []
-        for(var item of items){
-            source = source.concat(item.source)
+        var prepared = items.map(x => $B.prepare_string({string: x.value}))
+        var bytes = []
+        for(var item of prepared){
+            bytes = bytes.concat(item.bytes)
         }
-        items[0].source = source
-        var ast_obj = new $B.ast.Constant(items[0])
-        set_position(ast_obj)
+        value = _b_.bytes.$new(_b_.bytes, bytes)
+        var ast_obj = new $B.ast.Constant(value)
+        set_position_from_list(ast_obj, items)
         return ast_obj
+    }
+
+    // group consecutive strings
+    function group_consec_strings(items){
+        var consec_items = items.map(x => x.value).map($B.make_string_for_ast_value)
+        let ast_obj = new $B.ast.Constant(consec_items.join(''))
+        set_position_from_list(ast_obj, items)
+        return ast_obj
+    }
+
+    var items1 = [],
+        consec_strs = [],
+        item_type = null
+    for(var i = 0, len = items.length; i < len; i++){
+        item = items[i]
+        if(item_type === null){
+            item_type = Object.getPrototypeOf(item)
+        }
+        if(item instanceof $B.ast.Constant){
+            consec_strs.push(item)
+        }else{
+            if(consec_strs.length > 0){
+                items1.push(group_consec_strings(consec_strs))
+            }
+            consec_strs = []
+            items1.push(item)
+        }
+    }
+    if(consec_strs.length > 0){
+        items1.push(group_consec_strings(consec_strs))
     }
 
     if(! has_fstring){
-        items = items.map($B.make_string_for_ast_value) // in py2js.js
-        var ast_obj = new $B.ast.Constant(items.join(''))
-        set_position(ast_obj)
-        return ast_obj
+        return items1[0]
     }
 
-    var jstr_values = items
+    var jstr_values = items1
 
     var ast_obj = new $B.ast.JoinedStr(jstr_values)
-    set_position(ast_obj)
+    set_position_from_list(ast_obj, strings)
     return ast_obj
 }
 

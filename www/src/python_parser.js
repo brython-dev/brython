@@ -935,7 +935,6 @@ function make_ast(match, tokens){
         }
         if(rule.action){
             try{
-                //console.log(show_rule(rule, true))
                 ast = eval(rule.action)
             }catch(err){
                 if(debug){
