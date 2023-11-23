@@ -242,6 +242,10 @@ function TokenError(message, position){
     return exc
 }
 
+function MAKE_TOKEN(token_type){
+    return new Token('SYNTAXERROR')
+}
+
 function _get_line_at(src, pos){
     // Get the line in source code src starting at position pos
     var end = src.substr(pos).search(/[\r\n]/),
@@ -456,7 +460,7 @@ $B.tokenizer = function*(src, filename, mode){
                         [line_num, fstring_start + fstring_buffer.length],
                         line)
                 }
-                yield Token(FSTRING_END, char, [line_num, pos], 
+                yield Token(FSTRING_END, char, [line_num, pos],
                             [line_num, pos], line)
                 // pop from token modes
                 token_modes.pop()
@@ -698,6 +702,26 @@ $B.tokenizer = function*(src, filename, mode){
                             number += src[pos]
                             num_type = src[pos].toLowerCase()
                             pos++
+                        }else if(src[pos]){
+                            var pos1 = pos
+                            while(pos1 < src.length){
+                                if(src[pos1].match(/\d/)){
+                                    if(src[pos1] == '0'){
+                                        pos1++
+                                        continue
+                                    }
+                                    let msg = 'leading zeros in decimal integer ' +
+                                        'literals are not permitted; use an 0o prefix ' +
+                                        'for octal integers'
+                                    $B.raise_error_known_location(_b_.SyntaxError,
+                                        filename,
+                                        line_num, pos - line_start - number.length,
+                                        line_num, pos - line_start,
+                                        line, msg)
+                                }else{
+                                    break
+                                }
+                            }
                         }
                         break
                     case '.':
@@ -1040,6 +1064,12 @@ $B.tokenizer = function*(src, filename, mode){
                         [line_num, pos - line_start + 1],
                         line)
                     state = null
+                }else if(char.match(/\p{Letter}/u)){
+                    $B.raise_error_known_location(_b_.SyntaxError,
+                        filename,
+                        line_num, pos - line_start - number.length,
+                        line_num, pos - line_start,
+                        line, 'invalid decimal literal')
                 }else{
                     yield Token('NUMBER', number,
                         [line_num, pos - line_start - number.length],
