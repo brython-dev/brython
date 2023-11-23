@@ -168,8 +168,23 @@ function _seq_number_of_starred_exprs(seq){
 
 $B._PyPegen = {}
 
-$B._PyPegen.constant_from_string = function(p, s){
-    var ast_obj = new $B.ast.Constant(s.value)
+$B._PyPegen.constant_from_string = function(p, token){
+    var prepared = $B.prepare_string(token)
+    var is_bytes = prepared.value.startsWith('b')
+    if(! is_bytes){
+        var value = $B.make_string_for_ast_value(prepared.value)
+    }else{
+        value = prepared.value.substr(2, prepared.value.length - 3)
+        try{
+            value = _b_.bytes.$factory($B.encode_bytestring(value))
+        }catch(err){
+            $B._PyPegen.raise_error_known_location(p,
+                _b_.SyntaxError,
+                token.start[0], token.start[1], token.end[0], token.end[1],
+                'bytes can only contain ASCII literal characters')
+        }
+    }
+    var ast_obj = new $B.ast.Constant(value)
     set_position_from_obj(ast_obj, p.arena)
     return ast_obj
 }
@@ -189,6 +204,9 @@ $B._PyPegen.decoded_constant_from_token = function(p, t){
 $B._PyPegen.formatted_value = function(p,
         expression, debug,  conversion, format, closing_brace,
         arena){
+    if(conversion === undefined){
+        conversion = -1
+    }
     var ast_obj = new $B.ast.FormattedValue(expression, conversion, format)
     set_position_from_obj(ast_obj, p.arena)
     return ast_obj
@@ -214,8 +232,8 @@ function result_token_with_metadata(p, result, metadata){
 }
 
 $B._PyPegen.check_fstring_conversion = function(p, conv_token, conv){
-    if(conv_token.lineno != conv.lineno ||
-            conv_token.end_col_offset != conv.col_offset){
+    if(conv_token.start[0] != conv.lineno ||
+            conv_token.end[1] != conv.col_offset){
         $B._PyPegen.raise_error_known_location(p, _b_.SyntaxError,
             conv.lineno, conv.col_offset, conv.end_lineno, conv.end_col_offset,
             "f-string: conversion type must come right after the exclamanation mark"
@@ -229,18 +247,9 @@ $B._PyPegen.seq_count_dots = function(seq){
         return 0
     }
     var number_of_dots = 0;
-    for (var current_expr of seq) {
-        if(current_expr instanceof $B.ast.Constant){
-            switch (current_expr.value) {
-                case ELLIPSIS:
-                    number_of_dots += 3;
-                    break;
-                case DOT:
-                    number_of_dots += 1;
-                    break;
-                default:
-                    Py_UNREACHABLE();
-            }
+    for(var token of seq){
+        if(token.type == 'OP'){
+            number_of_dots += token.string.length
         }
     }
 
@@ -733,7 +742,6 @@ function make_formatted_value(p, fmt_values){
 }
 
 $B._PyPegen.concatenate_strings = function(p, strings){
-    console.log('concat strings', strings)
     // strings is a list of tokens
     var res = '',
         first = strings[0],
@@ -774,15 +782,19 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             }
             for(var fs_item of token.values){
                 if(fs_item instanceof $B.ast.Constant){
-                    // in a FSTRING_MIDDLE, value is unquoted
-                    fs_item.value = '`' + fs_item.value + '`'
+                    // escape single quotes not already escaped
+                    var parts = fs_item.value.split('\\\'')
+                    parts = parts.map(x => x.replace(new RegExp("'", "g"), "\\'"))
+                    fs_item.value = parts.join('\\\'')
+                    fs_item.value = fs_item.value.replace(/\n/g, '\\\n')
+                                                 .replace(/\r/g, '\\\r')
                 }
                 items.push(fs_item)
             }
             state = 'string'
         }else{
             items.push(token)
-            var is_bytes = token.value.startsWith('b')
+            var is_bytes = token.value.__class__ === _b_.bytes
             if((is_bytes && state == 'string') ||
                     (state == 'bytestring' && ! is_bytes)){
                 error('cannot mix bytes and nonbytes literals')
@@ -793,12 +805,11 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 
     if(state == 'bytestring'){
         // only bytestrings
-        var prepared = items.map(x => $B.prepare_string({string: x.value}))
         var bytes = []
-        for(var item of prepared){
-            bytes = bytes.concat(item.bytes)
+        for(var item of items){
+            bytes = bytes.concat(item.value.source)
         }
-        value = _b_.bytes.$new(_b_.bytes, bytes)
+        value = _b_.bytes.$factory(bytes)
         var ast_obj = new $B.ast.Constant(value)
         set_position_from_list(ast_obj, items)
         return ast_obj
@@ -806,8 +817,11 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 
     // group consecutive strings
     function group_consec_strings(items){
-        var consec_items = items.map(x => x.value).map($B.make_string_for_ast_value)
-        let ast_obj = new $B.ast.Constant(consec_items.join(''))
+        if(items.length == 1){
+            return items[0]
+        }
+        var values = items.map(x => x.value)
+        let ast_obj = new $B.ast.Constant(values.join(''))
         set_position_from_list(ast_obj, items)
         return ast_obj
     }

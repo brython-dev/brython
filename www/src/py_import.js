@@ -1254,8 +1254,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // mod_name == "typing"
+    var test = false // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
+        console.log('import', mod_name, fromlist, aliases)
         alert()
     }
     // special case

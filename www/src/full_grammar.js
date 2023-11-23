@@ -47,7 +47,7 @@ statements:
   {
     items: [
       {type: 'rule', name: 'statement', repeat: '+', alias: 'a'}
-    ], action: '$B._PyPegen.seq_flatten(p, a)'
+    ], action: function(L){return $B._PyPegen.seq_flatten(L.p, L.a)}
   },
 statement:
   {

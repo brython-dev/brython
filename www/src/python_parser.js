@@ -6,7 +6,7 @@
 (function($B){
 
 var _b_ = $B.builtins,
-    debug = null
+    debug = 0
 
 // ---- Define names used by grammar actions
 
@@ -786,7 +786,8 @@ function make_ast(match, tokens){
     // match.rule succeeds; make_ast() returns a value for the match, based on
     // the grammar action for the rule
     var rule = match.rule,
-        names = {}
+        names = {},
+        L = {p} // used as namespace for rule action parameters
     p.tokens = tokens
     p.mark = match.start
     p.fill = match.start
@@ -817,6 +818,7 @@ function make_ast(match, tokens){
             }
             if(rule.alias){
                 eval('var ' + rule.alias + ' = res')
+                L[rule.alias] = res
             }
             if(rule.action){
                 return eval(rule.action)
@@ -829,6 +831,7 @@ function make_ast(match, tokens){
             }
             if(rule.alias){
                 eval('var ' + rule.alias + ' = res')
+                L[rule.alias] = res
             }
             if(rule.action){
                 return eval(rule.action)
@@ -845,6 +848,7 @@ function make_ast(match, tokens){
                     var _make = make_ast(m, tokens)
                     if(rule.items[i].alias){
                         eval('var ' + rule.items[i].alias + ' = _make')
+                        L[rule.items[i].alias] = _make
                     }
                     elts.push(_make)
                 }
@@ -927,6 +931,7 @@ function make_ast(match, tokens){
             }
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
+                L[rule.items[i].alias] = _make
                 eval('var ' + rule.items[i].alias + ' = _make')
             }
             if(! rule.items[i].lookahead){
@@ -934,19 +939,37 @@ function make_ast(match, tokens){
             }
         }
         if(rule.action){
-            try{
-                ast = eval(rule.action)
-            }catch(err){
-                if(debug){
-                    var rule_str = show_rule(rule, true)
-                    console.log('error eval action of', rule_str)
-                    console.log('rule.action', rule.action)
-                    console.log('p', p)
-                    //console.log($B.make_frames_stack())
-                    console.log(err.message)
-                    console.log(err.stack)
+            if(typeof rule.action == 'function'){
+                console.log('run function', rule.action, 'L', L)
+                try{
+                    ast = rule.action(L)
+                }catch(err){
+                    if(debug === null){
+                        var rule_str = show_rule(rule, true)
+                        console.log('error eval action of', rule_str)
+                        console.log('rule.action', rule.action)
+                        console.log('p', p)
+                        //console.log($B.make_frames_stack())
+                        console.log(err.message)
+                        console.log(err.stack)
+                    }
+                    throw err
                 }
-                throw err
+            }else{
+                try{
+                    ast = eval(rule.action)
+                }catch(err){
+                    if(debug === null){
+                        var rule_str = show_rule(rule, true)
+                        console.log('error eval action of', rule_str)
+                        console.log('rule.action', rule.action)
+                        console.log('p', p)
+                        //console.log($B.make_frames_stack())
+                        console.log(err.message)
+                        console.log(err.stack)
+                    }
+                    throw err
+                }
             }
         }else if(nb_consuming == 1){
             ast = makes[0]
@@ -972,12 +995,7 @@ function make_ast(match, tokens){
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }else if(['STRING', 'string'].indexOf(rule.type) > -1){
-            var s = tokens[match.start].string
-            s = s.replace(/\n/g,'\\n\\\n')
-                 .replace(/\r/g,'\\r\\\r')
-            var ast_obj = new $B.ast.Constant(s)
-            set_position_from_EXTRA(ast_obj, EXTRA)
-            return ast_obj
+            return token
         }else if(rule.type == 'FSTRING_START'){
             return token
         }else if(rule.type == 'FSTRING_MIDDLE'){

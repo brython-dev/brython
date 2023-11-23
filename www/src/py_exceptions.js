@@ -104,11 +104,11 @@ $B.last_frame = function(){
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){
         var frame_obj = exc.$frame_obj
-        if($B.$isinstance(exc, _b_.SyntaxError)){
-            frame_obj = frame_obj.prev
-        }
         if(frame_obj === null){
             return _b_.None
+        }
+        if($B.$isinstance(exc, _b_.SyntaxError)){
+            frame_obj = frame_obj.prev
         }
         // save line numbers when exception happened
         var $linenums = $B.make_linenums(frame_obj)

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-22 21:23:00.761398"
-__BRYTHON__.timestamp=1700684580761
+__BRYTHON__.compiled_date="2023-11-23 11:42:31.508967"
+__BRYTHON__.timestamp=1700736151508
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -252,6 +252,7 @@ $B.set_func_names(error,"tokenize")}
 var exc=errors.TokenError.$factory(message,position)
 console.log('error',exc.__class__,exc.args)
 return exc}
+function MAKE_TOKEN(token_type){return new Token('SYNTAXERROR')}
 function _get_line_at(src,pos){
 var end=src.substr(pos).search(/[\r\n]/),line=end==-1 ? src.substr(pos):src.substr(pos,end+1)
 return line}
@@ -432,7 +433,13 @@ num_type=''
 if(src[pos]&&
 'xbo'.indexOf(src[pos].toLowerCase())>-1){number+=src[pos]
 num_type=src[pos].toLowerCase()
-pos++}
+pos++}else if(src[pos]){var pos1=pos
+while(pos1 < src.length){if(src[pos1].match(/\d/)){if(src[pos1]=='0'){pos1++
+continue}
+let msg='leading zeros in decimal integer '+
+'literals are not permitted; use an 0o prefix '+
+'for octal integers'
+$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,msg)}else{break}}}
 break
 case '.':
 if(src[pos]&& $B.in_unicode_category('Nd',ord(src[pos]))){state='NUMBER'
@@ -581,7 +588,7 @@ pos--}}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){
 number+=char
 yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
-state=null}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,'invalid decimal literal')}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
 state=null
 pos--}
 break}}
@@ -3994,7 +4001,7 @@ StringCtx.prototype.add_value=function(value){this.is_bytes=value.charAt(0)=='b'
 if(! this.is_bytes){this.value+=make_string_for_ast_value(value)}else{value=value.substr(2,value.length-3)
 try{var b=encode_bytestring(value)}catch(err){raise_syntax_error(this,'bytes can only contain ASCII literal characters')}
 this.value=this.value.concat(b)}}
-function encode_bytestring(s){s=s.replace(/\\t/g,'\t')
+var encode_bytestring=$B.encode_bytestring=function(s){s=s.replace(/\\t/g,'\t')
 .replace(/\\n/g,'\n')
 .replace(/\\r/g,'\r')
 .replace(/\\f/g,'\f')
@@ -8129,8 +8136,8 @@ return trace.join("\n")}
 $B.last_frame=function(){var frame=$B.frame_obj.frame
 return `file ${frame.__file__} line ${frame.$lineno}`}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc){var frame_obj=exc.$frame_obj
-if($B.$isinstance(exc,_b_.SyntaxError)){frame_obj=frame_obj.prev}
 if(frame_obj===null){return _b_.None}
+if($B.$isinstance(exc,_b_.SyntaxError)){frame_obj=frame_obj.prev}
 var $linenums=$B.make_linenums(frame_obj)
 return{
 __class__ :traceback,$stack:make_frames_stack(frame_obj),
@@ -10114,7 +10121,8 @@ mod_name=module}}
 return $B.imported[package_name]}}
 $B.$import=function(mod_name,fromlist,aliases,locals){
 var test=false 
-if(test){alert()}
+if(test){console.log('import',mod_name,fromlist,aliases)
+alert()}
 if(mod_name=='_frozen_importlib_external'){
 var alias=aliases[mod_name]||mod_name
 var imp=$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals);

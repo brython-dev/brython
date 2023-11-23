@@ -6859,7 +6859,7 @@ StringCtx.prototype.add_value = function(value){
     }
 }
 
-function encode_bytestring(s){
+var encode_bytestring = $B.encode_bytestring = function(s){
     s = s.replace(/\\t/g, '\t')
          .replace(/\\n/g, '\n')
          .replace(/\\r/g, '\r')
@@ -8584,7 +8584,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             console.log('no start', token)
         }
         lnum = token.start[0]
-        // console.log('token', token.type, token.string, 'lnum', lnum, 'context', context)
+        //console.log('token', token.type, token.string, 'lnum', lnum, 'context', context)
         //console.log('context', context)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
