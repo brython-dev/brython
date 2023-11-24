@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-23 11:42:31.508967"
-__BRYTHON__.timestamp=1700736151508
+__BRYTHON__.compiled_date="2023-11-24 16:31:00.582135"
+__BRYTHON__.timestamp=1700839860582
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -4835,7 +4835,7 @@ src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 var _ast
-if($B.parser_to_ast){console.log('use parser to ast')
+if($B.parser_to_ast){console.log('use standard parser')
 _ast=new $B.Parser(src,filename,'file').parse()}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
 _ast=root.ast()}
@@ -18700,9 +18700,7 @@ for(var seq of seqs){for(var item of seq){res.push(item)}}
 return res}
 $B._PyPegen.join_names_with_dot=function(p,first_name,second_name){var str=first_name.id+'.'+second_name.id
 return $B._PyAST.Name(str,new $B.ast.Load(),EXTRA_EXPR(first_name,second_name))}
-$B._PyPegen.make_module=function(p,a){var res=new $B.ast.Module(a)
-console.log('make module',res)
-return res}
+$B._PyPegen.make_module=function(p,a){return new $B.ast.Module(a)}
 $B._PyPegen.new_type_comment=function(p,s){if(s.length===0){return NULL}
 return s}
 $B._PyPegen.get_last_comprehension_item=function(comprehension){if(comprehension.ifs==NULL ||comprehension.ifs.length==0){return comprehension.iter;}
@@ -18739,11 +18737,11 @@ return e;}}})(__BRYTHON__)
 
 (function($B){var _b_=$B.builtins,debug=0
 var p={feature_version:$B.version_info[1]}
-var Store=new $B.ast.Store(),Load=new $B.ast.Load(),Del=new $B.ast.Del(),NULL=undefined
-$B.parser_constants={Store,Load,Del}
+$B.parser_constants={Store:new $B.ast.Store(),Load:new $B.ast.Load(),Del:new $B.ast.Del(),NULL:undefined,alias_ty:$B.ast.alias,keyword_ty:$B.ast.keyword,arguments_ty:$B.ast.arguments,expr_ty:$B.ast.expr,asdl_stmt_seq:Array,asdl_int_seq:Array,asdl_expr_seq:Array,asdl_keyword_seq:Array,asdl_identifier_seq:Array,asdl_pattern_seq:Array,AugOperator:$B.ast.AugAssign,IsNot:$B.ast.IsNot,Py_Ellipsis:_b_.Ellipsis,Py_False:false,Py_True:true,Py_None:_b_.None,PyExc_SyntaxError:_b_.SyntaxError}
 for(var op_type of $B.op_types){for(var key in op_type){var klass_name=op_type[key]
-eval(`var ${klass_name} = new $B.ast.${klass_name}()`)}}
-var alias_ty=$B.ast.alias,keyword_ty=$B.ast.keyword,arguments_ty=$B.ast.arguments,expr_ty=$B.ast.expr,asdl_stmt_seq=Array,asdl_int_seq=Array,asdl_expr_seq=Array,asdl_keyword_seq=Array,asdl_identifier_seq=Array,asdl_pattern_seq=Array,AugOperator=$B.ast.AugAssign,Py_Ellipsis=_b_.Ellipsis,Py_False=false,Py_True=true,Py_None=_b_.None,PyExc_SyntaxError=_b_.SyntaxError
+$B.parser_constants[klass_name]=new $B.ast[klass_name]()}}
+var NULL=$B.parser_constants.NULL
+console.log('parser constants',Object.keys($B.parser_constants).map(x=> `'${x}'`).join(', '))
 var PyPARSE_IGNORE_COOKIE=0x0010,PyPARSE_BARRY_AS_BDFL=0x0020,PyPARSE_TYPE_COMMENTS=0x0040,PyPARSE_ASYNC_HACKS=0x0080,PyPARSE_ALLOW_INCOMPLETE_INPUT=0x0100
 var STAR_TARGETS='star_targets',FOR_TARGETS='for_targets',DEL_TARGETS='del_targets'
 $B._PyAST={}
@@ -18765,8 +18763,6 @@ eval(function_code)}
 var inf=Number.POSITIVE_INFINITY
 var keywords=['and','as','elif','for','yield','while','assert','or','continue','lambda','from','class','in','not','finally','is','except','global','return','raise','break','with','def','try','if','else','del','import','nonlocal','pass'
 ]
-function asdl_seq_LEN(t){return t.length}
-function asdl_seq_GET(t,i){return t[i]}
 function PyPegen_last_item(seq){return seq[seq.length-1]}
 function get_last_token(p){var last_token=p.tokens.last
 if(p.tokens.last.type=="ENDMARKER"){var src=$B.file_cache[p.filename]
@@ -18774,11 +18770,11 @@ if(src){for(var token of $B.tokenizer(src)){if(token.type=="ENDMARKER"){break}
 if(token.type !="DEDENT"){last_token=token}}}else{last_token=undefined}}
 p.known_err_token=last_token}
 var helper_functions={CHECK:function(type,obj){if(Array.isArray(type)){var check
-for(var t of type){check=CHECK(t,obj)
+for(var t of type){check=helper_functions.CHECK(t,obj)
 if(check){return check}}
 return undefined}
 if(obj instanceof type){return obj}
-return undefined},CHECK_VERSION:function(type,version,msg,node){return INVALID_VERSION_CHECK(p,version,msg,node)},CHECK_NULL_ALLOWED:function(type,obj){if(obj !==NULL){if(type instanceof Array){for(var t of type){if(obj instanceof t){return obj}}
+return undefined},CHECK_VERSION:function(type,version,msg,node){return helper_functions.INVALID_VERSION_CHECK(p,version,msg,node)},CHECK_NULL_ALLOWED:function(type,obj){if(obj !==NULL){if(type instanceof Array){for(var t of type){if(obj instanceof t){return obj}}
 return}else{return obj instanceof type ? obj :undefined}}
 return obj},INVALID_VERSION_CHECK:function(p,version,msg,node){if(node==NULL){p.error_indicator=1;
 return NULL;}
@@ -18803,8 +18799,7 @@ if(type==STAR_TARGETS ||type==FOR_TARGETS){msg="cannot assign to %s";}else{msg="
 return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
 invalid_target,msg,$B._PyPegen.get_expr_name(invalid_target)
 )}
-return NULL;}}
-console.log(Object.keys(helper_functions))
+return NULL;},asdl_seq_LEN:(t)=> t.length,asdl_seq_GET:(t,i)=> t[i]}
 $B.helper_functions=helper_functions
 function handle_errortoken(token,token_reader){if(token.string=="'" ||token.string=='"'){return 'unterminated string literal '+
 `(detected at line ${token.start[0]})`}else if(token.string=='\\'){var nxt=token_reader.next
@@ -18858,7 +18853,7 @@ p.filename=this.filename
 p.known_err_token=err_token
 var message='invalid syntax'
 if(err_token.type=='ERRORTOKEN'){message=handle_errortoken(err_token,this.tokens)}
-RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,err_token.start[0],err_token.start[1],err_token.end[0],err_token.end[1],message)}
+$B.helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,err_token.start[0],err_token.start[1],err_token.end[0],err_token.end[1],message)}
 return make_ast(match,this.tokens)}
 Parser.prototype.clear_memo=function(){for(var key in this.memo){delete this.memo[key]}}
 Parser.prototype.get_memo=function(rule,position){if(this.memo[rule.name]===undefined ||
@@ -18994,16 +18989,10 @@ m.match=match
 m.end=match.end}
 delete this.HEADS[position]
 return m.match}
-function set_alias(L,name,value){console.log('set L',name,value)
-if(name=='a' && Array.isArray(value)&& value.length==1 &&
-Array.isArray(value[0])&& value[0].length==0){var err=Error()
-console.log(err.stack)
-alert()}
-L[name]=value}
+function set_alias(L,name,value){L[name]=value}
 function set_position(ast_obj){if(ast_obj.hasOwnProperty('col_offset')){return}
 var pos={},attrs=['lineno','col_offset','end_lineno','end_col_offset'],comp={lineno:(x,y)=> Math.min(x.lineno,y.lineno),col_offset:(x,y)=> Math.min(x.col_offset,y.col_offset),end_lineno:(x,y)=> Math.max(x.end_lineno,y.end_lineno),end_col_offset:(x,y)=> Math.max(x.end_col_offset,y.end_col_offset)}
-for(var key in ast_obj){console.log('key',key)
-if(Array.isArray(ast_obj[key])){for(var item of ast_obj[key]){if(item.hasOwnProperty('col_offset')){for(var attr of attrs){pos[attr]=pos[attr]===undefined ? item[attr]:comp[attr](pos,item)}}}}else if(ast_obj[key]&& ast_obj[key].hasOwnProperty('col_offset')){var item=ast_obj[key]
+for(var key in ast_obj){if(Array.isArray(ast_obj[key])){for(var item of ast_obj[key]){if(item.hasOwnProperty('col_offset')){for(var attr of attrs){pos[attr]=pos[attr]===undefined ? item[attr]:comp[attr](pos,item)}}}}else if(ast_obj[key]&& ast_obj[key].hasOwnProperty('col_offset')){var item=ast_obj[key]
 for(var attr of attrs){pos[attr]=pos[attr]===undefined ? item[attr]:comp[attr](pos,item)}}}
 for(var attr of attrs){ast_obj[attr]=pos[attr]}}
 function make_ast(match,tokens){
@@ -19020,26 +19009,20 @@ var FSTRING_MIDDLE='fstring_middle'
 if(rule.repeat){
 var res=[]
 if(['STRING','string','NEWLINE'].indexOf(rule.type)>-1){for(var m of match.matches){res.push(tokens[m.start])}
-if(rule.alias){eval('var '+rule.alias+' = res')
-set_alias(L,rule.alias,res)}
-if(rule.action){if(typeof rule.action=='function'){return rule.action(L)}else{return eval(rule.action)}}
+if(rule.alias){set_alias(L,rule.alias,res)}
+if(rule.action){return rule.action(L)}
 return res}else if(rule.type=='NAME'){for(var m of match.matches){res.push(new $B.ast.Name(tokens[m.start].string,new $B.ast.Load()))}
-if(rule.alias){eval('var '+rule.alias+' = res')
-set_alias(L,rule.alias,res)}
-if(rule.action){if(typeof rule.action=='function'){return rule.action(L)}else{return eval(rule.action)}}
+if(rule.alias){set_alias(L,rule.alias,res)}
+if(rule.action){return rule.action(L)}
 return res}
 var makes=[]
 for(var one_match of match.matches){
-if(one_match.rule===rule){console.log('cas 1')
-var elts=[]
+if(one_match.rule===rule){var elts=[]
 for(var i=0;i < one_match.matches.length;i++){var m=one_match.matches[i]
 var _make=make_ast(m,tokens)
-if(rule.items[i].alias){eval('var '+rule.items[i].alias+' = _make')
-set_alias(L,rule.items[i].alias,_make)}
+if(rule.items[i].alias){set_alias(L,rule.items[i].alias,_make)}
 elts.push(_make)}
-if(rule.action){try{var res
-if(typeof rule.action=='function'){console.log('apply function',rule.action+'','L',L)
-res=rule.action(L)}else{res=eval(rule.action)}}catch(err){console.log('error eval action of',show_rule(rule),match)
+if(rule.action){try{var res=rule.action(L)}catch(err){console.log('error eval action of',show_rule(rule),match)
 throw err}
 makes.push(res)}else if(elts.length==1){makes.push(elts[0])}else{makes.push(elts)}}else{makes.push(make_ast(one_match,tokens))}}
 if(makes.length==0){return}
@@ -19059,23 +19042,16 @@ if(m.end > m.start){_make=make_ast(m,tokens)
 makes.push(_make)}else{if(m.rule.repeat && repeater[m.rule.repeat][1]> 1){
 _make=[]}else{_make=undefined}}
 if(rule.items[i].alias){names[rule.items[i].alias]=_make
-set_alias(L,rule.items[i].alias,_make)
-eval('var '+rule.items[i].alias+' = _make')}
+set_alias(L,rule.items[i].alias,_make)}
 if(! rule.items[i].lookahead){nb_consuming++}}
-if(rule.action){if(typeof rule.action=='function'){try{ast=rule.action(L)
-set_position(ast)}catch(err){if(debug===null){var rule_str=show_rule(rule,true)
+if(rule.action){try{ast=rule.action(L)
+set_position_from_EXTRA(ast,EXTRA)}catch(err){if(debug===null){var rule_str=show_rule(rule,true)
 console.log('error eval action of',rule_str)
 console.log('rule.action',rule.action)
 console.log('p',p)
 console.log(err.message)
 console.log(err.stack)}
-throw err}}else{try{ast=eval(rule.action)}catch(err){if(debug===null){var rule_str=show_rule(rule,true)
-console.log('error eval action of',rule_str)
-console.log('rule.action',rule.action)
-console.log('p',p)
-console.log(err.message)
-console.log(err.stack)}
-throw err}}}else if(nb_consuming==1){ast=makes[0]}else{ast=makes}
+throw err}}else if(nb_consuming==1){ast=makes[0]}else{ast=makes}
 return ast}else{if(rule.type=='NAME'){var ast_obj=new $B.ast.Name(tokens[match.start].string,new $B.ast.Load())
 set_position_from_EXTRA(ast_obj,EXTRA)
 return ast_obj}else if(rule.type=='NUMBER'){try{var prepared=$B.prepare_number(token[1])}catch(err){RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p.arena,'wrong number %s',token[1])}
@@ -19134,7 +19110,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 {choices:[{items:[{type:'rule',name:'compound_stmt',alias:'a'},{type:'NEWLINE'}
 ],action:(L)=> $B._PyPegen.singleton_seq(L.p,L.a)},{items:[{type:'rule',name:'simple_stmts'}
 ]},{items:[{type:'NEWLINE'}
-],action:(L)=> $B._PyPegen.singleton_seq(L.p,$B.helper_functions.CHECK(stmt_ty,new $B.ast.Pass(L.EXTRA)))},{items:[{type:'ENDMARKER'}
+],action:(L)=> $B._PyPegen.singleton_seq(L.p,$B.helper_functions.CHECK($B.ast.stmt,new $B.ast.Pass(L.EXTRA)))},{items:[{type:'ENDMARKER'}
 ],action:(L)=> $B._PyPegen.interactive_exit(L.p)}]},simple_stmts:
 {choices:[{items:[{type:'rule',name:'simple_stmt',alias:'a'},{type:'string',value:';',lookahead:'negative'},{type:'NEWLINE'}
 ],action:(L)=> $B._PyPegen.singleton_seq(L.p,L.a)},{items:[{type:'rule',name:'simple_stmt',join:';',alias:'a',repeat:'+'},{items:[{type:'string',value:';'}
@@ -19177,11 +19153,11 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}]},assignment:
 {choices:[{items:[{type:'NAME',alias:'a'},{type:'string',value:':'},{type:'rule',name:'expression',alias:'b'},{items:[{type:'string',value:'='},{type:'rule',name:'annotated_rhs',alias:'d'}
 ],repeat:'?',alias:'c',action:(L)=> L.d}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,6,"Variable annotation syntax is",new $B.ast.AnnAssign($B.helper_functions.CHECK(expr_ty,$B._PyPegen.set_expr_context(L.p,L.a,$B.parser_constants.Store)),L.b,L.c,1,L.EXTRA))},{items:[{choices:[{items:[{type:'string',value:'('},{type:'rule',name:'single_target',alias:'b'},{type:'string',value:')'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,6,"Variable annotation syntax is",new $B.ast.AnnAssign($B.helper_functions.CHECK($B.parser_constants.expr_ty,$B._PyPegen.set_expr_context(L.p,L.a,$B.parser_constants.Store)),L.b,L.c,1,L.EXTRA))},{items:[{choices:[{items:[{type:'string',value:'('},{type:'rule',name:'single_target',alias:'b'},{type:'string',value:')'}
 ],action:(L)=> L.b},{items:[{type:'rule',name:'single_subscript_attribute_target'}
 ]}],alias:'a'},{type:'string',value:':'},{type:'rule',name:'expression',alias:'b'},{items:[{type:'string',value:'='},{type:'rule',name:'annotated_rhs',alias:'d'}
 ],repeat:'?',alias:'c',action:(L)=> L.d}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,6,"Variable annotations syntax is",new $B.ast.AnnAssign(L.a,L.b,L.c,0,L.EXTRA))},{items:[{items:[{type:'rule',name:'star_targets',alias:'z'},{type:'string',value:'='}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,6,"Variable annotations syntax is",new $B.ast.AnnAssign(L.a,L.b,L.c,0,L.EXTRA))},{items:[{items:[{type:'rule',name:'star_targets',alias:'z'},{type:'string',value:'='}
 ],repeat:'+',alias:'a',action:(L)=> L.z},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}],alias:'b'},{type:'string',value:'=',lookahead:'negative'},{items:[{type:'TYPE_COMMENT'}
@@ -19195,30 +19171,30 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}]},augassign:
 {choices:[{items:[{type:'string',value:'+='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,Add)},{items:[{type:'string',value:'-='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,Sub)},{items:[{type:'string',value:'*='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,Mult)},{items:[{type:'string',value:'@='}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(AugOperator,5,"The \'@\' operator is",$B._PyPegen.augoperator(L.p,MatMult))},{items:[{type:'string',value:'/='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,Div)},{items:[{type:'string',value:'%='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,Mod)},{items:[{type:'string',value:'&='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,BitAnd)},{items:[{type:'string',value:'|='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,BitOr)},{items:[{type:'string',value:'^='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,BitXor)},{items:[{type:'string',value:'<<='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,LShift)},{items:[{type:'string',value:'>>='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,RShift)},{items:[{type:'string',value:'**='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,Pow)},{items:[{type:'string',value:'//='}
-],action:(L)=> $B._PyPegen.augoperator(L.p,FloorDiv)}]},return_stmt:
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.Add)},{items:[{type:'string',value:'-='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.Sub)},{items:[{type:'string',value:'*='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.Mult)},{items:[{type:'string',value:'@='}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.AugOperator,5,"The \'@\' operator is",$B._PyPegen.augoperator(L.p,$B.parser_constants.MatMult))},{items:[{type:'string',value:'/='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.Div)},{items:[{type:'string',value:'%='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.Mod)},{items:[{type:'string',value:'&='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.BitAnd)},{items:[{type:'string',value:'|='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.BitOr)},{items:[{type:'string',value:'^='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.BitXor)},{items:[{type:'string',value:'<<='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.LShift)},{items:[{type:'string',value:'>>='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.RShift)},{items:[{type:'string',value:'**='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.Pow)},{items:[{type:'string',value:'//='}
+],action:(L)=> $B._PyPegen.augoperator(L.p,$B.parser_constants.FloorDiv)}]},return_stmt:
 {items:[{type:'string',value:'return'},{items:[{type:'rule',name:'star_expressions'}
 ],repeat:'?',alias:'a'}
 ],action:(L)=> new $B.ast.Return(L.a,L.EXTRA)},raise_stmt:
 {choices:[{items:[{type:'string',value:'raise'},{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:'from'},{type:'rule',name:'expression',alias:'z'}
 ],repeat:'?',alias:'b',action:(L)=> L.z}
 ],action:(L)=> new $B.ast.Raise(L.a,L.b,L.EXTRA)},{items:[{type:'string',value:'raise'}
-],action:(L)=> new $B.ast.Raise(NULL,NULL,L.EXTRA)}]},global_stmt:
+],action:(L)=> new $B.ast.Raise($B.parser_constants.NULL,$B.parser_constants.NULL,L.EXTRA)}]},global_stmt:
 {items:[{type:'string',value:'global'},{type:'NAME',join:',',alias:'a',repeat:'+'}
-],action:(L)=> new $B.ast.Global($B.helper_functions.CHECK(asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,L.a)),L.EXTRA)},nonlocal_stmt:
+],action:(L)=> new $B.ast.Global($B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,L.a)),L.EXTRA)},nonlocal_stmt:
 {items:[{type:'string',value:'nonlocal'},{type:'NAME',join:',',alias:'a',repeat:'+'}
-],action:(L)=> new $B.ast.Nonlocal($B.helper_functions.CHECK(asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,L.a)),L.EXTRA)},del_stmt:
+],action:(L)=> new $B.ast.Nonlocal($B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,L.a)),L.EXTRA)},del_stmt:
 {choices:[{items:[{type:'string',value:'del'},{type:'rule',name:'del_targets',alias:'a'},{choices:[{items:[{type:'string',value:';'}
 ]},{items:[{type:'NEWLINE'}
 ]}],lookahead:'positive'}
@@ -19241,23 +19217,23 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.ImportFrom(L.b.id,L.c,$B._PyPegen.seq_count_dots(L.a),L.EXTRA)},{items:[{type:'string',value:'from'},{choices:[{items:[{type:'string',value:'.'}
 ]},{items:[{type:'string',value:'...'}
 ]}],repeat:'+',alias:'a'},{type:'string',value:'import'},{type:'rule',name:'import_from_targets',alias:'b'}
-],action:(L)=> new $B.ast.ImportFrom(NULL,L.b,$B._PyPegen.seq_count_dots(L.a),L.EXTRA)}]},import_from_targets:
+],action:(L)=> new $B.ast.ImportFrom($B.parser_constants.NULL,L.b,$B._PyPegen.seq_count_dots(L.a),L.EXTRA)}]},import_from_targets:
 {choices:[{items:[{type:'string',value:'('},{type:'rule',name:'import_from_as_names',alias:'a'},{items:[{type:'string',value:','}
 ],repeat:'?'},{type:'string',value:')'}
 ],action:(L)=> L.a},{items:[{type:'rule',name:'import_from_as_names'},{type:'string',value:',',lookahead:'negative'}
 ]},{items:[{type:'string',value:'*'}
-],action:(L)=> $B._PyPegen.singleton_seq(L.p,$B.helper_functions.CHECK(alias_ty,$B._PyPegen.alias_for_star(L.p,L.EXTRA)))},{items:[{type:'rule',name:'invalid_import_from_targets'}
+],action:(L)=> $B._PyPegen.singleton_seq(L.p,$B.helper_functions.CHECK($B.parser_constants.alias_ty,$B._PyPegen.alias_for_star(L.p,L.EXTRA)))},{items:[{type:'rule',name:'invalid_import_from_targets'}
 ]}]},import_from_as_names:
 {items:[{type:'rule',name:'import_from_as_name',join:',',alias:'a',repeat:'+'}
 ],action:(L)=> L.a},import_from_as_name:
 {items:[{type:'NAME',alias:'a'},{items:[{type:'string',value:'as'},{type:'NAME',alias:'z'}
 ],repeat:'?',alias:'b',action:(L)=> L.z}
-],action:(L)=> new $B.ast.alias(L.a.id,(L.b)?(L.b).id:NULL,L.EXTRA)},dotted_as_names:
+],action:(L)=> new $B.ast.alias(L.a.id,(L.b)?(L.b).id:$B.parser_constants.NULL,L.EXTRA)},dotted_as_names:
 {items:[{type:'rule',name:'dotted_as_name',join:',',alias:'a',repeat:'+'}
 ],action:(L)=> L.a},dotted_as_name:
 {items:[{type:'rule',name:'dotted_name',alias:'a'},{items:[{type:'string',value:'as'},{type:'NAME',alias:'z'}
 ],repeat:'?',alias:'b',action:(L)=> L.z}
-],action:(L)=> new $B.ast.alias(L.a.id,(L.b)?(L.b).id:NULL,L.EXTRA)},dotted_name:
+],action:(L)=> new $B.ast.alias(L.a.id,(L.b)?(L.b).id:$B.parser_constants.NULL,L.EXTRA)},dotted_name:
 {choices:[{items:[{type:'rule',name:'dotted_name',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'}
 ],action:(L)=> $B._PyPegen.join_names_with_dot(L.p,L.a,L.b)},{items:[{type:'NAME'}
 ]}]},block:
@@ -19276,7 +19252,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],repeat:'?',alias:'t'},{items:[{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
 ],repeat:'?',alias:'z'},{type:'string',value:')'}
 ],repeat:'?',alias:'b',action:(L)=> L.z},{type:'string',value:':'},{type:'rule',name:'block',alias:'c'}
-],action:(L)=> new $B.ast.ClassDef(L.a.id,(L.b)?(L.b).args:NULL,(L.b)?(L.b).keywords:NULL,L.c,NULL,L.t,L.EXTRA)}]},function_def:
+],action:(L)=> new $B.ast.ClassDef(L.a.id,(L.b)?(L.b).args:$B.parser_constants.NULL,(L.b)?(L.b).keywords:$B.parser_constants.NULL,L.c,$B.parser_constants.NULL,L.t,L.EXTRA)}]},function_def:
 {choices:[{items:[{type:'rule',name:'decorators',alias:'d'},{type:'rule',name:'function_def_raw',alias:'f'}
 ],action:(L)=> $B._PyPegen.function_def_decorators(L.p,L.d,L.f)},{items:[{type:'rule',name:'function_def_raw'}
 ]}]},function_def_raw:
@@ -19286,25 +19262,25 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],repeat:'?',alias:'params'},{type:'string',value:')'},{items:[{type:'string',value:'->'},{type:'rule',name:'expression',alias:'z'}
 ],repeat:'?',alias:'a',action:(L)=> L.z},{type:'string',value:':'},{items:[{type:'rule',name:'func_type_comment'}
 ],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> new $B.ast.FunctionDef(L.n.id,(L.params)?L.params:$B.helper_functions.CHECK(arguments_ty,$B._PyPegen.empty_arguments(L.p)),L.b,NULL,L.a,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.t,L.EXTRA)},{items:[{type:'ASYNC'},{type:'string',value:'def'},{type:'NAME',alias:'n'},{items:[{type:'rule',name:'type_params'}
+],action:(L)=> new $B.ast.FunctionDef(L.n.id,(L.params)?L.params:$B.helper_functions.CHECK($B.parser_constants.arguments_ty,$B._PyPegen.empty_arguments(L.p)),L.b,$B.parser_constants.NULL,L.a,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.t,L.EXTRA)},{items:[{type:'ASYNC'},{type:'string',value:'def'},{type:'NAME',alias:'n'},{items:[{type:'rule',name:'type_params'}
 ],repeat:'?',alias:'t'},{type:'string',value:'('},{items:[{type:'rule',name:'params'}
 ],repeat:'?',alias:'params'},{type:'string',value:')'},{items:[{type:'string',value:'->'},{type:'rule',name:'expression',alias:'z'}
 ],repeat:'?',alias:'a',action:(L)=> L.z},{type:'string',value:':'},{items:[{type:'rule',name:'func_type_comment'}
 ],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,5,"Async functions are",new $B.ast.AsyncFunctionDef(L.n.id,(L.params)?L.params:$B.helper_functions.CHECK(arguments_ty,$B._PyPegen.empty_arguments(L.p)),L.b,NULL,L.a,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.t,L.EXTRA))}]},params:
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,5,"Async functions are",new $B.ast.AsyncFunctionDef(L.n.id,(L.params)?L.params:$B.helper_functions.CHECK($B.parser_constants.arguments_ty,$B._PyPegen.empty_arguments(L.p)),L.b,$B.parser_constants.NULL,L.a,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.t,L.EXTRA))}]},params:
 {choices:[{items:[{type:'rule',name:'invalid_parameters'}
 ]},{items:[{type:'rule',name:'parameters'}
 ]}]},parameters:
 {choices:[{items:[{type:'rule',name:'slash_no_default',alias:'a'},{type:'rule',name:'param_no_default',repeat:'*',alias:'b'},{type:'rule',name:'param_with_default',repeat:'*',alias:'c'},{items:[{type:'rule',name:'star_etc'}
 ],repeat:'?',alias:'d'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,L.a,NULL,L.b,L.c,L.d))},{items:[{type:'rule',name:'slash_with_default',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,L.a,$B.parser_constants.NULL,L.b,L.c,L.d))},{items:[{type:'rule',name:'slash_with_default',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
 ],repeat:'?',alias:'c'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,NULL,L.a,NULL,L.b,L.c))},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,L.a,$B.parser_constants.NULL,L.b,L.c))},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
 ],repeat:'?',alias:'c'}
-],action:(L)=> $B._PyPegen.make_arguments(L.p,NULL,NULL,L.a,L.b,L.c)},{items:[{type:'rule',name:'param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'star_etc'}
+],action:(L)=> $B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a,L.b,L.c)},{items:[{type:'rule',name:'param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'star_etc'}
 ],repeat:'?',alias:'b'}
-],action:(L)=> $B._PyPegen.make_arguments(L.p,NULL,NULL,NULL,L.a,L.b)},{items:[{type:'rule',name:'star_etc',alias:'a'}
-],action:(L)=> $B._PyPegen.make_arguments(L.p,NULL,NULL,NULL,NULL,L.a)}]},slash_no_default:
+],action:(L)=> $B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a,L.b)},{items:[{type:'rule',name:'star_etc',alias:'a'}
+],action:(L)=> $B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a)}]},slash_no_default:
 {choices:[{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:','}
 ],action:(L)=> L.a},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:')',lookahead:'positive'}
 ],action:(L)=> L.a}]},slash_with_default:
@@ -19318,8 +19294,8 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],repeat:'?',alias:'c'}
 ],action:(L)=> $B._PyPegen.star_etc(L.p,L.a,L.b,L.c)},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'rule',name:'param_maybe_default',repeat:'+',alias:'b'},{items:[{type:'rule',name:'kwds'}
 ],repeat:'?',alias:'c'}
-],action:(L)=> $B._PyPegen.star_etc(L.p,NULL,L.b,L.c)},{items:[{type:'rule',name:'kwds',alias:'a'}
-],action:(L)=> $B._PyPegen.star_etc(L.p,NULL,NULL,L.a)}]},kwds:
+],action:(L)=> $B._PyPegen.star_etc(L.p,$B.parser_constants.NULL,L.b,L.c)},{items:[{type:'rule',name:'kwds',alias:'a'}
+],action:(L)=> $B._PyPegen.star_etc(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a)}]},kwds:
 {choices:[{items:[{type:'rule',name:'invalid_kwds'}
 ]},{items:[{type:'string',value:'**'},{type:'rule',name:'param_no_default',alias:'a'}
 ],action:(L)=> L.a}]},param_no_default:
@@ -19336,9 +19312,9 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,L.tc)},{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
 ],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,L.tc)}]},param:
 {items:[{type:'NAME',alias:'a'},{type:'rule',name:'annotation',repeat:'?',alias:'b'}
-],action:(L)=> new $B.ast.arg(L.a.id,L.b,NULL,L.EXTRA)},param_star_annotation:
+],action:(L)=> new $B.ast.arg(L.a.id,L.b,$B.parser_constants.NULL,L.EXTRA)},param_star_annotation:
 {items:[{type:'NAME',alias:'a'},{type:'rule',name:'star_annotation',alias:'b'}
-],action:(L)=> new $B.ast.arg(L.a.id,L.b,NULL,L.EXTRA)},annotation:
+],action:(L)=> new $B.ast.arg(L.a.id,L.b,$B.parser_constants.NULL,L.EXTRA)},annotation:
 {items:[{type:'string',value:':'},{type:'rule',name:'expression',alias:'a'}
 ],action:(L)=> L.a},star_annotation:
 {items:[{type:'string',value:':'},{type:'rule',name:'star_expression',alias:'a'}
@@ -19348,12 +19324,12 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}]},if_stmt:
 {choices:[{items:[{type:'rule',name:'invalid_if_stmt'}
 ]},{items:[{type:'string',value:'if'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'elif_stmt',alias:'c'}
-],action:(L)=> new $B.ast.If(L.a,L.b,$B.helper_functions.CHECK(asdl_stmt_seq,$B._PyPegen.singleton_seq(L.p,L.c)),L.EXTRA)},{items:[{type:'string',value:'if'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{items:[{type:'rule',name:'else_block'}
+],action:(L)=> new $B.ast.If(L.a,L.b,$B.helper_functions.CHECK($B.parser_constants.asdl_stmt_seq,$B._PyPegen.singleton_seq(L.p,L.c)),L.EXTRA)},{items:[{type:'string',value:'if'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{items:[{type:'rule',name:'else_block'}
 ],repeat:'?',alias:'c'}
 ],action:(L)=> new $B.ast.If(L.a,L.b,L.c,L.EXTRA)}]},elif_stmt:
 {choices:[{items:[{type:'rule',name:'invalid_elif_stmt'}
 ]},{items:[{type:'string',value:'elif'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'elif_stmt',alias:'c'}
-],action:(L)=> new $B.ast.If(L.a,L.b,$B.helper_functions.CHECK(asdl_stmt_seq,$B._PyPegen.singleton_seq(L.p,L.c)),L.EXTRA)},{items:[{type:'string',value:'elif'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{items:[{type:'rule',name:'else_block'}
+],action:(L)=> new $B.ast.If(L.a,L.b,$B.helper_functions.CHECK($B.parser_constants.asdl_stmt_seq,$B._PyPegen.singleton_seq(L.p,L.c)),L.EXTRA)},{items:[{type:'string',value:'elif'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{items:[{type:'rule',name:'else_block'}
 ],repeat:'?',alias:'c'}
 ],action:(L)=> new $B.ast.If(L.a,L.b,L.c,L.EXTRA)}]},else_block:
 {choices:[{items:[{type:'rule',name:'invalid_else_stmt'}
@@ -19370,16 +19346,16 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.For(L.t,L.ex,L.b,L.el,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.EXTRA)},{items:[{type:'ASYNC'},{type:'string',value:'for'},{type:'rule',name:'star_targets',alias:'t'},{type:'string',value:'in'},{type:'COMMIT_CHOICE'},{type:'rule',name:'star_expressions',alias:'ex'},{type:'string',value:':'},{items:[{type:'TYPE_COMMENT'}
 ],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'},{items:[{type:'rule',name:'else_block'}
 ],repeat:'?',alias:'el'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,5,"Async for loops are",new $B.ast.AsyncFor(L.t,L.ex,L.b,L.el,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.EXTRA))},{items:[{type:'rule',name:'invalid_for_target'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,5,"Async for loops are",new $B.ast.AsyncFor(L.t,L.ex,L.b,L.el,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.EXTRA))},{items:[{type:'rule',name:'invalid_for_target'}
 ]}]},with_stmt:
 {choices:[{items:[{type:'rule',name:'invalid_with_stmt_indent'}
 ]},{items:[{type:'string',value:'with'},{type:'string',value:'('},{type:'rule',name:'with_item',join:',',alias:'a',repeat:'+'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,9,"Parenthesized context managers are",new $B.ast.With(L.a,L.b,NULL,L.EXTRA))},{items:[{type:'string',value:'with'},{type:'rule',name:'with_item',join:',',alias:'a',repeat:'+'},{type:'string',value:':'},{items:[{type:'TYPE_COMMENT'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,9,"Parenthesized context managers are",new $B.ast.With(L.a,L.b,$B.parser_constants.NULL,L.EXTRA))},{items:[{type:'string',value:'with'},{type:'rule',name:'with_item',join:',',alias:'a',repeat:'+'},{type:'string',value:':'},{items:[{type:'TYPE_COMMENT'}
 ],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
 ],action:(L)=> new $B.ast.With(L.a,L.b,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.EXTRA)},{items:[{type:'ASYNC'},{type:'string',value:'with'},{type:'string',value:'('},{type:'rule',name:'with_item',join:',',alias:'a',repeat:'+'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,5,"Async with statements are",new $B.ast.AsyncWith(L.a,L.b,NULL,L.EXTRA))},{items:[{type:'ASYNC'},{type:'string',value:'with'},{type:'rule',name:'with_item',join:',',alias:'a',repeat:'+'},{type:'string',value:':'},{items:[{type:'TYPE_COMMENT'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,5,"Async with statements are",new $B.ast.AsyncWith(L.a,L.b,$B.parser_constants.NULL,L.EXTRA))},{items:[{type:'ASYNC'},{type:'string',value:'with'},{type:'rule',name:'with_item',join:',',alias:'a',repeat:'+'},{type:'string',value:':'},{items:[{type:'TYPE_COMMENT'}
 ],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,5,"Async with statements are",new $B.ast.AsyncWith(L.a,L.b,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.EXTRA))},{items:[{type:'rule',name:'invalid_with_stmt'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,5,"Async with statements are",new $B.ast.AsyncWith(L.a,L.b,$B.helper_functions.NEW_TYPE_COMMENT(L.p,L.tc),L.EXTRA))},{items:[{type:'rule',name:'invalid_with_stmt'}
 ]}]},with_item:
 {choices:[{items:[{type:'rule',name:'expression',alias:'e'},{type:'string',value:'as'},{type:'rule',name:'star_target',alias:'t'},{choices:[{items:[{type:'string',value:','}
 ]},{items:[{type:'string',value:')'}
@@ -19387,35 +19363,35 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}],lookahead:'positive'}
 ],action:(L)=> new $B.ast.withitem(L.e,L.t,L.p.arena)},{items:[{type:'rule',name:'invalid_with_item'}
 ]},{items:[{type:'rule',name:'expression',alias:'e'}
-],action:(L)=> new $B.ast.withitem(L.e,NULL,L.p.arena)}]},try_stmt:
+],action:(L)=> new $B.ast.withitem(L.e,$B.parser_constants.NULL,L.p.arena)}]},try_stmt:
 {choices:[{items:[{type:'rule',name:'invalid_try_stmt'}
 ]},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'finally_block',alias:'f'}
-],action:(L)=> new $B.ast.Try(L.b,NULL,NULL,L.f,L.EXTRA)},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'except_block',repeat:'+',alias:'ex'},{items:[{type:'rule',name:'else_block'}
+],action:(L)=> new $B.ast.Try(L.b,$B.parser_constants.NULL,$B.parser_constants.NULL,L.f,L.EXTRA)},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'except_block',repeat:'+',alias:'ex'},{items:[{type:'rule',name:'else_block'}
 ],repeat:'?',alias:'el'},{items:[{type:'rule',name:'finally_block'}
 ],repeat:'?',alias:'f'}
 ],action:(L)=> new $B.ast.Try(L.b,L.ex,L.el,L.f,L.EXTRA)},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'except_star_block',repeat:'+',alias:'ex'},{items:[{type:'rule',name:'else_block'}
 ],repeat:'?',alias:'el'},{items:[{type:'rule',name:'finally_block'}
 ],repeat:'?',alias:'f'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,11,"Exception groups are",new $B.ast.TryStar(L.b,L.ex,L.el,L.f,L.EXTRA))}]},except_block:
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,11,"Exception groups are",new $B.ast.TryStar(L.b,L.ex,L.el,L.f,L.EXTRA))}]},except_block:
 {choices:[{items:[{type:'rule',name:'invalid_except_stmt_indent'}
 ]},{items:[{type:'string',value:'except'},{type:'rule',name:'expression',alias:'e'},{items:[{type:'string',value:'as'},{type:'NAME',alias:'z'}
 ],repeat:'?',alias:'t',action:(L)=> L.z},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> new $B.ast.ExceptHandler(L.e,(L.t)?(L.t).id:NULL,L.b,L.EXTRA)},{items:[{type:'string',value:'except'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> new $B.ast.ExceptHandler(NULL,NULL,L.b,L.EXTRA)},{items:[{type:'rule',name:'invalid_except_stmt'}
+],action:(L)=> new $B.ast.ExceptHandler(L.e,(L.t)?(L.t).id:$B.parser_constants.NULL,L.b,L.EXTRA)},{items:[{type:'string',value:'except'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
+],action:(L)=> new $B.ast.ExceptHandler($B.parser_constants.NULL,$B.parser_constants.NULL,L.b,L.EXTRA)},{items:[{type:'rule',name:'invalid_except_stmt'}
 ]}]},except_star_block:
 {choices:[{items:[{type:'rule',name:'invalid_except_star_stmt_indent'}
 ]},{items:[{type:'string',value:'except'},{type:'string',value:'*'},{type:'rule',name:'expression',alias:'e'},{items:[{type:'string',value:'as'},{type:'NAME',alias:'z'}
 ],repeat:'?',alias:'t',action:(L)=> L.z},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
-],action:(L)=> new $B.ast.ExceptHandler(L.e,(L.t)?(L.t).id:NULL,L.b,L.EXTRA)},{items:[{type:'rule',name:'invalid_except_stmt'}
+],action:(L)=> new $B.ast.ExceptHandler(L.e,(L.t)?(L.t).id:$B.parser_constants.NULL,L.b,L.EXTRA)},{items:[{type:'rule',name:'invalid_except_stmt'}
 ]}]},finally_block:
 {choices:[{items:[{type:'rule',name:'invalid_finally_stmt'}
 ]},{items:[{type:'string',value:'finally'},{type:'string',value:':'},{type:'rule',name:'block',alias:'a'}
 ],action:(L)=> L.a}]},match_stmt:
 {choices:[{items:[{type:'string',value:'match'},{type:'rule',name:'subject_expr',alias:'subject'},{type:'string',value:':'},{type:'NEWLINE'},{type:'INDENT'},{type:'rule',name:'case_block',repeat:'+',alias:'cases'},{type:'DEDENT'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,10,"Pattern matching is",new $B.ast.Match(L.subject,L.cases,L.EXTRA))},{items:[{type:'rule',name:'invalid_match_stmt'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,10,"Pattern matching is",new $B.ast.Match(L.subject,L.cases,L.EXTRA))},{items:[{type:'rule',name:'invalid_match_stmt'}
 ]}]},subject_expr:
 {choices:[{items:[{type:'rule',name:'star_named_expression',alias:'value'},{type:'string',value:','},{type:'rule',name:'star_named_expressions',repeat:'?',alias:'values'}
-],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.value,L.values)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'named_expression'}
+],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.value,L.values)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'named_expression'}
 ]}]},case_block:
 {choices:[{items:[{type:'rule',name:'invalid_case_block'}
 ]},{items:[{type:'string',value:'case'},{type:'rule',name:'patterns',alias:'pattern'},{type:'rule',name:'guard',repeat:'?',alias:'guard'},{type:'string',value:':'},{type:'rule',name:'block',alias:'body'}
@@ -19432,7 +19408,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.MatchAs(L.pattern,L.target.id,L.EXTRA)},{items:[{type:'rule',name:'invalid_as_pattern'}
 ]}]},or_pattern:
 {items:[{type:'rule',name:'closed_pattern',join:'|',alias:'patterns',repeat:'+'}
-],action:(L)=> asdl_seq_LEN(L.patterns)==1?asdl_seq_GET(L.patterns,0):new $B.ast.MatchOr(L.patterns,L.EXTRA)},closed_pattern:
+],action:(L)=> $B.helper_functions.asdl_seq_LEN(L.patterns)==1?$B.helper_functions.asdl_seq_GET(L.patterns,0):new $B.ast.MatchOr(L.patterns,L.EXTRA)},closed_pattern:
 {choices:[{items:[{type:'rule',name:'literal_pattern'}
 ]},{items:[{type:'rule',name:'capture_pattern'}
 ]},{items:[{type:'rule',name:'wildcard_pattern'}
@@ -19448,40 +19424,40 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.MatchValue(L.value,L.EXTRA)},{items:[{type:'rule',name:'complex_number',alias:'value'}
 ],action:(L)=> new $B.ast.MatchValue(L.value,L.EXTRA)},{items:[{type:'rule',name:'strings',alias:'value'}
 ],action:(L)=> new $B.ast.MatchValue(L.value,L.EXTRA)},{items:[{type:'string',value:'None'}
-],action:(L)=> new $B.ast.MatchSingleton(Py_None,L.EXTRA)},{items:[{type:'string',value:'True'}
-],action:(L)=> new $B.ast.MatchSingleton(Py_True,L.EXTRA)},{items:[{type:'string',value:'False'}
-],action:(L)=> new $B.ast.MatchSingleton(Py_False,L.EXTRA)}]},literal_expr:
+],action:(L)=> new $B.ast.MatchSingleton($B.parser_constants.Py_None,L.EXTRA)},{items:[{type:'string',value:'True'}
+],action:(L)=> new $B.ast.MatchSingleton($B.parser_constants.Py_True,L.EXTRA)},{items:[{type:'string',value:'False'}
+],action:(L)=> new $B.ast.MatchSingleton($B.parser_constants.Py_False,L.EXTRA)}]},literal_expr:
 {choices:[{items:[{type:'rule',name:'signed_number'},{choices:[{items:[{type:'string',value:'+'}
 ]},{items:[{type:'string',value:'-'}
 ]}],lookahead:'negative'}
 ]},{items:[{type:'rule',name:'complex_number'}
 ]},{items:[{type:'rule',name:'strings'}
 ]},{items:[{type:'string',value:'None'}
-],action:(L)=> new $B.ast.Constant(Py_None,NULL,L.EXTRA)},{items:[{type:'string',value:'True'}
-],action:(L)=> new $B.ast.Constant(Py_True,NULL,L.EXTRA)},{items:[{type:'string',value:'False'}
-],action:(L)=> new $B.ast.Constant(Py_False,NULL,L.EXTRA)}]},complex_number:
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_None,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'string',value:'True'}
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_True,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'string',value:'False'}
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_False,$B.parser_constants.NULL,L.EXTRA)}]},complex_number:
 {choices:[{items:[{type:'rule',name:'signed_real_number',alias:'real'},{type:'string',value:'+'},{type:'rule',name:'imaginary_number',alias:'imag'}
-],action:(L)=> new $B.ast.BinOp(L.real,Add,L.imag,L.EXTRA)},{items:[{type:'rule',name:'signed_real_number',alias:'real'},{type:'string',value:'-'},{type:'rule',name:'imaginary_number',alias:'imag'}
-],action:(L)=> new $B.ast.BinOp(L.real,Sub,L.imag,L.EXTRA)}]},signed_number:
+],action:(L)=> new $B.ast.BinOp(L.real,$B.parser_constants.Add,L.imag,L.EXTRA)},{items:[{type:'rule',name:'signed_real_number',alias:'real'},{type:'string',value:'-'},{type:'rule',name:'imaginary_number',alias:'imag'}
+],action:(L)=> new $B.ast.BinOp(L.real,$B.parser_constants.Sub,L.imag,L.EXTRA)}]},signed_number:
 {choices:[{items:[{type:'NUMBER'}
 ]},{items:[{type:'string',value:'-'},{type:'NUMBER',alias:'number'}
-],action:(L)=> new $B.ast.UnaryOp(USub,L.number,L.EXTRA)}]},signed_real_number:
+],action:(L)=> new $B.ast.UnaryOp($B.parser_constants.USub,L.number,L.EXTRA)}]},signed_real_number:
 {choices:[{items:[{type:'rule',name:'real_number'}
 ]},{items:[{type:'string',value:'-'},{type:'rule',name:'real_number',alias:'real'}
-],action:(L)=> new $B.ast.UnaryOp(USub,L.real,L.EXTRA)}]},real_number:
+],action:(L)=> new $B.ast.UnaryOp($B.parser_constants.USub,L.real,L.EXTRA)}]},real_number:
 {items:[{type:'NUMBER',alias:'real'}
 ],action:(L)=> $B._PyPegen.ensure_real(L.p,L.real)},imaginary_number:
 {items:[{type:'NUMBER',alias:'imag'}
 ],action:(L)=> $B._PyPegen.ensure_imaginary(L.p,L.imag)},capture_pattern:
 {items:[{type:'rule',name:'pattern_capture_target',alias:'target'}
-],action:(L)=> new $B.ast.MatchAs(NULL,L.target.id,L.EXTRA)},pattern_capture_target:
+],action:(L)=> new $B.ast.MatchAs($B.parser_constants.NULL,L.target.id,L.EXTRA)},pattern_capture_target:
 {items:[{type:'string',value:'_',lookahead:'negative'},{type:'NAME',alias:'name'},{choices:[{items:[{type:'string',value:'.'}
 ]},{items:[{type:'string',value:'('}
 ]},{items:[{type:'string',value:'='}
 ]}],lookahead:'negative'}
 ],action:(L)=> $B._PyPegen.set_expr_context(L.p,L.name,$B.parser_constants.Store)},wildcard_pattern:
 {items:[{type:'string',value:'_'}
-],action:(L)=> new $B.ast.MatchAs(NULL,NULL,L.EXTRA)},value_pattern:
+],action:(L)=> new $B.ast.MatchAs($B.parser_constants.NULL,$B.parser_constants.NULL,L.EXTRA)},value_pattern:
 {items:[{type:'rule',name:'attr',alias:'attr'},{choices:[{items:[{type:'string',value:'.'}
 ]},{items:[{type:'string',value:'('}
 ]},{items:[{type:'string',value:'='}
@@ -19506,12 +19482,12 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}]},star_pattern:
 {choices:[{items:[{type:'string',value:'*'},{type:'rule',name:'pattern_capture_target',alias:'target'}
 ],action:(L)=> new $B.ast.MatchStar(L.target.id,L.EXTRA)},{items:[{type:'string',value:'*'},{type:'rule',name:'wildcard_pattern'}
-],action:(L)=> new $B.ast.MatchStar(NULL,L.EXTRA)}]},mapping_pattern:
+],action:(L)=> new $B.ast.MatchStar($B.parser_constants.NULL,L.EXTRA)}]},mapping_pattern:
 {choices:[{items:[{type:'string',value:'{'},{type:'string',value:'}'}
-],action:(L)=> new $B.ast.MatchMapping(NULL,NULL,NULL,L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'double_star_pattern',alias:'rest'},{type:'string',value:',',repeat:'?'},{type:'string',value:'}'}
-],action:(L)=> new $B.ast.MatchMapping(NULL,NULL,L.rest.id,L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'items_pattern',alias:'items'},{type:'string',value:','},{type:'rule',name:'double_star_pattern',alias:'rest'},{type:'string',value:',',repeat:'?'},{type:'string',value:'}'}
-],action:(L)=> new $B.ast.MatchMapping($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.items)),$B.helper_functions.CHECK(asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.items)),L.rest.id,L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'items_pattern',alias:'items'},{type:'string',value:',',repeat:'?'},{type:'string',value:'}'}
-],action:(L)=> new $B.ast.MatchMapping($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.items)),$B.helper_functions.CHECK(asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.items)),NULL,L.EXTRA)}]},items_pattern:
+],action:(L)=> new $B.ast.MatchMapping($B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'double_star_pattern',alias:'rest'},{type:'string',value:',',repeat:'?'},{type:'string',value:'}'}
+],action:(L)=> new $B.ast.MatchMapping($B.parser_constants.NULL,$B.parser_constants.NULL,L.rest.id,L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'items_pattern',alias:'items'},{type:'string',value:','},{type:'rule',name:'double_star_pattern',alias:'rest'},{type:'string',value:',',repeat:'?'},{type:'string',value:'}'}
+],action:(L)=> new $B.ast.MatchMapping($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.items)),$B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.items)),L.rest.id,L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'items_pattern',alias:'items'},{type:'string',value:',',repeat:'?'},{type:'string',value:'}'}
+],action:(L)=> new $B.ast.MatchMapping($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.items)),$B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.items)),$B.parser_constants.NULL,L.EXTRA)}]},items_pattern:
 {items:[{type:'rule',name:'key_value_pattern',join:',',repeat:'+'}
 ]},key_value_pattern:
 {items:[{choices:[{items:[{type:'rule',name:'literal_expr'}
@@ -19521,10 +19497,10 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 {items:[{type:'string',value:'**'},{type:'rule',name:'pattern_capture_target',alias:'target'}
 ],action:(L)=> L.target},class_pattern:
 {choices:[{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'string',value:')'}
-],action:(L)=> new $B.ast.MatchClass(L.cls,NULL,NULL,NULL,L.EXTRA)},{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'rule',name:'positional_patterns',alias:'patterns'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'}
-],action:(L)=> new $B.ast.MatchClass(L.cls,L.patterns,NULL,NULL,L.EXTRA)},{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'rule',name:'keyword_patterns',alias:'keywords'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'}
-],action:(L)=> new $B.ast.MatchClass(L.cls,NULL,$B.helper_functions.CHECK(asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.keywords)))),$B.helper_functions.CHECK(asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.keywords)),L.EXTRA)},{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'rule',name:'positional_patterns',alias:'patterns'},{type:'string',value:','},{type:'rule',name:'keyword_patterns',alias:'keywords'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'}
-],action:(L)=> new $B.ast.MatchClass(L.cls,L.patterns,$B.helper_functions.CHECK(asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.keywords)))),$B.helper_functions.CHECK(asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.keywords)),L.EXTRA)},{items:[{type:'rule',name:'invalid_class_pattern'}
+],action:(L)=> new $B.ast.MatchClass(L.cls,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'rule',name:'positional_patterns',alias:'patterns'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'}
+],action:(L)=> new $B.ast.MatchClass(L.cls,L.patterns,$B.parser_constants.NULL,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'rule',name:'keyword_patterns',alias:'keywords'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'}
+],action:(L)=> new $B.ast.MatchClass(L.cls,$B.parser_constants.NULL,$B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.keywords)))),$B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.keywords)),L.EXTRA)},{items:[{type:'rule',name:'name_or_attr',alias:'cls'},{type:'string',value:'('},{type:'rule',name:'positional_patterns',alias:'patterns'},{type:'string',value:','},{type:'rule',name:'keyword_patterns',alias:'keywords'},{type:'string',value:',',repeat:'?'},{type:'string',value:')'}
+],action:(L)=> new $B.ast.MatchClass(L.cls,L.patterns,$B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq,$B._PyPegen.map_names_to_ids(L.p,$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_pattern_keys(L.p,L.keywords)))),$B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq,$B._PyPegen.get_patterns(L.p,L.keywords)),L.EXTRA)},{items:[{type:'rule',name:'invalid_class_pattern'}
 ]}]},positional_patterns:
 {items:[{type:'rule',name:'pattern',join:',',alias:'args',repeat:'+'}
 ],action:(L)=> L.args},keyword_patterns:
@@ -19534,7 +19510,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> $B._PyPegen.key_pattern_pair(L.p,L.arg,L.value)},type_alias:
 {items:[{type:'string',value:'type'},{type:'NAME',alias:'n'},{items:[{type:'rule',name:'type_params'}
 ],repeat:'?',alias:'t'},{type:'string',value:'='},{type:'rule',name:'expression',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(stmt_ty,12,"Type statement is",new $B.ast.TypeAlias($B.helper_functions.CHECK(expr_ty,$B._PyPegen.set_expr_context(L.p,L.n,$B.parser_constants.Store)),L.t,L.b,L.EXTRA))},type_params:
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.stmt,12,"Type statement is",new $B.ast.TypeAlias($B.helper_functions.CHECK($B.parser_constants.expr_ty,$B._PyPegen.set_expr_context(L.p,L.n,$B.parser_constants.Store)),L.t,L.b,L.EXTRA))},type_params:
 {items:[{type:'string',value:'['},{type:'rule',name:'type_param_seq',alias:'t'},{type:'string',value:']'}
 ],action:(L)=> $B.helper_functions.CHECK_VERSION(asdl_type_param_seq,12,"Type parameter lists are",L.t)},type_param_seq:
 {items:[{type:'rule',name:'type_param',join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
@@ -19552,8 +19528,8 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 {choices:[{items:[{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'expression',alias:'c'}
 ],repeat:'+',alias:'b',action:(L)=> L.c},{items:[{type:'string',value:','}
 ],repeat:'?'}
-],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'expression',alias:'a'},{type:'string',value:','}
-],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.a)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'expression'}
+],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'expression',alias:'a'},{type:'string',value:','}
+],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.a)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'expression'}
 ]}]},expression:
 {choices:[{items:[{type:'rule',name:'invalid_expression'}
 ]},{items:[{type:'rule',name:'invalid_legacy_expression'}
@@ -19568,8 +19544,8 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 {choices:[{items:[{type:'rule',name:'star_expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'star_expression',alias:'c'}
 ],repeat:'+',alias:'b',action:(L)=> L.c},{items:[{type:'string',value:','}
 ],repeat:'?'}
-],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'star_expression',alias:'a'},{type:'string',value:','}
-],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.a)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'star_expression'}
+],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'star_expression',alias:'a'},{type:'string',value:','}
+],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.a)),$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'star_expression'}
 ]}]},star_expression:
 {choices:[{items:[{type:'string',value:'*'},{type:'rule',name:'bitwise_or',alias:'a'}
 ],action:(L)=> new $B.ast.Starred(L.a,$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'expression'}
@@ -19581,24 +19557,24 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.Starred(L.a,$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'named_expression'}
 ]}]},assignment_expression:
 {items:[{type:'NAME',alias:'a'},{type:'string',value:':='},{type:'COMMIT_CHOICE'},{type:'rule',name:'expression',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(expr_ty,8,"Assignment expressions are",new $B.ast.NamedExpr($B.helper_functions.CHECK(expr_ty,$B._PyPegen.set_expr_context(L.p,L.a,$B.parser_constants.Store)),L.b,L.EXTRA))},named_expression:
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.expr_ty,8,"Assignment expressions are",new $B.ast.NamedExpr($B.helper_functions.CHECK($B.parser_constants.expr_ty,$B._PyPegen.set_expr_context(L.p,L.a,$B.parser_constants.Store)),L.b,L.EXTRA))},named_expression:
 {choices:[{items:[{type:'rule',name:'assignment_expression'}
 ]},{items:[{type:'rule',name:'invalid_named_expression'}
 ]},{items:[{type:'rule',name:'expression'},{type:'string',value:':=',lookahead:'negative'}
 ]}]},disjunction:
 {choices:[{items:[{type:'rule',name:'conjunction',alias:'a'},{items:[{type:'string',value:'or'},{type:'rule',name:'conjunction',alias:'c'}
 ],repeat:'+',alias:'b',action:(L)=> L.c}
-],action:(L)=> new $B.ast.BoolOp(Or,$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),L.EXTRA)},{items:[{type:'rule',name:'conjunction'}
+],action:(L)=> new $B.ast.BoolOp($B.parser_constants.Or,$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),L.EXTRA)},{items:[{type:'rule',name:'conjunction'}
 ]}]},conjunction:
 {choices:[{items:[{type:'rule',name:'inversion',alias:'a'},{items:[{type:'string',value:'and'},{type:'rule',name:'inversion',alias:'c'}
 ],repeat:'+',alias:'b',action:(L)=> L.c}
-],action:(L)=> new $B.ast.BoolOp(And,$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),L.EXTRA)},{items:[{type:'rule',name:'inversion'}
+],action:(L)=> new $B.ast.BoolOp($B.parser_constants.And,$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),L.EXTRA)},{items:[{type:'rule',name:'inversion'}
 ]}]},inversion:
 {choices:[{items:[{type:'string',value:'not'},{type:'rule',name:'inversion',alias:'a'}
-],action:(L)=> new $B.ast.UnaryOp(Not,L.a,L.EXTRA)},{items:[{type:'rule',name:'comparison'}
+],action:(L)=> new $B.ast.UnaryOp($B.parser_constants.Not,L.a,L.EXTRA)},{items:[{type:'rule',name:'comparison'}
 ]}]},comparison:
 {choices:[{items:[{type:'rule',name:'bitwise_or',alias:'a'},{type:'rule',name:'compare_op_bitwise_or_pair',repeat:'+',alias:'b'}
-],action:(L)=> new $B.ast.Compare(L.a,$B.helper_functions.CHECK(asdl_int_seq,$B._PyPegen.get_cmpops(L.p,L.b)),$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_exprs(L.p,L.b)),L.EXTRA)},{items:[{type:'rule',name:'bitwise_or'}
+],action:(L)=> new $B.ast.Compare(L.a,$B.helper_functions.CHECK($B.parser_constants.asdl_int_seq,$B._PyPegen.get_cmpops(L.p,L.b)),$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_exprs(L.p,L.b)),L.EXTRA)},{items:[{type:'rule',name:'bitwise_or'}
 ]}]},compare_op_bitwise_or_pair:
 {choices:[{items:[{type:'rule',name:'eq_bitwise_or'}
 ]},{items:[{type:'rule',name:'noteq_bitwise_or'}
@@ -19612,66 +19588,66 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]},{items:[{type:'rule',name:'is_bitwise_or'}
 ]}]},eq_bitwise_or:
 {items:[{type:'string',value:'=='},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,Eq,L.a)},noteq_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.Eq,L.a)},noteq_bitwise_or:
 {items:[{items:[{type:'string',value:'!=',alias:'tok'}
-],action:(L)=> $B._PyPegen.check_barry_as_flufl(L.p,L.tok)?NULL:L.tok},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,NotEq,L.a)},lte_bitwise_or:
+],action:(L)=> $B._PyPegen.check_barry_as_flufl(L.p,L.tok)?$B.parser_constants.NULL:L.tok},{type:'rule',name:'bitwise_or',alias:'a'}
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.NotEq,L.a)},lte_bitwise_or:
 {items:[{type:'string',value:'<='},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,LtE,L.a)},lt_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.LtE,L.a)},lt_bitwise_or:
 {items:[{type:'string',value:'<'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,Lt,L.a)},gte_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.Lt,L.a)},gte_bitwise_or:
 {items:[{type:'string',value:'>='},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,GtE,L.a)},gt_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.GtE,L.a)},gt_bitwise_or:
 {items:[{type:'string',value:'>'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,Gt,L.a)},notin_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.Gt,L.a)},notin_bitwise_or:
 {items:[{type:'string',value:'not'},{type:'string',value:'in'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,NotIn,L.a)},in_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.NotIn,L.a)},in_bitwise_or:
 {items:[{type:'string',value:'in'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,In,L.a)},isnot_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.In,L.a)},isnot_bitwise_or:
 {items:[{type:'string',value:'is'},{type:'string',value:'not'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,IsNot,L.a)},is_bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.IsNot,L.a)},is_bitwise_or:
 {items:[{type:'string',value:'is'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,Is,L.a)},bitwise_or:
+],action:(L)=> $B._PyPegen.cmpop_expr_pair(L.p,$B.parser_constants.Is,L.a)},bitwise_or:
 {choices:[{items:[{type:'rule',name:'bitwise_or',alias:'a'},{type:'string',value:'|'},{type:'rule',name:'bitwise_xor',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,BitOr,L.b,L.EXTRA)},{items:[{type:'rule',name:'bitwise_xor'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.BitOr,L.b,L.EXTRA)},{items:[{type:'rule',name:'bitwise_xor'}
 ]}]},bitwise_xor:
 {choices:[{items:[{type:'rule',name:'bitwise_xor',alias:'a'},{type:'string',value:'^'},{type:'rule',name:'bitwise_and',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,BitXor,L.b,L.EXTRA)},{items:[{type:'rule',name:'bitwise_and'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.BitXor,L.b,L.EXTRA)},{items:[{type:'rule',name:'bitwise_and'}
 ]}]},bitwise_and:
 {choices:[{items:[{type:'rule',name:'bitwise_and',alias:'a'},{type:'string',value:'&'},{type:'rule',name:'shift_expr',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,BitAnd,L.b,L.EXTRA)},{items:[{type:'rule',name:'shift_expr'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.BitAnd,L.b,L.EXTRA)},{items:[{type:'rule',name:'shift_expr'}
 ]}]},shift_expr:
 {choices:[{items:[{type:'rule',name:'shift_expr',alias:'a'},{type:'string',value:'<<'},{type:'rule',name:'sum',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,LShift,L.b,L.EXTRA)},{items:[{type:'rule',name:'shift_expr',alias:'a'},{type:'string',value:'>>'},{type:'rule',name:'sum',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,RShift,L.b,L.EXTRA)},{items:[{type:'rule',name:'sum'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.LShift,L.b,L.EXTRA)},{items:[{type:'rule',name:'shift_expr',alias:'a'},{type:'string',value:'>>'},{type:'rule',name:'sum',alias:'b'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.RShift,L.b,L.EXTRA)},{items:[{type:'rule',name:'sum'}
 ]}]},sum:
 {choices:[{items:[{type:'rule',name:'sum',alias:'a'},{type:'string',value:'+'},{type:'rule',name:'term',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,Add,L.b,L.EXTRA)},{items:[{type:'rule',name:'sum',alias:'a'},{type:'string',value:'-'},{type:'rule',name:'term',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,Sub,L.b,L.EXTRA)},{items:[{type:'rule',name:'term'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.Add,L.b,L.EXTRA)},{items:[{type:'rule',name:'sum',alias:'a'},{type:'string',value:'-'},{type:'rule',name:'term',alias:'b'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.Sub,L.b,L.EXTRA)},{items:[{type:'rule',name:'term'}
 ]}]},term:
 {choices:[{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'*'},{type:'rule',name:'factor',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,Mult,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'/'},{type:'rule',name:'factor',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,Div,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'//'},{type:'rule',name:'factor',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,FloorDiv,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'%'},{type:'rule',name:'factor',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,Mod,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'@'},{type:'rule',name:'factor',alias:'b'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(expr_ty,5,"The \'@\' operator is",new $B.ast.BinOp(L.a,MatMult,L.b,L.EXTRA))},{items:[{type:'rule',name:'factor'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.Mult,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'/'},{type:'rule',name:'factor',alias:'b'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.Div,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'//'},{type:'rule',name:'factor',alias:'b'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.FloorDiv,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'%'},{type:'rule',name:'factor',alias:'b'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.Mod,L.b,L.EXTRA)},{items:[{type:'rule',name:'term',alias:'a'},{type:'string',value:'@'},{type:'rule',name:'factor',alias:'b'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.expr_ty,5,"The \'@\' operator is",new $B.ast.BinOp(L.a,$B.parser_constants.MatMult,L.b,L.EXTRA))},{items:[{type:'rule',name:'factor'}
 ]}]},factor:
 {choices:[{items:[{type:'string',value:'+'},{type:'rule',name:'factor',alias:'a'}
-],action:(L)=> new $B.ast.UnaryOp(UAdd,L.a,L.EXTRA)},{items:[{type:'string',value:'-'},{type:'rule',name:'factor',alias:'a'}
-],action:(L)=> new $B.ast.UnaryOp(USub,L.a,L.EXTRA)},{items:[{type:'string',value:'~'},{type:'rule',name:'factor',alias:'a'}
-],action:(L)=> new $B.ast.UnaryOp(Invert,L.a,L.EXTRA)},{items:[{type:'rule',name:'power'}
+],action:(L)=> new $B.ast.UnaryOp($B.parser_constants.UAdd,L.a,L.EXTRA)},{items:[{type:'string',value:'-'},{type:'rule',name:'factor',alias:'a'}
+],action:(L)=> new $B.ast.UnaryOp($B.parser_constants.USub,L.a,L.EXTRA)},{items:[{type:'string',value:'~'},{type:'rule',name:'factor',alias:'a'}
+],action:(L)=> new $B.ast.UnaryOp($B.parser_constants.Invert,L.a,L.EXTRA)},{items:[{type:'rule',name:'power'}
 ]}]},power:
 {choices:[{items:[{type:'rule',name:'await_primary',alias:'a'},{type:'string',value:'**'},{type:'rule',name:'factor',alias:'b'}
-],action:(L)=> new $B.ast.BinOp(L.a,Pow,L.b,L.EXTRA)},{items:[{type:'rule',name:'await_primary'}
+],action:(L)=> new $B.ast.BinOp(L.a,$B.parser_constants.Pow,L.b,L.EXTRA)},{items:[{type:'rule',name:'await_primary'}
 ]}]},await_primary:
 {choices:[{items:[{type:'AWAIT'},{type:'rule',name:'primary',alias:'a'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(expr_ty,5,"Await expressions are",new $B.ast.Await(L.a,L.EXTRA))},{items:[{type:'rule',name:'primary'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.expr_ty,5,"Await expressions are",new $B.ast.Await(L.a,L.EXTRA))},{items:[{type:'rule',name:'primary'}
 ]}]},primary:
 {choices:[{items:[{type:'rule',name:'primary',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'}
 ],action:(L)=> new $B.ast.Attribute(L.a,L.b.id,$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'primary',alias:'a'},{type:'rule',name:'genexp',alias:'b'}
-],action:(L)=> new $B.ast.Call(L.a,$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.b)),NULL,L.EXTRA)},{items:[{type:'rule',name:'primary',alias:'a'},{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
+],action:(L)=> new $B.ast.Call(L.a,$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.b)),$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'rule',name:'primary',alias:'a'},{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
 ],repeat:'?',alias:'b'},{type:'string',value:')'}
-],action:(L)=> new $B.ast.Call(L.a,(L.b)?(L.b).args:NULL,(L.b)?(L.b).keywords:NULL,L.EXTRA)},{items:[{type:'rule',name:'primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'}
+],action:(L)=> new $B.ast.Call(L.a,(L.b)?(L.b).args:$B.parser_constants.NULL,(L.b)?(L.b).keywords:$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'rule',name:'primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'}
 ],action:(L)=> new $B.ast.Subscript(L.a,L.b,$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'atom'}
 ]}]},slices:
 {choices:[{items:[{type:'rule',name:'slice',alias:'a'},{type:'string',value:',',lookahead:'negative'}
@@ -19689,9 +19665,9 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> L.a}]},atom:
 {choices:[{items:[{type:'NAME'}
 ]},{items:[{type:'string',value:'True'}
-],action:(L)=> new $B.ast.Constant(Py_True,NULL,L.EXTRA)},{items:[{type:'string',value:'False'}
-],action:(L)=> new $B.ast.Constant(Py_False,NULL,L.EXTRA)},{items:[{type:'string',value:'None'}
-],action:(L)=> new $B.ast.Constant(Py_None,NULL,L.EXTRA)},{items:[{choices:[{items:[{type:'STRING'}
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_True,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'string',value:'False'}
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_False,$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'string',value:'None'}
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_None,$B.parser_constants.NULL,L.EXTRA)},{items:[{choices:[{items:[{type:'STRING'}
 ]},{items:[{type:'FSTRING_START'}
 ]}],lookahead:'positive'},{type:'rule',name:'strings'}
 ]},{items:[{type:'NUMBER'}
@@ -19708,7 +19684,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]},{items:[{type:'rule',name:'setcomp'}
 ]}]}
 ]},{items:[{type:'string',value:'...'}
-],action:(L)=> new $B.ast.Constant(Py_Ellipsis,NULL,L.EXTRA)}]},group:
+],action:(L)=> new $B.ast.Constant($B.parser_constants.Py_Ellipsis,$B.parser_constants.NULL,L.EXTRA)}]},group:
 {choices:[{items:[{type:'string',value:'('},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'named_expression'}
 ]}],alias:'a'},{type:'string',value:')'}
@@ -19716,20 +19692,20 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}]},lambdef:
 {items:[{type:'string',value:'lambda'},{items:[{type:'rule',name:'lambda_params'}
 ],repeat:'?',alias:'a'},{type:'string',value:':'},{type:'rule',name:'expression',alias:'b'}
-],action:(L)=> new $B.ast.Lambda((L.a)?L.a:$B.helper_functions.CHECK(arguments_ty,$B._PyPegen.empty_arguments(L.p)),L.b,L.EXTRA)},lambda_params:
+],action:(L)=> new $B.ast.Lambda((L.a)?L.a:$B.helper_functions.CHECK($B.parser_constants.arguments_ty,$B._PyPegen.empty_arguments(L.p)),L.b,L.EXTRA)},lambda_params:
 {choices:[{items:[{type:'rule',name:'invalid_lambda_parameters'}
 ]},{items:[{type:'rule',name:'lambda_parameters'}
 ]}]},lambda_parameters:
 {choices:[{items:[{type:'rule',name:'lambda_slash_no_default',alias:'a'},{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'b'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'c'},{items:[{type:'rule',name:'lambda_star_etc'}
 ],repeat:'?',alias:'d'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,L.a,NULL,L.b,L.c,L.d))},{items:[{type:'rule',name:'lambda_slash_with_default',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,L.a,$B.parser_constants.NULL,L.b,L.c,L.d))},{items:[{type:'rule',name:'lambda_slash_with_default',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
 ],repeat:'?',alias:'c'}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,NULL,L.a,NULL,L.b,L.c))},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty,8,"Positional-only parameters are",$B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,L.a,$B.parser_constants.NULL,L.b,L.c))},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
 ],repeat:'?',alias:'c'}
-],action:(L)=> $B._PyPegen.make_arguments(L.p,NULL,NULL,L.a,L.b,L.c)},{items:[{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'lambda_star_etc'}
+],action:(L)=> $B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a,L.b,L.c)},{items:[{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'lambda_star_etc'}
 ],repeat:'?',alias:'b'}
-],action:(L)=> $B._PyPegen.make_arguments(L.p,NULL,NULL,NULL,L.a,L.b)},{items:[{type:'rule',name:'lambda_star_etc',alias:'a'}
-],action:(L)=> $B._PyPegen.make_arguments(L.p,NULL,NULL,NULL,NULL,L.a)}]},lambda_slash_no_default:
+],action:(L)=> $B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a,L.b)},{items:[{type:'rule',name:'lambda_star_etc',alias:'a'}
+],action:(L)=> $B._PyPegen.make_arguments(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a)}]},lambda_slash_no_default:
 {choices:[{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:','}
 ],action:(L)=> L.a},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:':',lookahead:'positive'}
 ],action:(L)=> L.a}]},lambda_slash_with_default:
@@ -19741,8 +19717,8 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],repeat:'?',alias:'c'}
 ],action:(L)=> $B._PyPegen.star_etc(L.p,L.a,L.b,L.c)},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'rule',name:'lambda_param_maybe_default',repeat:'+',alias:'b'},{items:[{type:'rule',name:'lambda_kwds'}
 ],repeat:'?',alias:'c'}
-],action:(L)=> $B._PyPegen.star_etc(L.p,NULL,L.b,L.c)},{items:[{type:'rule',name:'lambda_kwds',alias:'a'}
-],action:(L)=> $B._PyPegen.star_etc(L.p,NULL,NULL,L.a)}]},lambda_kwds:
+],action:(L)=> $B._PyPegen.star_etc(L.p,$B.parser_constants.NULL,L.b,L.c)},{items:[{type:'rule',name:'lambda_kwds',alias:'a'}
+],action:(L)=> $B._PyPegen.star_etc(L.p,$B.parser_constants.NULL,$B.parser_constants.NULL,L.a)}]},lambda_kwds:
 {choices:[{items:[{type:'rule',name:'invalid_lambda_kwds'}
 ]},{items:[{type:'string',value:'**'},{type:'rule',name:'lambda_param_no_default',alias:'a'}
 ],action:(L)=> L.a}]},lambda_param_no_default:
@@ -19750,13 +19726,13 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> L.a},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'string',value:':',lookahead:'positive'}
 ],action:(L)=> L.a}]},lambda_param_with_default:
 {choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:','}
-],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,NULL)},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:':',lookahead:'positive'}
-],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,NULL)}]},lambda_param_maybe_default:
+],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,$B.parser_constants.NULL)},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:':',lookahead:'positive'}
+],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,$B.parser_constants.NULL)}]},lambda_param_maybe_default:
 {choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:','}
-],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,NULL)},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:':',lookahead:'positive'}
-],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,NULL)}]},lambda_param:
+],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,$B.parser_constants.NULL)},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:':',lookahead:'positive'}
+],action:(L)=> $B._PyPegen.name_default_pair(L.p,L.a,L.c,$B.parser_constants.NULL)}]},lambda_param:
 {items:[{type:'NAME',alias:'a'}
-],action:(L)=> new $B.ast.arg(L.a.id,NULL,NULL,L.EXTRA)},fstring_middle:
+],action:(L)=> new $B.ast.arg(L.a.id,$B.parser_constants.NULL,$B.parser_constants.NULL,L.EXTRA)},fstring_middle:
 {choices:[{items:[{type:'rule',name:'fstring_replacement_field'}
 ]},{items:[{type:'FSTRING_MIDDLE',alias:'t'}
 ],action:(L)=> $B._PyPegen.constant_from_token(L.p,L.t)}]},fstring_replacement_field:
@@ -19793,13 +19769,13 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.Set(L.a,L.EXTRA)},dict:
 {choices:[{items:[{type:'string',value:'{'},{items:[{type:'rule',name:'double_starred_kvpairs'}
 ],repeat:'?',alias:'a'},{type:'string',value:'}'}
-],action:(L)=> new $B.ast.Dict($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_keys(L.p,L.a)),$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.get_values(L.p,L.a)),L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'invalid_double_starred_kvpairs'},{type:'string',value:'}'}
+],action:(L)=> new $B.ast.Dict($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_keys(L.p,L.a)),$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.get_values(L.p,L.a)),L.EXTRA)},{items:[{type:'string',value:'{'},{type:'rule',name:'invalid_double_starred_kvpairs'},{type:'string',value:'}'}
 ]}]},double_starred_kvpairs:
 {items:[{type:'rule',name:'double_starred_kvpair',join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
 ],repeat:'?'}
 ],action:(L)=> L.a},double_starred_kvpair:
 {choices:[{items:[{type:'string',value:'**'},{type:'rule',name:'bitwise_or',alias:'a'}
-],action:(L)=> $B._PyPegen.key_value_pair(L.p,NULL,L.a)},{items:[{type:'rule',name:'kvpair'}
+],action:(L)=> $B._PyPegen.key_value_pair(L.p,$B.parser_constants.NULL,L.a)},{items:[{type:'rule',name:'kvpair'}
 ]}]},kvpair:
 {items:[{type:'rule',name:'expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'expression',alias:'b'}
 ],action:(L)=> $B._PyPegen.key_value_pair(L.p,L.a,L.b)},for_if_clauses:
@@ -19807,7 +19783,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> L.a},for_if_clause:
 {choices:[{items:[{type:'ASYNC'},{type:'string',value:'for'},{type:'rule',name:'star_targets',alias:'a'},{type:'string',value:'in'},{type:'COMMIT_CHOICE'},{type:'rule',name:'disjunction',alias:'b'},{items:[{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'z'}
 ],repeat:'*',alias:'c',action:(L)=> L.z}
-],action:(L)=> $B.helper_functions.CHECK_VERSION(comprehension_ty,6,"Async comprehensions are",new $B.ast.comprehension(L.a,L.b,L.c,1,L.p.arena))},{items:[{type:'string',value:'for'},{type:'rule',name:'star_targets',alias:'a'},{type:'string',value:'in'},{type:'COMMIT_CHOICE'},{type:'rule',name:'disjunction',alias:'b'},{items:[{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'z'}
+],action:(L)=> $B.helper_functions.CHECK_VERSION($B.ast.comprehension,6,"Async comprehensions are",new $B.ast.comprehension(L.a,L.b,L.c,1,L.p.arena))},{items:[{type:'string',value:'for'},{type:'rule',name:'star_targets',alias:'a'},{type:'string',value:'in'},{type:'COMMIT_CHOICE'},{type:'rule',name:'disjunction',alias:'b'},{items:[{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'z'}
 ],repeat:'*',alias:'c',action:(L)=> L.z}
 ],action:(L)=> new $B.ast.comprehension(L.a,L.b,L.c,0,L.p.arena)},{items:[{type:'rule',name:'invalid_for_target'}
 ]}]},listcomp:
@@ -19836,7 +19812,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}],join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','},{type:'rule',name:'kwargs',alias:'k'}
 ],repeat:'?',alias:'b',action:(L)=> L.k}
 ],action:(L)=> $B._PyPegen.collect_call_seqs(L.p,L.a,L.b,L.EXTRA)},{items:[{type:'rule',name:'kwargs',alias:'a'}
-],action:(L)=> new $B.ast.Call($B._PyPegen.dummy_name(L.p),$B.helper_functions.CHECK_NULL_ALLOWED(asdl_expr_seq,$B._PyPegen.seq_extract_starred_exprs(L.p,L.a)),$B.helper_functions.CHECK_NULL_ALLOWED(asdl_keyword_seq,$B._PyPegen.seq_delete_starred_exprs(L.p,L.a)),L.EXTRA)}]},kwargs:
+],action:(L)=> new $B.ast.Call($B._PyPegen.dummy_name(L.p),$B.helper_functions.CHECK_NULL_ALLOWED($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_extract_starred_exprs(L.p,L.a)),$B.helper_functions.CHECK_NULL_ALLOWED($B.parser_constants.asdl_keyword_seq,$B._PyPegen.seq_delete_starred_exprs(L.p,L.a)),L.EXTRA)}]},kwargs:
 {choices:[{items:[{type:'rule',name:'kwarg_or_starred',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'rule',name:'kwarg_or_double_starred',join:',',alias:'b',repeat:'+'}
 ],action:(L)=> $B._PyPegen.join_sequences(L.p,L.a,L.b)},{items:[{type:'rule',name:'kwarg_or_starred',join:',',repeat:'+'}
 ]},{items:[{type:'rule',name:'kwarg_or_double_starred',join:',',repeat:'+'}
@@ -19846,17 +19822,17 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> new $B.ast.Starred(L.a,$B.parser_constants.Load,L.EXTRA)}]},kwarg_or_starred:
 {choices:[{items:[{type:'rule',name:'invalid_kwarg'}
 ]},{items:[{type:'NAME',alias:'a'},{type:'string',value:'='},{type:'rule',name:'expression',alias:'b'}
-],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,$B.helper_functions.CHECK(keyword_ty,new $B.ast.keyword(L.a.id,L.b,L.EXTRA)),1)},{items:[{type:'rule',name:'starred_expression',alias:'a'}
+],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,$B.helper_functions.CHECK($B.parser_constants.keyword_ty,new $B.ast.keyword(L.a.id,L.b,L.EXTRA)),1)},{items:[{type:'rule',name:'starred_expression',alias:'a'}
 ],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,L.a,0)}]},kwarg_or_double_starred:
 {choices:[{items:[{type:'rule',name:'invalid_kwarg'}
 ]},{items:[{type:'NAME',alias:'a'},{type:'string',value:'='},{type:'rule',name:'expression',alias:'b'}
-],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,$B.helper_functions.CHECK(keyword_ty,new $B.ast.keyword(L.a.id,L.b,L.EXTRA)),1)},{items:[{type:'string',value:'**'},{type:'rule',name:'expression',alias:'a'}
-],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,$B.helper_functions.CHECK(keyword_ty,new $B.ast.keyword(NULL,L.a,L.EXTRA)),1)}]},star_targets:
+],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,$B.helper_functions.CHECK($B.parser_constants.keyword_ty,new $B.ast.keyword(L.a.id,L.b,L.EXTRA)),1)},{items:[{type:'string',value:'**'},{type:'rule',name:'expression',alias:'a'}
+],action:(L)=> $B._PyPegen.keyword_or_starred(L.p,$B.helper_functions.CHECK($B.parser_constants.keyword_ty,new $B.ast.keyword($B.parser_constants.NULL,L.a,L.EXTRA)),1)}]},star_targets:
 {choices:[{items:[{type:'rule',name:'star_target',alias:'a'},{type:'string',value:',',lookahead:'negative'}
 ],action:(L)=> L.a},{items:[{type:'rule',name:'star_target',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'star_target',alias:'c'}
 ],repeat:'*',alias:'b',action:(L)=> L.c},{items:[{type:'string',value:','}
 ],repeat:'?'}
-],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),$B.parser_constants.Store,L.EXTRA)}]},star_targets_list_seq:
+],action:(L)=> new $B.ast.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.seq_insert_in_front(L.p,L.a,L.b)),$B.parser_constants.Store,L.EXTRA)}]},star_targets_list_seq:
 {items:[{type:'rule',name:'star_target',join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
 ],repeat:'?'}
 ],action:(L)=> L.a},star_targets_tuple_seq:
@@ -19867,7 +19843,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> $B._PyPegen.singleton_seq(L.p,L.a)}]},star_target:
 {choices:[{items:[{type:'string',value:'*'},{items:[{type:'string',value:'*',lookahead:'negative'},{type:'rule',name:'star_target'}
 ],alias:'a'}
-],action:(L)=> new $B.ast.Starred($B.helper_functions.CHECK(expr_ty,$B._PyPegen.set_expr_context(L.p,L.a,$B.parser_constants.Store)),$B.parser_constants.Store,L.EXTRA)},{items:[{type:'rule',name:'target_with_star_atom'}
+],action:(L)=> new $B.ast.Starred($B.helper_functions.CHECK($B.parser_constants.expr_ty,$B._PyPegen.set_expr_context(L.p,L.a,$B.parser_constants.Store)),$B.parser_constants.Store,L.EXTRA)},{items:[{type:'rule',name:'target_with_star_atom'}
 ]}]},target_with_star_atom:
 {choices:[{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'negative'}
 ],action:(L)=> new $B.ast.Attribute(L.a,L.b.id,$B.parser_constants.Store,L.EXTRA)},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'},{type:'rule',name:'t_lookahead',lookahead:'negative'}
@@ -19890,9 +19866,9 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 {choices:[{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
 ],action:(L)=> new $B.ast.Attribute(L.a,L.b.id,$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
 ],action:(L)=> new $B.ast.Subscript(L.a,L.b,$B.parser_constants.Load,L.EXTRA)},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'rule',name:'genexp',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:(L)=> new $B.ast.Call(L.a,$B.helper_functions.CHECK(asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.b)),NULL,L.EXTRA)},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
+],action:(L)=> new $B.ast.Call(L.a,$B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq,$B._PyPegen.singleton_seq(L.p,L.b)),$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
 ],repeat:'?',alias:'b'},{type:'string',value:')'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:(L)=> new $B.ast.Call(L.a,(L.b)?(L.b).args:NULL,(L.b)?(L.b).keywords:NULL,L.EXTRA)},{items:[{type:'rule',name:'atom',alias:'a'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
+],action:(L)=> new $B.ast.Call(L.a,(L.b)?(L.b).args:$B.parser_constants.NULL,(L.b)?(L.b).keywords:$B.parser_constants.NULL,L.EXTRA)},{items:[{type:'rule',name:'atom',alias:'a'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
 ],action:(L)=> L.a}]},t_lookahead:
 {choices:[{items:[{type:'string',value:'('}
 ]},{items:[{type:'string',value:'['}
@@ -19935,14 +19911,14 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]}]},{type:'string',value:','},{type:'string',value:'*',alias:'b'}
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.b,"iterable argument unpacking follows keyword argument unpacking")},{items:[{type:'rule',name:'expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:','},{choices:[{items:[{type:'rule',name:'args'}
 ]}],repeat:'?'}
-],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,$B._PyPegen.get_last_comprehension_item(PyPegen_last_item(L.b,comprehension_ty)),"Generator expression must be parenthesized")},{items:[{type:'NAME',alias:'a'},{type:'string',value:'=',alias:'b'},{type:'rule',name:'expression'},{type:'rule',name:'for_if_clauses'}
+],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,$B._PyPegen.get_last_comprehension_item(PyPegen_last_item(L.b,$B.ast.comprehension)),"Generator expression must be parenthesized")},{items:[{type:'NAME',alias:'a'},{type:'string',value:'=',alias:'b'},{type:'rule',name:'expression'},{type:'rule',name:'for_if_clauses'}
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")},{items:[{items:[{type:'rule',name:'args'},{type:'string',value:','}
 ],repeat:'?'},{type:'NAME',alias:'a'},{type:'string',value:'=',alias:'b'},{choices:[{items:[{type:'string',value:','}
 ]},{items:[{type:'string',value:')'}
 ]}],lookahead:'positive'}
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"expected argument value expression")},{items:[{type:'rule',name:'args',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'}
 ],action:(L)=> $B._PyPegen.nonparen_genexp_in_call(L.p,L.a,L.b)},{items:[{type:'rule',name:'args'},{type:'string',value:','},{type:'rule',name:'expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'}
-],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,$B._PyPegen.get_last_comprehension_item(PyPegen_last_item(L.b,comprehension_ty)),"Generator expression must be parenthesized")},{items:[{type:'rule',name:'args',alias:'a'},{type:'string',value:','},{type:'rule',name:'args'}
+],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,$B._PyPegen.get_last_comprehension_item(PyPegen_last_item(L.b,$B.ast.comprehension)),"Generator expression must be parenthesized")},{items:[{type:'rule',name:'args',alias:'a'},{type:'string',value:','},{type:'rule',name:'args'}
 ],action:(L)=> $B._PyPegen.arguments_parsing_error(L.p,L.a)}]},invalid_kwarg:
 {choices:[{items:[{choices:[{items:[{type:'string',value:'True'}
 ]},{items:[{type:'string',value:'False'}
@@ -19958,11 +19934,11 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]},{items:[{type:'rule',name:'lambdef'}
 ]}]},invalid_legacy_expression:
 {items:[{type:'NAME',alias:'a'},{type:'string',value:'(',lookahead:'negative'},{type:'rule',name:'star_expressions',alias:'b'}
-],action:(L)=> $B._PyPegen.check_legacy_stmt(L.p,L.a)?$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"Missing parentheses in call to \'%U\'. Did you mean %U(...)?",L.a.id,L.a.id):NULL},invalid_expression:
+],action:(L)=> $B._PyPegen.check_legacy_stmt(L.p,L.a)?$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"Missing parentheses in call to \'%U\'. Did you mean %U(...)?",L.a.id,L.a.id):$B.parser_constants.NULL},invalid_expression:
 {choices:[{items:[{choices:[{items:[{type:'NAME'},{type:'STRING'}
 ]},{items:[{type:'SOFT_KEYWORD'}
 ]}],lookahead:'negative'},{type:'rule',name:'disjunction',alias:'a'},{type:'rule',name:'expression_without_invalid',alias:'b'}
-],action:(L)=> $B._PyPegen.check_legacy_stmt(L.p,L.a)?NULL:L.p.tokens.level==0?NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"invalid syntax. Perhaps you forgot a comma?")},{items:[{type:'rule',name:'disjunction',alias:'a'},{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'b'},{choices:[{items:[{type:'string',value:'else'}
+],action:(L)=> $B._PyPegen.check_legacy_stmt(L.p,L.a)?$B.parser_constants.NULL:L.p.tokens.level==0?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"invalid syntax. Perhaps you forgot a comma?")},{items:[{type:'rule',name:'disjunction',alias:'a'},{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'b'},{choices:[{items:[{type:'string',value:'else'}
 ]},{items:[{type:'string',value:':'}
 ]}],lookahead:'negative'}
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"expected \'else\' after \'if\' expression")},{items:[{type:'string',value:'lambda',alias:'a'},{items:[{type:'rule',name:'lambda_params'}
@@ -20008,7 +19984,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a,"iterable unpacking cannot be used in comprehension")},{items:[{choices:[{items:[{type:'string',value:'['}
 ]},{items:[{type:'string',value:'{'}
 ]}]},{type:'rule',name:'star_named_expression',alias:'a'},{type:'string',value:','},{type:'rule',name:'star_named_expressions',alias:'b'},{type:'rule',name:'for_if_clauses'}
-],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,PyPegen_last_item(L.b,expr_ty),"did you forget parentheses around the comprehension target?")},{items:[{choices:[{items:[{type:'string',value:'['}
+],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,PyPegen_last_item(L.b,$B.parser_constants.expr_ty),"did you forget parentheses around the comprehension target?")},{items:[{choices:[{items:[{type:'string',value:'['}
 ]},{items:[{type:'string',value:'{'}
 ]}]},{type:'rule',name:'star_named_expression',alias:'a'},{type:'string',value:',',alias:'b'},{type:'rule',name:'for_if_clauses'}
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a,L.b,"did you forget parentheses around the comprehension target?")}]},invalid_dict_comprehension:
@@ -20161,7 +20137,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a,"cannot use \'_\' as a target")},{items:[{type:'rule',name:'or_pattern'},{type:'string',value:'as'},{type:'NAME',lookahead:'negative'},{type:'rule',name:'expression',alias:'a'}
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a,"invalid pattern target")}]},invalid_class_pattern:
 {items:[{type:'rule',name:'name_or_attr'},{type:'string',value:'('},{type:'rule',name:'invalid_class_argument_pattern',alias:'a'}
-],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(PyPegen_first_item(L.a,pattern_ty),PyPegen_last_item(L.a,pattern_ty),"positional patterns follow keyword patterns")},invalid_class_argument_pattern:
+],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(PyPegen_first_item(L.a,$B.ast.pattern),PyPegen_last_item(L.a,$B.ast.pattern),"positional patterns follow keyword patterns")},invalid_class_argument_pattern:
 {items:[{items:[{type:'rule',name:'positional_patterns'},{type:'string',value:','}
 ],repeat:'?'},{type:'rule',name:'keyword_patterns'},{type:'string',value:','},{type:'rule',name:'positional_patterns',alias:'a'}
 ],action:(L)=> L.a},invalid_if_stmt:
@@ -20204,7 +20180,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],action:(L)=> $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a,"expression expected after dictionary key and \':\'")}]},invalid_kvpair:
 {choices:[{items:[{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:':'}
 ],lookahead:'negative'}
-],action:(L)=> $B.helper_functions.RAISE_ERROR_KNOWN_LOCATION(L.p,PyExc_SyntaxError,L.a.lineno,L.a.end_col_offset-1,L.a.end_lineno,-1,"\':\' expected after dictionary key")},{items:[{type:'rule',name:'expression'},{type:'string',value:':'},{type:'string',value:'*',alias:'a'},{type:'rule',name:'bitwise_or'}
+],action:(L)=> $B.helper_functions.RAISE_ERROR_KNOWN_LOCATION(L.p,$B.parser_constants.PyExc_SyntaxError,L.a.lineno,L.a.end_col_offset-1,L.a.end_lineno,-1,"\':\' expected after dictionary key")},{items:[{type:'rule',name:'expression'},{type:'string',value:':'},{type:'string',value:'*',alias:'a'},{type:'rule',name:'bitwise_or'}
 ],action:(L)=> RAISE_SYNTAX_ERROR_STARTING_FROM(L.a,"cannot use a starred expression in a dictionary value")},{items:[{type:'rule',name:'expression'},{type:'string',value:':',alias:'a'},{choices:[{items:[{type:'string',value:'}'}
 ]},{items:[{type:'string',value:','}
 ]}],lookahead:'positive'}
@@ -20225,13 +20201,13 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ]},{items:[{type:'string',value:':'}
 ]},{items:[{type:'string',value:'}'}
 ]}],lookahead:'negative'}
-],action:(L)=> PyErr_Occurred()?NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'=\', or \'!\', or \':\', or \'}\'")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
+],action:(L)=> PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'=\', or \'!\', or \':\', or \'}\'")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}]},{type:'string',value:'='},{choices:[{items:[{type:'string',value:'!'}
 ]},{items:[{type:'string',value:':'}
 ]},{items:[{type:'string',value:'}'}
 ]}],lookahead:'negative'}
-],action:(L)=> PyErr_Occurred()?NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'!\', or \':\', or \'}\'")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
+],action:(L)=> PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'!\', or \':\', or \'}\'")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}]},{type:'string',value:'=',repeat:'?'},{type:'rule',name:'invalid_conversion_character'}
 ]},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
@@ -20240,15 +20216,15 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=helper_functions.RAISE_SYNTAX_ERROR_KNO
 ],repeat:'?'},{choices:[{items:[{type:'string',value:':'}
 ]},{items:[{type:'string',value:'}'}
 ]}],lookahead:'negative'}
-],action:(L)=> PyErr_Occurred()?NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \':\' or \'}\'")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
+],action:(L)=> PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \':\' or \'}\'")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}]},{type:'string',value:'=',repeat:'?'},{items:[{type:'string',value:'!'},{type:'NAME'}
 ],repeat:'?'},{type:'string',value:':'},{type:'rule',name:'fstring_format_spec',repeat:'*'},{type:'string',value:'}',lookahead:'negative'}
-],action:(L)=> PyErr_Occurred()?NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\', or format specs")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
+],action:(L)=> PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\', or format specs")},{items:[{type:'string',value:'{'},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}]},{type:'string',value:'=',repeat:'?'},{items:[{type:'string',value:'!'},{type:'NAME'}
 ],repeat:'?'},{type:'string',value:'}',lookahead:'negative'}
-],action:(L)=> PyErr_Occurred()?NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\'")}]},invalid_conversion_character:
+],action:(L)=> PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\'")}]},invalid_conversion_character:
 {choices:[{items:[{type:'string',value:'!'},{choices:[{items:[{type:'string',value:':'}
 ]},{items:[{type:'string',value:'}'}
 ]}],lookahead:'positive'}

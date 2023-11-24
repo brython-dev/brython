@@ -13,37 +13,43 @@ var _b_ = $B.builtins,
 // Global parser object
 var p = {feature_version: $B.version_info[1]}
 
-var Store = new $B.ast.Store(),
-    Load = new $B.ast.Load(),
-    Del = new $B.ast.Del(),
-    NULL = undefined
-
-$B.parser_constants = {Store, Load, Del}
+$B.parser_constants = {
+    Store: new $B.ast.Store(),
+    Load: new $B.ast.Load(),
+    Del: new $B.ast.Del(),
+    NULL: undefined,
+    alias_ty: $B.ast.alias,
+    keyword_ty: $B.ast.keyword,
+    arguments_ty: $B.ast.arguments,
+    expr_ty: $B.ast.expr,
+    asdl_stmt_seq: Array,
+    asdl_int_seq: Array,
+    asdl_expr_seq: Array,
+    asdl_keyword_seq: Array,
+    asdl_identifier_seq: Array,
+    asdl_pattern_seq: Array,
+    AugOperator: $B.ast.AugAssign,
+    IsNot: $B.ast.IsNot,
+    Py_Ellipsis: _b_.Ellipsis,
+    Py_False: false,
+    Py_True: true,
+    Py_None: _b_.None,
+    PyExc_SyntaxError: _b_.SyntaxError
+}
 
 // actions such as Add, Not, etc.
 for(var op_type of $B.op_types){
     for(var key in op_type){
         var klass_name = op_type[key]
-        eval(`var ${klass_name} = new $B.ast.${klass_name}()`)
+        $B.parser_constants[klass_name] = new $B.ast[klass_name]()
     }
 }
 
-var alias_ty = $B.ast.alias,
-    keyword_ty = $B.ast.keyword,
-    arguments_ty = $B.ast.arguments,
-    expr_ty = $B.ast.expr,
-    asdl_stmt_seq = Array,
-    asdl_int_seq = Array,
-    asdl_expr_seq = Array,
-    asdl_keyword_seq = Array,
-    asdl_identifier_seq = Array,
-    asdl_pattern_seq = Array,
-    AugOperator = $B.ast.AugAssign,
-    Py_Ellipsis = _b_.Ellipsis,
-    Py_False = false,
-    Py_True = true,
-    Py_None = _b_.None,
-    PyExc_SyntaxError = _b_.SyntaxError
+var NULL = $B.parser_constants.NULL
+
+console.log('parser constants',
+    Object.keys($B.parser_constants).map(x => `'${x}'`).join(', '))
+
 
 var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_BARRY_AS_BDFL = 0x0020,
@@ -92,13 +98,7 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     ]
 
 
-function asdl_seq_LEN(t){
-    return t.length
-}
 
-function asdl_seq_GET(t, i){
-    return t[i]
-}
 
 function PyPegen_last_item(seq){
     return seq[seq.length - 1]
@@ -130,7 +130,7 @@ var helper_functions = {
         if(Array.isArray(type)){
             var check
             for(var t of type){
-                check = CHECK(t, obj)
+                check = helper_functions.CHECK(t, obj)
                 if(check){
                     return check
                 }
@@ -144,7 +144,7 @@ var helper_functions = {
     },
 
     CHECK_VERSION: function(type, version, msg, node){
-        return INVALID_VERSION_CHECK(p, version, msg, node)
+        return helper_functions.INVALID_VERSION_CHECK(p, version, msg, node)
     },
 
     CHECK_NULL_ALLOWED: function(type, obj){
@@ -261,10 +261,14 @@ var helper_functions = {
             )
         }
         return NULL;
-    }
+    },
+
+    asdl_seq_LEN: (t) => t.length,
+
+    asdl_seq_GET: (t, i) => t[i]
+
 }
 
-console.log(Object.keys(helper_functions))
 $B.helper_functions = helper_functions
 
 function handle_errortoken(token, token_reader){
@@ -414,7 +418,7 @@ Parser.prototype.parse = function(){
         if(err_token.type == 'ERRORTOKEN'){
             message = handle_errortoken(err_token, this.tokens)
         }
-        RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
+        $B.helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             err_token.start[0],
             err_token.start[1],
             err_token.end[0],
@@ -865,15 +869,10 @@ function make_ast(match, tokens){
                 res.push(tokens[m.start])
             }
             if(rule.alias){
-                eval('var ' + rule.alias + ' = res')
                 set_alias(L, rule.alias, res)
             }
             if(rule.action){
-                if(typeof rule.action == 'function'){
-                    return rule.action(L)
-                }else{
-                    return eval(rule.action)
-                }
+                return rule.action(L)
             }
             return res
         }else if(rule.type == 'NAME'){
@@ -882,15 +881,10 @@ function make_ast(match, tokens){
                     new $B.ast.Load()))
             }
             if(rule.alias){
-                eval('var ' + rule.alias + ' = res')
                 set_alias(L, rule.alias, res)
             }
             if(rule.action){
-                if(typeof rule.action == 'function'){
-                    return rule.action(L)
-                }else{
-                    return eval(rule.action)
-                }
+                return rule.action(L)
             }
             return res
         }
@@ -903,19 +897,13 @@ function make_ast(match, tokens){
                     var m = one_match.matches[i]
                     var _make = make_ast(m, tokens)
                     if(rule.items[i].alias){
-                        eval('var ' + rule.items[i].alias + ' = _make')
                         set_alias(L, rule.items[i].alias, _make)
                     }
                     elts.push(_make)
                 }
                 if(rule.action){
                     try{
-                        var res
-                        if(typeof rule.action == 'function'){
-                            res = rule.action(L)
-                        }else{
-                            res = eval(rule.action)
-                        }
+                        var res = rule.action(L)
                     }catch(err){
                         console.log('error eval action of', show_rule(rule), match)
                         throw err
@@ -994,44 +982,26 @@ function make_ast(match, tokens){
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
                 set_alias(L, rule.items[i].alias, _make)
-                eval('var ' + rule.items[i].alias + ' = _make')
             }
             if(! rule.items[i].lookahead){
                 nb_consuming++
             }
         }
         if(rule.action){
-            if(typeof rule.action == 'function'){
-                try{
-                    ast = rule.action(L)
-                    set_position(ast)
-                }catch(err){
-                    if(debug === null){
-                        var rule_str = show_rule(rule, true)
-                        console.log('error eval action of', rule_str)
-                        console.log('rule.action', rule.action)
-                        console.log('p', p)
-                        //console.log($B.make_frames_stack())
-                        console.log(err.message)
-                        console.log(err.stack)
-                    }
-                    throw err
+            try{
+                ast = rule.action(L)
+                set_position_from_EXTRA(ast, EXTRA)
+            }catch(err){
+                if(debug === null){
+                    var rule_str = show_rule(rule, true)
+                    console.log('error eval action of', rule_str)
+                    console.log('rule.action', rule.action)
+                    console.log('p', p)
+                    //console.log($B.make_frames_stack())
+                    console.log(err.message)
+                    console.log(err.stack)
                 }
-            }else{
-                try{
-                    ast = eval(rule.action)
-                }catch(err){
-                    if(debug === null){
-                        var rule_str = show_rule(rule, true)
-                        console.log('error eval action of', rule_str)
-                        console.log('rule.action', rule.action)
-                        console.log('p', p)
-                        //console.log($B.make_frames_stack())
-                        console.log(err.message)
-                        console.log(err.stack)
-                    }
-                    throw err
-                }
+                throw err
             }
         }else if(nb_consuming == 1){
             ast = makes[0]

@@ -52,7 +52,20 @@ helper_functions = [
     "RAISE_SYNTAX_ERROR_KNOWN_LOCATION",
     "RAISE_SYNTAX_ERROR_KNOWN_RANGE",
     "RAISE_SYNTAX_ERROR_INVALID_TARGET",
-    "_RAISE_SYNTAX_ERROR_INVALID_TARGET"]
+    "_RAISE_SYNTAX_ERROR_INVALID_TARGET",
+    "asdl_seq_LEN",
+    "asdl_seq_GET"]
+
+parser_constants = [
+    'Store', 'Load', 'Del', 'NULL', 'alias_ty', 'keyword_ty', 'arguments_ty',
+    'expr_ty', 'asdl_stmt_seq', 'asdl_int_seq', 'asdl_expr_seq',
+    'asdl_keyword_seq', 'asdl_identifier_seq', 'asdl_pattern_seq',
+    'AugOperator', 'IsNot', 'Py_Ellipsis', 'Py_False', 'Py_True', 'Py_None',
+    'PyExc_SyntaxError', 'Add', 'Sub', 'Mult', 'Div', 'FloorDiv', 'Mod',
+    'Pow', 'LShift', 'RShift', 'BitOr', 'BitXor', 'BitAnd', 'MatMult', 'And',
+    'Or', 'Eq', 'NotEq', 'Lt', 'LtE', 'Gt', 'GtE', 'Is', 'In', 'NotIn',
+    'Invert', 'UAdd', 'USub', 'Not'
+    ]
 
 def find_end_of_string(src, quote, start):
     escaped = False
@@ -235,10 +248,13 @@ class Node:
                         s_arg += 'L.'
                     if item[:2] == ['id', 'void']:
                         s_arg += '"void"'
-                    elif item[0] == 'id' and item[1] in ['Load', 'Store', 'Del']:
+                    elif item[0] in ['id', 'builtin'] and \
+                            item[1] in parser_constants:
                         s_arg += '$B.parser_constants.' + item[1]
                     elif item[0] == 'builtin' and item[1] == 'EXTRA':
                         s_arg += 'L.EXTRA'
+                    elif item[0] == 'id' and item[1].endswith('_ty'):
+                        s_arg += '$B.ast.' + item[1][:-3]
                     else:
                         s_arg += item[1]
                     pos += 1
@@ -262,7 +278,6 @@ def transform_action(action, aliases):
 
     node.group_arguments()
 
-    print('action', action)
     return '(L) => ' + node.show()
 
     action1 = re.sub(r'->v\..*?\.', '.', action)
@@ -334,11 +349,6 @@ def transform_action(action, aliases):
 
 
     return action10
-
-action = """PyErr_Occurred() ? NULL : RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting '}'")"""
-print(action)
-transform_action(action, {'a', 'b', 'c'})
-input()
 
 def parse(line):
     pos = 0
