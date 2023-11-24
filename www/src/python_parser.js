@@ -4,7 +4,7 @@
 // http://web.cs.ucla.edu/~todd/research/pepm08.pdf
 
 (function($B){
-
+"use strict";
 var _b_ = $B.builtins,
     debug = 0
 
@@ -93,13 +93,9 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     'try', 'if', 'else', 'del', 'import', 'nonlocal', 'pass'
     ]
 
-
-
-
 function PyPegen_last_item(seq){
     return seq[seq.length - 1]
 }
-
 
 function get_last_token(p){
     var last_token = p.tokens.last
@@ -896,7 +892,8 @@ function make_ast(match, tokens){
             _make
         if(match.matches.length > 0){
             var first = match.matches[0],
-                last = $B.last(match.matches)
+                last = $B.last(match.matches),
+                last_token
             EXTRA = {
                     lineno: tokens[first.start].start[0],
                     col_offset: tokens[first.start].start[1],
