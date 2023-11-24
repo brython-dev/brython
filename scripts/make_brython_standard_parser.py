@@ -168,6 +168,7 @@ class Node:
         self.content = []
         self.aliases = aliases
         self.aliases.add('p')
+        self.aliases.add('EXTRA')
 
     def add(self, item):
         self.content.append(item)
@@ -196,6 +197,12 @@ class Node:
                     if t_arg and not isinstance(t_arg[-1], Node) and \
                             t_arg[-1][0] in ('id', 'builtin'):
                         call = t_arg.pop()[1]
+                        if call.startswith('_PyPegen'):
+                            call = '$B._PyPegen.' + call[len('_Py_Pegen'):]
+                        elif call.startswith('_PyAST_'):
+                            call = 'new $B.ast.' + call[len('_PyAST_'):]
+                        elif call in helper_functions:
+                            call = '$B.helper_functions.' + call
                     t_arg.append(call + '(' + item.show() + ')')
                 else:
                     if t_arg and isinstance(t_arg[-1], str) and call == '' \
@@ -209,26 +216,31 @@ class Node:
             s_arg = ''
             pos = 0
             while pos < len(t_arg):
-                if isinstance(t_arg[pos], str):
+                item = t_arg[pos]
+                if isinstance(item, str):
                     s_arg += t_arg[pos]
                     pos += 1
-                elif t_arg[pos] == ['op', '->']:
+                elif item == ['op', '->']:
                     s_arg += '.'
                     if pos + 1 < len(t_arg) and t_arg[pos + 1][:2] == ['id', 'v']:
                         # sequence x->v.Name.id transformed to x.id
                         pos += 5
                     else:
                         pos += 1
-                elif t_arg[pos][0] == 'string':
-                    s_arg += f'"{t_arg[pos][1]}"'
+                elif item[0] == 'string':
+                    s_arg += f'"{item[1]}"'
                     pos += 1
                 else:
-                    if t_arg[pos][0] == 'id' and t_arg[pos][1] in self.aliases:
+                    if item[0] == 'id' and item[1] in self.aliases:
                         s_arg += 'L.'
-                    if t_arg[pos][:2] == ['id', 'void']:
+                    if item[:2] == ['id', 'void']:
                         s_arg += '"void"'
+                    elif item[0] == 'id' and item[1] in ['Load', 'Store', 'Del']:
+                        s_arg += '$B.parser_constants.' + item[1]
+                    elif item[0] == 'builtin' and item[1] == 'EXTRA':
+                        s_arg += 'L.EXTRA'
                     else:
-                        s_arg += t_arg[pos][1]
+                        s_arg += item[1]
                     pos += 1
             t.append(s_arg)
         return ', '.join(t)

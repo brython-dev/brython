@@ -911,8 +911,7 @@ $B._PyPegen.join_names_with_dot = function(p, first_name, second_name){
 }
 
 $B._PyPegen.make_module = function(p, a){
-    var res = new $B.ast.Module(a)
-    return res
+    return new $B.ast.Module(a)
 }
 
 $B._PyPegen.new_type_comment = function(p, s){

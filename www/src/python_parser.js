@@ -18,6 +18,8 @@ var Store = new $B.ast.Store(),
     Del = new $B.ast.Del(),
     NULL = undefined
 
+$B.parser_constants = {Store, Load, Del}
+
 // actions such as Add, Not, etc.
 for(var op_type of $B.op_types){
     for(var key in op_type){
@@ -788,6 +790,44 @@ Parser.prototype.grow_lr = function(rule, position, m, H){
     return m.match
 }
 
+function set_alias(L, name, value){
+    L[name] = value
+}
+
+function set_position(ast_obj){
+    if(ast_obj.hasOwnProperty('col_offset')){
+        return
+    }
+    var pos = {},
+        attrs = ['lineno', 'col_offset', 'end_lineno', 'end_col_offset'],
+        comp = {
+            lineno: (x, y) => Math.min(x.lineno, y.lineno),
+            col_offset: (x, y) => Math.min(x.col_offset, y.col_offset),
+            end_lineno: (x, y) => Math.max(x.end_lineno, y.end_lineno),
+            end_col_offset: (x, y) => Math.max(x.end_col_offset, y.end_col_offset)
+        }
+
+    for(var key in ast_obj){
+        if(Array.isArray(ast_obj[key])){
+            for(var item of ast_obj[key]){
+                if(item.hasOwnProperty('col_offset')){
+                    for(var attr of attrs){
+                        pos[attr] = pos[attr] === undefined ? item[attr] : comp[attr](pos, item)
+                    }
+                }
+            }
+        }else if(ast_obj[key] && ast_obj[key].hasOwnProperty('col_offset')){
+            var item = ast_obj[key]
+            for(var attr of attrs){
+                pos[attr] = pos[attr] === undefined ? item[attr] : comp[attr](pos, item)
+            }
+        }
+    }
+    for(var attr of attrs){
+        ast_obj[attr] = pos[attr]
+    }
+}
+
 // Function that generates the AST for a match
 function make_ast(match, tokens){
     // match.rule succeeds; make_ast() returns a value for the match, based on
@@ -812,6 +852,7 @@ function make_ast(match, tokens){
                  end_col_offset: token.end[1]
                  }
     p.arena = EXTRA
+    L.EXTRA = EXTRA
 
     var FSTRING_MIDDLE = 'fstring_middle'
 
@@ -825,10 +866,14 @@ function make_ast(match, tokens){
             }
             if(rule.alias){
                 eval('var ' + rule.alias + ' = res')
-                L[rule.alias] = res
+                set_alias(L, rule.alias, res)
             }
             if(rule.action){
-                return eval(rule.action)
+                if(typeof rule.action == 'function'){
+                    return rule.action(L)
+                }else{
+                    return eval(rule.action)
+                }
             }
             return res
         }else if(rule.type == 'NAME'){
@@ -838,10 +883,14 @@ function make_ast(match, tokens){
             }
             if(rule.alias){
                 eval('var ' + rule.alias + ' = res')
-                L[rule.alias] = res
+                set_alias(L, rule.alias, res)
             }
             if(rule.action){
-                return eval(rule.action)
+                if(typeof rule.action == 'function'){
+                    return rule.action(L)
+                }else{
+                    return eval(rule.action)
+                }
             }
             return res
         }
@@ -855,17 +904,23 @@ function make_ast(match, tokens){
                     var _make = make_ast(m, tokens)
                     if(rule.items[i].alias){
                         eval('var ' + rule.items[i].alias + ' = _make')
-                        L[rule.items[i].alias] = _make
+                        set_alias(L, rule.items[i].alias, _make)
                     }
                     elts.push(_make)
                 }
                 if(rule.action){
                     try{
-                        makes.push(eval(rule.action))
+                        var res
+                        if(typeof rule.action == 'function'){
+                            res = rule.action(L)
+                        }else{
+                            res = eval(rule.action)
+                        }
                     }catch(err){
                         console.log('error eval action of', show_rule(rule), match)
                         throw err
                     }
+                    makes.push(res)
                 }else if(elts.length == 1){
                     makes.push(elts[0])
                 }else{
@@ -938,7 +993,7 @@ function make_ast(match, tokens){
             }
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
-                L[rule.items[i].alias] = _make
+                set_alias(L, rule.items[i].alias, _make)
                 eval('var ' + rule.items[i].alias + ' = _make')
             }
             if(! rule.items[i].lookahead){
@@ -947,9 +1002,9 @@ function make_ast(match, tokens){
         }
         if(rule.action){
             if(typeof rule.action == 'function'){
-                console.log('run function', rule.action, rule.action + '', 'L', L)
                 try{
                     ast = rule.action(L)
+                    set_position(ast)
                 }catch(err){
                     if(debug === null){
                         var rule_str = show_rule(rule, true)

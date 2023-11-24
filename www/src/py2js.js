@@ -8844,7 +8844,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     var _ast
 
     if($B.parser_to_ast){
-        console.log('use parser to ast')
+        console.log('use standard parser')
         _ast = new $B.Parser(src, filename, 'file').parse()
     }else{
         var root = create_root_node({src, filename},
