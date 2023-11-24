@@ -427,7 +427,7 @@ $B.tokenizer = function*(src, filename, mode){
         }
         pos++
 
-        // console.log('token mode', token_mode, 'char', char)
+        // console.log('state', state, 'token mode', token_mode, 'char', char)
         if(token_mode != save_mode){
             if(token_mode == 'fstring'){
                 fstring_buffer = ''
@@ -515,6 +515,9 @@ $B.tokenizer = function*(src, filename, mode){
                 }
                 fstring_buffer += char
                 fstring_escape = false
+                if(char == '\n'){
+                    line_num++
+                }
                 continue
             }
         }else if(token_mode == 'format_specifier'){
