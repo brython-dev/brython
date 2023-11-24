@@ -786,8 +786,8 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                     var parts = fs_item.value.split('\\\'')
                     parts = parts.map(x => x.replace(new RegExp("'", "g"), "\\'"))
                     fs_item.value = parts.join('\\\'')
-                    fs_item.value = fs_item.value.replace(/\n/g, '\\\n')
-                                                 .replace(/\r/g, '\\\r')
+                    fs_item.value = fs_item.value.replace(/\n/g, '\\n')
+                                                 .replace(/\r/g, '\\r')
                 }
                 items.push(fs_item)
             }

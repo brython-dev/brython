@@ -213,7 +213,7 @@ class Node:
                         if call.startswith('_PyPegen'):
                             call = '$B._PyPegen.' + call[len('_Py_Pegen'):]
                         elif call.startswith('_PyAST_'):
-                            call = 'new $B.ast.' + call[len('_PyAST_'):]
+                            call = '$B._PyAST.' + call[len('_PyAST_'):]
                         elif call in helper_functions:
                             call = '$B.helper_functions.' + call
                     t_arg.append(call + '(' + item.show() + ')')

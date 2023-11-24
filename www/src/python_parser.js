@@ -47,10 +47,6 @@ for(var op_type of $B.op_types){
 
 var NULL = $B.parser_constants.NULL
 
-console.log('parser constants',
-    Object.keys($B.parser_constants).map(x => `'${x}'`).join(', '))
-
-
 var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_BARRY_AS_BDFL = 0x0020,
     PyPARSE_TYPE_COMMENTS = 0x0040,
@@ -796,40 +792,6 @@ Parser.prototype.grow_lr = function(rule, position, m, H){
 
 function set_alias(L, name, value){
     L[name] = value
-}
-
-function set_position(ast_obj){
-    if(ast_obj.hasOwnProperty('col_offset')){
-        return
-    }
-    var pos = {},
-        attrs = ['lineno', 'col_offset', 'end_lineno', 'end_col_offset'],
-        comp = {
-            lineno: (x, y) => Math.min(x.lineno, y.lineno),
-            col_offset: (x, y) => Math.min(x.col_offset, y.col_offset),
-            end_lineno: (x, y) => Math.max(x.end_lineno, y.end_lineno),
-            end_col_offset: (x, y) => Math.max(x.end_col_offset, y.end_col_offset)
-        }
-
-    for(var key in ast_obj){
-        if(Array.isArray(ast_obj[key])){
-            for(var item of ast_obj[key]){
-                if(item.hasOwnProperty('col_offset')){
-                    for(var attr of attrs){
-                        pos[attr] = pos[attr] === undefined ? item[attr] : comp[attr](pos, item)
-                    }
-                }
-            }
-        }else if(ast_obj[key] && ast_obj[key].hasOwnProperty('col_offset')){
-            var item = ast_obj[key]
-            for(var attr of attrs){
-                pos[attr] = pos[attr] === undefined ? item[attr] : comp[attr](pos, item)
-            }
-        }
-    }
-    for(var attr of attrs){
-        ast_obj[attr] = pos[attr]
-    }
 }
 
 // Function that generates the AST for a match
