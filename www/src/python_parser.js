@@ -28,13 +28,17 @@ $B.parser_constants = {
     asdl_keyword_seq: Array,
     asdl_identifier_seq: Array,
     asdl_pattern_seq: Array,
+    asdl_type_param_seq: Array,
     AugOperator: $B.ast.AugAssign,
     IsNot: $B.ast.IsNot,
     Py_Ellipsis: _b_.Ellipsis,
     Py_False: false,
     Py_True: true,
     Py_None: _b_.None,
-    PyExc_SyntaxError: _b_.SyntaxError
+    PyExc_SyntaxError: _b_.SyntaxError,
+    STAR_TARGETS: 1,
+    DEL_TARGETS: 2,
+    FOR_TARGETS: 3
 }
 
 // actions such as Add, Not, etc.
@@ -53,9 +57,7 @@ var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_ASYNC_HACKS = 0x0080,
     PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 
-var STAR_TARGETS = 'star_targets',
-    FOR_TARGETS = 'for_targets',
-    DEL_TARGETS = 'del_targets'
+
 
 // Generate functions to create AST instances
 $B._PyAST = {}
@@ -237,11 +239,12 @@ var helper_functions = {
     },
 
     _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
-        var invalid_target = $B.parser_helpers.CHECK_NULL_ALLOWED(expr_ty,
+        var invalid_target = $B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,
             $B._PyPegen.get_invalid_target(e, type));
         if (invalid_target != NULL) {
             var msg;
-            if (type == STAR_TARGETS || type == FOR_TARGETS) {
+            if (type == $B.parser_constants.STAR_TARGETS || 
+                    type == $B.parser_constants.FOR_TARGETS) {
                 msg = "cannot assign to %s";
             }else{
                 msg = "cannot delete %s";
@@ -955,8 +958,10 @@ function make_ast(match, tokens){
         if(rule.action){
             try{
                 ast = rule.action(L)
-                set_position_from_EXTRA(ast, EXTRA)
-                if(false && show_rule(rule).startsWith('fstring')){
+                if(ast !== NULL){
+                    set_position_from_EXTRA(ast, EXTRA)
+                }
+                if(false){ // && show_rule(rule).startsWith('fstring')){
                     console.log('action of', show_rule(rule), '\n  L', L)
                     console.log('  ast', ast)
                     console.log('  action', rule.action + '')
@@ -965,7 +970,7 @@ function make_ast(match, tokens){
                 if(debug === null){
                     var rule_str = show_rule(rule, true)
                     console.log('error eval action of', rule_str)
-                    console.log('rule.action', rule.action)
+                    console.log('rule.action', rule.action + '')
                     console.log('p', p)
                     //console.log($B.make_frames_stack())
                     console.log(err.message)

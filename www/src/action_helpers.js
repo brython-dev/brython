@@ -479,7 +479,7 @@ $B._PyPegen.get_patterns = function(p, seq){
     return seq === undefined ? [] : seq.map(x => x.pattern)
 }
 
-$B._PyPegen.check_legacy_stmt = function(p, name) {
+$B._PyPegen.check_legacy_stmt = function(p, name){
     return ["print", "exec"].indexOf(name) > -1
 }
 

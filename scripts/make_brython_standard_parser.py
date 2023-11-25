@@ -60,11 +60,14 @@ parser_constants = [
     'Store', 'Load', 'Del', 'NULL', 'alias_ty', 'keyword_ty', 'arguments_ty',
     'expr_ty', 'asdl_stmt_seq', 'asdl_int_seq', 'asdl_expr_seq',
     'asdl_keyword_seq', 'asdl_identifier_seq', 'asdl_pattern_seq',
+    'asdl_type_param_seq',
     'AugOperator', 'IsNot', 'Py_Ellipsis', 'Py_False', 'Py_True', 'Py_None',
     'PyExc_SyntaxError', 'Add', 'Sub', 'Mult', 'Div', 'FloorDiv', 'Mod',
     'Pow', 'LShift', 'RShift', 'BitOr', 'BitXor', 'BitAnd', 'MatMult', 'And',
     'Or', 'Eq', 'NotEq', 'Lt', 'LtE', 'Gt', 'GtE', 'Is', 'In', 'NotIn',
-    'Invert', 'UAdd', 'USub', 'Not'
+    'Invert', 'UAdd', 'USub', 'Not',
+    'STAR_TARGETS', 'DEL_TARGETS', 'FOR_TARGETS'
+
     ]
 
 def find_end_of_string(src, quote, start):
