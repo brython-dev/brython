@@ -204,12 +204,37 @@ $B._PyPegen.decoded_constant_from_token = function(p, t){
 $B._PyPegen.formatted_value = function(p,
         expression, debug,  conversion, format, closing_brace,
         arena){
-    if(conversion === undefined){
-        conversion = -1
+    var formatted_value = new $B.ast.FormattedValue(expression,
+        conversion === undefined ? - 1 : conversion.result,
+        format === undefined ? format : format.result)
+    set_position_from_obj(formatted_value, p.arena)
+    if(debug){
+        var debug_end_line,
+            debug_end_offset,
+            debug_metadata
+        if(conversion){
+            debug_end_line = conversion.result.lineno
+            debug_end_offset = conversion.result.col_offset
+            debug_metadata = conversion.metadata
+        }else if(format){
+            debug_end_line = format.result.lineno
+            debug_end_offset = format.result.col_offset + 1
+            debug_metadata = format.metadata
+        }else{
+            debug_end_line = p.end_lineno
+            debug_end_offset = p.end_col_offset
+            debug_metadata = closing_brace.metadata
+        }
+        var debug = new $B.ast.Constant(debug_metadata)
+        debug.lineno = p.lineno
+        debug.col_offset = p.col_offset + 1
+        debug.end_lineno = debug_end_line
+        debug.end_col_offset = debug_end_offset
+        var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
+        set_position_from_obj(joined_str, p.arena)
+        return joined_str
     }
-    var ast_obj = new $B.ast.FormattedValue(expression, conversion, format)
-    set_position_from_obj(ast_obj, p.arena)
-    return ast_obj
+    return formatted_value
 }
 
 $B._PyPegen.joined_str = function(p, a, items, c){
@@ -224,11 +249,11 @@ $B._PyPegen.joined_str = function(p, a, items, c){
 $B._PyPegen.setup_full_format_spec = function(p, colon, spec, arena){
     var ast_obj = new $B.ast.JoinedStr(spec)
     set_position_from_obj(ast_obj, arena)
-    return ast_obj
+    return result_token_with_metadata(p, ast_obj, colon.metadata)
 }
 
 function result_token_with_metadata(p, result, metadata){
-    return {metadata, result}
+    return {result, metadata}
 }
 
 $B._PyPegen.check_fstring_conversion = function(p, conv_token, conv){
@@ -742,6 +767,7 @@ function make_formatted_value(p, fmt_values){
 }
 
 $B._PyPegen.concatenate_strings = function(p, strings){
+    // console.log('concat', strings)
     // strings is a list of tokens
     var res = '',
         first = strings[0],

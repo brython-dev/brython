@@ -8546,6 +8546,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     while(true){
         try{
             token = root.token_reader.read()
+            // console.log(token.type, token.string, token.start, token.end)
         }catch(err){
             context = context || new NodeCtx(node)
             if(err.type == 'IndentationError'){

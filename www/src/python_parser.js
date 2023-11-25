@@ -366,6 +366,12 @@ var Parser = $B.Parser = function(src, filename, mode){
     // mode is 'file' for a script or exec(), 'eval' for eval()
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
+    /*
+    var tokenizer = $B.tokenizer(src, filename, mode)
+    for(var token of tokenizer){
+        console.log(token.type, token.string, token.start, token.end)
+    }
+    */
     var tokenizer = $B.tokenizer(src, filename, mode)
     this.tokens = generator_as_list(tokenizer)
     this.src = src
@@ -950,6 +956,11 @@ function make_ast(match, tokens){
             try{
                 ast = rule.action(L)
                 set_position_from_EXTRA(ast, EXTRA)
+                if(false && show_rule(rule).startsWith('fstring')){
+                    console.log('action of', show_rule(rule), '\n  L', L)
+                    console.log('  ast', ast)
+                    console.log('  action', rule.action + '')
+                }
             }catch(err){
                 if(debug === null){
                     var rule_str = show_rule(rule, true)
