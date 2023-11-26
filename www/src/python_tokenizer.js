@@ -341,18 +341,6 @@ function nesting_level(token_modes){
     }
 }
 
-function update_braces(braces, char){
-    if('[({'.indexOf(char) > -1){
-        braces.push(char)
-    }else if('])}'.indexOf(char) > -1){
-        if(braces.length && $last(braces) == closing[char]){
-            braces.pop()
-        }else{
-            braces.push(char)
-        }
-    }
-}
-
 $B.tokenizer = function*(src, filename, mode){
     var whitespace = ' \t\n',
         operators = '*+-/%&^~=<>',

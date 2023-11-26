@@ -204,8 +204,19 @@ $B._PyPegen.decoded_constant_from_token = function(p, t){
 $B._PyPegen.formatted_value = function(p,
         expression, debug,  conversion, format, closing_brace,
         arena){
+    var conversion_val = -1
+    if(conversion){
+        var conversion_expr = conversion.result,
+            first = conversion_expr.id
+        if(first.length > 1 || ! 'sra'.indexOf(first) == -1){
+            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion_expr,
+                `f-string: invalid conversion character {first}: ` +
+                "expected 's', 'r', or 'a'")
+        }
+        var conversion_val = first.charCodeAt(0)
+    }
     var formatted_value = new $B.ast.FormattedValue(expression,
-        conversion === undefined ? - 1 : conversion.result,
+        conversion_val,
         format === undefined ? format : format.result)
     set_position_from_obj(formatted_value, p.arena)
     if(debug){
@@ -784,7 +795,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                  end_lineno : last.end[0],
                  end_col_offset: last.end[1]
                 }
-        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
     }
 
     function set_position_from_list(ast_obj, items){
@@ -888,7 +899,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) ||
             exp.value.__class__ != _b_.complex) {
-        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
             "imaginary number required in complex literal");
         return NULL
     }
@@ -897,7 +908,7 @@ $B._PyPegen.ensure_imaginary = function(p, exp){
 
 $B._PyPegen.ensure_real = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
-       $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+       $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
             exp,
             "real number required in complex literal");
         return NULL
@@ -969,7 +980,7 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
 
     var last_comprehension = $B.last(comprehensions);
 
-    return $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
+    return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
         args.args[len - 1],
         $B._PyPegen.get_last_comprehension_item(last_comprehension),
         "Generator expression must be parenthesized"

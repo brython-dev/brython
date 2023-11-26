@@ -51,14 +51,6 @@ for(var op_type of $B.op_types){
 
 var NULL = $B.parser_constants.NULL
 
-var PyPARSE_IGNORE_COOKIE = 0x0010,
-    PyPARSE_BARRY_AS_BDFL = 0x0020,
-    PyPARSE_TYPE_COMMENTS = 0x0040,
-    PyPARSE_ASYNC_HACKS = 0x0080,
-    PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
-
-
-
 // Generate functions to create AST instances
 $B._PyAST = {}
 
@@ -95,9 +87,6 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     'try', 'if', 'else', 'del', 'import', 'nonlocal', 'pass'
     ]
 
-function PyPegen_last_item(seq){
-    return seq[seq.length - 1]
-}
 
 function get_last_token(p){
     var last_token = p.tokens.last
@@ -243,7 +232,7 @@ var helper_functions = {
             $B._PyPegen.get_invalid_target(e, type));
         if (invalid_target != NULL) {
             var msg;
-            if (type == $B.parser_constants.STAR_TARGETS || 
+            if (type == $B.parser_constants.STAR_TARGETS ||
                     type == $B.parser_constants.FOR_TARGETS) {
                 msg = "cannot assign to %s";
             }else{
@@ -369,12 +358,6 @@ var Parser = $B.Parser = function(src, filename, mode){
     // mode is 'file' for a script or exec(), 'eval' for eval()
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
-    /*
-    var tokenizer = $B.tokenizer(src, filename, mode)
-    for(var token of tokenizer){
-        console.log(token.type, token.string, token.start, token.end)
-    }
-    */
     var tokenizer = $B.tokenizer(src, filename, mode)
     this.tokens = generator_as_list(tokenizer)
     this.src = src
@@ -825,8 +808,6 @@ function make_ast(match, tokens){
     p.arena = EXTRA
     L.EXTRA = EXTRA
 
-    var FSTRING_MIDDLE = 'fstring_middle'
-
     if(rule.repeat){
         // If a repeated rule has an alias, it applies to the repetition list
         // The number of repetitions is len(match.matches)
@@ -958,14 +939,6 @@ function make_ast(match, tokens){
         if(rule.action){
             try{
                 ast = rule.action(L)
-                if(ast !== NULL){
-                    set_position_from_EXTRA(ast, EXTRA)
-                }
-                if(false){ // && show_rule(rule).startsWith('fstring')){
-                    console.log('action of', show_rule(rule), '\n  L', L)
-                    console.log('  ast', ast)
-                    console.log('  action', rule.action + '')
-                }
             }catch(err){
                 if(debug === null){
                     var rule_str = show_rule(rule, true)
@@ -1109,10 +1082,5 @@ function show_rule(rule, show_action){
     return res
 }
 
-// export names for use in other scripts (action_helpers.js)
-$B.Parser.RAISE_SYNTAX_ERROR = helper_functions.RAISE_SYNTAX_ERROR
-$B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION = helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION
-$B.Parser.RAISE_ERROR_KNOWN_LOCATION = helper_functions.RAISE_ERROR_KNOWN_LOCATION
-$B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE = helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE
 
 })(__BRYTHON__)
