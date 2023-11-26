@@ -676,7 +676,15 @@ function make_comp(scopes){
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`),
         comp_iter,
-        comp_scope = $B.last(scopes)
+        comp_scope = $B.last(scopes),
+        upper_comp_scope = comp_scope
+    while(upper_comp_scope.parent){
+        upper_comp_scope = upper_comp_scope.parent
+    }
+
+    var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
+                            upper_comp_scope.nb_await
+    
     for(var symbol of _b_.dict.$iter_items_with_hash(symtable_block.symbols)){
         if(symbol.value & DEF_COMP_ITER){
             comp_iter = symbol.key
@@ -687,9 +695,6 @@ function make_comp(scopes){
         // outmost expression is evaluated in enclosing scope
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
         nb_paren = 1
-
-    //var comp_scope = new Scope(`${type}_${id}`, 'comprehension', this)
-    //scopes.push(comp_scope)
 
     var comp = {ast:this, id, type, varnames,
                 module_name: scopes[0].name,
@@ -742,7 +747,11 @@ function make_comp(scopes){
     }else{
         var elt = $B.js_from_ast(this.elt, scopes)
     }
-    var has_await = comp_scope.has_await
+
+    // count if nb_await was incremented
+    var final_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
+                                  upper_comp_scope.nb_await
+    var has_await = final_nb_await_in_scope > initial_nb_await_in_scope
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
@@ -1149,6 +1158,10 @@ $B.ast.Await.prototype.to_js = function(scopes){
     while(scopes[ix].parent){
         ix--
     }
+    // Increment the number of 'await' in scope. Used to detect if
+    // comprehensions inside the scope have 'await'
+    scopes[ix].nb_await = scopes[ix].nb_await === undefined ? 1 :
+                          scopes[ix].nb_await + 1
     while(scopes[ix].ast instanceof $B.ast.ListComp ||
             scopes[ix].ast instanceof $B.ast.DictComp ||
             scopes[ix].ast instanceof $B.ast.SetComp ||
