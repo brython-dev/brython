@@ -60,7 +60,7 @@ function is_ID_Start(char){
     return /\p{Letter}/u.test(char) ||
            /\p{Nl}/u.test(char) ||
            char == '_' ||
-           Other_ID_Start.indexOf(char) > -1
+           Other_ID_Start.includes(char)
 
 }
 
@@ -71,7 +71,7 @@ const Other_ID_Continue = [0x00B7, 0x0387, 0x1369, 0x1370, 0x1371, 0x19DA,
 function is_ID_Continue(char){
     return is_ID_Start(char) ||
            /\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}/u.test(char) ||
-           Other_ID_Continue.indexOf(char) > -1
+           Other_ID_Continue.includes(char)
 }
 
 $B.is_XID_Start = function(cp){
@@ -294,11 +294,11 @@ function test_num(num_type, char){
         case '':
             return $B.in_unicode_category('Nd', ord(char))
         case 'x':
-            return '0123456789abcdef'.indexOf(char.toLowerCase()) > -1
+            return '0123456789abcdef'.includes(char.toLowerCase())
         case 'b':
-            return '01'.indexOf(char) > -1
+            return '01'.includes(char)
         case 'o':
-            return '01234567'.indexOf(char) > -1
+            return '01234567'.includes(char)
         default:
             throw Error('unknown num type ' + num_type)
     }
@@ -694,7 +694,7 @@ $B.tokenizer = function*(src, filename, mode){
                         number = char
                         num_type = ''
                         if(src[pos] &&
-                                'xbo'.indexOf(src[pos].toLowerCase()) > -1){
+                                'xbo'.includes(src[pos].toLowerCase())){
                             number += src[pos]
                             num_type = src[pos].toLowerCase()
                             pos++
@@ -794,7 +794,7 @@ $B.tokenizer = function*(src, filename, mode){
                             state = 'NUMBER'
                             num_type = ''
                             number = char
-                        }else if(ops.indexOf(char) > -1){
+                        }else if(ops.includes(char)){
                             if(token_mode == 'regular_within_fstring' &&
                                     (char == ':' || char == '}')){
                                 if(char == ':'){
@@ -836,12 +836,12 @@ $B.tokenizer = function*(src, filename, mode){
                                 }
                             }
                             var op = char
-                            if(op2.indexOf(char + src[pos]) > -1){
+                            if(op2.includes(char + src[pos])){
                                 op = char + src[pos]
                                 pos++
                             }
                             if(src[pos] == '=' && (op.length == 2 ||
-                                    augm_op.indexOf(op) > -1)){
+                                    augm_op.includes(op))){
                                 op += src[pos]
                                 pos++
                             }else if((char == '-' && src[pos] == '>') ||
@@ -849,9 +849,9 @@ $B.tokenizer = function*(src, filename, mode){
                                 op += src[pos]
                                 pos++
                             }
-                            if('[({'.indexOf(char) > -1){
+                            if('[({'.includes(char)){
                                 braces.push(char)
-                            }else if('])}'.indexOf(char) > -1){
+                            }else if('])}'.includes(char)){
                                 if(braces && $last(braces) == closing[char]){
                                     braces.pop()
                                 }else{
@@ -905,13 +905,13 @@ $B.tokenizer = function*(src, filename, mode){
                         if(triple_quote){
                           pos += 2
                         }
-                        if(prefix.toLowerCase().indexOf('f') > -1){
+                        if(prefix.toLowerCase().includes('f')){
                             fstring_start = pos - line_start - name.length
                             token_mode = new String('fstring')
                             token_mode.nesting = braces.length
                             token_mode.quote = quote
                             token_mode.triple_quote = triple_quote
-                            token_mode.raw = prefix.toLowerCase().indexOf('r') > -1
+                            token_mode.raw = prefix.toLowerCase().includes('r')
                             token_modes.push(token_mode)
                             var s = triple_quote ? quote.repeat(3) : quote
                             var end_col = fstring_start + name.length + s.length
@@ -1050,11 +1050,11 @@ $B.tokenizer = function*(src, filename, mode){
                     }else{
                         number += char
                     }
-                }else if(char == '.' && number.indexOf(char) == -1){
+                }else if(char == '.' && ! number.includes(char)){
                     number += char
                 }else if(char.toLowerCase() == 'e' &&
-                        number.toLowerCase().indexOf('e') == -1){
-                    if('+-'.indexOf(src[pos]) > -1 ||
+                        ! number.toLowerCase().includes('e')){
+                    if('+-'.includes(src[pos]) ||
                             $B.in_unicode_category('Nd', ord(src[pos]))){
                         number += char
                     }else{

@@ -266,7 +266,7 @@ function handle_errortoken(token, token_reader){
         }else{
             return 'unexpected character after line continuation character'
         }
-    }else if(' `$'.indexOf(token.string) == -1){
+    }else if(! ' `$'.includes(token.string)){
         var u = _b_.ord(token.string).toString(16).toUpperCase()
         u = 'U+' + '0'.repeat(Math.max(0, 4 - u.length)) + u
         return `invalid character '${token.string}' (${u})`
@@ -310,7 +310,7 @@ function generator_as_list(generator){
                   var next = target.next()
                   if(! next.done){
                       var value = next.value
-                      if(['ENCODING', 'NL', 'COMMENT'].indexOf(value.type) == -1){
+                      if(! ['ENCODING', 'NL', 'COMMENT'].includes(value.type)){
                           this.tokens.push(value)
                           break
                       }
@@ -612,8 +612,8 @@ Parser.prototype.eval_option_once = function(rule, position){
         var token = tokens[position],
             string = token.string,
             test = token.type == rule.type &&
-            keywords.indexOf(token.string) == -1 &&
-            ['True', 'False', 'None'].indexOf(token.string) == -1 &&
+            ! keywords.includes(token.string) &&
+            ! ['True', 'False', 'None'].includes(token.string) &&
             (rule.value === undefined ? true : tokens[position][1] == rule.value)
         return test ? {rule, start: position, end: position + 1} : FAIL
     }else if(rule.type == 'ASYNC'){
@@ -812,7 +812,7 @@ function make_ast(match, tokens){
         // If a repeated rule has an alias, it applies to the repetition list
         // The number of repetitions is len(match.matches)
         var res = []
-        if(['STRING', 'string', 'NEWLINE'].indexOf(rule.type) > -1){
+        if(['STRING', 'string', 'NEWLINE'].includes(rule.type)){
             for(var m of match.matches){
                 res.push(tokens[m.start])
             }
@@ -974,7 +974,7 @@ function make_ast(match, tokens){
             var ast_obj = new $B.ast.Constant(value)
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
-        }else if(['STRING', 'string'].indexOf(rule.type) > -1){
+        }else if(['STRING', 'string'].includes(rule.type)){
             return token
         }else if(rule.type == 'FSTRING_START'){
             return token
@@ -1018,7 +1018,7 @@ function show(match, tokens, level){
     }else{
         if(match.end > match.start){
             s += prefix
-            if(['NAME', 'STRING', 'NUMBER', 'string'].indexOf(match.rule.type) > -1){
+            if(['NAME', 'STRING', 'NUMBER', 'string'].includes(match.rule.type)){
                 s += match.rule.type + ' ' + tokens[match.start][1]
             }else{
                 s += match.rule.type + ' ' + (match.rule.value || '') +
