@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-26 10:08:15.285011"
-__BRYTHON__.timestamp=1700989695285
+__BRYTHON__.compiled_date="2023-11-26 10:27:05.982526"
+__BRYTHON__.timestamp=1700990825982
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -7757,9 +7757,10 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_infos=function(f,__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg){f.$is_func=true
-f.$infos={__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}}
-$B.make_code_attr=function(f,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames){f.$infos.__name__=co_name
+$B.make_function_infos=function(f,__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames
+){f.$is_func=true
+f.$infos={__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
+f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
 $B.make_function_defaults=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
@@ -16536,12 +16537,11 @@ js+=`$B.make_function_infos(${name2}, `+
 `${docstring}, `+
 `[${arg_names}], `+
 `${args_vararg}, `+
-`${args_kwarg})\n`
-js+=`$B.make_code_attr(${name2}, `+
+`${args_kwarg},\n`+
 `${positional.length}, `+
-`__file__,`+
-`${this.lineno},`+
-`${flags},`+
+`__file__, `+
+`${this.lineno}, `+
+`${flags}, `+
 `$B.fast_tuple([${free_vars}]), `+
 `${this.args.kwonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+

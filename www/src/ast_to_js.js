@@ -2557,13 +2557,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${docstring}, ` +
         `[${arg_names}], ` +
         `${args_vararg}, ` +
-        `${args_kwarg})\n`
-
-    js += `$B.make_code_attr(${name2}, ` +
+        `${args_kwarg},\n` +
+        // make f.__code__
         `${positional.length}, ` +
-        `__file__,` +
-        `${this.lineno},` +
-        `${flags},` +
+        `__file__, ` +
+        `${this.lineno}, ` +
+        `${flags}, ` +
         `$B.fast_tuple([${free_vars}]), ` +
         `${this.args.kwonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +

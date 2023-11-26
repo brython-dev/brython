@@ -3352,16 +3352,15 @@ $B.function.__mro__ = [_b_.object]
 
 $B.make_function_infos = function(f, __module__,
         __defaults__, __globals__, __kwdefaults__, __doc__, arg_names,
-        vararg, kwarg){
+        vararg, kwarg,
+        co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_posonlyargcount, co_qualname, co_varnames
+        ){
     f.$is_func = true
     f.$infos = {__module__,
         __defaults__, __globals__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg}
-}
-
-$B.make_code_attr = function(f, co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
-        co_posonlyargcount, co_qualname, co_varnames){
     f.$infos.__name__ = co_name
     f.$infos.__qualname__ = co_qualname
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
