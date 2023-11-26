@@ -21,3 +21,31 @@ type GenTA1[U] = list[tuple[T, T]]
 assert_raises(AttributeError, getattr, GenTA1, 'dummy')
 assert_raises(NameError, getattr, GenTA1, '__value__',
     msg="name 'T' is not defined")
+
+# generic function with lazy evaluation
+def func[T:int](arg):
+  assert str(T) == 'T'
+  assert T.__bound__ == int
+  assert T.__constraints__ == ()
+
+func(0)
+
+def dec1(f):
+  t.append('dec1')
+  return f
+
+def dec2(f):
+  t.append('dec2')
+  return f
+
+t = []
+
+@dec1
+@dec2
+def func[T:(int, 1/0)](arg):
+  assert str(T) == 'T'
+  assert T.__bound__ is None
+  assert_raises(ZeroDivisionError, getattr, T, '__constraints__')
+
+assert t == ['dec2', 'dec1']
+func(0)

@@ -34,16 +34,16 @@ var GLOBAL_PARAM = "name '%s' is parameter and global",
 
 var DEF_GLOBAL = 1,           /* global stmt */
     DEF_LOCAL = 2 ,           /* assignment in code block */
-    DEF_PARAM = 2<<1,         /* formal parameter */
-    DEF_NONLOCAL = 2<<2,      /* nonlocal stmt */
-    USE = 2<<3 ,              /* name is used */
-    DEF_FREE = 2<<4 ,         /* name used but not defined in nested block */
-    DEF_FREE_CLASS = 2<<5,    /* free variable from class's method */
-    DEF_IMPORT = 2<<6,        /* assignment occurred via import */
-    DEF_ANNOT = 2<<7,         /* this name is annotated */
-    DEF_COMP_ITER = 2<<8,     /* this name is a comprehension iteration variable */
-    DEF_TYPE_PARAM = 2<<9,    /* this name is a type parameter */
-    DEF_COMP_CELL = 2<<10       /* this name is a cell in an inlined comprehension */
+    DEF_PARAM = 2 << 1,         /* formal parameter */
+    DEF_NONLOCAL = 2 << 2,      /* nonlocal stmt */
+    USE = 2 << 3 ,              /* name is used */
+    DEF_FREE = 2 << 4 ,         /* name used but not defined in nested block */
+    DEF_FREE_CLASS = 2 << 5,    /* free variable from class's method */
+    DEF_IMPORT = 2 << 6,        /* assignment occurred via import */
+    DEF_ANNOT = 2 << 7,         /* this name is annotated */
+    DEF_COMP_ITER = 2 << 8,     /* this name is a comprehension iteration variable */
+    DEF_TYPE_PARAM = 2 << 9,    /* this name is a type parameter */
+    DEF_COMP_CELL = 2 << 10       /* this name is a cell in an inlined comprehension */
 
 var DEF_BOUND = DEF_LOCAL | DEF_PARAM | DEF_IMPORT
 
@@ -51,7 +51,7 @@ var DEF_BOUND = DEF_LOCAL | DEF_PARAM | DEF_IMPORT
    table.  GLOBAL is returned from PyST_GetScope() for either of them.
    It is stored in ste_symbols at bits 12-15.
 */
-var SCOPE_OFFSET = 11,
+var SCOPE_OFFSET = 12,
     SCOPE_MASK = (DEF_GLOBAL | DEF_LOCAL | DEF_PARAM | DEF_NONLOCAL)
 
 var LOCAL = 1,
@@ -594,16 +594,30 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 
     /* Update scope information for all symbols in this scope */
     for(var name of _b_.dict.$keys_string(symbols)){
+        var test = false // name == 'Callable'
         var flags = _b_.dict.$getitem_string(symbols, name)
+        if(test){
+            console.log('in update symbols, name', name, 'flags', flags,
+            flags & DEF_COMP_CELL)
+        }
         if(inlined_cells.has(name)){
             flags |= DEF_COMP_CELL
         }
         v_scope = scopes[name]
         var scope = v_scope
+        if(test){
+            console.log('name', name, 'scopes[name]', scopes[name],
+                ' flags |=', scope << SCOPE_OFFSET)
+        }
         flags |= (scope << SCOPE_OFFSET)
         v_new = flags
         if (!v_new){
             return 0;
+        }
+        if(test){
+            console.log('set symbol', name, 'v_new', v_new, 'def comp cell',
+                DEF_COMP_CELL,
+                v_new & DEF_COMP_CELL)
         }
         _b_.dict.$setitem_string(symbols, name, v_new)
     }
@@ -1143,6 +1157,11 @@ visitor.stmt = function(st, s){
         VISIT_SEQ(st, stmt, s.body)
         if(!symtable_exit_block(st)){
             VISIT_QUIT(st, 0)
+        }
+        if(s.type_params.length > 0) {
+            if (!symtable_exit_block(st)){
+                VISIT_QUIT(st, 0)
+            }
         }
         break;
     case $B.ast.ClassDef:
@@ -1732,7 +1751,7 @@ visitor.expr = function(st, e){
 }
 
 visitor.type_param = function(st, tp){
-    switch(tp.constructor) {
+  switch(tp.constructor) {
     case $B.ast.TypeVar:
         if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
             VISIT_QUIT(st, 0);

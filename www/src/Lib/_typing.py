@@ -176,11 +176,13 @@ class TypeVar:
         if constraints and len(constraints) == 1:
             raise TypeError("A single constraint is not allowed")
         msg = "TypeVar(name, constraint, ...): constraints must be types."
+        self.__bound__ = bound
         self.__constraints__ = tuple(_type_check(t, msg) for t in constraints)
         self.__module__ = 'typing'
         self.__covariant__ = covariant
         self.__contravariant__ = contravariant
         self.__infer_variance__ = infer_variance
+        self._lazy_eval = {}
 
 
     def __typing_subst__(self, arg):
@@ -198,6 +200,23 @@ class TypeVar:
         variance = '+' if self.__covariant__ else \
                        '-' if self.__contravariant__ else '~'
         return f"{variance}{self.__name__}"
+
+    def _set_lazy_eval(self, attr, func):
+        self._lazy_eval[attr] = func
+
+    def __getattribute__(self, attr):
+        try:
+            _lazy_eval = object.__getattribute__(self, '_lazy_eval')
+        except AttributeError:
+            return super().__getattribute__(attr)
+        if attr in _lazy_eval:
+            try:
+                return _lazy_eval[attr]()
+            except Exception as exc:
+                tb = exc.__traceback__
+                exc.__traceback__ = exc.__traceback__.tb_next
+                raise
+        return super().__getattribute__(attr)
 
 class TypeVarTuple:
     """Type variable tuple.

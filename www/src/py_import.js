@@ -1254,9 +1254,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // fromlist.indexOf('chainmap') > -1 //mod_name == "_frozen_importlib_external"
+    var test = false // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
-        console.log('mod name', mod_name, 'fromlist', fromlist)
+        console.log('import', mod_name, fromlist, aliases)
         alert()
     }
     // special case

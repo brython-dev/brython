@@ -67,7 +67,7 @@ function _make_posonlyargs(p,
     if (slash_without_default != NULL) {
         set_list(posonlyargs, slash_without_default)
     }else if (slash_with_default != NULL) {
-        slash_with_default_names =
+        var slash_with_default_names =
                 _get_names(p, slash_with_default.names_with_defaults);
         if (!slash_with_default_names) {
             return -1;
@@ -85,7 +85,7 @@ function _make_posargs(p,
               names_with_default,
               posargs) {
     if (plain_names != NULL && names_with_default != NULL) {
-        names_with_default_names = _get_names(p, names_with_default);
+        var names_with_default_names = _get_names(p, names_with_default);
         if (!names_with_default_names) {
             return -1;
         }
@@ -168,23 +168,124 @@ function _seq_number_of_starred_exprs(seq){
 
 $B._PyPegen = {}
 
+$B._PyPegen.constant_from_string = function(p, token){
+    var prepared = $B.prepare_string(token)
+    var is_bytes = prepared.value.startsWith('b')
+    if(! is_bytes){
+        var value = $B.make_string_for_ast_value(prepared.value)
+    }else{
+        value = prepared.value.substr(2, prepared.value.length - 3)
+        try{
+            value = _b_.bytes.$factory($B.encode_bytestring(value))
+        }catch(err){
+            $B._PyPegen.raise_error_known_location(p,
+                _b_.SyntaxError,
+                token.start[0], token.start[1], token.end[0], token.end[1],
+                'bytes can only contain ASCII literal characters')
+        }
+    }
+    var ast_obj = new $B.ast.Constant(value)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
+$B._PyPegen.constant_from_token = function(p, t){
+    var ast_obj = new $B.ast.Constant(t.string)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
+$B._PyPegen.decoded_constant_from_token = function(p, t){
+    var ast_obj = new $B.ast.Constant(t.string)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
+$B._PyPegen.formatted_value = function(p,
+        expression, debug,  conversion, format, closing_brace,
+        arena){
+    var conversion_val = -1
+    if(conversion){
+        var conversion_expr = conversion.result,
+            first = conversion_expr.id
+        if(first.length > 1 || ! 'sra'.indexOf(first) == -1){
+            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion_expr,
+                `f-string: invalid conversion character {first}: ` +
+                "expected 's', 'r', or 'a'")
+        }
+        var conversion_val = first.charCodeAt(0)
+    }
+    var formatted_value = new $B.ast.FormattedValue(expression,
+        conversion_val,
+        format === undefined ? format : format.result)
+    set_position_from_obj(formatted_value, p.arena)
+    if(debug){
+        var debug_end_line,
+            debug_end_offset,
+            debug_metadata
+        if(conversion){
+            debug_end_line = conversion.result.lineno
+            debug_end_offset = conversion.result.col_offset
+            debug_metadata = conversion.metadata
+        }else if(format){
+            debug_end_line = format.result.lineno
+            debug_end_offset = format.result.col_offset + 1
+            debug_metadata = format.metadata
+        }else{
+            debug_end_line = p.end_lineno
+            debug_end_offset = p.end_col_offset
+            debug_metadata = closing_brace.metadata
+        }
+        var debug = new $B.ast.Constant(debug_metadata)
+        debug.lineno = p.lineno
+        debug.col_offset = p.col_offset + 1
+        debug.end_lineno = debug_end_line
+        debug.end_col_offset = debug_end_offset
+        var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
+        set_position_from_obj(joined_str, p.arena)
+        return joined_str
+    }
+    return formatted_value
+}
+
+$B._PyPegen.joined_str = function(p, a, items, c){
+    var ast_obj = new $B.ast.JoinedStr(items)
+    ast_obj.lineno = a.start[0]
+    ast_obj.col_offset = a.start[1]
+    ast_obj.end_lineno = c.end[0]
+    ast_obj.end_col_offset = c.end[1]
+    return ast_obj
+}
+
+$B._PyPegen.setup_full_format_spec = function(p, colon, spec, arena){
+    var ast_obj = new $B.ast.JoinedStr(spec)
+    set_position_from_obj(ast_obj, arena)
+    return result_token_with_metadata(p, ast_obj, colon.metadata)
+}
+
+function result_token_with_metadata(p, result, metadata){
+    return {result, metadata}
+}
+
+$B._PyPegen.check_fstring_conversion = function(p, conv_token, conv){
+    if(conv_token.start[0] != conv.lineno ||
+            conv_token.end[1] != conv.col_offset){
+        $B._PyPegen.raise_error_known_location(p, _b_.SyntaxError,
+            conv.lineno, conv.col_offset, conv.end_lineno, conv.end_col_offset,
+            "f-string: conversion type must come right after the exclamanation mark"
+        )
+    }
+    return result_token_with_metadata(p, conv, conv_token.metadata)
+}
+
 $B._PyPegen.seq_count_dots = function(seq){
     if(seq === undefined){
         return 0
     }
     var number_of_dots = 0;
-    for (var current_expr of seq) {
-        if(current_expr instanceof $B.ast.Constant){
-            switch (current_expr.value) {
-                case ELLIPSIS:
-                    number_of_dots += 3;
-                    break;
-                case DOT:
-                    number_of_dots += 1;
-                    break;
-                default:
-                    Py_UNREACHABLE();
-            }
+    for(var token of seq){
+        if(token.type == 'OP'){
+            number_of_dots += token.string.length
         }
     }
 
@@ -251,6 +352,7 @@ function _set_list_context(p, e, ctx){
 }
 
 function _set_subscript_context(p, e, ctx){
+    console.log('set subscritp cntext', p, e)
     return $B._PyAST.Subscript(e.value, e.slice,
                             ctx, EXTRA_EXPR(e, e));
 }
@@ -388,7 +490,7 @@ $B._PyPegen.get_patterns = function(p, seq){
     return seq === undefined ? [] : seq.map(x => x.pattern)
 }
 
-$B._PyPegen.check_legacy_stmt = function(p, name) {
+$B._PyPegen.check_legacy_stmt = function(p, name){
     return ["print", "exec"].indexOf(name) > -1
 }
 
@@ -676,6 +778,7 @@ function make_formatted_value(p, fmt_values){
 }
 
 $B._PyPegen.concatenate_strings = function(p, strings){
+    // console.log('concat', strings)
     // strings is a list of tokens
     var res = '',
         first = strings[0],
@@ -692,14 +795,16 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                  end_lineno : last.end[0],
                  end_col_offset: last.end[1]
                 }
-        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
     }
 
-    function set_position(ast_obj){
-        ast_obj.lineno = first.start[0]
-        ast_obj.col_offset = first.start[1]
-        ast_obj.end_lineno = last.end[0]
-        ast_obj.end_col_offset = last.end[1]
+    function set_position_from_list(ast_obj, items){
+        var first = items[0],
+            last = items[items.length - 1]
+        ast_obj.lineno = first.lineno
+        ast_obj.col_offset = first.col_offset
+        ast_obj.end_lineno = last.end_lineno
+        ast_obj.end_col_offset = last.end_col_offset
     }
 
     // make a single list with all the strings
@@ -707,110 +812,94 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         has_fstring = false,
         state
     for(var token of strings){
-        var s = $B.prepare_string(token), // in string_parser.js
-            v = s.value
-        if(Array.isArray(v)){ // fstring
+        if(token instanceof $B.ast.JoinedStr){ // fstring
             has_fstring = true
             if(state == 'bytestring'){
                 error('cannot mix bytes and nonbytes literals')
             }
-            for(var fs_item of v){
-                if(typeof fs_item == 'string'){
-                    // add quotes
-                    fs_item = `'${fs_item.replace(/'/g, "\\'")}'`
+            for(var fs_item of token.values){
+                if(fs_item instanceof $B.ast.Constant){
+                    // escape single quotes not already escaped
+                    var parts = fs_item.value.split('\\\'')
+                    parts = parts.map(x => x.replace(new RegExp("'", "g"), "\\'"))
+                    fs_item.value = parts.join('\\\'')
+                    fs_item.value = fs_item.value.replace(/\n/g, '\\n')
+                                                 .replace(/\r/g, '\\r')
                 }
                 items.push(fs_item)
             }
             state = 'string'
         }else{
-            if((state == 'string' && s.bytes) ||
-                    (state == 'bytestring' && ! s.bytes)){
+            items.push(token)
+            var is_bytes = token.value.__class__ === _b_.bytes
+            if((is_bytes && state == 'string') ||
+                    (state == 'bytestring' && ! is_bytes)){
                 error('cannot mix bytes and nonbytes literals')
             }
-
-            var is_bytes = v.charAt(0) == 'b',
-                value
             state = is_bytes ? 'bytestring' : 'string'
-            if(! is_bytes){
-                value = v
-            }else{
-                value = $B.make_string_for_ast_value(v.substr(1))
-                value = `'${value}'`
-                value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
-            }
-            items.push(value)
         }
     }
 
     if(state == 'bytestring'){
         // only bytestrings
-        var source = []
+        var bytes = []
         for(var item of items){
-            source = source.concat(item.source)
+            bytes = bytes.concat(item.value.source)
         }
-        items[0].source = source
-        var ast_obj = new $B.ast.Constant(items[0])
-        set_position(ast_obj)
+        value = _b_.bytes.$factory(bytes)
+        var ast_obj = new $B.ast.Constant(value)
+        set_position_from_list(ast_obj, items)
         return ast_obj
+    }
+
+    // group consecutive strings
+    function group_consec_strings(items){
+        if(items.length == 1){
+            return items[0]
+        }
+        var values = items.map(x => x.value)
+        let ast_obj = new $B.ast.Constant(values.join(''))
+        set_position_from_list(ast_obj, items)
+        return ast_obj
+    }
+
+    var items1 = [],
+        consec_strs = [],
+        item_type = null
+    for(var i = 0, len = items.length; i < len; i++){
+        item = items[i]
+        if(item_type === null){
+            item_type = Object.getPrototypeOf(item)
+        }
+        if(item instanceof $B.ast.Constant){
+            consec_strs.push(item)
+        }else{
+            if(consec_strs.length > 0){
+                items1.push(group_consec_strings(consec_strs))
+            }
+            consec_strs = []
+            items1.push(item)
+        }
+    }
+    if(consec_strs.length > 0){
+        items1.push(group_consec_strings(consec_strs))
     }
 
     if(! has_fstring){
-        items = items.map($B.make_string_for_ast_value) // in py2js.js
-        var ast_obj = new $B.ast.Constant(items.join(''))
-        set_position(ast_obj)
-        return ast_obj
+        return items1[0]
     }
 
-    // concatenate consecutive strings
-    var items1 = [],
-        has_fstring,
-        i = 0
-    while(i < items.length){
-        if(typeof items[i] != 'string'){
-            items1.push(items[i])
-            i++
-        }else{
-            items1.push($B.make_string_for_ast_value(items[i]))
-            i++
-            while(i < items.length & typeof items[i] == 'string'){
-                items1[items1.length - 1] += $B.make_string_for_ast_value(items[i])
-                i++
-            }
-        }
-    }
-
-    var jstr_values = []
-
-    for(var item of items1){
-        if(typeof item == 'string'){
-            var quoted = `"${item.replace(/"/g, '\\"')}"`
-            var ast_obj = new $B.ast.Constant(item)
-            set_position_from_token(ast_obj, token)
-            jstr_values.push(ast_obj)
-        }else{
-            if(item.format !== undefined){
-                var _format = make_formatted_value(p, item.format)
-            }
-            var src = item.expression.trimStart() // ignore leading whitespace
-            var _ast = new $B.Parser(src, p.filename, 'eval').parse()
-            var raw_value = _ast.body
-            var formatted = new $B.ast.FormattedValue(raw_value,
-                make_conversion_code(item.conversion),
-                _format)
-            set_position(formatted)
-            jstr_values.push(formatted)
-        }
-    }
+    var jstr_values = items1
 
     var ast_obj = new $B.ast.JoinedStr(jstr_values)
-    set_position(ast_obj)
+    set_position_from_list(ast_obj, strings)
     return ast_obj
 }
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) ||
             exp.value.__class__ != _b_.complex) {
-        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
             "imaginary number required in complex literal");
         return NULL
     }
@@ -819,7 +908,7 @@ $B._PyPegen.ensure_imaginary = function(p, exp){
 
 $B._PyPegen.ensure_real = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
-       $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+       $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
             exp,
             "real number required in complex literal");
         return NULL
@@ -859,8 +948,7 @@ $B._PyPegen.join_names_with_dot = function(p, first_name, second_name){
 }
 
 $B._PyPegen.make_module = function(p, a){
-    var res = new $B.ast.Module(a)
-    return res
+    return new $B.ast.Module(a)
 }
 
 $B._PyPegen.new_type_comment = function(p, s){
@@ -892,7 +980,7 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
 
     var last_comprehension = $B.last(comprehensions);
 
-    return $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
+    return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
         args.args[len - 1],
         $B._PyPegen.get_last_comprehension_item(last_comprehension),
         "Generator expression must be parenthesized"

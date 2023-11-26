@@ -347,6 +347,9 @@ class Interpreter:
             self.insert(line)
             self.handle_line()
 
+    def add_to_history(self, line):
+        self.history.append(line)
+
     def handle_line(self, event=None):
         src = self.get_content().strip()
         if self._status == "main":
@@ -363,7 +366,7 @@ class Interpreter:
             if event is not None:
                 event.preventDefault()
             return
-        self.history.append(currentLine)
+        self.add_to_history(currentLine)
         self.current = len(self.history)
         if self._status in ["main", "3string"]:
             # special case
@@ -438,7 +441,7 @@ class Interpreter:
                 except Exception as exc:
                     self.print_tb(exc)
                     self._status = "main"
-            else:                
+            else:
                 try:
                     mode(block_src, self.globals, self.locals)
                 except Exception as exc:

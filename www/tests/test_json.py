@@ -85,4 +85,9 @@ assert json.loads('{"a":[]}') == {'a': []}
 d = "0.000000000000000"
 assert json.loads(d) == 0.0
 
+# issue 2331
+len1 = len(json.dumps("🙂", ensure_ascii=False))
+len2 = len(json.dumps("🙂"))
+assert len2 > len1
+
 print('all tests ok..')

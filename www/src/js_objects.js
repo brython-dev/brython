@@ -62,6 +62,8 @@ $B.pyobj2structuredclone = function(obj, strict){
             res[to_simple(entry[0])] = $B.pyobj2structuredclone(entry[1])
         }
         return res
+    }else if(obj.__class__ === $B.long_int){
+        return obj.value
     }else{
         return obj
     }
@@ -281,6 +283,9 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // Python strings are converted to the underlying value
         return pyobj.valueOf()
 
+    }
+    if(klass === $B.long_int){
+        return pyobj.value
     }
     if(klass === _b_.float){
 

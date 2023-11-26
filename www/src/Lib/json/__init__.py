@@ -196,7 +196,11 @@ def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
 
     """
     if cls is None:
-        return _json.dumps(obj, 1, **kw)
+        return _json.dumps(obj, 1,
+            skipkeys=skipkeys, ensure_ascii=ensure_ascii,
+            check_circular=check_circular, allow_nan=allow_nan, indent=indent,
+            separators=separators, default=default, sort_keys=sort_keys,
+            **kw)
     return cls(
         skipkeys=skipkeys, ensure_ascii=ensure_ascii,
         check_circular=check_circular, allow_nan=allow_nan, indent=indent,

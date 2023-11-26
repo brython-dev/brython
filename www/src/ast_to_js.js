@@ -204,7 +204,7 @@ var CELL = 5,
     GLOBAL_EXPLICIT = 2,
     GLOBAL_IMPLICIT = 3,
     SCOPE_MASK = 15,
-    SCOPE_OFF = 11
+    SCOPE_OFF = 12
 
 var TYPE_CLASS = 1,
     TYPE_FUNCTION = 0,
@@ -219,7 +219,7 @@ var DEF_GLOBAL = 1,           /* global stmt */
     DEF_FREE_CLASS = 2<<5,    /* free variable from class's method */
     DEF_IMPORT = 2<<6,        /* assignment occurred via import */
     DEF_ANNOT = 2<<7,         /* this name is annotated */
-    DEF_COMP_ITER = 2<<8     /* this name is a comprehension iteration variable */
+    DEF_COMP_ITER = 2<<8      /* this name is a comprehension iteration variable */
 
 function name_reference(name, scopes, position){
     var scope = name_scope(name, scopes)
@@ -260,7 +260,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'T'
+    var test = false // name == 'x'
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -290,6 +290,7 @@ function name_scope(name, scopes){
     }catch(err){
         console.log('name', name, 'not in symbols of block', block)
         console.log('symtables', scopes.symtable)
+        console.log('scopes', scopes.slice())
         return {found: false, resolve: 'all'}
     }
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
@@ -1375,19 +1376,19 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
     if(has_type_params){
-        js += `$B.$import('typing')\n` +
-              `var typing = $B.imported.typing\n`
+        js += `$B.$import('_typing')\n` +
+              `var _typing = $B.imported._typing\n`
         var params = []
         for(var item of this.type_params){
             if(item instanceof $B.ast.TypeVar){
-                params.push(`$B.$call(typing.TypeVar)('${item.name}')`)
+                params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)
             }else if(item instanceof $B.ast.TypeVarTuple){
-                params.push(`$B.$call($B.$getattr(typing.Unpack, '__getitem__'))($B.$call(typing.TypeVarTuple)('${item.name.id}'))`)
+                params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)
             }else if(item instanceof $B.ast.ParamSpec){
-                params.push(`$B.$call(typing.ParamSpec)('${item.name.id}')`)
+                params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)
             }
         }
-        bases.push(`typing.Generic.__class_getitem__(typing.Generic,` +
+        bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,` +
                 ` $B.fast_tuple([${params}]))`)
         for(var item of this.type_params){
             var name,
@@ -1397,7 +1398,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
             }else{
                 name = item.name.id
             }
-            js += `locals.${name} = $B.$call(typing.${param_type})('${name}')\n`
+            js += `locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`
         }
     }
 
@@ -1422,7 +1423,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `locals.__doc__ = ${docstring}\n` +
           `var frame = [name, locals, module, ${globals_name}]\n` +
-          `frame.__file__ = '${scopes.filename}'\n` +
+          `frame.__file__ = __file__\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `frame.$f_trace = $B.enter_frame(frame)\n` +
           `var _frame_obj = $B.frame_obj\n`
@@ -1770,6 +1771,511 @@ function transform_args(scopes){
             kw_defaults, kw_default_names, annotations}
 }
 
+
+
+const args0_fcts = $B.args_parsers = [];
+
+function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
+
+    const IDX =      hasPosOnly
+            | posOnlyDefaults    << 1
+            | hasPos        << 3
+            | posDefaults        << 4
+            | hasVargars        << 6
+            | hasNamedOnly        << 7
+            | namedOnlyDefaults    << 8
+            | hasKWargs        << 10;
+
+    const args0 = args0_fcts[IDX];
+
+    if(args0 !== undefined)
+        return args0;
+
+    const fct = args0_fcts[IDX] = generate_args0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs);
+
+    fct.id = IDX;
+
+    return fct;
+}
+$B.getArgs0 = getArgs0;
+
+const DEFAULTS = getArgs0.DEFAULTS = {
+    NONE: 0,
+    SOME: 1,
+    ALL : 3
+}
+
+
+// deno run generator.js
+// hasPos / posDefaults are pos parameters excluding posOnly parameters.
+function generate_args0(...args) {
+
+    return new Function('fct', 'args',  generate_args0_str(...args) );
+}
+
+
+function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
+
+    let fct =
+//`function args0_NEW(fct, args) {
+`
+    const LAST_ARGS = args[args.length-1];
+    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
+
+    let ARGS_POS_COUNT        = args.length;
+    let ARGS_NAMED            = null;
+
+    if( HAS_KW ) {
+        --ARGS_POS_COUNT;
+        ARGS_NAMED = LAST_ARGS.$kw;
+    }
+
+
+    const result = {};
+
+    // using const should enable the browser to perform some optimisation.
+    const $INFOS = fct.$infos;
+    const $CODE  = $INFOS.__code__;
+`;
+
+    if( hasPos || hasPosOnly || hasNamedOnly )
+        fct += `
+    const PARAMS_NAMES        = $INFOS.arg_names;
+`;
+
+    let PARAMS_POS_COUNT = "0";
+    if( hasPos || hasPosOnly ) {
+        PARAMS_POS_COUNT = "PARAMS_POS_COUNT";
+        fct += `
+    const PARAMS_POS_COUNT    = $CODE.co_argcount;
+`;
+    }
+
+    let PARAMS_POS_DEFAULTS_OFFSET = PARAMS_POS_COUNT;
+    let PARAMS_POS_DEFAULTS_COUNT = "0";
+
+    if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE ) {
+
+        PARAMS_POS_DEFAULTS_OFFSET = "PARAMS_POS_DEFAULTS_OFFSET";
+        PARAMS_POS_DEFAULTS_COUNT  = "PARAMS_POS_DEFAULTS_COUNT";
+
+        fct += `
+    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
+    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
+
+    const PARAMS_POS_DEFAULTS_OFFSET= ${PARAMS_POS_COUNT} - PARAMS_POS_DEFAULTS_COUNT;
+
+`;
+    }
+
+    fct += `
+    let offset = 0;
+`;
+
+    if( hasVargars ) {
+        fct +=
+`
+    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, ${PARAMS_POS_COUNT}, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
+`
+
+        if( hasPosOnly || hasPos ) {
+
+            fct +=
+`
+    const min = Math.min( ARGS_POS_COUNT, ${PARAMS_POS_COUNT} );
+    for( ; offset < min ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+        }
+    } else {
+        fct +=
+`
+    if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
+        $B.args0_old(fct, args);
+        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
+    }
+`
+        if( hasPosOnly || hasPos ) {
+
+            fct +=
+`
+    for( ; offset < ARGS_POS_COUNT ; ++offset)
+        result[ PARAMS_NAMES[offset] ] = args[offset];
+`
+        }
+    }
+
+
+    // verify if it truly has no kw arguments.
+    if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
+        fct += `
+    if( HAS_KW === true ) {
+
+        for(let argname in ARGS_NAMED[0] ) {
+            $B.args0_old(fct, args);
+            throw new Error('No named arguments expected !!!');
+        }
+
+        for(let id = 1; id < ARGS_NAMED.length; ++id ) {
+
+            const kargs = ARGS_NAMED[id];
+            for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) { //TODO: not optimal
+                $B.args0_old(fct, args);
+                throw new Error('No named arguments expected !!!');
+            }
+        }
+    }
+`;
+    } else {
+        fct += `
+    if( HAS_KW === false ) {
+    `;
+    }
+
+    if( hasPos || hasPosOnly ) {
+
+        if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
+
+            fct += `
+        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
+            $B.args0_old(fct, args);
+            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
+        }
+`
+        }
+
+        if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE) {
+            fct += `
+        for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
+            i < PARAMS_POS_DEFAULTS_COUNT;
+            ++i)
+            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`
+        }
+    }
+
+    if( hasKWargs ) {
+        fct += `
+        result[$INFOS.kwarg] = __BRYTHON__.obj_dict({});`
+    }
+
+    if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
+        fct += `
+        $B.args0_old(fct, args);
+        throw new Error('Named argument expected (args0 should have raised an error) !');
+`
+    } else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
+        fct += `
+        const kwargs_defaults_values = fct.$kwdefaults_values;
+
+        for(let i = 0; i < kwargs_defaults_values.length; ++i )
+                result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
+`
+    }
+
+    fct += `
+        return result;
+`
+
+    // verify if it truly has no kw arguments.
+    if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
+        return fct;
+    } else {
+        fct += `
+    }
+`;
+    }
+
+    if( namedOnlyDefaults !== DEFAULTS.NONE) {
+        fct += `
+    const kwargs_defaults = fct.$kwdefaults;
+`
+    }
+
+    let PARAMS_POSONLY_COUNT      = "0";
+
+    if( hasPosOnly ) {
+
+        PARAMS_POSONLY_COUNT = "PARAMS_POSONLY_COUNT";
+
+        fct += `
+    const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
+
+    if( offset < PARAMS_POSONLY_COUNT ) {
+
+        `;
+        if( posOnlyDefaults !== DEFAULTS.SOME) {
+            fct += `
+        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
+            $B.args0_old(fct, args);
+            throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+        }
+`
+        }
+        if( posOnlyDefaults === DEFAULTS.NONE) {
+            fct += `
+        $B.args0_old(fct, args);
+        throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
+`;
+        }
+
+        fct += `
+        const max = ${PARAMS_POS_DEFAULTS_COUNT} - (${PARAMS_POS_COUNT} - PARAMS_POSONLY_COUNT);
+
+        // default parameters
+        for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
+                i < max;
+                ++i)
+            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
+    }
+`
+    }
+
+    if( hasKWargs) {
+
+        fct += `
+    const extra = {};
+
+    let nb_extra_args = 0;
+`
+
+        if(hasPos || hasNamedOnly ) {
+            fct += `
+    const HAS_PARAMS = fct.$hasParams;
+`;
+        }
+    }
+
+    fct += `
+
+    let nb_named_args = 0;
+
+
+    const kargs = ARGS_NAMED[0];
+
+    for(let argname in kargs) {
+        `;
+
+        if( ! hasKWargs ) {
+            fct += `
+        result[ argname ] = kargs[argname];
+        ++nb_named_args;
+`;
+        }
+
+        if( hasKWargs ) {
+            if( ! hasNamedOnly && ! hasPos ) {
+                fct += `
+        extra[ argname ] = kargs[argname];
+        ++nb_extra_args;
+`
+            } else {
+                fct += `
+        if( HAS_PARAMS.has(argname) ) {
+            result[ argname ] = kargs[argname];
+            ++nb_named_args;
+        } else {
+            extra[ argname ] = kargs[argname];
+            ++nb_extra_args;
+        }
+`
+            }
+        }
+
+        fct += `
+    }
+
+    for(let id = 1; id < ARGS_NAMED.length; ++id ) {
+
+        const kargs = ARGS_NAMED[id];
+
+        for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+
+            if( typeof argname !== "string") {
+                $B.args0_old(fct, args);
+                throw new Error('Non string key passed in **kargs');
+            }
+            `;
+
+            if( ! hasKWargs ) {
+                fct += `
+            result[ argname ] = $B.$getitem(kargs, argname);
+            ++nb_named_args;
+`;
+            }
+
+            if( hasKWargs ) {
+                if( ! hasNamedOnly && ! hasPos ) {
+
+                    fct += `
+            extra[ argname ] = $B.$getitem(kargs, argname);
+            ++nb_extra_args;
+`
+                } else {
+                    fct += `
+            if( HAS_PARAMS.has(argname) ) {
+                result[ argname ] = $B.$getitem(kargs, argname);
+                ++nb_named_args;
+            } else {
+                extra[ argname ] = $B.$getitem(kargs, argname);
+                ++nb_extra_args;
+            }
+`
+                }
+            }
+
+            fct += `
+        }
+    }
+`
+
+    fct += `
+    let found = 0;
+    let ioffset = offset;
+`;
+
+    if(    (hasPosOnly || hasPos)
+        && (! hasPosOnly || posOnlyDefaults !== DEFAULTS.ALL)
+        && (! hasPos     || posDefaults !== DEFAULTS.ALL) ) {
+        fct += `
+    for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
+
+        const key = PARAMS_NAMES[ioffset];
+        if( key in result ) // maybe could be speed up using "!(key in result)"
+            continue;
+
+        $B.args0_old(fct, args);
+        throw new Error('Missing a named arguments (args0 should have raised an error) !');
+    }
+`
+    }
+    if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.NONE) || (hasPos && posDefaults !== DEFAULTS.NONE) ) {
+        fct += `
+    for( ; ioffset < PARAMS_POS_COUNT; ++ioffset) {
+
+        const key = PARAMS_NAMES[ioffset];
+        if( key in result )
+            continue;
+
+        result[key] = PARAMS_POS_DEFAULTS[ioffset - ${PARAMS_POS_DEFAULTS_OFFSET}];
+    ++found;
+    }
+`
+    }
+
+    if( hasNamedOnly ) {
+
+        fct += `
+        for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
+
+            const key = PARAMS_NAMES[ioffset];
+            if( key in result )
+                continue;
+`
+        if( namedOnlyDefaults === DEFAULTS.SOME) {
+            fct += `
+            if( ! kwargs_defaults.has(key) ) {
+                $B.args0_old(fct, args);
+
+                throw new Error('Missing a named arguments (args0 should have raised an error) !');
+            }
+`
+        }
+        if( namedOnlyDefaults === DEFAULTS.NONE ) {
+            fct += `
+            $B.args0_old(fct, args);
+
+            throw new Error('Missing a named arguments (args0 should have raised an error) !');
+`
+        }
+
+        if( namedOnlyDefaults !== DEFAULTS.NONE) {
+            fct += `
+
+            result[key] = kwargs_defaults.get(key);
+            ++found;
+`;
+        }
+
+        fct += `
+        }
+`;
+    }
+
+    if( hasNamedOnly || hasPos )
+        fct += `
+        if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
+            $B.args0_old(fct, args);
+            throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
+        }
+`;
+
+    if( hasKWargs ) {
+        fct += `
+    if( Object.keys(extra).length !== nb_extra_args ) {
+        $B.args0_old(fct, args);
+        throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
+    }
+    result[$INFOS.kwarg] = __BRYTHON__.obj_dict(extra);
+`
+    }
+
+    fct += `
+    return result
+    `;
+
+    //fct += `}`;
+    return fct;
+}
+
+//console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
+
+const USE_PERSO_ARGS0_EVERYWHERE = true;
+
+function type_param_in_def(tp, ref, scopes){
+    var gname = scopes[0].name,
+        globals_name = make_scope_name(scopes, scopes[0])
+    var js = ''
+    var name,
+        param_type = tp.constructor.$name
+    if(param_type == 'TypeVar'){
+        name = tp.name
+    }else{
+        name = tp.name.id
+    }
+    bind(name, scopes)
+    if(tp.bound){
+        // symtable defines a block of type 'TypeVarBoundBlock' associated
+        // with tp
+        var typevarscope = new Scope(name, 'typevarbound', tp)
+        scopes.push(typevarscope)
+        js += `function BOUND_OF_${name}(){\n` +
+              `var current_frame = $B.frame_obj.frame,\n` +
+              `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
+              `frame.$f_trace = $B.enter_frame(frame)\n` +
+              `frame.__file__ = '${scopes.filename}'\n` +
+              `frame.$lineno = ${tp.bound.lineno}\n` +
+              `try{\n` +
+              `var res = ${tp.bound.to_js(scopes)}\n` +
+              `$B.leave_frame()\nreturn res\n` +
+              `}catch(err){\n` +
+              `$B.leave_frame()\n` +
+              `throw err\n}\n}\n`
+        scopes.pop()
+    }
+    js += `locals_${ref}.${name} = ` +
+        `$B.$call(_typing.${param_type})('${name}')\n` +
+        `type_params.push(locals_${ref}.${name})\n`
+    if(tp.bound){
+        if(! tp.bound.elts){
+            js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
+                `'__bound__', BOUND_OF_${name})\n`
+        }else{
+            js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
+                `'__constraints__', BOUND_OF_${name})\n`
+        }
+    }
+    return js
+}
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
@@ -1778,17 +2284,24 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         var class_scope = last_scope(scopes)
     }
 
+    // bind function name in function enclosing scope
+    var func_name_scope = bind(this.name, scopes)
+
+    var gname = scopes[0].name,
+        globals_name = make_scope_name(scopes, scopes[0])
+
     var decorators = [],
         decorated = false,
-        decs = ''
+        decs_declare = this.decorator_list.length > 0 ?
+                           '// declare decorators\n' : ''
 
     // evaluate decorator in enclosing scope
     for(var dec of this.decorator_list){
         decorated = true
         var dec_id = 'decorator' + $B.UUID()
         decorators.push(dec_id)
-        decs += `$B.set_lineno(frame, ${dec.lineno})\n`
-        decs += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`
+        decs_declare += `$B.set_lineno(frame, ${dec.lineno})\n`
+        decs_declare += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
     // Detect doc string
@@ -1807,9 +2320,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
             `$B.obj_dict({${kw_defaults.join(', ')}})`
 
-    var func_scope = new Scope(this.name, 'def', this)
-    scopes.push(func_scope)
-
     var id = $B.UUID(),
         name1 = this.name + '$' + id,
         name2 = this.name + id
@@ -1820,27 +2330,32 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(has_type_params){
         // create a scope for type params
-        var tp_name = 'type_params'
-        var type_params_scope = new Scope(tp_name, 'type_params', this)
+        var tp_name = `type_params_${name2}`
+        var type_params_scope = new Scope(tp_name, 'type_params',
+            this.type_params)
+        scopes.push(type_params_scope)
         var type_params_ref = qualified_scope_name(scopes, type_params_scope)
 
+        var type_params_func = `function TYPE_PARAMS_OF_${name2}(){\n`
+
         // generate code to store type params in the scope namespace
-        var type_params = `$B.$import('typing')\n` +
-              `var typing = $B.imported.typing\n`
+        var type_params = `$B.$import('_typing')\n` +
+              `var _typing = $B.imported._typing\n` +
+              `var locals_${type_params_ref} = {\n},\n` +
+              `locals = locals_${type_params_ref},\n` +
+              `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
+              `type_params = []\n` +
+              `frame.$f_trace = $B.enter_frame(frame)\n` +
+              `frame.__file__ = '${scopes.filename}'\n`
         var name = this.type_params[0].name
         for(var item of this.type_params){
-            var name,
-                param_type = item.constructor.$name
-            if(param_type == 'TypeVar'){
-                name = item.name
-            }else{
-                name = item.name.id
-            }
-            bind(name, scopes)
-            type_params += `locals_${type_params_ref}.${name} = ` +
-                `$B.$call(typing.${param_type})('${name}')\n`
+            type_params += type_param_in_def(item, type_params_ref, scopes)
         }
+        type_params_func += type_params
     }
+
+    var func_scope = new Scope(this.name, 'def', this)
+    scopes.push(func_scope)
 
     var args = positional.concat(this.args.kwonlyargs),
         slots = [],
@@ -1879,8 +2394,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var parse_args = [name2]
 
-    var js = decs +
-             `$B.set_lineno(frame, ${this.lineno})\n`
+    var js = `$B.set_lineno(frame, ${this.lineno})\n`
 
     if(is_async && ! is_generator){
         js += 'async '
@@ -1888,9 +2402,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `function ${name2}(){\n`
 
-    var locals_name = make_scope_name(scopes, func_scope),
-        gname = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0])
+    var locals_name = make_scope_name(scopes, func_scope)
     js += `var ${locals_name},
                locals\n`
 
@@ -1904,9 +2416,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
-        js += `${locals_name} = locals = {};
-if( arguments.length !== 0)
-	$B.args0(${parse_args.join(', ')})\n`; // build error message
+        js += `${locals_name} = locals = {};\n`
+        // generate error message
+        js += `if(arguments.length !== 0) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;`
+    }else if(USE_PERSO_ARGS0_EVERYWHERE){
+        js += `${locals_name} = locals = ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n`
     }else{
         js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
     }
@@ -1916,7 +2430,7 @@ if( arguments.length !== 0)
     if(locals.$has_generators){
         frame.$has_generators = true
     }
-    frame.__file__ = '${scopes.filename}'
+    frame.__file__ = __file__
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`
 
@@ -1996,8 +2510,7 @@ if( arguments.length !== 0)
 
     scopes.pop()
 
-    var func_name_scope = bind(this.name, scopes),
-        in_class = func_name_scope.ast instanceof $B.ast.ClassDef
+    var in_class = func_name_scope.ast instanceof $B.ast.ClassDef
 
     var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
                               this.name
@@ -2029,7 +2542,6 @@ if( arguments.length !== 0)
     var varnames = parameters.concat(locals)
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
-    js += `${name2}.$is_func = true\n`
     if(in_class){
         js += `${name2}.$is_method = true\n`
     }
@@ -2037,31 +2549,27 @@ if( arguments.length !== 0)
         js += `${name2}.$is_async = true\n`
     }
     // Set admin infos
-    js += `${name2}.$infos = {\n` +
-        `__module__: "${gname}",\n` +
-        `__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n` +
-        `__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n` +
-        `__defaults__: ${defaults},\n` +
-        `__globals__: _b_.globals(),\n` +
-        `__kwdefaults__: ${kw_defaults},\n` +
-        `__doc__: ${docstring},\n` +
-        `__code__:{\n` +
-        `co_argcount: ${positional.length},\n ` +
-        `co_filename: '${scopes.filename}',\n` +
-        `co_firstlineno: ${this.lineno},\n` +
-        `co_flags: ${flags},\n` +
-        `co_freevars: $B.fast_tuple([${free_vars}]),\n` +
-        `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n` +
-        `co_name: '${this.$is_lambda ? '<lambda>': this.name}',\n` +
-        `co_nlocals: ${varnames.length},\n` +
-        `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
-        `co_qualname: '${this.$is_lambda ? '<lambda>': qualname}',\n` +
-        `co_varnames: $B.fast_tuple([${varnames}])\n` +
-        `},\n` +
-        `arg_names: [${arg_names}],\n` +
-        `vararg: ${args_vararg},\n` +
-        `kwarg: ${args_kwarg}\n` +
-        `}\n`
+    js += `$B.make_function_infos(${name2}, ` +
+        `'${gname}', ` +
+        `${defaults}, ` +
+        `_b_.globals(), ` +
+        `${kw_defaults}, ` +
+        `${docstring}, ` +
+        `[${arg_names}], ` +
+        `${args_vararg}, ` +
+        `${args_kwarg},\n` +
+        // make f.__code__
+        `${positional.length}, ` +
+        `__file__, ` +
+        `${this.lineno}, ` +
+        `${flags}, ` +
+        `$B.fast_tuple([${free_vars}]), ` +
+        `${this.args.kwonlyargs.length}, ` +
+        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
+        `${varnames.length}, ` +
+        `${this.args.posonlyargs.length}, ` +
+        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
+        `$B.fast_tuple([${varnames}]))\n`
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
@@ -2079,10 +2587,6 @@ if( arguments.length !== 0)
 
     js += `${func_ref} = ${name2}\n`
     if(this.returns || parsed_args.annotations){
-        if(has_type_params){
-            scopes.push(type_params_scope)
-            type_params_scope.name = this.name + '_' + type_params_scope.name
-        }
         var ann_items = []
         if(this.returns){
             ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
@@ -2096,14 +2600,17 @@ if( arguments.length !== 0)
                 ann_items.push(`['${arg_ann}', ${value}]`)
             }
         }
-        if(has_type_params){
-            scopes.pop()
-        }
+
         js += `${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`
     }else{
         js += `${func_ref}.__annotations__ = $B.empty_dict()\n`
     }
-    if(decorated){
+
+    if(has_type_params){
+        scopes.pop()
+    }
+
+    if(decorated && ! has_type_params){
         js += `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
         var decorate = func_ref
         for(var dec of decorators.reverse()){
@@ -2113,8 +2620,27 @@ if( arguments.length !== 0)
     }
 
     if(has_type_params){
-        js = `var locals_${type_params_ref} = {\n}\n` + type_params + js
+        // complete function TYPE_PARAMS_OF_func()
+        type_params_func += '\n' + js + '\n' +
+            `${name2}.__type_params__ = $B.fast_tuple(type_params)\n` +
+            `$B.leave_frame()\n` +
+            `return ${name2}\n}\n`
+
+        js = type_params_func
+        if(decorated){
+            // decorate outside of TYPE_PARAMS_OF_
+            js += `var ${func_ref} = TYPE_PARAMS_OF_${name2}()\n` +
+                `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
+            var decorate = func_ref
+            for(var dec of decorators.reverse()){
+                decorate = `$B.$call(${dec})(${decorate})`
+            }
+            js += decorate
+        }else{
+            js += `var locals_${type_params_ref} = TYPE_PARAMS_OF_${name2}()\n`
+        }
     }
+    js = decs_declare + js
     return js
 }
 
@@ -2618,7 +3144,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
             js += `,\nlocals_${name} = locals`
         }
     }
-    js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
+    js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3437,13 +3963,13 @@ $B.js_from_ast = function(ast, scopes){
             if(['match_case'].indexOf(klass) == -1){
                 console.log('pas de col offset pour', klass)
                 console.log(ast)
-                throw Error('ccc')
+                throw Error('no col offset')
                 alert()
             }
         }
         return ast.to_js(scopes)
     }
-    console.log("unhandled", ast.constructor.$name, ast)
+    console.log("unhandled", ast.constructor.$name, ast, typeof ast)
     return '// unhandled class ast.' + ast.constructor.$name
 }
 

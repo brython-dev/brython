@@ -18,8 +18,7 @@ function idb_load(evt, module){
     // Otherwise, get the source code from brython_stdlib.js.
     var res = evt.target.result
 
-    var timestamp = $B.timestamp,
-        debug = $B.get_page_option('debug')
+    var debug = $B.get_page_option('debug')
 
     if(res === undefined || res.timestamp != $B.timestamp ||
             ($B.VFS[module] && res.source_ts !== $B.VFS[module].timestamp)){
@@ -30,9 +29,7 @@ function idb_load(evt, module){
                 ext = elts[0],
                 source = elts[1]
             if(ext == ".py"){
-                var imports = elts[2],
-                    is_package = elts.length == 4,
-                    source_ts = elts.timestamp,
+                var is_package = elts.length == 4,
                     __package__
 
                 // Temporarily set $B.imported[module] for relative imports
@@ -46,9 +43,7 @@ function idb_load(evt, module){
                     __package__)
                 $B.url2name[module] = module
                 try{
-                    var root = $B.py2js(
-                            {src:source, filename: module}, module, module),
-                        js = root.to_js()
+                    $B.py2js({src:source, filename: module}, module, module)
                 }catch(err){
                     $B.handle_error(err)
                 }
@@ -87,7 +82,7 @@ function idb_load(evt, module){
                         nb_dots++
                         subimport = subimport.substr(1)
                     }
-                    var elts = url_elts.slice(0, nb_dots)
+                    let elts = url_elts.slice(0, nb_dots)
                     if(subimport){
                         elts = elts.concat([subimport])
                     }
@@ -98,7 +93,7 @@ function idb_load(evt, module){
                     // If the code of the required module is not already
                     // loaded, add a task for this.
                     if($B.VFS.hasOwnProperty(subimport)){
-                        var submodule = $B.VFS[subimport],
+                        let submodule = $B.VFS[subimport],
                             ext = submodule[0],
                             source = submodule[1]
                         if(submodule[0] == ".py"){
@@ -113,38 +108,6 @@ function idb_load(evt, module){
     }
     loop()
 }
-
-function store_precompiled(module, js, source_ts, imports, is_package){
-    // Sends a request to store the compiled Javascript for a module.
-    var db = $B.idb_cx.result,
-        tx = db.transaction("modules", "readwrite"),
-        store = tx.objectStore("modules"),
-        cursor = store.openCursor(),
-        data = {"name": module,
-            "content": js,
-            "imports": imports,
-            "timestamp": __BRYTHON__.timestamp,
-            "source_ts": source_ts,
-            "is_package": is_package
-            },
-        request = store.put(data)
-    if($B.get_page_option('debug') > 1){
-        console.log("store precompiled", module, "package", is_package)
-    }
-    document.dispatchEvent(new CustomEvent('precompile',
-        {detail: 'cache module '  + module}))
-    var ix = $B.outdated.indexOf(module)
-    if(ix > -1){
-        $B.outdated.splice(ix, 1)
-    }
-    request.onsuccess = function(evt){
-        // Restart the task "idb_get", knowing that this time it will use
-        // the compiled version.
-        $B.tasks.splice(0, 0, [idb_get, module])
-        loop()
-    }
-}
-
 
 function idb_get(module){
     // Sends a request to the indexedDB database for the module name.
@@ -192,7 +155,7 @@ $B.idb_open_promise = function(){
 
                 var openCursor = store.openCursor()
 
-                openCursor.onerror = function(evt){
+                openCursor.onerror = function(){
                     reject("open cursor error")
                 }
 
@@ -246,7 +209,7 @@ $B.idb_open_promise = function(){
 }
 
 
-$B.idb_open = function(obj){
+$B.idb_open = function(){
     $B.idb_name = "brython-cache"
     var idb_cx = $B.idb_cx = indexedDB.open($B.idb_name)
 
@@ -398,16 +361,15 @@ function add_jsmodule(module, source){
     $B.precompiled[module] = source
 }
 
-var inImported = $B.inImported = function(module){
+$B.inImported = function(module){
     if($B.imported.hasOwnProperty(module)){
         // already imported, do nothing
     }else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){
         var elts = __BRYTHON__.VFS[module]
         if(elts === undefined){console.log('bizarre', module)}
         var ext = elts[0],
-            source = elts[1],
-            is_package = elts.length == 4
-        if(ext==".py"){
+            source = elts[1]
+        if(ext == ".py"){
             if($B.idb_cx && !$B.idb_cx.$closed){
                 $B.tasks.splice(0, 0, [idb_get, module])
             }
@@ -435,7 +397,7 @@ function report_close(){
     }
 }
 
-function report_done(mod){
+function report_done(){
     if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent("brython_done",
             {detail: $B.obj_dict($B.$options)}))
@@ -530,34 +492,6 @@ var loop = $B.loop = function(){
 $B.tasks = []
 $B.has_indexedDB = self.indexedDB !== undefined
 
-function required_stdlib_imports(imports, start){
-    // Returns the list of modules from the standard library needed by
-    // the modules in "imports"
-    var nb_added = 0
-    start = start || 0
-    for(var i = start; i < imports.length; i++){
-        var module = imports[i]
-        if($B.imported.hasOwnProperty(module)){continue}
-        var mod_obj = $B.VFS[module]
-        if(mod_obj === undefined){console.log("undef", module)}
-        if(mod_obj[0] == ".py"){
-            var subimports = mod_obj[2] // list of modules needed by this mod
-            subimports.forEach(function(subimport){
-                if(!$B.imported.hasOwnProperty(subimport) &&
-                        imports.indexOf(subimport) == -1){
-                    if($B.VFS.hasOwnProperty(subimport)){
-                        imports.push(subimport)
-                        nb_added++
-                    }
-                }
-            })
-        }
-    }
-    if(nb_added){
-        required_stdlib_imports(imports, imports.length - nb_added)
-    }
-    return imports
-}
 
 })(__BRYTHON__)
 

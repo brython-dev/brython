@@ -349,3 +349,14 @@ async def wait_error():
         async_tester.assertIs(type(exc), TypeError)
 
 aio.run(wait_error())
+
+# anext(async_iterator, default)
+async def async_it_yield_one():
+  yield 1
+
+async def test_anext_with_default():
+  gen = async_it_yield_one()
+  async_tester.assertEqual(await anext(gen), 1)
+  async_tester.assertEqual(await anext(gen, 99), 99)
+
+aio.run(test_anext_with_default())

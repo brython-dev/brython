@@ -4,54 +4,52 @@
 // http://web.cs.ucla.edu/~todd/research/pepm08.pdf
 
 (function($B){
-
+"use strict";
 var _b_ = $B.builtins,
-    debug = 1
+    debug = 0
 
 // ---- Define names used by grammar actions
 
 // Global parser object
 var p = {feature_version: $B.version_info[1]}
 
-var Store = new $B.ast.Store(),
-    Load = new $B.ast.Load(),
-    Del = new $B.ast.Del(),
-    NULL = undefined
+$B.parser_constants = {
+    Store: new $B.ast.Store(),
+    Load: new $B.ast.Load(),
+    Del: new $B.ast.Del(),
+    NULL: undefined,
+    alias_ty: $B.ast.alias,
+    keyword_ty: $B.ast.keyword,
+    arguments_ty: $B.ast.arguments,
+    expr_ty: $B.ast.expr,
+    asdl_stmt_seq: Array,
+    asdl_int_seq: Array,
+    asdl_expr_seq: Array,
+    asdl_keyword_seq: Array,
+    asdl_identifier_seq: Array,
+    asdl_pattern_seq: Array,
+    asdl_type_param_seq: Array,
+    AugOperator: $B.ast.AugAssign,
+    IsNot: $B.ast.IsNot,
+    Py_Ellipsis: _b_.Ellipsis,
+    Py_False: false,
+    Py_True: true,
+    Py_None: _b_.None,
+    PyExc_SyntaxError: _b_.SyntaxError,
+    STAR_TARGETS: 1,
+    DEL_TARGETS: 2,
+    FOR_TARGETS: 3
+}
 
 // actions such as Add, Not, etc.
 for(var op_type of $B.op_types){
     for(var key in op_type){
         var klass_name = op_type[key]
-        eval(`var ${klass_name} = new $B.ast.${klass_name}()`)
+        $B.parser_constants[klass_name] = new $B.ast[klass_name]()
     }
 }
 
-var alias_ty = $B.ast.alias,
-    keyword_ty = $B.ast.keyword,
-    arguments_ty = $B.ast.arguments,
-    expr_ty = $B.ast.expr,
-    asdl_stmt_seq = Array,
-    asdl_int_seq = Array,
-    asdl_expr_seq = Array,
-    asdl_keyword_seq = Array,
-    asdl_identifier_seq = Array,
-    asdl_pattern_seq = Array,
-    AugOperator = $B.ast.AugAssign,
-    Py_Ellipsis = _b_.Ellipsis,
-    Py_False = false,
-    Py_True = true,
-    Py_None = _b_.None,
-    PyExc_SyntaxError = _b_.SyntaxError
-
-var PyPARSE_IGNORE_COOKIE = 0x0010,
-    PyPARSE_BARRY_AS_BDFL = 0x0020,
-    PyPARSE_TYPE_COMMENTS = 0x0040,
-    PyPARSE_ASYNC_HACKS = 0x0080,
-    PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
-
-var STAR_TARGETS = 'star_targets',
-    FOR_TARGETS = 'for_targets',
-    DEL_TARGETS = 'del_targets'
+var NULL = $B.parser_constants.NULL
 
 // Generate functions to create AST instances
 $B._PyAST = {}
@@ -90,91 +88,6 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     ]
 
 
-function asdl_seq_LEN(t){
-    return t.length
-}
-
-function asdl_seq_GET(t, i){
-    return t[i]
-}
-
-function PyPegen_last_item(seq){
-    return seq[seq.length - 1]
-}
-
-function CHECK(type, obj){
-    if(Array.isArray(type)){
-        var check
-        for(var t of type){
-            check = CHECK(t, obj)
-            if(check){
-                return check
-            }
-        }
-        return undefined
-    }
-    if(obj instanceof type){
-        return obj
-    }
-    return undefined
-}
-
-function CHECK_VERSION(type, version, msg, node){
-    return INVALID_VERSION_CHECK(p, version, msg, node)
-}
-
-function CHECK_NULL_ALLOWED(type, obj){
-    if(obj !== NULL){
-        if(type instanceof Array){
-            for(var t of type){
-                if(obj instanceof t){
-                    return obj
-                }
-            }
-            return
-        }else{
-            return obj instanceof type ? obj : undefined
-        }
-    }
-    return obj
-}
-
-function INVALID_VERSION_CHECK(p, version, msg, node){
-    if (node == NULL) {
-        p.error_indicator = 1;  // Inline CHECK_CALL
-        return NULL;
-    }
-    if (p.feature_version < version) {
-        p.error_indicator = 1;
-        return RAISE_SYNTAX_ERROR("%s only supported in Python 3.%i and greater",
-                                  msg, version);
-    }
-    return node;
-}
-
-function NEW_TYPE_COMMENT(p, x){
-    return x
-}
-
-function RAISE_ERROR_KNOWN_LOCATION(p, errtype,
-                           lineno, col_offset,
-                           end_lineno, end_col_offset,
-                           errmsg){
-    var va = [errmsg]
-    $B._PyPegen.raise_error_known_location(p, errtype,
-        lineno, col_offset, end_lineno, end_col_offset, errmsg, va);
-    return NULL;
-}
-
-var RAISE_SYNTAX_ERROR = function(msg){
-    var extra_args = []
-    for(var i = 1, len = arguments.length; i < len; i++){
-        extra_args.push(arguments[i])
-    }
-    get_last_token(p)
-    $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
-}
-
 function get_last_token(p){
     var last_token = p.tokens.last
     if(p.tokens.last.type == "ENDMARKER"){
@@ -195,68 +108,152 @@ function get_last_token(p){
     p.known_err_token = last_token
 }
 
-var RAISE_INDENTATION_ERROR = function(msg, arg){
-    if(arg !== undefined){
-        msg = _b_.str.__mod__(msg, arg)
-    }
-    var last_token = p.tokens.last
-    if(p.tokens.last.type == "ENDMARKER"){
-        var src = $B.file_cache[p.filename]
-        if(src){
-            for(var token of $B.tokenizer(src)){
-                if(token.type == "ENDMARKER"){
-                    break
+var helper_functions = {
+    CHECK: function(type, obj){
+        if(Array.isArray(type)){
+            var check
+            for(var t of type){
+                check = helper_functions.CHECK(t, obj)
+                if(check){
+                    return check
                 }
-                last_token = token
+            }
+            return undefined
+        }
+        if(obj instanceof type){
+            return obj
+        }
+        return undefined
+    },
+
+    CHECK_VERSION: function(type, version, msg, node){
+        return helper_functions.INVALID_VERSION_CHECK(p, version, msg, node)
+    },
+
+    CHECK_NULL_ALLOWED: function(type, obj){
+        if(obj !== NULL){
+            if(type instanceof Array){
+                for(var t of type){
+                    if(obj instanceof t){
+                        return obj
+                    }
+                }
+                return
+            }else{
+                return obj instanceof type ? obj : undefined
             }
         }
-    }
-    get_last_token(p)
-    $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
-}
+        return obj
+    },
 
-var RAISE_SYNTAX_ERROR_KNOWN_LOCATION = function(a, err_msg, arg){
-    if(arg !== undefined){
-        err_msg = _b_.str.__mod__(err_msg, arg)
-    }
-
-    RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
-        a.lineno, a.col_offset,
-        a.end_lineno, a.end_col_offset,
-        err_msg)
-}
-
-function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
-    var extra_args = arguments[3]
-    RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
-        a.lineno, a.col_offset,
-        b.end_lineno, b.end_col_offset,
-        msg, extra_args)
-}
-
-
-function RAISE_SYNTAX_ERROR_INVALID_TARGET(type, e){
-    return _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e)
-}
-
-function _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
-    var invalid_target = CHECK_NULL_ALLOWED(expr_ty,
-        $B._PyPegen.get_invalid_target(e, type));
-    if (invalid_target != NULL) {
-        var msg;
-        if (type == STAR_TARGETS || type == FOR_TARGETS) {
-            msg = "cannot assign to %s";
-        }else{
-            msg = "cannot delete %s";
+    INVALID_VERSION_CHECK: function(p, version, msg, node){
+        if (node == NULL) {
+            p.error_indicator = 1;  // Inline CHECK_CALL
+            return NULL;
         }
-        return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
-            invalid_target,
-            msg,
-            $B._PyPegen.get_expr_name(invalid_target)
-        )
-    }
-    return NULL;
+        if (p.feature_version < version) {
+            p.error_indicator = 1;
+            return helper_functions.RAISE_SYNTAX_ERROR("%s only supported in Python 3.%i and greater",
+                                      msg, version);
+        }
+        return node;
+    },
+
+    NEW_TYPE_COMMENT: function(p, x){
+        return x
+    },
+
+    RAISE_ERROR_KNOWN_LOCATION: function(p, errtype,
+                               lineno, col_offset,
+                               end_lineno, end_col_offset,
+                               errmsg){
+        var va = [errmsg]
+        $B._PyPegen.raise_error_known_location(p, errtype,
+            lineno, col_offset, end_lineno, end_col_offset, errmsg, va);
+        return NULL;
+    },
+
+    RAISE_SYNTAX_ERROR: function(msg){
+        var extra_args = []
+        for(var i = 1, len = arguments.length; i < len; i++){
+            extra_args.push(arguments[i])
+        }
+        get_last_token(p)
+        $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
+    },
+
+
+    RAISE_INDENTATION_ERROR: function(msg, arg){
+        if(arg !== undefined){
+            msg = _b_.str.__mod__(msg, arg)
+        }
+        var last_token = p.tokens.last
+        if(p.tokens.last.type == "ENDMARKER"){
+            var src = $B.file_cache[p.filename]
+            if(src){
+                for(var token of $B.tokenizer(src)){
+                    if(token.type == "ENDMARKER"){
+                        break
+                    }
+                    last_token = token
+                }
+            }
+        }
+        get_last_token(p)
+        $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
+    },
+
+    RAISE_SYNTAX_ERROR_KNOWN_LOCATION: function(a, err_msg, arg){
+        if(arg !== undefined){
+            err_msg = _b_.str.__mod__(err_msg, arg)
+        }
+
+        helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
+            a.lineno, a.col_offset,
+            a.end_lineno, a.end_col_offset,
+            err_msg)
+    },
+
+    RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(a, b, msg){
+        var extra_args = arguments[3]
+        helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
+            a.lineno, a.col_offset,
+            b.end_lineno, b.end_col_offset,
+            msg, extra_args)
+    },
+
+
+    RAISE_SYNTAX_ERROR_INVALID_TARGET: function(type, e){
+        return helper_functions._RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e)
+    },
+
+    _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
+        var invalid_target = $B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,
+            $B._PyPegen.get_invalid_target(e, type));
+        if (invalid_target != NULL) {
+            var msg;
+            if (type == $B.parser_constants.STAR_TARGETS ||
+                    type == $B.parser_constants.FOR_TARGETS) {
+                msg = "cannot assign to %s";
+            }else{
+                msg = "cannot delete %s";
+            }
+            return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+                invalid_target,
+                msg,
+                $B._PyPegen.get_expr_name(invalid_target)
+            )
+        }
+        return NULL;
+    },
+
+    asdl_seq_LEN: (t) => t.length,
+
+    asdl_seq_GET: (t, i) => t[i]
+
 }
+
+$B.helper_functions = helper_functions
 
 function handle_errortoken(token, token_reader){
     if(token.string == "'" || token.string == '"'){
@@ -405,7 +402,7 @@ Parser.prototype.parse = function(){
         if(err_token.type == 'ERRORTOKEN'){
             message = handle_errortoken(err_token, this.tokens)
         }
-        RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
+        $B.helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             err_token.start[0],
             err_token.start[1],
             err_token.end[0],
@@ -442,6 +439,9 @@ Parser.prototype.set_memo = function(rule, position, value){
 
 Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
+    if(debug){
+        console.log('apply rule', rule, 'at position', position, this.tokens[position])
+    }
     var memoized = this.RECALL(rule, position),
         result
     if(memoized === null){
@@ -631,6 +631,9 @@ Parser.prototype.eval_option_once = function(rule, position){
 
 Parser.prototype.eval_body = function(rule, position){
     // Only for grammar rules
+    if(debug){
+        console.log('eval body', rule, position, this.tokens[position])
+    }
     var start = position
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
@@ -775,12 +778,17 @@ Parser.prototype.grow_lr = function(rule, position, m, H){
     return m.match
 }
 
+function set_alias(L, name, value){
+    L[name] = value
+}
+
 // Function that generates the AST for a match
 function make_ast(match, tokens){
     // match.rule succeeds; make_ast() returns a value for the match, based on
     // the grammar action for the rule
     var rule = match.rule,
-        names = {}
+        names = {},
+        L = {p} // used as namespace for rule action parameters
     p.tokens = tokens
     p.mark = match.start
     p.fill = match.start
@@ -798,6 +806,7 @@ function make_ast(match, tokens){
                  end_col_offset: token.end[1]
                  }
     p.arena = EXTRA
+    L.EXTRA = EXTRA
 
     if(rule.repeat){
         // If a repeated rule has an alias, it applies to the repetition list
@@ -808,10 +817,10 @@ function make_ast(match, tokens){
                 res.push(tokens[m.start])
             }
             if(rule.alias){
-                eval('var ' + rule.alias + ' = res')
+                set_alias(L, rule.alias, res)
             }
             if(rule.action){
-                return eval(rule.action)
+                return rule.action(L)
             }
             return res
         }else if(rule.type == 'NAME'){
@@ -820,10 +829,10 @@ function make_ast(match, tokens){
                     new $B.ast.Load()))
             }
             if(rule.alias){
-                eval('var ' + rule.alias + ' = res')
+                set_alias(L, rule.alias, res)
             }
             if(rule.action){
-                return eval(rule.action)
+                return rule.action(L)
             }
             return res
         }
@@ -836,17 +845,18 @@ function make_ast(match, tokens){
                     var m = one_match.matches[i]
                     var _make = make_ast(m, tokens)
                     if(rule.items[i].alias){
-                        eval('var ' + rule.items[i].alias + ' = _make')
+                        set_alias(L, rule.items[i].alias, _make)
                     }
                     elts.push(_make)
                 }
                 if(rule.action){
                     try{
-                        makes.push(eval(rule.action))
+                        var res = rule.action(L)
                     }catch(err){
                         console.log('error eval action of', show_rule(rule), match)
                         throw err
                     }
+                    makes.push(res)
                 }else if(elts.length == 1){
                     makes.push(elts[0])
                 }else{
@@ -872,7 +882,8 @@ function make_ast(match, tokens){
             _make
         if(match.matches.length > 0){
             var first = match.matches[0],
-                last = $B.last(match.matches)
+                last = $B.last(match.matches),
+                last_token
             EXTRA = {
                     lineno: tokens[first.start].start[0],
                     col_offset: tokens[first.start].start[1],
@@ -919,8 +930,7 @@ function make_ast(match, tokens){
             }
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
-                eval('var ' + rule.items[i].alias + ' = _make')
-                // console.log('alias', rule.items[i].alias, show_rule(rule.items[i]), _make)
+                set_alias(L, rule.items[i].alias, _make)
             }
             if(! rule.items[i].lookahead){
                 nb_consuming++
@@ -928,14 +938,14 @@ function make_ast(match, tokens){
         }
         if(rule.action){
             try{
-                //console.log(show_rule(rule, true))
-                ast = eval(rule.action)
+                ast = rule.action(L)
             }catch(err){
-                if($B.get_option('debug') > 2){
+                if(debug === null){
                     var rule_str = show_rule(rule, true)
                     console.log('error eval action of', rule_str)
+                    console.log('rule.action', rule.action + '')
                     console.log('p', p)
-                    console.log($B.make_frames_stack())
+                    //console.log($B.make_frames_stack())
                     console.log(err.message)
                     console.log(err.stack)
                 }
@@ -965,13 +975,15 @@ function make_ast(match, tokens){
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }else if(['STRING', 'string'].indexOf(rule.type) > -1){
-            var s = tokens[match.start].string
-            s = s.replace(/\n/g,'\\n\\\n')
-                 .replace(/\r/g,'\\r\\\r')
-            var ast_obj = new $B.ast.Constant(s)
-            set_position_from_EXTRA(ast_obj, EXTRA)
-            return ast_obj
+            return token
+        }else if(rule.type == 'FSTRING_START'){
+            return token
+        }else if(rule.type == 'FSTRING_MIDDLE'){
+            return token
+        }else if(rule.type == 'FSTRING_END'){
+            return token
         }
+
         // ignore other rules such as DEDENT, NEWLINE etc.
     }
 }
@@ -1070,10 +1082,5 @@ function show_rule(rule, show_action){
     return res
 }
 
-// export names for use in other scripts (action_helpers.js)
-$B.Parser.RAISE_SYNTAX_ERROR = RAISE_SYNTAX_ERROR
-$B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION = RAISE_SYNTAX_ERROR_KNOWN_LOCATION
-$B.Parser.RAISE_ERROR_KNOWN_LOCATION = RAISE_ERROR_KNOWN_LOCATION
-$B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE = RAISE_SYNTAX_ERROR_KNOWN_RANGE
 
 })(__BRYTHON__)

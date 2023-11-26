@@ -10,13 +10,13 @@ file:
         repeat: '?', alias: 'a'
       },
       {type: 'ENDMARKER'}
-    ], action: '$B._PyPegen.make_module(p, a)'
+    ], action: (L) => $B._PyPegen.make_module(L.p, L.a)
   },
 interactive:
   {
     items: [
       {type: 'rule', name: 'statement_newline', alias: 'a'}
-    ], action: '$B._PyAST.Interactive(a, p.arena)'
+    ], action: (L) => $B._PyAST.Interactive(L.a, L.p.arena)
   },
 eval:
   {
@@ -24,7 +24,7 @@ eval:
       {type: 'rule', name: 'expressions', alias: 'a'},
       {type: 'NEWLINE', repeat: '*'},
       {type: 'ENDMARKER'}
-    ], action: '$B._PyAST.Expression(a, p.arena)'
+    ], action: (L) => $B._PyAST.Expression(L.a, L.p.arena)
   },
 func_type:
   {
@@ -41,19 +41,13 @@ func_type:
       {type: 'rule', name: 'expression', alias: 'b'},
       {type: 'NEWLINE', repeat: '*'},
       {type: 'ENDMARKER'}
-    ], action: '$B._PyAST.FunctionType(a, b, p.arena)'
-  },
-fstring:
-  {
-    items: [
-      {type: 'rule', name: 'star_expressions'}
-    ]
+    ], action: (L) => $B._PyAST.FunctionType(L.a, L.b, L.p.arena)
   },
 statements:
   {
     items: [
       {type: 'rule', name: 'statement', repeat: '+', alias: 'a'}
-    ], action: '$B._PyPegen.seq_flatten(p, a)'
+    ], action: (L) => $B._PyPegen.seq_flatten(L.p, L.a)
   },
 statement:
   {
@@ -61,12 +55,12 @@ statement:
       {
         items: [
           {type: 'rule', name: 'compound_stmt', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
           {type: 'rule', name: 'simple_stmts', alias: 'a'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 statement_newline:
@@ -76,7 +70,7 @@ statement_newline:
         items: [
           {type: 'rule', name: 'compound_stmt', alias: 'a'},
           {type: 'NEWLINE'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
@@ -86,12 +80,12 @@ statement_newline:
       {
         items: [
           {type: 'NEWLINE'}
-        ], action: '$B._PyPegen.singleton_seq(p, CHECK($B.ast.stmt, $B._PyAST.Pass(EXTRA)))'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, $B.helper_functions.CHECK($B.ast.stmt, $B._PyAST.Pass(L.EXTRA)))
       },
       {
         items: [
           {type: 'ENDMARKER'}
-        ], action: '$B._PyPegen.interactive_exit(p)'
+        ], action: (L) => $B._PyPegen.interactive_exit(L.p)
       }]
   },
 simple_stmts:
@@ -102,7 +96,7 @@ simple_stmts:
           {type: 'rule', name: 'simple_stmt', alias: 'a'},
           {type: 'string', value: ';', lookahead: 'negative'},
           {type: 'NEWLINE'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
@@ -114,7 +108,7 @@ simple_stmts:
             repeat: '?'
           },
           {type: 'NEWLINE'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 simple_stmt:
@@ -127,8 +121,14 @@ simple_stmt:
       },
       {
         items: [
+          {type: 'string', value: 'type', lookahead: 'positive'},
+          {type: 'rule', name: 'type_alias'}
+        ]
+      },
+      {
+        items: [
           {type: 'rule', name: 'star_expressions', alias: 'e'}
-        ], action: '$B._PyAST.Expr(e, EXTRA)'
+        ], action: (L) => $B._PyAST.Expr(L.e, L.EXTRA)
       },
       {
         items: [
@@ -163,7 +163,7 @@ simple_stmt:
       {
         items: [
           {type: 'string', value: 'pass'}
-        ], action: '$B._PyAST.Pass(EXTRA)'
+        ], action: (L) => $B._PyAST.Pass(L.EXTRA)
       },
       {
         items: [
@@ -186,12 +186,12 @@ simple_stmt:
       {
         items: [
           {type: 'string', value: 'break'}
-        ], action: '$B._PyAST.Break(EXTRA)'
+        ], action: (L) => $B._PyAST.Break(L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'continue'}
-        ], action: '$B._PyAST.Continue(EXTRA)'
+        ], action: (L) => $B._PyAST.Continue(L.EXTRA)
       },
       {
         items: [
@@ -323,9 +323,9 @@ assignment:
               {type: 'string', value: '='},
               {type: 'rule', name: 'annotated_rhs', alias: 'd'}
             ],
-            repeat: '?', alias: 'c', action: 'd'
+            repeat: '?', alias: 'c', action: (L) => L.d
           }
-        ], action: 'CHECK_VERSION( $B.ast.stmt, 6, "Variable annotation syntax is", $B._PyAST.AnnAssign(CHECK($B.ast.expr, $B._PyPegen.set_expr_context(p, a, Store)), b, c, 1, EXTRA) )'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 6, "Variable annotation syntax is", $B._PyAST.AnnAssign($B.helper_functions.CHECK($B.parser_constants.expr_ty, $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Store)), L.b, L.c, 1, L.EXTRA))
       },
       {
         items: [
@@ -336,7 +336,7 @@ assignment:
                   {type: 'string', value: '('},
                   {type: 'rule', name: 'single_target', alias: 'b'},
                   {type: 'string', value: ')'}
-                ], action: 'b'
+                ], action: (L) => L.b
               },
               {
                 items: [
@@ -351,9 +351,9 @@ assignment:
               {type: 'string', value: '='},
               {type: 'rule', name: 'annotated_rhs', alias: 'd'}
             ],
-            repeat: '?', alias: 'c', action: 'd'
+            repeat: '?', alias: 'c', action: (L) => L.d
           }
-        ], action: 'CHECK_VERSION($B.ast.stmt, 6, "Variable annotations syntax is", $B._PyAST.AnnAssign(a, b, c, 0, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 6, "Variable annotations syntax is", $B._PyAST.AnnAssign(L.a, L.b, L.c, 0, L.EXTRA))
       },
       {
         items: [
@@ -362,7 +362,7 @@ assignment:
               {type: 'rule', name: 'star_targets', alias: 'z'},
               {type: 'string', value: '='}
             ],
-            repeat: '+', alias: 'a', action: 'z'
+            repeat: '+', alias: 'a', action: (L) => L.z
           },
           {
            choices: [
@@ -384,7 +384,7 @@ assignment:
             ],
             repeat: '?', alias: 'tc'
           }
-        ], action: '$B._PyAST.Assign(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA)'
+        ], action: (L) => $B._PyAST.Assign(L.a, L.b, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.EXTRA)
       },
       {
         items: [
@@ -404,7 +404,7 @@ assignment:
                 ]
               }], alias: 'c'
           }
-        ], action: '$B._PyAST.AugAssign(a, b.kind, c, EXTRA)'
+        ], action: (L) => $B._PyAST.AugAssign(L.a, L.b.kind, L.c, L.EXTRA)
       },
       {
         items: [
@@ -432,67 +432,67 @@ augassign:
       {
         items: [
           {type: 'string', value: '+='}
-        ], action: '$B._PyPegen.augoperator(p, Add)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.Add)
       },
       {
         items: [
           {type: 'string', value: '-='}
-        ], action: '$B._PyPegen.augoperator(p, Sub)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.Sub)
       },
       {
         items: [
           {type: 'string', value: '*='}
-        ], action: '$B._PyPegen.augoperator(p, Mult)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.Mult)
       },
       {
         items: [
           {type: 'string', value: '@='}
-        ], action: 'CHECK_VERSION(AugOperator, 5, "The \'@\' operator is", $B._PyPegen.augoperator(p, MatMult))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.AugOperator, 5, "The \'@\' operator is", $B._PyPegen.augoperator(L.p, $B.parser_constants.MatMult))
       },
       {
         items: [
           {type: 'string', value: '/='}
-        ], action: '$B._PyPegen.augoperator(p, Div)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.Div)
       },
       {
         items: [
           {type: 'string', value: '%='}
-        ], action: '$B._PyPegen.augoperator(p, Mod)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.Mod)
       },
       {
         items: [
           {type: 'string', value: '&='}
-        ], action: '$B._PyPegen.augoperator(p, BitAnd)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.BitAnd)
       },
       {
         items: [
           {type: 'string', value: '|='}
-        ], action: '$B._PyPegen.augoperator(p, BitOr)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.BitOr)
       },
       {
         items: [
           {type: 'string', value: '^='}
-        ], action: '$B._PyPegen.augoperator(p, BitXor)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.BitXor)
       },
       {
         items: [
           {type: 'string', value: '<<='}
-        ], action: '$B._PyPegen.augoperator(p, LShift)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.LShift)
       },
       {
         items: [
           {type: 'string', value: '>>='}
-        ], action: '$B._PyPegen.augoperator(p, RShift)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.RShift)
       },
       {
         items: [
           {type: 'string', value: '**='}
-        ], action: '$B._PyPegen.augoperator(p, Pow)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.Pow)
       },
       {
         items: [
           {type: 'string', value: '//='}
-        ], action: '$B._PyPegen.augoperator(p, FloorDiv)'
+        ], action: (L) => $B._PyPegen.augoperator(L.p, $B.parser_constants.FloorDiv)
       }]
   },
 return_stmt:
@@ -505,7 +505,7 @@ return_stmt:
         ],
         repeat: '?', alias: 'a'
       }
-    ], action: '$B._PyAST.Return(a, EXTRA)'
+    ], action: (L) => $B._PyAST.Return(L.a, L.EXTRA)
   },
 raise_stmt:
   {
@@ -519,14 +519,14 @@ raise_stmt:
               {type: 'string', value: 'from'},
               {type: 'rule', name: 'expression', alias: 'z'}
             ],
-            repeat: '?', alias: 'b', action: 'z'
+            repeat: '?', alias: 'b', action: (L) => L.z
           }
-        ], action: '$B._PyAST.Raise(a, b, EXTRA)'
+        ], action: (L) => $B._PyAST.Raise(L.a, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'raise'}
-        ], action: '$B._PyAST.Raise(NULL, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Raise($B.parser_constants.NULL, $B.parser_constants.NULL, L.EXTRA)
       }]
   },
 global_stmt:
@@ -534,14 +534,14 @@ global_stmt:
     items: [
       {type: 'string', value: 'global'},
       {type: 'NAME', join: ',', alias: 'a', repeat: '+'}
-    ], action: '$B._PyAST.Global(CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, a)), EXTRA)'
+    ], action: (L) => $B._PyAST.Global($B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids(L.p, L.a)), L.EXTRA)
   },
 nonlocal_stmt:
   {
     items: [
       {type: 'string', value: 'nonlocal'},
       {type: 'NAME', join: ',', alias: 'a', repeat: '+'}
-    ], action: '$B._PyAST.Nonlocal(CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, a)), EXTRA)'
+    ], action: (L) => $B._PyAST.Nonlocal($B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids(L.p, L.a)), L.EXTRA)
   },
 del_stmt:
   {
@@ -563,7 +563,7 @@ del_stmt:
                 ]
               }], lookahead: 'positive'
           }
-        ], action: '$B._PyAST.Delete(a, EXTRA)'
+        ], action: (L) => $B._PyAST.Delete(L.a, L.EXTRA)
       },
       {
         items: [
@@ -575,7 +575,7 @@ yield_stmt:
   {
     items: [
       {type: 'rule', name: 'yield_expr', alias: 'y'}
-    ], action: '$B._PyAST.Expr(y, EXTRA)'
+    ], action: (L) => $B._PyAST.Expr(L.y, L.EXTRA)
   },
 assert_stmt:
   {
@@ -587,13 +587,18 @@ assert_stmt:
           {type: 'string', value: ','},
           {type: 'rule', name: 'expression', alias: 'z'}
         ],
-        repeat: '?', alias: 'b', action: 'z'
+        repeat: '?', alias: 'b', action: (L) => L.z
       }
-    ], action: '$B._PyAST.Assert(a, b, EXTRA)'
+    ], action: (L) => $B._PyAST.Assert(L.a, L.b, L.EXTRA)
   },
 import_stmt:
   {
    choices: [
+      {
+        items: [
+          {type: 'rule', name: 'invalid_import'}
+        ]
+      },
       {
         items: [
           {type: 'rule', name: 'import_name'}
@@ -610,7 +615,7 @@ import_name:
     items: [
       {type: 'string', value: 'import'},
       {type: 'rule', name: 'dotted_as_names', alias: 'a'}
-    ], action: '$B._PyAST.Import(a, EXTRA)'
+    ], action: (L) => $B._PyAST.Import(L.a, L.EXTRA)
   },
 import_from:
   {
@@ -635,7 +640,7 @@ import_from:
           {type: 'rule', name: 'dotted_name', alias: 'b'},
           {type: 'string', value: 'import'},
           {type: 'rule', name: 'import_from_targets', alias: 'c'}
-        ], action: '$B._PyAST.ImportFrom(b.id, c, $B._PyPegen.seq_count_dots(a), EXTRA)'
+        ], action: (L) => $B._PyAST.ImportFrom(L.b.id, L.c, $B._PyPegen.seq_count_dots(L.a), L.EXTRA)
       },
       {
         items: [
@@ -656,7 +661,7 @@ import_from:
           },
           {type: 'string', value: 'import'},
           {type: 'rule', name: 'import_from_targets', alias: 'b'}
-        ], action: '$B._PyAST.ImportFrom(NULL, b, $B._PyPegen.seq_count_dots(a), EXTRA)'
+        ], action: (L) => $B._PyAST.ImportFrom($B.parser_constants.NULL, L.b, $B._PyPegen.seq_count_dots(L.a), L.EXTRA)
       }]
   },
 import_from_targets:
@@ -673,7 +678,7 @@ import_from_targets:
             repeat: '?'
           },
           {type: 'string', value: ')'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -684,7 +689,7 @@ import_from_targets:
       {
         items: [
           {type: 'string', value: '*'}
-        ], action: '$B._PyPegen.singleton_seq(p, CHECK($B.ast.alias, $B._PyPegen.alias_for_star(p, EXTRA)))'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, $B.helper_functions.CHECK($B.parser_constants.alias_ty, $B._PyPegen.alias_for_star(L.p, L.EXTRA)))
       },
       {
         items: [
@@ -696,7 +701,7 @@ import_from_as_names:
   {
     items: [
       {type: 'rule', name: 'import_from_as_name', join: ',', alias: 'a', repeat: '+'}
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 import_from_as_name:
   {
@@ -707,15 +712,15 @@ import_from_as_name:
           {type: 'string', value: 'as'},
           {type: 'NAME', alias: 'z'}
         ],
-        repeat: '?', alias: 'b', action: 'z'
+        repeat: '?', alias: 'b', action: (L) => L.z
       }
-    ], action: '$B._PyAST.alias(a.id, (b) ? b.id : NULL, EXTRA)'
+    ], action: (L) => $B._PyAST.alias(L.a.id, (L.b)?(L.b).id:$B.parser_constants.NULL, L.EXTRA)
   },
 dotted_as_names:
   {
     items: [
       {type: 'rule', name: 'dotted_as_name', join: ',', alias: 'a', repeat: '+'}
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 dotted_as_name:
   {
@@ -726,9 +731,9 @@ dotted_as_name:
           {type: 'string', value: 'as'},
           {type: 'NAME', alias: 'z'}
         ],
-        repeat: '?', alias: 'b', action: 'z'
+        repeat: '?', alias: 'b', action: (L) => L.z
       }
-    ], action: '$B._PyAST.alias(a.id, (b) ? b.id : NULL, EXTRA)'
+    ], action: (L) => $B._PyAST.alias(L.a.id, (L.b)?(L.b).id:$B.parser_constants.NULL, L.EXTRA)
   },
 dotted_name:
   {
@@ -738,7 +743,7 @@ dotted_name:
           {type: 'rule', name: 'dotted_name', alias: 'a'},
           {type: 'string', value: '.'},
           {type: 'NAME', alias: 'b'}
-        ], action: '$B._PyPegen.join_names_with_dot(p, a, b)'
+        ], action: (L) => $B._PyPegen.join_names_with_dot(L.p, L.a, L.b)
       },
       {
         items: [
@@ -755,7 +760,7 @@ block:
           {type: 'INDENT'},
           {type: 'rule', name: 'statements', alias: 'a'},
           {type: 'DEDENT'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -777,9 +782,9 @@ decorators:
           {type: 'rule', name: 'named_expression', alias: 'f'},
           {type: 'NEWLINE'}
         ],
-        repeat: '+', alias: 'a', action: 'f'
+        repeat: '+', alias: 'a', action: (L) => L.f
       }
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 class_def:
   {
@@ -788,7 +793,7 @@ class_def:
         items: [
           {type: 'rule', name: 'decorators', alias: 'a'},
           {type: 'rule', name: 'class_def_raw', alias: 'b'}
-        ], action: '$B._PyPegen.class_def_decorators(p, a, b)'
+        ], action: (L) => $B._PyPegen.class_def_decorators(L.p, L.a, L.b)
       },
       {
         items: [
@@ -810,6 +815,12 @@ class_def_raw:
           {type: 'NAME', alias: 'a'},
           {
             items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?', alias: 't'
+          },
+          {
+            items: [
               {type: 'string', value: '('},
               {
                 items: [
@@ -819,11 +830,11 @@ class_def_raw:
               },
               {type: 'string', value: ')'}
             ],
-            repeat: '?', alias: 'b', action: 'z'
+            repeat: '?', alias: 'b', action: (L) => L.z
           },
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'c'}
-        ], action: '$B._PyAST.ClassDef(a.id, (b) ? b.args : NULL, (b) ? b.keywords : NULL, c, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.ClassDef(L.a.id, (L.b)?(L.b).args:$B.parser_constants.NULL, (L.b)?(L.b).keywords:$B.parser_constants.NULL, L.c, $B.parser_constants.NULL, L.t, L.EXTRA)
       }]
   },
 function_def:
@@ -833,7 +844,7 @@ function_def:
         items: [
           {type: 'rule', name: 'decorators', alias: 'd'},
           {type: 'rule', name: 'function_def_raw', alias: 'f'}
-        ], action: '$B._PyPegen.function_def_decorators(p, d, f)'
+        ], action: (L) => $B._PyPegen.function_def_decorators(L.p, L.d, L.f)
       },
       {
         items: [
@@ -853,6 +864,12 @@ function_def_raw:
         items: [
           {type: 'string', value: 'def'},
           {type: 'NAME', alias: 'n'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?', alias: 't'
+          },
           {type: 'string', value: '('},
           {
             items: [
@@ -866,7 +883,7 @@ function_def_raw:
               {type: 'string', value: '->'},
               {type: 'rule', name: 'expression', alias: 'z'}
             ],
-            repeat: '?', alias: 'a', action: 'z'
+            repeat: '?', alias: 'a', action: (L) => L.z
           },
           {type: 'string', value: ':'},
           {
@@ -876,13 +893,19 @@ function_def_raw:
             repeat: '?', alias: 'tc'
           },
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: '$B._PyAST.FunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA)'
+        ], action: (L) => $B._PyAST.FunctionDef(L.n.id, (L.params)?L.params:$B.helper_functions.CHECK($B.parser_constants.arguments_ty, $B._PyPegen.empty_arguments(L.p)), L.b, $B.parser_constants.NULL, L.a, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.t, L.EXTRA)
       },
       {
         items: [
           {type: 'ASYNC'},
           {type: 'string', value: 'def'},
           {type: 'NAME', alias: 'n'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?', alias: 't'
+          },
           {type: 'string', value: '('},
           {
             items: [
@@ -896,7 +919,7 @@ function_def_raw:
               {type: 'string', value: '->'},
               {type: 'rule', name: 'expression', alias: 'z'}
             ],
-            repeat: '?', alias: 'a', action: 'z'
+            repeat: '?', alias: 'a', action: (L) => L.z
           },
           {type: 'string', value: ':'},
           {
@@ -906,7 +929,7 @@ function_def_raw:
             repeat: '?', alias: 'tc'
           },
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: 'CHECK_VERSION( $B.ast.stmt, 5, "Async functions are", $B._PyAST.AsyncFunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA) )'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 5, "Async functions are", $B._PyAST.AsyncFunctionDef(L.n.id, (L.params)?L.params:$B.helper_functions.CHECK($B.parser_constants.arguments_ty, $B._PyPegen.empty_arguments(L.p)), L.b, $B.parser_constants.NULL, L.a, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.t, L.EXTRA))
       }]
   },
 params:
@@ -937,7 +960,7 @@ parameters:
             ],
             repeat: '?', alias: 'd'
           }
-        ], action: 'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, a, NULL, b, c, d))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(L.p, L.a, $B.parser_constants.NULL, L.b, L.c, L.d))
       },
       {
         items: [
@@ -949,7 +972,7 @@ parameters:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: 'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, NULL, a, NULL, b, c))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, L.a, $B.parser_constants.NULL, L.b, L.c))
       },
       {
         items: [
@@ -961,7 +984,7 @@ parameters:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.make_arguments(p, NULL, NULL, a, b, c)'
+        ], action: (L) => $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a, L.b, L.c)
       },
       {
         items: [
@@ -972,12 +995,12 @@ parameters:
             ],
             repeat: '?', alias: 'b'
           }
-        ], action: '$B._PyPegen.make_arguments(p, NULL, NULL, NULL, a, b)'
+        ], action: (L) => $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a, L.b)
       },
       {
         items: [
           {type: 'rule', name: 'star_etc', alias: 'a'}
-        ], action: '$B._PyPegen.make_arguments(p, NULL, NULL, NULL, NULL, a)'
+        ], action: (L) => $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a)
       }]
   },
 slash_no_default:
@@ -988,14 +1011,14 @@ slash_no_default:
           {type: 'rule', name: 'param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ','}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
           {type: 'rule', name: 'param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 slash_with_default:
@@ -1007,7 +1030,7 @@ slash_with_default:
           {type: 'rule', name: 'param_with_default', repeat: '+', alias: 'b'},
           {type: 'string', value: '/'},
           {type: 'string', value: ','}
-        ], action: '$B._PyPegen.slash_with_default(p, a, b)'
+        ], action: (L) => $B._PyPegen.slash_with_default(L.p, L.a, L.b)
       },
       {
         items: [
@@ -1015,7 +1038,7 @@ slash_with_default:
           {type: 'rule', name: 'param_with_default', repeat: '+', alias: 'b'},
           {type: 'string', value: '/'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: '$B._PyPegen.slash_with_default(p, a, b)'
+        ], action: (L) => $B._PyPegen.slash_with_default(L.p, L.a, L.b)
       }]
   },
 star_etc:
@@ -1037,7 +1060,7 @@ star_etc:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.star_etc(p, a, b, c)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, L.a, L.b, L.c)
       },
       {
         items: [
@@ -1050,7 +1073,7 @@ star_etc:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.star_etc(p, a, b, c)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, L.a, L.b, L.c)
       },
       {
         items: [
@@ -1063,12 +1086,12 @@ star_etc:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.star_etc(p, NULL, b, c)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, $B.parser_constants.NULL, L.b, L.c)
       },
       {
         items: [
           {type: 'rule', name: 'kwds', alias: 'a'}
-        ], action: '$B._PyPegen.star_etc(p, NULL, NULL, a)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a)
       }]
   },
 kwds:
@@ -1083,7 +1106,7 @@ kwds:
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'param_no_default', alias: 'a'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 param_no_default:
@@ -1094,14 +1117,14 @@ param_no_default:
           {type: 'rule', name: 'param', alias: 'a'},
           {type: 'string', value: ','},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'}
-        ], action: '$B._PyPegen.add_type_comment_to_arg(p, a, tc)'
+        ], action: (L) => $B._PyPegen.add_type_comment_to_arg(L.p, L.a, L.tc)
       },
       {
         items: [
           {type: 'rule', name: 'param', alias: 'a'},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: '$B._PyPegen.add_type_comment_to_arg(p, a, tc)'
+        ], action: (L) => $B._PyPegen.add_type_comment_to_arg(L.p, L.a, L.tc)
       }]
   },
 param_no_default_star_annotation:
@@ -1112,14 +1135,14 @@ param_no_default_star_annotation:
           {type: 'rule', name: 'param_star_annotation', alias: 'a'},
           {type: 'string', value: ','},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'}
-        ], action: '$B._PyPegen.add_type_comment_to_arg(p, a, tc)'
+        ], action: (L) => $B._PyPegen.add_type_comment_to_arg(L.p, L.a, L.tc)
       },
       {
         items: [
           {type: 'rule', name: 'param_star_annotation', alias: 'a'},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: '$B._PyPegen.add_type_comment_to_arg(p, a, tc)'
+        ], action: (L) => $B._PyPegen.add_type_comment_to_arg(L.p, L.a, L.tc)
       }]
   },
 param_with_default:
@@ -1131,7 +1154,7 @@ param_with_default:
           {type: 'rule', name: 'default', alias: 'c'},
           {type: 'string', value: ','},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, tc)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, L.tc)
       },
       {
         items: [
@@ -1139,7 +1162,7 @@ param_with_default:
           {type: 'rule', name: 'default', alias: 'c'},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, tc)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, L.tc)
       }]
   },
 param_maybe_default:
@@ -1151,7 +1174,7 @@ param_maybe_default:
           {type: 'rule', name: 'default', repeat: '?', alias: 'c'},
           {type: 'string', value: ','},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, tc)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, L.tc)
       },
       {
         items: [
@@ -1159,7 +1182,7 @@ param_maybe_default:
           {type: 'rule', name: 'default', repeat: '?', alias: 'c'},
           {type: 'TYPE_COMMENT', repeat: '?', alias: 'tc'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, tc)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, L.tc)
       }]
   },
 param:
@@ -1167,28 +1190,28 @@ param:
     items: [
       {type: 'NAME', alias: 'a'},
       {type: 'rule', name: 'annotation', repeat: '?', alias: 'b'}
-    ], action: '$B._PyAST.arg(a.id, b, NULL, EXTRA)'
+    ], action: (L) => $B._PyAST.arg(L.a.id, L.b, $B.parser_constants.NULL, L.EXTRA)
   },
 param_star_annotation:
   {
     items: [
       {type: 'NAME', alias: 'a'},
       {type: 'rule', name: 'star_annotation', alias: 'b'}
-    ], action: '$B._PyAST.arg(a.id, b, NULL, EXTRA)'
+    ], action: (L) => $B._PyAST.arg(L.a.id, L.b, $B.parser_constants.NULL, L.EXTRA)
   },
 annotation:
   {
     items: [
       {type: 'string', value: ':'},
       {type: 'rule', name: 'expression', alias: 'a'}
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 star_annotation:
   {
     items: [
       {type: 'string', value: ':'},
       {type: 'rule', name: 'star_expression', alias: 'a'}
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 default:
   {
@@ -1197,7 +1220,7 @@ default:
         items: [
           {type: 'string', value: '='},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -1220,7 +1243,7 @@ if_stmt:
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'},
           {type: 'rule', name: 'elif_stmt', alias: 'c'}
-        ], action: '$B._PyAST.If(a, b, CHECK(asdl_stmt_seq, $B._PyPegen.singleton_seq(p, c)), EXTRA)'
+        ], action: (L) => $B._PyAST.If(L.a, L.b, $B.helper_functions.CHECK($B.parser_constants.asdl_stmt_seq, $B._PyPegen.singleton_seq(L.p, L.c)), L.EXTRA)
       },
       {
         items: [
@@ -1234,7 +1257,7 @@ if_stmt:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyAST.If(a, b, c, EXTRA)'
+        ], action: (L) => $B._PyAST.If(L.a, L.b, L.c, L.EXTRA)
       }]
   },
 elif_stmt:
@@ -1252,7 +1275,7 @@ elif_stmt:
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'},
           {type: 'rule', name: 'elif_stmt', alias: 'c'}
-        ], action: '$B._PyAST.If(a, b, CHECK(asdl_stmt_seq, $B._PyPegen.singleton_seq(p, c)), EXTRA)'
+        ], action: (L) => $B._PyAST.If(L.a, L.b, $B.helper_functions.CHECK($B.parser_constants.asdl_stmt_seq, $B._PyPegen.singleton_seq(L.p, L.c)), L.EXTRA)
       },
       {
         items: [
@@ -1266,7 +1289,7 @@ elif_stmt:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyAST.If(a, b, c, EXTRA)'
+        ], action: (L) => $B._PyAST.If(L.a, L.b, L.c, L.EXTRA)
       }]
   },
 else_block:
@@ -1282,7 +1305,7 @@ else_block:
           {type: 'string', value: 'else'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: 'b'
+        ], action: (L) => L.b
       }]
   },
 while_stmt:
@@ -1305,7 +1328,7 @@ while_stmt:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyAST.While(a, b, c, EXTRA)'
+        ], action: (L) => $B._PyAST.While(L.a, L.b, L.c, L.EXTRA)
       }]
   },
 for_stmt:
@@ -1337,7 +1360,7 @@ for_stmt:
             ],
             repeat: '?', alias: 'el'
           }
-        ], action: '$B._PyAST.For(t, ex, b, el, NEW_TYPE_COMMENT(p, tc), EXTRA)'
+        ], action: (L) => $B._PyAST.For(L.t, L.ex, L.b, L.el, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.EXTRA)
       },
       {
         items: [
@@ -1361,7 +1384,7 @@ for_stmt:
             ],
             repeat: '?', alias: 'el'
           }
-        ], action: 'CHECK_VERSION($B.ast.stmt, 5, "Async for loops are", $B._PyAST.AsyncFor(t, ex, b, el, NEW_TYPE_COMMENT(p, tc), EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 5, "Async for loops are", $B._PyAST.AsyncFor(L.t, L.ex, L.b, L.el, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.EXTRA))
       },
       {
         items: [
@@ -1386,7 +1409,7 @@ with_stmt:
           {type: 'string', value: ')'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: 'CHECK_VERSION($B.ast.stmt, 9, "Parenthesized context managers are", $B._PyAST.With(a, b, NULL, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 9, "Parenthesized context managers are", $B._PyAST.With(L.a, L.b, $B.parser_constants.NULL, L.EXTRA))
       },
       {
         items: [
@@ -1400,7 +1423,7 @@ with_stmt:
             repeat: '?', alias: 'tc'
           },
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: '$B._PyAST.With(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA)'
+        ], action: (L) => $B._PyAST.With(L.a, L.b, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.EXTRA)
       },
       {
         items: [
@@ -1412,7 +1435,7 @@ with_stmt:
           {type: 'string', value: ')'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: 'CHECK_VERSION($B.ast.stmt, 5, "Async with statements are", $B._PyAST.AsyncWith(a, b, NULL, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 5, "Async with statements are", $B._PyAST.AsyncWith(L.a, L.b, $B.parser_constants.NULL, L.EXTRA))
       },
       {
         items: [
@@ -1427,7 +1450,7 @@ with_stmt:
             repeat: '?', alias: 'tc'
           },
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: 'CHECK_VERSION($B.ast.stmt, 5, "Async with statements are", $B._PyAST.AsyncWith(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 5, "Async with statements are", $B._PyAST.AsyncWith(L.a, L.b, $B.helper_functions.NEW_TYPE_COMMENT(L.p, L.tc), L.EXTRA))
       },
       {
         items: [
@@ -1461,7 +1484,7 @@ with_item:
                 ]
               }], lookahead: 'positive'
           }
-        ], action: '$B._PyAST.withitem(e, t, p.arena)'
+        ], action: (L) => $B._PyAST.withitem(L.e, L.t, L.p.arena)
       },
       {
         items: [
@@ -1471,7 +1494,7 @@ with_item:
       {
         items: [
           {type: 'rule', name: 'expression', alias: 'e'}
-        ], action: '$B._PyAST.withitem(e, NULL, p.arena)'
+        ], action: (L) => $B._PyAST.withitem(L.e, $B.parser_constants.NULL, L.p.arena)
       }]
   },
 try_stmt:
@@ -1488,7 +1511,7 @@ try_stmt:
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'},
           {type: 'rule', name: 'finally_block', alias: 'f'}
-        ], action: '$B._PyAST.Try(b, NULL, NULL, f, EXTRA)'
+        ], action: (L) => $B._PyAST.Try(L.b, $B.parser_constants.NULL, $B.parser_constants.NULL, L.f, L.EXTRA)
       },
       {
         items: [
@@ -1508,7 +1531,7 @@ try_stmt:
             ],
             repeat: '?', alias: 'f'
           }
-        ], action: '$B._PyAST.Try(b, ex, el, f, EXTRA)'
+        ], action: (L) => $B._PyAST.Try(L.b, L.ex, L.el, L.f, L.EXTRA)
       },
       {
         items: [
@@ -1528,7 +1551,7 @@ try_stmt:
             ],
             repeat: '?', alias: 'f'
           }
-        ], action: 'CHECK_VERSION($B.ast.stmt, 11, "Exception groups are", $B._PyAST.TryStar(b, ex, el, f, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 11, "Exception groups are", $B._PyAST.TryStar(L.b, L.ex, L.el, L.f, L.EXTRA))
       }]
   },
 except_block:
@@ -1548,18 +1571,18 @@ except_block:
               {type: 'string', value: 'as'},
               {type: 'NAME', alias: 'z'}
             ],
-            repeat: '?', alias: 't', action: 'z'
+            repeat: '?', alias: 't', action: (L) => L.z
           },
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: '$B._PyAST.ExceptHandler(e, (t) ? t.id : NULL, b, EXTRA)'
+        ], action: (L) => $B._PyAST.ExceptHandler(L.e, (L.t)?(L.t).id:$B.parser_constants.NULL, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'except'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: '$B._PyAST.ExceptHandler(NULL, NULL, b, EXTRA)'
+        ], action: (L) => $B._PyAST.ExceptHandler($B.parser_constants.NULL, $B.parser_constants.NULL, L.b, L.EXTRA)
       },
       {
         items: [
@@ -1585,11 +1608,11 @@ except_star_block:
               {type: 'string', value: 'as'},
               {type: 'NAME', alias: 'z'}
             ],
-            repeat: '?', alias: 't', action: 'z'
+            repeat: '?', alias: 't', action: (L) => L.z
           },
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'b'}
-        ], action: '$B._PyAST.ExceptHandler(e, (t) ? t.id : NULL, b, EXTRA)'
+        ], action: (L) => $B._PyAST.ExceptHandler(L.e, (L.t)?(L.t).id:$B.parser_constants.NULL, L.b, L.EXTRA)
       },
       {
         items: [
@@ -1610,7 +1633,7 @@ finally_block:
           {type: 'string', value: 'finally'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'a'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 match_stmt:
@@ -1625,7 +1648,7 @@ match_stmt:
           {type: 'INDENT'},
           {type: 'rule', name: 'case_block', repeat: '+', alias: 'cases'},
           {type: 'DEDENT'}
-        ], action: 'CHECK_VERSION($B.ast.stmt, 10, "Pattern matching is", $B._PyAST.Match(subject, cases, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 10, "Pattern matching is", $B._PyAST.Match(L.subject, L.cases, L.EXTRA))
       },
       {
         items: [
@@ -1641,7 +1664,7 @@ subject_expr:
           {type: 'rule', name: 'star_named_expression', alias: 'value'},
           {type: 'string', value: ','},
           {type: 'rule', name: 'star_named_expressions', repeat: '?', alias: 'values'}
-        ], action: '$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, value, values)), Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front(L.p, L.value, L.values)), $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -1664,7 +1687,7 @@ case_block:
           {type: 'rule', name: 'guard', repeat: '?', alias: 'guard'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'body'}
-        ], action: '$B._PyAST.match_case(pattern, guard, body, p.arena)'
+        ], action: (L) => $B._PyAST.match_case(L.pattern, L.guard, L.body, L.p.arena)
       }]
   },
 guard:
@@ -1672,7 +1695,7 @@ guard:
     items: [
       {type: 'string', value: 'if'},
       {type: 'rule', name: 'named_expression', alias: 'guard'}
-    ], action: 'guard'
+    ], action: (L) => L.guard
   },
 patterns:
   {
@@ -1680,7 +1703,7 @@ patterns:
       {
         items: [
           {type: 'rule', name: 'open_sequence_pattern', alias: 'patterns'}
-        ], action: '$B._PyAST.MatchSequence(patterns, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchSequence(L.patterns, L.EXTRA)
       },
       {
         items: [
@@ -1710,7 +1733,7 @@ as_pattern:
           {type: 'rule', name: 'or_pattern', alias: 'pattern'},
           {type: 'string', value: 'as'},
           {type: 'rule', name: 'pattern_capture_target', alias: 'target'}
-        ], action: '$B._PyAST.MatchAs(pattern, target.id, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchAs(L.pattern, L.target.id, L.EXTRA)
       },
       {
         items: [
@@ -1722,7 +1745,7 @@ or_pattern:
   {
     items: [
       {type: 'rule', name: 'closed_pattern', join: '|', alias: 'patterns', repeat: '+'}
-    ], action: 'asdl_seq_LEN(patterns) == 1 ? asdl_seq_GET(patterns, 0) : $B._PyAST.MatchOr(patterns, EXTRA)'
+    ], action: (L) => $B.helper_functions.asdl_seq_LEN(L.patterns)==1?$B.helper_functions.asdl_seq_GET(L.patterns, 0):$B._PyAST.MatchOr(L.patterns, L.EXTRA)
   },
 closed_pattern:
   {
@@ -1787,32 +1810,32 @@ literal_pattern:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: '$B._PyAST.MatchValue(value, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchValue(L.value, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'complex_number', alias: 'value'}
-        ], action: '$B._PyAST.MatchValue(value, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchValue(L.value, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'strings', alias: 'value'}
-        ], action: '$B._PyAST.MatchValue(value, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchValue(L.value, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'None'}
-        ], action: '$B._PyAST.MatchSingleton(Py_None, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchSingleton($B.parser_constants.Py_None, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'True'}
-        ], action: '$B._PyAST.MatchSingleton(Py_True, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchSingleton($B.parser_constants.Py_True, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'False'}
-        ], action: '$B._PyAST.MatchSingleton(Py_False, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchSingleton($B.parser_constants.Py_False, L.EXTRA)
       }]
   },
 literal_expr:
@@ -1849,17 +1872,17 @@ literal_expr:
       {
         items: [
           {type: 'string', value: 'None'}
-        ], action: '$B._PyAST.Constant(Py_None, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_None, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'True'}
-        ], action: '$B._PyAST.Constant(Py_True, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_True, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'False'}
-        ], action: '$B._PyAST.Constant(Py_False, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_False, $B.parser_constants.NULL, L.EXTRA)
       }]
   },
 complex_number:
@@ -1870,14 +1893,14 @@ complex_number:
           {type: 'rule', name: 'signed_real_number', alias: 'real'},
           {type: 'string', value: '+'},
           {type: 'rule', name: 'imaginary_number', alias: 'imag'}
-        ], action: '$B._PyAST.BinOp(real, Add, imag, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.real, $B.parser_constants.Add, L.imag, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'signed_real_number', alias: 'real'},
           {type: 'string', value: '-'},
           {type: 'rule', name: 'imaginary_number', alias: 'imag'}
-        ], action: '$B._PyAST.BinOp(real, Sub, imag, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.real, $B.parser_constants.Sub, L.imag, L.EXTRA)
       }]
   },
 signed_number:
@@ -1892,7 +1915,7 @@ signed_number:
         items: [
           {type: 'string', value: '-'},
           {type: 'NUMBER', alias: 'number'}
-        ], action: '$B._PyAST.UnaryOp(USub, number, EXTRA)'
+        ], action: (L) => $B._PyAST.UnaryOp($B.parser_constants.USub, L.number, L.EXTRA)
       }]
   },
 signed_real_number:
@@ -1907,26 +1930,26 @@ signed_real_number:
         items: [
           {type: 'string', value: '-'},
           {type: 'rule', name: 'real_number', alias: 'real'}
-        ], action: '$B._PyAST.UnaryOp(USub, real, EXTRA)'
+        ], action: (L) => $B._PyAST.UnaryOp($B.parser_constants.USub, L.real, L.EXTRA)
       }]
   },
 real_number:
   {
     items: [
       {type: 'NUMBER', alias: 'real'}
-    ], action: '$B._PyPegen.ensure_real(p, real)'
+    ], action: (L) => $B._PyPegen.ensure_real(L.p, L.real)
   },
 imaginary_number:
   {
     items: [
       {type: 'NUMBER', alias: 'imag'}
-    ], action: '$B._PyPegen.ensure_imaginary(p, imag)'
+    ], action: (L) => $B._PyPegen.ensure_imaginary(L.p, L.imag)
   },
 capture_pattern:
   {
     items: [
       {type: 'rule', name: 'pattern_capture_target', alias: 'target'}
-    ], action: '$B._PyAST.MatchAs(NULL, target.id, EXTRA)'
+    ], action: (L) => $B._PyAST.MatchAs($B.parser_constants.NULL, L.target.id, L.EXTRA)
   },
 pattern_capture_target:
   {
@@ -1951,13 +1974,13 @@ pattern_capture_target:
             ]
           }], lookahead: 'negative'
       }
-    ], action: '$B._PyPegen.set_expr_context(p, name, Store)'
+    ], action: (L) => $B._PyPegen.set_expr_context(L.p, L.name, $B.parser_constants.Store)
   },
 wildcard_pattern:
   {
     items: [
       {type: 'string', value: '_'}
-    ], action: '$B._PyAST.MatchAs(NULL, NULL, EXTRA)'
+    ], action: (L) => $B._PyAST.MatchAs($B.parser_constants.NULL, $B.parser_constants.NULL, L.EXTRA)
   },
 value_pattern:
   {
@@ -1981,7 +2004,7 @@ value_pattern:
             ]
           }], lookahead: 'negative'
       }
-    ], action: '$B._PyAST.MatchValue(attr, EXTRA)'
+    ], action: (L) => $B._PyAST.MatchValue(L.attr, L.EXTRA)
   },
 attr:
   {
@@ -1989,7 +2012,7 @@ attr:
       {type: 'rule', name: 'name_or_attr', alias: 'value'},
       {type: 'string', value: '.'},
       {type: 'NAME', alias: 'attr'}
-    ], action: '$B._PyAST.Attribute(value, attr.id, Load, EXTRA)'
+    ], action: (L) => $B._PyAST.Attribute(L.value, L.attr.id, $B.parser_constants.Load, L.EXTRA)
   },
 name_or_attr:
   {
@@ -2011,7 +2034,7 @@ group_pattern:
       {type: 'string', value: '('},
       {type: 'rule', name: 'pattern', alias: 'pattern'},
       {type: 'string', value: ')'}
-    ], action: 'pattern'
+    ], action: (L) => L.pattern
   },
 sequence_pattern:
   {
@@ -2021,14 +2044,14 @@ sequence_pattern:
           {type: 'string', value: '['},
           {type: 'rule', name: 'maybe_sequence_pattern', repeat: '?', alias: 'patterns'},
           {type: 'string', value: ']'}
-        ], action: '$B._PyAST.MatchSequence(patterns, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchSequence(L.patterns, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: '('},
           {type: 'rule', name: 'open_sequence_pattern', repeat: '?', alias: 'patterns'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.MatchSequence(patterns, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchSequence(L.patterns, L.EXTRA)
       }]
   },
 open_sequence_pattern:
@@ -2037,14 +2060,14 @@ open_sequence_pattern:
       {type: 'rule', name: 'maybe_star_pattern', alias: 'pattern'},
       {type: 'string', value: ','},
       {type: 'rule', name: 'maybe_sequence_pattern', repeat: '?', alias: 'patterns'}
-    ], action: '$B._PyPegen.seq_insert_in_front(p, pattern, patterns)'
+    ], action: (L) => $B._PyPegen.seq_insert_in_front(L.p, L.pattern, L.patterns)
   },
 maybe_sequence_pattern:
   {
     items: [
       {type: 'rule', name: 'maybe_star_pattern', join: ',', alias: 'patterns', repeat: '+'},
       {type: 'string', value: ',', repeat: '?'}
-    ], action: 'patterns'
+    ], action: (L) => L.patterns
   },
 maybe_star_pattern:
   {
@@ -2067,13 +2090,13 @@ star_pattern:
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'pattern_capture_target', alias: 'target'}
-        ], action: '$B._PyAST.MatchStar(target.id, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchStar(L.target.id, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'wildcard_pattern'}
-        ], action: '$B._PyAST.MatchStar(NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchStar($B.parser_constants.NULL, L.EXTRA)
       }]
   },
 mapping_pattern:
@@ -2083,7 +2106,7 @@ mapping_pattern:
         items: [
           {type: 'string', value: '{'},
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.MatchMapping(NULL, NULL, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchMapping($B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
@@ -2091,7 +2114,7 @@ mapping_pattern:
           {type: 'rule', name: 'double_star_pattern', alias: 'rest'},
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.MatchMapping(NULL, NULL, rest.id, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchMapping($B.parser_constants.NULL, $B.parser_constants.NULL, L.rest.id, L.EXTRA)
       },
       {
         items: [
@@ -2101,7 +2124,7 @@ mapping_pattern:
           {type: 'rule', name: 'double_star_pattern', alias: 'rest'},
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.MatchMapping( CHECK(asdl_expr_seq, $B._PyPegen.get_pattern_keys(p, items)), CHECK(asdl_pattern_seq, $B._PyPegen.get_patterns(p, items)), rest.id, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchMapping($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys(L.p, L.items)), $B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns(L.p, L.items)), L.rest.id, L.EXTRA)
       },
       {
         items: [
@@ -2109,7 +2132,7 @@ mapping_pattern:
           {type: 'rule', name: 'items_pattern', alias: 'items'},
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.MatchMapping( CHECK(asdl_expr_seq, $B._PyPegen.get_pattern_keys(p, items)), CHECK(asdl_pattern_seq, $B._PyPegen.get_patterns(p, items)), NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchMapping($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys(L.p, L.items)), $B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns(L.p, L.items)), $B.parser_constants.NULL, L.EXTRA)
       }]
   },
 items_pattern:
@@ -2136,14 +2159,14 @@ key_value_pattern:
       },
       {type: 'string', value: ':'},
       {type: 'rule', name: 'pattern', alias: 'pattern'}
-    ], action: '$B._PyPegen.key_pattern_pair(p, key, pattern)'
+    ], action: (L) => $B._PyPegen.key_pattern_pair(L.p, L.key, L.pattern)
   },
 double_star_pattern:
   {
     items: [
       {type: 'string', value: '**'},
       {type: 'rule', name: 'pattern_capture_target', alias: 'target'}
-    ], action: 'target'
+    ], action: (L) => L.target
   },
 class_pattern:
   {
@@ -2153,7 +2176,7 @@ class_pattern:
           {type: 'rule', name: 'name_or_attr', alias: 'cls'},
           {type: 'string', value: '('},
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.MatchClass(cls, NULL, NULL, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchClass(L.cls, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
@@ -2162,7 +2185,7 @@ class_pattern:
           {type: 'rule', name: 'positional_patterns', alias: 'patterns'},
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.MatchClass(cls, patterns, NULL, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.MatchClass(L.cls, L.patterns, $B.parser_constants.NULL, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
@@ -2171,7 +2194,7 @@ class_pattern:
           {type: 'rule', name: 'keyword_patterns', alias: 'keywords'},
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.MatchClass( cls, NULL, CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, CHECK(asdl_expr_seq, $B._PyPegen.get_pattern_keys(p, keywords)))), CHECK(asdl_pattern_seq, $B._PyPegen.get_patterns(p, keywords)), EXTRA)'
+        ], action: (L) => $B._PyAST.MatchClass(L.cls, $B.parser_constants.NULL, $B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids(L.p, $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys(L.p, L.keywords)))), $B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns(L.p, L.keywords)), L.EXTRA)
       },
       {
         items: [
@@ -2182,7 +2205,7 @@ class_pattern:
           {type: 'rule', name: 'keyword_patterns', alias: 'keywords'},
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.MatchClass( cls, patterns, CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, CHECK(asdl_expr_seq, $B._PyPegen.get_pattern_keys(p, keywords)))), CHECK(asdl_pattern_seq, $B._PyPegen.get_patterns(p, keywords)), EXTRA)'
+        ], action: (L) => $B._PyAST.MatchClass(L.cls, L.patterns, $B.helper_functions.CHECK($B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids(L.p, $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys(L.p, L.keywords)))), $B.helper_functions.CHECK($B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns(L.p, L.keywords)), L.EXTRA)
       },
       {
         items: [
@@ -2194,7 +2217,7 @@ positional_patterns:
   {
     items: [
       {type: 'rule', name: 'pattern', join: ',', alias: 'args', repeat: '+'}
-    ], action: 'args'
+    ], action: (L) => L.args
   },
 keyword_patterns:
   {
@@ -2208,7 +2231,92 @@ keyword_pattern:
       {type: 'NAME', alias: 'arg'},
       {type: 'string', value: '='},
       {type: 'rule', name: 'pattern', alias: 'value'}
-    ], action: '$B._PyPegen.key_pattern_pair(p, arg, value)'
+    ], action: (L) => $B._PyPegen.key_pattern_pair(L.p, L.arg, L.value)
+  },
+type_alias:
+  {
+    items: [
+      {type: 'string', value: 'type'},
+      {type: 'NAME', alias: 'n'},
+      {
+        items: [
+          {type: 'rule', name: 'type_params'}
+        ],
+        repeat: '?', alias: 't'
+      },
+      {type: 'string', value: '='},
+      {type: 'rule', name: 'expression', alias: 'b'}
+    ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.stmt, 12, "Type statement is", $B._PyAST.TypeAlias($B.helper_functions.CHECK($B.parser_constants.expr_ty, $B._PyPegen.set_expr_context(L.p, L.n, $B.parser_constants.Store)), L.t, L.b, L.EXTRA))
+  },
+type_params:
+  {
+    items: [
+      {type: 'string', value: '['},
+      {type: 'rule', name: 'type_param_seq', alias: 't'},
+      {type: 'string', value: ']'}
+    ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.asdl_type_param_seq, 12, "Type parameter lists are", L.t)
+  },
+type_param_seq:
+  {
+    items: [
+      {type: 'rule', name: 'type_param', join: ',', alias: 'a', repeat: '+'},
+      {
+        items: [
+          {type: 'string', value: ','}
+        ],
+        repeat: '?'
+      }
+    ], action: (L) => L.a
+  },
+type_param:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'NAME', alias: 'a'},
+          {
+            items: [
+              {type: 'rule', name: 'type_param_bound'}
+            ],
+            repeat: '?', alias: 'b'
+          }
+        ], action: (L) => $B._PyAST.TypeVar(L.a.id, L.b, L.EXTRA)
+      },
+      {
+        items: [
+          {type: 'string', value: '*'},
+          {type: 'NAME', alias: 'a'},
+          {type: 'string', value: ':', alias: 'colon'},
+          {type: 'rule', name: 'expression', alias: 'e'}
+        ], action: (L) => RAISE_SYNTAX_ERROR_STARTING_FROM(L.colon, L.e.kind==Tuple_kind?"cannot use constraints with TypeVarTuple":"cannot use bound with TypeVarTuple")
+      },
+      {
+        items: [
+          {type: 'string', value: '*'},
+          {type: 'NAME', alias: 'a'}
+        ], action: (L) => $B._PyAST.TypeVarTuple(L.a.id, L.EXTRA)
+      },
+      {
+        items: [
+          {type: 'string', value: '**'},
+          {type: 'NAME', alias: 'a'},
+          {type: 'string', value: ':', alias: 'colon'},
+          {type: 'rule', name: 'expression', alias: 'e'}
+        ], action: (L) => RAISE_SYNTAX_ERROR_STARTING_FROM(L.colon, L.e.kind==Tuple_kind?"cannot use constraints with ParamSpec":"cannot use bound with ParamSpec")
+      },
+      {
+        items: [
+          {type: 'string', value: '**'},
+          {type: 'NAME', alias: 'a'}
+        ], action: (L) => $B._PyAST.ParamSpec(L.a.id, L.EXTRA)
+      }]
+  },
+type_param_bound:
+  {
+    items: [
+      {type: 'string', value: ':'},
+      {type: 'rule', name: 'expression', alias: 'e'}
+    ], action: (L) => L.e
   },
 expressions:
   {
@@ -2221,7 +2329,7 @@ expressions:
               {type: 'string', value: ','},
               {type: 'rule', name: 'expression', alias: 'c'}
             ],
-            repeat: '+', alias: 'b', action: 'c'
+            repeat: '+', alias: 'b', action: (L) => L.c
           },
           {
             items: [
@@ -2229,13 +2337,13 @@ expressions:
             ],
             repeat: '?'
           }
-        ], action: '$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front(L.p, L.a, L.b)), $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'expression', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: '$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, a)), Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq(L.p, L.a)), $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -2263,7 +2371,7 @@ expression:
           {type: 'rule', name: 'disjunction', alias: 'b'},
           {type: 'string', value: 'else'},
           {type: 'rule', name: 'expression', alias: 'c'}
-        ], action: '$B._PyAST.IfExp(b, a, c, EXTRA)'
+        ], action: (L) => $B._PyAST.IfExp(L.b, L.a, L.c, L.EXTRA)
       },
       {
         items: [
@@ -2284,7 +2392,7 @@ yield_expr:
           {type: 'string', value: 'yield'},
           {type: 'string', value: 'from'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: '$B._PyAST.YieldFrom(a, EXTRA)'
+        ], action: (L) => $B._PyAST.YieldFrom(L.a, L.EXTRA)
       },
       {
         items: [
@@ -2295,7 +2403,7 @@ yield_expr:
             ],
             repeat: '?', alias: 'a'
           }
-        ], action: '$B._PyAST.Yield(a, EXTRA)'
+        ], action: (L) => $B._PyAST.Yield(L.a, L.EXTRA)
       }]
   },
 star_expressions:
@@ -2309,7 +2417,7 @@ star_expressions:
               {type: 'string', value: ','},
               {type: 'rule', name: 'star_expression', alias: 'c'}
             ],
-            repeat: '+', alias: 'b', action: 'c'
+            repeat: '+', alias: 'b', action: (L) => L.c
           },
           {
             items: [
@@ -2317,13 +2425,13 @@ star_expressions:
             ],
             repeat: '?'
           }
-        ], action: '$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front(L.p, L.a, L.b)), $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'star_expression', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: '$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, a)), Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq(L.p, L.a)), $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -2338,7 +2446,7 @@ star_expression:
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'bitwise_or', alias: 'a'}
-        ], action: '$B._PyAST.Starred(a, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Starred(L.a, $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -2356,7 +2464,7 @@ star_named_expressions:
         ],
         repeat: '?'
       }
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 star_named_expression:
   {
@@ -2365,7 +2473,7 @@ star_named_expression:
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'bitwise_or', alias: 'a'}
-        ], action: '$B._PyAST.Starred(a, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Starred(L.a, $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -2380,7 +2488,7 @@ assignment_expression:
       {type: 'string', value: ':='},
       {type: 'COMMIT_CHOICE'},
       {type: 'rule', name: 'expression', alias: 'b'}
-    ], action: 'CHECK_VERSION($B.ast.expr, 8, "Assignment expressions are", $B._PyAST.NamedExpr(CHECK($B.ast.expr, $B._PyPegen.set_expr_context(p, a, Store)), b, EXTRA))'
+    ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.expr_ty, 8, "Assignment expressions are", $B._PyAST.NamedExpr($B.helper_functions.CHECK($B.parser_constants.expr_ty, $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Store)), L.b, L.EXTRA))
   },
 named_expression:
   {
@@ -2413,9 +2521,9 @@ disjunction:
               {type: 'string', value: 'or'},
               {type: 'rule', name: 'conjunction', alias: 'c'}
             ],
-            repeat: '+', alias: 'b', action: 'c'
+            repeat: '+', alias: 'b', action: (L) => L.c
           }
-        ], action: '$B._PyAST.BoolOp( Or, CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), EXTRA)'
+        ], action: (L) => $B._PyAST.BoolOp($B.parser_constants.Or, $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front(L.p, L.a, L.b)), L.EXTRA)
       },
       {
         items: [
@@ -2434,9 +2542,9 @@ conjunction:
               {type: 'string', value: 'and'},
               {type: 'rule', name: 'inversion', alias: 'c'}
             ],
-            repeat: '+', alias: 'b', action: 'c'
+            repeat: '+', alias: 'b', action: (L) => L.c
           }
-        ], action: '$B._PyAST.BoolOp( And, CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), EXTRA)'
+        ], action: (L) => $B._PyAST.BoolOp($B.parser_constants.And, $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front(L.p, L.a, L.b)), L.EXTRA)
       },
       {
         items: [
@@ -2451,7 +2559,7 @@ inversion:
         items: [
           {type: 'string', value: 'not'},
           {type: 'rule', name: 'inversion', alias: 'a'}
-        ], action: '$B._PyAST.UnaryOp(Not, a, EXTRA)'
+        ], action: (L) => $B._PyAST.UnaryOp($B.parser_constants.Not, L.a, L.EXTRA)
       },
       {
         items: [
@@ -2466,7 +2574,7 @@ comparison:
         items: [
           {type: 'rule', name: 'bitwise_or', alias: 'a'},
           {type: 'rule', name: 'compare_op_bitwise_or_pair', repeat: '+', alias: 'b'}
-        ], action: '$B._PyAST.Compare( a, CHECK(asdl_int_seq, $B._PyPegen.get_cmpops(p, b)), CHECK(asdl_expr_seq, $B._PyPegen.get_exprs(p, b)), EXTRA)'
+        ], action: (L) => $B._PyAST.Compare(L.a, $B.helper_functions.CHECK($B.parser_constants.asdl_int_seq, $B._PyPegen.get_cmpops(L.p, L.b)), $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_exprs(L.p, L.b)), L.EXTRA)
       },
       {
         items: [
@@ -2533,7 +2641,7 @@ eq_bitwise_or:
     items: [
       {type: 'string', value: '=='},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, Eq, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.Eq, L.a)
   },
 noteq_bitwise_or:
   {
@@ -2541,38 +2649,38 @@ noteq_bitwise_or:
       {
         items: [
           {type: 'string', value: '!=', alias: 'tok'}
-        ], action: '$B._PyPegen.check_barry_as_flufl(p, tok) ? NULL : tok'
+        ], action: (L) => $B._PyPegen.check_barry_as_flufl(L.p, L.tok)?$B.parser_constants.NULL:L.tok
       },
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, NotEq, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.NotEq, L.a)
   },
 lte_bitwise_or:
   {
     items: [
       {type: 'string', value: '<='},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, LtE, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.LtE, L.a)
   },
 lt_bitwise_or:
   {
     items: [
       {type: 'string', value: '<'},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, Lt, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.Lt, L.a)
   },
 gte_bitwise_or:
   {
     items: [
       {type: 'string', value: '>='},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, GtE, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.GtE, L.a)
   },
 gt_bitwise_or:
   {
     items: [
       {type: 'string', value: '>'},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, Gt, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.Gt, L.a)
   },
 notin_bitwise_or:
   {
@@ -2580,14 +2688,14 @@ notin_bitwise_or:
       {type: 'string', value: 'not'},
       {type: 'string', value: 'in'},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, NotIn, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.NotIn, L.a)
   },
 in_bitwise_or:
   {
     items: [
       {type: 'string', value: 'in'},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, In, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.In, L.a)
   },
 isnot_bitwise_or:
   {
@@ -2595,14 +2703,14 @@ isnot_bitwise_or:
       {type: 'string', value: 'is'},
       {type: 'string', value: 'not'},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, IsNot, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.IsNot, L.a)
   },
 is_bitwise_or:
   {
     items: [
       {type: 'string', value: 'is'},
       {type: 'rule', name: 'bitwise_or', alias: 'a'}
-    ], action: '$B._PyPegen.cmpop_expr_pair(p, Is, a)'
+    ], action: (L) => $B._PyPegen.cmpop_expr_pair(L.p, $B.parser_constants.Is, L.a)
   },
 bitwise_or:
   {
@@ -2612,7 +2720,7 @@ bitwise_or:
           {type: 'rule', name: 'bitwise_or', alias: 'a'},
           {type: 'string', value: '|'},
           {type: 'rule', name: 'bitwise_xor', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, BitOr, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.BitOr, L.b, L.EXTRA)
       },
       {
         items: [
@@ -2628,7 +2736,7 @@ bitwise_xor:
           {type: 'rule', name: 'bitwise_xor', alias: 'a'},
           {type: 'string', value: '^'},
           {type: 'rule', name: 'bitwise_and', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, BitXor, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.BitXor, L.b, L.EXTRA)
       },
       {
         items: [
@@ -2644,7 +2752,7 @@ bitwise_and:
           {type: 'rule', name: 'bitwise_and', alias: 'a'},
           {type: 'string', value: '&'},
           {type: 'rule', name: 'shift_expr', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, BitAnd, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.BitAnd, L.b, L.EXTRA)
       },
       {
         items: [
@@ -2660,14 +2768,14 @@ shift_expr:
           {type: 'rule', name: 'shift_expr', alias: 'a'},
           {type: 'string', value: '<<'},
           {type: 'rule', name: 'sum', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, LShift, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.LShift, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'shift_expr', alias: 'a'},
           {type: 'string', value: '>>'},
           {type: 'rule', name: 'sum', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, RShift, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.RShift, L.b, L.EXTRA)
       },
       {
         items: [
@@ -2683,14 +2791,14 @@ sum:
           {type: 'rule', name: 'sum', alias: 'a'},
           {type: 'string', value: '+'},
           {type: 'rule', name: 'term', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, Add, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.Add, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'sum', alias: 'a'},
           {type: 'string', value: '-'},
           {type: 'rule', name: 'term', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, Sub, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.Sub, L.b, L.EXTRA)
       },
       {
         items: [
@@ -2706,35 +2814,35 @@ term:
           {type: 'rule', name: 'term', alias: 'a'},
           {type: 'string', value: '*'},
           {type: 'rule', name: 'factor', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, Mult, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.Mult, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'term', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'rule', name: 'factor', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, Div, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.Div, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'term', alias: 'a'},
           {type: 'string', value: '//'},
           {type: 'rule', name: 'factor', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, FloorDiv, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.FloorDiv, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'term', alias: 'a'},
           {type: 'string', value: '%'},
           {type: 'rule', name: 'factor', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, Mod, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.Mod, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'term', alias: 'a'},
           {type: 'string', value: '@'},
           {type: 'rule', name: 'factor', alias: 'b'}
-        ], action: 'CHECK_VERSION($B.ast.expr, 5, "The \'@\' operator is", $B._PyAST.BinOp(a, MatMult, b, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.expr_ty, 5, "The \'@\' operator is", $B._PyAST.BinOp(L.a, $B.parser_constants.MatMult, L.b, L.EXTRA))
       },
       {
         items: [
@@ -2749,19 +2857,19 @@ factor:
         items: [
           {type: 'string', value: '+'},
           {type: 'rule', name: 'factor', alias: 'a'}
-        ], action: '$B._PyAST.UnaryOp(UAdd, a, EXTRA)'
+        ], action: (L) => $B._PyAST.UnaryOp($B.parser_constants.UAdd, L.a, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: '-'},
           {type: 'rule', name: 'factor', alias: 'a'}
-        ], action: '$B._PyAST.UnaryOp(USub, a, EXTRA)'
+        ], action: (L) => $B._PyAST.UnaryOp($B.parser_constants.USub, L.a, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: '~'},
           {type: 'rule', name: 'factor', alias: 'a'}
-        ], action: '$B._PyAST.UnaryOp(Invert, a, EXTRA)'
+        ], action: (L) => $B._PyAST.UnaryOp($B.parser_constants.Invert, L.a, L.EXTRA)
       },
       {
         items: [
@@ -2777,7 +2885,7 @@ power:
           {type: 'rule', name: 'await_primary', alias: 'a'},
           {type: 'string', value: '**'},
           {type: 'rule', name: 'factor', alias: 'b'}
-        ], action: '$B._PyAST.BinOp(a, Pow, b, EXTRA)'
+        ], action: (L) => $B._PyAST.BinOp(L.a, $B.parser_constants.Pow, L.b, L.EXTRA)
       },
       {
         items: [
@@ -2792,7 +2900,7 @@ await_primary:
         items: [
           {type: 'AWAIT'},
           {type: 'rule', name: 'primary', alias: 'a'}
-        ], action: 'CHECK_VERSION($B.ast.expr, 5, "Await expressions are", $B._PyAST.Await(a, EXTRA))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.expr_ty, 5, "Await expressions are", $B._PyAST.Await(L.a, L.EXTRA))
       },
       {
         items: [
@@ -2808,13 +2916,13 @@ primary:
           {type: 'rule', name: 'primary', alias: 'a'},
           {type: 'string', value: '.'},
           {type: 'NAME', alias: 'b'}
-        ], action: '$B._PyAST.Attribute(a, b.id, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Attribute(L.a, L.b.id, $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'primary', alias: 'a'},
           {type: 'rule', name: 'genexp', alias: 'b'}
-        ], action: '$B._PyAST.Call(a, CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, b)), NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Call(L.a, $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq(L.p, L.b)), $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
@@ -2827,7 +2935,7 @@ primary:
             repeat: '?', alias: 'b'
           },
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.Call(a, (b) ? b.args : NULL, (b) ? b.keywords : NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Call(L.a, (L.b)?(L.b).args:$B.parser_constants.NULL, (L.b)?(L.b).keywords:$B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
@@ -2835,7 +2943,7 @@ primary:
           {type: 'string', value: '['},
           {type: 'rule', name: 'slices', alias: 'b'},
           {type: 'string', value: ']'}
-        ], action: '$B._PyAST.Subscript(a, b, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Subscript(L.a, L.b, $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -2850,7 +2958,7 @@ slices:
         items: [
           {type: 'rule', name: 'slice', alias: 'a'},
           {type: 'string', value: ',', lookahead: 'negative'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -2874,7 +2982,7 @@ slices:
             ],
             repeat: '?'
           }
-        ], action: '$B._PyAST.Tuple(a, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple(L.a, $B.parser_constants.Load, L.EXTRA)
       }]
   },
 slice:
@@ -2905,14 +3013,14 @@ slice:
                 repeat: '?', alias: 'd'
               }
             ],
-            repeat: '?', alias: 'c', action: 'd'
+            repeat: '?', alias: 'c', action: (L) => L.d
           }
-        ], action: '$B._PyAST.Slice(a, b, c, EXTRA)'
+        ], action: (L) => $B._PyAST.Slice(L.a, L.b, L.c, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'named_expression', alias: 'a'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 atom:
@@ -2926,21 +3034,33 @@ atom:
       {
         items: [
           {type: 'string', value: 'True'}
-        ], action: '$B._PyAST.Constant(Py_True, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_True, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'False'}
-        ], action: '$B._PyAST.Constant(Py_False, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_False, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
           {type: 'string', value: 'None'}
-        ], action: '$B._PyAST.Constant(Py_None, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_None, $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
-          {type: 'STRING', lookahead: 'positive'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'STRING'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'FSTRING_START'}
+                ]
+              }], lookahead: 'positive'
+          },
           {type: 'rule', name: 'strings'}
         ]
       },
@@ -3021,7 +3141,7 @@ atom:
       {
         items: [
           {type: 'string', value: '...'}
-        ], action: '$B._PyAST.Constant(Py_Ellipsis, NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Constant($B.parser_constants.Py_Ellipsis, $B.parser_constants.NULL, L.EXTRA)
       }]
   },
 group:
@@ -3044,7 +3164,7 @@ group:
               }], alias: 'a'
           },
           {type: 'string', value: ')'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -3064,7 +3184,7 @@ lambdef:
       },
       {type: 'string', value: ':'},
       {type: 'rule', name: 'expression', alias: 'b'}
-    ], action: '$B._PyAST.Lambda((a) ? a : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, EXTRA)'
+    ], action: (L) => $B._PyAST.Lambda((L.a)?L.a:$B.helper_functions.CHECK($B.parser_constants.arguments_ty, $B._PyPegen.empty_arguments(L.p)), L.b, L.EXTRA)
   },
 lambda_params:
   {
@@ -3094,7 +3214,7 @@ lambda_parameters:
             ],
             repeat: '?', alias: 'd'
           }
-        ], action: 'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, a, NULL, b, c, d))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(L.p, L.a, $B.parser_constants.NULL, L.b, L.c, L.d))
       },
       {
         items: [
@@ -3106,7 +3226,7 @@ lambda_parameters:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: 'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, NULL, a, NULL, b, c))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.parser_constants.arguments_ty, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, L.a, $B.parser_constants.NULL, L.b, L.c))
       },
       {
         items: [
@@ -3118,7 +3238,7 @@ lambda_parameters:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.make_arguments(p, NULL, NULL, a, b, c)'
+        ], action: (L) => $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a, L.b, L.c)
       },
       {
         items: [
@@ -3129,12 +3249,12 @@ lambda_parameters:
             ],
             repeat: '?', alias: 'b'
           }
-        ], action: '$B._PyPegen.make_arguments(p, NULL, NULL, NULL, a, b)'
+        ], action: (L) => $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a, L.b)
       },
       {
         items: [
           {type: 'rule', name: 'lambda_star_etc', alias: 'a'}
-        ], action: '$B._PyPegen.make_arguments(p, NULL, NULL, NULL, NULL, a)'
+        ], action: (L) => $B._PyPegen.make_arguments(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a)
       }]
   },
 lambda_slash_no_default:
@@ -3145,14 +3265,14 @@ lambda_slash_no_default:
           {type: 'rule', name: 'lambda_param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ','}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 lambda_slash_with_default:
@@ -3164,7 +3284,7 @@ lambda_slash_with_default:
           {type: 'rule', name: 'lambda_param_with_default', repeat: '+', alias: 'b'},
           {type: 'string', value: '/'},
           {type: 'string', value: ','}
-        ], action: '$B._PyPegen.slash_with_default(p, a, b)'
+        ], action: (L) => $B._PyPegen.slash_with_default(L.p, L.a, L.b)
       },
       {
         items: [
@@ -3172,7 +3292,7 @@ lambda_slash_with_default:
           {type: 'rule', name: 'lambda_param_with_default', repeat: '+', alias: 'b'},
           {type: 'string', value: '/'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: '$B._PyPegen.slash_with_default(p, a, b)'
+        ], action: (L) => $B._PyPegen.slash_with_default(L.p, L.a, L.b)
       }]
   },
 lambda_star_etc:
@@ -3194,7 +3314,7 @@ lambda_star_etc:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.star_etc(p, a, b, c)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, L.a, L.b, L.c)
       },
       {
         items: [
@@ -3207,12 +3327,12 @@ lambda_star_etc:
             ],
             repeat: '?', alias: 'c'
           }
-        ], action: '$B._PyPegen.star_etc(p, NULL, b, c)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, $B.parser_constants.NULL, L.b, L.c)
       },
       {
         items: [
           {type: 'rule', name: 'lambda_kwds', alias: 'a'}
-        ], action: '$B._PyPegen.star_etc(p, NULL, NULL, a)'
+        ], action: (L) => $B._PyPegen.star_etc(L.p, $B.parser_constants.NULL, $B.parser_constants.NULL, L.a)
       }]
   },
 lambda_kwds:
@@ -3227,7 +3347,7 @@ lambda_kwds:
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'lambda_param_no_default', alias: 'a'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 lambda_param_no_default:
@@ -3237,13 +3357,13 @@ lambda_param_no_default:
         items: [
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 lambda_param_with_default:
@@ -3254,14 +3374,14 @@ lambda_param_with_default:
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'rule', name: 'default', alias: 'c'},
           {type: 'string', value: ','}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, NULL)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, $B.parser_constants.NULL)
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'rule', name: 'default', alias: 'c'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, NULL)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, $B.parser_constants.NULL)
       }]
   },
 lambda_param_maybe_default:
@@ -3272,27 +3392,137 @@ lambda_param_maybe_default:
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'rule', name: 'default', repeat: '?', alias: 'c'},
           {type: 'string', value: ','}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, NULL)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, $B.parser_constants.NULL)
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'rule', name: 'default', repeat: '?', alias: 'c'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: '$B._PyPegen.name_default_pair(p, a, c, NULL)'
+        ], action: (L) => $B._PyPegen.name_default_pair(L.p, L.a, L.c, $B.parser_constants.NULL)
       }]
   },
 lambda_param:
   {
     items: [
       {type: 'NAME', alias: 'a'}
-    ], action: '$B._PyAST.arg(a.id, NULL, NULL, EXTRA)'
+    ], action: (L) => $B._PyAST.arg(L.a.id, $B.parser_constants.NULL, $B.parser_constants.NULL, L.EXTRA)
+  },
+fstring_middle:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'rule', name: 'fstring_replacement_field'}
+        ]
+      },
+      {
+        items: [
+          {type: 'FSTRING_MIDDLE', alias: 't'}
+        ], action: (L) => $B._PyPegen.constant_from_token(L.p, L.t)
+      }]
+  },
+fstring_replacement_field:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }], alias: 'a'
+          },
+          {type: 'string', value: '=', repeat: '?', alias: 'debug_expr'},
+          {
+            items: [
+              {type: 'rule', name: 'fstring_conversion'}
+            ],
+            repeat: '?', alias: 'conversion'
+          },
+          {
+            items: [
+              {type: 'rule', name: 'fstring_full_format_spec'}
+            ],
+            repeat: '?', alias: 'format'
+          },
+          {type: 'string', value: '}', alias: 'rbrace'}
+        ], action: (L) => $B._PyPegen.formatted_value(L.p, L.a, L.debug_expr, L.conversion, L.format, L.rbrace, L.EXTRA)
+      },
+      {
+        items: [
+          {type: 'rule', name: 'invalid_replacement_field'}
+        ]
+      }]
+  },
+fstring_conversion:
+  {
+    items: [
+      {type: 'string', value: '!', alias: 'conv_token'},
+      {type: 'NAME', alias: 'conv'}
+    ], action: (L) => $B._PyPegen.check_fstring_conversion(L.p, L.conv_token, L.conv)
+  },
+fstring_full_format_spec:
+  {
+    items: [
+      {type: 'string', value: ':', alias: 'colon'},
+      {type: 'rule', name: 'fstring_format_spec', repeat: '*', alias: 'spec'}
+    ], action: (L) => $B._PyPegen.setup_full_format_spec(L.p, L.colon, L.spec, L.EXTRA)
+  },
+fstring_format_spec:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'FSTRING_MIDDLE', alias: 't'}
+        ], action: (L) => $B._PyPegen.decoded_constant_from_token(L.p, L.t)
+      },
+      {
+        items: [
+          {type: 'rule', name: 'fstring_replacement_field'}
+        ]
+      }]
+  },
+fstring:
+  {
+    items: [
+      {type: 'FSTRING_START', alias: 'a'},
+      {type: 'rule', name: 'fstring_middle', repeat: '*', alias: 'b'},
+      {type: 'FSTRING_END', alias: 'c'}
+    ], action: (L) => $B._PyPegen.joined_str(L.p, L.a, L.b, L.c)
+  },
+string:
+  {
+    items: [
+      {type: 'STRING', alias: 's'}
+    ], action: (L) => $B._PyPegen.constant_from_string(L.p, L.s)
   },
 strings:
   {
     items: [
-      {type: 'STRING', repeat: '+', alias: 'a'}
-    ], action: '$B._PyPegen.concatenate_strings(p, a)'
+      {
+       choices: [
+          {
+            items: [
+              {type: 'rule', name: 'fstring'}
+            ]
+          },
+          {
+            items: [
+              {type: 'rule', name: 'string'}
+            ]
+          }],
+        repeat: '+', alias: 'a'
+      }
+    ], action: (L) => $B._PyPegen.concatenate_strings(L.p, L.a, L.EXTRA)
   },
 list:
   {
@@ -3305,7 +3535,7 @@ list:
         repeat: '?', alias: 'a'
       },
       {type: 'string', value: ']'}
-    ], action: '$B._PyAST.List(a, Load, EXTRA)'
+    ], action: (L) => $B._PyAST.List(L.a, $B.parser_constants.Load, L.EXTRA)
   },
 tuple:
   {
@@ -3322,10 +3552,10 @@ tuple:
             repeat: '?', alias: 'z'
           }
         ],
-        repeat: '?', alias: 'a', action: '$B._PyPegen.seq_insert_in_front(p, y, z)'
+        repeat: '?', alias: 'a', action: (L) => $B._PyPegen.seq_insert_in_front(L.p, L.y, L.z)
       },
       {type: 'string', value: ')'}
-    ], action: '$B._PyAST.Tuple(a, Load, EXTRA)'
+    ], action: (L) => $B._PyAST.Tuple(L.a, $B.parser_constants.Load, L.EXTRA)
   },
 set:
   {
@@ -3333,7 +3563,7 @@ set:
       {type: 'string', value: '{'},
       {type: 'rule', name: 'star_named_expressions', alias: 'a'},
       {type: 'string', value: '}'}
-    ], action: '$B._PyAST.Set(a, EXTRA)'
+    ], action: (L) => $B._PyAST.Set(L.a, L.EXTRA)
   },
 dict:
   {
@@ -3348,7 +3578,7 @@ dict:
             repeat: '?', alias: 'a'
           },
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.Dict( CHECK(asdl_expr_seq, $B._PyPegen.get_keys(p, a)), CHECK(asdl_expr_seq, $B._PyPegen.get_values(p, a)), EXTRA)'
+        ], action: (L) => $B._PyAST.Dict($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_keys(L.p, L.a)), $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.get_values(L.p, L.a)), L.EXTRA)
       },
       {
         items: [
@@ -3368,7 +3598,7 @@ double_starred_kvpairs:
         ],
         repeat: '?'
       }
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 double_starred_kvpair:
   {
@@ -3377,7 +3607,7 @@ double_starred_kvpair:
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'bitwise_or', alias: 'a'}
-        ], action: '$B._PyPegen.key_value_pair(p, NULL, a)'
+        ], action: (L) => $B._PyPegen.key_value_pair(L.p, $B.parser_constants.NULL, L.a)
       },
       {
         items: [
@@ -3391,13 +3621,13 @@ kvpair:
       {type: 'rule', name: 'expression', alias: 'a'},
       {type: 'string', value: ':'},
       {type: 'rule', name: 'expression', alias: 'b'}
-    ], action: '$B._PyPegen.key_value_pair(p, a, b)'
+    ], action: (L) => $B._PyPegen.key_value_pair(L.p, L.a, L.b)
   },
 for_if_clauses:
   {
     items: [
       {type: 'rule', name: 'for_if_clause', repeat: '+', alias: 'a'}
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 for_if_clause:
   {
@@ -3415,9 +3645,9 @@ for_if_clause:
               {type: 'string', value: 'if'},
               {type: 'rule', name: 'disjunction', alias: 'z'}
             ],
-            repeat: '*', alias: 'c', action: 'z'
+            repeat: '*', alias: 'c', action: (L) => L.z
           }
-        ], action: 'CHECK_VERSION($B.ast.comprehension, 6, "Async comprehensions are", $B._PyAST.comprehension(a, b, c, 1, p.arena))'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION($B.ast.comprehension, 6, "Async comprehensions are", $B._PyAST.comprehension(L.a, L.b, L.c, 1, L.p.arena))
       },
       {
         items: [
@@ -3431,9 +3661,9 @@ for_if_clause:
               {type: 'string', value: 'if'},
               {type: 'rule', name: 'disjunction', alias: 'z'}
             ],
-            repeat: '*', alias: 'c', action: 'z'
+            repeat: '*', alias: 'c', action: (L) => L.z
           }
-        ], action: '$B._PyAST.comprehension(a, b, c, 0, p.arena)'
+        ], action: (L) => $B._PyAST.comprehension(L.a, L.b, L.c, 0, L.p.arena)
       },
       {
         items: [
@@ -3450,7 +3680,7 @@ listcomp:
           {type: 'rule', name: 'named_expression', alias: 'a'},
           {type: 'rule', name: 'for_if_clauses', alias: 'b'},
           {type: 'string', value: ']'}
-        ], action: '$B._PyAST.ListComp(a, b, EXTRA)'
+        ], action: (L) => $B._PyAST.ListComp(L.a, L.b, L.EXTRA)
       },
       {
         items: [
@@ -3467,7 +3697,7 @@ setcomp:
           {type: 'rule', name: 'named_expression', alias: 'a'},
           {type: 'rule', name: 'for_if_clauses', alias: 'b'},
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.SetComp(a, b, EXTRA)'
+        ], action: (L) => $B._PyAST.SetComp(L.a, L.b, L.EXTRA)
       },
       {
         items: [
@@ -3497,7 +3727,7 @@ genexp:
           },
           {type: 'rule', name: 'for_if_clauses', alias: 'b'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.GeneratorExp(a, b, EXTRA)'
+        ], action: (L) => $B._PyAST.GeneratorExp(L.a, L.b, L.EXTRA)
       },
       {
         items: [
@@ -3514,7 +3744,7 @@ dictcomp:
           {type: 'rule', name: 'kvpair', alias: 'a'},
           {type: 'rule', name: 'for_if_clauses', alias: 'b'},
           {type: 'string', value: '}'}
-        ], action: '$B._PyAST.DictComp(a.key, a.value, b, EXTRA)'
+        ], action: (L) => $B._PyAST.DictComp(L.a.key, L.a.value, L.b, L.EXTRA)
       },
       {
         items: [
@@ -3535,7 +3765,7 @@ arguments:
             repeat: '?'
           },
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -3581,14 +3811,14 @@ args:
               {type: 'string', value: ','},
               {type: 'rule', name: 'kwargs', alias: 'k'}
             ],
-            repeat: '?', alias: 'b', action: 'k'
+            repeat: '?', alias: 'b', action: (L) => L.k
           }
-        ], action: '$B._PyPegen.collect_call_seqs(p, a, b, EXTRA)'
+        ], action: (L) => $B._PyPegen.collect_call_seqs(L.p, L.a, L.b, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'kwargs', alias: 'a'}
-        ], action: '$B._PyAST.Call($B._PyPegen.dummy_name(p), CHECK_NULL_ALLOWED(asdl_expr_seq, $B._PyPegen.seq_extract_starred_exprs(p, a)), CHECK_NULL_ALLOWED(asdl_keyword_seq, $B._PyPegen.seq_delete_starred_exprs(p, a)), EXTRA)'
+        ], action: (L) => $B._PyAST.Call($B._PyPegen.dummy_name(L.p), $B.helper_functions.CHECK_NULL_ALLOWED($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_extract_starred_exprs(L.p, L.a)), $B.helper_functions.CHECK_NULL_ALLOWED($B.parser_constants.asdl_keyword_seq, $B._PyPegen.seq_delete_starred_exprs(L.p, L.a)), L.EXTRA)
       }]
   },
 kwargs:
@@ -3599,7 +3829,7 @@ kwargs:
           {type: 'rule', name: 'kwarg_or_starred', join: ',', alias: 'a', repeat: '+'},
           {type: 'string', value: ','},
           {type: 'rule', name: 'kwarg_or_double_starred', join: ',', alias: 'b', repeat: '+'}
-        ], action: '$B._PyPegen.join_sequences(p, a, b)'
+        ], action: (L) => $B._PyPegen.join_sequences(L.p, L.a, L.b)
       },
       {
         items: [
@@ -3614,10 +3844,18 @@ kwargs:
   },
 starred_expression:
   {
-    items: [
-      {type: 'string', value: '*'},
-      {type: 'rule', name: 'expression', alias: 'a'}
-    ], action: '$B._PyAST.Starred(a, Load, EXTRA)'
+   choices: [
+      {
+        items: [
+          {type: 'rule', name: 'invalid_starred_expression'}
+        ]
+      },
+      {
+        items: [
+          {type: 'string', value: '*'},
+          {type: 'rule', name: 'expression', alias: 'a'}
+        ], action: (L) => $B._PyAST.Starred(L.a, $B.parser_constants.Load, L.EXTRA)
+      }]
   },
 kwarg_or_starred:
   {
@@ -3632,12 +3870,12 @@ kwarg_or_starred:
           {type: 'NAME', alias: 'a'},
           {type: 'string', value: '='},
           {type: 'rule', name: 'expression', alias: 'b'}
-        ], action: '$B._PyPegen.keyword_or_starred(p, CHECK($B.ast.keyword, $B._PyAST.keyword(a.id, b, EXTRA)), 1)'
+        ], action: (L) => $B._PyPegen.keyword_or_starred(L.p, $B.helper_functions.CHECK($B.parser_constants.keyword_ty, $B._PyAST.keyword(L.a.id, L.b, L.EXTRA)), 1)
       },
       {
         items: [
           {type: 'rule', name: 'starred_expression', alias: 'a'}
-        ], action: '$B._PyPegen.keyword_or_starred(p, a, 0)'
+        ], action: (L) => $B._PyPegen.keyword_or_starred(L.p, L.a, 0)
       }]
   },
 kwarg_or_double_starred:
@@ -3653,13 +3891,13 @@ kwarg_or_double_starred:
           {type: 'NAME', alias: 'a'},
           {type: 'string', value: '='},
           {type: 'rule', name: 'expression', alias: 'b'}
-        ], action: '$B._PyPegen.keyword_or_starred(p, CHECK($B.ast.keyword, $B._PyAST.keyword(a.id, b, EXTRA)), 1)'
+        ], action: (L) => $B._PyPegen.keyword_or_starred(L.p, $B.helper_functions.CHECK($B.parser_constants.keyword_ty, $B._PyAST.keyword(L.a.id, L.b, L.EXTRA)), 1)
       },
       {
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: '$B._PyPegen.keyword_or_starred(p, CHECK($B.ast.keyword, $B._PyAST.keyword(NULL, a, EXTRA)), 1)'
+        ], action: (L) => $B._PyPegen.keyword_or_starred(L.p, $B.helper_functions.CHECK($B.parser_constants.keyword_ty, $B._PyAST.keyword($B.parser_constants.NULL, L.a, L.EXTRA)), 1)
       }]
   },
 star_targets:
@@ -3669,7 +3907,7 @@ star_targets:
         items: [
           {type: 'rule', name: 'star_target', alias: 'a'},
           {type: 'string', value: ',', lookahead: 'negative'}
-        ], action: 'a'
+        ], action: (L) => L.a
       },
       {
         items: [
@@ -3679,7 +3917,7 @@ star_targets:
               {type: 'string', value: ','},
               {type: 'rule', name: 'star_target', alias: 'c'}
             ],
-            repeat: '*', alias: 'b', action: 'c'
+            repeat: '*', alias: 'b', action: (L) => L.c
           },
           {
             items: [
@@ -3687,7 +3925,7 @@ star_targets:
             ],
             repeat: '?'
           }
-        ], action: '$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple($B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front(L.p, L.a, L.b)), $B.parser_constants.Store, L.EXTRA)
       }]
   },
 star_targets_list_seq:
@@ -3700,7 +3938,7 @@ star_targets_list_seq:
         ],
         repeat: '?'
       }
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 star_targets_tuple_seq:
   {
@@ -3713,7 +3951,7 @@ star_targets_tuple_seq:
               {type: 'string', value: ','},
               {type: 'rule', name: 'star_target', alias: 'c'}
             ],
-            repeat: '+', alias: 'b', action: 'c'
+            repeat: '+', alias: 'b', action: (L) => L.c
           },
           {
             items: [
@@ -3721,13 +3959,13 @@ star_targets_tuple_seq:
             ],
             repeat: '?'
           }
-        ], action: ' $B._PyPegen.seq_insert_in_front(p, a, b)'
+        ], action: (L) => $B._PyPegen.seq_insert_in_front(L.p, L.a, L.b)
       },
       {
         items: [
           {type: 'rule', name: 'star_target', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: ' $B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       }]
   },
 star_target:
@@ -3742,7 +3980,7 @@ star_target:
               {type: 'rule', name: 'star_target'}
             ], alias: 'a'
           }
-        ], action: '$B._PyAST.Starred(CHECK($B.ast.expr, $B._PyPegen.set_expr_context(p, a, Store)), Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Starred($B.helper_functions.CHECK($B.parser_constants.expr_ty, $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Store)), $B.parser_constants.Store, L.EXTRA)
       },
       {
         items: [
@@ -3759,7 +3997,7 @@ target_with_star_atom:
           {type: 'string', value: '.'},
           {type: 'NAME', alias: 'b'},
           {type: 'rule', name: 't_lookahead', lookahead: 'negative'}
-        ], action: '$B._PyAST.Attribute(a, b.id, Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Attribute(L.a, L.b.id, $B.parser_constants.Store, L.EXTRA)
       },
       {
         items: [
@@ -3768,7 +4006,7 @@ target_with_star_atom:
           {type: 'rule', name: 'slices', alias: 'b'},
           {type: 'string', value: ']'},
           {type: 'rule', name: 't_lookahead', lookahead: 'negative'}
-        ], action: '$B._PyAST.Subscript(a, b, Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Subscript(L.a, L.b, $B.parser_constants.Store, L.EXTRA)
       },
       {
         items: [
@@ -3782,14 +4020,14 @@ star_atom:
       {
         items: [
           {type: 'NAME', alias: 'a'}
-        ], action: '$B._PyPegen.set_expr_context(p, a, Store)'
+        ], action: (L) => $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Store)
       },
       {
         items: [
           {type: 'string', value: '('},
           {type: 'rule', name: 'target_with_star_atom', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyPegen.set_expr_context(p, a, Store)'
+        ], action: (L) => $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Store)
       },
       {
         items: [
@@ -3801,7 +4039,7 @@ star_atom:
             repeat: '?', alias: 'a'
           },
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.Tuple(a, Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple(L.a, $B.parser_constants.Store, L.EXTRA)
       },
       {
         items: [
@@ -3813,7 +4051,7 @@ star_atom:
             repeat: '?', alias: 'a'
           },
           {type: 'string', value: ']'}
-        ], action: '$B._PyAST.List(a, Store, EXTRA)'
+        ], action: (L) => $B._PyAST.List(L.a, $B.parser_constants.Store, L.EXTRA)
       }]
   },
 single_target:
@@ -3827,14 +4065,14 @@ single_target:
       {
         items: [
           {type: 'NAME', alias: 'a'}
-        ], action: '$B._PyPegen.set_expr_context(p, a, Store)'
+        ], action: (L) => $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Store)
       },
       {
         items: [
           {type: 'string', value: '('},
           {type: 'rule', name: 'single_target', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 single_subscript_attribute_target:
@@ -3846,7 +4084,7 @@ single_subscript_attribute_target:
           {type: 'string', value: '.'},
           {type: 'NAME', alias: 'b'},
           {type: 'rule', name: 't_lookahead', lookahead: 'negative'}
-        ], action: '$B._PyAST.Attribute(a, b.id, Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Attribute(L.a, L.b.id, $B.parser_constants.Store, L.EXTRA)
       },
       {
         items: [
@@ -3855,7 +4093,7 @@ single_subscript_attribute_target:
           {type: 'rule', name: 'slices', alias: 'b'},
           {type: 'string', value: ']'},
           {type: 'rule', name: 't_lookahead', lookahead: 'negative'}
-        ], action: '$B._PyAST.Subscript(a, b, Store, EXTRA)'
+        ], action: (L) => $B._PyAST.Subscript(L.a, L.b, $B.parser_constants.Store, L.EXTRA)
       }]
   },
 t_primary:
@@ -3867,7 +4105,7 @@ t_primary:
           {type: 'string', value: '.'},
           {type: 'NAME', alias: 'b'},
           {type: 'rule', name: 't_lookahead', lookahead: 'positive'}
-        ], action: '$B._PyAST.Attribute(a, b.id, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Attribute(L.a, L.b.id, $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
@@ -3876,14 +4114,14 @@ t_primary:
           {type: 'rule', name: 'slices', alias: 'b'},
           {type: 'string', value: ']'},
           {type: 'rule', name: 't_lookahead', lookahead: 'positive'}
-        ], action: '$B._PyAST.Subscript(a, b, Load, EXTRA)'
+        ], action: (L) => $B._PyAST.Subscript(L.a, L.b, $B.parser_constants.Load, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 't_primary', alias: 'a'},
           {type: 'rule', name: 'genexp', alias: 'b'},
           {type: 'rule', name: 't_lookahead', lookahead: 'positive'}
-        ], action: '$B._PyAST.Call(a, CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, b)), NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Call(L.a, $B.helper_functions.CHECK($B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq(L.p, L.b)), $B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
@@ -3897,13 +4135,13 @@ t_primary:
           },
           {type: 'string', value: ')'},
           {type: 'rule', name: 't_lookahead', lookahead: 'positive'}
-        ], action: '$B._PyAST.Call(a, (b) ? b.args : NULL, (b) ? b.keywords : NULL, EXTRA)'
+        ], action: (L) => $B._PyAST.Call(L.a, (L.b)?(L.b).args:$B.parser_constants.NULL, (L.b)?(L.b).keywords:$B.parser_constants.NULL, L.EXTRA)
       },
       {
         items: [
           {type: 'rule', name: 'atom', alias: 'a'},
           {type: 'rule', name: 't_lookahead', lookahead: 'positive'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 t_lookahead:
@@ -3935,7 +4173,7 @@ del_targets:
         ],
         repeat: '?'
       }
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 del_target:
   {
@@ -3946,7 +4184,7 @@ del_target:
           {type: 'string', value: '.'},
           {type: 'NAME', alias: 'b'},
           {type: 'rule', name: 't_lookahead', lookahead: 'negative'}
-        ], action: '$B._PyAST.Attribute(a, b.id, Del, EXTRA)'
+        ], action: (L) => $B._PyAST.Attribute(L.a, L.b.id, $B.parser_constants.Del, L.EXTRA)
       },
       {
         items: [
@@ -3955,7 +4193,7 @@ del_target:
           {type: 'rule', name: 'slices', alias: 'b'},
           {type: 'string', value: ']'},
           {type: 'rule', name: 't_lookahead', lookahead: 'negative'}
-        ], action: '$B._PyAST.Subscript(a, b, Del, EXTRA)'
+        ], action: (L) => $B._PyAST.Subscript(L.a, L.b, $B.parser_constants.Del, L.EXTRA)
       },
       {
         items: [
@@ -3969,14 +4207,14 @@ del_t_atom:
       {
         items: [
           {type: 'NAME', alias: 'a'}
-        ], action: '$B._PyPegen.set_expr_context(p, a, Del)'
+        ], action: (L) => $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Del)
       },
       {
         items: [
           {type: 'string', value: '('},
           {type: 'rule', name: 'del_target', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: '$B._PyPegen.set_expr_context(p, a, Del)'
+        ], action: (L) => $B._PyPegen.set_expr_context(L.p, L.a, $B.parser_constants.Del)
       },
       {
         items: [
@@ -3988,7 +4226,7 @@ del_t_atom:
             repeat: '?', alias: 'a'
           },
           {type: 'string', value: ')'}
-        ], action: '$B._PyAST.Tuple(a, Del, EXTRA)'
+        ], action: (L) => $B._PyAST.Tuple(L.a, $B.parser_constants.Del, L.EXTRA)
       },
       {
         items: [
@@ -4000,7 +4238,7 @@ del_t_atom:
             repeat: '?', alias: 'a'
           },
           {type: 'string', value: ']'}
-        ], action: '$B._PyAST.List(a, Del, EXTRA)'
+        ], action: (L) => $B._PyAST.List(L.a, $B.parser_constants.Del, L.EXTRA)
       }]
   },
 type_expressions:
@@ -4015,7 +4253,7 @@ type_expressions:
           {type: 'string', value: ','},
           {type: 'string', value: '**'},
           {type: 'rule', name: 'expression', alias: 'c'}
-        ], action: '$B._PyPegen.seq_append_to_end( p, CHECK(asdl_seq, $B._PyPegen.seq_append_to_end(p, a, b)), c)'
+        ], action: (L) => $B._PyPegen.seq_append_to_end(L.p, $B.helper_functions.CHECK(asdl_seq, $B._PyPegen.seq_append_to_end(L.p, L.a, L.b)), L.c)
       },
       {
         items: [
@@ -4023,7 +4261,7 @@ type_expressions:
           {type: 'string', value: ','},
           {type: 'string', value: '*'},
           {type: 'rule', name: 'expression', alias: 'b'}
-        ], action: '$B._PyPegen.seq_append_to_end(p, a, b)'
+        ], action: (L) => $B._PyPegen.seq_append_to_end(L.p, L.a, L.b)
       },
       {
         items: [
@@ -4031,7 +4269,7 @@ type_expressions:
           {type: 'string', value: ','},
           {type: 'string', value: '**'},
           {type: 'rule', name: 'expression', alias: 'b'}
-        ], action: '$B._PyPegen.seq_append_to_end(p, a, b)'
+        ], action: (L) => $B._PyPegen.seq_append_to_end(L.p, L.a, L.b)
       },
       {
         items: [
@@ -4040,24 +4278,24 @@ type_expressions:
           {type: 'string', value: ','},
           {type: 'string', value: '**'},
           {type: 'rule', name: 'expression', alias: 'b'}
-        ], action: '$B._PyPegen.seq_append_to_end( p, CHECK(asdl_seq, $B._PyPegen.singleton_seq(p, a)), b)'
+        ], action: (L) => $B._PyPegen.seq_append_to_end(L.p, $B.helper_functions.CHECK(asdl_seq, $B._PyPegen.singleton_seq(L.p, L.a)), L.b)
       },
       {
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
           {type: 'rule', name: 'expression', join: ',', alias: 'a', repeat: '+'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 func_type_comment:
@@ -4073,7 +4311,7 @@ func_type_comment:
               {type: 'INDENT'}
             ], lookahead: 'positive'
           }
-        ], action: 't'
+        ], action: (L) => L.t
       },
       {
         items: [
@@ -4091,10 +4329,55 @@ invalid_arguments:
    choices: [
       {
         items: [
-          {type: 'rule', name: 'args', alias: 'a'},
+          {
+           choices: [
+              {
+                items: [
+                  {
+                    items: [
+                      {
+                       choices: [
+                          {
+                            items: [
+                              {type: 'rule', name: 'starred_expression'}
+                            ]
+                          },
+                          {
+                            items: [
+                              {
+                               choices: [
+                                  {
+                                    items: [
+                                      {type: 'rule', name: 'assignment_expression'}
+                                    ]
+                                  },
+                                  {
+                                    items: [
+                                      {type: 'rule', name: 'expression'},
+                                      {type: 'string', value: ':=', lookahead: 'negative'}
+                                    ]
+                                  }]
+                              },
+                              {type: 'string', value: '=', lookahead: 'negative'}
+                            ]
+                          }], join: ',',
+                        repeat: '+'
+                      },
+                      {type: 'string', value: ','},
+                      {type: 'rule', name: 'kwargs'}
+                    ]
+                  }
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'kwargs'}
+                ]
+              }]
+          },
           {type: 'string', value: ','},
-          {type: 'string', value: '*'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "iterable argument unpacking follows keyword argument unpacking")'
+          {type: 'string', value: '*', alias: 'b'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.b, "iterable argument unpacking follows keyword argument unpacking")
       },
       {
         items: [
@@ -4110,7 +4393,7 @@ invalid_arguments:
               }],
             repeat: '?'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, $B._PyPegen.get_last_comprehension_item(PyPegen_last_item(b, $B.ast.comprehension)), "Generator expression must be parenthesized")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, $B._PyPegen.get_last_comprehension_item(PyPegen_last_item(L.b, $B.ast.comprehension)), "Generator expression must be parenthesized")
       },
       {
         items: [
@@ -4118,13 +4401,39 @@ invalid_arguments:
           {type: 'string', value: '=', alias: 'b'},
           {type: 'rule', name: 'expression'},
           {type: 'rule', name: 'for_if_clauses'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")
+      },
+      {
+        items: [
+          {
+            items: [
+              {type: 'rule', name: 'args'},
+              {type: 'string', value: ','}
+            ],
+            repeat: '?'
+          },
+          {type: 'NAME', alias: 'a'},
+          {type: 'string', value: '=', alias: 'b'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: ','}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: ')'}
+                ]
+              }], lookahead: 'positive'
+          }
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "expected argument value expression")
       },
       {
         items: [
           {type: 'rule', name: 'args', alias: 'a'},
           {type: 'rule', name: 'for_if_clauses', alias: 'b'}
-        ], action: '$B._PyPegen.nonparen_genexp_in_call(p, a, b)'
+        ], action: (L) => $B._PyPegen.nonparen_genexp_in_call(L.p, L.a, L.b)
       },
       {
         items: [
@@ -4132,14 +4441,14 @@ invalid_arguments:
           {type: 'string', value: ','},
           {type: 'rule', name: 'expression', alias: 'a'},
           {type: 'rule', name: 'for_if_clauses', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, $B._PyPegen.get_last_comprehension_item(PyPegen_last_item(b, $B.ast.comprehension)), "Generator expression must be parenthesized")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, $B._PyPegen.get_last_comprehension_item(PyPegen_last_item(L.b, $B.ast.comprehension)), "Generator expression must be parenthesized")
       },
       {
         items: [
           {type: 'rule', name: 'args', alias: 'a'},
           {type: 'string', value: ','},
           {type: 'rule', name: 'args'}
-        ], action: '$B._PyPegen.arguments_parsing_error(p, a)'
+        ], action: (L) => $B._PyPegen.arguments_parsing_error(L.p, L.a)
       }]
   },
 invalid_kwarg:
@@ -4166,7 +4475,7 @@ invalid_kwarg:
               }], alias: 'a'
           },
           {type: 'string', value: '=', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot assign to %s", PyBytes_AS_STRING(a.bytes))'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "cannot assign to %s", PyBytes_AS_STRING(L.a.bytes))
       },
       {
         items: [
@@ -4174,7 +4483,7 @@ invalid_kwarg:
           {type: 'string', value: '=', alias: 'b'},
           {type: 'rule', name: 'expression'},
           {type: 'rule', name: 'for_if_clauses'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")
       },
       {
         items: [
@@ -4186,7 +4495,15 @@ invalid_kwarg:
           },
           {type: 'rule', name: 'expression', alias: 'a'},
           {type: 'string', value: '=', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE( a, b, "expression cannot contain assignment, perhaps you meant \"==\"?")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "expression cannot contain assignment, perhaps you meant \"==\"?")
+      },
+      {
+        items: [
+          {type: 'string', value: '**', alias: 'a'},
+          {type: 'rule', name: 'expression'},
+          {type: 'string', value: '='},
+          {type: 'rule', name: 'expression', alias: 'b'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "cannot assign to keyword argument unpacking")
       }]
   },
 expression_without_invalid:
@@ -4199,7 +4516,7 @@ expression_without_invalid:
           {type: 'rule', name: 'disjunction', alias: 'b'},
           {type: 'string', value: 'else'},
           {type: 'rule', name: 'expression', alias: 'c'}
-        ], action: '$B._PyAST.IfExp(b, a, c, EXTRA)'
+        ], action: (L) => $B._PyAST.IfExp(L.b, L.a, L.c, L.EXTRA)
       },
       {
         items: [
@@ -4218,7 +4535,7 @@ invalid_legacy_expression:
       {type: 'NAME', alias: 'a'},
       {type: 'string', value: '(', lookahead: 'negative'},
       {type: 'rule', name: 'star_expressions', alias: 'b'}
-    ], action: '$B._PyPegen.check_legacy_stmt(p, a) ? RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Missing parentheses in call to \'%U\'. Did you mean %U(...)?", a.id, a.id) : NULL'
+    ], action: (L) => $B._PyPegen.check_legacy_stmt(L.p, L.a)?$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "Missing parentheses in call to \'%U\'. Did you mean %U(...)?", L.a.id, L.a.id):$B.parser_constants.NULL
   },
 invalid_expression:
   {
@@ -4241,7 +4558,7 @@ invalid_expression:
           },
           {type: 'rule', name: 'disjunction', alias: 'a'},
           {type: 'rule', name: 'expression_without_invalid', alias: 'b'}
-        ], action: '$B._PyPegen.check_legacy_stmt(p, a) ? NULL : p.tokens[p.mark-1].level == 0 ? NULL : RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Perhaps you forgot a comma?")'
+        ], action: (L) => $B._PyPegen.check_legacy_stmt(L.p, L.a)?$B.parser_constants.NULL:L.p.tokens.level==0?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "invalid syntax. Perhaps you forgot a comma?")
       },
       {
         items: [
@@ -4261,7 +4578,20 @@ invalid_expression:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "expected \'else\' after \'if\' expression")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "expected \'else\' after \'if\' expression")
+      },
+      {
+        items: [
+          {type: 'string', value: 'lambda', alias: 'a'},
+          {
+            items: [
+              {type: 'rule', name: 'lambda_params'}
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: ':', alias: 'b'},
+          {type: 'FSTRING_MIDDLE', lookahead: 'positive'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "f-string: lambda expressions are not allowed without parentheses")
       }]
   },
 invalid_named_expression:
@@ -4272,7 +4602,7 @@ invalid_named_expression:
           {type: 'rule', name: 'expression', alias: 'a'},
           {type: 'string', value: ':='},
           {type: 'rule', name: 'expression'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION( a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name(a))'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name(L.a))
       },
       {
         items: [
@@ -4292,7 +4622,7 @@ invalid_named_expression:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?")
       },
       {
         items: [
@@ -4345,7 +4675,7 @@ invalid_named_expression:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot assign to %s here. Maybe you meant \'==\' instead of \'=\'?", $B._PyPegen.get_expr_name(a))'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "cannot assign to %s here. Maybe you meant \'==\' instead of \'=\'?", $B._PyPegen.get_expr_name(L.a))
       }]
   },
 invalid_assignment:
@@ -4356,7 +4686,7 @@ invalid_assignment:
           {type: 'rule', name: 'invalid_ann_assign_target', alias: 'a'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'expression'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION( a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name(a) )'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name(L.a))
       },
       {
         items: [
@@ -4365,14 +4695,14 @@ invalid_assignment:
           {type: 'rule', name: 'star_named_expressions', repeat: '*'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'expression'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "only single target (not tuple) can be annotated")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "only single target (not tuple) can be annotated")
       },
       {
         items: [
           {type: 'rule', name: 'expression', alias: 'a'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'expression'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "illegal target for annotation")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "illegal target for annotation")
       },
       {
         items: [
@@ -4385,7 +4715,7 @@ invalid_assignment:
           },
           {type: 'rule', name: 'star_expressions', alias: 'a'},
           {type: 'string', value: '='}
-        ], action: 'RAISE_SYNTAX_ERROR_INVALID_TARGET(STAR_TARGETS, a)'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET($B.parser_constants.STAR_TARGETS, L.a)
       },
       {
         items: [
@@ -4398,7 +4728,7 @@ invalid_assignment:
           },
           {type: 'rule', name: 'yield_expr', alias: 'a'},
           {type: 'string', value: '='}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "assignment to yield expression not possible")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "assignment to yield expression not possible")
       },
       {
         items: [
@@ -4417,7 +4747,7 @@ invalid_assignment:
                 ]
               }]
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION( a, "\'%s\' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name(a) )'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "\'%s\' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name(L.a))
       }]
   },
 invalid_ann_assign_target:
@@ -4438,7 +4768,7 @@ invalid_ann_assign_target:
           {type: 'string', value: '('},
           {type: 'rule', name: 'invalid_ann_assign_target', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: 'a'
+        ], action: (L) => L.a
       }]
   },
 invalid_del_stmt:
@@ -4446,14 +4776,14 @@ invalid_del_stmt:
     items: [
       {type: 'string', value: 'del'},
       {type: 'rule', name: 'star_expressions', alias: 'a'}
-    ], action: 'RAISE_SYNTAX_ERROR_INVALID_TARGET(DEL_TARGETS, a)'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET($B.parser_constants.DEL_TARGETS, L.a)
   },
 invalid_block:
   {
     items: [
       {type: 'NEWLINE'},
       {type: 'INDENT', lookahead: 'negative'}
-    ], action: 'RAISE_INDENTATION_ERROR("expected an indented block")'
+    ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block")
   },
 invalid_comprehension:
   {
@@ -4480,7 +4810,7 @@ invalid_comprehension:
           },
           {type: 'rule', name: 'starred_expression', alias: 'a'},
           {type: 'rule', name: 'for_if_clauses'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "iterable unpacking cannot be used in comprehension")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "iterable unpacking cannot be used in comprehension")
       },
       {
         items: [
@@ -4501,7 +4831,7 @@ invalid_comprehension:
           {type: 'string', value: ','},
           {type: 'rule', name: 'star_named_expressions', alias: 'b'},
           {type: 'rule', name: 'for_if_clauses'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, PyPegen_last_item(b, $B.ast.expr), "did you forget parentheses around the comprehension target?")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, PyPegen_last_item(L.b, $B.parser_constants.expr_ty), "did you forget parentheses around the comprehension target?")
       },
       {
         items: [
@@ -4521,7 +4851,7 @@ invalid_comprehension:
           {type: 'rule', name: 'star_named_expression', alias: 'a'},
           {type: 'string', value: ',', alias: 'b'},
           {type: 'rule', name: 'for_if_clauses'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "did you forget parentheses around the comprehension target?")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "did you forget parentheses around the comprehension target?")
       }]
   },
 invalid_dict_comprehension:
@@ -4532,32 +4862,16 @@ invalid_dict_comprehension:
       {type: 'rule', name: 'bitwise_or'},
       {type: 'rule', name: 'for_if_clauses'},
       {type: 'string', value: '}'}
-    ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "dict unpacking cannot be used in dict comprehension")'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "dict unpacking cannot be used in dict comprehension")
   },
 invalid_parameters:
   {
    choices: [
       {
         items: [
-          {type: 'rule', name: 'param_no_default', repeat: '*'},
-          {type: 'rule', name: 'invalid_parameters_helper'},
-          {type: 'rule', name: 'param_no_default', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'
-      },
-      {
-        items: [
-          {type: 'rule', name: 'param_no_default', repeat: '*'},
-          {type: 'string', value: '(', alias: 'a'},
-          {type: 'rule', name: 'param_no_default', repeat: '+'},
-          {type: 'string', value: ',', repeat: '?'},
-          {type: 'string', value: ')', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Function parameters cannot be parenthesized")'
-      },
-      {
-        items: [
           {type: 'string', value: '/', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "at least one argument must precede /")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "at least one argument must precede /")
       },
       {
         items: [
@@ -4576,7 +4890,24 @@ invalid_parameters:
           },
           {type: 'rule', name: 'param_maybe_default', repeat: '*'},
           {type: 'string', value: '/', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ may appear only once")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "/ may appear only once")
+      },
+      {
+        items: [
+          {type: 'rule', name: 'slash_no_default', repeat: '?'},
+          {type: 'rule', name: 'param_no_default', repeat: '*'},
+          {type: 'rule', name: 'invalid_parameters_helper'},
+          {type: 'rule', name: 'param_no_default', alias: 'a'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "parameter without a default follows parameter with a default")
+      },
+      {
+        items: [
+          {type: 'rule', name: 'param_no_default', repeat: '*'},
+          {type: 'string', value: '(', alias: 'a'},
+          {type: 'rule', name: 'param_no_default', repeat: '+'},
+          {type: 'string', value: ',', repeat: '?'},
+          {type: 'string', value: ')', alias: 'b'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "Function parameters cannot be parenthesized")
       },
       {
         items: [
@@ -4611,14 +4942,14 @@ invalid_parameters:
           },
           {type: 'rule', name: 'param_maybe_default', repeat: '*'},
           {type: 'string', value: '/', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ must be ahead of *")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "/ must be ahead of *")
       },
       {
         items: [
           {type: 'rule', name: 'param_maybe_default', repeat: '+'},
           {type: 'string', value: '/'},
           {type: 'string', value: '*', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expected comma between / and *")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "expected comma between / and *")
       }]
   },
 invalid_default:
@@ -4638,7 +4969,7 @@ invalid_default:
             ]
           }], lookahead: 'positive'
       }
-    ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expected default value expression")'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "expected default value expression")
   },
 invalid_star_etc:
   {
@@ -4672,21 +5003,21 @@ invalid_star_etc:
                 ]
               }]
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "named arguments must follow bare *")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "named arguments must follow bare *")
       },
       {
         items: [
           {type: 'string', value: '*'},
           {type: 'string', value: ','},
           {type: 'TYPE_COMMENT'}
-        ], action: 'RAISE_SYNTAX_ERROR("bare * has associated type comment")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("bare * has associated type comment")
       },
       {
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'param'},
           {type: 'string', value: '=', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-positional argument cannot have default value")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "var-positional argument cannot have default value")
       },
       {
         items: [
@@ -4719,7 +5050,7 @@ invalid_star_etc:
                 ]
               }]
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "* argument may appear only once")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "* argument may appear only once")
       }]
   },
 invalid_kwds:
@@ -4730,7 +5061,7 @@ invalid_kwds:
           {type: 'string', value: '**'},
           {type: 'rule', name: 'param'},
           {type: 'string', value: '=', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-keyword argument cannot have default value")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "var-keyword argument cannot have default value")
       },
       {
         items: [
@@ -4738,7 +5069,7 @@ invalid_kwds:
           {type: 'rule', name: 'param'},
           {type: 'string', value: ','},
           {type: 'rule', name: 'param', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "arguments cannot follow var-keyword argument")
       },
       {
         items: [
@@ -4763,7 +5094,7 @@ invalid_kwds:
                 ]
               }], alias: 'a'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "arguments cannot follow var-keyword argument")
       }]
   },
 invalid_parameters_helper:
@@ -4772,7 +5103,7 @@ invalid_parameters_helper:
       {
         items: [
           {type: 'rule', name: 'slash_with_default', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
@@ -4785,25 +5116,9 @@ invalid_lambda_parameters:
    choices: [
       {
         items: [
-          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
-          {type: 'rule', name: 'invalid_lambda_parameters_helper'},
-          {type: 'rule', name: 'lambda_param_no_default', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'
-      },
-      {
-        items: [
-          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
-          {type: 'string', value: '(', alias: 'a'},
-          {type: 'rule', name: 'lambda_param', join: ',', repeat: '+'},
-          {type: 'string', value: ',', repeat: '?'},
-          {type: 'string', value: ')', alias: 'b'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Lambda expression parameters cannot be parenthesized")'
-      },
-      {
-        items: [
           {type: 'string', value: '/', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "at least one argument must precede /")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "at least one argument must precede /")
       },
       {
         items: [
@@ -4822,7 +5137,24 @@ invalid_lambda_parameters:
           },
           {type: 'rule', name: 'lambda_param_maybe_default', repeat: '*'},
           {type: 'string', value: '/', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ may appear only once")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "/ may appear only once")
+      },
+      {
+        items: [
+          {type: 'rule', name: 'lambda_slash_no_default', repeat: '?'},
+          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
+          {type: 'rule', name: 'invalid_lambda_parameters_helper'},
+          {type: 'rule', name: 'lambda_param_no_default', alias: 'a'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "parameter without a default follows parameter with a default")
+      },
+      {
+        items: [
+          {type: 'rule', name: 'lambda_param_no_default', repeat: '*'},
+          {type: 'string', value: '(', alias: 'a'},
+          {type: 'rule', name: 'lambda_param', join: ',', repeat: '+'},
+          {type: 'string', value: ',', repeat: '?'},
+          {type: 'string', value: ')', alias: 'b'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "Lambda expression parameters cannot be parenthesized")
       },
       {
         items: [
@@ -4857,14 +5189,14 @@ invalid_lambda_parameters:
           },
           {type: 'rule', name: 'lambda_param_maybe_default', repeat: '*'},
           {type: 'string', value: '/', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ must be ahead of *")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "/ must be ahead of *")
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param_maybe_default', repeat: '+'},
           {type: 'string', value: '/'},
           {type: 'string', value: '*', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expected comma between / and *")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "expected comma between / and *")
       }]
   },
 invalid_lambda_parameters_helper:
@@ -4873,7 +5205,7 @@ invalid_lambda_parameters_helper:
       {
         items: [
           {type: 'rule', name: 'lambda_slash_with_default', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)'
+        ], action: (L) => $B._PyPegen.singleton_seq(L.p, L.a)
       },
       {
         items: [
@@ -4913,14 +5245,14 @@ invalid_lambda_star_etc:
                 ]
               }]
           }
-        ], action: 'RAISE_SYNTAX_ERROR("named arguments must follow bare *")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("named arguments must follow bare *")
       },
       {
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'lambda_param'},
           {type: 'string', value: '=', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-positional argument cannot have default value")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "var-positional argument cannot have default value")
       },
       {
         items: [
@@ -4953,7 +5285,7 @@ invalid_lambda_star_etc:
                 ]
               }]
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "* argument may appear only once")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "* argument may appear only once")
       }]
   },
 invalid_lambda_kwds:
@@ -4964,7 +5296,7 @@ invalid_lambda_kwds:
           {type: 'string', value: '**'},
           {type: 'rule', name: 'lambda_param'},
           {type: 'string', value: '=', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-keyword argument cannot have default value")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "var-keyword argument cannot have default value")
       },
       {
         items: [
@@ -4972,7 +5304,7 @@ invalid_lambda_kwds:
           {type: 'rule', name: 'lambda_param'},
           {type: 'string', value: ','},
           {type: 'rule', name: 'lambda_param', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "arguments cannot follow var-keyword argument")
       },
       {
         items: [
@@ -4997,7 +5329,7 @@ invalid_lambda_kwds:
                 ]
               }], alias: 'a'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "arguments cannot follow var-keyword argument")
       }]
   },
 invalid_double_type_comments:
@@ -5008,7 +5340,7 @@ invalid_double_type_comments:
       {type: 'TYPE_COMMENT'},
       {type: 'NEWLINE'},
       {type: 'INDENT'}
-    ], action: 'RAISE_SYNTAX_ERROR("Cannot have two type comments on def")'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("Cannot have two type comments on def")
   },
 invalid_with_item:
   {
@@ -5034,7 +5366,7 @@ invalid_with_item:
             ]
           }], lookahead: 'positive'
       }
-    ], action: 'RAISE_SYNTAX_ERROR_INVALID_TARGET(STAR_TARGETS, a)'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET($B.parser_constants.STAR_TARGETS, L.a)
   },
 invalid_for_target:
   {
@@ -5042,7 +5374,7 @@ invalid_for_target:
       {type: 'ASYNC', repeat: '?'},
       {type: 'string', value: 'for'},
       {type: 'rule', name: 'star_expressions', alias: 'a'}
-    ], action: 'RAISE_SYNTAX_ERROR_INVALID_TARGET(FOR_TARGETS, a)'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET($B.parser_constants.FOR_TARGETS, L.a)
   },
 invalid_group:
   {
@@ -5052,7 +5384,7 @@ invalid_group:
           {type: 'string', value: '('},
           {type: 'rule', name: 'starred_expression', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use starred expression here")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "cannot use starred expression here")
       },
       {
         items: [
@@ -5060,8 +5392,17 @@ invalid_group:
           {type: 'string', value: '**', alias: 'a'},
           {type: 'rule', name: 'expression'},
           {type: 'string', value: ')'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use double starred expression here")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "cannot use double starred expression here")
       }]
+  },
+invalid_import:
+  {
+    items: [
+      {type: 'string', value: 'import', alias: 'a'},
+      {type: 'rule', name: 'dotted_name', join: ',', repeat: '+'},
+      {type: 'string', value: 'from'},
+      {type: 'rule', name: 'dotted_name'}
+    ], action: (L) => RAISE_SYNTAX_ERROR_STARTING_FROM(L.a, "Did you mean to use \'from ... import ...\' instead?")
   },
 invalid_import_from_targets:
   {
@@ -5069,7 +5410,7 @@ invalid_import_from_targets:
       {type: 'rule', name: 'import_from_as_names'},
       {type: 'string', value: ','},
       {type: 'NEWLINE'}
-    ], action: 'RAISE_SYNTAX_ERROR("trailing comma not allowed without surrounding parentheses")'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("trailing comma not allowed without surrounding parentheses")
   },
 invalid_with_stmt:
   {
@@ -5097,7 +5438,7 @@ invalid_with_stmt:
             repeat: '+'
           },
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5125,7 +5466,7 @@ invalid_with_stmt:
           {type: 'string', value: ',', repeat: '?'},
           {type: 'string', value: ')'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       }]
   },
 invalid_with_stmt_indent:
@@ -5156,7 +5497,7 @@ invalid_with_stmt_indent:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'with\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'with\' statement on line %d", L.a.lineno)
       },
       {
         items: [
@@ -5186,7 +5527,7 @@ invalid_with_stmt_indent:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'with\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'with\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_try_stmt:
@@ -5198,7 +5539,7 @@ invalid_try_stmt:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'try\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'try\' statement on line %d", L.a.lineno)
       },
       {
         items: [
@@ -5218,38 +5559,49 @@ invalid_try_stmt:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: 'RAISE_SYNTAX_ERROR("expected \'except\' or \'finally\' block")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \'except\' or \'finally\' block")
       },
       {
         items: [
-          {type: 'string', value: 'try', alias: 'a'},
+          {type: 'string', value: 'try'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', repeat: '*'},
+          {type: 'rule', name: 'except_block', repeat: '+'},
+          {type: 'string', value: 'except', alias: 'a'},
+          {type: 'string', value: '*', alias: 'b'},
+          {type: 'rule', name: 'expression'},
           {
-           choices: [
-              {
-                items: [
-                  {
-                    items: [
-                      {type: 'rule', name: 'except_block', repeat: '+'},
-                      {type: 'rule', name: 'except_star_block'}
-                    ]
-                  }
-                ]
-              },
-              {
-                items: [
-                  {
-                    items: [
-                      {type: 'rule', name: 'except_star_block', repeat: '+'},
-                      {type: 'rule', name: 'except_block'}
-                    ]
-                  }
-                ]
-              }]
+            items: [
+              {type: 'string', value: 'as'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
           },
-          {type: 'rule', name: 'block', repeat: '*'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot have both \'except\' and \'except\' on the same \'try\'")'
+          {type: 'string', value: ':'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "cannot have both \'except\' and \'except*\' on the same \'try\'")
+      },
+      {
+        items: [
+          {type: 'string', value: 'try'},
+          {type: 'string', value: ':'},
+          {type: 'rule', name: 'block', repeat: '*'},
+          {type: 'rule', name: 'except_star_block', repeat: '+'},
+          {type: 'string', value: 'except', alias: 'a'},
+          {
+            items: [
+              {type: 'rule', name: 'expression'},
+              {
+                items: [
+                  {type: 'string', value: 'as'},
+                  {type: 'NAME'}
+                ],
+                repeat: '?'
+              }
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: ':'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "cannot have both \'except\' and \'except*\' on the same \'try\'")
       }]
   },
 invalid_except_stmt:
@@ -5270,7 +5622,7 @@ invalid_except_stmt:
             repeat: '?'
           },
           {type: 'string', value: ':'}
-        ], action: 'RAISE_SYNTAX_ERROR_STARTING_FROM(a, "multiple exception types must be parenthesized")'
+        ], action: (L) => RAISE_SYNTAX_ERROR_STARTING_FROM(L.a, "multiple exception types must be parenthesized")
       },
       {
         items: [
@@ -5285,13 +5637,13 @@ invalid_except_stmt:
             repeat: '?'
           },
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
           {type: 'string', value: 'except', alias: 'a'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5310,7 +5662,7 @@ invalid_except_stmt:
                 ]
               }]
           }
-        ], action: 'RAISE_SYNTAX_ERROR("expected one or more exception types")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected one or more exception types")
       }]
   },
 invalid_finally_stmt:
@@ -5320,7 +5672,7 @@ invalid_finally_stmt:
       {type: 'string', value: ':'},
       {type: 'NEWLINE'},
       {type: 'INDENT', lookahead: 'negative'}
-    ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'finally\' statement on line %d", a.lineno)'
+    ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'finally\' statement on line %d", L.a.lineno)
   },
 invalid_except_stmt_indent:
   {
@@ -5339,7 +5691,7 @@ invalid_except_stmt_indent:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", L.a.lineno)
       },
       {
         items: [
@@ -5347,7 +5699,7 @@ invalid_except_stmt_indent:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_except_star_stmt_indent:
@@ -5366,7 +5718,7 @@ invalid_except_star_stmt_indent:
       {type: 'string', value: ':'},
       {type: 'NEWLINE'},
       {type: 'INDENT', lookahead: 'negative'}
-    ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'
+    ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'except*\' statement on line %d", L.a.lineno)
   },
 invalid_match_stmt:
   {
@@ -5376,7 +5728,7 @@ invalid_match_stmt:
           {type: 'string', value: 'match'},
           {type: 'rule', name: 'subject_expr'},
           {type: 'NEWLINE'}
-        ], action: 'CHECK_VERSION(void, 10, "Pattern matching is", RAISE_SYNTAX_ERROR("expected \':\'") )'
+        ], action: (L) => $B.helper_functions.CHECK_VERSION("void", 10, "Pattern matching is", $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'"))
       },
       {
         items: [
@@ -5385,7 +5737,7 @@ invalid_match_stmt:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'match\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'match\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_case_block:
@@ -5397,7 +5749,7 @@ invalid_case_block:
           {type: 'rule', name: 'patterns'},
           {type: 'rule', name: 'guard', repeat: '?'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5407,7 +5759,7 @@ invalid_case_block:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'case\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'case\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_as_pattern:
@@ -5418,7 +5770,7 @@ invalid_as_pattern:
           {type: 'rule', name: 'or_pattern'},
           {type: 'string', value: 'as'},
           {type: 'string', value: '_', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use \'_\' as a target")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "cannot use \'_\' as a target")
       },
       {
         items: [
@@ -5426,7 +5778,7 @@ invalid_as_pattern:
           {type: 'string', value: 'as'},
           {type: 'NAME', lookahead: 'negative'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "invalid pattern target")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "invalid pattern target")
       }]
   },
 invalid_class_pattern:
@@ -5435,7 +5787,7 @@ invalid_class_pattern:
       {type: 'rule', name: 'name_or_attr'},
       {type: 'string', value: '('},
       {type: 'rule', name: 'invalid_class_argument_pattern', alias: 'a'}
-    ], action: 'RAISE_SYNTAX_ERROR_KNOWN_RANGE( PyPegen_first_item(a, $B.ast.pattern), PyPegen_last_item(a, $B.ast.pattern), "positional patterns follow keyword patterns")'
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(PyPegen_first_item(L.a, $B.ast.pattern), PyPegen_last_item(L.a, $B.ast.pattern), "positional patterns follow keyword patterns")
   },
 invalid_class_argument_pattern:
   {
@@ -5450,7 +5802,7 @@ invalid_class_argument_pattern:
       {type: 'rule', name: 'keyword_patterns'},
       {type: 'string', value: ','},
       {type: 'rule', name: 'positional_patterns', alias: 'a'}
-    ], action: 'a'
+    ], action: (L) => L.a
   },
 invalid_if_stmt:
   {
@@ -5460,7 +5812,7 @@ invalid_if_stmt:
           {type: 'string', value: 'if'},
           {type: 'rule', name: 'named_expression'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5469,7 +5821,7 @@ invalid_if_stmt:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'if\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'if\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_elif_stmt:
@@ -5480,7 +5832,7 @@ invalid_elif_stmt:
           {type: 'string', value: 'elif'},
           {type: 'rule', name: 'named_expression'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5489,7 +5841,7 @@ invalid_elif_stmt:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'elif\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'elif\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_else_stmt:
@@ -5499,7 +5851,7 @@ invalid_else_stmt:
       {type: 'string', value: ':'},
       {type: 'NEWLINE'},
       {type: 'INDENT', lookahead: 'negative'}
-    ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'else\' statement on line %d", a.lineno)'
+    ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'else\' statement on line %d", L.a.lineno)
   },
 invalid_while_stmt:
   {
@@ -5509,7 +5861,7 @@ invalid_while_stmt:
           {type: 'string', value: 'while'},
           {type: 'rule', name: 'named_expression'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5518,7 +5870,7 @@ invalid_while_stmt:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'while\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'while\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_for_stmt:
@@ -5537,7 +5889,7 @@ invalid_for_stmt:
           {type: 'string', value: 'in'},
           {type: 'rule', name: 'star_expressions'},
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
@@ -5554,7 +5906,7 @@ invalid_for_stmt:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after \'for\' statement on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after \'for\' statement on line %d", L.a.lineno)
       }]
   },
 invalid_def_raw:
@@ -5568,6 +5920,12 @@ invalid_def_raw:
       },
       {type: 'string', value: 'def', alias: 'a'},
       {type: 'NAME'},
+      {
+        items: [
+          {type: 'rule', name: 'type_params'}
+        ],
+        repeat: '?'
+      },
       {type: 'string', value: '('},
       {
         items: [
@@ -5586,7 +5944,7 @@ invalid_def_raw:
       {type: 'string', value: ':'},
       {type: 'NEWLINE'},
       {type: 'INDENT', lookahead: 'negative'}
-    ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after function definition on line %d", a.lineno)'
+    ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after function definition on line %d", L.a.lineno)
   },
 invalid_class_def_raw:
   {
@@ -5595,6 +5953,12 @@ invalid_class_def_raw:
         items: [
           {type: 'string', value: 'class'},
           {type: 'NAME'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?'
+          },
           {
             items: [
               {type: 'string', value: '('},
@@ -5609,12 +5973,18 @@ invalid_class_def_raw:
             repeat: '?'
           },
           {type: 'NEWLINE'}
-        ], action: 'RAISE_SYNTAX_ERROR("expected \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR("expected \':\'")
       },
       {
         items: [
           {type: 'string', value: 'class', alias: 'a'},
           {type: 'NAME'},
+          {
+            items: [
+              {type: 'rule', name: 'type_params'}
+            ],
+            repeat: '?'
+          },
           {
             items: [
               {type: 'string', value: '('},
@@ -5631,7 +6001,7 @@ invalid_class_def_raw:
           {type: 'string', value: ':'},
           {type: 'NEWLINE'},
           {type: 'INDENT', lookahead: 'negative'}
-        ], action: 'RAISE_INDENTATION_ERROR("expected an indented block after class definition on line %d", a.lineno)'
+        ], action: (L) => $B.helper_functions.RAISE_INDENTATION_ERROR("expected an indented block after class definition on line %d", L.a.lineno)
       }]
   },
 invalid_double_starred_kvpairs:
@@ -5650,7 +6020,7 @@ invalid_double_starred_kvpairs:
           {type: 'string', value: ':'},
           {type: 'string', value: '*', alias: 'a'},
           {type: 'rule', name: 'bitwise_or'}
-        ], action: 'RAISE_SYNTAX_ERROR_STARTING_FROM(a, "cannot use a starred expression in a dictionary value")'
+        ], action: (L) => RAISE_SYNTAX_ERROR_STARTING_FROM(L.a, "cannot use a starred expression in a dictionary value")
       },
       {
         items: [
@@ -5669,7 +6039,7 @@ invalid_double_starred_kvpairs:
                 ]
               }], lookahead: 'positive'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expression expected after dictionary key and \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "expression expected after dictionary key and \':\'")
       }]
   },
 invalid_kvpair:
@@ -5683,7 +6053,7 @@ invalid_kvpair:
               {type: 'string', value: ':'}
             ], lookahead: 'negative'
           }
-        ], action: 'RAISE_ERROR_KNOWN_LOCATION(p, PyExc_SyntaxError, a.lineno, a.end_col_offset - 1, a.end_lineno, -1, "\':\' expected after dictionary key")'
+        ], action: (L) => $B.helper_functions.RAISE_ERROR_KNOWN_LOCATION(L.p, $B.parser_constants.PyExc_SyntaxError, L.a.lineno, L.a.end_col_offset-1, L.a.end_lineno, -1, "\':\' expected after dictionary key")
       },
       {
         items: [
@@ -5691,7 +6061,7 @@ invalid_kvpair:
           {type: 'string', value: ':'},
           {type: 'string', value: '*', alias: 'a'},
           {type: 'rule', name: 'bitwise_or'}
-        ], action: 'RAISE_SYNTAX_ERROR_STARTING_FROM(a, "cannot use a starred expression in a dictionary value")'
+        ], action: (L) => RAISE_SYNTAX_ERROR_STARTING_FROM(L.a, "cannot use a starred expression in a dictionary value")
       },
       {
         items: [
@@ -5710,7 +6080,283 @@ invalid_kvpair:
                 ]
               }], lookahead: 'positive'
           }
-        ], action: 'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expression expected after dictionary key and \':\'")'
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "expression expected after dictionary key and \':\'")
+      }]
+  },
+invalid_starred_expression:
+  {
+    items: [
+      {type: 'string', value: '*', alias: 'a'},
+      {type: 'rule', name: 'expression'},
+      {type: 'string', value: '='},
+      {type: 'rule', name: 'expression', alias: 'b'}
+    ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(L.a, L.b, "cannot assign to iterable argument unpacking")
+  },
+invalid_replacement_field:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: '=', alias: 'a'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "f-string: valid expression required before \'=\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: '!', alias: 'a'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "f-string: valid expression required before \'!\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: ':', alias: 'a'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "f-string: valid expression required before \':\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {type: 'string', value: '}', alias: 'a'}
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(L.a, "f-string: valid expression required before \'}\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: (L) => RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting a valid expression after \'{\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: '='}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '!'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'=\', or \'!\', or \':\', or \'}\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '='},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: '!'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'!\', or \':\', or \'}\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {type: 'rule', name: 'invalid_conversion_character'}
+        ]
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {
+            items: [
+              {type: 'string', value: '!'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
+          },
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'negative'
+          }
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \':\' or \'}\'")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {
+            items: [
+              {type: 'string', value: '!'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: ':'},
+          {type: 'rule', name: 'fstring_format_spec', repeat: '*'},
+          {type: 'string', value: '}', lookahead: 'negative'}
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\', or format specs")
+      },
+      {
+        items: [
+          {type: 'string', value: '{'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'rule', name: 'yield_expr'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'rule', name: 'star_expressions'}
+                ]
+              }]
+          },
+          {type: 'string', value: '=', repeat: '?'},
+          {
+            items: [
+              {type: 'string', value: '!'},
+              {type: 'NAME'}
+            ],
+            repeat: '?'
+          },
+          {type: 'string', value: '}', lookahead: 'negative'}
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\'")
+      }]
+  },
+invalid_conversion_character:
+  {
+   choices: [
+      {
+        items: [
+          {type: 'string', value: '!'},
+          {
+           choices: [
+              {
+                items: [
+                  {type: 'string', value: ':'}
+                ]
+              },
+              {
+                items: [
+                  {type: 'string', value: '}'}
+                ]
+              }], lookahead: 'positive'
+          }
+        ], action: (L) => RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: missing conversion character")
+      },
+      {
+        items: [
+          {type: 'string', value: '!'},
+          {type: 'NAME', lookahead: 'negative'}
+        ], action: (L) => RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: invalid conversion character")
       }]
   },
 }

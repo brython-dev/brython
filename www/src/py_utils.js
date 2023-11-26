@@ -306,7 +306,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
-
+      
         return result
     }
 
@@ -409,6 +409,8 @@ function args0_NEW(fct, args) {
     return result
 }
 
+
+$B.args0_old = args0;
 $B.args0 = args0_NEW;
 
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,

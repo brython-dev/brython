@@ -5843,7 +5843,7 @@ var PatternGroupCtx = function(context){
     this.parent = context
     this.position = $token.value
     this.tree = []
-    var first_pattern = context.tree.pop()
+    context.tree.pop()
     this.expect = ',|'
     context.tree.push(this)
 }
@@ -5944,7 +5944,6 @@ var PatternLiteralCtx = function(context, token, value, sign){
 }
 
 PatternLiteralCtx.prototype.ast = function(){
-    var lineno = get_node(this).line_num
     try{
         var first = this.tree[0],
             result
@@ -5981,7 +5980,7 @@ PatternLiteralCtx.prototype.ast = function(){
             // value = complex number
             result = new ast.MatchValue(new ast.BinOp(
                 this.tree[0].ast(),
-                context.num_sign == '+' ? ast.Add : ast.Sub,
+                this.num_sign == '+' ? ast.Add : ast.Sub,
                 this.tree[1].ast()))
         }
         if(this.alias){
@@ -6328,13 +6327,13 @@ PatternOrCtx.prototype.bindings = function(){
         if(names === undefined){
             names = subbindings
         }else{
-            for(var item of names){
+            for(let item of names){
                 if(subbindings.indexOf(item) == -1){
                     raise_syntax_error(this,
                         "alternative patterns bind different names")
                 }
             }
-            for(var item of subbindings){
+            for(let item of subbindings){
                 if(names.indexOf(item) == -1){
                     raise_syntax_error(this,
                         "alternative patterns bind different names")
@@ -6631,7 +6630,7 @@ SetCompCtx.prototype.ast = function(){
     return ast_obj
 }
 
-SetCompCtx.prototype.transition = function(token, value){
+SetCompCtx.prototype.transition = function(token){
     var context = this
     if(token == '}'){
         return this.parent
@@ -6670,7 +6669,7 @@ SingleKwCtx.prototype.ast = function(){
     return ast_body(this.parent)
 }
 
-SingleKwCtx.prototype.transition = function(token, value){
+SingleKwCtx.prototype.transition = function(token){
     var context = this
     if(token == ':'){
         return BodyCtx(context)
@@ -6818,7 +6817,6 @@ var make_string_for_ast_value = $B.make_string_for_ast_value = function(value){
         var unquoted = value.substr(1, value.length - 2)
         return unquoted
     }
-    var quote = "'"
     // prepare value so that "'" + value + "'" is the correct string
     if(value.indexOf("'") > -1){
         var s = '',
@@ -6854,14 +6852,14 @@ StringCtx.prototype.add_value = function(value){
         try{
             var b = encode_bytestring(value)
         }catch(err){
-            raise_syntax_error(context,
+            raise_syntax_error(this,
                 'bytes can only contain ASCII literal characters')
         }
         this.value = this.value.concat(b)
     }
 }
 
-function encode_bytestring(s){
+var encode_bytestring = $B.encode_bytestring = function(s){
     s = s.replace(/\\t/g, '\t')
          .replace(/\\n/g, '\n')
          .replace(/\\r/g, '\r')
@@ -7009,7 +7007,7 @@ var TargetListCtx = $B.parser.TargetListCtx = function(context){
 
 TargetListCtx.prototype.ast = function(){
     if(this.tree.length == 1 && ! this.implicit_tuple){
-        var item = this.tree[0].ast()
+        let item = this.tree[0].ast()
         item.ctx = new ast.Store()
         if(item instanceof ast.Tuple){
             for(var target of item.elts){
@@ -7018,8 +7016,8 @@ TargetListCtx.prototype.ast = function(){
         }
         return item
     }else{
-        var items = []
-        for(var item of this.tree){
+        let items = []
+        for(let item of this.tree){
             item = item.ast()
             if(item.hasOwnProperty('ctx')){
                 item.ctx = new ast.Store()
@@ -7176,12 +7174,12 @@ TryCtx.prototype.ast = function(){
         raise_syntax_error(this, "expected 'except' or 'finally' block")
     }
     var klass = this.parent.is_trystar ? ast.TryStar : ast.Try
-    var res = new klass(res.body, res.handlers, res.orelse, res.finalbody)
+    res = new klass(res.body, res.handlers, res.orelse, res.finalbody)
     set_position(res, this.position)
     return res
 }
 
-TryCtx.prototype.transition = function(token, value){
+TryCtx.prototype.transition = function(token){
     var context = this
     if(token == ':'){
         return BodyCtx(context)
@@ -7463,8 +7461,7 @@ WithCtx.prototype.ast = function(){
     // ast.withitem(context_expr, optional_vars)
     // context_expr is the context manager, often a Call node.
     // optional_vars is a Name, Tuple or List for the "as foo part", or None
-    var withitems = [],
-        withitem
+    var withitems = []
     for(var withitem of this.tree){
         withitems.push(withitem.ast())
     }
@@ -7587,7 +7584,6 @@ withitem.prototype.transition = function(token, value){
     }else{
         return transition(context.parent, token, value)
     }
-    raise_syntax_error(context, "expected ':'")
 }
 
 var YieldCtx = $B.parser.YieldCtx = function(context, is_await){
@@ -7605,30 +7601,6 @@ var YieldCtx = $B.parser.YieldCtx = function(context, is_await){
 
     if(parent_match(context, {type: "annotation"})){
         raise_syntax_error(context, "'yield' outside function")
-    }
-
-    // Store "this" in the attribute "yields" of the list_or_tuple
-    // above; this is used to raise SyntaxError if there is a "yield"
-    // in a comprehension expression
-    var parent = this
-    while(true){
-        var list_or_tuple = parent_match(parent, {type: "list_or_tuple"})
-        if(list_or_tuple){
-            parent = list_or_tuple
-        }else{
-            break
-        }
-    }
-
-    // Same for set_or_dict
-    var parent = this
-    while(true){
-        var set_or_dict = parent_match(parent, {type: "dict_or_set"})
-        if(set_or_dict){
-            parent = set_or_dict
-        }else{
-            break
-        }
     }
 
     /* Strangely, the control that the "yield" is inside a function is done
@@ -7673,7 +7645,7 @@ var YieldCtx = $B.parser.YieldCtx = function(context, is_await){
         var outermost_expr = in_comp.tree[0].tree[1]
         // In a comprehension, "yield" is only allowed in the outermost
         // expression
-        var parent = context
+        parent = context
         while(parent){
             if(parent === outermost_expr){
                 break
@@ -7696,7 +7668,7 @@ var YieldCtx = $B.parser.YieldCtx = function(context, is_await){
         parent = parent.parent
     }
 
-    var parent = node.parent
+    parent = node.parent
     while(parent){
         if(parent.context && parent.context.tree.length > 0 &&
                 parent.context.tree[0].type == "with"){
@@ -7736,7 +7708,7 @@ YieldCtx.prototype.ast = function(){
     return ast_obj
 }
 
-YieldCtx.prototype.transition = function(token, value){
+YieldCtx.prototype.transition = function(token){
     var context = this
     if(token == 'from'){ // form "yield from <expr>"
         if(context.tree[0].type != 'abstract_expr'){
@@ -7766,7 +7738,7 @@ YieldCtx.prototype.check_in_function = function(){
     if(! in_func && scope.comprehension){
         var parent = scope.parent_block
         while(parent.comprehension){
-            parent = parent_block
+            parent = parent.parent_block
         }
         in_func = parent.is_function
         func_scope = parent
@@ -7820,7 +7792,7 @@ var get_docstring = $B.parser.get_docstring = function(node){
     return doc_string
 }
 
-var get_scope = $B.parser.get_scope = function(context, flag){
+var get_scope = $B.parser.get_scope = function(context){
     // Return the instance of $Node indicating the scope of context
     // Return null for the root node
     var ctx_node = context.parent
@@ -7841,14 +7813,14 @@ var get_scope = $B.parser.get_scope = function(context, flag){
             case 'def':
             case 'class':
             case 'generator':
-                var scope = tree_node.parent
+                scope = tree_node.parent
                 scope.ntype = ntype
                 scope.is_function = ntype != 'class'
                 return scope
         }
         tree_node = tree_node.parent
     }
-    var scope = tree_node.parent || tree_node // module
+    scope = tree_node.parent || tree_node // module
     scope.ntype = "module"
     return scope
 }
@@ -7883,8 +7855,7 @@ var mangle_name = $B.parser.mangle_name = function(name, context){
     // If name starts with __ and doesn't end with __, and if it is defined
     // in a class, "mangle" it, ie preprend _<classname>
     if(name.substr(0, 2) == "__" && name.substr(name.length - 2) !== "__"){
-        var klass = null,
-            scope = get_scope(context)
+        var scope = get_scope(context)
         while(true){
             if(scope.ntype == "module"){
                 return name
@@ -7951,10 +7922,10 @@ function test_num(num_lit){
     }
     function check(elt){
       if(elt.value.length == 0){
-        var t = subtypes[elt.subtype] || 'decimal'
+        let t = subtypes[elt.subtype] || 'decimal'
         error("invalid " + t + " literal")
-      }else if(elt.value[elt.value.length - 1].match(/[\-+_]/)){
-        var t = subtypes[elt.subtype] || 'decimal'
+      }else if(elt.value[elt.value.length - 1].match(/[-+_]/)){
+        let t = subtypes[elt.subtype] || 'decimal'
         error("invalid " + t + " literal")
       }else{
         // remove underscores
@@ -7966,12 +7937,12 @@ function test_num(num_lit){
     }
 
     while(pos < len){
-      var char = num_lit[pos]
+      char = num_lit[pos]
       if(char.match(digits_re)){
         if(elt === null){
             elt = {value: char}
         }else{
-            if(char == '_' && elt.value.match(/[._+\-]$/)){
+            if(char == '_' && elt.value.match(/[._+-]$/)){
                 // consecutive underscores
                 error('consecutive _ at ' + pos)
             }else if(char == '_' && elt.subtype == 'float' &&
@@ -8039,7 +8010,7 @@ function test_num(num_lit){
         }else{
           return check(elt)
         }
-      }else if(char.match(/[\+\-]/i)){
+      }else if(char.match(/[+-]/i)){
           if(elt === null){
             elt = {value: char}
             pos++
@@ -8067,7 +8038,7 @@ function test_num(num_lit){
 
 var opening = {')': '(', '}': '{', ']': '['}
 
-function check_line(token_reader, filename){
+function check_line(token_reader){
     var braces = []
     token_reader.position--
     while(true){
@@ -8082,12 +8053,12 @@ function check_line(token_reader, filename){
                 braces.push(token)
             }else if(')]}'.indexOf(token.string) > -1){
                 if(braces.length == 0){
-                    var err = SyntaxError(
+                    let err = SyntaxError(
                         `unmatched '${token.string}'`)
                     err.offset = token.start[1]
                     throw err
                 }else if($B.last(braces).string != opening[token.string]){
-                    var err = SyntaxError("closing parenthesis " +
+                    let err = SyntaxError("closing parenthesis " +
                         `'${token.string}' does not match opening ` +
                         `parenthesis '${$B.last(braces).string}'`)
                     err.offset = token.start[1]
@@ -8098,48 +8069,6 @@ function check_line(token_reader, filename){
             }
         }else if(token.type == 'NEWLINE'){
             return false
-        }
-    }
-    return false
-}
-
-function get_first_line(src, filename){
-    // used to check if 'match' or 'case' are the "soft keywords" for pattern
-    // matching, or ordinary ids
-    var braces = [],
-        token_reader = new $B.TokenReader(src, filename)
-    while(true){
-        var token = token_reader.read()
-        if(! token){
-            return {line: src}
-        }
-        if(token.type == 'OP' && token.string == ':' && braces.length == 0){
-            return true
-        }else if(token.type == 'OP'){
-            if('([{'.indexOf(token.string) > -1){
-                braces.push(token)
-            }else if(')]}'.indexOf(token.string) > -1){
-                if(braces.length == 0){
-                    var err = SyntaxError(
-                        `unmatched '${token.string}'`)
-                    err.offset = token.start[1]
-                    throw err
-                }else if($B.last(braces).string != opening[token.string]){
-                    var err = SyntaxError("closing parenthesis " +
-                        `'${token.string}' does not match opening ` +
-                        `parenthesis '${$B.last(braces).string}'`)
-                    err.offset = token.start[1]
-                    throw err
-                }else{
-                    braces.pop()
-                }
-            }
-        }else if(token.type == 'NEWLINE'){
-            var end = token.end,
-                lines = src.split('\n'),
-                match_lines = lines.slice(0, end[0] - 1)
-            match_lines.push(lines[end[0] - 1].substr(0, end[1]))
-            return {text: match_lines.join('\n'), newline_token: token}
         }
     }
     return false
@@ -8155,10 +8084,9 @@ function prepare_number(n){
         }else{
             return {type: 'float', value: n.replace(/_/g, '')}
         }
-        pos = j
     }else if(n.startsWith('0') && n != '0'){
         // octal, hexadecimal, binary
-        var num = test_num(n),
+        let num = test_num(n),
             base
         if(num.imaginary){
             return {type: 'imaginary', value: prepare_number(num.value)}
@@ -8175,7 +8103,7 @@ function prepare_number(n){
             return{type: 'int', value: [base, num.value]}
         }
     }else{
-        var num = test_num(n)
+        let num = test_num(n)
         if(num.subtype == "float"){
             if(num.imaginary){
                 return {
@@ -8219,7 +8147,7 @@ function test_escape(text, antislash_pos){
     }
     switch(text[antislash_pos + 1]){
         case "x":
-            var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
+            mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 2){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
@@ -8232,7 +8160,7 @@ function test_escape(text, antislash_pos){
             }
             break
         case "u":
-            var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
+            mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 4){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
@@ -8245,7 +8173,7 @@ function test_escape(text, antislash_pos){
             }
             break
         case "U":
-            var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
+            mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 8){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
@@ -8254,7 +8182,7 @@ function test_escape(text, antislash_pos){
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape")
             }else{
-                var value = parseInt(mo[0], 16)
+                let value = parseInt(mo[0], 16)
                 if(value > 0x10FFFF){
                     throw Error('invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
@@ -8268,7 +8196,7 @@ function test_escape(text, antislash_pos){
 
 $B.test_escape = test_escape
 
-function prepare_string(context, s, position){
+function prepare_string(context, s){
     var len = s.length,
         pos = 0,
         string_modifier,
@@ -8301,8 +8229,8 @@ function prepare_string(context, s, position){
     var raw = context.type == 'str' && context.raw,
         bytes = false,
         fstring = false,
-        sm_length, // length of string modifier
-        end = null;
+        end = null
+
     if(string_modifier){
         switch(string_modifier) {
             case 'r': // raw string
@@ -8322,12 +8250,10 @@ function prepare_string(context, s, position){
                 break
             case 'f':
                 fstring = true
-                sm_length = 1
                 break
             case 'fr':
             case 'rf':
                 fstring = true
-                sm_length = 2
                 raw = true
                 break
         }
@@ -8336,8 +8262,9 @@ function prepare_string(context, s, position){
 
     var escaped = false,
         zone = '',
-        end = 0,
         src = inner
+
+    end = 0
 
     while(end < src.length){
         if(escaped){
@@ -8368,14 +8295,14 @@ function prepare_string(context, s, position){
                     end += 2
                 }else if(src.substr(end + 1, 2) == 'N{'){
                     // Unicode literal ?
-                    var end_lit = end + 3,
+                    let end_lit = end + 3,
                         re = new RegExp("[-a-zA-Z0-9 ]+"),
                         search = re.exec(src.substr(end_lit))
                     if(search === null){
                         raise_syntax_error(context," (unicode error) " +
                             "malformed \\N character escape", pos)
                     }
-                    var end_lit = end_lit + search[0].length
+                    end_lit = end_lit + search[0].length
                     if(src.charAt(end_lit) != "}"){
                         raise_syntax_error(context, " (unicode error) " +
                             "malformed \\N character escape")
@@ -8399,7 +8326,7 @@ function prepare_string(context, s, position){
                         xhr.send()
                     }
                     if($B.unicodedb !== undefined){
-                        var re = new RegExp("^([0-9A-F]+);" +
+                        let re = new RegExp("^([0-9A-F]+);" +
                             description + ";.*$", "m")
                         search = re.exec($B.unicodedb)
                         if(search === null){
@@ -8474,7 +8401,7 @@ function prepare_string(context, s, position){
 
     if(fstring){
         try{
-            var re = new RegExp("\\\\" + quote, "g"),
+            let re = new RegExp("\\\\" + quote, "g"),
                 string_no_bs = string.replace(re, quote)
             var elts = $B.parse_fstring(string_no_bs) // in py_string.js
         }catch(err){
@@ -8592,11 +8519,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     var braces_stack = []
 
     var unsupported = []
-    var $indented = [
-        "class", "def", "for", "condition", "single_kw", "try", "except",
-        "with",
-        "match", "case" // PEP 622 (pattern matching)
-    ]
 
     var module = root.module
 
@@ -8624,14 +8546,14 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     while(true){
         try{
             token = root.token_reader.read()
+            // console.log(token.type, token.string, token.start, token.end)
         }catch(err){
             context = context || new NodeCtx(node)
             if(err.type == 'IndentationError'){
                 raise_indentation_error(context, err.message)
             }else if(err instanceof SyntaxError){
                 if(braces_stack.length > 0){
-                    var last_brace = $B.last(braces_stack),
-                        start = last_brace.start
+                    let last_brace = $B.last(braces_stack)
                     $token.value = last_brace
                     raise_syntax_error(context, `'${last_brace.string}'` +
                        ' was never closed')
@@ -8663,7 +8585,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             console.log('no start', token)
         }
         lnum = token.start[0]
-        // console.log('token', token.type, token.string, 'lnum', lnum, 'context', context)
+        //console.log('token', token.type, token.string, 'lnum', lnum, 'context', context)
         //console.log('context', context)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
@@ -8698,7 +8620,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 }
                 continue
             case 'COMMENT':
-                var end = line2pos[token.end[0]] + token.end[1]
                 continue
             case 'ERRORTOKEN':
                 context = context || new NodeCtx(node)
@@ -8758,7 +8679,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                         if(braces_stack.length == 0){
                             raise_syntax_error(context, "(unmatched '" + op + "')")
                         }else{
-                            var last_brace = $B.last(braces_stack)
+                            let last_brace = $B.last(braces_stack)
                             if(last_brace.string == braces_opener[op]){
                                 braces_stack.pop()
                             }else{
@@ -8786,7 +8707,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     }
                     // same as NEWLINE
                     transition(context, 'eol')
-                    var new_node = new $Node()
+                    let new_node = new $Node()
                     new_node.line_num = token[2][0] + 1
                     context = new NodeCtx(new_node)
                     node.parent.add(new_node)
@@ -8816,11 +8737,12 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 break
             case 'NUMBER':
                 try{
-                    var prepared = prepare_number(token[1])
+                    var prepared_num = prepare_number(token[1])
                 }catch(err){
                     raise_syntax_error(context, err.message)
                 }
-                context = transition(context, prepared.type, prepared.value)
+                context = transition(context, prepared_num.type,
+                                     prepared_num.value)
                 continue
             case 'NEWLINE':
                 if(context && context.node && context.node.is_body_node){
@@ -8902,22 +8824,15 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     // parent_scope = the scope where the code is created
     //
     // Returns the Javascript code
-    var __package__
     if(typeof module == "object"){
-        __package__ = module.__package__
         module = module.__name__
-    }else{
-        __package__ = ""
     }
 
     parent_scope = parent_scope || $B.builtins_scope
 
-    var t0 = Date.now(),
-        ix, // used for generator expressions
-        filename,
+    var filename,
         imported
     if(typeof src == 'object'){
-        ix = src.ix
         filename = src.filename
         imported = src.imported
         src = src.src
@@ -8930,7 +8845,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     var _ast
 
     if($B.parser_to_ast){
-        console.log('use parser to ast')
+        console.log('use standard parser')
         _ast = new $B.Parser(src, filename, 'file').parse()
     }else{
         var root = create_root_node({src, filename},
@@ -9026,14 +8941,14 @@ if(!$B.isWebWorker){
             }
             if(! onload){
                 // If no explicit "onload" is defined, default to brython
-                ev.target.body.onload = function(ev){
+                ev.target.body.onload = function(){
                     return brython()
                 }
             }else{
                 // else, execute onload, and if brython() was not called,
                 // call it, using the options defined in the custom tag
                 // <brython_options>
-                ev.target.body.onload = function(ev){
+                ev.target.body.onload = function(){
                     onload()
                     if(! status.brython_called){
                         brython()
@@ -9059,8 +8974,7 @@ if(!$B.isWebWorker){
 
 }
 
-var inject = {},
-    defined_ids = {},
+var defined_ids = {},
     script_to_id = new Map(),
     id_to_script = {}
 
@@ -9072,10 +8986,6 @@ function addPythonScript(addedNode){
             addedNode.type == "text/python3")){
        python_scripts.push(addedNode)
    }
-}
-
-function Injected(id){
-    this.id = id
 }
 
 var status = {
@@ -9157,8 +9067,7 @@ var brython = $B.parser.brython = function(options){
         set_script_id(python_script)
     }
 
-    var scripts = [],
-        webworkers = []
+    var scripts = []
 
     // URL of the script where function brython() is called
     // Remove part after # (cf. issue #2035)
@@ -9172,7 +9081,7 @@ var brython = $B.parser.brython = function(options){
     var kk = Object.keys(_window)
 
     // Option to only run the scripts specified by their id
-    var ids = $B.get_page_option('ids') || $B.get_page_option('ipy_id')
+    var ids = $B.get_page_option('ids')
     if(ids !== undefined){
         if(! Array.isArray(ids)){
             throw _b_.ValueError.$factory("ids is not a list")
@@ -9196,12 +9105,8 @@ var brython = $B.parser.brython = function(options){
     }else{
         scripts = python_scripts.slice()
     }
-    var module_name
-    if($B.get_page_option('ipy_id') !== undefined){
-        run_brython_magic(scripts)
-    }else{
-        run_scripts(scripts)
-    }
+
+    run_scripts(scripts)
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)
@@ -9243,7 +9148,7 @@ function convert_option(option, value){
             return value.trim().split(/\s+/)
         }
     }
-    return default_value[option]
+    return value
 }
 
 const default_option = {
@@ -9372,62 +9277,6 @@ function run_scripts(_scripts){
     $B.loop()
 }
 
-function run_brython_magic(scripts){
-    // The following lines are included to allow to run brython scripts in
-    // the IPython/Jupyter notebook using a cell magic. Have a look at
-    // https://github.com/kikocorreoso/brythonmagic for more info.
-    module_name = '__main__'
-    var src = "",
-        js,
-        root
-    for(var script of scripts){
-        src += (script.innerHTML || script.textContent)
-    }
-    try{
-        // Conversion of Python source code to Javascript
-        root = $B.py2js(src, module_name, module_name)
-        js = root.to_js()
-        if($B.debug > 1){
-            $log(js)
-        }
-
-        // Run resulting Javascript
-        eval(js)
-
-        root = null
-        js = null
-
-    }catch($err){
-        root = null
-        js = null
-        console.log($err)
-        if($B.debug > 1){
-            console.log($err)
-            for(var attr in $err){
-               console.log(attr + ' : ', $err[attr])
-            }
-        }
-
-        // If the error was not caught by the Python runtime, build an
-        // instance of a Python exception
-        if($err.$py_error === undefined){
-            console.log('Javascript error', $err)
-            $err = _b_.RuntimeError.$factory($err + '')
-        }
-
-        // Print the error traceback on the standard error stream
-        var $trace = $B.$getattr($err, 'info') + '\n' + $err.__name__ +
-            ': ' + $err.args
-        try{
-            $B.$getattr($B.get_stderr(), 'write')($trace)
-        }catch(print_exc_err){
-            console.log($trace)
-        }
-        // Throw the error to stop execution
-        throw $err
-    }
-}
-
 $B.run_script = function(script, src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
@@ -9457,7 +9306,7 @@ $B.run_script = function(script, src, name, url, run_loop){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
-        return $B.handle_error(err) // in loaders.js
+        return $B.handle_error($B.exception(err)) // in loaders.js
     }
     var _script = {
             __doc__: get_docstring(root._ast),
@@ -9466,49 +9315,10 @@ $B.run_script = function(script, src, name, url, run_loop){
             __file__: url,
             script_element: script
         }
-    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
-        // Build the list of stdlib modules required by the
-        // script
-        var imports1 = Object.keys(root.imports).slice(),
-            imports = imports1.filter(function(item){
-                return $B.VFS.hasOwnProperty(item)})
-        for(var _name of Object.keys(imports)){
-            if($B.VFS.hasOwnProperty(_name)){
-                var submodule = $B.VFS[_name],
-                    type = submodule[0]
-                if(type==".py"){
-                    var subimports = submodule[2],
-                        is_package = submodule.length == 4
-                    // "subimports" is the list of stdlib modules
-                    // directly imported by the module.
-                    if(type==".py"){
-                        // Add stdlib modules recursively imported
-                        required_stdlib_imports(subimports)
-                    }
-                    for(var mod of subimports){
-                        if(imports.indexOf(mod) == -1){
-                            imports.push(mod)
-                        }
-                    }
-                }
-            }
-        }
-        // Add task to stack
-        for(var j = 0; j < imports.length; j++){
-            $B.tasks.push([$B.inImported, imports[j]])
-        }
-        root = null
-    }
     $B.tasks.push(["execute", _script])
     if(run_loop){
         $B.loop()
     }
-}
-
-var $log = $B.$log = function(js){
-    js.split("\n").forEach(function(line, i){
-        console.log(i + 1, ":", line)
-    })
 }
 
 $B.$operators = $operators
@@ -9520,7 +9330,7 @@ $B.brython = brython
 
 })(__BRYTHON__)
 
-var brython = __BRYTHON__.brython
+globalThis.brython = __BRYTHON__.brython
 
 if (__BRYTHON__.isNode) {
     global.__BRYTHON__ = __BRYTHON__
