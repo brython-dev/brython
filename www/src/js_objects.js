@@ -170,7 +170,11 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
                     return pyobj
                 }
             }else{
-                _this[PYOBJFCTS] = new Map()
+                try{
+                    _this[PYOBJFCTS] = new Map()
+                }catch(err){
+                    // probably read-only, ignore
+                }
             }
         }
 
@@ -188,7 +192,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
 
         if(_this === null){
             jsobj[PYOBJFCT] = res;
-        }else{
+        }else if(_this[PYOBJFCTS] !== undefined){
             _this[PYOBJFCTS].set(jsobj, res)
         }
 
