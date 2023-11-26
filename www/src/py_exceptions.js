@@ -1059,8 +1059,8 @@ $B.error_trace = function(err){
                 console.log('err line', line)
                 console.log('indent', indent)
             }
-            var start = err.offset - indent,
-                end_offset = err.end_offset +
+            var start = err.offset - indent - 1,
+                end_offset = err.end_offset - 1 +
                     (err.end_offset == err.offset ? 1 : 0),
                 marks = '    ' + ' '.repeat(start),
                 nb_marks = 1
@@ -1131,7 +1131,7 @@ $B.get_stdout = function(){
 }
 
 $B.show_error = function(err){
-    var trace = $B.error_trace(err)
+    var trace = $B.error_trace($B.exception(err))
     try{
         var stderr = $B.get_stderr()
         $B.$getattr(stderr, 'write')(trace)
