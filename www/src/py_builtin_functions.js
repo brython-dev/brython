@@ -3349,26 +3349,43 @@ $B.function.__repr__ = function(self){
 
 $B.function.__mro__ = [_b_.object]
 
+
+$B.make_function_infos = function(f, __module__,
+        __defaults__, __globals__, __kwdefaults__, __doc__, arg_names,
+        vararg, kwarg){
+    f.$is_func = true
+    f.$infos = {__module__,
+        __defaults__, __globals__, __kwdefaults__, __doc__, arg_names,
+        vararg, kwarg}
+}
+
+$B.make_code_attr = function(f, co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_posonlyargcount, co_qualname, co_varnames){
+    f.$infos.__name__ = co_name
+    f.$infos.__qualname__ = co_qualname
+    f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_posonlyargcount, co_qualname, co_varnames}
+}
+
 $B.make_function_defaults = function(f){
     if(f.$infos === undefined || f.$infos.__code__ === undefined){
         throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);
     }
-    // Make the new $defaults Javascript object
     const varnames = f.$infos.__code__.co_varnames,
           value = f.$infos.__defaults__,
           offset   = f.$infos.__code__.co_argcount - value.length,
-          $defaults = {},
           $kwdefaults = new Map()
-    for(let i = 0; i < value.length ; ++i){
-        $defaults[varnames[i+offset]] = value[i]
-    }
+
+    var nb_kw_defaults = f.$infos.__kwdefaults__ === _b_.None ? 0 :
+                         _b_.dict.__len__(f.$infos.__kwdefaults__)
     if(f.$infos.__kwdefaults__ !== _b_.None){
         const kwdef = f.$infos.__kwdefaults__
         for(let kw of $B.make_js_iterator(kwdef)){
-            $kwdefaults.set(kw, $defaults[kw] = $B.$getitem(kwdef, kw))
+            $kwdefaults.set(kw, $B.$getitem(kwdef, kw))
         }
     }
-    f.$defaults = $defaults
     f.$kwdefaults = $kwdefaults
     f.$kwdefaults_values = [...$kwdefaults.values()]
 
@@ -3377,40 +3394,41 @@ $B.make_function_defaults = function(f){
         f.$hasParams.add(varnames[i])
     }
 
+    const $INFOS = f.$infos,
+          $CODE  = $INFOS.__code__,
+          DEFAULTS = $B.getArgs0.DEFAULTS
 
-        const $INFOS = f.$infos;
-        const $CODE  = $INFOS.__code__;
-        const DEFAULTS = $B.getArgs0.DEFAULTS;
+    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount,
+          PARAMS_NAMED_DEFAULTS_COUNT = nb_kw_defaults
+    let named_defaults = DEFAULTS.NONE;
+    if(PARAMS_NAMED_DEFAULTS_COUNT > 0){
+        named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ?
+                         DEFAULTS.ALL : DEFAULTS.SOME
+    }
+    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount
+    const PARAMS_POS_COUNT = $CODE.co_argcount - PARAMS_POSONLY_COUNT
 
-    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount;
-        const PARAMS_NAMED_DEFAULTS_COUNT = Object.keys($defaults).length - value.length;
-        let named_defaults = DEFAULTS.NONE;
-        if( PARAMS_NAMED_DEFAULTS_COUNT > 0)
-            named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
+    let pos_defaults = DEFAULTS.NONE
+    if(PARAMS_POS_COUNT !== 0 && value.length > 0){
+        pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL :
+                       DEFAULTS.SOME;
+    }
+    let posonly_defaults = DEFAULTS.NONE
+    if(value.length > PARAMS_POS_COUNT){
+        posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL :
+                           DEFAULTS.SOME;
+    }
 
-        const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-        const PARAMS_POS_COUNT           = $CODE.co_argcount - PARAMS_POSONLY_COUNT;
-
-        let pos_defaults = DEFAULTS.NONE;
-        if( PARAMS_POS_COUNT !== 0 && value.length > 0)
-            pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL : DEFAULTS.SOME;
-
-        let posonly_defaults = DEFAULTS.NONE;
-        if( value.length > PARAMS_POS_COUNT)
-            posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL : DEFAULTS.SOME;
-
-
-        f.$args_parser = f.$infos.args_parser = $B.getArgs0(
-            PARAMS_POSONLY_COUNT !== 0,
-            posonly_defaults,
-            PARAMS_POS_COUNT !== 0,
-            pos_defaults,
-            $INFOS.vararg !== null,
-            PARAMS_NAMED_COUNT !== 0,
-            named_defaults,
-            $INFOS.kwarg !== null
-        );
-
+    f.$args_parser = f.$infos.args_parser = $B.getArgs0(
+        PARAMS_POSONLY_COUNT !== 0,
+        posonly_defaults,
+        PARAMS_POS_COUNT !== 0,
+        pos_defaults,
+        $INFOS.vararg !== null,
+        PARAMS_NAMED_COUNT !== 0,
+        named_defaults,
+        $INFOS.kwarg !== null
+    )
 
     return _b_.None
 }
@@ -3460,14 +3478,6 @@ $B.function.__setattr__ = function(self, attr, value){
 $B.function.$factory = function(){}
 
 $B.set_func_names($B.function, "builtins")
-
-$B.make_code_attr = function(co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
-        co_posonlyargcount, co_qualname, co_varnames){
-    return {co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
-        co_posonlyargcount, co_qualname, co_varnames}
-}
 
 _b_.__BRYTHON__ = __BRYTHON__
 

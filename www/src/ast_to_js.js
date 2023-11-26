@@ -2542,7 +2542,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var varnames = parameters.concat(locals)
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
-    js += `${name2}.$is_func = true\n`
     if(in_class){
         js += `${name2}.$is_method = true\n`
     }
@@ -2550,15 +2549,17 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += `${name2}.$is_async = true\n`
     }
     // Set admin infos
-    js += `${name2}.$infos = {\n` +
-        `__module__: "${gname}",\n` +
-        `__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n` +
-        `__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n` +
-        `__defaults__: ${defaults},\n` +
-        `__globals__: _b_.globals(),\n` +
-        `__kwdefaults__: ${kw_defaults},\n` +
-        `__doc__: ${docstring},\n` +
-        `__code__: $B.make_code_attr(` +
+    js += `$B.make_function_infos(${name2}, ` +
+        `'${gname}', ` +
+        `${defaults}, ` +
+        `_b_.globals(), ` +
+        `${kw_defaults}, ` +
+        `${docstring}, ` +
+        `[${arg_names}], ` +
+        `${args_vararg}, ` +
+        `${args_kwarg})\n`
+
+    js += `$B.make_code_attr(${name2}, ` +
         `${positional.length}, ` +
         `__file__,` +
         `${this.lineno},` +
@@ -2569,11 +2570,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${varnames.length}, ` +
         `${this.args.posonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': qualname}', ` +
-        `$B.fast_tuple([${varnames}])),\n` +
-        `arg_names: [${arg_names}],\n` +
-        `vararg: ${args_vararg},\n` +
-        `kwarg: ${args_kwarg}\n` +
-        `}\n`
+        `$B.fast_tuple([${varnames}]))\n`
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`

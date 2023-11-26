@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-26 09:26:24.066663"
-__BRYTHON__.timestamp=1700987184066
+__BRYTHON__.compiled_date="2023-11-26 10:08:15.285011"
+__BRYTHON__.timestamp=1700989695285
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -7757,35 +7757,37 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
+$B.make_function_infos=function(f,__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg){f.$is_func=true
+f.$infos={__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}}
+$B.make_code_attr=function(f,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames){f.$infos.__name__=co_name
+f.$infos.__qualname__=co_qualname
+f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
 $B.make_function_defaults=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
-const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$defaults={},$kwdefaults=new Map()
-for(let i=0;i < value.length ;++i){$defaults[varnames[i+offset]]=value[i]}
+const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
+var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
+_b_.dict.__len__(f.$infos.__kwdefaults__)
 if(f.$infos.__kwdefaults__ !==_b_.None){const kwdef=f.$infos.__kwdefaults__
-for(let kw of $B.make_js_iterator(kwdef)){$kwdefaults.set(kw,$defaults[kw]=$B.$getitem(kwdef,kw))}}
-f.$defaults=$defaults
+for(let kw of $B.make_js_iterator(kwdef)){$kwdefaults.set(kw,$B.$getitem(kwdef,kw))}}
 f.$kwdefaults=$kwdefaults
 f.$kwdefaults_values=[...$kwdefaults.values()]
 f.$hasParams=new Set()
 for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i){f.$hasParams.add(varnames[i])}
-const $INFOS=f.$infos;
-const $CODE=$INFOS.__code__;
-const DEFAULTS=$B.getArgs0.DEFAULTS;
-const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount;
-const PARAMS_NAMED_DEFAULTS_COUNT=Object.keys($defaults).length-value.length;
+const $INFOS=f.$infos,$CODE=$INFOS.__code__,DEFAULTS=$B.getArgs0.DEFAULTS
+const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_NAMED_DEFAULTS_COUNT=nb_kw_defaults
 let named_defaults=DEFAULTS.NONE;
-if(PARAMS_NAMED_DEFAULTS_COUNT > 0)
-named_defaults=PARAMS_NAMED_DEFAULTS_COUNT >=PARAMS_NAMED_COUNT ? DEFAULTS.ALL :DEFAULTS.SOME;
-const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
-const PARAMS_POS_COUNT=$CODE.co_argcount-PARAMS_POSONLY_COUNT;
-let pos_defaults=DEFAULTS.NONE;
-if(PARAMS_POS_COUNT !==0 && value.length > 0)
-pos_defaults=value.length >=PARAMS_POS_COUNT ? DEFAULTS.ALL :DEFAULTS.SOME;
-let posonly_defaults=DEFAULTS.NONE;
-if(value.length > PARAMS_POS_COUNT)
-posonly_defaults=value.length >=$CODE.co_argcount ? DEFAULTS.ALL :DEFAULTS.SOME;
+if(PARAMS_NAMED_DEFAULTS_COUNT > 0){named_defaults=PARAMS_NAMED_DEFAULTS_COUNT >=PARAMS_NAMED_COUNT ?
+DEFAULTS.ALL :DEFAULTS.SOME}
+const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount
+const PARAMS_POS_COUNT=$CODE.co_argcount-PARAMS_POSONLY_COUNT
+let pos_defaults=DEFAULTS.NONE
+if(PARAMS_POS_COUNT !==0 && value.length > 0){pos_defaults=value.length >=PARAMS_POS_COUNT ? DEFAULTS.ALL :
+DEFAULTS.SOME;}
+let posonly_defaults=DEFAULTS.NONE
+if(value.length > PARAMS_POS_COUNT){posonly_defaults=value.length >=$CODE.co_argcount ? DEFAULTS.ALL :
+DEFAULTS.SOME;}
 f.$args_parser=f.$infos.args_parser=$B.getArgs0(
 PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
-);
+)
 return _b_.None}
 $B.function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
@@ -7801,7 +7803,6 @@ if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.
 self.$attrs[attr]=value}}
 $B.function.$factory=function(){}
 $B.set_func_names($B.function,"builtins")
-$B.make_code_attr=function(co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames){return{co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["__build_class__","abs","aiter","all","anext","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
@@ -16525,18 +16526,18 @@ for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.s
 if(_scope==FREE){free_vars.push(`'${ident}'`)}
 if(flag & DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
-js+=`${name2}.$is_func = true\n`
 if(in_class){js+=`${name2}.$is_method = true\n`}
 if(is_async){js+=`${name2}.$is_async = true\n`}
-js+=`${name2}.$infos = {\n`+
-`__module__: "${gname}",\n`+
-`__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n`+
-`__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n`+
-`__defaults__: ${defaults},\n`+
-`__globals__: _b_.globals(),\n`+
-`__kwdefaults__: ${kw_defaults},\n`+
-`__doc__: ${docstring},\n`+
-`__code__: $B.make_code_attr(`+
+js+=`$B.make_function_infos(${name2}, `+
+`'${gname}', `+
+`${defaults}, `+
+`_b_.globals(), `+
+`${kw_defaults}, `+
+`${docstring}, `+
+`[${arg_names}], `+
+`${args_vararg}, `+
+`${args_kwarg})\n`
+js+=`$B.make_code_attr(${name2}, `+
 `${positional.length}, `+
 `__file__,`+
 `${this.lineno},`+
@@ -16547,11 +16548,7 @@ js+=`${name2}.$infos = {\n`+
 `${varnames.length}, `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
-`$B.fast_tuple([${varnames}])),\n`+
-`arg_names: [${arg_names}],\n`+
-`vararg: ${args_vararg},\n`+
-`kwarg: ${args_kwarg}\n`+
-`}\n`
+`$B.fast_tuple([${varnames}]))\n`
 if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
 js+=`$B.make_function_defaults(${name2})\n`
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
