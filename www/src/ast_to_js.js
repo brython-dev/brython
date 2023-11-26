@@ -1423,7 +1423,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `locals.__doc__ = ${docstring}\n` +
           `var frame = [name, locals, module, ${globals_name}]\n` +
-          `frame.__file__ = '${scopes.filename}'\n` +
+          `frame.__file__ = __file__\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `frame.$f_trace = $B.enter_frame(frame)\n` +
           `var _frame_obj = $B.frame_obj\n`
@@ -2560,7 +2560,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__doc__: ${docstring},\n` +
         `__code__:{\n` +
         `co_argcount: ${positional.length},\n ` +
-        `co_filename: '${scopes.filename}',\n` +
+        `co_filename: __file__,\n` +
         `co_firstlineno: ${this.lineno},\n` +
         `co_flags: ${flags},\n` +
         `co_freevars: $B.fast_tuple([${free_vars}]),\n` +
@@ -3149,7 +3149,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
             js += `,\nlocals_${name} = locals`
         }
     }
-    js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
+    js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 

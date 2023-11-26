@@ -761,7 +761,8 @@ var $$eval = _b_.eval = function(){
     if(mode == 'eval'){
         // must set locals, might be used if expression is like
         // "True and True"
-        js = `var locals = ${local_name}\nreturn ${js}`
+        js = `var __file__ = '${filename}'\n` +
+              `var locals = ${local_name}\nreturn ${js}`
     }else if(src.single_expression){
         js = `var result = ${js}\n` +
              `if(result !== _b_.None){\n` +
@@ -773,7 +774,7 @@ var $$eval = _b_.eval = function(){
                                      local_name, global_name,
                                      'frame', '_frame_obj', js)
     }catch(err){
-        if(true){ //$B.get_option('debug') > 1){
+        if($B.get_option('debug') > 1){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
