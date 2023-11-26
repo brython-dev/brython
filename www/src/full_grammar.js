@@ -6135,7 +6135,7 @@ invalid_replacement_field:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: (L) => RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting a valid expression after \'{\'")
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting a valid expression after \'{\'")
       },
       {
         items: [
@@ -6176,7 +6176,7 @@ invalid_replacement_field:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'=\', or \'!\', or \':\', or \'}\'")
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'=\', or \'!\', or \':\', or \'}\'")
       },
       {
         items: [
@@ -6213,7 +6213,7 @@ invalid_replacement_field:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'!\', or \':\', or \'}\'")
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'!\', or \':\', or \'}\'")
       },
       {
         items: [
@@ -6272,7 +6272,7 @@ invalid_replacement_field:
                 ]
               }], lookahead: 'negative'
           }
-        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \':\' or \'}\'")
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \':\' or \'}\'")
       },
       {
         items: [
@@ -6301,7 +6301,7 @@ invalid_replacement_field:
           {type: 'string', value: ':'},
           {type: 'rule', name: 'fstring_format_spec', repeat: '*'},
           {type: 'string', value: '}', lookahead: 'negative'}
-        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\', or format specs")
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\', or format specs")
       },
       {
         items: [
@@ -6328,7 +6328,7 @@ invalid_replacement_field:
             repeat: '?'
           },
           {type: 'string', value: '}', lookahead: 'negative'}
-        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\'")
+        ], action: (L) => PyErr_Occurred()?$B.parser_constants.NULL:$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: expecting \'}\'")
       }]
   },
 invalid_conversion_character:
@@ -6350,13 +6350,13 @@ invalid_conversion_character:
                 ]
               }], lookahead: 'positive'
           }
-        ], action: (L) => RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: missing conversion character")
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: missing conversion character")
       },
       {
         items: [
           {type: 'string', value: '!'},
           {type: 'NAME', lookahead: 'negative'}
-        ], action: (L) => RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: invalid conversion character")
+        ], action: (L) => $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN("f-string: invalid conversion character")
       }]
   },
 }

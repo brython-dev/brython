@@ -247,6 +247,10 @@ var helper_functions = {
         return NULL;
     },
 
+    RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN: function(msg){
+        return helper_functions.RAISE_SYNTAX_ERROR(msg)
+    },
+
     asdl_seq_LEN: (t) => t.length,
 
     asdl_seq_GET: (t, i) => t[i]

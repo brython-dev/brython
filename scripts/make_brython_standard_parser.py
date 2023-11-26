@@ -53,6 +53,7 @@ helper_functions = [
     "RAISE_SYNTAX_ERROR_KNOWN_RANGE",
     "RAISE_SYNTAX_ERROR_INVALID_TARGET",
     "_RAISE_SYNTAX_ERROR_INVALID_TARGET",
+    "RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN",
     "asdl_seq_LEN",
     "asdl_seq_GET"]
 
