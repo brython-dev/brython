@@ -405,8 +405,8 @@ $B.tokenizer = function*(src, filename, mode){
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 
     while(pos < src.length){
-
         char = src[pos]
+        // console.log('char', char, 'state', state, 'token mode', token_mode)
         cp = src.charCodeAt(pos)
         if(cp >= 0xD800 && cp <= 0xDBFF){
             // code point encoded by a surrogate pair
@@ -487,8 +487,6 @@ $B.tokenizer = function*(src, filename, mode){
                         [line_num, pos - line_start],
                         [line_num, pos - line_start + 1],
                         line)
-                    console.log('emit closing bracket')
-                    alert()
                     continue
                 }
             }else if(char == '\\'){
@@ -747,6 +745,7 @@ $B.tokenizer = function*(src, filename, mode){
                         }
                         break
                     case '\\':
+                        var mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
                         if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
                             if(pos == src.length - 1){
                                 yield Token('ERRORTOKEN', char,
@@ -761,12 +760,12 @@ $B.tokenizer = function*(src, filename, mode){
                             pos += mo[0].length
                             line_start = pos + 1
                             line = get_line_at(pos)
-
-
                         }else{
-                            yield Token('ERRORTOKEN', char,
-                                [line_num, pos - line_start],
-                                [line_num, pos - line_start + 1], line)
+                            var msg = 'unexpected character after line ' +
+                                'continuation character'
+                            $B.raise_error_known_location(_b_.SyntaxError,
+                                filename, line_num, pos, line_num, pos + 1,
+                                line, msg)
                         }
                         break
                     case '\n':
@@ -809,7 +808,7 @@ $B.tokenizer = function*(src, filename, mode){
                                             line)
                                         // used on fstring debug mode
                                         colon.metadata = src.substr(
-                                            line_start + fstring_expr_start, 
+                                            line_start + fstring_expr_start,
                                             pos - line_start - fstring_expr_start - 1)
                                         yield colon
                                         token_modes.pop()
