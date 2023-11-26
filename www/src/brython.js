@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,0,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-26 09:12:03.770991"
-__BRYTHON__.timestamp=1700986323770
+__BRYTHON__.compiled_date="2023-11-26 09:26:24.066663"
+__BRYTHON__.timestamp=1700987184066
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -7801,6 +7801,7 @@ if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.
 self.$attrs[attr]=value}}
 $B.function.$factory=function(){}
 $B.set_func_names($B.function,"builtins")
+$B.make_code_attr=function(co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames){return{co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
 _b_.__BRYTHON__=__BRYTHON__
 $B.builtin_funcs=["__build_class__","abs","aiter","all","anext","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
@@ -16468,7 +16469,7 @@ js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
     if(locals.$has_generators){
         frame.$has_generators = true
     }
-    frame.__file__ = '${scopes.filename}'
+    frame.__file__ = __file__
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`
 if(func_scope.needs_stack_length){js+=`var stack_length = $B.count_frames()\n`}
@@ -16535,19 +16536,18 @@ js+=`${name2}.$infos = {\n`+
 `__globals__: _b_.globals(),\n`+
 `__kwdefaults__: ${kw_defaults},\n`+
 `__doc__: ${docstring},\n`+
-`__code__:{\n`+
-`co_argcount: ${positional.length},\n `+
-`co_filename: __file__,\n`+
-`co_firstlineno: ${this.lineno},\n`+
-`co_flags: ${flags},\n`+
-`co_freevars: $B.fast_tuple([${free_vars}]),\n`+
-`co_kwonlyargcount: ${this.args.kwonlyargs.length},\n`+
-`co_name: '${this.$is_lambda ? '<lambda>': this.name}',\n`+
-`co_nlocals: ${varnames.length},\n`+
-`co_posonlyargcount: ${this.args.posonlyargs.length},\n`+
-`co_qualname: '${this.$is_lambda ? '<lambda>': qualname}',\n`+
-`co_varnames: $B.fast_tuple([${varnames}])\n`+
-`},\n`+
+`__code__: $B.make_code_attr(`+
+`${positional.length}, `+
+`__file__,`+
+`${this.lineno},`+
+`${flags},`+
+`$B.fast_tuple([${free_vars}]), `+
+`${this.args.kwonlyargs.length}, `+
+`'${this.$is_lambda ? '<lambda>': this.name}', `+
+`${varnames.length}, `+
+`${this.args.posonlyargs.length}, `+
+`'${this.$is_lambda ? '<lambda>': qualname}', `+
+`$B.fast_tuple([${varnames}])),\n`+
 `arg_names: [${arg_names}],\n`+
 `vararg: ${args_vararg},\n`+
 `kwarg: ${args_kwarg}\n`+

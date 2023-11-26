@@ -2430,7 +2430,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(locals.$has_generators){
         frame.$has_generators = true
     }
-    frame.__file__ = '${scopes.filename}'
+    frame.__file__ = __file__
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`
 
@@ -2558,19 +2558,18 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__globals__: _b_.globals(),\n` +
         `__kwdefaults__: ${kw_defaults},\n` +
         `__doc__: ${docstring},\n` +
-        `__code__:{\n` +
-        `co_argcount: ${positional.length},\n ` +
-        `co_filename: __file__,\n` +
-        `co_firstlineno: ${this.lineno},\n` +
-        `co_flags: ${flags},\n` +
-        `co_freevars: $B.fast_tuple([${free_vars}]),\n` +
-        `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n` +
-        `co_name: '${this.$is_lambda ? '<lambda>': this.name}',\n` +
-        `co_nlocals: ${varnames.length},\n` +
-        `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
-        `co_qualname: '${this.$is_lambda ? '<lambda>': qualname}',\n` +
-        `co_varnames: $B.fast_tuple([${varnames}])\n` +
-        `},\n` +
+        `__code__: $B.make_code_attr(` +
+        `${positional.length}, ` +
+        `__file__,` +
+        `${this.lineno},` +
+        `${flags},` +
+        `$B.fast_tuple([${free_vars}]), ` +
+        `${this.args.kwonlyargs.length}, ` +
+        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
+        `${varnames.length}, ` +
+        `${this.args.posonlyargs.length}, ` +
+        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
+        `$B.fast_tuple([${varnames}])),\n` +
         `arg_names: [${arg_names}],\n` +
         `vararg: ${args_vararg},\n` +
         `kwarg: ${args_kwarg}\n` +

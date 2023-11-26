@@ -3461,6 +3461,14 @@ $B.function.$factory = function(){}
 
 $B.set_func_names($B.function, "builtins")
 
+$B.make_code_attr = function(co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_posonlyargcount, co_qualname, co_varnames){
+    return {co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_posonlyargcount, co_qualname, co_varnames}
+}
+
 _b_.__BRYTHON__ = __BRYTHON__
 
 $B.builtin_funcs = [
