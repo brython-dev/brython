@@ -2039,7 +2039,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `
 
         if(hasPos || hasNamedOnly ) {
-            fct += `
+            fct += `
     const HAS_PARAMS = fct.$hasParams;
 `;
         }
