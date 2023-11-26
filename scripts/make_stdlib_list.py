@@ -8,44 +8,35 @@ import git
 dico = {
     'title': {
             'en':'Brython distribution vs CPython',
-            'fr':'Comparaison des distributions Brython et CPython',
-            'es':'Distribución Brython vs CPython'
+            'fr':'Comparaison des distributions Brython et CPython'
     },
     'dir': {
         'en':'Directory',
-        'fr':'Répertoire',
-        'es':'Directorio'
+        'fr':'Répertoire'
     },
     'both': {
         'en':'Files in both distributions<br><i>' + \
             '* indicates that Brython version is different from CPython</i>',
         'fr':'Fichiers communs aux deux distributions <br><i>' + \
-            '* indique que la version Brython est différente de CPython</i>',
-        'es':'Archivos comunes en ambas distribuciones <br><i>' + \
-            '* indica que la versión de Brython es diferente de CPython'
+            '* indique que la version Brython est différente de CPython</i>'
     },
     'replacements': {
         'en': 'Replacement for CPython module',
-        'fr': 'Remplacement de modules CPython',
-        'es': 'Reemplazando módulos de CPython'
+        'fr': 'Remplacement de modules CPython'
     },
     'specific': {
         'en':'Brython-specific',
-        'fr':'Spécifiques à Brython',
-        'es':'Especificos de Brython'
+        'fr':'Spécifiques à Brython'
     },
     'not_yet': {
         'en':'In CPython but not (yet) in Brython<br><i>' + \
             '*: replaced by a Javascript module in /libs</i>',
         'fr':'Dans CPython mais pas (encore) dans Brython<br><i>' + \
-            '*: remplacé par un module Javascript dans /libs</i>',
-        'es':'En CPython pero no (todavía) en Brython<br><i>' + \
-            '*: reemplazado por un módulo javascript en /libs</i>'
+            '*: remplacé par un module Javascript dans /libs</i>'
     },
     'missing': {
         'en':'Directories in CPython distribution missing in Brython',
-        'fr':'Répertoires de la distribution CPython absents de Brython',
-        'es':'Directorios en CPython ausentes en la distribución en Brython'
+        'fr':'Répertoires de la distribution CPython absents de Brython'
     }
 }
 
@@ -61,12 +52,12 @@ print(python_stdlib_folder)
 doc_folder = os.path.join(os.path.dirname(os.getcwd()),
     'www', 'doc')
 static_doc_folder = os.path.join(os.path.dirname(os.getcwd()),
-    'www', 'static_doc')
+    'www', 'static_doc', version)
 
 if not os.path.exists(static_doc_folder):
     import make_doc
 
-for lang in 'en','es','fr':
+for lang in 'en', 'fr':
     index = open(os.path.join(doc_folder,lang,'index_static.html'), 'r', encoding="utf-8").read()
 
     with open(os.path.join(static_doc_folder,lang,'stdlib.html'), 'w', encoding="utf-8") as out:
