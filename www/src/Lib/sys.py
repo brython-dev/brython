@@ -232,10 +232,17 @@ hexversion = ((__BRYTHON__.version_info[0] << 24) +
                   ( __BRYTHON__.version_info[1] << 16) +
                   ( __BRYTHON__.version_info[2] << 8))
 
+_implementation_info = make_dataclass('version_info', [_comparable])(
+    major = __BRYTHON__.implementation[0],
+    minor = __BRYTHON__.implementation[1],
+    micro = __BRYTHON__.implementation[2],
+    releaselevel = __BRYTHON__.implementation[3],
+    serial = __BRYTHON__.implementation[4])
+    
 implementation = SimpleNamespace(
     name = 'Brython',
     cache_tag = None,
-    version = version_info,
+    version = _implementation_info,
     hexversion = hexversion
     )
 
