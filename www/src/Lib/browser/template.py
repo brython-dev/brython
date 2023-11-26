@@ -181,7 +181,7 @@ class Template:
                     value = item.value.replace("\n", "")
                     if "{" in value:
                         dynamic_attrs.append("'" + item.name + "', f'" +
-                            value.replace("'", "\\'") + "'")
+                            value + "'")
                     else:
                         static_attrs.append(item.name + '="' + value +'"')
 
@@ -256,7 +256,6 @@ class Template:
         try:
             exec(self.python, ns)
         except Exception as exc:
-            print('template 259, exc', exc)
             msg = traceback.format_exc()
             if isinstance(exc, SyntaxError):
                 line_no = exc.args[2]
