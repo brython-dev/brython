@@ -11,14 +11,14 @@ Brython scripts from a CDN:
 ```
 
 The minor version can be specified with `brython@3.12` and the micro version
-with `brython@3.12.0`.
+with `brython@3.12.1`.
 
 Brython is also available with cdnjs:
 
 ```xml
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.0/brython.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.1/brython.min.js">
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.0/brython_stdlib.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.1/brython_stdlib.min.js">
 </script>
 ```
 

@@ -2,4 +2,4 @@
 version = [3, 12, 0, "final", 0]
 
 # Brython version
-implementation = [3, 12, 0, "dev", 0]
+implementation = [3, 12, 1, "dev", 0]

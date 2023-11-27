@@ -7,7 +7,7 @@ import shutil
 import argparse
 import pathlib
 
-implementation = "3.12.0"
+implementation = "3.12.1"
 
 
 def main():

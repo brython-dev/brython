@@ -9,8 +9,6 @@ jobs:
         chrome: "stable"
         firefox: "latest"
         apt:
-          sources:
-            - sourceline: 'ppa:deadsnakes/ppa'
           packages:
             - libnss3
             - python3.12
