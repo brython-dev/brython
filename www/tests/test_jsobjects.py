@@ -262,7 +262,7 @@ window.demo_array.demo_array2.test2172()
 try:
     window.js_error()
 except Exception as exc:
-    assert exc.args[0] == 'catching JS error'
+    assert exc.args[0] == 'Error: catching JS error'
 
 # issue 2248
 assert type(javascript.NULL) is javascript.NullType
