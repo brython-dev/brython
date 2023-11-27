@@ -292,8 +292,25 @@ Cette méthode n'est pas recommandée, parce qu'elle introduit un risque de
 conflit avec des noms définis dans un programme ou une librairie Javascript
 utilisée dans la page.
 
+### Propriétés de l'objet `__BRYTHON__`
+
 L'objet `__BRYTHON__` expose des attributs qui peuvent être utilisés pour
 interagir avec des objets définis dans des scripts Python de la même page.
+
+*`__BRYTHON__`.whenReady*
+
+> Un objet Javascript `Promise` qui est résolu quand Brython a été chargé
+> dans la page et peut être utilisé par des programmes Javascript
+
+<blockquote>
+```xml
+function use_brython(){
+    // code ici
+}
+
+__BRYTHON__.whenReady.then(use_brython)
+```
+</blockquote>
 
 *`__BRYTHON__`.getPythonModule(module_name)*
 
@@ -321,6 +338,28 @@ document.getElementById('btn').addEventListener('click',
         __BRYTHON__.getPythonModule('s1').show_square(parseInt(v))
     }
 )
+</script>
+```
+</blockquote>
+
+Avant d'utiliser un module Python il faut s'assurer qu'il est bien chargé dans
+la page. Pour cela on peut utiliser l'événement "load" sur l'élément HTML
+`<script type="text/python">`, qui est déclenché quand le script a été
+exécuté:
+
+<blockquote>
+```xml
+<script type="text/python" debug=1 id="s1">
+x = 0
+</script>
+
+
+<script>
+var s1 = document.getElementById('s1')
+s1.addEventListener('load', function(script){
+  var module = __BRYTHON__.getPythonModule('s1')
+  console.log(module.x)
+})
 </script>
 ```
 </blockquote>

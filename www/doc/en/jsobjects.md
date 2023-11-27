@@ -290,8 +290,26 @@ window.echo = echo
 conflict with names defined in a Javascript program or library used in the page.
 </strong>
 
+### Properties of object `__BRYTHON__`
+
 The object `__BRYTHON__` exposes attributes that can be used by Javascript
 programs to interact with objects defined in Python scripts in the same page.
+
+
+*`__BRYTHON__`.whenReady*
+
+> A Javascript `Promise` resolved when Brython is loaded and can be used by
+> Javascript programs
+
+<blockquote>
+```xml
+function use_brython(){
+    // code here
+}
+
+__BRYTHON__.whenReady.then(use_brython)
+```
+</blockquote>
 
 *`__BRYTHON__`.getPythonModule(module_name)*
 
@@ -319,6 +337,27 @@ document.getElementById('btn').addEventListener('click',
         __BRYTHON__.getPythonModule('s1').show_square(parseInt(v))
     }
 )
+</script>
+```
+</blockquote>
+
+Before using a Python module it is required to make sure that it is actually
+loaded and executed. For that, use the "load" event on the HTML element
+`<script type="text/python">`:
+
+<blockquote>
+```xml
+<script type="text/python" debug=1 id="s1">
+x = 0
+</script>
+
+
+<script>
+var s1 = document.getElementById('s1')
+s1.addEventListener('load', function(script){
+  var module = __BRYTHON__.getPythonModule('s1')
+  console.log(module.x)
+})
 </script>
 ```
 </blockquote>
