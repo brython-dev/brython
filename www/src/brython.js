@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-27 07:51:15.689826"
-__BRYTHON__.timestamp=1701067875689
+__BRYTHON__.compiled_date="2023-11-27 17:13:15.983469"
+__BRYTHON__.timestamp=1701101595983
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8233,14 +8233,14 @@ err.__traceback__=traceback.$factory(err)}
 $B.exception=function(js_exc,in_ctx_manager){
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-var exc=_b_.JavascriptError.$factory((js_exc.__name__ ||js_exc.name))
+var msg=js_exc.name+': '+js_exc.message
+var exc=_b_.JavascriptError.$factory(msg)
 exc.$js_exc=js_exc
 if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}
 exc.__cause__=_b_.None
 exc.__context__=_b_.None
 exc.__suppress_context__=false
-var $message=(js_exc.message ||"<"+js_exc+">")
-exc.args=_b_.tuple.$factory([$message])
+exc.args=_b_.tuple.$factory([msg])
 exc.$py_error=true
 js_exc.$py_exc=exc
 $B.freeze(exc)}else{var exc=js_exc
@@ -8565,8 +8565,8 @@ if($B.stdlib_module_names.indexOf(err.name)>-1){
 trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=$B.offer_suggestions_for_attribute_error(err)
 if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}
 $B.frame_obj=save_frame_obj}else{trace=err+""}
-if(err.$js_exc){trace+='\n\nJavascript error\n'+err.$js_exc+
-'\n'+err.$js_exc.stack}
+if(err.$js_exc){trace+='\n'
+if($B.get_option('debug',err)> 1){trace+=err.$js_exc.stack}else{trace+='Set debug mode > 1 to see the Javascript error stack\n'}}
 return trace}
 $B.get_stderr=function(){if($B.imported.sys){return $B.imported.sys.stderr}
 return $B.imported._sys.stderr}
@@ -14965,7 +14965,7 @@ return awaitable}
 throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__)
 ;
-(function($B){$B.builtin_class_flags={builtins:{1074287874:['SystemError','NotImplementedError','TypeError','BufferError','BlockingIOError','IndexError','BytesWarning','ConnectionError','OverflowError','AssertionError','ArithmeticError','BaseException','EOFError','Exception','NameError','PermissionError','TimeoutError','ZeroDivisionError','ConnectionRefusedError','ChildProcessError','SyntaxWarning','ProcessLookupError','EncodingWarning','StopIteration','UnicodeError','WindowsError','AttributeError','BrokenPipeError','KeyError','ConnectionAbortedError','ReferenceError','TabError','ImportError','EnvironmentError','FileExistsError','ImportWarning','OSError','UnboundLocalError','FloatingPointError','UserWarning','IndentationError','RecursionError','NotADirectoryError','Warning','LookupError','UnicodeWarning','ModuleNotFoundError','IOError','StopAsyncIteration','ResourceWarning','BaseExceptionGroup','SystemExit','ConnectionResetError','RuntimeError','FutureWarning','FileNotFoundError','RuntimeWarning','UnicodeTranslateError','UnicodeEncodeError','PendingDeprecationWarning','UnicodeDecodeError','DeprecationWarning','IsADirectoryError','SyntaxError','KeyboardInterrupt','MemoryError','GeneratorExit','ValueError','InterruptedError'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['bytearray','float'],138941698:['bytes'],546050:['staticmethod','reversed','filter','property','super','enumerate','classmethod','map','zip'],529666:['object','complex'],541611330:['dict'],4740354:['set','frozenset'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['async_generator','member_descriptor','classmethod_descriptor','getset_descriptor','coroutine','method-wrapper','generator','frame'],547202:['builtin_function_or_method'],545026:['traceback','cell'],528642:['code','NoneType','ellipsis','NotImplementedType'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1074287874:['ConnectionAbortedError','ReferenceError','IsADirectoryError','UnicodeDecodeError','FileNotFoundError','PermissionError','ResourceWarning','ZeroDivisionError','ConnectionError','SystemExit','ModuleNotFoundError','BytesWarning','StopIteration','PendingDeprecationWarning','LookupError','OSError','AssertionError','EOFError','WindowsError','MemoryError','ConnectionRefusedError','NotImplementedError','TimeoutError','UnicodeWarning','Warning','FutureWarning','IndexError','DeprecationWarning','KeyError','ConnectionResetError','ProcessLookupError','UnicodeTranslateError','UnicodeEncodeError','SyntaxError','InterruptedError','ValueError','AttributeError','EnvironmentError','ChildProcessError','Exception','ImportWarning','BufferError','BrokenPipeError','OverflowError','TabError','TypeError','RuntimeWarning','UnicodeError','NotADirectoryError','SyntaxWarning','BlockingIOError','IndentationError','FloatingPointError','BaseExceptionGroup','FileExistsError','EncodingWarning','GeneratorExit','UserWarning','StopAsyncIteration','RecursionError','ImportError','ArithmeticError','RuntimeError','UnboundLocalError','IOError','SystemError','NameError','BaseException','KeyboardInterrupt'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['float','bytearray'],138941698:['bytes'],546050:['staticmethod','classmethod','super','map','reversed','filter','property','zip','enumerate'],529666:['object','complex'],541611330:['dict'],4740354:['set','frozenset'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['member_descriptor','generator','method-wrapper','frame','async_generator','classmethod_descriptor','getset_descriptor','coroutine'],547202:['builtin_function_or_method'],545026:['cell','traceback'],528642:['ellipsis','NotImplementedType','NoneType','code'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
