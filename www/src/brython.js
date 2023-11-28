@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-28 07:56:39.005126"
-__BRYTHON__.timestamp=1701154599005
+__BRYTHON__.compiled_date="2023-11-28 07:58:14.619938"
+__BRYTHON__.timestamp=1701154694619
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5259,7 +5259,7 @@ let kargs=ARGS_NAMED[0];
 for(let argname in kargs){result[argname ]=kargs[argname]
 ++nb_named_args}
 for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
-for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
+for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__,"keys")(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
 throw new Error('Non string key passed in **kargs');}
 result[argname ]=$B.$getitem(kargs,argname);
 ++nb_named_args}}
@@ -5292,7 +5292,7 @@ for(let argname in kargs){if(HAS_PARAMS.has(argname)){result[argname ]=kargs[arg
 ++nb_named_args}else{extra[argname ]=kargs[argname]
 ++nb_extra_args}}
 for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
-for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
+for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__,"keys")(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
 throw new Error('Non string key passed in **kargs');}
 if(HAS_PARAMS.has(argname)){result[argname ]=$B.$getitem(kargs,argname);
 ++nb_named_args}else{extra[argname ]=$B.$getitem(kargs,argname);
@@ -13834,7 +13834,7 @@ if(typeof jsobj=="string"){return $B.String(jsobj)}
 if(typeof jsobj=='bigint'){return _b_.int.$int_or_long(jsobj)}
 let pyobj=jsobj[PYOBJ]
 if(pyobj !==undefined){return pyobj;}
-if(jsobj instanceof Promise){
+if(jsobj instanceof Promise ||typeof jsobj.then=="function"){
 return jsobj.then(x=> jsobj2pyobj(x)).catch($B.handle_error)}
 if(typeof jsobj==="function"){
 _this=_this===undefined ? null :_this
@@ -16191,7 +16191,7 @@ if(! hasPos && ! hasNamedOnly && ! hasKWargs ){fct+=`
         }
         for(let id = 1; id < ARGS_NAMED.length; ++id ) {
             const kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator( kargs.__class__.keys(kargs) ) ) { //TODO: not optimal
+            for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) { //TODO: not optimal
                 $B.args0_old(fct, args);
                 throw new Error('No named arguments expected !!!');
             }
@@ -16290,7 +16290,7 @@ fct+=`
     }
     for(let id = 1; id < ARGS_NAMED.length; ++id ) {
         const kargs = ARGS_NAMED[id];
-        for(let argname of $B.make_js_iterator(kargs.__class__.keys(kargs)) ) {
+        for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
             if( typeof argname !== "string") {
                 $B.args0_old(fct, args);
                 throw new Error('Non string key passed in **kargs');
