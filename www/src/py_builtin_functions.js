@@ -3368,7 +3368,7 @@ $B.make_function_infos = function(f, __module__,
         co_posonlyargcount, co_qualname, co_varnames}
 }
 
-$B.make_function_defaults = function(f){
+$B.make_args_parser = function(f){
     if(f.$infos === undefined || f.$infos.__code__ === undefined){
         throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);
     }
@@ -3429,7 +3429,7 @@ $B.make_function_defaults = function(f){
         $INFOS.kwarg !== null
     )
 
-    return _b_.None
+    return f.$args_parser
 }
 
 $B.function.__setattr__ = function(self, attr, value){
@@ -3446,7 +3446,7 @@ $B.function.__setattr__ = function(self, attr, value){
         }
         if(self.$infos){
             self.$infos.__defaults__ = value
-            $B.make_function_defaults(self)
+            $B.make_args_parser(self)
         }else{
             throw _b_.AttributeError.$factory("cannot set attribute " + attr +
                 " of " + _b_.str.$factory(self))
@@ -3460,7 +3460,7 @@ $B.function.__setattr__ = function(self, attr, value){
         }
         if(self.$infos){
             self.$infos.__kwdefaults__ = value
-            $B.make_function_defaults(self)
+            $B.make_args_parser(self)
         }else{
             throw _b_.AttributeError.$factory("cannot set attribute " + attr +
                 " of " + _b_.str.$factory(self))

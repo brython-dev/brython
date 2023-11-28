@@ -684,7 +684,7 @@ function make_comp(scopes){
 
     var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                             upper_comp_scope.nb_await
-    
+
     for(var symbol of _b_.dict.$iter_items_with_hash(symtable_block.symbols)){
         if(symbol.value & DEF_COMP_ITER){
             comp_iter = symbol.key
@@ -2426,16 +2426,16 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
+    js += `var args_parser = ${name2}.$args_parser ?? ` +
+          `$B.make_args_parser(${name2})\n`
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
         js += `${locals_name} = locals = {};\n`
         // generate error message
-        js += `if(arguments.length !== 0) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;`
-    }else if(USE_PERSO_ARGS0_EVERYWHERE){
-        js += `${locals_name} = locals = ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n`
+        js += `if(arguments.length !== 0) args_parser(${parse_args.join(', ')})\n;`
     }else{
-        js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
+        js += `${locals_name} = locals = args_parser(${parse_args.join(', ')})\n`
     }
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
@@ -2587,8 +2587,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
     }
-
-    js += `$B.make_function_defaults(${name2})\n`
 
     var mangled = mangle(scopes, func_name_scope, this.name),
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`

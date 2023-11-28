@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-27 17:13:15.983469"
-__BRYTHON__.timestamp=1701101595983
+__BRYTHON__.compiled_date="2023-11-28 07:56:39.005126"
+__BRYTHON__.timestamp=1701154599005
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -7764,7 +7764,7 @@ f.$infos={__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,v
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
-$B.make_function_defaults=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
+$B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
 var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
 _b_.dict.__len__(f.$infos.__kwdefaults__)
@@ -7790,16 +7790,16 @@ DEFAULTS.SOME;}
 f.$args_parser=f.$infos.args_parser=$B.getArgs0(
 PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
 )
-return _b_.None}
+return f.$args_parser}
 $B.function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
 if(self.$infos){self.$infos.__defaults__=value
-$B.make_function_defaults(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+$B.make_args_parser(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
 " of "+_b_.str.$factory(self))}}else if(attr=="__kwdefaults__"){if(value===_b_.None){value=$B.empty_dict}else if(! $B.$isinstance(value,_b_.dict)){throw _b_.TypeError.$factory(
 "__kwdefaults__ must be set to a dict object")}
 if(self.$infos){self.$infos.__kwdefaults__=value
-$B.make_function_defaults(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+$B.make_args_parser(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
 " of "+_b_.str.$factory(self))}}
 if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.$attrs ||{}
 self.$attrs[attr]=value}}
@@ -16470,10 +16470,12 @@ parse_args.push('arguments')
 var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.vararg.arg+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+this.args.kwarg.arg+"'"
+js+=`var args_parser = ${name2}.$args_parser ?? `+
+`$B.make_args_parser(${name2})\n`
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`
-js+=`if(arguments.length !== 0) ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n;`}else if(USE_PERSO_ARGS0_EVERYWHERE){js+=`${locals_name} = locals = ${parse_args[0]}.$args_parser(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
+js+=`if(arguments.length !== 0) args_parser(${parse_args.join(', ')})\n;`}else{js+=`${locals_name} = locals = args_parser(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     if(locals.$has_generators){
@@ -16558,7 +16560,6 @@ js+=`$B.make_function_infos(${name2}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
 `$B.fast_tuple([${varnames}]))\n`
 if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
-js+=`$B.make_function_defaults(${name2})\n`
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
 if(decorated){func_ref=`decorated${$B.UUID()}`
 js+='var '}
