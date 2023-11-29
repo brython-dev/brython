@@ -61,7 +61,8 @@ function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, s
             var kw = $B.parse_kwargs(last.$kw, fname)
             for(var k in kw){
                 if(! slots.hasOwnProperty(k)){
-                    throw unexpected_keyword(fname, k)
+                    var suggestion = $B.offer_suggestions_for_unexpected_keyword_error(arg_names, k)
+                    throw unexpected_keyword(fname, k, suggestion)
                 }
             }
         }
@@ -79,9 +80,12 @@ function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, s
         `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)
 }
 
-function unexpected_keyword(fname, k){
-    return _b_.TypeError.$factory(fname +
-        `() got an unexpected keyword argument '${k}'`)
+function unexpected_keyword(fname, k, suggestion){
+    var msg = `${fname}() got an unexpected keyword argument '${k}'`
+    if(suggestion !== _b_.None){
+        msg += `. Did you mean: '${suggestion}'?`
+    }
+    return _b_.TypeError.$factory(msg)
 }
 
 var empty = {}
@@ -306,7 +310,7 @@ function args0_NEW(fct, args) {
             args0(fct, args)
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')
         }
-      
+
         return result
     }
 
@@ -571,7 +575,9 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
     if(! kwarg){
         for(var k in kw){
             if(! slots.hasOwnProperty(k)){
-                throw unexpected_keyword(fname, k)
+                var suggestion = $B.offer_suggestions_for_unexpected_keyword_error(
+                    arg_names, k)
+                throw unexpected_keyword(fname, k, suggestion)
             }
         }
     }

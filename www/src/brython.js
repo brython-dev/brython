@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-28 07:58:14.619938"
-__BRYTHON__.timestamp=1701154694619
+__BRYTHON__.compiled_date="2023-11-29 12:32:25.627427"
+__BRYTHON__.timestamp=1701257545627
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5199,7 +5199,8 @@ function pos_only_passed_as_keyword(fname,arg){return _b_.TypeError.$factory(fna
 function too_many_pos_args(fname,kwarg,arg_names,nb_kwonly,defaults,args,slots){var nb_pos=args.length,last=$B.last(args)
 if(last.$kw){
 if(! kwarg){var kw=$B.parse_kwargs(last.$kw,fname)
-for(var k in kw){if(! slots.hasOwnProperty(k)){throw unexpected_keyword(fname,k)}}}
+for(var k in kw){if(! slots.hasOwnProperty(k)){var suggestion=$B.offer_suggestions_for_unexpected_keyword_error(arg_names,k)
+throw unexpected_keyword(fname,k,suggestion)}}}
 nb_pos--}
 var nb_def=defaults.length
 var expected=arg_names.length-nb_kwonly,plural=expected==1 ? '' :'s'
@@ -5208,8 +5209,9 @@ plural='s'}
 var verb=nb_pos==1 ? 'was' :'were'
 return _b_.TypeError.$factory(fname+'() takes '+
 `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)}
-function unexpected_keyword(fname,k){return _b_.TypeError.$factory(fname+
-`() got an unexpected keyword argument '${k}'`)}
+function unexpected_keyword(fname,k,suggestion){var msg=`${fname}() got an unexpected keyword argument '${k}'`
+if(suggestion !==_b_.None){msg+=`. Did you mean: '${suggestion}'?`}
+return _b_.TypeError.$factory(msg)}
 var empty={}
 function args0(f,args){
 var arg_names=f.$infos.arg_names,code=f.$infos.__code__,slots={}
@@ -5362,7 +5364,9 @@ if(kw && kw.hasOwnProperty(arg_name)){slots[arg_name]=kw[arg_name]
 kw[arg_name]=empty}else{var kw_def=_b_.dict.$get_string(kwdefaults,arg_name)
 if(kw_def !==_b_.dict.$missing){slots[arg_name]=kw_def}else{missing_kwonly.push(arg_name)}}}
 if(missing_kwonly.length > 0){throw missing_required_kwonly(fname,missing_kwonly)}
-if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){throw unexpected_keyword(fname,k)}}}
+if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){var suggestion=$B.offer_suggestions_for_unexpected_keyword_error(
+arg_names,k)
+throw unexpected_keyword(fname,k,suggestion)}}}
 for(var k in kw){if(kw[k]===empty){continue}
 if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==empty){if(posonly_set[k]&& kwarg){
 extra_kw[k]=kw[k]}else{throw multiple_values(fname,k)}}else{slots[k]=kw[k]}}
@@ -8429,6 +8433,10 @@ if(frame[4]&& frame[4].$is_method){
 var instance_name=frame[4].$infos.__code__.co_varnames[0],instance=frame[1][instance_name]
 if(_b_.hasattr(instance,name)){return `self.${name}`}}
 return _b_.None}
+$B.offer_suggestions_for_unexpected_keyword_error=function(arg_names,key){if(key===_b_.None){return _b_.None}
+var suggestions=calculate_suggestions(arg_names,key)
+console.log('suggestions')
+return suggestions ||_b_.None}
 _b_.BaseExceptionGroup=$B.make_class("BaseExceptionGFroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
@@ -8560,7 +8568,7 @@ trace+=name+(args_str ? ': '+args_str :'')
 var save_frame_obj=$B.frame_obj
 $B.frame_obj=err.$frame_obj
 if(err.__class__===_b_.NameError){var suggestion=$B.offer_suggestions_for_name_error(err)
-if(suggestion !==_b_.None){trace+=`. Did you mean '${suggestion}'?`}
+if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}
 if($B.stdlib_module_names.indexOf(err.name)>-1){
 trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=$B.offer_suggestions_for_attribute_error(err)
 if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}

@@ -784,6 +784,14 @@ $B.offer_suggestions_for_name_error = function(exc, frame){
     return _b_.None
 }
 
+$B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
+    if(key === _b_.None){
+        return _b_.None
+    }
+    var suggestions = calculate_suggestions(arg_names, key)
+    console.log('suggestions')
+    return suggestions || _b_.None
+}
 
 // PEP 654
 _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGFroup",
@@ -1089,7 +1097,7 @@ $B.error_trace = function(err){
         if(err.__class__ === _b_.NameError){
             var suggestion = $B.offer_suggestions_for_name_error(err)
             if(suggestion !== _b_.None){
-                trace += `. Did you mean '${suggestion}'?`
+                trace += `. Did you mean: '${suggestion}'?`
             }
             if($B.stdlib_module_names.indexOf(err.name) > -1){
                 // new in 3.12
