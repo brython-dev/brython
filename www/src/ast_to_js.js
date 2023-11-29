@@ -1838,13 +1838,27 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     let ARGS_POS_COUNT        = args.length;
     let ARGS_NAMED            = null;
 
+    let result = {};
+    
     if( HAS_KW ) {
         --ARGS_POS_COUNT;
         ARGS_NAMED = LAST_ARGS.$kw;
+`;
+
+    if( (hasPos || hasNamedOnly) && ! hasKWargs ) {
+    	fct += `
+    	//result = Object.assign({}, ARGS_NAMED[0]); // temporary due to the use of args0_old for error message.
+    	result = ARGS_NAMED[0];
+    	var nb_named_args = 0;
+    	for(let _ in result)
+    	    ++nb_named_args;
+`;
+    }
+
+    fct += `
     }
 
 
-    const result = {};
 
     // using const should enable the browser to perform some optimisation.
     const $INFOS = fct.$infos;
@@ -2056,9 +2070,8 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     const HAS_PARAMS = fct.$hasParams;
 `;
         }
-    }
-
-    fct += `
+        
+        fct += `
 
     let nb_named_args = 0;
 
@@ -2068,21 +2081,13 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     for(let argname in kargs) {
         `;
 
-        if( ! hasKWargs ) {
-            fct += `
-        result[ argname ] = kargs[argname];
-        ++nb_named_args;
-`;
-        }
-
-        if( hasKWargs ) {
-            if( ! hasNamedOnly && ! hasPos ) {
-                fct += `
+        if( ! hasNamedOnly && ! hasPos ) {
+           fct += `
         extra[ argname ] = kargs[argname];
         ++nb_extra_args;
 `
-            } else {
-                fct += `
+        } else {
+           fct += `
         if( HAS_PARAMS.has(argname) ) {
             result[ argname ] = kargs[argname];
             ++nb_named_args;
@@ -2091,11 +2096,13 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
             ++nb_extra_args;
         }
 `
-            }
         }
-
-        fct += `
+        
+        fct += `}`;
+        
     }
+
+    fct += `
 
     for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
@@ -2240,7 +2247,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     return fct;
 }
 
-//console.log("pos", generate_args0_str(false, DEFAULTS.NONE, false, DEFAULTS.NONE, false, true, DEFAULTS.NONE, true) );
+console.log("pos", generate_args0_str(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
