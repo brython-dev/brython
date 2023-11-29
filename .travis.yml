@@ -9,6 +9,8 @@ jobs:
         chrome: "stable"
         firefox: "latest"
         apt:
+          sources:
+            - sourceline: 'ppa:deadsnakes/ppa'
           packages:
             - libnss3
             - python3.12
@@ -37,4 +39,3 @@ jobs:
         - EXCLUDE=./.*,www/src/Lib,www/tests
         # stop the build if there are Python syntax errors or undefined names
         - flake8 --builtins=__BRYTHON__ --exclude=$EXCLUDE --select=E9,F63,F7,F82 --show-source --statistics
-
