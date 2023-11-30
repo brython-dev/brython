@@ -2289,6 +2289,12 @@ function type_param_in_def(tp, ref, scopes){
     }
     return js
 }
+
+$B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
+    return $B.make_args_parser(fct)(fct, args);
+}
+
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
@@ -2426,16 +2432,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
-    js += `var args_parser = ${name2}.$args_parser ?? ` +
-          `$B.make_args_parser(${name2})\n`
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
         js += `${locals_name} = locals = {};\n`
         // generate error message
-        js += `if(arguments.length !== 0) args_parser(${parse_args.join(', ')})\n;`
+        js += `if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`
     }else{
-        js += `${locals_name} = locals = args_parser(${parse_args.join(', ')})\n`
+        js += `${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
     }
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
@@ -2582,11 +2586,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${varnames.length}, ` +
         `${this.args.posonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': qualname}', ` +
-        `$B.fast_tuple([${varnames}]))\n`
-
+        `$B.fast_tuple([${varnames}]))\n`;
+ 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
     }
+
+    js += `${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
+
 
     var mangled = mangle(scopes, func_name_scope, this.name),
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
