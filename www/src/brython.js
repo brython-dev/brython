@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 10:56:59.790275"
-__BRYTHON__.timestamp=1701338219790
+__BRYTHON__.compiled_date="2023-11-30 11:29:36.101437"
+__BRYTHON__.timestamp=1701340176101
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5760,7 +5760,7 @@ if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__')
 _b_.None,_b_.None,_b_.None)}}}}}
 delete frame[1].$current_exception
 return _b_.None}
-$B.trace_return_and_leave=function(frame){if(frame.$f_trace !==_b_.None){$B.trace_return(_b_.None)}
+$B.trace_return_and_leave=function(frame,return_value){if(frame.$f_trace !==_b_.None){$B.trace_return(return_value)}
 return $B.leave_frame()}
 $B.push_frame=function(frame){var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
 return{
@@ -8125,6 +8125,10 @@ console.error(['Traceback (most recent call last):',$B.print_stack(exc.$frame_ob
 if($B.get_option('debug',exc)> 1){console.log(exc.args)
 console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
+$B.set_exc_and_trace=function(exc,frame){$B.set_exc(exc,frame)
+if((! exc.$in_trace_func)&& frame.$f_trace !==_b_.None){frame.$f_trace=$B.trace_exception()}}
+$B.set_exc_and_leave=function(exc,frame){$B.set_exc_and_trace(exc,frame)
+$B.leave_frame()}
 $B.get_exc=function(){var frame=$B.frame_obj.frame
 return frame[1].$current_exception}
 $B.set_exception_offsets=function(exc,position){
@@ -15990,7 +15994,7 @@ scopes.pop()
 var keywords=[]
 for(var keyword of this.keywords){keywords.push(`["${keyword.arg}", `+
 $B.js_from_ast(keyword.value,scopes)+']')}
-js+='\n$B.trace_return_and_leave(frame)\n'+
+js+='\n$B.trace_return_and_leave(frame, _b_.None)\n'+
 `return $B.$class_constructor('${this.name}', locals, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}])\n`+
 `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
@@ -16511,18 +16515,16 @@ js+=`locals.__class__ =  `+
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
 js+='var result = _b_.None\n'+
-'$B.trace_return_and_leave(frame)\n'+
+'$B.trace_return_and_leave(frame, result)\n'+
 'return result\n'}
-js+=`}catch(err){
-    $B.set_exc(err, frame)\n`
+js+=`}catch(err){\n`
 if(func_scope.needs_frames){
-js+=`err.$frame_obj = _frame_obj\n`+
+js+=`$B.set_exc_and_trace(err, frame)\n`+
+`err.$frame_obj = _frame_obj\n`+
 `_linenums[_linenums.length - 1] = frame.$lineno\n`+
-`err.$linenums = _linenums\n`}
-js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
-    frame.$f_trace = $B.trace_exception()
-    }\n`
-js+=`$B.leave_frame();throw err
+`err.$linenums = _linenums\n`+
+`$B.leave_frame()\n`}else{js+=`$B.set_exc_and_leave(err, frame)\n`}
+js+=`throw err
     }
     }\n`
 if(is_generator){js+=`, '${this.name}')\n`+
@@ -16816,10 +16818,7 @@ js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
 `$B.leave_frame({locals, value: _b_.None})\n`+
 `}catch(err){\n`+
-`$B.set_exc(err, frame)\n`+
-`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
-`frame.$f_trace = $B.trace_exception()\n`+
-`}\n`+
+`$B.set_exc_and_trace(err, frame)\n`+
 `$B.leave_frame({locals, value: _b_.None})\n`+
 'throw err\n'+
 `}`
@@ -16857,9 +16856,7 @@ var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 'var result = '+
 (this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')+
 '\n'+
-`if(frame.$f_trace !== _b_.None){\n`+
-`$B.trace_return(result)\n}\n`
-js+=`$B.leave_frame()\nreturn result\n`
+`$B.trace_return_and_leave(frame, result)\nreturn result\n`
 return js}
 $B.ast.Set.prototype.to_js=function(scopes){var elts=[]
 for(var elt of this.elts){var js
@@ -16887,10 +16884,7 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc(${err}, frame)\n`+
-`if(frame.$f_trace !== _b_.None){\n`+
-`frame.$f_trace = $B.trace_exception()\n`+
-`}\n`
+`$B.set_exc_and_trace(${err}, frame)\n`
 if(has_else){js+=`failed${id} = true\n`}
 var first=true,has_untyped_except=false
 for(var handler of this.handlers){if(first){js+='if'
@@ -16944,11 +16938,8 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc(${err}, frame)\n`
-js+=`if(frame.$f_trace !== _b_.None){\n`+
-`frame.$f_trace = $B.trace_exception()\n`+
-`}\n`
-js+=`if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
+`$B.set_exc_and_trace(${err}, frame)\n`+
+`if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
 `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
 '}\n'+
 `function fake_split(exc, condition){\n`+

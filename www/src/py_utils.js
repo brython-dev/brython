@@ -1677,9 +1677,9 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
-$B.trace_return_and_leave = function(frame){
+$B.trace_return_and_leave = function(frame, return_value){
     if(frame.$f_trace !== _b_.None){
-        $B.trace_return(_b_.None)
+        $B.trace_return(return_value)
     }
     return $B.leave_frame()
 }

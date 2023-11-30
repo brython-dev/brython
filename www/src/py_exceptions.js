@@ -23,6 +23,18 @@ $B.set_exc = function(exc, frame){
     }
 }
 
+$B.set_exc_and_trace = function(exc, frame){
+    $B.set_exc(exc, frame)
+    if((! exc.$in_trace_func) && frame.$f_trace !== _b_.None){
+        frame.$f_trace = $B.trace_exception()
+    }
+}
+
+$B.set_exc_and_leave = function(exc, frame){
+    $B.set_exc_and_trace(exc, frame)
+    $B.leave_frame()
+}
+
 $B.get_exc = function(){
     var frame = $B.frame_obj.frame
     return frame[1].$current_exception
