@@ -3,8 +3,6 @@
 
 var _b_ = $B.builtins
 
-var trace = 1
-
 function compiler_error(ast_obj, message, end){
     var exc = _b_.SyntaxError.$factory(message)
     exc.filename = state.filename
@@ -1447,10 +1445,9 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `frame.__file__ = __file__\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `frame.$f_trace = $B.enter_frame(frame)\n` +
-          `var _frame_obj = $B.frame_obj\n`
-          if(trace){
-                js += `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
-          }
+          `var _frame_obj = $B.frame_obj\n` +
+          `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
+
     scopes.push(class_scope)
 
     js += add_body(this.body, scopes)
@@ -1463,11 +1460,10 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
             $B.js_from_ast(keyword.value, scopes) + ']')
     }
 
-    if(trace){
-        js += '\nif(frame.$f_trace !== _b_.None){\n' +
-                  '$B.trace_return(_b_.None)\n' +
-              '}'
-    }
+    js += '\nif(frame.$f_trace !== _b_.None){\n' +
+              '$B.trace_return(_b_.None)\n' +
+          '}'
+
     js += '\n$B.leave_frame()\n' +
           `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}])\n` +
@@ -2494,12 +2490,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if((! this.$is_lambda) && ! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
-        js += 'var result = _b_.None\n'
-        if(trace){
-            js += 'if(frame.$f_trace !== _b_.None){\n' +
-              '$B.trace_return(_b_.None)\n}\n'
-        }
-        js += '$B.leave_frame()\n' +
+        js += 'var result = _b_.None\n' +
+              'if(frame.$f_trace !== _b_.None){\n' +
+                  '$B.trace_return(_b_.None)\n}\n' +
+              '$B.leave_frame()\n' +
               'return result\n'
     }
 
@@ -2512,11 +2506,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               `_linenums[_linenums.length - 1] = frame.$lineno\n` +
               `err.$linenums = _linenums\n`
     }
-    if(trace){
-        js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
-        frame.$f_trace = $B.trace_exception()
-        }\n`
-    }
+
+    js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
+    frame.$f_trace = $B.trace_exception()
+    }\n`
+
     js += `$B.leave_frame();throw err
     }
     }\n`
@@ -3184,11 +3178,11 @@ $B.ast.Module.prototype.to_js = function(scopes){
               (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
           `}catch(err){\n` +
               `$B.set_exc(err, frame)\n`
-    if(trace){
-        js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n` +
-                  `frame.$f_trace = $B.trace_exception()\n` +
-              `}\n`
-    }
+
+    js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n` +
+              `frame.$f_trace = $B.trace_exception()\n` +
+          `}\n`
+
     js += (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
               'throw err\n' +
           `}`
@@ -3261,11 +3255,9 @@ $B.ast.Return.prototype.to_js = function(scopes){
     var js = `$B.set_lineno(frame, ${this.lineno})\n` +
              'var result = ' +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None') +
-             '\n'
-    if(trace){
-        js += `if(frame.$f_trace !== _b_.None){\n` +
+             '\n' +
+              `if(frame.$f_trace !== _b_.None){\n` +
               `$B.trace_return(result)\n}\n`
-    }
 
     js += `$B.leave_frame()\nreturn result\n`
     return js
@@ -3355,11 +3347,10 @@ $B.ast.Try.prototype.to_js = function(scopes){
         var err = 'err' + id
         js += '}\n' // close try
         js += `catch(${err}){\n` +
-              `$B.set_exc(${err}, frame)\n`
-        if(trace){
-            js += `if(frame.$f_trace !== _b_.None){\n` +
-                  `frame.$f_trace = $B.trace_exception()}\n`
-        }
+              `$B.set_exc(${err}, frame)\n` +
+              `if(frame.$f_trace !== _b_.None){\n` +
+                  `frame.$f_trace = $B.trace_exception()\n` +
+              `}\n`
         if(has_else){
             js += `failed${id} = true\n`
         }
@@ -3474,11 +3465,11 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         js += '}\n' // close try
         js += `catch(${err}){\n` +
               `$B.set_exc(${err}, frame)\n`
-        if(trace){
-            js += `if(frame.$f_trace !== _b_.None){\n` +
+
+        js += `if(frame.$f_trace !== _b_.None){\n` +
                   `frame.$f_trace = $B.trace_exception()\n`+
               `}\n`
-        }
+
         js += `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
                   `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
               '}\n' +
