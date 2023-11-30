@@ -23,7 +23,7 @@ function compiler_error(ast_obj, message, end){
                    exc.end_lineno, exc.end_offset]
     exc.$frame_obj = $B.frame_obj
     if($B.frame_obj === null){
-        alert('tiens !')
+        console.log('frame obj is null')
     }
     throw exc
 }
