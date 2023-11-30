@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 10:16:35.424532"
-__BRYTHON__.timestamp=1701335795424
+__BRYTHON__.compiled_date="2023-11-30 10:56:59.790275"
+__BRYTHON__.timestamp=1701338219790
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -16808,20 +16808,19 @@ js+=`\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
-if(! namespaces){
-js+=`frame.$f_trace = $B.enter_frame(frame)\n`+
-`$B.set_lineno(frame, 1)\n`+
-'\nvar _frame_obj = $B.frame_obj,\n'+
-'stack_length = $B.count_frames()\n'}
+js+=`frame.$f_trace = $B.enter_frame(frame)\n`
+if(! namespaces){js+=`$B.set_lineno(frame, 1)\n`+
+'\nvar _frame_obj = $B.frame_obj\n'}
+js+='var stack_length = $B.count_frames()\n'
 js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
 `$B.leave_frame({locals, value: _b_.None})\n`+
 `}catch(err){\n`+
-`$B.set_exc(err, frame)\n`
-js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
+`$B.set_exc(err, frame)\n`+
+`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()\n`+
-`}\n`
-js+=`$B.leave_frame({locals, value: _b_.None})\n`+
+`}\n`+
+`$B.leave_frame({locals, value: _b_.None})\n`+
 'throw err\n'+
 `}`
 scopes.pop()

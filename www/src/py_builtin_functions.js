@@ -781,6 +781,7 @@ var $$eval = _b_.eval = function(){
         throw err
     }
 
+    // console.log('exec func', $B.format_indent(exec_func + '', 0))
     try{
         var res = exec_func($B, _b_,
                             exec_locals, exec_globals, frame, _frame_obj)

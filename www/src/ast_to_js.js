@@ -3159,25 +3159,26 @@ $B.ast.Module.prototype.to_js = function(scopes){
           js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
     }
 
-    if(! namespaces){
+
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
-        js += `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `$B.set_lineno(frame, 1)\n` +
-              '\nvar _frame_obj = $B.frame_obj,\n' +
-              'stack_length = $B.count_frames()\n'
+
+    js += `frame.$f_trace = $B.enter_frame(frame)\n`
+    if(! namespaces){
+          js += `$B.set_lineno(frame, 1)\n` +
+                '\nvar _frame_obj = $B.frame_obj\n'
     }
+    js += 'var stack_length = $B.count_frames()\n'
+
     js += `try{\n` +
               add_body(this.body, scopes) + '\n' +
               `$B.leave_frame({locals, value: _b_.None})\n` +
           `}catch(err){\n` +
-              `$B.set_exc(err, frame)\n`
-
-    js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n` +
+              `$B.set_exc(err, frame)\n` +
+              `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n` +
               `frame.$f_trace = $B.trace_exception()\n` +
-          `}\n`
-
-    js += `$B.leave_frame({locals, value: _b_.None})\n` +
+          `}\n` +
+          `$B.leave_frame({locals, value: _b_.None})\n` +
               'throw err\n' +
           `}`
     scopes.pop()
