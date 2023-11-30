@@ -1677,6 +1677,13 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
+$B.trace_return_and_leave = function(frame){
+    if(frame.$f_trace !== _b_.None){
+        $B.trace_return(_b_.None)
+    }
+    return $B.leave_frame()
+}
+
 $B.push_frame = function(frame){
     var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
     return {

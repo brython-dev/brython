@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 08:37:34.597779"
-__BRYTHON__.timestamp=1701329854597
+__BRYTHON__.compiled_date="2023-11-30 10:16:35.424532"
+__BRYTHON__.timestamp=1701335795424
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5760,6 +5760,8 @@ if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__')
 _b_.None,_b_.None,_b_.None)}}}}}
 delete frame[1].$current_exception
 return _b_.None}
+$B.trace_return_and_leave=function(frame){if(frame.$f_trace !==_b_.None){$B.trace_return(_b_.None)}
+return $B.leave_frame()}
 $B.push_frame=function(frame){var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
 return{
 prev:$B.frame_obj,frame,count:count+1}}
@@ -15440,7 +15442,7 @@ exc.end_lineno=end.end_lineno
 exc.end_offset=end.end_col_offset
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 exc.$frame_obj=$B.frame_obj
-if($B.frame_obj===null){alert('tiens !')}
+if($B.frame_obj===null){console.log('frame obj is null')}
 throw exc}
 function fast_id(obj){
 if(obj.$id !==undefined){return obj.$id}
@@ -15988,10 +15990,7 @@ scopes.pop()
 var keywords=[]
 for(var keyword of this.keywords){keywords.push(`["${keyword.arg}", `+
 $B.js_from_ast(keyword.value,scopes)+']')}
-js+='\nif(frame.$f_trace !== _b_.None){\n'+
-'$B.trace_return(_b_.None)\n'+
-'}'
-js+='\n$B.leave_frame()\n'+
+js+='\n$B.trace_return_and_leave(frame)\n'+
 `return $B.$class_constructor('${this.name}', locals, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}])\n`+
 `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
@@ -16512,9 +16511,7 @@ js+=`locals.__class__ =  `+
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
 js+='var result = _b_.None\n'+
-'if(frame.$f_trace !== _b_.None){\n'+
-'$B.trace_return(_b_.None)\n}\n'+
-'$B.leave_frame()\n'+
+'$B.trace_return_and_leave(frame)\n'+
 'return result\n'}
 js+=`}catch(err){
     $B.set_exc(err, frame)\n`
@@ -16812,19 +16809,19 @@ js+=`\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
 if(! namespaces){
-js+=`frame.$f_trace = $B.enter_frame(frame)\n`}
-js+=`$B.set_lineno(frame, 1)\n`+
+js+=`frame.$f_trace = $B.enter_frame(frame)\n`+
+`$B.set_lineno(frame, 1)\n`+
 '\nvar _frame_obj = $B.frame_obj,\n'+
-'stack_length = $B.count_frames()\n'+
-`try{\n`+
+'stack_length = $B.count_frames()\n'}
+js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
-(namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
+`$B.leave_frame({locals, value: _b_.None})\n`+
 `}catch(err){\n`+
 `$B.set_exc(err, frame)\n`
 js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()\n`+
 `}\n`
-js+=(namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
+js+=`$B.leave_frame({locals, value: _b_.None})\n`+
 'throw err\n'+
 `}`
 scopes.pop()

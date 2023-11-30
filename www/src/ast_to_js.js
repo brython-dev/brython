@@ -1460,11 +1460,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
             $B.js_from_ast(keyword.value, scopes) + ']')
     }
 
-    js += '\nif(frame.$f_trace !== _b_.None){\n' +
-              '$B.trace_return(_b_.None)\n' +
-          '}'
-
-    js += '\n$B.leave_frame()\n' +
+    js += '\n$B.trace_return_and_leave(frame)\n' +
           `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}])\n` +
           `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
@@ -2491,9 +2487,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if((! this.$is_lambda) && ! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
         js += 'var result = _b_.None\n' +
-              'if(frame.$f_trace !== _b_.None){\n' +
-                  '$B.trace_return(_b_.None)\n}\n' +
-              '$B.leave_frame()\n' +
+              '$B.trace_return_and_leave(frame)\n' +
               'return result\n'
     }
 
@@ -3168,14 +3162,14 @@ $B.ast.Module.prototype.to_js = function(scopes){
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
-        js += `frame.$f_trace = $B.enter_frame(frame)\n`
+        js += `frame.$f_trace = $B.enter_frame(frame)\n` +
+              `$B.set_lineno(frame, 1)\n` +
+              '\nvar _frame_obj = $B.frame_obj,\n' +
+              'stack_length = $B.count_frames()\n'
     }
-    js += `$B.set_lineno(frame, 1)\n` +
-          '\nvar _frame_obj = $B.frame_obj,\n' +
-                'stack_length = $B.count_frames()\n' +
-          `try{\n` +
+    js += `try{\n` +
               add_body(this.body, scopes) + '\n' +
-              (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
+              `$B.leave_frame({locals, value: _b_.None})\n` +
           `}catch(err){\n` +
               `$B.set_exc(err, frame)\n`
 
@@ -3183,7 +3177,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
               `frame.$f_trace = $B.trace_exception()\n` +
           `}\n`
 
-    js += (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
+    js += `$B.leave_frame({locals, value: _b_.None})\n` +
               'throw err\n' +
           `}`
     scopes.pop()
