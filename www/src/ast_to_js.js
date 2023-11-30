@@ -2501,7 +2501,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               `err.$linenums = _linenums\n` +
               `$B.leave_frame()\n`
     }else{
-        js += `$B.set_exc_and_leave(err, frame)\n`
+        js += `$B.set_exc_and_leave(frame, err)\n`
     }
     js += `throw err
     }

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 11:29:36.101437"
-__BRYTHON__.timestamp=1701340176101
+__BRYTHON__.compiled_date="2023-11-30 11:31:44.933652"
+__BRYTHON__.timestamp=1701340304933
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8125,7 +8125,7 @@ console.error(['Traceback (most recent call last):',$B.print_stack(exc.$frame_ob
 if($B.get_option('debug',exc)> 1){console.log(exc.args)
 console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
-$B.set_exc_and_trace=function(exc,frame){$B.set_exc(exc,frame)
+$B.set_exc_and_trace=function(frame,exc){$B.set_exc(exc,frame)
 if((! exc.$in_trace_func)&& frame.$f_trace !==_b_.None){frame.$f_trace=$B.trace_exception()}}
 $B.set_exc_and_leave=function(exc,frame){$B.set_exc_and_trace(exc,frame)
 $B.leave_frame()}
@@ -16523,7 +16523,7 @@ js+=`$B.set_exc_and_trace(err, frame)\n`+
 `err.$frame_obj = _frame_obj\n`+
 `_linenums[_linenums.length - 1] = frame.$lineno\n`+
 `err.$linenums = _linenums\n`+
-`$B.leave_frame()\n`}else{js+=`$B.set_exc_and_leave(err, frame)\n`}
+`$B.leave_frame()\n`}else{js+=`$B.set_exc_and_leave(frame, err)\n`}
 js+=`throw err
     }
     }\n`
