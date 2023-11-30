@@ -975,6 +975,14 @@ $B.ast.Assign.prototype.to_js = function(scopes){
     }
 
     // evaluate value once
+    if(this.targets.length == 1){
+        var target = this.targets[0]
+        if(! (target instanceof $B.ast.Tuple) &&
+               ! (target instanceof $B.ast.List)){
+            js += assign_one(this.targets[0], value)
+            return js
+        }
+    }
     var value_id = 'v' + $B.UUID()
     js += `var ${value_id} = ${value}\n`
 
@@ -982,7 +990,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
     for(var target of this.targets){
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
-            assigns.push(assign_one(target, value_id))
+           assigns.push(assign_one(target, value_id))
         }else{
             assigns.push(assign_many(target, value_id))
         }

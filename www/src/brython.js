@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-29 12:32:25.627427"
-__BRYTHON__.timestamp=1701257545627
+__BRYTHON__.compiled_date="2023-11-30 08:30:14.781034"
+__BRYTHON__.timestamp=1701329414765
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -15789,6 +15789,10 @@ for(var elt of target.elts){if(elt instanceof $B.ast.Starred){assigns.push(assig
 elt instanceof $B.ast.Tuple){assigns.push(assign_many(elt,`${iter_id}.read_one()`))}else{assigns.push(assign_one(elt,`${iter_id}.read_one()`))}}
 js+=assigns.join('\n')
 return js}
+if(this.targets.length==1){var target=this.targets[0]
+if(!(target instanceof $B.ast.Tuple)&&
+!(target instanceof $B.ast.List)){js+=assign_one(this.targets[0],value)
+return js}}
 var value_id='v'+$B.UUID()
 js+=`var ${value_id} = ${value}\n`
 var assigns=[]
