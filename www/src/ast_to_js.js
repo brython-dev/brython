@@ -1852,6 +1852,8 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     	var nb_named_args = 0;
     	for(let _ in result)
     	    ++nb_named_args;
+    	    
+    	var nb_named_args_orig = nb_named_args;
 `;
     }
 
@@ -2221,17 +2223,31 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 `;
     }
 
-    if( hasNamedOnly || hasPos )
+    if( hasNamedOnly || hasPos ) {
         fct += `
         if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
+`;
+
+	if( ! hasKWargs ) {
+	    fct += `
+	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig));
+	        
+	    console.log(args, nb_named_args_orig, fct);
+`;
+	}
+
+	fct += `
+    		console.log("named");
             $B.args0_old(fct, args);
             throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
         }
 `;
+    }
 
     if( hasKWargs ) {
         fct += `
     if( Object.keys(extra).length !== nb_extra_args ) {
+    	console.log("extra");
         $B.args0_old(fct, args);
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
     }
@@ -2247,7 +2263,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     return fct;
 }
 
-console.log("pos", generate_args0_str(false, DEFAULTS.NONE, true, DEFAULTS.NONE, false, false, DEFAULTS.NONE, false) );
+console.log("pos", generate_args0_str(false, 0, true, 0, false, true, 0, false) );
 
 const USE_PERSO_ARGS0_EVERYWHERE = true;
 
