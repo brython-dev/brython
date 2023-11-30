@@ -1829,9 +1829,15 @@ function generate_args0(...args) {
 
 function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
 
+	console.log('!!!!!!!');
+
     let fct =
 //`function args0_NEW(fct, args) {
 `
+	console.log('!!!');
+	console.log(fct.name, fct);
+	console.log(${[hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs]});
+
     const LAST_ARGS = args[args.length-1];
     const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
 
@@ -1854,6 +1860,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     	    ++nb_named_args;
     	    
     	var nb_named_args_orig = nb_named_args;
+    	console.log("result_replaced_by_argsnames");
 `;
     }
 
@@ -1920,6 +1927,18 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         fct +=
 `
     if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
+`
+
+	if( ! hasKWargs && (hasPos || hasNamedOnly) )
+	    fct += `
+	if( HAS_KW ) {
+		
+	    console.log("B");
+	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+	   }
+`;
+
+	fct += `   
         $B.args0_old(fct, args);
         throw new Error('Too much positional arguments given (args0 should have raised an error) !');
     }
@@ -1941,6 +1960,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     if( HAS_KW === true ) {
 
         for(let argname in ARGS_NAMED[0] ) {
+        	console.log('error here', fct, args, '!');
             $B.args0_old(fct, args);
             throw new Error('No named arguments expected !!!');
         }
@@ -1948,7 +1968,9 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
             const kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) { //TODO: not optimal
+            for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) { //TODO: not optimal`
+
+	fct += `
                 $B.args0_old(fct, args);
                 throw new Error('No named arguments expected !!!');
             }
@@ -1966,7 +1988,18 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
 
             fct += `
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
+        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {`
+
+	    if( ! hasKWargs && (hasPos || hasNamedOnly) )
+	        fct += `
+	    if( HAS_KW ) {
+	    
+	    console.log("D");
+	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+	    }
+`;
+
+	fct += `
             $B.args0_old(fct, args);
             throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
         }
@@ -1988,7 +2021,17 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     }
 
     if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
-        fct += `
+
+	if( ! hasKWargs )
+	    fct += `
+	if( HAS_KW ) {
+	
+	    console.log("E");
+	ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+	}
+`;
+
+	fct += `  
         $B.args0_old(fct, args);
         throw new Error('Named argument expected (args0 should have raised an error) !');
 `
@@ -2002,6 +2045,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     }
 
     fct += `
+    	console.log('ok');
         return result;
 `
 
@@ -2034,14 +2078,31 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         `;
         if( posOnlyDefaults !== DEFAULTS.SOME) {
             fct += `
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
+        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {`
+
+	if( ! hasKWargs )
+	    fct += `
+	    
+	    console.log("F");
+	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+`;
+
+	    fct += `
             $B.args0_old(fct, args);
             throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
         }
 `
         }
         if( posOnlyDefaults === DEFAULTS.NONE) {
-            fct += `
+ 
+    	    if( ! hasKWargs )
+	        fct += `
+	        
+	    console.log("G");
+	ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+`;
+
+	fct += `  
         $B.args0_old(fct, args);
         throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
 `;
@@ -2112,7 +2173,16 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
         for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
 
-            if( typeof argname !== "string") {
+            if( typeof argname !== "string") {`
+
+	if( ! hasKWargs )
+	    fct += `
+	    
+	    console.log("H");
+	        ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+`;
+
+	fct += `
                 $B.args0_old(fct, args);
                 throw new Error('Non string key passed in **kargs');
             }
@@ -2164,7 +2234,17 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         const key = PARAMS_NAMES[ioffset];
         if( key in result ) // maybe could be speed up using "!(key in result)"
             continue;
+`
 
+	if( ! hasKWargs && (hasPos || hasNamedOnly) )
+	    fct += `
+	    
+	    console.log("I");
+	if( HAS_KW )
+        	ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+`;
+
+	fct += `
         $B.args0_old(fct, args);
         throw new Error('Missing a named arguments (args0 should have raised an error) !');
     }
@@ -2196,16 +2276,32 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         if( namedOnlyDefaults === DEFAULTS.SOME) {
             fct += `
             if( ! kwargs_defaults.has(key) ) {
-                $B.args0_old(fct, args);
+            `
 
+	    if( ! hasKWargs )
+	        fct += `
+	        
+	    console.log("J");
+	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+`;
+
+	    fct += `  
+                $B.args0_old(fct, args);
                 throw new Error('Missing a named arguments (args0 should have raised an error) !');
             }
 `
         }
         if( namedOnlyDefaults === DEFAULTS.NONE ) {
-            fct += `
-            $B.args0_old(fct, args);
 
+            if( ! hasKWargs )
+	        fct += `
+	        
+	    console.log("K");
+	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig))
+`;
+
+	fct += `  
+            $B.args0_old(fct, args);
             throw new Error('Missing a named arguments (args0 should have raised an error) !');
 `
         }
@@ -2230,6 +2326,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
 	if( ! hasKWargs ) {
 	    fct += `
+	    console.log("A");
 	    ARGS_NAMED[0] = Object.fromEntries(Object.entries(result).slice(0,nb_named_args_orig));
 	        
 	    console.log(args, nb_named_args_orig, fct);
@@ -2256,7 +2353,9 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     }
 
     fct += `
-    return result
+    
+   	console.log('ok');
+	return result
     `;
 
     //fct += `}`;
