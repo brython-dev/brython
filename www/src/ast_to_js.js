@@ -2495,7 +2495,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(func_scope.needs_frames){
         // set exception $frame_obj and $linenums
-        js += `$B.set_exc_and_trace(err, frame)\n` +
+        js += `$B.set_exc_and_trace(frame, err)\n` +
               `err.$frame_obj = _frame_obj\n` +
               `_linenums[_linenums.length - 1] = frame.$lineno\n` +
               `err.$linenums = _linenums\n` +
@@ -3172,7 +3172,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
               add_body(this.body, scopes) + '\n' +
               `$B.leave_frame({locals, value: _b_.None})\n` +
           `}catch(err){\n` +
-              `$B.set_exc_and_trace(err, frame)\n` +
+              `$B.set_exc_and_trace(frame, err)\n` +
               `$B.leave_frame({locals, value: _b_.None})\n` +
               'throw err\n' +
           `}`
@@ -3334,7 +3334,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         var err = 'err' + id
         js += '}\n' // close try
         js += `catch(${err}){\n` +
-              `$B.set_exc_and_trace(${err}, frame)\n`
+              `$B.set_exc_and_trace(frame, ${err})\n`
         if(has_else){
             js += `failed${id} = true\n`
         }
@@ -3448,7 +3448,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         var err = 'err' + id
         js += '}\n' // close try
         js += `catch(${err}){\n` +
-              `$B.set_exc_and_trace(${err}, frame)\n` +
+              `$B.set_exc_and_trace(frame, ${err})\n` +
               `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
                   `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
               '}\n' +

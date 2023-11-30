@@ -30,8 +30,8 @@ $B.set_exc_and_trace = function(frame, exc){
     }
 }
 
-$B.set_exc_and_leave = function(exc, frame){
-    $B.set_exc_and_trace(exc, frame)
+$B.set_exc_and_leave = function(frame, exc){
+    $B.set_exc_and_trace(frame, exc)
     $B.leave_frame()
 }
 

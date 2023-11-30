@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 11:31:44.933652"
-__BRYTHON__.timestamp=1701340304933
+__BRYTHON__.compiled_date="2023-11-30 11:45:50.598837"
+__BRYTHON__.timestamp=1701341150592
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8127,7 +8127,7 @@ console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.set_exc_and_trace=function(frame,exc){$B.set_exc(exc,frame)
 if((! exc.$in_trace_func)&& frame.$f_trace !==_b_.None){frame.$f_trace=$B.trace_exception()}}
-$B.set_exc_and_leave=function(exc,frame){$B.set_exc_and_trace(exc,frame)
+$B.set_exc_and_leave=function(frame,exc){$B.set_exc_and_trace(frame,exc)
 $B.leave_frame()}
 $B.get_exc=function(){var frame=$B.frame_obj.frame
 return frame[1].$current_exception}
@@ -16519,7 +16519,7 @@ js+='var result = _b_.None\n'+
 'return result\n'}
 js+=`}catch(err){\n`
 if(func_scope.needs_frames){
-js+=`$B.set_exc_and_trace(err, frame)\n`+
+js+=`$B.set_exc_and_trace(frame, err)\n`+
 `err.$frame_obj = _frame_obj\n`+
 `_linenums[_linenums.length - 1] = frame.$lineno\n`+
 `err.$linenums = _linenums\n`+
@@ -16818,7 +16818,7 @@ js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
 `$B.leave_frame({locals, value: _b_.None})\n`+
 `}catch(err){\n`+
-`$B.set_exc_and_trace(err, frame)\n`+
+`$B.set_exc_and_trace(frame, err)\n`+
 `$B.leave_frame({locals, value: _b_.None})\n`+
 'throw err\n'+
 `}`
@@ -16884,7 +16884,7 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc_and_trace(${err}, frame)\n`
+`$B.set_exc_and_trace(frame, ${err})\n`
 if(has_else){js+=`failed${id} = true\n`}
 var first=true,has_untyped_except=false
 for(var handler of this.handlers){if(first){js+='if'
@@ -16938,7 +16938,7 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc_and_trace(${err}, frame)\n`+
+`$B.set_exc_and_trace(frame, ${err})\n`+
 `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
 `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
 '}\n'+
