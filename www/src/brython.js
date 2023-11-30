@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 11:45:50.598837"
-__BRYTHON__.timestamp=1701341150592
+__BRYTHON__.compiled_date="2023-11-30 21:45:59.933480"
+__BRYTHON__.timestamp=1701377159933
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -15892,11 +15892,15 @@ var res=`$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
 var position=encode_position(this.left.col_offset,this.col_offset,this.end_col_offset,this.right.end_col_offset)
 return res+`, ${position})`}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
-var op=this.op instanceof $B.ast.And ? '! ' :''
+if(this.$dont_evaluate){var op=this.op instanceof $B.ast.And ? ' && ' :' || '
+var tests=[]
+for(var i=0,len=this.values.length;i < len;i++){var value=this.values[i]
+tests.push(`$B.$bool(${$B.js_from_ast(value, scopes)})`)}
+return '('+tests.join(op)+')'}else{var op=this.op instanceof $B.ast.And ? '! ' :''
 var tests=[]
 for(var i=0,len=this.values.length;i < len;i++){var value=this.values[i]
 if(i < len-1){tests.push(`${op}$B.$bool(locals.$test = `+
-`${$B.js_from_ast(value, scopes)}) ? locals.$test : `)}else{tests.push(`${$B.js_from_ast(value, scopes)}`)}}
+`${$B.js_from_ast(value, scopes)}) ? locals.$test : `)}else{tests.push(`${$B.js_from_ast(value, scopes)}`)}}}
 return '('+tests.join('')+')'}
 function in_loop(scopes){for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For ||
 scope.ast instanceof $B.ast.While){return true}}
@@ -16641,8 +16645,9 @@ $B.ast.Global.prototype.to_js=function(scopes){var scope=last_scope(scopes)
 for(var name of this.names){scope.globals.add(name)}
 return ''}
 $B.ast.If.prototype.to_js=function(scopes){var scope=$B.last(scopes),new_scope=copy_scope(scope,this)
-var js=`if($B.set_lineno(frame, ${this.lineno}) && `+
-`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+var js=`if($B.set_lineno(frame, ${this.lineno}) && `
+if(this.test instanceof $B.ast.BoolOp){this.test.$dont_evaluate=true
+js+=`${$B.js_from_ast(this.test, scopes)}){\n`}else{js+=`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`}
 scopes.push(new_scope)
 js+=add_body(this.body,scopes)+'\n}'
 scopes.pop()
@@ -17039,8 +17044,9 @@ $B.ast.While.prototype.to_js=function(scopes){var id=$B.UUID()
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
 var js=`var no_break_${id} = true\n`
-js+=`while($B.set_lineno(frame, ${this.lineno}) && `+
-`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+js+=`while($B.set_lineno(frame, ${this.lineno}) && `
+if(this.test instanceof $B.ast.BoolOp){this.test.$dont_evaluate=true
+js+=`${$B.js_from_ast(this.test, scopes)}){\n`}else{js+=`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`}
 js+=add_body(this.body,scopes)+'\n}'
 scopes.pop()
 if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+

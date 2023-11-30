@@ -1203,16 +1203,25 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
     // The expression x or y first evaluates x; if x is true, its value is
     // returned; otherwise, y is evaluated and the resulting value is
     // returned.
-
-    var op = this.op instanceof $B.ast.And ? '! ' : ''
-    var tests = []
-    for(var i = 0, len = this.values.length; i < len; i++){
-        var value = this.values[i]
-        if(i < len - 1){
-            tests.push(`${op}$B.$bool(locals.$test = ` +
-                `${$B.js_from_ast(value, scopes)}) ? locals.$test : `)
-        }else{
-            tests.push(`${$B.js_from_ast(value, scopes)}`)
+    if(this.$dont_evaluate){
+        var op = this.op instanceof $B.ast.And ? ' && ' : ' || '
+        var tests = []
+        for(var i = 0, len = this.values.length; i < len; i++){
+            var value = this.values[i]
+            tests.push(`$B.$bool(${$B.js_from_ast(value, scopes)})`)
+        }
+        return '(' + tests.join(op) + ')'
+    }else{
+        var op = this.op instanceof $B.ast.And ? '! ' : ''
+        var tests = []
+        for(var i = 0, len = this.values.length; i < len; i++){
+            var value = this.values[i]
+            if(i < len - 1){
+                tests.push(`${op}$B.$bool(locals.$test = ` +
+                    `${$B.js_from_ast(value, scopes)}) ? locals.$test : `)
+            }else{
+                tests.push(`${$B.js_from_ast(value, scopes)}`)
+            }
         }
     }
     return '(' + tests.join('') + ')'
@@ -2738,8 +2747,13 @@ $B.ast.If.prototype.to_js = function(scopes){
         new_scope = copy_scope(scope, this)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    var js = `if($B.set_lineno(frame, ${this.lineno}) && ` +
-        `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+    var js = `if($B.set_lineno(frame, ${this.lineno}) && `
+    if(this.test instanceof $B.ast.BoolOp){
+        this.test.$dont_evaluate = true
+        js += `${$B.js_from_ast(this.test, scopes)}){\n`
+    }else{
+        js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+    }
     scopes.push(new_scope)
     js += add_body(this.body, scopes) + '\n}'
     scopes.pop()
@@ -3639,8 +3653,13 @@ $B.ast.While.prototype.to_js = function(scopes){
     // Set a variable to detect a "break"
     var js = `var no_break_${id} = true\n`
 
-    js += `while($B.set_lineno(frame, ${this.lineno}) && ` +
-        `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+    js += `while($B.set_lineno(frame, ${this.lineno}) && `
+    if(this.test instanceof $B.ast.BoolOp){
+        this.test.$dont_evaluate = true
+        js += `${$B.js_from_ast(this.test, scopes)}){\n`
+    }else{
+        js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+    }
     js += add_body(this.body, scopes) + '\n}'
 
     scopes.pop()
