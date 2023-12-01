@@ -754,7 +754,7 @@ $B.get_class = function(obj){
             case "boolean":
                 return _b_.bool
             case "function":
-                if(obj.$is_js_func){
+                if(obj.$js_func){
                     // Javascript function or constructor
                     return $B.JSObj
                 }

@@ -111,17 +111,32 @@ const PYOBJFCTS = Symbol('PYOBJFCTS')
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     // If _this is passed and jsobj is a function, the function is called
     // with built-in value `this` set to _this
-    switch(jsobj) {
-      case true:
-      case false:
-        return jsobj
-    }
 
-    if(jsobj === undefined){
-        return $B.Undefined
-    }
     if(jsobj === null){
         return null
+    }
+
+    // Immutable types
+    switch(typeof jsobj){
+        case 'boolean':
+            return jsobj
+
+        case 'undefined':
+            return $B.Undefined
+
+        case 'number':
+             // convert JS numbers with no decimal to a Python int
+             if(jsobj % 1 === 0){
+                 return _b_.int.$factory(jsobj)
+             }
+             // other numbers to Python floats
+             return _b_.float.$factory(jsobj)
+
+        case 'bigint':
+            return _b_.int.$int_or_long(jsobj)
+
+        case 'string':
+            return $B.String(jsobj)
     }
 
     if(Array.isArray(jsobj)){
@@ -129,28 +144,15 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         Object.defineProperty(jsobj, "$is_js_array", {value: true});
         return jsobj
     }
-    if(typeof jsobj === 'number'){
-       if(jsobj % 1 === 0){ //TODO: dangerous, it can also be a float with no decimals.
-           return _b_.int.$factory(jsobj)
-       }
-       // for now, lets assume a float
-       return _b_.float.$factory(jsobj)
-    }
-    if(typeof jsobj == "string"){
-        return $B.String(jsobj)
-    }
-    if(typeof jsobj == 'bigint'){
-        return _b_.int.$int_or_long(jsobj)
-    }
 
     let pyobj = jsobj[PYOBJ]
     if(pyobj !== undefined) {
-        return pyobj;
+        return pyobj
     }
 
     // check if obj is an instance of Promise or supports the Thenable interface
+    // cf. issue #2321
     if(jsobj instanceof Promise || typeof jsobj.then == "function"){
-        // cf. issue #2321
         return jsobj.then(x => jsobj2pyobj(x)).catch($B.handle_error)
     }
 
@@ -199,7 +201,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
 
         res[JSOBJ] = jsobj
         res.$js_func = jsobj
-        res.$is_js_func = true
         res.$infos = {
             __name__: jsobj.name,
             __qualname__: jsobj.name
@@ -222,47 +223,44 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     jsobj[PYOBJ] = _res
     _res[JSOBJ] = jsobj
 
-    return _res;
+    return _res
 }
 
 var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     // conversion of a Python object into a Javascript object
-    if(pyobj === true || pyobj === false){
-        return pyobj
-    }
-    if(pyobj === $B.Undefined){
-        return undefined
-    }
-    if(pyobj === null) {
-        return null
+
+    // Immutable types
+    switch(pyobj){
+        case true:
+        case false:
+            return pyobj
+        case $B.Undefined:
+            return undefined
+        case null:
+            // javascript.NULL
+            return null
     }
 
     let _jsobj = pyobj[JSOBJ]
     if(_jsobj !== undefined){
         return _jsobj
     }
+
     var klass = $B.get_class(pyobj)
-    if(klass === undefined){
-        // not a Python object, consider arg as Javascript object instead
-        return pyobj
+
+    function has_type(cls, base){
+        return cls === base || cls.__mro__.includes(base)
     }
 
-    if(klass === $B.DOMNode ||
-            klass.__mro__.indexOf($B.DOMNode) > -1){
-
-        // instances of DOMNode or its subclasses are transformed into the
-        // underlying DOM element
+    if(has_type(klass, $B.DOMNode)){
         return pyobj
-
     }
-    if([_b_.list, _b_.tuple].indexOf(klass) > -1){
-
+    if(has_type(klass, _b_.list) || has_type(klass, _b_.tuple)){
         // Python list : transform its elements
         return pyobj.map(pyobj2jsobj)
-
     }
-    if(klass === _b_.dict || _b_.issubclass(klass, _b_.dict)){
 
+    if(has_type(klass, _b_.dict)){
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
         // Non-string keys are converted to strings by str(key). This will
@@ -283,22 +281,21 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         return jsobj
 
     }
-    if(klass === _b_.str){
-
+    if(has_type(klass, _b_.str)){
         // Python strings are converted to the underlying value
         return pyobj.valueOf()
-
     }
+
     if(klass === $B.long_int){
         return pyobj.value
     }
-    if(klass === _b_.float){
 
+    if(has_type(klass, _b_.float)){
         // floats are implemented as
         // {__class__: _b_.float, value: <JS number>}
         return pyobj.value
-
     }
+
     if(klass === $B.function || klass === $B.method){
         if(pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&
@@ -463,7 +460,7 @@ $B.JSObj.__eq__ = function(_self, other){
             }
             return true
         case 'function':
-            if(_self.$is_js_func && other.$is_js_func){
+            if(_self.$js_func && other.$js_func){
                 return _self.$js_func === other.$js_func
             }
             return _self === other
@@ -582,7 +579,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         return new_func
     }
     var js_attr = _self[attr]
-    if(js_attr == undefined && typeof _self == "function" && _self.$js_func){
+    if(js_attr == undefined && typeof _self == "function"){
         js_attr = _self.$js_func[attr]
     }
     if(test){
@@ -607,10 +604,10 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         if(class_attr !== null){
             if(typeof class_attr == "function"){
                 return function(){
-                    var args = new Array(arguments.length+1);
+                    var args = new Array(arguments.length + 1)
                     args[0] = _self;
                     for(var i = 0, len = arguments.length; i < len; i++){
-                        args[i+1] = arguments[i];
+                        args[i + 1] = arguments[i]
                     }
                     return $B.JSObj.$factory(class_attr.apply(null, args))
                 }
