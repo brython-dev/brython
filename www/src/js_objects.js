@@ -818,6 +818,19 @@ $B.IterableJSObj = $B.make_class('IterableJavascriptObject')
 $B.IterableJSObj.__bases__ = [$B.JSObj]
 $B.IterableJSObj.__mro__ = [$B.JSObj, _b_.object]
 
+$B.IterableJSObj.__contains__ = function(self, key){
+    if(self.contains !== undefined && typeof self.contains == 'function'){
+        return self.contains(key)
+    }else{
+        for(var item of $B.IterableJSObj.__iter__(self).it){
+            if($B.is_or_equals(item, key)){
+                return true
+            }
+        }
+        return false
+    }
+}
+
 $B.IterableJSObj.__iter__ = function(_self){
     return {
         __class__: $B.IterableJSObj,

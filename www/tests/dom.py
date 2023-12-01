@@ -41,6 +41,11 @@ element.addEventListener('click', f, True)
 element.click()
 assert f_called
 
+# issue 2338
+assert "yellow" in element.classList
+assert "blue" not in element.classList
+assert len(element.classList) == 2
+
 # issue 829
 # HTML attributes are case-insensitive
 class A(html.DIV):
