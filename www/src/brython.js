@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-11-30 21:45:59.933480"
-__BRYTHON__.timestamp=1701377159933
+__BRYTHON__.compiled_date="2023-12-01 08:24:04.509123"
+__BRYTHON__.timestamp=1701415444509
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -10278,10 +10278,6 @@ $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var unicode_tables=$B.unicode_tables
-$B.has_surrogate=function(s){
-for(var i=0;i < s.length;i++){var code=s.charCodeAt(i)
-if(code >=0xD800 && code <=0xDBFF){return true}}
-return false}
 var escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
 $B.surrogates=function(s){var s1='',escaped=false
 for(var char of s){if(escaped){var echar=escape2cp[char]
@@ -10336,35 +10332,21 @@ return Array.from(s)}
 function to_codepoints(s){
 if(s.codepoints){return s.codepoints}
 var cps=[]
-for(var i=0,len=s.length;i < len;i++){var code=s.charCodeAt(i)
-if(code >=0xD800 && code <=0xDBFF){var v=0x10000
-v+=(code & 0x03FF)<< 10
-v+=(s.charCodeAt(i+1)& 0x03FF)
-cps.push(v)
-i++}else{cps.push(code)}}
+for(var char of s){cps.push(char.codePointAt(0))}
 return s.codepoints=cps}
 str.__add__=function(_self,other){if(! $B.$isinstance(other,str)){try{return $B.$getattr(other,"__radd__")(_self)}catch(err){throw _b_.TypeError.$factory("Can't convert "+
 $B.class_name(other)+" to str implicitly")}}
 [_self,other]=to_string([_self,other])
-var res=$B.String(_self+other)
-return res}
+if(typeof _self=='string' && typeof other=='string'){return _self+other}
+return $B.String(_self+other)}
 str.__contains__=function(_self,item){if(! $B.$isinstance(item,str)){throw _b_.TypeError.$factory("'in <string>' requires "+
 "string as left operand, not "+$B.class_name(item))}
 [_self,item]=to_string([_self,item])
-if(item.__class__===str ||$B.$isinstance(item,str)){var nbcar=item.length}else{var nbcar=_b_.len(item)}
-if(nbcar==0){
-return true}
-var len=_self.length
-if(len==0){return nbcar==0}
-for(var i=0,len=_self.length;i < len;i++){if(_self.substr(i,nbcar)==item){return true}}
-return false}
+return _self.includes(item)}
 str.__delitem__=function(){throw _b_.TypeError.$factory("'str' object doesn't support item deletion")}
 str.__dir__=_b_.object.__dir__
 str.__eq__=function(_self,other){if($B.$isinstance(other,str)){[_self,other]=to_string([_self,other])
-if(typeof _self=='string' && typeof other=='string'){return _self==other}
-if(_self.length !=other.length){return false}
-for(var i=0,len=_self.length;i < len;i++){if(_self[i]!=other[i]){return false}}
-return true}
+return _self+''==other+''}
 return _b_.NotImplemented}
 function preformat(_self,fmt){if(fmt.empty){return _b_.str.$factory(_self)}
 if(fmt.type && fmt.type !="s"){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
@@ -10394,7 +10376,6 @@ for(var i=start;i < stop;i+=step){res+=_self[i]}}else{if(stop >=start){return ''
 for(var i=start;i > stop;i+=step){res+=_self[i]}}
 return $B.String(res)}
 var prefix=2,suffix=3,mask=(2**32-1)
-str.$nb_str_hash_cache=0
 function fnv(p){if(p.length==0){return 0}
 var x=prefix
 x=(x ^(p[0]<< 7))& mask

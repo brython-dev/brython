@@ -6,17 +6,6 @@ var _b_ = $B.builtins
 // build tables from data in unicode_data.js
 var unicode_tables = $B.unicode_tables
 
-$B.has_surrogate = function(s){
-    // Check if there are "surrogate pairs" characters in string s
-    for(var i = 0; i < s.length; i++){
-        var code = s.charCodeAt(i)
-        if(code >= 0xD800 && code <= 0xDBFF){
-            return true
-        }
-    }
-    return false
-}
-
 var escape2cp = {b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'}
 
 $B.surrogates = function(s){
@@ -52,6 +41,7 @@ $B.surrogates = function(s){
     }
     return surrogates
 }
+
 
 $B.String = function(s){
     var srg = $B.surrogates(s)
@@ -179,17 +169,8 @@ function to_codepoints(s){
         return s.codepoints
     }
     var cps = []
-    for(var i = 0, len = s.length; i < len; i++){
-        var code = s.charCodeAt(i)
-        if(code >= 0xD800 && code <= 0xDBFF){
-            var v = 0x10000
-            v += (code & 0x03FF) << 10
-            v += (s.charCodeAt(i + 1) & 0x03FF)
-            cps.push(v)
-            i++
-        }else{
-            cps.push(code)
-        }
+    for(var char of s){
+        cps.push(char.codePointAt(0))
     }
     return s.codepoints = cps
 }
@@ -203,8 +184,10 @@ str.__add__ = function(_self, other){
                 $B.class_name(other) + " to str implicitly")}
     }
     [_self, other] = to_string([_self, other])
-    var res = $B.String(_self + other)
-    return res
+    if(typeof _self == 'string' && typeof other == 'string'){
+        return _self + other
+    }
+    return $B.String(_self + other)
 }
 
 str.__contains__ = function(_self, item){
@@ -213,26 +196,7 @@ str.__contains__ = function(_self, item){
             "string as left operand, not " + $B.class_name(item))
     }
     [_self, item] = to_string([_self, item])
-
-    if(item.__class__ === str || $B.$isinstance(item, str)){
-        var nbcar = item.length
-    }else{
-        var nbcar = _b_.len(item)
-    }
-    if(nbcar == 0){
-         // a string contains the empty string
-        return true
-    }
-    var len = _self.length
-    if(len == 0){
-        return nbcar == 0
-    }
-    for(var i = 0, len = _self.length; i < len; i++){
-        if(_self.substr(i, nbcar) == item){
-            return true
-        }
-    }
-    return false
+    return _self.includes(item)
 }
 
 str.__delitem__ = function(){
@@ -246,18 +210,7 @@ str.__dir__ = _b_.object.__dir__
 str.__eq__ = function(_self, other){
     if($B.$isinstance(other, str)){
         [_self, other] = to_string([_self, other])
-        if(typeof _self == 'string' && typeof other == 'string'){
-            return _self == other
-        }
-        if(_self.length != other.length){
-            return false
-        }
-        for(var i = 0, len = _self.length; i < len; i++){
-            if(_self[i] != other[i]){
-                return false
-            }
-        }
-        return true
+        return _self + '' == other + ''
     }
     return _b_.NotImplemented
 }
@@ -345,8 +298,6 @@ str.$getitem_slice = function(_self, slice){
 var prefix = 2,
     suffix = 3,
     mask = (2 ** 32 - 1)
-
-str.$nb_str_hash_cache = 0
 
 function fnv(p){
     if(p.length == 0){
