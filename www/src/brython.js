@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-01 18:35:03.266025"
-__BRYTHON__.timestamp=1701452103266
+__BRYTHON__.compiled_date="2023-12-01 21:36:14.380809"
+__BRYTHON__.timestamp=1701462974380
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8538,7 +8538,7 @@ trace_line+='    '+' '.repeat(paddings[0])+
 if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
 trace.push(trace_line)}}}else{console.log('no src for filename',filename)
 console.log('in file_cache',Object.keys($B.file_cache).join('\n'))}}
-if(count_repeats > 0){var len=trace.length
+if(count_repeats > 1){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
@@ -13816,7 +13816,12 @@ Object.defineProperty(jsobj,"$is_js_array",{value:true});
 return jsobj}
 let pyobj=jsobj[PYOBJ]
 if(pyobj !==undefined){return pyobj}
-if(jsobj instanceof Promise ||typeof jsobj.then=="function"){return jsobj.then(x=> jsobj2pyobj(x)).catch($B.handle_error)}
+if(jsobj instanceof Promise ||typeof jsobj.then=="function"){
+var save_frame_obj=$B.frame_obj
+jsobj.$frame_obj=$B.frame_obj
+return jsobj.then(function(x){$B.frame_obj=save_frame_obj
+return jsobj2pyobj(x)}).catch(function(err){$B.frame_obj=save_frame_obj
+throw $B.exception(err)})}
 if(typeof jsobj==="function"){
 _this=_this===undefined ? null :_this
 if(_this===null){const pyobj=jsobj[PYOBJFCT];
@@ -14917,7 +14922,7 @@ self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async 
 throw _b_.TypeError.$factory(msg)}
 var res=self.$func.apply(null,self.$args)
 res.then(function(){if(self.$frame_obj){$B.frame_obj=self.$frame_obj}}).
-catch(function(err){if(self.$frame_obj){$B.frame_obj=self.$frame_obj}})
+catch(function(err){if(err.$frame_obj){$B.frame_obj=err.$frame_obj}})
 return res}
 coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
@@ -16402,7 +16407,7 @@ var func_name_scope=bind(this.name,scopes)
 var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var decorators=[],decorated=false,decs_declare=this.decorator_list.length > 0 ?
 '// declare decorators\n' :''
-for(var dec of this.decorator_list){decorated=true
+for(let dec of this.decorator_list){decorated=true
 var dec_id='decorator'+$B.UUID()
 decorators.push(dec_id)
 decs_declare+=`$B.set_lineno(frame, ${dec.lineno})\n`
@@ -16501,7 +16506,6 @@ if(is_generator){js+=`, '${this.name}')\n`+
 `$B.leave_frame()\n`+
 `return _gen_${id}}\n` }
 scopes.pop()
-var in_class=func_name_scope.ast instanceof $B.ast.ClassDef
 var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
 this.name
 var flags=3
@@ -16551,8 +16555,8 @@ ann_items.push(`['${arg_ann}', ${value}]`)}}
 js+=`${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`}else{js+=`${func_ref}.__annotations__ = $B.empty_dict()\n`}
 if(has_type_params){scopes.pop()}
 if(decorated && ! has_type_params){js+=`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
-var decorate=func_ref
-for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
+let decorate=func_ref
+for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}
 if(has_type_params){
 type_params_func+='\n'+js+'\n'+
@@ -16563,13 +16567,13 @@ js=type_params_func
 if(decorated){
 js+=`var ${func_ref} = TYPE_PARAMS_OF_${name2}()\n`+
 `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
-var decorate=func_ref
-for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
+let decorate=func_ref
+for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}else{js+=`var locals_${type_params_ref} = TYPE_PARAMS_OF_${name2}()\n`}}
 js=decs_declare+js
 return js}
 $B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
-var expr=this.elt,first_for=this.generators[0],
+var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
 scopes.push(comp_scope)
@@ -16586,11 +16590,11 @@ name.to_js=function(){return `next_${id}`}
 var assign=new $B.ast.Assign([first.target],name)
 assign.lineno=this.lineno
 js+=assign.to_js(scopes)+'\n'
-for(var _if of first.ifs){nb_paren++
+for(let _if of first.ifs){nb_paren++
 js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
 for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scopes)
 nb_paren++
-for(var _if of comprehension.ifs){nb_paren++}}
+for(let _if of comprehension.ifs){nb_paren++}}
 var elt=$B.js_from_ast(this.elt,scopes),has_await=comp_scope.has_await
 js=`var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`+js
 js+=has_await ? 'var save_frame_obj = $B.frame_obj;\n' :''
@@ -16698,7 +16702,7 @@ for(var i=1;i < pattern.patterns.length;i++){var _bindings=pattern_bindings(patt
 if(_bindings.length !=bindings.length){compiler_error(pattern,err_msg)}else{for(var j=0;j < bindings.length;j++){if(bindings[j]!=_bindings[j]){compiler_error(pattern,err_msg)}}}}
 break}
 return bindings.sort()}
-$B.ast.Match.prototype.to_js=function(scopes){var scope=$B.last(scopes),irrefutable
+$B.ast.Match.prototype.to_js=function(scopes){var irrefutable
 var js=`var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,first=true
 for(var _case of this.cases){if(! _case.guard){if(irrefutable){irrefutable_error(irrefutable)}
 irrefutable=is_irrefutable(_case.pattern)}
@@ -16717,29 +16721,28 @@ if(scope.bindings){if(scope.bindings.indexOf(name)>-1){compiler_error(this,`mult
 scope.bindings.push(name)}
 return params}
 $B.ast.MatchClass.prototype.to_js=function(scopes){var names=[]
-for(var pattern of this.patterns.concat(this.kwd_patterns)){var name=pattern.name
+for(let pattern of this.patterns.concat(this.kwd_patterns)){let name=pattern.name
 if(name){if(names.indexOf(name)>-1){compiler_error(pattern,`multiple assignment to name '${name}' in pattern`)}
 names.push(name)}}
 names=[]
-for(var i=0;i < this.kwd_attrs.length;i++){var kwd_attr=this.kwd_attrs[i]
+for(let i=0;i < this.kwd_attrs.length;i++){let kwd_attr=this.kwd_attrs[i]
 if(names.indexOf(kwd_attr)>-1){compiler_error(this.kwd_patterns[i],`attribute name repeated in class pattern: ${kwd_attr}`)}
 names.push(kwd_attr)}
 var cls=$B.js_from_ast(this.cls,scopes),patterns=this.patterns.map(x=> `{${$B.js_from_ast(x, scopes)}}`)
 var kw=[]
-for(var i=0,len=this.kwd_patterns.length;i < len;i++){kw.push(this.kwd_attrs[i]+': {'+
+for(let i=0,len=this.kwd_patterns.length;i < len;i++){kw.push(this.kwd_attrs[i]+': {'+
 $B.js_from_ast(this.kwd_patterns[i],scopes)+'}')}
 return `class: ${cls}, args: [${patterns}], keywords: {${kw.join(', ')}}`}
-$B.ast.MatchMapping.prototype.to_js=function(scopes){for(var key of this.keys){if(key instanceof $B.ast.Attribute ||
+$B.ast.MatchMapping.prototype.to_js=function(scopes){for(let key of this.keys){if(key instanceof $B.ast.Attribute ||
 key instanceof $B.ast.Constant ||
 key instanceof $B.ast.UnaryOp ||
 key instanceof $B.ast.BinOp){continue}else{compiler_error(key,'mapping pattern keys may only match literals and attribute lookups')}}
 var names=[]
-for(var pattern of this.patterns){if(pattern instanceof $B.ast.MatchAs && pattern.name){if(names.indexOf(pattern.name)>-1){compiler_error(pattern,`multiple assignments to name '${pattern.name}' in pattern`)}
+for(let pattern of this.patterns){if(pattern instanceof $B.ast.MatchAs && pattern.name){if(names.indexOf(pattern.name)>-1){compiler_error(pattern,`multiple assignments to name '${pattern.name}' in pattern`)}
 names.push(pattern.name)}}
 var items=[]
-for(var i=0,len=this.keys.length;i < len;i++){var key_prefix=this.keys[i]instanceof $B.ast.Constant ?
-'literal: ' :'value: '
-var key=$B.js_from_ast(this.keys[i],scopes),value=$B.js_from_ast(this.patterns[i],scopes)
+for(let i=0,len=this.keys.length;i < len;i++){let key_prefix=this.keys[i]instanceof $B.ast.Constant ?
+'literal: ' :'value: ',key=$B.js_from_ast(this.keys[i],scopes),value=$B.js_from_ast(this.patterns[i],scopes)
 items.push(`[{${key_prefix}${key}}, {${value}}]`)}
 var js='mapping: ['+items.join(', ')+']'
 if(this.rest){js+=`, rest: '${this.rest}'`}
@@ -16755,11 +16758,11 @@ for(var pattern of this.patterns){if(pattern instanceof $B.ast.MatchAs && patter
 names.push(pattern.name)}
 items.push('{'+$B.js_from_ast(pattern,scopes)+'}')}
 return `sequence: [${items.join(', ')}]`}
-$B.ast.MatchSingleton.prototype.to_js=function(scopes){var value=this.value===true ? '_b_.True' :
+$B.ast.MatchSingleton.prototype.to_js=function(){var value=this.value===true ? '_b_.True' :
 this.value===false ? '_b_.False' :
 '_b_.None'
 return `literal: ${value}`}
-$B.ast.MatchStar.prototype.to_js=function(scopes){var name=this.name===undefined ? '_' :this.name
+$B.ast.MatchStar.prototype.to_js=function(){var name=this.name===undefined ? '_' :this.name
 return `capture_starred: '${name}'`}
 $B.ast.MatchValue.prototype.to_js=function(scopes){if(this.value instanceof $B.ast.Constant){return `literal: ${$B.js_from_ast(this.value, scopes)}`}else if(this.value instanceof $B.ast.Constant ||
 this.value instanceof $B.ast.UnaryOp ||
@@ -16813,7 +16816,7 @@ $B.js_from_ast(this.value,scopes)+')'}
 $B.ast.Nonlocal.prototype.to_js=function(scopes){var scope=$B.last(scopes)
 for(var name of this.names){scope.nonlocals.add(name)}
 return ''}
-$B.ast.Pass.prototype.to_js=function(scopes){return `$B.set_lineno(frame, ${this.lineno})\n`+
+$B.ast.Pass.prototype.to_js=function(){return `$B.set_lineno(frame, ${this.lineno})\n`+
 'void(0)'}
 $B.ast.Raise.prototype.to_js=function(scopes){var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 '$B.$raise('
@@ -16917,7 +16920,6 @@ js+=`catch(${err}){\n`+
 `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n`+
 '}\n'
 if(has_else){js+=`failed${id} = true\n`}
-var first=true,has_untyped_except=false
 for(var handler of this.handlers){js+=`$B.set_lineno(frame, ${handler.lineno})\n`
 if(handler.type){js+="var condition = function(exc){\n"+
 "    return $B.$isinstance(exc, "+
@@ -16974,10 +16976,9 @@ scopes.push(type_alias_scope)
 var type_params_names=[]
 for(var type_param of this.type_params){if(type_param instanceof $B.ast.TypeVar){type_params_names.push(type_param.name)}else if(type_param instanceof $B.ast.TypeVarTuple ||
 type_param instanceof $B.ast.ParamSpec){type_params_names.push(type_param.name.id)}}
-var type_params_list=type_params_names.map(x=> `'${x}'`)
 for(var name of type_params_names){bind(name,scopes)}
 var qualified_name=qualified_scope_name(scopes,type_alias_scope)
-var value=this.value.to_js(scopes),type_params=[]
+var value=this.value.to_js(scopes)
 scopes.pop()
 scopes.pop()
 var js=`$B.$import('_typing')\n`
@@ -17017,7 +17018,6 @@ scopes.pop()
 if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+
 add_body(this.orelse,scopes)+'}\n'}
 return js}
-var with_counter=[0]
 $B.ast.With.prototype.to_js=function(scopes){
 function add_item(item,js){var id=$B.UUID()
 var s=`var mgr_${id} = `+
@@ -17186,13 +17186,11 @@ scopes.imports={}
 var js=ast_root.to_js(scopes)
 return{js,imports:scopes.imports}}
 $B.js_from_ast=function(ast,scopes){if(! scopes.symtable){throw Error('perdu symtable')}
-var js=''
 scopes=scopes ||[]
 if(ast.to_js !==undefined){if(ast.col_offset===undefined){var klass=ast.constructor.$name
-if(['match_case'].indexOf(klass)==-1){console.log('pas de col offset pour',klass)
+if(['match_case'].indexOf(klass)==-1){console.log('no col_offset for',klass)
 console.log(ast)
-throw Error('no col offset')
-alert()}}
+throw Error('no col offset')}}
 return ast.to_js(scopes)}
 console.log("unhandled",ast.constructor.$name,ast,typeof ast)
 return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__)

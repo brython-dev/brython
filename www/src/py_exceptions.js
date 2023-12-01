@@ -1033,7 +1033,7 @@ function trace_from_stack(err){
             console.log('in file_cache', Object.keys($B.file_cache).join('\n'))
         }
     }
-    if(count_repeats > 0){
+    if(count_repeats > 1){
         var len = trace.length
         for(var i = 0; i < 2; i++){
             if(src){
