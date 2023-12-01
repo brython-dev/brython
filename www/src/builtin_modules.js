@@ -1,12 +1,11 @@
 "use strict";
- ;(function($B) {
-     var _b_ = $B.builtins
+ (function($B) {
+    var _b_ = $B.builtins
     var update = $B.update_obj = function(mod, data) {
-        for(attr in data) {
+        for(let attr in data) {
             mod[attr] = data[attr]
         }
     }
-    var _window = globalThis;
     var modules = {}
     var browser = {
         $package: true,
@@ -133,7 +132,7 @@
                 var script = document.createElement('SCRIPT')
                 script.src = script_url
                 if(callback){
-                    script.addEventListener('load', function(ev){
+                    script.addEventListener('load', function(){
                         callback()
                     })
                 }
@@ -177,7 +176,7 @@
                 $B.run_script(script, $.src, $.name, $B.script_path, true)
             },
             URLParameter:function(name) {
-            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            name = name.replace(/[[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
             results = results === null ? "" :
@@ -284,16 +283,17 @@
                 return dict
             }
 
-            function makeFactory(klass, ComponentClass){
+            function makeFactory(klass){
                 // Create the factory function for HTML tags.
                 return (function(k){
                     return function(){
+                        var res
                         if(k.__name__ == 'SVG'){
-                            var res = $B.DOMNode.$factory(
+                            res = $B.DOMNode.$factory(
                                 document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
                             try{
-                                var res = document.createElement(k.__name__)
+                                res = document.createElement(k.__name__)
                             }catch(err){
                                 console.log('error ' + err)
                                 console.log('creating element', k.__name__)
@@ -384,10 +384,10 @@
         function(){return $B.Undefined}
     )
     $B.UndefinedType.__mro__ = [_b_.object]
-    $B.UndefinedType.__bool__ = function(self){
+    $B.UndefinedType.__bool__ = function(){
         return false
     }
-    $B.UndefinedType.__repr__ = function(self){
+    $B.UndefinedType.__repr__ = function(){
         return "<Javascript undefined>"
     }
     $B.UndefinedType.__str__ = $B.UndefinedType.__repr__;
@@ -446,14 +446,14 @@
                 return obj
             }
         },
-        import_js: function(url, name){
+        import_js: function(){
             // load JS script at specified url
             // If it exposes a variable $module, use it as the namespace of imported
             // module named "name"
-            var $ = $B.args('import_js', 2, {url: null, alias: null},
-                    ['url', 'alias'], arguments, {alias: _b_.None}, null, null),
+            var $ = $B.args('import_js', 2, {url: null, name: null},
+                    ['url', 'name'], arguments, {name: _b_.None}, null, null),
                 url = $.url,
-                alias = $.alias
+                name = $.name
             var xhr = new XMLHttpRequest(),
                 result
             xhr.open('GET', url, false)
@@ -484,18 +484,18 @@
             if($B.$isinstance(result, _b_.BaseException)){
                 $B.handle_error(result)
             }else{
-                if(alias === _b_.None){
+                if(name === _b_.None){
                     // set module name from url
-                    alias = url.split('.')
-                    if(alias.length > 1){
-                        alias.pop() // remove extension
+                    name = url.split('.')
+                    if(name.length > 1){
+                        name.pop() // remove extension
                     }
-                    alias = alias.join('.')
-                    result.__name__ = alias
+                    name = name.join('.')
+                    result.__name__ = name
                 }
-                $B.imported[alias] = result
+                $B.imported[name] = result
                 var frame = $B.frame_obj.frame
-                frame[1][alias] = result
+                frame[1][name] = result
             }
         },
         import_modules: function(refs, callback, loaded){
@@ -539,8 +539,7 @@
                 var script = document.createElement('script')
                 script.src = ref
                 script.addEventListener('load',
-                    function(ev){
-                        console.log('script loaded')
+                    function(){
                         loaded.push(script)
                         $B.imported.javascript.import_scripts(refs, callback, loaded)
                     }
@@ -644,7 +643,6 @@
     // the import machinery.
     // see https://github.com/brython-dev/brython/issues/189
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
-    var _b_ = $B.builtins
     modules['_sys'] = {
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
@@ -697,7 +695,7 @@
             }
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
         },
-        excepthook: function(exc_class, exc_value, traceback){
+        excepthook: function(exc_class, exc_value){
             $B.handle_error(exc_value)
         },
         exception: function(){
@@ -743,7 +741,7 @@
             function(){
                 return $B.obj_dict($B.imported)
             },
-            function(self, value){
+            function(){
                  throw _b_.TypeError.$factory("Read only property 'sys.modules'")
             }
         ),
@@ -781,7 +779,7 @@
             function(){
                 return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))
             },
-            function(self, value){
+            function(){
                 throw _b_.TypeError.$factory("Read only property" +
                     " 'sys.path_importer_cache'")
             }
@@ -863,7 +861,7 @@
             $B.fast_tuple(['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ResourceWarning, _b_.None, 0])
         ],
-        warn: function(message){
+        warn: function(){
             // Issue a warning, or maybe ignore it or raise an exception.
             var $ = $B.args('warn', 4,
                             {message: null, category: null, stacklevel: null, source: null},
@@ -892,11 +890,14 @@
                 syntax_error.line = message.line
                 throw syntax_error
             }
-            var warning_message
+            var warning_message,
+                file,
+                lineno,
+                line
             if(category === _b_.SyntaxWarning){
-                var file = message.filename,
-                    lineno = message.lineno,
-                    line = message.text
+                file = message.filename,
+                lineno = message.lineno,
+                line = message.text
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
@@ -909,13 +910,13 @@
                     _category_name: category.__name__
                 }
             }else{
-                var frame_rank = Math.max(0, $B.count_frames() - stacklevel),
-                    frame = $B.get_frame_at(frame_rank),
-                    file = frame.__file__,
-                    f_code = $B._frame.f_code.__get__(frame),
-                    lineno = frame.$lineno,
-                    src = $B.file_cache[file],
-                    line = src ? src.split('\n')[lineno - 1] : null
+                let frame_rank = Math.max(0, $B.count_frames() - stacklevel),
+                    frame = $B.get_frame_at(frame_rank)
+                file = frame.__file__
+                let f_code = $B._frame.f_code.__get__(frame),
+                    src = $B.file_cache[file]
+                lineno = frame.$lineno
+                line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
@@ -966,7 +967,7 @@
             format = "text",
             headers = {},
             timeout = {}
-        for(var key in kw.$jsobj){
+        for(let key in kw.$jsobj){
             if(key == "data"){
                 var params = kw.$jsobj[key]
                 if(typeof params == "string"){
@@ -974,7 +975,7 @@
                 }else if($B.$isinstance(params, _b_.bytes)){
                     data = new ArrayBuffer(params.source.length)
                     var array = new Int8Array(data)
-                    for(var i = 0, len = params.source.length; i < len; i++){
+                    for(let i = 0, len = params.source.length; i < len; i++){
                         array[i] = params.source[i]
                     }
                 }else{
@@ -984,20 +985,20 @@
                             $B.class_name(params))
                     }
                     var items = []
-                    for(var key of _b_.dict.$keys_string(params)){
-                        var value = _b_.dict.$getitem_string(params, key)
+                    for(let key of _b_.dict.$keys_string(params)){
+                        let value = _b_.dict.$getitem_string(params, key)
                         items.push(encodeURIComponent(key) + "=" +
                                    encodeURIComponent($B.pyobj2jsobj(value)))
                     }
                     data = items.join("&")
                 }
             }else if(key == "headers"){
-                var value = kw.$jsobj[key]
+                let value = kw.$jsobj[key]
                 if(! $B.$isinstance(value, _b_.dict)){
                     throw _b_.ValueError.$factory(
                         "headers must be a dict, not " + $B.class_name(value))
                 }
-                for(var key of _b_.dict.$keys_string(value)){
+                for(let key of _b_.dict.$keys_string(value)){
                     headers[key.toLowerCase()] = _b_.dict.$getitem_string(value, key)
                 }
             }else if(key.startsWith("on")){
@@ -1005,7 +1006,7 @@
                 if(event == "timeout"){
                     timeout.func = kw.$jsobj[key]
                 }else{
-                    ajax.bind(self, event, kw.$jsobj[key])
+                    modules["browser.aio"].ajax.bind(self, event, kw.$jsobj[key])
                 }
             }else if(key == "timeout"){
                 timeout.seconds = kw.$jsobj[key]
@@ -1082,22 +1083,22 @@
     Future.done = function(){
         var $ = $B.args('done', 1, {self:null},
                         ['self'], arguments, {}, null, null)
-        return !! self._done
+        return !! $.self._done
     }
 
-    Future.set_result = function(self, value){
+    Future.set_result = function(){
         var $ = $B.args('set_result', 2, {self:null, value: null},
                         ['self', 'value'], arguments, {}, null, null)
-        self._done = true
-        self._methods.resolve(value)
+        $.self._done = true
+        $.self._methods.resolve($.value)
         return _b_.None
     }
 
-    Future.set_exception = function(self, exception){
+    Future.set_exception = function(){
         var $ = $B.args('set_exception', 2, {self:null, exception: null},
                         ['self', 'exception'], arguments, {}, null, null)
-        self._done = true
-        self._methods.reject(exception)
+        $.self._done = true
+        $.self._methods.reject($.exception)
         return _b_.None
     }
 
@@ -1119,7 +1120,7 @@
                 url = url + (args.cache ? "?" : "&") + args.body
             }
             var func = function(){
-                return new Promise(function(resolve, reject){
+                return new Promise(function(resolve){
                     var xhr = new XMLHttpRequest()
                     xhr.open(method, url, true)
                     for(var key in args.headers){
@@ -1186,12 +1187,11 @@
         post: function(){
             return $B.imported['browser.aio'].ajax.bind(null, "POST").apply(null, arguments)
         },
-        run: function(coro){
+        run: function(){
             var handle_success = function(){
                     $B.leave_frame()
                 },
-                handle_error = $B.show_error,
-                error_func = handle_error
+                handle_error = $B.show_error
 
             var $ = $B.args("run", 3, {coro: null, onsuccess: null, onerror: null},
                     ["coro", "onsuccess", "onerror"], arguments,
@@ -1199,21 +1199,10 @@
                     null, null),
                 coro = $.coro,
                 onsuccess = $.onsuccess,
-                onerror = $.onerror,
-                error_func = onerror
-
-            if(onerror !== handle_error){
-                function error_func(exc){
-                    try{
-                        onerror(exc)
-                    }catch(err){
-                        handle_error(err)
-                    }
-                }
-            }
+                onerror = $.onerror
 
             var save_frame_obj = $B.frame_obj
-            $B.coroutine.send(coro).then(onsuccess).catch(error_func)
+            $B.coroutine.send(coro).then(onsuccess).catch(onerror)
             $B.frame_obj = save_frame_obj
             return _b_.None
         },
@@ -1263,7 +1252,7 @@
         }
     }
 
-    for(var attr in modules){
+    for(let attr in modules){
         load(attr, modules[attr])
     }
     if(!($B.isWebWorker || $B.isNode)){
@@ -1271,13 +1260,11 @@
         modules['browser'].aio = modules['browser.aio']
     }
 
-    var _b_ = $B.builtins
-
     // Set builtin name __builtins__
     _b_.__builtins__ = $B.module.$factory('__builtins__',
         'Python builtins')
 
-    for(var attr in _b_){
+    for(let attr in _b_){
         _b_.__builtins__[attr] = _b_[attr]
         $B.builtins_scope.binding[attr] = true
         if(_b_[attr].$is_class){
@@ -1327,7 +1314,7 @@
     }
 
     // Attributes of __BRYTHON__ are Python lists
-    for(var attr in $B){
+    for(let attr in $B){
         if(Array.isArray($B[attr])){
             $B[attr].__class__ = _b_.list
         }
@@ -1381,8 +1368,8 @@
     $B.set_func_names($B.cell, "builtins")
 
     // Set __flags__ of internal classes, defined in py_flags.js
-    for(var flag in $B.builtin_class_flags.builtins){
-        for(var key of $B.builtin_class_flags.builtins[flag]){
+    for(let flag in $B.builtin_class_flags.builtins){
+        for(let key of $B.builtin_class_flags.builtins[flag]){
             if(_b_[key]){
                 _b_[key].__flags__ = parseInt(flag)
             }else{
@@ -1391,8 +1378,8 @@
         }
     }
 
-    for(var flag in $B.builtin_class_flags.types){
-        for(var key of $B.builtin_class_flags.types[flag]){
+    for(let flag in $B.builtin_class_flags.types){
+        for(let key of $B.builtin_class_flags.types[flag]){
             if($B[key]){
                 $B[key].__flags__ = parseInt(flag)
             }
