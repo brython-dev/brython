@@ -132,7 +132,7 @@ def trace_exc(run_frame, src, ns):
         console.log(exc_value)
 
     def handle_repeats(filename, lineno, count_repeats):
-        if count_repeats > 0:
+        if count_repeats > 1:
             for _ in range(2):
                 result_lines.append(f'  File {filename}, line {lineno}')
                 show_line(filename, lineno, src)

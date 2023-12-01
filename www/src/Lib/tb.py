@@ -29,7 +29,7 @@ def format_exc():
                 count_repeats -= 1
                 if count_repeats == 0:
                     break
-            if count_repeats:
+            if count_repeats > 1:
                 trace.write(f'[Previous line repeated {count_repeats} ' +
                     f'more time{"s" if count_repeats > 1 else ""}]')
 
