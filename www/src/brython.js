@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-01 16:38:27.289256"
-__BRYTHON__.timestamp=1701445107289
+__BRYTHON__.compiled_date="2023-12-01 17:07:29.749032"
+__BRYTHON__.timestamp=1701446849749
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -13774,9 +13774,7 @@ await gen.throw(value)
 $B.frame_obj=save_frame_obj}
 $B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__)
 ;
-;(function($B){var _b_=$B.builtins
-var object=_b_.object
-var _window=globalThis;
+(function($B){var _b_=$B.builtins
 function to_simple(value){switch(typeof value){case 'string':
 case 'number':
 return value
@@ -13784,6 +13782,7 @@ case 'boolean':
 return value ? "true" :"false"
 case 'object':
 if(value===_b_.None){return 'null'}else if(value instanceof Number){return value.valueOf()}else if(value instanceof String){return value.valueOf()}
+break
 default:
 throw _b_.TypeError.$factory("keys must be str, int, "+
 "float, bool or None, not "+$B.class_name(value))}}
@@ -13791,20 +13790,20 @@ $B.pyobj2structuredclone=function(obj,strict){
 strict=strict===undefined ? true :strict
 if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string" ||obj instanceof String){return obj}else if(obj.__class__===_b_.float){return obj.value}else if(obj===_b_.None){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
-obj.__class__===_b_.tuple){var res=new Array(obj.length);
+obj.__class__===_b_.tuple){let res=new Array(obj.length);
 for(var i=0,len=obj.length;i < len;++i){res[i]=$B.pyobj2structuredclone(obj[i]);}
 return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
 "keys does not support structured clone")}}}
-var res={}
+let res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
 return res}else if(obj.__class__===$B.long_int){return obj.value}else{return obj}}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||
 typeof obj=="string"){return obj}else if(typeof obj=="number"){return Number.isInteger(obj)?
 obj :
 {__class__:_b_.float,value:obj}}else if(obj instanceof Number ||obj instanceof String){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
-obj.__class__===_b_.tuple){var res=_b_.list.$factory()
+obj.__class__===_b_.tuple){let res=_b_.list.$factory()
 for(var i=0,len=obj.length;i < len;i++){res.push($B.structuredclone2pyobj(obj[i]))}
-return res}else if(typeof obj=="object"){var res=$B.empty_dict()
+return res}else if(typeof obj=="object"){let res=$B.empty_dict()
 for(var key in obj){_b_.dict.$setitem(res,key,$B.structuredclone2pyobj(obj[key]))}
 return res}else{throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
 " does not support the structured clone algorithm")}}
@@ -13867,7 +13866,7 @@ if(has_type(klass,$B.DOMNode)){return pyobj}
 if(has_type(klass,_b_.list)||has_type(klass,_b_.tuple)){
 return pyobj.map(pyobj2jsobj)}
 if(has_type(klass,_b_.dict)){
-var jsobj={}
+let jsobj={}
 for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){var key=entry.key
 if(typeof key !=="string"){key=_b_.str.$factory(key)}
 if(typeof entry.value==='function'){
@@ -13884,15 +13883,16 @@ pyobj.prototype.constructor===pyobj &&
 ! pyobj.$is_func){
 return pyobj}
 if(pyobj.$is_async){
-const jsobj=function(){var res=pyobj.apply(null,arguments)
+let jsobj=function(){var res=pyobj.apply(null,arguments)
 return $B.coroutine.send(res)}
 pyobj[JSOBJ]=jsobj
 jsobj[PYOBJ]=pyobj
 return jsobj}
-var jsobj=function(){try{
+let jsobj=function(){try{
 var args=new Array(arguments.length)
 for(var i=0;i < arguments.length;++i){args[i]=jsobj2pyobj(arguments[i])}
-if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
+let res
+if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){res=new pyobj(...args)}else{res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}
 pyobj[JSOBJ]=jsobj
 jsobj[PYOBJ]=pyobj
@@ -14003,13 +14003,13 @@ throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return jsobj
 if(typeof _self.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
 typeof _self.item=='function'){var rank=_b_.int.$factory(key)
 if(rank < 0){rank+=_self.length}
-var res=_self.item(rank)
+let res=_self.item(rank)
 if(res===null){throw _b_.IndexError.$factory(rank)}
 return jsobj2pyobj(res)}}}else if(key.__class__===_b_.slice &&
 typeof _self.item=='function'){var _slice=_b_.slice.$conv_for_seq(key,_self.length)
-var res=new Array(Math.floor((_slice.stop-_slice.start)/_slice.step));
-let offset=0;
-for(var i=_slice.start;i < _slice.stop;i+=_slice.step){res[offset++]=_self.item(i);}
+let res=new Array(Math.floor((_slice.stop-_slice.start)/_slice.step))
+let offset=0
+for(var i=_slice.start;i < _slice.stop;i+=_slice.step){res[offset++]=_self.item(i)}
 return res}
 throw _b_.KeyError.$factory(key)}
 $B.JSObj.__setitem__=$B.JSObj.__setattr__

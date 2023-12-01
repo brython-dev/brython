@@ -1,12 +1,8 @@
 "use strict";
 
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins
-
-var object = _b_.object
-
-var _window = globalThis;
 
 function to_simple(value){
     switch(typeof value){
@@ -23,6 +19,7 @@ function to_simple(value){
             }else if(value instanceof String){
                 return value.valueOf()
             }
+            break
         default:
             throw _b_.TypeError.$factory("keys must be str, int, " +
                 "float, bool or None, not " + $B.class_name(value))
@@ -43,7 +40,7 @@ $B.pyobj2structuredclone = function(obj, strict){
         return null // _b_.None
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
             obj.__class__ === _b_.tuple){
-        var res = new Array(obj.length);
+        let res = new Array(obj.length);
         for(var i = 0, len = obj.length; i < len; ++i){
             res[i] = $B.pyobj2structuredclone(obj[i]);
         }
@@ -57,7 +54,7 @@ $B.pyobj2structuredclone = function(obj, strict){
                 }
             }
         }
-        var res = {}
+        let res = {}
         for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){
             res[to_simple(entry[0])] = $B.pyobj2structuredclone(entry[1])
         }
@@ -85,13 +82,13 @@ $B.structuredclone2pyobj = function(obj){
         return obj.valueOf()
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
             obj.__class__ === _b_.tuple){
-        var res = _b_.list.$factory()
+        let res = _b_.list.$factory()
         for(var i = 0, len = obj.length; i < len; i++){
             res.push($B.structuredclone2pyobj(obj[i]))
         }
         return res
     }else if(typeof obj == "object"){
-        var res = $B.empty_dict()
+        let res = $B.empty_dict()
         for(var key in obj){
             _b_.dict.$setitem(res, key, $B.structuredclone2pyobj(obj[key]))
         }
@@ -262,7 +259,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // Non-string keys are converted to strings by str(key). This will
         // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
         // be the Javascript object {1: "b"}
-        var jsobj = {}
+        let jsobj = {}
         for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
             var key = entry.key
             if(typeof key !== "string"){
@@ -303,7 +300,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         if(pyobj.$is_async){
             // issue 2251 : calling the Python async function in Javascript
             // returns a Promise
-            const jsobj = function(){
+            let jsobj = function(){
                 var res = pyobj.apply(null, arguments)
                 return $B.coroutine.send(res)
             }
@@ -314,7 +311,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             return jsobj
         }
         // Transform into a Javascript function
-        var jsobj = function(){
+        let jsobj = function(){
             try{
                 // transform JS arguments to Python arguments
                 var args = new Array(arguments.length)
@@ -322,10 +319,11 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     args[i] = jsobj2pyobj(arguments[i])
                 }
                 // Apply Python arguments to Python function
+                let res
                 if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
-                    var res = new pyobj(...args)
+                    res = new pyobj(...args)
                 }else{
-                    var res = pyobj.apply(this, args)
+                    res = pyobj.apply(this, args)
                 }
                 // Return a Javascript result
                 return pyobj2jsobj(res)
@@ -649,7 +647,7 @@ $B.JSObj.__getitem__ = function(_self, key){
                 if(rank < 0){
                     rank += _self.length
                 }
-                var res = _self.item(rank)
+                let res = _self.item(rank)
                 if(res === null){
                     throw _b_.IndexError.$factory(rank)
                 }
@@ -659,10 +657,10 @@ $B.JSObj.__getitem__ = function(_self, key){
     }else if(key.__class__ === _b_.slice &&
             typeof _self.item == 'function'){
         var _slice = _b_.slice.$conv_for_seq(key, _self.length)
-        var res = new Array( Math.floor( (_slice.stop - _slice.start) / _slice.step) );
-        let offset = 0;
+        let res = new Array(Math.floor((_slice.stop - _slice.start) / _slice.step))
+        let offset = 0
         for(var i = _slice.start; i < _slice.stop; i += _slice.step){
-            res[offset++] = _self.item(i);
+            res[offset++] = _self.item(i)
         }
         return res
     }
