@@ -801,7 +801,6 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
         return _b_.None
     }
     var suggestions = calculate_suggestions(arg_names, key)
-    console.log('suggestions')
     return suggestions || _b_.None
 }
 

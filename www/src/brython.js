@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-01 08:24:04.509123"
-__BRYTHON__.timestamp=1701415444509
+__BRYTHON__.compiled_date="2023-12-01 08:53:12.384309"
+__BRYTHON__.timestamp=1701417192384
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8441,7 +8441,6 @@ if(_b_.hasattr(instance,name)){return `self.${name}`}}
 return _b_.None}
 $B.offer_suggestions_for_unexpected_keyword_error=function(arg_names,key){if(key===_b_.None){return _b_.None}
 var suggestions=calculate_suggestions(arg_names,key)
-console.log('suggestions')
 return suggestions ||_b_.None}
 _b_.BaseExceptionGroup=$B.make_class("BaseExceptionGFroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
@@ -16410,6 +16409,7 @@ if(tp.bound){if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(local
 `'__bound__', BOUND_OF_${name})\n`}else{js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__constraints__', BOUND_OF_${name})\n`}}
 return js}
+$B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
 if(in_class){var class_scope=last_scope(scopes)}
@@ -16469,12 +16469,10 @@ parse_args.push('arguments')
 var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.vararg.arg+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+this.args.kwarg.arg+"'"
-js+=`var args_parser = ${name2}.$args_parser ?? `+
-`$B.make_args_parser(${name2})\n`
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`
-js+=`if(arguments.length !== 0) args_parser(${parse_args.join(', ')})\n;`}else{js+=`${locals_name} = locals = args_parser(${parse_args.join(', ')})\n`}
+js+=`if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`}else{js+=`${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     if(locals.$has_generators){
@@ -16553,8 +16551,9 @@ js+=`$B.make_function_infos(${name2}, `+
 `${varnames.length}, `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
-`$B.fast_tuple([${varnames}]))\n`
+`$B.fast_tuple([${varnames}]))\n`;
 if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
+js+=`${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
 if(decorated){func_ref=`decorated${$B.UUID()}`
 js+='var '}
