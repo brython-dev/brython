@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-01 17:07:29.749032"
-__BRYTHON__.timestamp=1701446849749
+__BRYTHON__.compiled_date="2023-12-01 17:51:47.307158"
+__BRYTHON__.timestamp=1701449507307
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -10275,14 +10275,13 @@ var _importlib_module={__class__ :Module,__name__ :"_importlib",Loader:Loader,VF
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;
-;(function($B){var _b_=$B.builtins
-var unicode_tables=$B.unicode_tables
+(function($B){var _b_=$B.builtins
 var escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
 $B.surrogates=function(s){var s1='',escaped=false
 for(var char of s){if(escaped){var echar=escape2cp[char]
 if(echar !==undefined){s1+=echar}else{s1+='\\'+char}
 escaped=false}else if(char=='\\'){escaped=true}else{s1+=char}}
-var codepoints=[],surrogates=[],j=0
+var surrogates=[],j=0
 for(var i=0,len=s1.length;i < len;i++){var cp=s1.codePointAt(i)
 if(cp >=0x10000){surrogates.push(j)
 i++}
@@ -10328,11 +10327,6 @@ if(! $B.$isinstance(obj,str)){throw _b_.TypeError.$factory((prefix ||'')+
 function to_chars(s){
 s=to_string(s)
 return Array.from(s)}
-function to_codepoints(s){
-if(s.codepoints){return s.codepoints}
-var cps=[]
-for(var char of s){cps.push(char.codePointAt(0))}
-return s.codepoints=cps}
 str.__add__=function(_self,other){if(! $B.$isinstance(other,str)){try{return $B.$getattr(other,"__radd__")(_self)}catch(err){throw _b_.TypeError.$factory("Can't convert "+
 $B.class_name(other)+" to str implicitly")}}
 [_self,other]=to_string([_self,other])
@@ -10369,27 +10363,19 @@ if($B.$isinstance(arg,_b_.slice)){return _b_.str.$getitem_slice(_self,arg)}
 if($B.$isinstance(arg,_b_.bool)){return _self.__getitem__(_b_.int.$factory(arg))}
 throw _b_.TypeError.$factory("string indices must be integers")}
 str.$getitem_slice=function(_self,slice){var len=str.__len__(_self),s=_b_.slice.$conv_for_seq(slice,len),start=pypos2jspos(_self,s.start),stop=pypos2jspos(_self,s.stop),step=s.step
-var res="",i=null
+var res=""
 if(step > 0){if(stop <=start){return ""}
-for(var i=start;i < stop;i+=step){res+=_self[i]}}else{if(stop >=start){return ''}
-for(var i=start;i > stop;i+=step){res+=_self[i]}}
+for(let i=start;i < stop;i+=step){res+=_self[i]}}else{if(stop >=start){return ''}
+for(let i=start;i > stop;i+=step){res+=_self[i]}}
 return $B.String(res)}
-var prefix=2,suffix=3,mask=(2**32-1)
-function fnv(p){if(p.length==0){return 0}
-var x=prefix
-x=(x ^(p[0]<< 7))& mask
-for(var i=0,len=p.length;i < len;i++){x=((1000003*x)^ p[i])& mask}
-x=(x ^ p.length)& mask
-x=(x ^ suffix)& mask
-if(x==-1){x=-2}
-return x}
+var prefix=2,suffix=3
 str.$getnewargs=function(self){return $B.fast_tuple([to_string(self)])}
 str.__getnewargs__=function(){return str.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
 str.__hash__=function(_self){
 var s=to_string(_self)
 for(var i=0,h=0,len=s.length;i < len;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0;}
 return h;}
-str.__init__=function(self,arg){
+str.__init__=function(){
 return _b_.None}
 var str_iterator=$B.make_class("str_iterator",function(s){return{
 __class__:str_iterator,it:s[Symbol.iterator]()}}
@@ -10405,8 +10391,6 @@ if(_self.surrogates===undefined){return _self.length}
 if(_self.len !==undefined){return _self.len}
 var len=_self.len=_self.length-_self.surrogates.length
 return len}
-var kwarg_key=new RegExp("([^\\)]*)\\)")
-var NotANumber=function(){this.name="NotANumber"}
 var number_check=function(s,flags){if(! $B.$isinstance(s,[_b_.int,_b_.float])){var type=flags.conversion_type
 throw _b_.TypeError.$factory(`%${type} format: a real number `+
 `is required, not ${$B.class_name(s)}`)}}
@@ -10462,7 +10446,6 @@ var _float_helper=function(val,flags){number_check(val,flags)
 if(flags.precision===undefined){if(! flags.decimal_point){flags.precision=6}else{flags.precision=0}}else{flags.precision=parseInt(flags.precision,10)
 validate_precision(flags.precision)}
 return $B.$isinstance(val,_b_.int)? val :val.value}
-var trailing_zeros=/(.*?)(0+)([eE].*)/,leading_zeros=/\.(0*)/,trailing_dot=/\.$/
 var validate_precision=function(precision){
 if(precision > 20){precision=20}}
 function handle_special_values(value,upper){var special
@@ -10613,7 +10596,7 @@ return flags}else{throw _b_.ValueError.$factory(`invalid character in format: ${
 throw _b_.ValueError.$factory('invalid format')}
 function is_mapping(obj){return _b_.hasattr(obj,'keys')&& _b_.hasattr(obj,'__getitem__')}
 $B.printf_format=function(s,type,args){
-var length=s.length,pos=0,argpos=null,getitem
+var argpos=null,getitem
 if($B.$isinstance(args,_b_.tuple)){argpos=0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
 var ret='',
 nbph=0,
@@ -10694,7 +10677,7 @@ attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
 "'str' object has no attribute '"+attr+"'")}}
 _b_.dict.$setitem(_self.__dict__,attr,value)
 return _b_.None}
-str.__setitem__=function(self,attr,value){throw _b_.TypeError.$factory(
+str.__setitem__=function(){throw _b_.TypeError.$factory(
 "'str' object does not support item assignment")}
 var combining=[]
 for(var cp=0x300;cp <=0x36F;cp++){combining.push(String.fromCharCode(cp))}
@@ -10800,7 +10783,7 @@ if(elts.length==1){
 name=fmt_string}else{
 name=elts[0]
 spec=elts.splice(1).join(":")}
-var elts=name.split("!")
+elts=name.split("!")
 if(elts.length > 1){name=elts[0]
 conv=elts[1]}
 if(name !==undefined){
@@ -10841,16 +10824,18 @@ pos=end}else{text+=car
 pos++}}
 if(text){parts.push(text)}
 return parts}
-str.format=function(_self){
-var last_arg=$B.last(arguments)
-if(last_arg.$nat=="mapping"){var mapping=last_arg.mapping,getitem=$B.$getattr(mapping,"__getitem__")
+str.format=function(){
+var last_arg=$B.last(arguments),$,mapping,getitem
+if(last_arg.$nat=="mapping"){mapping=last_arg.mapping
+getitem=$B.$getattr(mapping,"__getitem__")
 var args=[]
-for(var i=0,len=arguments.length-1;i < len;i++){args.push(arguments[i])}
-var $=$B.args("format",1,{self:null},["self"],args,{},"$args",null)}else{var $=$B.args("format",1,{self:null},["self"],arguments,{},"$args","$kw"),mapping=$.$kw,
+for(let i=0,len=arguments.length-1;i < len;i++){args.push(arguments[i])}
+$=$B.args("format",1,{self:null},["self"],args,{},"$args",null)}else{$=$B.args("format",1,{self:null},["self"],arguments,{},"$args","$kw")
+mapping=$.$kw,
 getitem=function(key){return _b_.dict.$getitem(mapping,key)}}
 var _self=to_string($.self),parts=$B.split_format(_self)
 var res="",fmt
-for(var i=0;i < parts.length;i++){
+for(let i=0;i < parts.length;i++){
 if(typeof parts[i]=="string"){res+=parts[i];
 continue}
 fmt=parts[i]
@@ -10859,9 +10844,11 @@ function replace_nested(name,key){if(/\d+/.exec(key)){
 return _b_.tuple.__getitem__($.$args,parseInt(key))}else{
 return _b_.dict.__getitem__($.$kw,key)}}
 fmt.spec=fmt.spec.replace(/\{(.*?)\}/g,replace_nested)}
+var value
 if(fmt.name.charAt(0).search(/\d/)>-1){
-var pos=parseInt(fmt.name),value=_b_.tuple.__getitem__($.$args,pos)}else{
-var value=getitem(fmt.name)}
+let pos=parseInt(fmt.name)
+value=_b_.tuple.__getitem__($.$args,pos)}else{
+value=getitem(fmt.name)}
 for(var j=0;j < fmt.name_ext.length;j++){var ext=fmt.name_ext[j]
 if(ext.charAt(0)=="."){
 value=$B.$getattr(value,ext.substr(1))}else{
@@ -10876,7 +10863,7 @@ res+=value.__class__.__format__(value,fmt.spec)}else{res+=$B.$getattr(value,"__f
 return res}
 str.format_map=function(){var $=$B.args("format_map",2,{self:null,mapping:null},['self','mapping'],arguments,{},null,null),_self=to_string($.self)
 return str.format(_self,{$nat:'mapping',mapping:$.mapping})}
-str.index=function(self){
+str.index=function(){
 var res=str.find.apply(null,arguments)
 if(res===-1){throw _b_.ValueError.$factory("substring not found")}
 return res}
@@ -10931,17 +10918,17 @@ var $=$B.args("isprintable",1,{self:null},["self"],arguments,{},null,null),_self
 for(var char of _self){if(char==' '){continue}
 if(unprintable_re.test(char)){return false}}
 return true}
-str.isspace=function(self){
+str.isspace=function(){
 var $=$B.args("isspace",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
 for(var char of _self){cp=_b_.ord(char)
 if(! $B.in_unicode_category('Zs',cp)&&
 $B.unicode_bidi_whitespace.indexOf(cp)==-1){return false}}
 return _self.length > 0}
-str.istitle=function(self){
+str.istitle=function(){
 var $=$B.args("istitle",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
 return _self.length > 0 && str.title(_self)==_self}
-str.isupper=function(self){
-var $=$B.args("islower",1,{self:null},["self"],arguments,{},null,null),is_upper=false,cp,_self=to_string(self)
+str.isupper=function(){
+var $=$B.args("islower",1,{self:null},["self"],arguments,{},null,null),is_upper=false,cp,_self=to_string($.self)
 for(var char of _self){cp=_b_.ord(char)
 if($B.in_unicode_category('Lu',cp)){is_upper=true
 continue}else if($B.in_unicode_category('Ll',cp)||
@@ -10956,13 +10943,13 @@ if(! $B.$isinstance(obj2,str)){throw _b_.TypeError.$factory("sequence item "+cou
 res.push(obj2)}catch(err){if($B.$isinstance(err,_b_.StopIteration)){break}
 else{throw err}}}
 return res.join(_self)}
-str.ljust=function(self){var $=$B.args("ljust",3,{self:null,width:null,fillchar:null},["self","width","fillchar"],arguments,{fillchar:" "},null,null),_self=to_string($.self),len=str.__len__(_self);
+str.ljust=function(){var $=$B.args("ljust",3,{self:null,width:null,fillchar:null},["self","width","fillchar"],arguments,{fillchar:" "},null,null),_self=to_string($.self),len=str.__len__(_self);
 if($.width <=len){return _self}
 return _self+$.fillchar.repeat($.width-len)}
-str.lower=function(self){var $=$B.args("lower",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.lower=function(){var $=$B.args("lower",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
 return _self.toLowerCase()}
-str.lstrip=function(self,x){var $=$B.args("lstrip",2,{self:null,chars:null},["self","chars"],arguments,{chars:_b_.None},null,null),_self=$.self,chars=$.chars
-if(chars===_b_.None){return self.trimStart()}
+str.lstrip=function(){var $=$B.args("lstrip",2,{self:null,chars:null},["self","chars"],arguments,{chars:_b_.None},null,null),_self=$.self,chars=$.chars
+if(chars===_b_.None){return _self.trimStart()}
 [_self,chars]=to_string([_self,chars])
 while(_self.length > 0){var flag=false
 for(var char of chars){if(_self.startsWith(char)){_self=_self.substr(char.length)
@@ -10976,7 +10963,7 @@ if($.y===null && $.z===null){
 if(! $B.$isinstance($.x,_b_.dict)){throw _b_.TypeError.$factory(
 "maketrans only argument must be a dict")}
 var items=_b_.list.$factory(_b_.dict.items($.x))
-for(var i=0,len=items.length;i < len;i++){var k=items[i][0],v=items[i][1]
+for(let i=0,len=items.length;i < len;i++){let k=items[i][0],v=items[i][1]
 if(! $B.$isinstance(k,_b_.int)){if($B.$isinstance(k,_b_.str)&& k.length==1){k=_b_.ord(k)}else{throw _b_.TypeError.$factory("dictionary key "+k+
 " is not int or 1-char string")}}
 if(v !==_b_.None && ! $B.$isinstance(v,[_b_.int,_b_.str])){throw _b_.TypeError.$factory("dictionary value "+v+
@@ -10988,10 +10975,10 @@ if(!($B.$isinstance($.x,_b_.str)&& $B.$isinstance($.y,_b_.str))){throw _b_.TypeE
 if($.z !==null){
 if(! $B.$isinstance($.z,_b_.str)){throw _b_.TypeError.$factory(
 "maketrans third argument must be a string")}
-for(var i=0,len=$.z.length;i < len;i++){toNone[_b_.ord($.z.charAt(i))]=true}}
-for(var i=0,len=$.x.length;i < len;i++){var key=_b_.ord($.x.charAt(i)),value=$.y.charCodeAt(i)
+for(let i=0,len=$.z.length;i < len;i++){toNone[_b_.ord($.z.charAt(i))]=true}}
+for(let i=0,len=$.x.length;i < len;i++){var key=_b_.ord($.x.charAt(i)),value=$.y.charCodeAt(i)
 _b_.dict.$setitem(_t,key,value)}
-for(var k in toNone){_b_.dict.$setitem(_t,parseInt(k),_b_.None)}
+for(let k in toNone){_b_.dict.$setitem(_t,parseInt(k),_b_.None)}
 return _t}}}
 str.maketrans.$type="staticmethod"
 str.partition=function(){var $=$B.args("partition",2,{self:null,sep:null},["self","sep"],arguments,{},null,null),_self,sep
@@ -11013,26 +11000,23 @@ if(!$B.$isinstance($.suffix,str)){throw _b_.ValueError.$factory("suffix should b
 [_self,suffix]=to_string([$.self,$.suffix])
 if(suffix.length > 0 && str.endswith(_self,suffix)){return _self.substr(0,_self.length-suffix.length)}
 return _self.substr(0)}
-function $re_escape(str){var specials="[.*+?|()$^"
-for(var i=0,len=specials.length;i < len;i++){var re=new RegExp("\\"+specials.charAt(i),"g")
-str=str.replace(re,"\\"+specials.charAt(i))}
-return str}
-str.replace=function(self,old,_new,count){
+str.replace=function(){
 var $=$B.args("replace",4,{self:null,old:null,new:null,count:null},["self","old","new","count"],arguments,{count:-1},null,null),count=$.count,_self=$.self,old=$.old,_new=$.new
 check_str(old,"replace() argument 1 ")
 check_str(_new,"replace() argument 2 ")
 if(! $B.$isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError.$factory("'"+$B.class_name(count)+
 "' object cannot be interpreted as an integer")}else if($B.$isinstance(count,_b_.float)){throw _b_.TypeError.$factory("integer argument expected, got float")}
-if(count==0){return self}
+if(count==0){return _self}
 if(count.__class__==$B.long_int){count=parseInt(count.value)}
 [old,_new]=to_string([old,_new])
+var elts
 if(old==""){if(_new==""){return _self}
 if(_self==""){return _new}
-var elts=_self.split("")
+elts=_self.split("")
 if(count >-1 && elts.length >=count){var rest=elts.slice(count).join("")
-return _new+elts.slice(0,count).join(_new)+rest}else{return _new+elts.join(_new)+_new}}else{var elts=str.split(_self,old,count)}
+return _new+elts.slice(0,count).join(_new)+rest}else{return _new+elts.join(_new)+_new}}else{elts=str.split(_self,old,count)}
 var res=_self,pos=-1
-if(old.length==0){var res=_new
+if(old.length==0){res=_new
 for(var i=0;i < elts.length;i++){res+=elts[i]+_new}
 return res+rest}
 if(count < 0){count=res.length}
@@ -11042,7 +11026,7 @@ res=res.substr(0,pos)+_new+res.substr(pos+old.length)
 pos=pos+_new.length
 count--}
 return res}
-str.rfind=function(self,substr){
+str.rfind=function(){
 var $=$B.args("rfind",4,{self:null,sub:null,start:null,end:null},["self","sub","start","end"],arguments,{start:0,end:null},null,null),_self,sub
 normalize_start_end($)
 check_str($.sub);
@@ -11056,7 +11040,7 @@ str.rindex=function(){
 var res=str.rfind.apply(null,arguments)
 if(res==-1){throw _b_.ValueError.$factory("substring not found")}
 return res}
-str.rjust=function(self){var $=$B.args("rjust",3,{self:null,width:null,fillchar:null},["self","width","fillchar"],arguments,{fillchar:" "},null,null),_self=to_string($.self)
+str.rjust=function(){var $=$B.args("rjust",3,{self:null,width:null,fillchar:null},["self","width","fillchar"],arguments,{fillchar:" "},null,null),_self=to_string($.self)
 var len=str.__len__(_self)
 if($.width <=len){return _self}
 return $B.String($.fillchar.repeat($.width-len)+_self)}
@@ -11067,7 +11051,7 @@ _self=reverse(_self),sep=reverse(sep)
 var items=str.partition(_self,sep).reverse()
 for(var i=0;i < items.length;i++){items[i]=items[i].split("").reverse().join("")}
 return items}
-str.rsplit=function(self){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},["self","sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),sep=$.sep,_self;
+str.rsplit=function(){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},["self","sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),sep=$.sep,_self;
 [_self,sep]=to_string([$.self,$.sep])
 var rev_str=reverse(_self),rev_sep=sep===_b_.None ? sep :reverse(sep),rev_res=str.split(rev_str,rev_sep,$.maxsplit)
 rev_res.reverse()
@@ -11085,10 +11069,10 @@ return ''}
 str.split=function(){var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},["self","sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,pos=0,_self=to_string($.self)
 if(maxsplit.__class__===$B.long_int){maxsplit=parseInt(maxsplit.value)}
 if(sep==""){throw _b_.ValueError.$factory("empty separator")}
-if(sep===_b_.None){var res=[]
+if(sep===_b_.None){let res=[]
 while(pos < _self.length && _self.charAt(pos).search(/\s/)>-1){pos++}
 if(pos===_self.length-1){return[_self]}
-var name=""
+let name=""
 while(1){if(_self.charAt(pos).search(/\s/)==-1){if(name==""){name=_self.charAt(pos)}else{name+=_self.charAt(pos)}}else{if(name !==""){res.push(name)
 if(maxsplit !==-1 && res.length==maxsplit+1){res.pop()
 res.push(name+_self.substr(pos))
@@ -11098,7 +11082,7 @@ pos++
 if(pos > _self.length-1){if(name){res.push(name)}
 break}}
 return res.map($B.String)}else{sep=to_string(sep)
-var res=[],s="",seplen=sep.length
+let res=[],s="",seplen=sep.length
 if(maxsplit==0){return[$.self]}
 while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
 pos+=seplen
@@ -11108,7 +11092,7 @@ s=""}else{s+=_self.charAt(pos)
 pos++}}
 res.push(s)
 return res.map($B.String)}}
-str.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
+str.splitlines=function(){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
 if(!$B.$isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
 $B.get_class($.keepends).__name)}
 var keepends=_b_.int.$factory($.keepends),res=[],start=0,pos=0,_self=to_string($.self)
@@ -11150,9 +11134,9 @@ for(var char of _self){cp=_b_.ord(char)
 try{var repl=getitem(cp)
 if(repl !==_b_.None){if(typeof repl=="string"){res.push(repl)}else if(typeof repl=="number"){res.push(String.fromCharCode(repl))}}}catch(err){res.push(char)}}
 return res.join("")}
-str.upper=function(self){var $=$B.args("upper",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.upper=function(){var $=$B.args("upper",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
 return _self.toUpperCase()}
-str.zfill=function(self,width){var $=$B.args("zfill",2,{self:null,width:null},["self","width"],arguments,{},null,null),_self=to_string($.self)
+str.zfill=function(){var $=$B.args("zfill",2,{self:null,width:null},["self","width"],arguments,{},null,null),_self=to_string($.self)
 var len=str.__len__(_self)
 if($.width <=len){return _self}
 switch(_self.charAt(0)){case "+":
@@ -11161,10 +11145,11 @@ return _self.charAt(0)+
 "0".repeat($.width-len)+_self.substr(1)
 default:
 return "0".repeat($.width-len)+_self}}
-str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
+str.$factory=function(arg,encoding){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
-var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
+var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+encoding=$.encoding}
 if(typeof arg=="string" ||arg instanceof String){return arg.toString()}else if(typeof arg=="number" && Number.isInteger(arg)){return arg.toString()}
 try{if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
@@ -11299,7 +11284,9 @@ elts.push(current)
 ctype=null
 current=""
 pos=i+1}}else{
-var i=pos,nb_braces=1,nb_paren=0,current=new fstring_expression(expr_start)
+let i=pos,nb_paren=0
+nb_braces=1
+current=new fstring_expression(expr_start)
 while(i < string.length){car=string.charAt(i)
 if(car=="{" && nb_paren==0){nb_braces++
 current.expression+=car
@@ -11323,11 +11310,11 @@ current.expression+=car
 i++}else if(car==")" ||car==']'){nb_paren--
 current.expression+=car
 i++}else if(car=='"'){
-if(string.substr(i,3)=='"""'){var end=string.indexOf('"""',i+3)
+if(string.substr(i,3)=='"""'){let end=string.indexOf('"""',i+3)
 if(end==-1){fstring_error("f-string: unterminated string",pos)}else{var trs=string.substring(i,end+3)
 trs=trs.replace("\n","\\n\\")
 current.expression+=trs
-i=end+3}}else{var end=string.indexOf('"',i+1)
+i=end+3}}else{let end=string.indexOf('"',i+1)
 if(end==-1){fstring_error("f-string: unterminated string",pos)}else{current.expression+=string.substring(i,end+1)
 i=end+1}}}else if(nb_paren==0 && car==":"){
 current.fmt=true
@@ -11359,10 +11346,10 @@ if(current.length > 0){elts.push(current)}
 for(var elt of elts){if(typeof elt=="object"){if(elt.fmt_pos !==undefined &&
 elt.expression.charAt(elt.fmt_pos)!=':'){throw Error()}}}
 return elts}
-var _chr=$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
+$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
 return String.fromCodePoint(0xD800 |(code >> 10))+
 String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
-var _ord=$B.jsstring2codepoint=function(c){if(c.length==1){return c.charCodeAt(0)}
+$B.jsstring2codepoint=function(c){if(c.length==1){return c.charCodeAt(0)}
 var code=0x10000
 code+=(c.charCodeAt(0)& 0x03FF)<< 10
 code+=(c.charCodeAt(1)& 0x03FF)
