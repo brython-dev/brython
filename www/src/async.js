@@ -24,8 +24,8 @@ coroutine.send = function(self){
         }
     }).
         catch(function(err){
-            if(self.$frame_obj){
-                $B.frame_obj = self.$frame_obj
+            if(err.$frame_obj){
+                $B.frame_obj = err.$frame_obj
             }
         })
     return res

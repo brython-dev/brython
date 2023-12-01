@@ -159,10 +159,11 @@ assert b1 ** b3 == window.BigInt(str(23456 ** 2))
 
 for num in [1, 4.7]:
     try:
-        b1 + num
-        raise Exception('shoulf have raised TypeError')
+        b1 + num # in Javascript, can't add BigInt and number
+        raise Exception('should have raised TypeError')
     except TypeError:
         pass
+
 
 # inheriting a Javascript class
 class Square2(window.Rectangle):
@@ -378,8 +379,9 @@ async def call_js_async():
     try:
         await window.js_async_raises_error()
         input('should have raised error')
-    except Exception as exc:
-        print(exc)
+    except JavascriptError as exc:
+        async_tester.assertEqual(str(exc), 
+            'ReferenceError: blabla is not defined')
 
 aio.run(call_js_async())
 
