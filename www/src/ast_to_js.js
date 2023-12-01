@@ -2324,7 +2324,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                            '// declare decorators\n' : ''
 
     // evaluate decorator in enclosing scope
-    for(var dec of this.decorator_list){
+    for(let dec of this.decorator_list){
         decorated = true
         var dec_id = 'decorator' + $B.UUID()
         decorators.push(dec_id)
@@ -2530,7 +2530,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
-    var in_class = func_name_scope.ast instanceof $B.ast.ClassDef
+    //var in_class = func_name_scope.ast instanceof $B.ast.ClassDef
 
     var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
                               this.name
@@ -2633,8 +2633,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(decorated && ! has_type_params){
         js += `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
-        var decorate = func_ref
-        for(var dec of decorators.reverse()){
+        let decorate = func_ref
+        for(let dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
         }
         js += decorate
@@ -2652,8 +2652,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             // decorate outside of TYPE_PARAMS_OF_
             js += `var ${func_ref} = TYPE_PARAMS_OF_${name2}()\n` +
                 `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
-            var decorate = func_ref
-            for(var dec of decorators.reverse()){
+            let decorate = func_ref
+            for(let dec of decorators.reverse()){
                 decorate = `$B.$call(${dec})(${decorate})`
             }
             js += decorate
@@ -2670,8 +2670,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
-    var expr = this.elt,
-        first_for = this.generators[0],
+    var first_for = this.generators[0],
         // outmost expression is evaluated in enclosing scope
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
         nb_paren = 1
@@ -2700,7 +2699,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     assign.lineno = this.lineno
     js += assign.to_js(scopes) + '\n'
 
-    for(var _if of first.ifs){
+    for(let _if of first.ifs){
         nb_paren++
         js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
     }
@@ -2708,7 +2707,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     for(var comprehension of this.generators.slice(1)){
         js += comprehension.to_js(scopes)
         nb_paren++
-        for(var _if of comprehension.ifs){
+        for(let _if of comprehension.ifs){
             nb_paren++
         }
     }
@@ -2972,8 +2971,7 @@ function pattern_bindings(pattern){
 }
 
 $B.ast.Match.prototype.to_js = function(scopes){
-    var scope = $B.last(scopes),
-        irrefutable
+    var irrefutable
     var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,
         first = true
     for(var _case of this.cases){
@@ -3024,8 +3022,8 @@ $B.ast.MatchAs.prototype.to_js = function(scopes){
 
 $B.ast.MatchClass.prototype.to_js = function(scopes){
     var names = []
-    for(var pattern of this.patterns.concat(this.kwd_patterns)){
-        var name = pattern.name
+    for(let pattern of this.patterns.concat(this.kwd_patterns)){
+        let name = pattern.name
         if(name){
             if(names.indexOf(name) > -1){
                 compiler_error(pattern,
@@ -3036,8 +3034,8 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
     }
 
     names = []
-    for(var i = 0; i < this.kwd_attrs.length; i++){
-        var kwd_attr = this.kwd_attrs[i]
+    for(let i = 0; i < this.kwd_attrs.length; i++){
+        let kwd_attr = this.kwd_attrs[i]
         if(names.indexOf(kwd_attr) > -1){
             compiler_error(this.kwd_patterns[i],
                 `attribute name repeated in class pattern: ${kwd_attr}`)
@@ -3048,7 +3046,7 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
     var cls = $B.js_from_ast(this.cls, scopes),
         patterns = this.patterns.map(x => `{${$B.js_from_ast(x, scopes)}}`)
     var kw = []
-    for(var i = 0, len = this.kwd_patterns.length; i < len; i++){
+    for(let i = 0, len = this.kwd_patterns.length; i < len; i++){
         kw.push(this.kwd_attrs[i] + ': {' +
             $B.js_from_ast(this.kwd_patterns[i], scopes) + '}')
     }
@@ -3056,7 +3054,7 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchMapping.prototype.to_js = function(scopes){
-    for(var key of this.keys){
+    for(let key of this.keys){
         if(key instanceof $B.ast.Attribute ||
                 key instanceof $B.ast.Constant ||
                 key instanceof $B.ast.UnaryOp ||
@@ -3068,7 +3066,7 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
         }
     }
     var names = []
-    for(var pattern of this.patterns){
+    for(let pattern of this.patterns){
         if(pattern instanceof $B.ast.MatchAs && pattern.name){
             if(names.indexOf(pattern.name) > -1){
                 compiler_error(pattern,
@@ -3078,10 +3076,10 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
         }
     }
     var items = []
-    for(var i = 0, len = this.keys.length; i < len; i++){
-        var key_prefix = this.keys[i] instanceof $B.ast.Constant ?
-                            'literal: ' : 'value: '
-        var key = $B.js_from_ast(this.keys[i], scopes),
+    for(let i = 0, len = this.keys.length; i < len; i++){
+        let key_prefix = this.keys[i] instanceof $B.ast.Constant ?
+                            'literal: ' : 'value: ',
+            key = $B.js_from_ast(this.keys[i], scopes),
             value = $B.js_from_ast(this.patterns[i], scopes)
         items.push(`[{${key_prefix}${key}}, {${value}}]`)
     }
@@ -3119,7 +3117,7 @@ $B.ast.MatchSequence.prototype.to_js = function(scopes){
     return `sequence: [${items.join(', ')}]`
 }
 
-$B.ast.MatchSingleton.prototype.to_js = function(scopes){
+$B.ast.MatchSingleton.prototype.to_js = function(){
     var value = this.value === true ? '_b_.True' :
                 this.value === false ? '_b_.False' :
                 '_b_.None'
@@ -3127,7 +3125,7 @@ $B.ast.MatchSingleton.prototype.to_js = function(scopes){
     return `literal: ${value}`
 }
 
-$B.ast.MatchStar.prototype.to_js = function(scopes){
+$B.ast.MatchStar.prototype.to_js = function(){
     var name = this.name === undefined ? '_' : this.name
     return `capture_starred: '${name}'`
 }
@@ -3243,7 +3241,7 @@ $B.ast.Nonlocal.prototype.to_js = function(scopes){
     return ''
 }
 
-$B.ast.Pass.prototype.to_js = function(scopes){
+$B.ast.Pass.prototype.to_js = function(){
     return `$B.set_lineno(frame, ${this.lineno})\n` +
            'void(0)'
 }
@@ -3480,8 +3478,6 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         if(has_else){
             js += `failed${id} = true\n`
         }
-        var first = true,
-            has_untyped_except = false
         for(var handler of this.handlers){
             js += `$B.set_lineno(frame, ${handler.lineno})\n`
             if(handler.type){
@@ -3580,15 +3576,12 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
         }
     }
 
-    var type_params_list = type_params_names.map(x => `'${x}'`)
-
     for(var name of type_params_names){
         bind(name, scopes)
     }
 
     var qualified_name = qualified_scope_name(scopes, type_alias_scope)
-    var value = this.value.to_js(scopes),
-        type_params = [] //this.type_params.map(x => x.to_js(scopes))
+    var value = this.value.to_js(scopes)
     scopes.pop()
     scopes.pop()
     var js = `$B.$import('_typing')\n`
@@ -3679,8 +3672,6 @@ $B.ast.While.prototype.to_js = function(scopes){
 
     return js
 }
-
-var with_counter = [0]
 
 $B.ast.With.prototype.to_js = function(scopes){
     /* PEP 243 says that
@@ -3970,16 +3961,14 @@ $B.js_from_ast = function(ast, scopes){
     if(! scopes.symtable){
         throw Error('perdu symtable')
     }
-    var js = ''
     scopes = scopes || []
     if(ast.to_js !== undefined){
         if(ast.col_offset === undefined){
             var klass = ast.constructor.$name
             if(['match_case'].indexOf(klass) == -1){
-                console.log('pas de col offset pour', klass)
+                console.log('no col_offset for', klass)
                 console.log(ast)
                 throw Error('no col offset')
-                alert()
             }
         }
         return ast.to_js(scopes)
