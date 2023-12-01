@@ -158,8 +158,11 @@ b3 = window.BigInt('2')
 assert b1 ** b3 == window.BigInt(str(23456 ** 2))
 
 for num in [1, 4.7]:
-    b1 + num # should not raise exception
-
+    try:
+        b1 + num
+        raise Exception('shoulf have raised TypeError')
+    except TypeError:
+        pass
 
 # inheriting a Javascript class
 class Square2(window.Rectangle):

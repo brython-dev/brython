@@ -133,7 +133,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
              return _b_.float.$factory(jsobj)
 
         case 'bigint':
-            return _b_.int.$int_or_long(jsobj)
+            return jsobj // $B.fast_long_int(jsobj)
 
         case 'string':
             return $B.String(jsobj)
@@ -219,16 +219,11 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return res
     }
 
-    const _res = $B.JSObj.$factory(jsobj)
-    jsobj[PYOBJ] = _res
-    _res[JSOBJ] = jsobj
-
-    return _res
+    return jsobj
 }
 
 var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     // conversion of a Python object into a Javascript object
-
     // Immutable types
     switch(pyobj){
         case true:
@@ -255,6 +250,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     if(has_type(klass, $B.DOMNode)){
         return pyobj
     }
+
     if(has_type(klass, _b_.list) || has_type(klass, _b_.tuple)){
         // Python list : transform its elements
         return pyobj.map(pyobj2jsobj)
@@ -371,16 +367,7 @@ function pyargs2jsargs(pyargs){
 
 $B.JSObj = $B.make_class("JSObject",
     function(jsobj){
-        if(Array.isArray(jsobj)){
-            // Set a Brython-specific attribute to identify JS Arrays that
-            // come from JS code. Cf. discussion #2226
-            jsobj.$is_js_array = true
-        }else if(typeof jsobj == "function"){
-            return jsobj2pyobj(jsobj)
-        }else if(typeof jsobj == "number" && ! Number.isInteger(jsobj)){
-            return {__class__: _b_.float, value: jsobj}
-        }
-        return jsobj
+        return jsobj2pyobj(jsobj)
     }
 )
 
@@ -513,7 +500,7 @@ function jsclass2pyclass(js_class){
     }
     klass.new = function(){
         var args = pyargs2jsargs(arguments)
-        return $B.JSObj.$factory(new proto.constructor(...args))
+        return jsobj2pyobj(new proto.constructor(...args))
     }
     var key, value
     for([key, value] of Object.entries(Object.getOwnPropertyDescriptors(proto))){
@@ -564,12 +551,12 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         if(_self.$js_func){
             new_func = function(){
                 var args = pyargs2jsargs(arguments)
-                return $B.JSObj.$factory(new _self.$js_func(...args))
+                return jsobj2pyobj(new _self.$js_func(...args))
             }
         }else{
             new_func = function(){
                 var args = pyargs2jsargs(arguments)
-                return $B.JSObj.$factory(new _self(...args))
+                return jsobj2pyobj(new _self(...args))
             }
         }
         new_func.$infos = {
@@ -596,7 +583,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         if(typeof _self.getNamedItem == 'function'){
             var res = _self.getNamedItem(attr)
             if(res !== undefined){
-                return $B.JSObj.$factory(res)
+                return jsobj2pyobj(res)
             }
         }
         var klass = $B.get_class(_self),
@@ -609,7 +596,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
                     for(var i = 0, len = arguments.length; i < len; i++){
                         args[i + 1] = arguments[i]
                     }
-                    return $B.JSObj.$factory(class_attr.apply(null, args))
+                    return jsobj2pyobj(class_attr.apply(null, args))
                 }
             }else{
                 return class_attr
@@ -630,9 +617,9 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         return jsobj2pyobj(js_attr, _self.$js_func || _self)
     }else{
         if(test){
-            console.log('use JSObj.$factory on', js_attr)
+            console.log('jsobj2pyobj on', js_attr)
         }
-        return $B.JSObj.$factory(js_attr)
+        return jsobj2pyobj(js_attr)
     }
 }
 
@@ -653,7 +640,7 @@ $B.JSObj.__getitem__ = function(_self, key){
         }
     }else if(typeof key == "number"){
         if(_self[key] !== undefined){
-            return $B.JSObj.$factory(_self[key])
+            return jsobj2pyobj(_self[key])
         }
         if(typeof _self.length == 'number'){
             if((typeof key == "number" || typeof key == "boolean") &&
@@ -666,7 +653,7 @@ $B.JSObj.__getitem__ = function(_self, key){
                 if(res === null){
                     throw _b_.IndexError.$factory(rank)
                 }
-                return $B.JSObj.$factory(res)
+                return jsobj2pyobj(res)
             }
         }
     }else if(key.__class__ === _b_.slice &&
@@ -869,7 +856,7 @@ js_array.__getattribute__ = function(_self, attr){
             return jsobj2pyobj(res, _self)
         }
         if(_self.hasOwnProperty(attr)){ // issue 2172
-            return $B.JSObj.$factory(_self[attr])
+            return jsobj2pyobj(_self[attr])
         }
         throw $B.attr_error(attr, _self)
     }
@@ -881,7 +868,7 @@ js_array.__getattribute__ = function(_self, attr){
 
 js_array.__getitem__ = function(_self, i){
     i = $B.PyNumber_Index(i)
-    return $B.jsobj2pyobj(_self[i])
+    return jsobj2pyobj(_self[i])
 }
 
 var js_array_iterator = $B.make_class('JSArray_iterator',
@@ -898,7 +885,7 @@ js_array_iterator.__next__ = function(_self){
     if(v.done){
         throw _b_.StopIteration.$factory('')
     }
-    return $B.jsobj2pyobj(v.value)
+    return jsobj2pyobj(v.value)
 }
 
 $B.set_func_names(js_array_iterator, 'builtins')

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-01 15:52:45.613981"
-__BRYTHON__.timestamp=1701442365613
+__BRYTHON__.compiled_date="2023-12-01 16:38:27.289256"
+__BRYTHON__.timestamp=1701445107289
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -13822,7 +13822,7 @@ case 'number':
 if(jsobj % 1===0){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)
 case 'bigint':
-return _b_.int.$int_or_long(jsobj)
+return jsobj 
 case 'string':
 return $B.String(jsobj)}
 if(Array.isArray(jsobj)){
@@ -13850,10 +13850,7 @@ if($B.$isNode(jsobj)){const res=$B.DOMNode.$factory(jsobj)
 jsobj[PYOBJ]=res
 res[JSOBJ]=jsobj
 return res}
-const _res=$B.JSObj.$factory(jsobj)
-jsobj[PYOBJ]=_res
-_res[JSOBJ]=jsobj
-return _res}
+return jsobj}
 var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 switch(pyobj){case true:
 case false:
@@ -13910,9 +13907,7 @@ throw _b_.TypeError.$factory(
 "keyword arguments")}
 args[i]=$B.pyobj2jsobj(arg)}
 return args}
-$B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){
-jsobj.$is_js_array=true}else if(typeof jsobj=="function"){return jsobj2pyobj(jsobj)}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
-return jsobj}
+$B.JSObj=$B.make_class("JSObject",function(jsobj){return jsobj2pyobj(jsobj)}
 )
 function check_big_int(x,y){if(typeof x !="bigint" ||typeof y !="bigint"){throw _b_.TypeError.$factory("unsupported operand type(s) for - : '"+
 $B.class_name(x)+"' and '"+$B.class_name(y)+"'")}}
@@ -13959,7 +13954,7 @@ var js_obj=new proto.constructor(...args)
 for(var attr in js_obj){_b_.dict.$setitem(self.__dict__,attr,$B.jsobj2pyobj(js_obj[attr]))}
 return _b_.None}
 klass.new=function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new proto.constructor(...args))}
+return jsobj2pyobj(new proto.constructor(...args))}
 var key,value
 for([key,value]of Object.entries(Object.getOwnPropertyDescriptors(proto))){if(key=='constructor'){continue}
 if(value.get){var getter=(function(v){return function(self){return v.get.call(self.__dict__.$jsobj)}})(value),setter=(function(v){return function(self,x){v.set.call(self.__dict__.$jsobj,x)}})(value)
@@ -13976,8 +13971,8 @@ if(test){console.log("__ga__",_self,attr)}
 if(attr=="new" && typeof _self=="function"){
 var new_func
 if(_self.$js_func){new_func=function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new _self.$js_func(...args))}}else{new_func=function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new _self(...args))}}
+return jsobj2pyobj(new _self.$js_func(...args))}}else{new_func=function(){var args=pyargs2jsargs(arguments)
+return jsobj2pyobj(new _self(...args))}}
 new_func.$infos={__name__:attr,__qualname__:attr}
 return new_func}
 var js_attr=_self[attr]
@@ -13987,30 +13982,30 @@ js_attr.toString().startsWith('class '))}
 if(js_attr===undefined){if(typeof _self=='object' && attr in _self){
 return $B.Undefined}
 if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
-if(res !==undefined){return $B.JSObj.$factory(res)}}
+if(res !==undefined){return jsobj2pyobj(res)}}
 var klass=$B.get_class(_self),class_attr=$B.$getattr(klass,attr,null)
 if(class_attr !==null){if(typeof class_attr=="function"){return function(){var args=new Array(arguments.length+1)
 args[0]=_self;
 for(var i=0,len=arguments.length;i < len;i++){args[i+1]=arguments[i]}
-return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
+return jsobj2pyobj(class_attr.apply(null,args))}}else{return class_attr}}
 throw $B.attr_error(attr,_self)}
 if(js_attr !==null &&
 js_attr.toString &&
 typeof js_attr.toString=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
-return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{if(test){console.log('use JSObj.$factory on',js_attr)}
-return $B.JSObj.$factory(js_attr)}}
+return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{if(test){console.log('jsobj2pyobj on',js_attr)}
+return jsobj2pyobj(js_attr)}}
 $B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}
 $B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){try{return $B.JSObj.__getattribute__(_self,key)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){throw _b_.KeyError.$factory(err.name)}
-throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return $B.JSObj.$factory(_self[key])}
+throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return jsobj2pyobj(_self[key])}
 if(typeof _self.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
 typeof _self.item=='function'){var rank=_b_.int.$factory(key)
 if(rank < 0){rank+=_self.length}
 var res=_self.item(rank)
 if(res===null){throw _b_.IndexError.$factory(rank)}
-return $B.JSObj.$factory(res)}}}else if(key.__class__===_b_.slice &&
+return jsobj2pyobj(res)}}}else if(key.__class__===_b_.slice &&
 typeof _self.item=='function'){var _slice=_b_.slice.$conv_for_seq(key,_self.length)
 var res=new Array(Math.floor((_slice.stop-_slice.start)/_slice.step));
 let offset=0;
@@ -14080,18 +14075,18 @@ var proto=Object.getPrototypeOf(_self),res=proto[attr]
 if(res !==undefined){
 return jsobj2pyobj(res,_self)}
 if(_self.hasOwnProperty(attr)){
-return $B.JSObj.$factory(_self[attr])}
+return jsobj2pyobj(_self[attr])}
 throw $B.attr_error(attr,_self)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
-return $B.jsobj2pyobj(_self[i])}
+return jsobj2pyobj(_self[i])}
 var js_array_iterator=$B.make_class('JSArray_iterator',function(obj){return{
 __class__:js_array_iterator,it:obj[Symbol.iterator]()}}
 )
 js_array_iterator.__next__=function(_self){var v=_self.it.next()
 if(v.done){throw _b_.StopIteration.$factory('')}
-return $B.jsobj2pyobj(v.value)}
+return jsobj2pyobj(v.value)}
 $B.set_func_names(js_array_iterator,'builtins')
 js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
 js_array.__repr__=function(_self){if($B.repr.enter(_self)){
