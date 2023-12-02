@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-02 09:36:32.501194"
-__BRYTHON__.timestamp=1701506192501
+__BRYTHON__.compiled_date="2023-12-02 10:45:36.205864"
+__BRYTHON__.timestamp=1701510336205
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -663,20 +663,20 @@ _fields=raw_fields.map(x=>
 (x.endsWith('*')||x.endsWith('?'))?
 x.substr(0,x.length-1):x)}}
 var cls=$B.make_class(kl),$defaults={},slots={},nb_args=0
-if(raw_fields){for(var i=0,len=_fields.length;i < len;i++){var f=_fields[i],rf=raw_fields[i]
+if(raw_fields){for(let i=0,len=_fields.length;i < len;i++){let f=_fields[i],rf=raw_fields[i]
 nb_args++
 slots[f]=null
 if(rf.endsWith('*')){$defaults[f]=[]}else if(rf.endsWith('?')){$defaults[f]=_b_.None}}}
 cls.$factory=function(){var $=$B.args(klass,nb_args,$B.clone(slots),Object.keys(slots),arguments,$B.clone($defaults),null,'kw')
 var res={__class__:cls,_attributes:$B.fast_tuple([])}
-for(var key in $){if(key=='kw'){for(var key in $.kw.$jsobj){res[key]=$.kw.$jsobj[key]}}else{res[key]=$[key]}}
+for(let key in $){if(key=='kw'){for(let prop in $.kw.$jsobj){res[prop]=$.kw.$jsobj[prop]}}else{res[key]=$[key]}}
 if(klass=="Constant"){res.value=$B.AST.$convert($.value)}
 return res}
 if(_fields){cls._fields=_fields}
 cls.__mro__=[$B.AST,_b_.object]
 cls.__module__='ast'
 cls.__dict__=$B.empty_dict()
-if(raw_fields){for(var i=0,len=raw_fields.length;i < len;i++){var raw_field=raw_fields[i]
+if(raw_fields){for(let i=0,len=raw_fields.length;i < len;i++){var raw_field=raw_fields[i]
 if(raw_field.endsWith('?')){_b_.dict.$setitem(cls.__dict__,_fields[i],_b_.None)}}}
 return cls})(klass)}}
 var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
@@ -7009,8 +7009,6 @@ if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
 if((! is_class)&& klass.$native){if(obj.$method_cache && obj.$method_cache[attr]){return obj.$method_cache[attr]}
 if($test){console.log("native class",klass,klass[attr])}
-if(attr=="__doc__" && klass[attr]===undefined){_get_builtins_doc()
-klass[attr]=$B.builtins_doc[klass.__name__]}
 if(klass[attr]===undefined){var object_attr=_b_.object[attr]
 if($test){console.log("object attr",object_attr)}
 if(object_attr !==undefined){klass[attr]=object_attr}else{if($test){console.log("obj[attr]",obj[attr])}
@@ -7094,14 +7092,6 @@ if(hash_method===_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'")}
 if(hash_method.$infos.__func__===_b_.object.__hash__){if(_b_.type.__getattribute__(klass,'__eq__')!==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return $B.$call(hash_method)(obj)}}
-function _get_builtins_doc(){if($B.builtins_doc===undefined){
-var url=$B.brython_path
-if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
-url+='/builtins_docstrings.js'
-var f=_b_.open(url)
-eval(f.$content)
-for(var key in docs){if(_b_[key]){_b_[key].__doc__=docs[key]}}
-$B.builtins_doc=docs}}
 var help=_b_.help=function(obj){if(obj===undefined){obj='help'}
 if(typeof obj=='string'){var lib_url='https://docs.python.org/3/library'
 var parts=obj.split('.'),head=[],url
@@ -8749,7 +8739,7 @@ $B.set_func_names(slice,"builtins")
 _b_.range=range
 _b_.slice=slice})(__BRYTHON__)
 ;
-;(function($B){var _b_=$B.builtins
+(function($B){var _b_=$B.builtins
 var from_unicode={},to_unicode={}
 function bytes_value(obj){return obj.__class__===bytes ? obj :fast_bytes(obj.source)}
 $B.to_bytes=function(obj){var res
@@ -8758,10 +8748,12 @@ if(ga !==null){res=$B.$call(ga)().source}else{throw _b_.TypeError.$factory("obje
 return res}
 function _strip(self,cars,lr){if(cars===undefined){cars=[]
 var ws='\r\n \t'
-for(var i=0,len=ws.length;i < len;i++){cars.push(ws.charCodeAt(i))}}else if($B.$isinstance(cars,bytes)){cars=cars.source}else{throw _b_.TypeError.$factory("Type str doesn't support the buffer API")}
-if(lr=='l'){for(var i=0,len=self.source.length;i < len;i++){if(cars.indexOf(self.source[i])==-1){break}}
+for(let i=0,len=ws.length;i < len;i++){cars.push(ws.charCodeAt(i))}}else if($B.$isinstance(cars,bytes)){cars=cars.source}else{throw _b_.TypeError.$factory("Type str doesn't support the buffer API")}
+if(lr=='l'){let i,len
+for(i=0,len=self.source.length;i < len;i++){if(cars.indexOf(self.source[i])==-1){break}}
 return bytes.$factory(self.source.slice(i))}
-for(var i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break}}
+let i
+for(i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break}}
 return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
 var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_class:true}
@@ -8830,17 +8822,16 @@ bytes.__eq__=function(self,other){if(invalid(other)){return false}
 return $B.$getattr(self.source,'__eq__')(other.source)}
 bytes.__ge__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
 return _b_.list.__ge__(self.source,other.source)}
-bytes.__getitem__=function(self,arg){var i
-if($B.$isinstance(arg,_b_.int)){var pos=arg
+bytes.__getitem__=function(self,arg){if($B.$isinstance(arg,_b_.int)){let pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){return self.source[pos]}
-throw _b_.IndexError.$factory("index out of range")}else if($B.$isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.source.length),start=s.start,stop=s.stop,step=s.step
-var res=[],i=null,pos=0
+throw _b_.IndexError.$factory("index out of range")}else if($B.$isinstance(arg,_b_.slice)){let s=_b_.slice.$conv_for_seq(arg,self.source.length),start=s.start,stop=s.stop,step=s.step
+let res=[],pos=0
 if(step > 0){stop=Math.min(stop,self.source.length)
 if(stop <=start){return bytes.$factory([])}
-for(var i=start;i < stop;i+=step){res[pos++]=self.source[i]}}else{if(stop >=start){return bytes.$factory([])}
+for(let i=start;i < stop;i+=step){res[pos++]=self.source[i]}}else{if(stop >=start){return bytes.$factory([])}
 stop=Math.max(0,stop)
-for(var i=start;i >=stop;i+=step){res[pos++]=self.source[i]}}
+for(let i=start;i >=stop;i+=step){res[pos++]=self.source[i]}}
 return bytes.$factory(res)}else if($B.$isinstance(arg,_b_.bool)){return self.source.__getitem__(_b_.int.$factory(arg))}}
 bytes.$getnewargs=function(self){return $B.fast_tuple([bytes_value(self)])}
 bytes.__getnewargs__=function(){return bytes.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
@@ -8866,12 +8857,11 @@ var res=bytes.$factory()
 res.source=t
 return res}
 bytes.__ne__=function(self,other){return ! bytes.__eq__(self,other)}
-bytes.__new__=function(cls,source,encoding,errors){var missing={},$=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{source:missing,encoding:missing,errors:missing},null,null)
-var source
+bytes.__new__=function(){var missing={},$=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{source:missing,encoding:missing,errors:missing},null,null),source=$.source
 if($.source===missing){return{
 __class__:$.cls,source:[]}}else if(typeof $.source=="string" ||$B.$isinstance($.source,_b_.str)){if($.encoding===missing){throw _b_.TypeError.$factory('string argument without an encoding')}
 $.errors=$.errors===missing ? 'strict' :$.errors
-var res=encode($.source,$.encoding,$.errors)
+let res=encode($.source,$.encoding,$.errors)
 if(! $B.$isinstance(res,bytes)){throw _b_.TypeError.$factory(`'${$.encoding}' codec returns `+
 `${$B.class_name(res)}, not bytes`)}
 res.__class__=$.cls
@@ -8879,10 +8869,11 @@ return res}
 if($.encoding !==missing){throw _b_.TypeError.$factory("encoding without a string argument")}
 if(typeof $.source=="number" ||$B.$isinstance($.source,_b_.int)){var size=$B.PyNumber_Index($.source)
 source=[]
-for(var i=0;i < size;i++){source[i]=0}}else if($B.$isinstance($.source,[_b_.bytes,_b_.bytearray])){source=$.source.source}else if($B.$isinstance($.source,_b_.memoryview)){source=$.source.obj.source}else{if(Array.isArray($.source)){var int_list=$.source}else{try{var int_list=_b_.list.$factory($.source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
+for(var i=0;i < size;i++){source[i]=0}}else if($B.$isinstance($.source,[_b_.bytes,_b_.bytearray])){source=$.source.source}else if($B.$isinstance($.source,_b_.memoryview)){source=$.source.obj.source}else{var int_list
+if(Array.isArray($.source)){int_list=$.source}else{try{int_list=_b_.list.$factory($.source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
 if(bytes_method===_b_.None){throw _b_.TypeError.$factory("cannot convert "+
 `'${$B.class_name(source)}' object to bytes`)}
-var res=$B.$call(bytes_method)()
+let res=$B.$call(bytes_method)()
 if(! $B.$isinstance(res,_b_.bytes)){throw _b_.TypeError.$factory(`__bytes__ returned `+
 `non-bytes (type ${$B.class_name(res)})`)}
 return res}}
@@ -8894,7 +8885,7 @@ return{
 __class__:$.cls,source}}
 bytes.$new=function(cls,source,encoding,errors){
 var self={__class__:cls},int_list=[],pos=0
-if(source===undefined){}else if(typeof source=="number" ||$B.$isinstance(source,_b_.int)){var i=source
+if(source===undefined){}else if(typeof source=="number" ||$B.$isinstance(source,_b_.int)){let i=source
 while(i--){int_list[pos++]=0}}else{if(typeof source=="string" ||$B.$isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
 int_list=encode(source,encoding ||"utf-8",errors ||"strict")}else{if(encoding !==undefined){console.log('encoding',encoding)
 throw _b_.TypeError.$factory("encoding without a string argument")}
@@ -8905,7 +8896,7 @@ var res=$B.$call(bytes_method)()
 if(! $B.$isinstance(res,_b_.bytes)){throw _b_.TypeError.$factory(`__bytes__ returned `+
 `non-bytes (type ${$B.class_name(res)})`)}
 return res}
-for(var i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){throw _b_.TypeError.$factory("'"+
+for(let i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){throw _b_.TypeError.$factory("'"+
 $B.class_name(int_list[i])+"' object "+
 "cannot be interpreted as an integer")}
 if(item < 0 ||item > 255){throw _b_.ValueError.$factory("bytes must be in range"+
@@ -8940,7 +8931,7 @@ len=1}else if(!$.sub.__class__){throw _b_.TypeError.$factory("first argument mus
 do{index=bytes.find($.self,$.sub,Math.max(index+len,$.start),$.end)
 if(index !=-1){n++}}while(index !=-1)
 return n}
-bytes.decode=function(self,encoding,errors){var $=$B.args("decode",3,{self:null,encoding:null,errors:null},["self","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
+bytes.decode=function(){var $=$B.args("decode",3,{self:null,encoding:null,errors:null},["self","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
 switch($.errors){case 'strict':
 case 'ignore':
 case 'replace':
@@ -8951,14 +8942,11 @@ case 'backslashreplace':
 return decode($.self,$.encoding,$.errors)
 default:}}
 bytes.endswith=function(){var $=$B.args('endswith',4,{self:null,suffix:null,start:null,end:null},['self','suffix','start','end'],arguments,{start:-1,end:-1},null,null)
-if($B.$isinstance($.suffix,bytes)){var start=$.start==-1 ?
-$.self.source.length-$.suffix.source.length :
-Math.min($.self.source.length-$.suffix.source.length,$.start)
-var end=$.end==-1 ? $.self.source.length :$.end
+if($B.$isinstance($.suffix,bytes)){var end=$.end==-1 ? $.self.source.length :$.end
 var res=true
-for(var i=$.suffix.source.length-1,len=$.suffix.source.length;
+for(let i=$.suffix.source.length-1,len=$.suffix.source.length;
 i >=0 && res;--i){res=$.self.source[end-len+i]==$.suffix.source[i]}
-return res}else if($B.$isinstance($.suffix,_b_.tuple)){for(var i=0;i < $.suffix.length;++i){if($B.$isinstance($.suffix[i],bytes)){if(bytes.endswith($.self,$.suffix[i],$.start,$.end)){return true}}else{throw _b_.TypeError.$factory("endswith first arg must be "+
+return res}else if($B.$isinstance($.suffix,_b_.tuple)){for(let i=0;i < $.suffix.length;++i){if($B.$isinstance($.suffix[i],bytes)){if(bytes.endswith($.self,$.suffix[i],$.start,$.end)){return true}}else{throw _b_.TypeError.$factory("endswith first arg must be "+
 "bytes or a tuple of bytes, not "+
 $B.class_name($.suffix))}}
 return false}else{throw _b_.TypeError.$factory("endswith first arg must be bytes "+
@@ -8972,7 +8960,12 @@ var tabs=new Array(nb_spaces)
 tabs.fill(32)
 buffer.splice.apply(buffer,[i,1].concat(tabs))}}
 return _b_.bytes.$factory(buffer)}
-bytes.find=function(self,sub){if(arguments.length !=2){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start,end=$.end}else{var start=0,end=-1}
+bytes.find=function(self,sub){var start,end
+if(arguments.length !=2){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
+sub=$.sub
+start=$.start
+end=$.end}else{start=0
+end=-1}
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
 return self.source.slice(0,end==-1 ? undefined :end).indexOf(sub,start)}else if(! sub.__class__){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
 "object, not '"+$B.class_name(sub)+"'")}else if(! sub.__class__.$buffer_protocol){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
@@ -9073,9 +9066,10 @@ var padding=[],count=$.width-$.self.source.length
 for(var i=0;i < count;++i){padding.push($.fillbyte.source[0])}
 return bytes.$factory($.self.source.concat(padding))}
 bytes.lstrip=function(self,cars){return _strip(self,cars,'l')}
-bytes.maketrans=function(from,to){var _t=[],to=$B.to_bytes(to)
-for(var i=0;i < 256;i++){_t[i]=i}
-for(var i=0,len=from.source.length;i < len;i++){var _ndx=from.source[i]
+bytes.maketrans=function(from,to){var _t=[]
+to=$B.to_bytes(to)
+for(let i=0;i < 256;i++){_t[i]=i}
+for(let i=0,len=from.source.length;i < len;i++){var _ndx=from.source[i]
 _t[_ndx]=to[i]}
 return bytes.$factory(_t)}
 bytes.partition=function(){var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
@@ -9108,7 +9102,13 @@ for(var i=0;i < len;i++){if(bytes.startswith(self,old,i)&& count){for(var j=0;j 
 i+=(old.source.length-1)
 count--}else{res.push(src[i])}}
 return bytes.$factory(res)}
-bytes.rfind=function(self,subbytes){if(arguments.length==2 && subbytes.__class__===bytes){var sub=subbytes,start=0,end=-1}else{var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),self=$.self,sub=$.sub,start=$.start,end=$.end}
+bytes.rfind=function(self,subbytes){var sub,start,end
+if(arguments.length==2 && subbytes.__class__===bytes){sub=subbytes
+start=0
+end=-1}else{var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
+sub=$.sub
+start=$.start
+end=$.end}
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
 return $.self.source.slice(start,$.end==-1 ? undefined :$.end).
 lastIndexOf(sub)+start}else if(! sub.__class__){throw _b_.TypeError.$factory("first argument must be a bytes-like "+
@@ -9152,7 +9152,7 @@ start=stop+len
 stop=start}else{stop++}}
 if(match ||(stop > start)){res.push(bytes.$factory(src.slice(start,stop)))}
 return res}
-bytes.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
+bytes.splitlines=function(){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
 if(!$B.$isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
 $B.get_class($.keepends).__name)}
 var keepends=_b_.int.$factory($.keepends),res=[],source=$.self.source,start=0,pos=0
@@ -9164,13 +9164,13 @@ start=pos=pos+1}else{pos++}}
 if(start < source.length){res.push(bytes.$factory(source.slice(start)))}
 return res}
 bytes.startswith=function(){var $=$B.args('startswith',3,{self:null,prefix:null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
-if($B.$isinstance($.prefix,bytes)){var res=true
-for(var i=0;i < $.prefix.source.length && res;i++){res=$.self.source[start+i]==$.prefix.source[i]}
-return res}else if($B.$isinstance($.prefix,_b_.tuple)){var items=[]
-for(var i=0;i < $.prefix.length;i++){if($B.$isinstance($.prefix[i],bytes)){items=items.concat($.prefix[i].source)}else{throw _b_.TypeError.$factory("startswith first arg must be "+
+if($B.$isinstance($.prefix,bytes)){let res=true
+for(let i=0;i < $.prefix.source.length && res;i++){res=$.self.source[start+i]==$.prefix.source[i]}
+return res}else if($B.$isinstance($.prefix,_b_.tuple)){let items=[]
+for(let i=0;i < $.prefix.length;i++){if($B.$isinstance($.prefix[i],bytes)){items=items.concat($.prefix[i].source)}else{throw _b_.TypeError.$factory("startswith first arg must be "+
 "bytes or a tuple of bytes, not "+
 $B.class_name($.prefix))}}
-var prefix=bytes.$factory(items)
+let prefix=bytes.$factory(items)
 return bytes.startswith($.self,prefix,start)}else{throw _b_.TypeError.$factory("startswith first arg must be bytes "+
 "or a tuple of bytes, not "+$B.class_name($.prefix))}}
 bytes.strip=function(self,cars){var res=bytes.lstrip(self,cars)
@@ -9204,11 +9204,8 @@ return bytes.$factory(buffer)}
 function $UnicodeEncodeError(encoding,code_point,position){throw _b_.UnicodeEncodeError.$factory("'"+encoding+
 "' codec can't encode character "+_b_.hex(code_point)+
 " in position "+position)}
-function $UnicodeDecodeError(encoding,position){throw _b_.UnicodeDecodeError.$factory("'"+encoding+
-"' codec can't decode bytes in position "+position)}
 function _hex(_int){var h=_int.toString(16)
 return '0x'+'0'.repeat(2-h.length)+h}
-function _int(hex){return parseInt(hex,16)}
 var aliases={ascii:['646','us-ascii'],big5:['big5-tw','csbig5'],big5hkscs:['big5-hkscs','hkscs'],cp037:['IBM037','IBM039'],cp273:['273','IBM273','csIBM273'],cp424:['EBCDIC-CP-HE','IBM424'],cp437:['437','IBM437'],cp500:['EBCDIC-CP-BE','EBCDIC-CP-CH','IBM500'],cp775:['IBM775'],cp850:['850','IBM850'],cp852:['852','IBM852'],cp855:['855','IBM855'],cp857:['857','IBM857'],cp858:['858','IBM858'],cp860:['860','IBM860'],cp861:['861','CP-IS','IBM861'],cp862:['862','IBM862'],cp863:['863','IBM863'],cp864:['IBM864'],cp865:['865','IBM865'],cp866:['866','IBM866'],cp869:['869','CP-GR','IBM869'],cp932:['932','ms932','mskanji','ms-kanji'],cp949:['949','ms949','uhc'],cp950:['950','ms950'],cp1026:['ibm1026'],cp1125:['1125','ibm1125','cp866u','ruscii'],cp1140:['ibm1140'],cp1250:['windows-1250'],cp1251:['windows-1251'],cp1252:['windows-1252'],cp1253:['windows-1253'],cp1254:['windows-1254'],cp1255:['windows-1255'],cp1256:['windows-1256'],cp1257:['windows-1257'],cp1258:['windows-1258'],euc_jp:['eucjp','ujis','u-jis'],euc_jis_2004:['jisx0213','eucjis2004'],euc_jisx0213:['eucjisx0213'],euc_kr:['euckr','korean','ksc5601','ks_c-5601','ks_c-5601-1987','ksx1001','ks_x-1001'],gb2312:['chinese','csiso58gb231280','euc-cn','euccn','eucgb2312-cn','gb2312-1980','gb2312-80','iso-ir-58'],gbk:['936','cp936','ms936'],gb18030:['gb18030-2000'],hz:['hzgb','hz-gb','hz-gb-2312'],iso2022_jp:['csiso2022jp','iso2022jp','iso-2022-jp'],iso2022_jp_1:['iso2022jp-1','iso-2022-jp-1'],iso2022_jp_2:['iso2022jp-2','iso-2022-jp-2'],iso2022_jp_2004:['iso2022jp-2004','iso-2022-jp-2004'],iso2022_jp_3:['iso2022jp-3','iso-2022-jp-3'],iso2022_jp_ext:['iso2022jp-ext','iso-2022-jp-ext'],iso2022_kr:['csiso2022kr','iso2022kr','iso-2022-kr'],latin_1:['iso-8859-1','iso8859-1','8859','cp819','latin','latin1','L1'],iso8859_2:['iso-8859-2','latin2','L2'],iso8859_3:['iso-8859-3','latin3','L3'],iso8859_4:['iso-8859-4','latin4','L4'],iso8859_5:['iso-8859-5','cyrillic'],iso8859_6:['iso-8859-6','arabic'],iso8859_7:['iso-8859-7','greek','greek8'],iso8859_8:['iso-8859-8','hebrew'],iso8859_9:['iso-8859-9','latin5','L5'],iso8859_10:['iso-8859-10','latin6','L6'],iso8859_11:['iso-8859-11','thai'],iso8859_13:['iso-8859-13','latin7','L7'],iso8859_14:['iso-8859-14','latin8','L8'],iso8859_15:['iso-8859-15','latin9','L9'],iso8859_16:['iso-8859-16','latin10','L10'],johab:['cp1361','ms1361'],kz1048:['kz_1048','strk1048_2002','rk1048'],mac_cyrillic:['maccyrillic'],mac_greek:['macgreek'],mac_iceland:['maciceland'],mac_latin2:['maclatin2','maccentraleurope','mac_centeuro'],mac_roman:['macroman','macintosh'],mac_turkish:['macturkish'],ptcp154:['csptcp154','pt154','cp154','cyrillic-asian'],shift_jis:['csshiftjis','shiftjis','sjis','s_jis'],shift_jis_2004:['shiftjis2004','sjis_2004','sjis2004'],shift_jisx0213:['shiftjisx0213','sjisx0213','s_jisx0213'],utf_32:['U32','utf32'],utf_32_be:['UTF-32BE'],utf_32_le:['UTF-32LE'],utf_16:['U16','utf16'],utf_16_be:['UTF-16BE'],utf_16_le:['UTF-16LE'],utf_7:['U7','unicode-1-1-utf-7'],utf_8:['U8','UTF','utf8','cp65001'],mbcs:['ansi','dbcs'],bz2_codec:['bz2'],hex_codec:['hex'],quopri_codec:['quopri','quotedprintable','quoted_printable'],uu_codec:['uu'],zlib_codec:['zip','zlib'],rot_13:['rot13']}
 var codecs_aliases={}
 for(var name in aliases){for(var alias of aliases[name]){codecs_aliases[alias.toLowerCase().replace(/-/g,'_')]=name}}
@@ -9230,8 +9227,8 @@ case "utf-8":
 case "utf8":
 case "U8":
 case "UTF":
-var pos=0,s="",err_info
-while(pos < b.length){var byte=b[pos]
+var pos=0,err_info
+while(pos < b.length){let byte=b[pos]
 err_info=null
 if(!(byte & 0x80)){
 s+=String.fromCodePoint(byte)
@@ -9242,32 +9239,32 @@ if(err_info !==null){if(errors=="ignore"){pos++}else{throw _b_.UnicodeDecodeErro
 err_info[0].toString(16)+"  in position "+
 err_info[1]+
 (err_info[2]=="end" ? ": unexpected end of data" :
-": invalid continuation byte"))}}else{var cp=byte & 0x1f
+": invalid continuation byte"))}}else{let cp=byte & 0x1f
 cp <<=6
 cp+=b[pos+1]& 0x3f
 s+=String.fromCodePoint(cp)
 pos+=2}}else if((byte >> 4)==14){
 if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}
-if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(var i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
+if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(let i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
 pos=err_info[3]}else{throw _b_.UnicodeDecodeError.$factory(
 "'utf-8' codec can't decode byte 0x"+
 err_info[0].toString(16)+"  in position "+
 err_info[1]+
 (err_info[2]=="end" ? ": unexpected end of data" :
-": invalid continuation byte"))}}else{var cp=byte & 0xf
+": invalid continuation byte"))}}else{let cp=byte & 0xf
 cp=cp << 12
 cp+=(b[pos+1]& 0x3f)<< 6
 cp+=b[pos+2]& 0x3f
 s+=String.fromCodePoint(cp)
 pos+=3}}else if((byte >> 3)==30){
-if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}else if(b[pos+3]===undefined){err_info=[byte,pos+'-'+(pos+1)+'-'+(pos+2),"end",pos+3]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}
-if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(var i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
+if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}else if(b[pos+3]===undefined){err_info=[byte,pos+'-'+(pos+1)+'-'+(pos+2),"end",pos+3]}
+if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(let i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
 pos=err_info[3]}else{throw _b_.UnicodeDecodeError.$factory(
 "'utf-8' codec can't decode byte 0x"+
 err_info[0].toString(16)+"  in position "+
 err_info[1]+
 (err_info[2]=="end" ? ": unexpected end of data" :
-": invalid continuation byte"))}}else{var cp=byte & 0xf
+": invalid continuation byte"))}}else{let cp=byte & 0xf
 cp=cp << 18
 cp+=(b[pos+1]& 0x3f)<< 12
 cp+=(b[pos+2]& 0x3f)<< 6
@@ -9301,11 +9298,11 @@ replace(/\\'/g,"'").
 replace(/\\"/g,'"')
 case "raw_unicode_escape":
 if(obj.__class__===bytes ||obj.__class__===bytearray){obj=decode(obj,"latin-1","strict")}
-return obj.replace(/\\u([a-fA-F0-9]{4})/g,function(mo){var cp=parseInt(mo.substr(2),16)
+return obj.replace(/\\u([a-fA-F0-9]{4})/g,function(mo){let cp=parseInt(mo.substr(2),16)
 return String.fromCharCode(cp)})
 case "ascii":
-for(var i=0,len=b.length;i < len;i++){var cp=b[i]
-if(cp <=127){s+=String.fromCharCode(cp)}else{if(errors=="ignore"){}else if(errors=="backslashreplace"){s+='\\x'+cp.toString(16)}else{var msg="'ascii' codec can't decode byte 0x"+
+for(let i=0,len=b.length;i < len;i++){let cp=b[i]
+if(cp <=127){s+=String.fromCharCode(cp)}else{if(errors=="ignore"){}else if(errors=="backslashreplace"){s+='\\x'+cp.toString(16)}else{let msg="'ascii' codec can't decode byte 0x"+
 cp.toString(16)+" in position "+i+
 ": ordinal not in range(128)"
 throw _b_.UnicodeDecodeError.$factory(msg)}}}
@@ -9313,7 +9310,7 @@ break
 default:
 try{load_decoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+enc)}
 var decoded=to_unicode[enc](obj)[0]
-for(var i=0,len=decoded.length;i < len;i++){if(decoded.codePointAt(i)==0xfffe){throw _b_.UnicodeDecodeError.$factory("'charmap' codec "+
+for(let i=0,len=decoded.length;i < len;i++){if(decoded.codePointAt(i)==0xfffe){throw _b_.UnicodeDecodeError.$factory("'charmap' codec "+
 `can't decode byte ${_hex(b[i])} in position ${i}: `+
 "character maps to <undefined>")}}
 return decoded}
@@ -9323,7 +9320,7 @@ var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
-for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
+for(let i=0,len=s.length;i < len;i++){let cp=s.charCodeAt(i)
 if(cp <=0x7f){t.push(cp)}else if(cp <=0x7ff){t.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp <=0xffff){t.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
 break
 case "latin":
@@ -9336,22 +9333,22 @@ case "iso_8859_1":
 case "8859":
 case "cp819":
 case "windows1252":
-for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
+for(let i=0,len=s.length;i < len;i++){let cp=s.charCodeAt(i)
 if(cp <=255){t[pos++]=cp}else if(errors !="ignore"){$UnicodeEncodeError(encoding,i)}}
 break
 case "ascii":
-for(var i=0,len=_b_.str.__len__(s);i < len;i++){var cp=s.charCodeAt(i),
+for(let i=0,len=_b_.str.__len__(s);i < len;i++){let cp=s.charCodeAt(i),
 char=_b_.str.__getitem__(s,i)
-if(cp <=127){t[pos++]=cp}else if(errors=="backslashreplace"){var hex=_b_.hex(_b_.ord(char))
+if(cp <=127){t[pos++]=cp}else if(errors=="backslashreplace"){let hex=_b_.hex(_b_.ord(char))
 if(hex.length < 5){hex='\\x'+'0'.repeat(4-hex.length)+hex.substr(2)}else if(hex.length < 7){hex='\\u'+'0'.repeat(6-hex.length)+hex.substr(2)}else{hex='\\U'+'0'.repeat(10-hex.length)+hex.substr(2)}
-for(var char of hex){t[pos++]=char.charCodeAt(0)}}else if(errors !=='ignore'){$UnicodeEncodeError(encoding,i)}}
+for(let char of hex){t[pos++]=char.charCodeAt(0)}}else if(errors !=='ignore'){$UnicodeEncodeError(encoding,i)}}
 break
 case "raw_unicode_escape":
-for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(cp < 256){t[pos++]=cp}else{var us=cp.toString(16)
+for(let i=0,len=s.length;i < len;i++){let cp=s.charCodeAt(i)
+if(cp < 256){t[pos++]=cp}else{let us=cp.toString(16)
 if(us.length % 2){us="0"+us}
 us="\\u"+us
-for(var j=0;j < us.length;j++){t[pos++]=us.charCodeAt(j)}}}
+for(let j=0;j < us.length;j++){t[pos++]=us.charCodeAt(j)}}}
 break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
@@ -9359,7 +9356,7 @@ return from_unicode[enc](s)[0]}
 return fast_bytes(t)}
 function fast_bytes(t){return{
 __class__:_b_.bytes,source:t}}
-bytes.$factory=function(source,encoding,errors){return bytes.__new__.bind(null,bytes).apply(null,arguments)}
+bytes.$factory=function(){return bytes.__new__.bind(null,bytes).apply(null,arguments)}
 bytes.__class__=_b_.type
 bytes.$is_class=true
 $B.set_func_names(bytes,"builtins")

@@ -1,6 +1,6 @@
 "use strict";
 
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -33,7 +33,7 @@ function _strip(self, cars, lr){
     if(cars === undefined){
         cars = []
         var ws = '\r\n \t'
-        for(var i = 0, len = ws.length; i < len; i++){
+        for(let i = 0, len = ws.length; i < len; i++){
             cars.push(ws.charCodeAt(i))
         }
     }else if($B.$isinstance(cars, bytes)){
@@ -42,12 +42,15 @@ function _strip(self, cars, lr){
         throw _b_.TypeError.$factory("Type str doesn't support the buffer API")
     }
     if(lr == 'l'){
-        for(var i = 0, len = self.source.length; i < len; i++){
+        let i,
+            len
+        for(i = 0, len = self.source.length; i < len; i++){
             if(cars.indexOf(self.source[i]) == -1){break}
         }
         return bytes.$factory(self.source.slice(i))
     }
-    for(var i = self.source.length - 1; i >= 0; i--){
+    let i
+    for(i = self.source.length - 1; i >= 0; i--){
        if(cars.indexOf(self.source[i]) == -1){break}
     }
     return bytes.$factory(self.source.slice(0, i + 1))
@@ -271,9 +274,8 @@ bytes.__ge__ = function(self, other){
 
 // borrowed from py_string.js.
 bytes.__getitem__ = function(self, arg){
-    var i
     if($B.$isinstance(arg, _b_.int)){
-        var pos = arg
+        let pos = arg
         if(arg < 0){
             pos = self.source.length + pos
         }
@@ -282,19 +284,18 @@ bytes.__getitem__ = function(self, arg){
         }
         throw _b_.IndexError.$factory("index out of range")
     }else if($B.$isinstance(arg, _b_.slice)){
-        var s = _b_.slice.$conv_for_seq(arg, self.source.length),
+        let s = _b_.slice.$conv_for_seq(arg, self.source.length),
             start = s.start,
             stop = s.stop,
             step = s.step
-        var res = [],
-            i = null,
+        let res = [],
             pos = 0
         if(step > 0){
             stop = Math.min(stop, self.source.length)
             if(stop <= start){
                 return bytes.$factory([])
             }
-            for(var i = start; i < stop; i += step){
+            for(let i = start; i < stop; i += step){
                 res[pos++] = self.source[i]
             }
         }else{
@@ -302,7 +303,7 @@ bytes.__getitem__ = function(self, arg){
                 return bytes.$factory([])
             }
             stop = Math.max(0, stop)
-            for(var i = start; i >= stop; i += step){
+            for(let i = start; i >= stop; i += step){
                 res[pos++] = self.source[i]
             }
         }
@@ -392,13 +393,13 @@ bytes.__ne__ = function(self,other){
     return ! bytes.__eq__(self, other)
 }
 
-bytes.__new__ = function(cls, source, encoding, errors){
+bytes.__new__ = function(){
     var missing = {},
         $ = $B.args("__new__", 4,
             {cls: null, source: null, encoding: null, errors: null},
             ["cls", "source", "encoding", "errors"], arguments,
-            {source: missing, encoding: missing, errors: missing}, null, null)
-    var source
+            {source: missing, encoding: missing, errors: missing}, null, null),
+        source = $.source
     if($.source === missing){
         return {
             __class__: $.cls,
@@ -409,7 +410,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
             throw _b_.TypeError.$factory('string argument without an encoding')
         }
         $.errors = $.errors === missing ? 'strict' : $.errors
-        var res = encode($.source, $.encoding, $.errors)
+        let res = encode($.source, $.encoding, $.errors)
         if(! $B.$isinstance(res, bytes)){
             throw _b_.TypeError.$factory(`'${$.encoding}' codec returns ` +
                 `${$B.class_name(res)}, not bytes`)
@@ -432,18 +433,19 @@ bytes.__new__ = function(cls, source, encoding, errors){
     }else if($B.$isinstance($.source, _b_.memoryview)){
         source = $.source.obj.source
     }else{
+        var int_list
         if(Array.isArray($.source)){
-            var int_list = $.source
+            int_list = $.source
         }else{
             try{
-                var int_list = _b_.list.$factory($.source)
+                int_list = _b_.list.$factory($.source)
             }catch(err){
                 var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
                 if(bytes_method === _b_.None){
                     throw _b_.TypeError.$factory("cannot convert " +
                         `'${$B.class_name(source)}' object to bytes`)
                 }
-                var res = $B.$call(bytes_method)()
+                let res = $B.$call(bytes_method)()
                 if(! $B.$isinstance(res, _b_.bytes)){
                     throw _b_.TypeError.$factory(`__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
@@ -477,7 +479,7 @@ bytes.$new = function(cls, source, encoding, errors){
     if(source === undefined){
         // empty list
     }else if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
-        var i = source
+        let i = source
         while(i--){
             int_list[pos++] = 0
         }
@@ -511,7 +513,7 @@ bytes.$new = function(cls, source, encoding, errors){
                     }
                     return res
                 }
-                for(var i = 0; i < int_list.length; i++){
+                for(let i = 0; i < int_list.length; i++){
                     try{
                         var item = _b_.int.$factory(int_list[i])
                     }catch(err){
@@ -618,7 +620,7 @@ bytes.count = function() {
     return n
 }
 
-bytes.decode = function(self, encoding,errors){
+bytes.decode = function(){
     var $ = $B.args("decode", 3, {self: null, encoding: null, errors: null},
             ["self", "encoding", "errors"], arguments,
             {encoding: "utf-8", errors: "strict"}, null, null)
@@ -642,18 +644,15 @@ bytes.endswith = function() {
             ['self', 'suffix', 'start', 'end'], arguments,
             {start: -1, end: -1}, null, null)
     if($B.$isinstance($.suffix, bytes)){
-        var start = $.start == -1 ?
-            $.self.source.length - $.suffix.source.length :
-            Math.min($.self.source.length - $.suffix.source.length, $.start)
         var end = $.end == -1 ? $.self.source.length : $.end
         var res = true
-        for (var i = $.suffix.source.length - 1, len = $.suffix.source.length;
+        for(let i = $.suffix.source.length - 1, len = $.suffix.source.length;
                 i >= 0 && res; --i){
             res = $.self.source[end - len + i] == $.suffix.source[i]
         }
         return res
     }else if($B.$isinstance($.suffix, _b_.tuple)){
-        for(var i = 0; i < $.suffix.length; ++i){
+        for(let i = 0; i < $.suffix.length; ++i){
             if($B.$isinstance($.suffix[i], bytes)){
                 if(bytes.endswith($.self, $.suffix[i], $.start, $.end)){
                     return true
@@ -693,17 +692,19 @@ bytes.expandtabs = function() {
 }
 
 bytes.find = function(self, sub){
+    var start,
+        end
     if(arguments.length != 2){
         var $ = $B.args('find', 4,
                 {self: null, sub: null, start: null, end: null},
                 ['self', 'sub', 'start', 'end'],
-                arguments, {start: 0, end: -1}, null, null),
-            sub = $.sub,
-            start = $.start,
-            end = $.end
+                arguments, {start: 0, end: -1}, null, null)
+        sub = $.sub
+        start = $.start
+        end = $.end
     }else{
-        var start = 0,
-            end = -1
+        start = 0
+        end = -1
     }
     if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
@@ -1008,13 +1009,15 @@ bytes.ljust = function() {
 bytes.lstrip = function(self, cars){return _strip(self, cars, 'l')}
 
 bytes.maketrans = function(from, to) {
-    var _t = [],
-        to = $B.to_bytes(to)
+    var _t = []
+    to = $B.to_bytes(to)
     // make 'default' translate table
-    for(var i = 0; i < 256; i++){_t[i] = i}
+    for(let i = 0; i < 256; i++){
+        _t[i] = i
+    }
 
     // make substitution in the translation table
-    for(var i = 0, len = from.source.length; i < len; i++){
+    for(let i = 0, len = from.source.length; i < len; i++){
        var _ndx = from.source[i]     //retrieve ascii code of char
        _t[_ndx] = to[i]
     }
@@ -1118,19 +1121,21 @@ bytes.replace = function(){
 }
 
 bytes.rfind = function(self, subbytes){
+    var sub,
+        start,
+        end
     if(arguments.length == 2 && subbytes.__class__ === bytes){
-        var sub = subbytes,
-            start = 0,
-            end = -1
+        sub = subbytes
+        start = 0
+        end = -1
     }else{
         var $ = $B.args('rfind', 4,
             {self: null, sub: null, start: null, end: null},
             ['self', 'sub', 'start', 'end'],
-            arguments, {start: 0, end: -1}, null, null),
-            self = $.self,
-            sub = $.sub,
-            start = $.start,
-            end = $.end
+            arguments, {start: 0, end: -1}, null, null)
+        sub = $.sub
+        start = $.start
+        end = $.end
     }
     if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
@@ -1258,7 +1263,7 @@ bytes.split = function(){
     return res
 }
 
-bytes.splitlines = function(self) {
+bytes.splitlines = function() {
     var $ = $B.args('splitlines', 2, {self: null, keepends: null},
                     ['self', 'keepends'], arguments, {keepends: false},
                     null, null)
@@ -1296,14 +1301,14 @@ bytes.startswith = function(){
         ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
         start = $.start
     if($B.$isinstance($.prefix, bytes)){
-        var res = true
-        for(var i = 0; i < $.prefix.source.length && res; i++){
+        let res = true
+        for(let i = 0; i < $.prefix.source.length && res; i++){
             res = $.self.source[start + i] == $.prefix.source[i]
         }
         return res
     }else if($B.$isinstance($.prefix, _b_.tuple)){
-        var items = []
-        for(var i = 0; i < $.prefix.length; i++){
+        let items = []
+        for(let i = 0; i < $.prefix.length; i++){
             if($B.$isinstance($.prefix[i], bytes)){
                 items = items.concat($.prefix[i].source)
             }else{
@@ -1312,7 +1317,7 @@ bytes.startswith = function(){
                     $B.class_name($.prefix))
             }
         }
-        var prefix = bytes.$factory(items)
+        let prefix = bytes.$factory(items)
         return bytes.startswith($.self, prefix, start)
     }else{
         throw _b_.TypeError.$factory("startswith first arg must be bytes " +
@@ -1426,17 +1431,9 @@ function $UnicodeEncodeError(encoding, code_point, position){
         " in position " + position)
 }
 
-function $UnicodeDecodeError(encoding, position){
-    throw _b_.UnicodeDecodeError.$factory("'" + encoding +
-        "' codec can't decode bytes in position " + position)
-}
-
 function _hex(_int){
     var h = _int.toString(16)
     return '0x' + '0'.repeat(2 - h.length) + h
-}
-function _int(hex){
-    return parseInt(hex, 16)
 }
 
 var aliases = {
@@ -1588,10 +1585,9 @@ var decode = $B.decode = function(obj, encoding, errors){
       case "U8":
       case "UTF":
           var pos = 0,
-              s = "",
               err_info
           while(pos < b.length){
-              var byte = b[pos]
+              let byte = b[pos]
               err_info = null
               if(!(byte & 0x80)){
                   // Most significant bit = 0
@@ -1616,7 +1612,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                                   ": invalid continuation byte"))
                       }
                   }else{
-                      var cp = byte & 0x1f
+                      let cp = byte & 0x1f
                       cp <<= 6
                       cp += b[pos + 1] & 0x3f
                       s += String.fromCodePoint(cp)
@@ -1637,7 +1633,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                       if(errors == "ignore"){
                           pos = err_info[3]
                       }else if(errors == "surrogateescape"){
-                          for(var i = pos; i < err_info[3]; i++){
+                          for(let i = pos; i < err_info[3]; i++){
                               s += String.fromCodePoint(0xdc80 + b[i] - 0x80)
                           }
                           pos = err_info[3]
@@ -1650,7 +1646,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                                   ": invalid continuation byte"))
                       }
                   }else{
-                      var cp = byte & 0xf
+                      let cp = byte & 0xf
                       cp = cp << 12
                       cp += (b[pos + 1] & 0x3f) << 6
                       cp += b[pos + 2] & 0x3f
@@ -1671,14 +1667,12 @@ var decode = $B.decode = function(obj, encoding, errors){
                       err_info = [byte,
                                   pos + '-' + (pos + 1) + '-' + (pos + 2),
                                   "end", pos + 3]
-                  }else if((b[pos + 2] & 0xc0) != 0x80){
-                      err_info = [byte, pos, "continuation", pos + 3]
                   }
                   if(err_info !== null){
                       if(errors == "ignore"){
                           pos = err_info[3]
                       }else if(errors == "surrogateescape"){
-                          for(var i = pos; i < err_info[3]; i++){
+                          for(let i = pos; i < err_info[3]; i++){
                               s += String.fromCodePoint(0xdc80 + b[i] - 0x80)
                           }
                           pos = err_info[3]
@@ -1691,7 +1685,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                                   ": invalid continuation byte"))
                       }
                   }else{
-                      var cp = byte & 0xf
+                      let cp = byte & 0xf
                       cp = cp << 18
                       cp += (b[pos + 1] & 0x3f) << 12
                       cp += (b[pos + 2] & 0x3f) << 6
@@ -1745,12 +1739,12 @@ var decode = $B.decode = function(obj, encoding, errors){
               obj = decode(obj, "latin-1", "strict")
           }
           return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
-              var cp = parseInt(mo.substr(2), 16)
+              let cp = parseInt(mo.substr(2), 16)
               return String.fromCharCode(cp)
           })
       case "ascii":
-          for(var i = 0, len = b.length; i < len; i++){
-              var cp = b[i]
+          for(let i = 0, len = b.length; i < len; i++){
+              let cp = b[i]
               if(cp <= 127){
                   s += String.fromCharCode(cp)
               }else{
@@ -1759,7 +1753,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                   }else if(errors == "backslashreplace"){
                       s += '\\x' + cp.toString(16)
                   }else{
-                      var msg = "'ascii' codec can't decode byte 0x" +
+                      let msg = "'ascii' codec can't decode byte 0x" +
                         cp.toString(16) + " in position " + i +
                         ": ordinal not in range(128)"
                       throw _b_.UnicodeDecodeError.$factory(msg)
@@ -1774,7 +1768,7 @@ var decode = $B.decode = function(obj, encoding, errors){
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
           var decoded = to_unicode[enc](obj)[0]
-          for(var i = 0, len = decoded.length; i < len; i++){
+          for(let i = 0, len = decoded.length; i < len; i++){
               if(decoded.codePointAt(i) == 0xfffe){
                   throw _b_.UnicodeDecodeError.$factory("'charmap' codec " +
                       `can't decode byte ${_hex(b[i])} in position ${i}: ` +
@@ -1801,8 +1795,8 @@ var encode = $B.encode = function(){
         case "utf-8":
         case "utf_8":
         case "utf8":
-            for(var i = 0, len = s.length; i < len; i++){
-                var cp = s.charCodeAt(i)
+            for(let i = 0, len = s.length; i < len; i++){
+                let cp = s.charCodeAt(i)
                 if(cp <= 0x7f){
                     t.push(cp)
                 }else if(cp <= 0x7ff){
@@ -1827,8 +1821,8 @@ var encode = $B.encode = function(){
         case "8859":
         case "cp819":
         case "windows1252":
-            for(var i = 0, len = s.length; i < len; i++){
-                var cp = s.charCodeAt(i) // code point
+            for(let i = 0, len = s.length; i < len; i++){
+                let cp = s.charCodeAt(i) // code point
                 if(cp <= 255){
                     t[pos++] = cp
                 }else if(errors != "ignore"){
@@ -1837,13 +1831,13 @@ var encode = $B.encode = function(){
             }
             break
         case "ascii":
-          for(var i = 0, len = _b_.str.__len__(s); i < len; i++){
-              var cp = s.charCodeAt(i), // code point
+          for(let i = 0, len = _b_.str.__len__(s); i < len; i++){
+              let cp = s.charCodeAt(i), // code point
                   char = _b_.str.__getitem__(s, i)
               if(cp <= 127){
                   t[pos++] = cp
               }else if(errors == "backslashreplace"){
-                  var hex = _b_.hex(_b_.ord(char))
+                  let hex = _b_.hex(_b_.ord(char))
                   if(hex.length < 5){
                       hex = '\\x' + '0'.repeat(4 - hex.length) + hex.substr(2)
                   }else if(hex.length < 7){
@@ -1851,7 +1845,7 @@ var encode = $B.encode = function(){
                   }else{
                       hex = '\\U' + '0'.repeat(10 - hex.length) + hex.substr(2)
                   }
-                  for(var char of hex){
+                  for(let char of hex){
                       t[pos++] = char.charCodeAt(0)
                   }
               }else if(errors !== 'ignore'){
@@ -1860,15 +1854,17 @@ var encode = $B.encode = function(){
           }
           break
         case "raw_unicode_escape":
-          for(var i = 0, len = s.length; i < len; i++){
-              var cp = s.charCodeAt(i) // code point
+          for(let i = 0, len = s.length; i < len; i++){
+              let cp = s.charCodeAt(i) // code point
               if(cp < 256){
                   t[pos++] = cp
               }else{
-                  var us = cp.toString(16)
-                  if(us.length % 2){us = "0" + us}
+                  let us = cp.toString(16)
+                  if(us.length % 2){
+                      us = "0" + us
+                  }
                   us = "\\u" + us
-                  for(var j = 0; j < us.length; j++){
+                  for(let j = 0; j < us.length; j++){
                       t[pos++] = us.charCodeAt(j)
                   }
               }
@@ -1892,7 +1888,7 @@ function fast_bytes(t){
     }
 }
 
-bytes.$factory = function(source, encoding, errors){
+bytes.$factory = function(){
     return bytes.__new__.bind(null, bytes).apply(null, arguments)
 }
 

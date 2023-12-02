@@ -137,8 +137,8 @@ $B.create_python_ast_classes = function(){
                 slots = {},
                 nb_args = 0
             if(raw_fields){
-                for(var i = 0, len = _fields.length; i < len; i++){
-                    var f = _fields[i],
+                for(let i = 0, len = _fields.length; i < len; i++){
+                    let f = _fields[i],
                         rf = raw_fields[i]
                     nb_args++
                     slots[f] = null
@@ -157,10 +157,10 @@ $B.create_python_ast_classes = function(){
                     __class__: cls,
                     _attributes: $B.fast_tuple([])
                 }
-                for(var key in $){
+                for(let key in $){
                     if(key == 'kw'){
-                        for(var key in $.kw.$jsobj){
-                            res[key] = $.kw.$jsobj[key]
+                        for(let prop in $.kw.$jsobj){
+                            res[prop] = $.kw.$jsobj[prop]
                         }
                     }else{
                         res[key] = $[key]
@@ -181,7 +181,7 @@ $B.create_python_ast_classes = function(){
             // For fields that end with "?", set class attribute to None
             // Used in ast.dump to skip printing the field
             if(raw_fields){
-                for(var i=0, len=raw_fields.length; i < len; i++){
+                for(let i=0, len=raw_fields.length; i < len; i++){
                     var raw_field = raw_fields[i]
                     if(raw_field.endsWith('?')){
                         _b_.dict.$setitem(cls.__dict__, _fields[i], _b_.None)

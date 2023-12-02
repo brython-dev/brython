@@ -1032,7 +1032,7 @@ $B.$getattr = function(obj, attr, _default){
                   __class__: $B.mappingproxy, // in py_dict.js
                   $jsobj: dict,
                   $version: 0
-                  }
+              }
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
@@ -1085,18 +1085,20 @@ $B.$getattr = function(obj, attr, _default){
             return obj.$method_cache[attr]
         }
 
-        if($test){console.log("native class", klass, klass[attr])}
-        if(attr == "__doc__" && klass[attr] === undefined){
-            _get_builtins_doc()
-            klass[attr] = $B.builtins_doc[klass.__name__]
+        if($test){
+            console.log("native class", klass, klass[attr])
         }
         if(klass[attr] === undefined){
             var object_attr = _b_.object[attr]
-            if($test){console.log("object attr", object_attr)}
+            if($test){
+                console.log("object attr", object_attr)
+            }
             if(object_attr !== undefined){
                 klass[attr] = object_attr
             }else{
-                if($test){console.log("obj[attr]", obj[attr])}
+                if($test){
+                    console.log("obj[attr]", obj[attr])
+                }
                 var attrs = obj.__dict__
                 if(attrs && _b_.dict.$contains_string(attrs, attr)){
                     return _b_.dict.$getitem_string(attrs, attr)
@@ -1113,9 +1115,13 @@ $B.$getattr = function(obj, attr, _default){
         if(typeof klass[attr] == 'function'){
             var func = klass[attr]
             // new is a static method
-            if(attr == '__new__'){func.$type = "staticmethod"}
+            if(attr == '__new__'){
+                func.$type = "staticmethod"
+            }
 
-            if(func.$type == "staticmethod"){return func}
+            if(func.$type == "staticmethod"){
+                return func
+            }
 
             var self = klass[attr].__class__ == $B.method ? klass : obj,
                 method = klass[attr].bind(null, self)
@@ -1350,26 +1356,6 @@ $B.$hash = function(obj){
         }
     }else{
         return $B.$call(hash_method)(obj)
-    }
-}
-
-function _get_builtins_doc(){
-    if($B.builtins_doc === undefined){
-        // Load builtins docstrings from file builtins_doctring.js
-        var url = $B.brython_path
-        if(url.charAt(url.length - 1) == '/'){
-            url = url.substr(0, url.length - 1)
-        }
-        url += '/builtins_docstrings.js'
-        var f = _b_.open(url)
-        eval(f.$content)
-        // builtins_docstrings defines an objet "docs"
-        for(var key in docs){
-            if(_b_[key]){
-                _b_[key].__doc__ = docs[key]
-            }
-        }
-        $B.builtins_doc = docs
     }
 }
 
