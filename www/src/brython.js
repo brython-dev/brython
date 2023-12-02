@@ -7,7 +7,7 @@ var __BRYTHON__=globalThis.__BRYTHON__ ||{}
 try{
 eval("async function* f(){}")}catch(err){console.warn("Your browser is not fully supported. If you are using "+
 "Microsoft Edge, please upgrade to the latest version")}
-;(function($B){
+(function($B){
 $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
@@ -16,9 +16,9 @@ $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
 var _window=globalThis;
 _window.location ||={href:'',origin:'',pathname:''};
 _window.navigator ||={userLanguage:''}
-_window.document ||={	getElementsByTagName:()=>[{src:"http://localhost/"}],
-	currentScript:{src:"http://localhost/"},
-	querySelectorAll:()=>[]}
+_window.document ||={getElementsByTagName:()=>[{src:"http://localhost/"}],
+currentScript:{src:"http://localhost/"},
+querySelectorAll:()=>[]}
 _window.HTMLElement ||=class HTMLElement{};
 _window.MutationObserver ||=function(){this.observe=()=>{};};
 _window.customElements ||={define:()=>{}};
@@ -26,20 +26,18 @@ var href=_window.location.href
 $B.protocol=href.split(':')[0]
 $B.BigInt=_window.BigInt
 $B.indexedDB=_window.indexedDB
-var $path
 if($B.brython_path===undefined){
 var this_url;
 if($B.isWebWorker){this_url=_window.location.href;
 if(this_url.startsWith("blob:")){this_url=this_url.substr(5)}}else{this_url=document.currentScript.src}
 var elts=this_url.split('/');
 elts.pop()
-$path=$B.brython_path=elts.join('/')+'/'}else{if(! $B.brython_path.endsWith("/")){$B.brython_path+="/"}
-$path=$B.brython_path}
+$B.brython_path=elts.join('/')+'/'}else{if(! $B.brython_path.endsWith("/")){$B.brython_path+="/"}}
 var parts_re=new RegExp('(.*?)://(.*?)/(.*)'),mo=parts_re.exec($B.brython_path)
 if(mo){$B.full_url={protocol:mo[1],host:mo[2],address:mo[3]}}
 var path=_window.location.origin+_window.location.pathname,path_elts=path.split("/")
 path_elts.pop()
-var $script_dir=$B.script_dir=path_elts.join("/")
+$B.script_dir=path_elts.join("/")
 $B.__ARGV=[]
 $B.webworkers={}
 $B.file_cache={}
@@ -117,7 +115,6 @@ $B.has_file=function(file){
 return($B.files && $B.files.hasOwnProperty(file))}
 $B.show_tokens=function(src,mode){
 for(var token of $B.tokenizer(src,'<string>',mode ||'file')){console.log(token.type,$B.builtins.repr(token.string),token.start,token.end,token.line)}}
-var py2js_magic=Math.random().toString(36).substr(2,8)
 function from_py(src,script_id){if(! $B.options_parsed){
 $B.parse_options()}
 script_id=script_id ||'python_script_'+$B.UUID()
@@ -155,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-02 09:04:19.053729"
-__BRYTHON__.timestamp=1701504259053
+__BRYTHON__.compiled_date="2023-12-02 09:13:45.997047"
+__BRYTHON__.timestamp=1701504825997
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins

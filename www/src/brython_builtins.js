@@ -8,7 +8,8 @@ try{
     console.warn("Your browser is not fully supported. If you are using " +
         "Microsoft Edge, please upgrade to the latest version")
 }
-;(function($B) {
+
+(function($B) {
 
 // Detect whether we are in a Web Worker
 $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
@@ -30,13 +31,13 @@ _window.location ||= {
 _window.navigator ||= {userLanguage: ''}
 
 _window.document  ||= {
-	getElementsByTagName: () => [{src: "http://localhost/"}],  // TODO: maybe needs some adaptations
-	currentScript: {src: "http://localhost/"}, // TODO: maybe needs some adaptations
-	querySelectorAll: () => []
+    getElementsByTagName: () => [{src: "http://localhost/"}],  // TODO: maybe needs some adaptations
+    currentScript: {src: "http://localhost/"}, // TODO: maybe needs some adaptations
+    querySelectorAll: () => []
 }
 
 _window.HTMLElement ||= class HTMLElement {};
-_window.MutationObserver ||= function() { this.observe = () => {};  }; 
+_window.MutationObserver ||= function() { this.observe = () => {};  };
 _window.customElements   ||= {define: () => {} };
 
 var href = _window.location.href
@@ -44,8 +45,6 @@ $B.protocol = href.split(':')[0]
 
 $B.BigInt = _window.BigInt
 $B.indexedDB = _window.indexedDB
-
-var $path
 
 if($B.brython_path === undefined){
     // Get url of this script brython_builtins.js
@@ -58,17 +57,16 @@ if($B.brython_path === undefined){
     }else{
         this_url = document.currentScript.src
     }
-    
+
     var elts = this_url.split('/');
     elts.pop()
     // brython_path is the url of the directory holding brython core scripts
     // It is used to import modules of the standard library
-    $path = $B.brython_path = elts.join('/') + '/'
+    $B.brython_path = elts.join('/') + '/'
 }else{
     if(! $B.brython_path.endsWith("/")){
         $B.brython_path += "/"
     }
-    $path = $B.brython_path
 }
 
 var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
@@ -83,7 +81,7 @@ if(mo){
 var path = _window.location.origin + _window.location.pathname,
     path_elts = path.split("/")
 path_elts.pop()
-var $script_dir = $B.script_dir = path_elts.join("/")
+$B.script_dir = path_elts.join("/")
 
 // Populated in py2js.brython(), used for sys.argv
 $B.__ARGV = []
@@ -309,9 +307,6 @@ $B.show_tokens = function(src, mode){
         console.log(token.type, $B.builtins.repr(token.string), token.start, token.end, token.line)
     }
 }
-
-// Can be used in Javascript programs to run Python code
-var py2js_magic = Math.random().toString(36).substr(2, 8)
 
 function from_py(src, script_id){
     if(! $B.options_parsed){
