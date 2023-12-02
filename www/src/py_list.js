@@ -1,9 +1,7 @@
 "use strict";
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins,
-    object = _b_.object,
-    getattr = $B.$getattr,
     isinstance = $B.$isinstance
 
 function check_not_tuple(self, attr){
@@ -12,21 +10,14 @@ function check_not_tuple(self, attr){
     }
 }
 
-function $list(){
-    // used for list displays
-    // different from list : $list(1) is valid (matches [1])
-    // but list(1) is invalid (integer 1 is not iterable)
-    return list.$factory.apply(null, arguments)
-}
-
 var list = {
     __class__: _b_.type,
     __qualname__: 'list',
-    __mro__: [object],
+    __mro__: [_b_.object],
     $is_class: true,
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
-    __dir__: object.__dir__
+    __dir__: _b_.object.__dir__
 }
 
 list.__add__ = function(self, other){
@@ -64,7 +55,7 @@ list.__class_getitem__ = function(cls, item){
     return $B.GenericAlias.$factory(cls, item)
 }
 
-list.__contains__ = function(self, item){
+list.__contains__ = function(){
     var $ = $B.args("__contains__", 2, {self: null, item: null},
         ["self", "item"], arguments, {}, null, null),
         self = $.self,
@@ -80,8 +71,10 @@ list.__contains__ = function(self, item){
 list.__delitem__ = function(self, arg){
 
     if(isinstance(arg, _b_.int)){
-        var pos = arg
-        if(arg < 0){pos = self.length + pos}
+        let pos = arg
+        if(arg < 0){
+            pos = self.length + pos
+        }
         if(pos >= 0 && pos < self.length){
             self.splice(pos, 1)
             return _b_.None
@@ -91,32 +84,45 @@ list.__delitem__ = function(self, arg){
     }
     if(isinstance(arg, _b_.slice)) {
         var step = arg.step
-        if(step === _b_.None){step = 1}
+        if(step === _b_.None){
+            step = 1
+        }
         var start = arg.start
-        if(start === _b_.None){start = step > 0 ? 0 : self.length}
+        if(start === _b_.None){
+            start = step > 0 ? 0 : self.length
+        }
         var stop = arg.stop
-        if(stop === _b_.None){stop = step > 0 ? self.length : 0}
-        if(start < 0){start = self.length + start}
-        if(stop < 0){stop = self.length + stop}
-        var res = [],
-            i = null,
+        if(stop === _b_.None){
+            stop = step > 0 ? self.length : 0
+        }
+        if(start < 0){
+            start = self.length + start
+        }
+        if(stop < 0){
+            stop = self.length + stop
+        }
+        let res = [],
             pos = 0
         if(step > 0){
             if(stop > start){
-                for(var i = start; i < stop; i += step){
-                    if(self[i] !== undefined){res[pos++] = i}
+                for(let i = start; i < stop; i += step){
+                    if(self[i] !== undefined){
+                        res[pos++] = i
+                    }
                 }
             }
         }else{
             if(stop < start){
-                for(var i = start; i > stop; i += step){
-                    if(self[i] !== undefined){res[pos++] = i}
+                for(let i = start; i > stop; i += step){
+                    if(self[i] !== undefined){
+                        res[pos++] = i
+                    }
                 }
                 res.reverse() // must be in ascending order
             }
         }
         // delete items from left to right
-        var i = res.length
+        let i = res.length
         while(i--){
            self.splice(res[i], 1)
         }
@@ -168,13 +174,13 @@ list.$getitem = function(self, key){
 
     var int_key
     try{
-      int_key = $B.PyNumber_Index(key)
+        int_key = $B.PyNumber_Index(key)
     }catch(err){
-
+        // ignore
     }
 
     if(int_key !== undefined){
-        var items = self.valueOf(),
+        let items = self.valueOf(),
             pos = int_key
         if(int_key < 0){
             pos = items.length + pos
@@ -192,10 +198,9 @@ list.$getitem = function(self, key){
                 key.step === _b_.None){
             return self.slice()
         }
-        var s = _b_.slice.$conv_for_seq(key, self.length)
+        let s = _b_.slice.$conv_for_seq(key, self.length)
         // Return the sliced list
-        var res = [],
-            i = null,
+        let res = [],
             items = self.valueOf(),
             pos = 0,
             start = s.start,
@@ -205,7 +210,7 @@ list.$getitem = function(self, key){
             if(stop <= start){
                 return factory(res)
             }
-            for(var i = start; i < stop; i += step){
+            for(let i = start; i < stop; i += step){
                res[pos++] = items[i]
             }
             return factory(res)
@@ -213,7 +218,7 @@ list.$getitem = function(self, key){
             if(stop > start){
                 return factory(res)
             }
-            for(var i = start; i > stop; i += step){
+            for(let i = start; i > stop; i += step){
                res[pos++] = items[i]
             }
             return factory(res)
@@ -403,7 +408,7 @@ list.__mul__ = function(self, other){
     }
 }
 
-list.__new__ = function(cls, ...args){
+list.__new__ = function(cls){
     if(cls === undefined){
         throw _b_.TypeError.$factory("list.__new__(): not enough arguments")
     }
@@ -559,9 +564,6 @@ list.index = function(){
         self = $.self,
         start = $.start,
         stop = $.stop
-    var _eq = function(other){
-        return $B.rich_comp("__eq__", $.x, other)
-    }
     if(start.__class__ === $B.long_int){
         start = parseInt(start.value) * (start.pos ? 1 : -1)
     }
@@ -629,7 +631,7 @@ list.remove = function(){
     throw _b_.ValueError.$factory(_b_.str.$factory($.x) + " is not in list")
 }
 
-list.reverse = function(self){
+list.reverse = function(){
     var $ = $B.args("reverse", 1, {self: null}, ["self"],
         arguments, {}, null, null),
         _len = $.self.length - 1,
@@ -640,67 +642,6 @@ list.reverse = function(self){
         $.self[_len - i] = buf
     }
     return _b_.None
-}
-
-// QuickSort implementation found at http://en.literateprograms.org/Quicksort_(JavaScript)
-function $partition(arg, array, begin, end, pivot)
-{
-    var piv = array[pivot]
-    array = swap(array, pivot, end - 1)
-    var store = begin
-    if(arg === null){
-        if(array.$cl !== false){
-            // Optimisation : if all elements have the same type, the
-            // comparison function __le__ can be computed once
-            var le_func = _b_.getattr(array.$cl, "__le__")
-            for(var ix = begin; ix < end - 1; ++ix) {
-                if(le_func(array[ix], piv)) {
-                    array = swap(array, store, ix);
-                    ++store
-                }
-            }
-        }else{
-            for(var ix = begin; ix < end - 1; ++ix) {
-                if($B.$getattr(array[ix], "__le__")(piv)){
-                    array = swap(array, store, ix)
-                    ++store
-                }
-            }
-        }
-    }else{
-        var len = array.length
-        for(var ix = begin; ix < end - 1; ++ix){
-            var x = arg(array[ix])
-            // If the comparison function changes the array size, raise
-            // ValueError
-            if(array.length !== len){
-                throw _b_.ValueError.$factory("list modified during sort")
-            }
-            if($B.$getattr(x, "__le__")(arg(piv))){
-                array = swap(array, store, ix)
-                ++store
-            }
-        }
-    }
-    array = swap(array, end - 1, store)
-    return store
-}
-
-function swap(_array, a, b){
-    var tmp = _array[a]
-    _array[a] = _array[b]
-    _array[b] = tmp
-    return _array
-}
-
-function $qsort(arg, array, begin, end){
-    if(end - 1 > begin) {
-        var pivot = begin + Math.floor(Math.random() * (end - begin))
-
-        pivot = $partition(arg, array, begin, end, pivot)
-        $qsort(arg, array, begin, pivot)
-        $qsort(arg, array, pivot + 1, end)
-    }
 }
 
 function $elts_class(self){
@@ -780,11 +721,11 @@ list.sort = function(self){
         }else{
             var temp = [],
                 saved = self.slice()
-            for(var i=0, len=self.length; i < len; i++){
+            for(let i = 0, len = self.length; i < len; i++){
                 temp.push([func(self[i]), i])
             }
             temp.sort(cmp)
-            for(var i=0, len=temp.length; i < len; i++){
+            for(let i = 0, len = temp.length; i < len; i++){
                 self[i] = saved[temp[i][1]]
             }
         }
@@ -816,14 +757,14 @@ var factory = function(){
         obj = obj.slice() // list(t) is not t
         obj.__brython__ = true;
         if(obj.__class__ == tuple){
-            var res = obj.slice()
+            let res = obj.slice()
             res.__class__ = list
             res.__brython__ = true
             return res
         }
         return obj
     }
-    var res = Array.from($B.make_js_iterator(obj))
+    let res = Array.from($B.make_js_iterator(obj))
     res.__brython__ = true // false for Javascript arrays - used in sort()
     return res
 }
@@ -839,8 +780,8 @@ list.$unpack = function(obj){
         return _b_.list.$factory(obj)
     }catch(err){
         try{
-            var it = $B.$iter(obj),
-                next_func = $B.$call($B.$getattr(it, "__next__"))
+            var it = $B.$iter(obj)
+            $B.$call($B.$getattr(it, "__next__"))
         }catch(err1){
             if($B.is_exc(err1, [_b_.TypeError])){
                 throw _b_.TypeError.$factory(
@@ -877,7 +818,7 @@ function make_args(args){
     return res
 }
 
-for(var attr in list){
+for(let attr in list){
     if($B.JSArray[attr] !== undefined){continue}
     if(typeof list[attr] == "function"){
         $B.JSArray[attr] = (function(fname){
@@ -892,11 +833,9 @@ for(var attr in list){
 $B.set_func_names($B.JSArray, "builtins")
 
 // Tuples
-function $tuple(arg){return arg} // used for parenthesed expressions
-
 var tuple = {
     __class__: _b_.type,
-    __mro__: [object],
+    __mro__: [_b_.object],
     __qualname__: 'tuple',
     $is_class: true,
     $native: true,
@@ -922,7 +861,7 @@ $B.fast_tuple = function(array){
 }
 
 // add tuple methods
-for(var attr in list){
+for(let attr in list){
     switch(attr) {
         case "__delitem__":
         case "__iadd__":

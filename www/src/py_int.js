@@ -1,5 +1,5 @@
 "use strict";
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -92,7 +92,7 @@ int.from_bytes = function() {
     }else{
         _bytes = _b_.list.$factory(x)
         _len = _bytes.length
-        for(var i = 0; i < _len; i++){
+        for(let i = 0; i < _len; i++){
             _b_.bytes.$factory([_bytes[i]])
         }
     }
@@ -108,7 +108,7 @@ int.from_bytes = function() {
     }
     num = BigInt(num)
     var _mult = 256n
-    for(var i = 1;  i < _len; i++){
+    for(let i = 1;  i < _len; i++){
         num += _mult * BigInt(_bytes[i])
         _mult *= 256n
     }
@@ -331,21 +331,13 @@ int.__hash__ = function(self){
     return self.valueOf()
 }
 
-int.__index__ = function(self){
-    return int_value(self)
-}
+int.__index__ = (self) => int_value(self)
 
-int.__init__ = function(self){
-    return _b_.None
-}
+int.__init__ = () => _b_.None
 
-int.__int__ = function(self){
-    return self
-}
+int.__int__ = (self) => self
 
-int.__invert__ = function(self){
-    return ~self
-}
+int.__invert__ = (self) => ~self
 
 int.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
@@ -501,15 +493,6 @@ int.__pow__ = function(self, other, z){
     $err("**", other)
 }
 
-function __newobj__(){
-    // __newobj__ is called with a generator as only argument
-    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
-        args = $.args
-    var res = args.slice(1)
-    res.__class__ = args[0]
-    return res
-}
-
 int.__repr__ = function(self){
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     var value = int_value(self),
@@ -574,22 +557,14 @@ int.bit_length = function(self){
 }
 
 // descriptors
-int.numerator = function(self){
-    return int_value(self)
-}
-int.denominator = function(self){
-    return int.$factory(1)
-}
-int.imag = function(self){
-    return int.$factory(0)
-}
-int.real = function(self){
-    return self
-}
+int.numerator = (self) => int_value(self)
+int.denominator = () => 1
+int.imag = () => 0
+int.real = (self) => self
 
 for(var attr of ['numerator', 'denominator', 'imag', 'real']){
     int[attr].setter = (function(x){
-        return function(self, value){
+        return function(self){
             throw _b_.AttributeError.$factory(`attribute '${x}' of ` +
                 `'${$B.class_name(self)}' objects is not writable`)
         }
@@ -683,17 +658,21 @@ var $valid_digits = function(base) {
     var digits = ""
     if(base === 0){return "0"}
     if(base < 10){
-       for(var i = 0; i < base; i++){digits += String.fromCharCode(i + 48)}
+       for(let i = 0; i < base; i++){
+           digits += String.fromCharCode(i + 48)
+       }
        return digits
     }
 
-    var digits = "0123456789"
+    digits = "0123456789"
     // A = 65 (10 + 55)
-    for (var i = 10; i < base; i++) {digits += String.fromCharCode(i + 55)}
+    for(let i = 10; i < base; i++){
+        digits += String.fromCharCode(i + 55)
+    }
     return digits
 }
 
-int.$factory = function(value, base){
+int.$factory = function(){
     var missing = {},
         $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"],
             arguments, {x: missing, base: missing}, null, null, 1),
@@ -726,15 +705,15 @@ int.$factory = function(value, base){
                 "int() can't convert non-string with explicit base")
         }else{
             // booleans, bigints, objects with method __index__
-            for(var special_method of ['__int__', '__index__', '__trunc__']){
-                var num_value = $B.$getattr($B.get_class(value),
+            for(let special_method of ['__int__', '__index__', '__trunc__']){
+                let num_value = $B.$getattr($B.get_class(value),
                                             special_method, _b_.None)
                 if(num_value !== _b_.None){
-                    var res = $B.$call(num_value)(value)
+                    let res = $B.$call(num_value)(value)
                     if(special_method == '__trunc__'){
                         $B.warn(_b_.DeprecationWarning,
                         'The delegation of int() to __trunc__ is deprecated.')
-                        var index_method = $B.$getattr(res, '__index__', null)
+                        let index_method = $B.$getattr(res, '__index__', null)
                         if(index_method === null){
                             throw _b_.TypeError.$factory('__trunc__ returned' +
                                 ` non-Integral (type ${$B.class_name(res)})`)
@@ -752,7 +731,7 @@ int.$factory = function(value, base){
                         }
                         return int_value(res)
                     }else{
-                        var klass = $B.get_class(res),
+                        let klass = $B.get_class(res),
                             index_method = $B.$getattr(klass, '__index__', null)
                         if(index_method === null){
                             throw _b_.TypeError.$factory(special_method +
@@ -790,7 +769,7 @@ int.$factory = function(value, base){
         sign = ''
 
     if(_value.startsWith('+') || _value.startsWith('-')){
-        var sign = _value[0]
+        sign = _value[0]
         _value = _value.substr(1)
     }
 
@@ -808,7 +787,7 @@ int.$factory = function(value, base){
 
 
     if(_value.length > 2){
-        var _pre = _value.substr(0, 2).toUpperCase()
+        let _pre = _value.substr(0, 2).toUpperCase()
         if(base == 0){
             if(_pre == "0B"){
                 base = 2
@@ -843,17 +822,17 @@ int.$factory = function(value, base){
     var _digits = $valid_digits(base),
         _re = new RegExp("^[+-]?[" + _digits + "]" +
         "[" + _digits + "_]*$", "i"),
-        match = _re.exec(_value)
+        match = _re.exec(_value),
+        res
     if(match === null){
         // try with number in non-latin alphabets
         res = 0
-        var coef = 1,
-            digit
+        var digit
         for(var char of _value){
             if(/\p{Nd}/u.test(char)){
                 // get value from table $B.digit_starts in unicode_data.js
-                var cp = char.codePointAt(0)
-                for(var start of $B.digits_starts){
+                let cp = char.codePointAt(0)
+                for(let start of $B.digits_starts){
                     if(cp - start < 10){
                         digit = cp - start
                         break
@@ -896,10 +875,10 @@ int.$factory = function(value, base){
             res = BigInt(_value)
         }else {
             base = BigInt(base)
-            var res = 0n,
-                coef = 1n,
+            res = 0n
+            let coef = 1n,
                 char
-            for(var i = _value.length - 1; i >= 0; i--){
+            for(let i = _value.length - 1; i >= 0; i--){
                 char = _value[i].toUpperCase()
                 res += coef * BigInt(_digits.indexOf(char))
                 coef *= base
@@ -951,14 +930,9 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 }
                 return len_method(obj) > 0
             }else{
-                try{
-                    var res = bool_class ?
-                              $B.$call(bool_method)(obj) :
-                              $B.$call(bool_method)()
-
-                }catch(err){
-                    throw err
-                }
+                var res = bool_class ?
+                          $B.$call(bool_method)(obj) :
+                          $B.$call(bool_method)()
                 if(res !== true && res !== false){
                     throw _b_.TypeError.$factory("__bool__ should return " +
                         "bool, returned " + $B.class_name(res))
