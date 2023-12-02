@@ -1,5 +1,5 @@
 "use strict";
-;(function($B){
+(function($B){
 
 /*
 Implementation of Python dictionaries
@@ -25,9 +25,6 @@ Lookup by keys:
 */
 
 var _b_ = $B.builtins
-
-var str_hash = _b_.str.__hash__,
-    $N = _b_.None
 
 var set_ops = ["eq", "le", "lt", "ge", "gt",
     "sub", "rsub", "and", "rand", "or", "ror", "xor", "rxor"]
@@ -74,8 +71,7 @@ const dict_view_op = {
     __and__: function(t1, t2){
         var items = []
         for(var i = 0, ilen = t1.length; i < ilen; i++){
-            var x = t1[i],
-                flag = false
+            var x = t1[i]
             for(var j = 0, jlen = t2.length; j < jlen; j++){
                 if($B.rich_comp("__eq__", x, t2[j])){
                     t2.splice(j, 1)
@@ -134,17 +130,6 @@ function make_view_comparison_methods(klass){
 
 $B.str_dict = function(){}
 
-var mappingproxy = $B.make_class("mappingproxy")
-
-var mappingproxy_handler = {
-    get(target, prop){
-        if(prop == '__class__'){
-            return mappingproxy
-        }
-        return target[prop]
-    }
-}
-
 var dict = {
     __class__: _b_.type,
     __mro__: [_b_.object],
@@ -197,20 +182,20 @@ dict.$set_like = function(self){
 
 dict.$iter_items_with_hash = function*(d){
     if(d.$all_str){
-        for(var key in d.$strings){
+        for(let key in d.$strings){
             if(key != '$dict_strings'){
                 yield {key, value: d.$strings[key]}
             }
         }
     }
     if(d.$jsobj){
-        for(var key in d.$jsobj){
+        for(let key in d.$jsobj){
             if(!d.$exclude || ! d.$exclude(key)){
                 yield {key, value: d.$jsobj[key]}
             }
         }
     }else if(d.__class__ === $B.jsobj_as_pydict){
-        for(var key in d.obj){
+        for(let key in d.obj){
             yield {key, value: d.obj[key]}
         }
     }else{
@@ -256,11 +241,11 @@ var $copy_dict = function(left, right){
     var right_version = right.$version
     if(right.$all_str){
         if(left.$all_str){
-            for(var key in right.$strings){
+            for(let key in right.$strings){
                 left.$strings[key] = right.$strings[key]
             }
         }else{
-            for(var key in right.$strings){
+            for(let key in right.$strings){
                 dict.$setitem(left, key, right.$strings[key])
             }
         }
@@ -363,7 +348,7 @@ dict.__delitem__ = function(){
             throw _b_.KeyError.$factory(key)
         }
         delete self.$jsobj[key]
-        return $N
+        return _b_.None
     }
 
     var lookup = dict.$lookup_by_key(self, key)
@@ -398,7 +383,7 @@ dict.$eq = function(self, other){
         if(dict.__len__(self) !== dict.__len__(other)){
             return false
         }
-        for(var k in self.$strings){
+        for(let k in self.$strings){
             if(! other.$strings.hasOwnProperty(k)){
                 return false
             }
@@ -425,12 +410,12 @@ dict.$eq = function(self, other){
     }
 
     if(self.$all_str){
-        var d = dict.copy(self)
+        let d = dict.copy(self)
         convert_all_str(d)
         return dict.$eq(d, other)
     }
     if(other.$all_str){
-        var d = dict.copy(other)
+        let d = dict.copy(other)
         convert_all_str(d)
         return dict.$eq(self, d)
     }
@@ -448,22 +433,22 @@ dict.$eq = function(self, other){
 
     for(var hash in self.table){
         var self_pairs = []
-        for(var index of self.table[hash]){
+        for(let index of self.table[hash]){
             self_pairs.push([self._keys[index], self._values[index]])
         }
         // Get all (key, value) pairs in other that have the same hash
         var other_pairs = []
         if(other.table[hash] !== undefined){
-            for(var index of other.table[hash]){
+            for(let index of other.table[hash]){
                 other_pairs.push([other._keys[index], other._values[index]])
             }
         }
 
-        for(var self_pair of self_pairs){
-            var flag = false
-            var key = self_pair[0],
+        for(let self_pair of self_pairs){
+            let flag = false,
+                key = self_pair[0],
                 value = self_pair[1]
-            for(var other_pair of other_pairs){
+            for(let other_pair of other_pairs){
                 if($B.is_or_equals(key, other_pair[0]) &&
                         $B.is_or_equals(value, other_pair[1])){
                     flag = true
@@ -599,7 +584,7 @@ dict.$getitem = function(self, key, ignore_missing){
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
             if(hash_method !== _b_.object.__hash__){
                 convert_all_str(self)
-                var lookup = dict.$lookup_by_key(self, key)
+                let lookup = dict.$lookup_by_key(self, key)
                 if(lookup.found){
                     return lookup.value
                 }
@@ -616,7 +601,7 @@ dict.$getitem = function(self, key, ignore_missing){
             throw _b_.KeyError.$factory(key)
         }
     }else{
-        var lookup = dict.$lookup_by_key(self, key)
+        let lookup = dict.$lookup_by_key(self, key)
         if(lookup.found){
             return lookup.value
         }
@@ -658,23 +643,23 @@ dict.__init__ = function(self, first, second){
     }
     if(second === undefined){
         if((! first.$kw) && $B.$isinstance(first, $B.JSObj)){
-            for(var key in first){
+            for(let key in first){
                 dict.$setitem(self, key, first[key])
             }
             return _b_.None
         }else if(first.$jsobj){
             self.$jsobj = {}
-            for(var attr in first.$jsobj){
+            for(let attr in first.$jsobj){
                 self.$jsobj[attr] = first.$jsobj[attr]
             }
             self.$all_str = false
-            return $N
+            return _b_.None
         }else if(first[Symbol.iterator]){
             init_from_list(self, first)
-            return $N
+            return _b_.None
         }else if(first.__class__ === $B.generator){
             init_from_list(self, first.js_gen)
-            return $N
+            return _b_.None
         }
     }
 
@@ -687,7 +672,7 @@ dict.__init__ = function(self, first, second){
     }else if(args.length == 1){
         args = args[0]
         if(args.__class__ === dict){
-            for(var entry of dict.$iter_items_with_hash(args)){
+            for(let entry of dict.$iter_items_with_hash(args)){
                 dict.$setitem(self, entry.key, entry.value, entry.hash)
             }
         }else{
@@ -698,12 +683,12 @@ dict.__init__ = function(self, first, second){
                     // has keys and __getitem__ : it's a mapping, iterate on
                     // keys and values
                     gi = $B.$call(gi)
-                    var kiter = _b_.iter($B.$call(keys)())
+                    let kiter = _b_.iter($B.$call(keys)())
                     while(true){
                         try{
-                            var key = _b_.next(kiter),
+                            let key = _b_.next(kiter),
                                 value = gi(key)
-                                dict.__setitem__(self, key, value)
+                            dict.__setitem__(self, key, value)
                         }catch(err){
                             if(err.__class__ === _b_.StopIteration){
                                 break
@@ -711,7 +696,7 @@ dict.__init__ = function(self, first, second){
                             throw err
                         }
                     }
-                    return $N
+                    return _b_.None
                 }
             }
             if(! Array.isArray(args)){
@@ -721,7 +706,7 @@ dict.__init__ = function(self, first, second){
         }
     }
 
-    for(var key in $.second.$jsobj){
+    for(let key in $.second.$jsobj){
         dict.$setitem(self, key, $.second.$jsobj[key])
     }
     return _b_.None
@@ -797,10 +782,8 @@ dict.__repr__ = function(self){
     if($B.repr.enter(self)){
         return "{...}"
     }
-    var res = [],
-        key,
-        value
-    for(var entry of dict.$iter_items_with_hash(self)){
+    let res = []
+    for(let entry of dict.$iter_items_with_hash(self)){
         res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
     }
     $B.repr.leave(self)
@@ -875,7 +858,7 @@ function make_reverse_iterator(name, iter_func){
         return res.value
     }
 
-    klass.__reduce_ex__ = function(self, protocol){
+    klass.__reduce_ex__ = function(self){
         return $B.fast_tuple([_b_.iter,
             $B.fast_tuple([Array.from(self.make_iter())])])
     }
@@ -903,7 +886,7 @@ dict.__ror__ = function(self, other){
     return res
 }
 
-dict.__setitem__ = function(self, key, value){
+dict.__setitem__ = function(){
     var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
         ["self", "key", "value"], arguments, {}, null, null)
     return dict.$setitem($.self, $.key, $.value)
@@ -949,7 +932,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         }else{
             self.$jsobj[key] = value
         }
-        return $N
+        return _b_.None
     }else if(self.__class__ === $B.jsobj_as_pydict){
         return $B.jsobj_as_pydict.__setitem__(self, key, value)
     }
@@ -1012,10 +995,10 @@ dict.clear = function(){
         }
     }
     self.$version++
-    return $N
+    return _b_.None
 }
 
-dict.copy = function(self){
+dict.copy = function(){
     // Return a shallow copy of the dictionary
     var $ = $B.args("copy", 1, {self: null},["self"], arguments,{},
         null, null),
@@ -1062,7 +1045,7 @@ dict.fromkeys = function(){
 
 dict.get = function(){
     var $ = $B.args("get", 3, {self: null, key: null, _default: null},
-        ["self", "key", "_default"], arguments, {_default: $N}, null, null)
+        ["self", "key", "_default"], arguments, {_default: _b_.None}, null, null)
     try{
         // call $getitem with ignore_missign set to true
         return dict.$getitem($.self, $.key, true)
@@ -1143,7 +1126,7 @@ dict_itemiterator.__next__ = function(self){
     return $B.fast_tuple(res.value)
 }
 
-dict_itemiterator.__reduce_ex__ = function(self, protocol){
+dict_itemiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([Array.from(self.make_iter())])])
 }
@@ -1151,8 +1134,7 @@ dict_itemiterator.__reduce_ex__ = function(self, protocol){
 $B.set_func_names(dict_itemiterator, 'builtins')
 
 dict.items = function(self){
-    var $ = $B.args('items', 1, {self: null}, ['self'], arguments,
-                    {}, null, null)
+    $B.args('items', 1, {self: null}, ['self'], arguments, {}, null, null)
     return dict_items.$factory(self)
 }
 
@@ -1215,7 +1197,7 @@ dict_keyiterator.__next__ = function(self){
     return res.value
 }
 
-dict_keyiterator.__reduce_ex__ = function(self, protocol){
+dict_keyiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([Array.from(self.make_iter())])])
 }
@@ -1223,8 +1205,7 @@ dict_keyiterator.__reduce_ex__ = function(self, protocol){
 $B.set_func_names(dict_keyiterator, 'builtins')
 
 dict.keys = function(self){
-    var $ = $B.args('keys', 1, {self: null}, ['self'], arguments,
-                    {}, null, null)
+    $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
     return dict_keys.$factory(self)
 }
 
@@ -1259,7 +1240,7 @@ dict.popitem = function(self){
         for(var key in self.$strings){
             // go to last key
         }
-        var res = $B.fast_tuple([key, self.$strings[key]])
+        let res = $B.fast_tuple([key, self.$strings[key]])
         delete self.$strings[key]
         self.$version++
         return res
@@ -1267,7 +1248,7 @@ dict.popitem = function(self){
     var index = self._keys.length - 1
     while(index >= 0){
         if(self._keys[index] !== undefined){
-            var res = $B.fast_tuple([self._keys[index], self._values[index]])
+            let res = $B.fast_tuple([self._keys[index], self._values[index]])
             delete self._keys[index]
             delete self._values[index]
             self.$version++
@@ -1279,7 +1260,7 @@ dict.popitem = function(self){
 
 dict.setdefault = function(){
     var $ = $B.args("setdefault", 3, {self: null, key: null, _default: null},
-            ["self", "key", "_default"], arguments, {_default: $N}, null, null),
+            ["self", "key", "_default"], arguments, {_default: _b_.None}, null, null),
         self = $.self,
         key = $.key,
         _default = $._default
@@ -1308,7 +1289,7 @@ dict.setdefault = function(){
     return _default
 }
 
-dict.update = function(self){
+dict.update = function(){
     var $ = $B.args("update", 1, {"self": null}, ["self"], arguments,
             {}, "args", "kw"),
         self = $.self,
@@ -1323,12 +1304,12 @@ dict.update = function(self){
             $copy_dict(self, o)
         }else if(_b_.hasattr(o, "keys")){
             var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
-            for(var i = 0, len = _keys.length; i < len; i++){
+            for(let i = 0, len = _keys.length; i < len; i++){
                 var _value = $B.$getattr(o, "__getitem__")(_keys[i])
                 dict.$setitem(self, _keys[i], _value)
             }
         }else{
-            var it = _b_.iter(o),
+            let it = _b_.iter(o),
                 i = 0,
                 key_value
             while(true){
@@ -1355,7 +1336,7 @@ dict.update = function(self){
         }
     }
     $copy_dict(self, kw)
-    return $N
+    return _b_.None
 }
 
 var dict_values = $B.make_class("dict_values",
@@ -1421,7 +1402,7 @@ dict_valueiterator.__next__ = function(self){
     return res.value
 }
 
-dict_valueiterator.__reduce_ex__ = function(self, protocol){
+dict_valueiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([Array.from(self.make_iter())])])
 }
@@ -1430,8 +1411,7 @@ $B.set_func_names(dict_valueiterator, 'builtins')
 
 
 dict.values = function(self){
-    var $ = $B.args('values', 1, {self: null}, ['self'], arguments,
-                    {}, null, null)
+    $B.args('values', 1, {self: null}, ['self'], arguments, {}, null, null)
     return dict_values.$factory(self)
 }
 
@@ -1480,14 +1460,15 @@ dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
+        var res
         if($B.$isinstance(obj, dict)){
             // obj is a dictionary, with string_dict table such that
             // obj.string_dict[key] = [value, rank]
             // Transform it into an object with attribute $jsobj such that
             // res.$jsobj[key] = value
-            var res = $B.obj_dict(dict.$to_obj(obj))
+            res = $B.obj_dict(dict.$to_obj(obj))
         }else{
-            var res = $B.obj_dict(obj)
+            res = $B.obj_dict(obj)
         }
         res.__class__ = mappingproxy
         res.$version = 0
@@ -1628,11 +1609,7 @@ jsobj_as_pydict.__iter__ = function(self){
 }
 
 jsobj_as_pydict.__len__ = function(self){
-    var len = 0
-    for(var key in self.obj){
-        len++
-    }
-    return len + self.new_keys.length
+    return Object.keys(self).length + self.new_keys.length
 }
 
 jsobj_as_pydict.__or__ = function(self, other){

@@ -1,5 +1,5 @@
 "use strict";
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -86,8 +86,7 @@ complex.__eq__ = function(self, other){
     return _b_.NotImplemented
 }
 
-const max_precision = 2 ** 31 - 4,
-      max_repeat = 2 ** 30 - 1
+const max_precision = 2 ** 31 - 4
 
 complex.__format__ = function(self, format_spec){
     if(format_spec.length == 0){
@@ -96,8 +95,7 @@ complex.__format__ = function(self, format_spec){
     var fmt = new $B.parse_format_spec(format_spec, self),
         type = fmt.conversion_type
 
-    var default_precision = 6,
-        skip_re,
+    var skip_re,
         add_parens
 
     if(type === undefined || 'eEfFgGn'.indexOf(type) > -1){
@@ -114,12 +112,10 @@ complex.__format__ = function(self, format_spec){
                  "specifier")
         }
         var re = self.$real.value,
-            im = self.$imag.value,
             precision = parseInt(fmt.precision, 10)
 
         if(type === undefined){
             type = 'r'
-            default_precision = 0
             if(re == 0 && Object.is(re, 0)){
                 skip_re = 1
             }else{
@@ -224,10 +220,10 @@ complex.__new__ = function(cls){
         missing = {},
         $ = $B.args("complex", 3, {cls: null, real: null, imag: null},
             ["cls", "real", "imag"], arguments, {real: 0, imag: missing},
-            null, null),
-        cls = $.cls,
-        first = $.real,
-        second = $.imag
+            null, null)
+        cls = $.cls
+        var first = $.real,
+            second = $.imag
 
     if(typeof first == "string"){
         if(second !== missing){
@@ -242,7 +238,7 @@ complex.__new__ = function(cls){
             }
             // Regular expression for literal complex string. Includes underscores
             // for PEP 515
-            var complex_re = /^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
+            var complex_re = /^\s*([+-]*[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?)([+-]?)([0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?)(j?)\s*$/i
 
             var parts = complex_re.exec(first)
 
@@ -331,7 +327,7 @@ complex.__new__ = function(cls){
         }
     }
 
-    var res = make_complex(r, i)
+    res = make_complex(r, i)
     res.__class__ = cls
     res.__dict__ = $B.empty_dict()
     return res
@@ -355,12 +351,6 @@ function complex2expo(cx){
     return {norm: norm, angle: angle}
 }
 
-function hypot(){
-    var $ = $B.args("hypot", 0, {}, [],
-                arguments, {}, "args", null)
-    return _b_.float.$factory(Math.hypot(...$.args))
-}
-
 // functions copied from CPython Objects/complexobject.c
 function c_powi(x, n){
     if (n > 0){
@@ -371,19 +361,17 @@ function c_powi(x, n){
 }
 
 function c_powu(x, n){
-    var r,
-        p,
-        mask = 1,
+    var mask = 1,
         r = c_1,
         p = x
     while (mask > 0 && n >= mask) {
         if (n & mask){
-            r = c_prod(r, p);
+            r = c_prod(r, p)
         }
-        mask <<= 1;
+        mask <<= 1
         p = c_prod(p, p)
     }
-    return r;
+    return r
 }
 
 function c_prod(a, b){
@@ -393,8 +381,7 @@ function c_prod(a, b){
 }
 
 function c_quot(a, b){
-     var r,      /* the result */
-         abs_breal = Math.abs(b.$real.value),
+     var abs_breal = Math.abs(b.$real.value),
          abs_bimag = Math.abs(b.$imag.value)
 
     if ($B.rich_comp('__ge__', abs_breal, abs_bimag)){
@@ -402,14 +389,14 @@ function c_quot(a, b){
         if (abs_breal == 0.0) {
             throw _b_.ZeroDivisionError.$factory()
         }else{
-            var ratio = b.$imag.value / b.$real.value,
+            let ratio = b.$imag.value / b.$real.value,
                 denom = b.$real.value + b.$imag.value * ratio
             return make_complex((a.$real.value + a.$imag.value * ratio) / denom,
                 (a.$imag.value - a.$real.value * ratio) / denom)
         }
     }else if (abs_bimag >= abs_breal) {
         /* divide tops and bottom by b.imag */
-        var ratio = b.$real.value / b.$imag.value,
+        let ratio = b.$real.value / b.$imag.value,
             denom = b.$real.value * ratio + b.$imag.value;
         if(b.$imag.value == 0.0){
             throw _b_.ZeroDivisionError.$factory()
