@@ -94,7 +94,6 @@ function idb_load(evt, module){
                     // loaded, add a task for this.
                     if($B.VFS.hasOwnProperty(subimport)){
                         let submodule = $B.VFS[subimport],
-                            ext = submodule[0],
                             source = submodule[1]
                         if(submodule[0] == ".py"){
                             $B.tasks.splice(0, 0, [idb_get, subimport])
@@ -412,10 +411,10 @@ var loop = $B.loop = function(){
                 tx = db.transaction("modules", "readwrite"),
                 store = tx.objectStore("modules")
             while($B.outdated.length > 0){
-                var module = $B.outdated.pop(),
+                let module = $B.outdated.pop(),
                     req = store.delete(module)
                 req.onsuccess = (function(mod){
-                    return function(event){
+                    return function(){
                         if($B.get_page_option('debug') > 1){
                             console.info("delete outdated", mod)
                         }
@@ -436,17 +435,17 @@ var loop = $B.loop = function(){
         args = task.slice(1)
 
     if(func == "execute"){
+        let script = task[1],
+            script_id = script.__name__.replace(/\./g, "_"),
+            module = $B.module.$factory(script.__name__)
+        module.__file__ = script.__file__
+        module.__doc__ = script.__doc__
+        $B.imported[script_id] = module
         try{
-            var script = task[1],
-                script_id = script.__name__.replace(/\./g, "_"),
-                module = $B.module.$factory(script.__name__)
-            module.__file__ = script.__file__
-            module.__doc__ = script.__doc__
-            $B.imported[script_id] = module
-            var module = new Function(script.js + `\nreturn locals`)()
-            for(var key in module){
+            var modobj = new Function(script.js + `\nreturn locals`)()
+            for(var key in modobj){
                 if(! key.startsWith('$')){
-                    $B.imported[script_id][key] = module[key]
+                    module[key] = modobj[key]
                 }
             }
             // dispatch "load" event on the <script> element

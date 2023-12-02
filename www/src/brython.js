@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-02 09:13:45.997047"
-__BRYTHON__.timestamp=1701504825997
+__BRYTHON__.compiled_date="2023-12-02 09:36:32.501194"
+__BRYTHON__.timestamp=1701506192501
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5037,7 +5037,7 @@ if(subimport){elts=elts.concat([subimport])}
 subimport=elts.join(".")}
 if(!$B.imported.hasOwnProperty(subimport)&&
 !$B.precompiled.hasOwnProperty(subimport)){
-if($B.VFS.hasOwnProperty(subimport)){let submodule=$B.VFS[subimport],ext=submodule[0],source=submodule[1]
+if($B.VFS.hasOwnProperty(subimport)){let submodule=$B.VFS[subimport],source=submodule[1]
 if(submodule[0]==".py"){$B.tasks.splice(0,0,[idb_get,subimport])}else{add_jsmodule(subimport,source)}}}}}}
 loop()}
 function idb_get(module){
@@ -5138,8 +5138,8 @@ function report_close(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEve
 function report_done(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
-while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
-req.onsuccess=(function(mod){return function(event){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
+while($B.outdated.length > 0){let module=$B.outdated.pop(),req=store.delete(module)
+req.onsuccess=(function(mod){return function(){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
 report_precompile(mod)}})(module)}
 report_close()
 $B.idb_cx.result.close()
@@ -5147,12 +5147,12 @@ $B.idb_cx.$closed=true}
 report_done()
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
-if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\./g,"_"),module=$B.module.$factory(script.__name__)
+if(func=="execute"){let script=task[1],script_id=script.__name__.replace(/\./g,"_"),module=$B.module.$factory(script.__name__)
 module.__file__=script.__file__
 module.__doc__=script.__doc__
 $B.imported[script_id]=module
-var module=new Function(script.js+`\nreturn locals`)()
-for(var key in module){if(! key.startsWith('$')){$B.imported[script_id][key]=module[key]}}
+try{var modobj=new Function(script.js+`\nreturn locals`)()
+for(var key in modobj){if(! key.startsWith('$')){module[key]=modobj[key]}}
 $B.dispatch_load_event(script.script_element)}catch(err){
 if(err.__class__===undefined){if(err.$py_exc){err=err.$py_exc}else{$B.freeze(err)
 var stack=err.$stack,frame_obj=err.$frame_obj,linenums=err.$linenums
