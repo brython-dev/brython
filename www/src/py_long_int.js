@@ -1,14 +1,10 @@
 "use strict";
-;(function($B){
+(function($B){
 /*
 Module to manipulate long integers
 */
 
 var _b_ = $B.builtins
-
-if($B.isWebWorker){
-    var window = self
-}
 
 var long_int = {
     __class__: _b_.type,
@@ -28,11 +24,7 @@ var long_int = {
     }
 }
 
-var max_safe_divider = $B.max_int / 9
-
 var int_or_long = _b_.int.$int_or_long
-
-var len = ((Math.pow(2, 53) - 1) + '').length - 1
 
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str.$factory(self)}
@@ -383,10 +375,10 @@ long_int.$log10 = function(x){
 }
 
 // descriptors
-long_int.numerator = function(self){return self}
-long_int.denominator = function(self){return _b_.int.$factory(1)}
-long_int.imag = function(self){return _b_.int.$factory(0)}
-long_int.real = function(self){return self}
+long_int.numerator = (self) => self
+long_int.denominator = () => 1
+long_int.imag = () => 0
+long_int.real = (self) => self
 
 // code for & | ^
 var body =
@@ -444,37 +436,19 @@ function digits(base){
     // Used to test if the string passed as first argument to long_int is valid
     var is_digits = {}
     // Number from 0 to base, or from 0 to 9 if base > 10
-    for(var i = 0; i < base; i++){
+    for(let i = 0; i < base; i++){
         if(i == 10){break}
         is_digits[i] = i
     }
     if(base > 10){
         // Additional letters
         // For instance in base 16, add "abcdefABCDEF" as keys
-        for(var i = 0; i < base - 10; i++){
+        for(let i = 0; i < base - 10; i++){
             is_digits[String.fromCharCode(65 + i)] = 10 + i
             is_digits[String.fromCharCode(97 + i)] = 10 + i
         }
     }
     return is_digits
-}
-
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1
-var MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER
-
-function isSafeInteger(n) {
-    return (typeof n === "number" &&
-        Math.round(n) === n &&
-        MIN_SAFE_INTEGER <= n &&
-        n <= MAX_SAFE_INTEGER)
-}
-
-function intOrLong(long){
-    // If the result of an operation on long_int instances is a safe
-    // integer, convert it to a Javascript number
-    var v = parseInt(long.value) * (long.pos ? 1 : -1)
-    if(v > MIN_SAFE_INTEGER && v < MAX_SAFE_INTEGER){return v}
-    return long
 }
 
 long_int.$from_int = function(value){
@@ -484,7 +458,7 @@ long_int.$from_int = function(value){
 long_int.$factory = function(value, base){
     // Check if all characters in value are valid in the base
     var is_digits = digits(base)
-    for(var i = 0; i < value.length; i++){
+    for(let i = 0; i < value.length; i++){
         if(is_digits[value.charAt(i)] === undefined){
             throw _b_.ValueError.$factory(
                 'int argument is not a valid number: "' + value + '"')
@@ -499,10 +473,10 @@ long_int.$factory = function(value, base){
         res = BigInt('0o' + value)
     }else{
         base = BigInt(base)
-        var res = 0n,
-            coef = 1n,
+        res = 0n
+        let coef = 1n,
             char
-        for(var i = value.length - 1; i >= 0; i--){
+        for(let i = value.length - 1; i >= 0; i--){
             char = value[i].toUpperCase()
             res += coef * BigInt(is_digits[char])
             coef *= base

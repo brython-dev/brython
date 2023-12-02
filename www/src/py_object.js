@@ -1,5 +1,5 @@
 "use strict";
-__BRYTHON__.builtins.object = (function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
@@ -12,16 +12,6 @@ var object = {
     $is_class: true,
     $native: true
 }
-
-// Name of special methods : if they are not found as attributes, try
-// the "reflected" attribute on the argument
-// For instance, for "getattr(x,'__mul__')", if object x has no attribute
-// "__mul__", try a function using the attribute "__rmul__" of its
-// first argument
-
-var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
-    "lshift", "rshift", "and", "xor", "or"]
-var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
     if(self.__dict__ && $B.$isinstance(self.__dict__, _b_.dict) &&
@@ -58,7 +48,7 @@ object.__dir__ = function(self) {
 
     var res = []
     for(var i = 0, len = objects.length; i < len; i++){
-        for(var attr in objects[i]){
+        for(let attr in objects[i]){
             if(attr.charAt(0) == "$") {
                 if(attr.charAt(1) == "$"){
                     // aliased name
@@ -78,7 +68,7 @@ object.__dir__ = function(self) {
 
     // add object's own attributes
     if(self.__dict__){
-        for(var attr of $B.make_js_iterator(self.__dict__)){
+        for(let attr of $B.make_js_iterator(self.__dict__)){
             if(attr.charAt(0) != "$"){
                 res.push(attr)
             }
@@ -159,7 +149,7 @@ object.__getattribute__ = function(obj, attr){
         res = check(obj, klass, attr)
         if(res === undefined){
             var mro = klass.__mro__
-            for(var i = 0, len = mro.length; i < len; i++){
+            for(let i = 0, len = mro.length; i < len; i++){
                 res = check(obj, mro[i], attr)
                 if($test){
                     console.log('in class', mro[i], 'res', res)
@@ -205,8 +195,8 @@ object.__getattribute__ = function(obj, attr){
 
         var get = res.__get__
         if(get === undefined && res.__class__){
-            var get = res.__class__.__get__
-            for(var i = 0; i < res.__class__.__mro__.length &&
+            get = res.__class__.__get__
+            for(let i = 0; i < res.__class__.__mro__.length &&
                     get === undefined; i++){
                 get = res.__class__.__mro__[i].__get__
             }
@@ -446,7 +436,7 @@ object.__reduce__ = function(self){
 function getNewArguments(self, klass){
     var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
     if(newargs_ex !== null){
-        var newargs = newargs_ex()
+        let newargs = newargs_ex()
         if((! newargs) || newargs.__class__ !== _b_.tuple){
             throw _b_.TypeError.$factory("__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
@@ -455,7 +445,7 @@ function getNewArguments(self, klass){
             throw _b_.ValueError.$factory("__getnewargs_ex__ should " +
                 `return a tuple of length 2, not ${newargs.length}`)
         }
-        var args = newargs[0],
+        let args = newargs[0],
             kwargs = newargs[1]
         if((! args) || args.__class__ !== _b_.tuple){
             throw _b_.TypeError.$factory("first item of the tuple returned " +
@@ -467,7 +457,7 @@ function getNewArguments(self, klass){
         }
         return {args, kwargs}
     }
-    var newargs = klass.$getnewargs,
+    let newargs = klass.$getnewargs,
         args
     if(! newargs){
         newargs = $B.$getattr(klass, '__getnewargs__', null)
@@ -607,7 +597,7 @@ object.$factory = function(){
 
 $B.set_func_names(object, "builtins")
 
-return object
+_b_.object = object
 
 })(__BRYTHON__)
 

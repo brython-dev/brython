@@ -1,6 +1,5 @@
-// range
 "use strict";
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins,
     None = _b_.None,
@@ -37,8 +36,8 @@ range.__contains__ = function(self, other){
     }
     var start = _b_.int.$to_bigint(self.start),
         stop = _b_.int.$to_bigint(self.stop),
-        step = _b_.int.$to_bigint(self.step),
-        other = _b_.int.$to_bigint(other)
+        step = _b_.int.$to_bigint(self.step)
+    other = _b_.int.$to_bigint(other)
 
     var sub = other - start,
         fl = sub / step,
@@ -54,7 +53,7 @@ range.__contains__ = function(self, other){
     }
 }
 
-range.__delattr__ = function(self, attr, value){
+range.__delattr__ = function(){
     throw _b_.AttributeError.$factory("readonly attribute")
 }
 
@@ -208,7 +207,7 @@ range.__repr__ = function(self){
     return res + ")"
 }
 
-range.__setattr__ = function(self, attr, value){
+range.__setattr__ = function(){
     throw _b_.AttributeError.$factory("readonly attribute")
 }
 
@@ -238,7 +237,7 @@ range.count = function(self, ob){
     }
 }
 
-range.index = function(self, other){
+range.index = function(){
     var $ = $B.args("index", 2, {self: null, other: null}, ["self", "other"],
         arguments, {}, null, null),
         self = $.self,
@@ -353,7 +352,7 @@ slice.__repr__ = function(self){
         _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }
 
-slice.__setattr__ = function(self, attr, value){
+slice.__setattr__ = function(){
     throw _b_.AttributeError.$factory("readonly attribute")
 }
 
@@ -413,7 +412,7 @@ slice.start = function(self){return self.start}
 slice.step = function(self){return self.step}
 slice.stop = function(self){return self.stop}
 
-slice.indices = function(self, length){
+slice.indices = function(self){
     // This method takes a single integer argument length and computes
     // information about the slice that the slice object would describe if
     // applied to a sequence of length items. It returns a tuple of three
@@ -423,19 +422,28 @@ slice.indices = function(self, length){
     var $ = $B.args("indices", 2, {self: null, length: null},
             ["self", "length"], arguments, {}, null, null)
     var len = $B.$GetInt($.length)
-    if(len < 0){_b_.ValueError.$factory("length should not be negative")}
-    var _step = (self.step == _b_.None)? 1 : self.step
+    if(len < 0){
+        throw _b_.ValueError.$factory("length should not be negative")
+    }
+    var _step = (self.step == _b_.None)? 1 : self.step,
+        _start,
+        _stop
     if(_step < 0){
-        var _start = self.start, _stop = self.stop
+        _start = self.start
+        _stop = self.stop
         _start = (_start == _b_.None)? len - 1 :
             (_start < 0)? _b_.max(-1, _start + len) : _b_.min(len - 1, self.start)
         _stop = (self.stop == _b_.None)? -1 :
             (_stop < 0)? _b_.max(-1, _stop + len) : _b_.min(len - 1, self.stop)
     }else{
-        var _start = (self.start == _b_.None) ? 0 : _b_.min(len, self.start)
-        var _stop = (self.stop == _b_.None)? len :_b_.min(len, self.stop)
-        if(_start < 0){_start = _b_.max(0, _start + len)}
-        if(_stop < 0){_stop=_b_.max(0, _stop + len)}
+        _start = (self.start == _b_.None) ? 0 : _b_.min(len, self.start)
+        _stop = (self.stop == _b_.None)? len :_b_.min(len, self.stop)
+        if(_start < 0){
+            _start = _b_.max(0, _start + len)
+        }
+        if(_stop < 0){
+            _stop = _b_.max(0, _stop + len)
+        }
     }
     return _b_.tuple.$factory([_start, _stop, _step])
 }
