@@ -1,5 +1,5 @@
 "use strict";
-;(function($B){
+(function($B){
 
 // Implementation of generators
 //
@@ -127,7 +127,7 @@ $B.generator.send = function(self, value){
     return res.value
 }
 
-$B.generator.throw = function(self, type, value, traceback){
+$B.generator.throw = function(){
     var $ = $B.args('throw', 4,
                     {self: null, type: null, value: null, traceback: null},
                     ['self', 'type', 'value', 'traceback'],
@@ -187,8 +187,6 @@ $B.async_generator = $B.make_class("async_generator",
         return f
     }
 )
-
-var ag_closed = {}
 
 $B.async_generator.__aiter__ = function(self){
     return self

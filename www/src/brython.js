@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-02 14:36:21.501834"
-__BRYTHON__.timestamp=1701524181501
+__BRYTHON__.compiled_date="2023-12-02 17:44:26.857992"
+__BRYTHON__.timestamp=1701535466857
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -9705,7 +9705,7 @@ _b_.set=set
 _b_.frozenset=frozenset})(__BRYTHON__)
 ;
 
-;(function($B){var _b_=$B.builtins,_window=globalThis
+(function($B){var _b_=$B.builtins,_window=globalThis
 var Module=$B.module=$B.make_class("module",function(name,doc,$package){return{
 $tp_class:Module,__builtins__:_b_.__builtins__,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 )
@@ -9741,7 +9741,7 @@ if(ix===-1){console.log('bizarre',path,$B.script_dir)}else{path.splice(ix,1,...p
 if($B.protocol !=="file"){meta_path.push($B.finders.path)
 path_hooks.push($B.url_hook)}
 $B.import_info[filename]={meta_path,path_hooks,path}}
-function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
+function $download_module(mod,url){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
 if($B.get_option('cache')){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
 xhr.send()
@@ -9749,9 +9749,8 @@ if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_
 mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
 mod.$last_modified=
 xhr.getResponseHeader("Last-Modified")}else{
-console.info("Error "+xhr.status+
-" means that Python module "+mod_name+
-" was not found at url "+url)
+console.info("Trying to import "+mod_name+
+", not found at url "+url)
 res=_b_.ModuleNotFoundError.$factory("No module named '"+
 mod_name+"'")}}}
 _window.clearTimeout(timer)
@@ -9760,9 +9759,6 @@ mod_name+"' (res is null)")}
 if(res.constructor===Error){throw res}
 return res}
 $B.$download_module=$download_module
-function import_js(mod,path){try{var module_contents=$download_module(mod,path,undefined)}catch(err){return null}
-run_js(module_contents,path,mod)
-return true}
 $B.addToImported=function(name,modobj){$B.imported[name]=modobj
 if(modobj===undefined){throw _b_.ImportError.$factory('imported not set by module')}
 modobj.__class__=Module
@@ -9770,9 +9766,7 @@ modobj.__name__=name
 for(var attr in modobj){if(typeof modobj[attr]=="function"){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=name}}}
-function run_js(module_contents,path,_module){
-var module_id="$locals_"+_module.__name__.replace(/\./g,'_')
-try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
+function run_js(module_contents,path,_module){try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
 var modobj=$B.imported[_module.__name__]
 if(modobj===undefined){throw _b_.ImportError.$factory('imported not set by module')}
 modobj.__class__=Module
@@ -9781,16 +9775,12 @@ for(var attr in modobj){if(typeof modobj[attr]=="function"){modobj[attr].$infos=
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=_module.__name__}}
 return true}
-function show_ns(){var kk=Object.keys(_window)
-for(var i=0,len=kk.length;i < len;i++){console.log(kk[i])
-if(kk[i].charAt(0)=="$"){console.log(eval(kk[i]))}}
-console.log("---")}
 function run_py(module_contents,path,module,compiled){
 $B.file_cache[path]=module_contents
 $B.url2name[path]=module.__name__
-var root,js,mod_name=module.__name__ 
-if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-var src={src:module_contents,filename:path,imported:true}
+var root,js,mod_name=module.__name__,
+src
+if(! compiled){src={src:module_contents,filename:path,imported:true}
 try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){err.$frame_obj=$B.frame_obj
 if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
 console.log('stack',$B.make_frames_stack(err.$frame_obj))}
@@ -9798,7 +9788,7 @@ throw err}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.get_option('debug')==10){console.log("code for module "+module.__name__)
 console.log($B.format_indent(js,0))}
-var src=js
+src=js
 js="var $module = (function(){\n"+js
 var prefix='locals_'
 js+='return '+prefix
@@ -9810,7 +9800,7 @@ if($B.get_option('debug',err)> 2){console.log(err+" for module "+module.__name__
 console.log("module",module)
 console.log(root)
 if($B.get_option('debug',err)> 1){console.log($B.format_indent(js,0))}
-for(var attr in err){console.log(attr,err[attr])}
+for(let attr in err){console.log(attr,err[attr])}
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)
@@ -9818,12 +9808,12 @@ console.log(js.split('\n').slice(err.lineNumber-3,err.lineNumber+3).join('\n'))
 console.log(err.stack)}
 throw err}
 try{
-for(var attr in mod){module[attr]=mod[attr]}
+for(let attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
 return{
 content:src,name:mod_name,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
-for(var attr in err){console.log(attr+" "+err[attr])}
+for(let attr in err){console.log(attr+" "+err[attr])}
 if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
@@ -9845,7 +9835,7 @@ return parts.join(".")}
 var VFSFinder=$B.make_class("VFSFinder",function(){return{
 __class__:VFSFinder}}
 )
-VFSFinder.find_spec=function(cls,fullname,path){var stored,is_package,timestamp
+VFSFinder.find_spec=function(cls,fullname){var stored,is_package,timestamp
 if(!$B.use_VFS){return _b_.None}
 stored=$B.VFS[fullname]
 if(stored===undefined){return _b_.None}
@@ -9857,12 +9847,12 @@ origin :is_builtin? "built-in" :"brython_stdlib",
 submodule_search_locations:is_package?[]:_b_.None,loader_state:{stored:stored,timestamp:timestamp},
 cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
 $B.set_func_names(VFSFinder,"<import>")
-for(var method in VFSFinder){if(typeof VFSFinder[method]=="function"){VFSFinder[method]=_b_.classmethod.$factory(
+for(let method in VFSFinder){if(typeof VFSFinder[method]=="function"){VFSFinder[method]=_b_.classmethod.$factory(
 VFSFinder[method])}}
 const VFSLoader=$B.make_class("VFSLoader",function(){return{
 __class__:VFSLoader}}
 )
-VFSLoader.create_module=function(self,spec){
+VFSLoader.create_module=function(){
 return _b_.None}
 VFSLoader.exec_module=function(self,modobj){
 var stored=modobj.__spec__.loader_state.stored,timestamp=modobj.__spec__.loader_state.timestamp
@@ -9887,7 +9877,7 @@ mod.__initialized__=true
 mod.__spec__=modobj.__spec__
 if(is_package){mod.__path__="<stdlib>"
 mod.__package__=parent
-mod.$is_package=true}else{var elts=parent.split(".")
+mod.$is_package=true}else{let elts=parent.split(".")
 elts.pop()
 mod.__package__=elts.join(".")}
 mod.__file__=path
@@ -9914,49 +9904,19 @@ record.timestamp=$B.timestamp
 record.source_ts=timestamp
 $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
-var elts=mod_name.split(".")
+let elts=mod_name.split(".")
 if(elts.length > 1){elts.pop()}
 if($B.$options.indexedDB && $B.indexedDB &&
 $B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
-idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),cursor=store.openCursor(),request=store.put(record)
+idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),request=store.put(record)
 request.onsuccess=function(){if($B.get_option('debug')> 1){console.info(modobj.__name__,"stored in db")}}
 request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
 $B.set_func_names(VFSLoader,"builtins")
-var finder_cpython={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'CPythonFinder',$infos:{__module__:"builtins",__name__:"CPythonFinder"},create_module :function(cls,spec){
-return _b_.None},exec_module :function(cls,modobj){console.log("exec PYthon module",modobj)
-var loader_state=modobj.__spec__.loader_state
-var content=loader_state.content
-delete modobj.__spec__["loader_state"]
-modobj.$is_package=loader_state.is_package
-modobj.__file__=loader_state.__file__
-$B.file_cache[modobj.__file__]=content
-$B.url2file[modobj.__file__]=modobj.__name__
-var mod_name=modobj.__name__
-if($B.get_option('debug')> 1){console.log("run Python code from CPython",mod_name)}
-run_py(content,modobj.__path__,modobj)},find_module:function(cls,name,path){return{
-__class__:Loader,load_module:function(name,path){var spec=cls.find_spec(cls,name,path)
-var mod=Module.$factory(name)
-$B.imported[name]=mod
-mod.__spec__=spec
-cls.exec_module(cls,mod)}}},find_spec :function(cls,fullname,path){console.log("finder cpython",fullname)
-var xhr=new XMLHttpRequest(),url="/cpython_import?module="+fullname,result
-xhr.open("GET",url,false)
-xhr.onreadystatechange=function(){if(this.readyState==4 && this.status==200){var data=JSON.parse(this.responseText)
-result=ModuleSpec.$factory({name :fullname,loader:cls,
-origin :"CPython",
-submodule_search_locations:data.is_package?[]:_b_.None,loader_state:{content:data.content},
-cached:_b_.None,parent:data.is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
-xhr.send()
-return result}}
-$B.set_func_names(finder_cpython,"<import>")
-for(var method in finder_cpython){if(typeof finder_cpython[method]=="function"){finder_cpython[method]=_b_.classmethod.$factory(
-finder_cpython[method])}}
-finder_cpython.$factory=function(){return{__class__:finder_cpython}}
 var StdlibStaticFinder=$B.make_class("StdlibStaticFinder",function(){return{
 __class__:StdlibStaticFinder}}
 )
-StdlibStaticFinder.find_spec=function(self,fullname,path){
+StdlibStaticFinder.find_spec=function(self,fullname){
 if($B.stdlib && $B.get_option('static_stdlib_import')){var address=$B.stdlib[fullname]
 if(address===undefined){var elts=fullname.split(".")
 if(elts.length > 1){elts.pop()
@@ -9973,7 +9933,7 @@ cached:_b_.None,parent:is_pkg ? fullname :parent_package(fullname),has_location:
 return res}}
 return _b_.None}
 $B.set_func_names(StdlibStaticFinder,"<import>")
-for(var method in StdlibStaticFinder){if(typeof StdlibStaticFinder[method]=="function"){StdlibStaticFinder[method]=_b_.classmethod.$factory(
+for(let method in StdlibStaticFinder){if(typeof StdlibStaticFinder[method]=="function"){StdlibStaticFinder[method]=_b_.classmethod.$factory(
 StdlibStaticFinder[method])}}
 StdlibStaticFinder.$factory=function(){return{__class__:StdlibStaticFinder}}
 var PathFinder=$B.make_class("PathFinder",function(){return{
@@ -9997,7 +9957,7 @@ var find_spec=$B.$getattr(finder,"find_spec"),spec=$B.$call(find_spec)(fullname)
 if(!$B.is_none(spec)){return spec}}
 return _b_.None}
 $B.set_func_names(PathFinder,"<import>")
-for(var method in PathFinder){if(typeof PathFinder[method]=="function"){PathFinder[method]=_b_.classmethod.$factory(
+for(let method in PathFinder){if(typeof PathFinder[method]=="function"){PathFinder[method]=_b_.classmethod.$factory(
 PathFinder[method])}}
 var PathEntryFinder=$B.make_class("PathEntryFinder",function(path_entry,hint){return{
 __class__:PathEntryFinder,path_entry:path_entry,hint:hint}}
@@ -10028,7 +9988,7 @@ $B.set_func_names(PathEntryFinder,"builtins")
 var PathLoader=$B.make_class("PathLoader",function(){return{
 __class__:PathLoader}}
 )
-PathLoader.create_module=function(self,spec){
+PathLoader.create_module=function(){
 return _b_.None}
 PathLoader.exec_module=function(self,module){
 var metadata=module.__spec__.loader_state
@@ -10070,9 +10030,7 @@ if(!$B.is_none(_loader)){var create_module=$B.$getattr(_loader,"create_module",_
 if(!$B.is_none(create_module)){module=$B.$call(create_module)(spec)}}
 if(module===undefined){throw _b_.ImportError.$factory(mod_name)}
 if($B.is_none(module)){
-module=$B.module.$factory(mod_name)
-var mod_desc=$B.$getattr(spec,"origin")
-if($B.$getattr(spec,"has_location")){mod_desc="from '"+mod_desc+"'"}else{mod_desc="("+mod_desc+")"}}}
+module=$B.module.$factory(mod_name)}}
 module.__name__=_spec_name
 module.__loader__=_loader
 module.__package__=$B.$getattr(spec,"parent","")
@@ -10092,7 +10050,7 @@ $B.path_importer_cache={}
 function import_error(mod_name){var exc=_b_.ImportError.$factory(mod_name)
 exc.name=mod_name
 throw exc}
-$B.$__import__=function(mod_name,globals,locals,fromlist,level){var $test=false 
+$B.$__import__=function(mod_name,globals,locals,fromlist){var $test=false 
 if($test){console.log("__import__",mod_name,'fromlist',fromlist);alert()}
 var from_stdlib=false
 if(globals.$jsobj && globals.$jsobj.__file__){var file=globals.$jsobj.__file__
@@ -10108,7 +10066,7 @@ if($B.is_none(fromlist)){fromlist=[]}
 for(var i=0,modsep="",_mod_name="",len=parsed_name.length-1,__path__=_b_.None;i <=len;++i){var _parent_name=_mod_name;
 _mod_name+=modsep+parsed_name[i]
 modsep="."
-var modobj=$B.imported[_mod_name]
+modobj=$B.imported[_mod_name]
 if($test){console.log("iter",i,_mod_name,"\nmodobj",modobj,"\n__path__",__path__,Array.isArray(__path__))
 alert()}
 if(modobj==_b_.None){
@@ -10140,7 +10098,7 @@ let package_name=mod_name
 while(parsed_name.length > 1){var module=parsed_name.pop();
 package_name=parsed_name.join('.')
 if($B.imported[package_name]===undefined){
-$B.$import(package_name,globals,locals,[])
+$B.$import(package_name,[],{},locals)
 $B.imported[package_name][module]=$B.imported[mod_name]
 mod_name=module}}
 return $B.imported[package_name]}}
@@ -10149,12 +10107,12 @@ var test=false
 if(test){console.log('import',mod_name,fromlist,aliases)
 alert()}
 if(mod_name=='_frozen_importlib_external'){
-var alias=aliases[mod_name]||mod_name
-var imp=$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals);
-var _bootstrap=$B.imported.importlib._bootstrap,_bootstrap_external=$B.imported.importlib['_bootstrap_external']
+let alias=aliases[mod_name]||mod_name
+$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals)
+let _bootstrap=$B.imported.importlib._bootstrap,_bootstrap_external=$B.imported.importlib['_bootstrap_external']
 _bootstrap_external._set_bootstrap_module(_bootstrap)
 _bootstrap._bootstap_external=_bootstrap_external
-var _frozen_importlib=$B.imported._frozen_importlib
+let _frozen_importlib=$B.imported._frozen_importlib
 if(_frozen_importlib){_frozen_importlib._bootstrap_external=_bootstrap_external}
 return}
 var level=0,frame=$B.frame_obj.frame,current_module=frame[2],parts=current_module.split('.')
@@ -10166,16 +10124,15 @@ current_module=parts.join('.')
 parts.pop()}
 if(level > 0){mod_name=current_module+
 (mod_name.length > 0 ? '.'+mod_name :'')}
-var parts=mod_name.split(".")
+parts=mod_name.split(".")
 if(mod_name[mod_name.length-1]=="."){parts.pop()}
 var norm_parts=[],prefix=true
-for(var i=0,len=parts.length;i < len;i++){var p=parts[i]
-if(prefix && p==""){
+for(var p of parts){if(prefix && p==""){
 var elt=norm_parts.pop()
 if(elt===undefined){throw _b_.ImportError.$factory("Parent module '' not loaded, "+
 "cannot perform relative import")}}else{prefix=false;
 norm_parts.push(p)}}
-var mod_name=norm_parts.join(".")
+mod_name=norm_parts.join(".")
 fromlist=fromlist===undefined ?[]:fromlist
 aliases=aliases===undefined ?{}:aliases
 locals=locals===undefined ?{}:locals
@@ -10198,7 +10155,7 @@ if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
 console.log('modobj',modobj)
 alert()}
 if(! fromlist ||fromlist.length==0){
-var alias=aliases[mod_name]
+let alias=aliases[mod_name]
 if(alias){locals[alias]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj}}else{var __all__=fromlist,thunk={}
 if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)
 alert()}
@@ -10207,8 +10164,7 @@ if(__all__ !==thunk){
 aliases={}}}
 if(__all__===thunk){
 for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
-for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
-var alias=aliases[name]||name
+for(let name of __all__){var alias=aliases[name]||name
 try{
 locals[alias]=$B.$getattr(modobj,name)}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){throw $err1}
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
@@ -10230,15 +10186,15 @@ throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
 return locals}}
 $B.$import_from=function(module,names,aliases,level,locals){
-var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0
+var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0,current_module
 if(relative){
-var current_module=$B.imported[parts.join('.')]
+current_module=$B.imported[parts.join('.')]
 if(current_module===undefined){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
 if(! current_module.$is_package){if(parts.length==1){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}else{parts.pop()
 current_module=$B.imported[parts.join('.')]}}
-while(level > 0){var current_module=$B.imported[parts.join('.')]
+while(level > 0){current_module=$B.imported[parts.join('.')]
 if(! current_module.$is_package){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
 level--
@@ -10259,7 +10215,7 @@ $B.$import(module,names,aliases,locals)}}
 $B.import_all=function(locals,module){
 for(var attr in module){if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
-$B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder,CPython:finder_cpython}
+$B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
 var value=(filetype=='none')? _b_.None :
 url_hook(path,filetype)
@@ -13648,7 +13604,7 @@ _b_.tuple=tuple
 _b_.object.__bases__=tuple.$factory()
 _b_.type.__bases__=$B.fast_tuple([_b_.object])})(__BRYTHON__)
 ;
-;(function($B){
+(function($B){
 var _b_=$B.builtins
 var $GeneratorReturn={}
 $B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
@@ -13692,7 +13648,7 @@ throw _b_.StopIteration.$factory(res.value.value)}
 gen.gi_running=false
 if(res.done){throw _b_.StopIteration.$factory(res.value)}
 return res.value}
-$B.generator.throw=function(self,type,value,traceback){var $=$B.args('throw',4,{self:null,type:null,value:null,traceback:null},['self','type','value','traceback'],arguments,{value:_b_.None,traceback:_b_.None},null,null),self=$.self,type=$.type,value=$.value,traceback=$.traceback
+$B.generator.throw=function(){var $=$B.args('throw',4,{self:null,type:null,value:null,traceback:null},['self','type','value','traceback'],arguments,{value:_b_.None,traceback:_b_.None},null,null),self=$.self,type=$.type,value=$.value,traceback=$.traceback
 var gen=self.js_gen,exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined ||value===_b_.None){exc=$B.$call(exc)()}else if($B.$isinstance(value,type)){exc=value}}else{if(value===_b_.None){value=exc}else{exc=$B.$call(exc)(value)}}
@@ -13711,7 +13667,6 @@ res.js_gen=gen
 return res}
 return f}
 )
-var ag_closed={}
 $B.async_generator.__aiter__=function(self){return self}
 $B.async_generator.__anext__=function(self){return $B.async_generator.asend(self,_b_.None)}
 $B.async_generator.aclose=function(self){self.js_gen.$finished=true
