@@ -1,9 +1,9 @@
 "use strict";
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins
 
-var TPFLAGS = {
+const TPFLAGS = {
     STATIC_BUILTIN: 1 << 1,
     MANAGED_WEAKREF: 1 << 3,
     MANAGED_DICT: 1 << 4,
@@ -58,7 +58,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     // Keyword arguments passed to the class
     var extra_kwargs = {}
     if(kwargs){
-        for(var  i = 0; i < kwargs.length; i++){
+        for(let  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],
                 val = kwargs[i][1]
             if(key != "metaclass"){
@@ -81,7 +81,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         if(typeof slots == "string"){
             slots = [slots]
         }else{
-            for(var item of $B.make_js_iterator(slots)){
+            for(let item of $B.make_js_iterator(slots)){
                 if(typeof item != 'string'){
                     throw _b_.TypeError.$factory('__slots__ items must be ' +
                         `strings, not '${$B.class_name(item)}'`)
@@ -107,7 +107,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     }
 
     // Set new class as subclass of its parents
-    for(var i = 0; i < bases.length; i++){
+    for(let i = 0; i < bases.length; i++){
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
     }
@@ -256,18 +256,6 @@ $B.resolve_mro_entries = function(bases){
     return has_mro_entries ? new_bases : bases
 }
 
-var type_getsets = {
-    __name__: "getset",
-    __qualname__: "getset",
-    __bases__: "getset",
-    __module__: "getset",
-    __abstractmethods__: "getset",
-    __dict__: "get",
-    __doc__: "getset",
-    __text_signature__: "get",
-    __annotations__: "getset"
-}
-
 $B.make_class = function(qualname, factory){
     // Builds a basic class object
 
@@ -286,7 +274,7 @@ $B.make_class = function(qualname, factory){
 }
 
 var type = $B.make_class("type",
-    function(kls, bases, cl_dict){
+    function(){
         var missing = {},
             $ = $B.args('type', 3, {kls: null, bases: null, cl_dict: null},
                 ['kls', 'bases', 'cl_dict'], arguments,
@@ -410,24 +398,6 @@ $B.getset_descriptor.__repr__ = function(self){
 
 $B.set_func_names($B.getset_descriptor, "builtins")
 
-var data_descriptors = ['__abstractmethods__',
-                        '__annotations__',
-                        '__base__',
-                        '__bases__',
-                        '__basicsize__',
-                        // '__dict__',
-                        '__dictoffset__',
-                        '__doc__',
-                        '__flags__',
-                        '__itemsize__',
-                        '__module__',
-                        '__mro__',
-                        '__name__',
-                        '__qualname__',
-                        '__text_signature__',
-                        '__weakrefoffset__'
-                        ]
-
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
     return function(){
@@ -507,7 +477,7 @@ type.__dir__ = function(klass){
     return _b_.sorted(dict)
 }
 
-type.__format__ = function(klass, fmt_spec){
+type.__format__ = function(klass){
     // For classes, format spec is ignored, return str(klass)
     return _b_.str.$factory(klass)
 }
@@ -529,13 +499,10 @@ type.__getattribute__ = function(klass, attr){
         case '__name__':
             return klass.__name__ || klass.__qualname__
         case "__setattr__":
-            if(klass["__setattr__"] !== undefined){
-                var func = klass["__setattr__"]
-            }else{
-                var func = function(kls, key, value){
-                    kls[key] = value
-                }
-            }
+            var func = klass["__setattr__"] ?? 
+                           function(kls, key, value){
+                               kls[key] = value
+                           }
             return method_wrapper.$factory(attr, klass, func)
         case "__delattr__":
             if(klass["__delattr__"] !== undefined){
@@ -581,7 +548,7 @@ type.__getattribute__ = function(klass, attr){
                 if(mro === undefined){
                     console.log("no mro for", klass)
                 }
-                for(var i = 0; i < mro.length; i++){
+                for(let i = 0; i < mro.length; i++){
                     if(mro[i].hasOwnProperty(attr)){
                         res = mro[i][attr]
                         break
@@ -591,27 +558,17 @@ type.__getattribute__ = function(klass, attr){
         }else{
             res = v
         }
-        if($test){
-            console.log('search in class mro', res)
-            if(res !== undefined){
-                if(klass.hasOwnProperty(attr)){
-                    console.log('found in klass', klass)
-                }else{
-                    console.log('found in', mro[i])
-                }
-            }
-        }
     }
 
     if(res === undefined){
         // search in metaclass
         if(res === undefined){
-            var meta = klass.__class__ || $B.get_class(klass),
-                res = meta.hasOwnProperty(attr) ? meta[attr] : undefined
+            var meta = klass.__class__ || $B.get_class(klass)
+            res = meta.hasOwnProperty(attr) ? meta[attr] : undefined
             if($test){console.log("search in meta", meta, res)}
             if(res === undefined){
                 var meta_mro = meta.__mro__
-                for(var i = 0; i < meta_mro.length; i++){
+                for(let i = 0; i < meta_mro.length; i++){
                     if(meta_mro[i].hasOwnProperty(attr)){
                         res = meta_mro[i][attr]
                         break
@@ -654,7 +611,7 @@ type.__getattribute__ = function(klass, attr){
             // (issues #126 and #949)
             var getattr = meta.__getattr__
             if(getattr === undefined){
-                for(var i = 0; i < meta_mro.length; i++){
+                for(let i = 0; i < meta_mro.length; i++){
                     if(meta_mro[i].__getattr__ !== undefined){
                         getattr = meta_mro[i].__getattr__
                         break
@@ -752,7 +709,7 @@ type.__init_subclass__ = function(){
             `${$.cls.__qualname__}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
     }
-    for(var key in $.kwargs.$jsobj){
+    if(Object.keys($.kwargs.$jsobj).length > 0){
         throw _b_.TypeError.$factory(
             `${$.cls.__qualname__}.__init_subclass__() ` +
             `takes no keyword arguments`)
@@ -786,7 +743,6 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // becomes the __bases__ attribute; and the dict dictionary is the
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
-    var test = false // name == '_GenericAlias'
 
     // arguments passed as keywords in class definition
     extra_kwargs = extra_kwargs === undefined ? {$kw: [{}]} :
@@ -817,13 +773,14 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     }
 
     try{
-        var slots = _b_.dict.$get_string(cl_dict, '__slots__')
+        let slots = _b_.dict.$get_string(cl_dict, '__slots__')
         if(slots !== _b_.dict.$missing){
-            for(var name of $B.make_js_iterator(slots)){
-                class_dict[name] = member_descriptor.$factory(name, class_dict)
+            for(let key of $B.make_js_iterator(slots)){
+                class_dict[key] = member_descriptor.$factory(key, class_dict)
             }
         }
     }catch(err){
+        // ignore
     }
 
 
@@ -953,7 +910,7 @@ type.mro = function(cls){
     for(var base of bases){
         // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
-        var bmro = [],
+        let bmro = [],
             pos = 0
         if(base === undefined ||
                 base.__mro__ === undefined){
@@ -984,31 +941,39 @@ type.mro = function(cls){
     var mro = [cls],
         mpos = 1
     while(1){
-        var non_empty = [],
+        let non_empty = [],
             pos = 0
-        for(var i = 0; i < seqs.length; i++){
+        for(let i = 0; i < seqs.length; i++){
             if(seqs[i].length > 0){non_empty[pos++] = seqs[i]}
         }
-        if(non_empty.length == 0){break}
-        for(var i = 0; i < non_empty.length; i++){
-            var seq = non_empty[i],
-                candidate = seq[0],
-                not_head = [],
+        if(non_empty.length == 0){
+            break
+        }
+        let candidate
+        for(let i = 0; i < non_empty.length; i++){
+            let seq = non_empty[i]
+            candidate = seq[0]
+            let not_head = [],
                 pos = 0
-            for(var j = 0; j < non_empty.length; j++){
-                var s = non_empty[j]
-                if(s.slice(1).indexOf(candidate) > -1){not_head[pos++] = s}
+            for(let j = 0; j < non_empty.length; j++){
+                let s = non_empty[j]
+                if(s.slice(1).indexOf(candidate) > -1){
+                    not_head[pos++] = s
+                }
             }
-            if(not_head.length > 0){candidate = null}
-            else{break}
+            if(not_head.length > 0){
+                candidate = null
+            }else{
+                break
+            }
         }
         if(candidate === null){
             throw _b_.TypeError.$factory(
                 "inconsistent hierarchy, no C3 MRO is possible")
         }
         mro[mpos++] = candidate
-        for(var i = 0; i < seqs.length;  i++){
-            var seq = seqs[i]
+        for(let i = 0; i < seqs.length;  i++){
+            let seq = seqs[i]
             if(seq[0] === candidate){ // remove candidate
                 seqs[i].shift()
             }
@@ -1048,7 +1013,7 @@ var property = _b_.property = $B.make_class("property",
     }
 )
 
-property.__init__ = function(self, fget, fset, fdel, doc) {
+property.__init__ = function(){
     var $ = $B.args('__init__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
@@ -1118,7 +1083,7 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 type.__call__.__class__ = wrapper_descriptor
 
 
-var $instance_creator = $B.$instance_creator = function(klass){
+$B.$instance_creator = function(klass){
     var test = false // klass.$infos && klass.$infos.__name__ == 'Square2'
     if(test){
         console.log('instance creator of', klass)
@@ -1208,7 +1173,7 @@ member_descriptor.__delete__ = function(self, kls){
     kls.$slot_values.delete(self.attr)
 }
 
-member_descriptor.__get__ = function(self, kls, obj_type){
+member_descriptor.__get__ = function(self, kls){
     if(kls === _b_.None){
         return self
     }
@@ -1277,8 +1242,8 @@ method.__getattribute__ = function(self, attr){
     if(infos && infos[attr]){
         if(attr == "__code__"){
             var res = {__class__: $B.Code}
-            for(var attr in infos.__code__){
-                res[attr] = infos.__code__[attr]
+            for(var key in infos.__code__){
+                res[key] = infos.__code__[key]
             }
             return res
         }else{
@@ -1296,7 +1261,7 @@ method.__repr__ = method.__str__ = function(self){
        " of " + _b_.str.$factory(self.$infos.__self__) + ">"
 }
 
-method.__setattr__ = function(self, key, value){
+method.__setattr__ = function(self, key){
     // Attempting to set an attribute on a method results in an AttributeError
     // being raised.
     if(key == "__class__"){
@@ -1372,7 +1337,7 @@ $B.make_iterator_class = function(name){
             throw _b_.StopIteration.$factory("StopIteration")
         },
 
-        __reduce_ex__: function(self, protocol){
+        __reduce_ex__: function(self){
             return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.items])])
         }
     }
@@ -1417,11 +1382,11 @@ $B.GenericAlias.__getitem__ = function(self, item){
         $B.class_name(item) +"' object")
 }
 
-$B.GenericAlias.__mro_entries__ = function(self, bases){
+$B.GenericAlias.__mro_entries__ = function(self){
     return $B.fast_tuple([self.origin_class])
 }
 
-$B.GenericAlias.__new__ = function(origin_class, items, kwds){
+$B.GenericAlias.__new__ = function(origin_class, items){
     var res = {
         __class__: $B.GenericAlias,
         __mro__: [origin_class],
@@ -1432,10 +1397,10 @@ $B.GenericAlias.__new__ = function(origin_class, items, kwds){
     return res
 }
 
-$B.GenericAlias.__or__ = function(self, other){
+$B.GenericAlias.__or__ = function(){
     var $ = $B.args('__or__', 2, {self: null, other: null}, ['self', 'other'],
                     arguments, {}, null, null)
-    return $B.UnionType.$factory([self, other])
+    return $B.UnionType.$factory([$.self, $.other])
 }
 
 $B.GenericAlias.__origin__ = _b_.property.$factory(
@@ -1446,7 +1411,9 @@ $B.GenericAlias.__parameters__ = _b_.property.$factory(
     // In PEP 585 : "a lazily computed tuple (possibly empty) of unique
     // type variables found in __args__", but what are "unique type
     // variables" ?
-    self => $B.fast_tuple([])
+    function(){
+        return $B.fast_tuple([])
+    }
 )
 
 $B.GenericAlias.__repr__ = function(self){
