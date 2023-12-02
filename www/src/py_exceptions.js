@@ -112,6 +112,24 @@ $B.last_frame = function(){
     return `file ${frame.__file__} line ${frame.$lineno}`
 }
 
+
+$B.count_frames = function(frame_obj){
+    frame_obj = frame_obj || $B.frame_obj
+    return frame_obj == null ? 0 : frame_obj.count
+}
+
+$B.get_frame_at = function(pos, frame_obj){
+    frame_obj = frame_obj || $B.frame_obj
+    var nb = frame_obj.count - pos - 1
+    for(var i = 0; i < nb; i++){
+        if(frame_obj.prev === null){
+            break
+        }
+        frame_obj = frame_obj.prev
+    }
+    return frame_obj.frame
+}
+
 // class of traceback objects
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){
@@ -1132,8 +1150,6 @@ $B.error_trace = function(err){
         trace += '\n'
         if($B.get_option('debug', err) > 1){
             trace += err.$js_exc.stack
-        }else{
-            trace += 'Set debug mode > 1 to see the Javascript error stack\n'
         }
     }
     return trace

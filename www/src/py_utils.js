@@ -1693,24 +1693,6 @@ $B.push_frame = function(frame){
     }
 }
 
-$B.count_frames = function(frame_obj){
-    frame_obj = frame_obj || $B.frame_obj
-    return frame_obj == null ? 0 : frame_obj.count
-}
-
-$B.get_frame_at = function(pos, frame_obj){
-    frame_obj = frame_obj || $B.frame_obj
-    var nb = $B.count_frames() - pos - 1
-    for(var i = 0; i < nb; i++){
-        if(frame_obj.prev === null){
-            break
-        }
-        frame_obj = frame_obj.prev
-    }
-    return frame_obj.frame
-}
-
-
 
 $B.floordiv = function(x, y){
     var z = x / y

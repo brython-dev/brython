@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-02 11:45:18.727771"
-__BRYTHON__.timestamp=1701513918727
+__BRYTHON__.compiled_date="2023-12-02 14:36:21.501834"
+__BRYTHON__.timestamp=1701524181501
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5762,13 +5762,6 @@ return $B.leave_frame()}
 $B.push_frame=function(frame){var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
 return{
 prev:$B.frame_obj,frame,count:count+1}}
-$B.count_frames=function(frame_obj){frame_obj=frame_obj ||$B.frame_obj
-return frame_obj==null ? 0 :frame_obj.count}
-$B.get_frame_at=function(pos,frame_obj){frame_obj=frame_obj ||$B.frame_obj
-var nb=$B.count_frames()-pos-1
-for(var i=0;i < nb;i++){if(frame_obj.prev===null){break}
-frame_obj=frame_obj.prev}
-return frame_obj.frame}
 $B.floordiv=function(x,y){var z=x/y
 if(Number.isSafeInteger(x)&&
 Number.isSafeInteger(y)&&
@@ -8147,6 +8140,13 @@ trace.push("    "+line.trim())}}}
 return trace.join("\n")}
 $B.last_frame=function(){var frame=$B.frame_obj.frame
 return `file ${frame.__file__} line ${frame.$lineno}`}
+$B.count_frames=function(frame_obj){frame_obj=frame_obj ||$B.frame_obj
+return frame_obj==null ? 0 :frame_obj.count}
+$B.get_frame_at=function(pos,frame_obj){frame_obj=frame_obj ||$B.frame_obj
+var nb=frame_obj.count-pos-1
+for(var i=0;i < nb;i++){if(frame_obj.prev===null){break}
+frame_obj=frame_obj.prev}
+return frame_obj.frame}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc){var frame_obj=exc.$frame_obj
 if(frame_obj===null){return _b_.None}
 if($B.$isinstance(exc,_b_.SyntaxError)){frame_obj=frame_obj.prev}
@@ -8566,7 +8566,7 @@ trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.
 if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}
 $B.frame_obj=save_frame_obj}else{trace=err+""}
 if(err.$js_exc){trace+='\n'
-if($B.get_option('debug',err)> 1){trace+=err.$js_exc.stack}else{trace+='Set debug mode > 1 to see the Javascript error stack\n'}}
+if($B.get_option('debug',err)> 1){trace+=err.$js_exc.stack}}
 return trace}
 $B.get_stderr=function(){if($B.imported.sys){return $B.imported.sys.stderr}
 return $B.imported._sys.stderr}
@@ -11931,19 +11931,15 @@ throw Error('not a big int')}
 return{
 __class__:$B.long_int,value:value}}})(__BRYTHON__)
 ;
-;(function($B){var _b_=$B.builtins
-var object=_b_.object
-function $err(op,other){var msg="unsupported operand type(s) for "+op+
-": 'float' and '"+$B.class_name(other)+"'"
-throw _b_.TypeError.$factory(msg)}
+(function($B){var _b_=$B.builtins
 function float_value(obj){return obj.__class__===float ? obj :fast_float(obj.value)}
-var float={__class__:_b_.type,__dir__:object.__dir__,__qualname__:'float',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+var float={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'float',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 float.$float_value=float_value
 float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
-float.numerator=function(self){return self}
-float.denominator=function(self){return 1}
-float.imag=function(self){return 0}
-float.real=function(self){return self}
+float.numerator=(self)=> self
+float.denominator=()=> 1
+float.imag=()=> 0
+float.real=(self)=> self
 float.__float__=function(self){return self}
 $B.shift1_cache={}
 float.as_integer_ratio=function(self){if(isinf(self)){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
@@ -11989,7 +11985,7 @@ return fast_float(Math.floor(self.value/other.value))}
 if($B.$isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
 return fast_float(Math.floor(self.value/other))}
 return _b_.NotImplemented}
-const DBL_MANT_DIG=53,LONG_MAX=__BRYTHON__.MAX_VALUE,DBL_MAX_EXP=2**10,LONG_MIN=__BRYTHON__.MIN_VALUE,DBL_MIN_EXP=-1021
+const DBL_MANT_DIG=53,LONG_MAX=$B.MAX_VALUE,DBL_MAX_EXP=2**10,LONG_MIN=$B.MIN_VALUE,DBL_MIN_EXP=-1021
 float.fromhex=function(klass,s){function hex_from_char(char){return parseInt(char,16)}
 function finished(){
 while(s[pos]&& s[pos].match(/\s/)){pos++;}
@@ -12003,9 +11999,6 @@ function parse_error(){throw _b_.ValueError.$factory(
 function insane_length_error(){throw _b_.ValueError.$factory(
 "hexadecimal string too long to convert");}
 s=s.trim()
-var re_parts=[/^(?<sign>[+-])?(0x)?/,/(?<integer>[0-9a-fA-F]+)?/,/(?<fraction>\.(?<fvalue>[0-9a-fA-F]+))?/,/(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
-var re=new RegExp(re_parts.map(r=> r.source).join(''))
-var mo=re.exec(s)
 if(s.match(/^\+?inf(inity)?$/i)){return INF}else if(s.match(/^-inf(inity)?$/i)){return NINF}else if(s.match(/^[+-]?nan$/i)){return NAN}
 var pos=0,negate,ldexp=_b_.float.$funcs.ldexp
 if(s[pos]=='-'){pos++;
@@ -12029,7 +12022,6 @@ pos++;
 while('0' <=s[pos]&& s[pos]<='9'){pos++;}
 exp=parseInt(s.substr(exp_start));}else{exp=0;}
 function HEX_DIGIT(j){if(! Number.isInteger(j)){throw Error('j pas entier')}
-var pos=j < fdigits ? coeff_end-j :coeff_end-1-j
 return hex_from_char(s[j < fdigits ?
 coeff_end-j :
 coeff_end-1-j])}
@@ -12040,23 +12032,23 @@ if(exp > LONG_MAX/2){console.log('overflow, exp',exp)
 throw overflow_error();}
 exp=exp-4*fdigits;
 var top_exp=exp+4*(ndigits-1);
-for(var digit=BigInt(HEX_DIGIT(ndigits-1));digit !=0;digit/=2n){top_exp++;}
-if(top_exp < DBL_MIN_EXP-DBL_MANT_DIG){x=ZERO;
+for(let digit=BigInt(HEX_DIGIT(ndigits-1));digit !=0;digit/=2n){top_exp++;}
+if(top_exp < DBL_MIN_EXP-DBL_MANT_DIG){x=ZERO
 return finished()}
 if(top_exp > DBL_MAX_EXP){throw overflow_error()}
 var lsb=Math.max(top_exp,DBL_MIN_EXP)-DBL_MANT_DIG;
 var x=0.0;
 if(exp >=lsb){
-for(var i=ndigits-1;i >=0;i--){x=16.0*x+HEX_DIGIT(i);}
-x=ldexp($B.fast_float(x),exp);
+for(let i=ndigits-1;i >=0;i--){x=16.0*x+HEX_DIGIT(i)}
+x=ldexp($B.fast_float(x),exp)
 return finished()}
-var half_eps=1 <<((lsb-exp-1)% 4),key_digit=parseInt((lsb-exp-1)/4);
-for(var i=ndigits-1;i > key_digit;i--){x=16.0*x+HEX_DIGIT(i);}
-var digit=HEX_DIGIT(key_digit);
-x=16.0*x+(digit &(16-2*half_eps));
+var half_eps=1 <<((lsb-exp-1)% 4),key_digit=parseInt((lsb-exp-1)/4)
+for(let i=ndigits-1;i > key_digit;i--){x=16.0*x+HEX_DIGIT(i)}
+let digit=HEX_DIGIT(key_digit)
+x=16.0*x+(digit &(16-2*half_eps))
 if((digit & half_eps)!=0){var round_up=0;
 if((digit &(3*half_eps-1))!=0 ||(half_eps==8 &&
-key_digit+1 < ndigits &&(HEX_DIGIT(key_digit+1)& 1)!=0)){round_up=1;}else{for(var i=key_digit-1;i >=0;i--){if(HEX_DIGIT(i)!=0){round_up=1;
+key_digit+1 < ndigits &&(HEX_DIGIT(key_digit+1)& 1)!=0)){round_up=1;}else{for(let i=key_digit-1;i >=0;i--){if(HEX_DIGIT(i)!=0){round_up=1;
 break;}}}
 if(round_up){x+=2*half_eps;
 if(top_exp==DBL_MAX_EXP &&
@@ -12087,21 +12079,22 @@ if(isNaN(value)){special="efg".indexOf(fmt.type)>-1 ? "nan" :"NAN"}else if(value
 if(special){return format_sign(value,fmt)+special}
 if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
 if(fmt.type=="%"){value*=100}
-if(fmt.type=="e"){var res=value.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
+if(fmt.type=="e"){let res=value.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
 if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
 res.charAt(res.length-1)}
 return res}
+var res
 if(fmt.precision !==undefined){
-var prec=fmt.precision
+let prec=fmt.precision
 if(prec==0){return Math.round(value)+""}
-var res=$B.roundDownToFixed(value,prec),
-pt_pos=res.indexOf(".")
+res=$B.roundDownToFixed(value,prec)
+let pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{var missing=fmt.precision-res.length+pt_pos+1
-if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
+if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){let exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
 if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{res=preformat(self,{type:"e",precision:fmt.precision-1})}
-var parts=res.split("e")
-if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{var signif=parts[0]
+let parts=res.split("e")
+if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{let signif=parts[0]
 if(signif.indexOf('.')> 0){while(signif.endsWith("0")){signif=signif.substr(0,signif.length-1)}}
 if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
 parts[0]=signif}
@@ -12110,13 +12103,15 @@ if(fmt.type=="G"){res=res.toUpperCase()}
 return res}else if(fmt.type===undefined){
 fmt.type="g"
 res=preformat(self,fmt)
-if(res.indexOf('.')==-1){var exp=res.length-1,exp=exp < 10 ? '0'+exp :exp,is_neg=res.startsWith('-'),point_pos=is_neg ? 2 :1,mant=res.substr(0,point_pos)+'.'+
+if(res.indexOf('.')==-1){let exp=res.length-1
+exp=exp < 10 ? '0'+exp :exp
+let is_neg=res.startsWith('-'),point_pos=is_neg ? 2 :1,mant=res.substr(0,point_pos)+'.'+
 res.substr(point_pos)
 return `${mant}e+${exp}`}
-fmt.type=undefined}else{var res1=value.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
+fmt.type=undefined}else{let res1=value.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
 if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
 while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
-res=elts.join("e")}}}else{var res=_b_.str.$factory(self)}
+res=elts.join("e")}}}else{res=_b_.str.$factory(self)}
 if(fmt.type===undefined ||"gGn".indexOf(fmt.type)!=-1){
 if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
 if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}else{res=res.substr(0,res.length-1)}}}
@@ -12211,7 +12206,7 @@ if(_e < 0){_esign="-"
 _e=-_e}
 if(self.value < 0){return "-0x"+_s+"p"+_esign+_e}
 return "0x"+_s+"p"+_esign+_e}
-float.__init__=function(self,value){return _b_.None}
+float.__init__=function(){return _b_.None}
 float.__int__=function(self){check_self_is_float(self,'__int__')
 if(Number.isInteger(self.value)){var res=BigInt(self.value),res_num=Number(res)
 return Number.isSafeInteger(res_num)?
@@ -12229,7 +12224,7 @@ var q=Math.floor(self.value/other.value),r=self.value-other.value*q
 if(r==0 && other.value < 0){return fast_float(-0)}
 return fast_float(r)}
 return _b_.NotImplemented}
-float.__mro__=[object]
+float.__mro__=[_b_.object]
 float.__mul__=function(self,other){if($B.$isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return fast_float(self.value*parseFloat(other.value))}
 other=_b_.int.numerator(other)
 return fast_float(self.value*other)}
@@ -12270,8 +12265,8 @@ return '0.0'}
 var res=self+"" 
 if(res.search(/[.eE]/)==-1){res+=".0"}
 var split_e=res.split(/e/i)
-if(split_e.length==2){var mant=split_e[0],exp=split_e[1]
-if(exp.startsWith('-')){var exp_str=parseInt(exp.substr(1))+''
+if(split_e.length==2){let mant=split_e[0],exp=split_e[1]
+if(exp.startsWith('-')){let exp_str=parseInt(exp.substr(1))+''
 if(exp_str.length < 2){exp_str='0'+exp_str}
 return mant+'e-'+exp_str}}
 var x,y
@@ -12279,16 +12274,17 @@ var x,y
 var sign=''
 if(x[0]=='-'){x=x.substr(1)
 sign='-'}
-if(x.length > 16){var exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
+if(x.length > 16){let exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
 while(dec_part.endsWith("0")){dec_part=dec_part.substr(0,dec_part.length-1)}
-var mant=int_part
+let mant=int_part
 if(dec_part.length > 0){mant+='.'+dec_part}
-return sign+mant+'e+'+exp}else if(x=="0"){var exp=0
+return sign+mant+'e+'+exp}else if(x=="0"){let exp=0
 while(exp < y.length && y.charAt(exp)=="0"){exp++}
 if(exp > 3){
-var rest=y.substr(exp),exp=(exp+1).toString()
+let rest=y.substr(exp)
+exp=(exp+1).toString()
 while(rest.endsWith("0")){rest=rest.substr(0,res.length-1)}
-var mant=rest[0]
+let mant=rest[0]
 if(rest.length > 1){mant+='.'+rest.substr(1)}
 if(exp.length==1){exp='0'+exp}
 return sign+mant+'e-'+exp}}
@@ -12352,7 +12348,7 @@ var op_func_body=
     }
     return _b_.NotImplemented`
 var ops={"+":"add","-":"sub"}
-for(var op in ops){var body=op_func_body.replace(/-/gm,op)
+for(let op in ops){let body=op_func_body.replace(/-/gm,op)
 float[`__${ops[op]}__`]=Function('self','other',body)}
 var comp_func_body=`
 var $B = __BRYTHON__,
@@ -12375,7 +12371,7 @@ if(inv_op !== _b_.None){
 throw _b_.TypeError.$factory(
     "unorderable types: float() > " + $B.class_name(other) + "()")
 `
-for(var op in $B.$comps){var body=comp_func_body.replace(/>/gm,op).
+for(let op in $B.$comps){let body=comp_func_body.replace(/>/gm,op).
 replace(/__gt__/gm,`__${$B.$comps[op]}__`).
 replace(/__le__/,`__${$B.$inv_comps[op]}__`)
 float[`__${$B.$comps[op]}__`]=Function('self','other',body)}
@@ -12393,8 +12389,6 @@ if(x >-1){res+=x}
 else{res+=s[i]}}
 return res}
 const fast_float=$B.fast_float=function(value){return{__class__:_b_.float,value}}
-var fast_float_with_hash=function(value,hash_value){return{
-__class__:_b_.float,__hashvalue__:hash_value,value}}
 float.$factory=function(value){if(value===undefined){return fast_float(0)}
 $B.check_nb_args_no_kw('float',1,arguments)
 switch(value){case true:
@@ -12437,22 +12431,23 @@ value=to_digits(value)
 if(isFinite(value)){return fast_float(parseFloat(value))}else{throw _b_.TypeError.$factory(
 "could not convert string to float: "+
 _b_.repr(original_value))}}}
-var klass=value.__class__,float_method=$B.$getattr(klass,'__float__',null)
+let klass=value.__class__,float_method=$B.$getattr(klass,'__float__',null)
 if(float_method===null){var index_method=$B.$getattr(klass,'__index__',null)
 if(index_method===null){throw _b_.TypeError.$factory("float() argument must be a string or a "+
 "number, not '"+$B.class_name(value)+"'")}
-var res=$B.$call(index_method)(value),klass=$B.get_class(res)
-if(klass===_b_.int){return fast_float(res)}else if(klass===$B.long_int){return $B.long_int.__float__(res)}else if(klass.__mro__.indexOf(_b_.int)>-1){var msg=`${$B.class_name(value)}.__index__ returned `+
-`non-int (type ${$B.class_name(res)}).  The `+
+let index=$B.$call(index_method)(value),index_klass=$B.get_class(res)
+if(index_klass===_b_.int){return fast_float(index)}else if(index_klass===$B.long_int){return $B.long_int.__float__(index)}else if(index_klass.__mro__.indexOf(_b_.int)>-1){let msg=`${$B.class_name(value)}.__index__ returned `+
+`non-int (type ${$B.class_name(index)}).  The `+
 'ability to return an instance of a strict subclass'+
 ' of int is deprecated, and may be removed in a '+
 'future version of Python.'
 $B.warn(_b_.DeprecationWarning,msg)
-return fast_float(res)}
+return fast_float(index)}
 throw _b_.TypeError.$factory('__index__ returned non-int'+
-` (type ${$B.class_name(res)})`)}
-var res=$B.$call(float_method)(value),klass=$B.get_class(res)
-if(klass !==_b_.float){if(klass.__mro__.indexOf(_b_.float)>-1){var msg=`${$B.class_name(value)}.__float__ returned `+
+` (type ${$B.class_name(index)})`)}
+let res=$B.$call(float_method)(value)
+klass=$B.get_class(res)
+if(klass !==_b_.float){if(klass.__mro__.indexOf(_b_.float)>-1){let msg=`${$B.class_name(value)}.__float__ returned `+
 `non-float (type ${$B.class_name(res)}).  The `+
 'ability to return an instance of a strict subclass'+
 ' of float is deprecated, and may be removed in a '+
@@ -12468,7 +12463,7 @@ float.fromhex=_b_.classmethod.$factory(float.fromhex)
 _b_.float=float
 $B.MAX_VALUE=fast_float(Number.MAX_VALUE)
 $B.MIN_VALUE=fast_float(2.2250738585072014e-308)
-const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0),NZERO=fast_float(-0)})(__BRYTHON__)
+const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0)})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
@@ -14121,16 +14116,12 @@ new_js_class.$is_js_class=true
 return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
-;(function($B){var _b_=$B.builtins,object=_b_.object,_window=globalThis
+(function($B){var _b_=$B.builtins,object=_b_.object,_window=globalThis
 var py_immutable_to_js=$B.py_immutable_to_js=function(pyobj){if($B.$isinstance(pyobj,_b_.float)){return pyobj.value}else if($B.$isinstance(pyobj,$B.long_int)){return $B.long_int.$to_js_number(pyobj)}
 return pyobj}
 function js_immutable_to_py(jsobj){if(typeof jsobj=="number"){if(Number.isSafeInteger(jsobj)){return jsobj}else if(Number.isInteger(jsobj)){return $B.fast_long_int(BigInt(jsobj+''))}else{return $B.fast_float(jsobj)}}
 return jsobj}
-function $getMouseOffset(target,ev){ev=ev ||_window.event;
-var docPos=$getPosition(target);
-var mousePos=$mouseCoords(ev);
-return{x:mousePos.x-docPos.x,y:mousePos.y-docPos.y};}
-function $getPosition(e){var left=0,top=0,width=e.width ||e.offsetWidth,height=e.height ||e.offsetHeight,scroll=document.scrollingElement.scrollTop
+function $getPosition(e){var left=0,top=0,width=e.width ||e.offsetWidth,height=e.height ||e.offsetHeight
 while(e.offsetParent){left+=e.offsetLeft
 top+=e.offsetTop
 e=e.offsetParent}
@@ -14141,28 +14132,25 @@ var parent_pos=$getPosition(e.parentElement)
 left+=parent_pos.left
 top+=parent_pos.top}
 return{left:left,top:top,width:width,height:height}}
-function trace(msg){var elt=document.getElementById("trace")
-if(elt){elt.innerText+=msg}}
-var $mouseCoords=$B.$mouseCoords=function(ev){if(ev.type.startsWith("touch")){var res={}
+var $mouseCoords=$B.$mouseCoords=function(ev){if(ev.type.startsWith("touch")){let res={}
 res.x=_b_.int.$factory(ev.touches[0].screenX)
 res.y=_b_.int.$factory(ev.touches[0].screenY)
 res.__getattr__=function(attr){return this[attr]}
 res.__class__="MouseCoords"
 return res}
 var posx=0,posy=0
-if(!ev){var ev=_window.event}
+if(!ev){ev=_window.event}
 if(ev.pageX ||ev.pageY){posx=ev.pageX
 posy=ev.pageY}else if(ev.clientX ||ev.clientY){posx=ev.clientX+document.body.scrollLeft+
 document.documentElement.scrollLeft
 posy=ev.clientY+document.body.scrollTop+
 document.documentElement.scrollTop}
-var res={}
+let res={}
 res.x=_b_.int.$factory(posx)
 res.y=_b_.int.$factory(posy)
 res.__getattr__=function(attr){return this[attr]}
 res.__class__="MouseCoords"
 return res}
-var $DOMNodeAttrs=["nodeName","nodeValue","nodeType","parentNode","childNodes","firstChild","lastChild","previousSibling","nextSibling","attributes","ownerDocument"]
 $B.$isNode=function(o){
 return(
 typeof Node==="object" ? o instanceof Node :
@@ -14181,9 +14169,10 @@ nodes.length !==undefined &&
 var $DOMEventAttrs_W3C=["NONE","CAPTURING_PHASE","AT_TARGET","BUBBLING_PHASE","type","target","currentTarget","eventPhase","bubbles","cancelable","timeStamp","stopPropagation","preventDefault","initEvent"]
 var $DOMEventAttrs_IE=["altKey","altLeft","button","cancelBubble","clientX","clientY","contentOverflow","ctrlKey","ctrlLeft","data","dataFld","dataTransfer","fromElement","keyCode","nextPage","offsetX","offsetY","origin","propertyName","reason","recordset","repeat","screenX","screenY","shiftKey","shiftLeft","source","srcElement","srcFilter","srcUrn","toElement","type","url","wheelDelta","x","y"]
 $B.$isEvent=function(obj){var flag=true
-for(var i=0;i < $DOMEventAttrs_W3C.length;i++){if(obj[$DOMEventAttrs_W3C[i]]===undefined){flag=false;break}}
+for(let attr of $DOMEventAttrs_W3C){if(obj[attr]===undefined){flag=false
+break}}
 if(flag){return true}
-for(var i=0;i < $DOMEventAttrs_IE.length;i++){if(obj[$DOMEventAttrs_IE[i]]===undefined){return false}}
+for(let attr of $DOMEventAttrs_IE){if(obj[attr]===undefined){return false}}
 return true}
 var $NodeTypes={1:"ELEMENT",2:"ATTRIBUTE",3:"TEXT",4:"CDATA_SECTION",5:"ENTITY_REFERENCE",6:"ENTITY",7:"PROCESSING_INSTRUCTION",8:"COMMENT",9:"DOCUMENT",10:"DOCUMENT_TYPE",11:"DOCUMENT_FRAGMENT",12:"NOTATION"}
 var Attributes=$B.make_class("Attributes",function(elt){return{__class__:Attributes,elt:elt}}
@@ -14255,6 +14244,7 @@ if(self.dataTransfer !==null && self.dataTransfer !==undefined){return Clipboard
 return $B.$JS2Py(self['data'])
 case 'target':
 if(self.target !==undefined){return DOMNode.$factory(self.target)}
+break
 case 'char':
 return String.fromCharCode(self.which)
 case 'svgX':
@@ -14285,17 +14275,6 @@ __class__ :Clipboard,__dict__:$B.empty_dict(),data :data}}
 Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
 Clipboard.__setitem__=function(self,name,value){self.data.setData(name,value)}
 $B.set_func_names(Clipboard,"<dom>")
-function $EventsList(elt,evt,arg){
-this.elt=elt
-this.evt=evt
-if($B.$isinstance(arg,_b_.list)){this.callbacks=arg}
-else{this.callbacks=[arg]}
-this.remove=function(callback){var found=false
-for(var i=0;i < this.callbacks.length;i++){if(this.callbacks[i]===callback){found=true
-this.callback.splice(i,1)
-this.elt.removeEventListener(this.evt,callback,false)
-break}}
-if(! found){throw _b_.KeyError.$factory("not found")}}}
 var dom={File :function(){},FileReader :function(){}}
 dom.File.__class__=_b_.type
 dom.File.__str__=function(){return "<class 'File'>"}
@@ -14313,7 +14292,7 @@ try{res.children=res.children.concat(_b_.list.$factory(other))}
 catch(err){throw _b_.TypeError.$factory("can't add '"+
 $B.class_name(other)+"' object to DOMNode instance")}}
 return res}
-DOMNode.__bool__=function(self){return true}
+DOMNode.__bool__=function(){return true}
 DOMNode.__contains__=function(self,key){
 if(self.nodeType==9 && typeof key=="string"){return document.getElementById(key)!==null}
 if(self.length !==undefined && typeof self.item=="function"){for(var i=0,len=self.length;i < len;i++){if(self.item(i)===key){return true}}}
@@ -14331,8 +14310,8 @@ if(res){res.parentNode.removeChild(res)}
 else{throw _b_.KeyError.$factory(key)}}else{
 self.parentNode.removeChild(self)}}
 DOMNode.__dir__=function(self){var res=[]
-for(var attr in self){if(attr.charAt(0)!="$"){res.push(attr)}}
-for(var attr in DOMNode){if(res.indexOf(attr)==-1){res.push(attr)}}
+for(let attr in self){if(attr.charAt(0)!="$"){res.push(attr)}}
+for(let attr in DOMNode){if(res.indexOf(attr)==-1){res.push(attr)}}
 res.sort()
 return res}
 DOMNode.__eq__=function(self,other){return self==other}
@@ -14354,27 +14333,27 @@ if(self instanceof SVGElement){return self[attr].baseVal.value}
 var computed=window.getComputedStyle(self).
 getPropertyValue(attr)
 if(computed !==undefined){if(computed==''){if(self.style[attr]!==undefined){return parseInt(self.style[attr])}else{return 0}}
-var prop=Math.floor(parseFloat(computed)+0.5)
+let prop=Math.floor(parseFloat(computed)+0.5)
 return isNaN(prop)? 0 :prop}else if(self.style[attr]){return parseInt(self.style[attr])}else{throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
 case "x":
 case "y":
-if(!(self instanceof SVGElement)){var pos=$getPosition(self)
+if(!(self instanceof SVGElement)){let pos=$getPosition(self)
 return attr=="x" ? pos.left :pos.top}
+break
 case "clear":
 case "closest":
 return function(){return DOMNode[attr].call(null,self,...arguments)}
 case "headers":
 if(self.nodeType==9){
-var req=new XMLHttpRequest();
+let req=new XMLHttpRequest();
 req.open("GET",document.location,false)
 req.send(null);
 var headers=req.getAllResponseHeaders()
 headers=headers.split("\r\n")
-var res=$B.empty_dict()
-for(var i=0;i < headers.length;i++){var header=headers[i]
-if(header.strip().length==0){continue}
-var pos=header.search(":")
+let res=$B.empty_dict()
+for(let header of headers){if(header.strip().length==0){continue}
+let pos=header.search(":")
 res.__setitem__(header.substr(0,pos),header.substr(pos+1).lstrip())}
 return res}
 break
@@ -14382,12 +14361,13 @@ case "location":
 attr="location"
 break}
 if(attr=="select" && self.nodeType==1 &&
-["INPUT","TEXTAREA"].indexOf(self.tagName.toUpperCase())>-1){return function(selector){if(selector===undefined){self.select();return _b_.None}
+["INPUT","TEXTAREA"].indexOf(self.tagName.toUpperCase())>-1){return function(selector){if(selector===undefined){self.select()
+return _b_.None}
 return DOMNode.select(self,selector)}}
 if(attr=="query" && self.nodeType==9){
-var res={__class__:Query,_keys :[],_values :{}}
-var qs=location.search.substr(1).split('&')
-if(location.search !=""){for(var i=0;i < qs.length;i++){var pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
+let res={__class__:Query,_keys :[],_values :{}}
+let qs=location.search.substr(1).split('&')
+if(location.search !=""){for(let i=0;i < qs.length;i++){let pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
 if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(key)
 res._values[key]=[value]}}}
 return res}
@@ -14403,7 +14383,7 @@ var bases=self.__class__.__bases__
 var show_message=true
 for(var base of bases){if(base.__module__=="browser.html"){show_message=false
 break}}
-if(show_message){var from_class=$B.$getattr(self.__class__,attr,_b_.None)
+if(show_message){from_class=$B.$getattr(self.__class__,attr,_b_.None)
 if(from_class !==_b_.None){var frame=$B.frame_obj.frame,line=frame.$lineno
 console.info("Warning: line "+line+", "+self.tagName+
 " element has instance attribute '"+attr+"' set."+
@@ -14414,7 +14394,7 @@ if(self.tagName){var ce=customElements.get(self.tagName.toLowerCase())
 if(ce !==undefined && ce.$cls !==undefined){
 var save_class=self.__class__
 self.__class__=ce.$cls
-try{var res=_b_.object.__getattribute__(self,attr)
+try{let res=_b_.object.__getattribute__(self,attr)
 self.__class__=save_class
 return res}catch(err){self.__class__=save_class
 if(! $B.is_exc(err,[_b_.AttributeError])){throw err}}}}else{return object.__getattribute__(self,attr)}}
@@ -14425,10 +14405,11 @@ if(method !==null){
 return res.bind(self)}}
 if(res.$is_func){
 return res}
-var func=(function(f,elt){return function(){var args=[],pos=0
+var func=(function(f,elt){return function(){var args=[]
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(typeof arg=="function"){
-if(arg.$cache){var f1=arg.$cache}else{var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}catch(err){$B.handle_error(err)}}}(arg)
+var f1
+if(arg.$cache){f1=arg.$cache}else{f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}catch(err){$B.handle_error(err)}}}(arg)
 arg.$cache=f1}
 args.push(f1)}else{args.push($B.pyobj2jsobj(arg))}}
 var result=f.apply(elt,args)
@@ -14443,27 +14424,26 @@ return res}
 return js_immutable_to_py(res)}
 return object.__getattribute__(self,attr)}
 DOMNode.__getitem__=function(self,key){if(self.nodeType==9){
-if(typeof key.valueOf()=="string"){var res=self.getElementById(key)
+if(typeof key.valueOf()=="string"){let res=self.getElementById(key)
 if(res){return DOMNode.$factory(res)}
-throw _b_.KeyError.$factory(key)}else{try{var elts=self.getElementsByTagName(key.__name__),res=[]
-for(var i=0;i < elts.length;i++){res.push(DOMNode.$factory(elts[i]))}
+throw _b_.KeyError.$factory(key)}else{try{let elts=self.getElementsByTagName(key.__name__),res=[]
+for(let i=0;i < elts.length;i++){res.push(DOMNode.$factory(elts[i]))}
 return res}catch(err){throw _b_.KeyError.$factory(_b_.str.$factory(key))}}}else{if((typeof key=="number" ||typeof key=="boolean")&&
 typeof self.item=="function"){var key_to_int=_b_.int.$factory(key)
 if(key_to_int < 0){key_to_int+=self.length}
-var res=DOMNode.$factory(self.item(key_to_int))
+let res=DOMNode.$factory(self.item(key_to_int))
 if(res===undefined){throw _b_.KeyError.$factory(key)}
 return res}else if(typeof key=="string" &&
 self.attributes &&
-typeof self.attributes.getNamedItem=="function"){var attr=self.attributes.getNamedItem(key)
-if(!!attr){return attr.value}
+typeof self.attributes.getNamedItem=="function"){let attr=self.attributes.getNamedItem(key)
+if(attr !==null){return attr.value}
 throw _b_.KeyError.$factory(key)}}}
 DOMNode.__hash__=function(self){return self.__hashvalue__===undefined ?
 (self.__hashvalue__=$B.$py_next_hash--):
 self.__hashvalue__}
 DOMNode.__iter__=function(self){
-if(self.length !==undefined && typeof self.item=="function"){var items=[]
-for(var i=0,len=self.length;i < len;i++){items.push(DOMNode.$factory(self.item(i)))}}else if(self.childNodes !==undefined){var items=[]
-for(var i=0,len=self.childNodes.length;i < len;i++){items.push(DOMNode.$factory(self.childNodes[i]))}}
+var items=[]
+if(self.length !==undefined && typeof self.item=="function"){for(let i=0,len=self.length;i < len;i++){items.push(DOMNode.$factory(self.item(i)))}}else if(self.childNodes !==undefined){for(let child of self.childNodes){items.push(DOMNode.$factory(child))}}
 return $B.$iter(items)}
 DOMNode.__le__=function(self,other){
 if(self.nodeType==9){self=self.body}
@@ -14490,9 +14470,8 @@ var txt=DOMNode.$factory(document.createTextNode(other))
 res.children=[txt,self]
 return res}
 DOMNode.__str__=DOMNode.__repr__=function(self){var attrs=self.attributes,attrs_str="",items=[]
-if(attrs !==undefined){var items=[]
-for(var i=0;i < attrs.length;i++){items.push(attrs[i].name+'="'+
-self.getAttributeNS(null,attrs[i].name)+'"')}}
+if(attrs !==undefined){for(let attr of attrs){items.push(attr.name+'="'+
+self.getAttributeNS(null,attr.name)+'"')}}
 var proto=Object.getPrototypeOf(self)
 if(proto){var name=proto.constructor.name
 if(name===undefined){
@@ -14510,8 +14489,7 @@ case "width":
 case "height":
 if($B.$isinstance(value,[_b_.int,_b_.float])&& self.nodeType==1){self.style[attr]=value+"px"
 return _b_.None}else{throw _b_.ValueError.$factory(attr+" value should be"+
-" an integer or float, not "+$B.class_name(value))}
-break}
+" an integer or float, not "+$B.class_name(value))}}
 if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
 var frame=$B.frame_obj.frame
@@ -14540,7 +14518,7 @@ DOMNode.abs_left={__get__:function(self){return $getPosition(self).left},__set__
 DOMNode.abs_top={__get__:function(self){return $getPosition(self).top},__set__:function(){throw _b_.AttributeError.$factory("'DOMNode' objectattribute "+
 "'abs_top' is read-only")}}
 DOMNode.attach=DOMNode.__le__ 
-DOMNode.bind=function(self,event){
+DOMNode.bind=function(){
 var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{func:_b_.None,options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
 if(func===_b_.None){
 return function(f){return DOMNode.bind(self,event,f)}}
@@ -14563,8 +14541,8 @@ DOMNode.child_nodes=function(self){var res=[]
 if(self.nodeType==9){self=self.body}
 for(var child of self.childNodes){res.push(DOMNode.$factory(child))}
 return res}
-DOMNode.clear=function(self){
-var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
+DOMNode.clear=function(){
+var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null),self=$.self
 if(self.nodeType==9){self=self.body}
 while(self.firstChild){self.removeChild(self.firstChild)}}
 DOMNode.Class=function(self){if(self.className !==undefined){return self.className}
@@ -14576,8 +14554,8 @@ for(var event in events){var evt_list=events[event]
 evt_list.forEach(function(evt){var func=evt[0]
 DOMNode.bind(res,event,func)})}
 return res}
-DOMNode.closest=function(self,selector){
-var $=$B.args("closest",2,{self:null,selector:null},["self","selector"],arguments,{},null,null)
+DOMNode.closest=function(){
+var $=$B.args("closest",2,{self:null,selector:null},["self","selector"],arguments,{},null,null),self=$.self,selector=$.selector
 var res=self.closest(selector)
 if(res===null){throw _b_.KeyError.$factory("no parent with selector "+selector)}
 return DOMNode.$factory(res)}
@@ -14652,7 +14630,7 @@ if(self.querySelector===undefined){throw _b_.TypeError.$factory("DOMNode object 
 var res=self.querySelector(selector)
 if(res===null){return _b_.None}
 return DOMNode.$factory(res)}
-DOMNode.setSelectionRange=function(self){
+DOMNode.setSelectionRange=function(){
 if(this["setSelectionRange"]!==undefined){return(function(obj){return function(){return obj.setSelectionRange.apply(obj,arguments)}})(this)}else if(this["createTextRange"]!==undefined){return(function(obj){return function(start_pos,end_pos){if(end_pos==undefined){end_pos=start_pos}
 var range=obj.createTextRange()
 range.collapse(true)
@@ -14695,24 +14673,25 @@ self.dispatchEvent(evObj)}}
 DOMNode.unbind=function(self,event){
 self.$events=self.$events ||{}
 if(self.$events==={}){return _b_.None}
-if(event===undefined){for(var event in self.$events){DOMNode.unbind(self,event)}
+if(event===undefined){for(let evt in self.$events){DOMNode.unbind(self,evt)}
 return _b_.None}
 if(self.$events[event]===undefined ||
 self.$events[event].length==0){return _b_.None}
 var events=self.$events[event]
 if(arguments.length==2){
-for(var i=0;i < events.length;i++){var callback=events[i][1]
+for(let evt of events){var callback=evt[1]
 self.removeEventListener(event,callback,false)}
 self.$events[event]=[]
 return _b_.None}
-for(var i=2;i < arguments.length;i++){var callback=arguments[i],flag=false,func=callback.$func
+for(let i=2;i < arguments.length;i++){let callback=arguments[i],flag=false,func=callback.$func
 if(func===undefined){
-var found=false
-for(var j=0;j < events.length;j++){if($B.is_or_equals(events[j][0],callback)){var func=callback,found=true
+let found=false
+for(let evt of events){if($B.is_or_equals(evt[0],callback)){func=callback
+found=true
 break}}
 if(! found){throw _b_.TypeError.$factory("function is not an event callback")}}
-for(var j=0;j < events.length;j++){if($B.$getattr(func,'__eq__')(events[j][0])){var callback=events[j][1]
-self.removeEventListener(event,callback,false)
+for(let j=0;j < events.length;j++){if($B.$getattr(func,'__eq__')(events[j][0])){let _callback=events[j][1]
+self.removeEventListener(event,_callback,false)
 events.splice(j,1)
 flag=true
 break}}
@@ -14935,7 +14914,8 @@ return awaitable}
 throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__)
 ;
-(function($B){$B.builtin_class_flags={builtins:{1074287874:['ConnectionAbortedError','ReferenceError','IsADirectoryError','UnicodeDecodeError','FileNotFoundError','PermissionError','ResourceWarning','ZeroDivisionError','ConnectionError','SystemExit','ModuleNotFoundError','BytesWarning','StopIteration','PendingDeprecationWarning','LookupError','OSError','AssertionError','EOFError','WindowsError','MemoryError','ConnectionRefusedError','NotImplementedError','TimeoutError','UnicodeWarning','Warning','FutureWarning','IndexError','DeprecationWarning','KeyError','ConnectionResetError','ProcessLookupError','UnicodeTranslateError','UnicodeEncodeError','SyntaxError','InterruptedError','ValueError','AttributeError','EnvironmentError','ChildProcessError','Exception','ImportWarning','BufferError','BrokenPipeError','OverflowError','TabError','TypeError','RuntimeWarning','UnicodeError','NotADirectoryError','SyntaxWarning','BlockingIOError','IndentationError','FloatingPointError','BaseExceptionGroup','FileExistsError','EncodingWarning','GeneratorExit','UserWarning','StopAsyncIteration','RecursionError','ImportError','ArithmeticError','RuntimeError','UnboundLocalError','IOError','SystemError','NameError','BaseException','KeyboardInterrupt'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['float','bytearray'],138941698:['bytes'],546050:['staticmethod','classmethod','super','map','reversed','filter','property','zip','enumerate'],529666:['object','complex'],541611330:['dict'],4740354:['set','frozenset'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['member_descriptor','generator','method-wrapper','frame','async_generator','classmethod_descriptor','getset_descriptor','coroutine'],547202:['builtin_function_or_method'],545026:['cell','traceback'],528642:['ellipsis','NotImplementedType','NoneType','code'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
+
+(function($B){$B.builtin_class_flags={builtins:{1074287874:['ReferenceError','SyntaxWarning','ConnectionAbortedError','Exception','OSError','KeyboardInterrupt','PermissionError','UnicodeTranslateError','InterruptedError','RuntimeWarning','Warning','SystemExit','ImportWarning','BaseException','FileNotFoundError','GeneratorExit','NotImplementedError','LookupError','WindowsError','IsADirectoryError','StopAsyncIteration','BlockingIOError','DeprecationWarning','StopIteration','BufferError','MemoryError','BaseExceptionGroup','FileExistsError','ModuleNotFoundError','ProcessLookupError','OverflowError','SyntaxError','EOFError','SystemError','RuntimeError','AssertionError','BytesWarning','EncodingWarning','RecursionError','ArithmeticError','PendingDeprecationWarning','TabError','UnboundLocalError','UnicodeDecodeError','NotADirectoryError','ResourceWarning','ChildProcessError','UnicodeError','BrokenPipeError','EnvironmentError','FloatingPointError','ValueError','UnicodeWarning','IndexError','NameError','IndentationError','ConnectionRefusedError','AttributeError','ConnectionError','FutureWarning','IOError','KeyError','TypeError','ConnectionResetError','TimeoutError','UnicodeEncodeError','ZeroDivisionError','ImportError','UserWarning'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['bytearray','float'],138941698:['bytes'],546050:['zip','property','enumerate','classmethod','map','staticmethod','reversed','super','filter'],529666:['object','complex'],541611330:['dict'],4740354:['set','frozenset'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['method-wrapper','async_generator','classmethod_descriptor','member_descriptor','getset_descriptor','coroutine','generator','frame'],547202:['builtin_function_or_method'],545026:['traceback','cell'],528642:['NotImplementedType','ellipsis','code','NoneType'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}

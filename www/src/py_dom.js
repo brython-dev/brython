@@ -1,5 +1,5 @@
 "use strict";
-;(function($B){
+(function($B){
 
 var _b_ = $B.builtins,
     object = _b_.object,
@@ -29,19 +29,11 @@ function js_immutable_to_py(jsobj){
 }
 
 // cross-browser utility functions
-function $getMouseOffset(target, ev){
-    ev = ev || _window.event;
-    var docPos    = $getPosition(target);
-    var mousePos  = $mouseCoords(ev);
-    return {x:mousePos.x - docPos.x, y:mousePos.y - docPos.y};
-}
-
 function $getPosition(e){
     var left = 0,
         top  = 0,
         width = e.width || e.offsetWidth,
-        height = e.height || e.offsetHeight,
-        scroll = document.scrollingElement.scrollTop
+        height = e.height || e.offsetHeight
 
     while (e.offsetParent){
         left += e.offsetLeft
@@ -62,16 +54,9 @@ function $getPosition(e){
     return {left: left, top: top, width: width, height: height}
 }
 
-function trace(msg){
-    var elt = document.getElementById("trace")
-    if(elt){
-        elt.innerText += msg
-    }
-}
-
 var $mouseCoords = $B.$mouseCoords = function(ev){
     if(ev.type.startsWith("touch")){
-        var res = {}
+        let res = {}
         res.x = _b_.int.$factory(ev.touches[0].screenX)
         res.y = _b_.int.$factory(ev.touches[0].screenY)
         res.__getattr__ = function(attr){return this[attr]}
@@ -80,7 +65,9 @@ var $mouseCoords = $B.$mouseCoords = function(ev){
     }
     var posx = 0,
         posy = 0
-    if(!ev){var ev = _window.event}
+    if(!ev){
+        ev = _window.event
+    }
     if(ev.pageX || ev.pageY){
         posx = ev.pageX
         posy = ev.pageY
@@ -90,17 +77,13 @@ var $mouseCoords = $B.$mouseCoords = function(ev){
         posy = ev.clientY + document.body.scrollTop +
             document.documentElement.scrollTop
     }
-    var res = {}
+    let res = {}
     res.x = _b_.int.$factory(posx)
     res.y = _b_.int.$factory(posy)
     res.__getattr__ = function(attr){return this[attr]}
     res.__class__ = "MouseCoords"
     return res
 }
-
-var $DOMNodeAttrs = ["nodeName", "nodeValue", "nodeType", "parentNode",
-    "childNodes", "firstChild", "lastChild", "previousSibling", "nextSibling",
-    "attributes", "ownerDocument"]
 
 $B.$isNode = function(o){
     // copied from http://stackoverflow.com/questions/384286/
@@ -144,12 +127,19 @@ var $DOMEventAttrs_IE = ["altKey", "altLeft", "button", "cancelBubble",
 
 $B.$isEvent = function(obj){
     var flag = true
-    for(var i = 0; i < $DOMEventAttrs_W3C.length; i++){
-        if(obj[$DOMEventAttrs_W3C[i]] === undefined){flag = false; break}
+    for(let attr of $DOMEventAttrs_W3C){
+        if(obj[attr] === undefined){
+            flag = false
+            break
+        }
     }
-    if(flag){return true}
-    for(var i = 0; i < $DOMEventAttrs_IE.length; i++){
-        if(obj[$DOMEventAttrs_IE[i]] === undefined){return false}
+    if(flag){
+        return true
+    }
+    for(let attr of $DOMEventAttrs_IE){
+        if(obj[attr] === undefined){
+            return false
+        }
     }
     return true
 }
@@ -356,6 +346,7 @@ DOMEvent.__getattribute__ = function(self, attr){
             if(self.target !== undefined){
                 return DOMNode.$factory(self.target)
             }
+            break
         case 'char':
             return String.fromCharCode(self.which)
         case 'svgX':
@@ -428,28 +419,6 @@ Clipboard.__setitem__ = function(self, name, value){
 
 $B.set_func_names(Clipboard, "<dom>")
 
-function $EventsList(elt, evt, arg){
-    // handles a list of callback fuctions for the event evt of element elt
-    // method .remove(callback) removes the callback from the list, and
-    // removes the event listener
-    this.elt = elt
-    this.evt = evt
-    if($B.$isinstance(arg, _b_.list)){this.callbacks = arg}
-    else{this.callbacks = [arg]}
-    this.remove = function(callback){
-        var found = false
-        for(var i = 0; i < this.callbacks.length; i++){
-            if(this.callbacks[i] === callback){
-                found = true
-                this.callback.splice(i, 1)
-                this.elt.removeEventListener(this.evt, callback, false)
-                break
-            }
-        }
-        if(! found){throw _b_.KeyError.$factory("not found")}
-    }
-}
-
 var dom = {
     File : function(){},
     FileReader : function(){}
@@ -491,7 +460,9 @@ DOMNode.__add__ = function(self, other){
     return res
 }
 
-DOMNode.__bool__ = function(self){return true}
+DOMNode.__bool__ = function(){
+    return true
+}
 
 DOMNode.__contains__ = function(self, key){
     // For document, if key is a string, "key in document" tells if an element
@@ -538,10 +509,10 @@ DOMNode.__delitem__ = function(self, key){
 DOMNode.__dir__ = function(self){
     var res = []
     // generic DOM attributes
-    for(var attr in self){
+    for(let attr in self){
         if(attr.charAt(0) != "$"){res.push(attr)}
     }
-    for(var attr in DOMNode){
+    for(let attr in DOMNode){
         if(res.indexOf(attr) == -1){
             res.push(attr)
         }
@@ -589,7 +560,7 @@ DOMNode.__getattribute__ = function(self, attr){
                         return 0
                     }
                 }
-                var prop = Math.floor(parseFloat(computed) + 0.5)
+                let prop = Math.floor(parseFloat(computed) + 0.5)
                 return isNaN(prop) ? 0 : prop
             }else if(self.style[attr]){
                 return parseInt(self.style[attr])
@@ -600,9 +571,10 @@ DOMNode.__getattribute__ = function(self, attr){
         case "x":
         case "y":
             if(! (self instanceof SVGElement)){
-                var pos = $getPosition(self)
+                let pos = $getPosition(self)
                 return attr == "x" ? pos.left : pos.top
             }
+            break
         case "clear":
         case "closest":
             return function(){
@@ -611,16 +583,17 @@ DOMNode.__getattribute__ = function(self, attr){
         case "headers":
           if(self.nodeType == 9){
               // HTTP headers
-              var req = new XMLHttpRequest();
+              let req = new XMLHttpRequest();
               req.open("GET", document.location, false)
               req.send(null);
               var headers = req.getAllResponseHeaders()
               headers = headers.split("\r\n")
-              var res = $B.empty_dict()
-              for(var i = 0; i < headers.length; i++){
-                  var header = headers[i]
-                  if(header.strip().length == 0){continue}
-                  var pos = header.search(":")
+              let res = $B.empty_dict()
+              for(let header of headers){
+                  if(header.strip().length == 0){
+                      continue
+                  }
+                  let pos = header.search(":")
                   res.__setitem__(header.substr(0, pos),
                       header.substr(pos + 1).lstrip())
               }
@@ -640,22 +613,25 @@ DOMNode.__getattribute__ = function(self, attr){
     if(attr == "select" && self.nodeType == 1 &&
             ["INPUT", "TEXTAREA"].indexOf(self.tagName.toUpperCase()) > -1){
         return function(selector){
-            if(selector === undefined){self.select(); return _b_.None}
+            if(selector === undefined){
+                self.select()
+                return _b_.None
+            }
             return DOMNode.select(self, selector)
         }
     }
     if(attr == "query" && self.nodeType == 9){
         // document.query is a instance of class Query, representing the
         // Query String
-        var res = {
+        let res = {
             __class__: Query,
             _keys : [],
             _values : {}
         }
-        var qs = location.search.substr(1).split('&')
+        let qs = location.search.substr(1).split('&')
         if(location.search != ""){
-            for(var i = 0; i < qs.length; i++){
-                var pos = qs[i].search("="),
+            for(let i = 0; i < qs.length; i++){
+                let pos = qs[i].search("="),
                     elts = [qs[i].substr(0, pos), qs[i].substr(pos + 1)],
                     key = decodeURIComponent(elts[0]),
                     value = decodeURIComponent(elts[1])
@@ -698,7 +674,7 @@ DOMNode.__getattribute__ = function(self, attr){
                 }
             }
             if(show_message){
-                var from_class = $B.$getattr(self.__class__, attr, _b_.None)
+                from_class = $B.$getattr(self.__class__, attr, _b_.None)
                 if(from_class !== _b_.None){
                     var frame = $B.frame_obj.frame,
                         line = frame.$lineno
@@ -720,7 +696,7 @@ DOMNode.__getattribute__ = function(self, attr){
                 var save_class = self.__class__
                 self.__class__ = ce.$cls
                 try{
-                    var res = _b_.object.__getattribute__(self, attr)
+                    let res = _b_.object.__getattribute__(self, attr)
                     self.__class__ = save_class
                     return res
                 }catch(err){
@@ -760,7 +736,7 @@ DOMNode.__getattribute__ = function(self, attr){
             // that produces a Python error message in case of failure.
             var func = (function(f, elt){
                 return function(){
-                    var args = [], pos = 0
+                    var args = []
                     for(var i = 0; i < arguments.length; i++){
                         var arg = arguments[i]
                         if(typeof arg == "function"){
@@ -773,10 +749,11 @@ DOMNode.__getattribute__ = function(self, attr){
                             //
                             // it is the same function "f" that is added and
                             // then removed (cf. issue #1157)
+                            var f1
                             if(arg.$cache){
-                                var f1 = arg.$cache
+                                f1 = arg.$cache
                             }else{
-                                var f1 = function(dest_fn){
+                                f1 = function(dest_fn){
                                     return function(){
                                         try{
                                             return dest_fn.apply(null, arguments)
@@ -815,16 +792,16 @@ DOMNode.__getattribute__ = function(self, attr){
 DOMNode.__getitem__ = function(self, key){
     if(self.nodeType == 9){ // Document
         if(typeof key.valueOf() == "string"){
-            var res = self.getElementById(key)
+            let res = self.getElementById(key)
             if(res){
                 return DOMNode.$factory(res)
             }
             throw _b_.KeyError.$factory(key)
         }else{
             try{
-                var elts = self.getElementsByTagName(key.__name__),
+                let elts = self.getElementsByTagName(key.__name__),
                     res = []
-                    for(var i = 0; i < elts.length; i++){
+                    for(let i = 0; i < elts.length; i++){
                         res.push(DOMNode.$factory(elts[i]))
                     }
                     return res
@@ -839,7 +816,7 @@ DOMNode.__getitem__ = function(self, key){
                 if(key_to_int < 0){
                     key_to_int += self.length
                 }
-                var res = DOMNode.$factory(self.item(key_to_int))
+                let res = DOMNode.$factory(self.item(key_to_int))
                 if(res === undefined){
                     throw _b_.KeyError.$factory(key)
                 }
@@ -847,8 +824,8 @@ DOMNode.__getitem__ = function(self, key){
         }else if(typeof key == "string" &&
                  self.attributes &&
                  typeof self.attributes.getNamedItem == "function"){
-             var attr = self.attributes.getNamedItem(key)
-             if(!!attr){
+             let attr = self.attributes.getNamedItem(key)
+             if(attr !== null){
                  return attr.value
              }
              throw _b_.KeyError.$factory(key)
@@ -864,15 +841,14 @@ DOMNode.__hash__ = function(self){
 
 DOMNode.__iter__ = function(self){
     // iteration on a Node
+    var items = []
     if(self.length !== undefined && typeof self.item == "function"){
-        var items = []
-        for(var i = 0, len = self.length; i < len; i++){
+        for(let i = 0, len = self.length; i < len; i++){
             items.push(DOMNode.$factory(self.item(i)))
         }
     }else if(self.childNodes !== undefined){
-        var items = []
-        for(var i = 0, len = self.childNodes.length; i < len; i++){
-            items.push(DOMNode.$factory(self.childNodes[i]))
+        for(let child of self.childNodes){
+            items.push(DOMNode.$factory(child))
         }
     }
     return $B.$iter(items)
@@ -948,10 +924,9 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
         attrs_str = "",
         items = []
     if(attrs !== undefined){
-        var items = []
-        for(var i = 0; i < attrs.length; i++){
-            items.push(attrs[i].name + '="' +
-                self.getAttributeNS(null, attrs[i].name) + '"')
+        for(let attr of attrs){
+            items.push(attr.name + '="' +
+                self.getAttributeNS(null, attr.name) + '"')
         }
     }
 
@@ -985,7 +960,6 @@ DOMNode.__setattr__ = function(self, attr, value){
                 throw _b_.ValueError.$factory(attr + " value should be" +
                     " an integer or float, not " + $B.class_name(value))
             }
-            break
     }
     if(DOMNode["set_" + attr] !== undefined) {
       return DOMNode["set_" + attr](self, value)
@@ -1083,7 +1057,7 @@ DOMNode.abs_top = {
 
 DOMNode.attach = DOMNode.__le__ // For allergics to syntax elt <= child
 
-DOMNode.bind = function(self, event){
+DOMNode.bind = function(){
     // bind functions to the event (event = "click", "mouseover" etc.)
     var $ = $B.args("bind", 4,
             {self: null, event: null, func: null, options: null},
@@ -1153,11 +1127,14 @@ DOMNode.child_nodes = function(self){
     return res
 }
 
-DOMNode.clear = function(self){
+DOMNode.clear = function(){
     // remove all children elements
     var $ = $B.args("clear", 1, {self: null}, ["self"], arguments, {},
-                null, null)
-    if(self.nodeType == 9){self = self.body}
+                null, null),
+        self = $.self
+    if(self.nodeType == 9){
+        self = self.body
+    }
     while(self.firstChild){
        self.removeChild(self.firstChild)
     }
@@ -1185,11 +1162,13 @@ DOMNode.clone = function(self){
     return res
 }
 
-DOMNode.closest = function(self, selector){
+DOMNode.closest = function(){
     // Returns the first parent of self with specified CSS selector
     // Raises KeyError if not found
     var $ = $B.args("closest", 2, {self: null, selector: null},
-                ["self", "selector"], arguments, {}, null, null)
+                ["self", "selector"], arguments, {}, null, null),
+        self = $.self,
+        selector = $.selector
     var res = self.closest(selector)
     if(res === null){
         throw _b_.KeyError.$factory("no parent with selector " + selector)
@@ -1380,13 +1359,13 @@ DOMNode.select_one = function(self, selector){
     return DOMNode.$factory(res)
 }
 
-DOMNode.setSelectionRange = function(self){ // for TEXTAREA
+DOMNode.setSelectionRange = function(){ // for TEXTAREA
     if(this["setSelectionRange"] !== undefined){
         return (function(obj){
             return function(){
                 return obj.setSelectionRange.apply(obj, arguments)
             }})(this)
-    }else if (this["createTextRange"] !== undefined){
+    }else if(this["createTextRange"] !== undefined){
         return (function(obj){
             return function(start_pos, end_pos){
                 if(end_pos == undefined){end_pos = start_pos}
@@ -1487,8 +1466,8 @@ DOMNode.unbind = function(self, event){
     }
 
     if(event === undefined){
-        for(var event in self.$events){
-            DOMNode.unbind(self, event)
+        for(let evt in self.$events){
+            DOMNode.unbind(self, evt)
         }
         return _b_.None
     }
@@ -1501,26 +1480,26 @@ DOMNode.unbind = function(self, event){
     var events = self.$events[event]
     if(arguments.length == 2){
         // remove all callback functions
-        for(var i = 0; i < events.length; i++){
-            var callback = events[i][1]
+        for(let evt of events){
+            var callback = evt[1]
             self.removeEventListener(event, callback, false)
         }
         self.$events[event] = []
         return _b_.None
     }
 
-    for(var i = 2; i < arguments.length; i++){
-        var callback = arguments[i],
+    for(let i = 2; i < arguments.length; i++){
+        let callback = arguments[i],
             flag = false,
             func = callback.$func
         if(func === undefined){
             // If a callback is created by an assignment to an existing
             // function
-            var found = false
-            for(var j = 0; j < events.length; j++){
-                if($B.is_or_equals(events[j][0], callback)){
-                    var func = callback,
-                        found = true
+            let found = false
+            for(let evt of events){
+                if($B.is_or_equals(evt[0], callback)){
+                    func = callback
+                    found = true
                     break
                 }
             }
@@ -1528,10 +1507,10 @@ DOMNode.unbind = function(self, event){
                 throw _b_.TypeError.$factory("function is not an event callback")
             }
         }
-        for(var j = 0; j < events.length; j++){
+        for(let j = 0; j < events.length; j++){
             if($B.$getattr(func, '__eq__')(events[j][0])){
-                var callback = events[j][1]
-                self.removeEventListener(event, callback, false)
+                let _callback = events[j][1]
+                self.removeEventListener(event, _callback, false)
                 events.splice(j, 1)
                 flag = true
                 break
