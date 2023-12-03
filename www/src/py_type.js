@@ -787,7 +787,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     class_dict.__mro__ = type.mro(class_dict).slice(1)
 
     // set class attributes for faster lookups
-    for(var entry of _b_.dict.$iter_items_with_hash(cl_dict)){
+    for(var entry of _b_.dict.$iter_items(cl_dict)){
         var key = entry.key,
             v = entry.value
         if(['__module__', '__class__', '__name__', '__qualname__'].

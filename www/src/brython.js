@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-03 09:22:43.446346"
-__BRYTHON__.timestamp=1701591763446
+__BRYTHON__.compiled_date="2023-12-03 09:28:29.305305"
+__BRYTHON__.timestamp=1701592109305
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5315,7 +5315,7 @@ if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 return slots}
 $B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
 for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i],key,value
-if(kw_arg.__class__===_b_.dict){for(var entry of _b_.dict.$iter_items_with_hash(kw_arg)){key=entry.key
+if(kw_arg.__class__===_b_.dict){for(var entry of _b_.dict.$iter_items(kw_arg)){key=entry.key
 if(typeof key !=='string'){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}else if(kwa[key]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
@@ -5998,7 +5998,7 @@ var newargs=getNewArguments(self,klass)
 if(newargs){arg2=arg2.concat(newargs.args)}
 res.push($B.fast_tuple(arg2))
 var d=$B.empty_dict(),nb=0
-if(self.__dict__){for(var item of _b_.dict.$iter_items_with_hash(self.__dict__)){if(item.key=="__class__" ||item.key.startsWith("$")){continue}
+if(self.__dict__){for(var item of _b_.dict.$iter_items(self.__dict__)){if(item.key=="__class__" ||item.key.startsWith("$")){continue}
 _b_.dict.$setitem(d,item.key,item.value)
 nb++}}
 if(nb==0){d=_b_.None}
@@ -6294,7 +6294,7 @@ var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,_
 try{let slots=_b_.dict.$get_string(cl_dict,'__slots__')
 if(slots !==_b_.dict.$missing){for(let key of $B.make_js_iterator(slots)){class_dict[key]=member_descriptor.$factory(key,class_dict)}}}catch(err){}
 class_dict.__mro__=type.mro(class_dict).slice(1)
-for(var entry of _b_.dict.$iter_items_with_hash(cl_dict)){var key=entry.key,v=entry.value
+for(var entry of _b_.dict.$iter_items(cl_dict)){var key=entry.key,v=entry.value
 if(['__module__','__class__','__name__','__qualname__'].
 indexOf(key)>-1){continue}
 if(key.startsWith('$')){continue}
@@ -9345,7 +9345,7 @@ for(let entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entr
 result.__class__=so.__class__
 return result}
 function set_difference_update(so,other){if(so===other){return set.clear(so);}
-if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items_with_hash(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(other)
+if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(other)
 for(let key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0
 function set_discard_entry(so,key,hash){var entry=set_lookkey(so,key,hash)
@@ -9365,7 +9365,7 @@ var result=make_new_set_base_type(so)
 if($B.$isinstance(other,[set,frozenset])){if(other.$used > so.$used){var tmp=so
 so=other
 other=tmp}
-for(let entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items_with_hash(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{let iterator=$B.make_js_iterator(other)
+for(let entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{let iterator=$B.make_js_iterator(other)
 for(var other_item of iterator){var test=set_contains(so,other_item)
 if(test){set_add(result,other_item)}}}
 return result}
@@ -9386,7 +9386,7 @@ a.$store=b.$store
 b.$used=temp.$used
 b.$store=temp.$store}
 function set_symmetric_difference_update(so,other){if(so==other){return set.clear(so)}
-if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items_with_hash(other)){let rv=set_discard_entry(so,entry.key,entry.hash)
+if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other)){let rv=set_discard_entry(so,entry.key,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.key,entry.hash)}}}else if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){let rv=set_discard_entry(so,entry.item,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.item,entry.hash)}}}else{return set_symmetric_difference_update(so,set.$factory(other))}
 return _b_.None}
@@ -9535,7 +9535,7 @@ var $=$B.args("symmetric_difference_update",2,{self:null,s:null},["self","s"],ar
 return set_symmetric_difference_update(self,s)}
 set.update=function(self){
 var $=$B.args("update",1,{self:null},["self"],arguments,{},"args",null)
-for(var iterable of $.args){if(Array.isArray(iterable)){for(let i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if($B.$isinstance(iterable,[set,frozenset])){for(let entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if($B.$isinstance(iterable,_b_.dict)){for(let entry of _b_.dict.$iter_items_with_hash(iterable)){set_add(self,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(iterable)
+for(var iterable of $.args){if(Array.isArray(iterable)){for(let i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if($B.$isinstance(iterable,[set,frozenset])){for(let entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if($B.$isinstance(iterable,_b_.dict)){for(let entry of _b_.dict.$iter_items(iterable)){set_add(self,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(iterable)
 for(let item of iterator){set_add(self,item)}}}
 self.$version++
 return _b_.None}
@@ -9557,14 +9557,14 @@ set.union=function(){var $=$B.args("union",1,{self:null},["self"],arguments,{},"
 let res=set_copy($.self)
 if($.args.length==0){return res}
 for(let arg of $.args){if($B.$isinstance(arg,[set,frozenset])){for(let entry of set_iter_with_hash(arg)){set_add(res,entry.item,entry.hash)}}else if(arg.__class__===_b_.dict){
-for(let entry of _b_.dict.$iter_items_with_hash(arg)){set_add(res,entry.key,entry.hash)}}else{let other=set.$factory(arg)
+for(let entry of _b_.dict.$iter_items(arg)){set_add(res,entry.key,entry.hash)}}else{let other=set.$factory(arg)
 res=set.union(res,other)}}
 return res}
 set.issubset=function(){
 var $=$B.args("issubset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
 if($B.$isinstance(other,[set,frozenset])){if(set.__len__(self)> set.__len__(other)){return false}
 for(let entry of set_iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
-return true}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items_with_hash(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
+return true}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
 return true}else{var member_func=$B.member_func(other)
 for(let entry of set_iter_with_hash(self)){if(! member_func(entry.item)){return false}}
 return true}}
@@ -12617,16 +12617,16 @@ $B.str_dict=function(){}
 var dict={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'dict',$is_class:true,$native:true,$match_mapping_pattern:true }
 dict.$to_obj=function(d){
 var res={}
-for(var entry of dict.$iter_items_with_hash(d)){res[entry.key]=entry.value}
+for(var entry of dict.$iter_items(d)){res[entry.key]=entry.value}
 return res}
-dict.$iter_keys_check=function*(d){for(var entry of dict.$iter_items_with_hash(d)){yield entry.key}}
-dict.$iter_values_check=function*(d){for(var entry of dict.$iter_items_with_hash(d)){yield entry.value}}
+dict.$iter_keys_check=function*(d){for(var entry of dict.$iter_items(d)){yield entry.key}}
+dict.$iter_values_check=function*(d){for(var entry of dict.$iter_items(d)){yield entry.value}}
 dict.$set_like=function(self){
 for(var v of self._values){if(v===undefined){continue}else if(typeof v=='string' ||
 typeof v=='number' ||
 typeof v=='boolean'){continue}else if([_b_.tuple,_b_.float,_b_.complex].indexOf(v.__class__)>-1){continue}else if(! _b_.hasattr(v.__class__,'__hash__')){return false}}
 return true}
-dict.$iter_items_with_hash=function*(d){if(d.$all_str){for(let key in d.$strings){if(key !='$dict_strings'){yield{key,value:d.$strings[key]}}}}
+dict.$iter_items=function*(d){if(d.$all_str){for(let key in d.$strings){if(key !='$dict_strings'){yield{key,value:d.$strings[key]}}}}
 if(d.$jsobj){for(let key in d.$jsobj){if(!d.$exclude ||! d.$exclude(key)){yield{key,value:d.$jsobj[key]}}}}else{var version=d.$version
 for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield{key:d._keys[i],value:d._values[i],hash:d._hashes[i]}
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
@@ -12638,7 +12638,7 @@ if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration'
 var $copy_dict=function(left,right){
 right.$version=right.$version ||0
 var right_version=right.$version
-if(right.$all_str){if(left.$all_str){for(let key in right.$strings){left.$strings[key]=right.$strings[key]}}else{for(let key in right.$strings){dict.$setitem(left,key,right.$strings[key])}}}else{for(var entry of dict.$iter_items_with_hash(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
+if(right.$all_str){if(left.$all_str){for(let key in right.$strings){left.$strings[key]=right.$strings[key]}}else{for(let key in right.$strings){dict.$setitem(left,key,right.$strings[key])}}}else{for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right.$version !=right_version){throw _b_.RuntimeError.$factory("dict mutated during update")}}}}
 dict.__bool__=function(){var $=$B.args("__bool__",1,{self:null},["self"],arguments,{},null,null)
 return dict.__len__($.self)> 0}
@@ -12778,7 +12778,7 @@ var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
 var args=$.first
 if(args.length > 1){throw _b_.TypeError.$factory("dict expected at most 1 argument"+
 ", got 2")}else if(args.length==1){args=args[0]
-if(args.__class__===dict){for(let entry of dict.$iter_items_with_hash(args)){dict.$setitem(self,entry.key,entry.value,entry.hash)}}else{var keys=$B.$getattr(args,"keys",null)
+if(args.__class__===dict){for(let entry of dict.$iter_items(args)){dict.$setitem(self,entry.key,entry.value,entry.hash)}}else{var keys=$B.$getattr(args,"keys",null)
 if(keys !==null){var gi=$B.$getattr(args,"__getitem__",null)
 if(gi !==null){
 gi=$B.$call(gi)
@@ -12819,7 +12819,7 @@ if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj,self.$exclude))}
 if($B.repr.enter(self)){return "{...}"}
 let res=[]
-for(let entry of dict.$iter_items_with_hash(self)){res.push(_b_.repr(entry.key)+": "+_b_.repr(entry.value))}
+for(let entry of dict.$iter_items(self)){res.push(_b_.repr(entry.key)+": "+_b_.repr(entry.value))}
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
 dict.$iter_items_reversed=function*(d){var version=d.$version
@@ -12910,7 +12910,7 @@ dict.get=function(){var $=$B.args("get",3,{self:null,key:null,_default:null},["s
 try{
 return dict.$getitem($.self,$.key,true)}catch(err){if($B.$isinstance(err,_b_.KeyError)){return $._default}else{throw err}}}
 var dict_items=$B.make_class("dict_items",function(d){return{
-__class__:dict_items,dict:d,make_iter:function*(){for(var entry of dict.$iter_items_with_hash(d)){yield $B.fast_tuple([entry.key,entry.value])}}}}
+__class__:dict_items,dict:d,make_iter:function*(){for(var entry of dict.$iter_items(d)){yield $B.fast_tuple([entry.key,entry.value])}}}}
 )
 dict_items.__iter__=function(self){return dict_itemiterator.$factory(self.make_iter)}
 dict_items.__len__=function(self){return dict.__len__(self.dict)}
@@ -13618,7 +13618,7 @@ if(has_type(klass,_b_.list)||has_type(klass,_b_.tuple)){
 return pyobj.map(pyobj2jsobj)}
 if(has_type(klass,_b_.dict)){
 let jsobj={}
-for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){var key=entry.key
+for(var entry of _b_.dict.$iter_items(pyobj)){var key=entry.key
 if(typeof key !=="string"){key=_b_.str.$factory(key)}
 if(typeof entry.value==='function'){
 entry.value.bind(jsobj)}
@@ -15393,7 +15393,7 @@ var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.tabl
 while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent}
 var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
-for(var symbol of _b_.dict.$iter_items_with_hash(symtable_block.symbols)){if(symbol.value & DEF_COMP_ITER){comp_iter=symbol.key}}
+for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){if(symbol.value & DEF_COMP_ITER){comp_iter=symbol.key}}
 var comp_iter_scope=name_scope(comp_iter,scopes)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
@@ -17045,7 +17045,7 @@ function SET_SCOPE(DICT,NAME,I){DICT[NAME]=I}
 function is_free_in_any_child(entry,key){for(var child_ste of entry.ste_children){var scope=_PyST_GetScope(child_ste,key)
 if(scope==FREE){return 1}}
 return 0}
-function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(var item of _b_.dict.$iter_items_with_hash(comp.symbols)){
+function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(var item of _b_.dict.$iter_items(comp.symbols)){
 var k=item.key,comp_flags=item.value;
 if(comp_flags & DEF_PARAM){
 continue;}

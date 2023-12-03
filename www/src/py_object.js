@@ -497,7 +497,7 @@ object.__reduce_ex__ = function(self, protocol){
     var d = $B.empty_dict(),
         nb = 0
     if(self.__dict__){
-        for(var item of _b_.dict.$iter_items_with_hash(self.__dict__)){
+        for(var item of _b_.dict.$iter_items(self.__dict__)){
             if(item.key == "__class__" || item.key.startsWith("$")){
                 continue
             }

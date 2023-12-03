@@ -269,7 +269,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
         // be the Javascript object {1: "b"}
         let jsobj = {}
-        for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
+        for(var entry of _b_.dict.$iter_items(pyobj)){
             var key = entry.key
             if(typeof key !== "string"){
                 key = _b_.str.$factory(key)

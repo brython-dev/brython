@@ -668,7 +668,7 @@ function make_comp(scopes){
     var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                             upper_comp_scope.nb_await
 
-    for(var symbol of _b_.dict.$iter_items_with_hash(symtable_block.symbols)){
+    for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){
         if(symbol.value & DEF_COMP_ITER){
             comp_iter = symbol.key
         }

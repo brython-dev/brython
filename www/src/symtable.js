@@ -367,7 +367,7 @@ function is_free_in_any_child(entry, key){
 }
 
 function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
-    for(var item of _b_.dict.$iter_items_with_hash(comp.symbols)) {
+    for(var item of _b_.dict.$iter_items(comp.symbols)) {
         // skip comprehension parameter
         var k = item.key,
             comp_flags = item.value;

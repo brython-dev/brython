@@ -624,7 +624,7 @@ $B.parse_kwargs = function(kw_args, fname){
             key,
             value
         if(kw_arg.__class__ === _b_.dict){
-            for(var entry of _b_.dict.$iter_items_with_hash(kw_arg)){
+            for(var entry of _b_.dict.$iter_items(kw_arg)){
                 key = entry.key
                 if(typeof key !== 'string'){
                     throw _b_.TypeError.$factory(fname +

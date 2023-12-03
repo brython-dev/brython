@@ -115,7 +115,7 @@ function set_difference_update(so, other){
             set_discard_entry(so, entry.item, entry.hash)
         }
     }else if($B.$isinstance(other, _b_.dict)){
-        for(let entry of _b_.dict.$iter_items_with_hash(other)){
+        for(let entry of _b_.dict.$iter_items(other)){
             set_discard_entry(so, entry.key, entry.hash)
         }
     }else{
@@ -192,7 +192,7 @@ function set_intersection(so, other){
             }
         }
     }else if($B.$isinstance(other, _b_.dict)){
-        for(let entry of _b_.dict.$iter_items_with_hash(other)){
+        for(let entry of _b_.dict.$iter_items(other)){
             if(set_contains(so, entry.key, entry.hash)){
                 set_add(result, entry.key, entry.hash)
             }
@@ -263,7 +263,7 @@ function set_symmetric_difference_update(so, other){
         return set.clear(so)
     }
     if($B.$isinstance(other, _b_.dict)){
-        for(let entry of _b_.dict.$iter_items_with_hash(other)){
+        for(let entry of _b_.dict.$iter_items(other)){
             let rv = set_discard_entry(so, entry.key, entry.hash)
             if(rv == DISCARD_NOTFOUND){
                 set_add(so, entry.key, entry.hash)
@@ -683,7 +683,7 @@ set.update = function(self){
                 set_add(self, entry.item, entry.hash)
             }
         }else if($B.$isinstance(iterable, _b_.dict)){
-            for(let entry of _b_.dict.$iter_items_with_hash(iterable)){
+            for(let entry of _b_.dict.$iter_items(iterable)){
                 set_add(self, entry.key, entry.hash)
             }
         }else{
@@ -761,7 +761,7 @@ set.union = function(){
             }
         }else if(arg.__class__ === _b_.dict){
             // dict.$iter_items_hash produces [key, value, hash]
-            for(let entry of _b_.dict.$iter_items_with_hash(arg)){
+            for(let entry of _b_.dict.$iter_items(arg)){
                 set_add(res, entry.key, entry.hash)
             }
         }else{
@@ -789,7 +789,7 @@ set.issubset = function(){
         }
         return true
     }else if($B.$isinstance(other, _b_.dict)){
-        for(let entry of _b_.dict.$iter_items_with_hash(self)){
+        for(let entry of _b_.dict.$iter_items(self)){
             if(! set_lookkey(other, entry.key, entry.hash)){
                 return false
             }

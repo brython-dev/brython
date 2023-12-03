@@ -144,20 +144,20 @@ dict.$to_obj = function(d){
     // return a Javascript objects with the keys mapped to the value,
     // excluding the insertion rank
     var res = {}
-    for(var entry of dict.$iter_items_with_hash(d)){
+    for(var entry of dict.$iter_items(d)){
         res[entry.key] = entry.value
     }
     return res
 }
 
 dict.$iter_keys_check = function*(d){
-    for(var entry of dict.$iter_items_with_hash(d)){
+    for(var entry of dict.$iter_items(d)){
         yield entry.key
     }
 }
 
 dict.$iter_values_check = function*(d){
-    for(var entry of dict.$iter_items_with_hash(d)){
+    for(var entry of dict.$iter_items(d)){
         yield entry.value
     }
 }
@@ -180,7 +180,7 @@ dict.$set_like = function(self){
     return true
 }
 
-dict.$iter_items_with_hash = function*(d){
+dict.$iter_items = function*(d){
     if(d.$all_str){
         for(let key in d.$strings){
             if(key != '$dict_strings'){
@@ -246,7 +246,7 @@ var $copy_dict = function(left, right){
             }
         }
     }else{
-        for(var entry of dict.$iter_items_with_hash(right)){
+        for(var entry of dict.$iter_items(right)){
             dict.$setitem(left, entry.key, entry.value, entry.hash)
             if(right.$version != right_version){
                 throw _b_.RuntimeError.$factory("dict mutated during update")
@@ -668,7 +668,7 @@ dict.__init__ = function(self, first, second){
     }else if(args.length == 1){
         args = args[0]
         if(args.__class__ === dict){
-            for(let entry of dict.$iter_items_with_hash(args)){
+            for(let entry of dict.$iter_items(args)){
                 dict.$setitem(self, entry.key, entry.value, entry.hash)
             }
         }else{
@@ -779,7 +779,7 @@ dict.__repr__ = function(self){
         return "{...}"
     }
     let res = []
-    for(let entry of dict.$iter_items_with_hash(self)){
+    for(let entry of dict.$iter_items(self)){
         res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
     }
     $B.repr.leave(self)
@@ -1058,7 +1058,7 @@ var dict_items = $B.make_class("dict_items",
             __class__: dict_items,
             dict: d,
             make_iter: function*(){
-                for(var entry of dict.$iter_items_with_hash(d)){
+                for(var entry of dict.$iter_items(d)){
                     yield $B.fast_tuple([entry.key, entry.value])
                 }
             }
