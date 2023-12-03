@@ -152,28 +152,11 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-03 08:33:00.490570"
-__BRYTHON__.timestamp=1701588780490
+__BRYTHON__.compiled_date="2023-12-03 09:04:24.775078"
+__BRYTHON__.timestamp=1701590664775
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
-$B.is_identifier=function(category,cp){
-var table=$B.unicode_identifiers[category],start=0,end=table.length-1,len=table.length,ix=Math.floor(len/2),nb=0
-var first=table[start],item=typeof first=='number' ? first :first[0]
-if(cp < item){return false}
-var last=table[end]
-if(typeof last=='number'){if(cp > last){return false}}else if(last[0]+last[1]< cp){return false}
-while(true){nb++
-if(nb > 100){console.log('infinite loop for',cp)
-alert()}
-var item=table[ix]
-if(typeof item !='number'){item=item[0]}
-if(item==cp){return true}else if(item > cp){end=ix}else{start=ix}
-len=Math.floor((end-start)/2)
-if(end-start==1){break}
-ix=start+len}
-return table[start][0]+table[start][1]> cp}
-const XID_Start_re=/\p{XID_Start}/u
 const Other_ID_Start=[0x1885,0x1886,0x2118,0x212E,0x309B,0x309C].map(
 x=> String.fromCodePoint(x))
 function is_ID_Start(char){return/\p{Letter}/u.test(char)||
@@ -185,16 +168,16 @@ map(x=> String.fromCodePoint(x))
 function is_ID_Continue(char){return is_ID_Start(char)||
 /\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}/u.test(char)||
 Other_ID_Continue.includes(char)}
-$B.is_XID_Start=function(cp){var char=String.fromCodePoint(cp)
+$B.is_XID_Start=function(cp){let char=String.fromCodePoint(cp)
 if(! is_ID_Start(char)){return false}
 var norm=char.normalize('NFKC')
 if(! is_ID_Start(norm[0])){return false}
-for(var char of norm.substr(1)){if(! is_ID_Continue(char)){return false}}
+for(let char of norm.substr(1)){if(! is_ID_Continue(char)){return false}}
 return true}
-$B.is_XID_Continue=function(cp){var char=String.fromCodePoint(cp)
+$B.is_XID_Continue=function(cp){let char=String.fromCodePoint(cp)
 if(! is_ID_Continue(char)){return false}
 var norm=char.normalize('NFKC')
-for(var char of norm.substr(1)){if(! is_ID_Continue(char)){return false}}
+for(let char of norm.substr(1)){if(! is_ID_Continue(char)){return false}}
 return true}
 $B.in_unicode_category=function(category,cp){if(isNaN(cp)){return false}
 try{var re=new RegExp('\\p{'+category+'}','u')
@@ -209,7 +192,7 @@ if(typeof last=='number'){if(cp > last){return false}}else if(last[0]+last[1]< c
 while(true){nb++
 if(nb > 100){console.log('infinite loop for',cp)
 alert()}
-var item=table[ix]
+item=table[ix]
 if(typeof item !='number'){item=item[0]}
 if(item==cp){return true}else if(item > cp){end=ix}else{start=ix}
 len=Math.floor((end-start)/2)
@@ -236,23 +219,6 @@ res[2]=start
 res[3]=end
 res[4]=line
 return res}
-var errors={}
-function TokenError(message,position){if(errors.TokenError===undefined){var $error_2={$name:"TokenError",$qualname:"TokenError",$is_class:true,__module__:"tokenize"}
-var error=errors.TokenError=$B.$class_constructor("TokenError",$error_2,_b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
-error.__doc__=_b_.None
-error.$factory=function(message,position){return{
-__class__:error,msg:message,lineno:position[0],colno:position[1]}}
-error.__str__=function(self){var s=self.msg
-if(self.lineno > 1){s+=` (${self.lineno}, ${self.colno})`}
-return s}
-$B.set_func_names(error,"tokenize")}
-var exc=errors.TokenError.$factory(message,position)
-console.log('error',exc.__class__,exc.args)
-return exc}
-function MAKE_TOKEN(token_type){return new Token('SYNTAXERROR')}
-function _get_line_at(src,pos){
-var end=src.substr(pos).search(/[\r\n]/),line=end==-1 ? src.substr(pos):src.substr(pos,end+1)
-return line}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
 while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),[line_num,start-line_start],[line_num,pos-line_start+1],line))
@@ -277,7 +243,8 @@ throw Error('unknown num type '+num_type)}}
 $B.TokenReader=function(src,filename){this.tokens=[]
 this.tokenizer=$B.tokenizer(src,filename)
 this.position=0}
-$B.TokenReader.prototype.read=function(){if(this.position < this.tokens.length){var res=this.tokens[this.position]}else{var res=this.tokenizer.next()
+$B.TokenReader.prototype.read=function(){var res
+if(this.position < this.tokens.length){res=this.tokens[this.position]}else{res=this.tokenizer.next()
 if(res.done){this.done=true
 return}
 res=res.value
@@ -289,7 +256,7 @@ function nesting_level(token_modes){var ix=token_modes.length-1
 while(ix >=0){var mode=token_modes[ix]
 if(mode.nesting !==undefined){return mode.nesting}
 ix--}}
-$B.tokenizer=function*(src,filename,mode){var whitespace=' \t\n',operators='*+-/%&^~=<>',allowed_after_identifier=',.()[]:;',string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+$B.tokenizer=function*(src,filename,mode){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
 src=src.replace(/\r\n/g,'\n').
 replace(/\r/g,'\n')
 if(mode !='eval' && ! src.endsWith('\n')){src+='\n'}
@@ -297,7 +264,7 @@ var lines=src.split('\n'),linenum=0,line_at={}
 for(var i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
-var state="line_start",char,cp,mo,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier,nesting,line
+var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
 yield Token('ENCODING','utf-8',[0,0],[0,0],'')
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
@@ -546,11 +513,12 @@ if(! escaped){
 var string_line=line
 if(line_num > string_start[0]){string_line=src.substring(
 string_start[2]-1,pos+2)}
-if(! triple_quote){var full_string=prefix+quote+string+
+var full_string
+if(! triple_quote){full_string=prefix+quote+string+
 quote
 yield Token('STRING',full_string,string_start,[line_num,pos-line_start+1],string_line)
 state=null}else if(char+src.substr(pos,2)==
-quote.repeat(3)){var full_string=prefix+quote.repeat(3)+
+quote.repeat(3)){full_string=prefix+quote.repeat(3)+
 string+quote.repeat(3)
 yield Token('STRING',full_string,string_start,[line_num,pos-line_start+3],string_line)
 pos+=2
@@ -560,7 +528,8 @@ break
 case '\r':
 case '\n':
 if(! escaped && ! triple_quote){
-var quote_pos=string_start[1]+line_start-1,pos=quote_pos
+var quote_pos=string_start[1]+line_start-1
+pos=quote_pos
 while(src[pos-1]==' '){pos--}
 while(pos < quote_pos){yield Token('ERRORTOKEN',' ',[line_num,pos-line_start+1],[line_num,pos-line_start+2],line)
 pos++}
@@ -615,9 +584,9 @@ case 'NUMBER':
 yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
 break
 case 'STRING':
-var msg=`unterminated ${triple_quote ? 'triple-quoted ' : ''}`+
-`string literal (detected at line ${line_num})`
-throw SyntaxError(msg)}
+throw SyntaxError(
+`unterminated ${triple_quote ? 'triple-quoted ' : ''}`+
+`string literal (detected at line ${line_num})`)}
 if(! src.endsWith('\n')&& state !=line_start){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+1],line+'\n')
 line_num++}
 while(indents.length > 0){indents.pop()
@@ -17039,9 +17008,8 @@ DEF_COMP_CELL=2 << 10
 var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
 var SCOPE_OFFSET=12,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
 var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
-var GENERATOR=1,GENERATOR_EXPRESSION=2
 var CO_FUTURE_ANNOTATIONS=0x1000000 
-var TYPE_CLASS=1,TYPE_FUNCTION=0,TYPE_MODULE=2
+var TYPE_MODULE=2
 var NULL=undefined
 var ModuleBlock=2,ClassBlock=1,FunctionBlock=0,AnnotationBlock=4,TypeVarBoundBlock=5,TypeAliasBlock=6,TypeParamBlock=7
 var PyExc_SyntaxError=_b_.SyntaxError
@@ -17052,9 +17020,8 @@ return[x.lineno,x.col_offset,x.end_lineno,x.end_col_offset]}
 function ST_LOCATION(x){
 return[x.lineno,x.col_offset,x.end_lineno,x.end_col_offset]}
 function _Py_Mangle(privateobj,ident){
-var result,nlen,plen,ipriv,maxchar;
+var plen,ipriv
 if(privateobj==NULL ||! ident.startsWith('__')){return ident;}
-nlen=ident.length
 plen=privateobj.length
 if(ident.endsWith('__')||ident.search(/\./)!=-1){return ident;}
 ipriv=0;
@@ -17062,9 +17029,8 @@ while(privateobj[ipriv]=='_'){ipriv++}
 if(ipriv==plen){return ident }
 var prefix=privateobj.substr(ipriv)
 return '_'+prefix+ident}
-var top=NULL,lambda=NULL,genexpr=NULL,listcomp=NULL,setcomp=NULL,dictcomp=NULL,__class__=NULL,_annotation=NULL
+var lambda=NULL
 var NoComprehension=0,ListComprehension=1,DictComprehension=2,SetComprehension=3,GeneratorExpression=4
-var internals={}
 function GET_IDENTIFIER(VAR){return VAR}
 function Symtable(){this.filename=NULL;
 this.stack=[]
@@ -17101,18 +17067,17 @@ if(!symtable_enter_block(st,'top',ModuleBlock,mod,0,0,0,0)){return NULL;}
 st.top=st.cur
 switch(mod.constructor){case $B.ast.Module:
 seq=mod.body
-for(var item of seq){visitor.stmt(st,item)}
+for(let item of seq){visitor.stmt(st,item)}
 break
 case $B.ast.Expression:
 visitor.expr(st,mod.body)
 break
 case $B.ast.Interactive:
 seq=mod.body
-for(var item of seq){visitor.stmt(st,item)}
+for(let item of seq){visitor.stmt(st,item)}
 break}
 symtable_analyze(st)
 return st.top;}
-function PySymtable_Lookup(st,key){return st.blocks.get(key)}
 function _PyST_GetSymbol(ste,name){if(! _b_.dict.$contains_string(ste.symbols,name)){return 0}
 return _b_.dict.$getitem_string(ste.symbols,name)}
 function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name);
@@ -17133,8 +17098,7 @@ var src=$B.file_cache[filename]
 if(src !==undefined){var lines=src.split('\n')
 exc.text=lines[lineno-1]}else{exc.text=''}
 exc.args[1]=[filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]}
-function error_at_directive(exc,ste,name){var data
-assert(ste.directives)
+function error_at_directive(exc,ste,name){assert(ste.directives)
 for(var data of ste.directives){if(data[0]==name){set_exc_info(exc,ste.table.filename,data[1],data[2],data[3],data[4])
 return 0}}
 throw _b_.RuntimeError.$factory(
@@ -17143,8 +17107,7 @@ function SET_SCOPE(DICT,NAME,I){DICT[NAME]=I}
 function is_free_in_any_child(entry,key){for(var child_ste of entry.ste_children){var scope=_PyST_GetScope(child_ste,key)
 if(scope==FREE){return 1}}
 return 0}
-function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){var pos=0
-for(var item of _b_.dict.$iter_items_with_hash(comp.symbols)){
+function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(var item of _b_.dict.$iter_items_with_hash(comp.symbols)){
 var k=item.key,comp_flags=item.value;
 if(comp_flags & DEF_PARAM){
 continue;}
@@ -17160,20 +17123,20 @@ if((existing & DEF_BOUND)&&
 !is_free_in_any_child(comp,k)&&
 ste.type !==ClassBlock){_b_.set.remove(comp_free,k)}}}
 return 1;}
-function analyze_name(ste,scopes,name,flags,bound,local,free,global,type_params,class_entry){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){var exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
+function analyze_name(ste,scopes,name,flags,bound,local,free,global,type_params,class_entry){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){let exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
 error_at_directive(exc,ste,name)
 throw exc}
 SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
 global.add(name)
 if(bound){bound.delete(name)}
 return 1}
-if(flags & DEF_NONLOCAL){if(!bound){var exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
+if(flags & DEF_NONLOCAL){if(!bound){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
 error_at_directive(exc,ste,name)
 throw exc}
-if(! bound.has(name)){var exc=PyErr_Format(_b_.SyntaxError,"no binding for nonlocal '%s' found",name)
+if(! bound.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"no binding for nonlocal '%s' found",name)
 error_at_directive(exc,ste,name)
 throw exc}
-if(type_params.has(name)){var exc=PyErr_Format(_b_.SyntaxError,"nonlocal binding not allowed for type parameter '%s'",name);
+if(type_params.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal binding not allowed for type parameter '%s'",name);
 error_at_directive(exc,ste,name)
 throw exc}
 SET_SCOPE(scopes,name,FREE)
@@ -17186,10 +17149,10 @@ global.delete(name)
 if(flags & DEF_TYPE_PARAM){type_params.add(name)}else{type_params.delete(name)}
 return 1}
 if(class_entry !=NULL){var class_flags=_PyST_GetSymbol(class_entry,name);
-if(class_flags & DEF_GLOBAL){SET_SCOPE(scopes,name,GLOBAL_EXPLICIT);
-return 1;}
-else if(class_flags & DEF_BOUND && !(class_flags & DEF_NONLOCAL)){SET_SCOPE(scopes,name,GLOBAL_IMPLICIT);
-return 1;}}
+if(class_flags & DEF_GLOBAL){SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
+return 1;}else if(class_flags & DEF_BOUND &&
+!(class_flags & DEF_NONLOCAL)){SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
+return 1}}
 if(bound && bound.has(name)){SET_SCOPE(scopes,name,FREE)
 ste.free=1
 free.add(name)
@@ -17199,12 +17162,10 @@ return 1}
 if(ste.nested){ste.free=1}
 SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
 return 1}
-var SET_SCOPE
-function analyze_cells(scopes,free,inlined_cells){var name,v,v_cell;
-var success=0,pos=0;
+function analyze_cells(scopes,free,inlined_cells){var v,v_cell;
 v_cell=CELL;
 if(!v_cell){return 0;}
-for(var name in scopes){v=scopes[name]
+for(let name in scopes){v=scopes[name]
 var scope=v;
 if(scope !=LOCAL){continue;}
 if(free.has(name)&& ! inlined_cells.has(name)){continue;}
@@ -17213,12 +17174,12 @@ free.delete(name)}
 return 1}
 function drop_class_free(ste,free){var res=free.delete('__class__')
 if(res){ste.needs_class_closure=1}
-var res=free.delete('__classdict__')
+res=free.delete('__classdict__')
 if(res){ste.needs_class_classdict=1}
 return 1}
-function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var name,itr,v,v_scope,v_new,v_free,pos=0
-for(var name of _b_.dict.$keys_string(symbols)){var test=false 
-var flags=_b_.dict.$getitem_string(symbols,name)
+function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var v,v_scope,v_new,v_free
+for(let name of _b_.dict.$keys_string(symbols)){var test=false 
+let flags=_b_.dict.$getitem_string(symbols,name)
 if(test){console.log('in update symbols, name',name,'flags',flags,flags & DEF_COMP_CELL)}
 if(inlined_cells.has(name)){flags |=DEF_COMP_CELL}
 v_scope=scopes[name]
@@ -17230,10 +17191,10 @@ if(!v_new){return 0;}
 if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',DEF_COMP_CELL,v_new & DEF_COMP_CELL)}
 _b_.dict.$setitem_string(symbols,name,v_new)}
 v_free=FREE << SCOPE_OFFSET
-for(var name of free){v=_b_.dict.$get_string(symbols,name)
+for(let name of free){v=_b_.dict.$get_string(symbols,name)
 if(v !==_b_.dict.$missing){
 if(classflag &&
-v &(DEF_BOUND |DEF_GLOBAL)){var flags=v |DEF_FREE_CLASS;
+v &(DEF_BOUND |DEF_GLOBAL)){let flags=v |DEF_FREE_CLASS;
 v_new=flags;
 if(! v_new){return 0;}
 _b_.dict.$setitem_string(symbols,name,v_new)}
@@ -17241,7 +17202,7 @@ continue;}
 if(bound && !bound.has(name)){continue;}
 _b_.dict.$setitem_string(symbols,name,v_free)}
 return 1}
-function analyze_block(ste,bound,free,global,typeparams,class_entry){var name,v,allfree=NULL,temp,i,success=0,pos=0;
+function analyze_block(ste,bound,free,global,typeparams,class_entry){var success=0
 let local=new Set()
 let scopes={}
 let newglobal=new Set()
@@ -17251,7 +17212,7 @@ let inlined_cells=new Set()
 if(ste.type===ClassBlock){
 Set_Union(newglobal,global)
 if(bound){Set_Union(newbound,bound)}}
-for(var name of _b_.dict.$keys_string(ste.symbols)){var flags=_b_.dict.$getitem_string(ste.symbols,name)
+for(let name of _b_.dict.$keys_string(ste.symbols)){var flags=_b_.dict.$getitem_string(ste.symbols,name)
 if(!analyze_name(ste,scopes,name,flags,bound,local,free,global,typeparams,class_entry)){return 0}}
 if(ste.type !=ClassBlock){
 if(_PyST_IsFunctionLike(ste)){Set_Union(newbound,local);}
@@ -17260,7 +17221,7 @@ Set_Union(newglobal,global);}else{
 newbound.add('__class__')
 newbound.add('__classdict__')}
 for(var c of ste.children){var child_free=new Set()
-var entry=c
+let entry=c
 var new_class_entry=NULL;
 if(entry.can_see_class_scope){if(ste.type==ClassBlock){new_class_entry=ste}else if(class_entry){new_class_entry=class_entry}}
 var inline_comp=entry.comprehension && ! entry.generator;
@@ -17269,7 +17230,7 @@ if(inline_comp){if(! inline_comprehension(ste,entry,scopes,child_free,inlined_ce
 entry.comp_inlined=1;}
 Set_Union(newfree,child_free);
 if(entry.free ||entry.child_free){ste.child_free=1}}
-for(var i=ste.children.length-1;i >=0;i--){var entry=ste.children[i];
+for(let i=ste.children.length-1;i >=0;i--){let entry=ste.children[i];
 if(entry.comp_inlined){ste.children.splice(i,0,...entry.children)}}
 if(_PyST_IsFunctionLike(ste)&& !analyze_cells(scopes,newfree,inlined_cells)){return 0}else if(ste.type===ClassBlock && !drop_class_free(ste,newfree)){return 0}
 if(!update_symbols(ste.symbols,scopes,bound,newfree,inlined_cells,ste.type===ClassBlock ||ste.can_see_class_scope)){return 0}
@@ -17312,15 +17273,15 @@ dict=ste.symbols
 if(_b_.dict.$contains_string(dict,mangled)){o=_b_.dict.$getitem_string(dict,mangled)
 val=o
 if((flag & DEF_PARAM)&&(val & DEF_PARAM)){
-var exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
+let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
 set_exc_info(exc,st.filename,..._location)
 throw exc}
-if((flag & DEF_TYPE_PARAM)&&(val & DEF_TYPE_PARAM)){var exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_TYPE_PARAM,name);
+if((flag & DEF_TYPE_PARAM)&&(val & DEF_TYPE_PARAM)){let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_TYPE_PARAM,name);
 set_exc_info(exc,st.filename,...location);
 throw exc}
 val |=flag}else{val=flag}
 if(ste.comp_iter_target){
-if(val &(DEF_GLOBAL |DEF_NONLOCAL)){var exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
+if(val &(DEF_GLOBAL |DEF_NONLOCAL)){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
 set_exc_info(exc,st.filename,..._location)
 throw exc}
 val |=DEF_COMP_ITER}
@@ -17361,7 +17322,7 @@ function VISIT_SEQ_TAIL(ST,TYPE,SEQ,START){for(var i=START,len=SEQ.length;i < le
 if(! visitor[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
 function VISIT_SEQ_WITH_NULL(ST,TYPE,SEQ){for(var elt of SEQ){if(! elt){continue }
 if(! visitor[TYPE](ST,elt)){VISIT_QUIT((ST),0)}}}
-function symtable_record_directive(st,name,lineno,col_offset,end_lineno,end_col_offset){var data,mangled,res;
+function symtable_record_directive(st,name,lineno,col_offset,end_lineno,end_col_offset){var data,mangled
 if(!st.cur.directives){st.cur.directives=[]}
 mangled=_Py_Mangle(st.private,name);
 if(!mangled){return 0;}
@@ -17407,7 +17368,6 @@ VISIT_QUIT(st,0)
 tmp=st.private
 st.private=s.name
 if(s.type_params.length > 0){if(!symtable_add_def(st,'__type_params__',DEF_LOCAL,LOCATION(s))){VISIT_QUIT(st,0);}
-var type_params=".type_params"
 if(!symtable_add_def(st,'type_params',USE,LOCATION(s))){VISIT_QUIT(st,0);}}
 VISIT_SEQ(st,stmt,s.body)
 st.private=tmp
@@ -17588,19 +17548,19 @@ default:
 console.log('unhandled',s)
 break}
 VISIT_QUIT(st,1)}
-function symtable_extend_namedexpr_scope(st,e){assert(st.stack);
-assert(e instanceof $B.ast.Name);
-var target_name=e.id;
-var i,size,ste;
+function symtable_extend_namedexpr_scope(st,e){assert(st.stack)
+assert(e instanceof $B.ast.Name)
+var target_name=e.id
+var i,size,ste
 size=st.stack.length
-assert(size);
+assert(size)
 for(i=size-1;i >=0;i--){ste=st.stack[i]
-if(ste.comprehension){var target_in_scope=_PyST_GetSymbol(ste,target_name);
-if(target_in_scope & DEF_COMP_ITER){var exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name);
+if(ste.comprehension){let target_in_scope=_PyST_GetSymbol(ste,target_name);
+if(target_in_scope & DEF_COMP_ITER){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name);
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.ed_lineno,e.end_col_offset)
 throw exc}
 continue;}
-if(_PyST_IsFunctionLike(ste)){var target_in_scope=_PyST_GetSymbol(ste,target_name);
+if(_PyST_IsFunctionLike(ste)){let target_in_scope=_PyST_GetSymbol(ste,target_name);
 if(target_in_scope & DEF_GLOBAL){if(!symtable_add_def(st,target_name,DEF_GLOBAL,LOCATION(e)))
 VISIT_QUIT(st,0);}else{
 if(!symtable_add_def(st,target_name,DEF_NONLOCAL,LOCATION(e)))
@@ -17613,7 +17573,7 @@ VISIT_QUIT(st,0);
 if(!symtable_record_directive(st,target_name,LOCATION(e)))
 VISIT_QUIT(st,0);
 return symtable_add_def_helper(st,target_name,DEF_GLOBAL,ste,LOCATION(e));}
-if(ste.type==ClassBlock){var exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_IN_CLASS);
+if(ste.type==ClassBlock){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_IN_CLASS);
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
 throw exc}}
 assert(0);
@@ -17810,24 +17770,19 @@ VISIT_QUIT(st,1);}
 function symtable_implicit_arg(st,pos){var id='.'+pos
 if(!symtable_add_def(st,id,DEF_PARAM,ST_LOCATION(st.cur))){return 0;}
 return 1;}
-visitor.params=function(st,args){var i;
-if(!args)
-return-1;
-for(var arg of args){if(!symtable_add_def(st,arg.arg,DEF_PARAM,LOCATION(arg)))
-return 0;}
-return 1;}
-visitor.annotation=function(st,annotation){var future_annotations=st.future.features & CO_FUTURE_ANNOTATIONS;
+visitor.params=function(st,args){if(! args){return-1}
+for(var arg of args){if(! symtable_add_def(st,arg.arg,DEF_PARAM,LOCATION(arg)))
+return 0}
+return 1}
+visitor.annotation=function(st,annotation){var future_annotations=st.future.features & CO_FUTURE_ANNOTATIONS
 if(future_annotations &&
-!symtable_enter_block(st,'_annotation',AnnotationBlock,annotation,annotation.lineno,annotation.col_offset,annotation.end_lineno,annotation.end_col_offset)){VISIT_QUIT(st,0);}
-VISIT(st,expr,annotation);
-if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0);}
-return 1;}
-visitor.argannotations=function(st,args){var i;
-if(!args)
-return-1;
-for(var arg of args){if(arg.annotation)
-VISIT(st,expr,arg.annotation);}
-return 1;}
+!symtable_enter_block(st,'_annotation',AnnotationBlock,annotation,annotation.lineno,annotation.col_offset,annotation.end_lineno,annotation.end_col_offset)){VISIT_QUIT(st,0)}
+VISIT(st,expr,annotation)
+if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0)}
+return 1}
+visitor.argannotations=function(st,args){if(!args){return-1}
+for(var arg of args){if(arg.annotation){VISIT(st,expr,arg.annotation)}}
+return 1}
 visitor.annotations=function(st,o,a,returns){var future_annotations=st.future.ff_features & CO_FUTURE_ANNOTATIONS;
 if(future_annotations &&
 !symtable_enter_block(st,'_annotation',AnnotationBlock,o,o.lineno,o.col_offset,o.end_lineno,o.end_col_offset)){VISIT_QUIT(st,0);}

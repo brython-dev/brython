@@ -3,56 +3,6 @@
 
 var _b_ = $B.builtins
 
-$B.is_identifier = function(category, cp){
-    // category is "XID_Start" or "XID_Continue"
-    var table = $B.unicode_identifiers[category],
-        start = 0,
-        end = table.length - 1,
-        len = table.length,
-        ix = Math.floor(len / 2),
-        nb = 0
-    var first = table[start],
-        item = typeof first == 'number' ? first : first[0]
-    if(cp < item){
-        return false
-    }
-    var last = table[end]
-    if(typeof last == 'number'){
-        if(cp > last){
-            return false
-        }
-    }else if(last[0] + last[1] < cp){
-        return false
-    }
-
-    while(true){
-        nb++
-        if(nb > 100){
-            console.log('infinite loop for', cp)
-            alert()
-        }
-        var item = table[ix]
-        if(typeof item != 'number'){
-            item = item[0]
-        }
-        if(item == cp){
-            return true
-        }else if(item > cp){
-            end = ix
-        }else{
-            start = ix
-        }
-        len = Math.floor((end - start) / 2)
-        if(end - start == 1){
-            break
-        }
-        ix = start + len
-    }
-    return table[start][0] + table[start][1] > cp
-}
-
-const XID_Start_re = /\p{XID_Start}/u
-
 const Other_ID_Start = [0x1885, 0x1886, 0x2118, 0x212E, 0x309B, 0x309C].map(
                            x => String.fromCodePoint(x))
 
@@ -75,7 +25,7 @@ function is_ID_Continue(char){
 }
 
 $B.is_XID_Start = function(cp){
-    var char = String.fromCodePoint(cp)
+    let char = String.fromCodePoint(cp)
     if(! is_ID_Start(char)){
         return false
     }
@@ -83,7 +33,7 @@ $B.is_XID_Start = function(cp){
     if(! is_ID_Start(norm[0])){
         return false
     }
-    for(var char of norm.substr(1)){
+    for(let char of norm.substr(1)){
         if(! is_ID_Continue(char)){
             return false
         }
@@ -92,12 +42,12 @@ $B.is_XID_Start = function(cp){
 }
 
 $B.is_XID_Continue = function(cp){
-    var char = String.fromCodePoint(cp)
+    let char = String.fromCodePoint(cp)
     if(! is_ID_Continue(char)){
         return false
     }
     var norm = char.normalize('NFKC')
-    for(var char of norm.substr(1)){
+    for(let char of norm.substr(1)){
         if(! is_ID_Continue(char)){
             return false
         }
@@ -147,7 +97,7 @@ function in_unicode_category(category, cp){
             console.log('infinite loop for', cp)
             alert()
         }
-        var item = table[ix]
+        item = table[ix]
         if(typeof item != 'number'){
             item = item[0]
         }
@@ -204,53 +154,6 @@ function Token(type, string, start, end, line){
     res[3] = end
     res[4] = line
     return res
-}
-
-var errors = {}
-
-function TokenError(message, position){
-    if(errors.TokenError === undefined){
-        var $error_2 = {
-            $name: "TokenError",
-            $qualname: "TokenError",
-            $is_class: true,
-            __module__: "tokenize"
-        }
-
-        var error = errors.TokenError = $B.$class_constructor("TokenError",
-            $error_2, _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
-        error.__doc__ = _b_.None
-        error.$factory = function(message, position){
-            return {
-                __class__: error,
-                msg: message,
-                lineno: position[0],
-                colno: position[1]
-            }
-        }
-        error.__str__ = function(self){
-            var s = self.msg
-            if(self.lineno > 1){
-                s += ` (${self.lineno}, ${self.colno})`
-            }
-            return s
-        }
-        $B.set_func_names(error, "tokenize")
-    }
-    var exc = errors.TokenError.$factory(message, position)
-    console.log('error', exc.__class__, exc.args)
-    return exc
-}
-
-function MAKE_TOKEN(token_type){
-    return new Token('SYNTAXERROR')
-}
-
-function _get_line_at(src, pos){
-    // Get the line in source code src starting at position pos
-    var end = src.substr(pos).search(/[\r\n]/),
-        line = end == -1 ? src.substr(pos) : src.substr(pos, end + 1)
-    return line
 }
 
 function get_comment(src, pos, line_num, line_start, token_name, line){
@@ -311,10 +214,11 @@ $B.TokenReader = function(src, filename){
 }
 
 $B.TokenReader.prototype.read = function(){
+    var res
     if(this.position < this.tokens.length){
-        var res = this.tokens[this.position]
+        res = this.tokens[this.position]
     }else{
-        var res = this.tokenizer.next()
+        res = this.tokenizer.next()
         if(res.done){
             this.done = true
             return
@@ -342,10 +246,7 @@ function nesting_level(token_modes){
 }
 
 $B.tokenizer = function*(src, filename, mode){
-    var whitespace = ' \t\n',
-        operators = '*+-/%&^~=<>',
-        allowed_after_identifier = ',.()[]:;',
-        string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
+    var string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
         bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
 
     src = src.replace(/\r\n/g, '\n').
@@ -373,7 +274,6 @@ $B.tokenizer = function*(src, filename, mode){
         cp,
         mo,
         pos = 0,
-        start,
         quote,
         triple_quote,
         escaped = false,
@@ -381,7 +281,6 @@ $B.tokenizer = function*(src, filename, mode){
         string,
         prefix,
         name,
-        operator,
         number,
         num_type,
         comment,
@@ -398,9 +297,7 @@ $B.tokenizer = function*(src, filename, mode){
         fstring_start,
         fstring_expr_start,
         fstring_escape,
-        format_specifier,
-        nesting,
-        line
+        format_specifier
 
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 
@@ -954,8 +851,9 @@ $B.tokenizer = function*(src, filename, mode){
                                 string_line = src.substring(
                                     string_start[2] - 1, pos + 2)
                             }
+                            var full_string
                             if(! triple_quote){
-                                var full_string = prefix + quote + string +
+                                full_string = prefix + quote + string +
                                   quote
                                 yield Token('STRING', full_string,
                                     string_start,
@@ -964,7 +862,7 @@ $B.tokenizer = function*(src, filename, mode){
                                 state = null
                             }else if(char + src.substr(pos, 2) ==
                                     quote.repeat(3)){
-                                var full_string = prefix + quote.repeat(3) +
+                                full_string = prefix + quote.repeat(3) +
                                         string + quote.repeat(3)
                                 // For triple-quoted strings, if it spans over
                                 // several lines, "line" is extended until the
@@ -988,8 +886,8 @@ $B.tokenizer = function*(src, filename, mode){
                         if(! escaped && ! triple_quote){
                             // unterminated string
                             // go back to yield whitespace as ERRORTOKEN
-                            var quote_pos = string_start[1] + line_start - 1,
-                                pos = quote_pos
+                            var quote_pos = string_start[1] + line_start - 1
+                            pos = quote_pos
                             while(src[pos - 1] == ' '){
                                 pos--
                             }
@@ -1114,9 +1012,9 @@ $B.tokenizer = function*(src, filename, mode){
               line)
             break
         case 'STRING':
-            var msg = `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
-                `string literal (detected at line ${line_num})`
-            throw SyntaxError(msg)
+            throw SyntaxError(
+                `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
+                `string literal (detected at line ${line_num})`)
     }
 
     if(! src.endsWith('\n') && state != line_start){

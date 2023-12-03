@@ -60,14 +60,9 @@ var LOCAL = 1,
     FREE = 4,
     CELL = 5
 
-var GENERATOR = 1,
-    GENERATOR_EXPRESSION = 2
-
 var CO_FUTURE_ANNOTATIONS = 0x1000000 // CPython Include/code.h
 
-var TYPE_CLASS = 1,
-    TYPE_FUNCTION = 0,
-    TYPE_MODULE = 2
+var TYPE_MODULE = 2
 
 var NULL = undefined
 
@@ -102,13 +97,11 @@ function ST_LOCATION(x){
 function _Py_Mangle(privateobj, ident){
     /* Name mangling: __private becomes _classname__private.
        This is independent from how the name is used. */
-    var result,
-        nlen, plen, ipriv,
-        maxchar;
+    var plen, 
+        ipriv
     if (privateobj == NULL || ! ident.startsWith('__')) {
         return ident;
     }
-    nlen = ident.length
     plen = privateobj.length
     /* Don't mangle __id__ or names with dots.
 
@@ -135,22 +128,13 @@ function _Py_Mangle(privateobj, ident){
     return '_' + prefix + ident
 }
 
-var top = NULL,
-    lambda = NULL,
-    genexpr = NULL,
-    listcomp = NULL,
-    setcomp = NULL,
-    dictcomp = NULL,
-    __class__ = NULL,
-    _annotation = NULL
+var lambda = NULL
 
 var NoComprehension = 0,
     ListComprehension = 1,
     DictComprehension = 2,
     SetComprehension = 3,
     GeneratorExpression = 4
-
-var internals = {}
 
 function GET_IDENTIFIER(VAR){
     return VAR
@@ -241,7 +225,7 @@ $B._PySymtable_Build = function(mod, filename, future){
     switch(mod.constructor){
         case $B.ast.Module:
             seq = mod.body
-            for(var item of seq){
+            for(let item of seq){
                 visitor.stmt(st, item)
             }
             break
@@ -250,7 +234,7 @@ $B._PySymtable_Build = function(mod, filename, future){
             break
         case $B.ast.Interactive:
             seq = mod.body
-            for(var item of seq){
+            for(let item of seq){
                 visitor.stmt(st, item)
             }
             break
@@ -260,10 +244,6 @@ $B._PySymtable_Build = function(mod, filename, future){
     symtable_analyze(st)
 
     return st.top;
-}
-
-function PySymtable_Lookup(st, key){
-    return st.blocks.get(key)
 }
 
 function _PyST_GetSymbol(ste, name){
@@ -314,9 +294,8 @@ function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset){
 }
 
 function error_at_directive(exc, ste, name){
-    var data
     assert(ste.directives)
-    for (var data of ste.directives) {
+    for(var data of ste.directives){
         if(data[0] == name){
             set_exc_info(exc, ste.table.filename,
                 data[1], data[2], data[3], data[4])
@@ -388,9 +367,7 @@ function is_free_in_any_child(entry, key){
 }
 
 function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
-    var pos = 0
-
-    for (var item of _b_.dict.$iter_items_with_hash(comp.symbols)) {
+    for(var item of _b_.dict.$iter_items_with_hash(comp.symbols)) {
         // skip comprehension parameter
         var k = item.key,
             comp_flags = item.value;
@@ -436,7 +413,7 @@ function analyze_name(ste, scopes, name, flags,
              global, type_params, class_entry){
     if(flags & DEF_GLOBAL){
         if(flags & DEF_NONLOCAL){
-            var exc = PyErr_Format(_b_.SyntaxError,
+            let exc = PyErr_Format(_b_.SyntaxError,
                          "name '%s' is nonlocal and global",
                          name)
             error_at_directive(exc, ste, name)
@@ -451,19 +428,19 @@ function analyze_name(ste, scopes, name, flags,
     }
     if (flags & DEF_NONLOCAL) {
         if(!bound){
-            var exc = PyErr_Format(_b_.SyntaxError,
+            let exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal declaration not allowed at module level");
             error_at_directive(exc, ste, name)
             throw exc
         }
         if (! bound.has(name)) {
-            var exc = PyErr_Format(_b_.SyntaxError,
+            let exc = PyErr_Format(_b_.SyntaxError,
                 "no binding for nonlocal '%s' found", name)
             error_at_directive(exc, ste, name)
             throw exc
         }
         if(type_params.has(name)){
-            var exc = PyErr_Format(_b_.SyntaxError,
+            let exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal binding not allowed for type parameter '%s'",
                          name);
             error_at_directive(exc, ste, name)
@@ -495,12 +472,12 @@ function analyze_name(ste, scopes, name, flags,
     if (class_entry != NULL) {
         var class_flags = _PyST_GetSymbol(class_entry, name);
         if (class_flags & DEF_GLOBAL) {
-            SET_SCOPE(scopes, name, GLOBAL_EXPLICIT);
+            SET_SCOPE(scopes, name, GLOBAL_EXPLICIT)
             return 1;
-        }
-        else if (class_flags & DEF_BOUND && !(class_flags & DEF_NONLOCAL)) {
-            SET_SCOPE(scopes, name, GLOBAL_IMPLICIT);
-            return 1;
+        }else if (class_flags & DEF_BOUND &&
+                !(class_flags & DEF_NONLOCAL)) {
+            SET_SCOPE(scopes, name, GLOBAL_IMPLICIT)
+            return 1
         }
     }
     /* If an enclosing block has a binding for this name, it
@@ -528,8 +505,6 @@ function analyze_name(ste, scopes, name, flags,
     return 1
 }
 
-var SET_SCOPE
-
 /* If a name is defined in free and also in locals, then this block
    provides the binding for the free variable.  The name should be
    marked CELL in this block and removed from the free list.
@@ -539,15 +514,14 @@ var SET_SCOPE
 */
 
 function analyze_cells(scopes, free, inlined_cells){
-    var name, v, v_cell;
-    var success = 0,
-        pos = 0;
+    var v,
+        v_cell;
 
     v_cell = CELL;
     if (!v_cell){
         return 0;
     }
-    for(var name in scopes){
+    for(let name in scopes){
         v = scopes[name]
         //assert(PyLong_Check(v));
         var scope = v;
@@ -572,7 +546,7 @@ function drop_class_free(ste, free){
     if(res){
         ste.needs_class_closure = 1
     }
-    var res = free.delete('__classdict__')
+    res = free.delete('__classdict__')
     if(res){
         ste.needs_class_classdict = 1
     }
@@ -584,18 +558,15 @@ function drop_class_free(ste, free){
  * All arguments are dicts.  Modifies symbols, others are read-only.
 */
 function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
-    var name,
-        itr,
-        v,
+    var v,
         v_scope,
         v_new,
-        v_free,
-        pos = 0
+        v_free
 
     /* Update scope information for all symbols in this scope */
-    for(var name of _b_.dict.$keys_string(symbols)){
+    for(let name of _b_.dict.$keys_string(symbols)){
         var test = false // name == 'Callable'
-        var flags = _b_.dict.$getitem_string(symbols, name)
+        let flags = _b_.dict.$getitem_string(symbols, name)
         if(test){
             console.log('in update symbols, name', name, 'flags', flags,
             flags & DEF_COMP_CELL)
@@ -625,7 +596,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
     /* Record not yet resolved free variables from children (if any) */
     v_free = FREE << SCOPE_OFFSET
 
-    for(var name of free){
+    for(let name of free){
 
         v = _b_.dict.$get_string(symbols, name)
 
@@ -637,7 +608,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
             */
             if  (classflag &&
                  v & (DEF_BOUND | DEF_GLOBAL)) {
-                var flags = v | DEF_FREE_CLASS;
+                let flags = v | DEF_FREE_CLASS;
                 v_new = flags;
                 if (! v_new) {
                     return 0;
@@ -681,9 +652,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 
 
 function analyze_block(ste, bound, free, global, typeparams, class_entry){
-    var name, v,
-        allfree = NULL,
-        temp, i, success = 0, pos = 0;
+    var success = 0
 
     let local = new Set()  /* collect new names bound in block */
     let scopes = {}  /* collect scopes defined for each name */
@@ -719,7 +688,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         }
     }
 
-    for(var name of _b_.dict.$keys_string(ste.symbols)){
+    for(let name of _b_.dict.$keys_string(ste.symbols)){
         var flags = _b_.dict.$getitem_string(ste.symbols, name)
         if (!analyze_name(ste, scopes, name, flags,
                           bound, local, free, global,
@@ -756,7 +725,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
 
     for (var c of ste.children){
         var child_free = new Set()
-        var entry = c
+        let entry = c
 
         var new_class_entry = NULL;
         if (entry.can_see_class_scope) {
@@ -786,8 +755,8 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         }
     }
     /* Splice children of inlined comprehensions into our children list */
-    for (var i = ste.children.length - 1; i >= 0; i--) {
-        var entry = ste.children[i];
+    for(let i = ste.children.length - 1; i >= 0; i--) {
+        let entry = ste.children[i];
         if (entry.comp_inlined) {
             ste.children.splice(i, 0, ...entry.children)
         }
@@ -931,12 +900,12 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         val = o
         if ((flag & DEF_PARAM) && (val & DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */
-            var exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_ARGUMENT, name);
+            let exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_ARGUMENT, name);
             set_exc_info(exc, st.filename, ..._location)
             throw exc
         }
         if ((flag & DEF_TYPE_PARAM) && (val & DEF_TYPE_PARAM)) {
-            var exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_TYPE_PARAM, name);
+            let exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_TYPE_PARAM, name);
             set_exc_info(exc, st.filename, ...location);
             throw exc
         }
@@ -951,7 +920,7 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
          * named expressions can check for conflicts.
          */
         if (val & (DEF_GLOBAL | DEF_NONLOCAL)) {
-            var exc = PyErr_Format(_b_.SyntaxError,
+            let exc = PyErr_Format(_b_.SyntaxError,
                 NAMED_EXPR_COMP_INNER_LOOP_CONFLICT, name);
             set_exc_info(exc, st.filename, ..._location)
             throw exc
@@ -1095,7 +1064,8 @@ function VISIT_SEQ_WITH_NULL(ST, TYPE, SEQ) {
 
 function symtable_record_directive(st, name, lineno,
                           col_offset, end_lineno, end_col_offset){
-    var data, mangled, res;
+    var data,
+        mangled
     if (!st.cur.directives) {
         st.cur.directives = []
     }
@@ -1194,7 +1164,6 @@ visitor.stmt = function(st, s){
                                   DEF_LOCAL, LOCATION(s))) {
                 VISIT_QUIT(st, 0);
             }
-            var type_params = ".type_params"
             if (!symtable_add_def(st, 'type_params',
                                   USE, LOCATION(s))) {
                 VISIT_QUIT(st, 0);
@@ -1499,13 +1468,15 @@ visitor.stmt = function(st, s){
 }
 
 function symtable_extend_namedexpr_scope(st, e){
-    assert(st.stack);
-    assert(e instanceof $B.ast.Name);
+    assert(st.stack)
+    assert(e instanceof $B.ast.Name)
 
-    var target_name = e.id;
-    var i, size, ste;
+    var target_name = e.id
+    var i,
+        size,
+        ste
     size = st.stack.length
-    assert(size);
+    assert(size)
 
     /* Iterate over the stack in reverse and add to the nearest adequate scope */
     for (i = size - 1; i >= 0; i--) {
@@ -1515,9 +1486,9 @@ function symtable_extend_namedexpr_scope(st, e){
          * binding conflict with iteration variables, otherwise skip it
          */
         if (ste.comprehension) {
-            var target_in_scope = _PyST_GetSymbol(ste, target_name);
+            let target_in_scope = _PyST_GetSymbol(ste, target_name);
             if(target_in_scope & DEF_COMP_ITER){
-                var exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_CONFLICT, target_name);
+                let exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_CONFLICT, target_name);
                 set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                     e.ed_lineno, e.end_col_offset)
                 throw exc
@@ -1527,7 +1498,7 @@ function symtable_extend_namedexpr_scope(st, e){
 
         /* If we find a FunctionBlock entry, add as GLOBAL/LOCAL or NONLOCAL/LOCAL */
         if (_PyST_IsFunctionLike(ste)) {
-            var target_in_scope = _PyST_GetSymbol(ste, target_name);
+            let target_in_scope = _PyST_GetSymbol(ste, target_name);
             if (target_in_scope & DEF_GLOBAL) {
                 if (!symtable_add_def(st, target_name, DEF_GLOBAL, LOCATION(e)))
                     VISIT_QUIT(st, 0);
@@ -1551,7 +1522,7 @@ function symtable_extend_namedexpr_scope(st, e){
         }
         /* Disallow usage in ClassBlock */
         if (ste.type == ClassBlock) {
-            var exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_IN_CLASS);
+            let exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_IN_CLASS);
             set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                               e.end_lineno, e.end_col_offset);
             throw exc
@@ -1834,21 +1805,18 @@ function symtable_implicit_arg(st, pos){
 }
 
 visitor.params = function(st, args){
-    var i;
-
-    if (!args)
-        return -1;
-
-    for (var arg of args) {
-        if (!symtable_add_def(st, arg.arg, DEF_PARAM, LOCATION(arg)))
-            return 0;
+    if(! args){
+        return -1
     }
-
-    return 1;
+    for(var arg of args){
+        if(! symtable_add_def(st, arg.arg, DEF_PARAM, LOCATION(arg)))
+            return 0
+    }
+    return 1
 }
 
 visitor.annotation = function(st, annotation){
-    var future_annotations = st.future.features & CO_FUTURE_ANNOTATIONS;
+    var future_annotations = st.future.features & CO_FUTURE_ANNOTATIONS
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               annotation,
@@ -1856,27 +1824,25 @@ visitor.annotation = function(st, annotation){
                               annotation.col_offset,
                               annotation.end_lineno,
                               annotation.end_col_offset)) {
-        VISIT_QUIT(st, 0);
+        VISIT_QUIT(st, 0)
     }
-    VISIT(st, expr, annotation);
-    if (future_annotations && !symtable_exit_block(st)) {
-        VISIT_QUIT(st, 0);
+    VISIT(st, expr, annotation)
+    if(future_annotations && !symtable_exit_block(st)){
+        VISIT_QUIT(st, 0)
     }
-    return 1;
+    return 1
 }
 
 visitor.argannotations = function(st, args){
-    var i;
-
-    if (!args)
-        return -1;
-
-    for (var arg of args) {
-        if (arg.annotation)
-            VISIT(st, expr, arg.annotation);
+    if(!args){
+        return -1
     }
-
-    return 1;
+    for(var arg of args){
+        if(arg.annotation){
+            VISIT(st, expr, arg.annotation)
+        }
+    }
+    return 1
 }
 
 visitor.annotations = function(st, o, a, returns){
