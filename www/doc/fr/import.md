@@ -60,8 +60,12 @@ plusieurs emplacements :
 
 - un module __X__ dans la bibliothèque standard
 - un fichier __X.py__ dans le répertoire courant
-- un fichier __\_\_init\_\_.py__ dans le répertoire X
-
+- un fichier __\_\_init\_\_.py__ dans le sous-répertoire __X__ du répertoire
+  courant
+- un fichier __X.py__ dans le répertoire __site-packages__ de la bibliothèque
+  standard
+- un fichier __\_\_init.py\_\___ dans le répertoire __site-packages/X__ de la 
+  bibliothèque standard
 
 En outre, si une page HTML comporte plusieurs scripts Brython, ceux qui sont
 déjà exécutés peuvent être importés par leur `id`:
@@ -102,7 +106,7 @@ A noter que ce programme analyse le code Brython contenu dans tous les scripts,
 modules et pages HTML qui se trouvent dans le répertoire et ses
 sous-répertoires. La version de CPython utilisée doit donc être compatible
 avec le code Brython : par exemple si ce code inclut des `match / case`, il
-faut au minimum CPython 3.10, sinon le programme détectera des erreurs de 
+faut au minimum CPython 3.10, sinon le programme détectera des erreurs de
 syntaxe.
 
 Vous pouvez ensuite remplacer toutes les occurrences de
