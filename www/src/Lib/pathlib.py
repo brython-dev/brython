@@ -127,12 +127,19 @@ def _compile_pattern_lines(pattern_lines, case_sensitive):
     # Match the start of the path, or just after a path separator
     parts = ['^']
     for part in pattern_lines.splitlines(keepends=True):
-        # We slice off the common prefix and suffix added by translate() to
-        # ensure that re.DOTALL is not set, and the end of the string not
-        # matched, respectively. With DOTALL not set, '*' wildcards will not
-        # match path separators, because the '.' characters in the pattern
-        # will not match newlines.
-        parts.append(fnmatch.translate(part)[_FNMATCH_SLICE])
+        if part == '*\n':
+            part = r'.+\n'
+        elif part == '*':
+            part = r'.+'
+        else:
+            # Any other component: pass to fnmatch.translate(). We slice off
+            # the common prefix and suffix added by translate() to ensure that
+            # re.DOTALL is not set, and the end of the string not matched,
+            # respectively. With DOTALL not set, '*' wildcards will not match
+            # path separators, because the '.' characters in the pattern will
+            # not match newlines.
+            part = fnmatch.translate(part)[_FNMATCH_SLICE]
+        parts.append(part)
     # Match the end of the path, always.
     parts.append(r'\Z')
     flags = re.MULTILINE
@@ -293,9 +300,9 @@ class PurePath(object):
     """
 
     __slots__ = (
-        # The `_raw_path` slot stores an unnormalized string path. This is set
+        # The `_raw_paths` slot stores unnormalized string paths. This is set
         # in the `__init__()` method.
-        '_raw_path',
+        '_raw_paths',
 
         # The `_drv`, `_root` and `_tail_cached` slots store parsed and
         # normalized parts of the path. They are set when any of the `drive`,
@@ -352,10 +359,11 @@ class PurePath(object):
         paths = []
         for arg in args:
             if isinstance(arg, PurePath):
-                path = arg._raw_path
                 if arg._flavour is ntpath and self._flavour is posixpath:
                     # GH-103631: Convert separators for backwards compatibility.
-                    path = path.replace('\\', '/')
+                    paths.extend(path.replace('\\', '/') for path in arg._raw_paths)
+                else:
+                    paths.extend(arg._raw_paths)
             else:
                 try:
                     path = os.fspath(arg)
@@ -366,13 +374,8 @@ class PurePath(object):
                         "argument should be a str or an os.PathLike "
                         "object where __fspath__ returns a str, "
                         f"not {type(path).__name__!r}")
-            paths.append(path)
-        if len(paths) == 0:
-            self._raw_path = ''
-        elif len(paths) == 1:
-            self._raw_path = paths[0]
-        else:
-            self._raw_path = self._flavour.join(*paths)
+                paths.append(path)
+        self._raw_paths = paths
 
     def with_segments(self, *pathsegments):
         """Construct a new path object from any number of path-like objects.
@@ -402,7 +405,14 @@ class PurePath(object):
         return drv, root, parsed
 
     def _load_parts(self):
-        drv, root, tail = self._parse_path(self._raw_path)
+        paths = self._raw_paths
+        if len(paths) == 0:
+            path = ''
+        elif len(paths) == 1:
+            path = paths[0]
+        else:
+            path = self._flavour.join(*paths)
+        drv, root, tail = self._parse_path(path)
         self._drv = drv
         self._root = root
         self._tail_cached = tail
@@ -498,8 +508,12 @@ class PurePath(object):
         try:
             return self._lines_cached
         except AttributeError:
-            trans = _SWAP_SEP_AND_NEWLINE[self._flavour.sep]
-            self._lines_cached = str(self).translate(trans)
+            path_str = str(self)
+            if path_str == '.':
+                self._lines_cached = ''
+            else:
+                trans = _SWAP_SEP_AND_NEWLINE[self._flavour.sep]
+                self._lines_cached = path_str.translate(trans)
             return self._lines_cached
 
     def __eq__(self, other):
@@ -665,10 +679,12 @@ class PurePath(object):
         for step, path in enumerate([other] + list(other.parents)):
             if self.is_relative_to(path):
                 break
+            elif not walk_up:
+                raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
+            elif path.name == '..':
+                raise ValueError(f"'..' segment in {str(other)!r} cannot be walked")
         else:
             raise ValueError(f"{str(self)!r} and {str(other)!r} have different anchors")
-        if step and not walk_up:
-            raise ValueError(f"{str(self)!r} is not in the subpath of {str(other)!r}")
         parts = ['..'] * step + self._tail[len(path._tail):]
         return self.with_segments(*parts)
 
@@ -733,10 +749,17 @@ class PurePath(object):
     def is_absolute(self):
         """True if the path is absolute (has both a root and, if applicable,
         a drive)."""
-        # ntpath.isabs() is defective - see GH-44626 .
         if self._flavour is ntpath:
+            # ntpath.isabs() is defective - see GH-44626.
             return bool(self.drive and self.root)
-        return self._flavour.isabs(self._raw_path)
+        elif self._flavour is posixpath:
+            # Optimization: work with raw paths on POSIX.
+            for path in self._raw_paths:
+                if path.startswith('/'):
+                    return True
+            return False
+        else:
+            return self._flavour.isabs(str(self))
 
     def is_reserved(self):
         """Return True if the path contains one of the special names reserved

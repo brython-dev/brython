@@ -62,8 +62,8 @@ class SymbolTable:
     def get_type(self):
         """Return the type of the symbol table.
 
-        The values returned are 'class', 'module' and
-        'function'.
+        The values returned are 'class', 'module', 'function',
+        'annotation', 'TypeVar bound', 'type alias', and 'type parameter'.
         """
         if self._table.type == _symtable.TYPE_MODULE:
             return "module"
@@ -71,17 +71,15 @@ class SymbolTable:
             return "function"
         if self._table.type == _symtable.TYPE_CLASS:
             return "class"
-        # Brython-specific
-        if self._table.type == 3:
+        if self._table.type == _symtable.TYPE_ANNOTATION:
             return "annotation"
-        if self._table.type == 4:
-            return "type_var_bound"
-        if self._table.type == 5:
-            return "type_alias"
-        if self._table.type == 6:
-            return "type_param"
-        assert self._table.type in (1, 2, 3, 4, 5, 6), \
-               "unexpected type: {0}".format(self._table.type)
+        if self._table.type == _symtable.TYPE_TYPE_VAR_BOUND:
+            return "TypeVar bound"
+        if self._table.type == _symtable.TYPE_TYPE_ALIAS:
+            return "type alias"
+        if self._table.type == _symtable.TYPE_TYPE_PARAM:
+            return "type parameter"
+        assert False, f"unexpected type: {self._table.type}"
 
     def get_id(self):
         """Return an identifier for the table.

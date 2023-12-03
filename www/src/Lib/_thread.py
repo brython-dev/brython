@@ -26,6 +26,9 @@ TIMEOUT_MAX = 2**31
 
 error = RuntimeError
 
+def daemon_threads_allowed():
+    return False
+
 def _set_sentinel(*args, **kw):
     return LockType()
 
