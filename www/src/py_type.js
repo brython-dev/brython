@@ -499,7 +499,7 @@ type.__getattribute__ = function(klass, attr){
         case '__name__':
             return klass.__name__ || klass.__qualname__
         case "__setattr__":
-            var func = klass["__setattr__"] ?? 
+            var func = klass["__setattr__"] ??
                            function(kls, key, value){
                                kls[key] = value
                            }
@@ -999,7 +999,6 @@ $B.set_func_names(type, "builtins")
 // Must do it after set_func_names to have $infos set
 type.__init_subclass__ = _b_.classmethod.$factory(type.__init_subclass__)
 
-
 _b_.type = type
 
 // property (built in function)
@@ -1455,6 +1454,14 @@ $B.UnionType.__eq__ = function(self, other){
         return _b_.NotImplemented
     }
     return _b_.list.__eq__(self.items, other.items)
+}
+
+$B.UnionType.__or__ = function(self, other){
+    var items = self.items.slice()
+    if(! items.includes(other)){
+        items.push(other)
+    }
+    return $B.UnionType.$factory(items)
 }
 
 $B.UnionType.__parameters__ = _b_.property.$factory(
