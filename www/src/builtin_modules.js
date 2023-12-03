@@ -1282,6 +1282,20 @@
     $B.method_descriptor.__getattribute__ = $B.function.__getattribute__
     $B.wrapper_descriptor.__getattribute__ = $B.function.__getattribute__
 
+    var tp_dict = _b_.type.__dict__ = $B.empty_dict(),
+        setitem = _b_.dict.$setitem
+    for(let method in _b_.type){
+        if(method.startsWith('__') && method.endsWith('__')){
+            setitem(tp_dict, method, _b_.type[method])
+        }
+    }
+    
+    setitem(tp_dict, '__mro__', {
+        __get__: function(cls){
+            return $B.fast_tuple([cls].concat(cls.__mro__))
+        }
+    })
+
     // Set type of methods of builtin classes
     for(var name in _b_){
         var builtin = _b_[name]

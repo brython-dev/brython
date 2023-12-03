@@ -1077,6 +1077,12 @@ $B.set_func_names(property, "builtins")
 var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
 
+wrapper_descriptor.__text_signature__ = {
+    __get__: function(){
+        return '(self, /, *args, **kwargs)'
+    }
+}
+
 $B.set_func_names(wrapper_descriptor, "builtins")
 
 type.__call__.__class__ = wrapper_descriptor
