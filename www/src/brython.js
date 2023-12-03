@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-03 09:04:24.775078"
-__BRYTHON__.timestamp=1701590664775
+__BRYTHON__.compiled_date="2023-12-03 09:22:43.446346"
+__BRYTHON__.timestamp=1701591763446
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -12627,7 +12627,7 @@ typeof v=='number' ||
 typeof v=='boolean'){continue}else if([_b_.tuple,_b_.float,_b_.complex].indexOf(v.__class__)>-1){continue}else if(! _b_.hasattr(v.__class__,'__hash__')){return false}}
 return true}
 dict.$iter_items_with_hash=function*(d){if(d.$all_str){for(let key in d.$strings){if(key !='$dict_strings'){yield{key,value:d.$strings[key]}}}}
-if(d.$jsobj){for(let key in d.$jsobj){if(!d.$exclude ||! d.$exclude(key)){yield{key,value:d.$jsobj[key]}}}}else if(d.__class__===$B.jsobj_as_pydict){for(let key in d.obj){yield{key,value:d.obj[key]}}}else{var version=d.$version
+if(d.$jsobj){for(let key in d.$jsobj){if(!d.$exclude ||! d.$exclude(key)){yield{key,value:d.$jsobj[key]}}}}else{var version=d.$version
 for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield{key:d._keys[i],value:d._values[i],hash:d._hashes[i]}
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
@@ -12865,7 +12865,7 @@ value=$B.pyobj2jsobj(value)}
 if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=value
 if(key=="__init__" ||key=="__new__"){
 self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=value}
-return _b_.None}else if(self.__class__===$B.jsobj_as_pydict){return $B.jsobj_as_pydict.__setitem__(self,key,value)}
+return _b_.None}
 if(key instanceof String){key=key.valueOf()}
 var hash=$hash !==undefined ? $hash :$B.$hash(key)
 var index
@@ -13072,69 +13072,7 @@ return d}
 $B.obj_dict=function(obj,exclude){var klass=obj.__class__ ||$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw $B.attr_error("__dict__",obj)}
 var res={__class__:dict,$jsobj:obj,$exclude:exclude ||function(){return false}}
-return res}
-var jsobj_as_pydict=$B.jsobj_as_pydict=$B.make_class('jsobj_as_pydict',function(jsobj){return{
-__class__:jsobj_as_pydict,obj:jsobj ||{},new_keys:[],$version:0}}
-)
-jsobj_as_pydict.__contains__=function(self,key){if(self.new_keys.indexOf(key)>-1){return true}
-return self.obj[key]!==undefined}
-jsobj_as_pydict.__delitem__=function(self,key){jsobj_as_pydict.__getitem__(self,key)
-delete self.obj[key]
-var ix=self.new_keys.indexOf(key)
-if(ix >-1){self.new_keys.splice(ix,1)}}
-jsobj_as_pydict.__eq__=function(self,other){if(other.__class__ !==jsobj_as_pydict &&
-! $B.$isinstance(other,_b_.dict)){return _b_.NotImplemented}
-var self1=$B.empty_dict(),other1=$B.empty_dict()
-dict.__init__(self1,jsobj_as_pydict.items(self))
-dict.__init__(other1,$B.get_class(other).items(other))
-return dict.__eq__(self1,other1)}
-jsobj_as_pydict.__ne__=function(self,other){var eq=jsobj_as_pydict.__eq__(self,other)
-return eq===_b_.NotImplemented ? eq :! eq}
-jsobj_as_pydict.__getitem__=function(self,key){if(self.obj.hasOwnProperty(key)){return self.obj[key]}
-throw _b_.KeyError.$factory(key)}
-jsobj_as_pydict.__iter__=function(self){return _b_.iter(jsobj_as_pydict.keys(self))}
-jsobj_as_pydict.__len__=function(self){return Object.keys(self).length+self.new_keys.length}
-jsobj_as_pydict.__or__=function(self,other){
-if(! $B.$isinstance(other,[dict,jsobj_as_pydict])){return _b_.NotImplemented}
-var res=jsobj_as_pydict.copy(self)
-jsobj_as_pydict.update(res,other)
-return res}
-jsobj_as_pydict.__repr__=function(self){if($B.repr.enter(self)){return "{...}"}
-var res=[],items=_b_.list.$factory(jsobj_as_pydict.items(self))
-for(var item of items){res.push(_b_.repr(item[0])+": "+_b_.repr(item[1]))}
-$B.repr.leave(self)
-return "{"+res.join(", ")+"}"}
-jsobj_as_pydict.__setitem__=function(self,key,value){self.obj[key]=value}
-jsobj_as_pydict.clear=function(self){self.obj={}
-return _b_.None}
-jsobj_as_pydict.copy=function(self){var copy=jsobj_as_pydict.$factory()
-for(var key in self.obj){copy.obj[key]=self.obj[key]}
-return copy}
-jsobj_as_pydict.get=function(self,key,_default){_default=_default===undefined ? _b_.None :_default
-if(! self.obj.hasOwnProperty(key)){return _default}
-return self.obj[key]}
-jsobj_as_pydict.$iter_items=function*(self){for(var key in self.obj){yield $B.fast_tuple([key,self.obj[key]])}}
-jsobj_as_pydict.items=function(self){var items=Array.from(jsobj_as_pydict.$iter_items(self))
-return _b_.iter(items)}
-jsobj_as_pydict.keys=function(self){var items=Array.from(jsobj_as_pydict.$iter_items(self)),keys=items.map(x=> x[0])
-return _b_.iter(keys)}
-jsobj_as_pydict.pop=function(){var missing={},$=$B.args("pop",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:missing},null,null),self=$.self,key=$.key,_default=$._default
-if(self.obj.hasOwnProperty(key)){var res=self.obj[key]
-delete self.obj[key]
-return res}else{if(_default !==missing){return _default}
-throw _b_.KeyError.$factory(key)}}
-jsobj_as_pydict.popitem=function(self){$B.check_nb_args_no_kw('popitem',1,arguments)
-for(var key in self.obj){var res=$B.fast_tuple([key,self.obj[key]])
-delete self.obj[key]
-return res}
-throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")}
-jsobj_as_pydict.update=function(self,other){var klass=$B.get_class(other),keys=$B.$call($B.$getattr(klass,'keys')),getitem
-for(var key of $B.make_js_iterator(keys(other))){if(! getitem){getitem=$B.$call($B.$getattr(klass,'__getitem__'))}
-self.obj[key]=getitem(other,key)}
-return _b_.None}
-jsobj_as_pydict.values=function(self){var items=Array.from(jsobj_as_pydict.$iter_items(self)),values=items.map(x=> x[1])
-return _b_.iter(values)}
-$B.set_func_names(jsobj_as_pydict,'builtins')})(__BRYTHON__)
+return res}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins,isinstance=$B.$isinstance
 function check_not_tuple(self,attr){if(self.__class__===tuple){throw $B.attr_error(attr,self)}}
