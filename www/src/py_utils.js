@@ -1943,8 +1943,7 @@ $B.rich_op1 = function(op, x, y){
     }
     if(res === _b_.NotImplemented){
         try{
-            var reflected = $B.$getattr(y, rop),
-                method = $B.$getattr(y_class, rop)
+            method = $B.$getattr(y_class, rop)
         }catch(err){
             if(err.__class__ !== _b_.AttributeError){
                 throw err

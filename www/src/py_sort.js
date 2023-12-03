@@ -565,7 +565,7 @@ var TimSort = function(array, compare){
                 tmp = this.tmp,
                 i = 0
 
-            for(var i = 0; i < length1; i++){
+            for(let i = 0; i < length1; i++){
                 tmp[i] = array[start1 + i]
             }
 
@@ -576,14 +576,14 @@ var TimSort = function(array, compare){
             array[dest++] = array[cursor2++]
 
             if(--length2 === 0){
-                for(var i = 0; i < length1; i++){
+                for(let i = 0; i < length1; i++){
                     array[dest + i] = tmp[cursor1 + i]
                 }
                 return
             }
 
             if(length1 === 1){
-                for(var i = 0; i < length2; i++){
+                for(let i = 0; i < length2; i++){
                     array[dest + i] = array[cursor2 + i]
                 }
                 array[dest + length2] = tmp[cursor1]
@@ -627,7 +627,7 @@ var TimSort = function(array, compare){
                         length1, 0, compare)
 
                     if(count1 !== 0){
-                        for(var i = 0; i < count1; i++){
+                        for(let i = 0; i < count1; i++){
                             array[dest + i] = tmp[cursor1 + i]
                         }
 
@@ -651,7 +651,7 @@ var TimSort = function(array, compare){
                         0, compare)
 
                     if(count2 !== 0){
-                        for(var i = 0; i < count2; i++){
+                        for(let i = 0; i < count2; i++){
                             array[dest + i] = array[cursor2 + i]
                         }
 
@@ -694,14 +694,14 @@ var TimSort = function(array, compare){
             }
 
             if(length1 === 1){
-                for(var i = 0; i < length2; i++){
+                for(let i = 0; i < length2; i++){
                     array[dest + i] = array[cursor2 + i]
                 }
                 array[dest + length2] = tmp[cursor1]
             }else if(length1 === 0){
                 throw new TimSortAssertion('mergeLow preconditions were not respected')
             }else{
-                for(var i = 0; i < length1; i++){
+                for(let i = 0; i < length1; i++){
                     array[dest + i] = tmp[cursor1 + i]
                 }
             }
@@ -721,16 +721,15 @@ var TimSort = function(array, compare){
         * @param {number} length2 - Length of run2.
         */
         mergeHigh: function(start1, length1, start2, length2){
-            var compare = this.compare,
+            let compare = this.compare,
                 array = this.array,
-                tmp = this.tmp,
-                i = 0
+                tmp = this.tmp
 
-            for(var i = 0; i < length2; i++){
+            for(let i = 0; i < length2; i++){
                 tmp[i] = array[start2 + i]
             }
 
-            var cursor1 = start1 + length1 - 1,
+            let cursor1 = start1 + length1 - 1,
                 cursor2 = length2 - 1,
                 dest = start2 + length2 - 1,
                 customCursor = 0,
@@ -741,7 +740,7 @@ var TimSort = function(array, compare){
             if(--length1 === 0){
                 customCursor = dest - (length2 - 1)
 
-                for(var i = 0; i < length2; i++){
+                for(let i = 0; i < length2; i++){
                     array[customCursor + i] = tmp[i]
                 }
 
@@ -754,7 +753,7 @@ var TimSort = function(array, compare){
                 customDest = dest + 1
                 customCursor = cursor1 + 1
 
-                for(var i = length1 - 1; i >= 0; i--){
+                for(let i = length1 - 1; i >= 0; i--){
                     array[customDest + i] = array[customCursor + i]
                 }
 
@@ -765,7 +764,7 @@ var TimSort = function(array, compare){
             var minGallop = this.minGallop
 
             while (true) {
-                var count1 = 0,
+                let count1 = 0,
                     count2 = 0,
                     exit = false
 
@@ -802,7 +801,7 @@ var TimSort = function(array, compare){
                         customDest = dest + 1
                         customCursor = cursor1 + 1
 
-                        for(var i = count1 - 1; i >= 0; i--){
+                        for(let i = count1 - 1; i >= 0; i--){
                             array[customDest + i] = array[customCursor + i]
                         }
 
@@ -829,7 +828,7 @@ var TimSort = function(array, compare){
                         customDest = dest + 1
                         customCursor = cursor2 + 1
 
-                        for(var i = 0; i < count2; i++){
+                        for(let i = 0; i < count2; i++){
                             array[customDest + i] = tmp[customCursor + i]
                         }
 
@@ -870,7 +869,7 @@ var TimSort = function(array, compare){
                 customDest = dest + 1
                 customCursor = cursor1 + 1
 
-                for(var i = length1 - 1; i >= 0; i--){
+                for(let i = length1 - 1; i >= 0; i--){
                     array[customDest + i] = array[customCursor + i]
                 }
 
@@ -879,7 +878,7 @@ var TimSort = function(array, compare){
                 throw new TimSortAssertion("mergeHigh preconditions were not respected")
             }else{
                 customCursor = dest - (length2 - 1)
-                for(var i = 0; i < length2; i++){
+                for(let i = 0; i < length2; i++){
                     array[customCursor + i] = tmp[i]
                 }
             }

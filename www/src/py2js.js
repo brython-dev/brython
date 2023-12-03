@@ -1,29 +1,18 @@
 // Python to Javascript translation engine
-;(function($B){
+(function($B){
 "use strict";
 
-$B.produce_ast = false
-
-Number.isInteger = Number.isInteger || function(value) {
-  return typeof value === 'number' &&
-    isFinite(value) &&
-    Math.floor(value) === value
-};
-
-Number.isSafeInteger = Number.isSafeInteger || function (value) {
-   return Number.isInteger(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
-};
-
-var js,res,$op
 var _b_ = $B.builtins
+
 var _window
+
 if ($B.isNode){
-    _window={ location: {
+    _window = { location: {
         href:'',
         origin: '',
         pathname: ''} }
 } else {
-    _window=self
+    _window = self
 }
 $B.parser = {}
 
@@ -33,7 +22,7 @@ Utility functions
 */
 
 // Return a clone of an object
-var clone = $B.clone = function(obj){
+$B.clone = function(obj){
     var res = {}
     for(var attr in obj){
         res[attr] = obj[attr]
@@ -504,24 +493,13 @@ function check_assignment(context, kwargs){
         }
     }
 
-    if(context.type == 'expr'){
-        var upper_expr = context
-        ctx = context
-        while(ctx.parent){
-            if(ctx.parent.type == 'expr'){
-                upper_expr = ctx.parent
-            }
-            ctx = ctx.parent
-        }
-    }
-
     // no assign in left side of augmented assignment
     if(in_left_side(context, 'augm_assign')){
         raise_syntax_error(context)
     }
 
     if(context.type == 'target_list'){
-        for(var target of context.tree){
+        for(let target of context.tree){
             check_assignment(target, {action: 'assign to'})
         }
         return
@@ -576,9 +554,6 @@ function check_assignment(context, kwargs){
                     }
                     report([name])
                 }
-                if(noassign[name] === true){
-                    report(keyword)
-                }
             }else if(['str', 'int', 'float', 'complex'].indexOf(assigned.type) > -1){
                 if(ctx.parent.type != 'op'){
                     report('literal')
@@ -607,7 +582,7 @@ function check_assignment(context, kwargs){
                         last_position(assigned))
                 }
             }else if(assigned.type == 'list_or_tuple'){
-                for(var item of ctx.tree){
+                for(let item of ctx.tree){
                     check_assignment(item, {action, once: true})
                 }
             }else if(assigned.type == 'dict_or_set'){
@@ -626,14 +601,14 @@ function check_assignment(context, kwargs){
                     last_position(assigned))
             }
         }else if(ctx.type == 'list_or_tuple'){
-            for(var item of ctx.tree){
+            for(let item of ctx.tree){
                 check_assignment(item, {action, once: true})
             }
         }else if(ctx.type == 'ternary'){
             report(['conditional expression'],
                    ctx.position, last_position(context))
         }else if(ctx.type == 'op'){
-            var a = ctx.tree[0].position,
+            let a = ctx.tree[0].position,
                 last = $B.last(ctx.tree).tree[0],
                 b = last.end_position || last.position
             if($B.op2method.comparisons[ctx.op] !== undefined){
@@ -805,7 +780,7 @@ $Node.prototype.show = function(indent){
     // For debugging purposes
     var res = ''
     if(this.type === 'module'){
-        for(var child of this.children){
+        for(let child of this.children){
             res += child.show(indent)
         }
         return res
@@ -818,7 +793,7 @@ $Node.prototype.show = function(indent){
         res += '{'
     }
     res +='\n'
-    for(var child of this.children){
+    for(let child of this.children){
        res += child.show(indent + 4)
     }
     if(this.children.length > 0){
@@ -871,7 +846,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
     var context = this
     var packed = context.packed,
         is_await = context.is_await,
-        position = context.position
+        commas
 
     switch(token) {
         case 'await':
@@ -891,8 +866,8 @@ AbstractExprCtx.prototype.transition = function(token, value){
         case 'lambda':
         case 'yield':
             context.parent.tree.pop() // remove abstract expression
-            var commas = context.with_commas,
-                star_position
+            commas = context.with_commas
+            var star_position
             if(context.packed){
                 star_position = context.star_position
             }
@@ -906,7 +881,6 @@ AbstractExprCtx.prototype.transition = function(token, value){
                 context.star_position = star_position
             }
     }
-
     switch(token) {
         case 'await':
             return new AbstractExprCtx(new AwaitCtx(
@@ -962,7 +936,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
             switch(tg) {
                 case '*':
                     context.parent.tree.pop() // remove abstract expression
-                    var commas = context.with_commas
+                    commas = context.with_commas
                     context = context.parent
                     context.position = $token.value
                     return new AbstractExprCtx(
@@ -971,7 +945,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
                         false)
                 case '**':
                     context.parent.tree.pop() // remove abstract expression
-                    var commas = context.with_commas
+                    commas = context.with_commas
                     context = context.parent
                     context.position = $token.value
                     return new AbstractExprCtx(
@@ -991,7 +965,7 @@ AbstractExprCtx.prototype.transition = function(token, value){
                     )
                 case 'not':
                     context.parent.tree.pop() // remove abstract expression
-                    var commas = context.with_commas
+                    commas = context.with_commas
                     context = context.parent
                     return new NotCtx(
                         new ExprCtx(context, 'not', commas))
@@ -1060,7 +1034,6 @@ AbstractExprCtx.prototype.transition = function(token, value){
         case 'except':
         case 'for':
         case 'while':
-        case 'in':
         case 'return':
         case 'try':
             raise_syntax_error(context)
@@ -1111,7 +1084,7 @@ var AnnotationCtx = $B.parser.AnnotationCtx = function(context){
     }
 }
 
-AnnotationCtx.prototype.transition = function(token, value){
+AnnotationCtx.prototype.transition = function(token){
     var context = this
     if(token == "eol" && context.tree.length == 1 &&
             context.tree[0].tree.length == 0){
@@ -1147,7 +1120,7 @@ AssertCtx.prototype.ast = function(){
     return ast_obj
 }
 
-AssertCtx.prototype.transition = function(token, value){
+AssertCtx.prototype.transition = function(token){
     var context = this
     if(token == ","){
         if(this.tree.length > 1){
@@ -1170,7 +1143,7 @@ AssertCtx.prototype.transition = function(token, value){
     raise_syntax_error(context)
 }
 
-var AssignCtx = $B.parser.AssignCtx = function(context, expression){
+var AssignCtx = $B.parser.AssignCtx = function(context){
     /*
     Class for the assignment operator "="
     context is the left operand of assignment
@@ -1189,8 +1162,6 @@ var AssignCtx = $B.parser.AssignCtx = function(context, expression){
 
     this.parent = context.parent
     this.tree = [context]
-
-    var scope = get_scope(this)
 
     if(context.type == 'assign'){
         check_assignment(context.tree[1])
@@ -1220,12 +1191,12 @@ var AssignCtx = $B.parser.AssignCtx = function(context, expression){
 
 function set_ctx_to_store(obj){
     if(Array.isArray(obj)){
-        for(var item of obj){
+        for(let item of obj){
             set_ctx_to_store(item)
         }
     }else if(obj instanceof ast.List ||
             obj instanceof ast.Tuple){
-        for(var item of obj.elts){
+        for(let item of obj.elts){
             set_ctx_to_store(item)
         }
     }else if(obj instanceof ast.Starred){
@@ -1258,9 +1229,9 @@ AssignCtx.prototype.ast = function(){
         targets.splice(0, 0, target.ast())
     }
     value.ctx = new ast.Load()
-    var lineno = get_node(this).line_num
+    var ast_obj
     if(target.annotation){
-        var ast_obj = new ast.AnnAssign(
+        ast_obj = new ast.AnnAssign(
             target.tree[0].ast(),
             target.annotation.tree[0].ast(),
             value,
@@ -1271,14 +1242,14 @@ AssignCtx.prototype.ast = function(){
             last_position(target.annotation))
         ast_obj.target.ctx = new ast.Store()
     }else{
-        var ast_obj = new ast.Assign(targets, value)
+        ast_obj = new ast.Assign(targets, value)
     }
     set_position(ast_obj, this.position)
     set_ctx_to_store(ast_obj.targets)
     return ast_obj
 }
 
-AssignCtx.prototype.transition = function(token, value){
+AssignCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol'){
         if(context.tree[1].type == 'abstract_expr'){
@@ -1302,11 +1273,11 @@ AsyncCtx.prototype.transition = function(token, value){
     if(token == "def"){
         return transition(context.parent, token, value)
     }else if(token == "with"){
-        var ctx = transition(context.parent, token, value)
+        let ctx = transition(context.parent, token, value)
         ctx.async = context // set attr "async" of with context
         return ctx
     }else if(token == "for"){
-        var ctx = transition(context.parent, token, value)
+        let ctx = transition(context.parent, token, value)
         ctx.parent.async = context // set attr "async" of for context
         return ctx
     }
@@ -1392,7 +1363,7 @@ AugmentedAssignCtx.prototype.ast = function(){
     return ast_obj
 }
 
-AugmentedAssignCtx.prototype.transition = function(token, value){
+AugmentedAssignCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol'){
         if(context.tree[1].type == 'abstract_expr'){
@@ -1470,7 +1441,7 @@ BreakCtx.prototype.ast = function(){
     return ast_obj
 }
 
-BreakCtx.prototype.transition = function(token, value){
+BreakCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol'){
         return transition(context.parent, 'eol')
@@ -1584,7 +1555,7 @@ CallCtx.prototype.ast = function(){
         keywords = new Set()
     for(var call_arg of this.tree){
         if(call_arg.type == 'double_star_arg'){
-            var value = call_arg.tree[0].tree[0].ast(),
+            let value = call_arg.tree[0].tree[0].ast(),
                 keyword = new ast.keyword(_b_.None, value)
             delete keyword.arg
             res.keywords.push(keyword)
@@ -1595,20 +1566,20 @@ CallCtx.prototype.ast = function(){
                         'iterable argument unpacking follows keyword argument unpacking')
                 }
             }
-            var starred = new ast.Starred(call_arg.tree[0].ast())
+            let starred = new ast.Starred(call_arg.tree[0].ast())
             set_position(starred, call_arg.position)
             starred.ctx = new ast.Load()
             res.args.push(starred)
         }else if(call_arg.type == 'genexpr'){
             res.args.push(call_arg.ast())
         }else{
-            var item = call_arg.tree[0]
+            let item = call_arg.tree[0]
             if(item === undefined){
                 // case when call ends with ",)"
                 continue
             }
             if(item.type == 'kwarg'){
-                var key = item.tree[0].value
+                let key = item.tree[0].value
                 if(key == '__debug__'){
                     raise_syntax_error_known_range(this,
                         this.position,
@@ -1627,7 +1598,7 @@ CallCtx.prototype.ast = function(){
                         `keyword argument repeated: ${key}`)
                 }
                 keywords.add(key)
-                var keyword = new ast.keyword(item.tree[0].value,
+                let keyword = new ast.keyword(item.tree[0].value,
                     item.tree[1].ast())
                 set_position(keyword, item.position)
                 res.keywords.push(keyword)
@@ -1733,6 +1704,26 @@ CaseCtx.prototype.set_alias = function(name){
     this.alias = name
 }
 
+// check if case is 'irrefutable' (cf. PEP 634)
+function is_irrefutable(pattern){
+    var cause
+    if(pattern.type == "capture_pattern"){
+        return pattern.tree[0]
+    }else if(pattern.type == "or_pattern"){
+        for(var subpattern of pattern.tree){
+            if(cause = is_irrefutable(subpattern)){
+                return cause
+            }
+        }
+    }else if(pattern.type == "sequence_pattern" &&
+            pattern.token == '(' &&
+            pattern.tree.length == 1 &&
+            (cause = is_irrefutable(pattern.tree[0]))){
+        return cause
+    }
+    return false
+}
+
 CaseCtx.prototype.transition = function(token, value){
     var context = this
     switch(token){
@@ -1740,25 +1731,6 @@ CaseCtx.prototype.transition = function(token, value){
             context.expect = ':'
             return new AbstractExprCtx(new AliasCtx(context))
         case ':':
-            // check if case is 'irrefutable' (cf. PEP 634)
-            function is_irrefutable(pattern){
-                var cause
-                if(pattern.type == "capture_pattern"){
-                    return pattern.tree[0]
-                }else if(pattern.type == "or_pattern"){
-                    for(var subpattern of pattern.tree){
-                        if(cause = is_irrefutable(subpattern)){
-                            return cause
-                        }
-                    }
-                }else if(pattern.type == "sequence_pattern" &&
-                        pattern.token == '(' &&
-                        pattern.tree.length == 1 &&
-                        (cause = is_irrefutable(pattern.tree[0]))){
-                    return cause
-                }
-                return false
-            }
             var cause
             if(cause = is_irrefutable(this.tree[0])){
                 // mark match node as having already an irrefutable pattern,
@@ -1937,15 +1909,6 @@ var Comprehension = {
         return comprehensions
     },
     make_comp: function(comp, context){
-        if(context.tree[0].type == 'yield'){
-            var comp_type = comp.type == 'listcomp' ? 'list comprehension' :
-                            comp.type == 'dictcomp' ? 'dict comprehension' :
-                            comp.type == 'setcomp' ? 'set comprehension' :
-                            comp.type == 'genexpr' ? 'generator expression' : ''
-            var a = context.tree[0]
-            //raise_syntax_error_known_range(context, a.position, last_position(a),
-            //                                `'yield' inside ${comp_type}`)
-        }
         comp.comprehension = true
         comp.position = $token.value
         comp.parent = context.parent
@@ -2062,7 +2025,7 @@ ContinueCtx.prototype.ast = function(){
     return ast_obj
 }
 
-ContinueCtx.prototype.transition = function(token, value){
+ContinueCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol'){return context.parent}
     raise_syntax_error(context)
@@ -2077,7 +2040,7 @@ var DecoratorCtx = $B.parser.DecoratorCtx = function(context){
     this.position = $token.value
 }
 
-DecoratorCtx.prototype.transition = function(token, value){
+DecoratorCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol') {
         return transition(context.parent, token)
@@ -2184,8 +2147,6 @@ DefCtx.prototype.ast = function(){
         },
         decorators = get_decorators(this.parent.node),
         func_args = this.tree[1],
-        state = 'arg',
-        default_value,
         res
 
     args = func_args.ast()
@@ -2209,7 +2170,7 @@ DefCtx.prototype.set_name = function(name){
     if(["None", "True", "False"].indexOf(name) > -1){
         raise_syntax_error(this) // invalid function name
     }
-    var id_ctx = new IdCtx(this, name)
+    new IdCtx(this, name)
     this.name = name
     this.id = this.scope.id + '_' + name
     this.id = this.id.replace(/\./g, '_') // for modules inside packages
@@ -2267,7 +2228,7 @@ var DelCtx = $B.parser.DelCtx = function(context){
 }
 
 DelCtx.prototype.ast = function(){
-    var targets
+    let targets
     if(this.tree[0].type == 'list_or_tuple'){
         // Syntax "del a, b, c"
         targets = this.tree[0].tree.map(x => x.ast())
@@ -2279,21 +2240,21 @@ DelCtx.prototype.ast = function(){
         for(var elt of targets.elts){
             elt.ctx = new ast.Del()
         }
-        var ast_obj = new ast.Delete([targets])
+        let ast_obj = new ast.Delete([targets])
         set_position(ast_obj, this.position)
         return ast_obj
     }else{
         targets = [this.tree[0].tree[0].ast()]
     }
-    for(var target of targets){
+    for(let target of targets){
         target.ctx = new ast.Del()
     }
-    var ast_obj = new ast.Delete(targets)
+    let ast_obj = new ast.Delete(targets)
     set_position(ast_obj, this.position)
     return ast_obj
 }
 
-DelCtx.prototype.transition = function(token, value){
+DelCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol'){
         check_assignment(this.tree[0], {action: 'delete'})
@@ -2345,7 +2306,7 @@ DictCompCtx.prototype.ast = function(){
     return ast_obj
 }
 
-DictCompCtx.prototype.transition = function(token, value){
+DictCompCtx.prototype.transition = function(token){
     var context = this
     if(token == '}'){
         return this.parent
@@ -2374,10 +2335,9 @@ DictOrSetCtx.prototype.ast = function(){
     // Dict(expr* keys, expr* values) | Set(expr* elts)
     var ast_obj
     if(this.real == 'dict'){
-        var keys = [],
+        let keys = [],
             values = []
-        var t0 = Date.now()
-        for(var i = 0, len = this.items.length; i < len; i++){
+        for(let i = 0, len = this.items.length; i < len; i++){
             if(this.items[i].type == 'expr' &&
                     this.items[i].tree[0].type == 'kwd'){
                 keys.push(_b_.None)
@@ -2391,7 +2351,7 @@ DictOrSetCtx.prototype.ast = function(){
         ast_obj = new ast.Dict(keys, values)
     }else if(this.real == 'set'){
         var items = []
-        for(var item of this.items){
+        for(let item of this.items){
             if(item.packed){
                 var starred = new ast.Starred(item.ast(),
                                               new ast.Load())
@@ -3253,7 +3213,7 @@ ExprCtx.prototype.transition = function(token, value){
           // If the part before "if" is an operation, apply operator
           // precedence
           // Example : print(1+n if n else 0)
-          var ctx = context
+          ctx = context
           while(ctx.parent &&
                   (ctx.parent.type == 'op' ||
                    ctx.parent.type == 'not' ||
@@ -3264,23 +3224,19 @@ ExprCtx.prototype.transition = function(token, value){
           return new AbstractExprCtx(new TernaryCtx(ctx), false)
       case 'JoinedStr':
           if(context.tree.length == 1 && context.tree[0] instanceof FStringCtx){
-              var fstring = context.tree[0]
-              return fstring
+              return context.tree[0]
           }else{
-              var msg = 'invalid syntax. Perhaps you forgot a comma?'
-              raise_syntax_error_known_range(context,
-                  this.position, $token.value, msg)
+              raise_syntax_error_known_range(context, this.position,
+                  $token.value, 'invalid syntax. Perhaps you forgot a comma?')
           }
           break
       case 'str':
           if(context.tree.length == 1 && context.tree[0] instanceof FStringCtx){
-              var fstring = context.tree[0]
-              new StringCtx(fstring, value)
+              new StringCtx(context.tree[0], value)
               return context
           }else{
-              var msg = 'invalid syntax. Perhaps you forgot a comma?'
-              raise_syntax_error_known_range(context,
-                  this.position, $token.value, msg)
+              raise_syntax_error_known_range(context, this.position,
+                  $token.value, 'invalid syntax. Perhaps you forgot a comma?')
           }
           break
       case 'eol':
@@ -3325,7 +3281,7 @@ var ExprNot = $B.parser.ExprNot = function(context){
     context.tree[context.tree.length] = this
 }
 
-ExprNot.prototype.transition = function(token, value){
+ExprNot.prototype.transition = function(token){
     var context = this
     if(token == 'in'){ // expr not in : operator
         context.parent.tree.pop()
@@ -3629,13 +3585,13 @@ FStringCtx.prototype.ast = function(){
                 // eg in "'ab' f'c{x}'"
                 $B.last(res.values).value += item.value
             }else{
-                var item_ast = new ast.Constant(item.value)
+                let item_ast = new ast.Constant(item.value)
                 set_position(item_ast, item.position)
                 res.values.push(item_ast)
             }
             state = 'string'
         }else{
-            var item_ast = item.ast()
+            let item_ast = item.ast()
             set_position(item_ast, item.position)
             res.values.push(item_ast)
             state = 'formatted_value'
@@ -3947,7 +3903,7 @@ var FuncArgIdCtx = $B.parser.FuncArgIdCtx = function(context, name){
     this.expect = '='
 }
 
-FuncArgIdCtx.prototype.transition = function(token, value){
+FuncArgIdCtx.prototype.transition = function(token){
     var context = this
     switch(token) {
         case '=':
@@ -4090,7 +4046,7 @@ GeneratorExpCtx.prototype.ast = function(){
     return res
 }
 
-GeneratorExpCtx.prototype.transition = function(token, value){
+GeneratorExpCtx.prototype.transition = function(token){
     var context = this
     if(token == ')'){
         if(this.parent.type == 'call'){
@@ -4223,18 +4179,17 @@ IdCtx.prototype.transition = function(token, value){
     if(context.value == 'case' && context.parent.parent.type == "node"){
         // case at the beginning of a line : if the line ends with a colon
         // (:), it is the "soft keyword" `case` for pattern matching
-        var save_position = module.token_reader.position,
+        let save_position = module.token_reader.position,
             ends_with_comma = check_line(module.token_reader, module.filename)
             module.token_reader.position = save_position
         if(ends_with_comma){
-            var node = get_node(context),
-                parent = node.parent
+            var node = get_node(context)
             if((! node.parent) || !(node.parent.is_match)){
                 raise_syntax_error(context, "('case' not inside 'match')")
             }else{
                 if(node.parent.irrefutable){
                     // "match" statement already has an irrefutable pattern
-                    var name = node.parent.irrefutable,
+                    let name = node.parent.irrefutable,
                         msg = name == '_' ? 'wildcard' :
                             `name capture '${name}'`
                     raise_syntax_error(context,
@@ -4247,7 +4202,7 @@ IdCtx.prototype.transition = function(token, value){
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
         // same for match
-        var save_position = module.token_reader.position,
+        let save_position = module.token_reader.position,
             ends_with_comma = check_line(module.token_reader, module.filename)
             module.token_reader.position = save_position
         if(ends_with_comma){
@@ -4282,14 +4237,14 @@ IdCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'imaginary':
+            var msg
             if(["print", "exec"].indexOf(context.value) > -1 ){
-                var f = context.value,
-                    msg = `Missing parentheses in call to '${f}'.` +
+                var f = context.value
+                msg = `Missing parentheses in call to '${f}'.` +
                     ` Did you mean ${f}(...)?`
             }else{
-                var msg = 'invalid syntax. Perhaps you forgot a comma?'
+                msg = 'invalid syntax. Perhaps you forgot a comma?'
             }
-            var call_arg = parent_match(context, {type: 'call_arg'})
             raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)
 
@@ -4401,10 +4356,6 @@ var ImportedModuleCtx = $B.parser.ImportedModuleCtx = function(context,name){
     context.tree[context.tree.length] = this
 }
 
-ImportedModuleCtx.prototype.transition = function(token, value){
-    var context = this
-}
-
 var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
     // Class for f-strings. values is an Array with strings or expressions
     this.type = 'JoinedStr'
@@ -4481,7 +4432,7 @@ JoinedStrCtx.prototype.ast = function(){
                     conv_num[item.elt.conversion] || -1,
                     format)
             set_position(value, this.position)
-            var format = item.format
+            format = item.format
             if(format !== undefined){
                 value.format = item.format.ast()
             }
@@ -4566,7 +4517,7 @@ var KwArgCtx = $B.parser.KwArgCtx = function(context){
     context.parent.parent.has_kw = true
 }
 
-KwArgCtx.prototype.transition = function(token, value){
+KwArgCtx.prototype.transition = function(token){
     var context = this
     if(token == ','){
         return new CallArgCtx(context.parent.parent)
@@ -4659,7 +4610,7 @@ ListCompCtx.prototype.ast = function(){
     return res
 }
 
-ListCompCtx.prototype.transition = function(token, value){
+ListCompCtx.prototype.transition = function(token){
     var context = this
     if(token == ']'){
         return this.parent
@@ -4818,10 +4769,10 @@ ListOrTupleCtx.prototype.transition = function(token, value){
                             context.implicit === true){
                         context.close()
                         context.parent.tree.pop()
-                        var expr = new ExprCtx(context.parent,
+                        var expr1 = new ExprCtx(context.parent,
                             'tuple', false)
-                        expr.tree = [context]
-                        context.parent = expr
+                        expr1.tree = [context]
+                        context.parent = expr1
                         return transition(context.parent, token)
                     }
                     raise_syntax_error(context, "(unexpected '=' inside list)")
@@ -4858,13 +4809,13 @@ ListOrTupleCtx.prototype.transition = function(token, value){
                 case 'not':
                 case ':':
                     context.expect = ','
-                    var expr = new AbstractExprCtx(context, false)
-                    return transition(expr, token, value)
+                    var expr2 = new AbstractExprCtx(context, false)
+                    return transition(expr2, token, value)
                 case 'op':
                     if('+-~*'.indexOf(value) > -1 || value == '**'){
                         context.expect = ','
-                        var expr = new AbstractExprCtx(context, false)
-                        return transition(expr, token, value)
+                        var expr3 = new AbstractExprCtx(context, false)
+                        return transition(expr3, token, value)
                     }
                     raise_syntax_error(context,
                         `(unexpected operator: ${value})`)
@@ -4921,7 +4872,7 @@ MatchCtx.prototype.ast = function(){
     return res
 }
 
-MatchCtx.prototype.transition = function(token, value){
+MatchCtx.prototype.transition = function(token){
     var context = this
     switch(token){
         case ':':
@@ -5014,7 +4965,7 @@ NodeCtx.prototype.transition = function(token, value){
     if(this.tree.length == 0 && this.node.parent){
         var rank = this.node.parent.children.indexOf(this.node)
         if(rank > 0){
-            var previous = this.node.parent.children[rank - 1]
+            let previous = this.node.parent.children[rank - 1]
             if(previous.context.tree[0].type == 'try' &&
                     ['except', 'finally'].indexOf(token) == -1){
                 raise_syntax_error(context,
@@ -5050,7 +5001,7 @@ NodeCtx.prototype.transition = function(token, value){
         case 'not':
         case 'lambda':
             var expr = new AbstractExprCtx(context,true)
-            return transition(expr,token,value)
+            return transition(expr, token, value)
         case 'assert':
             return new AbstractExprCtx(
                 new AssertCtx(context), false, true)
@@ -5081,26 +5032,25 @@ NodeCtx.prototype.transition = function(token, value){
             return new AbstractExprCtx(
                 new ConditionCtx(context, token), false)
         case 'ellipsis':
-            var expr = new AbstractExprCtx(context, true)
-            return transition(expr, token, value)
+            var ell_expr = new AbstractExprCtx(context, true)
+            return transition(ell_expr, token, value)
         case 'else':
-            var previous = get_previous(context)
-            if(['condition', 'except', 'for'].
-                    indexOf(previous.type) == -1){
+            var previous1 = get_previous(context)
+            if(! ['condition', 'except', 'for'].includes(previous1.type)){
                 raise_syntax_error(context, `(else after ${previous.type})`)
             }
             return new SingleKwCtx(context,token)
         case 'except':
-            var previous = get_previous(context)
-            if(['try', 'except'].indexOf(previous.type) == -1){
+            var previous2 = get_previous(context)
+            if(! ['try', 'except'].includes(previous2.type)){
                 raise_syntax_error(context, `(except after ${previous.type})`)
             }
             return new ExceptCtx(context)
         case 'finally':
-            var previous = get_previous(context)
-            if(['try', 'except'].indexOf(previous.type) == -1 &&
-                    (previous.type != 'single_kw' ||
-                        previous.token != 'else')){
+            var previous3 = get_previous(context)
+            if(! ['try', 'except'].includes(previous3.type) &&
+                    (previous3.type != 'single_kw' ||
+                        previous3.token != 'else')){
                 raise_syntax_error(context, `finally after ${previous.type})`)
             }
             return new SingleKwCtx(context,token)
@@ -5116,22 +5066,20 @@ NodeCtx.prototype.transition = function(token, value){
                 new ConditionCtx(context, token), false)
         case 'import':
             return new ImportCtx(context)
-        case 'lambda':
-            return new LambdaCtx(context)
         case 'nonlocal':
             return new NonlocalCtx(context)
         case 'op':
             switch(value) {
                 case '*':
-                    var expr = new AbstractExprCtx(context, true)
-                    return transition(expr, token, value)
+                    var expr1 = new AbstractExprCtx(context, true)
+                    return transition(expr1, token, value)
                 case '+':
                 case '-':
                 case '~':
                     context.position = $token.value
-                    var expr = new ExprCtx(context, 'unary', true)
+                    var expr2 = new ExprCtx(context, 'unary', true)
                     return new AbstractExprCtx(
-                        new UnaryCtx(expr, value), false)
+                        new UnaryCtx(expr2, value), false)
                 case '@':
                     return new AbstractExprCtx(new DecoratorCtx(context), false)
             }
@@ -5227,7 +5175,8 @@ NotCtx.prototype.ast = function(){
 }
 
 NotCtx.prototype.transition = function(token, value){
-    var context = this
+    var context = this,
+        expr
     switch(token) {
         case 'in':
             // not is always in an expression : remove it
@@ -5247,12 +5196,12 @@ NotCtx.prototype.transition = function(token, value){
         case '.':
         case 'not':
         case 'lambda':
-            var expr = new AbstractExprCtx(context, false)
+            expr = new AbstractExprCtx(context, false)
             return transition(expr, token, value)
         case 'op':
           var a = value
           if('+' == a || '-' == a || '~' == a){
-            var expr = new AbstractExprCtx(context, false)
+            expr = new AbstractExprCtx(context, false)
             return transition(expr, token, value)
           }
     }
@@ -5447,7 +5396,7 @@ PassCtx.prototype.ast = function(){
     return ast_obj
 }
 
-PassCtx.prototype.transition = function(token, value){
+PassCtx.prototype.transition = function(token){
     var context = this
     if(token == 'eol'){
         return context.parent
@@ -5586,10 +5535,11 @@ var PatternCaptureCtx = function(context, value){
 }
 
 PatternCaptureCtx.prototype.ast = function(){
-    var ast_obj
+    var ast_obj,
+        pattern
     try{
         if(this.tree.length > 1){
-            var pattern = new ast.Name(this.tree[0], new ast.Load())
+            pattern = new ast.Name(this.tree[0], new ast.Load())
             set_position(pattern, this.position)
             for(var i = 1; i < this.tree.length; i++){
                 pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
@@ -5606,7 +5556,7 @@ PatternCaptureCtx.prototype.ast = function(){
             }
             set_position(ast_obj, this.position)
         }else{
-            var pattern = this.tree[0]
+            pattern = this.tree[0]
             if(typeof pattern == 'string'){
                 // pattern is the string
             }else if(pattern.type == 'group_pattern'){
@@ -5711,13 +5661,13 @@ PatternClassCtx.prototype.ast = function(){
     //   class defined sequence of pattern matching attributes
     // `kwd_attrs` is a sequence of additional attributes to be matched
     // `kwd_patterns` are the corresponding patterns
+    var cls
     if(this.class_id.length == 1){
-        var cls = new ast.Name(this.class_id[0])
+        cls = new ast.Name(this.class_id[0])
     }else{
         // attribute, eg "case ast.Expr(expr)": class_id is
         // ['ast', '.', 'Expr']
-        var cls
-        for(var i = 0, len = this.class_id.length; i < len - 1; i++){
+        for(let i = 0, len = this.class_id.length; i < len - 1; i++){
             var value = new ast.Name(this.class_id[i], new ast.Load())
             set_position(value, this.positions[i])
             if(i == 0){
@@ -6186,8 +6136,7 @@ PatternMappingCtx.prototype.transition = function(token, value){
             }
             break
         case 'capture_pattern':
-            var p = new PatternCtx(context)
-            var capture = transition(p, token, value)
+            var capture = transition(new PatternCtx(context), token, value)
             if(capture instanceof PatternCaptureCtx){
                 if(context.double_star){
                     raise_syntax_error(context,
@@ -9332,7 +9281,7 @@ $B.brython = brython
 
 globalThis.brython = __BRYTHON__.brython
 
-if (__BRYTHON__.isNode) {
+if(__BRYTHON__.isNode){
     global.__BRYTHON__ = __BRYTHON__
     module.exports = { __BRYTHON__ }
 }

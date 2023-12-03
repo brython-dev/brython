@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-02 22:13:59.847044"
-__BRYTHON__.timestamp=1701551639847
+__BRYTHON__.compiled_date="2023-12-03 08:33:00.490570"
+__BRYTHON__.timestamp=1701588780490
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -683,18 +683,12 @@ var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__)
 ;
 
-;(function($B){$B.produce_ast=false
-Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
-isFinite(value)&&
-Math.floor(value)===value};
-Number.isSafeInteger=Number.isSafeInteger ||function(value){return Number.isInteger(value)&& Math.abs(value)<=Number.MAX_SAFE_INTEGER;};
-var js,res,$op
-var _b_=$B.builtins
+(function($B){var _b_=$B.builtins
 var _window
 if($B.isNode){_window={location:{href:'',origin:'',pathname:''}}}else{
 _window=self}
 $B.parser={}
-var clone=$B.clone=function(obj){var res={}
+$B.clone=function(obj){var res={}
 for(var attr in obj){res[attr]=obj[attr]}
 return res}
 $B.last=function(table){if(table===undefined){console.log($B.make_frames_stack())}
@@ -864,12 +858,8 @@ C,a,b,`invalid syntax. Maybe you meant '==' or ':=' instead of '='?`)}
 if(! parent_match(C,{type:'list_or_tuple'})){msg+=" here. Maybe you meant '==' instead of '='?"}}
 raise_syntax_error_known_range(
 C,a,b,`cannot ${action} ${msg}`)}}
-if(C.type=='expr'){var upper_expr=C
-ctx=C
-while(ctx.parent){if(ctx.parent.type=='expr'){upper_expr=ctx.parent}
-ctx=ctx.parent}}
 if(in_left_side(C,'augm_assign')){raise_syntax_error(C)}
-if(C.type=='target_list'){for(var target of C.tree){check_assignment(target,{action:'assign to'})}
+if(C.type=='target_list'){for(let target of C.tree){check_assignment(target,{action:'assign to'})}
 return}
 ctx=C
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){raise_syntax_error(C,`(assign to ${ctx.type})`)}else if(ctx.type=="expr"){if(parent_match(ctx,{type:'annotation'})){return true}
@@ -884,11 +874,10 @@ if(['None','True','False','__debug__'].indexOf(name)>-1){
 if(name=='__debug__' && augmented){
 $token.value=assigned.position
 raise_syntax_error(assigned,'cannot assign to __debug__')}
-report([name])}
-if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){if(ctx.parent.type !='op'){report('literal')}}else if(assigned.type=="ellipsis"){report('ellipsis')}else if(assigned.type=='genexpr'){report(['generator expression'])}else if(assigned.type=='starred'){if(action=='delete'){report('starred',assigned.position,last_position(assigned))}
+report([name])}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){if(ctx.parent.type !='op'){report('literal')}}else if(assigned.type=="ellipsis"){report('ellipsis')}else if(assigned.type=='genexpr'){report(['generator expression'])}else if(assigned.type=='starred'){if(action=='delete'){report('starred',assigned.position,last_position(assigned))}
 check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){if(! assigned.parenthesized){report('named expression')}else if(ctx.parent.type=='node'){raise_syntax_error_known_range(
 C,assigned.target.position,last_position(assigned),"cannot assign to named expression here. "+
-"Maybe you meant '==' instead of '='?")}else if(action=='delete'){report('named expression',assigned.position,last_position(assigned))}}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(assigned.type=='dict_or_set'){if(assigned.closed){report(assigned.real=='set' ? 'set display' :'dict literal',ctx.position,last_position(assigned))}}else if(assigned.type=='lambda'){report('lambda')}else if(assigned.type=='ternary'){report(['conditional expression'])}else if(assigned.type=='JoinedStr'){report('f-string expression',assigned.position,last_position(assigned))}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report(['conditional expression'],ctx.position,last_position(C))}else if(ctx.type=='op'){var a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
+"Maybe you meant '==' instead of '='?")}else if(action=='delete'){report('named expression',assigned.position,last_position(assigned))}}else if(assigned.type=='list_or_tuple'){for(let item of ctx.tree){check_assignment(item,{action,once:true})}}else if(assigned.type=='dict_or_set'){if(assigned.closed){report(assigned.real=='set' ? 'set display' :'dict literal',ctx.position,last_position(assigned))}}else if(assigned.type=='lambda'){report('lambda')}else if(assigned.type=='ternary'){report(['conditional expression'])}else if(assigned.type=='JoinedStr'){report('f-string expression',assigned.position,last_position(assigned))}}else if(ctx.type=='list_or_tuple'){for(let item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report(['conditional expression'],ctx.position,last_position(C))}else if(ctx.type=='op'){let a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
 if($B.op2method.comparisons[ctx.op]!==undefined){if(parent_match(C,{type:'target_list'})){
 raise_syntax_error(C)}
 report('comparison',a,b)}else{report('expression',a,b)}}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
@@ -949,14 +938,14 @@ child.parent=this
 child.module=this.module}
 $Node.prototype.show=function(indent){
 var res=''
-if(this.type==='module'){for(var child of this.children){res+=child.show(indent)}
+if(this.type==='module'){for(let child of this.children){res+=child.show(indent)}
 return res}
 indent=indent ||0
 res+=' '.repeat(indent)
 res+=this.C
 if(this.children.length > 0){res+='{'}
 res+='\n'
-for(var child of this.children){res+=child.show(indent+4)}
+for(let child of this.children){res+=child.show(indent+4)}
 if(this.children.length > 0){res+=' '.repeat(indent)
 res+='}\n'}
 return res}
@@ -967,7 +956,7 @@ this.tree=[]
 this.position=$token.value
 C.tree.push(this)}
 AbstractExprCtx.prototype.transition=function(token,value){var C=this
-var packed=C.packed,is_await=C.is_await,position=C.position
+var packed=C.packed,is_await=C.is_await,commas
 switch(token){case 'await':
 case 'id':
 case 'imaginary':
@@ -985,7 +974,8 @@ case 'not':
 case 'lambda':
 case 'yield':
 C.parent.tree.pop()
-var commas=C.with_commas,star_position
+commas=C.with_commas
+var star_position
 if(C.packed){star_position=C.star_position}
 C=C.parent
 C.packed=packed
@@ -1035,7 +1025,7 @@ var tg=value
 if(C.parent.type=='op' && '+-~'.indexOf(tg)==-1){raise_syntax_error(C)}
 switch(tg){case '*':
 C.parent.tree.pop()
-var commas=C.with_commas
+commas=C.with_commas
 C=C.parent
 C.position=$token.value
 return new AbstractExprCtx(
@@ -1043,7 +1033,7 @@ new StarredCtx(
 new ExprCtx(C,'expr',commas)),false)
 case '**':
 C.parent.tree.pop()
-var commas=C.with_commas
+commas=C.with_commas
 C=C.parent
 C.position=$token.value
 return new AbstractExprCtx(
@@ -1059,7 +1049,7 @@ new ExprCtx(C.parent,'unary',false),tg),false
 )
 case 'not':
 C.parent.tree.pop()
-var commas=C.with_commas
+commas=C.with_commas
 C=C.parent
 return new NotCtx(
 new ExprCtx(C,'not',commas))
@@ -1113,7 +1103,6 @@ case 'def':
 case 'except':
 case 'for':
 case 'while':
-case 'in':
 case 'return':
 case 'try':
 raise_syntax_error(C)
@@ -1145,7 +1134,7 @@ if(scope.ntype=="def" && C.tree && C.tree.length > 0 &&
 C.tree[0].type=="id"){var name=C.tree[0].value
 scope.annotations=scope.annotations ||new Set()
 scope.annotations.add(name)}}
-AnnotationCtx.prototype.transition=function(token,value){var C=this
+AnnotationCtx.prototype.transition=function(token){var C=this
 if(token=="eol" && C.tree.length==1 &&
 C.tree[0].tree.length==0){raise_syntax_error(C)}else if(token==':' && C.parent.type !="def"){raise_syntax_error(C,"more than one annotation")}else if(token=="augm_assign"){raise_syntax_error(C,"augmented assign as annotation")}else if(token=="op"){raise_syntax_error(C,"operator as annotation")}
 if(C.parent.type=='expr'){C.parent.with_commas=false}
@@ -1160,7 +1149,7 @@ AssertCtx.prototype.ast=function(){
 var msg=this.tree[1],ast_obj=new ast.Assert(this.tree[0].ast(),msg===undefined ? msg :msg.ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-AssertCtx.prototype.transition=function(token,value){var C=this
+AssertCtx.prototype.transition=function(token){var C=this
 if(token==","){if(this.tree.length > 1){raise_syntax_error(C,'(too many commas after assert)')}
 return new AbstractExprCtx(this,false)}
 if(token=='eol'){if(this.tree.length==1 &&
@@ -1168,7 +1157,7 @@ this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){$B.warn(_b_.SyntaxWarning,"assertion is always true, perhaps remove parentheses?",get_module(C).filename,$token.value)}
 return transition(C.parent,token)}
 raise_syntax_error(C)}
-var AssignCtx=$B.parser.AssignCtx=function(C,expression){
+var AssignCtx=$B.parser.AssignCtx=function(C){
 check_assignment(C)
 this.type='assign'
 this.position=$token.value
@@ -1176,13 +1165,12 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 this.parent=C.parent
 this.tree=[C]
-var scope=get_scope(this)
 if(C.type=='assign'){check_assignment(C.tree[1])}else{var assigned=C.tree[0]
 if(assigned.type=="ellipsis"){raise_syntax_error(C,'cannot assign to Ellipsis')}else if(assigned.type=='unary'){raise_syntax_error(C,'cannot assign to operator')}else if(assigned.type=='starred'){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
 if(['None','True','False','__debug__'].indexOf(id)>-1){raise_syntax_error(C,'cannot assign to '+id)}}
 if(assigned.parent.in_tuple===undefined){raise_syntax_error(C,"starred assignment target must be in a list or tuple")}}}}
-function set_ctx_to_store(obj){if(Array.isArray(obj)){for(var item of obj){set_ctx_to_store(item)}}else if(obj instanceof ast.List ||
-obj instanceof ast.Tuple){for(var item of obj.elts){set_ctx_to_store(item)}}else if(obj instanceof ast.Starred){obj.value.ctx=new ast.Store()}else if(obj===undefined){}else if(obj.ctx){obj.ctx=new ast.Store()}else{console.log('bizarre',obj,obj.constructor.$name)}}
+function set_ctx_to_store(obj){if(Array.isArray(obj)){for(let item of obj){set_ctx_to_store(item)}}else if(obj instanceof ast.List ||
+obj instanceof ast.Tuple){for(let item of obj.elts){set_ctx_to_store(item)}}else if(obj instanceof ast.Starred){obj.value.ctx=new ast.Store()}else if(obj===undefined){}else if(obj.ctx){obj.ctx=new ast.Store()}else{console.log('bizarre',obj,obj.constructor.$name)}}
 AssignCtx.prototype.ast=function(){var value=this.tree[1].ast(),targets=[],target=this.tree[0]
 if(target.type=='expr' && target.tree[0].type=='list_or_tuple'){target=target.tree[0]}
 if(target.type=='list_or_tuple'){target=target.ast()
@@ -1191,15 +1179,15 @@ targets=[target]}else{while(target.type=='assign'){targets.splice(0,0,target.tre
 target=target.tree[0]}
 targets.splice(0,0,target.ast())}
 value.ctx=new ast.Load()
-var lineno=get_node(this).line_num
-if(target.annotation){var ast_obj=new ast.AnnAssign(
+var ast_obj
+if(target.annotation){ast_obj=new ast.AnnAssign(
 target.tree[0].ast(),target.annotation.tree[0].ast(),value,target.$was_parenthesized ? 0 :1)
 set_position(ast_obj.annotation,target.annotation.position,last_position(target.annotation))
-ast_obj.target.ctx=new ast.Store()}else{var ast_obj=new ast.Assign(targets,value)}
+ast_obj.target.ctx=new ast.Store()}else{ast_obj=new ast.Assign(targets,value)}
 set_position(ast_obj,this.position)
 set_ctx_to_store(ast_obj.targets)
 return ast_obj}
-AssignCtx.prototype.transition=function(token,value){var C=this
+AssignCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){raise_syntax_error(C)}
 return transition(C.parent,'eol')}
 raise_syntax_error(C)}
@@ -1209,9 +1197,9 @@ this.parent=C
 C.async=true
 this.position=C.position=$token.value}
 AsyncCtx.prototype.transition=function(token,value){var C=this
-if(token=="def"){return transition(C.parent,token,value)}else if(token=="with"){var ctx=transition(C.parent,token,value)
+if(token=="def"){return transition(C.parent,token,value)}else if(token=="with"){let ctx=transition(C.parent,token,value)
 ctx.async=C 
-return ctx}else if(token=="for"){var ctx=transition(C.parent,token,value)
+return ctx}else if(token=="for"){let ctx=transition(C.parent,token,value)
 ctx.parent.async=C 
 return ctx}
 raise_syntax_error(C)}
@@ -1260,7 +1248,7 @@ var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_cl
 var ast_obj=new ast.AugAssign(target,new ast_class(),value)
 set_position(ast_obj,this.position)
 return ast_obj}
-AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
+AugmentedAssignCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){raise_syntax_error(C)}
 return transition(C.parent,'eol')}
 raise_syntax_error(C)}
@@ -1300,7 +1288,7 @@ C.tree[C.tree.length]=this}
 BreakCtx.prototype.ast=function(){var ast_obj=new ast.Break()
 set_position(ast_obj,this.position)
 return ast_obj}
-BreakCtx.prototype.transition=function(token,value){var C=this
+BreakCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){return transition(C.parent,'eol')}
 raise_syntax_error(C)}
 var CallArgCtx=$B.parser.CallArgCtx=function(C){
@@ -1375,20 +1363,20 @@ C.args=this}
 this.expect='id'
 this.tree=[]}
 CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[]),keywords=new Set()
-for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=call_arg.tree[0].tree[0].ast(),keyword=new ast.keyword(_b_.None,value)
+for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){let value=call_arg.tree[0].tree[0].ast(),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
 res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){if(res.keywords.length > 0){if(! res.keywords[0].arg){raise_syntax_error(this,'iterable argument unpacking follows keyword argument unpacking')}}
-var starred=new ast.Starred(call_arg.tree[0].ast())
+let starred=new ast.Starred(call_arg.tree[0].ast())
 set_position(starred,call_arg.position)
 starred.ctx=new ast.Load()
-res.args.push(starred)}else if(call_arg.type=='genexpr'){res.args.push(call_arg.ast())}else{var item=call_arg.tree[0]
+res.args.push(starred)}else if(call_arg.type=='genexpr'){res.args.push(call_arg.ast())}else{let item=call_arg.tree[0]
 if(item===undefined){
 continue}
-if(item.type=='kwarg'){var key=item.tree[0].value
+if(item.type=='kwarg'){let key=item.tree[0].value
 if(key=='__debug__'){raise_syntax_error_known_range(this,this.position,this.end_position,"cannot assign to __debug__")}else if(['True','False','None'].indexOf(key)>-1){raise_syntax_error_known_range(this,item.position,item.equal_sign_position,'expression cannot contain assignment, perhaps you meant "=="?')}
 if(keywords.has(key)){raise_syntax_error_known_range(item,item.position,last_position(item),`keyword argument repeated: ${key}`)}
 keywords.add(key)
-var keyword=new ast.keyword(item.tree[0].value,item.tree[1].ast())
+let keyword=new ast.keyword(item.tree[0].value,item.tree[1].ast())
 set_position(keyword,item.position)
 res.keywords.push(keyword)}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error_known_range(this,item.position,last_position(item),'positional argument follows keyword argument')}else{raise_syntax_error_known_range(this,item.position,last_position(item),'positional argument follows keyword argument unpacking')}}
 res.args.push(item.ast())}}}
@@ -1449,17 +1437,17 @@ var ast_obj=new ast.match_case(this.tree[0].ast(),this.has_guard ? this.tree[1].
 set_position(ast_obj,this.position)
 return ast_obj}
 CaseCtx.prototype.set_alias=function(name){this.alias=name}
-CaseCtx.prototype.transition=function(token,value){var C=this
-switch(token){case 'as':
-C.expect=':'
-return new AbstractExprCtx(new AliasCtx(C))
-case ':':
 function is_irrefutable(pattern){var cause
 if(pattern.type=="capture_pattern"){return pattern.tree[0]}else if(pattern.type=="or_pattern"){for(var subpattern of pattern.tree){if(cause=is_irrefutable(subpattern)){return cause}}}else if(pattern.type=="sequence_pattern" &&
 pattern.token=='(' &&
 pattern.tree.length==1 &&
 (cause=is_irrefutable(pattern.tree[0]))){return cause}
 return false}
+CaseCtx.prototype.transition=function(token,value){var C=this
+switch(token){case 'as':
+C.expect=':'
+return new AbstractExprCtx(new AliasCtx(C))
+case ':':
 var cause
 if(cause=is_irrefutable(this.tree[0])){
 get_node(C).parent.irrefutable=cause}
@@ -1549,12 +1537,7 @@ new ast.comprehension(
 target,item.tree[1].ast(),[],item.is_async ? 1 :0
 )
 )}else{$B.last(comprehensions).ifs.push(item.tree[0].ast())}}
-return comprehensions},make_comp:function(comp,C){if(C.tree[0].type=='yield'){var comp_type=comp.type=='listcomp' ? 'list comprehension' :
-comp.type=='dictcomp' ? 'dict comprehension' :
-comp.type=='setcomp' ? 'set comprehension' :
-comp.type=='genexpr' ? 'generator expression' :''
-var a=C.tree[0]}
-comp.comprehension=true
+return comprehensions},make_comp:function(comp,C){comp.comprehension=true
 comp.position=$token.value
 comp.parent=C.parent
 comp.id=comp.type+$B.UUID()
@@ -1608,7 +1591,7 @@ C.tree[C.tree.length]=this}
 ContinueCtx.prototype.ast=function(){var ast_obj=new ast.Continue()
 set_position(ast_obj,this.position)
 return ast_obj}
-ContinueCtx.prototype.transition=function(token,value){var C=this
+ContinueCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){return C.parent}
 raise_syntax_error(C)}
 var DecoratorCtx=$B.parser.DecoratorCtx=function(C){
@@ -1617,7 +1600,7 @@ this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
 this.position=$token.value}
-DecoratorCtx.prototype.transition=function(token,value){var C=this
+DecoratorCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){return transition(C.parent,token)}
 raise_syntax_error(C)}
 function get_decorators(node){var decorators=[]
@@ -1656,7 +1639,7 @@ this.default_list=[]
 this.other_args=null
 this.other_kw=null
 this.after_star=[]}
-DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[],type_params:[]},decorators=get_decorators(this.parent.node),func_args=this.tree[1],state='arg',default_value,res
+DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[],type_params:[]},decorators=get_decorators(this.parent.node),func_args=this.tree[1],res
 args=func_args.ast()
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=this.annotation.tree[0].ast()}
@@ -1665,7 +1648,7 @@ res.body=ast_body(this.parent)
 set_position(res,this.position)
 return res}
 DefCtx.prototype.set_name=function(name){if(["None","True","False"].indexOf(name)>-1){raise_syntax_error(this)}
-var id_ctx=new IdCtx(this,name)
+new IdCtx(this,name)
 this.name=name
 this.id=this.scope.id+'_'+name
 this.id=this.id.replace(/\./g,'_')
@@ -1701,21 +1684,21 @@ this.parent=C
 C.tree.push(this)
 this.tree=[]
 this.position=$token.value}
-DelCtx.prototype.ast=function(){var targets
+DelCtx.prototype.ast=function(){let targets
 if(this.tree[0].type=='list_or_tuple'){
 targets=this.tree[0].tree.map(x=> x.ast())}else if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){
 targets=this.tree[0].tree[0].ast()
 targets.ctx=new ast.Del()
 for(var elt of targets.elts){elt.ctx=new ast.Del()}
-var ast_obj=new ast.Delete([targets])
+let ast_obj=new ast.Delete([targets])
 set_position(ast_obj,this.position)
 return ast_obj}else{targets=[this.tree[0].tree[0].ast()]}
-for(var target of targets){target.ctx=new ast.Del()}
-var ast_obj=new ast.Delete(targets)
+for(let target of targets){target.ctx=new ast.Del()}
+let ast_obj=new ast.Delete(targets)
 set_position(ast_obj,this.position)
 return ast_obj}
-DelCtx.prototype.transition=function(token,value){var C=this
+DelCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){check_assignment(this.tree[0],{action:'delete'})
 return transition(C.parent,token)}
 raise_syntax_error(C)}
@@ -1746,7 +1729,7 @@ this.key.ast(),this.value.ast(),Comprehension.generators(this.tree)
 )
 set_position(ast_obj,this.position)
 return ast_obj}
-DictCompCtx.prototype.transition=function(token,value){var C=this
+DictCompCtx.prototype.transition=function(token){var C=this
 if(token=='}'){return this.parent}
 raise_syntax_error(C)}
 var DictOrSetCtx=$B.parser.DictOrSetCtx=function(C){
@@ -1761,15 +1744,14 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 DictOrSetCtx.prototype.ast=function(){
 var ast_obj
-if(this.real=='dict'){var keys=[],values=[]
-var t0=Date.now()
-for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].type=='expr' &&
+if(this.real=='dict'){let keys=[],values=[]
+for(let i=0,len=this.items.length;i < len;i++){if(this.items[i].type=='expr' &&
 this.items[i].tree[0].type=='kwd'){keys.push(_b_.None)
 values.push(this.items[i].tree[0].tree[0].ast())}else{keys.push(this.items[i].ast())
 values.push(this.items[i+1].ast())
 i++}}
 ast_obj=new ast.Dict(keys,values)}else if(this.real=='set'){var items=[]
-for(var item of this.items){if(item.packed){var starred=new ast.Starred(item.ast(),new ast.Load())
+for(let item of this.items){if(item.packed){var starred=new ast.Starred(item.ast(),new ast.Load())
 set_position(starred,item.position)
 items.push(starred)}else{items.push(item.ast())}}
 ast_obj=new ast.Set(items)}
@@ -2184,7 +2166,7 @@ in_comp=true
 break}}
 ctx=ctx.parent}
 if(in_comp){break}
-var ctx=C
+ctx=C
 while(ctx.parent &&
 (ctx.parent.type=='op' ||
 ctx.parent.type=='not' ||
@@ -2192,15 +2174,11 @@ ctx.parent.type=='unary' ||
 (ctx.parent.type=="expr" && ctx.parent.name=="operand"))){ctx=ctx.parent}
 return new AbstractExprCtx(new TernaryCtx(ctx),false)
 case 'JoinedStr':
-if(C.tree.length==1 && C.tree[0]instanceof FStringCtx){var fstring=C.tree[0]
-return fstring}else{var msg='invalid syntax. Perhaps you forgot a comma?'
-raise_syntax_error_known_range(C,this.position,$token.value,msg)}
+if(C.tree.length==1 && C.tree[0]instanceof FStringCtx){return C.tree[0]}else{raise_syntax_error_known_range(C,this.position,$token.value,'invalid syntax. Perhaps you forgot a comma?')}
 break
 case 'str':
-if(C.tree.length==1 && C.tree[0]instanceof FStringCtx){var fstring=C.tree[0]
-new StringCtx(fstring,value)
-return C}else{var msg='invalid syntax. Perhaps you forgot a comma?'
-raise_syntax_error_known_range(C,this.position,$token.value,msg)}
+if(C.tree.length==1 && C.tree[0]instanceof FStringCtx){new StringCtx(C.tree[0],value)
+return C}else{raise_syntax_error_known_range(C,this.position,$token.value,'invalid syntax. Perhaps you forgot a comma?')}
 break
 case 'eol':
 if(C.tree.length==2 &&
@@ -2219,7 +2197,7 @@ this.type='expr_not'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-ExprNot.prototype.transition=function(token,value){var C=this
+ExprNot.prototype.transition=function(token){var C=this
 if(token=='in'){
 C.parent.tree.pop()
 var op1=C.parent
@@ -2379,10 +2357,10 @@ raise_syntax_error(C)}
 FStringCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
 var state
 for(var item of this.tree){if(item instanceof StringCtx){if(state=='string'){
-$B.last(res.values).value+=item.value}else{var item_ast=new ast.Constant(item.value)
+$B.last(res.values).value+=item.value}else{let item_ast=new ast.Constant(item.value)
 set_position(item_ast,item.position)
 res.values.push(item_ast)}
-state='string'}else{var item_ast=item.ast()
+state='string'}else{let item_ast=item.ast()
 set_position(item_ast,item.position)
 res.values.push(item_ast)
 state='formatted_value'}}
@@ -2514,7 +2492,7 @@ if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.
 this.tree=[]
 C.tree[C.tree.length]=this
 this.expect='='}
-FuncArgIdCtx.prototype.transition=function(token,value){var C=this
+FuncArgIdCtx.prototype.transition=function(token){var C=this
 switch(token){case '=':
 if(C.expect=='='){C.has_default=true
 var def_ctx=C.parent.parent
@@ -2582,7 +2560,7 @@ this.tree[0].ast(),Comprehension.generators(this.tree.slice(1))
 )
 set_position(res,this.position)
 return res}
-GeneratorExpCtx.prototype.transition=function(token,value){var C=this
+GeneratorExpCtx.prototype.transition=function(token){var C=this
 if(token==')'){if(this.parent.type=='call'){
 if(C.parent.tree.length > 1){raise_syntax_error_known_range(C,first_position(C),last_position(C),'Generator expression must be parenthesized')}
 return this.parent.parent}
@@ -2644,16 +2622,16 @@ set_position(ast_obj,this.position)
 return ast_obj}
 IdCtx.prototype.transition=function(token,value){var C=this,module=get_module(this)
 if(C.value=='case' && C.parent.parent.type=="node"){
-var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
+let save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
 module.token_reader.position=save_position
-if(ends_with_comma){var node=get_node(C),parent=node.parent
+if(ends_with_comma){var node=get_node(C)
 if((! node.parent)||!(node.parent.is_match)){raise_syntax_error(C,"('case' not inside 'match')")}else{if(node.parent.irrefutable){
-var name=node.parent.irrefutable,msg=name=='_' ? 'wildcard' :
+let name=node.parent.irrefutable,msg=name=='_' ? 'wildcard' :
 `name capture '${name}'`
 raise_syntax_error(C,`${msg} makes remaining patterns unreachable`)}}
 return transition(new PatternCtx(
 new CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
-var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
+let save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
 module.token_reader.position=save_position
 if(ends_with_comma){return transition(new AbstractExprCtx(
 new MatchCtx(C.parent.parent),true),token,value)}}else if(C.value=='type' && C.parent.parent.type=="node"){if(token=='id'){
@@ -2675,9 +2653,10 @@ case 'JoinedStr':
 case 'int':
 case 'float':
 case 'imaginary':
-if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value,msg=`Missing parentheses in call to '${f}'.`+
-` Did you mean ${f}(...)?`}else{var msg='invalid syntax. Perhaps you forgot a comma?'}
-var call_arg=parent_match(C,{type:'call_arg'})
+var msg
+if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value
+msg=`Missing parentheses in call to '${f}'.`+
+` Did you mean ${f}(...)?`}else{msg='invalid syntax. Perhaps you forgot a comma?'}
 raise_syntax_error_known_range(C,this.position,$token.value,msg)}
 if(this.parent.parent.type=="starred"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return transition(C.parent,token,value)}
@@ -2740,7 +2719,6 @@ this.parent=C
 this.name=name
 this.alias=name
 C.tree[C.tree.length]=this}
-ImportedModuleCtx.prototype.transition=function(token,value){var C=this}
 var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,values){
 this.type='JoinedStr'
 this.parent=C
@@ -2779,7 +2757,7 @@ format=format===undefined ? format :format.ast()
 var value=new ast.FormattedValue(
 item.ast(),conv_num[item.elt.conversion]||-1,format)
 set_position(value,this.position)
-var format=item.format
+format=item.format
 if(format !==undefined){value.format=item.format.ast()}
 res.values.push(value)
 state='formatted_value'}}
@@ -2826,7 +2804,7 @@ this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
 C.parent.parent.has_kw=true}
-KwArgCtx.prototype.transition=function(token,value){var C=this
+KwArgCtx.prototype.transition=function(token){var C=this
 if(token==','){return new CallArgCtx(C.parent.parent)}else if(token=='for'){
 raise_syntax_error_known_range(C,C.position,C.equal_sign_position,"invalid syntax. "+
 "Maybe you meant '==' or ':=' instead of '='?")}
@@ -2870,7 +2848,7 @@ var res=new ast.ListComp(
 this.tree[0].ast(),Comprehension.generators(this.tree.slice(1)))
 set_position(res,this.position)
 return res}
-ListCompCtx.prototype.transition=function(token,value){var C=this
+ListCompCtx.prototype.transition=function(token){var C=this
 if(token==']'){return this.parent}
 raise_syntax_error(C)}
 var ListOrTupleCtx=$B.parser.ListOrTupleCtx=function(C,real){
@@ -2945,9 +2923,9 @@ switch(token){case '=':
 if(C.real=='tuple' &&
 C.implicit===true){C.close()
 C.parent.tree.pop()
-var expr=new ExprCtx(C.parent,'tuple',false)
-expr.tree=[C]
-C.parent=expr
+var expr1=new ExprCtx(C.parent,'tuple',false)
+expr1.tree=[C]
+C.parent=expr1
 return transition(C.parent,token)}
 raise_syntax_error(C,"(unexpected '=' inside list)")
 break
@@ -2978,12 +2956,12 @@ case 'await':
 case 'not':
 case ':':
 C.expect=','
-var expr=new AbstractExprCtx(C,false)
-return transition(expr,token,value)
+var expr2=new AbstractExprCtx(C,false)
+return transition(expr2,token,value)
 case 'op':
 if('+-~*'.indexOf(value)>-1 ||value=='**'){C.expect=','
-var expr=new AbstractExprCtx(C,false)
-return transition(expr,token,value)}
+var expr3=new AbstractExprCtx(C,false)
+return transition(expr3,token,value)}
 raise_syntax_error(C,`(unexpected operator: ${value})`)
 break
 default:
@@ -3013,7 +2991,7 @@ var res=new ast.Match(this.tree[0].ast(),ast_body(this.parent))
 set_position(res,this.position)
 res.$line_num=get_node(this).line_num
 return res}
-MatchCtx.prototype.transition=function(token,value){var C=this
+MatchCtx.prototype.transition=function(token){var C=this
 switch(token){case ':':
 if(this.tree[0].type=='list_or_tuple'){remove_abstract_expr(this.tree[0].tree)}
 switch(C.expect){case 'id':
@@ -3063,7 +3041,7 @@ if(this.node.parent && this.node.parent.C){var pctx=this.node.parent.C
 if(pctx.tree && pctx.tree.length==1 &&
 pctx.tree[0].type=="match"){if(token !='eol' &&(token !=='id' ||value !=='case')){raise_syntax_error(C)}}}
 if(this.tree.length==0 && this.node.parent){var rank=this.node.parent.children.indexOf(this.node)
-if(rank > 0){var previous=this.node.parent.children[rank-1]
+if(rank > 0){let previous=this.node.parent.children[rank-1]
 if(previous.C.tree[0].type=='try' &&
 ['except','finally'].indexOf(token)==-1){raise_syntax_error(C,"expected 'except' or 'finally' block")}}}
 switch(token){case ',':
@@ -3115,22 +3093,21 @@ previous.token=='while'){raise_syntax_error(C,`(elif after ${previous.type})`)}
 return new AbstractExprCtx(
 new ConditionCtx(C,token),false)
 case 'ellipsis':
-var expr=new AbstractExprCtx(C,true)
-return transition(expr,token,value)
+var ell_expr=new AbstractExprCtx(C,true)
+return transition(ell_expr,token,value)
 case 'else':
-var previous=get_previous(C)
-if(['condition','except','for'].
-indexOf(previous.type)==-1){raise_syntax_error(C,`(else after ${previous.type})`)}
+var previous1=get_previous(C)
+if(!['condition','except','for'].includes(previous1.type)){raise_syntax_error(C,`(else after ${previous.type})`)}
 return new SingleKwCtx(C,token)
 case 'except':
-var previous=get_previous(C)
-if(['try','except'].indexOf(previous.type)==-1){raise_syntax_error(C,`(except after ${previous.type})`)}
+var previous2=get_previous(C)
+if(!['try','except'].includes(previous2.type)){raise_syntax_error(C,`(except after ${previous.type})`)}
 return new ExceptCtx(C)
 case 'finally':
-var previous=get_previous(C)
-if(['try','except'].indexOf(previous.type)==-1 &&
-(previous.type !='single_kw' ||
-previous.token !='else')){raise_syntax_error(C,`finally after ${previous.type})`)}
+var previous3=get_previous(C)
+if(!['try','except'].includes(previous3.type)&&
+(previous3.type !='single_kw' ||
+previous3.token !='else')){raise_syntax_error(C,`finally after ${previous.type})`)}
 return new SingleKwCtx(C,token)
 case 'for':
 return new TargetListCtx(new ForExpr(C))
@@ -3144,21 +3121,19 @@ return new AbstractExprCtx(
 new ConditionCtx(C,token),false)
 case 'import':
 return new ImportCtx(C)
-case 'lambda':
-return new LambdaCtx(C)
 case 'nonlocal':
 return new NonlocalCtx(C)
 case 'op':
 switch(value){case '*':
-var expr=new AbstractExprCtx(C,true)
-return transition(expr,token,value)
+var expr1=new AbstractExprCtx(C,true)
+return transition(expr1,token,value)
 case '+':
 case '-':
 case '~':
 C.position=$token.value
-var expr=new ExprCtx(C,'unary',true)
+var expr2=new ExprCtx(C,'unary',true)
 return new AbstractExprCtx(
-new UnaryCtx(expr,value),false)
+new UnaryCtx(expr2,value),false)
 case '@':
 return new AbstractExprCtx(new DecoratorCtx(C),false)}
 break
@@ -3218,7 +3193,7 @@ C.tree[C.tree.length]=this}
 NotCtx.prototype.ast=function(){var ast_obj=new ast.UnaryOp(new ast.Not(),this.tree[0].ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-NotCtx.prototype.transition=function(token,value){var C=this
+NotCtx.prototype.transition=function(token,value){var C=this,expr
 switch(token){case 'in':
 C.parent.parent.tree.pop()
 return new ExprCtx(new OpCtx(C.parent,'not_in'),'op',false)
@@ -3235,11 +3210,11 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
-var expr=new AbstractExprCtx(C,false)
+expr=new AbstractExprCtx(C,false)
 return transition(expr,token,value)
 case 'op':
 var a=value
-if('+'==a ||'-'==a ||'~'==a){var expr=new AbstractExprCtx(C,false)
+if('+'==a ||'-'==a ||'~'==a){expr=new AbstractExprCtx(C,false)
 return transition(expr,token,value)}}
 if(this.tree.length==0 ||this.tree[0]instanceof AbstractExprCtx){raise_syntax_error(C)}
 return transition(C.parent,token)}
@@ -3325,7 +3300,7 @@ C.tree[C.tree.length]=this}
 PassCtx.prototype.ast=function(){var ast_obj=new ast.Pass()
 set_position(ast_obj,this.position)
 return ast_obj}
-PassCtx.prototype.transition=function(token,value){var C=this
+PassCtx.prototype.transition=function(token){var C=this
 if(token=='eol'){return C.parent}
 raise_syntax_error(C)}
 var PatternCtx=$B.parser.PatternCtx=function(C){
@@ -3407,15 +3382,15 @@ this.tree=[value]
 this.position=$token.value
 this.positions=[this.position]
 this.expect='.'}
-PatternCaptureCtx.prototype.ast=function(){var ast_obj
-try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0],new ast.Load())
+PatternCaptureCtx.prototype.ast=function(){var ast_obj,pattern
+try{if(this.tree.length > 1){pattern=new ast.Name(this.tree[0],new ast.Load())
 set_position(pattern,this.position)
 for(var i=1;i < this.tree.length;i++){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
 copy_position(pattern,pattern.value)}
 pattern=new ast.MatchValue(pattern)
 copy_position(pattern,pattern.value)}else if(this.starred){var v=this.tree[0]
 if(v=='_'){ast_obj=new ast.MatchStar()}else{ast_obj=new ast.MatchStar(v)}
-set_position(ast_obj,this.position)}else{var pattern=this.tree[0]
+set_position(ast_obj,this.position)}else{pattern=this.tree[0]
 if(typeof pattern=='string'){}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
 pattern=NumberCtx.prototype.ast.bind(this)()}
 if(pattern=='_'){pattern=new ast.MatchAs()
@@ -3463,9 +3438,9 @@ this.keywords=[]
 this.positionals=[]
 this.bound_names=[]}
 PatternClassCtx.prototype.ast=function(){
-if(this.class_id.length==1){var cls=new ast.Name(this.class_id[0])}else{
 var cls
-for(var i=0,len=this.class_id.length;i < len-1;i++){var value=new ast.Name(this.class_id[i],new ast.Load())
+if(this.class_id.length==1){cls=new ast.Name(this.class_id[0])}else{
+for(let i=0,len=this.class_id.length;i < len-1;i++){var value=new ast.Name(this.class_id[i],new ast.Load())
 set_position(value,this.positions[i])
 if(i==0){cls=new ast.Attribute(value,this.class_id[i+1])}else{cls=new ast.Attribute(cls,this.class_id[i+1])}
 set_position(cls,this.positions[i])}}
@@ -3690,8 +3665,7 @@ C.expect='.'
 return this}else{raise_syntax_error(C,'(expected key or **)')}
 break
 case 'capture_pattern':
-var p=new PatternCtx(C)
-var capture=transition(p,token,value)
+var capture=transition(new PatternCtx(C),token,value)
 if(capture instanceof PatternCaptureCtx){if(C.double_star){raise_syntax_error(C,"only one double star pattern is accepted")}
 if(value=='_'){raise_syntax_error(C)}
 if(C.bound_names.indexOf(value)>-1){raise_syntax_error(C,'duplicate binding: '+value)}
@@ -5859,7 +5833,7 @@ if((op=='__add__' ||op=='__mul__')&&
 (Array.isArray(x)||typeof x=='string' ||
 $B.$isinstance(x,[_b_.str,_b_.bytes,_b_.bytearray,_b_.memoryview]))){
 try{res=method(x,y)}catch(err){res=_b_.NotImplemented}}else{res=method(x,y)}
-if(res===_b_.NotImplemented){try{var reflected=$B.$getattr(y,rop),method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
+if(res===_b_.NotImplemented){try{method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
 throw _b_.TypeError.$factory(
 `unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
@@ -7939,12 +7913,12 @@ length2=gallopLeft(array[start1+length1-1],array,start2,length2,length2-1,compar
 if(length2===0){return}
 if(length1 <=length2){this.mergeLow(start1,length1,start2,length2)}else{this.mergeHigh(start1,length1,start2,length2)}},
 mergeLow:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
-for(var i=0;i < length1;i++){tmp[i]=array[start1+i]}
+for(let i=0;i < length1;i++){tmp[i]=array[start1+i]}
 var cursor1=0,cursor2=start2,dest=start1
 array[dest++]=array[cursor2++]
-if(--length2===0){for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}
+if(--length2===0){for(let i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}
 return}
-if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
+if(length1===1){for(let i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
 array[dest+length2]=tmp[cursor1]
 return}
 var minGallop=this.minGallop
@@ -7961,7 +7935,7 @@ break}}}while((count1 |count2)< minGallop)
 if(exit){break}
 do{
 count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare)
-if(count1 !==0){for(var i=0;i < count1;i++){array[dest+i]=tmp[cursor1+i]}
+if(count1 !==0){for(let i=0;i < count1;i++){array[dest+i]=tmp[cursor1+i]}
 dest+=count1
 cursor1+=count1
 length1-=count1
@@ -7971,7 +7945,7 @@ array[dest++]=array[cursor2++]
 if(--length2===0){exit=true
 break}
 count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare)
-if(count2 !==0){for(var i=0;i < count2;i++){array[dest+i]=array[cursor2+i]}
+if(count2 !==0){for(let i=0;i < count2;i++){array[dest+i]=array[cursor2+i]}
 dest+=count2
 cursor2+=count2
 length2-=count2
@@ -7987,24 +7961,24 @@ if(minGallop < 0){minGallop=0}
 minGallop+=2}
 this.minGallop=minGallop
 if(minGallop < 1){this.minGallop=1}
-if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
-array[dest+length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}}},
-mergeHigh:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
-for(var i=0;i < length2;i++){tmp[i]=array[start2+i]}
-var cursor1=start1+length1-1,cursor2=length2-1,dest=start2+length2-1,customCursor=0,customDest=0
+if(length1===1){for(let i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
+array[dest+length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(let i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}}},
+mergeHigh:function(start1,length1,start2,length2){let compare=this.compare,array=this.array,tmp=this.tmp
+for(let i=0;i < length2;i++){tmp[i]=array[start2+i]}
+let cursor1=start1+length1-1,cursor2=length2-1,dest=start2+length2-1,customCursor=0,customDest=0
 array[dest--]=array[cursor1--]
 if(--length1===0){customCursor=dest-(length2-1)
-for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}
+for(let i=0;i < length2;i++){array[customCursor+i]=tmp[i]}
 return}
 if(length2===1){dest-=length1
 cursor1-=length1
 customDest=dest+1
 customCursor=cursor1+1
-for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+for(let i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
 array[dest]=tmp[cursor2]
 return}
 var minGallop=this.minGallop
-while(true){var count1=0,count2=0,exit=false
+while(true){let count1=0,count2=0,exit=false
 do{if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--]
 count1++
 count2=0
@@ -8021,7 +7995,7 @@ cursor1-=count1
 length1-=count1
 customDest=dest+1
 customCursor=cursor1+1
-for(var i=count1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+for(let i=count1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
 if(length1===0){exit=true
 break}}
 array[dest--]=tmp[cursor2--]
@@ -8033,7 +8007,7 @@ cursor2-=count2
 length2-=count2
 customDest=dest+1
 customCursor=cursor2+1
-for(var i=0;i < count2;i++){array[customDest+i]=tmp[customCursor+i]}
+for(let i=0;i < count2;i++){array[customDest+i]=tmp[customCursor+i]}
 if(length2 <=1){exit=true
 break}}
 array[dest--]=array[cursor1--]
@@ -8050,9 +8024,9 @@ if(length2===1){dest-=length1
 cursor1-=length1
 customDest=dest+1
 customCursor=cursor1+1
-for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+for(let i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
 array[dest]=tmp[cursor2]}else if(length2==0){throw new TimSortAssertion("mergeHigh preconditions were not respected")}else{customCursor=dest-(length2-1)
-for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}}}}
+for(let i=0;i < length2;i++){array[customCursor+i]=tmp[i]}}}}
 if(self.length < 2*DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1}
 self.tmp=new Array(self.tmpStorageLength)
 self.stackLength=
