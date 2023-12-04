@@ -369,10 +369,9 @@ object.$new = function(cls){
     }
 }
 
-object.$new_no_init = function(cls){
-    if(cls === undefined){
-        throw _b_.TypeError.$factory("object.__new__(): not enough arguments")
-    }
+object.$no_new_init = function(cls){
+    // Used to create instances of classes with no explicit __new__ and an
+    // explicit __init__
     var res = Object.create(null)
     res.__class__ = cls
     res.__dict__ = $B.obj_dict({})
