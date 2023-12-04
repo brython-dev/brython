@@ -369,6 +369,16 @@ object.$new = function(cls){
     }
 }
 
+object.$new_no_init = function(cls){
+    if(cls === undefined){
+        throw _b_.TypeError.$factory("object.__new__(): not enough arguments")
+    }
+    var res = Object.create(null)
+    res.__class__ = cls
+    res.__dict__ = $B.obj_dict({})
+    return res
+}
+
 object.__new__ = function(cls, ...args){
     if(cls === undefined){
         throw _b_.TypeError.$factory("object.__new__(): not enough arguments")

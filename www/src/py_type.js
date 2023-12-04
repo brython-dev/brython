@@ -410,6 +410,16 @@ type.$call = function(klass, new_func, init_func){
         return instance
     }
 }
+type.$call_no_new_init = function(klass, init_func){
+    // return factory function for classes without explicit __new__ method
+    // and explicit __init__
+    return function(){
+        var instance = _b_.object.$new_no_init(klass)
+        // call __init__ with the same parameters
+        init_func.bind(null, instance).apply(null, arguments)
+        return instance
+    }
+}
 
 type.$call_no_init = function(klass, new_func){
     // return factory function for classes without __init__
@@ -1087,7 +1097,7 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 
 type.__call__.__class__ = wrapper_descriptor
 
-
+$B.nb_create = 0
 $B.$instance_creator = function(klass){
     var test = false // klass.$infos && klass.$infos.__name__ == 'Square2'
     if(test){
@@ -1124,6 +1134,8 @@ $B.$instance_creator = function(klass){
             }else{
                 factory = new_func.bind(null, klass)
             }
+        }else if(new_func === _b_.object.__new__){
+            factory = type.$call_no_new_init(klass, init_func)
         }else{
             factory = type.$call(klass, new_func, init_func)
         }

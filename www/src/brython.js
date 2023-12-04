@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-03 14:29:43.020732"
-__BRYTHON__.timestamp=1701610183020
+__BRYTHON__.compiled_date="2023-12-04 09:46:22.082279"
+__BRYTHON__.timestamp=1701679582082
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5943,6 +5943,11 @@ var res=Object.create(null)
 res.__class__=cls
 res.__dict__=$B.obj_dict({})
 return res}}
+object.$new_no_init=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
+var res=Object.create(null)
+res.__class__=cls
+res.__dict__=$B.obj_dict({})
+return res}
 object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
 var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
@@ -6157,6 +6162,10 @@ return function(){
 var instance=new_func.bind(null,klass).apply(null,arguments)
 if($B.$isinstance(instance,klass)){
 init_func.bind(null,instance).apply(null,arguments)}
+return instance}}
+type.$call_no_new_init=function(klass,init_func){
+return function(){var instance=_b_.object.$new_no_init(klass)
+init_func.bind(null,instance).apply(null,arguments)
 return instance}}
 type.$call_no_init=function(klass,new_func){
 return new_func.bind(null,klass)}
@@ -6416,6 +6425,7 @@ $B.make_class("wrapper_descriptor")
 wrapper_descriptor.__text_signature__={__get__:function(){return '(self, /, *args, **kwargs)'}}
 $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
+$B.nb_create=0
 $B.$instance_creator=function(klass){var test=false 
 if(test){console.log('instance creator of',klass)}
 if(klass.prototype && klass.prototype.constructor==klass){
@@ -6428,7 +6438,7 @@ throw _b_.TypeError.$factory(
 "with abstract method"+msg)}}
 var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
 if(metaclass===_b_.type){var new_func=type.__getattribute__(klass,'__new__'),init_func=type.__getattribute__(klass,'__init__')
-if(init_func===_b_.object.__init__){if(new_func===_b_.object.__new__){factory=_b_.object.$new(klass)}else{factory=new_func.bind(null,klass)}}else{factory=type.$call(klass,new_func,init_func)}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
+if(init_func===_b_.object.__init__){if(new_func===_b_.object.__new__){factory=_b_.object.$new(klass)}else{factory=new_func.bind(null,klass)}}else if(new_func===_b_.object.__new__){factory=type.$call_no_new_init(klass,init_func)}else{factory=type.$call(klass,new_func,init_func)}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
 if(call_func.$is_class){factory=$B.$call(call_func)}else{factory=call_func.bind(null,klass)}}
 factory.__class__=$B.function
 factory.$infos={__name__:klass.__name__,__module__:klass.__module__}
@@ -10170,8 +10180,7 @@ j++}
 return surrogates}
 $B.String=function(s){var srg=$B.surrogates(s)
 return srg.length==0 ? s :$B.make_String(s,srg)}
-$B.make_String=function(s,surrogates){if(! Array.isArray(surrogates)){throw Error('not list')}
-var res=new String(s)
+$B.make_String=function(s,surrogates){var res=new String(s)
 res.__class__=str
 res.surrogates=surrogates
 return res}

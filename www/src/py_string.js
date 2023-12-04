@@ -46,9 +46,6 @@ $B.String = function(s){
 }
 
 $B.make_String = function(s, surrogates){
-    if(! Array.isArray(surrogates)){
-        throw Error('not list')
-    }
     var res = new String(s)
     res.__class__ = str
     res.surrogates = surrogates
