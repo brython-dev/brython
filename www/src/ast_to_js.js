@@ -2532,7 +2532,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `$B.make_function_infos(${name2}, ` +
         `'${gname}', ` +
         `${defaults}, ` +
-        `_b_.globals(), ` +
         `${kw_defaults}, ` +
         `${docstring}, ` +
         `[${arg_names}], ` +
@@ -2543,13 +2542,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__file__, ` +
         `${this.lineno}, ` +
         `${flags}, ` +
-        `$B.fast_tuple([${free_vars}]), ` +
+        `[${free_vars}], ` +
         `${this.args.kwonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
         `${varnames.length}, ` +
         `${this.args.posonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': qualname}', ` +
-        `$B.fast_tuple([${varnames}]))\n`;
+        `[${varnames}])\n`;
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`

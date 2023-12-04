@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-04 09:46:22.082279"
-__BRYTHON__.timestamp=1701679582082
+__BRYTHON__.compiled_date="2023-12-04 10:13:35.343284"
+__BRYTHON__.timestamp=1701681215343
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5943,7 +5943,7 @@ var res=Object.create(null)
 res.__class__=cls
 res.__dict__=$B.obj_dict({})
 return res}}
-object.$new_no_init=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
+object.$no_new_init=function(cls){
 var res=Object.create(null)
 res.__class__=cls
 res.__dict__=$B.obj_dict({})
@@ -6164,7 +6164,7 @@ if($B.$isinstance(instance,klass)){
 init_func.bind(null,instance).apply(null,arguments)}
 return instance}}
 type.$call_no_new_init=function(klass,init_func){
-return function(){var instance=_b_.object.$new_no_init(klass)
+return function(){var instance=_b_.object.$no_new_init(klass)
 init_func.bind(null,instance).apply(null,arguments)
 return instance}}
 type.$call_no_init=function(klass,new_func){
@@ -7696,11 +7696,13 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_infos=function(f,__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames
+$B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames
 ){f.$is_func=true
-f.$infos={__module__,__defaults__,__globals__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
+f.$infos={__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
+co_freevars.__class__=_b_.tuple
+co_varnames.__class__=_b_.tuple
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
 $B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
@@ -16268,7 +16270,6 @@ if(is_async){js+=`${name2}.$is_async = true\n`}
 js+=`$B.make_function_infos(${name2}, `+
 `'${gname}', `+
 `${defaults}, `+
-`_b_.globals(), `+
 `${kw_defaults}, `+
 `${docstring}, `+
 `[${arg_names}], `+
@@ -16278,13 +16279,13 @@ js+=`$B.make_function_infos(${name2}, `+
 `__file__, `+
 `${this.lineno}, `+
 `${flags}, `+
-`$B.fast_tuple([${free_vars}]), `+
+`[${free_vars}], `+
 `${this.args.kwonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
 `${varnames.length}, `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
-`$B.fast_tuple([${varnames}]))\n`;
+`[${varnames}])\n`;
 if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
 js+=`${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`

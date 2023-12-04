@@ -3337,8 +3337,8 @@ $B.function.__repr__ = function(self){
 $B.function.__mro__ = [_b_.object]
 
 
-$B.make_function_infos = function(f, __module__,
-        __defaults__, __globals__, __kwdefaults__, __doc__, arg_names,
+$B.make_function_infos = function(f, __module__, __defaults__,
+        __kwdefaults__, __doc__, arg_names,
         vararg, kwarg,
         co_argcount, co_filename, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
@@ -3346,10 +3346,12 @@ $B.make_function_infos = function(f, __module__,
         ){
     f.$is_func = true
     f.$infos = {__module__,
-        __defaults__, __globals__, __kwdefaults__, __doc__, arg_names,
+        __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg}
     f.$infos.__name__ = co_name
     f.$infos.__qualname__ = co_qualname
+    co_freevars.__class__ = _b_.tuple
+    co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
         co_posonlyargcount, co_qualname, co_varnames}
