@@ -300,13 +300,15 @@ document['version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 <script type="text/python">
 from browser import worker
 from browser import document, alert, bind, window, html, console
-
-worker = worker.Worker('test_runner')
+import javascript
 
 table = document["result_table"]
 limit = document["duration"]
 
-@bind(worker, 'message')
+def ready(w):
+    global worker
+    worker = w
+
 def message(ev):
     if ev.data == 'ready':
         del document["msgbox"]
@@ -358,6 +360,10 @@ def show_test(event):
 
     mod = __import__(module)
     tab = window.open('show.html?file=%s' %mod.__file__)
+
+worker = worker.create_worker('test_runner', onready=ready,
+    onmessage=message)
+
 
 </script>
 
