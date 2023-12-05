@@ -410,13 +410,14 @@ type.$call = function(klass, new_func, init_func){
         return instance
     }
 }
+
 type.$call_no_new_init = function(klass, init_func){
     // return factory function for classes without explicit __new__ method
     // and explicit __init__
     return function(){
         var instance = _b_.object.$no_new_init(klass)
         // call __init__ with the same parameters
-        init_func.bind(null, instance).apply(null, arguments)
+        init_func(instance, ...arguments)
         return instance
     }
 }
