@@ -5,6 +5,7 @@ import os
 import cgi
 import json
 import sys
+import html
 
 cpython_version = ".".join(str(x) for x in sys.implementation.version[:3])
 
@@ -14,6 +15,8 @@ fs = cgi.FieldStorage()
 results = json.loads(fs["results"].value)
 version = fs["version"].value
 userAgent = fs["userAgent"].value
+
+sys.stderr.write(fs["results"].value)
 
 data = [
     {"test": result["test"],
@@ -29,8 +32,8 @@ json.dump(data, open("speed_results.json", "w", encoding="utf-8"),
 with open("speed_results.txt", "w", encoding="utf-8") as out:
     for line in data:
         out.write(f'{line["description"]};{line["ratio"]}\n')
-        
-html = """<!doctype html>
+
+template = """<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -66,11 +69,11 @@ User agent: {{userAgent}}
 </tr>
 """
 with open("speed_results.html", "w", encoding="utf-8") as out:
-    head = html.replace("{{version}}", version).replace("{{userAgent}}",
+    head = template.replace("{{version}}", version).replace("{{userAgent}}",
         userAgent).replace("{{cpython_version}}", cpython_version)
     out.write(head)
     for record in data:
         out.write(f'<tr><td>{record["description"]}</td>' +
             f'<td align="right"><b>{record["ratio"]}</b></td>' +
-            f'<td><pre>{record["src"]}</pre></td></tr>\n')
+            f'<td><pre>{html.escape(record["src"])}</pre></td></tr>\n')
     out.write("</table>\n</body>\n</html>")

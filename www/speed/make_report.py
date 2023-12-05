@@ -1,6 +1,7 @@
 import time
 import sys
 import traceback
+import json
 
 from browser import document, window, ajax
 import javascript
@@ -15,8 +16,9 @@ def run_cpython(script_name, next_step):
     next_step is the function called when the Ajax call is complete.
     """
     ajax.post('/time_cpython',
+        headers={'Content-Type': 'application/json'},
         oncomplete=next_step,
-        data=script_name,
+        data=json.dumps({'script': script_name}),
         timeout=4)
 
 def execute(option, src, callback):
@@ -39,7 +41,7 @@ def execute(option, src, callback):
         traceback.print_exc(file=sys.stderr)
         state = 0
 
-    brython_time = (time.perf_counter() - t0) * 1000.0
+    brython_time = (time.perf_counter() - t0)
     result['Brython'] = brython_time
 
     results.append(result)
@@ -65,12 +67,14 @@ def test_next():
         info = sys.implementation.version
         version = f"{info.major}.{info.minor}.{info.micro}"
 
-        ajax.post("/cgi-bin/store_speed.py",
-            data={
-                "results": javascript.JSON.stringify(results),
+        ajax.post("/store_speed",
+            headers={'Content-Type': 'application/json'},
+            data=json.dumps({
+                "results": results,
                 "version": version,
                 "userAgent": window.navigator.userAgent
-            })
+                })
+            )
 
 script_num = -1
 t_start = time.time()
@@ -79,3 +83,4 @@ results = []
 
 # run whole test suite
 test_next()
+
