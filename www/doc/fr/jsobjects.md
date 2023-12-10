@@ -397,8 +397,8 @@ alert('run py-disabled')
 <script>
 document.getElementById('btn').addEventListener('click',
     function(ev){
-        var src = document.getElementById('s1'),
-            modobj = __BRYTHON__.runPythonSource(src, 's1')
+        var script = document.getElementById('s1'),
+            modobj = __BRYTHON__.runPythonSource(script.innerText, 's1')
         console.log(modobj)
     }
 )
