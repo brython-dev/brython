@@ -4,7 +4,7 @@ module **browser.markdown**
 **markdown** is a mode of text formatting adapted to publication on Internet, more
 simple to edit than HTML.
 
-A complete description is available on [the mardown site](http://daringfireball.net/projects/markdown/).
+A complete description is available on [the markdown site](http://daringfireball.net/projects/markdown/).
 The module **markdown** is a slightly adapted version to enrich the rendering
 options:
 
