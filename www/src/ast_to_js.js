@@ -2204,7 +2204,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         $B.args0_old(fct, args);
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
     }
-    result[$INFOS.kwarg] = _b_.dict.$from_js(extra);
+    result[$INFOS.kwarg] = __BRYTHON__.builtins.dict.$from_js(extra);
 `
     }
 

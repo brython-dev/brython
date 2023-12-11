@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-11 09:18:25.878721"
-__BRYTHON__.timestamp=1702282705878
+__BRYTHON__.compiled_date="2023-12-11 16:23:49.822835"
+__BRYTHON__.timestamp=1702308229822
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -638,7 +638,7 @@ slots[f]=null
 if(rf.endsWith('*')){$defaults[f]=[]}else if(rf.endsWith('?')){$defaults[f]=_b_.None}}}
 cls.$factory=function(){var $=$B.args(klass,nb_args,$B.clone(slots),Object.keys(slots),arguments,$B.clone($defaults),null,'kw')
 var res={__class__:cls,_attributes:$B.fast_tuple([])}
-for(let key in $){if(key=='kw'){for(let prop in $.kw.$jsobj){res[prop]=$.kw.$jsobj[prop]}}else{res[key]=$[key]}}
+for(let key in $){if(key=='kw'){for(let item of _b_.dict.$iter_items($.kw)){res[item.key]=item.value}}else{res[key]=$[key]}}
 if(klass=="Constant"){res.value=$B.AST.$convert($.value)}
 return res}
 if(_fields){cls._fields=_fields}
@@ -5078,7 +5078,7 @@ loop()}
 function report_precompile(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
 ' from cache'}))}}
 function report_close(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
-function report_done(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
+function report_done(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:_b_.dict.$from_js($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
 while($B.outdated.length > 0){let module=$B.outdated.pop(),req=store.delete(module)
@@ -5179,7 +5179,7 @@ throw new Error('Not enough positional arguments given (args0 should have raised
 for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
 i < PARAMS_POS_DEFAULTS_COUNT;
 ++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}
-if(PARAMS_KWARGS_NAME !==null){result[PARAMS_KWARGS_NAME]=$B.obj_dict({})}
+if(PARAMS_KWARGS_NAME !==null){result[PARAMS_KWARGS_NAME]=$B.empty_dict()}
 if(PARAMS_NAMED_COUNT===0 ){return result}
 const kwargs_defaults_values=fct.$kwdefaults_values;
 const nb_named_defaults=kwargs_defaults_values.length;
@@ -5260,7 +5260,7 @@ if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
 throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
 if(Object.keys(extra).length !==nb_extra_args){args0(fct,args)
 throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !')}
-result[PARAMS_KWARGS_NAME]=__BRYTHON__.obj_dict(extra)
+result[PARAMS_KWARGS_NAME]=_b_.dict.$from_js(extra)
 return result}
 $B.args0_old=args0;
 $B.args0=args0_NEW;
@@ -5310,7 +5310,7 @@ throw unexpected_keyword(fname,k,suggestion)}}}
 for(var k in kw){if(kw[k]===empty){continue}
 if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==empty){if(posonly_set[k]&& kwarg){
 extra_kw[k]=kw[k]}else{throw multiple_values(fname,k)}}else{slots[k]=kw[k]}}
-if(kwarg){slots[kwarg]=$B.obj_dict(extra_kw)}
+if(kwarg){slots[kwarg]=_b_.dict.$from_js(extra_kw)}
 if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 return slots}
 $B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
@@ -6123,7 +6123,7 @@ A.$factory=factory
 return A}
 var type=$B.make_class("type",function(){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
 var kwarg={}
-for(var key in kw.$jsobj){kwarg[key]=kw.$jsobj[key]}
+for(var item of _b_.dict.$iter_items(kw)){kwarg[item.key]=item.value}
 var kwargs={$kw:[kwarg]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
 return $B.get_class(kls)}else{var module=$B.frame_obj.frame[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
@@ -6280,7 +6280,7 @@ var $=$B.args("__init_subclass__",1,{cls:null},['cls'],arguments,{},"args","kwar
 if($.args.length > 0){throw _b_.TypeError.$factory(
 `${$.cls.__qualname__}.__init_subclass__ takes no arguments `+
 `(${$.args.length} given)`)}
-if(Object.keys($.kwargs.$jsobj).length > 0){throw _b_.TypeError.$factory(
+if(_b_.dict.__len__($.kwargs)> 0){throw _b_.TypeError.$factory(
 `${$.cls.__qualname__}.__init_subclass__() `+
 `takes no keyword arguments`)}
 return _b_.None}
@@ -7193,16 +7193,16 @@ var $op_name='min'
 if(op==='__gt__'){$op_name="max"}
 var $=$B.args($op_name,0,{},[],args,{},'args','kw')
 var has_default=false,func=false
-for(var attr in $.kw.$jsobj){switch(attr){case 'key':
-func=$.kw.$jsobj[attr]
+for(var item of _b_.dict.$iter_items($.kw)){switch(item.key){case 'key':
+func=item.value
 func=func===_b_.None ? func :$B.$call(func)
 break
 case 'default':
-var default_value=$.kw.$jsobj[attr]
+var default_value=item.value
 has_default=true
 break
 default:
-throw _b_.TypeError.$factory("'"+attr+
+throw _b_.TypeError.$factory("'"+item.key+
 "' is an invalid keyword argument for this function")}}
 if((! func)||func===_b_.None){func=x=> x}
 if($.args.length==0){throw _b_.TypeError.$factory($op_name+
@@ -7310,7 +7310,7 @@ _b_.pow=function(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'
 if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if($B.$isinstance(x,_b_.int)){if($B.$isinstance(y,_b_.float)){throw all_ints()}else if($B.$isinstance(y,_b_.complex)){throw complex_modulo()}else if($B.$isinstance(y,_b_.int)){if($B.$isinstance(z,_b_.complex)){throw complex_modulo()}else if(! $B.$isinstance(z,_b_.int)){throw all_ints()}}
 return _b_.int.__pow__(x,y,z)}else if($B.$isinstance(x,_b_.float)){throw all_ints()}else if($B.$isinstance(x,_b_.complex)){throw complex_modulo()}}}
 var $print=_b_.print=function(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
-var kw=$ns['kw'],end=$B.is_none(kw.$jsobj.end)? '\n' :kw.$jsobj.end,sep=$B.is_none(kw.$jsobj.sep)? ' ' :kw.$jsobj.sep,file=$B.is_none(kw.$jsobj.file)? $B.get_stdout():kw.$jsobj.file
+var kw=$ns['kw'],end=_b_.dict.get(kw,'end','\n'),sep=_b_.dict.get(kw,'sep',' '),file=_b_.dict.get(kw,'file',$B.get_stdout())
 var args=$ns['args'],writer=$B.$getattr(file,'write')
 for(var i=0,len=args.length;i < len;i++){var arg=_b_.str.$factory(args[i])
 writer(arg)
@@ -7635,7 +7635,7 @@ _b_.str.$factory(file))}}
 var zip=_b_.zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
-var _args=$ns['args'],strict=$B.$bool($ns.kw.$jsobj.strict ||false)
+var _args=$ns['args'],strict=$B.$bool(_b_.dict.get($ns.kw,'strict',false))
 var iters=[]
 for(var arg of _args){iters.push($B.make_js_iterator(arg))}
 return{
@@ -12735,12 +12735,12 @@ if(ix !==undefined){delete self.$strings[key]}}
 if(self.$jsobj){delete self.$jsobj[key]}
 if(self.table){delete self.table[_b_.hash(key)]}}
 dict.$missing={}
-dict.$get_string=function(self,key){
+dict.$get_string=function(self,key,_default){
 if(self.$all_str && self.$strings.hasOwnProperty(key)){return self.$strings[key]}
 if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return self.$jsobj[key]}
 if(self.table && dict.__len__(self)){var indices=self.table[_b_.hash(key)]
 if(indices !==undefined){return self._values[indices[0]]}}
-return _b_.dict.$missing}
+return _default ?? _b_.dict.$missing}
 dict.$getitem_string=function(self,key){
 if(self.$all_str && self.$strings.hasOwnProperty(key)){return self.$strings[key]}
 if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return self.$jsobj[key]}
@@ -12781,11 +12781,17 @@ for(var item of args){if(item.length !=2){throw _b_.ValueError.$factory("diction
 `update sequence element #${i} has length ${item.length}; 2 is required`)}
 dict.$setitem(self,item[0],item[1])
 i++}}
+dict.$set_string_no_duplicate=function(d,keys,string,value){if(typeof string !=='string'){throw _b_.TypeError.$factory(
+'keywords must be strings')}
+if(keys.has(string)){throw _b_.TypeError.$factory('dict() got multiple values for keyword '+
+`argument '${string}'`)}
+d.$strings[string]=value
+keys.add(string)}
 dict.__init__=function(self,first,second){if(first===undefined){return _b_.None}
-if(second===undefined){if((! first.$kw)&& $B.$isinstance(first,$B.JSObj)){for(let key in first){dict.$setitem(self,key,first[key])}
-return _b_.None}else if(first.$jsobj){self.$jsobj={}
-for(let attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
-self.$all_str=false
+if(second===undefined){
+if((! first.$kw)&& $B.$isinstance(first,$B.JSObj)){for(let key in first){dict.$setitem(self,key,first[key])}
+return _b_.None}else if(first.$kw){var keys=new Set()
+for(let item of first.$kw){if($B.$isinstance(item,dict)){for(let subitem of dict.$iter_items(item)){dict.$set_string_no_duplicate(self,keys,subitem.key,subitem.value)}}else{for(let key in item){dict.$set_string_no_duplicate(self,keys,key,item[key])}}}
 return _b_.None}else if(first[Symbol.iterator]){init_from_list(self,first)
 return _b_.None}else if(first.__class__===$B.generator){init_from_list(self,first.js_gen)
 return _b_.None}}
@@ -13067,8 +13073,7 @@ for(var key in jsobj){dict.$setitem(res,key,jsobj[key])}
 return res}
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)
 var mappingproxy=$B.mappingproxy=$B.make_class("mappingproxy",function(obj){var res
-if($B.$isinstance(obj,dict)){
-res=$B.obj_dict(dict.$to_obj(obj))}else{res=$B.obj_dict(obj)}
+if($B.$isinstance(obj,dict)){res=$B.obj_dict(dict.$to_obj(obj))}else{res=$B.obj_dict(obj)}
 res.__class__=mappingproxy
 res.$version=0
 return res}
@@ -13328,8 +13333,8 @@ while(i--){if($B.get_class(self[i])!==cl){return false}}
 return cl}
 list.sort=function(self){var $=$B.args("sort",1,{self:null},["self"],arguments,{},null,"kw")
 check_not_tuple(self,"sort")
-var func=_b_.None,reverse=false,kw_args=$.kw
-for(var key in kw_args.$jsobj){if(key=="key"){func=kw_args.$jsobj[key]}else if(key=="reverse"){reverse=kw_args.$jsobj[key]}else{throw _b_.TypeError.$factory("'"+key+
+var func=_b_.None,reverse=false
+for(var item of _b_.dict.$iter_items($.kw)){if(item.key=="key"){func=item.value}else if(item.key=="reverse"){reverse=item.value}else{throw _b_.TypeError.$factory("'"+item.key+
 "' is an invalid keyword argument for this function")}}
 if(self.length==0){return _b_.None}
 if(func !==_b_.None){func=$B.$call(func)}
@@ -14369,7 +14374,7 @@ return res}
 DOMNode.get=function(self){
 var args=[]
 for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
-var $ns=$B.args("get",0,{},[],args,{},null,"kw"),$dict=$ns.kw.$jsobj
+var $ns=$B.args("get",0,{},[],args,{},null,"kw"),$dict=_b_.dict.$to_obj($ns.kw)
 if($dict["name"]!==undefined){if(self.getElementsByName===undefined){throw _b_.TypeError.$factory("DOMNode object doesn't support "+
 "selection by name")}
 return make_list(self.getElementsByName($dict['name']))}
@@ -14782,8 +14787,8 @@ for(var item of items){$B.DOMNode.__le__(self,item)}}catch(err){if($B.get_option
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}
-for(var arg in $ns.kw.$jsobj){
-var value=$ns.kw.$jsobj[arg]
+for(var item of _b_.dict.$iter_items($ns.kw)){
+var arg=item.key,value=item.value
 if(arg.toLowerCase().substr(0,2)=="on"){
 $B.DOMNode.__setattr__(self,arg,value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{
@@ -15008,27 +15013,24 @@ var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}},warn_explicit:function(){
 console.log("warn_explicit",arguments)}}
 var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
-function handle_kwargs(kw,method){
-var data,cache=false,format="text",headers={},timeout={}
-for(let key in kw.$jsobj){if(key=="data"){var params=kw.$jsobj[key]
-if(typeof params=="string"){data=params}else if($B.$isinstance(params,_b_.bytes)){data=new ArrayBuffer(params.source.length)
+function handle_kwargs(self,kw,method){var result={cache:false,format:'text',mode:'text',timeout:{},headers:{}}
+for(let item of _b_.dict.$iter_items(kw)){let key=item.key,value=item.value
+if(key=="data"){var params=value
+if(typeof params=="string" ||params instanceof FormData){result.body=params}else if($B.$isinstance(params,_b_.bytes)){result.body=new ArrayBuffer(params.source.length)
 var array=new Int8Array(data)
 for(let i=0,len=params.source.length;i < len;i++){array[i]=params.source[i]}}else{if(params.__class__ !==_b_.dict){throw _b_.TypeError.$factory("wrong type for data, "+
 "expected dict, bytes or str, got "+
 $B.class_name(params))}
 var items=[]
-for(let key of _b_.dict.$keys_string(params)){let value=_b_.dict.$getitem_string(params,key)
-items.push(encodeURIComponent(key)+"="+
-encodeURIComponent($B.pyobj2jsobj(value)))}
-data=items.join("&")}}else if(key=="headers"){let value=kw.$jsobj[key]
-if(! $B.$isinstance(value,_b_.dict)){throw _b_.ValueError.$factory(
+for(let subitem of _b_.dict.$iter_items(params)){items.push(encodeURIComponent(subitem.key)+"="+
+encodeURIComponent($B.pyobj2jsobj(subitem.value)))}
+result.body=items.join("&")}}else if(key=="headers"){if(! $B.$isinstance(value,_b_.dict)){throw _b_.ValueError.$factory(
 "headers must be a dict, not "+$B.class_name(value))}
-for(let key of _b_.dict.$keys_string(value)){headers[key.toLowerCase()]=_b_.dict.$getitem_string(value,key)}}else if(key.startsWith("on")){var event=key.substr(2)
-if(event=="timeout"){timeout.func=kw.$jsobj[key]}else{modules["browser.aio"].ajax.bind(self,event,kw.$jsobj[key])}}else if(key=="timeout"){timeout.seconds=kw.$jsobj[key]}else if(key=="cache"){cache=kw.$jsobj[key]}else if(key=="format"){format=kw.$jsobj[key]}}
+for(let subitem of _b_.dict.$iter_items(value)){result.headers[subitem.key.toLowerCase()]=subitem.value}}else if(key.startsWith("on")){var event=key.substr(2)
+if(event=="timeout"){result.timeout.func=value}else{modules["browser.aio"].ajax.bind(self,event,value)}}else if(key=="timeout"){result.timeout.seconds=value}else if(["cache","format","mode"].includes(key)){result[key]=value}}
 if(method=="post"){
-if(! headers.hasOwnProperty("Content-type")){headers["Content-Type"]="application/x-www-form-urlencoded"}}
-return{
-body:data,cache,format,timeout,headers}}
+if(! result.headers.hasOwnProperty("Content-type")){result.headers["Content-Type"]="application/x-www-form-urlencoded"}}
+return result}
 var HTTPRequest=$B.make_class("Request")
 HTTPRequest.data=_b_.property.$factory(function(self){if(self.format=="binary"){var view=new Uint8Array(self.response)
 return _b_.bytes.$factory(Array.from(view))}else if(self.format=="text"){return self.responseText}else if(self.format=="dataURL"){var base64String=btoa(String.fromCharCode.apply(null,new Uint8Array(self.response)))
@@ -15064,7 +15066,7 @@ $.self._methods.reject($.exception)
 return _b_.None}
 $B.set_func_names(Future,'browser.aio')
 modules['browser.aio']={ajax:function(){var $=$B.args("ajax",2,{method:null,url:null},["method","url"],arguments,{},null,"kw"),method=$.method.toUpperCase(),url=$.url,kw=$.kw
-var args=handle_kwargs(kw,"get")
+var args=handle_kwargs({},kw,"get")
 if(method=="GET" && ! args.cache){url=url+"?ts"+(new Date()).getTime()+"=0"}
 if(args.body && method=="GET"){url=url+(args.cache ? "?" :"&")+args.body}
 var func=function(){return new Promise(function(resolve){var xhr=new XMLHttpRequest()
@@ -15099,6 +15101,7 @@ return{
 __class__:$B.coroutine,$args:[seconds],$func:func}},Future,__getattr__:function(attr){
 $B.$import('_aio')
 return $B.$getattr($B.imported._aio,attr)}}
+modules['browser.aio']._handle_kwargs=handle_kwargs
 function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
@@ -16112,7 +16115,7 @@ if(hasKWargs ){fct+=`
         $B.args0_old(fct, args);
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
     }
-    result[$INFOS.kwarg] = _b_.dict.$from_js(extra);
+    result[$INFOS.kwarg] = __BRYTHON__.builtins.dict.$from_js(extra);
 `}
 fct+=`
     return result

@@ -285,8 +285,8 @@ var type = $B.make_class("type",
             kw = $.kw
 
         var kwarg = {}
-        for(var key in kw.$jsobj){
-            kwarg[key] = kw.$jsobj[key]
+        for(var item of _b_.dict.$iter_items(kw)){
+            kwarg[item.key] = item.value
         }
         var kwargs = {$kw: [kwarg]}
         if(cl_dict === missing){
@@ -720,7 +720,7 @@ type.__init_subclass__ = function(){
             `${$.cls.__qualname__}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
     }
-    if(Object.keys($.kwargs.$jsobj).length > 0){
+    if(_b_.dict.__len__($.kwargs) > 0){
         throw _b_.TypeError.$factory(
             `${$.cls.__qualname__}.__init_subclass__() ` +
             `takes no keyword arguments`)

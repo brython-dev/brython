@@ -122,10 +122,7 @@ var module = {
     b2a_base64: function(){
         var $ = $B.args("b2a_base64", 1, {data: null}, ['data'],
                 arguments, {}, null, "kw")
-        var newline = false
-        if($.kw && $.kw.$jsobj.hasOwnProperty('newline')){
-            newline = $.kw.$jsobj.newline
-        }
+        var newline = _b_.dict.$get_string($.kw, 'newline', false)
 
         var string = $B.to_bytes($.data),
             res = btoa(String.fromCharCode.apply(null, string))

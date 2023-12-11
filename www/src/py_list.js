@@ -662,16 +662,15 @@ list.sort = function(self){
 
     check_not_tuple(self, "sort")
     var func = _b_.None,
-        reverse = false,
-        kw_args = $.kw
+        reverse = false
 
-    for(var key in kw_args.$jsobj){
-        if(key == "key"){
-            func = kw_args.$jsobj[key]
-        }else if(key == "reverse"){
-            reverse = kw_args.$jsobj[key]
+    for(var item of _b_.dict.$iter_items($.kw)){
+        if(item.key == "key"){
+            func = item.value
+        }else if(item.key == "reverse"){
+            reverse = item.value
         }else{
-            throw _b_.TypeError.$factory("'" + key +
+            throw _b_.TypeError.$factory("'" + item.key +
                 "' is an invalid keyword argument for this function")
         }
     }

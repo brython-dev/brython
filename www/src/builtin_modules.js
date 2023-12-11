@@ -238,9 +238,10 @@
                     }
 
                     // attributes
-                    for(var arg in $ns.kw.$jsobj){
+                    for(var item of _b_.dict.$iter_items($ns.kw)){
                         // keyword arguments
-                        var value = $ns.kw.$jsobj[arg]
+                        var arg = item.key,
+                            value = item.value
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             $B.DOMNode.__setattr__(self, arg, value)
@@ -960,20 +961,23 @@
         "dataURL": "arraybuffer"
     }
 
-    function handle_kwargs(kw, method){
-        // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
-        var data,
-            cache = false,
-            format = "text",
-            headers = {},
-            timeout = {}
-        for(let key in kw.$jsobj){
+    function handle_kwargs(self, kw, method){
+        var result = {
+                cache: false,
+                format: 'text',
+                mode: 'text',
+                timeout: {},
+                headers: {}
+            }
+        for(let item of _b_.dict.$iter_items(kw)){
+            let key = item.key,
+                value = item.value
             if(key == "data"){
-                var params = kw.$jsobj[key]
-                if(typeof params == "string"){
-                    data = params
+                var params = value
+                if(typeof params == "string"  || params instanceof FormData){
+                    result.body = params
                 }else if($B.$isinstance(params, _b_.bytes)){
-                    data = new ArrayBuffer(params.source.length)
+                    result.body = new ArrayBuffer(params.source.length)
                     var array = new Int8Array(data)
                     for(let i = 0, len = params.source.length; i < len; i++){
                         array[i] = params.source[i]
@@ -985,50 +989,40 @@
                             $B.class_name(params))
                     }
                     var items = []
-                    for(let key of _b_.dict.$keys_string(params)){
-                        let value = _b_.dict.$getitem_string(params, key)
-                        items.push(encodeURIComponent(key) + "=" +
-                                   encodeURIComponent($B.pyobj2jsobj(value)))
+                    for(let subitem of _b_.dict.$iter_items(params)){
+                        items.push(encodeURIComponent(subitem.key) + "=" +
+                                   encodeURIComponent($B.pyobj2jsobj(subitem.value)))
                     }
-                    data = items.join("&")
+                    result.body = items.join("&")
                 }
             }else if(key == "headers"){
-                let value = kw.$jsobj[key]
                 if(! $B.$isinstance(value, _b_.dict)){
                     throw _b_.ValueError.$factory(
                         "headers must be a dict, not " + $B.class_name(value))
                 }
-                for(let key of _b_.dict.$keys_string(value)){
-                    headers[key.toLowerCase()] = _b_.dict.$getitem_string(value, key)
+                for(let subitem of _b_.dict.$iter_items(value)){
+                    result.headers[subitem.key.toLowerCase()] = subitem.value
                 }
             }else if(key.startsWith("on")){
                 var event = key.substr(2)
                 if(event == "timeout"){
-                    timeout.func = kw.$jsobj[key]
+                    result.timeout.func = value
                 }else{
-                    modules["browser.aio"].ajax.bind(self, event, kw.$jsobj[key])
+                    modules["browser.aio"].ajax.bind(self, event, value)
                 }
             }else if(key == "timeout"){
-                timeout.seconds = kw.$jsobj[key]
-            }else if(key == "cache"){
-                cache = kw.$jsobj[key]
-            }else if(key == "format"){
-                format = kw.$jsobj[key]
+                result.timeout.seconds = value
+            }else if(["cache", "format", "mode"].includes(key)){
+                result[key] = value
             }
         }
         if(method == "post"){
             // For POST requests, set default header
-            if(! headers.hasOwnProperty("Content-type")){
-                headers["Content-Type"] = "application/x-www-form-urlencoded"
+            if(! result.headers.hasOwnProperty("Content-type")){
+                result.headers["Content-Type"] = "application/x-www-form-urlencoded"
             }
         }
-        return {
-            body: data,
-            cache,
-            format,
-            timeout,
-            headers
-        }
+        return result
     }
 
     var HTTPRequest = $B.make_class("Request")
@@ -1112,7 +1106,7 @@
                 method = $.method.toUpperCase(),
                 url = $.url,
                 kw = $.kw
-            var args = handle_kwargs(kw, "get")
+            var args = handle_kwargs({}, kw, "get")
             if(method == "GET" && ! args.cache){
                 url = url + "?ts" + (new Date()).getTime() + "=0"
             }
@@ -1234,6 +1228,8 @@
         }
     }
 
+    modules['browser.aio']._handle_kwargs = handle_kwargs
+
     function load(name, module_obj){
         // add class and __str__
         module_obj.__class__ = $B.module
@@ -1289,7 +1285,7 @@
             setitem(tp_dict, method, _b_.type[method])
         }
     }
-    
+
     setitem(tp_dict, '__mro__', {
         __get__: function(cls){
             return $B.fast_tuple([cls].concat(cls.__mro__))

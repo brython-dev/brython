@@ -187,7 +187,7 @@ function args0_NEW(fct, args) {
         }
         // Handle kwargs parameters...
         if(PARAMS_KWARGS_NAME !== null){
-            result[PARAMS_KWARGS_NAME] = $B.obj_dict({})
+            result[PARAMS_KWARGS_NAME] = $B.empty_dict()
         }
         // Shortcut : no named parameters.
         if( PARAMS_NAMED_COUNT === 0 ){
@@ -408,7 +408,7 @@ function args0_NEW(fct, args) {
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !')
     }
 
-    result[PARAMS_KWARGS_NAME] = __BRYTHON__.obj_dict(extra)
+    result[PARAMS_KWARGS_NAME] = _b_.dict.$from_js(extra)
 
     return result
 }
@@ -606,7 +606,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
     }
 
     if(kwarg){
-        slots[kwarg] = $B.obj_dict(extra_kw)
+        slots[kwarg] = _b_.dict.$from_js(extra_kw)
     }
     if(vararg){
         slots[vararg] = $B.fast_tuple(varargs)

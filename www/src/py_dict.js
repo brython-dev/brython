@@ -499,7 +499,7 @@ dict.$delete_string = function(self, key){
 
 dict.$missing = {}
 
-dict.$get_string = function(self, key){
+dict.$get_string = function(self, key, _default){
     // Used for dicts where all keys are strings
     if(self.$all_str && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
@@ -513,7 +513,7 @@ dict.$get_string = function(self, key){
             return self._values[indices[0]]
         }
     }
-    return _b_.dict.$missing
+    return _default ?? _b_.dict.$missing
 }
 
 dict.$getitem_string = function(self, key){
@@ -633,22 +633,45 @@ function init_from_list(self, args){
     }
 }
 
+dict.$set_string_no_duplicate = function(d, keys, string, value){
+    if(typeof string !== 'string'){
+        throw _b_.TypeError.$factory(
+            'keywords must be strings')
+    }
+    if(keys.has(string)){
+        throw _b_.TypeError.$factory('dict() got multiple values for keyword ' +
+            `argument '${string}'`)
+    }
+    d.$strings[string] = value
+    keys.add(string)
+}
+
 dict.__init__ = function(self, first, second){
+
     if(first === undefined){
         return _b_.None
     }
     if(second === undefined){
+        // single argument
         if((! first.$kw) && $B.$isinstance(first, $B.JSObj)){
             for(let key in first){
                 dict.$setitem(self, key, first[key])
             }
             return _b_.None
-        }else if(first.$jsobj){
-            self.$jsobj = {}
-            for(let attr in first.$jsobj){
-                self.$jsobj[attr] = first.$jsobj[attr]
+        }else if(first.$kw){
+            var keys = new Set()
+            for(let item of first.$kw){
+                if($B.$isinstance(item, dict)){
+                    for(let subitem of dict.$iter_items(item)){
+                        dict.$set_string_no_duplicate(self, keys, subitem.key,
+                            subitem.value)
+                    }
+                }else{
+                    for(let key in item){
+                        dict.$set_string_no_duplicate(self, keys, key, item[key])
+                    }
+                }
             }
-            self.$all_str = false
             return _b_.None
         }else if(first[Symbol.iterator]){
             init_from_list(self, first)
@@ -1464,10 +1487,6 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
         var res
         if($B.$isinstance(obj, dict)){
-            // obj is a dictionary, with string_dict table such that
-            // obj.string_dict[key] = [value, rank]
-            // Transform it into an object with attribute $jsobj such that
-            // res.$jsobj[key] = value
             res = $B.obj_dict(dict.$to_obj(obj))
         }else{
             res = $B.obj_dict(obj)

@@ -159,8 +159,8 @@ $B.create_python_ast_classes = function(){
                 }
                 for(let key in $){
                     if(key == 'kw'){
-                        for(let prop in $.kw.$jsobj){
-                            res[prop] = $.kw.$jsobj[prop]
+                        for(let item of _b_.dict.$iter_items($.kw)){
+                            res[item.key] = item.value
                         }
                     }else{
                         res[key] = $[key]

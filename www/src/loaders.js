@@ -399,7 +399,7 @@ function report_close(){
 function report_done(){
     if(!$B.isWebWorker){
         document.dispatchEvent(new CustomEvent("brython_done",
-            {detail: $B.obj_dict($B.$options)}))
+            {detail: _b_.dict.$from_js($B.$options)}))
     }
 }
 

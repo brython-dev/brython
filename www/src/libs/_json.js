@@ -25,14 +25,12 @@ function to_json(obj, level){
         $ = $B.args("to_json", 2, {obj: null, level: null}, ['obj', 'level'],
                     arguments, {level: 1}, null, "kw")
 
+    var kw = _b_.dict.$to_obj($.kw)
     for(var key in $defaults){
-        if(! $.kw.$jsobj.hasOwnProperty(key)){
-            $.kw.$jsobj[key] = $defaults[key]
+        if(! kw.hasOwnProperty(key)){
+            kw[key] = $defaults[key]
         }
     }
-
-    // Transform Python dict into Javascript object
-    var kw = $.kw.$jsobj
 
     var indent = kw.indent,
         ensure_ascii = kw.ensure_ascii,
@@ -44,7 +42,7 @@ function to_json(obj, level){
         sort_keys = kw.sort_keys,
         allow_nan = kw.allow_nan,
         check_circular = kw.check_circular
-    
+
     var item_separator = separators[0],
         key_separator = separators[1]
     if(indent !== _b_.None){
@@ -563,7 +561,7 @@ var JSONDecoder = $B.make_class("JSONDecoder",
                 parse_float: _b_.None, parse_int: _b_.None,
                 parse_constant: _b_.None, object_pairs_hook: _b_.None},
             $ = $B.args("decode", 0, {}, [], arguments, {}, null, "kw")
-        var kw = $.kw.$jsobj
+        var kw = _b_.dict.$to_obj($.kw)
         for(var key in $defaults){
             if(kw[key] === undefined){
                 kw[key] = $defaults[key]

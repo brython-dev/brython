@@ -1798,18 +1798,18 @@ function $extreme(args, op){ // used by min() and max()
 
     var has_default = false,
         func = false
-    for(var attr in $.kw.$jsobj){
-        switch(attr){
+    for(var item of _b_.dict.$iter_items($.kw)){
+        switch(item.key){
             case 'key':
-                func = $.kw.$jsobj[attr]
+                func = item.value
                 func = func === _b_.None ? func : $B.$call(func)
                 break
             case 'default':
-                var default_value = $.kw.$jsobj[attr]
+                var default_value = item.value
                 has_default = true
                 break
             default:
-                throw _b_.TypeError.$factory("'" + attr +
+                throw _b_.TypeError.$factory("'" + item.key +
                     "' is an invalid keyword argument for this function")
         }
     }
@@ -2121,9 +2121,9 @@ var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
               {}, 'args', 'kw')
     var kw = $ns['kw'],
-        end = $B.is_none(kw.$jsobj.end) ? '\n' : kw.$jsobj.end,
-        sep = $B.is_none(kw.$jsobj.sep) ? ' ' : kw.$jsobj.sep,
-        file = $B.is_none(kw.$jsobj.file) ? $B.get_stdout() : kw.$jsobj.file
+        end = _b_.dict.get(kw, 'end', '\n'),
+        sep = _b_.dict.get(kw, 'sep', ' '),
+        file = _b_.dict.get(kw, 'file', $B.get_stdout())
     var args = $ns['args'],
         writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
@@ -3149,7 +3149,7 @@ var zip = _b_.zip = $B.make_class("zip",
         }
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
         var _args = $ns['args'],
-            strict = $B.$bool($ns.kw.$jsobj.strict || false)
+            strict = $B.$bool(_b_.dict.get($ns.kw, 'strict', false))
         var iters = []
         for(var arg of _args){
             iters.push($B.make_js_iterator(arg))
