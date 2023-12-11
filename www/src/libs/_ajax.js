@@ -74,74 +74,7 @@ function stringify(d){
     return items.join("&")
 }
 
-function handle_kwargs(self, kw, method){
-    // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
-    var data,
-        encoding,
-        headers={},
-        cache,
-        mode = "text",
-        timeout = {}
-
-    for(var key in kw.$jsobj){
-        if(key == "data"){
-            var params = kw.$jsobj[key]
-            if(typeof params == "string" || params instanceof FormData){
-                data = params
-            }else if(params.__class__ === _b_.dict){
-                var from_dict = []
-                for(var key of $B.make_js_iterator(_b_.dict.keys(params))){
-                    if(typeof key !== 'string'){
-                        throw _b_.ValueError.$factory(
-                            'data only supports string keys, got ' +
-                            `'${$B.class_name(key)}' object`)
-                    }
-                    from_dict.push(`${key}=${_b_.dict.$getitem(params, key)}`)
-                }
-                data = from_dict.join('&')
-            }else{
-                throw _b_.TypeError.$factory("wrong type for data: " +
-                    $B.class_name(params))
-            }
-        }else if(key == "encoding"){
-            encoding = kw.$jsobj[key]
-        }else if(key == "headers"){
-            var value = kw.$jsobj[key]
-            if(! $B.$isinstance(value, _b_.dict)){
-                throw _b_.ValueError.$factory(
-                    "headers must be a dict, not " + $B.class_name(value))
-            }
-            for(var key of _b_.dict.$keys_string(value)){
-                headers[key.toLowerCase()] = _b_.dict.$getitem_string(value, key)
-            }
-        }else if(key.startsWith("on")){
-            var event = key.substr(2)
-            if(event == "timeout"){
-                timeout.func = kw.$jsobj[key]
-            }else{
-                var f = kw.$jsobj[key]
-                ajax.bind(self, event, f)
-            }
-        }else if(key == "mode"){
-            var mode = kw.$jsobj[key]
-        }else if(key == "timeout"){
-            timeout.seconds = kw.$jsobj[key]
-        }else if(key == "cache"){
-            cache = kw.$jsobj[key]
-        }
-    }
-    if(encoding && mode != "text"){
-        throw _b_.ValueError.$factory("encoding not supported for mode " +
-            mode)
-    }
-    if((method == "post" || method == "put") && ! headers){
-        // For POST requests, set default header
-        self.js.setRequestHeader("Content-type",
-                                 "application/x-www-form-urlencoded")
-    }
-
-    return {cache, data, encoding, headers, mode, timeout}
-}
+var handle_kwargs = $B.imported['browser.aio']._handle_kwargs
 
 var ajax = $B.make_class('ajax')
 
@@ -354,6 +287,7 @@ function _request_without_body(method){
     url = $.url,
     async = !$.blocking,
     kw = $.kw
+
     var self = ajax.$factory()
     self.blocking = $.blocking
     var items = handle_kwargs(self, kw, method),
@@ -484,12 +418,10 @@ function file_upload(){
         file = $.file,
         kw = $.kw
 
-    var self = ajax.$factory(),
-        method = 'POST',
-        field_name = 'filetosave'
+    var self = ajax.$factory()
 
     var items = handle_kwargs(self, kw, method),
-        data = items.data,
+        data = items.body,
         headers = items.headers,
         timeout = items.timeout
 
@@ -502,26 +434,21 @@ function file_upload(){
     }
     set_timeout(self, timeout)
 
-    if(kw.$jsobj.hasOwnProperty('method')){
-        method = kw.$jsobj.method
-    }
-
-    if(kw.$jsobj.hasOwnProperty('field_name')){
-        field_name = kw.$jsobj.field_name
-    }
+    var method = _b_.dict.$get_string(kw, 'method', 'POST'),
+        field_name = _b_.dict.$get_string(kw, 'field_name', 'filetosave')
 
     var formdata = new FormData()
     formdata.append(field_name, file, file.name)
 
-    if(items.data){
-        if(items.data instanceof FormData){
+    if(items.body){
+        if(items.body instanceof FormData){
             // append additional data
-            for(var d of items.data){
+            for(var d of items.body){
                 formdata.append(d[0], d[1])
             }
-        }else if($B.$isinstance(items.data, _b_.dict)){
-            for(var d of _b_.list.$factory(_b_.dict.items(items.data))){
-                formdata.append(d[0], d[1])
+        }else if($B.$isinstance(items.body, _b_.dict)){
+            for(var item of _b_.dict.$iter_items(items.body)){
+                formdata.append(item.key, item.value)
             }
         }else{
             throw _b_.ValueError.$factory(
@@ -532,9 +459,9 @@ function file_upload(){
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(var key in kw.$jsobj){
-        if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), kw.$jsobj[key])
+    for(var item of _b_.dict.$iter_items(kw)){
+        if(item.key.startsWith("on")){
+            ajax.bind(self, item.key.substr(2), item.value)
         }
     }
 }
