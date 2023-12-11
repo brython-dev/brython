@@ -154,9 +154,9 @@ class Tester:
         if a is b:
             raise AssertionError('%s is %s should be false' %(a, b))
 
-    def assertIn(self, item, container):
+    def assertIn(self, item, container, msg=None):
         if not item in container:
-            raise AssertionError('%s should be in %s' %(item, container))
+            raise AssertionError(msg or '%s should be in %s' %(item, container))
 
     def assertIsNaN(self, obj, msg=None):
         import math

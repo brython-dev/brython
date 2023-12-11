@@ -1,10 +1,10 @@
 from browser import ajax, window
+from tester import async_tester
 
 def show(req, *expects):
     text = req.text
     for expected in expects:
-      if expected not in text:
-        raise AssertionError(f'{expected} not in {text}')
+        async_tester.assertIn(expected, text, f'{expected} not in {text}')
 
 # ajax.get to read text files
 ajax.get("files/text-utf8.txt", encoding='utf-8',
@@ -49,18 +49,7 @@ def read_image(req):
 ajax.get('../brython.png', mode="binary", oncomplete=read_image)
 ajax.get('../brython.png', mode="binary", oncomplete=read_image, blocking=True)
 
-# ajax.post
-# comment to see if it is the cause of Travis failure...
-"""
-ajax.post("/cgi-bin/post_test.py",
-    oncomplete=lambda req: show(req, "bar:38"),
-    data={'bar': 38})
 
-ajax.post("/cgi-bin/post_test.py",
-    headers={'Content-Type': "application/x-www-form-urlencoded"},
-    oncomplete=lambda req: show(req, "bar:38"),
-    data={'bar': 38})
-"""
 # DOM style
 req = ajax.Ajax()
 req.open("GET", "files/text-latin1.txt")
@@ -84,33 +73,9 @@ req.open("GET", "files/text-utf8.txt")
 req.bind("complete", lambda req: show(req, "bébé"))
 req.send()
 
-"""
-req = ajax.Ajax()
-req.open("GET", "/cgi-bin/get_test.py?bar=35", False)
-req.set_header('Content-Type', 'application/x-www-form-urlencoded')
-req.bind("complete", lambda req: show(req, "bar 35"))
-req.send()
-
-req = ajax.Ajax()
-req.open("POST", "/cgi-bin/post_test.py", False)
-req.bind("complete", lambda req: show(req, "bar:36"))
-req.send({'bar': 36})
-
-req = ajax.Ajax()
-req.open("POST", "/cgi-bin/post_test.py", False)
-req.set_header('content-type','application/x-www-form-urlencoded')
-req.bind("complete", lambda req: show(req, "bar:37"))
-req.send({'bar': 37})
-
-req = ajax.Ajax()
-req.open("POST", "/cgi-bin/post_test.py", False)
-req.setRequestHeader('content-type','application/x-www-form-urlencoded')
-req.bind("complete", lambda req: show(req, "bar:38"))
-req.send({'bar': 38})
-"""
 def assert_type(f, _type):
     data = f.read()
-    assert isinstance(data, _type)
+    async_tester.assertTrue(isinstance(data, _type))
 
 x = ajax.get("test.html", mode="binary",
     oncomplete=lambda req: assert_type(req, bytes))
@@ -128,18 +93,20 @@ ajax.get("catalog.xml", mode="document",
     oncomplete=read_xml)
 
 def read_json(req):
-    assert req.json == req.read()
-    assert isinstance(req.read(), dict)
+    async_tester.assertEqual(req.json, req.read())
+    async_tester.assertTrue(isinstance(req.read(), dict))
 
 ajax.get("files/glossary.json", mode="json",
     oncomplete=read_json)
 
 # issue 2051
 # use httpbin.org for testing
+
 def check(num, req, expected):
     data = req.json
     for key in expected:
-        assert data[key] == expected[key], (key, data[key], expected[key])
+        async_tester.assertEqual(data[key], expected[key],
+            (key, data[key], expected[key]))
 
 content = 'test file'
 file = window.File.new([content], 'test_file.txt')
