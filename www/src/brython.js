@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-05 09:19:42.632598"
-__BRYTHON__.timestamp=1701764382632
+__BRYTHON__.compiled_date="2023-12-11 09:18:25.878721"
+__BRYTHON__.timestamp=1702282705878
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -13062,6 +13062,9 @@ $B.set_func_names(dict,"builtins")
 dict.__class_getitem__=_b_.classmethod.$factory(dict.__class_getitem__)
 $B.empty_dict=function(){return{
 __class__:dict,table:Object.create(null),_keys:[],_values:[],_hashes:[],$strings:new $B.str_dict(),$version:0,$order:0,$all_str:true}}
+dict.$from_js=function(jsobj){var res=$B.empty_dict()
+for(var key in jsobj){dict.$setitem(res,key,jsobj[key])}
+return res}
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)
 var mappingproxy=$B.mappingproxy=$B.make_class("mappingproxy",function(obj){var res
 if($B.$isinstance(obj,dict)){
@@ -15948,7 +15951,7 @@ if(posOnlyDefaults !==DEFAULTS.NONE ||posDefaults !==DEFAULTS.NONE){fct+=`
             ++i)
             result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`}}
 if(hasKWargs ){fct+=`
-        result[$INFOS.kwarg] = __BRYTHON__.obj_dict({});`}
+        result[$INFOS.kwarg] = __BRYTHON__.empty_dict();`}
 if(hasNamedOnly && namedOnlyDefaults !==DEFAULTS.ALL){fct+=`
         $B.args0_old(fct, args);
         throw new Error('Named argument expected (args0 should have raised an error) !');
@@ -16109,7 +16112,7 @@ if(hasKWargs ){fct+=`
         $B.args0_old(fct, args);
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
     }
-    result[$INFOS.kwarg] = __BRYTHON__.obj_dict(extra);
+    result[$INFOS.kwarg] = _b_.dict.$from_js(extra);
 `}
 fct+=`
     return result
@@ -16160,7 +16163,7 @@ var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),positional=parsed_args.positional,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
 var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
 kw_defaults=kw_default_names.length==0 ? '_b_.None' :
-`$B.obj_dict({${kw_defaults.join(', ')}})`
+`_b_.dict.$from_js({${kw_defaults.join(', ')}})`
 var id=$B.UUID(),name2=this.name+id
 var has_type_params=this.type_params.length > 0,type_params=''
 if(has_type_params){

@@ -1447,6 +1447,14 @@ $B.empty_dict = function(){
     }
 }
 
+dict.$from_js = function(jsobj){
+    var res = $B.empty_dict()
+    for(var key in jsobj){
+        dict.$setitem(res, key, jsobj[key])
+    }
+    return res
+}
+
 // This must be done after set_func_names, otherwise dict.fromkeys doesn't
 // have the attribute $infos
 dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)

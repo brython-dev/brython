@@ -1948,7 +1948,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
     if( hasKWargs ) {
         fct += `
-        result[$INFOS.kwarg] = __BRYTHON__.obj_dict({});`
+        result[$INFOS.kwarg] = __BRYTHON__.empty_dict();`
     }
 
     if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
@@ -2204,7 +2204,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         $B.args0_old(fct, args);
         throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
     }
-    result[$INFOS.kwarg] = __BRYTHON__.obj_dict(extra);
+    result[$INFOS.kwarg] = _b_.dict.$from_js(extra);
 `
     }
 
@@ -2307,7 +2307,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
     kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
-            `$B.obj_dict({${kw_defaults.join(', ')}})`
+            `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
 
     var id = $B.UUID(),
         name2 = this.name + id
