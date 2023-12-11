@@ -1098,9 +1098,8 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 
 type.__call__.__class__ = wrapper_descriptor
 
-$B.nb_create = 0
 $B.$instance_creator = function(klass){
-    var test = false // klass.$infos && klass.$infos.__name__ == 'Square2'
+    var test = false // klass.__name__ == 'version_info'
     if(test){
         console.log('instance creator of', klass)
     }

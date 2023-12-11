@@ -36,7 +36,6 @@ list.__add__ = function(self, other){
     for(const item of other){
         res.push(is_js ? $B.$JS2Py(item) : item)
     }
-    res.__brython__ = true
     if(isinstance(self, tuple)){
         res = tuple.$factory(res)
     }
@@ -398,9 +397,6 @@ list.__mul__ = function(self, other){
             }
         }
         res.__class__ = self.__class__
-        if(self.__brython__){
-            res.__brython__ = self.__brython__
-        }
         return res
     }else if(isinstance(other, $B.long_int)){
         throw _b_.OverflowError.$factory(`cannot fit ` +
@@ -409,12 +405,12 @@ list.__mul__ = function(self, other){
 }
 
 list.__new__ = function(cls){
+    // ignores other arguments than the first
     if(cls === undefined){
         throw _b_.TypeError.$factory("list.__new__(): not enough arguments")
     }
     var res = []
     res.__class__ = cls
-    res.__brython__ = true
     res.__dict__ = $B.empty_dict()
     return res
 }
@@ -531,7 +527,6 @@ list.copy = function(){
         arguments, {}, null, null)
     var res = $.self.slice()
     res.__class__ = self.__class__
-    res.__brython__ = true
     return res
 }
 
@@ -728,17 +723,16 @@ list.sort = function(self){
                 self[i] = saved[temp[i][1]]
             }
         }
-        return self.__brython__ ? _b_.None : self
+        return self.$is_js_array ? self : _b_.None
     }
     $B.$TimSort(self, cmp)
 
     // Javascript libraries might use the return value
-    return self.__brython__ ? _b_.None : self
+    return self.$is_js_array ? self : _b_.None
 }
 
 // function used for list literals
 $B.$list = function(t){
-    t.__brython__ = true
     t.__class__ = _b_.list
     return t
 }
@@ -754,17 +748,14 @@ var factory = function(){
         obj = $.obj
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
-        obj.__brython__ = true;
         if(obj.__class__ == tuple){
             let res = obj.slice()
             res.__class__ = list
-            res.__brython__ = true
             return res
         }
         return obj
     }
     let res = Array.from($B.make_js_iterator(obj))
-    res.__brython__ = true // false for Javascript arrays - used in sort()
     return res
 }
 
@@ -854,7 +845,6 @@ tuple.$factory = function(){
 
 $B.fast_tuple = function(array){
     array.__class__ = tuple
-    array.__brython__ = true
     array.__dict__ = $B.empty_dict()
     return array
 }
@@ -931,30 +921,30 @@ tuple.__init__ = function(){
     return _b_.None
 }
 
-tuple.__new__ = function(cls, ...args){
-    if(cls === undefined){
-        throw _b_.TypeError.$factory("list.__new__(): not enough arguments")
+tuple.__new__ = function(){
+    if(arguments.length === undefined){
+        throw _b_.TypeError.$factory("tuple.__new__(): not enough arguments")
     }
+    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments,
+                    {}, 'args', 'kw'),
+        cls = $.cls,
+        args = $.args,
+        kw = $.kw
     var self = []
     self.__class__ = cls
-    self.__brython__ = true
     self.__dict__ = $B.empty_dict()
-    if(args.length == 0){
-        return self
-    }
-    var arg = $B.$iter(args[0]),
-        next_func = $B.$call($B.$getattr(arg, "__next__"))
-    while(1){
-        try{
-            var item = next_func()
-            self.push(item)
-        }
-        catch(err){
-            if(err.__class__ === _b_.StopIteration){
-                break
+    if(args.length > 0){
+        if(args.length == 1){
+            for(var item of $B.make_js_iterator(args[0])){
+                self.push(item)
             }
-            else{throw err}
+        }else{
+            throw _b_.TypeError.$factory('tuple expected at most 1 ' +
+                `argument, got ${args.length}`)
         }
+    }
+    if(cls === tuple && _b_.dict.__len__(kw) > 0){
+        throw _b_.TypeError.$factory('tuple() takes no keyword arguments')
     }
     return self
 }

@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-11 16:23:49.822835"
-__BRYTHON__.timestamp=1702308229822
+__BRYTHON__.compiled_date="2023-12-11 22:09:45.917198"
+__BRYTHON__.timestamp=1702328985917
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5478,7 +5478,6 @@ typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
 if(slice.stop < 0){slice.stop+=obj.length}
 res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
-res.__brython__=true
 return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
 $B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,$B.decode_position(position))
@@ -6425,7 +6424,6 @@ $B.make_class("wrapper_descriptor")
 wrapper_descriptor.__text_signature__={__get__:function(){return '(self, /, *args, **kwargs)'}}
 $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
-$B.nb_create=0
 $B.$instance_creator=function(klass){var test=false 
 if(test){console.log('instance creator of',klass)}
 if(klass.prototype && klass.prototype.constructor==klass){
@@ -13109,7 +13107,6 @@ this_name+' (not "'+$B.class_name(other)+
 return _b_.NotImplemented}
 var res=self.slice(),is_js=other.$brython_class=="js" 
 for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
-res.__brython__=true
 if(isinstance(self,tuple)){res=tuple.$factory(res)}
 return res}
 list.__bool__=function(self){return list.__len__(self)> 0}
@@ -13237,13 +13234,12 @@ if(self.length > $B.max_array_size/other){throw _b_.OverflowError.$factory(`cann
 var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
-if(self.__brython__){res.__brython__=self.__brython__}
 return res}else if(isinstance(other,$B.long_int)){throw _b_.OverflowError.$factory(`cannot fit `+
 `'${$B.class_name(other)}' into an index-sized integer`)}}
-list.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
+list.__new__=function(cls){
+if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
 res.__class__=cls
-res.__brython__=true
 res.__dict__=$B.empty_dict()
 return res}
 list.__repr__=function(self){$B.builtins_repr_check(list,arguments)
@@ -13286,7 +13282,6 @@ return _b_.None}
 list.copy=function(){var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null)
 var res=$.self.slice()
 res.__class__=self.__class__
-res.__brython__=true
 return res}
 list.count=function(){var $=$B.args("count",2,{self:null,x:null},["self","x"],arguments,{},null,null)
 var res=0
@@ -13351,25 +13346,21 @@ self.sort(cmp)}else{var temp=[],saved=self.slice()
 for(let i=0,len=self.length;i < len;i++){temp.push([func(self[i]),i])}
 temp.sort(cmp)
 for(let i=0,len=temp.length;i < len;i++){self[i]=saved[temp[i][1]]}}
-return self.__brython__ ? _b_.None :self}
+return self.$is_js_array ? self :_b_.None}
 $B.$TimSort(self,cmp)
-return self.__brython__ ? _b_.None :self}
-$B.$list=function(t){t.__brython__=true
-t.__class__=_b_.list
+return self.$is_js_array ? self :_b_.None}
+$B.$list=function(t){t.__class__=_b_.list
 return t}
 var factory=function(){var klass=this 
 if(arguments.length==0){return $B.$list([])}
 var $=$B.args(klass.__name__,1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
 if(Array.isArray(obj)){
 obj=obj.slice()
-obj.__brython__=true;
 if(obj.__class__==tuple){let res=obj.slice()
 res.__class__=list
-res.__brython__=true
 return res}
 return obj}
 let res=Array.from($B.make_js_iterator(obj))
-res.__brython__=true 
 return res}
 list.$factory=function(){return factory.apply(list,arguments)}
 list.$unpack=function(obj){
@@ -13396,7 +13387,6 @@ tuple.$factory=function(){var obj=factory.apply(tuple,arguments)
 obj.__class__=tuple
 return obj}
 $B.fast_tuple=function(array){array.__class__=tuple
-array.__brython__=true
 array.__dict__=$B.empty_dict()
 return array}
 for(let attr in list){switch(attr){case "__delitem__":
@@ -13430,17 +13420,14 @@ x=c_mul(1000003,x)^ y & 0xFFFFFFFF}
 return x}
 tuple.__init__=function(){
 return _b_.None}
-tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
+tuple.__new__=function(){if(arguments.length===undefined){throw _b_.TypeError.$factory("tuple.__new__(): not enough arguments")}
+var $=$B.args('__new__',1,{cls:null},['cls'],arguments,{},'args','kw'),cls=$.cls,args=$.args,kw=$.kw
 var self=[]
 self.__class__=cls
-self.__brython__=true
 self.__dict__=$B.empty_dict()
-if(args.length==0){return self}
-var arg=$B.$iter(args[0]),next_func=$B.$call($B.$getattr(arg,"__next__"))
-while(1){try{var item=next_func()
-self.push(item)}
-catch(err){if(err.__class__===_b_.StopIteration){break}
-else{throw err}}}
+if(args.length > 0){if(args.length==1){for(var item of $B.make_js_iterator(args[0])){self.push(item)}}else{throw _b_.TypeError.$factory('tuple expected at most 1 '+
+`argument, got ${args.length}`)}}
+if(cls===tuple && _b_.dict.__len__(kw)> 0){throw _b_.TypeError.$factory('tuple() takes no keyword arguments')}
 return self}
 tuple.__repr__=function(self){$B.builtins_repr_check(tuple,arguments)
 return list_repr(self)}
@@ -14783,6 +14770,7 @@ if(args.length==1){var first=args[0]
 if($B.$isinstance(first,[_b_.str,_b_.int,_b_.float])){
 self.innerHTML=_b_.str.$factory(first)}else if(first.__class__===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.appendChild(first.children[i])}}else{if($B.$isinstance(first,$B.DOMNode)){self.appendChild(first)}else{try{
 var items=_b_.list.$factory(first)
+console.log('item from iterable first',first,items)
 for(var item of items){$B.DOMNode.__le__(self,item)}}catch(err){if($B.get_option('debug',err)> 1){console.log(err,err.__class__,err.args)
 console.log("first",first)
 console.log(arguments)}

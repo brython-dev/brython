@@ -104,7 +104,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'st_size' // false // attr == "__args__"
+    var $test = false // attr == 'bar' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -179,7 +179,9 @@ object.__getattribute__ = function(obj, attr){
         console.log('after search classes', res)
     }
     if(res !== undefined){
-        if($test){console.log(res)}
+        if($test){
+            console.log(res)
+        }
         if(res.__class__ && _b_.issubclass(res.__class__, _b_.property)){
             return $B.$getattr(res, '__get__')(obj, klass)
         }else if(res.__class__ === _b_.classmethod){

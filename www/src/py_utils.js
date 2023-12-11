@@ -1079,7 +1079,6 @@ $B.getitem_slice = function(obj, slice){
         }
         if(res){
             res.__class__ = obj.__class__ // can be tuple
-            res.__brython__ = true
             return res
         }else{
             return _b_.list.$getitem(obj, slice)
