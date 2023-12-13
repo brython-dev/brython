@@ -32,9 +32,9 @@ list.__add__ = function(self, other){
         return _b_.NotImplemented
     }
     var res = self.slice(),
-        is_js = other.$brython_class == "js" // list of JS objects
+        is_js = other.$is_js_array // list of JS objects
     for(const item of other){
-        res.push(is_js ? $B.$JS2Py(item) : item)
+        res.push(is_js ? $B.$jsobj2pyobj(item) : item)
     }
     if(isinstance(self, tuple)){
         res = tuple.$factory(res)
@@ -784,43 +784,6 @@ list.$unpack = function(obj){
 }
 
 $B.set_func_names(list, "builtins")
-
-// Wrapper around Javascript arrays
-var JSArray = $B.JSArray = $B.make_class("JSArray",
-    function(array){
-        return {
-            __class__: JSArray,
-            js: array
-        }
-    }
-)
-
-JSArray.__repr__ = JSArray.__str__ = function(){
-    return "<JSArray object>"
-}
-
-// Add list methods to JSArray
-function make_args(args){
-    var res = [args[0].js]
-    for(var i = 1, len = args.length; i < len; i++){
-        res.push(args[i])
-    }
-    return res
-}
-
-for(let attr in list){
-    if($B.JSArray[attr] !== undefined){continue}
-    if(typeof list[attr] == "function"){
-        $B.JSArray[attr] = (function(fname){
-            return function(){
-                return $B.$JS2Py(list[fname].apply(null,
-                    make_args(arguments)))
-            }
-        })(attr)
-    }
-}
-
-$B.set_func_names($B.JSArray, "builtins")
 
 // Tuples
 var tuple = {
