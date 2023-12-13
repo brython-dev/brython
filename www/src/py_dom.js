@@ -5,6 +5,17 @@ var _b_ = $B.builtins,
     object = _b_.object,
     _window = globalThis
 
+
+// Convert result of operations on DOMNodes to Brython types
+// Same as jsobj2pyobj, except that `null` and `undefined` are
+// converted to None
+function convertDomValue(v){
+    if(v === null || v === undefined){
+        return _b_.None
+    }
+    return $B.jsobj2pyobj(v)
+}
+
 // Conversion of immutable types between Javascript and Python
 var py_immutable_to_js = $B.py_immutable_to_js = function (pyobj){
     if($B.$isinstance(pyobj, _b_.float)){
@@ -341,7 +352,7 @@ DOMEvent.__getattribute__ = function(self, attr){
             if(self.dataTransfer !== null && self.dataTransfer !== undefined){
                 return Clipboard.$factory(self.dataTransfer)
             }
-            return $B.$JS2Py(self['data'])
+            return convertDomValue(self['data'])
         case 'target':
             if(self.target !== undefined){
                 return DOMNode.$factory(self.target)
@@ -379,7 +390,7 @@ DOMEvent.__getattribute__ = function(self, attr){
             }
             return func
         }
-        return $B.$JS2Py(res)
+        return convertDomValue(res)
     }
     throw $B.attr_error(attr, self)
 }
@@ -770,7 +781,7 @@ DOMNode.__getattribute__ = function(self, attr){
                         }
                     }
                     var result = f.apply(elt, args)
-                    return $B.$JS2Py(result)
+                    return convertDomValue(result)
                 }
             })(res, self)
             func.$infos = {__name__ : attr, __qualname__: attr}
@@ -779,7 +790,7 @@ DOMNode.__getattribute__ = function(self, attr){
             return func
         }
         if(attr == 'style'){
-            return $B.JSObj.$factory(self[attr])
+            return $B.jsobj2pyobj(self[attr])
         }
         if(Array.isArray(res)){ // issue #619
             return res
@@ -1258,7 +1269,7 @@ DOMNode.getContext = function(self){ // for CANVAS tag
       throw _b_.AttributeError.$factory("object has no attribute 'getContext'")
     }
     return function(ctx){
-        return $B.JSObj.$factory(self.getContext(ctx))
+        return $B.jsobj2pyobj(self.getContext(ctx))
     }
 }
 
@@ -1659,7 +1670,7 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win = $B.JSObj.$factory(_window)
+var win = $B.jsobj2pyobj(_window)
 
 win.get_postMessage = function(msg,targetOrigin){
     if($B.$isinstance(msg, _b_.dict)){
