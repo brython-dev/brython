@@ -949,27 +949,13 @@ $B.get_method_class = function(method, ns, qualname, refs){
     }
     for(var ref of refs){
         if(klass[ref] === undefined){
-            var fake_class = $B.make_class(qualname)
-            return fake_class
+            return $B.make_class(qualname)
         }
         klass = klass[ref]
     }
     return klass
 }
 
-// transform native JS types into Brython types
-$B.$JS2Py = function(src){
-    if(typeof src === "number"){
-        if(src % 1 === 0){return src}
-        return _b_.float.$factory(src)
-    }
-    if(src === null || src === undefined){return _b_.None}
-    if(Array.isArray(src) &&
-            Object.getPrototypeOf(src) === Array.prototype){
-        src.$brython_class = "js" // used in make_iterator_class
-    }
-    return src
-}
 
 // warning
 $B.warn = function(klass, message, filename, token){
@@ -1557,7 +1543,7 @@ $B.enter_frame = function(frame){
     }
     frame.__class__ = $B.frame
     $B.frame_obj = $B.push_frame(frame)
-    if($B.tracefunc && $B.tracefunc !== _b_.None){
+    if($B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
                 ($B.tracefunc.$infos && frame[4] &&
                  frame[4] === $B.tracefunc.$infos.__func__)){
@@ -1640,7 +1626,7 @@ $B.leave_frame = function(arg){
 
     // When leaving a module, arg is set as an object of the form
     // {$locals, value: _b_.None}
-    if(arg && arg.value !== undefined && $B.tracefunc){
+    if(arg && arg.value !== undefined && $B.tracefunc !== _b_.None){
         if($B.frame_obj.frame.$f_trace === undefined){
             $B.frame_obj.frame.$f_trace = $B.tracefunc
         }
@@ -1689,19 +1675,6 @@ $B.push_frame = function(frame){
         prev: $B.frame_obj,
         frame,
         count: count + 1
-    }
-}
-
-
-$B.floordiv = function(x, y){
-    var z = x / y
-    if(Number.isSafeInteger(x) &&
-            Number.isSafeInteger(y) &&
-            Number.isSafeInteger(z)){
-        return Math.floor(z)
-    }else{
-        return $B.long_int.__floordiv__($B.long_int.$factory(x),
-            $B.long_int.$factory(y))
     }
 }
 
