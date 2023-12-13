@@ -760,18 +760,9 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         extra_kwargs
 
     // Create the class dictionary
-    if(! $B.$isinstance(cl_dict, _b_.dict)){
-        console.log('bizarre', meta, name, bases, cl_dict)
-        alert()
-    }
-    var module = _b_.dict.$get_string(cl_dict, '__module__')
-    if(module === _b_.dict.$missing){
-        module = $B.frame_obj.frame[2]
-    }
-    var qualname = _b_.dict.$get_string(cl_dict, '__qualname__')
-    if(qualname === _b_.dict.$missing){
-        qualname = name
-    }
+    var module = _b_.dict.$get_string(cl_dict, '__module__',
+                                      $B.frame_obj.frame[2])
+    var qualname = _b_.dict.$get_string(cl_dict, '__qualname__', name)
 
     var class_dict = {
         __class__ : meta,
@@ -783,17 +774,12 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         $is_class: true
     }
 
-    try{
-        let slots = _b_.dict.$get_string(cl_dict, '__slots__')
-        if(slots !== _b_.dict.$missing){
-            for(let key of $B.make_js_iterator(slots)){
-                class_dict[key] = member_descriptor.$factory(key, class_dict)
-            }
+    let slots = _b_.dict.$get_string(cl_dict, '__slots__', null)
+    if(slots !== null){
+        for(let key of $B.make_js_iterator(slots)){
+            class_dict[key] = member_descriptor.$factory(key, class_dict)
         }
-    }catch(err){
-        // ignore
     }
-
 
     class_dict.__mro__ = type.mro(class_dict).slice(1)
 
@@ -801,13 +787,15 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     for(var entry of _b_.dict.$iter_items(cl_dict)){
         var key = entry.key,
             v = entry.value
-        if(['__module__', '__class__', '__name__', '__qualname__'].
-                indexOf(key) > -1){
+        if(['__module__', '__class__', '__name__', '__qualname__'].includes(key)){
             continue
         }
-        if(key.startsWith('$')){continue}
-
-        if(v === undefined){continue}
+        if(key.startsWith('$')){
+            continue
+        }
+        if(v === undefined){
+            continue
+        }
         class_dict[key] = v
         if(v.__class__){
             // cf PEP 487 and issue #1178
@@ -817,23 +805,13 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
             }
         }
         if(typeof v == "function"){
-            if(v.$infos === undefined){
-                //console.log("type new", v, v + "")
-                console.log($B.make_frames_stack())
-            }else{
-                v.$infos.$class = class_dict
-                v.$infos.__qualname__ = name + '.' + v.$infos.__name__
-                if(v.$infos.$defaults){
-                    // If the function was set an attribute __defaults__, it is
-                    // stored in v.$infos.$defaults (cf. Function.__setattr__ in
-                    // py_builtin_functions.js)
-                    var $defaults = v.$infos.$defaults
-                    $B.function.__setattr__(v, "__defaults__",
-                        $defaults)
-                }
-            }
+            v.$infos.$class = class_dict
+            v.$infos.__qualname__ = name + '.' + v.$infos.__name__
         }
     }
+
+    // set $tp_setattr
+    class_dict.$tp_setattr = $B.search_in_mro(class_dict, '__setattr__')
 
     var sup = _b_.super.$factory(class_dict, class_dict)
     var init_subclass = _b_.super.__getattribute__(sup, "__init_subclass__")
@@ -877,6 +855,19 @@ type.__ror__ = function(){
     return _b_.NotImplemented
 }
 
+function update_subclasses(kls, name, alias, value){
+    // recursively propagate kls[alias] = value to subclasses of kls that
+    // don't define kls[name]
+    // For instance, set kls.$tp_setattr for subclasses that don't define
+    // __setattr__
+    for(var subclass of kls.$subclasses){
+        if(! subclass.hasOwnProperty(name)){
+            subclass[alias] = value
+            update_subclasses(subclass, name, alias, value)
+        }
+    }
+}
+
 type.__setattr__ = function(kls, attr, value){
     var $test = false
     if($test){console.log("kls is class", type)}
@@ -896,12 +887,21 @@ type.__setattr__ = function(kls, attr, value){
     // mapping proxy is read-only, set key/value without using __setitem__
     _b_.dict.$setitem(mp, attr, value)
 
-    if(attr == "__init__" || attr == "__new__"){
-        // redefine the function that creates instances of the class
-        kls.$factory = $B.$instance_creator(kls)
-    }else if(attr == "__bases__"){
-        // redefine mro
-        kls.__mro__ = _b_.type.mro(kls)
+    switch(attr){
+        case '__init__':
+        case '__new__':
+            // redefine the function that creates instances of the class
+            kls.$factory = $B.$instance_creator(kls)
+            break
+        case "__bases__":
+            // redefine mro
+            kls.__mro__ = _b_.type.mro(kls)
+            break
+        case '__setattr__':
+            var initial_value = kls.$tp_setattr
+            kls.$tp_setattr = value
+            update_subclasses(kls, '__setattr__', '$tp_setattr', value)
+            break
     }
     if($test){console.log("after setattr", kls)}
     return _b_.None
@@ -1344,10 +1344,10 @@ $B.make_iterator_class = function(name){
             self.counter++
             if(self.counter < self.items.length){
                 var item = self.items[self.counter]
-                if(self.items.$brython_class == "js"){
+                if(self.items.$is_js_array){
                     // iteration on Javascript lists produces Python objects
                     // cf. issue #1388
-                    item = $B.$JS2Py(item)
+                    item = $B.$jsobj2pyobj(item)
                 }
                 return item
             }
