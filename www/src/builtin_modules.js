@@ -37,7 +37,7 @@
                     // eg window, Web Worker
                     function f(ev){
                         try{
-                            return callback($B.JSObj.$factory(ev))
+                            return callback($B.jsobj2pyobj(ev))
                         }catch(err){
                             $B.handle_error(err)
                         }
@@ -80,7 +80,7 @@
             }
         },
 
-        console: self.console && $B.JSObj.$factory(self.console),
+        console: self.console && $B.jsobj2pyobj(self.console),
         self: $B.win,
         win: $B.win,
         "window": $B.win,
@@ -112,7 +112,7 @@
             "alert":function(message){
                 window.alert($B.builtins.str.$factory(message || ""))
             },
-            confirm: $B.JSObj.$factory(window.confirm),
+            confirm: $B.jsobj2pyobj(window.confirm),
             "document": $B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
@@ -139,10 +139,10 @@
                 document.body.appendChild(script)
             },
             mouseCoords: function(ev){
-                return $B.JSObj.$factory($B.$mouseCoords(ev))
+                return $B.jsobj2pyobj($B.$mouseCoords(ev))
             },
             prompt: function(message, default_value){
-                return $B.JSObj.$factory(window.prompt(message, default_value||''))
+                return $B.jsobj2pyobj(window.prompt(message, default_value||''))
             },
             reload: function(){
                 // Javascripts in the page
@@ -429,10 +429,10 @@
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this === undefined){return $B.builtins.None}
-            return $B.JSObj.$factory($B.js_this)
+            return $B.jsobj2pyobj($B.js_this)
         },
         Array: $B.js_array,
-        Date: self.Date && $B.JSObj.$factory(self.Date),
+        Date: self.Date && $B.jsobj2pyobj(self.Date),
         extends: function(js_constr){
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
@@ -561,7 +561,7 @@
             },
             stringify: function(obj, replacer, space){
                 return JSON.stringify($B.pyobj2structuredclone(obj, false),
-                    $B.JSObj.$factory(replacer), space)
+                    $B.jsobj2pyobj(replacer), space)
             }
         },
         jsobj2pyobj:function(obj){
@@ -576,10 +576,10 @@
             var content = $B.$getattr(file_obj, 'read')()
             eval(content)
         },
-        Math: self.Math && $B.JSObj.$factory(self.Math),
+        Math: self.Math && $B.jsobj2pyobj(self.Math),
         NULL: null,
         NullType: $B.make_class('NullType'),
-        Number: self.Number && $B.JSObj.$factory(self.Number),
+        Number: self.Number && $B.jsobj2pyobj(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -591,8 +591,8 @@
         pyobj2jsobj:function(obj){
             return $B.pyobj2jsobj(obj)
         },
-        RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
-        String: self.String && $B.JSObj.$factory(self.String),
+        RegExp: self.RegExp && $B.jsobj2pyobj(self.RegExp),
+        String: self.String && $B.jsobj2pyobj(self.String),
         "super": super_class,
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedType
@@ -778,7 +778,7 @@
         ),
         path_importer_cache: _b_.property.$factory(
             function(){
-                return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))
+                return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))
             },
             function(){
                 throw _b_.TypeError.$factory("Read only property" +
@@ -1470,5 +1470,8 @@ $B.stdin = {
         return ""
     }
 }
+
+// set default trace function (cf. sys.settrace)
+$B.tracefunc = _b_.None
 
 })(__BRYTHON__)

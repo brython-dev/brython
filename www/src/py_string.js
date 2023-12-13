@@ -2634,7 +2634,7 @@ str.$factory = function(arg, encoding){
         // even if arg has an attribute __str__
         var klass = arg.__class__ || $B.get_class(arg)
         if(klass === undefined){
-            return $B.JSObj.__str__($B.JSObj.$factory(arg))
+            return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
         var method = $B.$getattr(klass, "__str__", null)
         if(method === null){

@@ -1544,7 +1544,7 @@ function jsobj2dict(x, exclude){
             }else if(x[attr].$jsobj === x){
                 dict.$setitem(d, attr, d)
             }else{
-                dict.$setitem(d, attr, $B.$JS2Py(x[attr]))
+                dict.$setitem(d, attr, $B.jsobj2pyobj(x[attr]))
             }
         }
     }

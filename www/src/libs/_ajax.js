@@ -58,7 +58,7 @@ function _read(req){
     if(req.mode == "binary"){
         return b
     }else if(req.mode == "document"){
-        return $B.JSObj.$factory(xhr.response)
+        return $B.jsobj2pyobj(xhr.response)
     }else{
         var encoding = req.encoding || "utf-8"
         return _b_.bytes.decode(b, encoding)
@@ -118,7 +118,7 @@ ajax.__getattribute__ = function(self, attr){
             return self.js[attr]
         }
     }else if(attr == "xml"){
-        return $B.JSObj.$factory(self.js.responseXML)
+        return $B.jsobj2pyobj(self.js.responseXML)
     }
 }
 

@@ -372,11 +372,7 @@ function pyargs2jsargs(pyargs){
     return args
 }
 
-$B.JSObj = $B.make_class("JSObject",
-    function(jsobj){
-        return jsobj2pyobj(jsobj)
-    }
-)
+$B.JSObj = $B.make_class("JSObject", jsobj2pyobj)
 
 // Operations are implemented only for BigInt objects (cf. issue 1417)
 function check_big_int(x, y){
