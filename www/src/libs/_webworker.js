@@ -132,6 +132,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     header += `brython(${JSON.stringify($B.$options)})\n`
     js = header + js
     js = `try{${js}}catch(err){$B.handle_error(err)}`
+
     var blob = new Blob([js], {type: "application/js"}),
         url = URL.createObjectURL(blob),
         w = new Worker(url),

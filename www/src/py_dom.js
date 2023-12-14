@@ -339,42 +339,49 @@ function dom2svg(svg_elt, coords){
     return pt.matrixTransform(svg_elt.getScreenCTM().inverse())
 }
 
-DOMEvent.__getattribute__ = function(self, attr){
+DOMEvent.__getattribute__ = function(ev, attr){
     switch(attr) {
         case '__repr__':
         case '__str__':
             return function(){return '<DOMEvent object>'}
         case 'x':
-            return $mouseCoords(self).x
+            return $mouseCoords(ev).x
         case 'y':
-            return $mouseCoords(self).y
+            return $mouseCoords(ev).y
         case 'data':
-            if(self.dataTransfer !== null && self.dataTransfer !== undefined){
-                return Clipboard.$factory(self.dataTransfer)
+            if(ev.dataTransfer !== null && ev.dataTransfer !== undefined){
+                return Clipboard.$factory(ev.dataTransfer)
+            }else if(ev.target instanceof Worker){
+                // main script receiving a MessageEvent from a worker
+                return $B.structuredclone2pyobj(ev.data)
+            }else if(typeof DedicatedWorkerGlobalScope !== 'undefined' &&
+                    ev.target instanceof DedicatedWorkerGlobalScope){
+                // web worker receiving a message from the main script
+                return $B.structuredclone2pyobj(ev.data)
             }
-            return convertDomValue(self['data'])
+            return convertDomValue(ev.data)
         case 'target':
-            if(self.target !== undefined){
-                return DOMNode.$factory(self.target)
+            if(ev.target !== undefined){
+                return DOMNode.$factory(ev.target)
             }
             break
         case 'char':
-            return String.fromCharCode(self.which)
+            return String.fromCharCode(ev.which)
         case 'svgX':
-            if(self.target instanceof SVGSVGElement){
-                return Math.floor(dom2svg(self.target, $mouseCoords(self)).x)
+            if(ev.target instanceof SVGSVGElement){
+                return Math.floor(dom2svg(ev.target, $mouseCoords(ev)).x)
             }
             throw _b_.AttributeError.$factory("event target is not an SVG " +
                 "element")
         case 'svgY':
-            if(self.target instanceof SVGSVGElement){
-                return Math.floor(dom2svg(self.target, $mouseCoords(self)).y)
+            if(ev.target instanceof SVGSVGElement){
+                return Math.floor(dom2svg(ev.target, $mouseCoords(self)).y)
             }
             throw _b_.AttributeError.$factory("event target is not an SVG " +
                 "element")
     }
 
-    var res =  self[attr]
+    var res =  ev[attr]
     if(res !== undefined){
         if(typeof res == "function"){
             var func = function(){
@@ -382,7 +389,7 @@ DOMEvent.__getattribute__ = function(self, attr){
                 for(var i = 0; i < arguments.length; i++){
                     args.push($B.pyobj2jsobj(arguments[i]))
                 }
-                return res.apply(self, arguments)
+                return res.apply(ev, arguments)
             }
             func.$infos = {
                 __name__: res.name,
@@ -392,7 +399,7 @@ DOMEvent.__getattribute__ = function(self, attr){
         }
         return convertDomValue(res)
     }
-    throw $B.attr_error(attr, self)
+    throw $B.attr_error(attr, ev)
 }
 
 // Function to transform a DOM event into an instance of DOMEvent

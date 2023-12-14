@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-13 23:09:28.917342"
-__BRYTHON__.timestamp=1702505368917
+__BRYTHON__.compiled_date="2023-12-14 15:34:33.299171"
+__BRYTHON__.timestamp=1702564473299
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5372,7 +5372,7 @@ if(Array.isArray(obj)){if(obj.$is_js_array){return $B.js_array}else if(Object.ge
 return _b_.list}}else if(obj instanceof $B.str_dict){return _b_.dict}else if(typeof Node !=="undefined" 
 && obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
 $B.DOMNode}
-return $B.DOMNode}
+return $B.DOMNode}else if(obj instanceof Event){return $B.DOMEvent}
 break}}
 if(klass===undefined){return $B.get_jsobj_class(obj)}
 return klass}
@@ -14002,37 +14002,40 @@ var pt=svg_elt.createSVGPoint()
 pt.x=coords.x
 pt.y=coords.y
 return pt.matrixTransform(svg_elt.getScreenCTM().inverse())}
-DOMEvent.__getattribute__=function(self,attr){switch(attr){case '__repr__':
+DOMEvent.__getattribute__=function(ev,attr){switch(attr){case '__repr__':
 case '__str__':
 return function(){return '<DOMEvent object>'}
 case 'x':
-return $mouseCoords(self).x
+return $mouseCoords(ev).x
 case 'y':
-return $mouseCoords(self).y
+return $mouseCoords(ev).y
 case 'data':
-if(self.dataTransfer !==null && self.dataTransfer !==undefined){return Clipboard.$factory(self.dataTransfer)}
-return convertDomValue(self['data'])
+if(ev.dataTransfer !==null && ev.dataTransfer !==undefined){return Clipboard.$factory(ev.dataTransfer)}else if(ev.target instanceof Worker){
+return $B.structuredclone2pyobj(ev.data)}else if(typeof DedicatedWorkerGlobalScope !=='undefined' &&
+ev.target instanceof DedicatedWorkerGlobalScope){
+return $B.structuredclone2pyobj(ev.data)}
+return convertDomValue(ev.data)
 case 'target':
-if(self.target !==undefined){return DOMNode.$factory(self.target)}
+if(ev.target !==undefined){return DOMNode.$factory(ev.target)}
 break
 case 'char':
-return String.fromCharCode(self.which)
+return String.fromCharCode(ev.which)
 case 'svgX':
-if(self.target instanceof SVGSVGElement){return Math.floor(dom2svg(self.target,$mouseCoords(self)).x)}
+if(ev.target instanceof SVGSVGElement){return Math.floor(dom2svg(ev.target,$mouseCoords(ev)).x)}
 throw _b_.AttributeError.$factory("event target is not an SVG "+
 "element")
 case 'svgY':
-if(self.target instanceof SVGSVGElement){return Math.floor(dom2svg(self.target,$mouseCoords(self)).y)}
+if(ev.target instanceof SVGSVGElement){return Math.floor(dom2svg(ev.target,$mouseCoords(self)).y)}
 throw _b_.AttributeError.$factory("event target is not an SVG "+
 "element")}
-var res=self[attr]
+var res=ev[attr]
 if(res !==undefined){if(typeof res=="function"){var func=function(){var args=[]
 for(var i=0;i < arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
-return res.apply(self,arguments)}
+return res.apply(ev,arguments)}
 func.$infos={__name__:res.name,__qualname__:res.name}
 return func}
 return convertDomValue(res)}
-throw $B.attr_error(attr,self)}
+throw $B.attr_error(attr,ev)}
 var $DOMEvent=$B.$DOMEvent=function(ev){ev.__class__=DOMEvent
 ev.$no_dict=true
 if(ev.preventDefault===undefined){ev.preventDefault=function(){ev.returnValue=false}}

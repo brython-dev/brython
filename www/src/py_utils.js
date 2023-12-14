@@ -776,6 +776,8 @@ $B.get_class = function(obj){
                                    $B.DOMNode
                     }
                     return $B.DOMNode
+                }else if(obj instanceof Event){
+                    return $B.DOMEvent
                 }
                 break
         }
