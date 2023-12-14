@@ -244,11 +244,8 @@ ajax.set_timeout = function(self, seconds, func){
 
 ajax.$factory = function(){
 
-    if(window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
-        var xmlhttp = new XMLHttpRequest()
-    }else{// code for IE6, IE5
-        var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP")
-    }
+    var xmlhttp = new XMLHttpRequest()
+
     xmlhttp.onreadystatechange = function(){
         // here, "this" refers to xmlhttp
         var state = this.readyState
@@ -266,7 +263,7 @@ ajax.$factory = function(){
             this.oninteractive(res)
         }else if(state == 4 && this.oncomplete){
             if(timer !== null){
-                window.clearTimeout(timer)
+                globalThis.clearTimeout(timer)
             }
             this.oncomplete(res)
         }

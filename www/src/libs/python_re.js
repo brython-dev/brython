@@ -3184,7 +3184,6 @@ function prepare(args){
 function subn(pattern, repl, string, count, flags){
     // string is a StringObj instance
     // pattern is either a Pattern instance or a StringObj instance
-    var t0 = window.performance.now()
     var res = '',
         pos = 0,
         nb_sub = 0
@@ -3342,16 +3341,11 @@ function GroupMO(node, start, matches, string, groups, endpos){
     this.$groups = groups
 }
 
-$B.nb_group_backtrack = 0
-$B.t_group_backtrack = 0
-
 GroupMO.prototype.backtrack = function(string, groups){
     if(_debug.value){
         console.log('group MO backtrack, this', this)
         alert()
     }
-    $B.nb_group_backtrack++
-    var t0 = performance.now()
     // Try backtracking in the last match
     if(this.node.possessive || this.node.atomic){
         return false
@@ -3375,7 +3369,6 @@ GroupMO.prototype.backtrack = function(string, groups){
                             var ix = this.$groups.$last[this.$groups.$last.length - 1]
                             this.$groups[ix].end = _mo.end
                         }
-                        $B.t_group_backtrack += performance.now() - t0
                         return true
                     }
                 }
@@ -3386,7 +3379,6 @@ GroupMO.prototype.backtrack = function(string, groups){
                     groups[this.node.num].end = mo.end
                 }
                 this.end = mo.end
-                $B.t_group_backtrack += performance.now() - t0
                 return true
             }
         }
@@ -3402,7 +3394,6 @@ GroupMO.prototype.backtrack = function(string, groups){
             del_groups(groups, this.node)
             this.end = this.start
         }
-        $B.t_group_backtrack += performance.now() - t0
         return true
     }
     // Group fails; if some of its subgroups succeded, remove them from
@@ -3410,7 +3401,6 @@ GroupMO.prototype.backtrack = function(string, groups){
     if(this.node.repeat.min > 0){
         del_groups(groups, this.node)
     }
-    $B.t_group_backtrack += performance.now() - t0
     return false
 }
 
