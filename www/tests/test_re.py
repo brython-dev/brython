@@ -87,4 +87,9 @@ pattern = re.compile(
 # issue 1952
 assert re.search('^abc (.*)$', 'abc DEF')
 
+# issue 2342
+inStr = 'text_1'
+outStr = re.sub(r'\W+', '', inStr)
+assert outStr == 'text_1'
+
 print('all tests ok..')

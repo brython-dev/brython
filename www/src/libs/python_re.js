@@ -20,11 +20,11 @@ function is_word(cp){
             return true
     }
     for(var word_gc of word_gcs){
-        if(! $B.in_unicode_category(word_gc, cp)){
-            return false
+        if($B.in_unicode_category(word_gc, cp)){
+            return true
         }
     }
-    return true
+    return false
 }
 
 var ascii_word = {}
