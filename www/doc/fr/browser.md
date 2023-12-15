@@ -29,6 +29,9 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 **browser**.`DOMNode`
 > la classe des noeuds DOM
 
+**browser**.`is_webworker`
+> booléen qui indique si le script courant est exécuté dans un Web Worker
+
 **browser**.`load(`_script\_url_`)`
 > Fonction pour charger la librairie Javascript à l'adresse _script\_url_.
 

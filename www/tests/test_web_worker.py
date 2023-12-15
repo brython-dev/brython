@@ -1,4 +1,4 @@
-from browser import worker
+from browser import worker, is_webworker
 from tester import async_tester
 
 msg_num = 0
@@ -10,6 +10,7 @@ def main(w):
 
 def onmessage(ev):
     global msg_num
+    async_tester.assertFalse(is_webworker)
     if msg_num == 0:
         async_tester.assertEqual(ev.data, 'sent by web worker')
         ww.send(['a', 1])

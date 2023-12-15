@@ -18,7 +18,7 @@ The package **browser** groups the built-in Brython-specific names and modules
 
 **browser**.`document`
 > an object that represents the HTML document currently displayed in the
-> browser window. The interface of this object is described in section 
+> browser window. The interface of this object is described in section
 > "Browser interface"
 
 **browser**.`DOMEvent`
@@ -26,6 +26,9 @@ The package **browser** groups the built-in Brython-specific names and modules
 
 **browser**.`DOMNode`
 > the class of DOM nodes
+
+**browser**.`is_webworker`
+> boolean indicating if the current script is executed in a Web Worker
 
 **browser**.`load(`_script\_url_`)`
 > Load the Javascript library at address _script\_url_.
