@@ -152,8 +152,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-15 11:38:37.875736"
-__BRYTHON__.timestamp=1702636717875
+__BRYTHON__.compiled_date="2023-12-16 13:49:32.544753"
+__BRYTHON__.timestamp=1702730972544
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -5644,11 +5644,12 @@ default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
-if($B.frame_obj !==null && $B.frame_obj.count > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
+var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
+if(count > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
-$B.frame_obj=$B.push_frame(frame)
+$B.frame_obj={prev:$B.frame_obj,frame,count:count+1}
 if($B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
@@ -5664,7 +5665,7 @@ frame_obj=frame_obj.prev}
 return res}catch(err){$B.set_exc(err,frame)
 $B.frame_obj=$B.frame_obj.prev
 err.$in_trace_func=true
-throw err}}}else{$B.tracefunc=_b_.None}
+throw err}}}
 return _b_.None}
 $B.trace_exception=function(){var frame=$B.frame_obj.frame
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
@@ -14985,7 +14986,7 @@ var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}},warn_explicit:function(){
 console.log("warn_explicit",arguments)}}
 var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
-function handle_kwargs(self,kw,method){var result={cache:false,format:'text',mode:'text',timeout:{},headers:{}}
+function handle_kwargs(kw,method){var result={cache:false,format:'text',mode:'text',headers:{}}
 for(let item of _b_.dict.$iter_items(kw)){let key=item.key,value=item.value
 if(key=="data"){var params=value
 if(typeof params=="string" ||params instanceof FormData){result.body=params}else if($B.$isinstance(params,_b_.bytes)){result.body=new ArrayBuffer(params.source.length)
@@ -14998,10 +14999,9 @@ for(let subitem of _b_.dict.$iter_items(params)){items.push(encodeURIComponent(s
 encodeURIComponent($B.pyobj2jsobj(subitem.value)))}
 result.body=items.join("&")}}else if(key=="headers"){if(! $B.$isinstance(value,_b_.dict)){throw _b_.ValueError.$factory(
 "headers must be a dict, not "+$B.class_name(value))}
-for(let subitem of _b_.dict.$iter_items(value)){result.headers[subitem.key.toLowerCase()]=subitem.value}}else if(key.startsWith("on")){var event=key.substr(2)
-if(event=="timeout"){result.timeout.func=value}else{modules["browser.aio"].ajax.bind(self,event,value)}}else if(key=="timeout"){result.timeout.seconds=value}else if(["cache","format","mode"].includes(key)){result[key]=value}}
+for(let subitem of _b_.dict.$iter_items(value)){result.headers[subitem.key.toLowerCase()]=subitem.value}}else if(["cache","format","mode"].includes(key)){result[key]=value}}
 if(method=="post"){
-if(! result.headers.hasOwnProperty("Content-type")){result.headers["Content-Type"]="application/x-www-form-urlencoded"}}
+if(! result.headers.hasOwnProperty("content-type")){result.headers["Content-Type"]="application/x-www-form-urlencoded"}}
 return result}
 var HTTPRequest=$B.make_class("Request")
 HTTPRequest.data=_b_.property.$factory(function(self){if(self.format=="binary"){var view=new Uint8Array(self.response)
@@ -15038,7 +15038,7 @@ $.self._methods.reject($.exception)
 return _b_.None}
 $B.set_func_names(Future,'browser.aio')
 modules['browser.aio']={ajax:function(){var $=$B.args("ajax",2,{method:null,url:null},["method","url"],arguments,{},null,"kw"),method=$.method.toUpperCase(),url=$.url,kw=$.kw
-var args=handle_kwargs({},kw,"get")
+var args=handle_kwargs(kw,"get")
 if(method=="GET" && ! args.cache){url=url+"?ts"+(new Date()).getTime()+"=0"}
 if(args.body && method=="GET"){url=url+(args.cache ? "?" :"&")+args.body}
 var func=function(){return new Promise(function(resolve){var xhr=new XMLHttpRequest()
@@ -15073,7 +15073,6 @@ return{
 __class__:$B.coroutine,$args:[seconds],$func:func}},Future,__getattr__:function(attr){
 $B.$import('_aio')
 return $B.$getattr($B.imported._aio,attr)}}
-modules['browser.aio']._handle_kwargs=handle_kwargs
 function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name

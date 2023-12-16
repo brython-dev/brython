@@ -74,7 +74,75 @@ function stringify(d){
     return items.join("&")
 }
 
-var handle_kwargs = $B.imported['browser.aio']._handle_kwargs
+function handle_kwargs(self, kw, method){
+    // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
+    var data,
+        encoding,
+        headers={},
+        cache,
+        mode = "text",
+        timeout = {}
+
+    for(var item of _b_.dict.$iter_items(kw)){
+        var key = item.key
+        if(key == "data"){
+            var params = item.value
+            if(typeof params == "string" || params instanceof FormData){
+                data = params
+            }else if(params.__class__ === _b_.dict){
+                var from_dict = []
+                for(var key of $B.make_js_iterator(_b_.dict.keys(params))){
+                    if(typeof key !== 'string'){
+                        throw _b_.ValueError.$factory(
+                            'data only supports string keys, got ' +
+                            `'${$B.class_name(key)}' object`)
+                    }
+                    from_dict.push(`${key}=${_b_.dict.$getitem(params, key)}`)
+                }
+                data = from_dict.join('&')
+            }else{
+                throw _b_.TypeError.$factory("wrong type for data: " +
+                    $B.class_name(params))
+            }
+        }else if(key == "encoding"){
+            encoding = item.value
+        }else if(key == "headers"){
+            var value = item.value
+            if(! $B.$isinstance(value, _b_.dict)){
+                throw _b_.ValueError.$factory(
+                    "headers must be a dict, not " + $B.class_name(value))
+            }
+            for(var subitem of _b_.dict.$iter_items(value)){
+                headers[subitem.key.toLowerCase()] = subitem.value
+            }
+        }else if(key.startsWith("on")){
+            var event = key.substr(2)
+            if(event == "timeout"){
+                timeout.func = item.value
+            }else{
+                var f = item.value
+                ajax.bind(self, event, f)
+            }
+        }else if(key == "mode"){
+            var mode = item.value
+        }else if(key == "timeout"){
+            timeout.seconds = item.value
+        }else if(key == "cache"){
+            cache = item.value
+        }
+    }
+    if(encoding && mode != "text"){
+        throw _b_.ValueError.$factory("encoding not supported for mode " +
+            mode)
+    }
+    if((method == "post" || method == "put") && ! headers){
+        // For POST requests, set default header
+        self.js.setRequestHeader("Content-type",
+                                 "application/x-www-form-urlencoded")
+    }
+
+    return {cache, data, encoding, headers, mode, timeout}
+}
 
 var ajax = $B.make_class('ajax')
 
@@ -276,6 +344,7 @@ ajax.$factory = function(){
     return res
 }
 
+
 function _request_without_body(method){
     var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
         ["method", "url", "blocking"], arguments, {blocking: false},
@@ -289,10 +358,8 @@ function _request_without_body(method){
     self.blocking = $.blocking
     var items = handle_kwargs(self, kw, method),
         mode = self.mode = items.mode,
-        encoding = self.encoding = items.encoding
-        qs = items.data,
-        timeout = items.timeout
-    set_timeout(self, timeout)
+        encoding = self.encoding = items.encoding,
+        qs = items.data
     if(qs){
         url += "?" + qs
     }
@@ -317,6 +384,10 @@ function _request_without_body(method){
     for(var key in items.headers){
         self.js.setRequestHeader(key, items.headers[key])
     }
+    var timeout = items.timeout
+    if(timeout.seconds){
+        ajax.set_timeout(self, timeout.seconds, timeout.func)
+    }
     // Add function read() to return str or bytes according to mode
     self.js.send()
 }
@@ -332,14 +403,12 @@ function _request_with_body(method){
         content_type
     var self = ajax.$factory()
     self.js.open(method.toUpperCase(), url, async)
-    var items = handle_kwargs(self, kw, method),
-        data = items.data,
-        timeout = items.timeout
+    var items = handle_kwargs(self, kw, method), // common with browser.aio
+        data = items.data
+
     if($B.$isinstance(data, _b_.dict)){
         data = stringify(data)
     }
-
-    set_timeout(self, timeout)
     for(var key in items.headers){
         var value = items.headers[key]
         self.js.setRequestHeader(key, value)
@@ -418,18 +487,21 @@ function file_upload(){
     var self = ajax.$factory()
 
     var items = handle_kwargs(self, kw, method),
-        data = items.body,
-        headers = items.headers,
-        timeout = items.timeout
+        data = items.data,
+        headers = items.headers
 
-    for(var key in items.headers){
-        var value = items.headers[key]
+    for(var key in headers){
+        var value = headers[key]
         self.js.setRequestHeader(key, value)
         if(key == 'content-type'){
             content_type = value
         }
     }
-    set_timeout(self, timeout)
+
+    var timeout = items.timeout
+    if(timeout.seconds){
+        ajax.set_timeout(self, timeout.seconds, timeout.func)
+    }
 
     var method = _b_.dict.$get_string(kw, 'method', 'POST'),
         field_name = _b_.dict.$get_string(kw, 'field_name', 'filetosave')
@@ -437,14 +509,14 @@ function file_upload(){
     var formdata = new FormData()
     formdata.append(field_name, file, file.name)
 
-    if(items.body){
-        if(items.body instanceof FormData){
+    if(data){
+        if(data instanceof FormData){
             // append additional data
-            for(var d of items.body){
+            for(var d of data){
                 formdata.append(d[0], d[1])
             }
-        }else if($B.$isinstance(items.body, _b_.dict)){
-            for(var item of _b_.dict.$iter_items(items.body)){
+        }else if($B.$isinstance(data, _b_.dict)){
+            for(var item of _b_.dict.$iter_items(data)){
                 formdata.append(item.key, item.value)
             }
         }else{
@@ -452,15 +524,10 @@ function file_upload(){
                 'data value must be a dict of form_data')
         }
     }
-
+    
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(var item of _b_.dict.$iter_items(kw)){
-        if(item.key.startsWith("on")){
-            ajax.bind(self, item.key.substr(2), item.value)
-        }
-    }
 }
 
 $B.set_func_names(ajax)

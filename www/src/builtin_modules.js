@@ -961,12 +961,11 @@
         "dataURL": "arraybuffer"
     }
 
-    function handle_kwargs(self, kw, method){
+    function handle_kwargs(kw, method){
         var result = {
                 cache: false,
                 format: 'text',
                 mode: 'text',
-                timeout: {},
                 headers: {}
             }
         for(let item of _b_.dict.$iter_items(kw)){
@@ -1003,22 +1002,13 @@
                 for(let subitem of _b_.dict.$iter_items(value)){
                     result.headers[subitem.key.toLowerCase()] = subitem.value
                 }
-            }else if(key.startsWith("on")){
-                var event = key.substr(2)
-                if(event == "timeout"){
-                    result.timeout.func = value
-                }else{
-                    modules["browser.aio"].ajax.bind(self, event, value)
-                }
-            }else if(key == "timeout"){
-                result.timeout.seconds = value
             }else if(["cache", "format", "mode"].includes(key)){
                 result[key] = value
             }
         }
         if(method == "post"){
             // For POST requests, set default header
-            if(! result.headers.hasOwnProperty("Content-type")){
+            if(! result.headers.hasOwnProperty("content-type")){
                 result.headers["Content-Type"] = "application/x-www-form-urlencoded"
             }
         }
@@ -1106,7 +1096,7 @@
                 method = $.method.toUpperCase(),
                 url = $.url,
                 kw = $.kw
-            var args = handle_kwargs({}, kw, "get")
+            var args = handle_kwargs(kw, "get")
             if(method == "GET" && ! args.cache){
                 url = url + "?ts" + (new Date()).getTime() + "=0"
             }
@@ -1227,8 +1217,6 @@
             return $B.$getattr($B.imported._aio, attr)
         }
     }
-
-    modules['browser.aio']._handle_kwargs = handle_kwargs
 
     function load(name, module_obj){
         // add class and __str__

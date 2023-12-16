@@ -389,6 +389,7 @@ def async_wrapper(method):
             method(*args)
         except AssertionError as exc:
             input(str(exc))
+            raise
     return f
 
 for method_name in dir(Tester):
