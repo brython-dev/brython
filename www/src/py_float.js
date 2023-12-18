@@ -1346,7 +1346,7 @@ float.$factory = function(value){
                 "number, not '" + $B.class_name(value) + "'")
         }
         let index = $B.$call(index_method)(value),
-            index_klass = $B.get_class(res)
+            index_klass = $B.get_class(index)
 
         if(index_klass === _b_.int){
             return fast_float(index)
