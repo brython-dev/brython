@@ -52,36 +52,20 @@ var stat_result = $B.make_class("stat_result",
             return res
 
         }else{
-            try{
-                var xhr = new XMLHttpRequest()
-            }catch(err){
-                console.log('err', filename, err.message)
-                console.log('stack', $B.make_frames_stack())
-                throw err
-            }
-            xhr.open('HEAD', filename, false)
-            var infos = {}
-            xhr.onreadystatechange = function(){
-                if(this.readyState == 4){
-                    var res = {
-                        __class__: stat_result,
-                        st_atime: __BRYTHON__.timestamp,
-                        st_uid: -1,
-                        st_gid: -1,
-                        st_ino: -1,
-                        st_mode: filename.endsWith('/') ? 16895 : 33206,
-                        st_size: this.getResponseHeader('content-length')
-                    };
-                    ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
-                        forEach(function(item){
-                            res["st_" + item] = res.st_atime
-                        });
-                    infos.value = res
-                    $B.file_cache[filename] = this.responseText
-                }
-            }
-            xhr.send()
-            return infos.value
+            var res = {
+                __class__: stat_result,
+                st_atime: __BRYTHON__.timestamp,
+                st_uid: -1,
+                st_gid: -1,
+                st_ino: -1,
+                st_mode: filename.endsWith('/') ? 16895 : 33206,
+                st_size: 1 // fake
+            };
+            ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
+                forEach(function(item){
+                    res["st_" + item] = res.st_atime
+                });
+            return res
         }
     }
 )
