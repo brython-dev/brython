@@ -66,8 +66,6 @@ dont_write_bytecode = True
 
 exec_prefix = __BRYTHON__.brython_path
 
-executable = __BRYTHON__.brython_path + 'brython.js'
-
 argv = orig_argv = [__BRYTHON__.script_path] + list(__BRYTHON__.get_option('args'))
 
 def displayhook(value):

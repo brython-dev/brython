@@ -713,6 +713,7 @@
             }
             return _b_.None
         },
+        executable: $B.strip_host($B.brython_path + 'brython.js'),
         float_repr_style: 'short',
         getdefaultencoding: function(){
             return 'utf-8'
