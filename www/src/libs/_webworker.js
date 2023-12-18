@@ -91,8 +91,10 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     if(worker_script === undefined){
         throw _b_.KeyError.$factory(id)
     }
-    var filename = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
+    var filepath = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
+        filename = $B.strip_host(filepath),
         src = $B.file_cache[filename]
+
     var indexedDB = worker_script.attributes &&
             worker_script.attributes.getNamedItem('indexedDB')
     var script_id = "worker" + $B.UUID(),
@@ -156,7 +158,8 @@ function create_worker(){
         throw _b_.RuntimeError.$factory(`No webworker with id '${id}'`)
     }
     var script_id = "worker" + $B.UUID(),
-        filename = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
+        filepath = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
+        filename = $B.strip_host(filepath),
         src = $B.file_cache[filename]
     $B.url2name[filename] = script_id
 

@@ -320,8 +320,8 @@ $B.ajax_load_script = function(s){
             script, src, name, url, true])
         loop()
     }else if($B.protocol != "file"){
-        $B.script_filename = url
-        $B.scripts[url] = script
+        var filename = $B.script_filename = $B.strip_host(url)
+        $B.scripts[filename] = script
         var req = new XMLHttpRequest(),
             cache = $B.get_option('cache'),
             qs = cache ? '' :

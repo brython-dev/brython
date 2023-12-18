@@ -6,6 +6,8 @@
 var _b_ = $B.builtins,
     _window = globalThis
 
+// var dbUpdater = new Worker($B.brython_path + 'indexedDBupdater.js')
+
 // Class for modules
 var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
@@ -71,7 +73,8 @@ $B.make_import_paths = function(filename){
     // - finder_static_stlib : use the script stdlib_path.js to identify the
     //   packages and modules in the standard distribution
     // - finder_path : search module at different urls
-    var elts = filename.split('/')
+    var filepath = $B.domain ? $B.domain + '/' + filename : filename
+    var elts = filepath.split('/')
     elts.pop()
     var script_dir = elts.join('/'),
         path = [$B.brython_path + 'Lib',
@@ -292,6 +295,8 @@ function run_py(module_contents, path, module, compiled) {
         throw err
     }
 
+    var imports = Object.keys(root.imports).join(",")
+
     try{
         // Apply side-effects upon input module object
         for(let attr in mod){
@@ -305,7 +310,11 @@ function run_py(module_contents, path, module, compiled) {
         return {
             content: src,
             name: mod_name,
-            imports: Object.keys(root.imports).join(",")
+            imports,
+            is_package: module.$is_package,
+            path,
+            timestamp: $B.timestamp,
+            source_ts: module.__spec__.loader_state.timestamp
         }
     }catch(err){
         console.log("" + err + " " + " for module " + module.__name__)
@@ -321,6 +330,12 @@ function run_py(module_contents, path, module, compiled) {
 
 $B.run_py = run_py // used in importlib.basehook
 $B.run_js = run_js
+
+function save_in_indexedDB(record){
+    if(dbUpdater && $B.get_page_option('indexeddb') && $B.indexedDB){
+        dbUpdater.postMessage(record)
+    }
+}
 
 var ModuleSpec = $B.make_class("ModuleSpec",
     function(fields) {
@@ -513,7 +528,7 @@ VFSLoader.exec_module = function(self, modobj){
         if(elts.length > 1){
             elts.pop()
         }
-        if($B.$options.indexedDB && $B.indexedDB &&
+        if($B.get_page_option('indexeddb') && $B.indexedDB &&
                 $B.idb_name){
             // Store the compiled Javascript in indexedDB cache
             // $B.idb_name may not be defined if we are in a web worker
@@ -720,6 +735,7 @@ PathEntryFinder.find_spec = function(self, fullname){
             notfound = false
             loader_data.ext = file_info[1]
             loader_data.is_package = file_info[2]
+            loader_data.timestamp = Date.parse(module.$last_modified)
             if(hint === undefined){
                 self.hint = file_info[1]
                 // Top-level import
@@ -779,7 +795,9 @@ PathLoader.exec_module = function(self, module){
     var metadata = module.__spec__.loader_state
     module.$is_package = metadata.is_package
     if(metadata.ext == "py"){
-        run_py(metadata.code, metadata.path, module)
+        var record = run_py(metadata.code, metadata.path, module)
+        //record.python_source = metadata.code
+        //save_in_indexedDB(record)
     }else{
         run_js(metadata.code, metadata.path, module)
     }

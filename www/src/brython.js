@@ -34,10 +34,14 @@ var elts=this_url.split('/');
 elts.pop()
 $B.brython_path=elts.join('/')+'/'}else{if(! $B.brython_path.endsWith("/")){$B.brython_path+="/"}}
 var parts_re=new RegExp('(.*?)://(.*?)/(.*)'),mo=parts_re.exec($B.brython_path)
-if(mo){$B.full_url={protocol:mo[1],host:mo[2],address:mo[3]}}
+if(mo){$B.full_url={protocol:mo[1],host:mo[2],address:mo[3]}
+if(['http','https'].includes(mo[1])){$B.domain=mo[1]+'://'+mo[2]}}
 var path=_window.location.origin+_window.location.pathname,path_elts=path.split("/")
 path_elts.pop()
 $B.script_dir=path_elts.join("/")
+$B.strip_host=function(url){var parts_re=new RegExp('(.*?)://(.*?)/(.*)'),mo=parts_re.exec(url)
+if(mo){return mo[3]}
+throw Error('not a url: '+url)}
 $B.__ARGV=[]
 $B.webworkers={}
 $B.file_cache={}
@@ -152,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-16 13:49:32.544753"
-__BRYTHON__.timestamp=1702730972544
+__BRYTHON__.compiled_date="2023-12-18 21:32:09.089050"
+__BRYTHON__.timestamp=1702931529089
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -4858,6 +4862,7 @@ var inject_observer=new MutationObserver(function(mutations){for(var mutation of
 inject_observer.observe(document.documentElement,{childList:true,subtree:true})}}else if($B.isNode){return}
 for(var python_script of python_scripts){set_script_id(python_script)}
 var scripts=[]
+$B.script_path=_window.location.href.split('#')[0]
 var $href=$B.script_path=_window.location.href.split('#')[0],$href_elts=$href.split('/')
 $href_elts.pop()
 if($B.isWebWorker ||$B.isNode){$href_elts.pop()}
@@ -4905,7 +4910,8 @@ var source=(worker.innerText ||worker.textContent)
 source=unindent(source)
 source=source.replace(/^\n/,'')
 $B.webworkers[worker.id]=worker
-filename=$B.script_filename=$B.script_path+"#"+worker.id
+filename=$B.script_filename=$B.strip_host(
+$B.script_path+"#"+worker.id)
 $B.url2name[filename]=worker.id
 $B.file_cache[filename]=source
 $B.scripts[filename]=worker
@@ -4917,7 +4923,8 @@ src=(script.innerHTML ||script.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
 if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
-filename=$B.script_filename=$B.script_path+"#"+module_name
+filename=$B.script_filename=$B.strip_host(
+$B.script_path+"#"+module_name)
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
@@ -5054,8 +5061,8 @@ $B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_pa
 if($B.files && $B.files.hasOwnProperty(rel_path)){
 var src=atob($B.files[rel_path].content)
 $B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])
-loop()}else if($B.protocol !="file"){$B.script_filename=url
-$B.scripts[url]=script
+loop()}else if($B.protocol !="file"){var filename=$B.script_filename=$B.strip_host(url)
+$B.scripts[filename]=script
 var req=new XMLHttpRequest(),cache=$B.get_option('cache'),qs=cache ? '' :
 (url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
@@ -9657,7 +9664,8 @@ Module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
 $B.builtins[attr]=value}else{self[attr]=value}}
 $B.set_func_names(Module,"builtins")
 $B.make_import_paths=function(filename){
-var elts=filename.split('/')
+var filepath=$B.domain ? $B.domain+'/'+filename :filename
+var elts=filepath.split('/')
 elts.pop()
 var script_dir=elts.join('/'),path=[$B.brython_path+'Lib',$B.brython_path+'libs',script_dir,$B.brython_path+'Lib/site-packages']
 var meta_path=[],path_hooks=[]
@@ -9740,17 +9748,19 @@ console.log("linenum: "+err.lineNumber)
 console.log(js.split('\n').slice(err.lineNumber-3,err.lineNumber+3).join('\n'))
 console.log(err.stack)}
 throw err}
+var imports=Object.keys(root.imports).join(",")
 try{
 for(let attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
 return{
-content:src,name:mod_name,imports:Object.keys(root.imports).join(",")}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
+content:src,name:mod_name,imports,is_package:module.$is_package,path,timestamp:$B.timestamp,source_ts:module.__spec__.loader_state.timestamp}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(let attr in err){console.log(attr+" "+err[attr])}
 if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
 $B.run_js=run_js
+function save_in_indexedDB(record){if(dbUpdater && $B.get_page_option('indexeddb')&& $B.indexedDB){dbUpdater.postMessage(record)}}
 var ModuleSpec=$B.make_class("ModuleSpec",function(fields){fields.__class__=ModuleSpec
 return fields}
 )
@@ -9839,7 +9849,7 @@ $B.precompiled[mod_name]=record.is_package ?[record.content]:
 record.content
 let elts=mod_name.split(".")
 if(elts.length > 1){elts.pop()}
-if($B.$options.indexedDB && $B.indexedDB &&
+if($B.get_page_option('indexeddb')&& $B.indexedDB &&
 $B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),request=store.put(record)
@@ -9905,6 +9915,7 @@ loader_data.code=$download_module(module,file_info[0],undefined)
 notfound=false
 loader_data.ext=file_info[1]
 loader_data.is_package=file_info[2]
+loader_data.timestamp=Date.parse(module.$last_modified)
 if(hint===undefined){self.hint=file_info[1]
 $B.path_importer_cache[self.path_entry]=self}
 if(loader_data.is_package){
@@ -9926,7 +9937,7 @@ return _b_.None}
 PathLoader.exec_module=function(self,module){
 var metadata=module.__spec__.loader_state
 module.$is_package=metadata.is_package
-if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
+if(metadata.ext=="py"){var record=run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
 var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
@@ -12307,7 +12318,7 @@ let klass=value.__class__,float_method=$B.$getattr(klass,'__float__',null)
 if(float_method===null){var index_method=$B.$getattr(klass,'__index__',null)
 if(index_method===null){throw _b_.TypeError.$factory("float() argument must be a string or a "+
 "number, not '"+$B.class_name(value)+"'")}
-let index=$B.$call(index_method)(value),index_klass=$B.get_class(res)
+let index=$B.$call(index_method)(value),index_klass=$B.get_class(index)
 if(index_klass===_b_.int){return fast_float(index)}else if(index_klass===$B.long_int){return $B.long_int.__float__(index)}else if(index_klass.__mro__.indexOf(_b_.int)>-1){let msg=`${$B.class_name(value)}.__index__ returned `+
 `non-int (type ${$B.class_name(index)}).  The `+
 'ability to return an instance of a strict subclass'+
@@ -14920,7 +14931,7 @@ while(frame_obj !==null){frame=frame_obj.frame
 exc=frame[1].$current_exception
 if(exc !==undefined){return exc}
 frame_obj=frame_obj.prev}
-return _b_.None},float_repr_style:'short',getdefaultencoding:function(){return 'utf-8'},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
+return _b_.None},executable:$B.strip_host($B.brython_path+'brython.js'),float_repr_style:'short',getdefaultencoding:function(){return 'utf-8'},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
 return 0},last_exc:_b_.property.$factory(
 function(){return $B.imported._sys.exception()},function(value){$B.frame_obj.frame.$current_exception=value}
 ),modules:_b_.property.$factory(

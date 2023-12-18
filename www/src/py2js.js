@@ -9020,12 +9020,13 @@ var brython = $B.parser.brython = function(options){
 
     // URL of the script where function brython() is called
     // Remove part after # (cf. issue #2035)
+    $B.script_path = _window.location.href.split('#')[0]
     var $href = $B.script_path = _window.location.href.split('#')[0],
         $href_elts = $href.split('/')
     $href_elts.pop()
     if($B.isWebWorker || $B.isNode){$href_elts.pop()}
     $B.curdir = $href_elts.join('/')
-
+    
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
@@ -9188,7 +9189,8 @@ function run_scripts(_scripts){
             // remove leading CR if any
             source = source.replace(/^\n/, '')
             $B.webworkers[worker.id] = worker
-            filename = $B.script_filename = $B.script_path + "#" + worker.id
+            filename = $B.script_filename = $B.strip_host(
+                $B.script_path + "#" + worker.id)
             $B.url2name[filename] = worker.id
             $B.file_cache[filename] = source
             $B.scripts[filename] = worker
@@ -9214,7 +9216,8 @@ function run_scripts(_scripts){
             if(src.endsWith('\n')){
                 src = src.substr(0, src.length - 1)
             }
-            filename = $B.script_filename = $B.script_path + "#" + module_name
+            filename = $B.script_filename = $B.strip_host(
+                $B.script_path + "#" + module_name)
             // store source code
             $B.file_cache[filename] = src
             $B.url2name[filename] = module_name

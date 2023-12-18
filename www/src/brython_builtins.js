@@ -75,6 +75,9 @@ if(mo){
     $B.full_url = {protocol: mo[1],
                    host: mo[2],
                    address: mo[3]}
+    if(['http', 'https'].includes(mo[1])){
+        $B.domain = mo[1] + '://' + mo[2]
+    }
 }
 
 // Get the URL of the directory where the script stands
@@ -82,6 +85,15 @@ var path = _window.location.origin + _window.location.pathname,
     path_elts = path.split("/")
 path_elts.pop()
 $B.script_dir = path_elts.join("/")
+
+$B.strip_host = function(url){
+    var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
+        mo = parts_re.exec(url)
+    if(mo){
+        return mo[3]
+    }
+    throw Error('not a url: ' + url)
+}
 
 // Populated in py2js.brython(), used for sys.argv
 $B.__ARGV = []
