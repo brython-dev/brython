@@ -80,6 +80,8 @@ def message(ev):
       assert ev.data == ['a', 1]
       assert isinstance(ev.data, list)
       self.send(ev.data[:-1])
+    elif msg_num == 2:
+      self.send(['coucou', {'x': 1}])
     msg_num += 1
 
 </script>

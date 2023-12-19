@@ -39,12 +39,25 @@
     <script type="text/javascript" src="../src/brython_stdlib.js"></script>
 
 <script type="text/python" class="webworker" id="test_web_worker">
-from browser import self, bind
+from browser import self, bind, is_webworker
+from tester import async_tester
+
+msg_num = 0
 
 @bind(self, 'message')
 def message(ev):
-    assert ev.data == 'hello'
-    self.send('sent by web worker')
+    global msg_num
+    async_tester.assertTrue(is_webworker)
+    if msg_num == 0:
+      assert ev.data == 'hello'
+      self.send('sent by web worker')
+    elif msg_num == 1:
+      assert ev.data == ['a', 1]
+      assert isinstance(ev.data, list)
+      self.send(ev.data[:-1])
+    elif msg_num == 2:
+      self.send(['coucou', {'x': 1}])
+    msg_num += 1
 
 </script>
 

@@ -17,6 +17,9 @@ def onmessage(ev):
     elif msg_num == 1:
         async_tester.assertEqual(ev.data, ['a'])
         async_tester.assertIs(type(ev.data), list)
+        ww.send(1)
+    elif msg_num == 2:
+        async_tester.assertEqual(ev.data, ['coucou', {'x': 1}])
         print('all tests ok')
     msg_num += 1
 

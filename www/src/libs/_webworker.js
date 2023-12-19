@@ -232,15 +232,7 @@ function create_worker(){
                 reject(ev.data.substr(error_token.length))
             }else{
                 if(onmessage !== _b_.None){
-                    var py_event = new Proxy(ev, {
-                        get: function(target, prop){
-                            if(prop == 'data'){
-                                return $B.structuredclone2pyobj(target.data)
-                            }
-                            return target[prop]
-                        }
-                    })
-                    onmessage(py_event)
+                    onmessage(ev)
                 }
                 resolve(res)
             }
