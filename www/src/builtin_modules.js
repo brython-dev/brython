@@ -96,7 +96,13 @@
         delete browser.window
         delete browser.win
         // browser.send is an alias for postMessage
-        browser.self.send = self.postMessage
+        browser.self.send = function(){
+            var $ = $B.args('send', 1, {message: null},
+                    ['message'], arguments, {}, 'args', null),
+                message = $B.pyobj2structuredclone($.message),
+                args = $.args.map($B.pyobj2jsobj)
+            self.postMessage(message, ...args)
+        }
         browser.document = _b_.property.$factory(
             function(){
                 throw _b_.ValueError.$factory(
@@ -603,6 +609,11 @@
     modules.javascript.NullType.__eq__ = function(_self, other){
         // in Javascript, null == undefined is true...
         return other === null || other === $B.Undefined
+    }
+
+    modules.javascript.NullType.__repr__ = function(_self){
+        // in Javascript, null == undefined is true...
+        return '<Javascript null>'
     }
 
     $B.set_func_names(modules.javascript.NullType, 'javascript')
