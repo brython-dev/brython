@@ -61,17 +61,19 @@ function scripts_to_load(debug_level){
 
 var wclass = $B.make_class("Worker",
     function(worker){
-        var res = worker
-        res.send = function(){
-            var args = []
-            for(var arg of arguments){
-                args.push($B.pyobj2structuredclone(arg))
-            }
-            return res.postMessage.apply(this, args)
+        return {
+            __class__: wclass,
+            worker
         }
-        return res
     }
 )
+
+wclass.send = function(){
+    var $ = $B.args('send', 2, {self: null, message: null}, ['self', 'message'],
+            arguments, {}, 'args', null)
+    var message = $B.pyobj2structuredclone($.message)
+    return $.self.worker.postMessage(message, ...$.args)
+}
 
 wclass.__mro__ = [$B.JSObj, _b_.object]
 
@@ -234,14 +236,18 @@ function create_worker(){
                 if(onmessage !== _b_.None){
                     onmessage(ev)
                 }
-                resolve(res)
+                try{
+                    resolve(res)
+                }catch(err){
+                    reject(err)
+                }
             }
         }
 
         return res
     })
 
-    var error_func = onerror === _b_.None ? console.debug : onerror
+    var error_func = onerror === _b_.None ? $B.handle_error : onerror
 
     if(onready !== _b_.None){
         p.then(onready).catch(error_func)
