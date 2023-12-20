@@ -19,7 +19,7 @@ assert window.test_jsobj.undef_value is javascript.UNDEFINED
 # JS objects are in script jsobj_tests.js
 pyobj = window.test_jsobj.to_dict()
 print(pyobj)
-assert pyobj["null_value"] is None
+assert pyobj["null_value"] is javascript.NULL
 assert pyobj["undef_value"] is javascript.UNDEFINED
 assert pyobj["test_num"] == 10
 assert len(list(pyobj.items())) == 3

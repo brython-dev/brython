@@ -953,10 +953,10 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "sumprod" // && obj === _b_.list // "Point"
+    var $test = false // attr == "data" // && obj === _b_.list // "Point"
 
     if($test){
-        console.log("attr", attr, "of", obj, "class", klass,
+        console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
         "isclass", is_class)
     }
 
@@ -1177,6 +1177,9 @@ $B.$getattr = function(obj, attr, _default){
                     break
                 }
             }
+        }
+        if($test){
+            console.log('attr func', attr_func)
         }
     }
     if(typeof attr_func !== 'function'){
@@ -2154,7 +2157,7 @@ quit.__repr__ = quit.__str__ = function(){
 var repr = _b_.repr = function(obj){
     check_nb_args_no_kw('repr', 1, arguments)
 
-    var klass = obj.__class__ || $B.get_class(obj)
+    var klass = $B.get_class(obj)
     return $B.$call($B.$getattr(klass, "__repr__"))(obj)
 }
 

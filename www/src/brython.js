@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-19 08:21:40.769713"
-__BRYTHON__.timestamp=1702970500769
+__BRYTHON__.compiled_date="2023-12-20 14:19:25.275435"
+__BRYTHON__.timestamp=1703078365275
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -6909,7 +6909,7 @@ if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
 var $test=false 
-if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
+if($test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
 if(klass===undefined){klass=$B.get_class(obj)
 if(klass===undefined){
 if($test){console.log("no class",attr,obj.hasOwnProperty(attr),obj[attr])}
@@ -6982,7 +6982,8 @@ console.log('is type',klass===_b_.type)}
 if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}
 if($test){console.log('attr func',attr_func)}}else{attr_func=klass.__getattribute__
 if(attr_func===undefined){for(var cls of klass.__mro__){attr_func=cls['__getattribute__']
-if(attr_func !==undefined){break}}}}
+if(attr_func !==undefined){break}}}
+if($test){console.log('attr func',attr_func)}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
 var odga=_b_.object.__getattribute__
 if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\n','\nobj[attr]',obj[attr])}
@@ -7321,7 +7322,7 @@ $print.is_func=true
 var quit=_b_.quit=function(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
 var repr=_b_.repr=function(obj){check_nb_args_no_kw('repr',1,arguments)
-var klass=obj.__class__ ||$B.get_class(obj)
+var klass=$B.get_class(obj)
 return $B.$call($B.$getattr(klass,"__repr__"))(obj)}
 var reversed=_b_.reversed=$B.make_class("reversed",function(seq){
 check_nb_args_no_kw('reversed',1,arguments)
@@ -13545,16 +13546,18 @@ return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var key of $B.ma
 "keys does not support structured clone")}}}
 let res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
-return res}else if(obj.__class__===$B.long_int){return obj.value}else{return obj}}
+return res}else if(obj.__class__===$B.long_int){return obj.value}else if($B.$isinstance(obj,$B.JSObj)){return obj}
+throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||
 typeof obj=="string"){return obj}else if(typeof obj=="number"){return Number.isInteger(obj)?
 obj :
 {__class__:_b_.float,value:obj}}else if(obj instanceof Number ||obj instanceof String){return obj.valueOf()}else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){let res=_b_.list.$factory()
 for(var i=0,len=obj.length;i < len;i++){res.push($B.structuredclone2pyobj(obj[i]))}
-return res}else if(typeof obj=="object"){let res=$B.empty_dict()
+return res}else if(typeof obj=="object"){if(Object.getPrototypeOf(obj)===Object.prototype){
+let res=$B.empty_dict()
 for(var key in obj){_b_.dict.$setitem(res,key,$B.structuredclone2pyobj(obj[key]))}
-return res}else{throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
+return res}else{return obj}}else{throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
 " does not support the structured clone algorithm")}}
 const JSOBJ=Symbol('JSOBJ')
 const PYOBJ=Symbol('PYOBJ')
@@ -13787,7 +13790,9 @@ for(var item of events){_self.removeEventListener(evt,item[1])}
 delete _self.$brython_events[evt]}else{for(var i=0,len=events.length;i < len;i++){if(events[i][0]===func){events.splice(i,1)}}
 if(events.length==0){delete _self.$brython_events[evt]}}}
 $B.JSObj.to_dict=function(_self){
-return $B.structuredclone2pyobj(_self)}
+var res=$B.empty_dict()
+for(var key in _self){_b_.dict.$setitem(res,key,$B.jsobj2pyobj(_self[key]))}
+return res}
 $B.set_func_names($B.JSObj,"builtins")
 var js_list_meta=$B.make_class('js_list_meta')
 js_list_meta.__mro__=[_b_.type,_b_.object]
@@ -14731,7 +14736,8 @@ if($B.isNode){delete browser.window
 delete browser.win}else if($B.isWebWorker){browser.is_webworker=true
 delete browser.window
 delete browser.win
-browser.self.send=self.postMessage
+browser.self.send=function(){var $=$B.args('send',1,{message:null},['message'],arguments,{},'args',null),message=$B.pyobj2structuredclone($.message),args=$.args.map($B.pyobj2jsobj)
+self.postMessage(message,...args)}
 browser.document=_b_.property.$factory(
 function(){throw _b_.ValueError.$factory(
 "'document' is not available in Web Workers")},function(self,value){browser.document=value}
@@ -14896,6 +14902,8 @@ return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(o
 modules.javascript.NullType.__module__='javascript'
 modules.javascript.NullType.__eq__=function(_self,other){
 return other===null ||other===$B.Undefined}
+modules.javascript.NullType.__repr__=function(_self){
+return '<Javascript null>'}
 $B.set_func_names(modules.javascript.NullType,'javascript')
 modules.javascript.UndefinedType.__module__='javascript'
 var $io=$B.$io=$B.make_class("io",function(out){return{

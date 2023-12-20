@@ -61,9 +61,10 @@ $B.pyobj2structuredclone = function(obj, strict){
         return res
     }else if(obj.__class__ === $B.long_int){
         return obj.value
-    }else{
+    }else if($B.$isinstance(obj, $B.JSObj)){
         return obj
     }
+    throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)
 }
 
 $B.structuredclone2pyobj = function(obj){
@@ -88,11 +89,16 @@ $B.structuredclone2pyobj = function(obj){
         }
         return res
     }else if(typeof obj == "object"){
-        let res = $B.empty_dict()
-        for(var key in obj){
-            _b_.dict.$setitem(res, key, $B.structuredclone2pyobj(obj[key]))
+        if(Object.getPrototypeOf(obj) === Object.prototype){
+            // transform to Python dict
+            let res = $B.empty_dict()
+            for(var key in obj){
+                _b_.dict.$setitem(res, key, $B.structuredclone2pyobj(obj[key]))
+            }
+            return res
+        }else{
+            return obj
         }
-        return res
     }else{
         throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
             " does not support the structured clone algorithm")
@@ -747,7 +753,11 @@ $B.JSObj.unbind = function(_self, evt, func){
 
 $B.JSObj.to_dict = function(_self){
     // Returns a Python dictionary based on the underlying Javascript object
-    return $B.structuredclone2pyobj(_self)
+    var res = $B.empty_dict()
+    for(var key in _self){
+        _b_.dict.$setitem(res, key, $B.jsobj2pyobj(_self[key]))
+    }
+    return res
 }
 
 $B.set_func_names($B.JSObj, "builtins")
