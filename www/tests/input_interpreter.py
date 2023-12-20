@@ -16,7 +16,9 @@ if not hasattr(window, "SharedArrayBuffer"):
         "cross-origin-opener-policy= 'same-origin'")
     sys.exit()
 
-py_worker = worker.Worker("python-worker")
+def ready(w):
+    global py_worker
+    py_worker = w
 
 class Trace:
 
@@ -49,7 +51,6 @@ def wake_up():
     stdinbufferInt = window.Int32Array.new(Buffer.value)
     window.Atomics.notify(stdinbufferInt, 0, 1)
 
-@bind(py_worker, "message")
 def message(ev):
     data = ev.data
     console.log('main script receives', data)
@@ -61,7 +62,9 @@ def message(ev):
     elif status == "block" or status == "3string":
         interpreter.zone.value += '... '
     elif status == "stdin":
+        console.log('status is stdin, data', data)
         Buffer.value = data["buffer"]
+        console.log('setting value ok')
         interpreter.entry_start = interpreter.zone.selectionStart
     elif status == "print":
         args = data["args"]
@@ -429,4 +432,7 @@ class Interpreter:
         self.flush()
 
 interpreter = Interpreter()
+
+worker.create_worker("python-worker", onready=ready, onmessage=message)
+
 
