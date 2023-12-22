@@ -110,12 +110,13 @@ $B.make_import_paths = function(filename){
     var pythonpath = $B.get_option_from_filename('pythonpath', filename)
     if(pythonpath){
         // replace script_dir by paths in pythonpath
-        var ix = path.indexOf($B.script_dir)
+        var ix = path.indexOf(script_dir)
         if(ix === -1){
-            console.log('bizarre', path, $B.script_dir)
+            console.log('bizarre, script_dir', script_dir, 
+                'not in path', path)
         }else{
              path.splice(ix, 1, ...pythonpath)
-         }
+        }
     }
 
     // Use the defaut finder using sys.path if protocol is not file://

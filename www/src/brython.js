@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-22 15:37:36.253148"
-__BRYTHON__.timestamp=1703255856253
+__BRYTHON__.compiled_date="2023-12-22 18:20:26.012991"
+__BRYTHON__.timestamp=1703265626012
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -9677,8 +9677,8 @@ if(path.length > 3){path.shift()
 path.shift()}}
 var pythonpath=$B.get_option_from_filename('pythonpath',filename)
 if(pythonpath){
-var ix=path.indexOf($B.script_dir)
-if(ix===-1){console.log('bizarre',path,$B.script_dir)}else{path.splice(ix,1,...pythonpath)}}
+var ix=path.indexOf(script_dir)
+if(ix===-1){console.log('bizarre, script_dir',script_dir,'not in path',path)}else{path.splice(ix,1,...pythonpath)}}
 if($B.protocol !=="file"){meta_path.push($B.finders.path)
 path_hooks.push($B.url_hook)}
 $B.import_info[filename]={meta_path,path_hooks,path}}
