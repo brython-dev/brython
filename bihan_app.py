@@ -104,4 +104,7 @@ def store_speed(dialog):
                 f'<td><pre>{html.escape(record["src"])}</pre></td></tr>\n')
         out.write("</table>\n</body>\n</html>")
 
+def test_post(dialog):
+    return str(dialog.request.fields)
+    
 application.run(port=8000, debug=True)

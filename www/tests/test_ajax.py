@@ -131,5 +131,19 @@ ajax.file_upload('https://httpbin.org/anything',
                  data=data,
                  oncomplete=lambda req: check(2, req, expected2))
 
+# issue 2346
+import json
+
+form_data = {"ident": "a + b"}
+
+def oncomplete(req):
+    data = json.loads(req.read())
+    async_tester.assertEqual(data['form'], form_data)
+
+url = "http://httpbin.org/post"
+
+ajax.post(url,
+          data=form_data,
+          oncomplete=oncomplete)
 
 print('passed all tests...')

@@ -67,9 +67,9 @@ function _read(req){
 
 function stringify(d){
     var items = []
-    for(var entry of $B.make_js_iterator(_b_.dict.items(d))){
-        items.push(encodeURIComponent(entry[0]) + "=" +
-                   encodeURIComponent(entry[1]))
+    for(var entry of _b_.dict.$iter_items(d)){
+        items.push(encodeURIComponent(entry.key) + "=" +
+                   encodeURIComponent(entry.value))
     }
     return items.join("&")
 }
@@ -90,16 +90,7 @@ function handle_kwargs(self, kw, method){
             if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
-                var from_dict = []
-                for(var key of $B.make_js_iterator(_b_.dict.keys(params))){
-                    if(typeof key !== 'string'){
-                        throw _b_.ValueError.$factory(
-                            'data only supports string keys, got ' +
-                            `'${$B.class_name(key)}' object`)
-                    }
-                    from_dict.push(`${key}=${_b_.dict.$getitem(params, key)}`)
-                }
-                data = from_dict.join('&')
+                data = stringify(params)
             }else{
                 throw _b_.TypeError.$factory("wrong type for data: " +
                     $B.class_name(params))
@@ -524,7 +515,7 @@ function file_upload(){
                 'data value must be a dict of form_data')
         }
     }
-    
+
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
