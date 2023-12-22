@@ -1677,21 +1677,8 @@ $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
 
-var win = $B.jsobj2pyobj(_window)
-
-win.get_postMessage = function(msg,targetOrigin){
-    if($B.$isinstance(msg, _b_.dict)){
-        var temp = {__class__: "dict"},
-            items = _b_.list.$factory(_b_.dict.items(msg))
-        items.forEach(function(item){
-            temp[item[0]] = item[1]
-        })
-        msg = temp
-    }
-    return _window.postMessage(msg, targetOrigin)
-}
 
 $B.DOMNode = DOMNode
 
-$B.win = win
+
 })(__BRYTHON__)

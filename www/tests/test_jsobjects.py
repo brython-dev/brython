@@ -380,9 +380,13 @@ async def call_js_async():
         await window.js_async_raises_error()
         input('should have raised error')
     except JavascriptError as exc:
-        async_tester.assertEqual(str(exc), 
+        async_tester.assertEqual(str(exc),
             'ReferenceError: blabla is not defined')
 
 aio.run(call_js_async())
+
+# issue 2347
+pydict = window.nestedJSObj.to_dict()
+assert pydict == {'e': {'a': 1, 'b': 2}, 'f': {'c': 3, 'd': 4}}
 
 print("all tests ok...")

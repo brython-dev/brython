@@ -317,6 +317,16 @@ object.__getattribute__ = function(obj, attr){
                     if($test){console.log("return method", method)}
                     if(is_own_class_instance_method){
                         obj.$method_cache = obj.$method_cache || {}
+                        /*
+                        if(! obj.$method_cache){
+                            Object.defineProperty(obj, '$method_cache',
+                                {
+                                    value: {},
+                                    writable: true
+                                }
+                            )
+                        }
+                        */
                         obj.$method_cache[attr] = [method, res]
                     }
                     return method

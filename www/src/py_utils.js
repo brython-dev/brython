@@ -754,11 +754,10 @@ $B.get_class = function(obj){
             case "boolean":
                 return _b_.bool
             case "function":
-                if(obj.$js_func){
-                    // Javascript function or constructor
-                    return $B.JSObj
+                if(! obj.$js_func){
+                    // not a Javascript function or constructor
+                    return $B.function
                 }
-                return $B.function
             case "object":
                 if(Array.isArray(obj)){
                     if(obj.$is_js_array){

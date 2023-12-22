@@ -10,6 +10,7 @@ def main(w):
 
 def onmessage(ev):
     global msg_num
+    print('message', msg_num)
     async_tester.assertFalse(is_webworker)
     if msg_num == 0:
         async_tester.assertEqual(ev.data, 'sent by web worker')

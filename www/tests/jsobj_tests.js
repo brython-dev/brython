@@ -259,3 +259,6 @@ async function js_async_raises_error(){
     blabla
 }
 window.js_async_raises_error = js_async_raises_error
+
+// issue 2347
+window.nestedJSObj = {e:{a:1, b:2}, f:{c:3, d:4}}

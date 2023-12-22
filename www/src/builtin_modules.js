@@ -7,6 +7,8 @@
         }
     }
     var modules = {}
+    var win = $B.jsobj2pyobj(globalThis)
+
     var browser = {
         $package: true,
         $is_package: true,
@@ -79,11 +81,10 @@
                 return callback
             }
         },
-
         console: self.console && $B.jsobj2pyobj(self.console),
-        self: $B.win,
-        win: $B.win,
-        "window": $B.win,
+        self: win,
+        win: win,
+        window: win
     }
     browser.__path__ = browser.__file__
 
