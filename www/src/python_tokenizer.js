@@ -658,10 +658,11 @@ $B.tokenizer = function*(src, filename, mode){
                             line_start = pos + 1
                             line = get_line_at(pos)
                         }else{
+                            pos++;
                             var msg = 'unexpected character after line ' +
                                 'continuation character'
                             $B.raise_error_known_location(_b_.SyntaxError,
-                                filename, line_num, pos, line_num, pos + 1,
+                                filename, line_num, pos - line_start, line_num, pos - line_start + 1,
                                 line, msg)
                         }
                         break
