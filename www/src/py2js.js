@@ -9026,7 +9026,7 @@ var brython = $B.parser.brython = function(options){
     $href_elts.pop()
     if($B.isWebWorker || $B.isNode){$href_elts.pop()}
     $B.curdir = $href_elts.join('/')
-    
+
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
@@ -9128,6 +9128,7 @@ $B.get_page_option = function(option){
     // Get option defined at page level
     // If brython is explicitely called in <body onload="brython(options)">,
     // use these options first
+    option = option.toLowerCase()
     if($B.$options.hasOwnProperty(option)){
         // option passed to brython()
         return $B.$options[option]
