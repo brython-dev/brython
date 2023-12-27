@@ -132,7 +132,7 @@ _QUnit.test('testTraceback', testTraceback)
 result = test_utils.OneTimeTestResult()
 
 def qunit_add_tests(suite):
-    module_name = getattr(suite, 'caption', None) or 'All tests'
+    module_name = getattr(suite, 'caption', 'All tests')
     _QUnit.module(module_name)
     pend = []
     for test in suite:
@@ -146,18 +146,9 @@ def qunit_add_tests(suite):
 
 qunit_add_tests(test_utils.load_brython_test_cases('.'))
 
-
-# def fail_qunit(name, message):
-#     def the_test(qunit):
-#         qunit.ok(False, message)
-#     _QUnit.test(name, the_test)
-
-# try:
-#     from unittest.loader import TestLoader
-# except:
-#     fail_qunit('Loading unittest.loader.TestLoader', traceback.format_exc())
-
-    </script>
+for test_name in ('test.test_syntax',):
+    qunit_add_tests(test_utils.load_cpython_test_cases(test_name))
+</script>
 
 <!-- for Web Components tests -->
 <ui-group child-config='{"fill": true}'>

@@ -4,6 +4,7 @@ import os
 from browser import window
 import brython_test_utils as utils
 import unittest
+from unittest.loader import defaultTestLoader
 
 
 # TODO: Not needed if test cases are written in unittest style
@@ -103,6 +104,16 @@ def load_brython_test_cases(base_path=''):
         tcs = []
         for filenm, caption in options:
             tcs.append(BrythonModuleTestCase(filenm, caption, base_path))
-        ret.append(NamedTestSuite('Brython :' + label, tcs))
+        ret.append(NamedTestSuite('Brython: ' + label, tcs))
     return unittest.TestSuite(ret)
 
+def recursive_caption(suite, caption):
+    if isinstance(suite, unittest.BaseTestSuite):
+        suite.caption = caption
+        for subsuite in suite:
+            recursive_caption(subsuite, caption)
+
+def load_cpython_test_cases(test_name):
+    suite = defaultTestLoader.loadTestsFromName(test_name)
+    recursive_caption(suite, 'CPython')
+    return suite
