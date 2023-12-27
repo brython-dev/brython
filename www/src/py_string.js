@@ -1889,6 +1889,7 @@ str.isnumeric = function(){
     return _self.length > 0
 }
 
+// This regex should match the one in py2js.js
 var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
 str.isprintable = function(){

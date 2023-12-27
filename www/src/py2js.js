@@ -8407,6 +8407,9 @@ function unindent(src){
     return unindented_lines.join('\n')
 }
 
+// This regex should match the one in py_string.js
+var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
+
 function handle_errortoken(context, token, token_reader){
     if(token.string == "'" || token.string == '"'){
         raise_syntax_error(context, 'unterminated string literal ' +
@@ -8423,8 +8426,15 @@ function handle_errortoken(context, token, token_reader){
     }else if(' `$'.indexOf(token.string) == -1){
         var u = _b_.ord(token.string).toString(16).toUpperCase()
         u = 'U+' + '0'.repeat(Math.max(0, 4 - u.length)) + u
-        raise_syntax_error(context,
-            `invalid character '${token.string}' (${u})`)
+
+        let error_message;
+        if (unprintable_re.test(token.string)) {
+            error_message = `invalid non-printable character ${u}`
+        } else {
+            error_message = `invalid character '${token.string}' (${u})`
+        }
+        raise_syntax_error(context, error_message);
+            
     }
     raise_syntax_error(context)
 }

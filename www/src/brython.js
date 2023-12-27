@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-27 03:15:18.898175"
-__BRYTHON__.timestamp=1703664918898
+__BRYTHON__.compiled_date="2023-12-27 03:52:14.415948"
+__BRYTHON__.timestamp=1703667134415
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -4633,11 +4633,15 @@ unindented_lines.push(line.substr(start))}else if(line.startsWith(global_indent)
 `column ${start}, line ${line_num} at column `+
 line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
 return unindented_lines.join('\n')}
+var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 function handle_errortoken(C,token,token_reader){if(token.string=="'" ||token.string=='"'){raise_syntax_error(C,'unterminated string literal '+
 `(detected at line ${token.start[0]})`)}else if(token.string=='\\'){var nxt=token_reader.read()
 if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while parsing')}else{raise_syntax_error_known_range(C,nxt,nxt,'unexpected character after line continuation character')}}else if(' `$'.indexOf(token.string)==-1){var u=_b_.ord(token.string).toString(16).toUpperCase()
 u='U+'+'0'.repeat(Math.max(0,4-u.length))+u
-raise_syntax_error(C,`invalid character '${token.string}' (${u})`)}
+let error_message;
+if(unprintable_re.test(token.string)){error_message=`invalid non-printable character ${u}`}else{
+error_message=`invalid character '${token.string}' (${u})`}
+raise_syntax_error(C,error_message);}
 raise_syntax_error(C)}
 const braces_opener={")":"(","]":"[","}":"{"},braces_open="([{",braces_closer={'(':')','{':'}','[':']'}
 function check_brace_is_closed(brace,reader){
