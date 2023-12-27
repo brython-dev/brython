@@ -66,6 +66,7 @@ from browser import window
 import brython_test_utils as utils
 from   brython_test_utils import unittest as test_utils
 import unittest
+from unittest.loader import defaultTestLoader
 import traceback
 
 def testTraceback(qunit):
@@ -131,8 +132,8 @@ _QUnit.test('testTraceback', testTraceback)
 # TODO: Arg values e.g. verbosity level ?
 result = test_utils.OneTimeTestResult()
 
-def qunit_add_tests(suite):
-    module_name = getattr(suite, 'caption', 'All tests')
+def qunit_add_tests(suite, default_caption = 'All tests'):
+    module_name = getattr(suite, 'caption', default_caption)
     _QUnit.module(module_name)
     pend = []
     for test in suite:
@@ -142,12 +143,13 @@ def qunit_add_tests(suite):
             testName = test.shortDescription() or test.id()
             _QUnit.test(testName, test_utils.qunit_test(testName, test, result))
     for suite in pend:
-        qunit_add_tests(suite)
+        qunit_add_tests(suite, default_caption)
 
 qunit_add_tests(test_utils.load_brython_test_cases('.'))
 
 for test_name in ('test.test_syntax',):
-    qunit_add_tests(test_utils.load_cpython_test_cases(test_name))
+    suite = defaultTestLoader.loadTestsFromName(test_name)
+    qunit_add_tests(suite, default_caption = 'CPython')
 </script>
 
 <!-- for Web Components tests -->
