@@ -427,6 +427,17 @@ _b_.compile = function() {
     // exec()
     $._ast = $B.ast_js_to_py(_ast)
     $._ast.$js_ast = _ast
+
+    // Compile the ast to JS, as in py2js, so we emit syntax errors created
+    // by the JS conversion process.
+    var future = $B.future_features(_ast, filename)
+    var symtable = $B._PySymtable_Build(_ast, filename, future)
+    $B.js_from_root({
+        ast: _ast,
+        symtable,
+        filename,
+    })
+
     return $
 }
 
