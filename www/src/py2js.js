@@ -1910,7 +1910,6 @@ var Comprehension = {
     },
     make_comp: function(comp, context){
         comp.comprehension = true
-        comp.position = $token.value
         comp.parent = context.parent
         comp.id = comp.type + $B.UUID()
         var scope = get_scope(context)
@@ -6564,6 +6563,7 @@ var SetCompCtx = function(context){
     this.type = 'setcomp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
+    this.position = $token.value
     Comprehension.make_comp(this, context)
 }
 
