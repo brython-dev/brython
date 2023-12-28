@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-27 16:05:27.290432"
-__BRYTHON__.timestamp=1703711127289
+__BRYTHON__.compiled_date="2023-12-28 00:36:50.716135"
+__BRYTHON__.timestamp=1703741810715
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -15456,11 +15456,11 @@ js+=has_await ? 'var save_frame_obj = $B.frame_obj;\n' :''
 if(this instanceof $B.ast.ListComp){js+=`result_${id}.push(${elt})\n`}else if(this instanceof $B.ast.SetComp){js+=`_b_.set.add(result_${id}, ${elt})\n`}else if(this instanceof $B.ast.DictComp){js+=`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}
 for(var i=0;i < nb_paren;i++){js+='}\n'}
 js+=`}catch(err){\n`+
-(has_await ? '$B.restore_frame_obj(save_frame_obj, locals)\n' :'')+
+(has_await ? `$B.restore_frame_obj(save_frame_obj, ${comp.locals_name})\n` :'')+
 `$B.set_exc(err, frame)\n`+
 `throw err\n}\n`+
-(has_await ? '\n$B.restore_frame_obj(save_frame_obj, locals);' :'')
-if(comp_iter_scope.found){js+=`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}else{js+=`delete locals.${comp_iter}\n`}
+(has_await ? `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` :'')
+if(comp_iter_scope.found){js+=`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}else{js+=`delete ${comp.locals_name}.${comp_iter}\n`}
 js+=`return result_${id}\n`+
 `}\n`+
 `)(${outmost_expr})\n`

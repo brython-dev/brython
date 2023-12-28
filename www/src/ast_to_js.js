@@ -753,21 +753,20 @@ function make_comp(scopes){
         js += '}\n'
     }
     js += `}catch(err){\n` +
-          (has_await ? '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
+          (has_await ? `$B.restore_frame_obj(save_frame_obj, ${comp.locals_name})\n` : '') +
           `$B.set_exc(err, frame)\n` +
           `throw err\n}\n` +
-          (has_await ? '\n$B.restore_frame_obj(save_frame_obj, locals);' : '')
+          (has_await ? `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
 
     if(comp_iter_scope.found){
         js += `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
     }else{
-        js += `delete locals.${comp_iter}\n`
+        js += `delete ${comp.locals_name}.${comp_iter}\n`
     }
     js += `return result_${id}\n` +
           `}\n` +
           `)(${outmost_expr})\n`
 
-    //scopes.pop()
     return js
 }
 
