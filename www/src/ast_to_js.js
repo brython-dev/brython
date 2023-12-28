@@ -3123,7 +3123,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
         js += `locals = ${namespaces.local_name},\n` +
               `globals = ${namespaces.global_name}`
         if(name){
-            js += `,\nlocals_${name} = locals`
+            let local_name = ('locals_' + name).replace(/\./g, '_')
+            js += `,\n${local_name} = locals`
         }
     }
     js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +

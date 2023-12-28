@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-28 03:19:24.722782"
-__BRYTHON__.timestamp=1703751564722
+__BRYTHON__.compiled_date="2023-12-28 03:38:51.551191"
+__BRYTHON__.timestamp=1703752731551
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -6800,7 +6800,7 @@ exc.args=['unexpected EOF while parsing',[filename,lines.length-1,1,line]]
 exc.filename=filename
 exc.text=line
 throw exc}
-var local_name='locals_'+__name__,global_name='globals_'+__name__,exec_locals={},exec_globals={}
+var local_name=('locals_'+__name__).replace(/\./g,'_'),global_name=('globals_'+__name__).replace(/\./g,'_'),exec_locals={},exec_globals={}
 if(_globals===_b_.None){
 if(frame[1]===frame[3]){
 global_name+='_globals'
@@ -16538,7 +16538,8 @@ if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`}else{
 js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name}`
-if(name){js+=`,\nlocals_${name} = locals`}}
+if(name){let local_name=('locals_'+name).replace(/\./g,'_')
+js+=`,\n${local_name} = locals`}}
 js+=`\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`

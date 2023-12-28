@@ -613,8 +613,8 @@ var $$eval = _b_.eval = function(){
         throw exc
     }
 
-    var local_name = 'locals_' + __name__,
-        global_name = 'globals_' + __name__,
+    var local_name = ('locals_' + __name__).replace(/\./g, '_'),
+        global_name = ('globals_' + __name__).replace(/\./g, '_'),
         exec_locals = {},
         exec_globals = {}
 
