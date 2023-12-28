@@ -391,7 +391,7 @@ $B.tokenizer = function*(src, filename, mode){
                     fstring_buffer += char + char
                 }else{
                     if(fstring_escape){
-                        fstring_buffer += char
+                        fstring_buffer += '\\' + char
                     }
                     fstring_escape = ! fstring_escape
                 }
