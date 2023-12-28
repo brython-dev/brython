@@ -789,6 +789,7 @@ var $$eval = _b_.eval = function(){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
+        $B.frame_obj = save_frame_obj
         throw err
     }
 
