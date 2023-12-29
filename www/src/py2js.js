@@ -6731,6 +6731,9 @@ var StarredCtx = $B.parser.StarredCtx = function(context){
 }
 
 StarredCtx.prototype.ast = function(){
+    if (this.tree[0].type == "abstract_expr") {
+        raise_syntax_error_known_range(this, this.position, last_position(this), 'invalid syntax')
+    }
     var ast_obj = new ast.Starred(this.tree[0].ast(), new ast.Load())
     set_position(ast_obj, this.position)
     return ast_obj
