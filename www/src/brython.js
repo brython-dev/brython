@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-28 19:46:20.948284"
-__BRYTHON__.timestamp=1703810780948
+__BRYTHON__.compiled_date="2023-12-28 23:55:36.969539"
+__BRYTHON__.timestamp=1703825736969
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -1010,6 +1010,7 @@ C.parent.tree.pop()
 commas=C.with_commas
 C=C.parent
 C.position=$token.value
+if(C.type !='dict_or_set'){raise_syntax_error(C)}
 return new AbstractExprCtx(
 new KwdCtx(
 new ExprCtx(C,'expr',commas)),false)
@@ -1747,6 +1748,9 @@ var last=$B.last(C.tree)
 if(last.type=="expr" && last.tree[0].type=="kwd"){C.nb_items+=2}else if(last.type=="abstract_expr"){C.tree.pop()}else{C.nb_items++}
 check_last()
 C.end_position=$token.value
+if(C.real=='dict_or_set'){
+for(var item of C.tree){if(item.type=="expr" && item.tree[0].type=="kwd"){C.real='dict'
+break}}}
 if(C.real=='dict_or_set'){
 C.real=C.tree.length==0 ?
 'dict' :'set'}

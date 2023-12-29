@@ -948,6 +948,11 @@ AbstractExprCtx.prototype.transition = function(token, value){
                     commas = context.with_commas
                     context = context.parent
                     context.position = $token.value
+
+                    if (context.type != 'dict_or_set') {
+                        raise_syntax_error(context)
+                    }
+
                     return new AbstractExprCtx(
                         new KwdCtx(
                             new ExprCtx(context, 'expr', commas)),
@@ -2412,7 +2417,18 @@ DictOrSetCtx.prototype.transition = function(token, value){
                     check_last()
                     context.end_position = $token.value
                     if(context.real == 'dict_or_set'){
-                        // for "{}" or {1}
+                        // {**{1:2}} should be a dictionary, even though it
+                        // contains elements and no colons, which makes it
+                        // look like a set
+                        for (var item of context.tree) {
+                            if (item.type == "expr" && item.tree[0].type == "kwd") {
+                                context.real = 'dict'
+                                break
+                            }
+                        }
+                    }
+                    if(context.real == 'dict_or_set'){
+                        // {} should be a dictionary, but {1} should be a set
                         context.real = context.tree.length == 0 ?
                             'dict' : 'set'
                     }
@@ -4482,7 +4498,7 @@ JoinedStrCtx.prototype.transition = function(token, value){
 }
 
 var KwdCtx = $B.parser.KwdCtx = function(context){
-    // used for **expr
+    // used for **expr in a dictionary
     this.type = 'kwd'
     this.position = context.position
     this.parent = context
