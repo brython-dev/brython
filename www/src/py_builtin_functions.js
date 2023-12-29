@@ -773,9 +773,10 @@ var $$eval = _b_.eval = function(){
         // must set locals, might be used if expression is like
         // "True and True"
         js = `var __file__ = '${filename}'\n` +
-              `var locals = ${local_name}\nreturn ${js}`
+             `var locals = ${local_name}\nreturn ${js}`
     }else if(src.single_expression){
-        js = `var result = ${js}\n` +
+        js = `var __file__ = '${filename}'\n` +
+             `var result = ${js}\n` +
              `if(result !== _b_.None){\n` +
                  `_b_.print(result)\n` +
              `}`
