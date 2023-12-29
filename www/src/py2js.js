@@ -595,7 +595,7 @@ function check_assignment(context, kwargs){
                 report('lambda')
             }else if(assigned.type == 'ternary'){
                 report(['conditional expression'])
-            }else if(assigned.type == 'JoinedStr'){
+            }else if(['fstring', 'JoinedStr'].indexOf(assigned.type) > -1){
                 report('f-string expression',
                     assigned.position,
                     last_position(assigned))
