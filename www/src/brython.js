@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-29 01:38:04.471647"
-__BRYTHON__.timestamp=1703831884470
+__BRYTHON__.compiled_date="2023-12-29 03:00:01.113690"
+__BRYTHON__.timestamp=1703836801113
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -1066,6 +1066,8 @@ tuple.tree=[C]
 C.parent=tuple
 return tuple}
 break
+case 'func_arg_id':
+raise_syntax_error(C,'expected default value expression')
 default:
 raise_syntax_error(C)}
 break
@@ -1647,7 +1649,7 @@ case 'annotation':
 return new AbstractExprCtx(new AnnotationCtx(C),true)
 case ':':
 if(C.has_args){return BodyCtx(C)}
-raise_syntax_error(C,"missing function parameters")
+raise_syntax_error(C,"expected '('")
 break
 case 'eol':
 if(C.has_args){raise_syntax_error(C,"expected ':'")}}
@@ -1846,6 +1848,7 @@ C.parent.pos_only=C.tree.length
 C.tree.push(this)}
 EndOfPositionalCtx.prototype.transition=function(token,value){var C=this
 if(token=="," ||token==")"){return transition(C.parent,token,value)}
+if(token=='op' && value=='*'){raise_syntax_error(C,"expected comma between / and *")}
 raise_syntax_error(C)}
 var ExceptCtx=$B.parser.ExceptCtx=function(C){
 this.type='except'
@@ -2430,7 +2433,7 @@ function check_last(){var last=$B.last(C.tree)
 if(last && last.type=="func_star_arg"){if(last.name=="*"){
 raise_syntax_error(C,'named arguments must follow bare *')}}}
 switch(token){case 'id':
-if(C.has_kw_arg){raise_syntax_error(C,'duplicate keyword argument')}
+if(C.has_kw_arg){raise_syntax_error(C,'arguments cannot follow var-keyword argument')}
 if(C.expect=='id'){C.expect=','
 if(C.names.indexOf(value)>-1){raise_syntax_error(C,'duplicate argument '+value+
 ' in function definition')}}
@@ -2446,17 +2449,20 @@ check()
 check_last()
 return transition(C.parent,token,value)
 case 'op':
-if(C.has_kw_arg){raise_syntax_error(C,"(unpacking after '**' argument)")}
+if(C.has_kw_arg){raise_syntax_error(C,"arguments cannot follow var-keyword argument")}
 var op=value
 C.expect=','
-if(op=='*'){if(C.has_star_arg){raise_syntax_error(C,"(only one '*' argument allowed)")}
+if(op=='*'){if(C.has_star_arg){raise_syntax_error(C,"* argument may appear only once")}
 return new FuncStarArgCtx(C,'*')}else if(op=='**'){return new FuncStarArgCtx(C,'**')}else if(op=='/'){
-if(C.has_end_positional){raise_syntax_error(C,'/ may appear only once')}else if(C.has_star_arg){raise_syntax_error(C,'/ must be ahead of *')}
+if(C.tree.length==0){raise_syntax_error(C,'at least one argument must precede /')}else if(C.has_end_positional){raise_syntax_error(C,'/ may appear only once')}else if(C.has_star_arg){raise_syntax_error(C,'/ must be ahead of *')}
 return new EndOfPositionalCtx(C)}
 raise_syntax_error(C)
 break
 case ':':
-if(C.parent.type=="lambda"){return transition(C.parent,token)}}
+if(C.parent.type=="lambda"){return transition(C.parent,token)}
+case '(':
+let type_name=C.parent.type=='def' ? 'Function' :'Lambda expression'
+raise_syntax_error(C,`${type_name} parameters cannot be parenthesized`)}
 raise_syntax_error(C)}
 var FuncArgIdCtx=$B.parser.FuncArgIdCtx=function(C,name){
 this.type='func_arg_id'
@@ -2517,7 +2523,10 @@ if(C.name===undefined){raise_syntax_error(C,'named arguments must follow bare *'
 return transition(C.parent.parent,":")}
 if(C.name===undefined){raise_syntax_error(C,'(annotation on an unnamed parameter)')}
 return new AbstractExprCtx(
-new AnnotationCtx(C),false)}
+new AnnotationCtx(C),false)
+case '=':
+if(C.op=='*'){raise_syntax_error(C,'var-positional argument cannot have default value')}
+raise_syntax_error(C,'var-keyword argument cannot have default value')}
 raise_syntax_error(C)}
 FuncStarArgCtx.prototype.set_name=function(name){if(name=='__debug__'){raise_syntax_error_known_range(this,this.position,$token.value,'cannot assign to __debug__')}
 this.name=name

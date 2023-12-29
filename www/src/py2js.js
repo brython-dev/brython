@@ -1025,6 +1025,8 @@ AbstractExprCtx.prototype.transition = function(token, value){
                         return tuple
                     }
                     break
+                case 'func_arg_id':
+                    raise_syntax_error(context, 'expected default value expression')
                 default:
                     raise_syntax_error(context)
 
@@ -2212,7 +2214,7 @@ DefCtx.prototype.transition = function(token, value){
             if(context.has_args){
                 return BodyCtx(context)
             }
-            raise_syntax_error(context, "missing function parameters")
+            raise_syntax_error(context, "expected '('")
             break
         case 'eol':
             if(context.has_args){
@@ -2612,6 +2614,9 @@ EndOfPositionalCtx.prototype.transition = function(token, value){
     var context = this
     if(token == "," || token == ")"){
         return transition(context.parent, token, value)
+    }
+    if(token == 'op' && value == '*') {
+        raise_syntax_error(context, "expected comma between / and *")
     }
     raise_syntax_error(context)
 }
@@ -3839,7 +3844,7 @@ FuncArgs.prototype.transition = function(token, value){
     switch (token) {
         case 'id':
             if(context.has_kw_arg){
-                raise_syntax_error(context, 'duplicate keyword argument')
+                raise_syntax_error(context, 'arguments cannot follow var-keyword argument')
             }
             if(context.expect == 'id'){
                 context.expect = ','
@@ -3864,19 +3869,21 @@ FuncArgs.prototype.transition = function(token, value){
             return transition(context.parent, token, value)
         case 'op':
             if(context.has_kw_arg){
-                raise_syntax_error(context, "(unpacking after '**' argument)")
+                raise_syntax_error(context, "arguments cannot follow var-keyword argument")
             }
             var op = value
             context.expect = ','
             if(op == '*'){
                 if(context.has_star_arg){
-                    raise_syntax_error(context, "(only one '*' argument allowed)")
+                    raise_syntax_error(context, "* argument may appear only once")
                 }
                 return new FuncStarArgCtx(context, '*')
             }else if(op == '**'){
                 return new FuncStarArgCtx(context, '**')
             }else if(op == '/'){ // PEP 570
-                if(context.has_end_positional){
+                if(context.tree.length == 0){
+                    raise_syntax_error(context, 'at least one argument must precede /')
+                }else if(context.has_end_positional){
                     raise_syntax_error(context, '/ may appear only once')
                 }else if(context.has_star_arg){
                     raise_syntax_error(context, '/ must be ahead of *')
@@ -3889,6 +3896,9 @@ FuncArgs.prototype.transition = function(token, value){
             if(context.parent.type == "lambda"){
                 return transition(context.parent, token)
             }
+        case '(':
+            let type_name = context.parent.type == 'def' ? 'Function' : 'Lambda expression'
+            raise_syntax_error(context, `${type_name} parameters cannot be parenthesized`)
     }
     raise_syntax_error(context)
 }
@@ -4012,6 +4022,12 @@ FuncStarArgCtx.prototype.transition = function(token, value){
             }
             return new AbstractExprCtx(
                 new AnnotationCtx(context), false)
+        case '=':
+            if (context.op == '*') {
+                raise_syntax_error(context, 'var-positional argument cannot have default value')
+            }
+            raise_syntax_error(context, 'var-keyword argument cannot have default value')
+
     }
     raise_syntax_error(context)
 }
