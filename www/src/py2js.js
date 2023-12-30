@@ -4283,12 +4283,12 @@ IdCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'imaginary':
-            var msg
+            var msg = 'invalid syntax'
             if(["print", "exec"].indexOf(context.value) > -1 ){
                 var f = context.value
                 msg = `Missing parentheses in call to '${f}'.` +
                     ` Did you mean ${f}(...)?`
-            }else{
+            }else if(context.parent.parent && (['list_or_tuple', 'dict'].indexOf(context.parent.parent.type) > -1)){
                 msg = 'invalid syntax. Perhaps you forgot a comma?'
             }
             raise_syntax_error_known_range(context,

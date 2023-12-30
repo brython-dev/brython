@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-29 22:16:02.914465"
-__BRYTHON__.timestamp=1703906162914
+__BRYTHON__.compiled_date="2023-12-30 00:00:54.193150"
+__BRYTHON__.timestamp=1703912454192
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -2643,10 +2643,10 @@ case 'JoinedStr':
 case 'int':
 case 'float':
 case 'imaginary':
-var msg
+var msg='invalid syntax'
 if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value
 msg=`Missing parentheses in call to '${f}'.`+
-` Did you mean ${f}(...)?`}else{msg='invalid syntax. Perhaps you forgot a comma?'}
+` Did you mean ${f}(...)?`}else if(C.parent.parent &&(['list_or_tuple','dict'].indexOf(C.parent.parent.type)>-1)){msg='invalid syntax. Perhaps you forgot a comma?'}
 raise_syntax_error_known_range(C,this.position,$token.value,msg)}
 if(this.parent.parent.type=="starred"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return transition(C.parent,token,value)}
