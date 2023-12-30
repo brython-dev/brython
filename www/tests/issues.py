@@ -3213,6 +3213,18 @@ assert_raises(SyntaxError, exec, "x:1,")
 # issue 2304
 assert_raises(SyntaxError, exec, "if True:\n not")
 
+# Dictionary containing just a dictionary unpacking
+assert {**{1:2}} == {1:2}
+
+# Tuple containing just a tuple unpacking
+assert (*(1,2),) == (1,2)
+
+# Lambda function in a with statement
+assert_raises(TypeError, exec, '''
+with (lambda: None):
+    pass
+''')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
