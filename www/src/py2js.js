@@ -392,6 +392,11 @@ function raise_indentation_error(context, msg, indented_node){
         var type = indented_node.context.tree[0].type,
             token = indented_node.context.tree[0].token,
             lineno = indented_node.line_num
+
+        if (type == 'except' && indented_node.context.tree[0].try_node.context.is_trystar) {
+            type = 'except*'
+        }
+
         switch(type){
             case 'class':
                 type = 'class definition'
@@ -404,6 +409,7 @@ function raise_indentation_error(context, msg, indented_node){
                 break
             case 'case':
             case 'except':
+            case 'except*':
             case 'for':
             case 'match':
             case 'try':
@@ -2718,6 +2724,9 @@ ExceptCtx.prototype.transition = function(token, value){
             }
             break
         case ':':
+            if (context.tree.length == 0 && context.try_node.context.is_trystar) {
+                raise_syntax_error(context, "expected one or more exception types")
+            }
             var _ce = context.expect
             if(_ce == 'id' || _ce == 'as' || _ce == ':'){
                 return BodyCtx(context)

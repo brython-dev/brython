@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-29 21:32:46.475046"
-__BRYTHON__.timestamp=1703903566474
+__BRYTHON__.compiled_date="2023-12-29 21:49:38.028804"
+__BRYTHON__.timestamp=1703904578028
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -784,6 +784,7 @@ function raise_syntax_error(C,msg,token){raise_error(_b_.SyntaxError,C,msg,token
 function raise_indentation_error(C,msg,indented_node){
 if(indented_node){
 var type=indented_node.C.tree[0].type,token=indented_node.C.tree[0].token,lineno=indented_node.line_num
+if(type=='except' && indented_node.C.tree[0].try_node.C.is_trystar){type='except*'}
 switch(type){case 'class':
 type='class definition'
 break
@@ -795,6 +796,7 @@ type='function definition'
 break
 case 'case':
 case 'except':
+case 'except*':
 case 'for':
 case 'match':
 case 'try':
@@ -1905,6 +1907,7 @@ C.set_alias(value)
 return C}
 break
 case ':':
+if(C.tree.length==0 && C.try_node.C.is_trystar){raise_syntax_error(C,"expected one or more exception types")}
 var _ce=C.expect
 if(_ce=='id' ||_ce=='as' ||_ce==':'){return BodyCtx(C)}
 break
