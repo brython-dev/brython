@@ -4228,8 +4228,8 @@ IdCtx.prototype.transition = function(token, value){
         // - it is immediately followed by an identifier
         // it is the "soft keyword" `case` for pattern matching.
         //
-        // NodeCtx.prototype.transition also helps handle the soft vs hard
-        // keyword differentiation, by treating an occurrence of `case`
+        // NodeCtx.prototype.transition also helps handle the soft keyword vs
+        // identifier differentiation, by treating an occurrence of `case`
         // differently if it occurs at the beginning of a line and is a direct
         // child of a match.
         let save_position = module.token_reader.position,
