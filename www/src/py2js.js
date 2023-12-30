@@ -4559,6 +4559,10 @@ var KwArgCtx = $B.parser.KwArgCtx = function(context){
     context.parent.tree.pop()
     context.parent.tree.push(this)
 
+    if (['None', 'True', 'False', '__debug__'].indexOf(context.tree[0].value) > -1) {
+        raise_syntax_error(context, 'cannot assign to ' + context.tree[0].value)
+    }
+
     // set attribute "has_kw" of CallCtx instance to true
     context.parent.parent.has_kw = true
 }

@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-29 21:49:38.028804"
-__BRYTHON__.timestamp=1703904578028
+__BRYTHON__.compiled_date="2023-12-29 22:16:02.914465"
+__BRYTHON__.timestamp=1703906162914
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -2793,6 +2793,7 @@ this.equal_sign_position=$token.value
 this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
+if(['None','True','False','__debug__'].indexOf(C.tree[0].value)>-1){raise_syntax_error(C,'cannot assign to '+C.tree[0].value)}
 C.parent.parent.has_kw=true}
 KwArgCtx.prototype.transition=function(token){var C=this
 if(token==','){return new CallArgCtx(C.parent.parent)}else if(token=='for'){
