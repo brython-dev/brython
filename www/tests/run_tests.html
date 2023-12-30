@@ -125,9 +125,23 @@ def testTraceback(qunit):
         print('Failure in testTraceback')
         qunit.ok(False, traceback.format_exc())
 
+def testDoctest(qunit):
+    try:
+        import doctest
+        import test_failing_doctest
+
+        result = doctest.testmod(test_failing_doctest)
+        assert result.failed == 2
+        assert result.attempted == 9
+
+        qunit.ok(True)
+    except:
+        print('Failure in testTraceback')
+        qunit.ok(False, traceback.format_exc())
 
 _QUnit = window.QUnit
 _QUnit.test('testTraceback', testTraceback)
+_QUnit.test('testDoctest', testDoctest)
 
 # TODO: Arg values e.g. verbosity level ?
 result = test_utils.OneTimeTestResult()
