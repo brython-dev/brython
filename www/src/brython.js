@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-30 02:51:05.223044"
-__BRYTHON__.timestamp=1703922665222
+__BRYTHON__.compiled_date="2023-12-30 13:35:45.780012"
+__BRYTHON__.timestamp=1703961345779
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -4840,6 +4840,9 @@ $B.parse_options=function(options){
 if(options===undefined){options={}}else if(typeof options=='number'){
 options={debug:options}}else if(typeof options !=='object'){console.warn('ignoring invalid argument passed to brython():',options)
 options={}}
+let options_lowered={}
+for(const[key,value]of Object.entries(options)){options_lowered[key.toLowerCase()]=value}
+options=options_lowered
 $B.debug=options.debug===undefined ? 1 :options.debug
 _b_.__debug__=$B.debug > 0
 options.python_extension=options.python_extension ||'.py'
@@ -4921,9 +4924,10 @@ $B.get_filename_for_import=function(){var filename=$B.get_filename()
 if($B.import_info[filename]===undefined){$B.make_import_paths(filename)}
 return filename}
 $B.get_page_option=function(option){
+option=option.toLowerCase()
 if($B.$options.hasOwnProperty(option)){
-return $B.$options[option]}else if(brython_options.hasOwnProperty(option.toLowerCase())){
-return brython_options[option.toLowerCase()]}else{return default_option[option]}}
+return $B.$options[option]}else if(brython_options.hasOwnProperty(option)){
+return brython_options[option]}else{return default_option[option]}}
 $B.get_option=function(option,err){var filename=$B.script_filename
 if(err && err.$frame_obj){filename=$B.get_frame_at(0,err.$frame_obj).__file__}else{filename=$B.get_filename()}
 return $B.get_option_from_filename(option,filename)}
@@ -5052,7 +5056,7 @@ store.onsuccess=resolve}
 idb_cx.onerror=function(){
 $B.idb_cx=null
 $B.idb_name=null
-$B.$options.indexedDB=false
+$B.$options.indexeddb=false
 reject('could not open indexedDB database')}})}
 $B.idb_open=function(){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
@@ -5087,7 +5091,7 @@ store.onsuccess=loop}
 idb_cx.onerror=function(){console.info('could not open indexedDB database')
 $B.idb_cx=null
 $B.idb_name=null
-$B.$options.indexedDB=false
+$B.$options.indexeddb=false
 loop()}}
 $B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_path=url.substr($B.script_dir.length+1)
 if($B.files && $B.files.hasOwnProperty(rel_path)){

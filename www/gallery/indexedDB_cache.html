@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brython indexedDB cache</title>
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+</style>
+
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+
+<script type="text/javascript" src="/src/py_ast_classes.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+<script type="text/javascript" src="/src/py_flags.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
+<script type="text/javascript" src="/src/brython_ready.js"></script>
+
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
+
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+td {
+    border-style:solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: #000;
+    padding:3px;
+}
+
+th {
+    border-style:solid;
+    border-width: 1px;
+    border-color: #000;
+    background-color: #61D7A4;
+    padding: 4px;
+}
+</style>
+
+</head>
+<body>
+
+<h2>Brython indexedDB cache</h2>
+<button id="clear">clear cache</button>
+
+<div id="table"></div>
+
+<script type="text/python" debug=2 id="s1">
+import datetime
+
+from browser import alert, bind, document, window, html
+
+@bind('#clear', 'click')
+def clear(ev):
+    db = request.result
+    tx = db.transaction("modules", "readwrite")
+    store = tx.objectStore("modules")
+    def clear_success(ev):
+        alert('cleared')
+        show(request, check=False)
+
+    def clear_error(ev):
+        alert('error clear')
+        show(request)
+
+    clear_request = store.clear()
+    clear_request.onsuccess = clear_success
+    clear_request.onerror = clear_error
+
+def show(ev, check=True):
+    """Show the contents of Brython indexedDB cache"""
+    db = request.result
+    tx = db.transaction("modules", "readonly")
+    store = tx.objectStore("modules")
+    cursor = store.openCursor()
+
+    stored = set()
+
+    # clear table
+    document["table"].clear()
+
+    # headers
+    t = html.TABLE()
+    document["table"] <= t
+
+    t <= html.TR(html.TH(x) for x in ["name", "path", "Brython timestamp",
+        "VFS timestamp", "Size of compiled script"])
+
+    def add_row(ev):
+        """Add a row to the table for each iteration on cursor
+        When cursor in empty, add a line for new record insertion
+        """
+        res = ev.target.result
+        if res:
+            v = res.value
+            stored.add(v.name)
+            row = html.TR()
+
+            row <= [html.TD(str(getattr(v, key, '')))
+                for key in ["name", "path"]]
+            for key in ["timestamp", "source_ts"]:
+                ts = getattr(v, key) / 1000
+                dt = datetime.datetime.fromtimestamp(ts)
+                row <= html.TD(dt.strftime('%Y-%m-%d %H:%M:%S'))
+            row <= html.TD(str(len(v.content)), align='right')
+            row.key = res.key
+            t <= row
+            getattr(res, "continue")()
+        else:
+            if check and not 'datetime' in stored:
+                alert('Error: datetime not in indexedDB cache')
+
+    cursor.bind("success", add_row)
+
+
+idb = window.indexedDB
+
+request = idb.open("brython-cache")
+
+request.bind("success", show)
+
+
+</script>
+
+<script>
+
+</script>
+
+<script> // src="module1.js">
+
+
+</script>
+
+</body>
+</html>

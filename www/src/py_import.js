@@ -112,7 +112,7 @@ $B.make_import_paths = function(filename){
         // replace script_dir by paths in pythonpath
         var ix = path.indexOf(script_dir)
         if(ix === -1){
-            console.log('bizarre, script_dir', script_dir, 
+            console.log('bizarre, script_dir', script_dir,
                 'not in path', path)
         }else{
              path.splice(ix, 1, ...pythonpath)

@@ -8918,6 +8918,12 @@ $B.parse_options = function(options){
         options = {}
     }
 
+    let options_lowered = {}
+    for (const [key, value] of Object.entries(options)) {
+        options_lowered[key.toLowerCase()] = value
+    }
+    options = options_lowered
+
     $B.debug = options.debug === undefined ? 1 : options.debug
 
     // set built-in variable __debug__
@@ -9113,7 +9119,7 @@ var brython = $B.parser.brython = function(options){
     $href_elts.pop()
     if($B.isWebWorker || $B.isNode){$href_elts.pop()}
     $B.curdir = $href_elts.join('/')
-    
+
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 
@@ -9215,12 +9221,13 @@ $B.get_page_option = function(option){
     // Get option defined at page level
     // If brython is explicitely called in <body onload="brython(options)">,
     // use these options first
+    option = option.toLowerCase()
     if($B.$options.hasOwnProperty(option)){
         // option passed to brython()
         return $B.$options[option]
-    }else if(brython_options.hasOwnProperty(option.toLowerCase())){
+    }else if(brython_options.hasOwnProperty(option)){
         // else use options defined in tag <brython-options>
-        return brython_options[option.toLowerCase()]
+        return brython_options[option]
     }else{
         return default_option[option]
     }
