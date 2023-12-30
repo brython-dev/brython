@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-30 02:37:44.170671"
-__BRYTHON__.timestamp=1703921864170
+__BRYTHON__.compiled_date="2023-12-30 02:51:05.223044"
+__BRYTHON__.timestamp=1703922665222
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -1483,7 +1483,7 @@ return new TypeParamsCtx(C)
 case ':':
 if(this.args){for(var arg of this.args.tree){var param=arg.tree[0]
 if(arg.type !='call_arg'){$token.value=C.parenthesis_position
-raise_syntax_error(C,"expected ':'")}
+raise_syntax_error(C,"invalid syntax")}
 if((param.type=='expr' && param.name=='id')||
 param.type=="kwarg"){continue}
 $token.value=arg.position

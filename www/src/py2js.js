@@ -1849,7 +1849,7 @@ ClassCtx.prototype.transition = function(token, value){
                     var param = arg.tree[0]
                     if(arg.type != 'call_arg'){
                         $token.value = context.parenthesis_position
-                        raise_syntax_error(context, "expected ':'")
+                        raise_syntax_error(context, "invalid syntax")
                     }
                     if((param.type == 'expr' && param.name == 'id') ||
                             param.type == "kwarg"){
