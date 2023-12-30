@@ -274,6 +274,10 @@ _b_.compile = function() {
     $B.file_cache[filename] = $.source
     $B.url2name[filename] = module_name
 
+    if ($.flags & $B.PyCF_TYPE_COMMENTS) {
+        throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')
+    }
+
     if($B.$isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
             lfpos = $.source.source.indexOf(10),

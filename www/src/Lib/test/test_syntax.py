@@ -555,16 +555,6 @@ SyntaxError: expected default value expression
 Traceback (most recent call last):
 SyntaxError: expected default value expression
 
->>> import ast; ast.parse('''
-... def f(
-...     *, # type: int
-...     a, # type: int
-... ):
-...     pass
-... ''', type_comments=True)
-Traceback (most recent call last):
-SyntaxError: bare * has associated type comment
-
 
 From ast_for_funcdef():
 

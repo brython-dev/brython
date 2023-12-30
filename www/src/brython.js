@@ -68,7 +68,8 @@ var long=formatter.format(date)
 var ix=0,minlen=Math.min(short.length,long.length)
 while(ix < minlen && short[ix]==long[ix]){ix++}
 $B.tz_name=long.substr(ix).trim()
-$B.PyCF_ONLY_AST=1024 
+$B.PyCF_ONLY_AST=1024
+$B.PyCF_TYPE_COMMENTS=0x1000
 if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)-1
@@ -156,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-30 02:21:42.406471"
-__BRYTHON__.timestamp=1703920902406
+__BRYTHON__.compiled_date="2023-12-30 02:37:44.170671"
+__BRYTHON__.timestamp=1703921864170
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -6692,6 +6693,7 @@ var filename=$.co_filename=$.filename
 var interactive=$.mode=="single" &&($.flags & 0x200)
 $B.file_cache[filename]=$.source
 $B.url2name[filename]=module_name
+if($.flags & $B.PyCF_TYPE_COMMENTS){throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')}
 if($B.$isinstance($.source,_b_.bytes)){var encoding='utf-8',lfpos=$.source.source.indexOf(10),first_line,second_line
 if(lfpos==-1){first_line=$.source}else{first_line=_b_.bytes.$factory($.source.source.slice(0,lfpos))}
 first_line=_b_.bytes.decode(first_line,'latin-1')

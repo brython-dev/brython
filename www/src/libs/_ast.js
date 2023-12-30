@@ -4,6 +4,7 @@ var _b_ = $B.builtins,
     ast = $B.ast, // created in py2js
     mod = {}
 mod.PyCF_ONLY_AST = $B.PyCF_ONLY_AST
+mod.PyCF_TYPE_COMMENTS = $B.PyCF_TYPE_COMMENTS
 mod.AST = $B.AST // in builtin_modules.js
 $B.create_python_ast_classes() // in py_ast.js
 for(var klass in ast){
