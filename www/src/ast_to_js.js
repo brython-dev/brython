@@ -3265,7 +3265,7 @@ $B.ast.Starred.prototype.to_js = function(scopes){
         compiler_error(this,
             "starred assignment target must be in a list or tuple")
     }else{
-        compiler_error(this, "can't use starred expression here")
+        compiler_error(this, "invalid syntax")
     }
 }
 

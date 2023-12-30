@@ -3278,10 +3278,16 @@ ExprCtx.prototype.transition = function(token, value){
                   if(parent_match(context, {type: 'del'})){
                       raise_syntax_error(context, 'cannot delete starred')
                   }
+                  if (['assign', 'augm_assign', 'node'].indexOf(context.parent.type) > -1) {
+                      raise_syntax_error_known_range(context,
+                          t.position,
+                          last_position(t),
+                          "can't use starred expression here")
+                  }
                   raise_syntax_error_known_range(context,
                       t.position,
                       last_position(t),
-                      "can't use starred expression here")
+                      "invalid syntax")
               }else if(t.type == "call" && t.func.type == "starred"){
                   $token.value = t.func.position
                   raise_syntax_error(context,
@@ -4695,9 +4701,8 @@ ListOrTupleCtx.prototype.transition = function(token, value){
                         var close = true
                         context.end_position = $token.value
                         if(context.tree.length == 1){
-                            if(parent_match(context, {type: 'del'}) &&
-                                    context.tree[0].type == 'expr' &&
-                                    context.tree[0].tree[0].type == 'starred'){
+                            if(context.tree[0].type == 'expr' &&
+                               context.tree[0].tree[0].type == 'starred'){
                                 raise_syntax_error_known_range(context,
                                     context.tree[0].tree[0].position,
                                     last_position(context.tree[0]),

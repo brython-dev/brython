@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-29 03:00:01.113690"
-__BRYTHON__.timestamp=1703836801113
+__BRYTHON__.compiled_date="2023-12-29 21:16:34.598716"
+__BRYTHON__.timestamp=1703902594598
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -2169,7 +2169,8 @@ raise_syntax_error_known_range(C,C.position,$token.value,"Missing parentheses in
 if(["dict_or_set","list_or_tuple","str"].indexOf(C.parent.type)==-1){var t=C.tree[0]
 if(t.type=="starred"){$token.value=t.position
 if(parent_match(C,{type:'del'})){raise_syntax_error(C,'cannot delete starred')}
-raise_syntax_error_known_range(C,t.position,last_position(t),"can't use starred expression here")}else if(t.type=="call" && t.func.type=="starred"){$token.value=t.func.position
+if(['assign','augm_assign','node'].indexOf(C.parent.type)>-1){raise_syntax_error_known_range(C,t.position,last_position(t),"can't use starred expression here")}
+raise_syntax_error_known_range(C,t.position,last_position(t),"invalid syntax")}else if(t.type=="call" && t.func.type=="starred"){$token.value=t.func.position
 raise_syntax_error(C,"can't use starred expression here")}}}
 return transition(C.parent,token)}
 var ExprNot=$B.parser.ExprNot=function(C){
@@ -2858,8 +2859,7 @@ return transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){ca
 if(token==')'){if(C.implicit){return transition(C.parent,token,value)}
 var close=true
 C.end_position=$token.value
-if(C.tree.length==1){if(parent_match(C,{type:'del'})&&
-C.tree[0].type=='expr' &&
+if(C.tree.length==1){if(C.tree[0].type=='expr' &&
 C.tree[0].tree[0].type=='starred'){raise_syntax_error_known_range(C,C.tree[0].tree[0].position,last_position(C.tree[0]),'cannot use starred expression here')}
 var grandparent=C.parent.parent
 grandparent.tree.pop()
@@ -16617,7 +16617,7 @@ $B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scop
 $B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_ast(this.lower,scopes):'_b_.None',upper=this.upper ? $B.js_from_ast(this.upper,scopes):'_b_.None',step=this.step ? $B.js_from_ast(this.step,scopes):'_b_.None'
 return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
-if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
+if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"invalid syntax")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
 if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position(this.value.col_offset,this.slice.col_offset,this.slice.end_col_offset)
 return `$B.$getitem(${value}, ${slice},${position})`}}
