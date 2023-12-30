@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2023-12-30 00:00:54.193150"
-__BRYTHON__.timestamp=1703912454192
+__BRYTHON__.compiled_date="2023-12-30 02:21:42.406471"
+__BRYTHON__.timestamp=1703920902406
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -1439,7 +1439,7 @@ return BodyCtx(C)}
 break
 case 'op':
 if(value=='|'){return new PatternCtx(new PatternOrCtx(C))}
-raise_syntax_error(C,'expected :')
+raise_syntax_error(C,"expected ':'")
 break
 case ',':
 if(C.expect==':' ||C.expect=='as'){return new PatternCtx(new PatternSequenceCtx(C))}
@@ -1448,7 +1448,7 @@ case 'if':
 C.has_guard=true
 return new AbstractExprCtx(new ConditionCtx(C,token),false)
 default:
-raise_syntax_error(C,'expected :')}}
+raise_syntax_error(C,"expected ':'")}}
 var ClassCtx=$B.parser.ClassCtx=function(C){
 this.type='class'
 this.parent=C
@@ -2612,18 +2612,18 @@ set_position(ast_obj,this.position)
 return ast_obj}
 IdCtx.prototype.transition=function(token,value){var C=this,module=get_module(this)
 if(C.value=='case' && C.parent.parent.type=="node"){
-let save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
+let save_position=module.token_reader.position,ends_with_colon=line_ends_with_colon(module.token_reader,module.filename)
 module.token_reader.position=save_position
-if(ends_with_comma){var node=get_node(C)
+if(ends_with_colon ||token=='id'){var node=get_node(C)
 if((! node.parent)||!(node.parent.is_match)){raise_syntax_error(C,"('case' not inside 'match')")}else{if(node.parent.irrefutable){
 let name=node.parent.irrefutable,msg=name=='_' ? 'wildcard' :
 `name capture '${name}'`
 raise_syntax_error(C,`${msg} makes remaining patterns unreachable`)}}
 return transition(new PatternCtx(
 new CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
-let save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
+let save_position=module.token_reader.position,ends_with_colon=line_ends_with_colon(module.token_reader,module.filename)
 module.token_reader.position=save_position
-if(ends_with_comma){return transition(new AbstractExprCtx(
+if(ends_with_colon ||token=='id'){return transition(new AbstractExprCtx(
 new MatchCtx(C.parent.parent),true),token,value)}}else if(C.value=='type' && C.parent.parent.type=="node"){if(token=='id'){
 return new TypeAliasCtx(C,value)}}
 switch(token){case '=':
@@ -3009,6 +3009,11 @@ res.target.ctx=new ast.Store()
 set_position(res,this.position)
 return res}
 NamedExprCtx.prototype.transition=function(token,value){return transition(this.parent,token,value)}
+function get_node_ancestor(node){return node.parent
+&& node.parent.C
+&& node.parent.C.tree
+&& node.parent.C.tree.length > 0
+&& node.parent.C.tree[0]}
 var NodeCtx=$B.parser.NodeCtx=function(node){
 this.node=node
 node.C=this
@@ -3057,6 +3062,8 @@ case 'str':
 case 'JoinedStr':
 case 'not':
 case 'lambda':
+if(value=='case'){let node_ancestor=get_node_ancestor(C.node)
+if(node_ancestor && node_ancestor.type=='match'){return new PatternCtx(new CaseCtx(C))}}
 var expr=new AbstractExprCtx(C,true)
 return transition(expr,token,value)
 case 'assert':
@@ -4495,7 +4502,7 @@ elt.length++
 return elt}else{error("invalid syntax")}}else{break}}
 return check(elt)}
 var opening={')':'(','}':'{',']':'['}
-function check_line(token_reader){var braces=[]
+function line_ends_with_colon(token_reader){var braces=[]
 token_reader.position--
 while(true){var token=token_reader.read()
 if(! token){return false}

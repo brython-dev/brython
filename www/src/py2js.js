@@ -1765,7 +1765,7 @@ CaseCtx.prototype.transition = function(token, value){
             if(value == '|'){
                 return new PatternCtx(new PatternOrCtx(context))
             }
-            raise_syntax_error(context, 'expected :')
+            raise_syntax_error(context, "expected ':'")
             break
         case ',':
             if(context.expect == ':' || context.expect == 'as'){
@@ -1778,7 +1778,7 @@ CaseCtx.prototype.transition = function(token, value){
             return new AbstractExprCtx(new ConditionCtx(context, token),
                 false)
         default:
-            raise_syntax_error(context, 'expected :')
+            raise_syntax_error(context, "expected ':'")
     }
 }
 
@@ -4223,12 +4223,19 @@ IdCtx.prototype.transition = function(token, value){
     var context = this,
         module = get_module(this)
     if(context.value == 'case' && context.parent.parent.type == "node"){
-        // case at the beginning of a line : if the line ends with a colon
-        // (:), it is the "soft keyword" `case` for pattern matching
+        // if `case` is at the beginning of a line and either:
+        // - the line ends with a colon (:) OR
+        // - it is immediately followed by an identifier
+        // it is the "soft keyword" `case` for pattern matching.
+        //
+        // NodeCtx.prototype.transition also helps handle the soft vs hard
+        // keyword differentiation, by treating an occurrence of `case`
+        // differently if it occurs at the beginning of a line and is a direct
+        // child of a match.
         let save_position = module.token_reader.position,
-            ends_with_comma = check_line(module.token_reader, module.filename)
+            ends_with_colon = line_ends_with_colon(module.token_reader, module.filename)
             module.token_reader.position = save_position
-        if(ends_with_comma){
+        if(ends_with_colon || token == 'id'){
             var node = get_node(context)
             if((! node.parent) || !(node.parent.is_match)){
                 raise_syntax_error(context, "('case' not inside 'match')")
@@ -4247,11 +4254,11 @@ IdCtx.prototype.transition = function(token, value){
                     token, value)
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
-        // same for match
+        // same 'soft keyword' handling as case, but for match
         let save_position = module.token_reader.position,
-            ends_with_comma = check_line(module.token_reader, module.filename)
+            ends_with_colon = line_ends_with_colon(module.token_reader, module.filename)
             module.token_reader.position = save_position
-        if(ends_with_comma){
+        if(ends_with_colon || token == 'id'){
             return transition(new AbstractExprCtx(
                 new MatchCtx(context.parent.parent), true),
                 token, value)
@@ -4970,6 +4977,14 @@ NamedExprCtx.prototype.transition = function(token, value){
     return transition(this.parent, token, value)
 }
 
+function get_node_ancestor(node) {
+    return node.parent
+           && node.parent.context
+           && node.parent.context.tree
+           && node.parent.context.tree.length > 0
+           && node.parent.context.tree[0]
+}
+
 var NodeCtx = $B.parser.NodeCtx = function(node){
     // Base class for the context in a node
     this.node = node
@@ -5049,6 +5064,14 @@ NodeCtx.prototype.transition = function(token, value){
         case 'JoinedStr':
         case 'not':
         case 'lambda':
+            // If we're seeing a case as a direct child of a match, we can
+            // treat this case as a hard keyword
+            if (value == 'case') {
+                let node_ancestor = get_node_ancestor(context.node)
+                if (node_ancestor && node_ancestor.type == 'match') {
+                    return new PatternCtx(new CaseCtx(context))
+                }
+            }
             var expr = new AbstractExprCtx(context,true)
             return transition(expr, token, value)
         case 'assert':
@@ -8041,7 +8064,7 @@ function test_num(num_lit){
 
 var opening = {')': '(', '}': '{', ']': '['}
 
-function check_line(token_reader){
+function line_ends_with_colon(token_reader){
     var braces = []
     token_reader.position--
     while(true){
