@@ -7486,6 +7486,7 @@ WithCtx.prototype.transition = function(token, value){
             }
             break
         case 'id':
+        case 'lambda':
             if(context.expect == 'expr'){
                 // start withitem
                 context.expect = ','
