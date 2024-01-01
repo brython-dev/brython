@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+        <title>Babylon Template</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+
+            #holder {
+                width: 80%;
+                height: 100%;
+                float: left;
+            }
+
+            #instructions {
+                width: 20%;
+                height: 100%;
+                float: left;
+                background-color: grey;
+            }
+        </style>
+
+        <script src="https://cdn.babylonjs.com/babylon.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/pep/0.4.3/pep.js" crossorigin="anonymous"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>
+
+    </head>
+
+   <body>
+
+    <div id = "holder">
+        <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
+    </div>
+    <div id = "instructions">
+        <br>
+        Adapted from <a href="https://doc.babylonjs.com/webpages/app4" target="_blank">
+            https://doc.babylonjs.com/webpages/app4</a>
+        <h2>Instructions</h2>
+        <br>
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+        Instructions Instructions Instructions Instructions Instructions
+    </div>
+
+
+
+
+
+    <script type="text/python">
+        import math
+
+        from browser import document, window
+        from javascript import NULL as null
+
+        BABYLON = window.BABYLON
+
+        canvas = document["renderCanvas"] # Get the canvas element
+        engine = BABYLON.Engine.new(canvas, True) # Generate the BABYLON 3D engine
+
+        # Add your code here matching the playground format
+        def createScene():
+            scene = BABYLON.Scene.new(engine)
+
+            buildDwellings()
+
+            # Set camera and light
+            camera = BABYLON.ArcRotateCamera.new("camera",
+                         -math.pi / 2, math.pi / 2.5, 15,
+                         BABYLON.Vector3.new(0, 0, 0))
+            camera.attachControl(canvas, True)
+            light = BABYLON.HemisphericLight.new("light",
+                        BABYLON.Vector3.new(1, 1, 0))
+
+            return scene
+
+        # /******Build Functions***********/
+        def buildDwellings():
+            ground = buildGround()
+
+            detached_house = buildHouse(1)
+            detached_house.rotation.y = -math.pi / 16
+            detached_house.position.x = -6.8
+            detached_house.position.z = 2.5
+
+            semi_house = buildHouse(2)
+            semi_house.rotation.y = -math.pi / 16
+            semi_house.position.x = -4.5
+            semi_house.position.z = 3
+
+            places = [] # each entry is an array [house type, rotation, x, z]
+            places.append([1, -math.pi / 16, -6.8, 2.5 ])
+            places.append([2, -math.pi / 16, -4.5, 3 ])
+            places.append([2, -math.pi / 16, -1.5, 4 ])
+            places.append([2, -math.pi / 3, 1.5, 6 ])
+            places.append([2, 15 * math.pi / 16, -6.4, -1.5 ])
+            places.append([1, 15 * math.pi / 16, -4.1, -1 ])
+            places.append([2, 15 * math.pi / 16, -2.1, -0.5 ])
+            places.append([1, 5 * math.pi / 4, 0, -1 ])
+            places.append([1, math.pi + math.pi / 2.5, 0.5, -3 ])
+            places.append([2, math.pi + math.pi / 2.1, 0.75, -5 ])
+            places.append([1, math.pi + math.pi / 2.25, 0.75, -7 ])
+            places.append([2, math.pi / 1.9, 4.75, -1 ])
+            places.append([1, math.pi / 1.95, 4.5, -3 ])
+            places.append([2, math.pi / 1.9, 4.75, -5 ])
+            places.append([1, math.pi / 1.9, 4.75, -7 ])
+            places.append([2, -math.pi / 3, 5.25, 2 ])
+            places.append([1, -math.pi / 3, 6, 4 ])
+
+            # Create instances from the first two that were built
+            houses = []
+            for i, place in enumerate(places):
+                if place[0] == 1:
+                    houses.append(detached_house.createInstance(f"house{i}"))
+                else:
+                    houses.append(semi_house.createInstance(f"house{i}"))
+                houses[i].rotation.y = place[1]
+                houses[i].position.x = place[2]
+                houses[i].position.z = place[3]
+
+        def buildGround():
+            # color
+            groundMat = BABYLON.StandardMaterial.new("groundMat")
+            groundMat.diffuseColor = BABYLON.Color3.new(0, 1, 0)
+
+            ground = BABYLON.MeshBuilder.CreateGround("ground",
+                         {'width':15, 'height':16})
+            ground.material = groundMat
+
+        def buildHouse(width):
+            box = buildBox(width)
+            roof = buildRoof(width)
+
+            return BABYLON.Mesh.MergeMeshes([box, roof], True, False, null,
+                       False, True)
+
+        def buildBox(width):
+            # texture
+            boxMat = BABYLON.StandardMaterial.new("boxMat");
+            if width == 2:
+               boxMat.diffuseTexture = BABYLON.Texture.new("https://assets.babylonjs.com/environments/semihouse.png")
+            else:
+                boxMat.diffuseTexture = BABYLON.Texture.new("https://assets.babylonjs.com/environments/cubehouse.png");
+
+            # options parameter to set different images on each side
+            faceUV = [None, None, None, None]
+            if width == 2:
+                faceUV[0] = BABYLON.Vector4.new(0.6, 0.0, 1.0, 1.0) # rear face
+                faceUV[1] = BABYLON.Vector4.new(0.0, 0.0, 0.4, 1.0) # front face
+                faceUV[2] = BABYLON.Vector4.new(0.4, 0, 0.6, 1.0) # right side
+                faceUV[3] = BABYLON.Vector4.new(0.4, 0, 0.6, 1.0) # left side
+            else:
+                faceUV[0] = BABYLON.Vector4.new(0.5, 0.0, 0.75, 1.0) # rear face
+                faceUV[1] = BABYLON.Vector4.new(0.0, 0.0, 0.25, 1.0) # front face
+                faceUV[2] = BABYLON.Vector4.new(0.25, 0, 0.5, 1.0) # right side
+                faceUV[3] = BABYLON.Vector4.new(0.75, 0, 1.0, 1.0) # left side
+
+            # top 4 and bottom 5 not seen so not set
+
+            #**** World Objects *****/
+            box = BABYLON.MeshBuilder.CreateBox("box",
+                      {'width': width, 'faceUV': faceUV, 'wrap': True})
+            box.material = boxMat
+            box.position.y = 0.5
+
+            return box
+
+        def buildRoof(width):
+            # texture
+            roofMat = BABYLON.StandardMaterial.new("roofMat")
+            roofMat.diffuseTexture = BABYLON.Texture.new("https://assets.babylonjs.com/environments/roof.jpg")
+
+            roof = BABYLON.MeshBuilder.CreateCylinder("roof",
+                       {'diameter': 1.3, 'height': 1.2, 'tessellation': 3})
+            roof.material = roofMat
+            roof.scaling.x = 0.75
+            roof.scaling.y = width
+            roof.rotation.z = math.pi / 2
+            roof.position.y = 1.22
+
+            return roof
+
+        scene = createScene() # Call the createScene function
+
+        # Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(lambda: scene.render())
+
+        # Watch for browser/canvas resize events
+        window.bind("resize", lambda ev: engine.resize())
+    </script>
+
+   </body>
+
+</html>
