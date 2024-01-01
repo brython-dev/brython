@@ -392,6 +392,11 @@ function raise_indentation_error(context, msg, indented_node){
         var type = indented_node.context.tree[0].type,
             token = indented_node.context.tree[0].token,
             lineno = indented_node.line_num
+
+        if (type == 'except' && indented_node.context.tree[0].try_node.context.is_trystar) {
+            type = 'except*'
+        }
+
         switch(type){
             case 'class':
                 type = 'class definition'
@@ -404,6 +409,7 @@ function raise_indentation_error(context, msg, indented_node){
                 break
             case 'case':
             case 'except':
+            case 'except*':
             case 'for':
             case 'match':
             case 'try':
@@ -595,7 +601,7 @@ function check_assignment(context, kwargs){
                 report('lambda')
             }else if(assigned.type == 'ternary'){
                 report(['conditional expression'])
-            }else if(assigned.type == 'JoinedStr'){
+            }else if(['fstring', 'JoinedStr'].indexOf(assigned.type) > -1){
                 report('f-string expression',
                     assigned.position,
                     last_position(assigned))
@@ -948,6 +954,11 @@ AbstractExprCtx.prototype.transition = function(token, value){
                     commas = context.with_commas
                     context = context.parent
                     context.position = $token.value
+
+                    if (context.type != 'dict_or_set') {
+                        raise_syntax_error(context)
+                    }
+
                     return new AbstractExprCtx(
                         new KwdCtx(
                             new ExprCtx(context, 'expr', commas)),
@@ -1020,6 +1031,8 @@ AbstractExprCtx.prototype.transition = function(token, value){
                         return tuple
                     }
                     break
+                case 'func_arg_id':
+                    raise_syntax_error(context, 'expected default value expression')
                 default:
                     raise_syntax_error(context)
 
@@ -1752,7 +1765,7 @@ CaseCtx.prototype.transition = function(token, value){
             if(value == '|'){
                 return new PatternCtx(new PatternOrCtx(context))
             }
-            raise_syntax_error(context, 'expected :')
+            raise_syntax_error(context, "expected ':'")
             break
         case ',':
             if(context.expect == ':' || context.expect == 'as'){
@@ -1765,7 +1778,7 @@ CaseCtx.prototype.transition = function(token, value){
             return new AbstractExprCtx(new ConditionCtx(context, token),
                 false)
         default:
-            raise_syntax_error(context, 'expected :')
+            raise_syntax_error(context, "expected ':'")
     }
 }
 
@@ -1836,7 +1849,7 @@ ClassCtx.prototype.transition = function(token, value){
                     var param = arg.tree[0]
                     if(arg.type != 'call_arg'){
                         $token.value = context.parenthesis_position
-                        raise_syntax_error(context, "expected ':'")
+                        raise_syntax_error(context, "invalid syntax")
                     }
                     if((param.type == 'expr' && param.name == 'id') ||
                             param.type == "kwarg"){
@@ -1910,7 +1923,6 @@ var Comprehension = {
     },
     make_comp: function(comp, context){
         comp.comprehension = true
-        comp.position = $token.value
         comp.parent = context.parent
         comp.id = comp.type + $B.UUID()
         var scope = get_scope(context)
@@ -2208,7 +2220,7 @@ DefCtx.prototype.transition = function(token, value){
             if(context.has_args){
                 return BodyCtx(context)
             }
-            raise_syntax_error(context, "missing function parameters")
+            raise_syntax_error(context, "expected '('")
             break
         case 'eol':
             if(context.has_args){
@@ -2413,7 +2425,18 @@ DictOrSetCtx.prototype.transition = function(token, value){
                     check_last()
                     context.end_position = $token.value
                     if(context.real == 'dict_or_set'){
-                        // for "{}" or {1}
+                        // {**{1:2}} should be a dictionary, even though it
+                        // contains elements and no colons, which makes it
+                        // look like a set
+                        for (var item of context.tree) {
+                            if (item.type == "expr" && item.tree[0].type == "kwd") {
+                                context.real = 'dict'
+                                break
+                            }
+                        }
+                    }
+                    if(context.real == 'dict_or_set'){
+                        // {} should be a dictionary, but {1} should be a set
                         context.real = context.tree.length == 0 ?
                             'dict' : 'set'
                     }
@@ -2598,6 +2621,9 @@ EndOfPositionalCtx.prototype.transition = function(token, value){
     if(token == "," || token == ")"){
         return transition(context.parent, token, value)
     }
+    if(token == 'op' && value == '*') {
+        raise_syntax_error(context, "expected comma between / and *")
+    }
     raise_syntax_error(context)
 }
 
@@ -2698,6 +2724,9 @@ ExceptCtx.prototype.transition = function(token, value){
             }
             break
         case ':':
+            if (context.tree.length == 0 && context.try_node.context.is_trystar) {
+                raise_syntax_error(context, "expected one or more exception types")
+            }
             var _ce = context.expect
             if(_ce == 'id' || _ce == 'as' || _ce == ':'){
                 return BodyCtx(context)
@@ -3258,10 +3287,16 @@ ExprCtx.prototype.transition = function(token, value){
                   if(parent_match(context, {type: 'del'})){
                       raise_syntax_error(context, 'cannot delete starred')
                   }
+                  if (['assign', 'augm_assign', 'node'].indexOf(context.parent.type) > -1) {
+                      raise_syntax_error_known_range(context,
+                          t.position,
+                          last_position(t),
+                          "can't use starred expression here")
+                  }
                   raise_syntax_error_known_range(context,
                       t.position,
                       last_position(t),
-                      "can't use starred expression here")
+                      "invalid syntax")
               }else if(t.type == "call" && t.func.type == "starred"){
                   $token.value = t.func.position
                   raise_syntax_error(context,
@@ -3824,7 +3859,7 @@ FuncArgs.prototype.transition = function(token, value){
     switch (token) {
         case 'id':
             if(context.has_kw_arg){
-                raise_syntax_error(context, 'duplicate keyword argument')
+                raise_syntax_error(context, 'arguments cannot follow var-keyword argument')
             }
             if(context.expect == 'id'){
                 context.expect = ','
@@ -3849,19 +3884,21 @@ FuncArgs.prototype.transition = function(token, value){
             return transition(context.parent, token, value)
         case 'op':
             if(context.has_kw_arg){
-                raise_syntax_error(context, "(unpacking after '**' argument)")
+                raise_syntax_error(context, "arguments cannot follow var-keyword argument")
             }
             var op = value
             context.expect = ','
             if(op == '*'){
                 if(context.has_star_arg){
-                    raise_syntax_error(context, "(only one '*' argument allowed)")
+                    raise_syntax_error(context, "* argument may appear only once")
                 }
                 return new FuncStarArgCtx(context, '*')
             }else if(op == '**'){
                 return new FuncStarArgCtx(context, '**')
             }else if(op == '/'){ // PEP 570
-                if(context.has_end_positional){
+                if(context.tree.length == 0){
+                    raise_syntax_error(context, 'at least one argument must precede /')
+                }else if(context.has_end_positional){
                     raise_syntax_error(context, '/ may appear only once')
                 }else if(context.has_star_arg){
                     raise_syntax_error(context, '/ must be ahead of *')
@@ -3874,6 +3911,9 @@ FuncArgs.prototype.transition = function(token, value){
             if(context.parent.type == "lambda"){
                 return transition(context.parent, token)
             }
+        case '(':
+            let type_name = context.parent.type == 'def' ? 'Function' : 'Lambda expression'
+            raise_syntax_error(context, `${type_name} parameters cannot be parenthesized`)
     }
     raise_syntax_error(context)
 }
@@ -3997,6 +4037,12 @@ FuncStarArgCtx.prototype.transition = function(token, value){
             }
             return new AbstractExprCtx(
                 new AnnotationCtx(context), false)
+        case '=':
+            if (context.op == '*') {
+                raise_syntax_error(context, 'var-positional argument cannot have default value')
+            }
+            raise_syntax_error(context, 'var-keyword argument cannot have default value')
+
     }
     raise_syntax_error(context)
 }
@@ -4177,12 +4223,19 @@ IdCtx.prototype.transition = function(token, value){
     var context = this,
         module = get_module(this)
     if(context.value == 'case' && context.parent.parent.type == "node"){
-        // case at the beginning of a line : if the line ends with a colon
-        // (:), it is the "soft keyword" `case` for pattern matching
+        // if `case` is at the beginning of a line and either:
+        // - the line ends with a colon (:) OR
+        // - it is immediately followed by an identifier
+        // it is the "soft keyword" `case` for pattern matching.
+        //
+        // NodeCtx.prototype.transition also helps handle the soft keyword vs
+        // identifier differentiation, by treating an occurrence of `case`
+        // differently if it occurs at the beginning of a line and is a direct
+        // child of a match.
         let save_position = module.token_reader.position,
-            ends_with_comma = check_line(module.token_reader, module.filename)
+            ends_with_colon = line_ends_with_colon(module.token_reader, module.filename)
             module.token_reader.position = save_position
-        if(ends_with_comma){
+        if(ends_with_colon || token == 'id'){
             var node = get_node(context)
             if((! node.parent) || !(node.parent.is_match)){
                 raise_syntax_error(context, "('case' not inside 'match')")
@@ -4201,11 +4254,11 @@ IdCtx.prototype.transition = function(token, value){
                     token, value)
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
-        // same for match
+        // same 'soft keyword' handling as case, but for match
         let save_position = module.token_reader.position,
-            ends_with_comma = check_line(module.token_reader, module.filename)
+            ends_with_colon = line_ends_with_colon(module.token_reader, module.filename)
             module.token_reader.position = save_position
-        if(ends_with_comma){
+        if(ends_with_colon || token == 'id'){
             return transition(new AbstractExprCtx(
                 new MatchCtx(context.parent.parent), true),
                 token, value)
@@ -4237,12 +4290,12 @@ IdCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'imaginary':
-            var msg
+            var msg = 'invalid syntax'
             if(["print", "exec"].indexOf(context.value) > -1 ){
                 var f = context.value
                 msg = `Missing parentheses in call to '${f}'.` +
                     ` Did you mean ${f}(...)?`
-            }else{
+            }else if(context.parent.parent && (['list_or_tuple', 'dict'].indexOf(context.parent.parent.type) > -1)){
                 msg = 'invalid syntax. Perhaps you forgot a comma?'
             }
             raise_syntax_error_known_range(context,
@@ -4483,7 +4536,7 @@ JoinedStrCtx.prototype.transition = function(token, value){
 }
 
 var KwdCtx = $B.parser.KwdCtx = function(context){
-    // used for **expr
+    // used for **expr in a dictionary
     this.type = 'kwd'
     this.position = context.position
     this.parent = context
@@ -4512,6 +4565,10 @@ var KwArgCtx = $B.parser.KwArgCtx = function(context){
     // operation replaces left operand
     context.parent.tree.pop()
     context.parent.tree.push(this)
+
+    if (['None', 'True', 'False', '__debug__'].indexOf(context.tree[0].value) > -1) {
+        raise_syntax_error(context, 'cannot assign to ' + context.tree[0].value)
+    }
 
     // set attribute "has_kw" of CallCtx instance to true
     context.parent.parent.has_kw = true
@@ -4664,9 +4721,8 @@ ListOrTupleCtx.prototype.transition = function(token, value){
                         var close = true
                         context.end_position = $token.value
                         if(context.tree.length == 1){
-                            if(parent_match(context, {type: 'del'}) &&
-                                    context.tree[0].type == 'expr' &&
-                                    context.tree[0].tree[0].type == 'starred'){
+                            if(context.tree[0].type == 'expr' &&
+                               context.tree[0].tree[0].type == 'starred'){
                                 raise_syntax_error_known_range(context,
                                     context.tree[0].tree[0].position,
                                     last_position(context.tree[0]),
@@ -4921,6 +4977,14 @@ NamedExprCtx.prototype.transition = function(token, value){
     return transition(this.parent, token, value)
 }
 
+function get_node_ancestor(node) {
+    return node.parent
+           && node.parent.context
+           && node.parent.context.tree
+           && node.parent.context.tree.length > 0
+           && node.parent.context.tree[0]
+}
+
 var NodeCtx = $B.parser.NodeCtx = function(node){
     // Base class for the context in a node
     this.node = node
@@ -5000,6 +5064,14 @@ NodeCtx.prototype.transition = function(token, value){
         case 'JoinedStr':
         case 'not':
         case 'lambda':
+            // If we're seeing a case as a direct child of a match, we can
+            // treat this case as a hard keyword
+            if (value == 'case') {
+                let node_ancestor = get_node_ancestor(context.node)
+                if (node_ancestor && node_ancestor.type == 'match') {
+                    return new PatternCtx(new CaseCtx(context))
+                }
+            }
             var expr = new AbstractExprCtx(context,true)
             return transition(expr, token, value)
         case 'assert':
@@ -6564,6 +6636,7 @@ var SetCompCtx = function(context){
     this.type = 'setcomp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
+    this.position = $token.value
     Comprehension.make_comp(this, context)
 }
 
@@ -6731,6 +6804,9 @@ var StarredCtx = $B.parser.StarredCtx = function(context){
 }
 
 StarredCtx.prototype.ast = function(){
+    if (this.tree[0].type == "abstract_expr") {
+        raise_syntax_error_known_range(this, this.position, last_position(this), 'invalid syntax')
+    }
     var ast_obj = new ast.Starred(this.tree[0].ast(), new ast.Load())
     set_position(ast_obj, this.position)
     return ast_obj
@@ -7446,6 +7522,7 @@ WithCtx.prototype.transition = function(token, value){
             }
             break
         case 'id':
+        case 'lambda':
             if(context.expect == 'expr'){
                 // start withitem
                 context.expect = ','
@@ -7987,7 +8064,7 @@ function test_num(num_lit){
 
 var opening = {')': '(', '}': '{', ']': '['}
 
-function check_line(token_reader){
+function line_ends_with_colon(token_reader){
     var braces = []
     token_reader.position--
     while(true){
@@ -8407,6 +8484,9 @@ function unindent(src){
     return unindented_lines.join('\n')
 }
 
+// This regex should match the one in py_string.js
+var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
+
 function handle_errortoken(context, token, token_reader){
     if(token.string == "'" || token.string == '"'){
         raise_syntax_error(context, 'unterminated string literal ' +
@@ -8423,8 +8503,15 @@ function handle_errortoken(context, token, token_reader){
     }else if(' `$'.indexOf(token.string) == -1){
         var u = _b_.ord(token.string).toString(16).toUpperCase()
         u = 'U+' + '0'.repeat(Math.max(0, 4 - u.length)) + u
-        raise_syntax_error(context,
-            `invalid character '${token.string}' (${u})`)
+
+        let error_message;
+        if (unprintable_re.test(token.string)) {
+            error_message = `invalid non-printable character ${u}`
+        } else {
+            error_message = `invalid character '${token.string}' (${u})`
+        }
+        raise_syntax_error(context, error_message);
+            
     }
     raise_syntax_error(context)
 }
@@ -8831,6 +8918,12 @@ $B.parse_options = function(options){
         options = {}
     }
 
+    let options_lowered = {}
+    for (const [key, value] of Object.entries(options)) {
+        options_lowered[key.toLowerCase()] = value
+    }
+    options = options_lowered
+
     $B.debug = options.debug === undefined ? 1 : options.debug
 
     // set built-in variable __debug__
@@ -9132,9 +9225,9 @@ $B.get_page_option = function(option){
     if($B.$options.hasOwnProperty(option)){
         // option passed to brython()
         return $B.$options[option]
-    }else if(brython_options.hasOwnProperty(option.toLowerCase())){
+    }else if(brython_options.hasOwnProperty(option)){
         // else use options defined in tag <brython-options>
-        return brython_options[option.toLowerCase()]
+        return brython_options[option]
     }else{
         return default_option[option]
     }

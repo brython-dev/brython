@@ -753,21 +753,20 @@ function make_comp(scopes){
         js += '}\n'
     }
     js += `}catch(err){\n` +
-          (has_await ? '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
+          (has_await ? `$B.restore_frame_obj(save_frame_obj, ${comp.locals_name})\n` : '') +
           `$B.set_exc(err, frame)\n` +
           `throw err\n}\n` +
-          (has_await ? '\n$B.restore_frame_obj(save_frame_obj, locals);' : '')
+          (has_await ? `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
 
     if(comp_iter_scope.found){
         js += `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
     }else{
-        js += `delete locals.${comp_iter}\n`
+        js += `delete ${comp.locals_name}.${comp_iter}\n`
     }
     js += `return result_${id}\n` +
           `}\n` +
           `)(${outmost_expr})\n`
 
-    //scopes.pop()
     return js
 }
 
@@ -3124,7 +3123,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
         js += `locals = ${namespaces.local_name},\n` +
               `globals = ${namespaces.global_name}`
         if(name){
-            js += `,\nlocals_${name} = locals`
+            let local_name = ('locals_' + name).replace(/\./g, '_')
+            js += `,\n${local_name} = locals`
         }
     }
     js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
@@ -3265,7 +3265,7 @@ $B.ast.Starred.prototype.to_js = function(scopes){
         compiler_error(this,
             "starred assignment target must be in a list or tuple")
     }else{
-        compiler_error(this, "can't use starred expression here")
+        compiler_error(this, "invalid syntax")
     }
 }
 

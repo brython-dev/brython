@@ -1410,11 +1410,10 @@ Pattern.finditer = function(self){
             {self: null, string: null, pos: null, endpos: null},
             'self string pos endpos'.split(' '), arguments,
             {pos: 0, endpos: _b_.None}, null, null)
-    var original_string = $.string,
-        data = prepare({string: $.string})
+    var data = prepare({string: $.string})
     var endpos = $.endpos === _b_.None ? data.string.length : $.endpos
     return $B.generator.$factory(iterator)(self.$pattern, data.string,
-            no_flag, $.string, $.pos, endpos)
+            self.flags, $.string, $.pos, endpos)
 }
 
 Pattern.fullmatch = function(self, string){
@@ -3278,7 +3277,7 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
         if(cp === undefined){
             accept_one = false
         }
-        if(starts_with_string_start(pattern)){
+        if (starts_with_string_start(pattern) && !(flags.value & MULTILINE.value)) {
             break
         }
     }

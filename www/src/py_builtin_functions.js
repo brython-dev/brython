@@ -274,6 +274,10 @@ _b_.compile = function() {
     $B.file_cache[filename] = $.source
     $B.url2name[filename] = module_name
 
+    if ($.flags & $B.PyCF_TYPE_COMMENTS) {
+        throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')
+    }
+
     if($B.$isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
             lfpos = $.source.source.indexOf(10),
@@ -427,6 +431,17 @@ _b_.compile = function() {
     // exec()
     $._ast = $B.ast_js_to_py(_ast)
     $._ast.$js_ast = _ast
+
+    // Compile the ast to JS, as in py2js, so we emit syntax errors created
+    // by the JS conversion process.
+    var future = $B.future_features(_ast, filename)
+    var symtable = $B._PySymtable_Build(_ast, filename, future)
+    $B.js_from_root({
+        ast: _ast,
+        symtable,
+        filename,
+    })
+
     return $
 }
 
@@ -602,8 +617,8 @@ var $$eval = _b_.eval = function(){
         throw exc
     }
 
-    var local_name = 'locals_' + __name__,
-        global_name = 'globals_' + __name__,
+    var local_name = ('locals_' + __name__).replace(/\./g, '_'),
+        global_name = ('globals_' + __name__).replace(/\./g, '_'),
         exec_locals = {},
         exec_globals = {}
 
@@ -762,9 +777,10 @@ var $$eval = _b_.eval = function(){
         // must set locals, might be used if expression is like
         // "True and True"
         js = `var __file__ = '${filename}'\n` +
-              `var locals = ${local_name}\nreturn ${js}`
+             `var locals = ${local_name}\nreturn ${js}`
     }else if(src.single_expression){
-        js = `var result = ${js}\n` +
+        js = `var __file__ = '${filename}'\n` +
+             `var result = ${js}\n` +
              `if(result !== _b_.None){\n` +
                  `_b_.print(result)\n` +
              `}`
@@ -778,6 +794,7 @@ var $$eval = _b_.eval = function(){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
+        $B.frame_obj = save_frame_obj
         throw err
     }
 

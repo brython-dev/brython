@@ -8,6 +8,11 @@ import javascript
 from browser import console, document, window, alert, bind, html
 import browser.widgets.dialog as dialog
 
+if hasattr(window, 'localStorage'):
+    from browser.local_storage import storage
+else:
+    storage = None
+
 # set height of container to 75% of screen
 _height = document.documentElement.clientHeight
 _s = document['container']
@@ -15,9 +20,14 @@ _s.style.height = '%spx' % int(_height * 0.85)
 
 has_ace = True
 try:
+    def handle_editor_change(*args):
+        if storage is None:
+            return
+        storage["py_src"] = editor.getValue()
     editor = window.ace.edit("editor")
     editor.setTheme("ace/theme/solarized_light")
     editor.session.setMode("ace/mode/python")
+    editor.session.on('change', handle_editor_change)
     editor.focus()
 
     editor.setOptions({
@@ -34,11 +44,6 @@ except:
     editor.getValue = get_value
     editor.setValue = set_value
     has_ace = False
-
-if hasattr(window, 'localStorage'):
-    from browser.local_storage import storage
-else:
-    storage = None
 
 if 'set_debug' in document:
     __BRYTHON__.debug = int(document['set_debug'].checked)

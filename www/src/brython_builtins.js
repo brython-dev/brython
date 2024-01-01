@@ -168,8 +168,9 @@ while(ix < minlen && short[ix] == long[ix]){
 }
 $B.tz_name = long.substr(ix).trim()
 
-
-$B.PyCF_ONLY_AST = 1024 // compiler flags, used in libs/_ast.js and compile()
+// compiler flags, used in libs/_ast.js and compile()
+$B.PyCF_ONLY_AST = 1024
+$B.PyCF_TYPE_COMMENTS = 0x1000
 
 if($B.isWebWorker){
     $B.charset = "utf-8"

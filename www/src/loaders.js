@@ -201,7 +201,7 @@ $B.idb_open_promise = function(){
             // Proceed without indexedDB
             $B.idb_cx = null
             $B.idb_name = null
-            $B.$options.indexedDB = false
+            $B.$options.indexeddb = false
             reject('could not open indexedDB database')
         }
     })
@@ -302,7 +302,7 @@ $B.idb_open = function(){
         // Proceed without indexedDB
         $B.idb_cx = null
         $B.idb_name = null
-        $B.$options.indexedDB = false
+        $B.$options.indexeddb = false
         loop()
     }
 }

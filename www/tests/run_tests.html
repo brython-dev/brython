@@ -66,6 +66,7 @@ from browser import window
 import brython_test_utils as utils
 from   brython_test_utils import unittest as test_utils
 import unittest
+from unittest.loader import defaultTestLoader
 import traceback
 
 def testTraceback(qunit):
@@ -124,15 +125,29 @@ def testTraceback(qunit):
         print('Failure in testTraceback')
         qunit.ok(False, traceback.format_exc())
 
+def testDoctest(qunit):
+    try:
+        import doctest
+        import test_failing_doctest
+
+        result = doctest.testmod(test_failing_doctest)
+        assert result.failed == 2
+        assert result.attempted == 9
+
+        qunit.ok(True)
+    except:
+        print('Failure in testTraceback')
+        qunit.ok(False, traceback.format_exc())
 
 _QUnit = window.QUnit
 _QUnit.test('testTraceback', testTraceback)
+_QUnit.test('testDoctest', testDoctest)
 
 # TODO: Arg values e.g. verbosity level ?
 result = test_utils.OneTimeTestResult()
 
-def qunit_add_tests(suite):
-    module_name = getattr(suite, 'caption', None) or 'All tests'
+def qunit_add_tests(suite, default_caption = 'All tests'):
+    module_name = getattr(suite, 'caption', default_caption)
     _QUnit.module(module_name)
     pend = []
     for test in suite:
@@ -142,22 +157,14 @@ def qunit_add_tests(suite):
             testName = test.shortDescription() or test.id()
             _QUnit.test(testName, test_utils.qunit_test(testName, test, result))
     for suite in pend:
-        qunit_add_tests(suite)
+        qunit_add_tests(suite, default_caption)
 
 qunit_add_tests(test_utils.load_brython_test_cases('.'))
 
-
-# def fail_qunit(name, message):
-#     def the_test(qunit):
-#         qunit.ok(False, message)
-#     _QUnit.test(name, the_test)
-
-# try:
-#     from unittest.loader import TestLoader
-# except:
-#     fail_qunit('Loading unittest.loader.TestLoader', traceback.format_exc())
-
-    </script>
+for test_name in ('test.test_syntax',):
+    suite = defaultTestLoader.loadTestsFromName(test_name)
+    qunit_add_tests(suite, default_caption = 'CPython')
+</script>
 
 <!-- for Web Components tests -->
 <ui-group child-config='{"fill": true}'>

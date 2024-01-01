@@ -5,7 +5,6 @@ from browser import window
 import brython_test_utils as utils
 import unittest
 
-
 # TODO: Not needed if test cases are written in unittest style
 class BrythonModuleTestCase(unittest.TestCase):
     def __init__(self, modname, caption, base_path=''):
@@ -103,6 +102,5 @@ def load_brython_test_cases(base_path=''):
         tcs = []
         for filenm, caption in options:
             tcs.append(BrythonModuleTestCase(filenm, caption, base_path))
-        ret.append(NamedTestSuite('Brython :' + label, tcs))
+        ret.append(NamedTestSuite('Brython: ' + label, tcs))
     return unittest.TestSuite(ret)
-
