@@ -36,7 +36,7 @@ def discover_brython_test_modules():
         ("DOM interface", [
             ("dom.py", "DOM"),
             ("test_webcomponent.py", "Web component"),
-            # ("test_web_worker.py", "Web Worker")
+            ("test_web_worker.py", "Web Worker")
         ]),
         ("Issues", [
           ("issues_gc.py", "issues (GC)"),
@@ -45,7 +45,7 @@ def discover_brython_test_modules():
         ]),
         ("Modules", [
           ("test_ast.py", "ast"),
-          # ("test_aio.py", "browser.aio"),
+          ("test_aio.py", "browser.aio"),
           ("test_ajax.py", "browser.ajax"),
           ("test_highlight.py", "browser.highlight"),
           ("test_browser_html.py", "browser.html"),
