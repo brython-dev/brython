@@ -89,8 +89,8 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
 
 
 function get_last_token(p){
-    var last_token = p.tokens.last
-    if(p.tokens.last.type == "ENDMARKER"){
+    var last_token = $B.last(p.tokens)
+    if(last_token.type == "ENDMARKER"){
         var src = $B.file_cache[p.filename]
         if(src){
             for(var token of $B.tokenizer(src)){
@@ -187,8 +187,8 @@ var helper_functions = {
         if(arg !== undefined){
             msg = _b_.str.__mod__(msg, arg)
         }
-        var last_token = p.tokens.last
-        if(p.tokens.last.type == "ENDMARKER"){
+        var last_token = $B.last(p.tokens)
+        if(last_token.type == "ENDMARKER"){
             var src = $B.file_cache[p.filename]
             if(src){
                 for(var token of $B.tokenizer(src)){
@@ -290,43 +290,19 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
 
 // JS classes and functions used by the parsing algorithm
 
-// Returns an object that has the interface of a list and consumes the
-// generator on demand, if the index was not yet read.
-// Used for the tokens. Reading all the tokens first would raise an exception
-// if there is an invalid token at the end of a long script, instead of
-// raising a possible SyntaxError at the beginning
-function generator_as_list(generator){
-    return new Proxy(generator,
-      {
-        get: function(target, ix){
-            if(ix == 'last'){
-                return $B.last(this.tokens)
-            }else if(ix == 'next'){
-                ix = this.tokens.length
+function read_token(parser){
+    while(true){
+        var next = parser.tokenizer.next()
+        if(! next.done){
+            var value = next.value
+            if(! ['ENCODING', 'NL', 'COMMENT'].includes(value.type)){
+                parser.tokens.push(value)
+                break
             }
-          if(this.tokens === undefined){
-              this.tokens = []
-          }
-          if(ix >= this.tokens.length){
-              // consume generator until we find a token other than ENCODING,
-              // NL or COMMENT which are ignored by the grammar
-              while(true){
-                  var next = target.next()
-                  if(! next.done){
-                      var value = next.value
-                      if(! ['ENCODING', 'NL', 'COMMENT'].includes(value.type)){
-                          this.tokens.push(value)
-                          break
-                      }
-                  }else{
-                      throw Error('tokenizer exhausted')
-                  }
-              }
-          }
-          return this.tokens[ix]
+        }else{
+            throw Error('tokenizer exhausted')
         }
-      }
-    )
+    }
 }
 
 // transform repeat string to min and max number of repetitions
@@ -363,11 +339,19 @@ var Parser = $B.Parser = function(src, filename, mode){
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
     var tokenizer = $B.tokenizer(src, filename, mode)
-    this.tokens = generator_as_list(tokenizer)
+    this.tokenizer = tokenizer
+    this.mark = 0
+    this.fill = 0
+    this.level = 0
+    this.size = 1
+    this.tokens = []
     this.src = src
     this.filename = filename
     this.mode = mode
     this.memo = {}
+    this.arena = {
+        a_objects: []
+    }
     if(filename){
         p.filename = filename
     }
@@ -399,7 +383,7 @@ Parser.prototype.parse = function(){
         }
     }
     if(match === FAIL){
-        var err_token = this.tokens.last
+        var err_token = $B.last(this.tokens)
         p.filename = this.filename
         p.known_err_token = err_token
         var message = 'invalid syntax'
@@ -511,6 +495,9 @@ Parser.prototype.eval_option = function(rule, position){
             //   reset to the position of the "s" character
             // - else break
             if(rule.join){
+                while(tokens[match.end] === undefined){
+                    read_token(this)
+                }
                 if(tokens[match.end][1] == rule.join){
                     position = match.end + 1
                     join_position = position
@@ -548,6 +535,7 @@ Parser.prototype.eval_option = function(rule, position){
 
 Parser.prototype.eval_option_once = function(rule, position){
     var tokens = this.tokens
+    tokens[position] ?? read_token(this)
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
             var choice = rule.choices[i],
