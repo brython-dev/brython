@@ -185,19 +185,19 @@ $B._PyPegen.constant_from_string = function(p, token){
         }
     }
     var ast_obj = new $B.ast.Constant(value)
-    set_position_from_obj(ast_obj, p.arena)
+    set_position_from_token(ast_obj, token)
     return ast_obj
 }
 
 $B._PyPegen.constant_from_token = function(p, t){
     var ast_obj = new $B.ast.Constant(t.string)
-    set_position_from_obj(ast_obj, p.arena)
+    set_position_from_token(ast_obj, t)
     return ast_obj
 }
 
 $B._PyPegen.decoded_constant_from_token = function(p, t){
     var ast_obj = new $B.ast.Constant(t.string)
-    set_position_from_obj(ast_obj, p.arena)
+    set_position_from_token(ast_obj, t)
     return ast_obj
 }
 
@@ -710,7 +710,6 @@ $B._PyPegen.collect_call_seqs = function(p, a, b,
     if (b == NULL) {
         return $B._PyAST.Call($B._PyPegen.dummy_name(p), a, [], lineno, col_offset,
                         end_lineno, end_col_offset, arena);
-
     }
 
     var starreds = $B._PyPegen.seq_extract_starred_exprs(p, b),

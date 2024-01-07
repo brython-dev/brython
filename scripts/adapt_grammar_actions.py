@@ -15,9 +15,15 @@ def transform_action(action):
     #action9 = re.sub(operators_re, r'$B.ast.\1', action8)
     action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
 
-    for op in ['USub', 'Add', 'Sub', 'Module']:
-        action9 = re.sub(rf'\b{op}\b', 'new $B.ast.' + op, action9)
+    for name in operators + ['Module']:
+        action9 = re.sub(rf'\b{name}\b', 'new $B.ast.' + name, action9)
 
+    for name in helper_functions:
+        action9 = re.sub(rf'\b{name}\b', '$B.helper_functions.' + name, action9)
+
+    for name in parser_constants:
+        action9 = re.sub(rf'\b{name}\b', '$B.parser_constants.' + name, action9)
+        
     # remove parameter types, eg
     # "$B._PyPegen.joined_str(p, a, (asdl_expr_seq)b, c)"
     # replaced by
@@ -74,6 +80,33 @@ operators = [
     ]
 
 operators_re = r'\b(' + '|'.join(operators) + r')\b'
+
+parser_constants = [
+    'Store', 'Load', 'Del', 'NULL', 'alias_ty', 'keyword_ty', 'arguments_ty',
+    'expr_ty', 'asdl_stmt_seq', 'asdl_int_seq', 'asdl_expr_seq',
+    'asdl_keyword_seq', 'asdl_identifier_seq', 'asdl_pattern_seq',
+    'asdl_type_param_seq',
+    'AugOperator', 'Py_Ellipsis', 'Py_False', 'Py_True', 'Py_None',
+    'PyExc_SyntaxError',
+    'STAR_TARGETS', 'DEL_TARGETS', 'FOR_TARGETS'
+    ]
+
+helper_functions = [
+    "CHECK",
+    "CHECK_VERSION",
+    "CHECK_NULL_ALLOWED",
+    "INVALID_VERSION_CHECK",
+    "NEW_TYPE_COMMENT",
+    "RAISE_ERROR_KNOWN_LOCATION",
+    "RAISE_SYNTAX_ERROR",
+    "RAISE_INDENTATION_ERROR",
+    "RAISE_SYNTAX_ERROR_KNOWN_LOCATION",
+    "RAISE_SYNTAX_ERROR_KNOWN_RANGE",
+    "RAISE_SYNTAX_ERROR_INVALID_TARGET",
+    "_RAISE_SYNTAX_ERROR_INVALID_TARGET",
+    "RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN",
+    "asdl_seq_LEN",
+    "asdl_seq_GET"]
 
 if __name__ == '__main__':
     src = """_PyAST_alias(a->v.Name.id,

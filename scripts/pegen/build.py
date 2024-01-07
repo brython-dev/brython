@@ -316,7 +316,7 @@ def build_javascript_generator(
         gen: ParserGenerator = JavascriptParserGenerator(
             grammar, all_tokens, exact_tok, non_exact_tok, file,
             skip_actions=skip_actions,
-            debug = True
+            debug = False
         )
         gen.generate(grammar_file)
 

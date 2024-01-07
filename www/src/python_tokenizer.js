@@ -157,6 +157,10 @@ function Token(type, string, start, end, line){
     res[2] = start
     res[3] = end
     res[4] = line
+    res.lineno = start[0]
+    res.col_offset = start[1]
+    res.end_lineno = end[0]
+    res.end_col_offset = end[1]
     return res
 }
 

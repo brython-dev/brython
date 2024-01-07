@@ -136,13 +136,12 @@ const EXTRA = {}
 
 EXTENSION_SUFFIX = """
 $B._PyPegen_parse = function(p){
-    console.log('parse', p)
-    // Initialize keywords
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
 
-    console.log('first token', p.tok.next().value)
+    // skip first token (ENCODING)
+    p.tok.next()
 
     return file_rule(p)
 
@@ -611,10 +610,8 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             self.print("p.error_indicator = 1;")
             self.add_return("NULL")
         self.print("}")
-        self.print("var _start_lineno = p.tokens[_mark].lineno;")
-        self.print("UNUSED(_start_lineno); // Only used by EXTRA macro")
-        self.print("var _start_col_offset = p.tokens[_mark].col_offset;")
-        self.print("UNUSED(_start_col_offset); // Only used by EXTRA macro")
+        self.print("EXTRA.lineno = p.tokens[_mark].lineno;")
+        self.print("EXTRA.col_offset = p.tokens[_mark].col_offset;")
 
     def _set_up_token_end_metadata_extraction(self) -> None:
         self.print("var _token = $B._PyPegen.get_last_nonnwhitespace_token(p);")
@@ -622,10 +619,8 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         with self.indent():
             self.add_return("NULL")
         self.print("}")
-        self.print("var _end_lineno = _token.end_lineno;")
-        self.print("UNUSED(_end_lineno); // Only used by EXTRA macro")
-        self.print("var _end_col_offset = _token.end_col_offset;")
-        self.print("UNUSED(_end_col_offset); // Only used by EXTRA macro")
+        self.print("EXTRA.end_lineno = _token.end_lineno;")
+        self.print("EXTRA.end_col_offset = _token.end_col_offset;")
 
     def _check_for_errors(self) -> None:
         self.print("if (p.error_indicator) {")
