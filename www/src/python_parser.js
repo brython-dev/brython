@@ -349,6 +349,7 @@ var Parser = $B.Parser = function(src, filename, mode){
     this.filename = filename
     this.mode = mode
     this.memo = {}
+    this.cache = {}
     this.arena = {
         a_objects: []
     }
@@ -399,7 +400,10 @@ Parser.prototype.parse = function(){
     }
 
     // If parsing succeeds, return AST object
-    return make_ast(match, this.tokens)
+    var t0 = window.performance.now()
+    var res = make_ast(match, this.tokens)
+    $B.time_make_ast += window.performance.now() - t0
+    return res
 }
 
 Parser.prototype.clear_memo = function(){
@@ -460,12 +464,21 @@ Parser.prototype.apply_rule = function(rule, position){
     return result
 }
 
+function set_id(rule){
+    return $B.UUID()
+}
+
+$B.nb_eval_option = 0
+$B.nb_deja_vu = 0
+
 Parser.prototype.eval_option = function(rule, position){
+    $B.nb_eval_option++
     var tokens = this.tokens,
         result,
         start = position,
         join_position = false
 
+    rule.id = rule.id ?? $B.UUID()
     if(! rule.repeat){
         result = this.eval_option_once(rule, position)
     }else{
@@ -539,9 +552,7 @@ Parser.prototype.eval_option_once = function(rule, position){
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
             var choice = rule.choices[i],
-                invalid = choice.items && choice.items.length == 1 &&
-                    choice.items[0].name &&
-                    choice.items[0].name.startsWith('invalid_')
+                invalid = choice.invalid ?? test_invalid(choice)
             if(invalid && ! this.use_invalid){
                 continue
             }
@@ -621,6 +632,13 @@ Parser.prototype.eval_option_once = function(rule, position){
     }
 }
 
+function test_invalid(choice){
+    choice.invalid = choice.items && choice.items.length == 1 &&
+                    choice.items[0].name &&
+                    choice.items[0].name.startsWith('invalid_')
+    return choice.invalid
+}
+
 Parser.prototype.eval_body = function(rule, position){
     // Only for grammar rules
     if(debug){
@@ -630,9 +648,7 @@ Parser.prototype.eval_body = function(rule, position){
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
             var choice = rule.choices[i],
-                invalid = choice.items && choice.items.length == 1 &&
-                    choice.items[0].name &&
-                    choice.items[0].name.startsWith('invalid_')
+                invalid = choice.invalid ?? test_invalid(choice)
             if(invalid && ! this.use_invalid){
                 continue
             }
@@ -775,6 +791,8 @@ function set_alias(L, name, value){
 }
 
 // Function that generates the AST for a match
+$B.time_make_ast = 0
+
 function make_ast(match, tokens){
     // match.rule succeeds; make_ast() returns a value for the match, based on
     // the grammar action for the rule

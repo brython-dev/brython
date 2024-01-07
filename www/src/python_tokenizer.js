@@ -148,6 +148,10 @@ var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
 function Token(type, string, start, end, line){
     start = start.slice(0, 2)
     var res = {type, string, start, end, line}
+    res.num_type = $B.py_tokens[type]
+    if(type == 'OP'){
+        res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
+    }
     res[0] = type
     res[1] = string
     res[2] = start

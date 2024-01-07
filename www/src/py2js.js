@@ -8511,7 +8511,7 @@ function handle_errortoken(context, token, token_reader){
             error_message = `invalid character '${token.string}' (${u})`
         }
         raise_syntax_error(context, error_message);
-            
+
     }
     raise_syntax_error(context)
 }
@@ -8853,6 +8853,8 @@ var create_root_node = $B.parser.create_root_node = function(src, module,
     return root
 }
 
+$B.parse_time = 0
+
 $B.py2js = function(src, module, locals_id, parent_scope){
     // src = Python source (string or object)
     // module = module name (string)
@@ -8878,7 +8880,8 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         locals_id = locals_id[0]
     }
 
-    var _ast
+    var _ast,
+        t0 = window.performance.now()
 
     if($B.parser_to_ast){
         console.log('use standard parser')
@@ -8889,6 +8892,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         dispatch_tokens(root)
         _ast = root.ast()
     }
+    $B.parse_time += window.performance.now() - t0
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
     var js_obj = $B.js_from_root({ast: _ast,
@@ -9352,6 +9356,7 @@ $B.run_script = function(script, src, name, url, run_loop){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
+        console.log('err', err)
         return $B.handle_error($B.exception(err)) // in loaders.js
     }
     var _script = {
