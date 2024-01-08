@@ -81,10 +81,10 @@ jsDelivr supports version ranges, so if you want the latest of the
 
 ```html
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.11/brython.min.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.12/brython.min.js">
 </script>
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.11/brython_stdlib.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.12/brython_stdlib.js">
 </script>
 ```
 
