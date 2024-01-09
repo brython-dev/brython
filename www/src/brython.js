@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-06 11:19:03.957022"
-__BRYTHON__.timestamp=1704536343957
+__BRYTHON__.compiled_date="2024-01-09 11:45:50.434401"
+__BRYTHON__.timestamp=1704797150433
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -223,6 +223,12 @@ res[1]=string
 res[2]=start
 res[3]=end
 res[4]=line
+if($B.py_tokens){res.num_type=$B.py_tokens[type]
+if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}
+res.lineno=start[0]
+res.col_offset=start[1]
+res.end_lineno=end[0]
+res.end_col_offset=end[1]}
 return res}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
@@ -4816,6 +4822,7 @@ src=src.src}
 src=src.replace(/\r\n/gm,"\n")
 root.src=src
 return root}
+$B.parse_time=0
 $B.py2js=function(src,module,locals_id,parent_scope){
 if(typeof module=="object"){module=module.__name__}
 parent_scope=parent_scope ||$B.builtins_scope
@@ -4825,11 +4832,12 @@ imported=src.imported
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
-var _ast
+var _ast,t0=window.performance.now()
 if($B.parser_to_ast){console.log('use standard parser')
 _ast=new $B.Parser(src,filename,'file').parse()}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
 _ast=root.ast()}
+$B.parse_time+=window.performance.now()-t0
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root({ast:_ast,symtable,filename,imported})
@@ -4978,7 +4986,8 @@ _b_.__debug__=$B.get_option('debug')> 0
 var root,js
 try{root=$B.py2js({src:src,filename:url},name,name)
 js=root.to_js()
-if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error($B.exception(err))}
+if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){console.log('err',err)
+return $B.handle_error($B.exception(err))}
 var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
 $B.tasks.push(["execute",_script])
 if(run_loop){$B.loop()}}
