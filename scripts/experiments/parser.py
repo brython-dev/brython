@@ -20,7 +20,7 @@ class Rule:
         self.name = name
         self.alias = ''
 
-    def __reXpr__(self):
+    def __repr__(self):
         s = self.alias + '=' if self.alias else ''
         return s + self.name
 
@@ -28,6 +28,9 @@ class Literal:
 
     def __init__(self, value):
         self.value = value
+
+    def __repr__(self):
+        return self.value
 
 class Operator:
 
@@ -39,23 +42,22 @@ class Operator:
 
 class Primitive:
 
-    def __init__(self, name, repeat = ''):
-        self.name = name
-        self.repeat = repeat
-
+    def __init__(self):
+        self.repeat = ''
+        
     def __repr__(self):
-        return self.name + self.repeat
+        return self.__class__.__name__ + self.repeat
 
-class ENDMARKER:
+class ENDMARKER(Primitive):
     pass
 
-class NUMBER:
+class NUMBER(Primitive):
     pass
 
-class NAME:
+class NAME(Primitive):
     pass
 
-class NEWLINE:
+class NEWLINE(Primitive):
     pass
 
 primitives = {
@@ -89,6 +91,7 @@ def parse_grammar_options(line):
                         option.append(Literal(tok[1:-1]))
                     else:
                         option.append(Operator(tok[1:-1]))
+                        operators.add(tok[1:-1])
                 elif tok == tok.upper():
                     option.append(primitives[tok]())
                 else:
@@ -96,7 +99,7 @@ def parse_grammar_options(line):
         elif state == 'cont':
             alias = option[-1].name
             if tok == tok.upper():
-                option[-1] = Primitive(tok)
+                option[-1] = primitive[tok]()
             else:
                 option[-1] = Rule(tok)
             option[-1].alias = alias
@@ -128,14 +131,14 @@ with open('d:/cpython/Grammar/python.mini1.gram', encoding='utf-8') as f:
 
     grammar[rule] = options
 
-"""
+
 for rule in grammar:
     print(rule)
     for option in grammar[rule]:
         print('    ', option)
-"""
 
-grammar = {
+
+grammar1 = {
 'start': [
         ['expr', 'NEWLINE?', 'ENDMARKER', '{ ast.Expression(expr) }']
     ],
@@ -158,8 +161,6 @@ grammar = {
         [ 'NUMBER', '{ ast.Constant(value=ast.literal_eval(number.string)) }']
     ]
 }
-
-operators = ['(', ')', '+', '-', '*', '/']
 
 state = None
 
@@ -210,7 +211,8 @@ def can_follow(e):
     for rule, options in grammar.items():
         for onum, option in enumerate(options):
             if e is None:
-                if option[0] == option[0].upper():
+                if type(option[0]).__name__ in primitives \
+                        or option[0] in operators:
                     result.append([rule, onum, 0])
             else:
                 for inum, ge in enumerate(option[:-1]):
@@ -236,8 +238,11 @@ def match(token, ge):
     if ge in operators:
         if tok_type == 'OP' and token.string == ge:
             return ge
-    elif ge == ge.upper():
-        if tok_type == ge or (ge.endswith('?') and tok_type == ge[:-1]):
+    elif type(ge).__name__ in primitives:
+        if tok_type == ge:
+            return ge
+        elif hasattr(ge, 'repeat') and ge.repeat == '?' and \
+                tok_type == type(ge).__name__:
             return ge
     elif tok_type in is_a: # NUMBER, NAME
         for equiv in is_a[tok_type]:
