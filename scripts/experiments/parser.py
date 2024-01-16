@@ -8,7 +8,13 @@ import pprint
 primitives = {}
 
 operators = set()
+keywords = set()
 
+class Operator(str):
+    pass
+
+class Keyword(str):
+    pass
 
 def parse_grammar_options(line):
     lexer = shlex.shlex(io.StringIO(line))
@@ -28,8 +34,11 @@ def parse_grammar_options(line):
                 option[-1] += '?'
             else:
                 if tok.startswith("'"):
-                    option.append(tok[1:-1])
+                    if tok[1].isalpha():
+                        option.append(Keyword(tok[1:-1]))
+                        keywords.add(tok[1:-1])
                     if not tok[1].isalpha():
+                        option.append(Operator(tok[1:-1]))
                         operators.add(tok[1:-1])
                 else:
                     option.append(tok)
@@ -45,7 +54,7 @@ def parse_grammar_options(line):
     return option
 
 grammar = {}
-with open('d:/cpython/Grammar/python.mini1.gram', encoding='utf-8') as f:
+with open('python.mini.gram', encoding='utf-8') as f:
     rule = None
     for line in f:
         if not line.strip():
@@ -64,37 +73,13 @@ with open('d:/cpython/Grammar/python.mini1.gram', encoding='utf-8') as f:
 
     grammar[rule] = options
 
-"""
-for rule in grammar:
+for rule, options in grammar.items():
     print(rule)
-    for option in grammar[rule]:
-        print('    ', option)
-"""
+    for option in options:
+        print('  |', ' '.join(option))
 
-grammar = {
-'start': [
-        ['expr', 'NEWLINE?', 'ENDMARKER', '{ ast.Expression(expr) }']
-    ],
-'expr': [
-        [ 'expr', '+',  'term', '{ ast.BinOp(expr, ast.Add(), term) }'],
-        [ 'expr', '-', 'term',  '{ ast.BinOp(expr, ast.Sub(), term) }'],
-        [ 'term', '{ term }']
-    ],
-'term': [
-        [ 'term', '*', 'factor',  '{ ast.BinOp(l, ast.Mult(), r) }'],
-        [ 'term', '/', 'factor', '{ ast.BinOp(term, ast.Div(), factor) }'],
-        [ 'factor', '{ factor }']
-    ],
-'factor': [
-        [ '(', 'expr', ')',  '{ expr }'],
-        [ 'atom', '{ atom }'],
-    ],
-'atom': [
-        [ 'NAME', '{ ast.Name(id=name.string, ctx=ast.Load()) }'],
-        [ 'NUMBER', '{ ast.Constant(value=ast.literal_eval(number.string)) }']
-    ]
-}
-
+print('operators', operators)
+print('keywords', keywords)
 
 state = None
 
@@ -148,8 +133,11 @@ def can_follow(e):
     for rule, options in grammar.items():
         for onum, option in enumerate(options):
             if e is None:
-                if option[0] == option[0].upper():
+                print(rule, option[0], 'op ok kw', isinstance(option[0], (Operator, Keyword)))
+                if option[0] == option[0].upper() or \
+                        isinstance(option[0], (Operator, Keyword)):
                     result.append([rule, onum, 0])
+                    print('add to result', option[0], grammar[rule][onum][0])
             else:
                 for inum, ge in enumerate(option[:-1]):
                     if ge == e:
@@ -169,16 +157,20 @@ candidates = []
 
 
 src = "x + (1 + (y * (7 - 6)))"
+src = 'import XXX'
 last_item = None
 
 def match(token, ge):
     tok_type = _token.tok_name[token.type]
-    test = False # tok_type == 'OP' and token.string == '('
+    test =tok_type == 'NAME' and token.string == 'import'
     if test:
         print('test match', tok_type, token.string, 'with ge', ge)
         input()
     if ge in operators:
         if tok_type == 'OP' and token.string == ge:
+            return ge
+    elif ge in keywords:
+        if tok_type == 'NAME' and token.string == ge:
             return ge
     elif ge == ge.upper():
         if tok_type == ge or (ge.endswith('?') and tok_type == ge[:-1]):
@@ -209,6 +201,7 @@ def show_candidates(candidates):
     for rule, onum, inum in candidates:
         option = grammar[rule][onum]
         print('  ', rule, option, 'expect', option[inum])
+
 for token in tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline):
     print()
     tok_type = _token.tok_name[token.type]
