@@ -3,18 +3,30 @@ import token as _token
 import io
 import re
 import shlex
-import pprint
+import string
 
 primitives = {}
 
 operators = set()
 keywords = set()
+punctuations = set()
 
 class Operator(str):
     pass
 
 class Keyword(str):
+
+    def __str__(self):
+        return f"'{str.__str__(self)}'"
+
+
+class Punctuation(str):
     pass
+
+class Separated(str):
+
+    def __str__(self):
+        return f"'{self.separator}'.{str.__str__(self)}"
 
 def parse_grammar_options(line):
     lexer = shlex.shlex(io.StringIO(line))
@@ -32,16 +44,34 @@ def parse_grammar_options(line):
                 state = 'action'
             elif tok == '?':
                 option[-1] += '?'
+            elif tok == '.':
+                if isinstance(option[-1], Punctuation):
+                    state = 'separated'
+                    separator = option.pop()
+                else:
+                    raise Exception('. after non separator ' + option.pop())
             else:
                 if tok.startswith("'"):
                     if tok[1].isalpha():
                         option.append(Keyword(tok[1:-1]))
                         keywords.add(tok[1:-1])
-                    if not tok[1].isalpha():
+                    elif tok[1] in string.punctuation:
+                        option.append(Punctuation(tok[1:-1]))
+                        punctuations.add(tok[1:-1])
+                    elif not tok[1].isalpha():
                         option.append(Operator(tok[1:-1]))
                         operators.add(tok[1:-1])
                 else:
                     option.append(tok)
+        elif state == 'separated':
+            sep = Separated(tok)
+            sep.separator = separator
+            option.append(sep)
+            state = 'expect+'
+        elif state == 'expect+':
+            if tok != '+':
+                raise Exception('expected +, got ' + tok)
+            state = 'new'
         elif state == 'cont':
             alias = option[-1]
             option[-1] = tok
@@ -54,7 +84,7 @@ def parse_grammar_options(line):
     return option
 
 grammar = {}
-with open('python.mini.gram', encoding='utf-8') as f:
+with open('python.mini.gram2', encoding='utf-8') as f:
     rule = None
     for line in f:
         if not line.strip():
@@ -76,10 +106,12 @@ with open('python.mini.gram', encoding='utf-8') as f:
 for rule, options in grammar.items():
     print(rule)
     for option in options:
-        print('  |', ' '.join(option))
+        print(option)
+        print('  |', ' '.join(str(x) for x in option))
 
 print('operators', operators)
 print('keywords', keywords)
+print('punctuations', punctuations)
 
 state = None
 
@@ -130,21 +162,58 @@ def add_to_list(t1, t2):
 def can_follow(e):
     # list of elements that can follow grammar element "e"
     result = []
+    test = False # isinstance(e, Separated)
+    if test:
+        print('can follow', e)
     for rule, options in grammar.items():
         for onum, option in enumerate(options):
             if e is None:
-                print(rule, option[0], 'op ok kw', isinstance(option[0], (Operator, Keyword)))
                 if option[0] == option[0].upper() or \
                         isinstance(option[0], (Operator, Keyword)):
                     result.append([rule, onum, 0])
-                    print('add to result', option[0], grammar[rule][onum][0])
             else:
                 for inum, ge in enumerate(option[:-1]):
                     if ge == e:
+                        if isinstance(e, Separated):
+                            result.append([rule, onum, inum])
                         if len(option) == 2:
                             add_to_list(result, can_follow(rule))
                         elif inum < len(option) - 2:
-                            result.append([rule, onum, inum + 1])
+                            if isinstance(ge, Separated):
+                                result.append([rule, onum, inum])
+                                if getattr(ge, 'expect', None) == 'separator':
+                                    result.append([rule, onum, inum + 1])
+                            else:
+                                next_ge = option[inum + 1]
+                                if next_ge == '[':
+                                    # next can be first ge inside []
+                                    result.append([rule, onum, inum + 2])
+                                    # or the ge after matching ']'
+                                    next_inum = inum + 1
+                                    nb_inum = len(option)
+                                    while next_inum < nb_inum - 1:
+                                        if option[next_inum] == ']':
+                                            break
+                                        next_inum += 1
+                                    print('[ ends at', option[next_inum])
+                                    if next_inum == nb_inum - 2:
+                                        add_to_list(result, can_follow(rule))
+                                    else:
+                                        result.append([rule, onum, next_inum + 1])
+                                elif next_ge == '(':
+                                    # next can be the ge after "("
+                                    result.append([rule, onum, inum + 2])
+                                    # check if there is a repeater ("*" or "+")
+                                    # after matching ")"
+                                    next_inum = inum + 1
+                                    nb_inum = len(option)
+                                    while next_inum < nb_inum - 1:
+                                        if option[next_inum] == ')':
+                                            break
+                                        next_inum += 1
+                                    print('( ends at', option[next_inum])
+                                else:
+                                    result.append([rule, onum, inum + 1])
                         else:
                             add_to_list(result, can_follow(rule))
 
@@ -157,20 +226,49 @@ candidates = []
 
 
 src = "x + (1 + (y * (7 - 6)))"
-src = 'import XXX'
+src = "global x"
+
+
 last_item = None
 
+def starters(r):
+    # list of options whose first option is compatible with rule "r"
+    result = []
+    for rule, options in grammar.items():
+        for onum, option in enumerate(options):
+            if option[0] == r:
+                result.append([rule, onum, 0])
+    if r in is_a:
+        for equiv in is_a[r]:
+            add_to_list(result, starters(equiv))
+    return result
+
+
+
 def match(token, ge):
+    # check if token matches the grammar expression referenced by candidate
+    # returns a list of candidates for the next token
     tok_type = _token.tok_name[token.type]
-    test =tok_type == 'NAME' and token.string == 'import'
+    test = tok_type == 'OP' and token.string == '='
     if test:
         print('test match', tok_type, token.string, 'with ge', ge)
         input()
-    if ge in operators:
+    if ge in operators or ge in punctuations:
         if tok_type == 'OP' and token.string == ge:
             return ge
     elif ge in keywords:
         if tok_type == 'NAME' and token.string == ge:
+            return ge
+
+    elif isinstance(ge, Separated):
+        if not hasattr(ge, 'expect'):
+            ge.expect = 'repeated'
+        if ge.expect == 'repeated' and tok_type == ge:
+            ge.expect = 'separator'
+            return ge
+        elif ge.expect == 'separator' and tok_type == 'OP' and \
+                token.string == ge.separator:
+            ge.expect = 'repeated'
             return ge
     elif ge == ge.upper():
         if tok_type == ge or (ge.endswith('?') and tok_type == ge[:-1]):
