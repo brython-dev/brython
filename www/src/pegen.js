@@ -12,6 +12,8 @@
 
 // Internal parser functions
 
+var _b_ = __BRYTHON__.builtins
+
 const Load = new $B.ast.Load()
 
 function strchr(s, char){
@@ -20,6 +22,10 @@ function strchr(s, char){
 
 function strlen(s){
     return s.length
+}
+
+function strncmp(a, b){
+    return a < b ? -1 : a > b ? 1 : 0
 }
 
 function PyOS_strtol(s, end, base){
@@ -55,7 +61,7 @@ function PyBytes_FromStringAndSize(s){
 }
 
 function _PyArena_AddPyObject(arena, obj){
-    arena.a_objects.push(obj)
+    // arena.a_objects.push(obj)
     return 1
 }
 
@@ -240,20 +246,11 @@ function initialize_token(p, parser_token, new_token, token_type) {
 
     parser_token.num_type = (token_type == NAME) ? _get_keyword_or_name_type(p, new_token) : token_type;
     parser_token.bytes = PyBytes_FromStringAndSize(new_token.string)
-        //PyBytes_FromStringAndSize(new_token.start, new_token.end - new_token.start);
-    if (parser_token.bytes == NULL) {
-        return -1;
-    }
 
-    if (_PyArena_AddPyObject(p.arena, parser_token.bytes) < 0) {
-        return -1;
-    }
-
+    _PyArena_AddPyObject(p.arena, parser_token.bytes)
     parser_token.metadata = NULL;
     if (new_token.metadata != NULL) {
-        if (_PyArena_AddPyObject(p.arena, new_token.metadata) < 0) {
-            return -1;
-        }
+        _PyArena_AddPyObject(p.arena, new_token.metadata)
         parser_token.metadata = new_token.metadata;
         new_token.metadata = NULL;
     }
@@ -300,22 +297,10 @@ $B._PyPegen.fill_token = function(p){
     var new_token = {metadata: NULL}
     //_PyToken_Init(new_token);
     var type = get_next_token(p, new_token);
+
     // Record and skip '# type: ignore' comments
     while (type == TYPE_IGNORE) {
-        var len = new_token.end_col_offset - new_token.col_offset;
-        var tag = PyMem_Malloc(len + 1);
-        if (tag == NULL) {
-            PyErr_NoMemory();
-            // goto error;
-        }
-        strncpy(tag, new_token.start, len);
-        tag[len] = '\0';
-        // Ownership of tag passes to the growable array
-        if (!growable_comment_array_add(p.type_ignore_comments, p.tok.lineno, tag)) {
-            PyErr_NoMemory();
-            // goto error;
-        }
-        type = _PyTokenizer_Get(p.tok, new_token);
+        type = get_next_token(p, new_token);
     }
 
     // If we have reached the end and we are in single input mode we need to insert a newline and reset the parsing
@@ -331,13 +316,6 @@ $B._PyPegen.fill_token = function(p){
     else {
         p.parsing_started = 1;
     }
-
-    // Check if we are at the limit of the token array capacity and resize if needed
-    /*
-    if ((p.fill == p.size) && (_resize_tokens_array(p) != 0)) {
-        return error()
-    }
-    */
 
     var t = p.tokens[p.fill];
     return initialize_token(p, t, new_token, type);
@@ -379,6 +357,8 @@ $B._PyPegen.get_memo_statistics = function(){
     return ret;
 }
 // #endif
+
+
 $B._PyPegen.is_memoized = function(p, type, pres){
     if (p.mark == p.fill) {
         if ($B._PyPegen.fill_token(p) < 0) {
@@ -391,7 +371,7 @@ $B._PyPegen.is_memoized = function(p, type, pres){
 
     for (var m = t.memo; m != NULL; m = m.next) {
         if (m.type == type) {
-// #if defined(PY_DEBUG)
+            /* #if defined(PY_DEBUG)
             if (0 <= type && type < NSTATISTICS) {
                 var count = m.mark - p.mark;
                 // A memoized negative result counts for one.
@@ -400,7 +380,7 @@ $B._PyPegen.is_memoized = function(p, type, pres){
                 }
                 memo_statistics[type] += count;
             }
-// #endif
+            #endif */
             p.mark = m.mark;
             pres.value = m.node;
             return 1;
@@ -601,7 +581,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
     }
     var the_token;
     var size;
-    PyBytes_AsStringAndSize(t.bytes, the_token, size);
+    the_token = _b_.bytes.decode(t.bytes, 'iso-8859-1');
     for (let keyword = p.soft_keywords; keyword != NULL; keyword++) {
         if (strncmp(keyword, the_token, size) == 0) {
             return $B._PyPegen.name_from_token(p, t);
