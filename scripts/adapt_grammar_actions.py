@@ -16,7 +16,7 @@ def transform_action(action):
     action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
 
     for name in operators + ['Module']:
-        action9 = re.sub(rf'\b{name}\b', 'new $B.ast.' + name, action9)
+        action9 = re.sub(rf'\b{name}\b', 'new $B.ast.' + name + '()', action9)
 
     for name in helper_functions:
         action9 = re.sub(rf'\b{name}\b', '$B.helper_functions.' + name, action9)
