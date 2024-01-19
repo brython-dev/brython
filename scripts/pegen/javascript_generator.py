@@ -200,9 +200,6 @@ class FunctionCall:
                 ]
             else:
                 parts = ["(", self.assigned_variable, " = ", *parts, ")"]
-        if '*' in "".join(parts):
-            print('function call', "".join(parts))
-            input()
         if self.comment:
             parts.append(f"  // {self.comment}")
         return "".join(parts)
