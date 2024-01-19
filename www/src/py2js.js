@@ -8881,7 +8881,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     }
 
     var _ast,
-        t0 = window.performance.now()
+        t0 = globalThis.performance.now()
 
     if($B.parser_to_ast){
         console.log('use standard parser')
@@ -8892,7 +8892,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         dispatch_tokens(root)
         _ast = root.ast()
     }
-    $B.parse_time += window.performance.now() - t0
+    $B.parse_time += globalThis.performance.now() - t0
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
     var js_obj = $B.js_from_root({ast: _ast,
