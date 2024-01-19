@@ -412,12 +412,16 @@ Parser.prototype.get_memo = function(rule, position){
     return m
 }
 
+var ignored = [$B.py_tokens.ENCODING,
+    $B.py_tokens.NL,
+    $B.py_tokens.COMMENT]
+    
 Parser.prototype.read_token = function(){
     while(true){
         var next = this.tokenizer.next()
         if(! next.done){
             var value = next.value
-            if(! ['ENCODING', 'NL', 'COMMENT'].includes(value.type)){
+            if(! ignored.includes(value.num_type)){
                 this.tokens.push(value)
                 return value
             }

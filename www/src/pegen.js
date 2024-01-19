@@ -275,41 +275,18 @@ function initialize_token(p, parser_token, new_token, token_type) {
     return (token_type == ERRORTOKEN ? _Pypegen_tokenizer_error(p) : 0);
 }
 
-function _resize_tokens_array(p) {
-    /*
-    int newsize = p->size * 2;
-    Token **new_tokens = PyMem_Realloc(p->tokens, newsize * sizeof(Token *));
-    if (new_tokens == NULL) {
-        PyErr_NoMemory();
-        return -1;
-    }
-    p->tokens = new_tokens;
-
-    for (int i = p->size; i < newsize; i++) {
-        p->tokens[i] = PyMem_Calloc(1, sizeof(Token));
-        if (p->tokens[i] == NULL) {
-            p->size = i; // Needed, in order to cleanup correctly after parser fails
-            PyErr_NoMemory();
-            return -1;
-        }
-    }
-    p->size = newsize;
-    */
-    return 0;
-}
-
 function _PyToken_Init(token) {
     token.metadata = NULL;
 }
 
 function _PyTokenizer_Get(tok, new_token){
     var token = tok.next().value
-    console.log('token', token)
     for(var key in token){
         new_token[key] = token[key]
     }
-    return token.type
+    return token.num_type
 }
+
 
 function get_next_token(p, new_token){
     var token = p.tokens[p.fill] ?? p.read_token()
@@ -320,14 +297,9 @@ function get_next_token(p, new_token){
 }
 
 $B._PyPegen.fill_token = function(p){
-    function error(){
-        _PyToken_Free(new_token);
-        return -1;
-    }
-    var new_token = {}
-    _PyToken_Init(new_token);
+    var new_token = {metadata: NULL}
+    //_PyToken_Init(new_token);
     var type = get_next_token(p, new_token);
-
     // Record and skip '# type: ignore' comments
     while (type == TYPE_IGNORE) {
         var len = new_token.end_col_offset - new_token.col_offset;
@@ -361,9 +333,11 @@ $B._PyPegen.fill_token = function(p){
     }
 
     // Check if we are at the limit of the token array capacity and resize if needed
+    /*
     if ((p.fill == p.size) && (_resize_tokens_array(p) != 0)) {
         return error()
     }
+    */
 
     var t = p.tokens[p.fill];
     return initialize_token(p, t, new_token, type);
@@ -519,10 +493,10 @@ $B._PyPegen.expect_soft_keyword = function(p, keyword){
         }
     }
     var t = p.tokens[p.mark];
-    if (t.type != NAME) {
+    if (t.num_type != NAME) {
         return NULL;
     }
-    console.log('t', t)
+
     const s = t.string // PyBytes_AsString(t.bytes);
     if (!s) {
         p.error_indicator = 1;
