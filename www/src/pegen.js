@@ -405,7 +405,6 @@ $B._PyPegen.get_memo_statistics = function(){
     return ret;
 }
 // #endif
-
 $B._PyPegen.is_memoized = function(p, type, pres){
     if (p.mark == p.fill) {
         if ($B._PyPegen.fill_token(p) < 0) {
@@ -540,7 +539,7 @@ $B._PyPegen.get_last_nonnwhitespace_token = function(p){
     var token = NULL;
     for (let m = p.mark - 1; m >= 0; m--) {
         token = p.tokens[m];
-        if (token.type != ENDMARKER && (token.type < NEWLINE || token.type > DEDENT)) {
+        if (token.num_type != ENDMARKER && (token.num_type < NEWLINE || token.num_type > DEDENT)) {
             break;
         }
     }
@@ -548,7 +547,6 @@ $B._PyPegen.get_last_nonnwhitespace_token = function(p){
 }
 
 $B._PyPegen.new_identifier = function(p, n){
-    console.log('new ident', p, n)
     var id = n
     /* PyUnicode_DecodeUTF8 should always return a ready string. */
     // assert(PyUnicode_IS_READY(id));
