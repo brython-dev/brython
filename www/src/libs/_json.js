@@ -342,6 +342,8 @@ function num_at(s, i){
       }else if('eE'.indexOf(s[j]) > -1 && ! exp){
         exp = ! exp
         j++
+      }else if(s[j] == '-' && 'eE'.includes(s[j-1])){
+        j++
       }else{
         return [{type: 'num', value: s.substring(i, j)}, j]
       }
@@ -414,8 +416,8 @@ function Node(parent){
 }
 
 Node.prototype.transition = function(token){
-    if([true, false, _b_.None].indexOf(token) > -1 ||
-            ['str', 'num'].indexOf(token.type) > -1){
+    if([true, false, _b_.None].includes(token) ||
+            ['str', 'num'].includes(token.type)){
         if(this.parent === undefined &&
                 (this.list.length > 0 || this.content)){
             throw Error('Extra data')

@@ -157,8 +157,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-09 11:45:50.434401"
-__BRYTHON__.timestamp=1704797150433
+__BRYTHON__.compiled_date="2024-01-19 20:36:24.458510"
+__BRYTHON__.timestamp=1705692984458
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -217,18 +217,19 @@ function $last(array){return array[array.length-1]}
 var ops='.,:;+-*/%~^|&=<>[](){}@',
 op2=['**','//','>>','<<'],augm_op='+-*/%^|&=<>@',closing={'}':'{',']':'[',')':'('}
 function Token(type,string,start,end,line){start=start.slice(0,2)
-var res={type,string,start,end,line}
-res[0]=type
-res[1]=string
-res[2]=start
-res[3]=end
-res[4]=line
-if($B.py_tokens){res.num_type=$B.py_tokens[type]
+var res
+if($B.py_tokens){res={string,line}
+res.num_type=$B.py_tokens[type]
 if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}
 res.lineno=start[0]
 res.col_offset=start[1]
 res.end_lineno=end[0]
-res.end_col_offset=end[1]}
+res.end_col_offset=end[1]}else{res={type,string,start,end,line}
+res[0]=type
+res[1]=string
+res[2]=start
+res[3]=end
+res[4]=line}
 return res}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
@@ -4832,12 +4833,12 @@ imported=src.imported
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
-var _ast,t0=window.performance.now()
+var _ast,t0=globalThis.performance.now()
 if($B.parser_to_ast){console.log('use standard parser')
 _ast=new $B.Parser(src,filename,'file').parse()}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
 _ast=root.ast()}
-$B.parse_time+=window.performance.now()-t0
+$B.parse_time+=globalThis.performance.now()-t0
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root({ast:_ast,symtable,filename,imported})

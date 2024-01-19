@@ -90,4 +90,8 @@ len1 = len(json.dumps("🙂", ensure_ascii=False))
 len2 = len(json.dumps("🙂"))
 assert len2 > len1
 
+# issue 2355
+x = json.loads("1e-06")
+assert x == 1e-06
+
 print('all tests ok..')
