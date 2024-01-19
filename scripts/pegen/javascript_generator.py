@@ -669,13 +669,15 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         with self.indent():
             self.add_level()
             self._check_for_errors()
-            self.print(f"var _res = {{value: NULL}};")
             if memoize:
+                self.print(f"var _res = {{value: NULL}};")
                 self.print(f"if ($B._PyPegen.is_memoized(p, {node.name}_type, _res)) {{")
                 with self.indent():
                     self.add_return("_res.value")
                 self.print("}")
-            self.print("_res = NULL;")
+                self.print("_res = NULL;")
+            else:
+                self.print("var _res = NULL;")
             self.print("var _mark = p.mark;")
             if any(alt.action and "EXTRA" in alt.action for alt in rhs.alts):
                 self._set_up_token_start_metadata_extraction()
@@ -689,6 +691,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
                 self.print(f'D(fprintf(stderr, "Fail at %d: {node.name}\\n", p.mark));')
             self.print("_res = NULL;")
         self.print("  function done(){")
+
         with self.indent():
             if memoize:
                 self.print(f"$B._PyPegen.insert_memo(p, _mark, {node.name}_type, _res);")
@@ -726,16 +729,16 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             if is_repeat1:
                 self.print("if (_n == 0 || p.error_indicator) {")
                 with self.indent():
-                    self.print("// PyMem_Free(_children);")
+                    # self.print("// PyMem_Free(_children);")
                     self.add_return("NULL")
                 self.print("}")
-            self.print("var _seq = [];")
-            self.out_of_memory_return(f"!_seq", cleanup_code="PyMem_Free(_children);")
-            self.print("for (let i = 0; i < _n; i++){_seq[i] = _children[i]};")
-            self.print("// PyMem_Free(_children);")
+            #self.print("var _seq = [];")
+            # self.out_of_memory_return(f"!_seq", cleanup_code="PyMem_Free(_children);")
+            #self.print("for (let i = 0; i < _n; i++){_seq[i] = _children[i]};")
+            #self.print("// PyMem_Free(_children);")
             if memoize and node.name:
                 self.print(f"$B._PyPegen.insert_memo(p, _start_mark, {node.name}_type, _seq);")
-            self.add_return("_seq")
+            self.add_return("_children")
 
     def visit_Rule(self, node: Rule) -> None:
         is_loop = node.is_loop()
@@ -807,13 +810,15 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         _action = transform_action(node.action)
         self.print(f"_res = {_action};")
 
-        self.print("if (_res == NULL && PyErr_Occurred()) {")
+        """
+        self.print("if (_res == NULL && XXXPyErr_Occurred()) {")
         with self.indent():
             self.print("p.error_indicator = 1;")
             if cleanup_code:
                 self.print(cleanup_code)
             self.add_return("NULL")
         self.print("}")
+        """
 
         if self.debug:
             node = str(node).replace('"', '\\"')

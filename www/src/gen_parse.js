@@ -678,8 +678,7 @@ function file_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // statements? $
         if (p.error_indicator) {
@@ -694,10 +693,6 @@ function file_rule(p)
         )
         {
             _res = $B._PyPegen.make_module (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -714,8 +709,7 @@ function interactive_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // statement_newline
         if (p.error_indicator) {
@@ -727,10 +721,6 @@ function interactive_rule(p)
         )
         {
             _res = new $B._PyAST.Interactive (a, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -747,8 +737,7 @@ function eval_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expressions NEWLINE* $
         if (p.error_indicator) {
@@ -766,10 +755,6 @@ function eval_rule(p)
         )
         {
             _res = new $B._PyAST.Expression (a, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -786,8 +771,7 @@ function func_type_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' type_expressions? ')' '->' expression NEWLINE* $
         if (p.error_indicator) {
@@ -817,10 +801,6 @@ function func_type_rule(p)
         )
         {
             _res = new $B._PyAST.FunctionType (a, b, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -837,8 +817,7 @@ function statements_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // statement+
         if (p.error_indicator) {
@@ -850,10 +829,6 @@ function statements_rule(p)
         )
         {
             _res = $B._PyPegen.seq_flatten (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -870,8 +845,7 @@ function statement_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // compound_stmt
         if (p.error_indicator) {
@@ -883,10 +857,6 @@ function statement_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -901,10 +871,6 @@ function statement_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -921,8 +887,7 @@ function statement_newline_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -943,10 +908,6 @@ function statement_newline_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -981,10 +942,6 @@ function statement_newline_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.singleton_seq (p, $B.helper_functions.CHECK ( $B.ast.stmt, new $B._PyAST.Pass ( EXTRA ) ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -999,10 +956,6 @@ function statement_newline_rule(p)
         )
         {
             _res = $B._PyPegen.interactive_exit (p);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1019,8 +972,7 @@ function simple_stmts_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // simple_stmt !';' NEWLINE
         if (p.error_indicator) {
@@ -1037,10 +989,6 @@ function simple_stmts_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1062,10 +1010,6 @@ function simple_stmts_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1154,10 +1098,6 @@ function simple_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Expr (e, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1226,10 +1166,6 @@ function simple_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Pass (EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1298,10 +1234,6 @@ function simple_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Break (EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1322,10 +1254,6 @@ function simple_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Continue (EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1383,8 +1311,7 @@ function compound_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // &('def' | '@' | ASYNC) function_def
         if (p.error_indicator) {
@@ -1529,8 +1456,7 @@ function assignment_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -1563,10 +1489,6 @@ function assignment_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 6, "Variable annotation syntax is", new $B._PyAST.AnnAssign ( $B.helper_functions.CHECK ( $B.ast.expr, $B._PyPegen.set_expr_context ( p, a, $B.parser_constants.Store ) ), b, c, 1, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1596,10 +1518,6 @@ function assignment_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 6, "Variable annotations syntax is", new $B._PyAST.AnnAssign ( a, b, c, 0, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1628,10 +1546,6 @@ function assignment_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Assign (a, b, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1661,10 +1575,6 @@ function assignment_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.AugAssign (a, b.kind, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -1698,8 +1608,7 @@ function annotated_rhs_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -1754,8 +1663,7 @@ function augassign_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '+='
         if (p.error_indicator) {
@@ -1766,11 +1674,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 36))  // token='+='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.Add);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.Add());
             return done();
         }
         p.mark = _mark;
@@ -1784,11 +1688,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 37))  // token='-='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.Sub);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.Sub());
             return done();
         }
         p.mark = _mark;
@@ -1802,11 +1702,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 38))  // token='*='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.Mult);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.Mult());
             return done();
         }
         p.mark = _mark;
@@ -1820,11 +1716,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 50))  // token='@='
         )
         {
-            _res = $B.helper_functions.CHECK_VERSION ($B.parser_constants.AugOperator, 5, "The '@' operator is", $B._PyPegen.augoperator ( p, new $B.ast.MatMult ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B.helper_functions.CHECK_VERSION ($B.parser_constants.AugOperator, 5, "The '@' operator is", $B._PyPegen.augoperator ( p, new $B.ast.MatMult() ));
             return done();
         }
         p.mark = _mark;
@@ -1838,11 +1730,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 39))  // token='/='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.Div);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.Div());
             return done();
         }
         p.mark = _mark;
@@ -1856,11 +1744,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 40))  // token='%='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.Mod);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.Mod());
             return done();
         }
         p.mark = _mark;
@@ -1874,11 +1758,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 41))  // token='&='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.BitAnd);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.BitAnd());
             return done();
         }
         p.mark = _mark;
@@ -1892,11 +1772,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 42))  // token='|='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.BitOr);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.BitOr());
             return done();
         }
         p.mark = _mark;
@@ -1910,11 +1786,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 43))  // token='^='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.BitXor);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.BitXor());
             return done();
         }
         p.mark = _mark;
@@ -1928,11 +1800,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 44))  // token='<<='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.LShift);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.LShift());
             return done();
         }
         p.mark = _mark;
@@ -1946,11 +1814,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 45))  // token='>>='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.RShift);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.RShift());
             return done();
         }
         p.mark = _mark;
@@ -1964,11 +1828,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 46))  // token='**='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.Pow);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.Pow());
             return done();
         }
         p.mark = _mark;
@@ -1982,11 +1842,7 @@ function augassign_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 48))  // token='//='
         )
         {
-            _res = $B._PyPegen.augoperator (p, new $B.ast.FloorDiv);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.augoperator (p, new $B.ast.FloorDiv());
             return done();
         }
         p.mark = _mark;
@@ -2003,8 +1859,7 @@ function return_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2031,10 +1886,6 @@ function return_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Return (a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2051,8 +1902,7 @@ function raise_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2082,10 +1932,6 @@ function raise_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Raise (a, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2106,10 +1952,6 @@ function raise_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Raise ($B.parser_constants.NULL, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2126,8 +1968,7 @@ function global_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2154,10 +1995,6 @@ function global_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Global ($B.helper_functions.CHECK ( $B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids ( p, a ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2174,8 +2011,7 @@ function nonlocal_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2202,10 +2038,6 @@ function nonlocal_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Nonlocal ($B.helper_functions.CHECK ( $B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids ( p, a ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2222,8 +2054,7 @@ function del_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2252,10 +2083,6 @@ function del_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Delete (a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2286,8 +2113,7 @@ function yield_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2311,10 +2137,6 @@ function yield_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Expr (y, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2331,8 +2153,7 @@ function assert_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2362,10 +2183,6 @@ function assert_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Assert (a, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2382,8 +2199,7 @@ function import_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_import
         if (p.error_indicator) {
@@ -2439,8 +2255,7 @@ function import_name_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2467,10 +2282,6 @@ function import_name_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Import (a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2489,8 +2300,7 @@ function import_from_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2526,10 +2336,6 @@ function import_from_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ImportFrom (b. id, c, $B._PyPegen.seq_count_dots ( a ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2559,10 +2365,6 @@ function import_from_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ImportFrom ($B.parser_constants.NULL, b, $B._PyPegen.seq_count_dots ( a ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2583,8 +2385,7 @@ function import_from_targets_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2612,10 +2413,6 @@ function import_from_targets_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2652,10 +2449,6 @@ function import_from_targets_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.singleton_seq (p, $B.helper_functions.CHECK ( $B.ast.alias, $B._PyPegen.alias_for_star ( p, EXTRA ) ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2686,8 +2479,7 @@ function import_from_as_names_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.import_from_as_name+
         if (p.error_indicator) {
@@ -2699,10 +2491,6 @@ function import_from_as_names_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2719,8 +2507,7 @@ function import_from_as_name_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2747,10 +2534,6 @@ function import_from_as_name_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.alias (a. id, ( b ) ? ( b ). id : $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2767,8 +2550,7 @@ function dotted_as_names_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.dotted_as_name+
         if (p.error_indicator) {
@@ -2780,10 +2562,6 @@ function dotted_as_names_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2800,8 +2578,7 @@ function dotted_as_name_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -2828,10 +2605,6 @@ function dotted_as_name_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.alias (a. id, ( b ) ? ( b ). id : $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2877,8 +2650,7 @@ function dotted_name_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // dotted_name '.' NAME
         if (p.error_indicator) {
@@ -2896,10 +2668,6 @@ function dotted_name_raw(p)
         )
         {
             _res = $B._PyPegen.join_names_with_dot (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -2955,10 +2723,6 @@ function block_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3004,8 +2768,7 @@ function decorators_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (('@' named_expression NEWLINE))+
         if (p.error_indicator) {
@@ -3017,10 +2780,6 @@ function decorators_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3037,8 +2796,7 @@ function class_def_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // decorators class_def_raw
         if (p.error_indicator) {
@@ -3053,10 +2811,6 @@ function class_def_rule(p)
         )
         {
             _res = $B._PyPegen.class_def_decorators (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3089,8 +2843,7 @@ function class_def_raw_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -3143,10 +2896,6 @@ function class_def_raw_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ClassDef (a. id, ( b ) ? ( b ). args : $B.parser_constants.NULL, ( b ) ? ( b ). keywords : $B.parser_constants.NULL, c, $B.parser_constants.NULL, t, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3163,8 +2912,7 @@ function function_def_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // decorators function_def_raw
         if (p.error_indicator) {
@@ -3179,10 +2927,6 @@ function function_def_rule(p)
         )
         {
             _res = $B._PyPegen.function_def_decorators (p, d, f);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3216,8 +2960,7 @@ function function_def_raw_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -3282,10 +3025,6 @@ function function_def_raw_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.FunctionDef (n. id, ( params ) ? params : $B.helper_functions.CHECK ( $B.ast.arguments, $B._PyPegen.empty_arguments ( p ) ), b, $B.parser_constants.NULL, a, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), t, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3336,10 +3075,6 @@ function function_def_raw_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 5, "Async functions are", new $B._PyAST.AsyncFunctionDef ( n. id, ( params ) ? params : $B.helper_functions.CHECK ( $B.ast.arguments, $B._PyPegen.empty_arguments ( p ) ), b, $B.parser_constants.NULL, a, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), t, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3356,8 +3091,7 @@ function params_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_parameters
         if (p.error_indicator) {
@@ -3404,8 +3138,7 @@ function parameters_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // slash_no_default param_no_default* param_with_default* star_etc?
         if (p.error_indicator) {
@@ -3426,10 +3159,6 @@ function parameters_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments ( p, a, $B.parser_constants.NULL, b, c, d ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3450,10 +3179,6 @@ function parameters_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments ( p, $B.parser_constants.NULL, a, $B.parser_constants.NULL, b, c ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3474,10 +3199,6 @@ function parameters_rule(p)
         )
         {
             _res = $B._PyPegen.make_arguments (p, $B.parser_constants.NULL, $B.parser_constants.NULL, a, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3495,10 +3216,6 @@ function parameters_rule(p)
         )
         {
             _res = $B._PyPegen.make_arguments (p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3513,10 +3230,6 @@ function parameters_rule(p)
         )
         {
             _res = $B._PyPegen.make_arguments (p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3533,8 +3246,7 @@ function slash_no_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param_no_default+ '/' ','
         if (p.error_indicator) {
@@ -3552,10 +3264,6 @@ function slash_no_default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3575,10 +3283,6 @@ function slash_no_default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3597,8 +3301,7 @@ function slash_with_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param_no_default* param_with_default+ '/' ','
         if (p.error_indicator) {
@@ -3619,10 +3322,6 @@ function slash_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.slash_with_default (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3645,10 +3344,6 @@ function slash_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.slash_with_default (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3670,8 +3365,7 @@ function star_etc_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_star_etc
         if (p.error_indicator) {
@@ -3706,10 +3400,6 @@ function star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, a, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3733,10 +3423,6 @@ function star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, a, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3760,10 +3446,6 @@ function star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, $B.parser_constants.NULL, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3778,10 +3460,6 @@ function star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, $B.parser_constants.NULL, $B.parser_constants.NULL, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3798,8 +3476,7 @@ function kwds_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_kwds
         if (p.error_indicator) {
@@ -3828,10 +3505,6 @@ function kwds_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3848,8 +3521,7 @@ function param_no_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param ',' TYPE_COMMENT?
         if (p.error_indicator) {
@@ -3867,10 +3539,6 @@ function param_no_default_rule(p)
         )
         {
             _res = $B._PyPegen.add_type_comment_to_arg (p, a, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3890,10 +3558,6 @@ function param_no_default_rule(p)
         )
         {
             _res = $B._PyPegen.add_type_comment_to_arg (p, a, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3912,8 +3576,7 @@ function param_no_default_star_annotation_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param_star_annotation ',' TYPE_COMMENT?
         if (p.error_indicator) {
@@ -3931,10 +3594,6 @@ function param_no_default_star_annotation_rule(p)
         )
         {
             _res = $B._PyPegen.add_type_comment_to_arg (p, a, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3954,10 +3613,6 @@ function param_no_default_star_annotation_rule(p)
         )
         {
             _res = $B._PyPegen.add_type_comment_to_arg (p, a, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -3974,8 +3629,7 @@ function param_with_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param default ',' TYPE_COMMENT?
         if (p.error_indicator) {
@@ -3996,10 +3650,6 @@ function param_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4022,10 +3672,6 @@ function param_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4044,8 +3690,7 @@ function param_maybe_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param default? ',' TYPE_COMMENT?
         if (p.error_indicator) {
@@ -4066,10 +3711,6 @@ function param_maybe_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4092,10 +3733,6 @@ function param_maybe_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, tc);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4112,8 +3749,7 @@ function param_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4140,10 +3776,6 @@ function param_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.arg (a. id, b, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4160,8 +3792,7 @@ function param_star_annotation_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4188,10 +3819,6 @@ function param_star_annotation_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.arg (a. id, b, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4208,8 +3835,7 @@ function annotation_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':' expression
         if (p.error_indicator) {
@@ -4224,10 +3850,6 @@ function annotation_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4244,8 +3866,7 @@ function star_annotation_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':' star_expression
         if (p.error_indicator) {
@@ -4260,10 +3881,6 @@ function star_annotation_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4280,8 +3897,7 @@ function default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '=' expression
         if (p.error_indicator) {
@@ -4296,10 +3912,6 @@ function default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4333,8 +3945,7 @@ function if_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4384,10 +3995,6 @@ function if_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.If (a, b, $B.helper_functions.CHECK ( $B.parser_constants.asdl_stmt_seq, $B._PyPegen.singleton_seq ( p, c ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4420,10 +4027,6 @@ function if_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.If (a, b, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4443,8 +4046,7 @@ function elif_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4494,10 +4096,6 @@ function elif_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.If (a, b, $B.helper_functions.CHECK ( $B.parser_constants.asdl_stmt_seq, $B._PyPegen.singleton_seq ( p, c ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4530,10 +4128,6 @@ function elif_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.If (a, b, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4550,8 +4144,7 @@ function else_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_else_stmt
         if (p.error_indicator) {
@@ -4583,10 +4176,6 @@ function else_block_rule(p)
         )
         {
             _res = b;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4603,8 +4192,7 @@ function while_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4654,10 +4242,6 @@ function while_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.While (a, b, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4678,8 +4262,7 @@ function for_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4741,10 +4324,6 @@ function for_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.For (t, ex, b, el, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4795,10 +4374,6 @@ function for_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 5, "Async for loops are", new $B._PyAST.AsyncFor ( t, ex, b, el, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4838,8 +4413,7 @@ function with_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -4896,10 +4470,6 @@ function with_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 9, "Parenthesized context managers are", new $B._PyAST.With ( a, b, $B.parser_constants.NULL, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4932,10 +4502,6 @@ function with_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.With (a, b, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -4978,10 +4544,6 @@ function with_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 5, "Async with statements are", new $B._PyAST.AsyncWith ( a, b, $B.parser_constants.NULL, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5017,10 +4579,6 @@ function with_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 5, "Async with statements are", new $B._PyAST.AsyncWith ( a, b, $B.helper_functions.NEW_TYPE_COMMENT ( p, tc ), EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5054,8 +4612,7 @@ function with_item_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression 'as' star_target &(',' | ')' | ':')
         if (p.error_indicator) {
@@ -5075,10 +4632,6 @@ function with_item_rule(p)
         )
         {
             _res = new $B._PyAST.withitem (e, t, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5107,10 +4660,6 @@ function with_item_rule(p)
         )
         {
             _res = new $B._PyAST.withitem (e, $B.parser_constants.NULL, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5131,8 +4680,7 @@ function try_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5179,10 +4727,6 @@ function try_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Try (b, $B.parser_constants.NULL, $B.parser_constants.NULL, f, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5218,10 +4762,6 @@ function try_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Try (b, ex, el, f, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5257,10 +4797,6 @@ function try_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 11, "Exception groups are", new $B._PyAST.TryStar ( b, ex, el, f, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5281,8 +4817,7 @@ function except_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5332,10 +4867,6 @@ function except_block_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ExceptHandler (e, ( t ) ? ( t ). id : $B.parser_constants.NULL, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5362,10 +4893,6 @@ function except_block_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ExceptHandler ($B.parser_constants.NULL, $B.parser_constants.NULL, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5399,8 +4926,7 @@ function except_star_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5453,10 +4979,6 @@ function except_star_block_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ExceptHandler (e, ( t ) ? ( t ). id : $B.parser_constants.NULL, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5487,8 +5009,7 @@ function finally_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_finally_stmt
         if (p.error_indicator) {
@@ -5520,10 +5041,6 @@ function finally_block_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5542,8 +5059,7 @@ function match_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5585,10 +5101,6 @@ function match_stmt_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 10, "Pattern matching is", new $B._PyAST.Match ( subject, cases, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5619,8 +5131,7 @@ function subject_expr_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5650,10 +5161,6 @@ function subject_expr_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, value, values ) ), $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5684,8 +5191,7 @@ function case_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_case_block
         if (p.error_indicator) {
@@ -5723,10 +5229,6 @@ function case_block_rule(p)
         )
         {
             _res = new $B._PyAST.match_case (pattern, guard, body, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5743,8 +5245,7 @@ function guard_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'if' named_expression
         if (p.error_indicator) {
@@ -5759,10 +5260,6 @@ function guard_rule(p)
         )
         {
             _res = guard;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5779,8 +5276,7 @@ function patterns_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5804,10 +5300,6 @@ function patterns_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchSequence (patterns, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5838,8 +5330,7 @@ function pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // as_pattern
         if (p.error_indicator) {
@@ -5881,8 +5372,7 @@ function as_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5912,10 +5402,6 @@ function as_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchAs (pattern, target. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -5946,8 +5432,7 @@ function or_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -5971,10 +5456,6 @@ function or_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.asdl_seq_LEN (patterns ) == 1 ? $B.helper_functions.asdl_seq_GET ( patterns, 0 ) : new $B._PyAST.MatchOr ( patterns, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6136,8 +5617,7 @@ function literal_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6163,10 +5643,6 @@ function literal_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchValue (value, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6187,10 +5663,6 @@ function literal_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchValue (value, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6211,10 +5683,6 @@ function literal_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchValue (value, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6235,10 +5703,6 @@ function literal_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchSingleton ($B.parser_constants.Py_None, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6259,10 +5723,6 @@ function literal_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchSingleton ($B.parser_constants.Py_True, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6283,10 +5743,6 @@ function literal_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchSingleton ($B.parser_constants.Py_False, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6309,8 +5765,7 @@ function literal_expr_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6378,10 +5833,6 @@ function literal_expr_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_None, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6402,10 +5853,6 @@ function literal_expr_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_True, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6426,10 +5873,6 @@ function literal_expr_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_False, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6448,8 +5891,7 @@ function complex_number_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6478,11 +5920,7 @@ function complex_number_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (real, new $B.ast.Add, imag, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (real, new $B.ast.Add(), imag, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -6508,11 +5946,7 @@ function complex_number_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (real, new $B.ast.Sub, imag, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (real, new $B.ast.Sub(), imag, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -6529,8 +5963,7 @@ function signed_number_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6570,11 +6003,7 @@ function signed_number_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.UnaryOp (new $B.ast.USub, number, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.UnaryOp (new $B.ast.USub(), number, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -6591,8 +6020,7 @@ function signed_real_number_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6632,11 +6060,7 @@ function signed_real_number_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.UnaryOp (new $B.ast.USub, real, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.UnaryOp (new $B.ast.USub(), real, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -6653,8 +6077,7 @@ function real_number_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NUMBER
         if (p.error_indicator) {
@@ -6666,10 +6089,6 @@ function real_number_rule(p)
         )
         {
             _res = $B._PyPegen.ensure_real (p, real);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6686,8 +6105,7 @@ function imaginary_number_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NUMBER
         if (p.error_indicator) {
@@ -6699,10 +6117,6 @@ function imaginary_number_rule(p)
         )
         {
             _res = $B._PyPegen.ensure_imaginary (p, imag);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6719,8 +6133,7 @@ function capture_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6744,10 +6157,6 @@ function capture_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchAs ($B.parser_constants.NULL, target. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6764,8 +6173,7 @@ function pattern_capture_target_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // !"_" NAME !('.' | '(' | '=')
         if (p.error_indicator) {
@@ -6781,10 +6189,6 @@ function pattern_capture_target_rule(p)
         )
         {
             _res = $B._PyPegen.set_expr_context (p, name, $B.parser_constants.Store);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6801,8 +6205,7 @@ function wildcard_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6826,10 +6229,6 @@ function wildcard_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchAs ($B.parser_constants.NULL, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6846,8 +6245,7 @@ function value_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6873,10 +6271,6 @@ function value_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchValue (attr, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6922,8 +6316,7 @@ function attr_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -6953,10 +6346,6 @@ function attr_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Attribute (value, attr. id, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -6974,8 +6363,7 @@ function name_or_attr_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // attr
         if (p.error_indicator) {
@@ -7017,8 +6405,7 @@ function group_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' pattern ')'
         if (p.error_indicator) {
@@ -7036,10 +6423,6 @@ function group_pattern_rule(p)
         )
         {
             _res = pattern;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7056,8 +6439,7 @@ function sequence_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -7087,10 +6469,6 @@ function sequence_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchSequence (patterns, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7117,10 +6495,6 @@ function sequence_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchSequence (patterns, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7137,8 +6511,7 @@ function open_sequence_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // maybe_star_pattern ',' maybe_sequence_pattern?
         if (p.error_indicator) {
@@ -7156,10 +6529,6 @@ function open_sequence_pattern_rule(p)
         )
         {
             _res = $B._PyPegen.seq_insert_in_front (p, pattern, patterns);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7176,8 +6545,7 @@ function maybe_sequence_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.maybe_star_pattern+ ','?
         if (p.error_indicator) {
@@ -7193,10 +6561,6 @@ function maybe_sequence_pattern_rule(p)
         )
         {
             _res = patterns;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7213,8 +6577,7 @@ function maybe_star_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_pattern
         if (p.error_indicator) {
@@ -7287,10 +6650,6 @@ function star_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchStar (target. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7314,10 +6673,6 @@ function star_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchStar ($B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7339,8 +6694,7 @@ function mapping_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -7367,10 +6721,6 @@ function mapping_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchMapping ($B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7401,10 +6751,6 @@ function mapping_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchMapping ($B.parser_constants.NULL, $B.parser_constants.NULL, rest. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7441,10 +6787,6 @@ function mapping_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchMapping ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys ( p, items ) ), $B.helper_functions.CHECK ( $B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns ( p, items ) ), rest. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7475,10 +6817,6 @@ function mapping_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchMapping ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys ( p, items ) ), $B.helper_functions.CHECK ( $B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns ( p, items ) ), $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7495,8 +6833,7 @@ function items_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.key_value_pattern+
         if (p.error_indicator) {
@@ -7524,8 +6861,7 @@ function key_value_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (literal_expr | attr) ':' pattern
         if (p.error_indicator) {
@@ -7543,10 +6879,6 @@ function key_value_pattern_rule(p)
         )
         {
             _res = $B._PyPegen.key_pattern_pair (p, key, pattern);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7563,8 +6895,7 @@ function double_star_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '**' pattern_capture_target
         if (p.error_indicator) {
@@ -7579,10 +6910,6 @@ function double_star_pattern_rule(p)
         )
         {
             _res = target;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7604,8 +6931,7 @@ function class_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -7635,10 +6961,6 @@ function class_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchClass (cls, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7672,10 +6994,6 @@ function class_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchClass (cls, patterns, $B.parser_constants.NULL, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7709,10 +7027,6 @@ function class_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchClass (cls, $B.parser_constants.NULL, $B.helper_functions.CHECK ( $B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids ( p, $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys ( p, keywords ) ) ) ), $B.helper_functions.CHECK ( $B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns ( p, keywords ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7752,10 +7066,6 @@ function class_pattern_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.MatchClass (cls, patterns, $B.helper_functions.CHECK ( $B.parser_constants.asdl_identifier_seq, $B._PyPegen.map_names_to_ids ( p, $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_pattern_keys ( p, keywords ) ) ) ), $B.helper_functions.CHECK ( $B.parser_constants.asdl_pattern_seq, $B._PyPegen.get_patterns ( p, keywords ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7786,8 +7096,7 @@ function positional_patterns_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.pattern+
         if (p.error_indicator) {
@@ -7799,10 +7108,6 @@ function positional_patterns_rule(p)
         )
         {
             _res = args;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7819,8 +7124,7 @@ function keyword_patterns_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.keyword_pattern+
         if (p.error_indicator) {
@@ -7848,8 +7152,7 @@ function keyword_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NAME '=' pattern
         if (p.error_indicator) {
@@ -7867,10 +7170,6 @@ function keyword_pattern_rule(p)
         )
         {
             _res = $B._PyPegen.key_pattern_pair (p, arg, value);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7887,8 +7186,7 @@ function type_alias_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -7924,10 +7222,6 @@ function type_alias_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.stmt, 12, "Type statement is", new $B._PyAST.TypeAlias ( $B.helper_functions.CHECK ( $B.ast.expr, $B._PyPegen.set_expr_context ( p, n, $B.parser_constants.Store ) ), t, b, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7944,8 +7238,7 @@ function type_params_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '[' type_param_seq ']'
         if (p.error_indicator) {
@@ -7963,10 +7256,6 @@ function type_params_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION ($B.parser_constants.asdl_type_param_seq, 12, "Type parameter lists are", t);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -7983,8 +7272,7 @@ function type_param_seq_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.type_param+ ','?
         if (p.error_indicator) {
@@ -8000,10 +7288,6 @@ function type_param_seq_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8056,10 +7340,6 @@ function type_param_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.TypeVar (a. id, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8083,10 +7363,6 @@ function type_param_rule(p)
         )
         {
             _res = RAISE_SYNTAX_ERROR_STARTING_FROM (colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8110,10 +7386,6 @@ function type_param_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.TypeVarTuple (a. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8137,10 +7409,6 @@ function type_param_rule(p)
         )
         {
             _res = RAISE_SYNTAX_ERROR_STARTING_FROM (colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8164,10 +7432,6 @@ function type_param_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ParamSpec (a. id, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8185,8 +7449,7 @@ function type_param_bound_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':' expression
         if (p.error_indicator) {
@@ -8201,10 +7464,6 @@ function type_param_bound_rule(p)
         )
         {
             _res = e;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8221,8 +7480,7 @@ function expressions_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -8253,10 +7511,6 @@ function expressions_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8280,10 +7534,6 @@ function expressions_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq ( p, a ) ), $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8387,10 +7637,6 @@ function expression_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.IfExp (b, a, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8436,8 +7682,7 @@ function yield_expr_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -8467,10 +7712,6 @@ function yield_expr_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.YieldFrom (a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8494,10 +7735,6 @@ function yield_expr_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Yield (a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8517,8 +7754,7 @@ function star_expressions_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -8549,10 +7785,6 @@ function star_expressions_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8576,10 +7808,6 @@ function star_expressions_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq ( p, a ) ), $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8641,10 +7869,6 @@ function star_expression_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Starred (a, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8676,8 +7900,7 @@ function star_named_expressions_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.star_named_expression+ ','?
         if (p.error_indicator) {
@@ -8693,10 +7916,6 @@ function star_named_expressions_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8713,8 +7932,7 @@ function star_named_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -8741,10 +7959,6 @@ function star_named_expression_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Starred (a, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8775,8 +7989,7 @@ function assignment_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -8809,10 +8022,6 @@ function assignment_expression_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.expr, 8, "Assignment expressions are", new $B._PyAST.NamedExpr ( $B.helper_functions.CHECK ( $B.ast.expr, $B._PyPegen.set_expr_context ( p, a, $B.parser_constants.Store ) ), b, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -8832,8 +8041,7 @@ function named_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // assignment_expression
         if (p.error_indicator) {
@@ -8921,11 +8129,7 @@ function disjunction_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BoolOp (new $B.ast.Or, $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BoolOp (new $B.ast.Or(), $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -8987,11 +8191,7 @@ function conjunction_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BoolOp (new $B.ast.And, $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BoolOp (new $B.ast.And(), $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -9053,11 +8253,7 @@ function inversion_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.UnaryOp (new $B.ast.Not, a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.UnaryOp (new $B.ast.Not(), a, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -9089,8 +8285,7 @@ function comparison_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -9117,10 +8312,6 @@ function comparison_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Compare (a, $B.helper_functions.CHECK ( $B.parser_constants.asdl_int_seq, $B._PyPegen.get_cmpops ( p, b ) ), $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_exprs ( p, b ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -9161,8 +8352,7 @@ function compare_op_bitwise_or_pair_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // eq_bitwise_or
         if (p.error_indicator) {
@@ -9316,8 +8506,7 @@ function eq_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '==' bitwise_or
         if (p.error_indicator) {
@@ -9331,11 +8520,7 @@ function eq_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Eq, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Eq(), a);
             return done();
         }
         p.mark = _mark;
@@ -9352,8 +8537,7 @@ function noteq_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ('!=') bitwise_or
         if (p.error_indicator) {
@@ -9367,11 +8551,7 @@ function noteq_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.NotEq, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.NotEq(), a);
             return done();
         }
         p.mark = _mark;
@@ -9388,8 +8568,7 @@ function lte_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '<=' bitwise_or
         if (p.error_indicator) {
@@ -9403,11 +8582,7 @@ function lte_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.LtE, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.LtE(), a);
             return done();
         }
         p.mark = _mark;
@@ -9424,8 +8599,7 @@ function lt_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '<' bitwise_or
         if (p.error_indicator) {
@@ -9439,11 +8613,7 @@ function lt_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Lt, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Lt(), a);
             return done();
         }
         p.mark = _mark;
@@ -9460,8 +8630,7 @@ function gte_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '>=' bitwise_or
         if (p.error_indicator) {
@@ -9475,11 +8644,7 @@ function gte_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.GtE, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.GtE(), a);
             return done();
         }
         p.mark = _mark;
@@ -9496,8 +8661,7 @@ function gt_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '>' bitwise_or
         if (p.error_indicator) {
@@ -9511,11 +8675,7 @@ function gt_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Gt, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Gt(), a);
             return done();
         }
         p.mark = _mark;
@@ -9532,8 +8692,7 @@ function notin_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'not' 'in' bitwise_or
         if (p.error_indicator) {
@@ -9550,11 +8709,7 @@ function notin_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.NotIn, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.NotIn(), a);
             return done();
         }
         p.mark = _mark;
@@ -9571,8 +8726,7 @@ function in_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'in' bitwise_or
         if (p.error_indicator) {
@@ -9586,11 +8740,7 @@ function in_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.In, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.In(), a);
             return done();
         }
         p.mark = _mark;
@@ -9607,8 +8757,7 @@ function isnot_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'is' 'not' bitwise_or
         if (p.error_indicator) {
@@ -9625,11 +8774,7 @@ function isnot_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.IsNot, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.IsNot(), a);
             return done();
         }
         p.mark = _mark;
@@ -9646,8 +8791,7 @@ function is_bitwise_or_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'is' bitwise_or
         if (p.error_indicator) {
@@ -9661,11 +8805,7 @@ function is_bitwise_or_rule(p)
             (a = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Is, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B._PyPegen.cmpop_expr_pair (p, new $B.ast.Is(), a);
             return done();
         }
         p.mark = _mark;
@@ -9711,8 +8851,7 @@ function bitwise_or_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -9741,11 +8880,7 @@ function bitwise_or_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.BitOr, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.BitOr(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -9805,8 +8940,7 @@ function bitwise_xor_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -9835,11 +8969,7 @@ function bitwise_xor_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.BitXor, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.BitXor(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -9899,8 +9029,7 @@ function bitwise_and_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -9929,11 +9058,7 @@ function bitwise_and_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.BitAnd, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.BitAnd(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -9993,8 +9118,7 @@ function shift_expr_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10023,11 +9147,7 @@ function shift_expr_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.LShift, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.LShift(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10053,11 +9173,7 @@ function shift_expr_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.RShift, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.RShift(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10117,8 +9233,7 @@ function sum_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10147,11 +9262,7 @@ function sum_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.Add, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.Add(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10177,11 +9288,7 @@ function sum_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.Sub, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.Sub(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10247,8 +9354,7 @@ function term_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10277,11 +9383,7 @@ function term_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.Mult, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.Mult(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10307,11 +9409,7 @@ function term_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.Div, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.Div(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10337,11 +9435,7 @@ function term_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.FloorDiv, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.FloorDiv(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10367,11 +9461,7 @@ function term_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.Mod, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.Mod(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10397,11 +9487,7 @@ function term_raw(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = $B.helper_functions.CHECK_VERSION ($B.ast.expr, 5, "The '@' operator is", new $B._PyAST.BinOp ( a, new $B.ast.MatMult, b, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = $B.helper_functions.CHECK_VERSION ($B.ast.expr, 5, "The '@' operator is", new $B._PyAST.BinOp ( a, new $B.ast.MatMult(), b, EXTRA ));
             return done();
         }
         p.mark = _mark;
@@ -10462,11 +9548,7 @@ function factor_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.UnaryOp (new $B.ast.UAdd, a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.UnaryOp (new $B.ast.UAdd(), a, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10489,11 +9571,7 @@ function factor_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.UnaryOp (new $B.ast.USub, a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.UnaryOp (new $B.ast.USub(), a, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10516,11 +9594,7 @@ function factor_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.UnaryOp (new $B.ast.Invert, a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.UnaryOp (new $B.ast.Invert(), a, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10552,8 +9626,7 @@ function power_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10582,11 +9655,7 @@ function power_rule(p)
             }
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
-            _res = new $B._PyAST.BinOp (a, new $B.ast.Pow, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
+            _res = new $B._PyAST.BinOp (a, new $B.ast.Pow(), b, EXTRA);
             return done();
         }
         p.mark = _mark;
@@ -10648,10 +9717,6 @@ function await_primary_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.expr, 5, "Await expressions are", new $B._PyAST.Await ( a, EXTRA ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10717,8 +9782,7 @@ function primary_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10748,10 +9812,6 @@ function primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Attribute (a, b. id, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10775,10 +9835,6 @@ function primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Call (a, $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq ( p, b ) ), $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10808,10 +9864,6 @@ function primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Call (a, ( b ) ? ( b ). args : $B.parser_constants.NULL, ( b ) ? ( b ). keywords : $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10841,10 +9893,6 @@ function primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Subscript (a, b, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10875,8 +9923,7 @@ function slices_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10896,10 +9943,6 @@ function slices_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10924,10 +9967,6 @@ function slices_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple (a, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10944,8 +9983,7 @@ function slice_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -10978,10 +10016,6 @@ function slice_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Slice (a, b, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -10996,10 +10030,6 @@ function slice_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11026,8 +10056,7 @@ function atom_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -11065,10 +10094,6 @@ function atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_True, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11089,10 +10114,6 @@ function atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_False, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11113,10 +10134,6 @@ function atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_None, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11215,10 +10232,6 @@ function atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Constant ($B.parser_constants.Py_Ellipsis, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11235,8 +10248,7 @@ function group_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' (yield_expr | named_expression) ')'
         if (p.error_indicator) {
@@ -11254,10 +10266,6 @@ function group_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11288,8 +10296,7 @@ function lambdef_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -11322,10 +10329,6 @@ function lambdef_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Lambda (( a ) ? a : $B.helper_functions.CHECK ( $B.ast.arguments, $B._PyPegen.empty_arguments ( p ) ), b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11342,8 +10345,7 @@ function lambda_params_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_lambda_parameters
         if (p.error_indicator) {
@@ -11390,8 +10392,7 @@ function lambda_parameters_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_slash_no_default lambda_param_no_default* lambda_param_with_default* lambda_star_etc?
         if (p.error_indicator) {
@@ -11412,10 +10413,6 @@ function lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments ( p, a, $B.parser_constants.NULL, b, c, d ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11436,10 +10433,6 @@ function lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments ( p, $B.parser_constants.NULL, a, $B.parser_constants.NULL, b, c ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11460,10 +10453,6 @@ function lambda_parameters_rule(p)
         )
         {
             _res = $B._PyPegen.make_arguments (p, $B.parser_constants.NULL, $B.parser_constants.NULL, a, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11481,10 +10470,6 @@ function lambda_parameters_rule(p)
         )
         {
             _res = $B._PyPegen.make_arguments (p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11499,10 +10484,6 @@ function lambda_parameters_rule(p)
         )
         {
             _res = $B._PyPegen.make_arguments (p, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, $B.parser_constants.NULL, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11521,8 +10502,7 @@ function lambda_slash_no_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param_no_default+ '/' ','
         if (p.error_indicator) {
@@ -11540,10 +10520,6 @@ function lambda_slash_no_default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11563,10 +10539,6 @@ function lambda_slash_no_default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11585,8 +10557,7 @@ function lambda_slash_with_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param_no_default* lambda_param_with_default+ '/' ','
         if (p.error_indicator) {
@@ -11607,10 +10578,6 @@ function lambda_slash_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.slash_with_default (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11633,10 +10600,6 @@ function lambda_slash_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.slash_with_default (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11657,8 +10620,7 @@ function lambda_star_etc_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_lambda_star_etc
         if (p.error_indicator) {
@@ -11693,10 +10655,6 @@ function lambda_star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, a, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11720,10 +10678,6 @@ function lambda_star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, $B.parser_constants.NULL, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11738,10 +10692,6 @@ function lambda_star_etc_rule(p)
         )
         {
             _res = $B._PyPegen.star_etc (p, $B.parser_constants.NULL, $B.parser_constants.NULL, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11758,8 +10708,7 @@ function lambda_kwds_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.call_invalid_rules) { // invalid_lambda_kwds
         if (p.error_indicator) {
@@ -11788,10 +10737,6 @@ function lambda_kwds_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11808,8 +10753,7 @@ function lambda_param_no_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param ','
         if (p.error_indicator) {
@@ -11824,10 +10768,6 @@ function lambda_param_no_default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11844,10 +10784,6 @@ function lambda_param_no_default_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11864,8 +10800,7 @@ function lambda_param_with_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param default ','
         if (p.error_indicator) {
@@ -11883,10 +10818,6 @@ function lambda_param_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, $B.parser_constants.NULL);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11906,10 +10837,6 @@ function lambda_param_with_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, $B.parser_constants.NULL);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11926,8 +10853,7 @@ function lambda_param_maybe_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param default? ','
         if (p.error_indicator) {
@@ -11945,10 +10871,6 @@ function lambda_param_maybe_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, $B.parser_constants.NULL);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11968,10 +10890,6 @@ function lambda_param_maybe_default_rule(p)
         )
         {
             _res = $B._PyPegen.name_default_pair (p, a, c, $B.parser_constants.NULL);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -11988,8 +10906,7 @@ function lambda_param_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12013,10 +10930,6 @@ function lambda_param_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.arg (a. id, $B.parser_constants.NULL, $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12033,8 +10946,7 @@ function fstring_middle_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // fstring_replacement_field
         if (p.error_indicator) {
@@ -12060,10 +10972,6 @@ function fstring_middle_rule(p)
         )
         {
             _res = $B._PyPegen.constant_from_token (p, t);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12082,8 +10990,7 @@ function fstring_replacement_field_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12122,10 +11029,6 @@ function fstring_replacement_field_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.formatted_value (p, a, debug_expr, conversion, format, rbrace, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12156,8 +11059,7 @@ function fstring_conversion_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // "!" NAME
         if (p.error_indicator) {
@@ -12172,10 +11074,6 @@ function fstring_conversion_rule(p)
         )
         {
             _res = $B._PyPegen.check_fstring_conversion (p, conv_token, conv);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12192,8 +11090,7 @@ function fstring_full_format_spec_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12220,10 +11117,6 @@ function fstring_full_format_spec_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.setup_full_format_spec (p, colon, spec, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12240,8 +11133,7 @@ function fstring_format_spec_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // FSTRING_MIDDLE
         if (p.error_indicator) {
@@ -12253,10 +11145,6 @@ function fstring_format_spec_rule(p)
         )
         {
             _res = $B._PyPegen.decoded_constant_from_token (p, t);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12287,8 +11175,7 @@ function fstring_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // FSTRING_START fstring_middle* FSTRING_END
         if (p.error_indicator) {
@@ -12306,10 +11193,6 @@ function fstring_rule(p)
         )
         {
             _res = $B._PyPegen.joined_str (p, a, b, c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12326,8 +11209,7 @@ function string_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // STRING
         if (p.error_indicator) {
@@ -12339,10 +11221,6 @@ function string_rule(p)
         )
         {
             _res = $B._PyPegen.constant_from_string (p, s);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12387,10 +11265,6 @@ function strings_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.concatenate_strings (p, a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12408,8 +11282,7 @@ function list_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12439,10 +11312,6 @@ function list_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.List (a, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12459,8 +11328,7 @@ function tuple_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12490,10 +11358,6 @@ function tuple_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple (a, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12510,8 +11374,7 @@ function set_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12541,10 +11404,6 @@ function set_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Set (a, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12561,8 +11420,7 @@ function dict_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12592,10 +11450,6 @@ function dict_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Dict ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_keys ( p, a ) ), $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.get_values ( p, a ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12632,8 +11486,7 @@ function double_starred_kvpairs_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.double_starred_kvpair+ ','?
         if (p.error_indicator) {
@@ -12649,10 +11502,6 @@ function double_starred_kvpairs_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12669,8 +11518,7 @@ function double_starred_kvpair_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '**' bitwise_or
         if (p.error_indicator) {
@@ -12685,10 +11533,6 @@ function double_starred_kvpair_rule(p)
         )
         {
             _res = $B._PyPegen.key_value_pair (p, $B.parser_constants.NULL, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12719,8 +11563,7 @@ function kvpair_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression ':' expression
         if (p.error_indicator) {
@@ -12738,10 +11581,6 @@ function kvpair_rule(p)
         )
         {
             _res = $B._PyPegen.key_value_pair (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12758,8 +11597,7 @@ function for_if_clauses_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // for_if_clause+
         if (p.error_indicator) {
@@ -12771,10 +11609,6 @@ function for_if_clauses_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12794,8 +11628,7 @@ function for_if_clause_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ASYNC 'for' star_targets 'in' ~ disjunction (('if' disjunction))*
         if (p.error_indicator) {
@@ -12825,10 +11658,6 @@ function for_if_clause_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION ($B.ast.comprehension, 6, "Async comprehensions are", new $B._PyAST.comprehension ( a, b, c, 1, p.arena ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12861,10 +11690,6 @@ function for_if_clause_rule(p)
         )
         {
             _res = new $B._PyAST.comprehension (a, b, c, 0, p.arena);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12898,8 +11723,7 @@ function listcomp_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -12932,10 +11756,6 @@ function listcomp_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.ListComp (a, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -12966,8 +11786,7 @@ function setcomp_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13000,10 +11819,6 @@ function setcomp_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.SetComp (a, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13036,8 +11851,7 @@ function genexp_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13070,10 +11884,6 @@ function genexp_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.GeneratorExp (a, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13104,8 +11914,7 @@ function dictcomp_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13138,10 +11947,6 @@ function dictcomp_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.DictComp (a.key, a.value, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13194,10 +11999,6 @@ function arguments_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13231,8 +12032,7 @@ function args_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13259,10 +12059,6 @@ function args_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.collect_call_seqs (p, a, b, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13283,10 +12079,6 @@ function args_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Call ($B._PyPegen.dummy_name ( p ), $B.helper_functions.CHECK_NULL_ALLOWED ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_extract_starred_exprs ( p, a ) ), $B.helper_functions.CHECK_NULL_ALLOWED ( $B.parser_constants.asdl_keyword_seq, $B._PyPegen.seq_delete_starred_exprs ( p, a ) ), EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13306,8 +12098,7 @@ function kwargs_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.kwarg_or_starred+ ',' ','.kwarg_or_double_starred+
         if (p.error_indicator) {
@@ -13325,10 +12116,6 @@ function kwargs_rule(p)
         )
         {
             _res = $B._PyPegen.join_sequences (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13373,8 +12160,7 @@ function starred_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13415,10 +12201,6 @@ function starred_expression_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Starred (a, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13435,8 +12217,7 @@ function kwarg_or_starred_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13480,10 +12261,6 @@ function kwarg_or_starred_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.keyword_or_starred (p, $B.helper_functions.CHECK ( $B.ast.keyword, new $B._PyAST.keyword ( a. id, b, EXTRA ) ), 1);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13498,10 +12275,6 @@ function kwarg_or_starred_rule(p)
         )
         {
             _res = $B._PyPegen.keyword_or_starred (p, a, 0);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13518,8 +12291,7 @@ function kwarg_or_double_starred_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13563,10 +12335,6 @@ function kwarg_or_double_starred_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.keyword_or_starred (p, $B.helper_functions.CHECK ( $B.ast.keyword, new $B._PyAST.keyword ( a. id, b, EXTRA ) ), 1);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13590,10 +12358,6 @@ function kwarg_or_double_starred_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = $B._PyPegen.keyword_or_starred (p, $B.helper_functions.CHECK ( $B.ast.keyword, new $B._PyAST.keyword ( $B.parser_constants.NULL, a, EXTRA ) ), 1);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13610,8 +12374,7 @@ function star_targets_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13631,10 +12394,6 @@ function star_targets_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13662,10 +12421,6 @@ function star_targets_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple ($B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.seq_insert_in_front ( p, a, b ) ), $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13682,8 +12437,7 @@ function star_targets_list_seq_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.star_target+ ','?
         if (p.error_indicator) {
@@ -13699,10 +12453,6 @@ function star_targets_list_seq_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13719,8 +12469,7 @@ function star_targets_tuple_seq_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_target ((',' star_target))+ ','?
         if (p.error_indicator) {
@@ -13739,10 +12488,6 @@ function star_targets_tuple_seq_rule(p)
         )
         {
             _res = $B._PyPegen.seq_insert_in_front (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13760,10 +12505,6 @@ function star_targets_tuple_seq_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13811,10 +12552,6 @@ function star_target_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Starred ($B.helper_functions.CHECK ( $B.ast.expr, $B._PyPegen.set_expr_context ( p, a, $B.parser_constants.Store ) ), $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13885,10 +12622,6 @@ function target_with_star_atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Attribute (a, b. id, $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13920,10 +12653,6 @@ function target_with_star_atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Subscript (a, b, $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -13959,8 +12688,7 @@ function star_atom_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -13978,10 +12706,6 @@ function star_atom_rule(p)
         )
         {
             _res = $B._PyPegen.set_expr_context (p, a, $B.parser_constants.Store);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14002,10 +12726,6 @@ function star_atom_rule(p)
         )
         {
             _res = $B._PyPegen.set_expr_context (p, a, $B.parser_constants.Store);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14032,10 +12752,6 @@ function star_atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple (a, $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14062,10 +12778,6 @@ function star_atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.List (a, $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14082,8 +12794,7 @@ function single_target_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // single_subscript_attribute_target
         if (p.error_indicator) {
@@ -14109,10 +12820,6 @@ function single_target_rule(p)
         )
         {
             _res = $B._PyPegen.set_expr_context (p, a, $B.parser_constants.Store);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14133,10 +12840,6 @@ function single_target_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14155,8 +12858,7 @@ function single_subscript_attribute_target_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -14188,10 +12890,6 @@ function single_subscript_attribute_target_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Attribute (a, b. id, $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14223,10 +12921,6 @@ function single_subscript_attribute_target_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Subscript (a, b, $B.parser_constants.Store, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14277,8 +12971,7 @@ function t_primary_raw(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -14310,10 +13003,6 @@ function t_primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Attribute (a, b. id, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14345,10 +13034,6 @@ function t_primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Subscript (a, b, $B.parser_constants.Load, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14374,10 +13059,6 @@ function t_primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Call (a, $B.helper_functions.CHECK ( $B.parser_constants.asdl_expr_seq, $B._PyPegen.singleton_seq ( p, b ) ), $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14409,10 +13090,6 @@ function t_primary_raw(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Call (a, ( b ) ? ( b ). args : $B.parser_constants.NULL, ( b ) ? ( b ). keywords : $B.parser_constants.NULL, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14429,10 +13106,6 @@ function t_primary_raw(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14449,8 +13122,7 @@ function t_lookahead_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '('
         if (p.error_indicator) {
@@ -14506,8 +13178,7 @@ function del_targets_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.del_target+ ','?
         if (p.error_indicator) {
@@ -14523,10 +13194,6 @@ function del_targets_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14582,10 +13249,6 @@ function del_target_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Attribute (a, b. id, $B.parser_constants.Del, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14617,10 +13280,6 @@ function del_target_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Subscript (a, b, $B.parser_constants.Del, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14652,8 +13311,7 @@ function del_t_atom_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -14671,10 +13329,6 @@ function del_t_atom_rule(p)
         )
         {
             _res = $B._PyPegen.set_expr_context (p, a, $B.parser_constants.Del);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14695,10 +13349,6 @@ function del_t_atom_rule(p)
         )
         {
             _res = $B._PyPegen.set_expr_context (p, a, $B.parser_constants.Del);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14725,10 +13375,6 @@ function del_t_atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.Tuple (a, $B.parser_constants.Del, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14755,10 +13401,6 @@ function del_t_atom_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.List (a, $B.parser_constants.Del, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14782,8 +13424,7 @@ function type_expressions_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.expression+ ',' '*' expression ',' '**' expression
         if (p.error_indicator) {
@@ -14813,10 +13454,6 @@ function type_expressions_rule(p)
         )
         {
             _res = $B._PyPegen.seq_append_to_end (p, $B.helper_functions.CHECK ( asdl_seq, $B._PyPegen.seq_append_to_end ( p, a, b ) ), c);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14840,10 +13477,6 @@ function type_expressions_rule(p)
         )
         {
             _res = $B._PyPegen.seq_append_to_end (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14867,10 +13500,6 @@ function type_expressions_rule(p)
         )
         {
             _res = $B._PyPegen.seq_append_to_end (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14897,10 +13526,6 @@ function type_expressions_rule(p)
         )
         {
             _res = $B._PyPegen.seq_append_to_end (p, $B.helper_functions.CHECK ( asdl_seq, $B._PyPegen.singleton_seq ( p, a ) ), b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14918,10 +13543,6 @@ function type_expressions_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14939,10 +13560,6 @@ function type_expressions_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14957,10 +13574,6 @@ function type_expressions_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -14980,8 +13593,7 @@ function func_type_comment_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NEWLINE TYPE_COMMENT &(NEWLINE INDENT)
         if (p.error_indicator) {
@@ -14998,10 +13610,6 @@ function func_type_comment_rule(p)
         )
         {
             _res = t;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15053,8 +13661,7 @@ function invalid_arguments_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ((','.(starred_expression | (assignment_expression | expression !':=') !'=')+ ',' kwargs) | kwargs) ',' '*'
         if (p.error_indicator) {
@@ -15072,10 +13679,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (b, "iterable argument unpacking follows keyword argument unpacking");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15100,10 +13703,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15127,10 +13726,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15154,10 +13749,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expected argument value expression");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15175,10 +13766,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B._PyPegen.nonparen_genexp_in_call (p, a, b);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15202,10 +13789,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15226,10 +13809,6 @@ function invalid_arguments_rule(p)
         )
         {
             _res = $B._PyPegen.arguments_parsing_error (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15250,8 +13829,7 @@ function invalid_kwarg_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ('True' | 'False' | 'None') '='
         if (p.error_indicator) {
@@ -15266,10 +13844,6 @@ function invalid_kwarg_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to %s", PyBytes_AS_STRING ( a.bytes ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15293,10 +13867,6 @@ function invalid_kwarg_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15316,10 +13886,6 @@ function invalid_kwarg_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expression cannot contain assignment, perhaps you meant \"==\"?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15343,10 +13909,6 @@ function invalid_kwarg_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to keyword argument unpacking");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15369,8 +13931,7 @@ function expression_without_invalid_rule(p)
         p.call_invalid_rules = _prev_call_invalid;
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     if (p.mark == p.fill && $B._PyPegen.fill_token(p) < 0) {
         p.error_indicator = 1;
@@ -15409,11 +13970,6 @@ function expression_without_invalid_rule(p)
             EXTRA.end_lineno = _token.end_lineno;
             EXTRA.end_col_offset = _token.end_col_offset;
             _res = new $B._PyAST.IfExp (b, a, c, EXTRA);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                p.call_invalid_rules = _prev_call_invalid;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15461,8 +14017,7 @@ function invalid_legacy_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NAME !'(' star_expressions
         if (p.error_indicator) {
@@ -15479,10 +14034,6 @@ function invalid_legacy_expression_rule(p)
         )
         {
             _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE ( a, b, "Missing parentheses in call to '%U'. Did you mean %U(...)?", a. id, a. id) : $B.parser_constants.NULL;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15502,8 +14053,7 @@ function invalid_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // !(NAME STRING | SOFT_KEYWORD) disjunction expression_without_invalid
         if (p.error_indicator) {
@@ -15520,10 +14070,6 @@ function invalid_expression_rule(p)
         )
         {
             _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.parser_constants.NULL : p.tokens [p.mark - 1].level == 0 ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE ( a, b, "invalid syntax. Perhaps you forgot a comma?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15546,10 +14092,6 @@ function invalid_expression_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expected 'else' after 'if' expression");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15573,10 +14115,6 @@ function invalid_expression_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "f-string: lambda expressions are not allowed without parentheses");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15618,10 +14156,6 @@ function invalid_named_expression_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name ( a ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15644,10 +14178,6 @@ function invalid_named_expression_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15672,10 +14202,6 @@ function invalid_named_expression_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot assign to %s here. Maybe you meant '==' instead of '='?", $B._PyPegen.get_expr_name ( a ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15699,8 +14225,7 @@ function invalid_assignment_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // invalid_ann_assign_target ':' expression
         if (p.error_indicator) {
@@ -15718,10 +14243,6 @@ function invalid_assignment_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name ( a ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15748,10 +14269,6 @@ function invalid_assignment_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "only single target (not tuple) can be annotated");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15772,10 +14289,6 @@ function invalid_assignment_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "illegal target for annotation");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15796,10 +14309,6 @@ function invalid_assignment_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.STAR_TARGETS, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15820,10 +14329,6 @@ function invalid_assignment_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "assignment to yield expression not possible");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15844,10 +14349,6 @@ function invalid_assignment_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "'%s' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name ( a ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15864,8 +14365,7 @@ function invalid_ann_assign_target_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // list
         if (p.error_indicator) {
@@ -15911,10 +14411,6 @@ function invalid_ann_assign_target_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15931,8 +14427,7 @@ function invalid_del_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'del' star_expressions
         if (p.error_indicator) {
@@ -15947,10 +14442,6 @@ function invalid_del_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.DEL_TARGETS, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -15967,8 +14458,7 @@ function invalid_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NEWLINE !INDENT
         if (p.error_indicator) {
@@ -15982,10 +14472,6 @@ function invalid_block_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16005,8 +14491,7 @@ function invalid_comprehension_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ('[' | '(' | '{') starred_expression for_if_clauses
         if (p.error_indicator) {
@@ -16024,10 +14509,6 @@ function invalid_comprehension_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "iterable unpacking cannot be used in comprehension");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16054,10 +14535,6 @@ function invalid_comprehension_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, PyPegen_last_item ( b, $B.ast.expr ), "did you forget parentheses around the comprehension target?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16081,10 +14558,6 @@ function invalid_comprehension_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "did you forget parentheses around the comprehension target?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16101,8 +14574,7 @@ function invalid_dict_comprehension_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '{' '**' bitwise_or for_if_clauses '}'
         if (p.error_indicator) {
@@ -16126,10 +14598,6 @@ function invalid_dict_comprehension_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "dict unpacking cannot be used in dict comprehension");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16152,8 +14620,7 @@ function invalid_parameters_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // "/" ','
         if (p.error_indicator) {
@@ -16168,10 +14635,6 @@ function invalid_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "at least one argument must precede /");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16192,10 +14655,6 @@ function invalid_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ may appear only once");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16220,10 +14679,6 @@ function invalid_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "parameter without a default follows parameter with a default");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16251,10 +14706,6 @@ function invalid_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "Function parameters cannot be parenthesized");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16285,10 +14736,6 @@ function invalid_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ must be ahead of *");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16309,10 +14756,6 @@ function invalid_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected comma between / and *");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16329,8 +14772,7 @@ function invalid_default_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '=' &(')' | ',')
         if (p.error_indicator) {
@@ -16344,10 +14786,6 @@ function invalid_default_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected default value expression");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16368,8 +14806,7 @@ function invalid_star_etc_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '*' (')' | ',' (')' | '**'))
         if (p.error_indicator) {
@@ -16384,10 +14821,6 @@ function invalid_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "named arguments must follow bare *");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16408,10 +14841,6 @@ function invalid_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("bare * has associated type comment");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16432,10 +14861,6 @@ function invalid_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-positional argument cannot have default value");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16462,10 +14887,6 @@ function invalid_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "* argument may appear only once");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16482,8 +14903,7 @@ function invalid_kwds_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '**' param '='
         if (p.error_indicator) {
@@ -16501,10 +14921,6 @@ function invalid_kwds_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-keyword argument cannot have default value");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16528,10 +14944,6 @@ function invalid_kwds_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16555,10 +14967,6 @@ function invalid_kwds_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16575,8 +14983,7 @@ function invalid_parameters_helper_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // slash_with_default
         if (p.error_indicator) {
@@ -16588,10 +14995,6 @@ function invalid_parameters_helper_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16628,8 +15031,7 @@ function invalid_lambda_parameters_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // "/" ','
         if (p.error_indicator) {
@@ -16644,10 +15046,6 @@ function invalid_lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "at least one argument must precede /");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16668,10 +15066,6 @@ function invalid_lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ may appear only once");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16696,10 +15090,6 @@ function invalid_lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "parameter without a default follows parameter with a default");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16727,10 +15117,6 @@ function invalid_lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "Lambda expression parameters cannot be parenthesized");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16761,10 +15147,6 @@ function invalid_lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ must be ahead of *");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16785,10 +15167,6 @@ function invalid_lambda_parameters_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected comma between / and *");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16807,8 +15185,7 @@ function invalid_lambda_parameters_helper_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_slash_with_default
         if (p.error_indicator) {
@@ -16820,10 +15197,6 @@ function invalid_lambda_parameters_helper_rule(p)
         )
         {
             _res = $B._PyPegen.singleton_seq (p, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16857,8 +15230,7 @@ function invalid_lambda_star_etc_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '*' (':' | ',' (':' | '**'))
         if (p.error_indicator) {
@@ -16873,10 +15245,6 @@ function invalid_lambda_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("named arguments must follow bare *");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16897,10 +15265,6 @@ function invalid_lambda_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-positional argument cannot have default value");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16927,10 +15291,6 @@ function invalid_lambda_star_etc_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "* argument may appear only once");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16950,8 +15310,7 @@ function invalid_lambda_kwds_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '**' lambda_param '='
         if (p.error_indicator) {
@@ -16969,10 +15328,6 @@ function invalid_lambda_kwds_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-keyword argument cannot have default value");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -16996,10 +15351,6 @@ function invalid_lambda_kwds_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17023,10 +15374,6 @@ function invalid_lambda_kwds_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17043,8 +15390,7 @@ function invalid_double_type_comments_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // TYPE_COMMENT NEWLINE TYPE_COMMENT NEWLINE INDENT
         if (p.error_indicator) {
@@ -17068,10 +15414,6 @@ function invalid_double_type_comments_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("Cannot have two type comments on def");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17088,8 +15430,7 @@ function invalid_with_item_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression 'as' expression &(',' | ')' | ':')
         if (p.error_indicator) {
@@ -17109,10 +15450,6 @@ function invalid_with_item_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.STAR_TARGETS, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17129,8 +15466,7 @@ function invalid_for_target_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ASYNC? 'for' star_expressions
         if (p.error_indicator) {
@@ -17149,10 +15485,6 @@ function invalid_for_target_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.FOR_TARGETS, a);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17169,8 +15501,7 @@ function invalid_group_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' starred_expression ')'
         if (p.error_indicator) {
@@ -17188,10 +15519,6 @@ function invalid_group_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use starred expression here");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17215,10 +15542,6 @@ function invalid_group_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use double starred expression here");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17235,8 +15558,7 @@ function invalid_import_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'import' ','.dotted_name+ 'from' dotted_name
         if (p.error_indicator) {
@@ -17257,10 +15579,6 @@ function invalid_import_rule(p)
         )
         {
             _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "Did you mean to use 'from ... import ...' instead?");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17277,8 +15595,7 @@ function invalid_import_from_targets_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // import_from_as_names ',' NEWLINE
         if (p.error_indicator) {
@@ -17296,10 +15613,6 @@ function invalid_import_from_targets_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("trailing comma not allowed without surrounding parentheses");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17318,8 +15631,7 @@ function invalid_with_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ASYNC? 'with' ','.(expression ['as' star_target])+ NEWLINE
         if (p.error_indicator) {
@@ -17341,10 +15653,6 @@ function invalid_with_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17379,10 +15687,6 @@ function invalid_with_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17401,8 +15705,7 @@ function invalid_with_stmt_indent_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ASYNC? 'with' ','.(expression ['as' star_target])+ ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -17429,10 +15732,6 @@ function invalid_with_stmt_indent_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'with' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17472,10 +15771,6 @@ function invalid_with_stmt_indent_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'with' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17496,8 +15791,7 @@ function invalid_try_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'try' ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -17517,10 +15811,6 @@ function invalid_try_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'try' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17543,10 +15833,6 @@ function invalid_try_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected 'except' or 'finally' block");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17586,10 +15872,6 @@ function invalid_try_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot have both 'except' and 'except' on the same 'try'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17623,10 +15905,6 @@ function invalid_try_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot have both 'except' and 'except' on the same 'try'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17647,8 +15925,7 @@ function invalid_except_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'except' '*'? expression ',' expressions ['as' NAME] ':'
         if (p.error_indicator) {
@@ -17680,10 +15957,6 @@ function invalid_except_stmt_rule(p)
         )
         {
             _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "multiple exception types must be parenthesized");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17712,10 +15985,6 @@ function invalid_except_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17733,10 +16002,6 @@ function invalid_except_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17757,10 +16022,6 @@ function invalid_except_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected one or more exception types");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17777,8 +16038,7 @@ function invalid_finally_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'finally' ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -17798,10 +16058,6 @@ function invalid_finally_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'finally' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17820,8 +16076,7 @@ function invalid_except_stmt_indent_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'except' expression ['as' NAME] ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -17848,10 +16103,6 @@ function invalid_except_stmt_indent_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17874,10 +16125,6 @@ function invalid_except_stmt_indent_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17895,8 +16142,7 @@ function invalid_except_star_stmt_indent_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'except' '*' expression ['as' NAME] ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -17926,10 +16172,6 @@ function invalid_except_star_stmt_indent_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17948,8 +16190,7 @@ function invalid_match_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // "match" subject_expr NEWLINE
         if (p.error_indicator) {
@@ -17967,10 +16208,6 @@ function invalid_match_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.CHECK_VERSION (_void, 10, "Pattern matching is", $B.helper_functions.RAISE_SYNTAX_ERROR ( "expected ':'" ));
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -17996,10 +16233,6 @@ function invalid_match_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'match' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18018,8 +16251,7 @@ function invalid_case_block_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // "case" patterns guard? NEWLINE
         if (p.error_indicator) {
@@ -18041,10 +16273,6 @@ function invalid_case_block_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18074,10 +16302,6 @@ function invalid_case_block_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'case' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18094,8 +16318,7 @@ function invalid_as_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // or_pattern 'as' "_"
         if (p.error_indicator) {
@@ -18113,10 +16336,6 @@ function invalid_as_pattern_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use '_' as a target");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18139,10 +16358,6 @@ function invalid_as_pattern_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "invalid pattern target");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18159,8 +16374,7 @@ function invalid_class_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // name_or_attr '(' invalid_class_argument_pattern
         if (p.error_indicator) {
@@ -18178,10 +16392,6 @@ function invalid_class_pattern_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (PyPegen_first_item ( a, $B.ast.pattern ), PyPegen_last_item ( a, $B.ast.pattern ), "positional patterns follow keyword patterns");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18199,8 +16409,7 @@ function invalid_class_argument_pattern_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // [positional_patterns ','] keyword_patterns ',' positional_patterns
         if (p.error_indicator) {
@@ -18222,10 +16431,6 @@ function invalid_class_argument_pattern_rule(p)
         )
         {
             _res = a;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18244,8 +16449,7 @@ function invalid_if_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'if' named_expression NEWLINE
         if (p.error_indicator) {
@@ -18263,10 +16467,6 @@ function invalid_if_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18292,10 +16492,6 @@ function invalid_if_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'if' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18314,8 +16510,7 @@ function invalid_elif_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'elif' named_expression NEWLINE
         if (p.error_indicator) {
@@ -18333,10 +16528,6 @@ function invalid_elif_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18362,10 +16553,6 @@ function invalid_elif_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'elif' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18382,8 +16569,7 @@ function invalid_else_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'else' ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -18403,10 +16589,6 @@ function invalid_else_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'else' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18425,8 +16607,7 @@ function invalid_while_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'while' named_expression NEWLINE
         if (p.error_indicator) {
@@ -18444,10 +16625,6 @@ function invalid_while_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18473,10 +16650,6 @@ function invalid_while_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'while' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18495,8 +16668,7 @@ function invalid_for_stmt_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ASYNC? 'for' star_targets 'in' star_expressions NEWLINE
         if (p.error_indicator) {
@@ -18524,10 +16696,6 @@ function invalid_for_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18563,10 +16731,6 @@ function invalid_for_stmt_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'for' statement on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18584,8 +16748,7 @@ function invalid_def_raw_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ASYNC? 'def' NAME type_params? '(' params? ')' ['->' expression] ':' NEWLINE !INDENT
         if (p.error_indicator) {
@@ -18630,10 +16793,6 @@ function invalid_def_raw_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after function definition on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18652,8 +16811,7 @@ function invalid_class_def_raw_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'class' NAME type_params? ['(' arguments? ')'] NEWLINE
         if (p.error_indicator) {
@@ -18679,10 +16837,6 @@ function invalid_class_def_raw_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18716,10 +16870,6 @@ function invalid_class_def_raw_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after class definition on line %d", a.lineno);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18739,8 +16889,7 @@ function invalid_double_starred_kvpairs_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.double_starred_kvpair+ ',' invalid_kvpair
         if (p.error_indicator) {
@@ -18781,10 +16930,6 @@ function invalid_double_starred_kvpairs_rule(p)
         )
         {
             _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "cannot use a starred expression in a dictionary value");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18804,10 +16949,6 @@ function invalid_double_starred_kvpairs_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expression expected after dictionary key and ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18827,8 +16968,7 @@ function invalid_kvpair_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression !(':')
         if (p.error_indicator) {
@@ -18842,10 +16982,6 @@ function invalid_kvpair_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_ERROR_KNOWN_LOCATION (p, $B.parser_constants.PyExc_SyntaxError, a.lineno, a.end_col_offset - 1, a.end_lineno, - 1, "':' expected after dictionary key");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18869,10 +17005,6 @@ function invalid_kvpair_rule(p)
         )
         {
             _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "cannot use a starred expression in a dictionary value");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18892,10 +17024,6 @@ function invalid_kvpair_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expression expected after dictionary key and ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18912,8 +17040,7 @@ function invalid_starred_expression_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '*' expression '=' expression
         if (p.error_indicator) {
@@ -18934,10 +17061,6 @@ function invalid_starred_expression_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to iterable argument unpacking");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -18965,8 +17088,7 @@ function invalid_replacement_field_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '{' '='
         if (p.error_indicator) {
@@ -18981,10 +17103,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '='");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19002,10 +17120,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '!'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19023,10 +17137,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before ':'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19044,10 +17154,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '}'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19064,10 +17170,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: expecting a valid expression after '{'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19087,10 +17189,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '=', or '!', or ':', or '}'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19113,10 +17211,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '!', or ':', or '}'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19168,10 +17262,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting ':' or '}'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19205,10 +17295,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '}', or format specs");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19236,10 +17322,6 @@ function invalid_replacement_field_rule(p)
         )
         {
             _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '}'");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19256,8 +17338,7 @@ function invalid_conversion_character_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '!' &(':' | '}')
         if (p.error_indicator) {
@@ -19271,10 +17352,6 @@ function invalid_conversion_character_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: missing conversion character");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19291,10 +17368,6 @@ function invalid_conversion_character_rule(p)
         )
         {
             _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: invalid conversion character");
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19332,16 +17405,7 @@ function _loop0_1_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_2: NEWLINE
@@ -19371,16 +17435,7 @@ function _loop0_2_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_3: statement
@@ -19411,19 +17466,9 @@ function _loop1_3_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_5: ';' simple_stmt
@@ -19451,26 +17496,12 @@ function _loop0_5_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_4: simple_stmt _loop0_5
@@ -19479,8 +17510,7 @@ function _gather_4_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // simple_stmt _loop0_5
         if (p.error_indicator) {
@@ -19511,8 +17541,7 @@ function _tmp_6_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'import'
         if (p.error_indicator) {
@@ -19554,8 +17583,7 @@ function _tmp_7_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'def'
         if (p.error_indicator) {
@@ -19611,8 +17639,7 @@ function _tmp_8_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'class'
         if (p.error_indicator) {
@@ -19654,8 +17681,7 @@ function _tmp_9_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'with'
         if (p.error_indicator) {
@@ -19697,8 +17723,7 @@ function _tmp_10_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'for'
         if (p.error_indicator) {
@@ -19740,8 +17765,7 @@ function _tmp_11_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '=' annotated_rhs
         if (p.error_indicator) {
@@ -19756,10 +17780,6 @@ function _tmp_11_rule(p)
         )
         {
             _res = d;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19776,8 +17796,7 @@ function _tmp_12_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' single_target ')'
         if (p.error_indicator) {
@@ -19795,10 +17814,6 @@ function _tmp_12_rule(p)
         )
         {
             _res = b;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19829,8 +17844,7 @@ function _tmp_13_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '=' annotated_rhs
         if (p.error_indicator) {
@@ -19845,10 +17859,6 @@ function _tmp_13_rule(p)
         )
         {
             _res = d;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -19887,19 +17897,9 @@ function _loop1_14_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_15: yield_expr | star_expressions
@@ -19908,8 +17908,7 @@ function _tmp_15_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -19951,8 +17950,7 @@ function _tmp_16_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -19994,8 +17992,7 @@ function _tmp_17_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'from' expression
         if (p.error_indicator) {
@@ -20010,10 +18007,6 @@ function _tmp_17_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20049,26 +18042,12 @@ function _loop0_19_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_18: NAME _loop0_19
@@ -20077,8 +18056,7 @@ function _gather_18_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NAME _loop0_19
         if (p.error_indicator) {
@@ -20128,26 +18106,12 @@ function _loop0_21_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_20: NAME _loop0_21
@@ -20156,8 +18120,7 @@ function _gather_20_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NAME _loop0_21
         if (p.error_indicator) {
@@ -20188,8 +18151,7 @@ function _tmp_22_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ';'
         if (p.error_indicator) {
@@ -20231,8 +18193,7 @@ function _tmp_23_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ',' expression
         if (p.error_indicator) {
@@ -20247,10 +18208,6 @@ function _tmp_23_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20288,16 +18245,7 @@ function _loop0_24_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_25: ('.' | '...')
@@ -20328,19 +18276,9 @@ function _loop1_25_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_27: ',' import_from_as_name
@@ -20368,26 +18306,12 @@ function _loop0_27_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_26: import_from_as_name _loop0_27
@@ -20396,8 +18320,7 @@ function _gather_26_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // import_from_as_name _loop0_27
         if (p.error_indicator) {
@@ -20428,8 +18351,7 @@ function _tmp_28_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -20444,10 +18366,6 @@ function _tmp_28_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20483,26 +18401,12 @@ function _loop0_30_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_29: dotted_as_name _loop0_30
@@ -20511,8 +18415,7 @@ function _gather_29_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // dotted_as_name _loop0_30
         if (p.error_indicator) {
@@ -20543,8 +18446,7 @@ function _tmp_31_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -20559,10 +18461,6 @@ function _tmp_31_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20601,19 +18499,9 @@ function _loop1_32_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_33: '(' arguments? ')'
@@ -20622,8 +18510,7 @@ function _tmp_33_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' arguments? ')'
         if (p.error_indicator) {
@@ -20641,10 +18528,6 @@ function _tmp_33_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20661,8 +18544,7 @@ function _tmp_34_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '->' expression
         if (p.error_indicator) {
@@ -20677,10 +18559,6 @@ function _tmp_34_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20697,8 +18575,7 @@ function _tmp_35_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '->' expression
         if (p.error_indicator) {
@@ -20713,10 +18590,6 @@ function _tmp_35_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -20754,16 +18627,7 @@ function _loop0_36_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_37: param_with_default
@@ -20793,16 +18657,7 @@ function _loop0_37_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_38: param_with_default
@@ -20832,16 +18687,7 @@ function _loop0_38_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_39: param_no_default
@@ -20872,19 +18718,9 @@ function _loop1_39_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_40: param_with_default
@@ -20914,16 +18750,7 @@ function _loop0_40_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_41: param_with_default
@@ -20954,19 +18781,9 @@ function _loop1_41_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_42: param_no_default
@@ -20997,19 +18814,9 @@ function _loop1_42_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_43: param_no_default
@@ -21040,19 +18847,9 @@ function _loop1_43_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_44: param_no_default
@@ -21082,16 +18879,7 @@ function _loop0_44_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_45: param_with_default
@@ -21122,19 +18910,9 @@ function _loop1_45_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_46: param_no_default
@@ -21164,16 +18942,7 @@ function _loop0_46_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_47: param_with_default
@@ -21204,19 +18973,9 @@ function _loop1_47_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_48: param_maybe_default
@@ -21246,16 +19005,7 @@ function _loop0_48_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_49: param_maybe_default
@@ -21285,16 +19035,7 @@ function _loop0_49_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_50: param_maybe_default
@@ -21325,19 +19066,9 @@ function _loop1_50_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_52: ',' with_item
@@ -21365,26 +19096,12 @@ function _loop0_52_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_51: with_item _loop0_52
@@ -21393,8 +19110,7 @@ function _gather_51_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // with_item _loop0_52
         if (p.error_indicator) {
@@ -21444,26 +19160,12 @@ function _loop0_54_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_53: with_item _loop0_54
@@ -21472,8 +19174,7 @@ function _gather_53_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // with_item _loop0_54
         if (p.error_indicator) {
@@ -21523,26 +19224,12 @@ function _loop0_56_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_55: with_item _loop0_56
@@ -21551,8 +19238,7 @@ function _gather_55_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // with_item _loop0_56
         if (p.error_indicator) {
@@ -21602,26 +19288,12 @@ function _loop0_58_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_57: with_item _loop0_58
@@ -21630,8 +19302,7 @@ function _gather_57_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // with_item _loop0_58
         if (p.error_indicator) {
@@ -21662,8 +19333,7 @@ function _tmp_59_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','
         if (p.error_indicator) {
@@ -21741,19 +19411,9 @@ function _loop1_60_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_61: except_star_block
@@ -21784,19 +19444,9 @@ function _loop1_61_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_62: 'as' NAME
@@ -21805,8 +19455,7 @@ function _tmp_62_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -21821,10 +19470,6 @@ function _tmp_62_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -21841,8 +19486,7 @@ function _tmp_63_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -21857,10 +19501,6 @@ function _tmp_63_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -21899,19 +19539,9 @@ function _loop1_64_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_66: '|' closed_pattern
@@ -21939,26 +19569,12 @@ function _loop0_66_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_65: closed_pattern _loop0_66
@@ -21967,8 +19583,7 @@ function _gather_65_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // closed_pattern _loop0_66
         if (p.error_indicator) {
@@ -21999,8 +19614,7 @@ function _tmp_67_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '+'
         if (p.error_indicator) {
@@ -22042,8 +19656,7 @@ function _tmp_68_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '+'
         if (p.error_indicator) {
@@ -22085,8 +19698,7 @@ function _tmp_69_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '.'
         if (p.error_indicator) {
@@ -22142,8 +19754,7 @@ function _tmp_70_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '.'
         if (p.error_indicator) {
@@ -22218,26 +19829,12 @@ function _loop0_72_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_71: maybe_star_pattern _loop0_72
@@ -22246,8 +19843,7 @@ function _gather_71_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // maybe_star_pattern _loop0_72
         if (p.error_indicator) {
@@ -22297,26 +19893,12 @@ function _loop0_74_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_73: key_value_pattern _loop0_74
@@ -22325,8 +19907,7 @@ function _gather_73_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // key_value_pattern _loop0_74
         if (p.error_indicator) {
@@ -22357,8 +19938,7 @@ function _tmp_75_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // literal_expr
         if (p.error_indicator) {
@@ -22419,26 +19999,12 @@ function _loop0_77_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_76: pattern _loop0_77
@@ -22447,8 +20013,7 @@ function _gather_76_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // pattern _loop0_77
         if (p.error_indicator) {
@@ -22498,26 +20063,12 @@ function _loop0_79_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_78: keyword_pattern _loop0_79
@@ -22526,8 +20077,7 @@ function _gather_78_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // keyword_pattern _loop0_79
         if (p.error_indicator) {
@@ -22577,26 +20127,12 @@ function _loop0_81_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_80: type_param _loop0_81
@@ -22605,8 +20141,7 @@ function _gather_80_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // type_param _loop0_81
         if (p.error_indicator) {
@@ -22659,19 +20194,9 @@ function _loop1_82_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_83: (',' star_expression)
@@ -22702,19 +20227,9 @@ function _loop1_83_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_85: ',' star_named_expression
@@ -22742,26 +20257,12 @@ function _loop0_85_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_84: star_named_expression _loop0_85
@@ -22770,8 +20271,7 @@ function _gather_84_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_named_expression _loop0_85
         if (p.error_indicator) {
@@ -22824,19 +20324,9 @@ function _loop1_86_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_87: ('and' inversion)
@@ -22867,19 +20357,9 @@ function _loop1_87_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_88: compare_op_bitwise_or_pair
@@ -22910,19 +20390,9 @@ function _loop1_88_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_89: '!='
@@ -22931,8 +20401,7 @@ function _tmp_89_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '!='
         if (p.error_indicator) {
@@ -22944,10 +20413,6 @@ function _tmp_89_rule(p)
         )
         {
             _res = $B._PyPegen.check_barry_as_flufl (p, tok) ? $B.parser_constants.NULL : tok;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -22983,26 +20448,12 @@ function _loop0_91_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_90: (slice | starred_expression) _loop0_91
@@ -23011,8 +20462,7 @@ function _gather_90_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (slice | starred_expression) _loop0_91
         if (p.error_indicator) {
@@ -23043,8 +20493,7 @@ function _tmp_92_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':' expression?
         if (p.error_indicator) {
@@ -23059,10 +20508,6 @@ function _tmp_92_rule(p)
         )
         {
             _res = d;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -23079,8 +20524,7 @@ function _tmp_93_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // STRING
         if (p.error_indicator) {
@@ -23122,8 +20566,7 @@ function _tmp_94_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // tuple
         if (p.error_indicator) {
@@ -23179,8 +20622,7 @@ function _tmp_95_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // list
         if (p.error_indicator) {
@@ -23222,8 +20664,7 @@ function _tmp_96_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // dict
         if (p.error_indicator) {
@@ -23293,8 +20734,7 @@ function _tmp_97_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -23357,16 +20797,7 @@ function _loop0_98_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_99: lambda_param_with_default
@@ -23396,16 +20827,7 @@ function _loop0_99_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_100: lambda_param_with_default
@@ -23435,16 +20857,7 @@ function _loop0_100_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_101: lambda_param_no_default
@@ -23475,19 +20888,9 @@ function _loop1_101_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_102: lambda_param_with_default
@@ -23517,16 +20920,7 @@ function _loop0_102_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_103: lambda_param_with_default
@@ -23557,19 +20951,9 @@ function _loop1_103_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_104: lambda_param_no_default
@@ -23600,19 +20984,9 @@ function _loop1_104_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_105: lambda_param_no_default
@@ -23643,19 +21017,9 @@ function _loop1_105_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_106: lambda_param_no_default
@@ -23685,16 +21049,7 @@ function _loop0_106_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_107: lambda_param_with_default
@@ -23725,19 +21080,9 @@ function _loop1_107_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_108: lambda_param_no_default
@@ -23767,16 +21112,7 @@ function _loop0_108_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_109: lambda_param_with_default
@@ -23807,19 +21143,9 @@ function _loop1_109_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_110: lambda_param_maybe_default
@@ -23849,16 +21175,7 @@ function _loop0_110_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_111: lambda_param_maybe_default
@@ -23889,19 +21206,9 @@ function _loop1_111_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_112: yield_expr | star_expressions
@@ -23910,8 +21217,7 @@ function _tmp_112_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -23974,16 +21280,7 @@ function _loop0_113_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_114: fstring_middle
@@ -24013,16 +21310,7 @@ function _loop0_114_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_115: (fstring | string)
@@ -24053,19 +21341,9 @@ function _loop1_115_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_116: star_named_expression ',' star_named_expressions?
@@ -24074,8 +21352,7 @@ function _tmp_116_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_named_expression ',' star_named_expressions?
         if (p.error_indicator) {
@@ -24093,10 +21370,6 @@ function _tmp_116_rule(p)
         )
         {
             _res = $B._PyPegen.seq_insert_in_front (p, y, z);
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -24132,26 +21405,12 @@ function _loop0_118_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_117: double_starred_kvpair _loop0_118
@@ -24160,8 +21419,7 @@ function _gather_117_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // double_starred_kvpair _loop0_118
         if (p.error_indicator) {
@@ -24214,19 +21472,9 @@ function _loop1_119_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_120: ('if' disjunction)
@@ -24256,16 +21504,7 @@ function _loop0_120_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_121: ('if' disjunction)
@@ -24295,16 +21534,7 @@ function _loop0_121_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_122: assignment_expression | expression !':='
@@ -24313,8 +21543,7 @@ function _tmp_122_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // assignment_expression
         if (p.error_indicator) {
@@ -24377,26 +21606,12 @@ function _loop0_124_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_123:
@@ -24406,8 +21621,7 @@ function _gather_123_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (starred_expression | (assignment_expression | expression !':=') !'=') _loop0_124
         if (p.error_indicator) {
@@ -24438,8 +21652,7 @@ function _tmp_125_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ',' kwargs
         if (p.error_indicator) {
@@ -24454,10 +21667,6 @@ function _tmp_125_rule(p)
         )
         {
             _res = k;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -24493,26 +21702,12 @@ function _loop0_127_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_126: kwarg_or_starred _loop0_127
@@ -24521,8 +21716,7 @@ function _gather_126_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // kwarg_or_starred _loop0_127
         if (p.error_indicator) {
@@ -24572,26 +21766,12 @@ function _loop0_129_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_128: kwarg_or_double_starred _loop0_129
@@ -24600,8 +21780,7 @@ function _gather_128_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // kwarg_or_double_starred _loop0_129
         if (p.error_indicator) {
@@ -24651,26 +21830,12 @@ function _loop0_131_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_130: kwarg_or_starred _loop0_131
@@ -24679,8 +21844,7 @@ function _gather_130_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // kwarg_or_starred _loop0_131
         if (p.error_indicator) {
@@ -24730,26 +21894,12 @@ function _loop0_133_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_132: kwarg_or_double_starred _loop0_133
@@ -24758,8 +21908,7 @@ function _gather_132_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // kwarg_or_double_starred _loop0_133
         if (p.error_indicator) {
@@ -24811,16 +21960,7 @@ function _loop0_134_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_136: ',' star_target
@@ -24848,26 +21988,12 @@ function _loop0_136_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_135: star_target _loop0_136
@@ -24876,8 +22002,7 @@ function _gather_135_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_target _loop0_136
         if (p.error_indicator) {
@@ -24930,19 +22055,9 @@ function _loop1_137_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_138: !'*' star_target
@@ -24951,8 +22066,7 @@ function _tmp_138_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // !'*' star_target
         if (p.error_indicator) {
@@ -25001,26 +22115,12 @@ function _loop0_140_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_139: del_target _loop0_140
@@ -25029,8 +22129,7 @@ function _gather_139_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // del_target _loop0_140
         if (p.error_indicator) {
@@ -25080,26 +22179,12 @@ function _loop0_142_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_141: expression _loop0_142
@@ -25108,8 +22193,7 @@ function _gather_141_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression _loop0_142
         if (p.error_indicator) {
@@ -25159,26 +22243,12 @@ function _loop0_144_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_143: expression _loop0_144
@@ -25187,8 +22257,7 @@ function _gather_143_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression _loop0_144
         if (p.error_indicator) {
@@ -25238,26 +22307,12 @@ function _loop0_146_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_145: expression _loop0_146
@@ -25266,8 +22321,7 @@ function _gather_145_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression _loop0_146
         if (p.error_indicator) {
@@ -25317,26 +22371,12 @@ function _loop0_148_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_147: expression _loop0_148
@@ -25345,8 +22385,7 @@ function _gather_147_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression _loop0_148
         if (p.error_indicator) {
@@ -25377,8 +22416,7 @@ function _tmp_149_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NEWLINE INDENT
         if (p.error_indicator) {
@@ -25411,8 +22449,7 @@ function _tmp_150_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (','.(starred_expression | (assignment_expression | expression !':=') !'=')+ ',' kwargs)
         if (p.error_indicator) {
@@ -25454,8 +22491,7 @@ function _tmp_151_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // args
         if (p.error_indicator) {
@@ -25500,8 +22536,7 @@ function _tmp_152_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // args ','
         if (p.error_indicator) {
@@ -25532,8 +22567,7 @@ function _tmp_153_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','
         if (p.error_indicator) {
@@ -25575,8 +22609,7 @@ function _tmp_154_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'True'
         if (p.error_indicator) {
@@ -25632,8 +22665,7 @@ function _tmp_155_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NAME '='
         if (p.error_indicator) {
@@ -25664,8 +22696,7 @@ function _tmp_156_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NAME STRING
         if (p.error_indicator) {
@@ -25710,8 +22741,7 @@ function _tmp_157_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'else'
         if (p.error_indicator) {
@@ -25753,8 +22783,7 @@ function _tmp_158_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '='
         if (p.error_indicator) {
@@ -25796,8 +22825,7 @@ function _tmp_159_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // list
         if (p.error_indicator) {
@@ -25895,8 +22923,7 @@ function _tmp_160_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '='
         if (p.error_indicator) {
@@ -25959,16 +22986,7 @@ function _loop0_161_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_162: (star_targets '=')
@@ -25998,16 +23016,7 @@ function _loop0_162_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_163: (star_targets '=')
@@ -26037,16 +23046,7 @@ function _loop0_163_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_164: yield_expr | star_expressions
@@ -26055,8 +23055,7 @@ function _tmp_164_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -26098,8 +23097,7 @@ function _tmp_165_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '['
         if (p.error_indicator) {
@@ -26155,8 +23153,7 @@ function _tmp_166_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '['
         if (p.error_indicator) {
@@ -26198,8 +23195,7 @@ function _tmp_167_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '['
         if (p.error_indicator) {
@@ -26241,8 +23237,7 @@ function _tmp_168_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // slash_no_default
         if (p.error_indicator) {
@@ -26305,16 +23300,7 @@ function _loop0_169_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_170: param_no_default
@@ -26344,16 +23330,7 @@ function _loop0_170_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_171: param_no_default
@@ -26383,16 +23360,7 @@ function _loop0_171_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_172: param_no_default
@@ -26423,19 +23391,9 @@ function _loop1_172_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_173: slash_no_default | slash_with_default
@@ -26444,8 +23402,7 @@ function _tmp_173_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // slash_no_default
         if (p.error_indicator) {
@@ -26508,16 +23465,7 @@ function _loop0_174_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_175: ',' | param_no_default
@@ -26526,8 +23474,7 @@ function _tmp_175_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','
         if (p.error_indicator) {
@@ -26590,16 +23537,7 @@ function _loop0_176_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_177: param_maybe_default
@@ -26630,19 +23568,9 @@ function _loop1_177_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_178: ')' | ','
@@ -26651,8 +23579,7 @@ function _tmp_178_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ')'
         if (p.error_indicator) {
@@ -26694,8 +23621,7 @@ function _tmp_179_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ')'
         if (p.error_indicator) {
@@ -26740,8 +23666,7 @@ function _tmp_180_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param_no_default
         if (p.error_indicator) {
@@ -26804,16 +23729,7 @@ function _loop0_181_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_182: param_no_default | ','
@@ -26822,8 +23738,7 @@ function _tmp_182_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // param_no_default
         if (p.error_indicator) {
@@ -26865,8 +23780,7 @@ function _tmp_183_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '*'
         if (p.error_indicator) {
@@ -26944,19 +23858,9 @@ function _loop1_184_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_185: lambda_slash_no_default | lambda_slash_with_default
@@ -26965,8 +23869,7 @@ function _tmp_185_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_slash_no_default
         if (p.error_indicator) {
@@ -27029,16 +23932,7 @@ function _loop0_186_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_187: lambda_param_no_default
@@ -27068,16 +23962,7 @@ function _loop0_187_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_188: lambda_param_no_default
@@ -27107,16 +23992,7 @@ function _loop0_188_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop0_190: ',' lambda_param
@@ -27144,26 +24020,12 @@ function _loop0_190_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_189: lambda_param _loop0_190
@@ -27172,8 +24034,7 @@ function _gather_189_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param _loop0_190
         if (p.error_indicator) {
@@ -27204,8 +24065,7 @@ function _tmp_191_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_slash_no_default
         if (p.error_indicator) {
@@ -27268,16 +24128,7 @@ function _loop0_192_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_193: ',' | lambda_param_no_default
@@ -27286,8 +24137,7 @@ function _tmp_193_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','
         if (p.error_indicator) {
@@ -27350,16 +24200,7 @@ function _loop0_194_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_195: lambda_param_maybe_default
@@ -27390,19 +24231,9 @@ function _loop1_195_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_196: lambda_param_with_default
@@ -27433,19 +24264,9 @@ function _loop1_196_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_197: ':' | ',' (':' | '**')
@@ -27454,8 +24275,7 @@ function _tmp_197_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':'
         if (p.error_indicator) {
@@ -27500,8 +24320,7 @@ function _tmp_198_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param_no_default
         if (p.error_indicator) {
@@ -27564,16 +24383,7 @@ function _loop0_199_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_200: lambda_param_no_default | ','
@@ -27582,8 +24392,7 @@ function _tmp_200_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // lambda_param_no_default
         if (p.error_indicator) {
@@ -27625,8 +24434,7 @@ function _tmp_201_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '*'
         if (p.error_indicator) {
@@ -27682,8 +24490,7 @@ function _tmp_202_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','
         if (p.error_indicator) {
@@ -27758,26 +24565,12 @@ function _loop0_204_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_203: dotted_name _loop0_204
@@ -27786,8 +24579,7 @@ function _gather_203_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // dotted_name _loop0_204
         if (p.error_indicator) {
@@ -27837,26 +24629,12 @@ function _loop0_206_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_205: (expression ['as' star_target]) _loop0_206
@@ -27865,8 +24643,7 @@ function _gather_205_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (expression ['as' star_target]) _loop0_206
         if (p.error_indicator) {
@@ -27916,26 +24693,12 @@ function _loop0_208_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_207: (expressions ['as' star_target]) _loop0_208
@@ -27944,8 +24707,7 @@ function _gather_207_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (expressions ['as' star_target]) _loop0_208
         if (p.error_indicator) {
@@ -27995,26 +24757,12 @@ function _loop0_210_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_209: (expression ['as' star_target]) _loop0_210
@@ -28023,8 +24771,7 @@ function _gather_209_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (expression ['as' star_target]) _loop0_210
         if (p.error_indicator) {
@@ -28074,26 +24821,12 @@ function _loop0_212_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_211: (expressions ['as' star_target]) _loop0_212
@@ -28102,8 +24835,7 @@ function _gather_211_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (expressions ['as' star_target]) _loop0_212
         if (p.error_indicator) {
@@ -28134,8 +24866,7 @@ function _tmp_213_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'except'
         if (p.error_indicator) {
@@ -28198,16 +24929,7 @@ function _loop0_214_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_215: except_block
@@ -28238,19 +24960,9 @@ function _loop1_215_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_216: 'as' NAME
@@ -28259,8 +24971,7 @@ function _tmp_216_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -28312,16 +25023,7 @@ function _loop0_217_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _loop1_218: except_star_block
@@ -28352,19 +25054,9 @@ function _loop1_218_rule(p)
         p.mark = _mark;
     }
     if (_n == 0 || p.error_indicator) {
-        // PyMem_Free(_children);
         return NULL;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_219: expression ['as' NAME]
@@ -28373,8 +25065,7 @@ function _tmp_219_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression ['as' NAME]
         if (p.error_indicator) {
@@ -28406,8 +25097,7 @@ function _tmp_220_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -28438,8 +25128,7 @@ function _tmp_221_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -28470,8 +25159,7 @@ function _tmp_222_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // NEWLINE
         if (p.error_indicator) {
@@ -28513,8 +25201,7 @@ function _tmp_223_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -28545,8 +25232,7 @@ function _tmp_224_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -28577,8 +25263,7 @@ function _tmp_225_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // positional_patterns ','
         if (p.error_indicator) {
@@ -28609,8 +25294,7 @@ function _tmp_226_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '->' expression
         if (p.error_indicator) {
@@ -28641,8 +25325,7 @@ function _tmp_227_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' arguments? ')'
         if (p.error_indicator) {
@@ -28677,8 +25360,7 @@ function _tmp_228_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '(' arguments? ')'
         if (p.error_indicator) {
@@ -28732,26 +25414,12 @@ function _loop0_230_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_229: double_starred_kvpair _loop0_230
@@ -28760,8 +25428,7 @@ function _gather_229_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // double_starred_kvpair _loop0_230
         if (p.error_indicator) {
@@ -28792,8 +25459,7 @@ function _tmp_231_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '}'
         if (p.error_indicator) {
@@ -28835,8 +25501,7 @@ function _tmp_232_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '}'
         if (p.error_indicator) {
@@ -28878,8 +25543,7 @@ function _tmp_233_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -28921,8 +25585,7 @@ function _tmp_234_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -28964,8 +25627,7 @@ function _tmp_235_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '='
         if (p.error_indicator) {
@@ -29035,8 +25697,7 @@ function _tmp_236_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -29078,8 +25739,7 @@ function _tmp_237_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '!'
         if (p.error_indicator) {
@@ -29135,8 +25795,7 @@ function _tmp_238_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -29178,8 +25837,7 @@ function _tmp_239_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -29221,8 +25879,7 @@ function _tmp_240_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '!' NAME
         if (p.error_indicator) {
@@ -29253,8 +25910,7 @@ function _tmp_241_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':'
         if (p.error_indicator) {
@@ -29296,8 +25952,7 @@ function _tmp_242_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -29339,8 +25994,7 @@ function _tmp_243_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '!' NAME
         if (p.error_indicator) {
@@ -29392,16 +26046,7 @@ function _loop0_244_rule(p)
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _tmp_245: yield_expr | star_expressions
@@ -29410,8 +26055,7 @@ function _tmp_245_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // yield_expr
         if (p.error_indicator) {
@@ -29453,8 +26097,7 @@ function _tmp_246_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '!' NAME
         if (p.error_indicator) {
@@ -29485,8 +26128,7 @@ function _tmp_247_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':'
         if (p.error_indicator) {
@@ -29528,8 +26170,7 @@ function _tmp_248_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_targets '='
         if (p.error_indicator) {
@@ -29544,10 +26185,6 @@ function _tmp_248_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29564,8 +26201,7 @@ function _tmp_249_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '.'
         if (p.error_indicator) {
@@ -29607,8 +26243,7 @@ function _tmp_250_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '.'
         if (p.error_indicator) {
@@ -29650,8 +26285,7 @@ function _tmp_251_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // '@' named_expression NEWLINE
         if (p.error_indicator) {
@@ -29669,10 +26303,6 @@ function _tmp_251_rule(p)
         )
         {
             _res = f;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29689,8 +26319,7 @@ function _tmp_252_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ',' expression
         if (p.error_indicator) {
@@ -29705,10 +26334,6 @@ function _tmp_252_rule(p)
         )
         {
             _res = c;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29725,8 +26350,7 @@ function _tmp_253_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ',' star_expression
         if (p.error_indicator) {
@@ -29741,10 +26365,6 @@ function _tmp_253_rule(p)
         )
         {
             _res = c;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29761,8 +26381,7 @@ function _tmp_254_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'or' conjunction
         if (p.error_indicator) {
@@ -29777,10 +26396,6 @@ function _tmp_254_rule(p)
         )
         {
             _res = c;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29797,8 +26412,7 @@ function _tmp_255_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'and' inversion
         if (p.error_indicator) {
@@ -29813,10 +26427,6 @@ function _tmp_255_rule(p)
         )
         {
             _res = c;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29833,8 +26443,7 @@ function _tmp_256_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // slice
         if (p.error_indicator) {
@@ -29876,8 +26485,7 @@ function _tmp_257_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // fstring
         if (p.error_indicator) {
@@ -29919,8 +26527,7 @@ function _tmp_258_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'if' disjunction
         if (p.error_indicator) {
@@ -29935,10 +26542,6 @@ function _tmp_258_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29955,8 +26558,7 @@ function _tmp_259_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'if' disjunction
         if (p.error_indicator) {
@@ -29971,10 +26573,6 @@ function _tmp_259_rule(p)
         )
         {
             _res = z;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -29991,8 +26589,7 @@ function _tmp_260_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // starred_expression
         if (p.error_indicator) {
@@ -30036,8 +26633,7 @@ function _tmp_261_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ',' star_target
         if (p.error_indicator) {
@@ -30052,10 +26648,6 @@ function _tmp_261_rule(p)
         )
         {
             _res = c;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -30072,8 +26664,7 @@ function _tmp_262_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ',' star_target
         if (p.error_indicator) {
@@ -30088,10 +26679,6 @@ function _tmp_262_rule(p)
         )
         {
             _res = c;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                return NULL;
-            }
             return done();
         }
         p.mark = _mark;
@@ -30109,8 +26696,7 @@ function _tmp_263_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ','.(starred_expression | (assignment_expression | expression !':=') !'=')+ ',' kwargs
         if (p.error_indicator) {
@@ -30144,8 +26730,7 @@ function _tmp_264_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_targets '='
         if (p.error_indicator) {
@@ -30176,8 +26761,7 @@ function _tmp_265_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // star_targets '='
         if (p.error_indicator) {
@@ -30208,8 +26792,7 @@ function _tmp_266_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ')'
         if (p.error_indicator) {
@@ -30251,8 +26834,7 @@ function _tmp_267_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // ':'
         if (p.error_indicator) {
@@ -30294,8 +26876,7 @@ function _tmp_268_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression ['as' star_target]
         if (p.error_indicator) {
@@ -30327,8 +26908,7 @@ function _tmp_269_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expressions ['as' star_target]
         if (p.error_indicator) {
@@ -30360,8 +26940,7 @@ function _tmp_270_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expression ['as' star_target]
         if (p.error_indicator) {
@@ -30393,8 +26972,7 @@ function _tmp_271_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // expressions ['as' star_target]
         if (p.error_indicator) {
@@ -30426,8 +27004,7 @@ function _tmp_272_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' NAME
         if (p.error_indicator) {
@@ -30458,8 +27035,7 @@ function _tmp_273_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // assignment_expression
         if (p.error_indicator) {
@@ -30522,26 +27098,12 @@ function _loop0_275_rule(p)
         )
         {
             _res = elem;
-            if (_res == NULL && PyErr_Occurred()) {
-                p.error_indicator = 1;
-                PyMem_Free(_children);
-                return NULL;
-            }
             _children[_n++] = _res;
             _mark = p.mark;
         }
         p.mark = _mark;
     }
-    var _seq = [];
-    if (!_seq) {
-        PyMem_Free(_children);
-        p.error_indicator = 1;
-        PyErr_NoMemory();
-        return NULL;
-    }
-    for (let i = 0; i < _n; i++){_seq[i] = _children[i]};
-    // PyMem_Free(_children);
-    return _seq;
+    return _children;
 }
 
 // _gather_274:
@@ -30551,8 +27113,7 @@ function _gather_274_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // (starred_expression | (assignment_expression | expression !':=') !'=') _loop0_275
         if (p.error_indicator) {
@@ -30583,8 +27144,7 @@ function _tmp_276_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' star_target
         if (p.error_indicator) {
@@ -30615,8 +27175,7 @@ function _tmp_277_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' star_target
         if (p.error_indicator) {
@@ -30647,8 +27206,7 @@ function _tmp_278_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' star_target
         if (p.error_indicator) {
@@ -30679,8 +27237,7 @@ function _tmp_279_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // 'as' star_target
         if (p.error_indicator) {
@@ -30711,8 +27268,7 @@ function _tmp_280_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // starred_expression
         if (p.error_indicator) {
@@ -30756,8 +27312,7 @@ function _tmp_281_rule(p)
     if (p.error_indicator) {
         return NULL;
     }
-    var _res = {value: NULL};
-    _res = NULL;
+    var _res = NULL;
     var _mark = p.mark;
     { // assignment_expression
         if (p.error_indicator) {
