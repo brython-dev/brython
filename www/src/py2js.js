@@ -8893,13 +8893,16 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         _ast = $B._PyPegen_parse(parser)
         console.log('tokens', parser.tokens)
         if(_ast === undefined){
-            console.log('_ast undef', src)
-            console.log('tokens\n', parser.tokens)
-            alert()
             parser = new $B.Parser(src, filename, 'file')
             parser.call_invalid_rules = true
             $B._PyPegen_parse(parser)
-            console.log('parsed invalid rules')
+            // if invalid rules didn't raise an error, fall back to
+            // SyntaxError
+            var err_token = $B.last(parser.tokens)
+            raise_error_known_location(_b_.SyntaxError,
+                filename, err_token.lineno, err_token.col_offset,
+                err_token.end_lineno, err_token.end_col_offset,
+                err_token.line, 'invalid syntax')
         }
     }else{
         var root = create_root_node({src, filename},

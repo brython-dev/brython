@@ -895,6 +895,7 @@ function statement_newline_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // compound_stmt NEWLINE
@@ -1052,6 +1053,7 @@ function simple_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // assignment
@@ -1464,6 +1466,7 @@ function assignment_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME ':' expression ['=' annotated_rhs]
@@ -1867,6 +1870,7 @@ function return_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'return' star_expressions?
@@ -1910,6 +1914,7 @@ function raise_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'raise' expression ['from' expression]
@@ -1976,6 +1981,7 @@ function global_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'global' ','.NAME+
@@ -2019,6 +2025,7 @@ function nonlocal_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'nonlocal' ','.NAME+
@@ -2062,6 +2069,7 @@ function del_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'del' del_targets &(';' | NEWLINE)
@@ -2121,6 +2129,7 @@ function yield_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // yield_expr
@@ -2161,6 +2170,7 @@ function assert_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'assert' expression [',' expression]
@@ -2263,6 +2273,7 @@ function import_name_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'import' dotted_as_names
@@ -2308,6 +2319,7 @@ function import_from_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'from' (('.' | '...'))* dotted_name 'import' import_from_targets
@@ -2393,6 +2405,7 @@ function import_from_targets_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '(' import_from_as_names ','? ')'
@@ -2515,6 +2528,7 @@ function import_from_as_name_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME ['as' NAME]
@@ -2586,6 +2600,7 @@ function dotted_as_name_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // dotted_name ['as' NAME]
@@ -2851,6 +2866,7 @@ function class_def_raw_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_class_def_raw
@@ -2968,6 +2984,7 @@ function function_def_raw_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_def_raw
@@ -3757,6 +3774,7 @@ function param_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME annotation?
@@ -3800,6 +3818,7 @@ function param_star_annotation_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME star_annotation
@@ -3953,6 +3972,7 @@ function if_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_if_stmt
@@ -4054,6 +4074,7 @@ function elif_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_elif_stmt
@@ -4200,6 +4221,7 @@ function while_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_while_stmt
@@ -4270,6 +4292,7 @@ function for_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_for_stmt
@@ -4421,6 +4444,7 @@ function with_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_with_stmt_indent
@@ -4688,6 +4712,7 @@ function try_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_try_stmt
@@ -4825,6 +4850,7 @@ function except_block_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_except_stmt_indent
@@ -4934,6 +4960,7 @@ function except_star_block_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_except_star_stmt_indent
@@ -5067,6 +5094,7 @@ function match_stmt_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // "match" subject_expr ':' NEWLINE INDENT case_block+ DEDENT
@@ -5139,6 +5167,7 @@ function subject_expr_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // star_named_expression ',' star_named_expressions?
@@ -5284,6 +5313,7 @@ function patterns_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // open_sequence_pattern
@@ -5380,6 +5410,7 @@ function as_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // or_pattern 'as' pattern_capture_target
@@ -5440,6 +5471,7 @@ function or_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '|'.closed_pattern+
@@ -5625,6 +5657,7 @@ function literal_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // signed_number !('+' | '-')
@@ -5773,6 +5806,7 @@ function literal_expr_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // signed_number !('+' | '-')
@@ -5899,6 +5933,7 @@ function complex_number_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // signed_real_number '+' imaginary_number
@@ -5971,6 +6006,7 @@ function signed_number_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NUMBER
@@ -6028,6 +6064,7 @@ function signed_real_number_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // real_number
@@ -6141,6 +6178,7 @@ function capture_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // pattern_capture_target
@@ -6213,6 +6251,7 @@ function wildcard_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // "_"
@@ -6253,6 +6292,7 @@ function value_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // attr !('.' | '(' | '=')
@@ -6324,6 +6364,7 @@ function attr_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // name_or_attr '.' NAME
@@ -6447,6 +6488,7 @@ function sequence_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '[' maybe_sequence_pattern? ']'
@@ -6631,6 +6673,7 @@ function star_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '*' pattern_capture_target
@@ -6702,6 +6745,7 @@ function mapping_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '{' '}'
@@ -6939,6 +6983,7 @@ function class_pattern_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // name_or_attr '(' ')'
@@ -7194,6 +7239,7 @@ function type_alias_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // "type" NAME type_params? '=' expression
@@ -7321,6 +7367,7 @@ function type_param_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME type_param_bound?
@@ -7488,6 +7535,7 @@ function expressions_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // expression ((',' expression))+ ','?
@@ -7581,6 +7629,7 @@ function expression_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_expression
@@ -7690,6 +7739,7 @@ function yield_expr_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'yield' 'from' expression
@@ -7762,6 +7812,7 @@ function star_expressions_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // star_expression ((',' star_expression))+ ','?
@@ -7850,6 +7901,7 @@ function star_expression_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '*' bitwise_or
@@ -7940,6 +7992,7 @@ function star_named_expression_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '*' bitwise_or
@@ -7997,6 +8050,7 @@ function assignment_expression_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME ':=' ~ expression
@@ -8111,6 +8165,7 @@ function disjunction_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // conjunction (('or' conjunction))+
@@ -8173,6 +8228,7 @@ function conjunction_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // inversion (('and' inversion))+
@@ -8235,6 +8291,7 @@ function inversion_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'not' inversion
@@ -8293,6 +8350,7 @@ function comparison_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // bitwise_or compare_op_bitwise_or_pair+
@@ -8859,6 +8917,7 @@ function bitwise_or_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // bitwise_or '|' bitwise_xor
@@ -8948,6 +9007,7 @@ function bitwise_xor_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // bitwise_xor '^' bitwise_and
@@ -9037,6 +9097,7 @@ function bitwise_and_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // bitwise_and '&' shift_expr
@@ -9126,6 +9187,7 @@ function shift_expr_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // shift_expr '<<' sum
@@ -9241,6 +9303,7 @@ function sum_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // sum '+' term
@@ -9362,6 +9425,7 @@ function term_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // term '*' factor
@@ -9530,6 +9594,7 @@ function factor_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '+' factor
@@ -9634,6 +9699,7 @@ function power_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // await_primary '**' factor
@@ -9698,6 +9764,7 @@ function await_primary_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // AWAIT primary
@@ -9790,6 +9857,7 @@ function primary_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // primary '.' NAME
@@ -9931,6 +9999,7 @@ function slices_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // slice !','
@@ -9991,6 +10060,7 @@ function slice_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // expression? ':' expression? [':' expression?]
@@ -10064,6 +10134,7 @@ function atom_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME
@@ -10304,6 +10375,7 @@ function lambdef_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // 'lambda' lambda_params? ':' expression
@@ -10914,6 +10986,7 @@ function lambda_param_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME
@@ -10998,6 +11071,7 @@ function fstring_replacement_field_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '{' (yield_expr | star_expressions) '='? fstring_conversion? fstring_full_format_spec? '}'
@@ -11098,6 +11172,7 @@ function fstring_full_format_spec_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // ':' fstring_format_spec*
@@ -11249,6 +11324,7 @@ function strings_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // ((fstring | string))+
@@ -11290,6 +11366,7 @@ function list_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '[' star_named_expressions? ']'
@@ -11336,6 +11413,7 @@ function tuple_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '(' [star_named_expression ',' star_named_expressions?] ')'
@@ -11382,6 +11460,7 @@ function set_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '{' star_named_expressions '}'
@@ -11428,6 +11507,7 @@ function dict_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '{' double_starred_kvpairs? '}'
@@ -11731,6 +11811,7 @@ function listcomp_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '[' named_expression for_if_clauses ']'
@@ -11794,6 +11875,7 @@ function setcomp_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '{' named_expression for_if_clauses '}'
@@ -11859,6 +11941,7 @@ function genexp_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '(' (assignment_expression | expression !':=') for_if_clauses ')'
@@ -11922,6 +12005,7 @@ function dictcomp_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '{' kvpair for_if_clauses '}'
@@ -12040,6 +12124,7 @@ function args_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // ','.(starred_expression | (assignment_expression | expression !':=') !'=')+ [',' kwargs]
@@ -12168,6 +12253,7 @@ function starred_expression_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_starred_expression
@@ -12225,6 +12311,7 @@ function kwarg_or_starred_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_kwarg
@@ -12299,6 +12386,7 @@ function kwarg_or_double_starred_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     if (p.call_invalid_rules) { // invalid_kwarg
@@ -12382,6 +12470,7 @@ function star_targets_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // star_target !','
@@ -12533,6 +12622,7 @@ function star_target_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // '*' (!'*' star_target)
@@ -12598,6 +12688,7 @@ function target_with_star_atom_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // t_primary '.' NAME !t_lookahead
@@ -12696,6 +12787,7 @@ function star_atom_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME
@@ -12866,6 +12958,7 @@ function single_subscript_attribute_target_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // t_primary '.' NAME !t_lookahead
@@ -12979,6 +13072,7 @@ function t_primary_raw(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // t_primary '.' NAME &t_lookahead
@@ -13225,6 +13319,7 @@ function del_target_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // t_primary '.' NAME !t_lookahead
@@ -13319,6 +13414,7 @@ function del_t_atom_rule(p)
         p.error_indicator = 1;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // NAME
@@ -13940,6 +14036,7 @@ function expression_without_invalid_rule(p)
         p.call_invalid_rules = _prev_call_invalid;
         return NULL;
     }
+    var EXTRA = {}
     EXTRA.lineno = p.tokens[_mark].lineno;
     EXTRA.col_offset = p.tokens[_mark].col_offset;
     { // disjunction 'if' disjunction 'else' expression

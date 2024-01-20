@@ -379,6 +379,59 @@ _b_.compile = function() {
             res.$js_ast = _ast
             return res
         }
+    }else if($B.py_tokens){
+        // generated PEG parser
+        try{
+            var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
+            parser = new $B.Parser($.source, filename, parser_mode)
+            _ast = $B._PyPegen_parse(parser)
+            if(_ast === undefined){
+                parser = new $B.Parser(src, filename, 'file')
+                parser.call_invalid_rules = true
+                $B._PyPegen_parse(parser)
+                // if invalid rules didn't raise an error, fall back to
+                // SyntaxError
+                var err_token = $B.last(parser.tokens)
+                $B.raise_error_known_location(_b_.SyntaxError,
+                    filename, err_token.lineno, err_token.col_offset,
+                    err_token.end_lineno, err_token.end_col_offset,
+                    err_token.line, 'invalid syntax')
+            }      
+        }catch(err){
+            if($.mode == 'single'){
+                try{
+                    parser.tokens.next // throws an exception if tokenizer exhausted
+                }catch(err2){
+                    // special case
+                    var tokens = parser.tokens,
+                        tester = tokens[tokens.length - 2]
+                    if((tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
+                            tester.type == "DEDENT" && ($.flags & 0x200)){
+                        err.__class__ = _b_.SyntaxError
+                        err.args[0] = 'incomplete input'
+                    }
+                }
+            }
+            throw err
+        }
+        if($.mode == 'single' && _ast.body.length == 1 &&
+                _ast.body[0] instanceof $B.ast.Expr){
+            // If mode is 'single' and the source is a single expression,
+            // set _ast to an Expression and set attribute .single_expression
+            // to compile() result. This is used in exec() to print the
+            // expression if it is not None
+            parser = new $B.Parser($.source, filename, 'eval')
+            _ast = parser.parse()
+            $.single_expression = true
+        }
+
+        if($.flags == $B.PyCF_ONLY_AST){
+            delete $B.url2name[filename]
+            let res = $B.ast_js_to_py(_ast)
+            res.$js_ast = _ast
+            return res
+        }
+
     }else{
         var root = $B.parser.create_root_node(
                 {src: $.source, filename},
@@ -745,13 +798,14 @@ var $$eval = _b_.eval = function(){
                 var parser = new $B.Parser(src, filename, _mode)
                 _ast = $B._PyPegen_parse(parser)
                 if(_ast === undefined){
-                    console.log('_ast undef', src)
-                    console.log('tokens\n', parser.tokens)
-                    alert()
                     parser = new $B.Parser(src, filename, 'file')
                     parser.call_invalid_rules = true
                     $B._PyPegen_parse(parser)
-                    console.log('parsed invalid rules')
+                    var err_token = $B.last(parser.tokens)
+                    $B.raise_error_known_location(_b_.SyntaxError,
+                        filename, err_token.lineno, err_token.col_offset,
+                        err_token.end_lineno, err_token.end_col_offset,
+                        err_token.line, 'invalid syntax')
                 }
             }else{
                 var root = $B.parser.create_root_node(src, '<module>', frame[0], frame[2],
@@ -798,8 +852,6 @@ var $$eval = _b_.eval = function(){
              `}`
     }
 
-    console.log('eval js\n', $B.format_indent(js, 0))
-    
     try{
         var exec_func = new Function('$B', '_b_',
                                      local_name, global_name,

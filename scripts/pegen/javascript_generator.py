@@ -610,6 +610,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             self.print("p.error_indicator = 1;")
             self.add_return("NULL")
         self.print("}")
+        self.print("var EXTRA = {}")
         self.print("EXTRA.lineno = p.tokens[_mark].lineno;")
         self.print("EXTRA.col_offset = p.tokens[_mark].col_offset;")
 
