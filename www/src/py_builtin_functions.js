@@ -735,13 +735,25 @@ var $$eval = _b_.eval = function(){
     }
 
     try{
-        if($B.parser_to_ast){
-            if(! _ast){
+        if(! _ast){
+            if($B.parser_to_ast){
                 var _mode = mode == 'eval' ? 'eval' : 'file'
                 _ast = new $B.Parser(src, filename, _mode).parse()
-            }
-        }else{
-            if(! _ast){
+            }else if($B.py_tokens){
+                // generated PEG parser
+                var _mode = mode == 'eval' ? 'eval' : 'file'
+                var parser = new $B.Parser(src, filename, _mode)
+                _ast = $B._PyPegen_parse(parser)
+                if(_ast === undefined){
+                    console.log('_ast undef', src)
+                    console.log('tokens\n', parser.tokens)
+                    alert()
+                    parser = new $B.Parser(src, filename, 'file')
+                    parser.call_invalid_rules = true
+                    $B._PyPegen_parse(parser)
+                    console.log('parsed invalid rules')
+                }
+            }else{
                 var root = $B.parser.create_root_node(src, '<module>', frame[0], frame[2],
                         1)
                 root.mode = mode
@@ -785,6 +797,9 @@ var $$eval = _b_.eval = function(){
                  `_b_.print(result)\n` +
              `}`
     }
+
+    console.log('eval js\n', $B.format_indent(js, 0))
+    
     try{
         var exec_func = new Function('$B', '_b_',
                                      local_name, global_name,

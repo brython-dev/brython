@@ -347,6 +347,7 @@ var Parser = $B.Parser = function(src, filename, mode){
 }
 
 Parser.prototype.parse = function(){
+    console.log('parse')
     if(this.src.trim().length == 0){
         // eg empty __init__.py
         return new $B.ast.Module([])
@@ -415,7 +416,7 @@ Parser.prototype.get_memo = function(rule, position){
 var ignored = [$B.py_tokens.ENCODING,
     $B.py_tokens.NL,
     $B.py_tokens.COMMENT]
-    
+
 Parser.prototype.read_token = function(){
     while(true){
         var next = this.tokenizer.next()

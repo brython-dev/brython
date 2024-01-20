@@ -218,7 +218,7 @@ $B._PyPegen.formatted_value = function(p,
     var formatted_value = new $B.ast.FormattedValue(expression,
         conversion_val,
         format === undefined ? format : format.result)
-    set_position_from_obj(formatted_value, p.arena)
+    set_position_from_obj(formatted_value, arena)
     if(debug){
         var debug_end_line,
             debug_end_offset,

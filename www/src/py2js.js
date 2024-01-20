@@ -8886,12 +8886,28 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     if($B.parser_to_ast){
         console.log('use standard parser')
         _ast = new $B.Parser(src, filename, 'file').parse()
+    }else if($B.py_tokens){
+        // generated PEG parser
+        console.log('use generated PEG parser')
+        var parser = new $B.Parser(src, filename, 'file')
+        _ast = $B._PyPegen_parse(parser)
+        console.log('tokens', parser.tokens)
+        if(_ast === undefined){
+            console.log('_ast undef', src)
+            console.log('tokens\n', parser.tokens)
+            alert()
+            parser = new $B.Parser(src, filename, 'file')
+            parser.call_invalid_rules = true
+            $B._PyPegen_parse(parser)
+            console.log('parsed invalid rules')
+        }
     }else{
         var root = create_root_node({src, filename},
                                      module, locals_id, parent_scope)
         dispatch_tokens(root)
         _ast = root.ast()
     }
+    // console.log('_ast', _ast)
     $B.parse_time += globalThis.performance.now() - t0
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)

@@ -101,9 +101,7 @@ const Store = new $B.ast.Store(),
 
 const EXTRA = {}
 const n_keyword_lists = 9;
-const reserved_keywords = {
-    NULL: -1,
-    NULL: -1,
+const _reserved_keywords = {
     if: 642,
     as: 640,
     in: 651,
@@ -138,6 +136,10 @@ const reserved_keywords = {
     continue: 509,
     nonlocal: 524,
 };
+const reserved_keywords = Object.create(null)
+for(var item of Object.entries(_reserved_keywords)){
+  reserved_keywords[item[0]] = item[1]
+}
 const soft_keywords = [
     "_",
     "case",
@@ -27358,6 +27360,11 @@ $B._PyPegen_parse = function(p){
     // skip first token (ENCODING)
     p.tok.next()
 
-    return file_rule(p)
+    switch(p.mode){
+        case 'file':
+            return file_rule(p)
+        case 'eval':
+            return eval_rule(p)
+    }
 
 }

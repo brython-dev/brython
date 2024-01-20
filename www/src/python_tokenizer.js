@@ -153,11 +153,17 @@ function Token(type, string, start, end, line){
         res.num_type = $B.py_tokens[type]
         if(type == 'OP'){
             res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
+        }else if(type == 'NAME' && ['async', 'await'].includes(string)){
+            res.num_type = $B.py_tokens[string.toUpperCase()]
         }
         res.lineno = start[0]
         res.col_offset = start[1]
         res.end_lineno = end[0]
         res.end_col_offset = end[1]
+        if(res.num_type == -1){
+            console.log('res', res)
+            alert()
+        }
     }else{
         res = {type, string, start, end, line}
         res[0] = type

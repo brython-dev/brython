@@ -55,6 +55,7 @@ body,td,th{
 <!-- scripts for PEG parser -->
 <script type="text/javascript" src="/src/action_helpers_generated_version.js"></script>
 <script type="text/javascript" src="/src/string_parser.js"></script>
+<script type="text/javascript" src="/src/number_parser.js"></script>
 <script type="text/javascript" src="/src/python_parser_peg_version.js"></script>
 <script type="text/javascript" src="/src/pegen.js"></script>
 <script type="text/javascript" src="/src/gen_parse.js"></script>
@@ -81,9 +82,16 @@ function parse(filename, src){
         parser = new $B.Parser(src, filename, 'file')
         parser.call_invalid_rules = true
         $B._PyPegen_parse(parser)
+    }else{
+      var imported
+      var future = $B.future_features(_ast, filename)
+      var symtable = $B._PySymtable_Build(_ast, filename, future)
+      var js_obj = $B.js_from_root({ast: _ast,
+                                    symtable,
+                                    filename,
+                                    imported})
+      console.log('conv to js ok, length', js_obj)
     }
-    console.log(filename, 'parsed in', window.performance.now() - t0, 'ms')
-    console.log('nb tokens', parser.tokens.length)
 }
 
 </script>

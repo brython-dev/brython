@@ -143,7 +143,12 @@ $B._PyPegen_parse = function(p){
     // skip first token (ENCODING)
     p.tok.next()
 
-    return file_rule(p)
+    switch(p.mode){
+        case 'file':
+            return file_rule(p)
+        case 'eval':
+            return eval_rule(p)
+    }
 
 }
 """
@@ -577,20 +582,18 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         )
         self.print(f"const n_keyword_lists = {n_keyword_lists};")
         groups = self._group_keywords_by_length()
-        self.print("const reserved_keywords = {")
+        self.print("const _reserved_keywords = {")
         with self.indent():
             num_groups = max(groups) + 1 if groups else 1
             for keywords_length in range(num_groups):
-                if keywords_length not in groups.keys():
-                    self.print("NULL: -1,")
-                else:
-                    # self.print("(KeywordToken[]) {")
-                    # with self.indent():
+                if keywords_length in groups.keys():
                     for keyword_str, keyword_type in groups[keywords_length]:
                         self.print(f'{keyword_str}: {keyword_type},')
-                        # self.print("{NULL, -1},")
-                    # self.print("},")
         self.print("};")
+        self.print("const reserved_keywords = Object.create(null)")
+        self.print("for(var item of Object.entries(_reserved_keywords)){")
+        self.print("  reserved_keywords[item[0]] = item[1]")
+        self.print("}")
 
     def _setup_soft_keywords(self) -> None:
         soft_keywords = sorted(self.soft_keywords)

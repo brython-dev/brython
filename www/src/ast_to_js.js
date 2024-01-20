@@ -1540,7 +1540,11 @@ $B.ast.Constant.prototype.to_js = function(){
     }else if(this.value.__class__ === _b_.bytes){
         return `_b_.bytes.$factory([${this.value.source}])`
     }else if(typeof this.value == "number"){
-        return this.value
+        if(Number.isInteger(this.value)){
+            return this.value
+        }else{
+            return `({__class__: _b_.float, value: ${this.value}})`
+        }
     }else if(this.value.__class__ === $B.long_int){
         return `$B.fast_long_int(${this.value.value}n)`
     }else if(this.value.__class__ === _b_.float){

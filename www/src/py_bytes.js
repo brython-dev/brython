@@ -1888,6 +1888,8 @@ function fast_bytes(t){
     }
 }
 
+$B.fast_bytes = fast_bytes
+
 bytes.$factory = function(){
     return bytes.__new__.bind(null, bytes).apply(null, arguments)
 }

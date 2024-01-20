@@ -57,7 +57,10 @@ function PyUnicode_IS_ASCII(char){
 }
 
 function PyBytes_FromStringAndSize(s){
-    return $B.builtins.str.encode(s, 'iso-8859-1')
+    var dest = new Uint8Array(s.length * 3)
+    var encoder = new TextEncoder()
+    var result = encoder.encodeInto(s, dest)
+    return $B.fast_bytes(Array.from(dest.slice(0, result.written)))
 }
 
 function _PyArena_AddPyObject(arena, obj){
@@ -245,6 +248,11 @@ function initialize_token(p, parser_token, new_token, token_type) {
     // assert(parser_token != NULL);
 
     parser_token.num_type = (token_type == NAME) ? _get_keyword_or_name_type(p, new_token) : token_type;
+    if(parser_token.num_type == -1){
+        console.log('bizarre', new_token)
+        console.log('keywords', p.keywords)
+        alert()
+    }
     parser_token.bytes = PyBytes_FromStringAndSize(new_token.string)
 
     _PyArena_AddPyObject(p.arena, parser_token.bytes)
@@ -590,7 +598,21 @@ $B._PyPegen.soft_keyword_token = function(p) {
     return NULL;
 }
 
+function prepared_number_value(prepared){
+    switch(prepared.type){
+        case 'float':
+            return parseFloat(prepared.value)
+        case 'imaginary':
+            return $B.make_complex(0, prepared_number_value(prepared.value))
+        case 'int':
+            return parseInt(prepared.value[1], prepared.value[0])
+    }
+}
+
 function parsenumber_raw(s){
+    var prepared = $B.prepare_number(s) // in number_parser.js
+    return prepared_number_value(prepared)
+    /*
     var nd,
         x,
         dx,
@@ -599,8 +621,9 @@ function parsenumber_raw(s){
 
     // assert(s != NULL);
     errno = 0;
-    end = s + strlen(s) - 1;
-    imflag = end == 'j' || end == 'J';
+    end = strlen(s) - 1;
+    console.log('end', end, 'last', s[end])
+    imflag = s[end] == 'j' || s[end] == 'J';
     if (s[0] == '0') {
         x = PyOS_strtoul(s, end, 0);
         if (x < 0 && errno == 0) {
@@ -615,7 +638,6 @@ function parsenumber_raw(s){
         }
         return PyLong_FromLong(x);
     }
-    /* XXX Huge floats may silently fail */
     if (imflag) {
         compl.real = 0.;
         compl.imag = PyOS_string_to_double(s, end, NULL);
@@ -629,6 +651,7 @@ function parsenumber_raw(s){
         return NULL;
     }
     return PyFloat_FromDouble(dx);
+    */
 }
 
 function parsenumber(s){
@@ -666,7 +689,7 @@ $B._PyPegen.number_token = function(p){
     }
 
     var c = parsenumber(num_raw);
-
+    
     if (c == NULL) {
         p.error_indicator = 1;
         var tstate = _PyThreadState_GET();
