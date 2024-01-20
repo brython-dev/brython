@@ -155,12 +155,14 @@ function Token(type, string, start, end, line){
             res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
         }else if(type == 'NAME' && ['async', 'await'].includes(string)){
             res.num_type = $B.py_tokens[string.toUpperCase()]
+        }else if(type == 'ENCODING'){
+            res.num_type = $B.py_tokens.ENCODING
         }
         res.lineno = start[0]
         res.col_offset = start[1]
         res.end_lineno = end[0]
         res.end_col_offset = end[1]
-        if(res.num_type == -1){
+        if(res.num_type === undefined){
             console.log('res', res)
             alert()
         }
@@ -664,13 +666,10 @@ $B.tokenizer = function*(src, filename, mode){
                         var mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
                         if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
                             if(pos == src.length - 1){
-                                yield Token('ERRORTOKEN', char,
-                                    [line_num, pos - line_start],
-                                    [line_num, pos - line_start + 1], line)
-                                var token_name = braces.length > 0 ? 'NL': 'NEWLINE'
-                                yield Token(token_name, mo[0],
-                                    [line_num, pos - line_start],
-                                    [line_num, pos - line_start + mo[0].length], line)
+                                var msg = 'unexpected EOF while parsing'
+                                $B.raise_error_known_location(_b_.SyntaxError,
+                                    filename, line_num, pos - line_start, line_num, pos - line_start + 1,
+                                    line, msg)
                             }
                             line_num++
                             pos += mo[0].length

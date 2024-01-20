@@ -135,13 +135,11 @@ const EXTRA = {}
 
 
 EXTENSION_SUFFIX = """
-$B._PyPegen_parse = function(p){
+$B._PyPegen.parse = function(p){
+    console.log('parse, p', p)
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
-
-    // skip first token (ENCODING)
-    p.tok.next()
 
     switch(p.mode){
         case 'file':
@@ -149,7 +147,6 @@ $B._PyPegen_parse = function(p){
         case 'eval':
             return eval_rule(p)
     }
-
 }
 """
 

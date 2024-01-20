@@ -601,11 +601,24 @@ $B._PyPegen.soft_keyword_token = function(p) {
 function prepared_number_value(prepared){
     switch(prepared.type){
         case 'float':
-            return parseFloat(prepared.value)
+            return $B.fast_float(prepared.value)
         case 'imaginary':
             return $B.make_complex(0, prepared_number_value(prepared.value))
         case 'int':
-            return parseInt(prepared.value[1], prepared.value[0])
+            var res = parseInt(prepared.value[1], prepared.value[0])
+            if(! Number.isSafeInteger(res)){
+                var base = prepared.value[0],
+                    num_str = prepared.value[1]
+                switch(base){
+                    case 8:
+                        return $B.fast_long_int(BigInt('0x' + num_str))
+                    case 10:
+                        return $B.fast_long_int(BigInt(num_str))
+                    case 16:
+                        return $B.fast_long_int(BigInt('0x' + num_str))
+                }
+            }
+            return res
     }
 }
 
@@ -689,7 +702,7 @@ $B._PyPegen.number_token = function(p){
     }
 
     var c = parsenumber(num_raw);
-    
+
     if (c == NULL) {
         p.error_indicator = 1;
         var tstate = _PyThreadState_GET();
@@ -851,7 +864,7 @@ function reset_parser_state_for_error_pass(p){
     p.call_invalid_rules = 1;
     // Don't try to get extra tokens in interactive mode when trying to
     // raise specialized errors in the second pass.
-    p.tok.interactive_underflow = IUNDERFLOW_STOP;
+    // p.tok.interactive_underflow = IUNDERFLOW_STOP;
 }
 
 function _is_end_of_source(p) {
@@ -863,6 +876,7 @@ $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
     // assert(p->level == 0);
     if (res == NULL) {
+        /*
         if ((p.flags & PyPARSE_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
             PyErr_Clear();
             return RAISE_SYNTAX_ERROR("incomplete input");
@@ -870,15 +884,17 @@ $B._PyPegen.run_parser = function(p){
         if (PyErr_Occurred() && !PyErr_ExceptionMatches(PyExc_SyntaxError)) {
             return NULL;
         }
+        */
        // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"
         // rules will be active during parsing.
         var last_token = p.tokens[p.fill - 1];
         reset_parser_state_for_error_pass(p);
-        _PyPegen_parse(p);
+        $B._PyPegen.parse(p);
 
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
+        console.log('error', p)
         _Pypegen_set_syntax_error(p, last_token);
        return NULL;
     }
@@ -890,14 +906,16 @@ $B._PyPegen.run_parser = function(p){
 
     // test_peg_generator defines _Py_TEST_PEGEN to not call PyAST_Validate()
 // #if defined(Py_DEBUG) && !defined(_Py_TEST_PEGEN)
-    if (p.start_rule == Py_single_input ||
-        p.start_rule == Py_file_input ||
-        p.start_rule == Py_eval_input)
+    /*
+    if (p.mode == 'single' ||
+        p.mode == 'file' ||
+        p.mode == 'eval')
     {
         if (!_PyAST_Validate(res)) {
             return NULL;
         }
     }
+    */
 // #endif
     return res;
 }

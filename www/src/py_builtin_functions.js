@@ -386,7 +386,7 @@ _b_.compile = function() {
             parser = new $B.Parser($.source, filename, parser_mode)
             _ast = $B._PyPegen_parse(parser)
             if(_ast === undefined){
-                parser = new $B.Parser(src, filename, 'file')
+                parser = new $B.Parser(src, filename, parser_mode)
                 parser.call_invalid_rules = true
                 $B._PyPegen_parse(parser)
                 // if invalid rules didn't raise an error, fall back to
@@ -396,7 +396,7 @@ _b_.compile = function() {
                     filename, err_token.lineno, err_token.col_offset,
                     err_token.end_lineno, err_token.end_col_offset,
                     err_token.line, 'invalid syntax')
-            }      
+            }
         }catch(err){
             if($.mode == 'single'){
                 try{
@@ -795,10 +795,13 @@ var $$eval = _b_.eval = function(){
             }else if($B.py_tokens){
                 // generated PEG parser
                 var _mode = mode == 'eval' ? 'eval' : 'file'
+                console.log('eval with gen parser, _mode', _mode)
                 var parser = new $B.Parser(src, filename, _mode)
-                _ast = $B._PyPegen_parse(parser)
+                _ast = $B._PyPegen.run_parser(parser)
+                console.log('_ast', _ast)
+                /*
                 if(_ast === undefined){
-                    parser = new $B.Parser(src, filename, 'file')
+                    parser = new $B.Parser(src, filename, _mode)
                     parser.call_invalid_rules = true
                     $B._PyPegen_parse(parser)
                     var err_token = $B.last(parser.tokens)
@@ -807,6 +810,7 @@ var $$eval = _b_.eval = function(){
                         err_token.end_lineno, err_token.end_col_offset,
                         err_token.line, 'invalid syntax')
                 }
+                */
             }else{
                 var root = $B.parser.create_root_node(src, '<module>', frame[0], frame[2],
                         1)

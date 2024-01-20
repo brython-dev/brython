@@ -284,8 +284,10 @@ $B._PyPegen.seq_count_dots = function(seq){
     }
     var number_of_dots = 0;
     for(var token of seq){
-        if(token.type == 'OP'){
+        if(token.num_type == $B.py_tokens.DOT){
             number_of_dots += token.string.length
+        }else if(token.num_type == $B.py_tokens.ELLIPSIS){
+            number_of_dots += 3
         }
     }
 

@@ -77,6 +77,10 @@ fetch(filename).then(function(ev){
 function parse(filename, src){
     var t0 = window.performance.now()
     var parser = new $B.Parser(src, filename, 'file')
+    var _ast = $B._PyPegen.run_parser(parser)
+    console.log(_ast)
+    
+    /*
     var _ast = $B._PyPegen_parse(parser)
     if(_ast === undefined){
         parser = new $B.Parser(src, filename, 'file')
@@ -92,6 +96,7 @@ function parse(filename, src){
                                     imported})
       console.log('conv to js ok, length', js_obj)
     }
+    */
 }
 
 </script>
