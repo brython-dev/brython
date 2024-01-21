@@ -92,6 +92,8 @@ function parse(filename, src){
                                     imported})
       console.log('conv to js ok, length', js_obj)
     }
+    var t1 = window.performance.now()
+    console.log(t1 - t0, 'ms');
 }
 
 </script>
