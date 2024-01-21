@@ -460,9 +460,11 @@ $B._PyPegen.get_expr_name = function(e){
         case 'NamedExpr':
             return "named expression";
         default:
+            /*
             PyErr_Format(PyExc_SystemError,
                          "unexpected expression in assignment %d (line %d)",
                          e.kind, e.lineno);
+            */
             return NULL;
     }
 }
@@ -629,7 +631,7 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
     var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1];
     var va = errmsg
     $B._PyPegen.raise_error_known_location(p, errtype,
-        t.start[0], t.start[1], t.end[0], t.end[1], errmsg, va);
+        t.lineno, t.col_offset, t.end_lineno, t.end_col_offset, errmsg, va);
 }
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
@@ -638,10 +640,10 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
     exc.filename = p.filename
     if(p.known_err_token){
         var token = p.known_err_token
-        exc.lineno = token.start[0]
-        exc.offset = token.start[1] + 1
-        exc.end_lineno = token.end[0]
-        exc.end_offset = token.end[1]
+        exc.lineno = token.lineno
+        exc.offset = token.col_offset + 1
+        exc.end_lineno = token.end_lineno
+        exc.end_offset = token.end_col_offset
         exc.text = token.line
     }else{
         exc.lineno = lineno

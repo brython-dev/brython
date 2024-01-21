@@ -173,7 +173,7 @@ var helper_functions = {
         return NULL;
     },
 
-    RAISE_SYNTAX_ERROR: function(msg){
+    RAISE_SYNTAX_ERROR: function(p, msg){
         var extra_args = []
         for(var i = 1, len = arguments.length; i < len; i++){
             extra_args.push(arguments[i])
@@ -183,7 +183,7 @@ var helper_functions = {
     },
 
 
-    RAISE_INDENTATION_ERROR: function(msg, arg){
+    RAISE_INDENTATION_ERROR: function(p, msg, arg){
         if(arg !== undefined){
             msg = _b_.str.__mod__(msg, arg)
         }
@@ -203,7 +203,7 @@ var helper_functions = {
         $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
     },
 
-    RAISE_SYNTAX_ERROR_KNOWN_LOCATION: function(a, err_msg, arg){
+    RAISE_SYNTAX_ERROR_KNOWN_LOCATION: function(p, a, err_msg, arg){
         if(arg !== undefined){
             err_msg = _b_.str.__mod__(err_msg, arg)
         }
@@ -214,7 +214,7 @@ var helper_functions = {
             err_msg)
     },
 
-    RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(a, b, msg){
+    RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(p, a, b, msg){
         var extra_args = arguments[3]
         helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             a.lineno, a.col_offset,
@@ -223,7 +223,7 @@ var helper_functions = {
     },
 
 
-    RAISE_SYNTAX_ERROR_INVALID_TARGET: function(type, e){
+    RAISE_SYNTAX_ERROR_INVALID_TARGET: function(p, type, e){
         return helper_functions._RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e)
     },
 
@@ -239,6 +239,7 @@ var helper_functions = {
                 msg = "cannot delete %s";
             }
             return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+                p,
                 invalid_target,
                 msg,
                 $B._PyPegen.get_expr_name(invalid_target)
@@ -247,8 +248,8 @@ var helper_functions = {
         return NULL;
     },
 
-    RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN: function(msg){
-        return helper_functions.RAISE_SYNTAX_ERROR(msg)
+    RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN: function(p, msg){
+        return helper_functions.RAISE_SYNTAX_ERROR(p, msg)
     },
 
     asdl_seq_LEN: (t) => t.length,

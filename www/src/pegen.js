@@ -895,8 +895,10 @@ $B._PyPegen.run_parser = function(p){
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
         console.log('error', p)
-        _Pypegen_set_syntax_error(p, last_token);
-       return NULL;
+        $B.raise_error_known_location(_b_.SyntaxError, p.filename,
+            last_token.lineno, last_token.col_offset,
+            last_token.end_lineno, last_token.end_col_offset,
+            last_token.line, 'invalid syntax')
     }
 
     if (p.start_rule == Py_single_input && bad_single_statement(p)) {

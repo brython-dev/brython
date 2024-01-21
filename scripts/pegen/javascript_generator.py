@@ -136,7 +136,6 @@ const EXTRA = {}
 
 EXTENSION_SUFFIX = """
 $B._PyPegen.parse = function(p){
-    console.log('parse, p', p)
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
@@ -691,6 +690,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             if self.debug:
                 self.print(f'D(fprintf(stderr, "Fail at %d: {node.name}\\n", p.mark));')
             self.print("_res = NULL;")
+            self.print("return done()")
         self.print("  function done(){")
 
         with self.indent():

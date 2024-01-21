@@ -700,6 +700,7 @@ function file_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -728,6 +729,7 @@ function interactive_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -762,6 +764,7 @@ function eval_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -808,6 +811,7 @@ function func_type_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -836,6 +840,7 @@ function statements_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -878,6 +883,7 @@ function statement_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -964,6 +970,7 @@ function statement_newline_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1018,6 +1025,7 @@ function simple_stmts_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1295,6 +1303,7 @@ function simple_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, simple_stmt_type, _res);
     return _res;
@@ -1444,6 +1453,7 @@ function compound_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1602,6 +1612,7 @@ function assignment_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1644,6 +1655,7 @@ function annotated_rhs_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1853,6 +1865,7 @@ function augassign_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1897,6 +1910,7 @@ function return_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -1964,6 +1978,7 @@ function raise_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2008,6 +2023,7 @@ function global_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2052,6 +2068,7 @@ function nonlocal_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2112,6 +2129,7 @@ function del_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2153,6 +2171,7 @@ function yield_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2200,6 +2219,7 @@ function assert_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2256,6 +2276,7 @@ function import_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2300,6 +2321,7 @@ function import_name_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2384,6 +2406,7 @@ function import_from_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2483,6 +2506,7 @@ function import_from_targets_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2511,6 +2535,7 @@ function import_from_as_names_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2555,6 +2580,7 @@ function import_from_as_name_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2583,6 +2609,7 @@ function dotted_as_names_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2627,6 +2654,7 @@ function dotted_as_name_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2704,6 +2732,7 @@ function dotted_name_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2773,6 +2802,7 @@ function block_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, block_type, _res);
     return _res;
@@ -2802,6 +2832,7 @@ function decorators_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2847,6 +2878,7 @@ function class_def_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2919,6 +2951,7 @@ function class_def_raw_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -2964,6 +2997,7 @@ function function_def_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3099,6 +3133,7 @@ function function_def_raw_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3141,6 +3176,7 @@ function params_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3254,6 +3290,7 @@ function parameters_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3307,6 +3344,7 @@ function slash_no_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3368,6 +3406,7 @@ function slash_with_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3484,6 +3523,7 @@ function star_etc_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3529,6 +3569,7 @@ function kwds_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3582,6 +3623,7 @@ function param_no_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3637,6 +3679,7 @@ function param_no_default_star_annotation_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3696,6 +3739,7 @@ function param_with_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3757,6 +3801,7 @@ function param_maybe_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3801,6 +3846,7 @@ function param_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3845,6 +3891,7 @@ function param_star_annotation_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3876,6 +3923,7 @@ function annotation_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3907,6 +3955,7 @@ function star_annotation_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -3952,6 +4001,7 @@ function default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4054,6 +4104,7 @@ function if_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4156,6 +4207,7 @@ function elif_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4204,6 +4256,7 @@ function else_block_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4271,6 +4324,7 @@ function while_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4421,6 +4475,7 @@ function for_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4624,6 +4679,7 @@ function with_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4691,6 +4747,7 @@ function with_item_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4829,6 +4886,7 @@ function try_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -4940,6 +4998,7 @@ function except_block_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5027,6 +5086,7 @@ function except_star_block_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5075,6 +5135,7 @@ function finally_block_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5150,6 +5211,7 @@ function match_stmt_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5211,6 +5273,7 @@ function subject_expr_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5265,6 +5328,7 @@ function case_block_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5296,6 +5360,7 @@ function guard_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5351,6 +5416,7 @@ function patterns_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5393,6 +5459,7 @@ function pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5454,6 +5521,7 @@ function as_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5495,6 +5563,7 @@ function or_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5633,6 +5702,7 @@ function closed_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, closed_pattern_type, _res);
     return _res;
@@ -5783,6 +5853,7 @@ function literal_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5914,6 +5985,7 @@ function literal_expr_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -5989,6 +6061,7 @@ function complex_number_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6047,6 +6120,7 @@ function signed_number_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6105,6 +6179,7 @@ function signed_real_number_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6133,6 +6208,7 @@ function real_number_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6161,6 +6237,7 @@ function imaginary_number_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6202,6 +6279,7 @@ function capture_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6234,6 +6312,7 @@ function pattern_capture_target_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6275,6 +6354,7 @@ function wildcard_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6318,6 +6398,7 @@ function value_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6394,6 +6475,7 @@ function attr_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6437,6 +6519,7 @@ function name_or_attr_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6471,6 +6554,7 @@ function group_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6544,6 +6628,7 @@ function sequence_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6578,6 +6663,7 @@ function open_sequence_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6610,6 +6696,7 @@ function maybe_sequence_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6652,6 +6739,7 @@ function maybe_star_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6723,6 +6811,7 @@ function star_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, star_pattern_type, _res);
     return _res;
@@ -6868,6 +6957,7 @@ function mapping_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6896,6 +6986,7 @@ function items_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6930,6 +7021,7 @@ function key_value_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -6961,6 +7053,7 @@ function double_star_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7132,6 +7225,7 @@ function class_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7160,6 +7254,7 @@ function positional_patterns_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7188,6 +7283,7 @@ function keyword_patterns_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7222,6 +7318,7 @@ function keyword_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7275,6 +7372,7 @@ function type_alias_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7309,6 +7407,7 @@ function type_params_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7341,6 +7440,7 @@ function type_param_seq_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7411,7 +7511,7 @@ function type_param_rule(p)
             (e = expression_rule(p))  // expression
         )
         {
-            _res = RAISE_SYNTAX_ERROR_STARTING_FROM (colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
+            _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
             return done();
         }
         p.mark = _mark;
@@ -7457,7 +7557,7 @@ function type_param_rule(p)
             (e = expression_rule(p))  // expression
         )
         {
-            _res = RAISE_SYNTAX_ERROR_STARTING_FROM (colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
+            _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
             return done();
         }
         p.mark = _mark;
@@ -7486,6 +7586,7 @@ function type_param_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, type_param_type, _res);
     return _res;
@@ -7518,6 +7619,7 @@ function type_param_bound_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7603,6 +7705,7 @@ function expressions_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7721,6 +7824,7 @@ function expression_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, expression_type, _res);
     return _res;
@@ -7792,6 +7896,7 @@ function yield_expr_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7880,6 +7985,7 @@ function star_expressions_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -7942,6 +8048,7 @@ function star_expression_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, star_expression_type, _res);
     return _res;
@@ -7975,6 +8082,7 @@ function star_named_expressions_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8033,6 +8141,7 @@ function star_named_expression_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8086,6 +8195,7 @@ function assignment_expression_rule(p)
         }
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8144,6 +8254,7 @@ function named_expression_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8206,6 +8317,7 @@ function disjunction_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, disjunction_type, _res);
     return _res;
@@ -8269,6 +8381,7 @@ function conjunction_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, conjunction_type, _res);
     return _res;
@@ -8332,6 +8445,7 @@ function inversion_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, inversion_type, _res);
     return _res;
@@ -8391,6 +8505,7 @@ function comparison_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8555,6 +8670,7 @@ function compare_op_bitwise_or_pair_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8586,6 +8702,7 @@ function eq_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8617,6 +8734,7 @@ function noteq_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8648,6 +8766,7 @@ function lte_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8679,6 +8798,7 @@ function lt_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8710,6 +8830,7 @@ function gte_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8741,6 +8862,7 @@ function gt_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8775,6 +8897,7 @@ function notin_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8806,6 +8929,7 @@ function in_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8840,6 +8964,7 @@ function isnot_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8871,6 +8996,7 @@ function is_bitwise_or_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -8961,6 +9087,7 @@ function bitwise_or_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9051,6 +9178,7 @@ function bitwise_xor_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9141,6 +9269,7 @@ function bitwise_and_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9257,6 +9386,7 @@ function shift_expr_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9373,6 +9503,7 @@ function sum_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9573,6 +9704,7 @@ function term_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9681,6 +9813,7 @@ function factor_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, factor_type, _res);
     return _res;
@@ -9743,6 +9876,7 @@ function power_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -9805,6 +9939,7 @@ function await_primary_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, await_primary_type, _res);
     return _res;
@@ -9982,6 +10117,7 @@ function primary_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10043,6 +10179,7 @@ function slices_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10107,6 +10244,7 @@ function slice_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10310,6 +10448,7 @@ function atom_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10358,6 +10497,7 @@ function group_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10408,6 +10548,7 @@ function lambdef_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10450,6 +10591,7 @@ function lambda_params_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10563,6 +10705,7 @@ function lambda_parameters_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10618,6 +10761,7 @@ function lambda_slash_no_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10679,6 +10823,7 @@ function lambda_slash_with_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10771,6 +10916,7 @@ function lambda_star_etc_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10816,6 +10962,7 @@ function lambda_kwds_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10863,6 +11010,7 @@ function lambda_param_no_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10916,6 +11064,7 @@ function lambda_param_with_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -10969,6 +11118,7 @@ function lambda_param_maybe_default_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11010,6 +11160,7 @@ function lambda_param_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11052,6 +11203,7 @@ function fstring_middle_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11124,6 +11276,7 @@ function fstring_replacement_field_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11155,6 +11308,7 @@ function fstring_conversion_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11199,6 +11353,7 @@ function fstring_full_format_spec_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11241,6 +11396,7 @@ function fstring_format_spec_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11275,6 +11431,7 @@ function fstring_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11303,6 +11460,7 @@ function string_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11348,6 +11506,7 @@ function strings_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, strings_type, _res);
     return _res;
@@ -11396,6 +11555,7 @@ function list_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11443,6 +11603,7 @@ function tuple_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11490,6 +11651,7 @@ function set_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11557,6 +11719,7 @@ function dict_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11589,6 +11752,7 @@ function double_starred_kvpairs_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11634,6 +11798,7 @@ function double_starred_kvpair_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11668,6 +11833,7 @@ function kvpair_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11696,6 +11862,7 @@ function for_if_clauses_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11794,6 +11961,7 @@ function for_if_clause_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11858,6 +12026,7 @@ function listcomp_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11922,6 +12091,7 @@ function setcomp_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -11988,6 +12158,7 @@ function genexp_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12052,6 +12223,7 @@ function dictcomp_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12104,6 +12276,7 @@ function arguments_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, arguments_type, _res);
     return _res;
@@ -12171,6 +12344,7 @@ function args_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12236,6 +12410,7 @@ function kwargs_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12294,6 +12469,7 @@ function starred_expression_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12369,6 +12545,7 @@ function kwarg_or_starred_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12453,6 +12630,7 @@ function kwarg_or_double_starred_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12517,6 +12695,7 @@ function star_targets_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12549,6 +12728,7 @@ function star_targets_list_seq_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12601,6 +12781,7 @@ function star_targets_tuple_seq_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12663,6 +12844,7 @@ function star_target_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, star_target_type, _res);
     return _res;
@@ -12765,6 +12947,7 @@ function target_with_star_atom_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, target_with_star_atom_type, _res);
     return _res;
@@ -12877,6 +13060,7 @@ function star_atom_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -12939,6 +13123,7 @@ function single_target_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13021,6 +13206,7 @@ function single_subscript_attribute_target_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13207,6 +13393,7 @@ function t_primary_raw(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13263,6 +13450,7 @@ function t_lookahead_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13295,6 +13483,7 @@ function del_targets_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13396,6 +13585,7 @@ function del_target_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, del_target_type, _res);
     return _res;
@@ -13504,6 +13694,7 @@ function del_t_atom_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13677,6 +13868,7 @@ function type_expressions_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13741,6 +13933,7 @@ function func_type_comment_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13776,7 +13969,7 @@ function invalid_arguments_rule(p)
             (b = $B._PyPegen.expect_token(p, 16))  // token='*'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (b, "iterable argument unpacking follows keyword argument unpacking");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, b, "iterable argument unpacking follows keyword argument unpacking");
             return done();
         }
         p.mark = _mark;
@@ -13800,7 +13993,7 @@ function invalid_arguments_rule(p)
             (_opt_var = _tmp_151_rule(p), !p.error_indicator)  // [args | expression for_if_clauses]
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
             return done();
         }
         p.mark = _mark;
@@ -13823,7 +14016,7 @@ function invalid_arguments_rule(p)
             (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
             return done();
         }
         p.mark = _mark;
@@ -13846,7 +14039,7 @@ function invalid_arguments_rule(p)
             $B._PyPegen.lookahead(1, _tmp_153_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expected argument value expression");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "expected argument value expression");
             return done();
         }
         p.mark = _mark;
@@ -13886,7 +14079,7 @@ function invalid_arguments_rule(p)
             (b = for_if_clauses_rule(p))  // for_if_clauses
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
             return done();
         }
         p.mark = _mark;
@@ -13912,6 +14105,7 @@ function invalid_arguments_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -13941,7 +14135,7 @@ function invalid_kwarg_rule(p)
             (b = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to %s", PyBytes_AS_STRING ( a.bytes ));
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot assign to %s", PyBytes_AS_STRING ( a.bytes ));
             return done();
         }
         p.mark = _mark;
@@ -13964,7 +14158,7 @@ function invalid_kwarg_rule(p)
             (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
             return done();
         }
         p.mark = _mark;
@@ -13983,7 +14177,7 @@ function invalid_kwarg_rule(p)
             (b = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expression cannot contain assignment, perhaps you meant \"==\"?");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "expression cannot contain assignment, perhaps you meant \"==\"?");
             return done();
         }
         p.mark = _mark;
@@ -14006,12 +14200,13 @@ function invalid_kwarg_rule(p)
             (b = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to keyword argument unpacking");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot assign to keyword argument unpacking");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14104,6 +14299,7 @@ function expression_without_invalid_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     p.call_invalid_rules = _prev_call_invalid;
     return _res;
@@ -14132,12 +14328,13 @@ function invalid_legacy_expression_rule(p)
             (b = star_expressions_rule(p))  // star_expressions
         )
         {
-            _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE ( a, b, "Missing parentheses in call to '%U'. Did you mean %U(...)?", a. id, a. id) : $B.parser_constants.NULL;
+            _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,  a, b, "Missing parentheses in call to '%U'. Did you mean %U(...)?", a. id, a. id) : $B.parser_constants.NULL;
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14168,7 +14365,7 @@ function invalid_expression_rule(p)
             (b = expression_without_invalid_rule(p))  // expression_without_invalid
         )
         {
-            _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.parser_constants.NULL : p.tokens [p.mark - 1].level == 0 ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE ( a, b, "invalid syntax. Perhaps you forgot a comma?");
+            _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.parser_constants.NULL : p.tokens [p.mark - 1].level == 0 ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,  a, b, "invalid syntax. Perhaps you forgot a comma?");
             return done();
         }
         p.mark = _mark;
@@ -14190,7 +14387,7 @@ function invalid_expression_rule(p)
             $B._PyPegen.lookahead(0, _tmp_157_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expected 'else' after 'if' expression");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "expected 'else' after 'if' expression");
             return done();
         }
         p.mark = _mark;
@@ -14213,12 +14410,13 @@ function invalid_expression_rule(p)
             $B._PyPegen.lookahead_with_int(1, $B._PyPegen.expect_token, p, FSTRING_MIDDLE)  // token=FSTRING_MIDDLE
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "f-string: lambda expressions are not allowed without parentheses");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "f-string: lambda expressions are not allowed without parentheses");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14254,7 +14452,7 @@ function invalid_named_expression_rule(p)
             (expression_var = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name ( a ));
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name ( a ));
             return done();
         }
         p.mark = _mark;
@@ -14276,7 +14474,7 @@ function invalid_named_expression_rule(p)
             $B._PyPegen.lookahead(0, _tmp_158_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
             return done();
         }
         p.mark = _mark;
@@ -14300,12 +14498,13 @@ function invalid_named_expression_rule(p)
             $B._PyPegen.lookahead(0, _tmp_160_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot assign to %s here. Maybe you meant '==' instead of '='?", $B._PyPegen.get_expr_name ( a ));
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot assign to %s here. Maybe you meant '==' instead of '='?", $B._PyPegen.get_expr_name ( a ));
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     $B._PyPegen.insert_memo(p, _mark, invalid_named_expression_type, _res);
     return _res;
@@ -14341,7 +14540,7 @@ function invalid_assignment_rule(p)
             (expression_var = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name ( a ));
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name ( a ));
             return done();
         }
         p.mark = _mark;
@@ -14367,7 +14566,7 @@ function invalid_assignment_rule(p)
             (expression_var = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "only single target (not tuple) can be annotated");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "only single target (not tuple) can be annotated");
             return done();
         }
         p.mark = _mark;
@@ -14387,7 +14586,7 @@ function invalid_assignment_rule(p)
             (expression_var = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "illegal target for annotation");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "illegal target for annotation");
             return done();
         }
         p.mark = _mark;
@@ -14407,7 +14606,7 @@ function invalid_assignment_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.STAR_TARGETS, a);
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.STAR_TARGETS, a);
             return done();
         }
         p.mark = _mark;
@@ -14427,7 +14626,7 @@ function invalid_assignment_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "assignment to yield expression not possible");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "assignment to yield expression not possible");
             return done();
         }
         p.mark = _mark;
@@ -14447,12 +14646,13 @@ function invalid_assignment_rule(p)
             (_tmp_164_var = _tmp_164_rule(p))  // yield_expr | star_expressions
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "'%s' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name ( a ));
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "'%s' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name ( a ));
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14515,6 +14715,7 @@ function invalid_ann_assign_target_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14540,12 +14741,13 @@ function invalid_del_stmt_rule(p)
             (a = star_expressions_rule(p))  // star_expressions
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.DEL_TARGETS, a);
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.DEL_TARGETS, a);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14570,12 +14772,13 @@ function invalid_block_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block");
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14607,7 +14810,7 @@ function invalid_comprehension_rule(p)
             (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "iterable unpacking cannot be used in comprehension");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "iterable unpacking cannot be used in comprehension");
             return done();
         }
         p.mark = _mark;
@@ -14633,7 +14836,7 @@ function invalid_comprehension_rule(p)
             (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, PyPegen_last_item ( b, $B.ast.expr ), "did you forget parentheses around the comprehension target?");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, PyPegen_last_item ( b, $B.ast.expr ), "did you forget parentheses around the comprehension target?");
             return done();
         }
         p.mark = _mark;
@@ -14656,12 +14859,13 @@ function invalid_comprehension_rule(p)
             (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "did you forget parentheses around the comprehension target?");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "did you forget parentheses around the comprehension target?");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14696,12 +14900,13 @@ function invalid_dict_comprehension_rule(p)
             (_literal_1 = $B._PyPegen.expect_token(p, 26))  // token='}'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "dict unpacking cannot be used in dict comprehension");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "dict unpacking cannot be used in dict comprehension");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14733,7 +14938,7 @@ function invalid_parameters_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 12))  // token=','
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "at least one argument must precede /");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "at least one argument must precede /");
             return done();
         }
         p.mark = _mark;
@@ -14753,7 +14958,7 @@ function invalid_parameters_rule(p)
             (a = $B._PyPegen.expect_token(p, 17))  // token='/'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ may appear only once");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ may appear only once");
             return done();
         }
         p.mark = _mark;
@@ -14777,7 +14982,7 @@ function invalid_parameters_rule(p)
             (a = param_no_default_rule(p))  // param_no_default
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "parameter without a default follows parameter with a default");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "parameter without a default follows parameter with a default");
             return done();
         }
         p.mark = _mark;
@@ -14804,7 +15009,7 @@ function invalid_parameters_rule(p)
             (b = $B._PyPegen.expect_token(p, 8))  // token=')'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "Function parameters cannot be parenthesized");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "Function parameters cannot be parenthesized");
             return done();
         }
         p.mark = _mark;
@@ -14834,7 +15039,7 @@ function invalid_parameters_rule(p)
             (a = $B._PyPegen.expect_token(p, 17))  // token='/'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ must be ahead of *");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ must be ahead of *");
             return done();
         }
         p.mark = _mark;
@@ -14854,12 +15059,13 @@ function invalid_parameters_rule(p)
             (a = $B._PyPegen.expect_token(p, 16))  // token='*'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected comma between / and *");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expected comma between / and *");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14884,12 +15090,13 @@ function invalid_default_rule(p)
             $B._PyPegen.lookahead(1, _tmp_178_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected default value expression");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expected default value expression");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -14919,7 +15126,7 @@ function invalid_star_etc_rule(p)
             (_tmp_179_var = _tmp_179_rule(p))  // ')' | ',' (')' | '**')
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "named arguments must follow bare *");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "named arguments must follow bare *");
             return done();
         }
         p.mark = _mark;
@@ -14939,7 +15146,7 @@ function invalid_star_etc_rule(p)
             (type_comment_var = $B._PyPegen.expect_token(p, TYPE_COMMENT))  // token='TYPE_COMMENT'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("bare * has associated type comment");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "bare * has associated type comment");
             return done();
         }
         p.mark = _mark;
@@ -14959,7 +15166,7 @@ function invalid_star_etc_rule(p)
             (a = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-positional argument cannot have default value");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-positional argument cannot have default value");
             return done();
         }
         p.mark = _mark;
@@ -14985,12 +15192,13 @@ function invalid_star_etc_rule(p)
             (_tmp_182_var = _tmp_182_rule(p))  // param_no_default | ','
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "* argument may appear only once");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "* argument may appear only once");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15019,7 +15227,7 @@ function invalid_kwds_rule(p)
             (a = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-keyword argument cannot have default value");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-keyword argument cannot have default value");
             return done();
         }
         p.mark = _mark;
@@ -15042,7 +15250,7 @@ function invalid_kwds_rule(p)
             (a = param_rule(p))  // param
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
             return done();
         }
         p.mark = _mark;
@@ -15065,12 +15273,13 @@ function invalid_kwds_rule(p)
             (a = _tmp_183_rule(p))  // '*' | '**' | '/'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15113,6 +15322,7 @@ function invalid_parameters_helper_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15144,7 +15354,7 @@ function invalid_lambda_parameters_rule(p)
             (_literal = $B._PyPegen.expect_token(p, 12))  // token=','
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "at least one argument must precede /");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "at least one argument must precede /");
             return done();
         }
         p.mark = _mark;
@@ -15164,7 +15374,7 @@ function invalid_lambda_parameters_rule(p)
             (a = $B._PyPegen.expect_token(p, 17))  // token='/'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ may appear only once");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ may appear only once");
             return done();
         }
         p.mark = _mark;
@@ -15188,7 +15398,7 @@ function invalid_lambda_parameters_rule(p)
             (a = lambda_param_no_default_rule(p))  // lambda_param_no_default
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "parameter without a default follows parameter with a default");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "parameter without a default follows parameter with a default");
             return done();
         }
         p.mark = _mark;
@@ -15215,7 +15425,7 @@ function invalid_lambda_parameters_rule(p)
             (b = $B._PyPegen.expect_token(p, 8))  // token=')'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "Lambda expression parameters cannot be parenthesized");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "Lambda expression parameters cannot be parenthesized");
             return done();
         }
         p.mark = _mark;
@@ -15245,7 +15455,7 @@ function invalid_lambda_parameters_rule(p)
             (a = $B._PyPegen.expect_token(p, 17))  // token='/'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ must be ahead of *");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ must be ahead of *");
             return done();
         }
         p.mark = _mark;
@@ -15265,12 +15475,13 @@ function invalid_lambda_parameters_rule(p)
             (a = $B._PyPegen.expect_token(p, 16))  // token='*'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected comma between / and *");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expected comma between / and *");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15315,6 +15526,7 @@ function invalid_lambda_parameters_helper_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15343,7 +15555,7 @@ function invalid_lambda_star_etc_rule(p)
             (_tmp_197_var = _tmp_197_rule(p))  // ':' | ',' (':' | '**')
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("named arguments must follow bare *");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "named arguments must follow bare *");
             return done();
         }
         p.mark = _mark;
@@ -15363,7 +15575,7 @@ function invalid_lambda_star_etc_rule(p)
             (a = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-positional argument cannot have default value");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-positional argument cannot have default value");
             return done();
         }
         p.mark = _mark;
@@ -15389,12 +15601,13 @@ function invalid_lambda_star_etc_rule(p)
             (_tmp_200_var = _tmp_200_rule(p))  // lambda_param_no_default | ','
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "* argument may appear only once");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "* argument may appear only once");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15426,7 +15639,7 @@ function invalid_lambda_kwds_rule(p)
             (a = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-keyword argument cannot have default value");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-keyword argument cannot have default value");
             return done();
         }
         p.mark = _mark;
@@ -15449,7 +15662,7 @@ function invalid_lambda_kwds_rule(p)
             (a = lambda_param_rule(p))  // lambda_param
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
             return done();
         }
         p.mark = _mark;
@@ -15472,12 +15685,13 @@ function invalid_lambda_kwds_rule(p)
             (a = _tmp_201_rule(p))  // '*' | '**' | '/'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15512,12 +15726,13 @@ function invalid_double_type_comments_rule(p)
             (indent_var = $B._PyPegen.expect_token(p, INDENT))  // token='INDENT'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("Cannot have two type comments on def");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "Cannot have two type comments on def");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15548,12 +15763,13 @@ function invalid_with_item_rule(p)
             $B._PyPegen.lookahead(1, _tmp_202_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.STAR_TARGETS, a);
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.STAR_TARGETS, a);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15583,12 +15799,13 @@ function invalid_for_target_rule(p)
             (a = star_expressions_rule(p))  // star_expressions
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.FOR_TARGETS, a);
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.FOR_TARGETS, a);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15617,7 +15834,7 @@ function invalid_group_rule(p)
             (_literal_1 = $B._PyPegen.expect_token(p, 8))  // token=')'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use starred expression here");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use starred expression here");
             return done();
         }
         p.mark = _mark;
@@ -15640,12 +15857,13 @@ function invalid_group_rule(p)
             (_literal_1 = $B._PyPegen.expect_token(p, 8))  // token=')'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use double starred expression here");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use double starred expression here");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15677,12 +15895,13 @@ function invalid_import_rule(p)
             (dotted_name_var = dotted_name_rule(p))  // dotted_name
         )
         {
-            _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "Did you mean to use 'from ... import ...' instead?");
+            _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "Did you mean to use 'from ... import ...' instead?");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15711,12 +15930,13 @@ function invalid_import_from_targets_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("trailing comma not allowed without surrounding parentheses");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "trailing comma not allowed without surrounding parentheses");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15751,7 +15971,7 @@ function invalid_with_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -15785,12 +16005,13 @@ function invalid_with_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15830,7 +16051,7 @@ function invalid_with_stmt_indent_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'with' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'with' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
@@ -15869,12 +16090,13 @@ function invalid_with_stmt_indent_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'with' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'with' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -15909,7 +16131,7 @@ function invalid_try_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'try' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'try' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
@@ -15931,7 +16153,7 @@ function invalid_try_stmt_rule(p)
             $B._PyPegen.lookahead(0, _tmp_213_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected 'except' or 'finally' block");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected 'except' or 'finally' block");
             return done();
         }
         p.mark = _mark;
@@ -15970,7 +16192,7 @@ function invalid_try_stmt_rule(p)
             (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot have both 'except' and 'except' on the same 'try'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot have both 'except' and 'except' on the same 'try'");
             return done();
         }
         p.mark = _mark;
@@ -16003,12 +16225,13 @@ function invalid_try_stmt_rule(p)
             (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot have both 'except' and 'except' on the same 'try'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot have both 'except' and 'except' on the same 'try'");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16055,7 +16278,7 @@ function invalid_except_stmt_rule(p)
             (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
         )
         {
-            _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "multiple exception types must be parenthesized");
+            _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "multiple exception types must be parenthesized");
             return done();
         }
         p.mark = _mark;
@@ -16083,7 +16306,7 @@ function invalid_except_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16100,7 +16323,7 @@ function invalid_except_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16120,12 +16343,13 @@ function invalid_except_stmt_rule(p)
             (_tmp_222_var = _tmp_222_rule(p))  // NEWLINE | ':'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected one or more exception types");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected one or more exception types");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16156,12 +16380,13 @@ function invalid_finally_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'finally' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'finally' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16201,7 +16426,7 @@ function invalid_except_stmt_indent_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
@@ -16223,12 +16448,13 @@ function invalid_except_stmt_indent_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16270,12 +16496,13 @@ function invalid_except_star_stmt_indent_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16306,7 +16533,7 @@ function invalid_match_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.CHECK_VERSION (_void, 10, "Pattern matching is", $B.helper_functions.RAISE_SYNTAX_ERROR ( "expected ':'" ));
+            _res = $B.helper_functions.CHECK_VERSION (_void, 10, "Pattern matching is", $B.helper_functions.RAISE_SYNTAX_ERROR(p,  "expected ':'" ));
             return done();
         }
         p.mark = _mark;
@@ -16331,12 +16558,13 @@ function invalid_match_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'match' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'match' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16371,7 +16599,7 @@ function invalid_case_block_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16400,12 +16628,13 @@ function invalid_case_block_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'case' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'case' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16434,7 +16663,7 @@ function invalid_as_pattern_rule(p)
             (a = $B._PyPegen.expect_soft_keyword(p, "_"))  // soft_keyword='"_"'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use '_' as a target");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use '_' as a target");
             return done();
         }
         p.mark = _mark;
@@ -16456,12 +16685,13 @@ function invalid_as_pattern_rule(p)
             (a = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "invalid pattern target");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "invalid pattern target");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16490,12 +16720,13 @@ function invalid_class_pattern_rule(p)
             (a = invalid_class_argument_pattern_rule(p))  // invalid_class_argument_pattern
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (PyPegen_first_item ( a, $B.ast.pattern ), PyPegen_last_item ( a, $B.ast.pattern ), "positional patterns follow keyword patterns");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, PyPegen_first_item ( a, $B.ast.pattern ), PyPegen_last_item ( a, $B.ast.pattern ), "positional patterns follow keyword patterns");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16535,6 +16766,7 @@ function invalid_class_argument_pattern_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16565,7 +16797,7 @@ function invalid_if_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16590,12 +16822,13 @@ function invalid_if_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'if' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'if' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16626,7 +16859,7 @@ function invalid_elif_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16651,12 +16884,13 @@ function invalid_elif_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'elif' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'elif' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16687,12 +16921,13 @@ function invalid_else_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'else' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'else' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16723,7 +16958,7 @@ function invalid_while_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16748,12 +16983,13 @@ function invalid_while_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'while' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'while' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16794,7 +17030,7 @@ function invalid_for_stmt_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16829,12 +17065,13 @@ function invalid_for_stmt_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'for' statement on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'for' statement on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16891,12 +17128,13 @@ function invalid_def_raw_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after function definition on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after function definition on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -16935,7 +17173,7 @@ function invalid_class_def_raw_rule(p)
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
             return done();
         }
         p.mark = _mark;
@@ -16968,12 +17206,13 @@ function invalid_class_def_raw_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
         )
         {
-            _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after class definition on line %d", a.lineno);
+            _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after class definition on line %d", a.lineno);
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17028,7 +17267,7 @@ function invalid_double_starred_kvpairs_rule(p)
             (bitwise_or_var = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "cannot use a starred expression in a dictionary value");
+            _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
             return done();
         }
         p.mark = _mark;
@@ -17047,12 +17286,13 @@ function invalid_double_starred_kvpairs_rule(p)
             $B._PyPegen.lookahead(1, _tmp_231_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expression expected after dictionary key and ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expression expected after dictionary key and ':'");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17103,7 +17343,7 @@ function invalid_kvpair_rule(p)
             (bitwise_or_var = bitwise_or_rule(p))  // bitwise_or
         )
         {
-            _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "cannot use a starred expression in a dictionary value");
+            _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
             return done();
         }
         p.mark = _mark;
@@ -17122,12 +17362,13 @@ function invalid_kvpair_rule(p)
             $B._PyPegen.lookahead(1, _tmp_232_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expression expected after dictionary key and ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expression expected after dictionary key and ':'");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17159,12 +17400,13 @@ function invalid_starred_expression_rule(p)
             (b = expression_rule(p))  // expression
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to iterable argument unpacking");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot assign to iterable argument unpacking");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17201,7 +17443,7 @@ function invalid_replacement_field_rule(p)
             (a = $B._PyPegen.expect_token(p, 22))  // token='='
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '='");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before '='");
             return done();
         }
         p.mark = _mark;
@@ -17218,7 +17460,7 @@ function invalid_replacement_field_rule(p)
             (a = $B._PyPegen.expect_token(p, 54))  // token='!'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '!'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before '!'");
             return done();
         }
         p.mark = _mark;
@@ -17235,7 +17477,7 @@ function invalid_replacement_field_rule(p)
             (a = $B._PyPegen.expect_token(p, 11))  // token=':'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before ':'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before ':'");
             return done();
         }
         p.mark = _mark;
@@ -17252,7 +17494,7 @@ function invalid_replacement_field_rule(p)
             (a = $B._PyPegen.expect_token(p, 26))  // token='}'
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '}'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before '}'");
             return done();
         }
         p.mark = _mark;
@@ -17268,7 +17510,7 @@ function invalid_replacement_field_rule(p)
             $B._PyPegen.lookahead(0, _tmp_233_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: expecting a valid expression after '{'");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p, "f-string: expecting a valid expression after '{'");
             return done();
         }
         p.mark = _mark;
@@ -17287,7 +17529,7 @@ function invalid_replacement_field_rule(p)
             $B._PyPegen.lookahead(0, _tmp_235_rule, p)
         )
         {
-            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '=', or '!', or ':', or '}'");
+            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '=', or '!', or ':', or '}'");
             return done();
         }
         p.mark = _mark;
@@ -17309,7 +17551,7 @@ function invalid_replacement_field_rule(p)
             $B._PyPegen.lookahead(0, _tmp_237_rule, p)
         )
         {
-            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '!', or ':', or '}'");
+            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '!', or ':', or '}'");
             return done();
         }
         p.mark = _mark;
@@ -17360,7 +17602,7 @@ function invalid_replacement_field_rule(p)
             $B._PyPegen.lookahead(0, _tmp_241_rule, p)
         )
         {
-            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting ':' or '}'");
+            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting ':' or '}'");
             return done();
         }
         p.mark = _mark;
@@ -17393,7 +17635,7 @@ function invalid_replacement_field_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, 26)  // token='}'
         )
         {
-            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '}', or format specs");
+            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}', or format specs");
             return done();
         }
         p.mark = _mark;
@@ -17420,12 +17662,13 @@ function invalid_replacement_field_rule(p)
             $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, 26)  // token='}'
         )
         {
-            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '}'");
+            _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}'");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17450,7 +17693,7 @@ function invalid_conversion_character_rule(p)
             $B._PyPegen.lookahead(1, _tmp_247_rule, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: missing conversion character");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p, "f-string: missing conversion character");
             return done();
         }
         p.mark = _mark;
@@ -17466,12 +17709,13 @@ function invalid_conversion_character_rule(p)
             $B._PyPegen.lookahead_with_name(0, $B._PyPegen.name_token, p)
         )
         {
-            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: invalid conversion character");
+            _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p, "f-string: invalid conversion character");
             return done();
         }
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17629,6 +17873,7 @@ function _gather_4_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17671,6 +17916,7 @@ function _tmp_6_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17727,6 +17973,7 @@ function _tmp_7_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17769,6 +18016,7 @@ function _tmp_8_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17811,6 +18059,7 @@ function _tmp_9_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17853,6 +18102,7 @@ function _tmp_10_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17884,6 +18134,7 @@ function _tmp_11_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17932,6 +18183,7 @@ function _tmp_12_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -17963,6 +18215,7 @@ function _tmp_13_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18038,6 +18291,7 @@ function _tmp_15_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18080,6 +18334,7 @@ function _tmp_16_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18111,6 +18366,7 @@ function _tmp_17_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18175,6 +18431,7 @@ function _gather_18_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18239,6 +18496,7 @@ function _gather_20_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18281,6 +18539,7 @@ function _tmp_22_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18312,6 +18571,7 @@ function _tmp_23_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18439,6 +18699,7 @@ function _gather_26_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18470,6 +18731,7 @@ function _tmp_28_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18534,6 +18796,7 @@ function _gather_29_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18565,6 +18828,7 @@ function _tmp_31_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18632,6 +18896,7 @@ function _tmp_33_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18663,6 +18928,7 @@ function _tmp_34_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -18694,6 +18960,7 @@ function _tmp_35_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19229,6 +19496,7 @@ function _gather_51_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19293,6 +19561,7 @@ function _gather_53_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19357,6 +19626,7 @@ function _gather_55_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19421,6 +19691,7 @@ function _gather_57_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19477,6 +19748,7 @@ function _tmp_59_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19574,6 +19846,7 @@ function _tmp_62_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19605,6 +19878,7 @@ function _tmp_63_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19702,6 +19976,7 @@ function _gather_65_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19744,6 +20019,7 @@ function _tmp_67_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19786,6 +20062,7 @@ function _tmp_68_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19842,6 +20119,7 @@ function _tmp_69_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19898,6 +20176,7 @@ function _tmp_70_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -19962,6 +20241,7 @@ function _gather_71_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20026,6 +20306,7 @@ function _gather_73_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20068,6 +20349,7 @@ function _tmp_75_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20132,6 +20414,7 @@ function _gather_76_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20196,6 +20479,7 @@ function _gather_78_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20260,6 +20544,7 @@ function _gather_80_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20390,6 +20675,7 @@ function _gather_84_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20517,6 +20803,7 @@ function _tmp_89_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20581,6 +20868,7 @@ function _gather_90_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20612,6 +20900,7 @@ function _tmp_92_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20654,6 +20943,7 @@ function _tmp_93_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20710,6 +21000,7 @@ function _tmp_94_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20752,6 +21043,7 @@ function _tmp_95_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20822,6 +21114,7 @@ function _tmp_96_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -20864,6 +21157,7 @@ function _tmp_97_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21347,6 +21641,7 @@ function _tmp_112_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21474,6 +21769,7 @@ function _tmp_116_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21538,6 +21834,7 @@ function _gather_117_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21675,6 +21972,7 @@ function _tmp_122_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21740,6 +22038,7 @@ function _gather_123_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21771,6 +22070,7 @@ function _tmp_125_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21835,6 +22135,7 @@ function _gather_126_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21899,6 +22200,7 @@ function _gather_128_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -21963,6 +22265,7 @@ function _gather_130_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22027,6 +22330,7 @@ function _gather_132_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22121,6 +22425,7 @@ function _gather_135_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22184,6 +22489,7 @@ function _tmp_138_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22248,6 +22554,7 @@ function _gather_139_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22312,6 +22619,7 @@ function _gather_141_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22376,6 +22684,7 @@ function _gather_143_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22440,6 +22749,7 @@ function _gather_145_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22504,6 +22814,7 @@ function _gather_147_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22535,6 +22846,7 @@ function _tmp_149_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22579,6 +22891,7 @@ function _tmp_150_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22624,6 +22937,7 @@ function _tmp_151_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22655,6 +22969,7 @@ function _tmp_152_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22697,6 +23012,7 @@ function _tmp_153_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22753,6 +23069,7 @@ function _tmp_154_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22784,6 +23101,7 @@ function _tmp_155_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22829,6 +23147,7 @@ function _tmp_156_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22871,6 +23190,7 @@ function _tmp_157_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -22913,6 +23233,7 @@ function _tmp_158_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23011,6 +23332,7 @@ function _tmp_159_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23053,6 +23375,7 @@ function _tmp_160_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23185,6 +23508,7 @@ function _tmp_164_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23241,6 +23565,7 @@ function _tmp_165_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23283,6 +23608,7 @@ function _tmp_166_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23325,6 +23651,7 @@ function _tmp_167_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23367,6 +23694,7 @@ function _tmp_168_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23532,6 +23860,7 @@ function _tmp_173_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23604,6 +23933,7 @@ function _tmp_175_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23709,6 +24039,7 @@ function _tmp_178_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23754,6 +24085,7 @@ function _tmp_179_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23796,6 +24128,7 @@ function _tmp_180_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23868,6 +24201,7 @@ function _tmp_182_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23924,6 +24258,7 @@ function _tmp_183_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -23999,6 +24334,7 @@ function _tmp_185_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24153,6 +24489,7 @@ function _gather_189_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24195,6 +24532,7 @@ function _tmp_191_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24267,6 +24605,7 @@ function _tmp_193_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24408,6 +24747,7 @@ function _tmp_197_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24450,6 +24790,7 @@ function _tmp_198_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24522,6 +24863,7 @@ function _tmp_200_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24578,6 +24920,7 @@ function _tmp_201_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24634,6 +24977,7 @@ function _tmp_202_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24698,6 +25042,7 @@ function _gather_203_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24762,6 +25107,7 @@ function _gather_205_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24826,6 +25172,7 @@ function _gather_207_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24890,6 +25237,7 @@ function _gather_209_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24954,6 +25302,7 @@ function _gather_211_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -24996,6 +25345,7 @@ function _tmp_213_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25090,6 +25440,7 @@ function _tmp_216_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25185,6 +25536,7 @@ function _tmp_219_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25216,6 +25568,7 @@ function _tmp_220_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25247,6 +25600,7 @@ function _tmp_221_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25289,6 +25643,7 @@ function _tmp_222_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25320,6 +25675,7 @@ function _tmp_223_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25351,6 +25707,7 @@ function _tmp_224_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25382,6 +25739,7 @@ function _tmp_225_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25413,6 +25771,7 @@ function _tmp_226_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25448,6 +25807,7 @@ function _tmp_227_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25483,6 +25843,7 @@ function _tmp_228_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25547,6 +25908,7 @@ function _gather_229_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25589,6 +25951,7 @@ function _tmp_231_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25631,6 +25994,7 @@ function _tmp_232_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25673,6 +26037,7 @@ function _tmp_233_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25715,6 +26080,7 @@ function _tmp_234_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25785,6 +26151,7 @@ function _tmp_235_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25827,6 +26194,7 @@ function _tmp_236_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25883,6 +26251,7 @@ function _tmp_237_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25925,6 +26294,7 @@ function _tmp_238_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25967,6 +26337,7 @@ function _tmp_239_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -25998,6 +26369,7 @@ function _tmp_240_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26040,6 +26412,7 @@ function _tmp_241_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26082,6 +26455,7 @@ function _tmp_242_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26113,6 +26487,7 @@ function _tmp_243_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26185,6 +26560,7 @@ function _tmp_245_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26216,6 +26592,7 @@ function _tmp_246_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26258,6 +26635,7 @@ function _tmp_247_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26289,6 +26667,7 @@ function _tmp_248_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26331,6 +26710,7 @@ function _tmp_249_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26373,6 +26753,7 @@ function _tmp_250_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26407,6 +26788,7 @@ function _tmp_251_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26438,6 +26820,7 @@ function _tmp_252_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26469,6 +26852,7 @@ function _tmp_253_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26500,6 +26884,7 @@ function _tmp_254_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26531,6 +26916,7 @@ function _tmp_255_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26573,6 +26959,7 @@ function _tmp_256_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26615,6 +27002,7 @@ function _tmp_257_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26646,6 +27034,7 @@ function _tmp_258_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26677,6 +27066,7 @@ function _tmp_259_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26721,6 +27111,7 @@ function _tmp_260_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26752,6 +27143,7 @@ function _tmp_261_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26783,6 +27175,7 @@ function _tmp_262_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26818,6 +27211,7 @@ function _tmp_263_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26849,6 +27243,7 @@ function _tmp_264_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26880,6 +27275,7 @@ function _tmp_265_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26922,6 +27318,7 @@ function _tmp_266_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26964,6 +27361,7 @@ function _tmp_267_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -26996,6 +27394,7 @@ function _tmp_268_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27028,6 +27427,7 @@ function _tmp_269_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27060,6 +27460,7 @@ function _tmp_270_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27092,6 +27493,7 @@ function _tmp_271_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27123,6 +27525,7 @@ function _tmp_272_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27167,6 +27570,7 @@ function _tmp_273_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27232,6 +27636,7 @@ function _gather_274_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27263,6 +27668,7 @@ function _tmp_276_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27294,6 +27700,7 @@ function _tmp_277_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27325,6 +27732,7 @@ function _tmp_278_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27356,6 +27764,7 @@ function _tmp_279_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27400,6 +27809,7 @@ function _tmp_280_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
@@ -27444,13 +27854,13 @@ function _tmp_281_rule(p)
         p.mark = _mark;
     }
     _res = NULL;
+    return done()
   function done(){
     return _res;
     }
 }
 
 $B._PyPegen.parse = function(p){
-    console.log('parse, p', p)
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;

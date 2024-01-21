@@ -384,19 +384,7 @@ _b_.compile = function() {
         try{
             var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
             parser = new $B.Parser($.source, filename, parser_mode)
-            _ast = $B._PyPegen_parse(parser)
-            if(_ast === undefined){
-                parser = new $B.Parser(src, filename, parser_mode)
-                parser.call_invalid_rules = true
-                $B._PyPegen_parse(parser)
-                // if invalid rules didn't raise an error, fall back to
-                // SyntaxError
-                var err_token = $B.last(parser.tokens)
-                $B.raise_error_known_location(_b_.SyntaxError,
-                    filename, err_token.lineno, err_token.col_offset,
-                    err_token.end_lineno, err_token.end_col_offset,
-                    err_token.line, 'invalid syntax')
-            }
+            _ast = $B._PyPegen.run_parser(parser)
         }catch(err){
             if($.mode == 'single'){
                 try{
