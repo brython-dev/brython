@@ -61,18 +61,6 @@ function PyUnicode_IS_ASCII(char){
     return char.codePointAt(0) < 128
 }
 
-function PyBytes_FromStringAndSize(s){
-    var dest = new Uint8Array(s.length * 3)
-    var encoder = new TextEncoder()
-    var result = encoder.encodeInto(s, dest)
-    return $B.fast_bytes(Array.from(dest.slice(0, result.written)))
-}
-
-function _PyArena_AddPyObject(arena, obj){
-    // arena.a_objects.push(obj)
-    return 1
-}
-
 function set_position_from_token(ast_obj, token){
     for(var attr of ['lineno', 'col_offset', 'end_lineno', 'end_col_offset']){
         ast_obj[attr] = token[attr]
@@ -258,12 +246,9 @@ function initialize_token(p, parser_token, new_token, token_type) {
         console.log('keywords', p.keywords)
         alert()
     }
-    parser_token.bytes = PyBytes_FromStringAndSize(new_token.string)
 
-    _PyArena_AddPyObject(p.arena, parser_token.bytes)
     parser_token.metadata = NULL;
     if (new_token.metadata != NULL) {
-        _PyArena_AddPyObject(p.arena, new_token.metadata)
         parser_token.metadata = new_token.metadata;
         new_token.metadata = NULL;
     }
@@ -545,10 +530,6 @@ $B._PyPegen.new_identifier = function(p, n){
         id = id2;
     }
     PyUnicode_InternInPlace(id);
-    if (_PyArena_AddPyObject(p.arena, id) < 0)
-    {
-        return error()
-    }
     return id;
 
     function error(){
@@ -718,11 +699,6 @@ $B._PyPegen.number_token = function(p){
         return NULL;
     }
 
-    if (_PyArena_AddPyObject(p.arena, c) < 0) {
-        Py_DECREF(c);
-        p.error_indicator = 1;
-        return NULL;
-    }
     var res = new $B.ast.Constant(c, NULL);
     set_position_from_token(res, t)
     return res
