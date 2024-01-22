@@ -39,7 +39,8 @@ const libraries = ['brython_builtins.js', 'py_ast_classes.js', 'stdlib_paths.js'
 'python_parser_peg_version.js', 'pegen.js', 'gen_parse.js'];
 
 for (const library of libraries) {
-    jscode = fs.readFileSync(library, 'utf8');
+    const libraryPath = path.join('..', 'www', 'src', library);
+    jscode = fs.readFileSync(libraryPath, 'utf8');
     eval(jscode);
 }
 
@@ -62,15 +63,6 @@ function parse(filename, src) {
     })
   }
 }
-
-// Assumes all files are well-formed
-// function compile_python_script(py_src) {
-//     __BRYTHON__.$py_module_path['__main__'] = './'
-//     if (brython_implementation == 'brython_standard_parser.js') {
-//         __BRYTHON__.parser_to_ast = 1
-//     }
-//     return __BRYTHON__.python_to_js(py_src, '__main_soln__');
-// }
 
 __BRYTHON__.$py_module_path = __BRYTHON__.$py_module_path || {}
 __BRYTHON__.$py_module_alias = __BRYTHON__.$py_module_alias || {}
@@ -106,7 +98,7 @@ var skip_tests = [
 ]
 
 function main() {
-    let pyperformance_dir = '../../../pyperformance/pyperformance'
+    let pyperformance_dir = '../../pyperformance/pyperformance'
     let benchmark_paths = get_benchmark_paths(pyperformance_dir)
 
     let start_time = performance.now()
