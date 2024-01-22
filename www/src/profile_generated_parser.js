@@ -109,8 +109,7 @@ function main() {
     let pyperformance_dir = '../../../pyperformance/pyperformance'
     let benchmark_paths = get_benchmark_paths(pyperformance_dir)
 
-    // let benchmark_path = process.argv[2];
-    // let benchmark_paths = [benchmark_path];
+    let start_time = performance.now()
 
     for (let i = 0; i < benchmark_paths.length; i++) {
         let benchmark_path = benchmark_paths[i]
@@ -127,14 +126,12 @@ function main() {
         }
 
         let py_src = fs.readFileSync(benchmark_path, 'utf8')
-
-        let start_time = performance.now()
-        // for (let i = 0; i < 1000; i++) {
-          parse(benchmark_path, py_src)
-        // }
-        let end_time = performance.now()
-        // console.log(end_time - start_time)
+        parse(benchmark_path, py_src)
+        
     }
+
+    let end_time = performance.now()
+    console.log(end_time - start_time)
 
     console.log('done!')
 }
