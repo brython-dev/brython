@@ -15,6 +15,11 @@
 var _b_ = __BRYTHON__.builtins
 
 const Load = new $B.ast.Load()
+const NULL = undefined;
+const ENDMARKER = 0,
+      NAME = 1,
+      NUMBER = 2,
+      STRING = 3
 
 function strchr(s, char){
     return s.includes(char)
