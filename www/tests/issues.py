@@ -1,6 +1,7 @@
 from tester import assertRaises, assert_raises
 
 parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
+gen_parser = hasattr(__BRYTHON__, 'py_tokens')
 
 # issue 5
 assert(isinstance(__debug__, bool))
@@ -2646,7 +2647,7 @@ try:
     exec("not x = 1")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    if parser_to_ast:
+    if parser_to_ast or gen_parser:
         assert exc.args[0] == "cannot assign to expression"
     else:
         assert exc.args[0] == "cannot assign to operator"
@@ -3084,13 +3085,13 @@ assert_raises(SyntaxError,
 try:
     exec('x =')
 except SyntaxError as e:
-    assert e.args == ('invalid syntax', ('<string>', 1, 4, 'x =\n', 1, 4))
+    assert e.args == ('invalid syntax', ('<string>', 1, 4, 'x =\n', 1, 5))
 
 # issue 1980
 try:
     exec("x= ")
 except SyntaxError as exc:
-    assert exc.args == ('invalid syntax', ('<string>', 1, 4, 'x= \n', 1, 4))
+    assert exc.args == ('invalid syntax', ('<string>', 1, 4, 'x= \n', 1, 5))
 
 # issue 2015
 assert_raises(SyntaxError, exec, "f(x=not)")

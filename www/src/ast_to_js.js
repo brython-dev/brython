@@ -2797,6 +2797,53 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.Interactive.prototype.to_js = function(scopes){
+    mark_parents(this)
+    // create top scope
+    var name = init_scopes.bind(this)('module', scopes)
+
+    var module_id = name,
+        global_name = make_scope_name(scopes),
+        mod_name = module_name(scopes)
+
+    var js = `// Javascript code generated from ast\n` +
+             `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+
+    js += `${global_name} = {}, // $B.imported["${mod_name}"],\n` +
+          `locals = ${global_name},\n` +
+          `frame = ["${module_id}", locals, "${module_id}", locals]`
+
+    js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
+          `locals.__name__ = '${name}'\n` +
+          `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
+
+    if(! scopes.imported){
+          js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
+    }
+
+
+        // for exec(), frame is put on top of the stack inside
+        // py_builtin_functions.js / $$eval()
+
+    js += `frame.$f_trace = $B.enter_frame(frame)\n`
+    js += `$B.set_lineno(frame, 1)\n` +
+        '\nvar _frame_obj = $B.frame_obj\n'
+    js += 'var stack_length = $B.count_frames()\n'
+
+    js += `try{\n` +
+              add_body(this.body, scopes) + '\n' +
+              `$B.leave_frame({locals, value: _b_.None})\n` +
+          `}catch(err){\n` +
+              `$B.set_exc_and_trace(frame, err)\n` +
+              `$B.leave_frame({locals, value: _b_.None})\n` +
+              'throw err\n' +
+          `}`
+    scopes.pop()
+
+    console.log('Interactive', js)
+    return js
+}
+
 $B.ast.JoinedStr.prototype.to_js = function(scopes){
     var items = this.values.map(s => $B.js_from_ast(s, scopes))
     if(items.length == 0){

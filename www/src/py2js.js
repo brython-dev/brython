@@ -360,6 +360,21 @@ function raise_error_known_location(type, filename, lineno, col_offset,
 
 $B.raise_error_known_location = raise_error_known_location
 
+function raise_error_known_token(type, filename, token, message){
+    var exc = type.$factory(message)
+    exc.filename = filename
+    exc.lineno = token.lineno
+    exc.offset = token.col_offset + 1
+    exc.end_lineno = token.end_lineno
+    exc.end_offset = token.end_col_offset + 1
+    exc.text = token.line
+    exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
+                   exc.end_lineno, exc.end_offset])
+    exc.$frame_obj = $B.frame_obj
+    throw exc
+}
+
+$B.raise_error_known_token = raise_error_known_token
 
 function raise_syntax_error_known_range(context, a, b, msg){
     // a and b are the first and last tokens for the exception

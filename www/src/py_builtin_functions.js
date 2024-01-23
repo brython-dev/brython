@@ -254,6 +254,7 @@ code.__getattribute__ = function(self, attr){
 
 $B.set_func_names(code, "builtins")
 
+
 //compile() (built in function)
 _b_.compile = function() {
     var $ = $B.args('compile', 7,
@@ -265,6 +266,7 @@ _b_.compile = function() {
          {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0},
          null, null)
 
+    console.log('  --- compile', $.source, 'mode', $.mode)
     var module_name = '$exec_' + $B.UUID()
     $.__class__ = code
     $.co_flags = $.flags
@@ -323,9 +325,19 @@ _b_.compile = function() {
         // This is used in codeop.py to raise SyntaxError until a block in the
         // interactive interpreter ends with "\n"
         // Cf. issue #853
-        var lines = $.source.split("\n")
-        if($B.last(lines).startsWith(" ")){
-            throw _b_.SyntaxError.$factory("unexpected EOF while parsing")
+        var lines = $.source.split("\n"),
+            last_line = $B.last(lines)
+        if(last_line.startsWith(" ")){
+            var msg = "unexpected EOF while parsing",
+                exc = _b_.SyntaxError.$factory()
+            exc.filename = filename
+            exc.lineno = exc.end_lineno = lines.length - 1
+            exc.offset = 0
+            exc.end_offset = last_line.length - 1
+            exc.text = last_line
+            exc.args = [msg, $B.fast_tuple([filename, exc.lineno, exc.offset,
+                        exc.text, exc.end_lineno, exc.end_offset])]
+            throw exc
         }
     }
 
@@ -344,7 +356,7 @@ _b_.compile = function() {
         try{
             var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
             parser = new $B.Parser($.source, filename, parser_mode)
-            _ast = parser.parse()
+            _ast = $B._PyPegen.run_parser(parser)
         }catch(err){
             if($.mode == 'single'){
                 try{
@@ -384,20 +396,17 @@ _b_.compile = function() {
         try{
             var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
             parser = new $B.Parser($.source, filename, parser_mode)
+            parser.flags = $.flags
             _ast = $B._PyPegen.run_parser(parser)
         }catch(err){
             if($.mode == 'single'){
-                try{
-                    parser.tokens.next // throws an exception if tokenizer exhausted
-                }catch(err2){
-                    // special case
-                    var tokens = parser.tokens,
-                        tester = tokens[tokens.length - 2]
-                    if((tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
-                            tester.type == "DEDENT" && ($.flags & 0x200)){
-                        err.__class__ = _b_.SyntaxError
-                        err.args[0] = 'incomplete input'
-                    }
+                var tester = parser.tokens[parser.tokens.length - 2]
+
+                if(tester && (
+                        (tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
+                        (tester.type == "DEDENT" && ($.flags & 0x200)))){
+                    err.__class__ = _b_.SyntaxError
+                    err.args[0] = 'incomplete input'
                 }
             }
             throw err
@@ -409,7 +418,7 @@ _b_.compile = function() {
             // to compile() result. This is used in exec() to print the
             // expression if it is not None
             parser = new $B.Parser($.source, filename, 'eval')
-            _ast = parser.parse()
+            _ast = $B._PyPegen.run_parser(parser)
             $.single_expression = true
         }
 
@@ -430,6 +439,7 @@ _b_.compile = function() {
             $B.parser.dispatch_tokens(root, $.source)
             _ast = root.ast()
         }catch(err){
+            console.log('parsing failed')
             if($.mode == 'single' && root.token_reader.read() === undefined){
                 // special case
                 let tokens = root.token_reader.tokens,
@@ -448,6 +458,7 @@ _b_.compile = function() {
             // set _ast to an Expression and set attribute .single_expression
             // to compile() result. This is used in exec() to print the
             // expression if it is not None
+            console.log('single expression')
             root = $B.parser.create_root_node(
                 {src: $.source, filename},
                 module_name, module_name)
@@ -783,22 +794,9 @@ var $$eval = _b_.eval = function(){
             }else if($B.py_tokens){
                 // generated PEG parser
                 var _mode = mode == 'eval' ? 'eval' : 'file'
-                console.log('eval with gen parser, _mode', _mode)
                 var parser = new $B.Parser(src, filename, _mode)
                 _ast = $B._PyPegen.run_parser(parser)
-                console.log('_ast', _ast)
-                /*
-                if(_ast === undefined){
-                    parser = new $B.Parser(src, filename, _mode)
-                    parser.call_invalid_rules = true
-                    $B._PyPegen_parse(parser)
-                    var err_token = $B.last(parser.tokens)
-                    $B.raise_error_known_location(_b_.SyntaxError,
-                        filename, err_token.lineno, err_token.col_offset,
-                        err_token.end_lineno, err_token.end_col_offset,
-                        err_token.line, 'invalid syntax')
-                }
-                */
+
             }else{
                 var root = $B.parser.create_root_node(src, '<module>', frame[0], frame[2],
                         1)

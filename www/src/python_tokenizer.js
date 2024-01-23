@@ -149,7 +149,7 @@ function Token(type, string, start, end, line){
     start = start.slice(0, 2)
     var res
     if($B.py_tokens){
-        res = {string, line}
+        res = {type, string, line}
         res.num_type = $B.py_tokens[type]
         if(type == 'OP'){
             res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
@@ -799,10 +799,16 @@ $B.tokenizer = function*(src, filename, mode){
                             // ignore
                         }else{
                             // invalid character
-                            yield Token('ERRORTOKEN', char,
+                            var cp = char.codePointAt(0)
+                            var err_msg = `invalid character '${char}' (U+` +
+                                          `${cp.toString(16).toUpperCase()})`
+                            var err_token = Token('ERRORTOKEN', char,
                                 [line_num, pos - line_start],
                                 [line_num, pos - line_start + 1],
                                 line)
+                            console.log('invalid character error')
+                            $B.raise_error_known_token(_b_.SyntaxError, filename,
+                                err_token, err_msg)
                         }
               }
               break

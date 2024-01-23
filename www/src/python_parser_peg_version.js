@@ -349,6 +349,8 @@ var Parser = $B.Parser = function(src, filename, mode){
 
 Parser.prototype.parse = function(){
     console.log('parse')
+    console.log(Error().stack)
+    alert()
     if(this.src.trim().length == 0){
         // eg empty __init__.py
         return new $B.ast.Module([])
