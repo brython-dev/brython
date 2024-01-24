@@ -78,25 +78,8 @@ function parse(filename, src){
     var t0 = window.performance.now()
     var parser = new $B.Parser(src, filename, 'file')
     var _ast = $B._PyPegen.run_parser(parser)
+    console.log('parse time', window.performance.now() - t0)
     console.log(_ast)
-    
-    /*
-    var _ast = $B._PyPegen_parse(parser)
-    if(_ast === undefined){
-        parser = new $B.Parser(src, filename, 'file')
-        parser.call_invalid_rules = true
-        $B._PyPegen_parse(parser)
-    }else{
-      var imported
-      var future = $B.future_features(_ast, filename)
-      var symtable = $B._PySymtable_Build(_ast, filename, future)
-      var js_obj = $B.js_from_root({ast: _ast,
-                                    symtable,
-                                    filename,
-                                    imported})
-      console.log('conv to js ok, length', js_obj)
-    }
-    */
 }
 
 </script>
