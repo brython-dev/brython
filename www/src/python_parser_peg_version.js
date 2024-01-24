@@ -258,7 +258,43 @@ var helper_functions = {
 
 }
 
+
 $B.helper_functions = helper_functions
+
+// XXX redundant with above functions
+function raise_error_known_location(type, filename, lineno, col_offset,
+        end_lineno, end_col_offset, line, message){
+    var exc = type.$factory(message)
+    exc.filename = filename
+    exc.lineno = lineno
+    exc.offset = col_offset + 1
+    exc.end_lineno = end_lineno
+    exc.end_offset = end_col_offset + 1
+    exc.text = line
+    exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
+                   exc.end_lineno, exc.end_offset])
+    exc.$frame_obj = $B.frame_obj
+    throw exc
+}
+
+$B.raise_error_known_location = raise_error_known_location
+
+function raise_error_known_token(type, filename, token, message){
+    var exc = type.$factory(message)
+    exc.filename = filename
+    exc.lineno = token.lineno
+    exc.offset = token.col_offset + 1
+    exc.end_lineno = token.end_lineno
+    exc.end_offset = token.end_col_offset + 1
+    exc.text = token.line
+    exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
+                   exc.end_lineno, exc.end_offset])
+    exc.$frame_obj = $B.frame_obj
+    throw exc
+}
+
+$B.raise_error_known_token = raise_error_known_token
+
 
 function handle_errortoken(token, token_reader){
     if(token.string == "'" || token.string == '"'){

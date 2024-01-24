@@ -891,9 +891,7 @@ $B.unpacker = function(obj, nb_targets, has_starred){
         var nb_after_starred = arguments[3]
         position_rank++
     }
-    if($B.pep657){
-        position = $B.decode_position(arguments[position_rank])
-    }
+    position = $B.decode_position(arguments[position_rank])
     var t = _b_.list.$factory(obj),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)

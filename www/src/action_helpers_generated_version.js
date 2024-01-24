@@ -8,6 +8,57 @@ var _b_ = $B.builtins,
     ELLIPSIS = '...',
     DEL_TARGETS = 'del_targets'
 
+function make_string_for_ast_value(value){
+    value = value.replace(/\n/g,'\\n\\\n')
+    value = value.replace(/\r/g,'\\r\\\r')
+    if(value[0] == "'"){
+        var unquoted = value.substr(1, value.length - 2)
+        return unquoted
+    }
+    // prepare value so that "'" + value + "'" is the correct string
+    if(value.indexOf("'") > -1){
+        var s = '',
+            escaped = false
+        for(var char of value){
+            if(char == '\\'){
+                if(escaped){
+                    s += '\\\\'
+                }
+                escaped = !escaped
+            }else{
+                if(char == "'" && ! escaped){
+                    // escape unescaped single quotes
+                    s += '\\'
+                }else if(escaped){
+                    s += '\\'
+                }
+                s += char
+                escaped = false
+            }
+        }
+        value = s
+    }
+    return value.substr(1, value.length - 2)
+}
+
+function encode_bytestring(s){
+    s = s.replace(/\\t/g, '\t')
+         .replace(/\\n/g, '\n')
+         .replace(/\\r/g, '\r')
+         .replace(/\\f/g, '\f')
+         .replace(/\\v/g, '\v')
+         .replace(/\\\\/g, '\\')
+    var t = []
+    for(var i = 0, len = s.length; i < len; i++){
+        var cp = s.codePointAt(i)
+        if(cp > 255){
+            throw Error()
+        }
+        t.push(cp)
+    }
+    return t
+}
+
 function EXTRA_EXPR(head, tail){
     return {
             lineno: head.lineno,
@@ -172,11 +223,11 @@ $B._PyPegen.constant_from_string = function(p, token){
     var prepared = $B.prepare_string(token)
     var is_bytes = prepared.value.startsWith('b')
     if(! is_bytes){
-        var value = $B.make_string_for_ast_value(prepared.value)
+        var value = make_string_for_ast_value(prepared.value)
     }else{
         value = prepared.value.substr(2, prepared.value.length - 3)
         try{
-            value = _b_.bytes.$factory($B.encode_bytestring(value))
+            value = _b_.bytes.$factory(encode_bytestring(value))
         }catch(err){
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,

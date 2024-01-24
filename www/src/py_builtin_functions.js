@@ -351,132 +351,44 @@ _b_.compile = function() {
     var _ast,
         parser
 
-    if($B.parser_to_ast){
-        try{
-            var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
-            parser = new $B.Parser($.source, filename, parser_mode)
-            _ast = $B._PyPegen.run_parser(parser)
-        }catch(err){
-            if($.mode == 'single'){
-                try{
-                    parser.tokens.next // throws an exception if tokenizer exhausted
-                }catch(err2){
-                    // special case
-                    var tokens = parser.tokens,
-                        tester = tokens[tokens.length - 2]
-                    if((tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
-                            tester.type == "DEDENT" && ($.flags & 0x200)){
-                        err.__class__ = _b_.SyntaxError
-                        err.args[0] = 'incomplete input'
-                    }
-                }
+
+    // generated PEG parser
+    try{
+        var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
+        parser = new $B.Parser($.source, filename, parser_mode)
+        parser.flags = $.flags
+        _ast = $B._PyPegen.run_parser(parser)
+    }catch(err){
+        if($.mode == 'single'){
+            var tester = parser.tokens[parser.tokens.length - 2]
+
+            if(tester && (
+                    (tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
+                    (tester.type == "DEDENT" && ($.flags & 0x200)))){
+                err.__class__ = _b_.SyntaxError
+                err.args[0] = 'incomplete input'
             }
-            throw err
         }
-        if($.mode == 'single' && _ast.body.length == 1 &&
-                _ast.body[0] instanceof $B.ast.Expr){
-            // If mode is 'single' and the source is a single expression,
-            // set _ast to an Expression and set attribute .single_expression
-            // to compile() result. This is used in exec() to print the
-            // expression if it is not None
-            parser = new $B.Parser($.source, filename, 'eval')
-            _ast = parser.parse()
-            $.single_expression = true
-        }
-
-        if($.flags == $B.PyCF_ONLY_AST){
-            delete $B.url2name[filename]
-            let res = $B.ast_js_to_py(_ast)
-            res.$js_ast = _ast
-            return res
-        }
-    }else if($B.py_tokens){
-        // generated PEG parser
-        try{
-            var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
-            parser = new $B.Parser($.source, filename, parser_mode)
-            parser.flags = $.flags
-            _ast = $B._PyPegen.run_parser(parser)
-        }catch(err){
-            if($.mode == 'single'){
-                var tester = parser.tokens[parser.tokens.length - 2]
-
-                if(tester && (
-                        (tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
-                        (tester.type == "DEDENT" && ($.flags & 0x200)))){
-                    err.__class__ = _b_.SyntaxError
-                    err.args[0] = 'incomplete input'
-                }
-            }
-            throw err
-        }
-        if($.mode == 'single' && _ast.body.length == 1 &&
-                _ast.body[0] instanceof $B.ast.Expr){
-            // If mode is 'single' and the source is a single expression,
-            // set _ast to an Expression and set attribute .single_expression
-            // to compile() result. This is used in exec() to print the
-            // expression if it is not None
-            parser = new $B.Parser($.source, filename, 'eval')
-            _ast = $B._PyPegen.run_parser(parser)
-            $.single_expression = true
-        }
-
-        if($.flags == $B.PyCF_ONLY_AST){
-            delete $B.url2name[filename]
-            let res = $B.ast_js_to_py(_ast)
-            res.$js_ast = _ast
-            return res
-        }
-
-    }else{
-        var root = $B.parser.create_root_node(
-                {src: $.source, filename},
-                module_name, module_name)
-        root.mode = $.mode
-        root.parent_block = $B.builtins_scope
-        try{
-            $B.parser.dispatch_tokens(root, $.source)
-            _ast = root.ast()
-        }catch(err){
-            console.log('parsing failed')
-            if($.mode == 'single' && root.token_reader.read() === undefined){
-                // special case
-                let tokens = root.token_reader.tokens,
-                    tester = tokens[tokens.length - 2]
-                if((tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
-                        tester.type == "DEDENT" && ($.flags & 0x200)){
-                    err.__class__ = _b_.SyntaxError
-                    err.args[0] = 'incomplete input'
-                }
-            }
-            throw err
-        }
-        if($.mode == 'single' && _ast.body.length == 1 &&
-                _ast.body[0] instanceof $B.ast.Expr){
-            // If mode is 'single' and the source is a single expression,
-            // set _ast to an Expression and set attribute .single_expression
-            // to compile() result. This is used in exec() to print the
-            // expression if it is not None
-            console.log('single expression')
-            root = $B.parser.create_root_node(
-                {src: $.source, filename},
-                module_name, module_name)
-            root.mode = 'eval'
-            $.single_expression = true
-            root.parent_block = $B.builtins_scope
-            $B.parser.dispatch_tokens(root, $.source)
-            _ast = root.ast()
-        }
-        delete $B.url2name[filename]
-
-        if($.flags == $B.PyCF_ONLY_AST){
-            $B.create_python_ast_classes() // in py_ast.js
-            // Transform _ast (JS version) into a Python ast instance
-            let res = $B.ast_js_to_py(_ast) // in py_ast.js
-            res.$js_ast = _ast
-            return res
-        }
+        throw err
     }
+    if($.mode == 'single' && _ast.body.length == 1 &&
+            _ast.body[0] instanceof $B.ast.Expr){
+        // If mode is 'single' and the source is a single expression,
+        // set _ast to an Expression and set attribute .single_expression
+        // to compile() result. This is used in exec() to print the
+        // expression if it is not None
+        parser = new $B.Parser($.source, filename, 'eval')
+        _ast = $B._PyPegen.run_parser(parser)
+        $.single_expression = true
+    }
+
+    if($.flags == $B.PyCF_ONLY_AST){
+        delete $B.url2name[filename]
+        let res = $B.ast_js_to_py(_ast)
+        res.$js_ast = _ast
+        return res
+    }
+
     delete $B.url2name[filename]
     // Set attribute ._ast to avoid compiling again if result is passed to
     // exec()
@@ -787,23 +699,9 @@ var $$eval = _b_.eval = function(){
 
     try{
         if(! _ast){
-            if($B.parser_to_ast){
-                var _mode = mode == 'eval' ? 'eval' : 'file'
-                _ast = new $B.Parser(src, filename, _mode).parse()
-            }else if($B.py_tokens){
-                // generated PEG parser
-                var _mode = mode == 'eval' ? 'eval' : 'file'
-                var parser = new $B.Parser(src, filename, _mode)
-                _ast = $B._PyPegen.run_parser(parser)
-
-            }else{
-                var root = $B.parser.create_root_node(src, '<module>', frame[0], frame[2],
-                        1)
-                root.mode = mode
-                root.filename = filename
-                $B.parser.dispatch_tokens(root)
-                _ast = root.ast()
-            }
+            var _mode = mode == 'eval' ? 'eval' : 'file'
+            var parser = new $B.Parser(src, filename, _mode)
+            _ast = $B._PyPegen.run_parser(parser)
         }
         var future = $B.future_features(_ast, filename),
             symtable = $B._PySymtable_Build(_ast, filename, future),

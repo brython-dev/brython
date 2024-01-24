@@ -3,6 +3,89 @@
 
 var _b_ = $B.builtins
 
+function ast_dump(tree, indent){
+    var attr,
+        value
+    indent = indent || 0
+    if(tree === _b_.None){
+        // happens in dictionary keys for **kw
+        return 'None'
+    }else if(typeof tree == 'string'){
+        return `'${tree}'`
+    }else if(typeof tree == 'number'){
+        return tree + ''
+    }else if(tree.imaginary){
+        return tree.value + 'j'
+    }else if(Array.isArray(tree)){
+        if(tree.length == 0){
+            return '[]'
+        }
+        res = '[\n'
+        var items = []
+        for(var x of tree){
+            try{
+                items.push(ast_dump(x, indent + 1))
+            }catch(err){
+                console.log('error', tree)
+                console.log('for item', x)
+                throw err
+            }
+        }
+        res += items.join(',\n')
+        return res + ']'
+    }else if(tree.$name){
+        return tree.$name + '()'
+    }else if(tree instanceof ast.MatchSingleton){
+        return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
+    }else if(tree instanceof ast.Constant){
+        value = tree.value
+        // For imaginary numbers, value is an object with
+        // attribute "imaginary" set
+        if(value.imaginary){
+            return `Constant(value=${_b_.repr(value.value)}j)`
+        }
+        return `Constant(value=${$B.AST.$convert(value)})`
+    }
+    var proto = Object.getPrototypeOf(tree).constructor
+    var res = '  ' .repeat(indent) + proto.$name + '('
+    if($B.ast_classes[proto.$name] === undefined){
+        console.log('no ast class', proto)
+    }
+    var attr_names = $B.ast_classes[proto.$name].split(','),
+        attrs = []
+    // remove trailing * in attribute names
+    attr_names = attr_names.map(x => (x.endsWith('*') || x.endsWith('?')) ?
+                                     x.substr(0, x.length - 1) : x)
+    if([ast.Name].indexOf(proto) > -1){
+        for(attr of attr_names){
+            if(tree[attr] !== undefined){
+                attrs.push(`${attr}=${ast_dump(tree[attr])}`)
+            }
+        }
+        return res + attrs.join(', ') + ')'
+    }
+    for(attr of attr_names){
+        if(tree[attr] !== undefined){
+            value = tree[attr]
+            attrs.push(attr + '=' +
+                ast_dump(tree[attr], indent + 1).trimStart())
+        }
+    }
+    if(attrs.length > 0){
+        res += '\n'
+        res += attrs.map(x => '  '.repeat(indent + 1) + x).join(',\n')
+    }
+    res  += ')'
+    return res
+}
+
+
+function string_from_ast_value(value){
+    // remove escaped "'" in string value
+    return value.replace(new RegExp("\\\\'", 'g'), "'")
+}
+
+
 function compiler_error(ast_obj, message, end){
     var exc = _b_.SyntaxError.$factory(message)
     exc.filename = state.filename
@@ -1608,7 +1691,7 @@ $B.ast.Dict.prototype.to_js = function(scopes){
             if(this.keys[i] instanceof $B.ast.Constant){
                 var v = this.keys[i].value
                 if(typeof v == 'string'){
-                    item += ', ' + $B.$hash($B.string_from_ast_value(v))
+                    item += ', ' + $B.$hash(string_from_ast_value(v))
                 }else{
                     try{
                         var hash = $B.$hash(this.keys[i].value)
