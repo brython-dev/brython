@@ -2,7 +2,7 @@ import sys
 
 from browser import document, window, html, console, bind, timer, alert
 
-import music
+#import notes
 import synthesizer
 import widgets
 
@@ -296,7 +296,7 @@ instances = {'volume': {}, 'lfo': {}, 'lfo_gain': {}}
 def play(octave, note, time=None):
     global audioContext
 
-    freq = music.note_freqs[octave][note]
+    freq = notes.note_freqs[octave][note]
 
     if audioContext is None:
         audioContext = synthesizer.make_context()
@@ -489,7 +489,7 @@ def noteReleased(event):
 def setup():
     base = tone_value.text
     octave = int(octave_value.text)
-    scale = music.create_major_scale(base, octave)[:3 * 7]
+    scale = notes.create_major_scale(base, octave)[:3 * 7]
 
     keyboard = document.select_one(".keyboard")
 
@@ -504,7 +504,7 @@ def setup():
             keyboard.insertBefore(line := html.DIV(), keyboard.firstChild)
             line_num += 1
         octaveElem = html.DIV(Class="octave")
-        octaveElem <= createKey(note, octave, music.note_freqs[octave][note])
+        octaveElem <= createKey(note, octave, notes.note_freqs[octave][note])
         line <= octaveElem
         key_mapping[keys[i]] = octave, note
 
