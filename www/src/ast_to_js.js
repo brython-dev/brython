@@ -3261,6 +3261,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
             js += `,\n${local_name} = locals`
         }
     }
+    
     js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`

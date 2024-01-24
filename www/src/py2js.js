@@ -770,8 +770,8 @@ function run_scripts(_scripts){
             $B.file_cache[filename] = src
             $B.url2name[filename] = module_name
             $B.scripts[filename] = script
-            $B.tasks.push([$B.run_script, script, src, module_name,
-                           filename, true])
+            $B.tasks.push([$B.run_script, script, src, module_name, 
+                           $B.script_path, true])
         }
     }
     $B.loop()
@@ -780,18 +780,19 @@ function run_scripts(_scripts){
 $B.run_script = function(script, src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
+    var filename = $B.script_filename = $B.strip_host(url)
 
     // set script dir
     var script_elts = url.split('/')
     script_elts.pop()
     $B.script_dir = script_elts.join('/')
 
-    $B.file_cache[url] = src
-    $B.url2name[url] = name
-    $B.scripts[url] = script
+    $B.file_cache[filename] = src
+    $B.url2name[filename] = name
+    $B.scripts[filename] = script
 
     // Initialize information for imports : path, meta_path, path_hooks
-    $B.make_import_paths(url) // in py_import.js
+    $B.make_import_paths(filename) // in py_import.js
 
     // set built-in variable __debug__
     _b_.__debug__ = $B.get_option('debug') > 0
@@ -800,7 +801,7 @@ $B.run_script = function(script, src, name, url, run_loop){
         js
 
     try{
-        root = $B.py2js({src: src, filename: url}, name, name)
+        root = $B.py2js({src: src, filename}, name, name)
         js = root.to_js()
         if($B.get_option_from_filename('debug', url) > 1){
             console.log($B.format_indent(js, 0))
