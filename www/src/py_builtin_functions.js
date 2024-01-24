@@ -266,7 +266,6 @@ _b_.compile = function() {
          {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0},
          null, null)
 
-    console.log('  --- compile', $.source, 'mode', $.mode)
     var module_name = '$exec_' + $B.UUID()
     $.__class__ = code
     $.co_flags = $.flags

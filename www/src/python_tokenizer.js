@@ -806,7 +806,6 @@ $B.tokenizer = function*(src, filename, mode){
                                 [line_num, pos - line_start],
                                 [line_num, pos - line_start + 1],
                                 line)
-                            console.log('invalid character error')
                             $B.raise_error_known_token(_b_.SyntaxError, filename,
                                 err_token, err_msg)
                         }

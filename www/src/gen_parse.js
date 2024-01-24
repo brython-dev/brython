@@ -912,7 +912,7 @@ function statement_newline_rule(p)
         var newline_var;
         if (
             (a = compound_stmt_rule(p))  // compound_stmt
-            && 
+            &&
             (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
         )
         {

@@ -546,7 +546,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
     var ast_obj = new constr(
         function_def.name, function_def.args,
         function_def.body, decorators, function_def.returns,
-        function_def.type_comment)
+        function_def.type_comment,
+        function_def.type_params)
     for(var position of positions){
         ast_obj[position] = function_def[position]
     }
