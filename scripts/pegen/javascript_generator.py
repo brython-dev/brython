@@ -145,6 +145,11 @@ $B._PyPegen.parse = function(p){
             return file_rule(p)
         case 'eval':
             return eval_rule(p)
+        case 'single':
+            return interactive_rule(p)
+        default:
+            console.log('unknown mode', p.mode)
+            alert()
     }
 }
 """
