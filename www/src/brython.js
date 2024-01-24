@@ -41,6 +41,7 @@ path_elts.pop()
 $B.script_dir=path_elts.join("/")
 $B.strip_host=function(url){var parts_re=new RegExp('(.*?)://(.*?)/(.*)'),mo=parts_re.exec(url)
 if(mo){return mo[3]}
+console.log(Error().stack)
 throw Error('not a url: '+url)}
 $B.__ARGV=[]
 $B.webworkers={}
@@ -167,8 +168,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-24 12:12:08.137397"
-__BRYTHON__.timestamp=1706094728137
+__BRYTHON__.compiled_date="2024-01-24 15:34:36.996021"
+__BRYTHON__.timestamp=1706106876996
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 
@@ -951,19 +952,20 @@ $B.script_path+"#"+module_name)
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
-$B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}
+$B.tasks.push([$B.run_script,script,src,module_name,$B.script_path,true])}}
 $B.loop()}
 $B.run_script=function(script,src,name,url,run_loop){
+var filename=$B.script_filename=$B.strip_host(url)
 var script_elts=url.split('/')
 script_elts.pop()
 $B.script_dir=script_elts.join('/')
-$B.file_cache[url]=src
-$B.url2name[url]=name
-$B.scripts[url]=script
-$B.make_import_paths(url)
+$B.file_cache[filename]=src
+$B.url2name[filename]=name
+$B.scripts[filename]=script
+$B.make_import_paths(filename)
 _b_.__debug__=$B.get_option('debug')> 0
 var root,js
-try{root=$B.py2js({src:src,filename:url},name,name)
+try{root=$B.py2js({src:src,filename},name,name)
 js=root.to_js()
 if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){console.log('err',err)
 return $B.handle_error($B.exception(err))}
@@ -5727,11 +5729,12 @@ modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=_module.__name__}}
 return true}
 function run_py(module_contents,path,module,compiled){
-$B.file_cache[path]=module_contents
-$B.url2name[path]=module.__name__
+var filename=$B.strip_host(path)
+$B.file_cache[filename]=module_contents
+$B.url2name[filename]=module.__name__
 var root,js,mod_name=module.__name__,
 src
-if(! compiled){src={src:module_contents,filename:path,imported:true}
+if(! compiled){src={src:module_contents,filename,imported:true}
 try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){err.$frame_obj=$B.frame_obj
 if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
 console.log('stack',$B.make_frames_stack(err.$frame_obj))}
@@ -5850,7 +5853,8 @@ $B.builtins.setattr(
 $B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{var mod_name=modobj.__name__
 if($B.get_option('debug')> 1){console.log("run Python code from VFS",mod_name)}
-var record=run_py(module_contents,modobj.__file__,modobj)
+var path=$B.brython_path+'/'+modobj.__file__
+var record=run_py(module_contents,path,modobj)
 record.imports=imports.join(',')
 record.is_package=modobj.$is_package
 record.timestamp=$B.timestamp
