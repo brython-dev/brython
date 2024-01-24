@@ -609,7 +609,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
 $B._PyPegen.class_def_decorators = function(p, decorators, class_def){
     var ast_obj = $B._PyAST.ClassDef(
         class_def.name, class_def.bases,
-        class_def.keywords, class_def.body, decorators)
+        class_def.keywords, class_def.body, decorators,
+        class_def.type_params)
     set_position_from_obj(ast_obj, class_def)
     return ast_obj
 }
