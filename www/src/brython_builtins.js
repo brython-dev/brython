@@ -92,6 +92,7 @@ $B.strip_host = function(url){
     if(mo){
         return mo[3]
     }
+    console.log(Error().stack)
     throw Error('not a url: ' + url)
 }
 

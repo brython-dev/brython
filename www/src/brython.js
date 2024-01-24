@@ -41,6 +41,7 @@ path_elts.pop()
 $B.script_dir=path_elts.join("/")
 $B.strip_host=function(url){var parts_re=new RegExp('(.*?)://(.*?)/(.*)'),mo=parts_re.exec(url)
 if(mo){return mo[3]}
+console.log(Error().stack)
 throw Error('not a url: '+url)}
 $B.__ARGV=[]
 $B.webworkers={}
@@ -157,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-19 20:36:24.458510"
-__BRYTHON__.timestamp=1705692984458
+__BRYTHON__.compiled_date="2024-01-24 15:29:59.648056"
+__BRYTHON__.timestamp=1706106599648
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -220,11 +221,13 @@ function Token(type,string,start,end,line){start=start.slice(0,2)
 var res
 if($B.py_tokens){res={string,line}
 res.num_type=$B.py_tokens[type]
-if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}
+if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='NAME' &&['async','await'].includes(string)){res.num_type=$B.py_tokens[string.toUpperCase()]}
 res.lineno=start[0]
 res.col_offset=start[1]
 res.end_lineno=end[0]
-res.end_col_offset=end[1]}else{res={type,string,start,end,line}
+res.end_col_offset=end[1]
+if(res.num_type==-1){console.log('res',res)
+alert()}}else{res={type,string,start,end,line}
 res[0]=type
 res[1]=string
 res[2]=start
@@ -4835,7 +4838,16 @@ var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 var _ast,t0=globalThis.performance.now()
 if($B.parser_to_ast){console.log('use standard parser')
-_ast=new $B.Parser(src,filename,'file').parse()}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
+_ast=new $B.Parser(src,filename,'file').parse()}else if($B.py_tokens){
+console.log('use generated PEG parser')
+var parser=new $B.Parser(src,filename,'file')
+_ast=$B._PyPegen_parse(parser)
+console.log('tokens',parser.tokens)
+if(_ast===undefined){parser=new $B.Parser(src,filename,'file')
+parser.call_invalid_rules=true
+$B._PyPegen_parse(parser)
+var err_token=$B.last(parser.tokens)
+raise_error_known_location(_b_.SyntaxError,filename,err_token.lineno,err_token.col_offset,err_token.end_lineno,err_token.end_col_offset,err_token.line,'invalid syntax')}}else{var root=create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
 _ast=root.ast()}
 $B.parse_time+=globalThis.performance.now()-t0
@@ -4973,19 +4985,20 @@ $B.script_path+"#"+module_name)
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
-$B.tasks.push([$B.run_script,script,src,module_name,filename,true])}}
+$B.tasks.push([$B.run_script,script,src,module_name,$B.script_path,true])}}
 $B.loop()}
 $B.run_script=function(script,src,name,url,run_loop){
+var filename=$B.script_filename=$B.strip_host(url)
 var script_elts=url.split('/')
 script_elts.pop()
 $B.script_dir=script_elts.join('/')
-$B.file_cache[url]=src
-$B.url2name[url]=name
-$B.scripts[url]=script
-$B.make_import_paths(url)
+$B.file_cache[filename]=src
+$B.url2name[filename]=name
+$B.scripts[filename]=script
+$B.make_import_paths(filename)
 _b_.__debug__=$B.get_option('debug')> 0
 var root,js
-try{root=$B.py2js({src:src,filename:url},name,name)
+try{root=$B.py2js({src:src,filename},name,name)
 js=root.to_js()
 if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){console.log('err',err)
 return $B.handle_error($B.exception(err))}
@@ -6749,6 +6762,28 @@ $.single_expression=true}
 if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
 let res=$B.ast_js_to_py(_ast)
 res.$js_ast=_ast
+return res}}else if($B.py_tokens){
+try{var parser_mode=$.mode=='eval' ? 'eval' :'file'
+parser=new $B.Parser($.source,filename,parser_mode)
+_ast=$B._PyPegen_parse(parser)
+if(_ast===undefined){parser=new $B.Parser(src,filename,'file')
+parser.call_invalid_rules=true
+$B._PyPegen_parse(parser)
+var err_token=$B.last(parser.tokens)
+$B.raise_error_known_location(_b_.SyntaxError,filename,err_token.lineno,err_token.col_offset,err_token.end_lineno,err_token.end_col_offset,err_token.line,'invalid syntax')}}catch(err){if($.mode=='single'){try{parser.tokens.next }catch(err2){
+var tokens=parser.tokens,tester=tokens[tokens.length-2]
+if((tester.type=="NEWLINE" &&($.flags & 0x4000))||
+tester.type=="DEDENT" &&($.flags & 0x200)){err.__class__=_b_.SyntaxError
+err.args[0]='incomplete input'}}}
+throw err}
+if($.mode=='single' && _ast.body.length==1 &&
+_ast.body[0]instanceof $B.ast.Expr){
+parser=new $B.Parser($.source,filename,'eval')
+_ast=parser.parse()
+$.single_expression=true}
+if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
+let res=$B.ast_js_to_py(_ast)
+res.$js_ast=_ast
 return res}}else{var root=$B.parser.create_root_node(
 {src:$.source,filename},module_name,module_name)
 root.mode=$.mode
@@ -6876,8 +6911,16 @@ var _frame_obj=$B.frame_obj
 frame.$lineno=1
 if(src.__class__===code){_ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
-try{if($B.parser_to_ast){if(! _ast){var _mode=mode=='eval' ? 'eval' :'file'
-_ast=new $B.Parser(src,filename,_mode).parse()}}else{if(! _ast){var root=$B.parser.create_root_node(src,'<module>',frame[0],frame[2],1)
+try{if(! _ast){if($B.parser_to_ast){var _mode=mode=='eval' ? 'eval' :'file'
+_ast=new $B.Parser(src,filename,_mode).parse()}else if($B.py_tokens){
+var _mode=mode=='eval' ? 'eval' :'file'
+var parser=new $B.Parser(src,filename,_mode)
+_ast=$B._PyPegen_parse(parser)
+if(_ast===undefined){parser=new $B.Parser(src,filename,'file')
+parser.call_invalid_rules=true
+$B._PyPegen_parse(parser)
+var err_token=$B.last(parser.tokens)
+$B.raise_error_known_location(_b_.SyntaxError,filename,err_token.lineno,err_token.col_offset,err_token.end_lineno,err_token.end_col_offset,err_token.line,'invalid syntax')}}else{var root=$B.parser.create_root_node(src,'<module>',frame[0],frame[2],1)
 root.mode=mode
 root.filename=filename
 $B.parser.dispatch_tokens(root)
@@ -9363,6 +9406,7 @@ return from_unicode[enc](s)[0]}
 return fast_bytes(t)}
 function fast_bytes(t){return{
 __class__:_b_.bytes,source:t}}
+$B.fast_bytes=fast_bytes
 bytes.$factory=function(){return bytes.__new__.bind(null,bytes).apply(null,arguments)}
 bytes.__class__=_b_.type
 bytes.$is_class=true
@@ -9769,11 +9813,12 @@ modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=_module.__name__}}
 return true}
 function run_py(module_contents,path,module,compiled){
-$B.file_cache[path]=module_contents
-$B.url2name[path]=module.__name__
+var filename=$B.strip_host(path)
+$B.file_cache[filename]=module_contents
+$B.url2name[filename]=module.__name__
 var root,js,mod_name=module.__name__,
 src
-if(! compiled){src={src:module_contents,filename:path,imported:true}
+if(! compiled){src={src:module_contents,filename,imported:true}
 try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){err.$frame_obj=$B.frame_obj
 if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
 console.log('stack',$B.make_frames_stack(err.$frame_obj))}
@@ -9892,7 +9937,8 @@ $B.builtins.setattr(
 $B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
 return $module}else{var mod_name=modobj.__name__
 if($B.get_option('debug')> 1){console.log("run Python code from VFS",mod_name)}
-var record=run_py(module_contents,modobj.__file__,modobj)
+var path=$B.brython_path+'/'+modobj.__file__
+var record=run_py(module_contents,path,modobj)
 record.imports=imports.join(',')
 record.is_package=modobj.$is_package
 record.timestamp=$B.timestamp
@@ -15813,7 +15859,7 @@ for(var _if of this.ifs){js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
 return js}
 $B.ast.Constant.prototype.to_js=function(){if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){var s=this.value,srg=$B.surrogates(s)
 if(srg.length==0){return `'${s}'`}
-return `$B.make_String('${s}', [${srg}])`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){return this.value}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
+return `$B.make_String('${s}', [${srg}])`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){if(Number.isInteger(this.value)){return this.value}else{return `({__class__: _b_.float, value: ${this.value}})`}}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
 throw SyntaxError('bad value',this.value)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
 return 'continue'}
