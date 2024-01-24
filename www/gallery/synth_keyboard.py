@@ -2,7 +2,7 @@ import sys
 
 from browser import document, window, html, console, bind, timer, alert
 
-#import notes
+import notes
 import synthesizer
 import widgets
 
