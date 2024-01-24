@@ -281,25 +281,6 @@ function raise_error_known_token(type, filename, token, message){
 $B.raise_error_known_token = raise_error_known_token
 
 
-function handle_errortoken(token, token_reader){
-    if(token.string == "'" || token.string == '"'){
-        return 'unterminated string literal ' +
-            `(detected at line ${token.start[0]})`
-    }else if(token.string == '\\'){
-        var nxt = token_reader.next
-        if((! nxt) || nxt.type == 'NEWLINE'){
-            return 'unexpected EOF while parsing'
-        }else{
-            return 'unexpected character after line continuation character'
-        }
-    }else if(! ' `$'.includes(token.string)){
-        var u = _b_.ord(token.string).toString(16).toUpperCase()
-        u = 'U+' + '0'.repeat(Math.max(0, 4 - u.length)) + u
-        return `invalid character '${token.string}' (${u})`
-    }
-    return 'invalid syntax'
-}
-
 function set_position_from_EXTRA(ast_obj, EXTRA){
     for(var key in EXTRA){
         ast_obj[key] = EXTRA[key]
@@ -307,15 +288,6 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
 }
 
 
-// ---- end of names used by grammar actions
-
-
-// JS classes and functions used by the parsing algorithm
-
-// transform repeat string to min and max number of repetitions
-
-// An instance of Parser is created for each script / exec /
-// f-string expression
 var Parser = $B.Parser = function(src, filename, mode){
     // mode is 'file' for a script or exec(), 'eval' for eval()
     // Normalize line ends
