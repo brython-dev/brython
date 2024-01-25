@@ -368,4 +368,11 @@ assert nextafter(inf, 0) == 1.7976931348623157e+308
 
 assert nextafter(0, inf) == 5e-324
 
+# issue 2361
+def f():
+    pass
+
+assert_raises(TypeError, math.sqrt, f,
+    msg = "must be real number, not function")
+    
 print("passed all tests..")

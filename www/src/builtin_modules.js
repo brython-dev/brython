@@ -709,7 +709,7 @@
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
         },
         excepthook: function(exc_class, exc_value){
-            $B.handle_error(exc_value)
+            $B.show_error(exc_value)
         },
         exception: function(){
             var frame_obj = $B.frame_obj,

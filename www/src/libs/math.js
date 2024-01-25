@@ -18,7 +18,12 @@ var float_check = function(x) {
     }else if(x.__class__ === _b_.float){
         return x.value
     }
-    return _b_.float.$factory(x).value
+    try{
+        return _b_.float.$factory(x).value
+    }catch(err){
+        throw _b_.TypeError.$factory('must be real number, not ' +
+            $B.class_name(x))
+    }
 }
 
 function check_int(x){
