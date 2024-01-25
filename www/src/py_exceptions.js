@@ -1173,6 +1173,7 @@ $B.show_error = function(err){
     var trace = $B.error_trace($B.exception(err))
     try{
         var stderr = $B.get_stderr()
+        console.log('stderr', stderr)
         $B.$getattr(stderr, 'write')(trace)
         var flush = $B.$getattr(stderr, 'flush', _b_.None)
         if(flush !== _b_.None){

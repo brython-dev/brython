@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-25 21:24:05.157149"
-__BRYTHON__.timestamp=1706214245157
+__BRYTHON__.compiled_date="2024-01-25 21:36:40.285907"
+__BRYTHON__.timestamp=1706215000285
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -8623,6 +8623,7 @@ $B.get_stdout=function(){if($B.imported.sys){return $B.imported.sys.stdout}
 return $B.imported._sys.stdout}
 $B.show_error=function(err){var trace=$B.error_trace($B.exception(err))
 try{var stderr=$B.get_stderr()
+console.log('stderr',stderr)
 $B.$getattr(stderr,'write')(trace)
 var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}catch(print_exc_err){console.debug(trace)}}
@@ -15041,7 +15042,7 @@ while(frame_obj !==null){frame=frame_obj.frame
 exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}
 frame_obj=frame_obj.prev}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value){$B.handle_error(exc_value)},exception:function(){var frame_obj=$B.frame_obj,frame,exc
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value){$B.show_error(exc_value)},exception:function(){var frame_obj=$B.frame_obj,frame,exc
 while(frame_obj !==null){frame=frame_obj.frame
 exc=frame[1].$current_exception
 if(exc !==undefined){return exc}
