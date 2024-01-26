@@ -168,8 +168,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-24 15:34:36.996021"
-__BRYTHON__.timestamp=1706106876996
+__BRYTHON__.compiled_date="2024-01-25 22:06:34.808892"
+__BRYTHON__.timestamp=1706216794807
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 
@@ -240,31 +240,18 @@ return code}
 function $last(array){return array[array.length-1]}
 var ops='.,:;+-*/%~^|&=<>[](){}@',
 op2=['**','//','>>','<<'],augm_op='+-*/%^|&=<>@',closing={'}':'{',']':'[',')':'('}
-function Token(type,string,start,end,line){start=start.slice(0,2)
-var res
-if($B.py_tokens){res={type,string,line}
+function Token(type,string,lineno,col_offset,end_lineno,end_col_offset,line){var res={type,string,line,lineno,col_offset,end_lineno,end_col_offset}
 res.num_type=$B.py_tokens[type]
 if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='NAME' &&['async','await'].includes(string)){res.num_type=$B.py_tokens[string.toUpperCase()]}else if(type=='ENCODING'){res.num_type=$B.py_tokens.ENCODING}
-res.lineno=start[0]
-res.col_offset=start[1]
-res.end_lineno=end[0]
-res.end_col_offset=end[1]
-if(res.num_type===undefined){console.log('res',res)
-alert()}}else{res={type,string,start,end,line}
-res[0]=type
-res[1]=string
-res[2]=start
-res[3]=end
-res[4]=line}
 return res}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
-while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),[line_num,start-line_start],[line_num,pos-line_start+1],line))
+while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),line_num,start-line_start,line_num,pos-line_start+1,line))
 if(ix !==undefined){var nb=1
 if(src[pos]=='\r' && src[pos+1]=='\n'){nb++}else if(src[pos]===undefined){
 nb=0}
-t.push(Token(token_name,src.substr(pos,nb),[line_num,pos-line_start+1],[line_num,pos-line_start+nb+1],line))
-if(src[pos]===undefined){t.push(Token('NEWLINE','\n',[line_num,pos-line_start+1],[line_num,pos-line_start+2],''))}
+t.push(Token(token_name,src.substr(pos,nb),line_num,pos-line_start+1,line_num,pos-line_start+nb+1,line))
+if(src[pos]===undefined){t.push(Token('NEWLINE','\n',line_num,pos-line_start+1,line_num,pos-line_start+2,''))}
 pos+=nb}
 return{t,pos}}
 pos++}}
@@ -278,18 +265,6 @@ case 'o':
 return '01234567'.includes(char)
 default:
 throw Error('unknown num type '+num_type)}}
-$B.TokenReader=function(src,filename){this.tokens=[]
-this.tokenizer=$B.tokenizer(src,filename)
-this.position=0}
-$B.TokenReader.prototype.read=function(){var res
-if(this.position < this.tokens.length){res=this.tokens[this.position]}else{res=this.tokenizer.next()
-if(res.done){this.done=true
-return}
-res=res.value
-this.tokens.push(res)}
-this.position++
-return res}
-$B.TokenReader.prototype.seek=function(position){this.position=position}
 function nesting_level(token_modes){var ix=token_modes.length-1
 while(ix >=0){var mode=token_modes[ix]
 if(mode.nesting !==undefined){return mode.nesting}
@@ -303,7 +278,7 @@ for(var i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
 var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
-yield Token('ENCODING','utf-8',[0,0],[0,0],'')
+yield Token('ENCODING','utf-8',0,0,0,0,'')
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
 if(cp >=0xD800 && cp <=0xDBFF){
@@ -322,8 +297,8 @@ continue}
 char=token_mode.quote.repeat(3)
 pos+=2}
 if(fstring_buffer.length > 0){
-yield Token(FSTRING_MIDDLE,fstring_buffer,[line_num,fstring_start],[line_num,fstring_start+fstring_buffer.length],line)}
-yield Token(FSTRING_END,char,[line_num,pos],[line_num,pos],line)
+yield Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line)}
+yield Token(FSTRING_END,char,line_num,pos,line_num,pos,line)
 token_modes.pop()
 token_mode=$B.last(token_modes)
 state=null
@@ -331,7 +306,7 @@ continue}else if(char=='{'){if(src.charAt(pos)=='{'){
 fstring_buffer+=char
 pos++
 continue}else{
-if(fstring_buffer.length > 0){yield Token(FSTRING_MIDDLE,fstring_buffer,[line_num,fstring_start],[line_num,fstring_start+fstring_buffer.length],line)}
+if(fstring_buffer.length > 0){yield Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line)}
 token_mode='regular_within_fstring'
 fstring_expr_start=pos-line_start
 state=null
@@ -339,7 +314,7 @@ token_modes.push(token_mode)}}else if(char=='}'){if(src.charAt(pos)=='}'){
 fstring_buffer+=char
 pos++
 continue}else{
-yield Token('OP',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+yield Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 continue}}else if(char=='\\'){if(token_mode.raw){fstring_buffer+=char+char}else{if(fstring_escape){fstring_buffer+='\\'+char}
 fstring_escape=! fstring_escape}
 continue}else{if(fstring_escape){fstring_buffer+='\\'}
@@ -347,17 +322,17 @@ fstring_buffer+=char
 fstring_escape=false
 if(char=='\n'){line_num++}
 continue}}else if(token_mode=='format_specifier'){if(char==quote){if(format_specifier.length > 0){
-yield Token(FSTRING_MIDDLE,format_specifier,[line_num,fstring_start],[line_num,fstring_start+format_specifier.length],line)
+yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
 token_modes.pop()
 token_mode=$B.last(token_modes)
 continue}}else if(char=='{'){
-yield Token(FSTRING_MIDDLE,format_specifier,[line_num,fstring_start],[line_num,fstring_start+format_specifier.length],line)
+yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
 token_mode='regular_within_fstring'
 fstring_expr_start=pos-line_start
 state=null
 token_modes.push(token_mode)}else if(char=='}'){
-yield Token(FSTRING_MIDDLE,format_specifier,[line_num,fstring_start],[line_num,fstring_start+format_specifier.length],line)
-yield Token('OP',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
+yield Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 if(braces.length==0 ||$B.last(braces)!=='{'){throw Error('wrong braces')}
 braces.pop()
 token_modes.pop()
@@ -369,7 +344,7 @@ line=get_line_at(pos-1)
 line_start=pos
 line_num++
 if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))){
-yield Token('NL',mo[0],[line_num,0],[line_num,mo[0].length],line)
+yield Token('NL',mo[0],line_num,0,line_num,mo[0].length,line)
 pos+=mo[0].length-1
 continue}else if(char=='#'){comment=get_comment(src,pos,line_num,line_start,'NL',line)
 for(var item of comment.t){yield item}
@@ -388,21 +363,21 @@ var comment=get_comment(src,pos+1,line_num,line_start,'NL',line)
 for(var item of comment.t){yield item}
 pos=comment.pos
 continue}else if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
-yield Token('NL','',[line_num,pos-line_start+1],[line_num,pos-line_start+1+mo[0].length],line)
+yield Token('NL','',line_num,pos-line_start+1,line_num,pos-line_start+1+mo[0].length,line)
 pos+=mo[0].length
 continue}
 if(indents.length==0 ||indent > $last(indents)){indents.push(indent)
-yield Token('INDENT','',[line_num,0],[line_num,indent],line)}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
+yield Token('INDENT','',line_num,0,line_num,indent,line)}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
 if(ix==-1){var error=Error('unindent does not match '+
 'any outer indentation level')
 error.type='IndentationError'
 error.line_num=line_num
 throw error }
 for(var i=indents.length-1;i > ix;i--){indents.pop()
-yield Token('DEDENT','',[line_num,indent],[line_num,indent],line)}}
+yield Token('DEDENT','',line_num,indent,line_num,indent,line)}}
 state=null}else{
 while(indents.length > 0){indents.pop()
-yield Token('DEDENT','',[line_num,indent],[line_num,indent],line)}
+yield Token('DEDENT','',line_num,indent,line_num,indent,line)}
 state=null
 pos--}
 break
@@ -451,9 +426,9 @@ while(src[pos]==char){pos++
 op+=char}
 var dot_pos=pos-line_start-op.length+1
 while(op.length >=3){
-yield Token('OP','...',[line_num,dot_pos],[line_num,dot_pos+3],line)
+yield Token('OP','...',line_num,dot_pos,line_num,dot_pos+3,line)
 op=op.substr(3)}
-for(var i=0;i < op.length;i++){yield Token('OP','.',[line_num,dot_pos],[line_num,dot_pos+1],line)
+for(var i=0;i < op.length;i++){yield Token('OP','.',line_num,dot_pos,line_num,dot_pos+1,line)
 dot_pos++}}
 break
 case '\\':
@@ -472,7 +447,7 @@ case '\n':
 case '\r':
 var token_name=braces.length > 0 ? 'NL':'NEWLINE'
 mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))
-yield Token(token_name,mo[0],[line_num,pos-line_start],[line_num,pos-line_start+mo[0].length],line)
+yield Token(token_name,mo[0],line_num,pos-line_start,line_num,pos-line_start+mo[0].length,line)
 pos+=mo[0].length-1
 if(token_name=='NEWLINE'){state='line_start'}else{line_num++
 line_start=pos+1
@@ -485,7 +460,7 @@ name=char}else if($B.in_unicode_category('Nd',ord(char))){state='NUMBER'
 num_type=''
 number=char}else if(ops.includes(char)){if(token_mode=='regular_within_fstring' &&
 (char==':' ||char=='}')){if(char==':'){
-if(nesting_level(token_modes)==braces.length-1){let colon=Token('OP',char,[line_num,pos-line_start-op.length+1],[line_num,pos-line_start+1],line)
+if(nesting_level(token_modes)==braces.length-1){let colon=Token('OP',char,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)
 colon.metadata=src.substr(
 line_start+fstring_expr_start,pos-line_start-fstring_expr_start-1)
 yield colon
@@ -493,7 +468,7 @@ token_modes.pop()
 token_mode='format_specifier'
 token_modes.push(token_mode)
 continue}}else{
-let closing_brace=Token('OP',char,[line_num,pos-line_start-op.length+1],[line_num,pos-line_start+1],line)
+let closing_brace=Token('OP',char,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)
 closing_brace.metadata=src.substring(
 line_start+fstring_start+2,pos-1)
 yield closing_brace
@@ -511,16 +486,16 @@ pos++}else if((char=='-' && src[pos]=='>')||
 (char==':' && src[pos]=='=')){op+=src[pos]
 pos++}
 if('[({'.includes(char)){braces.push(char)}else if('])}'.includes(char)){if(braces && $last(braces)==closing[char]){braces.pop()}else{braces.push(char)}}
-yield Token('OP',op,[line_num,pos-line_start-op.length+1],[line_num,pos-line_start+1],line)}else if(char=='!'){if(src[pos]=='='){yield Token('OP','!=',[line_num,pos-line_start],[line_num,pos-line_start+2],line)
+yield Token('OP',op,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)}else if(char=='!'){if(src[pos]=='='){yield Token('OP','!=',line_num,pos-line_start,line_num,pos-line_start+2,line)
 pos++}else{
-let token=Token('OP',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+let token=Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 token.metadata=src.substring(
 line_start+fstring_start+2,pos-1)
 yield token}}else if(char==' ' ||char=='\t'){}else{
 var cp=char.codePointAt(0)
 var err_msg=`invalid character '${char}' (U+`+
 `${cp.toString(16).toUpperCase()})`
-var err_token=Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+var err_token=Token('ERRORTOKEN',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 $B.raise_error_known_token(_b_.SyntaxError,filename,err_token,err_msg)}}
 break
 case 'NAME':
@@ -539,13 +514,13 @@ token_mode.raw=prefix.toLowerCase().includes('r')
 token_modes.push(token_mode)
 var s=triple_quote ? quote.repeat(3):quote
 var end_col=fstring_start+name.length+s.length
-yield Token(FSTRING_START,prefix+s,[line_num,fstring_start],[line_num,end_col],line)
+yield Token(FSTRING_START,prefix+s,line_num,fstring_start,line_num,end_col,line)
 continue}
 escaped=false
 string_start=[line_num,pos-line_start-name.length,line_start]
-string=''}else{yield Token('NAME',name,[line_num,pos-line_start-name.length],[line_num,pos-line_start],line)
+string=''}else{yield Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line)
 state=null
-pos--}}else{yield Token('NAME',name,[line_num,pos-line_start-name.length],[line_num,pos-line_start],line)
+pos--}}else{yield Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line)
 state=null
 pos--}
 break
@@ -558,11 +533,11 @@ string_start[2]-1,pos+2)}
 var full_string
 if(! triple_quote){full_string=prefix+quote+string+
 quote
-yield Token('STRING',full_string,string_start,[line_num,pos-line_start+1],string_line)
+yield Token('STRING',full_string,string_start[0],string_start[1],line_num,pos-line_start+1,string_line)
 state=null}else if(char+src.substr(pos,2)==
 quote.repeat(3)){full_string=prefix+quote.repeat(3)+
 string+quote.repeat(3)
-yield Token('STRING',full_string,string_start,[line_num,pos-line_start+3],string_line)
+yield Token('STRING',full_string,string_start[0],string_start[1],line_num,pos-line_start+3,string_line)
 pos+=2
 state=null}else{string+=char}}else{string+=char}
 escaped=false
@@ -573,10 +548,10 @@ if(! escaped && ! triple_quote){
 var quote_pos=string_start[1]+line_start-1
 pos=quote_pos
 while(src[pos-1]==' '){pos--}
-while(pos < quote_pos){yield Token('ERRORTOKEN',' ',[line_num,pos-line_start+1],[line_num,pos-line_start+2],line)
+while(pos < quote_pos){yield Token('ERRORTOKEN',' ',line_num,pos-line_start+1,line_num,pos-line_start+2,line)
 pos++}
 pos++
-yield Token('ERRORTOKEN',quote,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+yield Token('ERRORTOKEN',quote,line_num,pos-line_start,line_num,pos-line_start+1,line)
 state=null
 pos++
 break}
@@ -601,17 +576,17 @@ break
 case 'NUMBER':
 if(test_num(num_type,char)){number+=char}else if(char=='_' && ! number.endsWith('.')){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}else if(src[pos]===undefined ||
 ! test_num(num_type,src[pos])){
-yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+yield Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line)
 state=null
 pos--}else{number+=char}}else if(char=='.' && ! number.includes(char)){number+=char}else if(char.toLowerCase()=='e' &&
 ! number.toLowerCase().includes('e')){if('+-'.includes(src[pos])||
-$B.in_unicode_category('Nd',ord(src[pos]))){number+=char}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+$B.in_unicode_category('Nd',ord(src[pos]))){number+=char}else{yield Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line)
 state=null
 pos--}}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){
 number+=char
-yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
-state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,'invalid decimal literal')}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+yield Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line)
+state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,'invalid decimal literal')}else{yield Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line)
 state=null
 pos--}
 break}}
@@ -620,20 +595,20 @@ switch(state){case 'line_start':
 line_num++
 break
 case 'NAME':
-yield Token('NAME',name,[line_num,pos-line_start-name.length+1],[line_num,pos-line_start+1],line)
+yield Token('NAME',name,line_num,pos-line_start-name.length+1,line_num,pos-line_start+1,line)
 break
 case 'NUMBER':
-yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
+yield Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line)
 break
 case 'STRING':
 throw SyntaxError(
 `unterminated ${triple_quote ? 'triple-quoted ' : ''}`+
 `string literal (detected at line ${line_num})`)}
-if(! src.endsWith('\n')&& state !=line_start){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+1],line+'\n')
+if(! src.endsWith('\n')&& state !=line_start){yield Token('NEWLINE','',line_num,pos-line_start+1,line_num,pos-line_start+1,line+'\n')
 line_num++}
 while(indents.length > 0){indents.pop()
-yield Token('DEDENT','',[line_num,0],[line_num,0],'')}
-yield Token('ENDMARKER','',[line_num,0],[line_num,0],'')}})(__BRYTHON__)
+yield Token('DEDENT','',line_num,0,line_num,0,'')}
+yield Token('ENDMARKER','',line_num,0,line_num,0,'')}})(__BRYTHON__)
 ;
 (function($B){
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
@@ -967,7 +942,7 @@ _b_.__debug__=$B.get_option('debug')> 0
 var root,js
 try{root=$B.py2js({src:src,filename},name,name)
 js=root.to_js()
-if($B.get_option_from_filename('debug',url)> 1){console.log($B.format_indent(js,0))}}catch(err){console.log('err',err)
+if($B.get_option_from_filename('debug',filename)> 1){console.log($B.format_indent(js,0))}}catch(err){console.log('err',err)
 return $B.handle_error($B.exception(err))}
 var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
 $B.tasks.push(["execute",_script])
@@ -8328,10 +8303,10 @@ value=to_digits(value)
 if(isFinite(value)){return fast_float(parseFloat(value))}else{throw _b_.TypeError.$factory(
 "could not convert string to float: "+
 _b_.repr(original_value))}}}
-let klass=value.__class__,float_method=$B.$getattr(klass,'__float__',null)
+let klass=$B.get_class(value),float_method=$B.$getattr(klass,'__float__',null)
 if(float_method===null){var index_method=$B.$getattr(klass,'__index__',null)
 if(index_method===null){throw _b_.TypeError.$factory("float() argument must be a string or a "+
-"number, not '"+$B.class_name(value)+"'")}
+"real number, not '"+$B.class_name(value)+"'")}
 let index=$B.$call(index_method)(value),index_klass=$B.get_class(index)
 if(index_klass===_b_.int){return fast_float(index)}else if(index_klass===$B.long_int){return $B.long_int.__float__(index)}else if(index_klass.__mro__.indexOf(_b_.int)>-1){let msg=`${$B.class_name(value)}.__index__ returned `+
 `non-int (type ${$B.class_name(index)}).  The `+
@@ -10957,7 +10932,7 @@ while(frame_obj !==null){frame=frame_obj.frame
 exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}
 frame_obj=frame_obj.prev}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value){$B.handle_error(exc_value)},exception:function(){var frame_obj=$B.frame_obj,frame,exc
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value){$B.show_error(exc_value)},exception:function(){var frame_obj=$B.frame_obj,frame,exc
 while(frame_obj !==null){frame=frame_obj.frame
 exc=frame[1].$current_exception
 if(exc !==undefined){return exc}
@@ -14644,12 +14619,6 @@ exc.args[1]=$B.fast_tuple([filename,exc.lineno,exc.offset,exc.text,exc.end_linen
 exc.$frame_obj=$B.frame_obj
 throw exc}
 $B.raise_error_known_token=raise_error_known_token
-function handle_errortoken(token,token_reader){if(token.string=="'" ||token.string=='"'){return 'unterminated string literal '+
-`(detected at line ${token.start[0]})`}else if(token.string=='\\'){var nxt=token_reader.next
-if((! nxt)||nxt.type=='NEWLINE'){return 'unexpected EOF while parsing'}else{return 'unexpected character after line continuation character'}}else if(! ' `$'.includes(token.string)){var u=_b_.ord(token.string).toString(16).toUpperCase()
-u='U+'+'0'.repeat(Math.max(0,4-u.length))+u
-return `invalid character '${token.string}' (${u})`}
-return 'invalid syntax'}
 function set_position_from_EXTRA(ast_obj,EXTRA){for(var key in EXTRA){ast_obj[key]=EXTRA[key]}}
 var Parser=$B.Parser=function(src,filename,mode){
 src=src.replace(/\r\n/gm,"\n")
