@@ -239,9 +239,6 @@ var ast_dump = $B.ast_dump = function(tree, indent){
     return res
 }
 
-// Get options set by "from __future__ import XXX"
-var CO_FUTURE_ANNOTATIONS = 0x1000000
-
 function get_line(filename, lineno){
     var src = $B.file_cache[filename],
         line = _b_.None
@@ -287,7 +284,7 @@ $B.future_features = function(mod, filename){
                         get_line(filename, child.lineno),
                         "not a chance")
                 }else if(name == "annotations"){
-                    features |= CO_FUTURE_ANNOTATIONS
+                    features |= $B.CO_FUTURE_ANNOTATIONS
                 }else if(VALID_FUTURES.indexOf(name) == -1){
                     raise_error_known_location(_b_.SyntaxError, filename,
                         alias.lineno, alias.col_offset,
@@ -6965,10 +6962,10 @@ SubscripCtx.prototype.ast = function(){
     if(this.tree.length > 1){
         var slice_items = this.tree.map(x => x.ast())
         slice = new ast.Tuple(slice_items)
-        set_position(slice, this.position, this.end_position)
     }else{
         slice = this.tree[0].ast()
     }
+    set_position(slice, this.position, this.end_position)
     slice.ctx = new ast.Load()
     var value = this.value.ast()
     if(value.ctx){
@@ -8916,6 +8913,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     var js_obj = $B.js_from_root({ast: _ast,
                                   symtable,
                                   filename,
+                                  src,
                                   imported})
     var js_from_ast = js_obj.js
 
@@ -9338,7 +9336,7 @@ function run_scripts(_scripts){
             $B.file_cache[filename] = src
             $B.url2name[filename] = module_name
             $B.scripts[filename] = script
-            $B.tasks.push([$B.run_script, script, src, module_name, 
+            $B.tasks.push([$B.run_script, script, src, module_name,
                            $B.script_path, true])
         }
     }

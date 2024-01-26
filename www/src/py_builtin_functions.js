@@ -396,7 +396,7 @@ _b_.compile = function() {
                     filename, err_token.lineno, err_token.col_offset,
                     err_token.end_lineno, err_token.end_col_offset,
                     err_token.line, 'invalid syntax')
-            }      
+            }
         }catch(err){
             if($.mode == 'single'){
                 try{
@@ -493,6 +493,7 @@ _b_.compile = function() {
         ast: _ast,
         symtable,
         filename,
+        src: $.source
     })
 
     return $
@@ -821,6 +822,7 @@ var $$eval = _b_.eval = function(){
             js_obj = $B.js_from_root({ast: _ast,
                                       symtable,
                                       filename,
+                                      src,
                                       namespaces: {local_name,
                                                    exec_locals,
                                                    global_name,

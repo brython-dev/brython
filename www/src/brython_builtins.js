@@ -172,6 +172,7 @@ $B.tz_name = long.substr(ix).trim()
 // compiler flags, used in libs/_ast.js and compile()
 $B.PyCF_ONLY_AST = 1024
 $B.PyCF_TYPE_COMMENTS = 0x1000
+$B.CO_FUTURE_ANNOTATIONS = 0x1000000
 
 if($B.isWebWorker){
     $B.charset = "utf-8"

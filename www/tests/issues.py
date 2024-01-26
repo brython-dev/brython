@@ -3225,6 +3225,36 @@ with (lambda: None):
     pass
 ''')
 
+# issue 2356
+postponed = """
+from __future__ import annotations
+
+if False:
+  Fraction = True
+
+def isNum(x: Fraction) -> Fraction:
+   pass
+
+annotations = isNum.__annotations__
+"""
+
+ns = {}
+exec(postponed, ns)
+ann = ns['annotations']
+assert ann == {'x': 'Fraction', 'return': 'Fraction'}, ann
+
+not_postponed = """
+if False:
+  Fraction = True
+
+def isNum(x: Fraction) -> Fraction:
+   pass
+
+print(isNum.__annotations__)
+"""
+assert_raises(NameError, exec, not_postponed, {},
+    msg="name 'Fraction' is not defined")
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

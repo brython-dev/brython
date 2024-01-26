@@ -60,8 +60,6 @@ var LOCAL = 1,
     FREE = 4,
     CELL = 5
 
-var CO_FUTURE_ANNOTATIONS = 0x1000000 // CPython Include/code.h
-
 var TYPE_MODULE = 2
 
 var NULL = undefined
@@ -97,7 +95,7 @@ function ST_LOCATION(x){
 function _Py_Mangle(privateobj, ident){
     /* Name mangling: __private becomes _classname__private.
        This is independent from how the name is used. */
-    var plen, 
+    var plen,
         ipriv
     if (privateobj == NULL || ! ident.startsWith('__')) {
         return ident;
@@ -1816,7 +1814,7 @@ visitor.params = function(st, args){
 }
 
 visitor.annotation = function(st, annotation){
-    var future_annotations = st.future.features & CO_FUTURE_ANNOTATIONS
+    var future_annotations = st.future.features & $B.CO_FUTURE_ANNOTATIONS
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               annotation,
@@ -1846,7 +1844,7 @@ visitor.argannotations = function(st, args){
 }
 
 visitor.annotations = function(st, o, a, returns){
-    var future_annotations = st.future.ff_features & CO_FUTURE_ANNOTATIONS;
+    var future_annotations = st.future.ff_features & $B.CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               o, o.lineno, o.col_offset, o.end_lineno,
