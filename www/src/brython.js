@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-26 11:06:37.294410"
-__BRYTHON__.timestamp=1706263597294
+__BRYTHON__.compiled_date="2024-01-26 12:15:42.810623"
+__BRYTHON__.timestamp=1706267742810
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -15580,7 +15580,8 @@ if(check_func){obj._check()}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
-function annotation_to_str(obj){var s
+function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)
+var s
 if(obj instanceof $B.ast.Name){s=obj.id}else if(obj instanceof $B.ast.BinOp){s=annotation_to_str(obj.left)+'|'+annotation_to_str(obj.right)}else if(obj instanceof $B.ast.Subscript){s=annotation_to_str(obj.value)+'['+
 annotation_to_str(obj.slice)+']'}else if(obj instanceof $B.ast.Constant){if(obj.value===_b_.None){s='None'}else{console.log('other constant',obj)}}else{console.log('other annotation',obj)}
 return s}
@@ -15592,7 +15593,7 @@ if(! scope.has_annotation){js+='locals.__annotations__ = locals.__annotations__ 
 scope.has_annotation=true
 scope.locals.add('__annotations__')}
 if(this.target instanceof $B.ast.Name){var ann_value=postpone_annotation ?
-`'${annotation_to_str(this.annotation)}'` :
+`'${annotation_to_str(this.annotation, scopes)}'` :
 $B.js_from_ast(this.annotation,scopes)}
 if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
 if(this.target instanceof $B.ast.Name && this.simple){let scope=bind(this.target.id,scopes),mangled=mangle(scopes,scope,this.target.id)
@@ -16409,12 +16410,13 @@ if(postponed){
 var src=scopes.src
 if(src===undefined){console.log('no src, filename',scopes)}}
 var ann_items=[]
-if(parsed_args.annotations){for(var arg_ann in parsed_args.annotations){if(in_class){arg_ann=mangle(scopes,class_scope,arg_ann)}
+if(parsed_args.annotations){for(var arg_ann in parsed_args.annotations){var ann_ast=parsed_args.annotations[arg_ann]
+if(in_class){arg_ann=mangle(scopes,class_scope,arg_ann)}
 if(postponed){
-var ann_ast=parsed_args.annotations[arg_ann],ann_str=get_source_from_position(src,ann_ast)
-ann_items.push(`['${arg_ann}', '${ann_str}']`)}else{var value=parsed_args.annotations[arg_ann].to_js(scopes)
+var ann_str=annotation_to_str(ann_ast,scopes)
+ann_items.push(`['${arg_ann}', '${ann_str}']`)}else{var value=ann_ast.to_js(scopes)
 ann_items.push(`['${arg_ann}', ${value}]`)}}}
-if(this.returns){if(postponed){var ann_str=get_source_from_position(src,this.returns)
+if(this.returns){if(postponed){var ann_str=annotation_to_str(this.returns,scopes)
 ann_items.push(`['return', '${ann_str}']`)}else{ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}}
 js+=`${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`}else{js+=`${func_ref}.__annotations__ = $B.empty_dict()\n`}
 if(has_type_params){scopes.pop()}

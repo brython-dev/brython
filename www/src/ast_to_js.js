@@ -855,7 +855,9 @@ $B.ast.Assert.prototype.to_js = function(scopes){
            `throw _b_.AssertionError.$factory(${msg})}\n`
 }
 
-function annotation_to_str(obj){
+function annotation_to_str(obj, scopes){
+    return get_source_from_position(scopes.src, obj)
+
     var s
     if(obj instanceof $B.ast.Name){
         s = obj.id
@@ -888,7 +890,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     }
     if(this.target instanceof $B.ast.Name){
         var ann_value = postpone_annotation ?
-                `'${annotation_to_str(this.annotation)}'` :
+                `'${annotation_to_str(this.annotation, scopes)}'` :
                 $B.js_from_ast(this.annotation, scopes)
     }
     if(this.value){
@@ -2609,23 +2611,23 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         var ann_items = []
         if(parsed_args.annotations){
             for(var arg_ann in parsed_args.annotations){
+                var ann_ast = parsed_args.annotations[arg_ann]
                 if(in_class){
                     arg_ann = mangle(scopes, class_scope, arg_ann)
                 }
                 if(postponed){
                     // PEP 563
-                    var ann_ast = parsed_args.annotations[arg_ann],
-                        ann_str = get_source_from_position(src, ann_ast)
+                    var ann_str = annotation_to_str(ann_ast, scopes)
                     ann_items.push(`['${arg_ann}', '${ann_str}']`)
                 }else{
-                    var value = parsed_args.annotations[arg_ann].to_js(scopes)
+                    var value = ann_ast.to_js(scopes)
                     ann_items.push(`['${arg_ann}', ${value}]`)
                 }
             }
         }
         if(this.returns){
             if(postponed){
-                var ann_str = get_source_from_position(src, this.returns)
+                var ann_str = annotation_to_str(this.returns, scopes)
                 ann_items.push(`['return', '${ann_str}']`)
             }else{
                 ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
