@@ -138,6 +138,35 @@ $B.decode_position = function(pos){
     return pos
 }
 
+function get_source_from_position(src, ast_obj){
+    var lines = src.split('\n'),
+        start_line = lines[ast_obj.lineno - 1]
+    if(ast_obj.end_lineno == ast_obj.lineno){
+        return start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
+    }else{
+        var res = start_line.substr(ast_obj.col_offset),
+            line_num = ast_obj.lineno + 1
+        while(line_num < ast_obj.end_lineno){
+            res += lines[line_num - 1]
+        }
+        res += lines[ast_obj.end_lineno - 1].substr(0, ast_obj.end_col_offset)
+        return res
+    }
+}
+
+function get_names(ast_obj){
+    // get all names used in ast object
+    var res = new Set()
+    if(ast_obj instanceof $B.ast.Name){
+        res.add(ast_obj)
+    }else if(ast_obj instanceof $B.ast.Subscript){
+        for(var item of get_names(ast_obj.value)){
+            res.add(item)
+        }
+    }
+    return res
+}
+
 function last_scope(scopes){
     var ix = scopes.length - 1
     while(scopes[ix].parent){
@@ -909,9 +938,9 @@ $B.ast.Assert.prototype.to_js = function(scopes){
            `throw _b_.AssertionError.$factory(${msg})}\n`
 }
 
-var CO_FUTURE_ANNOTATIONS = 0x1000000
+function annotation_to_str(obj, scopes){
+    return get_source_from_position(scopes.src, obj)
 
-function annotation_to_str(obj){
     var s
     if(obj instanceof $B.ast.Name){
         s = obj.id
@@ -934,7 +963,7 @@ function annotation_to_str(obj){
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
     var postpone_annotation = scopes.symtable.table.future.features &
-            CO_FUTURE_ANNOTATIONS
+            $B.CO_FUTURE_ANNOTATIONS
     var scope = last_scope(scopes)
     var js = ''
     if(! scope.has_annotation){
@@ -944,7 +973,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     }
     if(this.target instanceof $B.ast.Name){
         var ann_value = postpone_annotation ?
-                `'${annotation_to_str(this.annotation)}'` :
+                `'${annotation_to_str(this.annotation, scopes)}'` :
                 $B.js_from_ast(this.annotation, scopes)
     }
     if(this.value){
@@ -2653,20 +2682,40 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `${func_ref} = ${name2}\n`
     if(this.returns || parsed_args.annotations){
-        var ann_items = []
-        if(this.returns){
-            ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
+        var features = scopes.symtable.table.future.features,
+            postponed = features & $B.CO_FUTURE_ANNOTATIONS
+        if(postponed){
+            // PEP 563
+            var src = scopes.src
+            if(src === undefined){
+                console.log('no src, filename', scopes)
+            }
         }
+        var ann_items = []
         if(parsed_args.annotations){
             for(var arg_ann in parsed_args.annotations){
-                var value = parsed_args.annotations[arg_ann].to_js(scopes)
+                var ann_ast = parsed_args.annotations[arg_ann]
                 if(in_class){
                     arg_ann = mangle(scopes, class_scope, arg_ann)
                 }
-                ann_items.push(`['${arg_ann}', ${value}]`)
+                if(postponed){
+                    // PEP 563
+                    var ann_str = annotation_to_str(ann_ast, scopes)
+                    ann_items.push(`['${arg_ann}', '${ann_str}']`)
+                }else{
+                    var value = ann_ast.to_js(scopes)
+                    ann_items.push(`['${arg_ann}', ${value}]`)
+                }
             }
         }
-
+        if(this.returns){
+            if(postponed){
+                var ann_str = annotation_to_str(this.returns, scopes)
+                ann_items.push(`['return', '${ann_str}']`)
+            }else{
+                ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
+            }
+        }
         js += `${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`
     }else{
         js += `${func_ref}.__annotations__ = $B.empty_dict()\n`
@@ -3261,7 +3310,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
             js += `,\n${local_name} = locals`
         }
     }
-    
+
     js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
@@ -4027,10 +4076,10 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
 var state = {}
 
 $B.js_from_root = function(arg){
-
     var ast_root = arg.ast,
         symtable = arg.symtable,
         filename = arg.filename,
+        src = arg.src,
         namespaces = arg.namespaces,
         imported = arg.imported
 
@@ -4044,6 +4093,7 @@ $B.js_from_root = function(arg){
     state.filename = filename
     scopes.symtable = symtable
     scopes.filename = filename
+    scopes.src = src
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}

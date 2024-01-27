@@ -403,6 +403,7 @@ _b_.compile = function() {
         ast: _ast,
         symtable,
         filename,
+        src: $.source
     })
 
     return $
@@ -708,6 +709,7 @@ var $$eval = _b_.eval = function(){
             js_obj = $B.js_from_root({ast: _ast,
                                       symtable,
                                       filename,
+                                      src,
                                       namespaces: {local_name,
                                                    exec_locals,
                                                    global_name,
