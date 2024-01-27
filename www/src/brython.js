@@ -71,6 +71,7 @@ while(ix < minlen && short[ix]==long[ix]){ix++}
 $B.tz_name=long.substr(ix).trim()
 $B.PyCF_ONLY_AST=1024
 $B.PyCF_TYPE_COMMENTS=0x1000
+$B.CO_FUTURE_ANNOTATIONS=0x1000000
 $B.PyCF_ALLOW_INCOMPLETE_INPUT=0x4000
 if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
@@ -153,9 +154,9 @@ __BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simpl
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pyclbr','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.music21','site-packages.music21.abcFormat','site-packages.music21.alpha','site-packages.music21.alpha.analysis','site-packages.music21.analysis','site-packages.music21.audioSearch','site-packages.music21.braille','site-packages.music21.capella','site-packages.music21.chord','site-packages.music21.common','site-packages.music21.converter','site-packages.music21.corpus','site-packages.music21.features','site-packages.music21.figuredBass','site-packages.music21.graph','site-packages.music21.humdrum','site-packages.music21.ipython21','site-packages.music21.languageExcerpts','site-packages.music21.lily','site-packages.music21.mei','site-packages.music21.mei.test','site-packages.music21.metadata','site-packages.music21.meter','site-packages.music21.midi','site-packages.music21.musedata','site-packages.music21.musedata.testPrimitive','site-packages.music21.musedata.testPrimitive.test01','site-packages.music21.musicxml','site-packages.music21.musicxml.lilypondTestSuite','site-packages.music21.noteworthy','site-packages.music21.omr','site-packages.music21.romanText','site-packages.music21.scale','site-packages.music21.scale.scala','site-packages.music21.scale.scala.scl','site-packages.music21.search','site-packages.music21.stream','site-packages.music21.test','site-packages.music21.tree','site-packages.music21.vexflow','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
@@ -168,9 +169,9 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-25 22:06:34.808892"
-__BRYTHON__.timestamp=1706216794807
-__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","python_re_new","unicodedata"]
+__BRYTHON__.compiled_date="2024-01-27 08:11:47.600795"
+__BRYTHON__.timestamp=1706339507599
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
 (function($B){const tokens=['ENDMARKER','NAME','NUMBER','STRING','NEWLINE','INDENT','DEDENT','LPAR','RPAR','LSQB','RSQB','COLON','COMMA','SEMI','PLUS','MINUS','STAR','SLASH','VBAR','AMPER','LESS','GREATER','EQUAL','DOT','PERCENT','LBRACE','RBRACE','EQEQUAL','NOTEQUAL','LESSEQUAL','GREATEREQUAL','TILDE','CIRCUMFLEX','LEFTSHIFT','RIGHTSHIFT','DOUBLESTAR','PLUSEQUAL','MINEQUAL','STAREQUAL','SLASHEQUAL','PERCENTEQUAL','AMPEREQUAL','VBAREQUAL','CIRCUMFLEXEQUAL','LEFTSHIFTEQUAL','RIGHTSHIFTEQUAL','DOUBLESTAREQUAL','DOUBLESLASH','DOUBLESLASHEQUAL','AT','ATEQUAL','RARROW','ELLIPSIS','COLONEQUAL','EXCLAMATION','OP','AWAIT','ASYNC','TYPE_IGNORE','TYPE_COMMENT','SOFT_KEYWORD','FSTRING_START','FSTRING_MIDDLE','FSTRING_END','COMMENT','NL',
@@ -680,7 +681,6 @@ return res}
 $B.last=function(table){if(table===undefined){console.log($B.make_frames_stack())}
 return table[table.length-1]}
 var ast=$B.ast
-var CO_FUTURE_ANNOTATIONS=0x1000000
 function get_line(filename,lineno){var src=$B.file_cache[filename],line=_b_.None
 if(src !==undefined){var lines=src.split('\n')
 line=lines[lineno-1]}
@@ -694,7 +694,7 @@ i++}}
 while(i < mod.body.length){var child=mod.body[i]
 if(child instanceof $B.ast.ImportFrom && child.module=='__future__'){
 for(var alias of child.names){var name=alias.name
-if(name=="braces"){raise_error_known_location(_b_.SyntaxError,filename,alias.lineno,alias.col_offset,alias.end_lineno,alias.end_col_offset,get_line(filename,child.lineno),"not a chance")}else if(name=="annotations"){features |=CO_FUTURE_ANNOTATIONS}else if(VALID_FUTURES.indexOf(name)==-1){raise_error_known_location(_b_.SyntaxError,filename,alias.lineno,alias.col_offset,alias.end_lineno,alias.end_col_offset,get_line(filename,child.lineno),`future feature ${name} is not defined`)}}
+if(name=="braces"){raise_error_known_location(_b_.SyntaxError,filename,alias.lineno,alias.col_offset,alias.end_lineno,alias.end_col_offset,get_line(filename,child.lineno),"not a chance")}else if(name=="annotations"){features |=$B.CO_FUTURE_ANNOTATIONS}else if(VALID_FUTURES.indexOf(name)==-1){raise_error_known_location(_b_.SyntaxError,filename,alias.lineno,alias.col_offset,alias.end_lineno,alias.end_col_offset,get_line(filename,child.lineno),`future feature ${name} is not defined`)}}
 i++}else{break}}
 return{features}}
 $B.format_indent=function(js,indent){
@@ -795,7 +795,7 @@ var parser=new $B.Parser(src,filename,'file'),_ast=$B._PyPegen.run_parser(parser
 $B.parse_time+=globalThis.performance.now()-t0
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
-var js_obj=$B.js_from_root({ast:_ast,symtable,filename,imported})
+var js_obj=$B.js_from_root({ast:_ast,symtable,filename,src,imported})
 var js_from_ast=js_obj.js
 return{
 _ast,imports:js_obj.imports,to_js:function(){return js_from_ast}}}
@@ -2716,7 +2716,7 @@ $._ast=$B.ast_js_to_py(_ast)
 $._ast.$js_ast=_ast
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
-$B.js_from_root({ast:_ast,symtable,filename,})
+$B.js_from_root({ast:_ast,symtable,filename,src:$.source})
 return $}
 _b_.debug=$B.debug > 0
 _b_.delattr=function(obj,attr){
@@ -2816,7 +2816,7 @@ if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
 try{if(! _ast){var _mode=mode=='eval' ? 'eval' :'file'
 var parser=new $B.Parser(src,filename,_mode)
 _ast=$B._PyPegen.run_parser(parser)}
-var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root({ast:_ast,symtable,filename,namespaces:{local_name,exec_locals,global_name,exec_globals}}),js=js_obj.js}catch(err){if(err.args){if(err.args[1]){exec_locals.$lineno=err.args[1][1]}}else{console.log('JS Error',err.message)}
+var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root({ast:_ast,symtable,filename,src,namespaces:{local_name,exec_locals,global_name,exec_globals}}),js=js_obj.js}catch(err){if(err.args){if(err.args[1]){exec_locals.$lineno=err.args[1][1]}}else{console.log('JS Error',err.message)}
 $B.frame_obj=save_frame_obj
 throw err}
 if(mode=='eval'){
@@ -11213,6 +11213,15 @@ target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
 function encode_position(a,b,c,d){if(d===undefined){return `[${[a, b, c]}]`}else{return `[${[a, b, c, d]}]`}}
 $B.decode_position=function(pos){return pos}
+function get_source_from_position(src,ast_obj){var lines=src.split('\n'),start_line=lines[ast_obj.lineno-1]
+if(ast_obj.end_lineno==ast_obj.lineno){return start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
+while(line_num < ast_obj.end_lineno){res+=lines[line_num-1]}
+res+=lines[ast_obj.end_lineno-1].substr(0,ast_obj.end_col_offset)
+return res}}
+function get_names(ast_obj){
+var res=new Set()
+if(ast_obj instanceof $B.ast.Name){res.add(ast_obj)}else if(ast_obj instanceof $B.ast.Subscript){for(var item of get_names(ast_obj.value)){res.add(item)}}
+return res}
 function last_scope(scopes){var ix=scopes.length-1
 while(scopes[ix].parent){ix--}
 return scopes[ix]}
@@ -11492,20 +11501,20 @@ if(check_func){obj._check()}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
-var CO_FUTURE_ANNOTATIONS=0x1000000
-function annotation_to_str(obj){var s
+function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)
+var s
 if(obj instanceof $B.ast.Name){s=obj.id}else if(obj instanceof $B.ast.BinOp){s=annotation_to_str(obj.left)+'|'+annotation_to_str(obj.right)}else if(obj instanceof $B.ast.Subscript){s=annotation_to_str(obj.value)+'['+
 annotation_to_str(obj.slice)+']'}else if(obj instanceof $B.ast.Constant){if(obj.value===_b_.None){s='None'}else{console.log('other constant',obj)}}else{console.log('other annotation',obj)}
 return s}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes.symtable.table.future.features &
-CO_FUTURE_ANNOTATIONS
+$B.CO_FUTURE_ANNOTATIONS
 var scope=last_scope(scopes)
 var js=''
 if(! scope.has_annotation){js+='locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n'
 scope.has_annotation=true
 scope.locals.add('__annotations__')}
 if(this.target instanceof $B.ast.Name){var ann_value=postpone_annotation ?
-`'${annotation_to_str(this.annotation)}'` :
+`'${annotation_to_str(this.annotation, scopes)}'` :
 $B.js_from_ast(this.annotation,scopes)}
 if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
 if(this.target instanceof $B.ast.Name && this.simple){let scope=bind(this.target.id,scopes),mangled=mangle(scopes,scope,this.target.id)
@@ -12317,11 +12326,19 @@ var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name
 if(decorated){func_ref=`decorated${$B.UUID()}`
 js+='var '}
 js+=`${func_ref} = ${name2}\n`
-if(this.returns ||parsed_args.annotations){var ann_items=[]
-if(this.returns){ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}
-if(parsed_args.annotations){for(var arg_ann in parsed_args.annotations){var value=parsed_args.annotations[arg_ann].to_js(scopes)
+if(this.returns ||parsed_args.annotations){var features=scopes.symtable.table.future.features,postponed=features & $B.CO_FUTURE_ANNOTATIONS
+if(postponed){
+var src=scopes.src
+if(src===undefined){console.log('no src, filename',scopes)}}
+var ann_items=[]
+if(parsed_args.annotations){for(var arg_ann in parsed_args.annotations){var ann_ast=parsed_args.annotations[arg_ann]
 if(in_class){arg_ann=mangle(scopes,class_scope,arg_ann)}
-ann_items.push(`['${arg_ann}', ${value}]`)}}
+if(postponed){
+var ann_str=annotation_to_str(ann_ast,scopes)
+ann_items.push(`['${arg_ann}', '${ann_str}']`)}else{var value=ann_ast.to_js(scopes)
+ann_items.push(`['${arg_ann}', ${value}]`)}}}
+if(this.returns){if(postponed){var ann_str=annotation_to_str(this.returns,scopes)
+ann_items.push(`['return', '${ann_str}']`)}else{ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}}
 js+=`${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`}else{js+=`${func_ref}.__annotations__ = $B.empty_dict()\n`}
 if(has_type_params){scopes.pop()}
 if(decorated && ! has_type_params){js+=`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
@@ -12971,13 +12988,14 @@ return `yield* (function* f(){
             return _r${n}
         })()`}
 var state={}
-$B.js_from_root=function(arg){var ast_root=arg.ast,symtable=arg.symtable,filename=arg.filename,namespaces=arg.namespaces,imported=arg.imported
+$B.js_from_root=function(arg){var ast_root=arg.ast,symtable=arg.symtable,filename=arg.filename,src=arg.src,namespaces=arg.namespaces,imported=arg.imported
 if($B.show_ast_dump){console.log($B.ast_dump(ast_root))}
 if($B.compiler_check){$B.compiler_check(ast_root,symtable)}
 var scopes=[]
 state.filename=filename
 scopes.symtable=symtable
 scopes.filename=filename
+scopes.src=src
 scopes.namespaces=namespaces
 scopes.imported=imported
 scopes.imports={}
@@ -13016,7 +13034,6 @@ DEF_COMP_CELL=2 << 10
 var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
 var SCOPE_OFFSET=12,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
 var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
-var CO_FUTURE_ANNOTATIONS=0x1000000 
 var TYPE_MODULE=2
 var NULL=undefined
 var ModuleBlock=2,ClassBlock=1,FunctionBlock=0,AnnotationBlock=4,TypeVarBoundBlock=5,TypeAliasBlock=6,TypeParamBlock=7
@@ -13782,7 +13799,7 @@ visitor.params=function(st,args){if(! args){return-1}
 for(var arg of args){if(! symtable_add_def(st,arg.arg,DEF_PARAM,LOCATION(arg)))
 return 0}
 return 1}
-visitor.annotation=function(st,annotation){var future_annotations=st.future.features & CO_FUTURE_ANNOTATIONS
+visitor.annotation=function(st,annotation){var future_annotations=st.future.features & $B.CO_FUTURE_ANNOTATIONS
 if(future_annotations &&
 !symtable_enter_block(st,'_annotation',AnnotationBlock,annotation,annotation.lineno,annotation.col_offset,annotation.end_lineno,annotation.end_col_offset)){VISIT_QUIT(st,0)}
 VISIT(st,expr,annotation)
@@ -13791,7 +13808,7 @@ return 1}
 visitor.argannotations=function(st,args){if(!args){return-1}
 for(var arg of args){if(arg.annotation){VISIT(st,expr,arg.annotation)}}
 return 1}
-visitor.annotations=function(st,o,a,returns){var future_annotations=st.future.ff_features & CO_FUTURE_ANNOTATIONS;
+visitor.annotations=function(st,o,a,returns){var future_annotations=st.future.ff_features & $B.CO_FUTURE_ANNOTATIONS;
 if(future_annotations &&
 !symtable_enter_block(st,'_annotation',AnnotationBlock,o,o.lineno,o.col_offset,o.end_lineno,o.end_col_offset)){VISIT_QUIT(st,0);}
 if(a.posonlyargs && !visitor.argannotations(st,a.posonlyargs))
