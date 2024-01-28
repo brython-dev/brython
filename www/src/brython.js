@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-27 08:22:43.511566"
-__BRYTHON__.timestamp=1706340163510
+__BRYTHON__.compiled_date="2024-01-28 12:19:50.578105"
+__BRYTHON__.timestamp=1706440790578
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -12769,7 +12769,8 @@ continue}
 if($B.is_or_equals(d._keys[index],key)){return{found:true,key:d._keys[index],value:d._values[index],hash,rank:i,index}}}}
 return{found:false,hash}}
 dict.__contains__=function(){var $=$B.args("__contains__",2,{self:null,key:null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
-if(self.$all_str){if(typeof key=='string'){return self.$strings.hasOwnProperty(key)}
+return _b_.dict.$contains(self,key)}
+dict.$contains=function(self,key){if(self.$all_str){if(typeof key=='string'){return self.$strings.hasOwnProperty(key)}
 var hash=$B.$getattr($B.get_class(key),'__hash__')
 if(hash===_b_.object.__hash__){return false}
 convert_all_str(self)}
@@ -15580,11 +15581,7 @@ if(check_func){obj._check()}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
-function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)
-var s
-if(obj instanceof $B.ast.Name){s=obj.id}else if(obj instanceof $B.ast.BinOp){s=annotation_to_str(obj.left)+'|'+annotation_to_str(obj.right)}else if(obj instanceof $B.ast.Subscript){s=annotation_to_str(obj.value)+'['+
-annotation_to_str(obj.slice)+']'}else if(obj instanceof $B.ast.Constant){if(obj.value===_b_.None){s='None'}else{console.log('other constant',obj)}}else{console.log('other annotation',obj)}
-return s}
+function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes.symtable.table.future.features &
 $B.CO_FUTURE_ANNOTATIONS
 var scope=last_scope(scopes)

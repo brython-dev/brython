@@ -300,7 +300,10 @@ dict.__contains__ = function(){
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
+    return _b_.dict.$contains(self, key)
+}
 
+dict.$contains = function(self, key){
     if(self.$all_str){
         if(typeof key == 'string'){
             return self.$strings.hasOwnProperty(key)
