@@ -12,7 +12,10 @@ var xmlparser = $B.make_class('xmlparser',
             __class__: xmlparser,
             encoding,
             namespace_separator,
-            intern
+            intern,
+            _buffer: '',
+            _state: 'data',
+            _start_data: 0
         }
     }
 )
@@ -25,9 +28,24 @@ xmlparser.Parse = function(){
         self = $.self,
         data = $.data,
         isfinal = $.isfinal
-    console.log('Parse', self, data, isfinal)
-    for(var token of xml_tokenizer(data)){
-        console.log(token)
+    if(_b_.isinstance(data, _b_.bytes)){
+        var decoder = new TextDecoder(),
+        array = new Uint8Array(data.source)
+        data = decoder.decode(array)
+    }
+    self._buffer = data
+    self._buffer_length = _b_.len(data)
+    self._pos = 0
+    for(var token of xmlparser.xml_tokenizer(self)){
+        if(token instanceof ELEMENT){
+            if(! token.is_declaration && ! token.is_end){
+                self.StartElementHandler(token.name, token.attrs)
+            }else if(token.is_end){
+                self.EndElementHandler(token.name)
+            }
+        }else if(token instanceof DATA){
+            self.CharacterDataHandler(token.value)
+        }
     }
 }
 
@@ -39,6 +57,56 @@ xmlparser.SetBase = function(self, base){
 xmlparser.SetParamEntityParsing = function(self, peParsing){
     self._peParsing = peParsing
     return peParsing
+}
+
+xmlparser.xml_tokenizer = function*(self){
+    // convert bytes to string
+    console.log('tokenizer', self._pos, self._buffer_length)
+    self._state = self._state ?? 'data'
+    self._data_buffer = self._data_buffer ?? ''
+    while(self._pos < self._buffer_length){
+        var char = self._buffer[self._pos]
+        if(self._state == 'data' && char == '<'){
+            var data = self._data_buffer
+            if(! is_whitespace(data)){
+                yield new DATA(data)
+            }
+            self._state = 'element'
+            self._tag_state = 'tag_name'
+            self._element = new ELEMENT()
+            self._pos++
+        }else if(self._state == 'data'){
+            self._data_buffer += char
+            self._pos++
+        }else if(self._state == 'element' && 
+                self._element.expect == 'name_start'
+                && char == '!'){
+            self._element = new DTD()
+            self._pos++
+        }else if(self._state == 'element'){
+            self._element.feed(char)
+            if(self._element.closed){
+                yield self._element
+                self._state = 'data'
+                self._data_buffer = ''
+            }else if(self._element.is_comment){
+                self._state = 'comment'
+                self._comment = new COMMENT()
+            }
+            self._pos++
+        }else if(self._state == 'comment'){
+            self._comment.feed(char)
+            if(self._comment.closed){
+                yield self._comment
+                self._state = 'data'
+                self._data_buffer = ''
+            }
+            self._pos++
+        }else{
+            self._pos++
+        }
+    }
+    console.log('fini')
 }
 
 $B.set_func_names(xmlparser, 'expat')
@@ -59,29 +127,46 @@ error.__mro__ = [_b_.Exception, _b_.BaseException, _b_.object]
 
 $B.set_func_names(error, "expat")
 
-function DECLARATION(){
-  this.expect = 'name'
-  this.items = []
+function DTD(){
+    this.expect = 'name_start'
+    this.items = []
 }
 
-DECLARATION.prototype.feed = function(item){
-    if(this.expect == 'name'){
-        if(item instanceof Name){
-            this.name = item.value
-            this.is_prolog = this.name == '?xml'
-            this.expect = 'any'
+DTD.prototype.feed = function(char){
+    if(this.expect == 'name_start'){
+        if(is_id_start(char)){
+            this.name = char
+            this.expect = 'name_continue'
+        }else if(char == '-'){
+            this.expect = '-' // maybe comment start
         }else{
-            console.log('feed item', item)
-            throw Error('expected name, got ' + Object.getPrototypeOf(item).name)
+            throw Error('expected name, got ' + chare)
+        }
+    }else if(this.expect == 'name_continue'){
+        if(is_id_continue(char)){
+            this.name += char
+        }else if(char == '>'){
+            this.closed = true
+        }else{
+            this.expect == 'any'
+        }
+    }else if(this.expect == '-'){
+        if(char == '-'){
+            // comment
+            this.is_comment = true
+        }else{
+            throw Error('expected -, got: ' + char)
         }
     }else{
-        if(item != END){
-            this.items.push(item)
+        if(char == '>'){
+            this.closed = true
+        }else{
+            this.items.push(char)
         }
     }
 }
 
-DECLARATION.prototype.toString = function(){
+DTD.prototype.toString = function(){
     var res = `<!${this.name}`
     if(this.items.length > 0){
         res += ' '
@@ -91,31 +176,162 @@ DECLARATION.prototype.toString = function(){
     return res + '>'
 }
 
+function COMMENT(){
+    this.value = ''
+    this.expect = '-'
+}
+
+COMMENT.prototype.feed = function(char){
+    if(this.expect == '-'){
+        if(char == '-'){
+            this.expect = '--'
+        }else{
+            this.value += char
+        }
+    }else if(this.expect == '--'){
+        if(char == '-'){
+            this.expect = '>'
+        }else{
+            this.value += '-' + char
+            this.expect = '-'
+        }
+    }else if(this.expect == '>'){
+        if(char == '>'){
+            this.closed = true
+        }else{
+            throw Error('comment, expected >, got: ' + char)
+        }
+    }
+}
+
 function ELEMENT() {
-    this.expect = 'name'
-    this.attrs = []
+    this.expect = 'name_start'
+    this.attrs = $B.empty_dict()
+}
+
+ELEMENT.prototype.add_attribute_name = function(attr_name){
+    if(_b_.dict.$contains(this.attrs, attr_name)){
+        throw Error(`duplicate attribute name: ${attr_name}`)
+    }
+    _b_.dict.$setitem(this.attrs, attr_name, _b_.None)
+}
+
+ELEMENT.prototype.set_attribute_value = function(value){
+    _b_.dict.$setitem(this.attrs, this.attr_name, value)
 }
 
 ELEMENT.prototype.feed = function(item){
-    if(this.expect == 'name'){
-        if(item instanceof Name){
-            this.name = item.value
-            this.is_prolog = this.name == '?xml'
-            this.expect = 'attr_name'
+    if(this.expect == 'name_start'){
+        if(item == '?'){
+            if(this.is_declaration){
+                throw Error('already got ?')
+            }
+            this.is_declaration = true
+            this.name = item
+        }else if(item == '/'){
+            if(this.is_end){
+                throw Error('already got /')
+            }
+            this.is_end = true
+        }else if(is_id_start(item)){
+            this.name = item
+            this.expect = 'name_continue'
+        }
+    }else if(this.expect == 'name_continue'){
+        if(is_id_continue(item)){
+            this.name += item
+        }else if(is_whitespace(item)){
+            this.expect = 'attr_name_start'
+        }else if(item == '>'){
+            this.closed = true
+        }else if(item == '/'){
+            this.self_closing = true
+            this.expect = '>'
         }else{
-            console.log('feed item', item)
-            throw Error('expected name, got ' + Object.getPrototypeOf(item).name)
+            throw Error('unexpected at end of element name: ' + item)
+        }
+    }else if(this.expect == 'attr_name_start'){
+        if(item == '/'){
+            this.self_closing = true
+        }else if(item == '>'){
+            this.closed = true
+        }else if(is_id_start(item)){
+            this.attr_name = item
+            this.expect = 'attr_name_continue'
+        }else if(item == '?' && this.is_declaration){
+            this.expect = '>'
+        }else if(! is_whitespace(item)){
+            throw Error('expected attribute name, got: ' + item)
+        }
+    }else if(this.expect == 'attr_name_continue'){
+        if(is_id_continue(item)){
+            this.attr_name += item
+        }else if(item == '='){
+            this.add_attribute_name(this.attr_name)
+            this.expect = 'attr_value_start'
+            this.attr_value = ''
+        }else if(is_whitespace(item)){
+            this.add_attribute_name(this.attr_name)
+            this.expect = 'attr_value_or_name'
+        }else if(item == '>'){
+            this.add_attribute_name(this.attr_name)
+            this.closed = true
+        }else{
+            throw Error('unexpected character in attribute name: ' + item)
+        }
+    }else if(this.expect == 'attr_value_or_name'){
+        if(item == '='){
+            this.expect = 'attr_value_start'
+            this.attr_value = ''
+        }else if(item == '>'){
+            this.closed = true
+        }else if(is_id_start(item)){
+            this.attr_name = item
+            this.expect = 'attr_name_continue'
+        }else if(! is_whitespace(item)){
+            throw Error('expected attribute value or name, got: ' + item)
+        }
+    }else if(this.expect == 'attr_value_start'){
+        if(item == '"' || item == "'"){
+            this.expect = 'quote'
+            this.quote = item
+            this.attr_value = ''
+        }else if(is_digit(item)){
+            this.expect = 'num_value'
+            this.attr_value = item
+        }else if(is_id_start(item)){
+            this.expect = 'attr_value_continue'
+            this.attr_value = item
+        }else if(! is_whitespace(item)){
+            throw Error('unexpect attribute value start: ' + item)
+        }
+    }else if(this.expect == "quote"){
+        if(item == this.quote){
+            this.set_attribute_value(this.attr_value)
+            this.expect = 'attr_name_start'
+        }else{
+            this.attr_value += item
+        }
+    }else if(this.expect == '>'){
+        if(item == '>'){
+            this.closed = true
+        }else{
+            throw Error('expected >, got: ' + item)
         }
     }else if(this.expect == 'attr_name'){
         if(item instanceof Name){
-            this.attrs.push(new ATTR(item.value))
-        }else if(item.value == '?' && this.is_prolog){
+            if(_b_.dict.__contains__(this.attrs, item.value)){
+                throw Error('duplicate value ' + item.value)
+            }
+            _b_.dict.$setitem(this.attrs, item.value, _b_.None)
+            this.last_attr = item.value
+        }else if(item.value == '?' && this.is_declaration){
             if(this.question_mark){
                 throw Error('already ?')
             }
             this.question_mark = true
         }else if(item == END){
-            if(this.is_prolog && ! this.question_mark){
+            if(this.is_declaration && ! this.question_mark){
                 throw Error('missing ')
             }
         }else if(item instanceof Punctuation && item.value == '/'){
@@ -125,7 +341,7 @@ ELEMENT.prototype.feed = function(item){
             throw Error('expected attribute name, got ' + item)
         }
     }else if(this.expect == 'attr_value'){
-        this.attrs[this.attrs.length - 1].value = item
+        _b_.dict.$setitem(this.attrs, this.last_attr, item)
         this.expect = 'attr_name'
     }else if(this.expect == END){
         // after "/"
@@ -143,8 +359,9 @@ ELEMENT.prototype.toString = function() {
         res += ' '
     }
     var attrs = []
-    for(var attr of this.attrs){
-        attrs.push(attr.toString())
+    for(var item of _b_.dict.$iter_items(this.attrs)){
+        console.log('item', item)
+        attrs.push(`${item.key}: ${item.value.toString()}`)
     }
     res += attrs.join(' ')
     if(this.no_end){
@@ -165,11 +382,11 @@ ATTR.prototype.toString = function(){
   return res
 }
 
-function TEXT(value) {
+function DATA(value) {
     this.value = value
 }
 
-TEXT.prototype.toString = function() {
+DATA.prototype.toString = function() {
     return `${this.value}`
 }
 
@@ -195,6 +412,7 @@ function String(quote, value){
 }
 
 String.prototype.toString = function(){
+    console.log('String to string')
     return this.quote + this.value + this.quote
 }
 
@@ -256,7 +474,7 @@ function process(src){
             break
         }
         var head = ' '.repeat(indent)
-        if(token instanceof TEXT){
+        if(token instanceof DATA){
             display(head + ' ' + token.toString())
         }else if(token instanceof ELEMENT){
             if(token.is_end){
@@ -264,7 +482,7 @@ function process(src){
             }
             head = ' '.repeat(indent)
             display(head + token.toString())
-            if(token.is_end || token.no_end || token.is_prolog){
+            if(token.is_end || token.self_closing || token.is_declaration){
                 //
             }else{
                 indent++
@@ -277,8 +495,12 @@ function process(src){
     }
 }
 
+function is_id_start(char){
+    return char.match(/\p{L}/u) || char == "_"
+}
+
 function is_id_continue(char){
-    return char.match(/\p{L}/u) || "-_".includes(char) || char.match(/\d/)
+    return char.match(/\p{L}/u) || "-_:".includes(char) || char.match(/\d/)
 }
 
 function is_whitespace(s){
@@ -288,95 +510,6 @@ function is_whitespace(s){
         }
     }
     return true
-}
-
-function* xml_tokenizer(bytes){
-    // convert bytes to string
-    var decoder = new TextDecoder(),
-        array = new Uint8Array(bytes.source)
-    console.log('array', array)
-    var src = decoder.decode(array)
-    var pos = 0,
-        state = 'data',
-        start_data = pos,
-        element
-    while(pos < src.length){
-        var char = src[pos]
-        if(state == 'data' && char == '<'){
-            var data = src.substring(start_data, pos)
-            if(! is_whitespace(data)){
-                yield new TEXT(data)
-            }
-            state = 'element'
-            tag_state = 'tag_name'
-            element = new ELEMENT()
-            if(src.substr(pos + 1, 4) == '?xml'){
-                // prolog
-                element.feed(new Name('?xml'))
-                pos += 5
-            }else if(src[pos + 1] == '!'){
-                if(src.substr(pos + 1, 3) == '!--'){
-                    console.log('COMMENT')
-                    var end = src.indexOf('--', pos + 4)
-                    if(end == -1){
-                        throw Error('unterminated comment')
-                    }
-                    yield new COMMENT(src.substring(pos + 4, ix))
-                    pos = ix + 1
-                }else{
-                    element = new DECLARATION()
-                    pos += 2
-                }
-            }else if(src[pos + 1] == '/'){
-                element.is_end = true
-                pos += 2
-            }else{
-                pos++
-            }
-            continue
-        }else if(state == 'element' && char == '>'){
-            element.feed(END)
-            yield element
-            state = 'data'
-            pos++
-            start_data = pos
-            continue
-        }
-        if(state == 'element'){
-            if(punctuations.includes(char)){
-              element.feed(new Punctuation(char))
-              pos++
-            }else if(char == '='){
-              element.expect = 'attr_value'
-              pos++
-            }else if(char=='"' || char == "'"){
-              var end = src.indexOf(char, pos + 1)
-              element.feed(new String(char, src.substring(pos + 1, end)))
-              pos = end + 1
-            }else if(char.match(/\p{L}/u)){
-              end = pos + 1
-              while(end < src.length){
-                if(is_id_continue(src[end])){
-                  end++
-                }else{
-                  break
-                }
-              }
-              element.feed(new Name(src.substring(pos, end)))
-              pos = end
-            }else if(is_whitespace(char)){
-              pos++
-            }else{
-              console.log('unhandled', char)
-              console.log(src.substr(pos, 30))
-              alert()
-              pos++
-            }
-        }else{
-            pos++
-        }
-    }
-    console.log('fini')
 }
 
 var model = 'model',
