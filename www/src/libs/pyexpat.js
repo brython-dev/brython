@@ -6,6 +6,7 @@ const XML_PARAM_ENTITY_PARSING_NEVER = 0,
       XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE = 1,
       XML_PARAM_ENTITY_PARSING_ALWAYS = 2
 
+
 var xmlparser = $B.make_class('xmlparser',
     function(encoding, namespace_separator, intern){
         return {
@@ -15,10 +16,14 @@ var xmlparser = $B.make_class('xmlparser',
             intern,
             _buffer: '',
             _state: 'data',
-            _start_data: 0
+            _data_buffer: '',
+            initialized: false,
+            has_xml_header: false
         }
     }
 )
+
+const encoding_re = /<\?xml .*encoding\s*=\s*"(.*)"/
 
 xmlparser.Parse = function(){
     var $ = $B.args('Parse', 3,
@@ -27,11 +32,35 @@ xmlparser.Parse = function(){
                 {}, null, null),
         self = $.self,
         data = $.data,
-        isfinal = $.isfinal
+        isfinal = $.isfinal,
+        decoder,
+        array
+    if(self.finished){
+        throw Error('parsing finished')
+    }
     if(_b_.isinstance(data, _b_.bytes)){
-        var decoder = new TextDecoder(),
+        if(self.encoding === _b_.None){
+            // try getting encoding from prolog
+            decoder = new TextDecoder('iso-8859-1')
+            array = new Uint8Array(data.source.slice(0, 200))
+            var head = decoder.decode(array)
+            var mo = encoding_re.exec(head)
+            if(mo){
+                self.encoding = mo[1]
+            }else{
+                self.encoding = 'utf-8' // default
+            }
+        }
+        // decode bytes
+        decoder = new TextDecoder(self.encoding)
         array = new Uint8Array(data.source)
         data = decoder.decode(array)
+    }
+    if(! self.initialized){
+        if(data[0] != '<'){
+            throw Error("XML or text declaration not at start of entity")
+        }
+        self.initialized = true
     }
     self._buffer = data
     self._buffer_length = _b_.len(data)
@@ -47,6 +76,9 @@ xmlparser.Parse = function(){
             self.CharacterDataHandler(token.value)
         }
     }
+    if(isfinal){
+        self.finished = true
+    }
 }
 
 xmlparser.SetBase = function(self, base){
@@ -61,37 +93,45 @@ xmlparser.SetParamEntityParsing = function(self, peParsing){
 
 xmlparser.xml_tokenizer = function*(self){
     // convert bytes to string
-    console.log('tokenizer', self._pos, self._buffer_length)
-    self._state = self._state ?? 'data'
-    self._data_buffer = self._data_buffer ?? ''
     while(self._pos < self._buffer_length){
         var char = self._buffer[self._pos]
         if(self._state == 'data' && char == '<'){
-            var data = self._data_buffer
-            if(! is_whitespace(data)){
-                yield new DATA(data)
+            if(self._data_buffer.length > 0){
+                yield new DATA(self._data_buffer)
             }
             self._state = 'element'
             self._tag_state = 'tag_name'
-            self._element = new ELEMENT()
+            self._element = new ELEMENT(self)
             self._pos++
         }else if(self._state == 'data'){
-            self._data_buffer += char
+            if(char == '\n'){
+                if(self._data_buffer.length > 0){
+                    yield new DATA(self._data_buffer)
+                }
+                yield new DATA(char)
+                self._data_buffer = ''
+            }else{
+                self._data_buffer += char
+            }
             self._pos++
-        }else if(self._state == 'element' && 
+        }else if(self._state == 'element' &&
                 self._element.expect == 'name_start'
                 && char == '!'){
-            self._element = new DTD()
+            self._element = new DTD(self)
             self._pos++
         }else if(self._state == 'element'){
-            self._element.feed(char)
+            self._element = self._element.feed(char)
+            if(self._element === undefined){
+                console.log('undefined after char', char,
+                    self._buffer.substring(self._pos - 10, self._pos + 10))
+            }
             if(self._element.closed){
                 yield self._element
                 self._state = 'data'
                 self._data_buffer = ''
             }else if(self._element.is_comment){
                 self._state = 'comment'
-                self._comment = new COMMENT()
+                self._comment = new COMMENT(self)
             }
             self._pos++
         }else if(self._state == 'comment'){
@@ -111,12 +151,22 @@ xmlparser.xml_tokenizer = function*(self){
 
 $B.set_func_names(xmlparser, 'expat')
 
+function raise_error(parser, message){
+    message += ' at position ' + parser._pos
+    var ix = parser._pos
+    while(ix >= 0 && parser._buffer[ix] !== '\n'){
+        ix--
+    }
+    message += '\n' + parser._buffer.substring(ix, parser._pos + 1)
+    throw error.$factory(message)
+}
+
 var error = $B.make_class("error",
     function(message){
         return {
             __class__: error,
             msg: message,
-            args: $B.fast_tuple([]),
+            args: $B.fast_tuple([message]),
             __cause__: _b_.None,
             __context__: _b_.None,
             __suppress_context__: false
@@ -127,7 +177,100 @@ error.__mro__ = [_b_.Exception, _b_.BaseException, _b_.object]
 
 $B.set_func_names(error, "expat")
 
-function DTD(){
+function DOCTYPE(parser){
+    this.parser = parser
+    this.expect = 'element_start'
+}
+
+DOCTYPE.prototype.feed = function(char){
+    if(this.expect == 'element_start'){
+        if(is_id_start(char)){
+            this.root_element = char
+            this.expect = 'element_continue'
+        }else if(! is_whitespace(char)){
+            throw Error('expected element start, got: ' + char)
+        }
+    }else if(this.expect == 'element_continue'){
+        if(is_id_continue(char)){
+            this.root_element += char
+        }else{
+            if(is_whitespace(char)){
+                this.expect = 'rest'
+            }else{
+                throw Error('expected whitespace after root element, got: ' + char)
+            }
+        }
+    }else if(this.expect == 'rest'){
+        if(! is_whitespace(char)){
+            if(is_id_start(char)){
+                // external DTD
+                this.type = 'external'
+                this.decl = char
+                this.expect = 'decl_continue'
+            }else if(char == '['){
+                this.type = 'internal'
+                this.expect = ']'
+                this.declarations = ''
+            }else{
+                throw Error('unexpected in DOCTYPE: ' + char)
+            }
+        }
+    }else if(this.expect == 'decl_continue'){
+        if(is_id_continue(char)){
+            this.decl += char
+        }else{
+            if(is_whitespace(char)){
+                this.expect = 'string_start'
+                this.strings = []
+            }else{
+                throw Error('unexpected after declaration: ' + char)
+            }
+        }
+    }else if(this.expect == 'string_start'){
+        if(! is_whitespace(char)){
+            if(char == '"' || char == "'"){
+                this.quote = char
+                this.string = ''
+                this.expect = 'string_end'
+            }else{
+                raise_error(this.parser, 'expected quote, got: ' + char)
+            }
+        }
+    }else if(this.expect == 'string_end'){
+        if(char == this.quote){
+            this.strings.push(this.string)
+            if(this.strings.length == 1){
+                this.fpi = this.strings[0]
+                this.expect = 'string_start'
+                this.string = ''
+            }else{
+                this.url = this.strings[1]
+                this.expect = '>'
+            }
+        }else{
+            this.string += char
+        }
+    }else if(this.expect == '>'){
+        if(! is_whitespace(char)){
+            if(char == '>'){
+                this.closed = true
+            }else{
+                throw Error('expected >, ggot: ' + char)
+            }
+        }
+    }else if(this.expect == ']'){
+        if(char == ']'){
+            this.expect = '>'
+        }else{
+            this.declaration += char
+        }
+    }else{
+        throw Error('wrong expect: ' + this.expect)
+    }
+    return this
+}
+function DTD(parser){
+    this.parser = parser
     this.expect = 'name_start'
     this.items = []
 }
@@ -145,10 +288,16 @@ DTD.prototype.feed = function(char){
     }else if(this.expect == 'name_continue'){
         if(is_id_continue(char)){
             this.name += char
-        }else if(char == '>'){
-            this.closed = true
         }else{
-            this.expect == 'any'
+            console.log('DTD name', this.name)
+            if(this.name == 'DOCTYPE'){
+                return new DOCTYPE(this.parser)
+            }
+            if(char == '>'){
+                this.closed = true
+            }else{
+                this.expect == 'any'
+            }
         }
     }else if(this.expect == '-'){
         if(char == '-'){
@@ -164,6 +313,7 @@ DTD.prototype.feed = function(char){
             this.items.push(char)
         }
     }
+    return this
 }
 
 DTD.prototype.toString = function(){
@@ -176,7 +326,8 @@ DTD.prototype.toString = function(){
     return res + '>'
 }
 
-function COMMENT(){
+function COMMENT(parser){
+    this.parser = parser
     this.value = ''
     this.expect = '-'
 }
@@ -204,7 +355,8 @@ COMMENT.prototype.feed = function(char){
     }
 }
 
-function ELEMENT() {
+function ELEMENT(parser) {
+    this.parser = parser
     this.expect = 'name_start'
     this.attrs = $B.empty_dict()
 }
@@ -227,7 +379,6 @@ ELEMENT.prototype.feed = function(item){
                 throw Error('already got ?')
             }
             this.is_declaration = true
-            this.name = item
         }else if(item == '/'){
             if(this.is_end){
                 throw Error('already got /')
@@ -240,15 +391,25 @@ ELEMENT.prototype.feed = function(item){
     }else if(this.expect == 'name_continue'){
         if(is_id_continue(item)){
             this.name += item
-        }else if(is_whitespace(item)){
-            this.expect = 'attr_name_start'
-        }else if(item == '>'){
-            this.closed = true
-        }else if(item == '/'){
-            this.self_closing = true
-            this.expect = '>'
         }else{
-            throw Error('unexpected at end of element name: ' + item)
+            // end of element name
+            if(this.is_declaration){
+                if(this.name == 'xml'){
+                    this.is_xml_header = true
+                }else{
+                    return new PROCESSING_INSTRUCTION(this.parser, this.name)
+                }
+            }
+            if(is_whitespace(item)){
+                this.expect = 'attr_name_start'
+            }else if(item == '>'){
+                this.closed = true
+            }else if(item == '/'){
+                this.self_closing = true
+                this.expect = '>'
+            }else{
+                throw Error('unexpected at end of element name: ' + item)
+            }
         }
     }else if(this.expect == 'attr_name_start'){
         if(item == '/'){
@@ -272,14 +433,20 @@ ELEMENT.prototype.feed = function(item){
             this.attr_value = ''
         }else if(is_whitespace(item)){
             this.add_attribute_name(this.attr_name)
-            this.expect = 'attr_value_or_name'
+            this.expect = '='
         }else if(item == '>'){
             this.add_attribute_name(this.attr_name)
             this.closed = true
         }else{
             throw Error('unexpected character in attribute name: ' + item)
         }
-    }else if(this.expect == 'attr_value_or_name'){
+    }else if(this.expect == '='){
+        if(item == '='){
+            this.expect = 'attr_value_start'
+        }else if(! is_whitespace(item)){
+            throw Error('expected =, got: ' + item)
+        }
+    }else if(this.expect == 'attr_value'){
         if(item == '='){
             this.expect = 'attr_value_start'
             this.attr_value = ''
@@ -296,12 +463,6 @@ ELEMENT.prototype.feed = function(item){
             this.expect = 'quote'
             this.quote = item
             this.attr_value = ''
-        }else if(is_digit(item)){
-            this.expect = 'num_value'
-            this.attr_value = item
-        }else if(is_id_start(item)){
-            this.expect = 'attr_value_continue'
-            this.attr_value = item
         }else if(! is_whitespace(item)){
             throw Error('unexpect attribute value start: ' + item)
         }
@@ -349,6 +510,7 @@ ELEMENT.prototype.feed = function(item){
             throw Error('nothing after /')
         }
     }
+    return this
 }
 
 ELEMENT.prototype.toString = function() {
@@ -368,6 +530,32 @@ ELEMENT.prototype.toString = function() {
         res += '/'
     }
     return res + '>'
+}
+
+function PROCESSING_INSTRUCTION(parser, name){
+    this.parser = parser
+    this.name = name
+    this.expect = '?'
+    this.content = ''
+}
+
+PROCESSING_INSTRUCTION.prototype.feed = function(char){
+    // capture everything until the sequence ?>
+    if(this.expect == '?'){
+        if(char == '?'){
+            this.expect = '>'
+        }else{
+            this.content += char
+        }
+    }else if(this.expect == '>'){
+        if(char == '>'){
+            this.closed = true
+        }else{
+            this.content += '?' + char
+            this.expect = '-'
+        }
+    }
+    return this
 }
 
 function ATTR(name){
@@ -412,7 +600,6 @@ function String(quote, value){
 }
 
 String.prototype.toString = function(){
-    console.log('String to string')
     return this.quote + this.value + this.quote
 }
 
@@ -509,7 +696,7 @@ function is_whitespace(s){
             return false
         }
     }
-    return true
+    return s.length > 0
 }
 
 var model = 'model',
