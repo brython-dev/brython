@@ -587,7 +587,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
     }
     var the_token;
     var size;
-    the_token = _b_.bytes.decode(t.bytes, 'iso-8859-1');
+    the_token = t.string; // _b_.bytes.decode(t.bytes, 'iso-8859-1');
     for (let keyword = p.soft_keywords; keyword != NULL; keyword++) {
         if (strncmp(keyword, the_token, size) == 0) {
             return $B._PyPegen.name_from_token(p, t);
