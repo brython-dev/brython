@@ -7512,7 +7512,7 @@ function type_param_rule(p)
                 (e = expression_rule(p))  // expression
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM (colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
+                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
                 break;
             }
             p.mark = _mark;
@@ -7558,7 +7558,7 @@ function type_param_rule(p)
                 (e = expression_rule(p))  // expression
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM (colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
+                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
                 break;
             }
             p.mark = _mark;
@@ -13970,7 +13970,7 @@ function invalid_arguments_rule(p)
                 (b = $B._PyPegen.expect_token(p, 16))  // token='*'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (b, "iterable argument unpacking follows keyword argument unpacking");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, b, "iterable argument unpacking follows keyword argument unpacking");
                 break;
             }
             p.mark = _mark;
@@ -13994,7 +13994,7 @@ function invalid_arguments_rule(p)
                 (_opt_var = _tmp_151_rule(p), !p.error_indicator)  // [args | expression for_if_clauses]
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
                 break;
             }
             p.mark = _mark;
@@ -14017,7 +14017,7 @@ function invalid_arguments_rule(p)
                 (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
                 break;
             }
             p.mark = _mark;
@@ -14040,7 +14040,7 @@ function invalid_arguments_rule(p)
                 $B._PyPegen.lookahead(1, _tmp_153_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expected argument value expression");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "expected argument value expression");
                 break;
             }
             p.mark = _mark;
@@ -14080,7 +14080,7 @@ function invalid_arguments_rule(p)
                 (b = for_if_clauses_rule(p))  // for_if_clauses
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, $B._PyPegen.get_last_comprehension_item ( PyPegen_last_item ( b, $B.ast.comprehension ) ), "Generator expression must be parenthesized");
                 break;
             }
             p.mark = _mark;
@@ -14136,7 +14136,7 @@ function invalid_kwarg_rule(p)
                 (b = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to %s", PyBytes_AS_STRING ( a.bytes ));
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot assign to %s", PyBytes_AS_STRING ( a.bytes ));
                 break;
             }
             p.mark = _mark;
@@ -14159,7 +14159,7 @@ function invalid_kwarg_rule(p)
                 (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
                 break;
             }
             p.mark = _mark;
@@ -14178,7 +14178,7 @@ function invalid_kwarg_rule(p)
                 (b = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expression cannot contain assignment, perhaps you meant \"==\"?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "expression cannot contain assignment, perhaps you meant \"==\"?");
                 break;
             }
             p.mark = _mark;
@@ -14201,7 +14201,7 @@ function invalid_kwarg_rule(p)
                 (b = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to keyword argument unpacking");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot assign to keyword argument unpacking");
                 break;
             }
             p.mark = _mark;
@@ -14329,7 +14329,7 @@ function invalid_legacy_expression_rule(p)
                 (b = star_expressions_rule(p))  // star_expressions
             )
             {
-                _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE ( a, b, "Missing parentheses in call to '%U'. Did you mean %U(...)?", a. id, a. id) : $B.parser_constants.NULL;
+                _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,  a, b, "Missing parentheses in call to '%U'. Did you mean %U(...)?", a. id, a. id) : $B.parser_constants.NULL;
                 break;
             }
             p.mark = _mark;
@@ -14366,7 +14366,7 @@ function invalid_expression_rule(p)
                 (b = expression_without_invalid_rule(p))  // expression_without_invalid
             )
             {
-                _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.parser_constants.NULL : p.tokens [p.mark - 1].level == 0 ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE ( a, b, "invalid syntax. Perhaps you forgot a comma?");
+                _res = $B._PyPegen.check_legacy_stmt (p, a ) ? $B.parser_constants.NULL : p.tokens [p.mark - 1].level == 0 ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,  a, b, "invalid syntax. Perhaps you forgot a comma?");
                 break;
             }
             p.mark = _mark;
@@ -14388,7 +14388,7 @@ function invalid_expression_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_157_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "expected 'else' after 'if' expression");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "expected 'else' after 'if' expression");
                 break;
             }
             p.mark = _mark;
@@ -14411,7 +14411,7 @@ function invalid_expression_rule(p)
                 $B._PyPegen.lookahead_with_int(1, $B._PyPegen.expect_token, p, FSTRING_MIDDLE)  // token=FSTRING_MIDDLE
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "f-string: lambda expressions are not allowed without parentheses");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "f-string: lambda expressions are not allowed without parentheses");
                 break;
             }
             p.mark = _mark;
@@ -14453,7 +14453,7 @@ function invalid_named_expression_rule(p)
                 (expression_var = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name ( a ));
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use assignment expressions with %s", $B._PyPegen.get_expr_name ( a ));
                 break;
             }
             p.mark = _mark;
@@ -14475,7 +14475,7 @@ function invalid_named_expression_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_158_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?");
                 break;
             }
             p.mark = _mark;
@@ -14499,7 +14499,7 @@ function invalid_named_expression_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_160_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot assign to %s here. Maybe you meant '==' instead of '='?", $B._PyPegen.get_expr_name ( a ));
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot assign to %s here. Maybe you meant '==' instead of '='?", $B._PyPegen.get_expr_name ( a ));
                 break;
             }
             p.mark = _mark;
@@ -14541,7 +14541,7 @@ function invalid_assignment_rule(p)
                 (expression_var = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name ( a ));
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "only single target (not %s) can be annotated", $B._PyPegen.get_expr_name ( a ));
                 break;
             }
             p.mark = _mark;
@@ -14567,7 +14567,7 @@ function invalid_assignment_rule(p)
                 (expression_var = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "only single target (not tuple) can be annotated");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "only single target (not tuple) can be annotated");
                 break;
             }
             p.mark = _mark;
@@ -14587,7 +14587,7 @@ function invalid_assignment_rule(p)
                 (expression_var = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "illegal target for annotation");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "illegal target for annotation");
                 break;
             }
             p.mark = _mark;
@@ -14607,7 +14607,7 @@ function invalid_assignment_rule(p)
                 (_literal = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.STAR_TARGETS, a);
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.STAR_TARGETS, a);
                 break;
             }
             p.mark = _mark;
@@ -14627,7 +14627,7 @@ function invalid_assignment_rule(p)
                 (_literal = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "assignment to yield expression not possible");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "assignment to yield expression not possible");
                 break;
             }
             p.mark = _mark;
@@ -14647,7 +14647,7 @@ function invalid_assignment_rule(p)
                 (_tmp_164_var = _tmp_164_rule(p))  // yield_expr | star_expressions
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "'%s' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name ( a ));
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "'%s' is an illegal expression for augmented assignment", $B._PyPegen.get_expr_name ( a ));
                 break;
             }
             p.mark = _mark;
@@ -14742,7 +14742,7 @@ function invalid_del_stmt_rule(p)
                 (a = star_expressions_rule(p))  // star_expressions
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.DEL_TARGETS, a);
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.DEL_TARGETS, a);
                 break;
             }
             p.mark = _mark;
@@ -14773,7 +14773,7 @@ function invalid_block_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block");
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block");
                 break;
             }
             p.mark = _mark;
@@ -14811,7 +14811,7 @@ function invalid_comprehension_rule(p)
                 (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "iterable unpacking cannot be used in comprehension");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "iterable unpacking cannot be used in comprehension");
                 break;
             }
             p.mark = _mark;
@@ -14837,7 +14837,7 @@ function invalid_comprehension_rule(p)
                 (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, PyPegen_last_item ( b, $B.ast.expr ), "did you forget parentheses around the comprehension target?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, PyPegen_last_item ( b, $B.ast.expr ), "did you forget parentheses around the comprehension target?");
                 break;
             }
             p.mark = _mark;
@@ -14860,7 +14860,7 @@ function invalid_comprehension_rule(p)
                 (for_if_clauses_var = for_if_clauses_rule(p))  // for_if_clauses
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "did you forget parentheses around the comprehension target?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "did you forget parentheses around the comprehension target?");
                 break;
             }
             p.mark = _mark;
@@ -14901,7 +14901,7 @@ function invalid_dict_comprehension_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 26))  // token='}'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "dict unpacking cannot be used in dict comprehension");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "dict unpacking cannot be used in dict comprehension");
                 break;
             }
             p.mark = _mark;
@@ -14939,7 +14939,7 @@ function invalid_parameters_rule(p)
                 (_literal = $B._PyPegen.expect_token(p, 12))  // token=','
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "at least one argument must precede /");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "at least one argument must precede /");
                 break;
             }
             p.mark = _mark;
@@ -14959,7 +14959,7 @@ function invalid_parameters_rule(p)
                 (a = $B._PyPegen.expect_token(p, 17))  // token='/'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ may appear only once");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ may appear only once");
                 break;
             }
             p.mark = _mark;
@@ -14983,7 +14983,7 @@ function invalid_parameters_rule(p)
                 (a = param_no_default_rule(p))  // param_no_default
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "parameter without a default follows parameter with a default");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "parameter without a default follows parameter with a default");
                 break;
             }
             p.mark = _mark;
@@ -15010,7 +15010,7 @@ function invalid_parameters_rule(p)
                 (b = $B._PyPegen.expect_token(p, 8))  // token=')'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "Function parameters cannot be parenthesized");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "Function parameters cannot be parenthesized");
                 break;
             }
             p.mark = _mark;
@@ -15040,7 +15040,7 @@ function invalid_parameters_rule(p)
                 (a = $B._PyPegen.expect_token(p, 17))  // token='/'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ must be ahead of *");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ must be ahead of *");
                 break;
             }
             p.mark = _mark;
@@ -15060,7 +15060,7 @@ function invalid_parameters_rule(p)
                 (a = $B._PyPegen.expect_token(p, 16))  // token='*'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected comma between / and *");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expected comma between / and *");
                 break;
             }
             p.mark = _mark;
@@ -15091,7 +15091,7 @@ function invalid_default_rule(p)
                 $B._PyPegen.lookahead(1, _tmp_178_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected default value expression");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expected default value expression");
                 break;
             }
             p.mark = _mark;
@@ -15127,7 +15127,7 @@ function invalid_star_etc_rule(p)
                 (_tmp_179_var = _tmp_179_rule(p))  // ')' | ',' (')' | '**')
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "named arguments must follow bare *");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "named arguments must follow bare *");
                 break;
             }
             p.mark = _mark;
@@ -15147,7 +15147,7 @@ function invalid_star_etc_rule(p)
                 (type_comment_var = $B._PyPegen.expect_token(p, TYPE_COMMENT))  // token='TYPE_COMMENT'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("bare * has associated type comment");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "bare * has associated type comment");
                 break;
             }
             p.mark = _mark;
@@ -15167,7 +15167,7 @@ function invalid_star_etc_rule(p)
                 (a = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-positional argument cannot have default value");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-positional argument cannot have default value");
                 break;
             }
             p.mark = _mark;
@@ -15193,7 +15193,7 @@ function invalid_star_etc_rule(p)
                 (_tmp_182_var = _tmp_182_rule(p))  // param_no_default | ','
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "* argument may appear only once");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "* argument may appear only once");
                 break;
             }
             p.mark = _mark;
@@ -15228,7 +15228,7 @@ function invalid_kwds_rule(p)
                 (a = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-keyword argument cannot have default value");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-keyword argument cannot have default value");
                 break;
             }
             p.mark = _mark;
@@ -15251,7 +15251,7 @@ function invalid_kwds_rule(p)
                 (a = param_rule(p))  // param
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
                 break;
             }
             p.mark = _mark;
@@ -15274,7 +15274,7 @@ function invalid_kwds_rule(p)
                 (a = _tmp_183_rule(p))  // '*' | '**' | '/'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
                 break;
             }
             p.mark = _mark;
@@ -15355,7 +15355,7 @@ function invalid_lambda_parameters_rule(p)
                 (_literal = $B._PyPegen.expect_token(p, 12))  // token=','
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "at least one argument must precede /");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "at least one argument must precede /");
                 break;
             }
             p.mark = _mark;
@@ -15375,7 +15375,7 @@ function invalid_lambda_parameters_rule(p)
                 (a = $B._PyPegen.expect_token(p, 17))  // token='/'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ may appear only once");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ may appear only once");
                 break;
             }
             p.mark = _mark;
@@ -15399,7 +15399,7 @@ function invalid_lambda_parameters_rule(p)
                 (a = lambda_param_no_default_rule(p))  // lambda_param_no_default
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "parameter without a default follows parameter with a default");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "parameter without a default follows parameter with a default");
                 break;
             }
             p.mark = _mark;
@@ -15426,7 +15426,7 @@ function invalid_lambda_parameters_rule(p)
                 (b = $B._PyPegen.expect_token(p, 8))  // token=')'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "Lambda expression parameters cannot be parenthesized");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "Lambda expression parameters cannot be parenthesized");
                 break;
             }
             p.mark = _mark;
@@ -15456,7 +15456,7 @@ function invalid_lambda_parameters_rule(p)
                 (a = $B._PyPegen.expect_token(p, 17))  // token='/'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "/ must be ahead of *");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "/ must be ahead of *");
                 break;
             }
             p.mark = _mark;
@@ -15476,7 +15476,7 @@ function invalid_lambda_parameters_rule(p)
                 (a = $B._PyPegen.expect_token(p, 16))  // token='*'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expected comma between / and *");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expected comma between / and *");
                 break;
             }
             p.mark = _mark;
@@ -15556,7 +15556,7 @@ function invalid_lambda_star_etc_rule(p)
                 (_tmp_197_var = _tmp_197_rule(p))  // ':' | ',' (':' | '**')
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("named arguments must follow bare *");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "named arguments must follow bare *");
                 break;
             }
             p.mark = _mark;
@@ -15576,7 +15576,7 @@ function invalid_lambda_star_etc_rule(p)
                 (a = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-positional argument cannot have default value");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-positional argument cannot have default value");
                 break;
             }
             p.mark = _mark;
@@ -15602,7 +15602,7 @@ function invalid_lambda_star_etc_rule(p)
                 (_tmp_200_var = _tmp_200_rule(p))  // lambda_param_no_default | ','
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "* argument may appear only once");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "* argument may appear only once");
                 break;
             }
             p.mark = _mark;
@@ -15640,7 +15640,7 @@ function invalid_lambda_kwds_rule(p)
                 (a = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "var-keyword argument cannot have default value");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "var-keyword argument cannot have default value");
                 break;
             }
             p.mark = _mark;
@@ -15663,7 +15663,7 @@ function invalid_lambda_kwds_rule(p)
                 (a = lambda_param_rule(p))  // lambda_param
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
                 break;
             }
             p.mark = _mark;
@@ -15686,7 +15686,7 @@ function invalid_lambda_kwds_rule(p)
                 (a = _tmp_201_rule(p))  // '*' | '**' | '/'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "arguments cannot follow var-keyword argument");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "arguments cannot follow var-keyword argument");
                 break;
             }
             p.mark = _mark;
@@ -15727,7 +15727,7 @@ function invalid_double_type_comments_rule(p)
                 (indent_var = $B._PyPegen.expect_token(p, INDENT))  // token='INDENT'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("Cannot have two type comments on def");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "Cannot have two type comments on def");
                 break;
             }
             p.mark = _mark;
@@ -15764,7 +15764,7 @@ function invalid_with_item_rule(p)
                 $B._PyPegen.lookahead(1, _tmp_202_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.STAR_TARGETS, a);
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.STAR_TARGETS, a);
                 break;
             }
             p.mark = _mark;
@@ -15800,7 +15800,7 @@ function invalid_for_target_rule(p)
                 (a = star_expressions_rule(p))  // star_expressions
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET ($B.parser_constants.FOR_TARGETS, a);
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_INVALID_TARGET(p, $B.parser_constants.FOR_TARGETS, a);
                 break;
             }
             p.mark = _mark;
@@ -15835,7 +15835,7 @@ function invalid_group_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 8))  // token=')'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use starred expression here");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use starred expression here");
                 break;
             }
             p.mark = _mark;
@@ -15858,7 +15858,7 @@ function invalid_group_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 8))  // token=')'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use double starred expression here");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use double starred expression here");
                 break;
             }
             p.mark = _mark;
@@ -15896,7 +15896,7 @@ function invalid_import_rule(p)
                 (dotted_name_var = dotted_name_rule(p))  // dotted_name
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "Did you mean to use 'from ... import ...' instead?");
+                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "Did you mean to use 'from ... import ...' instead?");
                 break;
             }
             p.mark = _mark;
@@ -15931,7 +15931,7 @@ function invalid_import_from_targets_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("trailing comma not allowed without surrounding parentheses");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "trailing comma not allowed without surrounding parentheses");
                 break;
             }
             p.mark = _mark;
@@ -15972,7 +15972,7 @@ function invalid_with_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16006,7 +16006,7 @@ function invalid_with_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16052,7 +16052,7 @@ function invalid_with_stmt_indent_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'with' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'with' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16091,7 +16091,7 @@ function invalid_with_stmt_indent_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'with' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'with' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16132,7 +16132,7 @@ function invalid_try_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'try' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'try' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16154,7 +16154,7 @@ function invalid_try_stmt_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_213_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected 'except' or 'finally' block");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected 'except' or 'finally' block");
                 break;
             }
             p.mark = _mark;
@@ -16193,7 +16193,7 @@ function invalid_try_stmt_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot have both 'except' and 'except' on the same 'try'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot have both 'except' and 'except' on the same 'try'");
                 break;
             }
             p.mark = _mark;
@@ -16226,7 +16226,7 @@ function invalid_try_stmt_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot have both 'except' and 'except' on the same 'try'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot have both 'except' and 'except' on the same 'try'");
                 break;
             }
             p.mark = _mark;
@@ -16279,7 +16279,7 @@ function invalid_except_stmt_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "multiple exception types must be parenthesized");
+                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "multiple exception types must be parenthesized");
                 break;
             }
             p.mark = _mark;
@@ -16307,7 +16307,7 @@ function invalid_except_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16324,7 +16324,7 @@ function invalid_except_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16344,7 +16344,7 @@ function invalid_except_stmt_rule(p)
                 (_tmp_222_var = _tmp_222_rule(p))  // NEWLINE | ':'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected one or more exception types");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected one or more exception types");
                 break;
             }
             p.mark = _mark;
@@ -16381,7 +16381,7 @@ function invalid_finally_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'finally' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'finally' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16427,7 +16427,7 @@ function invalid_except_stmt_indent_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16449,7 +16449,7 @@ function invalid_except_stmt_indent_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16497,7 +16497,7 @@ function invalid_except_star_stmt_indent_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'except' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16534,7 +16534,7 @@ function invalid_match_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.CHECK_VERSION (_void, 10, "Pattern matching is", $B.helper_functions.RAISE_SYNTAX_ERROR ( "expected ':'" ));
+                _res = $B.helper_functions.CHECK_VERSION (_void, 10, "Pattern matching is", $B.helper_functions.RAISE_SYNTAX_ERROR(p,  "expected ':'" ));
                 break;
             }
             p.mark = _mark;
@@ -16559,7 +16559,7 @@ function invalid_match_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'match' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'match' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16600,7 +16600,7 @@ function invalid_case_block_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16629,7 +16629,7 @@ function invalid_case_block_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'case' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'case' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16664,7 +16664,7 @@ function invalid_as_pattern_rule(p)
                 (a = $B._PyPegen.expect_soft_keyword(p, "_"))  // soft_keyword='"_"'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "cannot use '_' as a target");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot use '_' as a target");
                 break;
             }
             p.mark = _mark;
@@ -16686,7 +16686,7 @@ function invalid_as_pattern_rule(p)
                 (a = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "invalid pattern target");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "invalid pattern target");
                 break;
             }
             p.mark = _mark;
@@ -16721,7 +16721,7 @@ function invalid_class_pattern_rule(p)
                 (a = invalid_class_argument_pattern_rule(p))  // invalid_class_argument_pattern
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (PyPegen_first_item ( a, $B.ast.pattern ), PyPegen_last_item ( a, $B.ast.pattern ), "positional patterns follow keyword patterns");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, PyPegen_first_item ( a, $B.ast.pattern ), PyPegen_last_item ( a, $B.ast.pattern ), "positional patterns follow keyword patterns");
                 break;
             }
             p.mark = _mark;
@@ -16798,7 +16798,7 @@ function invalid_if_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16823,7 +16823,7 @@ function invalid_if_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'if' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'if' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16860,7 +16860,7 @@ function invalid_elif_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16885,7 +16885,7 @@ function invalid_elif_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'elif' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'elif' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16922,7 +16922,7 @@ function invalid_else_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'else' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'else' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -16959,7 +16959,7 @@ function invalid_while_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -16984,7 +16984,7 @@ function invalid_while_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'while' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'while' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -17031,7 +17031,7 @@ function invalid_for_stmt_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -17066,7 +17066,7 @@ function invalid_for_stmt_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after 'for' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'for' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -17129,7 +17129,7 @@ function invalid_def_raw_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after function definition on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after function definition on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -17174,7 +17174,7 @@ function invalid_class_def_raw_rule(p)
                 (newline_var = $B._PyPegen.expect_token(p, NEWLINE))  // token='NEWLINE'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR ("expected ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR(p, "expected ':'");
                 break;
             }
             p.mark = _mark;
@@ -17207,7 +17207,7 @@ function invalid_class_def_raw_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR ("expected an indented block after class definition on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after class definition on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -17268,7 +17268,7 @@ function invalid_double_starred_kvpairs_rule(p)
                 (bitwise_or_var = bitwise_or_rule(p))  // bitwise_or
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "cannot use a starred expression in a dictionary value");
+                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
                 break;
             }
             p.mark = _mark;
@@ -17287,7 +17287,7 @@ function invalid_double_starred_kvpairs_rule(p)
                 $B._PyPegen.lookahead(1, _tmp_231_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expression expected after dictionary key and ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expression expected after dictionary key and ':'");
                 break;
             }
             p.mark = _mark;
@@ -17344,7 +17344,7 @@ function invalid_kvpair_rule(p)
                 (bitwise_or_var = bitwise_or_rule(p))  // bitwise_or
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM (a, "cannot use a starred expression in a dictionary value");
+                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
                 break;
             }
             p.mark = _mark;
@@ -17363,7 +17363,7 @@ function invalid_kvpair_rule(p)
                 $B._PyPegen.lookahead(1, _tmp_232_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "expression expected after dictionary key and ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "expression expected after dictionary key and ':'");
                 break;
             }
             p.mark = _mark;
@@ -17401,7 +17401,7 @@ function invalid_starred_expression_rule(p)
                 (b = expression_rule(p))  // expression
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE (a, b, "cannot assign to iterable argument unpacking");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot assign to iterable argument unpacking");
                 break;
             }
             p.mark = _mark;
@@ -17444,7 +17444,7 @@ function invalid_replacement_field_rule(p)
                 (a = $B._PyPegen.expect_token(p, 22))  // token='='
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '='");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before '='");
                 break;
             }
             p.mark = _mark;
@@ -17461,7 +17461,7 @@ function invalid_replacement_field_rule(p)
                 (a = $B._PyPegen.expect_token(p, 54))  // token='!'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '!'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before '!'");
                 break;
             }
             p.mark = _mark;
@@ -17478,7 +17478,7 @@ function invalid_replacement_field_rule(p)
                 (a = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before ':'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before ':'");
                 break;
             }
             p.mark = _mark;
@@ -17495,7 +17495,7 @@ function invalid_replacement_field_rule(p)
                 (a = $B._PyPegen.expect_token(p, 26))  // token='}'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION (a, "f-string: valid expression required before '}'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "f-string: valid expression required before '}'");
                 break;
             }
             p.mark = _mark;
@@ -17511,7 +17511,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_233_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: expecting a valid expression after '{'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p, "f-string: expecting a valid expression after '{'");
                 break;
             }
             p.mark = _mark;
@@ -17530,7 +17530,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_235_rule, p)
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '=', or '!', or ':', or '}'");
+                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '=', or '!', or ':', or '}'");
                 break;
             }
             p.mark = _mark;
@@ -17552,7 +17552,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_237_rule, p)
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '!', or ':', or '}'");
+                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '!', or ':', or '}'");
                 break;
             }
             p.mark = _mark;
@@ -17603,7 +17603,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_241_rule, p)
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting ':' or '}'");
+                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting ':' or '}'");
                 break;
             }
             p.mark = _mark;
@@ -17636,7 +17636,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, 26)  // token='}'
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '}', or format specs");
+                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}', or format specs");
                 break;
             }
             p.mark = _mark;
@@ -17663,7 +17663,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, 26)  // token='}'
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ( "f-string: expecting '}'");
+                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}'");
                 break;
             }
             p.mark = _mark;
@@ -17694,7 +17694,7 @@ function invalid_conversion_character_rule(p)
                 $B._PyPegen.lookahead(1, _tmp_247_rule, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: missing conversion character");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p, "f-string: missing conversion character");
                 break;
             }
             p.mark = _mark;
@@ -17710,7 +17710,7 @@ function invalid_conversion_character_rule(p)
                 $B._PyPegen.lookahead_with_name(0, $B._PyPegen.name_token, p)
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN ("f-string: invalid conversion character");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p, "f-string: invalid conversion character");
                 break;
             }
             p.mark = _mark;
@@ -27860,19 +27860,20 @@ function _tmp_281_rule(p)
     return _res;
 }
 
-$B._PyPegen_parse = function(p){
+$B._PyPegen.parse = function(p){
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
-
-    // skip first token (ENCODING)
-    p.tok.next()
 
     switch(p.mode){
         case 'file':
             return file_rule(p)
         case 'eval':
             return eval_rule(p)
+        case 'single':
+            return interactive_rule(p)
+        default:
+            console.log('unknown mode', p.mode)
+            alert()
     }
-
 }

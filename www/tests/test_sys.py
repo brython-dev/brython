@@ -162,3 +162,24 @@ assert hasattr(sys, 'pycache_prefix')
 
 # remove trace for next tests
 sys.settrace(None)
+
+# issue 2360
+import io
+
+save_stderr = sys.stderr
+
+out = io.StringIO()
+sys.stderr = out
+
+flag = False
+try:
+  0/0
+except:
+  sys.excepthook(*sys.exc_info())
+  flag = True
+
+assert flag is True
+assert 'ZeroDivisionError' in out.getvalue()
+sys.stderr = save_stderr
+
+

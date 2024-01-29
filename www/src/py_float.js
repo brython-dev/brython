@@ -1335,7 +1335,7 @@ float.$factory = function(value){
          }
     }
 
-    let klass = value.__class__,
+    let klass = $B.get_class(value),
         float_method = $B.$getattr(klass, '__float__', null)
 
     if(float_method === null){
@@ -1343,7 +1343,7 @@ float.$factory = function(value){
 
         if(index_method === null){
             throw _b_.TypeError.$factory("float() argument must be a string or a " +
-                "number, not '" + $B.class_name(value) + "'")
+                "real number, not '" + $B.class_name(value) + "'")
         }
         let index = $B.$call(index_method)(value),
             index_klass = $B.get_class(index)

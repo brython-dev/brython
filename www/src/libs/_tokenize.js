@@ -22,12 +22,11 @@ TokenizerIter.__iter__ = function(self){
             }catch(err){
                 if($B.is_exc(err, [_b_.StopIteration])){
                     token = endmarker
-                    token.start[0]++
-                    token.end[0]++
-                    var type_code = $B.imported.token[token.type]
-                    yield $B.fast_tuple([type_code, token.string,
-                                         $B.fast_tuple(token.start),
-                                         $B.fast_tuple(token.end),
+                    token.lineno++
+                    token.end_lineno++
+                    yield $B.fast_tuple([token.num_type, token.string,
+                                         $B.fast_tuple([token.lineno, token.col_offset]),
+                                         $B.fast_tuple([token.end_lineno, token.end_col_offset]),
                                          token.line])
                 }
                 throw err
@@ -35,18 +34,18 @@ TokenizerIter.__iter__ = function(self){
             line_num++
             var line = _b_.bytes.decode(bytes, 'utf-8')
             for(var token of $B.tokenizer(line, 'test')){
-                if(token.type == 'ENCODING'){ // skip encoding token
+                if(token.num_type == $B.py_tokens.ENCODING){ // skip encoding token
                     continue
-                }else if(token.type == 'ENDMARKER'){
+                }else if(token.num_type == $B.py_tokens.ENDMARKER){
                     var endmarker = token
                     continue
                 }
-                token.start[0] = line_num
-                token.end[0] = line_num
-                var type_code = $B.imported.token[token.type]
-                yield $B.fast_tuple([type_code, token.string,
-                                     $B.fast_tuple(token.start),
-                                     $B.fast_tuple(token.end),
+                token.type = token.num_type
+                token.lineno = line_num
+                token.end_lineno = line_num
+                yield $B.fast_tuple([token.num_type, token.string,
+                                     $B.fast_tuple([token.lineno, token.col_offset]),
+                                     $B.fast_tuple([token.end_lineno, token.end_col_offset]),
                                      token.line])
             }
         }

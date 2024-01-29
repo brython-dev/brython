@@ -36,16 +36,14 @@ def run():
 
     # build brython.js from base Javascript files
     sources = [
-        # initialize __BRYTHON__
         'brython_builtins',
-
-        # generated
-        'py_ast_classes', # from Python.asdl
-        'unicode_data',   # from Unicode database
-        'stdlib_paths',   # from current standard library files
-        'version_info',   # from version, implementation, timestamp
-
-        # core Brython scripts
+        
+        'py_ast_classes',
+        'stdlib_paths',
+        'unicode_data',
+        'version_info',
+        
+        'py_tokens',
         'python_tokenizer',
         'py_ast',
         'py2js',
@@ -67,8 +65,8 @@ def run():
         'py_complex',
         'py_dict',
         'py_list',
-        'py_generator',
         'js_objects',
+        'py_generator',
         'py_dom',
         'py_pattern_matching',
         'async',
@@ -76,8 +74,15 @@ def run():
         'builtin_modules',
         'ast_to_js',
         'symtable',
-        'builtins_docstrings',
+        
+        'action_helpers_generated_version',
+        'string_parser',
+        'number_parser',
+        'python_parser_peg_version',
+        'pegen',
+        'gen_parse',
         'brython_ready'
+
     ]
 
     res = f"""// brython.js brython.info

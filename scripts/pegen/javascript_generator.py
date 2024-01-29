@@ -135,21 +135,22 @@ const EXTRA = {}
 
 
 EXTENSION_SUFFIX = """
-$B._PyPegen_parse = function(p){
+$B._PyPegen.parse = function(p){
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
-
-    // skip first token (ENCODING)
-    p.tok.next()
 
     switch(p.mode){
         case 'file':
             return file_rule(p)
         case 'eval':
             return eval_rule(p)
+        case 'single':
+            return interactive_rule(p)
+        default:
+            console.log('unknown mode', p.mode)
+            alert()
     }
-
 }
 """
 
@@ -697,7 +698,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
                     self.print(f'D(fprintf(stderr, "Fail at %d: {node.name}\\n", p.mark));')
                 self.print("_res = NULL;")
                 self.print("break;")
-            self.print('}')
+            self.print("}")
             if memoize:
                 self.print(f"$B._PyPegen.insert_memo(p, _mark, {node.name}_type, _res);")
             self.add_return("_res")

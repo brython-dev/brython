@@ -23,7 +23,7 @@ def transform_action(action):
 
     for name in parser_constants:
         action9 = re.sub(rf'\b{name}\b', '$B.parser_constants.' + name, action9)
-        
+
     # remove parameter types, eg
     # "$B._PyPegen.joined_str(p, a, (asdl_expr_seq)b, c)"
     # replaced by
@@ -61,6 +61,8 @@ def transform_action(action):
         action9 = type_decl.groups()[0]
 
     action9 = action9.replace('void', '_void')
+
+    action9 = re.sub(r'RAISE_(.*?)\s*\(([^p])', r'RAISE_\1(p, \2', action9)
     action10 = action9.strip('{}')
 
     return action10

@@ -8,6 +8,57 @@ var _b_ = $B.builtins,
     ELLIPSIS = '...',
     DEL_TARGETS = 'del_targets'
 
+function make_string_for_ast_value(value){
+    value = value.replace(/\n/g,'\\n\\\n')
+    value = value.replace(/\r/g,'\\r\\\r')
+    if(value[0] == "'"){
+        var unquoted = value.substr(1, value.length - 2)
+        return unquoted
+    }
+    // prepare value so that "'" + value + "'" is the correct string
+    if(value.indexOf("'") > -1){
+        var s = '',
+            escaped = false
+        for(var char of value){
+            if(char == '\\'){
+                if(escaped){
+                    s += '\\\\'
+                }
+                escaped = !escaped
+            }else{
+                if(char == "'" && ! escaped){
+                    // escape unescaped single quotes
+                    s += '\\'
+                }else if(escaped){
+                    s += '\\'
+                }
+                s += char
+                escaped = false
+            }
+        }
+        value = s
+    }
+    return value.substr(1, value.length - 2)
+}
+
+function encode_bytestring(s){
+    s = s.replace(/\\t/g, '\t')
+         .replace(/\\n/g, '\n')
+         .replace(/\\r/g, '\r')
+         .replace(/\\f/g, '\f')
+         .replace(/\\v/g, '\v')
+         .replace(/\\\\/g, '\\')
+    var t = []
+    for(var i = 0, len = s.length; i < len; i++){
+        var cp = s.codePointAt(i)
+        if(cp > 255){
+            throw Error()
+        }
+        t.push(cp)
+    }
+    return t
+}
+
 function EXTRA_EXPR(head, tail){
     return {
             lineno: head.lineno,
@@ -172,11 +223,11 @@ $B._PyPegen.constant_from_string = function(p, token){
     var prepared = $B.prepare_string(token)
     var is_bytes = prepared.value.startsWith('b')
     if(! is_bytes){
-        var value = $B.make_string_for_ast_value(prepared.value)
+        var value = make_string_for_ast_value(prepared.value)
     }else{
         value = prepared.value.substr(2, prepared.value.length - 3)
         try{
-            value = _b_.bytes.$factory($B.encode_bytestring(value))
+            value = _b_.bytes.$factory(encode_bytestring(value))
         }catch(err){
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
@@ -284,8 +335,10 @@ $B._PyPegen.seq_count_dots = function(seq){
     }
     var number_of_dots = 0;
     for(var token of seq){
-        if(token.type == 'OP'){
+        if(token.num_type == $B.py_tokens.DOT){
             number_of_dots += token.string.length
+        }else if(token.num_type == $B.py_tokens.ELLIPSIS){
+            number_of_dots += 3
         }
     }
 
@@ -458,9 +511,11 @@ $B._PyPegen.get_expr_name = function(e){
         case 'NamedExpr':
             return "named expression";
         default:
+            /*
             PyErr_Format(PyExc_SystemError,
                          "unexpected expression in assignment %d (line %d)",
                          e.kind, e.lineno);
+            */
             return NULL;
     }
 }
@@ -542,7 +597,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
     var ast_obj = new constr(
         function_def.name, function_def.args,
         function_def.body, decorators, function_def.returns,
-        function_def.type_comment)
+        function_def.type_comment,
+        function_def.type_params)
     for(var position of positions){
         ast_obj[position] = function_def[position]
     }
@@ -553,7 +609,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
 $B._PyPegen.class_def_decorators = function(p, decorators, class_def){
     var ast_obj = $B._PyAST.ClassDef(
         class_def.name, class_def.bases,
-        class_def.keywords, class_def.body, decorators)
+        class_def.keywords, class_def.body, decorators,
+        class_def.type_params)
     set_position_from_obj(ast_obj, class_def)
     return ast_obj
 }
@@ -627,7 +684,7 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
     var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1];
     var va = errmsg
     $B._PyPegen.raise_error_known_location(p, errtype,
-        t.start[0], t.start[1], t.end[0], t.end[1], errmsg, va);
+        t.lineno, t.col_offset, t.end_lineno, t.end_col_offset, errmsg, va);
 }
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
@@ -636,10 +693,10 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
     exc.filename = p.filename
     if(p.known_err_token){
         var token = p.known_err_token
-        exc.lineno = token.start[0]
-        exc.offset = token.start[1] + 1
-        exc.end_lineno = token.end[0]
-        exc.end_offset = token.end[1]
+        exc.lineno = token.lineno
+        exc.offset = token.col_offset + 1
+        exc.end_lineno = token.end_lineno
+        exc.end_offset = token.end_col_offset
         exc.text = token.line
     }else{
         exc.lineno = lineno

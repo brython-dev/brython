@@ -55,7 +55,8 @@ const NSTATISTICS = 2000,
       ERRORTOKEN = 'ERRORTOKEN',
       NEWLINE = $B.py_tokens.NEWLINE,
       DEDENT = $B.py_tokens.DEDENT,
-      Py_single_input = 'py_single_input'
+      Py_single_input = 'py_single_input',
+      PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 
 function PyUnicode_IS_ASCII(char){
     return char.codePointAt(0) < 128
@@ -282,11 +283,22 @@ function _PyTokenizer_Get(tok, new_token){
     return token.num_type
 }
 
-
 function get_next_token(p, new_token){
     var token = p.tokens[p.fill] ?? p.read_token()
     for(var key in token){
         new_token[key] = token[key]
+    }
+    if(token.num_type == $B.py_tokens.ENDMARKER){
+        // on 'single' mode, insert a NEWLINE before ENDMARKER
+        if(p.mode == 'single'){
+            var end_token = p.tokens[p.tokens.length - 2]
+            if(end_token.num_type != $B.py_tokens.NEWLINE){
+                var newline = $B.clone(end_token)
+                newline.num_type = $B.py_tokens.NEWLINE
+                p.tokens.splice(p.tokens.length - 1, 0, newline)
+                token = newline
+            }
+        }
     }
     return token.num_type
 }
@@ -587,11 +599,24 @@ $B._PyPegen.soft_keyword_token = function(p) {
 function prepared_number_value(prepared){
     switch(prepared.type){
         case 'float':
-            return parseFloat(prepared.value)
+            return $B.fast_float(prepared.value)
         case 'imaginary':
             return $B.make_complex(0, prepared_number_value(prepared.value))
         case 'int':
-            return parseInt(prepared.value[1], prepared.value[0])
+            var res = parseInt(prepared.value[1], prepared.value[0])
+            if(! Number.isSafeInteger(res)){
+                var base = prepared.value[0],
+                    num_str = prepared.value[1]
+                switch(base){
+                    case 8:
+                        return $B.fast_long_int(BigInt('0x' + num_str))
+                    case 10:
+                        return $B.fast_long_int(BigInt(num_str))
+                    case 16:
+                        return $B.fast_long_int(BigInt('0x' + num_str))
+                }
+            }
+            return res
     }
 }
 
@@ -675,7 +700,7 @@ $B._PyPegen.number_token = function(p){
     }
 
     var c = parsenumber(num_raw);
-    
+
     if (c == NULL) {
         p.error_indicator = 1;
         var tstate = _PyThreadState_GET();
@@ -832,7 +857,7 @@ function reset_parser_state_for_error_pass(p){
     p.call_invalid_rules = 1;
     // Don't try to get extra tokens in interactive mode when trying to
     // raise specialized errors in the second pass.
-    p.tok.interactive_underflow = IUNDERFLOW_STOP;
+    // p.tok.interactive_underflow = IUNDERFLOW_STOP;
 }
 
 function _is_end_of_source(p) {
@@ -848,20 +873,22 @@ $B._PyPegen.run_parser = function(p){
             PyErr_Clear();
             return RAISE_SYNTAX_ERROR("incomplete input");
         }
+        /*
         if (PyErr_Occurred() && !PyErr_ExceptionMatches(PyExc_SyntaxError)) {
             return NULL;
         }
+        */
        // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"
         // rules will be active during parsing.
         var last_token = p.tokens[p.fill - 1];
         reset_parser_state_for_error_pass(p);
-        _PyPegen_parse(p);
+        $B._PyPegen.parse(p);
 
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
-        _Pypegen_set_syntax_error(p, last_token);
-       return NULL;
+        $B.raise_error_known_token(_b_.SyntaxError, p.filename,
+            last_token, 'invalid syntax')
     }
 
     if (p.start_rule == Py_single_input && bad_single_statement(p)) {
@@ -871,14 +898,16 @@ $B._PyPegen.run_parser = function(p){
 
     // test_peg_generator defines _Py_TEST_PEGEN to not call PyAST_Validate()
 // #if defined(Py_DEBUG) && !defined(_Py_TEST_PEGEN)
-    if (p.start_rule == Py_single_input ||
-        p.start_rule == Py_file_input ||
-        p.start_rule == Py_eval_input)
+    /*
+    if (p.mode == 'single' ||
+        p.mode == 'file' ||
+        p.mode == 'eval')
     {
         if (!_PyAST_Validate(res)) {
             return NULL;
         }
     }
+    */
 // #endif
     return res;
 }

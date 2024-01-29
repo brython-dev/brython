@@ -233,8 +233,9 @@ function run_js(module_contents, path, _module){
 
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
-    $B.file_cache[path] = module_contents
-    $B.url2name[path] = module.__name__
+    var filename = $B.strip_host(path)
+    $B.file_cache[filename] = module_contents
+    $B.url2name[filename] = module.__name__
     var root,
         js,
         mod_name = module.__name__, // might be modified inside module, eg _pydecimal
@@ -242,7 +243,7 @@ function run_py(module_contents, path, module, compiled) {
     if(! compiled){
         src = {
             src: module_contents,
-            filename: path,
+            filename,
             imported: true
         }
 
@@ -518,7 +519,8 @@ VFSLoader.exec_module = function(self, modobj){
         if($B.get_option('debug') > 1){
             console.log("run Python code from VFS", mod_name)
         }
-        var record = run_py(module_contents, modobj.__file__, modobj)
+        var path = $B.brython_path + '/' + modobj.__file__
+        var record = run_py(module_contents, path, modobj)
         record.imports = imports.join(',')
         record.is_package = modobj.$is_package
         record.timestamp = $B.timestamp

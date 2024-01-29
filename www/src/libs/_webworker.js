@@ -11,12 +11,13 @@ function scripts_to_load(debug_level){
     if(debug_level > 2){
         var brython_scripts = [
             'brython_builtins',
-
+            
             'py_ast_classes',
-            'unicode_data',
             'stdlib_paths',
+            'unicode_data',
             'version_info',
-
+            
+            'py_tokens',
             'python_tokenizer',
             'py_ast',
             'py2js',
@@ -30,7 +31,6 @@ function scripts_to_load(debug_level){
             'py_range_slice',
             'py_bytes',
             'py_set',
-            'js_objects',
             'py_import',
             'py_string',
             'py_int',
@@ -39,6 +39,7 @@ function scripts_to_load(debug_level){
             'py_complex',
             'py_dict',
             'py_list',
+            'js_objects',
             'py_generator',
             'py_dom',
             'py_pattern_matching',
@@ -47,8 +48,15 @@ function scripts_to_load(debug_level){
             'builtin_modules',
             'ast_to_js',
             'symtable',
-            'builtins_docstrings'
-            ]
+            
+            'action_helpers_generated_version',
+            'string_parser',
+            'number_parser',
+            'python_parser_peg_version',
+            'pegen',
+            'gen_parse',
+            'brython_ready'
+        ]
     }else{
         var brython_scripts = ['brython']
     }

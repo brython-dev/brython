@@ -5,6 +5,12 @@ import re
 import shlex
 import string
 
+grammar_file = 'python.mini.gram2'
+
+
+src = "x + (1 + (y * (7 - 6)))"
+src = 'global x, y'
+
 primitives = {}
 
 operators = set()
@@ -19,6 +25,10 @@ class Keyword(str):
     def __str__(self):
         return f"'{str.__str__(self)}'"
 
+class Frozen:
+
+    def __init__(self, ge):
+        self.ge = ge
 
 class Punctuation(str):
     pass
@@ -84,7 +94,7 @@ def parse_grammar_options(line):
     return option
 
 grammar = {}
-with open('python.mini.gram2', encoding='utf-8') as f:
+with open(grammar_file, encoding='utf-8') as f:
     rule = None
     for line in f:
         if not line.strip():
@@ -103,11 +113,13 @@ with open('python.mini.gram2', encoding='utf-8') as f:
 
     grammar[rule] = options
 
+def show_option(option):
+    return '  | ' + ' '.join(str(x) for x in option)
+
 for rule, options in grammar.items():
     print(rule)
     for option in options:
-        print(option)
-        print('  |', ' '.join(str(x) for x in option))
+        print(show_option(option))
 
 print('operators', operators)
 print('keywords', keywords)
@@ -159,9 +171,14 @@ def add_to_list(t1, t2):
         if item not in t1:
             t1.append(item)
 
+class Candidate(list):
+
+    def append(self, item):
+        list.append(self, Candidate(item))
+
 def can_follow(e):
     # list of elements that can follow grammar element "e"
-    result = []
+    result = Candidate()
     test = False # isinstance(e, Separated)
     if test:
         print('can follow', e)
@@ -169,7 +186,7 @@ def can_follow(e):
         for onum, option in enumerate(options):
             if e is None:
                 if option[0] == option[0].upper() or \
-                        isinstance(option[0], (Operator, Keyword)):
+                        isinstance(option[0], (Operator, Keyword, Frozen)):
                     result.append([rule, onum, 0])
             else:
                 for inum, ge in enumerate(option[:-1]):
@@ -224,11 +241,6 @@ print('can follow None', can_follow(None))
 
 candidates = []
 
-
-src = "x + (1 + (y * (7 - 6)))"
-src = "global x"
-
-
 last_item = None
 
 def starters(r):
@@ -243,11 +255,19 @@ def starters(r):
             add_to_list(result, starters(equiv))
     return result
 
+def follower(candidate):
+    rule, onum, inum = candidate
+    result = []
+    option = grammar[rule][onum][:]
+    ge = option[inum]
+    if option[-1].startswith('{'):
+        option.pop()
 
-
-def match(token, ge):
+def match(token, candidate):
     # check if token matches the grammar expression referenced by candidate
     # returns a list of candidates for the next token
+    rule, onum, inum = candidate
+    ge = grammar[rule][onum][inum]
     tok_type = _token.tok_name[token.type]
     test = tok_type == 'OP' and token.string == '='
     if test:
@@ -259,17 +279,22 @@ def match(token, ge):
     elif ge in keywords:
         if tok_type == 'NAME' and token.string == ge:
             return ge
-
     elif isinstance(ge, Separated):
-        if not hasattr(ge, 'expect'):
-            ge.expect = 'repeated'
-        if ge.expect == 'repeated' and tok_type == ge:
-            ge.expect = 'separator'
+        if not hasattr(candidate, 'expect'):
+            candidate.expect = 'repeated'
+        if candidate.expect == 'repeated' and tok_type == ge:
+            candidate.expect = 'separator'
             return ge
-        elif ge.expect == 'separator' and tok_type == 'OP' and \
+        elif candidate.expect == 'separator' and tok_type == 'OP' and \
                 token.string == ge.separator:
-            ge.expect = 'repeated'
+            candidate.expect = 'repeated'
             return ge
+    elif ge == '&':
+        print('match with ge', ge)
+        next_candidate = candidate[:]
+        next_candidate[-1] += 1
+        if next_ge := match(token, next_candidate):
+            return Frozen(next_ge)
     elif ge == ge.upper():
         if tok_type == ge or (ge.endswith('?') and tok_type == ge[:-1]):
             return ge
@@ -298,7 +323,9 @@ candidates = can_follow(None)
 def show_candidates(candidates):
     for rule, onum, inum in candidates:
         option = grammar[rule][onum]
-        print('  ', rule, option, 'expect', option[inum])
+        print('  ', rule, show_option(option), 'expect', option[inum])
+
+
 
 for token in tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline):
     print()
@@ -310,11 +337,15 @@ for token in tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline):
     show_candidates(candidates)
     matches = []
     new_candidates = []
-    for rule, onum, inum in candidates:
+    for candidate in candidates:
+        rule, onum, inum = candidate
         ge = grammar[rule][onum][inum]
-        if new_ge := match(token, ge):
+        if new_ge := match(token, candidate):
             print('token matches with grammar expression', ge, 'new', new_ge)
             matches.append(new_ge)
+            if isinstance(new_ge, Frozen):
+                add_to_list(new_candidates, can_follow(new_ge.ge))
+                break
             add_to_list(new_candidates, can_follow(new_ge))
 
     print('new candidates')
