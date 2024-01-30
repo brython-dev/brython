@@ -289,7 +289,6 @@ DTD.prototype.feed = function(char){
         if(is_id_continue(char)){
             this.name += char
         }else{
-            console.log('DTD name', this.name)
             if(this.name == 'DOCTYPE'){
                 return new DOCTYPE(this.parser)
             }
