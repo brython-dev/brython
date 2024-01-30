@@ -1815,7 +1815,6 @@ const DEFAULTS = getArgs0.DEFAULTS = {
 // deno run generator.js
 // hasPos / posDefaults are pos parameters excluding posOnly parameters.
 function generate_args0(...args) {
-
     return new Function('fct', 'args',  generate_args0_str(...args) );
 }
 

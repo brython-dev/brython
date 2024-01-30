@@ -153,14 +153,14 @@ var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collection
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.music21','site-packages.music21.abcFormat','site-packages.music21.alpha','site-packages.music21.alpha.analysis','site-packages.music21.analysis','site-packages.music21.audioSearch','site-packages.music21.braille','site-packages.music21.capella','site-packages.music21.chord','site-packages.music21.common','site-packages.music21.converter','site-packages.music21.corpus','site-packages.music21.features','site-packages.music21.figuredBass','site-packages.music21.graph','site-packages.music21.humdrum','site-packages.music21.ipython21','site-packages.music21.languageExcerpts','site-packages.music21.lily','site-packages.music21.mei','site-packages.music21.mei.test','site-packages.music21.metadata','site-packages.music21.meter','site-packages.music21.midi','site-packages.music21.musedata','site-packages.music21.musedata.testPrimitive','site-packages.music21.musedata.testPrimitive.test01','site-packages.music21.musicxml','site-packages.music21.musicxml.lilypondTestSuite','site-packages.music21.noteworthy','site-packages.music21.omr','site-packages.music21.romanText','site-packages.music21.scale','site-packages.music21.scale.scala','site-packages.music21.scale.scala.scl','site-packages.music21.search','site-packages.music21.stream','site-packages.music21.test','site-packages.music21.tree','site-packages.music21.vexflow','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-28 12:19:50.578105"
-__BRYTHON__.timestamp=1706440790578
+__BRYTHON__.compiled_date="2024-01-30 11:59:34.394562"
+__BRYTHON__.timestamp=1706612374394
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -7805,7 +7805,10 @@ for(let kw of $B.make_js_iterator(kwdef)){$kwdefaults.set(kw,$B.$getitem(kwdef,k
 f.$kwdefaults=$kwdefaults
 f.$kwdefaults_values=[...$kwdefaults.values()]
 f.$hasParams=new Set()
-for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i){f.$hasParams.add(varnames[i])}
+var nb_args=f.$infos.__code__.co_argcount+
+f.$infos.__code__.co_kwonlyargcount+
+(f.$infos.kwargs ? 1 :0)
+for(let i=0 ;i < nb_args;++i){f.$hasParams.add(varnames[i])}
 const $INFOS=f.$infos,$CODE=$INFOS.__code__,DEFAULTS=$B.getArgs0.DEFAULTS
 const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_NAMED_DEFAULTS_COUNT=nb_kw_defaults
 let named_defaults=DEFAULTS.NONE;
