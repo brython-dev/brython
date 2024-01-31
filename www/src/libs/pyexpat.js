@@ -6,6 +6,13 @@ const XML_PARAM_ENTITY_PARSING_NEVER = 0,
       XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE = 1,
       XML_PARAM_ENTITY_PARSING_ALWAYS = 2
 
+const xml_entities = {
+    '&gt;': '>',
+    '&lt;': '<',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&amp;': '&'
+    }
 
 var xmlparser = $B.make_class('xmlparser',
     function(encoding, namespace_separator, intern){
@@ -14,16 +21,91 @@ var xmlparser = $B.make_class('xmlparser',
             encoding,
             namespace_separator,
             intern,
+            buffer_text: false,
             _buffer: '',
             _state: 'data',
             _data_buffer: '',
-            initialized: false,
-            has_xml_header: false
+            _initialized: false,
+            _maybe_entity: null,
+            _element_stack: []
         }
     }
 )
 
+xmlparser._handle_stack = function(self){
+    if(self._element.is_end){
+        if(self._element_stack.length == 0){
+            raise_error(self, 'no opening tag for closing ' + self._element.name)
+        }else{
+            var expected = $B.last(self._element_stack)
+            if(expected !== self._element.name){
+                raise_error(self, `tag mismatch, ` +
+                    `expected closing tag ${expected}, ` +
+                    `got: ${self._element.name}`)
+            }
+            self._element_stack.pop()
+            if(self._element_stack.length == 0){
+                flush_char_data(self)
+            }
+        }
+    }else if(! self._element.self_closing){
+        self._element_stack.push(self._element.name)
+    }
+}
+
+xmlparser.CharacterDataHandler = _b_.None
+
+xmlparser.CommentHandler = _b_.None
+
+xmlparser.EndElementHandler = _b_.None
+
+function check_entity(parser, pos){
+    var entity = parser._maybe_entity
+    var decimal = /&#(\d+);$/.exec(entity)
+    if(decimal){
+        return _b_.chr(parseInt(decimal[1]))
+    }
+    var hexa = /&#x(\d+);$/.exec(entity)
+    if(hexa){
+        return _b_.chr(parseInt(hexa[1], 16))
+    }
+    var xml_entity = xml_entities[entity]
+    if(xml_entity){
+        return xml_entity
+    }
+    raise_error_known_position(parser, `unknown entity: "${entity}"`, pos)
+}
+
+function flush_char_data(parser){
+    var buf = parser._data_buffer
+    if(buf.length > 0){
+        let handler = parser._handlers.CharacterDataHandler
+        if(handler !== _b_.None){
+            handler(buf)
+        }
+    }
+    parser._data_buffer = ''
+}
+
+function flush_final_char_data(parser){
+    var buf = parser._data_buffer
+    for(var i = 0; i < buf.length; i++){
+        if(! buf[i].match(/\s/)){
+            var pos = parser._pos - buf.length + i - 1
+            var msg = `junk after document element: line 1, column ${pos}`
+            raise_error(parser, msg)
+        }
+    }
+}
+
 const encoding_re = /<\?xml .*encoding\s*=\s*"(.*)"/
+
+const handler_names = [
+    'CharacterDataHandler',
+    'CommentHandler',
+    'StartElementHandler',
+    'EndElementHandler'
+    ]
 
 xmlparser.Parse = function(){
     var $ = $B.args('Parse', 3,
@@ -56,26 +138,52 @@ xmlparser.Parse = function(){
         array = new Uint8Array(data.source)
         data = decoder.decode(array)
     }
-    if(! self.initialized){
+    if(! self._initialized){
         if(data[0] != '<'){
             throw Error("XML or text declaration not at start of entity")
         }
-        self.initialized = true
+        self._initialized = true
     }
     self._buffer = data
     self._buffer_length = _b_.len(data)
     self._pos = 0
+
+    var handlers = self._handlers = {}
+    for(var handler_name of handler_names){
+        let handler = $B.$getattr(self, handler_name)
+        if(handler !== _b_.None){
+            handlers[handler_name] = $B.$call(handler)
+        }else{
+            handlers[handler_name] = _b_.None
+        }
+    }
+
     for(var token of xmlparser.xml_tokenizer(self)){
         if(token instanceof ELEMENT){
             if(! token.is_declaration && ! token.is_end){
-                self.StartElementHandler(token.name, token.attrs)
-            }else if(token.is_end){
-                self.EndElementHandler(token.name)
+                if(handlers.StartElementHandler !== _b_.None){
+                    flush_char_data(self)
+                    handlers.StartElementHandler(token.name, token.attrs)
+                }
+                if(token.self_closing &&
+                            handlers.EndElementHandler !== _b_.None){
+                    handlers.EndElementHandler(token.name)
+                }
+            }else if(token.is_end &&
+                    handlers.EndElementHandler !== _b_.None){
+                flush_char_data(self)
+                handlers.EndElementHandler(token.name)
             }
-        }else if(token instanceof DATA){
-            self.CharacterDataHandler(token.value)
+        }else if(token instanceof DATA &&
+                handlers.CharacterDataHandler !== _b_.None){
+            handlers.CharacterDataHandler(token.value)
+        }else if(token instanceof COMMENT &&
+                handlers.CommentHandler !== _b_.None){
+            flush_char_data(self)
+            handlers.CommentHandler(token.value)
         }
     }
+    flush_final_char_data(self)
     if(isfinal){
         self.finished = true
     }
@@ -91,27 +199,44 @@ xmlparser.SetParamEntityParsing = function(self, peParsing){
     return peParsing
 }
 
+xmlparser.StartElementHandler = _b_.None
+
 xmlparser.xml_tokenizer = function*(self){
     // convert bytes to string
     while(self._pos < self._buffer_length){
+
         var char = self._buffer[self._pos]
         if(self._state == 'data' && char == '<'){
-            if(self._data_buffer.length > 0){
-                yield new DATA(self._data_buffer)
-            }
+            self._maybe_entity = null
             self._state = 'element'
             self._tag_state = 'tag_name'
             self._element = new ELEMENT(self)
             self._pos++
         }else if(self._state == 'data'){
             if(char == '\n'){
-                if(self._data_buffer.length > 0){
-                    yield new DATA(self._data_buffer)
+                if(! self.buffer_text){
+                    flush_char_data(self)
+                    self._data_buffer = char
+                    flush_char_data(self)
+                }else{
+                    self._data_buffer += char
                 }
-                yield new DATA(char)
-                self._data_buffer = ''
+                self._maybe_entity = null
             }else{
                 self._data_buffer += char
+                if(char == '&'){
+                    // maybe start entity
+                    self._maybe_entity = char
+                }else if(self._maybe_entity !== null){
+                    self._maybe_entity += char
+                    if(char == ';'){
+                        var entity_pos = self._pos - self._maybe_entity.length + 1
+                        var replacement = check_entity(self, entity_pos)
+                        self._data_buffer = self._data_buffer.replace(
+                            self._maybe_entity, replacement)
+                        self._maybe_entity = null
+                    }
+                }
             }
             self._pos++
         }else if(self._state == 'element' &&
@@ -126,9 +251,10 @@ xmlparser.xml_tokenizer = function*(self){
                     self._buffer.substring(self._pos - 10, self._pos + 10))
             }
             if(self._element.closed){
+                xmlparser._handle_stack(self)
                 yield self._element
                 self._state = 'data'
-                self._data_buffer = ''
+                // self._data_buffer = ''
             }else if(self._element.is_comment){
                 self._state = 'comment'
                 self._comment = new COMMENT(self)
@@ -146,18 +272,21 @@ xmlparser.xml_tokenizer = function*(self){
             self._pos++
         }
     }
-    console.log('fini')
 }
 
 $B.set_func_names(xmlparser, 'expat')
 
-function raise_error(parser, message){
-    message += ' at position ' + parser._pos
-    var ix = parser._pos
+function raise_error_known_position(parser, message, pos){
+    message += ' at position ' + pos
+    var ix = pos
     while(ix >= 0 && parser._buffer[ix] !== '\n'){
         ix--
     }
-    message += '\n' + parser._buffer.substring(ix, parser._pos + 1)
+    message += '\n' + parser._buffer.substring(ix, pos + 1)
+    throw error.$factory(message)
+}
+
+function raise_error(parser, message){
     throw error.$factory(message)
 }
 
@@ -616,7 +745,6 @@ function open(url){
 }
 
 function create_parser(){
-    console.log('create parser', arguments)
     var $ = $B.args('ParserCreate', 3,
                 {encoding: null, namespace_separator: null, intern: null},
                 ['encoding', 'namespace_separator', 'intern'], arguments,
