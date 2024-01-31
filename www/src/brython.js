@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-30 11:59:34.394562"
-__BRYTHON__.timestamp=1706612374394
+__BRYTHON__.compiled_date="2024-01-31 07:53:09.325595"
+__BRYTHON__.timestamp=1706683989325
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -12913,7 +12913,7 @@ throw err}}
 return _b_.None}}
 if(! Array.isArray(args)){args=_b_.list.$factory(args)}
 init_from_list(self,args)}}
-for(let key in $.second.$jsobj){dict.$setitem(self,key,$.second.$jsobj[key])}
+for(let item of _b_.dict.$iter_items($.second)){dict.$setitem(self,item.key,item.value)}
 return _b_.None}
 dict.__iter__=function(self){return _b_.iter(dict.keys(self))}
 dict.__ior__=function(self,other){
@@ -13161,7 +13161,7 @@ return dict_values.$factory(self)}
 dict.$literal=function(items){var res=$B.empty_dict()
 for(var item of items){dict.$setitem(res,item[0],item[1],item[2])}
 return res}
-dict.$factory=function(){var res=dict.__new__(dict)
+dict.$factory=function(){var res=$B.empty_dict()
 var args=[res]
 for(var arg of arguments){args.push(arg)}
 dict.__init__.apply(null,args)

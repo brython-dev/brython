@@ -650,7 +650,6 @@ dict.$set_string_no_duplicate = function(d, keys, string, value){
 }
 
 dict.__init__ = function(self, first, second){
-
     if(first === undefined){
         return _b_.None
     }
@@ -687,6 +686,7 @@ dict.__init__ = function(self, first, second){
 
     var $ = $B.args("dict", 1, {self:null}, ["self"],
         arguments, {}, "first", "second")
+
     var args = $.first
     if(args.length > 1){
         throw _b_.TypeError.$factory("dict expected at most 1 argument" +
@@ -728,8 +728,8 @@ dict.__init__ = function(self, first, second){
         }
     }
 
-    for(let key in $.second.$jsobj){
-        dict.$setitem(self, key, $.second.$jsobj[key])
+    for(let item of _b_.dict.$iter_items($.second)){
+        dict.$setitem(self, item.key, item.value)
     }
     return _b_.None
 }
@@ -1444,7 +1444,7 @@ dict.$literal = function(items){
 }
 
 dict.$factory = function(){
-    var res = dict.__new__(dict)
+    var res = $B.empty_dict()
     var args = [res]
     for(var arg of arguments){
         args.push(arg)
