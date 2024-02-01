@@ -27,18 +27,27 @@ var xmlparser = $B.make_class('xmlparser',
             _data_buffer: '',
             _initialized: false,
             _maybe_entity: null,
-            _element_stack: []
+            _element_stack: [],
+            _chunk_size: 2 << 14
         }
     }
 )
 
 xmlparser._handle_stack = function(self){
+    if(! (self._element instanceof ELEMENT)){
+        return
+    }
+    if(self._element.name === undefined){
+        console.log('name undefined', self._element)
+        alert()
+    }
     if(self._element.is_end){
         if(self._element_stack.length == 0){
             raise_error(self, 'no opening tag for closing ' + self._element.name)
         }else{
             var expected = $B.last(self._element_stack)
             if(expected !== self._element.name){
+                console.log('error handle stack, stack', self._element_stack, self._element)
                 raise_error(self, `tag mismatch, ` +
                     `expected closing tag ${expected}, ` +
                     `got: ${self._element.name}`)
@@ -98,7 +107,7 @@ function flush_final_char_data(parser){
     }
 }
 
-const encoding_re = /<\?xml .*encoding\s*=\s*"(.*)"/
+const encoding_re = /<\?xml .*encoding\s*=\s*"(.*?)"/
 
 const handler_names = [
     'CharacterDataHandler',
@@ -189,6 +198,24 @@ xmlparser.Parse = function(){
     }
 }
 
+xmlparser.ParseFile = function(){
+    var $ = $B.args('ParseFile', 2,
+                {self: null, file: null},
+                ['self', 'file'], arguments,
+                {}, null, null),
+        self = $.self,
+        file = $.file
+    var reader = $B.$call($B.$getattr(file, 'read'))
+    while(true){
+        var data = reader(self._chunk_size)
+        if(data.length == 0){
+            return xmlparser.Parse(self, data, true)
+        }else{
+            xmlparser.Parse(self, data, false)
+        }
+    }
+}
+
 xmlparser.SetBase = function(self, base){
     self._base = base
     return _b_.None
@@ -252,6 +279,15 @@ xmlparser.xml_tokenizer = function*(self){
             }
             if(self._element.closed){
                 xmlparser._handle_stack(self)
+                if(self._element instanceof DOCTYPE){
+                    if(self._element.declarations){
+                        var parser = xmlparser.$factory()
+                        xmlparser.Parse(parser,
+                                        self._element.declarations.trim(), 
+                                        true)
+                        console.log('parser', parser)
+                    }
+                }
                 yield self._element
                 self._state = 'data'
                 // self._data_buffer = ''
@@ -356,7 +392,11 @@ DOCTYPE.prototype.feed = function(char){
             }
         }
     }else if(this.expect == 'string_start'){
-        if(! is_whitespace(char)){
+        if(char == '['){
+            this.type = 'mixed'
+            this.declarations = ''
+            this.expect = ']'
+        }else if(! is_whitespace(char)){
             if(char == '"' || char == "'"){
                 this.quote = char
                 this.string = ''
@@ -391,13 +431,48 @@ DOCTYPE.prototype.feed = function(char){
         if(char == ']'){
             this.expect = '>'
         }else{
-            this.declaration += char
+            this.declarations += char
         }
     }else{
         throw Error('wrong expect: ' + this.expect)
     }
     return this
 }
+
+function CDATA(){
+    this.content = ''
+    this.expect = ']'
+    this.level = 1
+}
+
+CDATA.prototype.feed = function(char){
+    switch(this.expect){
+        case ']':
+            if(char == '>'){
+                throw Error('closed without closing ]')
+            }else if(char == '['){
+                this.level++
+            }else if(char == ']'){
+                if(this.level == 1){
+                    this.expect = '>'
+                }else{
+                    this.level--
+                }
+            }else{
+                this.content += char
+            }
+            break
+        case '>':
+            if(char != '>'){
+                console.log('-- error', this, 'char', char)
+                throw Error('expected ">", got: ' + char)
+            }
+            this.closed = true
+            break
+    }
+    return this
+}
+
 function DTD(parser){
     this.parser = parser
     this.expect = 'name_start'
@@ -411,15 +486,20 @@ DTD.prototype.feed = function(char){
             this.expect = 'name_continue'
         }else if(char == '-'){
             this.expect = '-' // maybe comment start
+        }else if(char == '['){
+            return new CDATA()
         }else{
-            throw Error('expected name, got ' + chare)
+            throw Error('expected name, got ' + char)
         }
     }else if(this.expect == 'name_continue'){
         if(is_id_continue(char)){
             this.name += char
         }else{
+            console.log('DD, name', this.name)
             if(this.name == 'DOCTYPE'){
                 return new DOCTYPE(this.parser)
+            }else if(this.name == 'ENTITY'){
+                return new ENTITY(this.parser)
             }
             if(char == '>'){
                 this.closed = true
