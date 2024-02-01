@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-01 21:25:08.396940"
-__BRYTHON__.timestamp=1706819108396
+__BRYTHON__.compiled_date="2024-02-01 21:36:07.775990"
+__BRYTHON__.timestamp=1706819767775
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -11624,6 +11624,8 @@ return int_value(res)}}}
 throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like object "+
 `or a real number, not '${$B.class_name(value)}'`)}}
+if(value.length==0){throw _b_.ValueError.$factory(
+`invalid literal for int() with base 10: ${_b_.repr(value)}`)}
 base=base===missing ? 10:$B.PyNumber_Index(base)
 if(!(base >=2 && base <=36)){
 if(base !=0){throw _b_.ValueError.$factory("invalid base")}}

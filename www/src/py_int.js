@@ -747,6 +747,10 @@ int.$factory = function(){
         }
     }
 
+    if(value.length == 0){
+        throw _b_.ValueError.$factory(
+            `invalid literal for int() with base 10: ${_b_.repr(value)}`)
+    }
     base = base === missing ? 10: $B.PyNumber_Index(base)
 
     if(! (base >=2 && base <= 36)){
