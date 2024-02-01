@@ -151,6 +151,27 @@ BytesIO.getvalue = function(){
     return self.$content
 }
 
+BytesIO.read = function(){
+    var $ = $B.args("read", 2, {self: null, nbytes: null},
+            ["self", "nbytes"], arguments, {nbytes: _b_.None}, null, null),
+        self = $.self,
+        nbytes = $.nbytes,
+        res
+    var source = self.$content.source
+    if(nbytes === _b_.None){
+        res = $B.fast_bytes(source.slice(self.$counter))
+        self.$counter = source.length
+    }else if(! _b_.isinstance(nbytes, _b_.int)){
+        throw _b_.TypeError.$factory('number of bytes should be int, not ' +
+            $B.class_name(nbytes))
+    }else{
+        res = $B.fast_bytes(source.slice(self.$counter,
+                            self.$counter + nbytes))
+        self.$counter = Math.min(self.$counter + nbytes, source.length)
+    }
+    return res
+}
+
 BytesIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
