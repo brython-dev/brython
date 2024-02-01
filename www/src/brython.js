@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-31 21:47:42.610982"
-__BRYTHON__.timestamp=1706734062610
+__BRYTHON__.compiled_date="2024-02-01 21:25:08.396940"
+__BRYTHON__.timestamp=1706819108396
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -12890,6 +12890,13 @@ if(keys.has(string)){throw _b_.TypeError.$factory('dict() got multiple values fo
 `argument '${string}'`)}
 d.$strings[string]=value
 keys.add(string)}
+function add_mapping(d,obj){for(var entry of _b_.dict.$iter_items(obj)){dict.$setitem(d,entry.key,entry.value,entry.hash)}}
+function add_iterable(d,js_iterable){var i=0
+for(var entry of js_iterable){var items=Array.from($B.make_js_iterator(entry))
+if(items.length !==2){throw _b_.ValueError.$factory("dictionary "+
+`update sequence element #${i} has length ${items.length}; 2 is required`)}
+dict.$setitem(d,items[0],items[1])
+i++}}
 dict.__init__=function(self,first,second){if(first===undefined){return _b_.None}
 if(second===undefined){
 if((! first.$kw)&& $B.$isinstance(first,$B.JSObj)){for(let key in first){dict.$setitem(self,key,first[key])}
@@ -12900,8 +12907,13 @@ return _b_.None}else if(first.__class__===$B.generator){init_from_list(self,firs
 return _b_.None}}
 var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
 var args=$.first
-if(args.length > 1){throw _b_.TypeError.$factory("dict expected at most 1 argument"+
-", got 2")}else if(args.length==1){args=args[0]
+if(args.length > 1){if($B._experimental_dict){console.log('try dict(*args)')
+for(var arg of args){if(_b_.isinstance(arg,_b_.dict)){add_mapping(self,arg)}else{try{var js_iterable=$B.make_js_iterator(arg)}catch(err){console.log(arg)
+console.log(err)
+throw _b_.TypeError.$factory('expected mapping or '+
+`iterable, got ${$B.class_name(arg)}`)}
+add_iterable(self,js_iterable)}}}else{throw _b_.TypeError.$factory("dict expected at most 1 argument"+
+`, got ${args.length}`)}}else if(args.length==1){args=args[0]
 if(args.__class__===dict){for(let entry of dict.$iter_items(args)){dict.$setitem(self,entry.key,entry.value,entry.hash)}}else{var keys=$B.$getattr(args,"keys",null)
 if(keys !==null){var gi=$B.$getattr(args,"__getitem__",null)
 if(gi !==null){
