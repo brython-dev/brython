@@ -3302,9 +3302,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
 
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
-
-    js += `frame.$f_trace = $B.enter_frame(frame)\n`
     if(! namespaces){
+          js += `frame.$f_trace = $B.enter_frame(frame)\n`
           js += `$B.set_lineno(frame, 1)\n` +
                 '\nvar _frame_obj = $B.frame_obj\n'
     }
