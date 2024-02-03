@@ -110,6 +110,28 @@ var module = {
         return stat_result.$factory(filename)
     },
     open: function(path, flags){return _b_.open(path, flags)},
+    remove: function(path) {
+        var $ = $B.args("remove", 1, { path: null }, ["path"], arguments, {}, null, null)
+        console.log($)
+
+        var path = $.path
+        var found_file = false
+
+        if ($B.file_cache && $B.file_cache.hasOwnProperty(path)){
+            delete $B.file_cache[path]
+            found_file = true
+        }
+        if ($B.files && $B.files.hasOwnProperty(path)){
+            delete $B.files[path]
+            found_file = true
+        }
+
+        if(!found_file) {
+            throw _b_.FileNotFoundError.$factory(`No such file or directory: '${path}'`)
+        }
+
+        return _b_.None
+    },
     stat: function(filename){return stat_result.$factory(filename)},
     stat_result: function(filename){return stat_result.$factory(filename)},
     urandom: function(n){
@@ -135,7 +157,7 @@ var module = {
     "close", "closerange", "device_encoding", "dup", "dup2",
     "execv", "execve", "fsat", "fsync", "get_terminal_size", "getcwdb",
     "getlogin", "getppid", "isatty", "kill", "link", "listdir", "lseek",
-    "mkdir", "pipe", "putenv", "read", "readlink", "remove", "rename",
+    "mkdir", "pipe", "putenv", "read", "readlink", "rename",
     "replace", "rmdir", "spawnv", "spawnve", "startfile", "stat_float_times",
     "statvfs_result", "strerror", "symlink", "system", "terminal_size",
     "times", "times_result", "umask", "uname_result", "unlink", "utime",

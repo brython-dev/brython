@@ -153,15 +153,15 @@ var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collection
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-01 21:36:07.775990"
-__BRYTHON__.timestamp=1706819767775
-__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
+__BRYTHON__.compiled_date="2024-02-03 18:08:20.239438"
+__BRYTHON__.timestamp=1707001700239
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
 const Other_ID_Start=[0x1885,0x1886,0x2118,0x212E,0x309B,0x309C].map(
@@ -7248,7 +7248,10 @@ var len=_b_.len=function(obj){check_nb_args_no_kw('len',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
 try{var method=$B.$getattr(klass,'__len__')}catch(err){throw _b_.TypeError.$factory("object of type '"+
 $B.class_name(obj)+"' has no len()")}
-return $B.$call(method)(obj)}
+let res=$B.$call(method)(obj)
+if(!$B.$isinstance(res,_b_.int)){throw _b_.TypeError.$factory(`'${$B.class_name(res)}' object cannot be interpreted as an integer`)}
+if(!$B.rich_comp('__ge__',res,0)){throw _b_.ValueError.$factory('ValueError: __len__() should return >= 0')}
+return res}
 _b_.locals=function(){
 check_nb_args('locals',0,arguments)
 var locals_obj=$B.frame_obj.frame[1]
@@ -7587,7 +7590,7 @@ throw err}}}
 var $Reader=$B.make_class("Reader")
 $Reader.__bool__=function(){return true}
 $Reader.__enter__=function(self){return self}
-$Reader.__exit__=function(){return false}
+$Reader.__exit__=function(self){$Reader.close(self)}
 $Reader.__init__=function(_self,initial_value=''){_self.$content=initial_value
 _self.$counter=0}
 $Reader.__iter__=function(self){
@@ -11697,7 +11700,7 @@ if(test){console.log('bool(obj)',obj,'bool_class',bool_class,'klass',klass,'appl
 console.log('$B.$call(bool_method)',bool_method+'')}
 if(bool_method===missing){var len_method=$B.$getattr(klass,'__len__',missing)
 if(len_method===missing){return true}
-return len_method(obj)> 0}else{var res=bool_class ?
+return _b_.len(obj)> 0}else{var res=bool_class ?
 $B.$call(bool_method)(obj):
 $B.$call(bool_method)()
 if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
@@ -11722,6 +11725,10 @@ return _b_.NotImplemented}
 bool.$factory=function(){
 var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)
 return $B.$bool($.x,true)}
+bool.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("bool.__new__(): not enough arguments")}else if(!$B.$isinstance(cls,_b_.type)){throw _b_.TypeError.$factory(`bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)}else if(!_b_.issubclass(cls,bool)){let class_name=$B.class_name(cls)
+throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)}
+if(arguments.length > 2){throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)}
+return bool.$factory(value)}
 bool.numerator=int.numerator
 bool.denominator=int.denominator
 bool.real=int.real

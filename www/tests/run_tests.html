@@ -161,7 +161,7 @@ def qunit_add_tests(suite, default_caption = 'All tests'):
 
 qunit_add_tests(test_utils.load_brython_test_cases('.'))
 
-for test_name in ('test.test_syntax',):
+for test_name in ('test.test_syntax', 'test.test_bool'):
     suite = defaultTestLoader.loadTestsFromName(test_name)
     qunit_add_tests(suite, default_caption = 'CPython')
 </script>

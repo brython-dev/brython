@@ -932,7 +932,9 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 if(len_method === missing){
                     return true
                 }
-                return len_method(obj) > 0
+                // Call _b_.len here instead of len_method directly to use
+                // len's handling of non-integer and negative values
+                return _b_.len(obj) > 0
             }else{
                 var res = bool_class ?
                           $B.$call(bool_method)(obj) :
@@ -1016,6 +1018,21 @@ bool.$factory = function(){
     var $ = $B.args("bool", 1, {x: null}, ["x"],
         arguments, {x: false}, null, null)
     return $B.$bool($.x, true)
+}
+
+bool.__new__ = function (cls, value) {
+    if (cls === undefined) {
+        throw _b_.TypeError.$factory("bool.__new__(): not enough arguments")
+    } else if (!$B.$isinstance(cls, _b_.type)) {
+        throw _b_.TypeError.$factory(`bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
+    } else if (!_b_.issubclass(cls, bool)) {
+        let class_name = $B.class_name(cls)
+        throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`) 
+    }
+    if (arguments.length > 2) {
+        throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)
+    }
+    return bool.$factory(value)
 }
 
 bool.numerator = int.numerator
