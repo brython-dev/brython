@@ -1012,6 +1012,11 @@ bool.__xor__ = function(self, other) {
     return _b_.NotImplemented
 }
 
+bool.__invert__ = function(self) {
+    $B.warn(_b_.DeprecationWarning, `Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
+    return int.__invert__(self)
+}
+
 bool.$factory = function(){
     // Calls $B.$bool, which is used inside the generated JS code and skips
     // arguments control.

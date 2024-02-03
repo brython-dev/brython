@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 18:34:40.742718"
-__BRYTHON__.timestamp=1707003280742
+__BRYTHON__.compiled_date="2024-02-03 18:39:49.784452"
+__BRYTHON__.timestamp=1707003589784
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -11722,6 +11722,8 @@ bool.__repr__=function(self){$B.builtins_repr_check(bool,arguments)
 return self ? "True" :"False"}
 bool.__xor__=function(self,other){if($B.$isinstance(other,bool)){return self ^ other ? true :false}else if($B.$isinstance(other,int)){return int.__xor__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
+bool.__invert__=function(self){$B.warn(_b_.DeprecationWarning,`Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
+return int.__invert__(self)}
 bool.$factory=function(){
 var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null,1)
 return $B.$bool($.x,true)}
