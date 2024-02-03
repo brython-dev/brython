@@ -156,7 +156,7 @@ var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collection
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-01-29 08:25:13.724670"
-__BRYTHON__.timestamp=1706513113723
+__BRYTHON__.compiled_date="2024-02-03 09:04:24.343539"
+__BRYTHON__.timestamp=1706947464343
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -3696,7 +3696,10 @@ for(let kw of $B.make_js_iterator(kwdef)){$kwdefaults.set(kw,$B.$getitem(kwdef,k
 f.$kwdefaults=$kwdefaults
 f.$kwdefaults_values=[...$kwdefaults.values()]
 f.$hasParams=new Set()
-for(let i=f.$infos.__code__.co_posonlyargcount ;i < varnames.length;++i){f.$hasParams.add(varnames[i])}
+var nb_args=f.$infos.__code__.co_argcount+
+f.$infos.__code__.co_kwonlyargcount+
+(f.$infos.kwargs ? 1 :0)
+for(let i=0 ;i < nb_args;++i){f.$hasParams.add(varnames[i])}
 const $INFOS=f.$infos,$CODE=$INFOS.__code__,DEFAULTS=$B.getArgs0.DEFAULTS
 const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_NAMED_DEFAULTS_COUNT=nb_kw_defaults
 let named_defaults=DEFAULTS.NONE;
@@ -7512,6 +7515,8 @@ return int_value(res)}}}
 throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like object "+
 `or a real number, not '${$B.class_name(value)}'`)}}
+if(value.length==0){throw _b_.ValueError.$factory(
+`invalid literal for int() with base 10: ${_b_.repr(value)}`)}
 base=base===missing ? 10:$B.PyNumber_Index(base)
 if(!(base >=2 && base <=36)){
 if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
@@ -8660,7 +8665,8 @@ continue}
 if($B.is_or_equals(d._keys[index],key)){return{found:true,key:d._keys[index],value:d._values[index],hash,rank:i,index}}}}
 return{found:false,hash}}
 dict.__contains__=function(){var $=$B.args("__contains__",2,{self:null,key:null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
-if(self.$all_str){if(typeof key=='string'){return self.$strings.hasOwnProperty(key)}
+return _b_.dict.$contains(self,key)}
+dict.$contains=function(self,key){if(self.$all_str){if(typeof key=='string'){return self.$strings.hasOwnProperty(key)}
 var hash=$B.$getattr($B.get_class(key),'__hash__')
 if(hash===_b_.object.__hash__){return false}
 convert_all_str(self)}
@@ -8777,6 +8783,13 @@ if(keys.has(string)){throw _b_.TypeError.$factory('dict() got multiple values fo
 `argument '${string}'`)}
 d.$strings[string]=value
 keys.add(string)}
+function add_mapping(d,obj){for(var entry of _b_.dict.$iter_items(obj)){dict.$setitem(d,entry.key,entry.value,entry.hash)}}
+function add_iterable(d,js_iterable){var i=0
+for(var entry of js_iterable){var items=Array.from($B.make_js_iterator(entry))
+if(items.length !==2){throw _b_.ValueError.$factory("dictionary "+
+`update sequence element #${i} has length ${items.length}; 2 is required`)}
+dict.$setitem(d,items[0],items[1])
+i++}}
 dict.__init__=function(self,first,second){if(first===undefined){return _b_.None}
 if(second===undefined){
 if((! first.$kw)&& $B.$isinstance(first,$B.JSObj)){for(let key in first){dict.$setitem(self,key,first[key])}
@@ -8787,8 +8800,13 @@ return _b_.None}else if(first.__class__===$B.generator){init_from_list(self,firs
 return _b_.None}}
 var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
 var args=$.first
-if(args.length > 1){throw _b_.TypeError.$factory("dict expected at most 1 argument"+
-", got 2")}else if(args.length==1){args=args[0]
+if(args.length > 1){if($B._experimental_dict){console.log('try dict(*args)')
+for(var arg of args){if(_b_.isinstance(arg,_b_.dict)){add_mapping(self,arg)}else{try{var js_iterable=$B.make_js_iterator(arg)}catch(err){console.log(arg)
+console.log(err)
+throw _b_.TypeError.$factory('expected mapping or '+
+`iterable, got ${$B.class_name(arg)}`)}
+add_iterable(self,js_iterable)}}}else{throw _b_.TypeError.$factory("dict expected at most 1 argument"+
+`, got ${args.length}`)}}else if(args.length==1){args=args[0]
 if(args.__class__===dict){for(let entry of dict.$iter_items(args)){dict.$setitem(self,entry.key,entry.value,entry.hash)}}else{var keys=$B.$getattr(args,"keys",null)
 if(keys !==null){var gi=$B.$getattr(args,"__getitem__",null)
 if(gi !==null){
@@ -8800,7 +8818,7 @@ throw err}}
 return _b_.None}}
 if(! Array.isArray(args)){args=_b_.list.$factory(args)}
 init_from_list(self,args)}}
-for(let key in $.second.$jsobj){dict.$setitem(self,key,$.second.$jsobj[key])}
+for(let item of _b_.dict.$iter_items($.second)){dict.$setitem(self,item.key,item.value)}
 return _b_.None}
 dict.__iter__=function(self){return _b_.iter(dict.keys(self))}
 dict.__ior__=function(self,other){
@@ -9048,7 +9066,7 @@ return dict_values.$factory(self)}
 dict.$literal=function(items){var res=$B.empty_dict()
 for(var item of items){dict.$setitem(res,item[0],item[1],item[2])}
 return res}
-dict.$factory=function(){var res=dict.__new__(dict)
+dict.$factory=function(){var res=$B.empty_dict()
 var args=[res]
 for(var arg of arguments){args.push(arg)}
 dict.__init__.apply(null,args)
@@ -11501,11 +11519,7 @@ if(check_func){obj._check()}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
-function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)
-var s
-if(obj instanceof $B.ast.Name){s=obj.id}else if(obj instanceof $B.ast.BinOp){s=annotation_to_str(obj.left)+'|'+annotation_to_str(obj.right)}else if(obj instanceof $B.ast.Subscript){s=annotation_to_str(obj.value)+'['+
-annotation_to_str(obj.slice)+']'}else if(obj instanceof $B.ast.Constant){if(obj.value===_b_.None){s='None'}else{console.log('other constant',obj)}}else{console.log('other annotation',obj)}
-return s}
+function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes.symtable.table.future.features &
 $B.CO_FUTURE_ANNOTATIONS
 var scope=last_scope(scopes)
