@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 18:39:49.784452"
-__BRYTHON__.timestamp=1707003589784
+__BRYTHON__.compiled_date="2024-02-03 18:50:12.804382"
+__BRYTHON__.timestamp=1707004212804
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -11736,8 +11736,10 @@ let int_result=int.from_bytes($.bytes,$.byteorder,$.signed)
 return bool.$factory(int_result)}
 bool.numerator=int.numerator
 bool.denominator=int.denominator
-bool.real=int.real
+bool.real=(self)=> self ? 1 :0
 bool.imag=int.imag
+for(var attr of['real']){bool[attr].setter=(function(x){return function(self){throw _b_.AttributeError.$factory(`attribute '${x}' of `+
+`'${$B.class_name(self)}' objects is not writable`)}})(attr)}
 _b_.bool=bool
 $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;

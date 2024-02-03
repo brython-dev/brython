@@ -1051,8 +1051,18 @@ bool.from_bytes = function () {
 
 bool.numerator = int.numerator
 bool.denominator = int.denominator
-bool.real = int.real
+bool.real = (self) => self ? 1 : 0
 bool.imag = int.imag
+
+for (var attr of ['real']) {
+    bool[attr].setter = (function (x) {
+        return function (self) {
+            throw _b_.AttributeError.$factory(`attribute '${x}' of ` +
+                `'${$B.class_name(self)}' objects is not writable`)
+        }
+    })(attr)
+}
+
 
 _b_.bool = bool
 
