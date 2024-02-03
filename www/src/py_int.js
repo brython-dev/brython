@@ -1016,7 +1016,7 @@ bool.$factory = function(){
     // Calls $B.$bool, which is used inside the generated JS code and skips
     // arguments control.
     var $ = $B.args("bool", 1, {x: null}, ["x"],
-        arguments, {x: false}, null, null)
+        arguments, {x: false}, null, null, 1)
     return $B.$bool($.x, true)
 }
 
