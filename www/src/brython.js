@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 09:04:24.343539"
-__BRYTHON__.timestamp=1706947464343
+__BRYTHON__.compiled_date="2024-02-03 17:11:46.597537"
+__BRYTHON__.timestamp=1706976706597
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -4115,6 +4115,7 @@ $B.set_func_names(traceback,"builtins")
 var frame=$B.frame=$B.make_class("frame",function(frame_list){frame_list.__class__=frame
 return frame_list}
 )
+frame.__bool__=function(){return true}
 frame.__delattr__=function(_self,attr){if(attr=="f_trace"){_self.$f_trace=_b_.None}}
 frame.__dir__=function(){return _b_.object.__dir__(frame).concat(['clear','f_back','f_builtins','f_code','f_globals','f_lasti','f_lineno','f_locals','f_trace','f_trace_lines','f_trace_opcodes'])}
 frame.__getattr__=function(_self,attr){
@@ -4125,7 +4126,6 @@ frame_obj=frame_obj.prev}
 if(frame_obj.prev !==null){return frame.$factory(frame_obj.prev.frame)}
 return _b_.None}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){if(_self.$f_trace===undefined){return _b_.None}
 return _self.$f_trace}
-console.log('no attr',attr,'for frame',_self)
 throw $B.attr_error(attr,_self)}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
 _self.$f_trace=value}}
@@ -12612,8 +12612,8 @@ js+=`\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
-js+=`frame.$f_trace = $B.enter_frame(frame)\n`
-if(! namespaces){js+=`$B.set_lineno(frame, 1)\n`+
+if(! namespaces){js+=`frame.$f_trace = $B.enter_frame(frame)\n`
+js+=`$B.set_lineno(frame, 1)\n`+
 '\nvar _frame_obj = $B.frame_obj\n'}
 js+='var stack_length = $B.count_frames()\n'
 js+=`try{\n`+

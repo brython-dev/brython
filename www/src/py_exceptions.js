@@ -183,6 +183,10 @@ var frame = $B.frame = $B.make_class("frame",
     }
 )
 
+frame.__bool__ = function(){
+    return true
+}
+
 frame.__delattr__ = function(_self, attr){
     if(attr == "f_trace"){
         _self.$f_trace = _b_.None
@@ -222,7 +226,7 @@ frame.__getattr__ = function(_self, attr){
         return _self.$f_trace
     }
 
-    console.log('no attr', attr, 'for frame', _self)
+    //console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
 
