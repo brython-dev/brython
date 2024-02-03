@@ -1035,6 +1035,15 @@ bool.__new__ = function (cls, value) {
     return bool.$factory(value)
 }
 
+bool.from_bytes = function () {
+    var $ = $B.args("from_bytes", 3,
+        { bytes: null, byteorder: null, signed: null },
+        ["bytes", "byteorder", "signed"],
+        arguments, { byteorder: 'big', signed: false }, null, null)
+    let int_result = int.from_bytes($.bytes, $.byteorder, $.signed)
+    return bool.$factory(int_result)
+}
+
 bool.numerator = int.numerator
 bool.denominator = int.denominator
 bool.real = int.real

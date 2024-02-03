@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 18:08:20.239438"
-__BRYTHON__.timestamp=1707001700239
+__BRYTHON__.compiled_date="2024-02-03 18:25:48.484635"
+__BRYTHON__.timestamp=1707002748484
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -10424,7 +10424,7 @@ var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
 var num_format=function(val,flags){number_check(val,flags)
-if($B.$isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! $B.$isinstance(val,_b_.int)){val=parseInt(val)}
+if($B.$isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! $B.$isinstance(val,_b_.int)){val=parseInt(val)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==="0"){if(val < 0){s=s.substring(1)
 return "-"+format_padding(s,flags,true)}
@@ -10514,7 +10514,7 @@ format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
 $B.formatters={floating_point_format,floating_point_decimal_format,floating_point_exponential_format}
 var signed_hex_format=function(val,upper,flags){var ret
 if(! $B.$isinstance(val,_b_.int)){throw _b_.TypeError.$factory(
-`%X format: an integer is required, not ${$B.class_name(val)}`)}
+`%X format: an integer is required, not ${$B.class_name(val)}`)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
 if(val.__class__===$B.long_int){ret=val.value.toString(16)}else{ret=parseInt(val)
 ret=ret.toString(16)}
 ret=format_int_precision(ret,flags)
@@ -11729,6 +11729,9 @@ bool.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factor
 throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)}
 if(arguments.length > 2){throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)}
 return bool.$factory(value)}
+bool.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null },["bytes","byteorder","signed"],arguments,{byteorder:'big',signed:false },null,null)
+let int_result=int.from_bytes($.bytes,$.byteorder,$.signed)
+return bool.$factory(int_result)}
 bool.numerator=int.numerator
 bool.denominator=int.denominator
 bool.real=int.real

@@ -447,6 +447,8 @@ var num_format = function(val, flags) {
         val = parseInt(val.value)
     }else if(! $B.$isinstance(val, _b_.int)){
         val = parseInt(val)
+    }else if ($B.$isinstance(val, _b_.bool)) {
+        val = val ? 1 : 0
     }
 
     var s = format_int_precision(val, flags)
@@ -692,6 +694,8 @@ var signed_hex_format = function(val, upper, flags){
     if(! $B.$isinstance(val, _b_.int)){
         throw _b_.TypeError.$factory(
             `%X format: an integer is required, not ${$B.class_name(val)}`)
+    } else if ($B.$isinstance(val, _b_.bool)) {
+        val = val ? 1 : 0
     }
 
     if(val.__class__ === $B.long_int){
