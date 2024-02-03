@@ -283,7 +283,7 @@ xmlparser.xml_tokenizer = function*(self){
                     if(self._element.declarations){
                         var parser = xmlparser.$factory()
                         xmlparser.Parse(parser,
-                                        self._element.declarations.trim(), 
+                                        self._element.declarations.trim(),
                                         true)
                         console.log('parser', parser)
                     }
@@ -738,6 +738,30 @@ ELEMENT.prototype.toString = function() {
         res += '/'
     }
     return res + '>'
+}
+
+/*
+EntityDecl        ::=  GEDecl | PEDecl
+GEDecl            ::=  '<!ENTITY' S Name S EntityDef S? '>'
+PEDecl            ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
+EntityDef         ::=  EntityValue | (ExternalID NDataDecl?)
+PEDef             ::=  EntityValue | ExternalID
+ExternalID        ::=  'SYSTEM' S SystemLiteral
+                    |  'PUBLIC' S PubidLiteral S SystemLiteral
+NDataDecl         ::=  S 'NDATA' S Name
+*/
+function ENTITY(){
+}
+
+ENTITY.prototype.feed = function(char){
+    if(! is_whitespace(char)){
+        if(is_id_start(char)){
+            return new GEDecl(char)
+        }else if(char == "%"){
+            return new PEDecl()
+        }
+        throw Error('unexpected after ENTITY: ' + char)
+    }
 }
 
 function PROCESSING_INSTRUCTION(parser, name){
