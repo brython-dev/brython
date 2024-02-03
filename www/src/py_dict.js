@@ -300,7 +300,10 @@ dict.__contains__ = function(){
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
+    return _b_.dict.$contains(self, key)
+}
 
+dict.$contains = function(self, key){
     if(self.$all_str){
         if(typeof key == 'string'){
             return self.$strings.hasOwnProperty(key)
@@ -646,8 +649,26 @@ dict.$set_string_no_duplicate = function(d, keys, string, value){
     keys.add(string)
 }
 
-dict.__init__ = function(self, first, second){
+function add_mapping(d, obj){
+    for(var entry of _b_.dict.$iter_items(obj)){
+        dict.$setitem(d, entry.key, entry.value, entry.hash)
+    }
+}
 
+function add_iterable(d, js_iterable){
+    var i = 0
+    for(var entry of js_iterable){
+        var items = Array.from($B.make_js_iterator(entry))
+        if(items.length !== 2){
+            throw _b_.ValueError.$factory("dictionary " +
+                `update sequence element #${i} has length ${items.length}; 2 is required`)
+        }
+        dict.$setitem(d, items[0], items[1])
+        i++
+    }
+}
+
+dict.__init__ = function(self, first, second){
     if(first === undefined){
         return _b_.None
     }
@@ -684,10 +705,30 @@ dict.__init__ = function(self, first, second){
 
     var $ = $B.args("dict", 1, {self:null}, ["self"],
         arguments, {}, "first", "second")
+
     var args = $.first
     if(args.length > 1){
-        throw _b_.TypeError.$factory("dict expected at most 1 argument" +
-            ", got 2")
+        if($B._experimental_dict){
+            console.log('try dict(*args)')
+            for(var arg of args){
+                if(_b_.isinstance(arg, _b_.dict)){
+                    add_mapping(self, arg)
+                }else{
+                    try{
+                        var js_iterable = $B.make_js_iterator(arg)
+                    }catch(err){
+                        console.log(arg)
+                        console.log(err)
+                        throw _b_.TypeError.$factory('expected mapping or ' +
+                            `iterable, got ${$B.class_name(arg)}`)
+                    }
+                    add_iterable(self, js_iterable)
+                }
+            }
+        }else{
+            throw _b_.TypeError.$factory("dict expected at most 1 argument" +
+                `, got ${args.length}`)
+        }
     }else if(args.length == 1){
         args = args[0]
         if(args.__class__ === dict){
@@ -725,8 +766,8 @@ dict.__init__ = function(self, first, second){
         }
     }
 
-    for(let key in $.second.$jsobj){
-        dict.$setitem(self, key, $.second.$jsobj[key])
+    for(let item of _b_.dict.$iter_items($.second)){
+        dict.$setitem(self, item.key, item.value)
     }
     return _b_.None
 }
@@ -1441,7 +1482,7 @@ dict.$literal = function(items){
 }
 
 dict.$factory = function(){
-    var res = dict.__new__(dict)
+    var res = $B.empty_dict()
     var args = [res]
     for(var arg of arguments){
         args.push(arg)

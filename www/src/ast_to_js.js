@@ -940,25 +940,6 @@ $B.ast.Assert.prototype.to_js = function(scopes){
 
 function annotation_to_str(obj, scopes){
     return get_source_from_position(scopes.src, obj)
-
-    var s
-    if(obj instanceof $B.ast.Name){
-        s = obj.id
-    }else if(obj instanceof $B.ast.BinOp){
-        s = annotation_to_str(obj.left) + '|' + annotation_to_str(obj.right)
-    }else if(obj instanceof $B.ast.Subscript){
-        s = annotation_to_str(obj.value) + '[' +
-                annotation_to_str(obj.slice) + ']'
-    }else if(obj instanceof $B.ast.Constant){
-        if(obj.value === _b_.None){
-            s = 'None'
-        }else{
-            console.log('other constant', obj)
-        }
-    }else{
-        console.log('other annotation', obj)
-    }
-    return s
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
@@ -1917,7 +1898,6 @@ const DEFAULTS = getArgs0.DEFAULTS = {
 // deno run generator.js
 // hasPos / posDefaults are pos parameters excluding posOnly parameters.
 function generate_args0(...args) {
-
     return new Function('fct', 'args',  generate_args0_str(...args) );
 }
 

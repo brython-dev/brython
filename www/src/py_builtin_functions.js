@@ -3336,7 +3336,11 @@ $B.make_args_parser = function(f){
     f.$kwdefaults_values = [...$kwdefaults.values()]
 
     f.$hasParams = new Set()
-    for(let i = f.$infos.__code__.co_posonlyargcount ; i < varnames.length; ++i){
+
+    var nb_args = f.$infos.__code__.co_argcount +
+                  f.$infos.__code__.co_kwonlyargcount +
+                  (f.$infos.kwargs ? 1 : 0)
+    for(let i = 0 ; i < nb_args; ++i){
         f.$hasParams.add(varnames[i])
     }
 
