@@ -153,15 +153,15 @@ var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collection
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-01 21:36:07.775990"
-__BRYTHON__.timestamp=1706819767775
-__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
+__BRYTHON__.compiled_date="2024-02-03 23:59:16.941421"
+__BRYTHON__.timestamp=1707022756941
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
 const Other_ID_Start=[0x1885,0x1886,0x2118,0x212E,0x309B,0x309C].map(
@@ -11624,8 +11624,6 @@ return int_value(res)}}}
 throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like object "+
 `or a real number, not '${$B.class_name(value)}'`)}}
-if(value.length==0){throw _b_.ValueError.$factory(
-`invalid literal for int() with base 10: ${_b_.repr(value)}`)}
 base=base===missing ? 10:$B.PyNumber_Index(base)
 if(!(base >=2 && base <=36)){
 if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
@@ -11637,6 +11635,8 @@ var _value=value.trim(),
 sign=''
 if(_value.startsWith('+')||_value.startsWith('-')){sign=_value[0]
 _value=_value.substr(1)}
+if(_value.length==0){throw _b_.ValueError.$factory(
+`invalid literal for int() with base 10: ${_b_.repr(value)}`)}
 if(_value.length==2 && base==0 &&
 (_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
 if(_value.endsWith('_')){invalid(base)}
@@ -11664,7 +11664,9 @@ if(digit < base){res=$B.rich_op('__mul__',res,base)
 res=$B.rich_op('__add__',res,digit)}else{invalid(base)}}
 return res}else{_value=_value.replace(/_/g,"")}
 if(base==2){res=BigInt('0b'+_value)}else if(base==8){res=BigInt('0o'+_value)}else if(base==16){res=BigInt('0x'+_value)}else{if($B.int_max_str_digits !=0 &&
-_value.length > $B.int_max_str_digits){throw _b_.ValueError.$factory("Exceeds the limit "+
+_value.length > $B.int_max_str_digits &&
+((base &(base-1))!==0)
+){throw _b_.ValueError.$factory("Exceeds the limit "+
 `(${$B.int_max_str_digits}) for integer string conversion: `+
 `value has ${value.length} digits; use `+
 "sys.set_int_max_str_digits() to increase the limit.")}

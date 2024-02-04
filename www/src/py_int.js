@@ -747,10 +747,6 @@ int.$factory = function(){
         }
     }
 
-    if(value.length == 0){
-        throw _b_.ValueError.$factory(
-            `invalid literal for int() with base 10: ${_b_.repr(value)}`)
-    }
     base = base === missing ? 10: $B.PyNumber_Index(base)
 
     if(! (base >=2 && base <= 36)){
@@ -775,6 +771,11 @@ int.$factory = function(){
     if(_value.startsWith('+') || _value.startsWith('-')){
         sign = _value[0]
         _value = _value.substr(1)
+    }
+
+    if (_value.length == 0) {
+        throw _b_.ValueError.$factory(
+            `invalid literal for int() with base 10: ${_b_.repr(value)}`)
     }
 
     if(_value.length == 2 && base == 0 &&
@@ -869,7 +870,9 @@ int.$factory = function(){
         res = BigInt('0x' + _value)
     }else{
         if($B.int_max_str_digits != 0 &&
-                _value.length > $B.int_max_str_digits){
+           _value.length > $B.int_max_str_digits &&
+           ((base & (base - 1)) !== 0) // base is not a power of 2
+        ){
             throw _b_.ValueError.$factory("Exceeds the limit " +
                 `(${$B.int_max_str_digits}) for integer string conversion: ` +
                 `value has ${value.length} digits; use ` +
