@@ -233,7 +233,7 @@ function run_js(module_contents, path, _module){
 
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
-    var filename = $B.strip_host(path)
+    var filename = module.__file__
     $B.file_cache[filename] = module_contents
     $B.url2name[filename] = module.__name__
     var root,

@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 17:11:46.597537"
-__BRYTHON__.timestamp=1706976706597
+__BRYTHON__.compiled_date="2024-02-04 11:21:01.134005"
+__BRYTHON__.timestamp=1707042061134
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -5707,7 +5707,7 @@ modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=_module.__name__}}
 return true}
 function run_py(module_contents,path,module,compiled){
-var filename=$B.strip_host(path)
+var filename=module.__file__
 $B.file_cache[filename]=module_contents
 $B.url2name[filename]=module.__name__
 var root,js,mod_name=module.__name__,
