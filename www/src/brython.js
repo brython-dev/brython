@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 23:59:16.941421"
-__BRYTHON__.timestamp=1707022756941
+__BRYTHON__.compiled_date="2024-02-04 02:18:13.593848"
+__BRYTHON__.timestamp=1707031093593
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -11601,7 +11601,9 @@ if(value===missing ||value===undefined){if(base !==missing){throw _b_.TypeError.
 return 0}
 if($B.$isinstance(value,[_b_.bytes,_b_.bytearray])){
 value=$B.$getattr(value,'decode')('latin-1')}else if(explicit_base && ! $B.$isinstance(value,_b_.str)){throw _b_.TypeError.$factory(
-"int() can't convert non-string with explicit base")}else if($B.$isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tobytes(value),'decode')('latin-1')}
+"int() can't convert non-string with explicit base")}else{
+let klass=$B.get_class(value)
+if(klass.$buffer_protocol){value=$B.$getattr(klass.tobytes(value),'decode')('latin-1')}}
 if(! $B.$isinstance(value,_b_.str)){if(base !==missing){throw _b_.TypeError.$factory(
 "int() can't convert non-string with explicit base")}else{
 for(let special_method of['__int__','__index__','__trunc__']){let num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)

@@ -695,8 +695,11 @@ int.$factory = function(){
     }else if(explicit_base && ! $B.$isinstance(value, _b_.str)){
         throw _b_.TypeError.$factory(
             "int() can't convert non-string with explicit base")
-    }else if($B.$isinstance(value, _b_.memoryview)){
-        value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
+    }else {
+        let klass = $B.get_class(value)
+        if (klass.$buffer_protocol) {
+            value = $B.$getattr(klass.tobytes(value), 'decode')('latin-1')
+        }
     }
 
     if(! $B.$isinstance(value, _b_.str)){
