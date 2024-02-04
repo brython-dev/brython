@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 19:21:57.496219"
-__BRYTHON__.timestamp=1707006117496
+__BRYTHON__.compiled_date="2024-02-03 19:24:23.424030"
+__BRYTHON__.timestamp=1707006263423
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -11507,6 +11507,7 @@ if(self_as_int.__class__===$B.long_int){return $B.long_int.__neg__(self_as_int)}
 return-self}
 int.__new__=function(cls,value,base){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! $B.$isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
 if(cls===int){return int.$factory(value,base)}
+if(cls===bool){throw _b_.TypeError.$factory("int.__new__(bool) is not safe, use bool.__new__()")}
 return{
 __class__:cls,__dict__:$B.empty_dict(),$brython_value:int.$factory(value,base),toString:function(){return value}}}
 int.__pos__=function(self){return self}

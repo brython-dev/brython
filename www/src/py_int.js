@@ -389,6 +389,9 @@ int.__new__ = function(cls, value, base){
     if(cls === int){
         return int.$factory(value, base)
     }
+    if(cls === bool) {
+        throw _b_.TypeError.$factory("int.__new__(bool) is not safe, use bool.__new__()")
+    }
     // set method .toString so that BigInt(instance) returns a bingint
     return {
         __class__: cls,
