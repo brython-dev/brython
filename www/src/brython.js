@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-04 02:18:13.593848"
-__BRYTHON__.timestamp=1707031093593
+__BRYTHON__.compiled_date="2024-02-04 02:27:37.926428"
+__BRYTHON__.timestamp=1707031657926
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -11637,8 +11637,7 @@ var _value=value.trim(),
 sign=''
 if(_value.startsWith('+')||_value.startsWith('-')){sign=_value[0]
 _value=_value.substr(1)}
-if(_value.length==0){throw _b_.ValueError.$factory(
-`invalid literal for int() with base 10: ${_b_.repr(value)}`)}
+if(_value.length==0){invalid(base)}
 if(_value.length==2 && base==0 &&
 (_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
 if(_value.endsWith('_')){invalid(base)}

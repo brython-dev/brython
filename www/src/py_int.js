@@ -777,8 +777,7 @@ int.$factory = function(){
     }
 
     if (_value.length == 0) {
-        throw _b_.ValueError.$factory(
-            `invalid literal for int() with base 10: ${_b_.repr(value)}`)
+        invalid(base)
     }
 
     if(_value.length == 2 && base == 0 &&
