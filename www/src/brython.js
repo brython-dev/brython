@@ -159,8 +159,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-03 18:50:12.804382"
-__BRYTHON__.timestamp=1707004212804
+__BRYTHON__.compiled_date="2024-02-03 19:21:57.496219"
+__BRYTHON__.timestamp=1707006117496
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata"]
 ;
 (function($B){var _b_=$B.builtins
@@ -10868,15 +10868,22 @@ str.isascii=function(){
 var $=$B.args("isascii",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
 for(var i=0,len=_self.length;i < len;i++){if(_self.charCodeAt(i)> 127){return false}}
 return true}
+var unicode_categories_contain_character=function(categories,cp){for(var cat of categories){console.log(cat,cp);
+if($B.in_unicode_category(cat,cp)){return true}}
+return false}
+var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
+var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
 str.isalnum=function(){
-var $=$B.args("isalnum",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of _self){cp=_b_.ord(char)
-for(var cat of['Ll','Lu','Lm','Lt','Lo','Nd','digits','numeric']){if(! $B.in_unicode_category(cat,cp)){return false}}}
+var $=$B.args("isalnum",1,{self:null},["self"],arguments,{},null,null)
+var _self=to_string($.self);
+if(_self.length==0){return false}
+for(var char of _self){if(!unicode_categories_contain_character(alnum_categories,_b_.ord(char))){return false}}
 return true}
 str.isalpha=function(){
-var $=$B.args("isalpha",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of _self){cp=_b_.ord(char)
-for(var cat of['Ll','Lu','Lm','Lt','Lo']){if(! $B.in_unicode_category(cat,cp)){return false}}}
+var $=$B.args("isalpha",1,{self:null},["self"],arguments,{},null,null)
+var _self=to_string($.self);
+if(_self.length==0){return false}
+for(var char of _self){if(!unicode_categories_contain_character(alpha_categories,_b_.ord(char))){return false}}
 return true}
 str.isdecimal=function(){
 var $=$B.args("isdecimal",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)

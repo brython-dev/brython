@@ -1747,21 +1747,33 @@ str.isascii = function(){
     return true
 }
 
+var unicode_categories_contain_character = function (categories, cp) {
+    for (var cat of categories) {
+        console.log(cat, cp);
+        if ($B.in_unicode_category(cat, cp)) {
+            return true
+        }
+    }
+    return false
+}
+
+var alpha_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']
+var alnum_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd']
+
 str.isalnum = function(){
     /* Return true if all characters in the string are alphanumeric and there
     is at least one character, false otherwise. A character c is alphanumeric
     if one of the following returns True: c.isalpha(), c.isdecimal(),
     c.isdigit(), or c.isnumeric(). */
     var $ = $B.args("isalnum", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
-    for(var char of _self){
-        cp = _b_.ord(char)
-        for(var cat of ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd', 'digits', 'numeric']){
-            if(! $B.in_unicode_category(cat, cp)){
-                return false
-            }
+            arguments, {}, null, null)
+    var _self = to_string($.self);
+    if (_self.length == 0) {
+        return false
+    }
+    for (var char of _self) {
+        if (!unicode_categories_contain_character(alnum_categories, _b_.ord(char))) {
+            return false
         }
     }
     return true
@@ -1774,15 +1786,14 @@ str.isalpha = function(){
     those with general category property being one of "Lm", "Lt", "Lu", "Ll",
     or "Lo". */
     var $ = $B.args("isalpha", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
-    for(var char of _self){
-        cp = _b_.ord(char)
-        for(var cat of ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']){
-            if(! $B.in_unicode_category(cat, cp)){
-                return false
-            }
+            arguments, {}, null, null)
+    var _self = to_string($.self);
+    if (_self.length == 0) {
+        return false
+    }
+    for (var char of _self) {
+        if (!unicode_categories_contain_character(alpha_categories, _b_.ord(char))) {
+            return false
         }
     }
     return true
