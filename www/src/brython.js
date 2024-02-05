@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-05 10:57:14.620548"
-__BRYTHON__.timestamp=1707127034620
+__BRYTHON__.compiled_date="2024-02-05 11:07:42.949861"
+__BRYTHON__.timestamp=1707127662949
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -369,11 +369,9 @@ pos+=mo[0].length
 continue}
 if(indents.length==0 ||indent > $last(indents)){indents.push(indent)
 yield Token('INDENT','',line_num,0,line_num,indent,line)}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
-if(ix==-1){var error=Error('unindent does not match '+
-'any outer indentation level')
-error.type='IndentationError'
-error.line_num=line_num
-throw error }
+if(ix==-1){var message='unindent does not match '+
+'any outer indentation level'
+$B.raise_error_known_location(_b_.IndentationError,filename,line_num,0,line_num,0,line,message)}
 for(var i=indents.length-1;i > ix;i--){indents.pop()
 yield Token('DEDENT','',line_num,indent,line_num,indent,line)}}
 state=null}else{

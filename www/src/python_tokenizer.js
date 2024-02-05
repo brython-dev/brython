@@ -145,7 +145,7 @@ var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
     augm_op = '+-*/%^|&=<>@',
     closing = {'}': '{', ']': '[', ')': '('}
 
-function Token(type, string, lineno, col_offset, end_lineno, end_col_offset, 
+function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
         line){
     var res = {type, string, line, lineno, col_offset, end_lineno, end_col_offset}
     res.num_type = $B.py_tokens[type]
@@ -500,11 +500,12 @@ $B.tokenizer = function*(src, filename, mode){
                     }else if(indent < $last(indents)){
                         var ix = indents.indexOf(indent)
                         if(ix == -1){
-                            var error = Error('unindent does not match ' +
-                                'any outer indentation level')
-                            error.type = 'IndentationError'
-                            error.line_num = line_num
-                            throw error                      }
+                            var message = 'unindent does not match ' +
+                                'any outer indentation level'
+                            $B.raise_error_known_location(_b_.IndentationError, 
+                                filename, line_num, 0,
+                                line_num, 0, line, message)
+                        }
                         for(var i = indents.length - 1; i > ix; i--){
                             indents.pop()
                             yield Token('DEDENT', '', line_num, indent,
