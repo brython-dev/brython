@@ -413,7 +413,10 @@ def assert_raises(exc_type, func, *args, msg=None, nb_args=None, **kw):
                         f'    Expected: {msg}\n' +
                         f'    Got     : {exc.args[0]}')
             elif isinstance(msg, re.Pattern):
-                assert msg.match(exc.args[0])
+                if not msg.match(exc.args[0]):
+                    raise AssertionError('correct exception type, but message\n' +
+                        f'    {exc.args[0]}' +
+                        f'\ndoes not match pattern {msg}')
     else:
         raise AssertionError(f'should have raised {exc_type.__name__}')
 

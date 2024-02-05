@@ -468,7 +468,8 @@ $B._PyPegen.expect_forced_token = function(p, type, expected) {
     }
     var t = p.tokens[p.mark];
     if (t.num_type != type) {
-        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(t, "expected '%s'", expected);
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, t,
+            `expected '${expected}'`);
         return NULL;
     }
     p.mark += 1;
