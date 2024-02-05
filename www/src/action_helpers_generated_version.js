@@ -1067,8 +1067,7 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
     switch (e.constructor) {
         case $B.ast.List:
         case $B.ast.Tuple:
-            VISIT_CONTAINER(e, e.constructor);
-            return NULL;
+            return VISIT_CONTAINER(e, e.constructor);
         case $B.ast.Starred:
             if (targets_type == DEL_TARGETS) {
                 return e;
