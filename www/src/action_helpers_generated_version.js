@@ -560,10 +560,10 @@ $B._PyPegen.dummy_name = function(p){
         return cache;
     }
 
-    var id = "",
+    var id = "dummy" + Math.random().toString(36).substr(2),
         ast_obj = new $B.ast.Name(id, new $B.ast.Load())
     set_position_from_list(ast_obj, [1, 0, 1, 0])
-    return cache;
+    return ast_obj
 }
 
 $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
@@ -1023,6 +1023,24 @@ $B._PyPegen.get_last_comprehension_item = function(comprehension) {
         return comprehension.iter;
     }
     return $B.last(comprehension.ifs);
+}
+
+$B._PyPegen.arguments_parsing_error = function(p, e){
+    var kwarg_unpacking = 0;
+    for (let keyword of e.keywords){
+        if (! keyword.arg) {
+            kwarg_unpacking = 1;
+        }
+    }
+
+    var msg = NULL;
+    if (kwarg_unpacking) {
+        msg = "positional argument follows keyword argument unpacking";
+    } else {
+        msg = "positional argument follows keyword argument";
+    }
+
+    return $B.helper_functions.RAISE_SYNTAX_ERROR(p, msg);
 }
 
 $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){

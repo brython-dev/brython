@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-05 16:01:31.218958"
-__BRYTHON__.timestamp=1707145291217
+__BRYTHON__.compiled_date="2024-02-05 18:13:03.357580"
+__BRYTHON__.timestamp=1707153183356
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -14191,9 +14191,9 @@ $B._PyPegen.get_patterns=function(p,seq){return seq===undefined ?[]:seq.map(x=> 
 $B._PyPegen.check_legacy_stmt=function(p,name){return["print","exec"].includes(name)}
 $B._PyPegen.dummy_name=function(p){var cache=NULL;
 if(cache !=NULL){return cache;}
-var id="",ast_obj=new $B.ast.Name(id,new $B.ast.Load())
+var id="dummy"+Math.random().toString(36).substr(2),ast_obj=new $B.ast.Name(id,new $B.ast.Load())
 set_position_from_list(ast_obj,[1,0,1,0])
-return cache;}
+return ast_obj}
 $B._PyPegen.add_type_comment_to_arg=function(p,a,tc){if(tc==NULL){return a}
 var bytes=_b_.bytes.$factory(tc),tco=$B._PyPegen.new_type_comment(p,bytes);
 var ast_obj=$B._PyAST.arg(a.arg,a.annotation,tco,a.lineno,a.col_offset,a.end_lineno,a.end_col_offset,p.arena);
@@ -14370,6 +14370,12 @@ $B._PyPegen.new_type_comment=function(p,s){if(s.length===0){return NULL}
 return s}
 $B._PyPegen.get_last_comprehension_item=function(comprehension){if(comprehension.ifs==NULL ||comprehension.ifs.length==0){return comprehension.iter;}
 return $B.last(comprehension.ifs);}
+$B._PyPegen.arguments_parsing_error=function(p,e){var kwarg_unpacking=0;
+for(let keyword of e.keywords){if(! keyword.arg){kwarg_unpacking=1;}}
+var msg=NULL;
+if(kwarg_unpacking){msg="positional argument follows keyword argument unpacking";}else{
+msg="positional argument follows keyword argument";}
+return $B.helper_functions.RAISE_SYNTAX_ERROR(p,msg);}
 $B._PyPegen.nonparen_genexp_in_call=function(p,args,comprehensions){
 var len=args.args.length
 if(len <=1){return NULL;}
