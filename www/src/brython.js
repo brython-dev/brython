@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-05 10:36:38.452514"
-__BRYTHON__.timestamp=1707125798451
+__BRYTHON__.compiled_date="2024-02-05 10:57:14.620548"
+__BRYTHON__.timestamp=1707127034620
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -13952,7 +13952,8 @@ set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset
 throw exc}})(__BRYTHON__)
 ;
 
-(function($B){var _b_=$B.builtins,NULL=undefined,DOT='.',ELLIPSIS='...',DEL_TARGETS='del_targets'
+(function($B){var _b_=$B.builtins,NULL=undefined,DOT='.',ELLIPSIS='...'
+const STAR_TARGETS=1,DEL_TARGETS=2,FOR_TARGETS=3
 function make_string_for_ast_value(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
 if(value[0]=="'"){var unquoted=value.substr(1,value.length-2)
@@ -14377,10 +14378,10 @@ case $B.ast.Tuple:
 return VISIT_CONTAINER(e,e.constructor);
 case $B.ast.Starred:
 if(targets_type==DEL_TARGETS){return e;}
-return _PyPegen_get_invalid_target(e.value,targets_type);
+return $B._PyPegen.get_invalid_target(e.value,targets_type);
 case $B.ast.Compare:
 if(targets_type==FOR_TARGETS){var cmpop=e.ops[0]
-if(cmpop==$B.ast.In){return _PyPegen_get_invalid_target(e.left,targets_type);}
+if(cmpop==$B.ast.In){return $B._PyPegen.get_invalid_target(e.left,targets_type);}
 return NULL;}
 return e;
 case $B.ast.Name:

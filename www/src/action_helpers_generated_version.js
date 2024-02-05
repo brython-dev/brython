@@ -5,8 +5,12 @@
 var _b_ = $B.builtins,
     NULL = undefined,
     DOT = '.',
-    ELLIPSIS = '...',
-    DEL_TARGETS = 'del_targets'
+    ELLIPSIS = '...'
+
+// TARGETS_TYPE
+const STAR_TARGETS = 1,
+      DEL_TARGETS = 2,
+      FOR_TARGETS = 3
 
 function make_string_for_ast_value(value){
     value = value.replace(/\n/g,'\\n\\\n')
@@ -1044,7 +1048,6 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
 }
 
 $B._PyPegen.get_invalid_target = function(e, targets_type){
-
     if (e == NULL) {
         return NULL;
     }
@@ -1072,7 +1075,7 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
             if (targets_type == DEL_TARGETS) {
                 return e;
             }
-            return _PyPegen_get_invalid_target(e.value, targets_type);
+            return $B._PyPegen.get_invalid_target(e.value, targets_type);
         case $B.ast.Compare:
             // This is needed, because the `a in b` in `for a in b` gets parsed
             // as a comparison, and so we need to search the left side of the comparison
@@ -1080,7 +1083,7 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
             if (targets_type == FOR_TARGETS) {
                 var cmpop = e.ops[0]
                 if (cmpop == $B.ast.In) {
-                    return _PyPegen_get_invalid_target(e.left, targets_type);
+                    return $B._PyPegen.get_invalid_target(e.left, targets_type);
                 }
                 return NULL;
             }
