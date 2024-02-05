@@ -101,6 +101,7 @@ function flush_final_char_data(parser){
     for(var i = 0; i < buf.length; i++){
         if(! buf[i].match(/\s/)){
             var pos = parser._pos - buf.length + i - 1
+            console.log('rest', buf)
             var msg = `junk after document element: line 1, column ${pos}`
             raise_error(parser, msg)
         }
@@ -230,9 +231,16 @@ xmlparser.StartElementHandler = _b_.None
 
 xmlparser.xml_tokenizer = function*(self){
     // convert bytes to string
+    self._element = new DOCUMENT(self)
     while(self._pos < self._buffer_length){
 
         var char = self._buffer[self._pos]
+        self._element = self._element.feed(char)
+        if(self._element.closed){
+            yield self._element
+        }
+        self._pos++
+        /*
         if(self._state == 'data' && char == '<'){
             self._maybe_entity = null
             self._state = 'element'
@@ -307,7 +315,9 @@ xmlparser.xml_tokenizer = function*(self){
         }else{
             self._pos++
         }
+        */
     }
+    console.log('fini')
 }
 
 $B.set_func_names(xmlparser, 'expat')
@@ -319,11 +329,25 @@ function raise_error_known_position(parser, message, pos){
         ix--
     }
     message += '\n' + parser._buffer.substring(ix, pos + 1)
+    message += '\n' + ' '.repeat(pos - ix - 1) + '^'
     throw error.$factory(message)
 }
 
 function raise_error(parser, message){
     throw error.$factory(message)
+}
+
+function raise_error1(element, char){
+    var head = element
+    while(head.origin){
+        head = head.origin
+    }
+    console.log(head)
+    var cls = element.constructor.name,
+        message = cls + ' expected ' + element.expect +
+            ', got: ' + char
+    var pos = head.parser._pos
+    raise_error_known_position(head.parser, message, pos)
 }
 
 var error = $B.make_class("error",
@@ -342,99 +366,321 @@ error.__mro__ = [_b_.Exception, _b_.BaseException, _b_.object]
 
 $B.set_func_names(error, "expat")
 
-function DOCTYPE(parser){
+function expect_chars(element, char, stop){
+    var res
+    if(! element.hasOwnProperty('expected_chars')){
+        element.expected_chars = ''
+    }
+    if(is_char(char)){
+        element.expected_chars += char
+        if(stop){
+            var end_pos = element.expected_chars.length - stop.length
+            var tail = element.expected_chars.substr(end_pos)
+            if(tail == stop){
+                res = {value: element.expected_chars.substr(0, end_pos)}
+                delete element.expected_chars
+                return res
+            }
+        }
+    }else{
+        res = {value: element.expected_chars}
+        if(element.expected_pos == literal.length){
+            delete element.expected_pos
+            return {value: literal}
+        }
+    }
+    return {value: null}
+}
+
+function expect_name(element, char){
+    if(! element.hasOwnProperty('expected_name')){
+        if(is_id_start(char)){
+            element.expected_name = char
+        }else if(! is_whitespace(char)){
+            raise_error(element.parser, 'expected name start, got: ' + char)
+        }
+    }else if(is_id_continue(char)){
+        element.expected_name += char
+    }else if(is_whitespace(char)){
+        var res = {value: element.expected_name}
+        delete element.expected_name
+        return res
+    }else{
+        raise_error(element.parser, 'name expected id, got: ' + char)
+    }
+    return {}
+}
+
+function expect_literal(element, literal, char){
+    if(! element.hasOwnProperty('expected_pos')){
+        element.expected_pos = 0
+    }
+    if(literal[element.expected_pos] == char){
+        element.expected_pos++
+        if(element.expected_pos == literal.length){
+            delete element.expected_pos
+            return {value: literal}
+        }
+    }
+    return {value: null}
+}
+
+/*
+document  ::=  prolog element Misc*
+
+prolog       ::=  XMLDecl? Misc* (doctypedecl Misc*)?
+Misc         ::=  Comment | PI | S
+*/
+function DOCUMENT(parser){
     this.parser = parser
+    this.expect = 'prolog'
+    this.names = []
+}
+
+DOCUMENT.prototype.feed = function(char){
+    if(this.expect == 'prolog'){
+        if(char !== '<'){
+            raise_error(this.parser, 'expected <')
+        }
+        this.expect = 'name_start_or_special'
+    }else if(this.expect == 'name_start_or_special'){
+        if(char == '!'){
+            this.expect = 'comment_or_doctype'
+        }else if(char == '?'){
+            this.expect = 'xmldecl_or_pi'
+        }else if(is_id_start(char)){
+            return new ELEMENT(this.parser).feed(char)
+        }else{
+            raise_error(this.parser, 'expected !, ? or name start, got: ' + char)
+        }
+    }else if(this.expect == 'comment_or_doctype'){
+        if(char == '-'){
+            this.expect = 'comment'
+        }else if(char == 'D'){
+            this.expect = 'DOCTYPE'
+            return this.feed(char)
+        }else{
+            raise_error('expected comment or DOCTYPE, got: ' + char)
+        }
+    }else if(this.expect == 'DOCTYPE'){
+        var res = expect_literal(this, 'DOCTYPE', char)
+        if(res.value){
+            return new DOCTYPE(this.parser, this)
+        }
+    }else if(this.expect == 'xmldecl_or_pi'){
+        var res = expect_name(this, char)
+        if(res.value){
+            if(res.value == 'xml'){
+                this.expect = 'prolog'
+                return new XMLDECL(this.parser, this)
+            }else{
+                this.expect = 'prolog'
+                var pi = new PI(this.parser, this)
+                pi.name = res.value
+                pi.expect = 'content'
+                return pi
+            }
+        }
+        return this
+    }else if(this.expect == 'comment'){
+        if(char == '-'){
+            this.expect = 'prolog'
+            return new COMMENT(this.parser, this)
+        }else{
+            raise_error(this.parser, 'DOCUMENT, expected -, got: ' + char)
+        }
+    }else{
+        raise_error(this.parser, 'DOCUMENT, unhandled expect: ' + this.expect)
+    }
+    return this
+}
+
+/*
+doctypedecl    ::=  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
+intSubset      ::=  (markupdecl | DeclSep)*
+markupdecl     ::=  elementdecl | AttlistDecl | EntityDecl | NotationDecl
+                 |  PI | Comment
+DeclSep        ::=  PEReference | S
+*/
+
+function DOCTYPE(parser, origin){
+    this.parser = parser
+    this.origin = origin
     this.expect = 'element_start'
 }
 
 DOCTYPE.prototype.feed = function(char){
+    console.log('DOCTYPE feed', this.expect, 'char', char)
     if(this.expect == 'element_start'){
-        if(is_id_start(char)){
-            this.root_element = char
-            this.expect = 'element_continue'
-        }else if(! is_whitespace(char)){
-            throw Error('expected element start, got: ' + char)
+        var res = expect_name(this, char)
+        if(res.value){
+            this.name = res.value
+            this.expect = 'external_id_or_[_or_>'
         }
-    }else if(this.expect == 'element_continue'){
-        if(is_id_continue(char)){
-            this.root_element += char
-        }else{
-            if(is_whitespace(char)){
-                this.expect = 'rest'
-            }else{
-                throw Error('expected whitespace after root element, got: ' + char)
-            }
-        }
-    }else if(this.expect == 'rest'){
-        if(! is_whitespace(char)){
-            if(is_id_start(char)){
-                // external DTD
-                this.type = 'external'
-                this.decl = char
-                this.expect = 'decl_continue'
-            }else if(char == '['){
-                this.type = 'internal'
-                this.expect = ']'
-                this.declarations = ''
-            }else{
-                throw Error('unexpected in DOCTYPE: ' + char)
-            }
-        }
-    }else if(this.expect == 'decl_continue'){
-        if(is_id_continue(char)){
-            this.decl += char
-        }else{
-            if(is_whitespace(char)){
-                this.expect = 'string_start'
-                this.strings = []
-            }else{
-                throw Error('unexpected after declaration: ' + char)
-            }
-        }
-    }else if(this.expect == 'string_start'){
+    }else if(this.expect == 'external_id_or_[_or_>'){
         if(char == '['){
-            this.type = 'mixed'
-            this.declarations = ''
-            this.expect = ']'
-        }else if(! is_whitespace(char)){
-            if(char == '"' || char == "'"){
-                this.quote = char
-                this.string = ''
-                this.expect = 'string_end'
-            }else{
-                raise_error(this.parser, 'expected quote, got: ' + char)
-            }
-        }
-    }else if(this.expect == 'string_end'){
-        if(char == this.quote){
-            this.strings.push(this.string)
-            if(this.strings.length == 1){
-                this.fpi = this.strings[0]
-                this.expect = 'string_start'
-                this.string = ''
-            }else{
-                this.url = this.strings[1]
-                this.expect = '>'
-            }
+            this.expect = '>'
+            return new intSubset(this)
+        }else if(char == '>'){
+            this.expect == 'no_whitespace'
+        }else if(char == 'S' || char == 'P'){
+            this.expect = '[_or_>'
+            var res = new ExternalID(this)
+            return res.feed(char)
         }else{
-            this.string += char
+            raise_error(this.parser, 'DOCTYPE expected SYSTEM, PUBLIC, [ or >, got: ' + char)
+        }
+    }else if(this.expect == '[_or_>'){
+        if(char == '['){
+            this.expect = '>'
+            return new intSubset(this)
+        }else if(char == '>'){
+            this.expect = 'no_whitespace'
+        }else if(! is_whitespace(char)){
+            raise_error(this.parser, 'DOCTYPE expected [ or >, got: ' + char)
         }
     }else if(this.expect == '>'){
         if(! is_whitespace(char)){
             if(char == '>'){
-                this.closed = true
+                this.expect = 'no_whitespace'
             }else{
-                throw Error('expected >, ggot: ' + char)
+                raise_error(this.parser, 'DOCTYPE expected >, got: ' + char)
             }
         }
-    }else if(this.expect == ']'){
-        if(char == ']'){
-            this.expect = '>'
-        }else{
-            this.declarations += char
+    }else if(this.expect = 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
         }
-    }else{
-        throw Error('wrong expect: ' + this.expect)
+    }
+    return this
+}
+
+/*
+XMLDecl      ::=  '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
+VersionInfo  ::=  S 'version' Eq ("'" VersionNum "'" | '"' VersionNum '"')
+Eq           ::=  S? '=' S?
+VersionNum   ::=  '1.0'
+EncodingDecl  ::=  S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
+EncName       ::=  [A-Za-z] ([A-Za-z0-9._] | '-')*
+SDDecl  ::=  S 'standalone' Eq
+             (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
+*/
+function XMLDECL(parser, origin){
+    this.parser = parser
+    this.expect = 'version_info'
+    this.origin = origin
+}
+
+XMLDECL.prototype.feed = function(char){
+    switch(this.expect){
+        case 'version_info':
+            var res = expect_literal(this, 'version', char)
+            if(res.value){
+                this.expect = 'eq'
+                this.attr_name = 'version'
+            }
+            break
+        case 'eq':
+            if(char == '='){
+                this.expect = 'quote'
+            }else if(! is_whitespace(char)){
+                raise_error(this.parser, 'expect =, got: ' + char)
+            }
+            break
+        case 'quote':
+            if(is_quote(char)){
+                this.expect = char
+                this.quoted = ''
+            }else if(! is_whitespace(char)){
+                raise_error(this.parser, 'expected quote, got: ' + char)
+            }
+            break
+        case '"':
+        case "'":
+            var res = expect_literal(this, this.expect, char)
+            if(res.value){
+                this[this.attr_name] = this.quoted
+                this.expect = 'encoding_or_sd_or_close'
+            }else{
+                this.quoted += char
+            }
+            break
+        case 'encoding_or_sd_or_close':
+            switch(char){
+                case 'e':
+                    if(! this.hasOwnProperty('encoding')){
+                        this.expect = 'encoding'
+                        return this.feed(char)
+                    }
+                    break
+                case 's':
+                    if(! this.hasOwnProperty('standalone')){
+                        this.expect = 'standalone'
+                        return this.feed(char)
+                    }
+                    break
+                case '?':
+                    this.expect = '>'
+                    break
+                default:
+                    if(! is_whitespace(char)){
+                        raise_error(this.parser,
+                            'expected encoding, standalone or ?, got: ' + char)
+                    }
+            }
+            break
+        case 'encoding':
+        case 'standalone':
+            var res = expect_literal(this, this.expect, char)
+            if(res.value){
+                this.attr_name = this.expect
+                this.expect = 'eq'
+            }
+            break
+        case '>':
+            if(char == '>'){
+                this.closed = true
+            }else if(! is_whitespace(char)){
+                if(this.closed){
+                    return this.origin.feed(char)
+                }
+                raise_error(this.parser, 'expected >, got: ' + char)
+            }
+            break
+        default:
+            raise_error(this.parser, 'unhandled case: ' + this.expect)
+    }
+    return this
+}
+
+/*
+PI        ::=  '<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'
+PITarget  ::=  Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
+*/
+function PI(parser, origin){
+    this.parser = parser
+    this.origin = origin
+    this.expect = 'pi_target'
+}
+
+PI.prototype.feed = function(char){
+    if(this.expect == 'pi_target'){
+        var res = expect_name(this, char)
+        if(res.value){
+            this.pi_target = res.value
+            this.expect = 'content'
+        }
+    }else if(this.expect == 'content'){
+        var res = expect_chars(this, char, '?>')
+        if(res.value){
+            this.content = res.value
+            this.closed = true
+            this.expect = 'no_whitespace'
+        }
+    }else if(this.expect == 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
+        }
     }
     return this
 }
@@ -534,33 +780,26 @@ DTD.prototype.toString = function(){
     return res + '>'
 }
 
-function COMMENT(parser){
+function COMMENT(parser, origin){
     this.parser = parser
+    this.origin = origin
     this.value = ''
-    this.expect = '-'
+    this.expect = '-->'
 }
 
 COMMENT.prototype.feed = function(char){
-    if(this.expect == '-'){
-        if(char == '-'){
-            this.expect = '--'
-        }else{
-            this.value += char
+    if(this.expect == '-->'){
+        var res = expect_chars(this, char, '-->')
+        if(res.value){
+            this.content = res.value
+            this.expect = 'no_whitespace'
         }
-    }else if(this.expect == '--'){
-        if(char == '-'){
-            this.expect = '>'
-        }else{
-            this.value += '-' + char
-            this.expect = '-'
-        }
-    }else if(this.expect == '>'){
-        if(char == '>'){
-            this.closed = true
-        }else{
-            throw Error('comment, expected >, got: ' + char)
+    }else if(this.expect == 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
         }
     }
+    return this
 }
 
 function ELEMENT(parser) {
@@ -742,26 +981,251 @@ ELEMENT.prototype.toString = function() {
 
 /*
 EntityDecl        ::=  GEDecl | PEDecl
-GEDecl            ::=  '<!ENTITY' S Name S EntityDef S? '>'
 PEDecl            ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
-EntityDef         ::=  EntityValue | (ExternalID NDataDecl?)
 PEDef             ::=  EntityValue | ExternalID
-ExternalID        ::=  'SYSTEM' S SystemLiteral
-                    |  'PUBLIC' S PubidLiteral S SystemLiteral
-NDataDecl         ::=  S 'NDATA' S Name
 */
-function ENTITY(){
+function ENTITY(parser){
+    this.parser = parser
 }
 
 ENTITY.prototype.feed = function(char){
     if(! is_whitespace(char)){
         if(is_id_start(char)){
-            return new GEDecl(char)
+            return new GEDecl(this.parser, char)
         }else if(char == "%"){
-            return new PEDecl()
+            return new PEDecl(this.parser)
         }
         throw Error('unexpected after ENTITY: ' + char)
     }
+}
+
+/*
+GEDecl            ::=  '<!ENTITY' S Name S EntityDef S? '>'
+EntityDef         ::=  EntityValue | (ExternalID NDataDecl?)
+ExternalID        ::=  'SYSTEM' S SystemLiteral
+                    |  'PUBLIC' S PubidLiteral S SystemLiteral
+NDataDecl         ::=  S 'NDATA' S Name
+EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
+                 |  "'" ([^%&'] | PEReference | Reference)* "'"
+
+*/
+function GEDecl(parser, char){
+    this.parser = parser
+    this.expect = 'name_continue'
+    this.name = char
+    this.state = 'name'
+}
+
+GEDecl.prototype.feed = function(char){
+    switch(this.expect){
+        case 'name_start':
+            if(is_id_start(char)){
+                if(this.state == 'NDATA'){
+                    this.ndata_name = char
+                }
+                this.expect = 'name_continue'
+            }else if(! is_whitespace(char)){
+                throw Error('GEDecl expected name start, got: ' + char)
+            }
+            break
+        case 'name_continue':
+            if(is_id_continue(char)){
+                if(this.state == 'name'){
+                    this.name += char
+                }else if(this.state == 'NDATA'){
+                    this.ndata_name += char
+                }
+            }else if(is_whitespace(char)){
+                if(this.state == 'NDATA'){
+                    this.expect = '>'
+                }else{
+                    this.expect = 'entity_def'
+                }
+            }else if(char == '>' && this.state == 'NDATA'){
+                this.closed = true
+            }else{
+                throw Error('GEDecl expected name, got: ' + char)
+            }
+            break
+        case 'entity_def':
+            if(is_quote(char)){
+                this.quoted = ''
+                this.state = this.expect
+                this.expect = char
+            }else if(char == 'S' || char == 'P'){
+                this.expect = char == 'S' ? 'SYSTEM' : 'PUBLIC'
+                this.expect_pos = 1
+                this.external_id = this.expect
+            }else if(! is_whitespace(char)){
+                throw Error('GEDCL expect quote, SYSTEM or PUBLIC, got: ' + char)
+            }
+            break
+        case 'SYSTEM':
+        case 'PUBLIC':
+            if(char == this.expect[this.expect_pos]){
+                this.expect_pos++
+                if(this.expect_pos == this.expect.length){
+                    this.expect = this.expect == 'SYSTEM' ? 'system_literal' :
+                                                            'pubid_literal'
+                }
+            }else{
+                throw Error(`GEDecl expected ${this.expect}, got: ${char}`)
+            }
+            break
+        case 'NDATA':
+            if(char == this.expect[this.expect_pos]){
+                this.expect_pos++
+                if(this.expect_pos == this.expect.length){
+                    this.expect = 'name_start'
+                    this.ndata_name = ''
+                    this.state = 'NDATA'
+                }
+            }else{
+                throw Error(`GEDecl expected ${this.expect}, got: ${char}`)
+            }
+            break
+        case '"':
+        case "'":
+            if(this.state == 'entity_def'){
+                if(char == this.expect){
+                    this.entity_def = this.quoted
+                    this.expect = '>'
+                }else{
+                    this.quoted += char
+                }
+            }else if(this.state == 'system_literal'){
+                if(char == this.expect){
+                    this.system_literal = this.quoted
+                    this.expect = 'n_data_decl_or_close'
+                }else{
+                    this.quoted += char
+                }
+            }
+            break
+        case 'system_literal':
+            if(is_quote(char)){
+                this.expect = char
+                this.state = 'system_literal'
+                this.quoted = ''
+            }else if(! is_whitespace(char)){
+                throw Error('GEDecl expected SystemLiteral, got: ' + char)
+            }
+            break
+        case '>':
+            if(! is_whitespace(char)){
+                if(char == '>'){
+                    this.closed = true
+                }else{
+                    throw Error('GEDecl expected >, got: ' + char)
+                }
+            }
+            break
+        case 'n_data_decl_or_close':
+            if(char == '>'){
+                this.closed = true
+            }else if(char == 'N'){
+                this.expect = 'NDATA'
+                this.expect_pos = 1
+            }else if(! is_whitespace(char)){
+                throw Error('GEDecl expected NDATA or >, got: ' + char)
+            }
+            break
+        default:
+            console.log(this.parser._buffer.substr(0, this.parser._pos))
+            throw Error('pas fini...')
+    }
+    return this
+}
+
+/*
+ExternalID        ::=  'SYSTEM' S SystemLiteral
+                    |  'PUBLIC' S PubidLiteral S SystemLiteral
+*/
+function ExternalID(origin){
+    this.origin = origin
+    this.expect = 'first'
+}
+
+ExternalID.prototype.feed = function(char){
+    console.log('ExternalID expects', this.expect, 'char', char)
+    if(this.expect == 'first'){
+        if(! is_whitespace(char)){
+            if(char == 'S'){
+                this.expect = 'SYSTEM'
+                return this.feed(char)
+            }else if(char == 'P'){
+                this.expect = 'PUBLIC'
+                return this.feed(char)
+            }else{
+                raise_error(this, 'ExternalID expected SYSTME or PUBLIC, got: ' + char)
+            }
+        }
+    }else if(this.expect == 'SYSTEM' || this.expect == 'PUBLIC'){
+        var res = expect_literal(this, this.expect, char)
+        if(res.value){
+            this.type = this.expect
+            if(this.type == 'SYSTEM'){
+                this.expect = '[_or_>'
+                return new SystemLiteral(this)
+            }else{
+                this.expect = 'system_after_pubid'
+                return new PubidLiteral(this)
+            }
+        }
+    }else if(this.expect == 'system_after_pubid'){
+        if(! is_whitespace(char)){
+            this.expect = '[_or_>'
+            return new SystemLiteral(this)
+        }
+    }else if(this.expect == '[_or_>'){
+        if(char == '['){
+            this.expect = '>'
+            return new intSubset(this)
+        }else if(char == '>'){
+            this.expect == 'no_whitespace'
+        }else{
+            raise_error1(this, char)
+        }
+    }else if(this.expect == '>'){
+        if(char == '>'){
+            this.expect = 'no_whitespace'
+        }else if(! is_whitespace(char)){
+            raise_error1(this, char)
+        }
+    }else if(this.expect == 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
+        }
+    }
+    return this
+}
+
+function SystemLiteral(origin){
+    this.origin = origin
+    this.expect = 'quote'
+}
+
+SystemLiteral.prototype.feed = function(char){
+    console.log('SystemLiteral expects', this.expect, 'char', char)
+    if(this.expect == 'quote'){
+        if(is_quote(char)){
+            this.expect = char
+            this.content = ''
+        }else if(! is_whitespace(char)){
+            raise_error1(this, char)
+        }
+    }else if(this.expect == 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
+        }
+    }else{
+        if(char == this.expect){
+            this.expect = 'no_whitespace'
+        }else{
+            this.content += char
+        }
+    }
+    return this
 }
 
 function PROCESSING_INSTRUCTION(parser, name){
@@ -928,6 +1392,19 @@ function is_whitespace(s){
         }
     }
     return s.length > 0
+}
+
+function is_quote(char){
+    return char == '"' || char == "'"
+}
+
+function is_char(char){
+    // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+    var cp = char.codePointAt(0)
+    return ([0x9, 0xa, 0xd].includes(cp)) ||
+            (0x20 <= cp && cp <= 0xd7ff) ||
+            (0xe000 <= cp && cp <= 0xfffd) ||
+            (0x10000 <= cp && cp <= 0x10ffff)
 }
 
 var model = 'model',
