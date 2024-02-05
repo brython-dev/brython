@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-05 11:27:59.781157"
-__BRYTHON__.timestamp=1707128879781
+__BRYTHON__.compiled_date="2024-02-05 16:01:31.218958"
+__BRYTHON__.timestamp=1707145291217
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -187,6 +187,7 @@ function ISNONTERMINAL(x){return x >=NT_OFFSET}
 function ISEOF(x){return x==ENDMARKER}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
+function is_whitespace(char){return ' \n\r\t\f'.includes(char)}
 const Other_ID_Start=[0x1885,0x1886,0x2118,0x212E,0x309B,0x309C].map(
 x=> String.fromCodePoint(x))
 function is_ID_Start(char){return/\p{Letter}/u.test(char)||
@@ -275,10 +276,10 @@ src=src.replace(/\r\n/g,'\n').
 replace(/\r/g,'\n')
 if(mode !='eval' && ! src.endsWith('\n')){src+='\n'}
 var lines=src.split('\n'),linenum=0,line_at={}
-for(var i=0,len=src.length;i < len;i++){line_at[i]=linenum
+for(let i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
-var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
+var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
 yield Token('ENCODING','utf-8',0,0,0,0,'')
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
@@ -354,8 +355,19 @@ state='line_start'
 continue}
 indent=0
 if(char==' '){indent=1}else if(char=='\t'){indent=8}
-if(indent){while(pos < src.length){if(src[pos]==' '){indent++}else if(src[pos]=='\t'){indent+=8}else{break}
+if(indent){var broken=false
+while(pos < src.length){if(false){
+if(' \t'.includes(src[pos])){pos++
+continue}
+$B.raise_error_known_location(_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos+1-line_start,line,'unindent does not match any outer indentation level')}
+if(src[pos]==' '){indent++}else if(src[pos]=='\t'){indent+=8}else if(src[pos]=='\\' && src[pos+1]=='\n'){
+pos++
+line_start=pos+2
+line_num++
+line=get_line_at(pos+2)
+broken=true}else{break}
 pos++}
+if(broken && src[pos]!=='\n'){$B.raise_error_known_location(_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos+1-line_start,line,'unindent does not match any outer indentation level')}
 if(pos==src.length){
 line_num--
 break}
@@ -363,7 +375,9 @@ if(src[pos]=='#'){
 var comment=get_comment(src,pos+1,line_num,line_start,'NL',line)
 for(var item of comment.t){yield item}
 pos=comment.pos
-continue}else if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
+continue}else if(src[pos]=='\\'){if(/^\f?(\r\n|\r|\n)/.exec(src[pos+1])){line_num++
+pos++
+continue}else{$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos+2-line_start,line_num,pos+3-line_start,line,'unexpected character after line continuation character')}}else if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
 yield Token('NL','',line_num,pos-line_start+1,line_num,pos-line_start+1+mo[0].length,line)
 pos+=mo[0].length
 continue}
@@ -432,7 +446,7 @@ dot_pos++}}
 break
 case '\\':
 var mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
-if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){if(pos==src.length-1){var msg='unexpected EOF while parsing'
+if(mo){if(pos==src.length-1){var msg='unexpected EOF while parsing'
 $B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg)}
 line_num++
 pos+=mo[0].length
@@ -765,17 +779,13 @@ if(value > 0x10FFFF){throw Error('invalid unicode escape '+mo[0])}else if(value 
 $B.test_escape=test_escape 
 function unindent(src){
 var lines=src.split('\n'),line,global_indent,indent,unindented_lines=[]
-for(var line_num=0,len=lines.length;line_num < len;line_num++){line=lines[line_num]
-indent=line.match(/^\s*/)[0]
-if(indent !=line){
-if(global_indent===undefined){
-if(indent.length==0){
-return src}
-global_indent=indent
-var start=global_indent.length
-unindented_lines.push(line.substr(start))}else if(line.startsWith(global_indent)){unindented_lines.push(line.substr(start))}else{throw SyntaxError("first line starts at "+
-`column ${start}, line ${line_num} at column `+
-line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
+var min_indent
+for(var line of lines){if(/^\s*$/.exec(line)){continue}
+indent=line.match(/^\s*/)[0].length
+if(indent==0){return src}
+if(min_indent===undefined){min_indent=indent}
+if(indent < min_indent){min_indent=indent}}
+for(var line of lines){if(/^\s*$/.exec(lines[first])){unindented_lines.push(line)}else{unindented_lines.push(line.substr(min_indent))}}
 return unindented_lines.join('\n')}
 var $token={}
 $B.parse_time=0
@@ -903,25 +913,24 @@ $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 var src
 for(var worker of webworkers){if(worker.src){
 $B.tasks.push([$B.ajax_load_script,{script:worker,name:worker.id,url:worker.src,is_ww:true}])}else{
-var source=(worker.innerText ||worker.textContent)
-source=unindent(source)
-source=source.replace(/^\n/,'')
 $B.webworkers[worker.id]=worker
 filename=$B.script_filename=$B.strip_host(
 $B.script_path+"#"+worker.id)
+var source=(worker.innerText ||worker.textContent)
+source=unindent(source)
+source=source.replace(/^\n/,'')
 $B.url2name[filename]=worker.id
 $B.file_cache[filename]=source
 $B.scripts[filename]=worker
 $B.dispatch_load_event(worker)}}
 for(var script of scripts){module_name=script_to_id.get(script)
 if(script.src){
-$B.tasks.push([$B.ajax_load_script,{script,name:module_name,url:script.src,id:script.id}])}else{
+$B.tasks.push([$B.ajax_load_script,{script,name:module_name,url:script.src,id:script.id}])}else{filename=$B.script_filename=$B.strip_host(
+$B.script_path+"#"+module_name)
 src=(script.innerHTML ||script.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
 if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
-filename=$B.script_filename=$B.strip_host(
-$B.script_path+"#"+module_name)
 $B.file_cache[filename]=src
 $B.url2name[filename]=module_name
 $B.scripts[filename]=script
@@ -4488,7 +4497,7 @@ if($B.get_option('debug',err)> 1){console.log('error args',err.args[1])
 console.log('err line',line)
 console.log('indent',indent)}
 var start=err.offset-indent-1,end_offset=err.end_offset-1+
-(err.end_offset==err.offset ? 1 :0),marks='    '+' '.repeat(start),nb_marks=1
+(err.end_offset==err.offset ? 1 :0),marks='    '+' '.repeat(Math.max(0,start)),nb_marks=1
 if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=end_offset-start-indent}
 if(nb_marks==0 &&
 err.end_offset==line.substr(indent).length){nb_marks=1}}
@@ -14365,8 +14374,7 @@ $B._PyPegen.nonparen_genexp_in_call=function(p,args,comprehensions){
 var len=args.args.length
 if(len <=1){return NULL;}
 var last_comprehension=$B.last(comprehensions);
-return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
-args.args[len-1],$B._PyPegen.get_last_comprehension_item(last_comprehension),"Generator expression must be parenthesized"
+return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,args.args[len-1],$B._PyPegen.get_last_comprehension_item(last_comprehension),"Generator expression must be parenthesized"
 );}
 $B._PyPegen.get_invalid_target=function(e,targets_type){if(e==NULL){return NULL;}
 function VISIT_CONTAINER(CONTAINER,TYPE){for(var elt of CONTAINER.elts){var child=$B._PyPegen.get_invalid_target(elt,targets_type);
@@ -14975,13 +14983,21 @@ p.mark=0;
 p.call_invalid_rules=1;}
 function _is_end_of_source(p){var err=p.tok.done;
 return err==E_EOF ||err==E_EOFS ||err==E_EOLS;}
+$B._PyPegen.set_syntax_error=function(p,last_token){
+if(p.fill==0){$B.helper_functions.RAISE_SYNTAX_ERROR(p,"error at start before reading any input");}
+if(last_token.num_type==ERRORTOKEN && p.tok.done==E_EOF){if(p.tok.level){raise_unclosed_parentheses_error(p);}else{
+$B.helper_functions.RAISE_SYNTAX_ERROR(p,"unexpected EOF while parsing");}
+return;}
+if(last_token.num_type==INDENT ||last_token.num_type==DEDENT){$B.helper_functions.RAISE_INDENTATION_ERROR(p,last_token.num_type==INDENT ? "unexpected indent" :"unexpected unindent");
+return;}
+$B.raise_error_known_token(_b_.SyntaxError,p.filename,last_token,"invalid syntax");}
 $B._PyPegen.run_parser=function(p){var res=$B._PyPegen.parse(p);
 if(res==NULL){if((p.flags & PyPARSE_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(p)){PyErr_Clear();
 return RAISE_SYNTAX_ERROR("incomplete input");}
 var last_token=p.tokens[p.fill-1];
 reset_parser_state_for_error_pass(p);
 $B._PyPegen.parse(p);
-$B.raise_error_known_token(_b_.SyntaxError,p.filename,last_token,'invalid syntax')}
+$B._PyPegen.set_syntax_error(p,last_token);}
 if(p.start_rule==Py_single_input && bad_single_statement(p)){p.tok.done=E_BADSINGLE;
 return RAISE_SYNTAX_ERROR("multiple statements found while compiling a single statement");}
 return res;}

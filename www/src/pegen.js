@@ -866,6 +866,37 @@ function _is_end_of_source(p) {
     return err == E_EOF || err == E_EOFS || err == E_EOLS;
 }
 
+$B._PyPegen.set_syntax_error = function(p, last_token) {
+    // Initialization error
+    if (p.fill == 0) {
+        $B.helper_functions.RAISE_SYNTAX_ERROR(p,
+            "error at start before reading any input");
+    }
+    // Parser encountered EOF (End of File) unexpectedtly
+    if (last_token.num_type == ERRORTOKEN && p.tok.done == E_EOF) {
+        if (p.tok.level) {
+            raise_unclosed_parentheses_error(p);
+        } else {
+            $B.helper_functions.RAISE_SYNTAX_ERROR(p, "unexpected EOF while parsing");
+        }
+        return;
+    }
+    // Indentation error in the tokenizer
+    if (last_token.num_type == INDENT || last_token.num_type == DEDENT) {
+        $B.helper_functions.RAISE_INDENTATION_ERROR(p,
+            last_token.num_type == INDENT ? "unexpected indent" : "unexpected unindent");
+        return;
+    }
+    // Unknown error (generic case)
+
+    // Use the last token we found on the first pass to avoid reporting
+    // incorrect locations for generic syntax errors just because we reached
+    // further away when trying to find specific syntax errors in the second
+    // pass.
+    $B.raise_error_known_token(_b_.SyntaxError, p.filename, last_token, 
+        "invalid syntax");
+}
+
 $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
     // assert(p->level == 0);
@@ -888,8 +919,9 @@ $B._PyPegen.run_parser = function(p){
 
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
-        $B.raise_error_known_token(_b_.SyntaxError, p.filename,
-            last_token, 'invalid syntax')
+        $B._PyPegen.set_syntax_error(p, last_token);
+        /* $B.raise_error_known_token(_b_.SyntaxError, p.filename,
+            last_token, 'invalid syntax') */
     }
 
     if (p.start_rule == Py_single_input && bad_single_statement(p)) {

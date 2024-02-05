@@ -276,29 +276,28 @@ function unindent(src){
         indent,
         unindented_lines = []
 
-    for(var line_num = 0, len = lines.length; line_num < len; line_num++){
-        line = lines[line_num]
-        indent = line.match(/^\s*/)[0]
-        if(indent != line){ // non whitespace-only line
-            if(global_indent === undefined){
-                // The indentation of the first non-whitespace line sets the
-                // "global indentation" for the whole script.
-                if(indent.length == 0){
-                    // Return source code unchanged if no global indentation
-                    return src
-                }
-                global_indent = indent
-                var start = global_indent.length
-                unindented_lines.push(line.substr(start))
-            }else if(line.startsWith(global_indent)){
-                unindented_lines.push(line.substr(start))
-            }else{
-                throw SyntaxError("first line starts at " +
-                   `column ${start}, line ${line_num} at column ` +
-                   line.match(/\s*/).length + '\n    ' + line)
-            }
+    var min_indent
+    for(var line of lines){
+        if(/^\s*$/.exec(line)){
+            continue
+        }
+        indent = line.match(/^\s*/)[0].length
+        if(indent == 0){
+            return src
+        }
+        if(min_indent === undefined){
+            min_indent = indent
+        }
+        if(indent < min_indent){
+            min_indent = indent
+        }
+    }
+
+    for(var line of lines){
+        if(/^\s*$/.exec(lines[first])){
+            unindented_lines.push(line)
         }else{
-            unindented_lines.push('')
+            unindented_lines.push(line.substr(min_indent))
         }
     }
     return unindented_lines.join('\n')
@@ -730,13 +729,13 @@ function run_scripts(_scripts){
                 {script: worker, name: worker.id, url: worker.src, is_ww: true}])
         }else{
             // Get source code inside the script element
+            $B.webworkers[worker.id] = worker
+            filename = $B.script_filename = $B.strip_host(
+                $B.script_path + "#" + worker.id)
             var source = (worker.innerText || worker.textContent)
             source = unindent(source) // remove global indentation
             // remove leading CR if any
             source = source.replace(/^\n/, '')
-            $B.webworkers[worker.id] = worker
-            filename = $B.script_filename = $B.strip_host(
-                $B.script_path + "#" + worker.id)
             $B.url2name[filename] = worker.id
             $B.file_cache[filename] = source
             $B.scripts[filename] = worker
@@ -753,6 +752,8 @@ function run_scripts(_scripts){
             $B.tasks.push([$B.ajax_load_script,
                 {script, name: module_name, url: script.src, id: script.id}])
         }else{
+            filename = $B.script_filename = $B.strip_host(
+                $B.script_path + "#" + module_name)
             // Get source code inside the script element
             src = (script.innerHTML || script.textContent)
             src = unindent(src) // remove global indentation
@@ -762,8 +763,6 @@ function run_scripts(_scripts){
             if(src.endsWith('\n')){
                 src = src.substr(0, src.length - 1)
             }
-            filename = $B.script_filename = $B.strip_host(
-                $B.script_path + "#" + module_name)
             // store source code
             $B.file_cache[filename] = src
             $B.url2name[filename] = module_name

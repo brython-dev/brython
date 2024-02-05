@@ -1040,7 +1040,7 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
 
     var last_comprehension = $B.last(comprehensions);
 
-    return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
+    return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,
         args.args[len - 1],
         $B._PyPegen.get_last_comprehension_item(last_comprehension),
         "Generator expression must be parenthesized"

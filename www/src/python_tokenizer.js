@@ -3,6 +3,10 @@
 
 var _b_ = $B.builtins
 
+function is_whitespace(char){
+    return ' \n\r\t\f'.includes(char)
+}
+
 const Other_ID_Start = [0x1885, 0x1886, 0x2118, 0x212E, 0x309B, 0x309C].map(
                            x => String.fromCodePoint(x))
 
@@ -234,7 +238,7 @@ $B.tokenizer = function*(src, filename, mode){
         linenum = 0,
         line_at = {}
 
-    for(var i = 0, len = src.length; i < len; i++){
+    for(let i = 0, len = src.length; i < len; i++){
         line_at[i] = linenum
         if(src[i] == '\n'){
             linenum++
@@ -261,6 +265,7 @@ $B.tokenizer = function*(src, filename, mode){
         num_type,
         comment,
         indent,
+        indent_before_continuation = 0,
         indents = [],
         braces = [],
         line,
@@ -279,7 +284,7 @@ $B.tokenizer = function*(src, filename, mode){
 
     while(pos < src.length){
         char = src[pos]
-        // console.log('char', char, 'state', state, 'token mode', token_mode)
+        //console.log('char', char, 'state', state, 'token mode', token_mode)
         cp = src.charCodeAt(pos)
         if(cp >= 0xD800 && cp <= 0xDBFF){
             // code point encoded by a surrogate pair
@@ -462,15 +467,42 @@ $B.tokenizer = function*(src, filename, mode){
                     indent = 8
                 }
                 if(indent){
+                    var broken = false
                     while(pos < src.length){
+                        if(false){ //broken){
+                            if(' \t'.includes(src[pos])){
+                                pos++
+                                continue
+                            }
+                            $B.raise_error_known_location(_b_.IndentationError,
+                                filename, line_num, pos - line_start,
+                                line_num, pos + 1 - line_start,
+                                line,
+                                'unindent does not match any outer indentation level')
+                        }
                         if(src[pos] == ' '){
                             indent++
                         }else if(src[pos] == '\t'){
                             indent += 8
+                        }else if(src[pos] == '\\' && src[pos + 1] == '\n'){
+                            // continuation line at the end of a
+                            // whitespace-only line
+                            pos++
+                            line_start = pos + 2
+                            line_num++
+                            line = get_line_at(pos + 2)
+                            broken = true
                         }else{
                             break
                         }
                         pos++
+                    }
+                    if(broken && src[pos] !== '\n'){
+                            $B.raise_error_known_location(_b_.IndentationError,
+                                filename, line_num, pos - line_start,
+                                line_num, pos + 1 - line_start,
+                                line,
+                                'unindent does not match any outer indentation level')
                     }
                     if(pos == src.length){
                         // reach eof while counting indent
@@ -486,6 +518,18 @@ $B.tokenizer = function*(src, filename, mode){
                         }
                         pos = comment.pos
                         continue
+                    }else if(src[pos] == '\\'){
+                        if(/^\f?(\r\n|\r|\n)/.exec(src[pos + 1])){
+                            line_num++
+                            pos++
+                            continue
+                        }else{
+                            $B.raise_error_known_location(_b_.SyntaxError,
+                                filename, line_num, pos + 2 - line_start,
+                                line_num, pos + 3 - line_start,
+                                line,
+                                'unexpected character after line continuation character')
+                        }
                     }else if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
                         // whitespace-only line
                         yield Token('NL', '', line_num, pos - line_start + 1,
@@ -502,7 +546,7 @@ $B.tokenizer = function*(src, filename, mode){
                         if(ix == -1){
                             var message = 'unindent does not match ' +
                                 'any outer indentation level'
-                            $B.raise_error_known_location(_b_.IndentationError, 
+                            $B.raise_error_known_location(_b_.IndentationError,
                                 filename, line_num, 0,
                                 line_num, 0, line, message)
                         }
@@ -620,7 +664,7 @@ $B.tokenizer = function*(src, filename, mode){
                         break
                     case '\\':
                         var mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
-                        if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
+                        if(mo){
                             if(pos == src.length - 1){
                                 var msg = 'unexpected EOF while parsing'
                                 $B.raise_error_known_location(_b_.SyntaxError,
