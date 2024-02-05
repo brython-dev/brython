@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-05 18:13:03.357580"
-__BRYTHON__.timestamp=1707153183356
+__BRYTHON__.compiled_date="2024-02-05 18:33:57.287941"
+__BRYTHON__.timestamp=1707154437287
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -188,6 +188,7 @@ function ISEOF(x){return x==ENDMARKER}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 function is_whitespace(char){return ' \n\r\t\f'.includes(char)}
+var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 const Other_ID_Start=[0x1885,0x1886,0x2118,0x212E,0x309B,0x309C].map(
 x=> String.fromCodePoint(x))
 function is_ID_Start(char){return/\p{Letter}/u.test(char)||
@@ -505,8 +506,9 @@ let token=Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line
 token.metadata=src.substring(
 line_start+fstring_start+2,pos-1)
 yield token}}else if(char==' ' ||char=='\t'){}else{
-var cp=char.codePointAt(0)
-var err_msg=`invalid character '${char}' (U+`+
+var cp=char.codePointAt(0),err_msg='invalid'
+if(unprintable_re.exec(char)){err_msg+=' non-printable'}
+err_msg+=` character '${char}' (U+`+
 `${cp.toString(16).toUpperCase()})`
 var err_token=Token('ERRORTOKEN',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 $B.raise_error_known_token(_b_.SyntaxError,filename,err_token,err_msg)}}

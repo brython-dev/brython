@@ -7,6 +7,8 @@ function is_whitespace(char){
     return ' \n\r\t\f'.includes(char)
 }
 
+var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
+
 const Other_ID_Start = [0x1885, 0x1886, 0x2118, 0x212E, 0x309B, 0x309C].map(
                            x => String.fromCodePoint(x))
 
@@ -799,8 +801,12 @@ $B.tokenizer = function*(src, filename, mode){
                             // ignore
                         }else{
                             // invalid character
-                            var cp = char.codePointAt(0)
-                            var err_msg = `invalid character '${char}' (U+` +
+                            var cp = char.codePointAt(0),
+                                err_msg = 'invalid'
+                            if(unprintable_re.exec(char)){
+                                err_msg += ' non-printable'
+                            }
+                            err_msg += ` character '${char}' (U+` +
                                           `${cp.toString(16).toUpperCase()})`
                             var err_token = Token('ERRORTOKEN', char,
                                 line_num, pos - line_start,
