@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-05 18:33:57.287941"
-__BRYTHON__.timestamp=1707154437287
+__BRYTHON__.compiled_date="2024-02-07 13:10:53.543020"
+__BRYTHON__.timestamp=1707307853543
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -11229,7 +11229,7 @@ exc.end_lineno=end.end_lineno
 exc.end_offset=end.end_col_offset
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 exc.$frame_obj=$B.frame_obj
-if($B.frame_obj===null){console.log('frame obj is null')}
+if($B.frame_obj===null){}
 throw exc}
 function fast_id(obj){
 if(obj.$id !==undefined){return obj.$id}
@@ -12662,6 +12662,7 @@ if(this.exc){js+=$B.js_from_ast(this.exc,scopes)}
 if(this.cause){js+=', '+$B.js_from_ast(this.cause,scopes)}
 return js+')'}
 $B.ast.Return.prototype.to_js=function(scopes){
+if(last_scope(scopes).type !='def'){compiler_error(this,"'return' outside function")}
 compiler_check(this)
 var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 'var result = '+

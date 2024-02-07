@@ -106,7 +106,7 @@ function compiler_error(ast_obj, message, end){
                    exc.end_lineno, exc.end_offset]
     exc.$frame_obj = $B.frame_obj
     if($B.frame_obj === null){
-        console.log('frame obj is null')
+        // console.log('frame obj is null')
     }
     throw exc
 }
@@ -3382,6 +3382,10 @@ $B.ast.Raise.prototype.to_js = function(scopes){
 
 $B.ast.Return.prototype.to_js = function(scopes){
     // check that return is inside a function
+    if(last_scope(scopes).type != 'def'){
+        compiler_error(this, "'return' outside function")
+    }
+
     compiler_check(this)
     var js = `$B.set_lineno(frame, ${this.lineno})\n` +
              'var result = ' +
