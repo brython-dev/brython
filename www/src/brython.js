@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-08 16:27:59.694821"
-__BRYTHON__.timestamp=1707406079693
+__BRYTHON__.compiled_date="2024-02-08 16:36:27.935946"
+__BRYTHON__.timestamp=1707406587934
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -778,14 +778,14 @@ throw Error(
 if(value > 0x10FFFF){throw Error('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
 $B.test_escape=test_escape 
 function unindent(src){
-var lines=src.split('\n'),line,global_indent,indent,unindented_lines=[]
+var lines=src.split('\n'),line,global_indent,indent,first,unindented_lines=[]
 var min_indent
 for(var line of lines){if(/^\s*$/.exec(line)){continue}
 indent=line.match(/^\s*/)[0].length
 if(indent==0){return src}
 if(min_indent===undefined){min_indent=indent}
 if(indent < min_indent){min_indent=indent}}
-for(var line of lines){if(/^\s*$/.exec(lines[first])){unindented_lines.push(line)}else{unindented_lines.push(line.substr(min_indent))}}
+for(var line of lines){if(/^\s*$/.exec(line)){unindented_lines.push(line)}else{unindented_lines.push(line.substr(min_indent))}}
 return unindented_lines.join('\n')}
 var $token={}
 $B.parse_time=0

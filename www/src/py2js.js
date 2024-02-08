@@ -274,6 +274,7 @@ function unindent(src){
         line,
         global_indent,
         indent,
+        first,
         unindented_lines = []
 
     var min_indent
@@ -294,7 +295,7 @@ function unindent(src){
     }
 
     for(var line of lines){
-        if(/^\s*$/.exec(lines[first])){
+        if(/^\s*$/.exec(line)){
             unindented_lines.push(line)
         }else{
             unindented_lines.push(line.substr(min_indent))
