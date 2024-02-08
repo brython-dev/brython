@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-07 13:10:53.543020"
-__BRYTHON__.timestamp=1707307853543
+__BRYTHON__.compiled_date="2024-02-07 23:23:01.981908"
+__BRYTHON__.timestamp=1707344581981
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -272,7 +272,7 @@ function nesting_level(token_modes){var ix=token_modes.length-1
 while(ix >=0){var mode=token_modes[ix]
 if(mode.nesting !==undefined){return mode.nesting}
 ix--}}
-$B.tokenizer=function*(src,filename,mode){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+$B.tokenizer=function*(src,filename,mode,parser){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
 src=src.replace(/\r\n/g,'\n').
 replace(/\r/g,'\n')
 if(mode !='eval' && ! src.endsWith('\n')){src+='\n'}
@@ -281,6 +281,7 @@ for(let i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
 var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
+if(parser){parser.braces=braces}
 yield Token('ENCODING','utf-8',0,0,0,0,'')
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
@@ -336,7 +337,7 @@ state=null
 token_modes.push(token_mode)}else if(char=='}'){
 yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
 yield Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
-if(braces.length==0 ||$B.last(braces)!=='{'){throw Error('wrong braces')}
+if(braces.length==0 ||$B.last(braces).char !=='{'){throw Error('wrong braces')}
 braces.pop()
 token_modes.pop()
 token_mode=$B.last(token_modes)
@@ -488,7 +489,7 @@ line_start+fstring_start+2,pos-1)
 yield closing_brace
 token_modes.pop()
 token_mode=token_modes[token_modes.length-1]
-if(braces.length==0 ||$B.last(braces)!=='{'){throw Error('wrong braces')}
+if(braces.length==0 ||$B.last(braces).char !=='{'){throw Error('wrong braces')}
 braces.pop()
 continue}}
 var op=char
@@ -499,7 +500,7 @@ augm_op.includes(op))){op+=src[pos]
 pos++}else if((char=='-' && src[pos]=='>')||
 (char==':' && src[pos]=='=')){op+=src[pos]
 pos++}
-if('[({'.includes(char)){braces.push(char)}else if('])}'.includes(char)){if(braces && $last(braces)==closing[char]){braces.pop()}else{braces.push(char)}}
+if('[({'.includes(char)){braces.push({char,pos,line_num,line_start,line})}else if('])}'.includes(char)){if(braces.length && $last(braces).char==closing[char]){braces.pop()}else{braces.push({char,pos,line_num,line_start,line})}}
 yield Token('OP',op,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)}else if(char=='!'){if(src[pos]=='='){yield Token('OP','!=',line_num,pos-line_start,line_num,pos-line_start+2,line)
 pos++}else{
 let token=Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
@@ -605,7 +606,6 @@ state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.
 state=null
 pos--}
 break}}
-if(braces.length > 0){throw SyntaxError('EOF in multi-line statement')}
 switch(state){case 'line_start':
 line_num++
 break
@@ -14668,7 +14668,7 @@ $B.raise_error_known_token=raise_error_known_token
 function set_position_from_EXTRA(ast_obj,EXTRA){for(var key in EXTRA){ast_obj[key]=EXTRA[key]}}
 var Parser=$B.Parser=function(src,filename,mode){
 src=src.replace(/\r\n/gm,"\n")
-var tokenizer=$B.tokenizer(src,filename,mode)
+var tokenizer=$B.tokenizer(src,filename,mode,this)
 this.tokenizer=tokenizer
 this.tok=tokenizer
 this.mark=0
@@ -14992,6 +14992,11 @@ p.mark=0;
 p.call_invalid_rules=1;}
 function _is_end_of_source(p){var err=p.tok.done;
 return err==E_EOF ||err==E_EOFS ||err==E_EOLS;}
+$B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var tokenizer=$B.tokenizer(p.src,p.filename,p.mode,p)
+for(var token of tokenizer){}
+if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno=brace.line_num
+if(p.tokens.length==0 ||$B.last(p.tokens).lineno >=err_lineno){if('([{'.includes(brace.char)){msg=`'${brace.char}' was never closed`}else{msg=`unmatched '${brace.char}'`}
+$B.raise_error_known_location(_b_.SyntaxError,p.filename,brace.line_num,brace.pos-brace.line_start,brace.line_num,brace.pos-brace.line_start+1,brace.line,msg)}}}
 $B._PyPegen.set_syntax_error=function(p,last_token){
 if(p.fill==0){$B.helper_functions.RAISE_SYNTAX_ERROR(p,"error at start before reading any input");}
 if(last_token.num_type==ERRORTOKEN && p.tok.done==E_EOF){if(p.tok.level){raise_unclosed_parentheses_error(p);}else{
@@ -14999,13 +15004,15 @@ $B.helper_functions.RAISE_SYNTAX_ERROR(p,"unexpected EOF while parsing");}
 return;}
 if(last_token.num_type==INDENT ||last_token.num_type==DEDENT){$B.helper_functions.RAISE_INDENTATION_ERROR(p,last_token.num_type==INDENT ? "unexpected indent" :"unexpected unindent");
 return;}
+$B._PyPegen.tokenize_full_source_to_check_for_errors(p);
 $B.raise_error_known_token(_b_.SyntaxError,p.filename,last_token,"invalid syntax");}
 $B._PyPegen.run_parser=function(p){var res=$B._PyPegen.parse(p);
 if(res==NULL){if((p.flags & PyPARSE_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(p)){PyErr_Clear();
 return RAISE_SYNTAX_ERROR("incomplete input");}
 var last_token=p.tokens[p.fill-1];
 reset_parser_state_for_error_pass(p);
-$B._PyPegen.parse(p);
+try{$B._PyPegen.parse(p);}catch(err){$B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+throw err}
 $B._PyPegen.set_syntax_error(p,last_token);}
 if(p.start_rule==Py_single_input && bad_single_statement(p)){p.tok.done=E_BADSINGLE;
 return RAISE_SYNTAX_ERROR("multiple statements found while compiling a single statement");}

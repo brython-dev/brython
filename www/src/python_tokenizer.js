@@ -227,7 +227,7 @@ function nesting_level(token_modes){
     }
 }
 
-$B.tokenizer = function*(src, filename, mode){
+$B.tokenizer = function*(src, filename, mode, parser){
     var string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
         bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
 
@@ -281,6 +281,10 @@ $B.tokenizer = function*(src, filename, mode){
         fstring_expr_start,
         fstring_escape,
         format_specifier
+
+    if(parser){
+        parser.braces = braces
+    }
 
     yield Token('ENCODING', 'utf-8', 0, 0, 0, 0, '')
 
@@ -424,7 +428,7 @@ $B.tokenizer = function*(src, filename, mode){
                     line_num, pos - line_start,
                     line_num, pos - line_start + 1,
                     line)
-                if(braces.length == 0 || $B.last(braces) !== '{'){
+                if(braces.length == 0 || $B.last(braces).char !== '{'){
                     throw Error('wrong braces')
                 }
                 braces.pop()
@@ -745,7 +749,7 @@ $B.tokenizer = function*(src, filename, mode){
                                     yield closing_brace
                                     token_modes.pop()
                                     token_mode = token_modes[token_modes.length - 1]
-                                    if(braces.length == 0 || $B.last(braces) !== '{'){
+                                    if(braces.length == 0 || $B.last(braces).char !== '{'){
                                         throw Error('wrong braces')
                                     }
                                     braces.pop()
@@ -767,12 +771,12 @@ $B.tokenizer = function*(src, filename, mode){
                                 pos++
                             }
                             if('[({'.includes(char)){
-                                braces.push(char)
+                                braces.push({char, pos, line_num, line_start, line})
                             }else if('])}'.includes(char)){
-                                if(braces && $last(braces) == closing[char]){
+                                if(braces.length && $last(braces).char == closing[char]){
                                     braces.pop()
                                 }else{
-                                    braces.push(char)
+                                    braces.push({char, pos, line_num, line_start, line})
                                 }
                             }
                             yield Token('OP', op,
@@ -1020,9 +1024,19 @@ $B.tokenizer = function*(src, filename, mode){
         }
     }
 
+    /*
     if(braces.length > 0){
-        throw SyntaxError('EOF in multi-line statement')
+        var brace = $B.last(braces)
+        var line_num = line_at[pos],
+            line = get_line_at(brace.pos)
+        $B.raise_error_known_location(_b_.SyntaxError,
+                        filename,
+                        line_num, pos - line_start,
+                        line_num, pos - line_start,
+                        line,
+                        `'${brace.char}' was never closed`)
     }
+    */
 
     switch(state){
         case 'line_start':

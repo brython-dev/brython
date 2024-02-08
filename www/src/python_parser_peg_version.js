@@ -292,7 +292,7 @@ var Parser = $B.Parser = function(src, filename, mode){
     // mode is 'file' for a script or exec(), 'eval' for eval()
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
-    var tokenizer = $B.tokenizer(src, filename, mode)
+    var tokenizer = $B.tokenizer(src, filename, mode, this)
     this.tokenizer = tokenizer
     this.tok = tokenizer
     this.mark = 0

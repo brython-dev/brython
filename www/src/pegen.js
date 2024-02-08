@@ -866,6 +866,29 @@ function _is_end_of_source(p) {
     return err == E_EOF || err == E_EOFS || err == E_EOLS;
 }
 
+$B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
+    var tokenizer = $B.tokenizer(p.src, p.filename, p.mode, p)
+    for(var token of tokenizer){
+    }
+    if(p.braces.length > 0){
+        var brace = $B.last(p.braces),
+            err_lineno =  brace.line_num
+        if(p.tokens.length == 0 || $B.last(p.tokens).lineno >= err_lineno){
+            if('([{'.includes(brace.char)){
+                msg = `'${brace.char}' was never closed`
+            }else{
+                msg = `unmatched '${brace.char}'`
+            }                
+            $B.raise_error_known_location(_b_.SyntaxError,
+                            p.filename,
+                            brace.line_num, brace.pos - brace.line_start,
+                            brace.line_num, brace.pos - brace.line_start + 1,
+                            brace.line,
+                            msg)
+        }
+    }
+}
+
 $B._PyPegen.set_syntax_error = function(p, last_token) {
     // Initialization error
     if (p.fill == 0) {
@@ -888,14 +911,15 @@ $B._PyPegen.set_syntax_error = function(p, last_token) {
         return;
     }
     // Unknown error (generic case)
-
+    $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
     // Use the last token we found on the first pass to avoid reporting
     // incorrect locations for generic syntax errors just because we reached
     // further away when trying to find specific syntax errors in the second
     // pass.
-    $B.raise_error_known_token(_b_.SyntaxError, p.filename, last_token, 
+    $B.raise_error_known_token(_b_.SyntaxError, p.filename, last_token,
         "invalid syntax");
 }
+
 
 $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
@@ -910,13 +934,17 @@ $B._PyPegen.run_parser = function(p){
             return NULL;
         }
         */
-       // Make a second parser pass. In this pass we activate heavier and slower checks
+        // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"
         // rules will be active during parsing.
         var last_token = p.tokens[p.fill - 1];
         reset_parser_state_for_error_pass(p);
-        $B._PyPegen.parse(p);
-
+        try{
+            $B._PyPegen.parse(p);
+        }catch(err){
+            $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+            throw err
+        }
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
         $B._PyPegen.set_syntax_error(p, last_token);
