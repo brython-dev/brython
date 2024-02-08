@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-07 23:23:01.981908"
-__BRYTHON__.timestamp=1707344581981
+__BRYTHON__.compiled_date="2024-02-08 16:27:59.694821"
+__BRYTHON__.timestamp=1707406079693
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -358,10 +358,9 @@ continue}
 indent=0
 if(char==' '){indent=1}else if(char=='\t'){indent=8}
 if(indent){var broken=false
-while(pos < src.length){if(false){
-if(' \t'.includes(src[pos])){pos++
-continue}
-$B.raise_error_known_location(_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos+1-line_start,line,'unindent does not match any outer indentation level')}
+while(pos < src.length){if(broken && indent > 0 && ' \t'.includes(src[pos])){$B.raise_error_known_location(
+_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,'unindent does not match any outer indentation level'
+)}
 if(src[pos]==' '){indent++}else if(src[pos]=='\t'){indent+=8}else if(src[pos]=='\\' && src[pos+1]=='\n'){
 pos++
 line_start=pos+2
@@ -369,7 +368,6 @@ line_num++
 line=get_line_at(pos+2)
 broken=true}else{break}
 pos++}
-if(broken && src[pos]!=='\n'){$B.raise_error_known_location(_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos+1-line_start,line,'unindent does not match any outer indentation level')}
 if(pos==src.length){
 line_num--
 break}

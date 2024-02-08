@@ -475,16 +475,15 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 if(indent){
                     var broken = false
                     while(pos < src.length){
-                        if(false){ //broken){
-                            if(' \t'.includes(src[pos])){
-                                pos++
-                                continue
-                            }
-                            $B.raise_error_known_location(_b_.IndentationError,
-                                filename, line_num, pos - line_start,
-                                line_num, pos + 1 - line_start,
+                        if(broken && indent > 0 && ' \t'.includes(src[pos])){
+                            $B.raise_error_known_location(
+                                _b_.IndentationError,
+                                filename,
+                                line_num, pos - line_start,
+                                line_num, pos - line_start + 1,
                                 line,
-                                'unindent does not match any outer indentation level')
+                                'unindent does not match any outer indentation level'
+                            )
                         }
                         if(src[pos] == ' '){
                             indent++
@@ -502,13 +501,6 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             break
                         }
                         pos++
-                    }
-                    if(broken && src[pos] !== '\n'){
-                            $B.raise_error_known_location(_b_.IndentationError,
-                                filename, line_num, pos - line_start,
-                                line_num, pos + 1 - line_start,
-                                line,
-                                'unindent does not match any outer indentation level')
                     }
                     if(pos == src.length){
                         // reach eof while counting indent
@@ -1023,20 +1015,6 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 break
         }
     }
-
-    /*
-    if(braces.length > 0){
-        var brace = $B.last(braces)
-        var line_num = line_at[pos],
-            line = get_line_at(brace.pos)
-        $B.raise_error_known_location(_b_.SyntaxError,
-                        filename,
-                        line_num, pos - line_start,
-                        line_num, pos - line_start,
-                        line,
-                        `'${brace.char}' was never closed`)
-    }
-    */
 
     switch(state){
         case 'line_start':
