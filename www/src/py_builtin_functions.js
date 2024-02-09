@@ -1686,7 +1686,18 @@ var len = _b_.len = function(obj){
         throw _b_.TypeError.$factory("object of type '" +
             $B.class_name(obj) + "' has no len()")
     }
-    return $B.$call(method)(obj)
+
+    let res = $B.$call(method)(obj)
+
+    if (!$B.$isinstance(res, _b_.int)) {
+        throw _b_.TypeError.$factory(`'${$B.class_name(res)}' object cannot be interpreted as an integer`)
+    }
+
+    if(!$B.rich_comp('__ge__', res, 0)) {
+        throw _b_.ValueError.$factory('ValueError: __len__() should return >= 0')   
+    }
+
+    return res
 }
 
 _b_.locals = function(){
@@ -2674,8 +2685,8 @@ $Reader.__enter__ = function(self){
     return self
 }
 
-$Reader.__exit__ = function(){
-    return false
+$Reader.__exit__ = function(self){
+    $Reader.close(self)
 }
 
 $Reader.__init__ = function(_self, initial_value=''){

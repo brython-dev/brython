@@ -389,6 +389,9 @@ int.__new__ = function(cls, value, base){
     if(cls === int){
         return int.$factory(value, base)
     }
+    if(cls === bool) {
+        throw _b_.TypeError.$factory("int.__new__(bool) is not safe, use bool.__new__()")
+    }
     // set method .toString so that BigInt(instance) returns a bingint
     return {
         __class__: cls,
@@ -932,7 +935,9 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 if(len_method === missing){
                     return true
                 }
-                return len_method(obj) > 0
+                // Call _b_.len here instead of len_method directly to use
+                // len's handling of non-integer and negative values
+                return _b_.len(obj) > 0
             }else{
                 var res = bool_class ?
                           $B.$call(bool_method)(obj) :
@@ -1010,18 +1015,57 @@ bool.__xor__ = function(self, other) {
     return _b_.NotImplemented
 }
 
+bool.__invert__ = function(self) {
+    $B.warn(_b_.DeprecationWarning, `Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
+    return int.__invert__(self)
+}
+
 bool.$factory = function(){
     // Calls $B.$bool, which is used inside the generated JS code and skips
     // arguments control.
     var $ = $B.args("bool", 1, {x: null}, ["x"],
-        arguments, {x: false}, null, null)
+        arguments, {x: false}, null, null, 1)
     return $B.$bool($.x, true)
+}
+
+bool.__new__ = function (cls, value) {
+    if (cls === undefined) {
+        throw _b_.TypeError.$factory("bool.__new__(): not enough arguments")
+    } else if (!$B.$isinstance(cls, _b_.type)) {
+        throw _b_.TypeError.$factory(`bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
+    } else if (!_b_.issubclass(cls, bool)) {
+        let class_name = $B.class_name(cls)
+        throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`) 
+    }
+    if (arguments.length > 2) {
+        throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)
+    }
+    return bool.$factory(value)
+}
+
+bool.from_bytes = function () {
+    var $ = $B.args("from_bytes", 3,
+        { bytes: null, byteorder: null, signed: null },
+        ["bytes", "byteorder", "signed"],
+        arguments, { byteorder: 'big', signed: false }, null, null)
+    let int_result = int.from_bytes($.bytes, $.byteorder, $.signed)
+    return bool.$factory(int_result)
 }
 
 bool.numerator = int.numerator
 bool.denominator = int.denominator
-bool.real = int.real
+bool.real = (self) => self ? 1 : 0
 bool.imag = int.imag
+
+for (var attr of ['real']) {
+    bool[attr].setter = (function (x) {
+        return function (self) {
+            throw _b_.AttributeError.$factory(`attribute '${x}' of ` +
+                `'${$B.class_name(self)}' objects is not writable`)
+        }
+    })(attr)
+}
+
 
 _b_.bool = bool
 

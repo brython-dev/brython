@@ -447,6 +447,8 @@ var num_format = function(val, flags) {
         val = parseInt(val.value)
     }else if(! $B.$isinstance(val, _b_.int)){
         val = parseInt(val)
+    }else if ($B.$isinstance(val, _b_.bool)) {
+        val = val ? 1 : 0
     }
 
     var s = format_int_precision(val, flags)
@@ -692,6 +694,8 @@ var signed_hex_format = function(val, upper, flags){
     if(! $B.$isinstance(val, _b_.int)){
         throw _b_.TypeError.$factory(
             `%X format: an integer is required, not ${$B.class_name(val)}`)
+    } else if ($B.$isinstance(val, _b_.bool)) {
+        val = val ? 1 : 0
     }
 
     if(val.__class__ === $B.long_int){
@@ -1743,21 +1747,33 @@ str.isascii = function(){
     return true
 }
 
+var unicode_categories_contain_character = function (categories, cp) {
+    for (var cat of categories) {
+        console.log(cat, cp);
+        if ($B.in_unicode_category(cat, cp)) {
+            return true
+        }
+    }
+    return false
+}
+
+var alpha_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']
+var alnum_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd']
+
 str.isalnum = function(){
     /* Return true if all characters in the string are alphanumeric and there
     is at least one character, false otherwise. A character c is alphanumeric
     if one of the following returns True: c.isalpha(), c.isdecimal(),
     c.isdigit(), or c.isnumeric(). */
     var $ = $B.args("isalnum", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
-    for(var char of _self){
-        cp = _b_.ord(char)
-        for(var cat of ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd', 'digits', 'numeric']){
-            if(! $B.in_unicode_category(cat, cp)){
-                return false
-            }
+            arguments, {}, null, null)
+    var _self = to_string($.self);
+    if (_self.length == 0) {
+        return false
+    }
+    for (var char of _self) {
+        if (!unicode_categories_contain_character(alnum_categories, _b_.ord(char))) {
+            return false
         }
     }
     return true
@@ -1770,15 +1786,14 @@ str.isalpha = function(){
     those with general category property being one of "Lm", "Lt", "Lu", "Ll",
     or "Lo". */
     var $ = $B.args("isalpha", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
-    for(var char of _self){
-        cp = _b_.ord(char)
-        for(var cat of ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']){
-            if(! $B.in_unicode_category(cat, cp)){
-                return false
-            }
+            arguments, {}, null, null)
+    var _self = to_string($.self);
+    if (_self.length == 0) {
+        return false
+    }
+    for (var char of _self) {
+        if (!unicode_categories_contain_character(alpha_categories, _b_.ord(char))) {
+            return false
         }
     }
     return true
