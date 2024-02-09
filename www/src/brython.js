@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-08 16:36:27.935946"
-__BRYTHON__.timestamp=1707406587934
+__BRYTHON__.compiled_date="2024-02-09 08:43:59.719950"
+__BRYTHON__.timestamp=1707464639719
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -3146,7 +3146,10 @@ var len=_b_.len=function(obj){check_nb_args_no_kw('len',1,arguments)
 var klass=obj.__class__ ||$B.get_class(obj)
 try{var method=$B.$getattr(klass,'__len__')}catch(err){throw _b_.TypeError.$factory("object of type '"+
 $B.class_name(obj)+"' has no len()")}
-return $B.$call(method)(obj)}
+let res=$B.$call(method)(obj)
+if(!$B.$isinstance(res,_b_.int)){throw _b_.TypeError.$factory(`'${$B.class_name(res)}' object cannot be interpreted as an integer`)}
+if(!$B.rich_comp('__ge__',res,0)){throw _b_.ValueError.$factory('ValueError: __len__() should return >= 0')}
+return res}
 _b_.locals=function(){
 check_nb_args('locals',0,arguments)
 var locals_obj=$B.frame_obj.frame[1]
@@ -3485,7 +3488,7 @@ throw err}}}
 var $Reader=$B.make_class("Reader")
 $Reader.__bool__=function(){return true}
 $Reader.__enter__=function(self){return self}
-$Reader.__exit__=function(){return false}
+$Reader.__exit__=function(self){$Reader.close(self)}
 $Reader.__init__=function(_self,initial_value=''){_self.$content=initial_value
 _self.$counter=0}
 $Reader.__iter__=function(self){
@@ -6319,7 +6322,7 @@ var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
 var num_format=function(val,flags){number_check(val,flags)
-if($B.$isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! $B.$isinstance(val,_b_.int)){val=parseInt(val)}
+if($B.$isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! $B.$isinstance(val,_b_.int)){val=parseInt(val)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==="0"){if(val < 0){s=s.substring(1)
 return "-"+format_padding(s,flags,true)}
@@ -6409,7 +6412,7 @@ format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
 $B.formatters={floating_point_format,floating_point_decimal_format,floating_point_exponential_format}
 var signed_hex_format=function(val,upper,flags){var ret
 if(! $B.$isinstance(val,_b_.int)){throw _b_.TypeError.$factory(
-`%X format: an integer is required, not ${$B.class_name(val)}`)}
+`%X format: an integer is required, not ${$B.class_name(val)}`)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
 if(val.__class__===$B.long_int){ret=val.value.toString(16)}else{ret=parseInt(val)
 ret=ret.toString(16)}
 ret=format_int_precision(ret,flags)
@@ -6763,15 +6766,22 @@ str.isascii=function(){
 var $=$B.args("isascii",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
 for(var i=0,len=_self.length;i < len;i++){if(_self.charCodeAt(i)> 127){return false}}
 return true}
+var unicode_categories_contain_character=function(categories,cp){for(var cat of categories){console.log(cat,cp);
+if($B.in_unicode_category(cat,cp)){return true}}
+return false}
+var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
+var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
 str.isalnum=function(){
-var $=$B.args("isalnum",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of _self){cp=_b_.ord(char)
-for(var cat of['Ll','Lu','Lm','Lt','Lo','Nd','digits','numeric']){if(! $B.in_unicode_category(cat,cp)){return false}}}
+var $=$B.args("isalnum",1,{self:null},["self"],arguments,{},null,null)
+var _self=to_string($.self);
+if(_self.length==0){return false}
+for(var char of _self){if(!unicode_categories_contain_character(alnum_categories,_b_.ord(char))){return false}}
 return true}
 str.isalpha=function(){
-var $=$B.args("isalpha",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
-for(var char of _self){cp=_b_.ord(char)
-for(var cat of['Ll','Lu','Lm','Lt','Lo']){if(! $B.in_unicode_category(cat,cp)){return false}}}
+var $=$B.args("isalpha",1,{self:null},["self"],arguments,{},null,null)
+var _self=to_string($.self);
+if(_self.length==0){return false}
+for(var char of _self){if(!unicode_categories_contain_character(alpha_categories,_b_.ord(char))){return false}}
 return true}
 str.isdecimal=function(){
 var $=$B.args("isdecimal",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
@@ -7395,6 +7405,7 @@ if(self_as_int.__class__===$B.long_int){return $B.long_int.__neg__(self_as_int)}
 return-self}
 int.__new__=function(cls,value,base){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! $B.$isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
 if(cls===int){return int.$factory(value,base)}
+if(cls===bool){throw _b_.TypeError.$factory("int.__new__(bool) is not safe, use bool.__new__()")}
 return{
 __class__:cls,__dict__:$B.empty_dict(),$brython_value:int.$factory(value,base),toString:function(){return value}}}
 int.__pos__=function(self){return self}
@@ -7595,7 +7606,7 @@ if(test){console.log('bool(obj)',obj,'bool_class',bool_class,'klass',klass,'appl
 console.log('$B.$call(bool_method)',bool_method+'')}
 if(bool_method===missing){var len_method=$B.$getattr(klass,'__len__',missing)
 if(len_method===missing){return true}
-return len_method(obj)> 0}else{var res=bool_class ?
+return _b_.len(obj)> 0}else{var res=bool_class ?
 $B.$call(bool_method)(obj):
 $B.$call(bool_method)()
 if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
@@ -7617,13 +7628,24 @@ bool.__repr__=function(self){$B.builtins_repr_check(bool,arguments)
 return self ? "True" :"False"}
 bool.__xor__=function(self,other){if($B.$isinstance(other,bool)){return self ^ other ? true :false}else if($B.$isinstance(other,int)){return int.__xor__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
+bool.__invert__=function(self){$B.warn(_b_.DeprecationWarning,`Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
+return int.__invert__(self)}
 bool.$factory=function(){
-var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)
+var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null,1)
 return $B.$bool($.x,true)}
+bool.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("bool.__new__(): not enough arguments")}else if(!$B.$isinstance(cls,_b_.type)){throw _b_.TypeError.$factory(`bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)}else if(!_b_.issubclass(cls,bool)){let class_name=$B.class_name(cls)
+throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)}
+if(arguments.length > 2){throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)}
+return bool.$factory(value)}
+bool.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null },["bytes","byteorder","signed"],arguments,{byteorder:'big',signed:false },null,null)
+let int_result=int.from_bytes($.bytes,$.byteorder,$.signed)
+return bool.$factory(int_result)}
 bool.numerator=int.numerator
 bool.denominator=int.denominator
-bool.real=int.real
+bool.real=(self)=> self ? 1 :0
 bool.imag=int.imag
+for(var attr of['real']){bool[attr].setter=(function(x){return function(self){throw _b_.AttributeError.$factory(`attribute '${x}' of `+
+`'${$B.class_name(self)}' objects is not writable`)}})(attr)}
 _b_.bool=bool
 $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;
