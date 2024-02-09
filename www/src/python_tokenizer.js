@@ -476,6 +476,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     var broken = false
                     while(pos < src.length){
                         if(broken && indent > 0 && ' \t'.includes(src[pos])){
+                            console.log('indentation error 479')
                             $B.raise_error_known_location(
                                 _b_.IndentationError,
                                 filename,

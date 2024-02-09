@@ -867,6 +867,7 @@ function _is_end_of_source(p) {
 }
 
 $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
+    var last_token = p.tokens[p.fill - 1]
     var tokenizer = $B.tokenizer(p.src, p.filename, p.mode, p)
     for(var token of tokenizer){
     }
@@ -878,7 +879,7 @@ $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
                 msg = `'${brace.char}' was never closed`
             }else{
                 msg = `unmatched '${brace.char}'`
-            }                
+            }
             $B.raise_error_known_location(_b_.SyntaxError,
                             p.filename,
                             brace.line_num, brace.pos - brace.line_start,
@@ -895,6 +896,8 @@ $B._PyPegen.set_syntax_error = function(p, last_token) {
         $B.helper_functions.RAISE_SYNTAX_ERROR(p,
             "error at start before reading any input");
     }
+    $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+
     // Parser encountered EOF (End of File) unexpectedtly
     if (last_token.num_type == ERRORTOKEN && p.tok.done == E_EOF) {
         if (p.tok.level) {
@@ -929,11 +932,6 @@ $B._PyPegen.run_parser = function(p){
             PyErr_Clear();
             return RAISE_SYNTAX_ERROR("incomplete input");
         }
-        /*
-        if (PyErr_Occurred() && !PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-            return NULL;
-        }
-        */
         // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"
         // rules will be active during parsing.
@@ -942,14 +940,14 @@ $B._PyPegen.run_parser = function(p){
         try{
             $B._PyPegen.parse(p);
         }catch(err){
-            $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+            last_token = p.tokens[p.fill - 1]
+            // check if a parenthesis error occurred before
+            $B._PyPegen.tokenize_full_source_to_check_for_errors(p)
             throw err
         }
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
         $B._PyPegen.set_syntax_error(p, last_token);
-        /* $B.raise_error_known_token(_b_.SyntaxError, p.filename,
-            last_token, 'invalid syntax') */
     }
 
     if (p.start_rule == Py_single_input && bad_single_statement(p)) {

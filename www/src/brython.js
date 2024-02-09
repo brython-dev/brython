@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-09 08:43:59.719950"
-__BRYTHON__.timestamp=1707464639719
+__BRYTHON__.compiled_date="2024-02-09 12:08:48.147919"
+__BRYTHON__.timestamp=1707476928145
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -358,7 +358,8 @@ continue}
 indent=0
 if(char==' '){indent=1}else if(char=='\t'){indent=8}
 if(indent){var broken=false
-while(pos < src.length){if(broken && indent > 0 && ' \t'.includes(src[pos])){$B.raise_error_known_location(
+while(pos < src.length){if(broken && indent > 0 && ' \t'.includes(src[pos])){console.log('indentation error 479')
+$B.raise_error_known_location(
 _b_.IndentationError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,'unindent does not match any outer indentation level'
 )}
 if(src[pos]==' '){indent++}else if(src[pos]=='\t'){indent+=8}else if(src[pos]=='\\' && src[pos+1]=='\n'){
@@ -15012,13 +15013,15 @@ p.mark=0;
 p.call_invalid_rules=1;}
 function _is_end_of_source(p){var err=p.tok.done;
 return err==E_EOF ||err==E_EOFS ||err==E_EOLS;}
-$B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var tokenizer=$B.tokenizer(p.src,p.filename,p.mode,p)
+$B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var last_token=p.tokens[p.fill-1]
+var tokenizer=$B.tokenizer(p.src,p.filename,p.mode,p)
 for(var token of tokenizer){}
 if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno=brace.line_num
 if(p.tokens.length==0 ||$B.last(p.tokens).lineno >=err_lineno){if('([{'.includes(brace.char)){msg=`'${brace.char}' was never closed`}else{msg=`unmatched '${brace.char}'`}
 $B.raise_error_known_location(_b_.SyntaxError,p.filename,brace.line_num,brace.pos-brace.line_start,brace.line_num,brace.pos-brace.line_start+1,brace.line,msg)}}}
 $B._PyPegen.set_syntax_error=function(p,last_token){
 if(p.fill==0){$B.helper_functions.RAISE_SYNTAX_ERROR(p,"error at start before reading any input");}
+$B._PyPegen.tokenize_full_source_to_check_for_errors(p);
 if(last_token.num_type==ERRORTOKEN && p.tok.done==E_EOF){if(p.tok.level){raise_unclosed_parentheses_error(p);}else{
 $B.helper_functions.RAISE_SYNTAX_ERROR(p,"unexpected EOF while parsing");}
 return;}
@@ -15031,7 +15034,8 @@ if(res==NULL){if((p.flags & PyPARSE_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(
 return RAISE_SYNTAX_ERROR("incomplete input");}
 var last_token=p.tokens[p.fill-1];
 reset_parser_state_for_error_pass(p);
-try{$B._PyPegen.parse(p);}catch(err){$B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+try{$B._PyPegen.parse(p);}catch(err){last_token=p.tokens[p.fill-1]
+$B._PyPegen.tokenize_full_source_to_check_for_errors(p)
 throw err}
 $B._PyPegen.set_syntax_error(p,last_token);}
 if(p.start_rule==Py_single_input && bad_single_statement(p)){p.tok.done=E_BADSINGLE;
