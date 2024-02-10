@@ -68,12 +68,10 @@ class Tab(html.TD):
         self.add_close_button()
 
     def add_close_button(self):
-        if self.num > 1:
-            self.row <= self.close_button
+        self.row <= self.close_button
 
     def remove_close_button(self):
-        if self.num > 1:
-            self.close_button.remove()
+        self.close_button.remove()
 
     def select(self):
         index = self.num - 1
@@ -83,6 +81,7 @@ class Tab(html.TD):
         self.score.bar_cell <= self.score.bars[index]
         self.score.selected_tab = self
         self.className = 'selected_tab'
+        self.add_close_button()
 
     def unselect(self):
         bar = self.score.bars[self.num - 1]
@@ -96,6 +95,7 @@ class Tab(html.TD):
         del self.score.tabs[-1]
         del self.score.bars[-1]
         self.remove()
+
 
 class Score(html.TABLE):
 
@@ -134,6 +134,7 @@ class Score(html.TABLE):
             self.selected_tab.unselect()
         tab.select()
         self.selected_tab = tab
+        console.log('tab', tab)
 
     def show_pattern(self, pattern_num):
         selected = self.tabs[pattern_num]
@@ -146,26 +147,32 @@ class Score(html.TABLE):
         timer.set_timeout(lambda: cell.check(), 100)
 
     def select_tab(self, ev):
-        self.show_pattern(int(ev.target.text) - 1)
+        tab = ev.target.parentNode.closest('TD')
+        while not hasattr(tab, 'num'):
+            tab = tab.parentNode.closest('TD')    
+        self.show_pattern(int(tab.num) - 1)
 
-    def get_seq(self, bpm):
+    def get_seq(self, pattern_num=None):
         seq = []
         patterns = []
-        for pattern in self.patterns.value.split():
-            repeat = pattern.split('x')
-            if len(repeat) == 2:
-                patterns += [int(repeat[0]) - 1] * int(repeat[1])
-            elif len(repeat) > 2:
-                raise PatternError(f'invalid pattern: {pattern}')
-            else:
-                patterns.append(int(pattern) - 1)
+        if pattern_num is None:
+            for pattern in self.patterns.value.split():
+                repeat = pattern.split('x')
+                if len(repeat) == 2:
+                    patterns += [int(repeat[0]) - 1] * int(repeat[1])
+                elif len(repeat) > 2:
+                    raise PatternError(f'invalid pattern: {pattern}')
+                else:
+                    patterns.append(int(pattern) - 1)
+        else:
+            patterns = [pattern_num]
         #patterns = [int(x.strip()) - 1 for x in self.patterns.value.split()]
         nb_bars = len(patterns)
         # there are bpm quarter notes per minute
         # each quarter note lasts 60/bpm second
         # a bar has 4 quarter notes, so a bar lasts 240/bpm seconds
         # dt is the interval between 16th notes (1/4 of a quarter)
-        dt = 15 / bpm
+        dt = 15 / self.bpm
         t0 = 0
         for pattern in patterns:
             bar = self.bars[pattern]
@@ -174,7 +181,7 @@ class Score(html.TABLE):
                 for pos in notes[instrument]:
                     cell = bar.lines[line_num].children[pos + 1]
                     seq.append((line_num, t0 + pos * dt, pattern, cell))
-            t0 += 240 / bpm
+            t0 += 240 / self.bpm
         seq.sort(key=lambda x: x[1])
         return seq, nb_bars
 
@@ -186,7 +193,10 @@ class Bar(html.TABLE):
         self.score = score
         if notes is None:
             notes = {}
-        top = html.TR(html.TD('&nbsp;'))
+        play_button = html.BUTTON('&#x23f5;')
+        if hasattr(self.score, 'play_pattern'):
+            play_button.bind('click', self.score.play_pattern)
+        top = html.TR(html.TD(play_button))
         top <= [NoteCell(x) for x in '1   2   3   4   ']
         self <= top
         self.lines = []

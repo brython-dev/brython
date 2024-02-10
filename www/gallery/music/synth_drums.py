@@ -57,6 +57,7 @@ Kick = make_class('Kick', 'samples/Acoustic Kick 01.wav')
 instruments = [Crash, HiHat, TomHigh, TomMid, TomLow, Snare, Kick]
 
 score = drum_score.Score(instruments)
+
 document['score'] <= html.DIV('Patterns')
 
 document['score'] <= score
@@ -90,7 +91,6 @@ def file_read(ev):
         attribute."""
         global score
         data = json.loads(event.target.result)
-        score = drum_score.Score(instruments)
         document['score'].clear()
         document['score'] <= score
         score.patterns.value = data['patterns']
@@ -140,13 +140,14 @@ schedule_period = 1000 * 0.05 # milliseconds
 bpm_control = document['bpm']
 bpm_value = document['bpm_value']
 
+score.bpm = int(bpm_control.value)
+
 @bind('#bpm', 'input')
 def change_bpm(ev):
     bpm_value.text = ev.target.value
+    score.bpm = int(ev.target.value)
     Sequencer.read_sequence()
 
-def get_bpm():
-    return int(bpm_control.value)
 
 class Sequencer:
 
@@ -154,31 +155,38 @@ class Sequencer:
     pattern = None
 
     @classmethod
-    def read_sequence(cls):
-        cls.seq, cls.nb_bars = score.get_seq(get_bpm())
+    def read_sequence(cls, num=None):
+        cls.seq, cls.nb_bars = score.get_seq(num)
 
 
-@bind('#start_loop', 'click')
+@bind('.start_loop', 'click')
 def start_loop(ev):
+    print('click on start loop', ev.target)
+    if getattr(ev.target, 'id', None) != 'play_score':
+        num = score.selected_tab.num - 1
+    else:
+        num = None
     setup()
     if Sequencer.running:
         ev.target.html = '&#x23f5;'
         Sequencer.running = False
         return
-    Sequencer.read_sequence()
+    Sequencer.read_sequence(num)
     if not Sequencer.seq:
         return
-    ev.target.html = '&#x23f9'
+    ev.target.html = '&#x23f9;'
     Sequencer.running = True
     Sequencer.pattern = None
-    loop(Config.context.currentTime, 0)
+    loop(Config.context.currentTime, num, 0)
+
+score.play_pattern = start_loop
 
 @bind('#end_loop', 'click')
 def end_loop(ev):
     document['start_loop'].html = '&#x23f5'
     Sequencer.running = False
 
-def loop(t0, i):
+def loop(t0, num, i):
     dt = Config.context.currentTime - t0
 
     if not Sequencer.running:
@@ -188,7 +196,7 @@ def loop(t0, i):
         line_num, t, pattern, cell = Sequencer.seq[i]
         instrument = score.instruments[line_num]()
         if pattern != Sequencer.pattern:
-            score.show_pattern(pattern)
+            score.show_pattern(pattern);
             Sequencer.pattern = pattern
         score.flash(cell)
         start = t0 + t
@@ -196,9 +204,12 @@ def loop(t0, i):
         i += 1
         if i >= len(Sequencer.seq):
             i = 0
-            bpm = get_bpm()
-            t0 = t0 + Sequencer.nb_bars * 240 / bpm # bar duration (4 quarter notes)
-            Sequencer.read_sequence()
+            t0 = t0 + Sequencer.nb_bars * 240 / score.bpm # bar duration (4 quarter notes)
+            Sequencer.read_sequence(num)
             break
 
-    timer.set_timeout(loop, schedule_period, t0, i)
+    timer.set_timeout(loop, schedule_period, t0, num, i)
+
+@bind('button', 'click')
+def click_button(ev):
+    print(ev.target)
