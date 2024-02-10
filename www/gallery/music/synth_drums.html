@@ -24,7 +24,7 @@
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
   </head>
-  <body onload="brython()">
+  <body>
     <div class="wrapper">
 
       <section>
@@ -34,18 +34,14 @@
       <section>
 
       <p>
-        Kick frequency<input type="range" id="kick_freq" min="100" value="170" max="300" step="1"><br>
-
-      </p>
-      <p>
-        <button id="start_loop" class="pure-button">LOOP</button>
-        <button id="end_loop" class="pure-button">STOP</button>
-        <input type="range" id="bpm" min="30" max="300" step="1" value="120">
+        <button id="start_loop" class="pure-button">&#x23f5;</button>
+        <!-- button id="end_loop" class="pure-button">&#x23f9;</button -->
+        <input type="range" id="bpm" min="30" max="300" step="1" value="120"><span id="bpm_value"></span>
       </p>
       <p>
         LOAD <input type="file" id="load_score" class="pure-button">
         <a href="#" id="save_score" download class="pure-button">SAVE</a>
-        <input type="range" id="bpm" min="30" max="300" step="1" value="120">
+        <!-- input type="range" id="bpm" min="30" max="300" step="1" value="120" -->
       </p>
       </section>
 

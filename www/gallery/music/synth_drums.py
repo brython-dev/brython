@@ -18,94 +18,8 @@ def setup():
     if Config.context is None:
         Config.context = window.AudioContext.new()
 
-kick_freq = document['kick_freq']
 
-class Kick:
-
-    checked = 'o'
-
-    def __init__(self):
-        setup()
-
-    def setup(self):
-        self.osc = Config.context.createOscillator()
-        self.gain = Config.context.createGain()
-        self.osc.connect(self.gain)
-        self.gain.connect(Config.context.destination)
-
-    def trigger(self, time=None):
-        time = time or Config.context.currentTime
-        self.setup()
-
-        self.osc.frequency.setValueAtTime(int(kick_freq.value), time)
-        self.gain.gain.setValueAtTime(1, time)
-
-        self.osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5)
-        self.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5)
-
-        self.osc.start(time)
-
-        self.osc.stop(time + 0.5)
-
-
-class Snare:
-
-    checked = 'o'
-
-    def __init__(self):
-        setup()
-        self.setup()
-
-    def setup(self):
-        self.noise = Config.context.createBufferSource()
-        self.noise.buffer = self.noiseBuffer()
-
-        noiseFilter = Config.context.createBiquadFilter()
-        noiseFilter.type = 'highpass'
-        noiseFilter.frequency.value = 1000
-        self.noise.connect(noiseFilter)
-
-        self.noiseEnvelope = Config.context.createGain()
-        noiseFilter.connect(self.noiseEnvelope)
-
-        self.noiseEnvelope.connect(Config.context.destination)
-
-    def noiseBuffer(self):
-        bufferSize = Config.context.sampleRate
-        buffer = Config.context.createBuffer(1, bufferSize,
-                                             Config.context.sampleRate)
-        output = buffer.getChannelData(0)
-
-        for i in range(bufferSize):
-          output[i] = random.random() * 2 - 1
-
-        return buffer
-
-    def trigger(self, time=None):
-
-        time = time or Config.context.currentTime
-        self.osc = Config.context.createOscillator()
-        self.osc.type = 'triangle'
-
-        self.oscEnvelope = Config.context.createGain()
-        self.osc.connect(self.oscEnvelope)
-        self.oscEnvelope.connect(Config.context.destination)
-
-        self.noiseEnvelope.gain.cancelScheduledValues(time)
-
-        self.noiseEnvelope.gain.setValueAtTime(1, time)
-        self.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2)
-        self.noise.start(time)
-
-        self.osc.frequency.setValueAtTime(100, time)
-        self.oscEnvelope.gain.setValueAtTime(0.7, time)
-        self.oscEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.1)
-        self.osc.start(time)
-
-        self.osc.stop(time + 0.2)
-        self.noise.stop(time + 0.2)
-
-class HiHat:
+class Instrument:
 
     buffer = None
     checked = 'x'
@@ -120,7 +34,7 @@ class HiHat:
         if self.buffer is None:
             Config.context = window.AudioContext.new()
             time = time or Config.context.currentTime
-            sampleLoader('samples/hihat.wav', HiHat, lambda: self.setup(time))
+            sampleLoader(self.sample, self.__class__, lambda: self.setup(time))
         else:
             time = time or Config.context.currentTime
             self.setup(time)
@@ -129,7 +43,18 @@ class HiHat:
         time = Config.context.currentTime if time is None else time
         self.source.start(time)
 
-instruments = [HiHat, Snare, Kick]
+def make_class(name, sample):
+    return type(name, [Instrument], {'sample': sample})
+
+Crash = make_class('Crash', 'samples/Acoustic Crash 01.wav')
+HiHat = make_class('HiHat', 'samples/Acoustic Closed Hat 05.wav')
+Snare = make_class('Snare', 'samples/Acoustic Snare 01.wav')
+TomHigh = make_class('TomHigh', 'samples/Acoustic High Tom 01.wav')
+TomMid = make_class('TomMid', 'samples/Acoustic Mid Tom 01.wav')
+TomLow = make_class('TomLow', 'samples/Acoustic Low Tom 01.wav')
+Kick = make_class('Kick', 'samples/Acoustic Kick 01.wav')
+
+instruments = [Crash, HiHat, TomHigh, TomMid, TomLow, Snare, Kick]
 
 score = drum_score.Score(instruments)
 document['score'] <= html.DIV('Patterns')
@@ -171,6 +96,7 @@ def file_read(ev):
         score.patterns.value = data['patterns']
         for i, notes in enumerate(data['bars']):
             score.new_tab(notes=notes)
+        bpm_control.value = bpm_value.text = data['bpm']
         # set attribute "download" to file name
         save_button.attrs["download"] = file.name
 
@@ -197,7 +123,10 @@ def mousedown(evt):
               sbar[instrument.__name__] = bar.notes[instrument]
           bars.append(sbar)
 
-      data = json.dumps({'patterns': score.patterns.value, 'bars': bars})
+      data = json.dumps({'patterns': score.patterns.value,
+                         'bars': bars,
+                         'bpm': get_bpm()
+                         })
 
       content = window.encodeURIComponent(data)
       # set attribute "href" of save link
@@ -209,9 +138,11 @@ look_ahead = 0.1
 schedule_period = 1000 * 0.05 # milliseconds
 
 bpm_control = document['bpm']
+bpm_value = document['bpm_value']
 
 @bind('#bpm', 'input')
 def change_bpm(ev):
+    bpm_value.text = ev.target.value
     Sequencer.read_sequence()
 
 def get_bpm():
@@ -231,16 +162,20 @@ class Sequencer:
 def start_loop(ev):
     setup()
     if Sequencer.running:
+        ev.target.html = '&#x23f5;'
+        Sequencer.running = False
         return
     Sequencer.read_sequence()
     if not Sequencer.seq:
         return
+    ev.target.html = '&#x23f9'
     Sequencer.running = True
     Sequencer.pattern = None
     loop(Config.context.currentTime, 0)
 
 @bind('#end_loop', 'click')
 def end_loop(ev):
+    document['start_loop'].html = '&#x23f5'
     Sequencer.running = False
 
 def loop(t0, i):
