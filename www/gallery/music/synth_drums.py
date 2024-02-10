@@ -209,7 +209,3 @@ def loop(t0, num, i):
             break
 
     timer.set_timeout(loop, schedule_period, t0, num, i)
-
-@bind('button', 'click')
-def click_button(ev):
-    print(ev.target)

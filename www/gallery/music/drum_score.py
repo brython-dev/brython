@@ -74,27 +74,21 @@ class Tab(html.TD):
         self.close_button.remove()
 
     def select(self):
-        index = self.num - 1
-        bar = self.score.bars[index]
         if self.score.selected_tab is not None:
             self.score.selected_tab.unselect()
+        index = self.score.tabs.index(self)
         self.score.bar_cell <= self.score.bars[index]
         self.score.selected_tab = self
         self.className = 'selected_tab'
         self.add_close_button()
 
     def unselect(self):
-        bar = self.score.bars[self.num - 1]
         self.score.bar_cell.clear()
         self.className = 'unselected_tab'
 
     def close(self, ev):
         ev.stopPropagation()
-        self.score.tabs[-2].add_close_button()
-        self.score.tabs[-2].select()
-        del self.score.tabs[-1]
-        del self.score.bars[-1]
-        self.remove()
+        self.score.remove_tab(self)
 
 
 class Score(html.TABLE):
@@ -136,11 +130,18 @@ class Score(html.TABLE):
         self.selected_tab = tab
         console.log('tab', tab)
 
+    def get_tab(self, tab_num):
+        for tab in self.tabs:
+            if tab.num == tab_num:
+                return tab
+
     def show_pattern(self, pattern_num):
-        selected = self.tabs[pattern_num]
-        if selected is self.selected_tab:
-            return
-        selected.select()
+        for tab in self.tabs:
+            if tab.num == pattern_num:
+                selected = tab
+                if selected is self.selected_tab:
+                    return
+                selected.select()
 
     def flash(self, cell):
         cell.style.backgroundColor = 'black'
@@ -149,8 +150,19 @@ class Score(html.TABLE):
     def select_tab(self, ev):
         tab = ev.target.parentNode.closest('TD')
         while not hasattr(tab, 'num'):
-            tab = tab.parentNode.closest('TD')    
-        self.show_pattern(int(tab.num) - 1)
+            tab = tab.parentNode.closest('TD')
+        self.show_pattern(tab.num)
+
+    def remove_tab(self, tab):
+        ix = self.tabs.index(tab)
+        if len(self.tabs) > 1:
+            next_tab = self.tabs[ix + 1] if ix < len(self.tabs) - 1 \
+                       else self.tabs[ix - 1]
+        self.tabs.remove(tab)
+        del self.bars[ix]
+        tab.remove()
+        if self.tabs:
+            self.show_pattern(next_tab.num)
 
     def get_seq(self, pattern_num=None):
         seq = []
@@ -159,14 +171,13 @@ class Score(html.TABLE):
             for pattern in self.patterns.value.split():
                 repeat = pattern.split('x')
                 if len(repeat) == 2:
-                    patterns += [int(repeat[0]) - 1] * int(repeat[1])
+                    patterns += [int(repeat[0])] * int(repeat[1])
                 elif len(repeat) > 2:
                     raise PatternError(f'invalid pattern: {pattern}')
                 else:
-                    patterns.append(int(pattern) - 1)
+                    patterns.append(int(pattern))
         else:
-            patterns = [pattern_num]
-        #patterns = [int(x.strip()) - 1 for x in self.patterns.value.split()]
+            patterns = [pattern_num + 1]
         nb_bars = len(patterns)
         # there are bpm quarter notes per minute
         # each quarter note lasts 60/bpm second
@@ -175,7 +186,8 @@ class Score(html.TABLE):
         dt = 15 / self.bpm
         t0 = 0
         for pattern in patterns:
-            bar = self.bars[pattern]
+            tab = self.get_tab(pattern)
+            bar = self.bars[self.tabs.index(tab)]
             notes = bar.notes
             for line_num, instrument in enumerate(notes):
                 for pos in notes[instrument]:
