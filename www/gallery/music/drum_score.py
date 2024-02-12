@@ -208,14 +208,18 @@ class Bar(html.TABLE):
         play_button = html.BUTTON('&#x23f5;')
         if hasattr(self.score, 'play_pattern'):
             play_button.bind('click', self.score.play_pattern)
-        top = html.TR(html.TD(play_button))
+        top = html.TR(html.TD(play_button, colspan=2))
         top <= [NoteCell(x) for x in '1   2   3   4   ']
         self <= top
         self.lines = []
         self.notes = {}
         for instrument in score.instruments:
             self.notes[instrument] = notes.get(instrument.__name__, [])
-            line = html.TR(html.TD(instrument.__name__))
+            volume_control = html.INPUT(type="range", min=0, max=100, step=1,
+                                        style="width:80px")
+            instrument.volume_control = volume_control
+            line = html.TR(html.TD(volume_control) +
+                           html.TD(instrument.__name__))
             for pos in range(16):
                 note = Note(self, instrument)
                 line <= note

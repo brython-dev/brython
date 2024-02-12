@@ -26,8 +26,12 @@ class Instrument:
 
     def setup(self, time):
         self.source = Config.context.createBufferSource()
+        volume = int(self.volume_control.value) / 50
+        gain = window.GainNode.new(Config.context)
+        gain.gain.value = volume
         self.source.buffer = self.buffer
-        self.source.connect(Config.context.destination)
+        self.source.connect(gain)
+        gain.connect(Config.context.destination)
         self.play(time)
 
     def trigger(self, time=None):
@@ -63,6 +67,11 @@ document['score'] <= html.DIV('Patterns')
 document['score'] <= score
 score.new_tab()
 
+def change_instr_volume(ev):
+    print(ev.target)
+
+for i, control in enumerate(document.select('INPUT[type="range"]')):
+    control.bind('input', change_instr_volume)
 
 def sampleLoader(url, cls, callback):
     request = window.XMLHttpRequest.new()
@@ -125,7 +134,7 @@ def mousedown(evt):
 
       data = json.dumps({'patterns': score.patterns.value,
                          'bars': bars,
-                         'bpm': get_bpm()
+                         'bpm': score.bpm
                          })
 
       content = window.encodeURIComponent(data)
