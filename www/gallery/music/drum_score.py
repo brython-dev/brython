@@ -128,7 +128,6 @@ class Score(html.TABLE):
             self.selected_tab.unselect()
         tab.select()
         self.selected_tab = tab
-        console.log('tab', tab)
 
     def get_tab(self, tab_num):
         for tab in self.tabs:
@@ -208,7 +207,7 @@ class Bar(html.TABLE):
         play_button = html.BUTTON('&#x23f5;')
         if hasattr(self.score, 'play_pattern'):
             play_button.bind('click', self.score.play_pattern)
-        top = html.TR(html.TD(play_button, colspan=2))
+        top = html.TR(html.TD(play_button))
         top <= [NoteCell(x) for x in '1   2   3   4   ']
         self <= top
         self.lines = []
@@ -217,8 +216,8 @@ class Bar(html.TABLE):
             self.notes[instrument] = notes.get(instrument.__name__, [])
             volume_control = html.INPUT(type="range", min=0, max=100, step=1,
                                         style="width:80px")
-            instrument.volume_control = volume_control
-            line = html.TR(html.TD(volume_control) +
+            #instrument.volume_control = volume_control
+            line = html.TR(#html.TD(volume_control) +
                            html.TD(instrument.__name__))
             for pos in range(16):
                 note = Note(self, instrument)

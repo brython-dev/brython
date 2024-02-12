@@ -26,12 +26,8 @@ class Instrument:
 
     def setup(self, time):
         self.source = Config.context.createBufferSource()
-        volume = int(self.volume_control.value) / 50
-        gain = window.GainNode.new(Config.context)
-        gain.gain.value = volume
         self.source.buffer = self.buffer
-        self.source.connect(gain)
-        gain.connect(Config.context.destination)
+        self.source.connect(Config.context.destination)
         self.play(time)
 
     def trigger(self, time=None):
@@ -102,6 +98,8 @@ def file_read(ev):
         data = json.loads(event.target.result)
         document['score'].clear()
         document['score'] <= score
+        while score.tabs:
+            score.remove_tab(score.tabs[-1])
         score.patterns.value = data['patterns']
         for i, notes in enumerate(data['bars']):
             score.new_tab(notes=notes)
