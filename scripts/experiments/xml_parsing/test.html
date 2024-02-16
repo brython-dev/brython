@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="parser.js"></script>
+<script src="xml_helpers.js"></script>
+</head>
+<body>
+<script>
+
+function parse(s){
+    console.log('parse', s)
+    var parser = {
+      _buffer: s,
+      _pos: 0
+    }
+
+    var element = new document_rule(parser),
+        next_element
+    var top = element
+    while(parser._pos < parser._buffer.length){
+      var char = parser._buffer[parser._pos]
+      //console.log('read char', char, 'at pos', parser._pos, 'element', element, element.constructor.name)
+      next_element = element.feed(char)
+      if(next_element === undefined){
+        console.log('undef, element', element, 'char', char)
+      }
+      element = next_element
+      if(element === FAIL){
+          console.log('fail')
+          break
+      }
+      parser._pos++
+    }
+    element = element.feed(END)
+
+    console.log('last element', element, element === top)
+    console.log()
+}
+
+
+parse(`<?xml version="1.0" ?>`)
+
+xxx
+
+parse('abzerty')
+parse('cdzerty')
+parse('xy')
+
+xxx
+
+parse('<HTML>')
+
+parse('<A href="foo">')
+parse('<BUTTON>')
+xxx
+
+parse('ab')
+parse('cd')
+parse('ef')
+
+parse('abef')
+parse('cdef')
+</script>
+</body>
+</html>
