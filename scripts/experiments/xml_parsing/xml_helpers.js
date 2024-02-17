@@ -38,7 +38,7 @@ function reset_pos(element, pos){
 
 function read_char(element){
     var parser = get_top(element)
-    return parser._buffer[parser._pos]
+    return parser._buffer[parser._pos] || END
 }
 
 function raise_error_known_position(parser, message){
@@ -94,17 +94,11 @@ LITERAL.prototype.feed = function(char){
     if(char == this.string[this.str_pos]){
         this.str_pos++
         if(this.str_pos == this.string.length){
-            this.origin.store_result(this)
-            this.origin.expect = this.next_if_ok
             return this.origin
         }
         return this
-    }else if(this.args.next_if_fail !== undefined){
-        reset_pos(this, this.pos)
-        this.origin.expect = this.args.next_if_fail
-        return this.origin.feed(read_char(this))
     }else{
-        return this.handle_fail(char)
+        return FAIL
     }
 }
 
@@ -125,6 +119,11 @@ function NAME_rule(origin, next_if_ok, args){
   this.next_if_ok = next_if_ok
   this.args = args
   this.value = ''
+  this.pos = get_pos(this)
+}
+
+NAME_rule.prototype.reset = function(){
+    this.value = ''
 }
 
 NAME_rule.prototype.feed = function(char){
@@ -134,7 +133,7 @@ NAME_rule.prototype.feed = function(char){
     }else{
       if(this.args.next_if_fail){
           this.origin.expect = this.args.next_if_fail
-          return this.origin.reach(this)
+          return this.origin.feed(char)
       }
       return FAIL
     }
@@ -148,22 +147,35 @@ NAME_rule.prototype.feed = function(char){
   return this
 }
 
-function NUMBER_rule(origin){
+function NUMBER_rule(origin, next_if_ok, args){
   this.origin = origin
+  this.rank = this.origin.expect
+  this.next_if_ok = next_if_ok
+  this.args = args
+  this.pos = get_pos(this)
   this.value = ''
+}
+
+NUMBER_rule.prototype.reset = function(){
+    this.value = ''
 }
 
 NUMBER_rule.prototype.feed = function(char){
   if(this.value == ''){
     if(is_num(char)){
       this.value = char
+    }else if(this.args.next_if_fail !== undefined){
+        this.origin.expect = this.args.next_if_fail
+        return this.origin.feed(char)
     }else{
       return FAIL
     }
   }else if(is_num(char)){
     this.value += char
   }else{
-    return this.origin.reach(this, char)
+    this.origin.expect = this.next_if_ok
+    this.origin.store_result(this)
+    return this.origin.feed(char)
   }
   return this
 }
@@ -177,40 +189,26 @@ function S_rule(origin, next_if_ok, args){
   this.value = ''
 }
 
+S_rule.prototype.reset = function(){
+    this.value = ''
+}
+
 S_rule.prototype.feed = function(char){
-  var q = this.args.quantifier
-  if(q){
-      var repeats = this.origin.result_store[this.rank]
-      var nb_repeats = repeats ? repeats.length : 0
-  }
+    console.log('S_rule, char', char, 'value', this.value.length)
   if(this.value == ''){
       if(! is_space(char)){
-          if((! q) || (q == '+' && nb_repeats == 0)){
-              return this.handle_fail(char)
-          }
-          reset_pos(this, this.pos)
-          this.origin.expect = this.next_if_ok
-          return this.origin.feed(char)
+          return FAIL
       }
       this.value = char
   }else if(is_space(char)){
       this.value += char
   }else{
       this.origin.store_result(this)
-      this.origin.expect = this.next_if_ok
       return this.origin.feed(char)
   }
   return this
 }
 
-S_rule.prototype.handle_fail = function(){
-    reset_pos(this, this.pos)
-    if(this.args.next_if_fail !== undefined){
-        this.origin.expect = this.args.next_if_fail
-        return this.origin.feed(read_char(this))
-    }
-    return this.origin.handle_fail()
-}
 
 function CHAR_rule(origin, next_if_ok, args){
   this.origin = origin
