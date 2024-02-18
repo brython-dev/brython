@@ -776,6 +776,7 @@ $B.JSObj.to_dict = function(_self){
         throw _b_.TypeError.$factory(
             "method 'to_dict()' not supported for functions")
     }
+    console.log('to dict', _self)
     var res = $B.empty_dict()
     for(var key in _self){
         _b_.dict.$setitem_string(res, key, convert_to_python(_self[key]))
@@ -798,6 +799,10 @@ function convert_to_python(obj){
         return obj.map(convert_to_python)
     }
     if($B.$isinstance(obj, $B.JSObj)){
+        if(typeof obj == 'number'){
+            // float
+            return $B.fast_float(obj)
+        }
         var res = $B.empty_dict()
         for(var key in obj){
             _b_.dict.$setitem_string(res, key, convert_to_python(obj[key]))

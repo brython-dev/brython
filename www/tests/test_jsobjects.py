@@ -389,4 +389,14 @@ aio.run(call_js_async())
 pydict = window.nestedJSObj.to_dict()
 assert pydict == {'e': {'a': 1, 'b': 2}, 'f': {'c': 3, 'd': 4}}
 
+# issue 2371
+import browser
+a = '{"num":1, "val":2.3}'
+o = browser.window.JSON.parse(a)
+assert o.num == 1
+assert o.val == 2.3
+t = o.to_dict()   # prints {'num': 1, 'val':  {}}
+assert t["num"] == 1
+assert t["val"] == 2.3
+
 print("all tests ok...")
