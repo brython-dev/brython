@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="stylesheets/styles.css">
     <!-- link rel="stylesheet" href="stylesheets/pygment_trac.css" -->
     <link rel="stylesheet" href="stylesheets/buttons-min.css">
+    <link rel="stylesheet" href="drums.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -27,6 +28,12 @@
   <body>
     <div class="wrapper">
 
+      <section id="notes_per_bar">
+        Notes per bar
+        <button>12</button>
+        <button>16</button>
+      </section>
+
       <section>
         <div id="score"></div>
       </section>
@@ -34,15 +41,16 @@
       <section>
 
       <p>
+      <section id="bpm">
+        <!--
         <button class="pure-button start_loop" id="play_score">&#x23f5;</button>
-        <!-- button id="end_loop" class="pure-button">&#x23f9;</button -->
         <input type="range" id="bpm" min="30" max="300" step="1" value="120"><span id="bpm_value"></span>
+        -->
+      </section>
       </p>
       <p>
         LOAD <input type="file" id="load_score" class="pure-button">
-        <a href="#" id="save_score" download class="pure-button">SAVE</a>
-        <!-- input type="range" id="bpm" min="30" max="300" step="1" value="120" -->
-      </p>
+        <a href="#" id="save_score" download class="pure-button">SAVE</a      </p>
       </section>
 
 
