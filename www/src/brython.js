@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-18 17:24:18.887318"
-__BRYTHON__.timestamp=1708273458887
+__BRYTHON__.compiled_date="2024-02-18 17:26:54.677430"
+__BRYTHON__.timestamp=1708273614677
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -9738,7 +9738,6 @@ if(events.length==0){delete _self.$brython_events[evt]}}}
 $B.JSObj.to_dict=function(_self){
 if(typeof _self=='function'){throw _b_.TypeError.$factory(
 "method 'to_dict()' not supported for functions")}
-console.log('to dict',_self)
 var res=$B.empty_dict()
 for(var key in _self){_b_.dict.$setitem_string(res,key,convert_to_python(_self[key]))}
 return res}
