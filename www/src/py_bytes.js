@@ -1718,10 +1718,6 @@ var decode = $B.decode = function(obj, encoding, errors){
                   }
               }
           }
-          if(s1 != s){
-              console.log('JS', s1)
-              console.log('Py', s)
-          }
           return s
       case "latin_1":
       case "windows1252":
