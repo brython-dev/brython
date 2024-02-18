@@ -1584,6 +1584,16 @@ var decode = $B.decode = function(obj, encoding, errors){
       case "utf8":
       case "U8":
       case "UTF":
+          if(globalThis.TextDecoder){
+              var decoder = new TextDecoder('utf-8', {fatal: true}),
+                  array = new Uint8Array(b)
+              try{
+                  return decoder.decode(array)
+              }catch(err){
+                  // handled below; TextDecoder doesn't provide the same
+                  // information as Python
+              }
+          }
           var pos = 0,
               err_info
           while(pos < b.length){
@@ -1708,6 +1718,10 @@ var decode = $B.decode = function(obj, encoding, errors){
                   }
               }
           }
+          if(s1 != s){
+              console.log('JS', s1)
+              console.log('Py', s)
+          }
           return s
       case "latin_1":
       case "windows1252":
@@ -1795,6 +1809,16 @@ var encode = $B.encode = function(){
         case "utf-8":
         case "utf_8":
         case "utf8":
+            if(globalThis.TextEncoder){
+                var encoder = new TextEncoder('utf-8', {fatal: true})
+                try{
+                    var array = encoder.encode(s)
+                    return fast_bytes(Array.from(array))
+                }catch(err){
+                    // handled below; TextDecoder doesn't provide the same
+                    // information as Python
+                }
+            }
             for(let i = 0, len = s.length; i < len; i++){
                 let cp = s.charCodeAt(i)
                 if(cp <= 0x7f){

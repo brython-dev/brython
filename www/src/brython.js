@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-18 17:26:54.677430"
-__BRYTHON__.timestamp=1708273614677
+__BRYTHON__.compiled_date="2024-02-18 18:51:18.297410"
+__BRYTHON__.timestamp=1708278678297
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -5182,6 +5182,8 @@ case "utf-8":
 case "utf8":
 case "U8":
 case "UTF":
+if(globalThis.TextDecoder){var decoder=new TextDecoder('utf-8',{fatal:true}),array=new Uint8Array(b)
+try{return decoder.decode(array)}catch(err){}}
 var pos=0,err_info
 while(pos < b.length){let byte=b[pos]
 err_info=null
@@ -5230,6 +5232,8 @@ pos++}else{throw _b_.UnicodeDecodeError.$factory(
 "'utf-8' codec can't decode byte 0x"+
 byte.toString(16)+" in position "+pos+
 ": invalid start byte")}}}
+if(s1 !=s){console.log('JS',s1)
+console.log('Py',s)}
 return s
 case "latin_1":
 case "windows1252":
@@ -5275,6 +5279,9 @@ var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
+if(globalThis.TextEncoder){var encoder=new TextEncoder('utf-8',{fatal:true})
+try{var array=encoder.encode(s)
+return fast_bytes(Array.from(array))}catch(err){}}
 for(let i=0,len=s.length;i < len;i++){let cp=s.charCodeAt(i)
 if(cp <=0x7f){t.push(cp)}else if(cp <=0x7ff){t.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp <=0xffff){t.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
 break
