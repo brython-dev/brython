@@ -6,6 +6,8 @@ const XML_PARAM_ENTITY_PARSING_NEVER = 0,
       XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE = 1,
       XML_PARAM_ENTITY_PARSING_ALWAYS = 2
 
+const FAIL = {}
+
 const xml_entities = {
     '&gt;': '>',
     '&lt;': '<',
@@ -233,89 +235,12 @@ xmlparser.xml_tokenizer = function*(self){
     // convert bytes to string
     self._element = new DOCUMENT(self)
     while(self._pos < self._buffer_length){
-
         var char = self._buffer[self._pos]
         self._element = self._element.feed(char)
         if(self._element.closed){
             yield self._element
         }
         self._pos++
-        /*
-        if(self._state == 'data' && char == '<'){
-            self._maybe_entity = null
-            self._state = 'element'
-            self._tag_state = 'tag_name'
-            self._element = new ELEMENT(self)
-            self._pos++
-        }else if(self._state == 'data'){
-            if(char == '\n'){
-                if(! self.buffer_text){
-                    flush_char_data(self)
-                    self._data_buffer = char
-                    flush_char_data(self)
-                }else{
-                    self._data_buffer += char
-                }
-                self._maybe_entity = null
-            }else{
-                self._data_buffer += char
-                if(char == '&'){
-                    // maybe start entity
-                    self._maybe_entity = char
-                }else if(self._maybe_entity !== null){
-                    self._maybe_entity += char
-                    if(char == ';'){
-                        var entity_pos = self._pos - self._maybe_entity.length + 1
-                        var replacement = check_entity(self, entity_pos)
-                        self._data_buffer = self._data_buffer.replace(
-                            self._maybe_entity, replacement)
-                        self._maybe_entity = null
-                    }
-                }
-            }
-            self._pos++
-        }else if(self._state == 'element' &&
-                self._element.expect == 'name_start'
-                && char == '!'){
-            self._element = new DTD(self)
-            self._pos++
-        }else if(self._state == 'element'){
-            self._element = self._element.feed(char)
-            if(self._element === undefined){
-                console.log('undefined after char', char,
-                    self._buffer.substring(self._pos - 10, self._pos + 10))
-            }
-            if(self._element.closed){
-                xmlparser._handle_stack(self)
-                if(self._element instanceof DOCTYPE){
-                    if(self._element.declarations){
-                        var parser = xmlparser.$factory()
-                        xmlparser.Parse(parser,
-                                        self._element.declarations.trim(),
-                                        true)
-                        console.log('parser', parser)
-                    }
-                }
-                yield self._element
-                self._state = 'data'
-                // self._data_buffer = ''
-            }else if(self._element.is_comment){
-                self._state = 'comment'
-                self._comment = new COMMENT(self)
-            }
-            self._pos++
-        }else if(self._state == 'comment'){
-            self._comment.feed(char)
-            if(self._comment.closed){
-                yield self._comment
-                self._state = 'data'
-                self._data_buffer = ''
-            }
-            self._pos++
-        }else{
-            self._pos++
-        }
-        */
     }
     console.log('fini')
 }
@@ -392,6 +317,7 @@ function expect_chars(element, char, stop){
     return {value: null}
 }
 
+
 function expect_name(element, char){
     if(! element.hasOwnProperty('expected_name')){
         if(is_id_start(char)){
@@ -420,16 +346,36 @@ function expect_literal(element, literal, char){
         if(element.expected_pos == literal.length){
             delete element.expected_pos
             return {value: literal}
+        }else{
+            return {value: null}
         }
     }
-    return {value: null}
+    return FAIL
+}
+
+function get_parser(element){
+    while(element.origin){
+        element = element.origin
+    }
+    return element.parser
+}
+
+function get_pos(element){
+    while(element.origin){
+        element = element.origin
+    }
+    return element.parser._pos
 }
 
 /*
 document  ::=  prolog element Misc*
 
 prolog       ::=  XMLDecl? Misc* (doctypedecl Misc*)?
+XMLDecl      ::=  '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
 Misc         ::=  Comment | PI | S
+Comment  ::=  '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
+PI        ::=  '<?' PITarget (S (Char* - (Char* '?>' Char*)))? '?>'
+doctypedecl    ::=  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
 */
 function DOCUMENT(parser){
     this.parser = parser
@@ -439,6 +385,8 @@ function DOCUMENT(parser){
 
 DOCUMENT.prototype.feed = function(char){
     if(this.expect == 'prolog'){
+        this.expect = 'element'
+        return (new prolog(this)).feed(char)
         if(char !== '<'){
             raise_error(this.parser, 'expected <')
         }
@@ -449,9 +397,10 @@ DOCUMENT.prototype.feed = function(char){
         }else if(char == '?'){
             this.expect = 'xmldecl_or_pi'
         }else if(is_id_start(char)){
-            return new ELEMENT(this.parser).feed(char)
+            this.expect = 'prolog'
+            return new ELEMENT(this).feed(char)
         }else{
-            raise_error(this.parser, 'expected !, ? or name start, got: ' + char)
+            raise_error1(this, char)
         }
     }else if(this.expect == 'comment_or_doctype'){
         if(char == '-'){
@@ -495,6 +444,157 @@ DOCUMENT.prototype.feed = function(char){
     return this
 }
 
+/*
+prolog       ::=  XMLDecl? Misc* (doctypedecl Misc*)?
+*/
+function prolog(origin){
+    this.origin = origin
+    this.expect = 'XMLDecl?'
+}
+
+prolog.prototype.feed = function(char){
+    if(this.expect == 'XMLDecl?'){
+        return (new XMLDecl(this)).feed(char)
+    }
+    return this
+}
+
+/*
+XMLDecl      ::=  '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
+*/
+function XMLDecl(origin){
+    this.origin = origin
+    this.expect = '<?xml'
+}
+
+XMLDecl.prototype.feed = function(char){
+    if(this.expect == '<?xml'){
+        var res = expect_literal(this, '<?xml', char)
+        if(res.value){
+            console.log('found value', res.value)
+            this.expect = 'EncodingDecl?'
+            return new VersionInfo(this)
+        }
+    }else if(this.expect == 'EncodingDecl?'){
+        return new EncodingDecl(this)
+    }else{
+        raise_error1(this, 'unhandled expect: ' + this.expect)
+    }
+    return this
+}
+
+/*
+VersionInfo  ::=  S 'version' Eq ("'" VersionNum "'" | '"' VersionNum '"')
+*/
+function VersionInfo(origin){
+    this.origin = origin
+    this.expect = 'S'
+}
+
+VersionInfo.prototype.feed = function(char){
+    if(this.expect == 'S'){
+        this.expect = 'version'
+        return (new S(this)).feed(char)
+    }else if(this.expect == 'version'){
+        var res = expect_literal(this, 'version', char)
+        if(res.value){
+            this.expect = "'"
+            return new Eq(this)
+        }
+    }else if(this.expect == "'"){
+        var parser = get_parser(this),
+            save_pos = parser._pos
+        var res = expect_literal(this, "'", char)
+        console.log('res', res)
+        if(res === FAIL){
+            parser._pos = save_pos
+            this.expect = '"'
+            return this.feed(parser._buffer[save_pos])
+        }else if(res.value){
+            this.quote = res.value
+            this.expect = 'VersionNum1'
+        }
+    }else if(this.expect == '"'){
+        var res = expect_literal(this, '"', char)
+        console.log('res', res)
+        if(res === FAIL){
+            raise_error1(this, char)
+        }else if(res.value){
+            this.quote = res.value
+            this.expect = 'VersionNum2'
+        }
+    }else if(this.expect == 'VersionNum1'){
+        var res = expect_chars(this, char, "'")
+        if(res.value){
+            console.log('VersionInfo complete')
+            return this.origin
+        }else if(res === FAIL){
+            raise_error1(this, char)
+        }
+    }else if(this.expect == 'VersionNum2'){
+        var res = expect_chars(this, char, '"')
+        if(res.value){
+            console.log('VersionInfo complete')
+            return this.origin
+        }else if(res === FAIL){
+            raise_error1(this, char)
+        }
+    }else{
+        raise_error1(this, 'unhandled expect: ' + this.expect)
+    }
+    return this
+}
+
+function S(origin){
+    this.origin = origin
+}
+
+S.prototype.feed = function(char){
+    if(! is_whitespace(char)){
+        return this.origin.feed(char)
+    }
+    return this
+}
+
+/*
+Eq           ::=  S? '=' S?
+*/
+
+function Eq(origin){
+    this.origin = origin
+    this.expect = 'S1'
+}
+
+Eq.prototype.feed = function(char){
+    if(this.expect == 'S1'){
+        this.expect = '='
+        return (new S(this)).feed(char)
+    }else if(this.expect == '='){
+        var res = expect_literal(this, '=', char)
+        if(res){
+            this.expect = 'S2'
+        }
+    }else if(this.expect == 'S2'){
+        this.expect = 'end'
+        return (new S(this)).feed(char)
+    }else if(this.expect == 'end'){
+        return this.origin.feed(char)
+    }
+    return this
+}
+
+function Quote(origin){
+    this.origin = origin
+}
+
+Quote.prototype.feed = function(char){
+    if(char == '"' || char == "'"){
+        this.quote = char
+    }else{
+        raise_error1(this, char)
+    }
+    return this
+}
 /*
 doctypedecl    ::=  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
 intSubset      ::=  (markupdecl | DeclSep)*
@@ -802,9 +902,19 @@ COMMENT.prototype.feed = function(char){
     return this
 }
 
-function ELEMENT(parser) {
-    this.parser = parser
-    this.expect = 'name_start'
+/*
+element       ::=  EmptyElemTag  | STag content ETag
+STag          ::=  '<' Name (S Attribute)* S? '>'
+Attribute     ::=  Name Eq AttValue
+ETag          ::=  '</' Name S? '>'
+content       ::=  CharData?
+                   ((element | Reference | CDSect | PI | Comment) CharData?)*
+EmptyElemTag  ::=  '<' Name (S Attribute)* S? '/>'
+*/
+
+function ELEMENT(origin) {
+    this.origin = origin
+    this.expect = '?_/_or_name_start'
     this.attrs = $B.empty_dict()
 }
 
@@ -819,25 +929,26 @@ ELEMENT.prototype.set_attribute_value = function(value){
     _b_.dict.$setitem(this.attrs, this.attr_name, value)
 }
 
-ELEMENT.prototype.feed = function(item){
+ELEMENT.prototype.feed = function(char){
+    console.log('ELEMENT feed, expects', this.expect, 'char', char)
     if(this.expect == 'name_start'){
-        if(item == '?'){
+        if(char == '?'){
             if(this.is_declaration){
                 throw Error('already got ?')
             }
             this.is_declaration = true
-        }else if(item == '/'){
+        }else if(char == '/'){
             if(this.is_end){
                 throw Error('already got /')
             }
             this.is_end = true
-        }else if(is_id_start(item)){
-            this.name = item
+        }else if(is_id_start(char)){
+            this.name = char
             this.expect = 'name_continue'
         }
     }else if(this.expect == 'name_continue'){
-        if(is_id_continue(item)){
-            this.name += item
+        if(is_id_continue(char)){
+            this.name += char
         }else{
             // end of element name
             if(this.is_declaration){
@@ -847,115 +958,121 @@ ELEMENT.prototype.feed = function(item){
                     return new PROCESSING_INSTRUCTION(this.parser, this.name)
                 }
             }
-            if(is_whitespace(item)){
+            if(is_whitespace(char)){
                 this.expect = 'attr_name_start'
-            }else if(item == '>'){
+            }else if(char == '>'){
                 this.closed = true
-            }else if(item == '/'){
+            }else if(char == '/'){
                 this.self_closing = true
                 this.expect = '>'
             }else{
-                throw Error('unexpected at end of element name: ' + item)
+                throw Error('unexpected at end of element name: ' + char)
             }
         }
     }else if(this.expect == 'attr_name_start'){
-        if(item == '/'){
+        if(char == '/'){
             this.self_closing = true
-        }else if(item == '>'){
-            this.closed = true
-        }else if(is_id_start(item)){
-            this.attr_name = item
+        }else if(char == '>'){
+            this.expect = 'no_whitespace'
+        }else if(is_id_start(char)){
+            this.attr_name = char
             this.expect = 'attr_name_continue'
-        }else if(item == '?' && this.is_declaration){
+        }else if(char == '?' && this.is_declaration){
             this.expect = '>'
-        }else if(! is_whitespace(item)){
-            throw Error('expected attribute name, got: ' + item)
+        }else if(! is_whitespace(char)){
+            throw Error('expected attribute name, got: ' + char)
         }
     }else if(this.expect == 'attr_name_continue'){
-        if(is_id_continue(item)){
-            this.attr_name += item
-        }else if(item == '='){
+        if(is_id_continue(char)){
+            this.attr_name += char
+        }else if(char == '='){
             this.add_attribute_name(this.attr_name)
             this.expect = 'attr_value_start'
             this.attr_value = ''
-        }else if(is_whitespace(item)){
+        }else if(is_whitespace(char)){
             this.add_attribute_name(this.attr_name)
             this.expect = '='
-        }else if(item == '>'){
+        }else if(char == '>'){
             this.add_attribute_name(this.attr_name)
             this.closed = true
         }else{
-            throw Error('unexpected character in attribute name: ' + item)
+            throw Error('unexpected character in attribute name: ' + char)
         }
     }else if(this.expect == '='){
-        if(item == '='){
+        if(char == '='){
             this.expect = 'attr_value_start'
-        }else if(! is_whitespace(item)){
-            throw Error('expected =, got: ' + item)
+        }else if(! is_whitespace(char)){
+            raise_error1(this, char)
         }
     }else if(this.expect == 'attr_value'){
-        if(item == '='){
+        if(char == '='){
             this.expect = 'attr_value_start'
             this.attr_value = ''
-        }else if(item == '>'){
+        }else if(char == '>'){
             this.closed = true
-        }else if(is_id_start(item)){
-            this.attr_name = item
+        }else if(is_id_start(char)){
+            this.attr_name = char
             this.expect = 'attr_name_continue'
-        }else if(! is_whitespace(item)){
-            throw Error('expected attribute value or name, got: ' + item)
+        }else if(! is_whitespace(char)){
+            throw Error('expected attribute value or name, got: ' + char)
         }
     }else if(this.expect == 'attr_value_start'){
-        if(item == '"' || item == "'"){
+        if(char == '"' || char == "'"){
             this.expect = 'quote'
-            this.quote = item
+            this.quote = char
             this.attr_value = ''
-        }else if(! is_whitespace(item)){
-            throw Error('unexpect attribute value start: ' + item)
+        }else if(! is_whitespace(char)){
+            throw Error('unexpect attribute value start: ' + char)
         }
     }else if(this.expect == "quote"){
-        if(item == this.quote){
+        if(char == this.quote){
             this.set_attribute_value(this.attr_value)
             this.expect = 'attr_name_start'
         }else{
-            this.attr_value += item
+            this.attr_value += char
         }
     }else if(this.expect == '>'){
-        if(item == '>'){
+        if(char == '>'){
             this.closed = true
         }else{
-            throw Error('expected >, got: ' + item)
+            throw Error('expected >, got: ' + char)
         }
     }else if(this.expect == 'attr_name'){
-        if(item instanceof Name){
-            if(_b_.dict.__contains__(this.attrs, item.value)){
-                throw Error('duplicate value ' + item.value)
+        if(char instanceof Name){
+            if(_b_.dict.__contains__(this.attrs, char.value)){
+                throw Error('duplicate value ' + char.value)
             }
-            _b_.dict.$setitem(this.attrs, item.value, _b_.None)
-            this.last_attr = item.value
-        }else if(item.value == '?' && this.is_declaration){
+            _b_.dict.$setitem(this.attrs, char.value, _b_.None)
+            this.last_attr = char.value
+        }else if(char.value == '?' && this.is_declaration){
             if(this.question_mark){
                 throw Error('already ?')
             }
             this.question_mark = true
-        }else if(item == END){
+        }else if(char == END){
             if(this.is_declaration && ! this.question_mark){
                 throw Error('missing ')
             }
-        }else if(item instanceof Punctuation && item.value == '/'){
+        }else if(char instanceof Punctuation && char.value == '/'){
             this.no_end = true
             this.expect = END
         }else{
-            throw Error('expected attribute name, got ' + item)
+            throw Error('expected attribute name, got ' + char)
         }
     }else if(this.expect == 'attr_value'){
-        _b_.dict.$setitem(this.attrs, this.last_attr, item)
+        _b_.dict.$setitem(this.attrs, this.last_attr, char)
         this.expect = 'attr_name'
     }else if(this.expect == END){
         // after "/"
-        if(item != END){
+        if(char != END){
             throw Error('nothing after /')
         }
+    }else if(this.expect == 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
+        }
+    }else{
+        raise_error1(this, char)
     }
     return this
 }
@@ -1147,7 +1264,6 @@ function ExternalID(origin){
 }
 
 ExternalID.prototype.feed = function(char){
-    console.log('ExternalID expects', this.expect, 'char', char)
     if(this.expect == 'first'){
         if(! is_whitespace(char)){
             if(char == 'S'){
@@ -1175,14 +1291,14 @@ ExternalID.prototype.feed = function(char){
     }else if(this.expect == 'system_after_pubid'){
         if(! is_whitespace(char)){
             this.expect = '[_or_>'
-            return new SystemLiteral(this)
+            return (new SystemLiteral(this)).feed(char)
         }
     }else if(this.expect == '[_or_>'){
         if(char == '['){
             this.expect = '>'
             return new intSubset(this)
         }else if(char == '>'){
-            this.expect == 'no_whitespace'
+            return this.origin.feed(char)
         }else{
             raise_error1(this, char)
         }
@@ -1194,7 +1310,54 @@ ExternalID.prototype.feed = function(char){
         }
     }else if(this.expect == 'no_whitespace'){
         if(! is_whitespace(char)){
+            console.log('return to origin', this.origin, 'char', char)
             return this.origin.feed(char)
+        }
+    }
+    return this
+}
+
+/*
+PubidLiteral   ::=  '"' PubidChar* '"' | "'" (PubidChar - "'")* "'"
+PubidChar      ::=  #x20 | #xD | #xA | [a-zA-Z0-9]
+                 |  [-'()+,./:=?;!*#@$_%]
+*/
+function PubidLiteral(origin){
+    this.origin = origin
+    this.expect = 'quote'
+}
+
+
+function is_pubid_char(char){
+    /*
+#x20 | #xD | #xA | [a-zA-Z0-9]
+                 |  [-'()+,./:=?;!*#@$_%]
+*/
+    return char.match(new RegExp("[a-zA-Z0-9-'()+,./:=?;!*#@$_%]")) ||
+        ' \n\r'.includes(char)
+}
+
+PubidLiteral.prototype.feed = function(char){
+    if(this.expect == 'quote'){
+        if(is_quote(char)){
+            this.expect = char
+            this.content = ''
+        }else if(! is_whitespace(char)){
+            raise_error1(this, char)
+        }
+    }else if(this.expect == 'no_whitespace'){
+        if(! is_whitespace(char)){
+            return this.origin.feed(char)
+        }
+    }else{
+        if(char == this.expect){
+            this.expect = 'no_whitespace'
+        }else if(is_pubid_char(char)){
+            this.content += char
+        }else{
+            console.log('PubidLiteral expects', this.expect, 'char', char)
+            console.log(is_pubid_char(char))
+            raise_error1(this, char)
         }
     }
     return this
