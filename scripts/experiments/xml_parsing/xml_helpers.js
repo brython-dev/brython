@@ -113,11 +113,10 @@ LITERAL.prototype.handle_fail = function(char){
     return this.origin.handle_fail(char)
 }
 
-function NAME_rule(origin, next_if_ok, args){
+function NAME_rule(origin, next_if_ok){
   this.origin = origin
   this.rank = this.origin.expect
   this.next_if_ok = next_if_ok
-  this.args = args
   this.value = ''
   this.pos = get_pos(this)
 }
@@ -131,17 +130,12 @@ NAME_rule.prototype.feed = function(char){
     if(is_id_start(char)){
       this.value = char
     }else{
-      if(this.args.next_if_fail){
-          this.origin.expect = this.args.next_if_fail
-          return this.origin.feed(char)
-      }
       return FAIL
     }
   }else if(is_id_continue(char)){
     this.value += char
   }else{
     this.origin.expect = this.next_if_ok
-    this.origin.store_result(this)
     return this.origin.feed(char)
   }
   return this
@@ -203,7 +197,6 @@ S_rule.prototype.feed = function(char){
   }else if(is_space(char)){
       this.value += char
   }else{
-      this.origin.store_result(this)
       return this.origin.feed(char)
   }
   return this

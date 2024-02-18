@@ -49,22 +49,20 @@ def generate_parser(rules):
                     next_if_ok = -1
                 if minus:
                     minus_index = options.index(minus)
-                args = ARGS()
-                if alt:
-                    args['next_if_fail'] = alt_index
-                if minus:
-                    args['minus'] = minus_index
-                if quantifier:
-                    args['quantifier'] = f"'{quantifier}'"
-                if alt or minus:
-                    args['save_pos'] = "get_pos(this)"
                 if isinstance(option, Literal):
                     literal = option.value.replace("'", "\\'")
+                    if alt:
+                        write(f"save_pos = get_pos(this)")
                     write(f"rule = new LITERAL(this, '{literal}')")
                     write(f"res = rule.feed(char)")
                     write(f"if(res === FAIL){{")
                     indent += 1
-                    write("return res")
+                    if alt:
+                        write(f"this.expect = {alt_index}")
+                        write(f"reset_pos(this, save_pos)")
+                        write(f"return this.feed(read_char(this))")
+                    else:
+                        write("return res")
                     indent -= 1
                     write(f"}}")
                     write(f"this.expect = {next_if_ok}")
@@ -73,15 +71,14 @@ def generate_parser(rules):
                     if isinstance(option, Rule):
                         write(f"if(! this.rules[{i}]){{")
                         indent += 1
-                        write(f"this.rules[{i}] = new {option.value}_rule(this, {next_if_ok}, {args})")
-                        write(f"this.repeats[{i}] = 0")
+                        write(f"this.rules[{i}] = new {option.value}_rule(this, {next_if_ok})")
+                        if quantifier and quantifier in '+*':
+                            write(f"this.repeats[{i}] = 0")
                         indent -= 1
                         write(f"}}")
                         write(f"rule = this.rules[{i}]")
                         write(f"rule.reset()")
                         if quantifier:
-                            write(f"while(true){{")
-                            indent += 1
                             write(f"save_pos = get_pos(this)")
                             write(f"res = rule.feed(char)")
                             write(f"if(res === FAIL){{")
@@ -92,8 +89,12 @@ def generate_parser(rules):
                                 write("return FAIL")
                                 indent -= 1
                                 write(f"}}")
+                            if quantifier and quantifier in '+*':
+                                write(f"this.result_store[{i}] = this.result_store[{i}] || []")
+                                write(f"this.result_store[{i}].push([save_pos, get_pos(this)])")
+                                write(f"console.log('result_store {rule}', this.result_store)")
                             write(f"this.expect = {next_if_ok}")
-                            write("reset_pos(this, save_pos)")
+                            write(f"reset_pos(this, save_pos)")
                             write(f"return this.feed(read_char(this))")
                             indent -= 1
                             write(f"}}else{{")
@@ -107,13 +108,10 @@ def generate_parser(rules):
                                 write(f"return res")
                             indent -= 1
                             write(f"}}")
-                            indent -= 1
-                            write(f"}}")
                         else:
                             write(f"this.expect = {next_if_ok}")
                             if alt:
                                 write(f"save_pos = get_pos(this)")
-                            if alt:
                                 write(f"res = rule.feed(char)")
                                 write(f"if(res === FAIL){{")
                                 indent += 1
@@ -122,11 +120,12 @@ def generate_parser(rules):
                                 write(f"return this.feed(read_char(this))")
                                 indent -= 1
                                 write(f"}}")
+                                write(f"return res")
                             else:
                                 write(f"return rule.feed(char)")
                     else:
                         charset = option.value.replace("'", "\\'")
-                        write(f"rule = new CHARSET_rule(this, '{charset}', {next_if_ok}, {args})")
+                        write(f"rule = new CHARSET_rule(this, '{charset}', {next_if_ok})")
                 elif option is End:
                     write(f"if(char == END){{")
                     indent += 1
@@ -141,17 +140,9 @@ def generate_parser(rules):
                 num += 1
             indent += 1
             write(f"case -1:")
-            #write(f"      this.matches.push(
             indent += 1
-            if quantifier:
-                if quantifier in '*+':
-                    write(f"this.expect = 0")
-                    write(f"return this.feed(char)")
-                elif quantifier == '?':
-                    write(f"this.origin.expect = this.next_if_ok")
-                    write(f"return this.origin.feed(char)")
-            else:
-                write(f"return this.origin.feed(char)")
+            write(f"return this.origin.feed(char)")
+
             indent -= 2
             write(f"}}") # close "switch"
             write(f"return this")
@@ -159,6 +150,7 @@ def generate_parser(rules):
             write('}')
             write('')
 
+            """
             write(f"{rule}_rule.prototype.store_result = function(obj){{")
             indent += 1
             write(f"console.log('store result', obj)")
@@ -173,31 +165,14 @@ def generate_parser(rules):
             write(f"}}")
             indent -= 1
             write(f"}}\n")
-
-            write(f"{rule}_rule.prototype.handle_fail = function(char){{")
-            indent += 1
-            write(f"console.log('handle_fail', this, char)")
-            write("reset_pos(this, this.pos)")
-            write("var q = this.args.quantifier")
-            write(f"if('*?'.includes(q)){{")
-            indent += 1
-            write("this.origin.expect = this.next_if_ok")
-            write(f"return this.origin.feed(read_char(this))")
-            indent -= 1
-            write(f"}}else if(this.args.next_if_fail){{")
-            indent += 1
-            write(f"this.origin.expect = this.args.next_if_fail")
-            write(f"return this.origin.feed(read_char(this))")
-            indent -= 1
-            write(f"}}")
-            indent -= 1
-            write(f"}}\n")
+            """
 
             write(f"{rule}_rule.prototype.reset = function(){{")
             indent += 1
             write(f"this.expect = 0")
             indent -= 1
             write(f"}}")
+            write('')
 
 
 grammar = """
@@ -222,8 +197,11 @@ EncName       ::=  [A-Za-z] ([A-Za-z0-9._] | '-')*
 SDDecl  ::=  S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
 """
 
-_grammar = """
-document  ::=   NAME (S NAME)*
+grammar = """
+document  ::=   '<' NAME S+ attributes* '>'
+attributes ::= attribute (S+ attribute)*
+attribute ::= NAME S* '=' S* attr_value
+attr_value ::= ('"' NAME '"' | "'" NAME "'")
 """
 
 rules = make_rules(grammar)
