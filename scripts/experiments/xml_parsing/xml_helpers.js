@@ -1,4 +1,5 @@
 var FAIL = {FAIL: true}
+var DONE = {DONE: true}
 var END = {END: true}
 
 function is_id_start(char){
@@ -90,15 +91,24 @@ function LITERAL(origin, string, next_if_ok, args){
     this.str_pos = 0
 }
 
+LITERAL.prototype.reset = function(){
+    this.str_pos = 0
+    delete this.done
+}
+
 LITERAL.prototype.feed = function(char){
+    console.log('LITERAL', this.string, 'expects', this.string[this.str_pos], 'char', char)
+    if(this.string == '<!DOCTYPE>'){
+        console.log('LITERAL feed', this.string, char, this.str_pos)
+    }
     if(char == this.string[this.str_pos]){
         this.str_pos++
         if(this.str_pos == this.string.length){
-            return this.origin
+            return this.origin.feed(DONE)
         }
         return this
     }else{
-        return FAIL
+        return this.origin.feed(FAIL)
     }
 }
 
@@ -218,16 +228,71 @@ CHAR_rule.prototype.feed = function(char){
     }
 }
 
-function CHARSET_rule(origin, charset, next_if_ok, args){
+var hex_range_re = /^#x([a-fA-F0-9]+)-#x([a-fA-F0-9]+)$/
+var charset_range_re = /(\w)-(\w)/g
+
+
+function CHARSET_rule(origin, charset, next_if_ok){
     this.origin = origin
     this.charset = charset
     this.next_if_ok = next_if_ok
-    this.args = args
+    var negative = charset.startsWith('^'),
+        body = negative ? charset.substr(1) : charset
+
+    var mo = body.match(hex_range_re)
+    if(mo){
+        var left = parseInt(`0x${mo[1]}`, 16),
+            right = parseInt(`0x${mo[2]}`, 16)
+        if(negative){
+            this.test = function(char){
+                var cp = char.charCodeAt(0)
+                return (cp < left) || (cp > right)
+            }
+        }else{
+            this.test = function(char){
+                var cp = char.charCodeAt(0)
+                return (cp >= left) && (cp <= right)
+            }
+        }
+        return
+    }
+
+    var ranges = []
+    for(var mo of body.matchAll(charset_range_re)){
+        ranges.push(mo.slice(1))
+    }
+    if(ranges.length > 0){
+        if(negative){
+            this.test = function(char){
+                for(var range of ranges){
+                    if(char >= range[0] && char <= range[1]){
+                        return false
+                    }
+                }
+                return true
+            }
+        }else{
+            this.test = function(char){
+                for(var range of ranges){
+                    if(char >= range[0] && char <= range[1]){
+                        return true
+                    }
+                }
+                return false
+            }
+        }
+        return
+    }
+
     if(charset.startsWith('^')){
         this.test = char => ! charset.substr(1).includes(char)
     }else{
         this.test = char => charset.includes(char)
     }
+}
+
+CHARSET_rule.prototype.reset = function(){
+    // ignore
 }
 
 CHARSET_rule.prototype.feed = function(char){
