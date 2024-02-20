@@ -556,7 +556,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "Date"
+    var test = attr == "line"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -625,7 +625,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     }
     if(js_attr !== null &&
             js_attr.toString &&
-            typeof js_attr.toString == 'function' &&
+            typeof js_attr == 'function' &&
             js_attr.toString().startsWith('class ')){
         // Javascript class
         return jsclass2pyclass(js_attr)

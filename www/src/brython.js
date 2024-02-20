@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-18 19:10:21.845903"
-__BRYTHON__.timestamp=1708279821844
+__BRYTHON__.compiled_date="2024-02-20 12:03:39.219296"
+__BRYTHON__.timestamp=1708427019219
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -9670,7 +9670,7 @@ klass.__mro__=[py_parent].concat(klass.__mro__)}
 var frame=$B.frame_obj.frame
 if(frame){$B.set_func_names(klass,frame[2])}
 return klass}
-$B.JSObj.__getattribute__=function(_self,attr){var test=false 
+$B.JSObj.__getattribute__=function(_self,attr){var test=attr=="line"
 if(test){console.log("__ga__",_self,attr)}
 if(attr=="new" && typeof _self=="function"){
 var new_func
@@ -9695,7 +9695,7 @@ return jsobj2pyobj(class_attr.apply(null,args))}}else{return class_attr}}
 throw $B.attr_error(attr,_self)}
 if(js_attr !==null &&
 js_attr.toString &&
-typeof js_attr.toString=='function' &&
+typeof js_attr=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
 return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{if(test){console.log('jsobj2pyobj on',js_attr)}
