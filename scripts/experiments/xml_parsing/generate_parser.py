@@ -36,6 +36,20 @@ def generate_parser(rules):
             write(f"switch(this.expect){{")
             for i, option in enumerate(options):
                 print('option', option)
+                if option is End:
+                    indent += 1
+                    write(f"case -1:")
+                    write(f"case {i}:")
+                    indent += 1
+                    write(f"if(char == END){{")
+                    indent += 1
+                    write(f"return DONE")
+                    indent -= 1
+                    write(f"}}")
+                    write(f"return FAIL")
+                    indent -=2
+                    continue
+
                 indent += 1
                 num = 1
                 write(f"case {i}: // {option}")
@@ -49,101 +63,112 @@ def generate_parser(rules):
                     next_if_ok = -1
                 if minus:
                     minus_index = options.index(minus)
+
+                write(f"if(! this.rules[{i}]){{")
+                indent += 1
+                lhs = f"this.rules[{i}]"
                 if isinstance(option, Literal):
-                    literal = option.value.replace("'", "\\'")
-                    if alt:
-                        write(f"save_pos = get_pos(this)")
-                    write(f"rule = new LITERAL(this, '{literal}')")
-                    write(f"res = rule.feed(char)")
-                    write(f"if(res === FAIL){{")
+                    if isinstance(option.value, int):
+                        literal = f"String.fromCharCode({option.value})"
+                    else:
+                        literal = option.value.replace("'", "\\'")
+                        literal = f"'{literal}'"
+                    write(f"{lhs} = new LITERAL(this, {literal})")
+                elif isinstance(option, Charset):
+                    charset = option.value.replace("'", "\\'")
+                    write(f"{lhs} = new CHARSET_rule(this, '{charset}')")
+                elif isinstance(option, Rule):
+                    if option.value == 'S':
+                        write("{lhs} = new LITERAL(this, ' ')")
+                    else:
+                        write(f"{lhs} = new {option.value}_rule(this)")
+                if quantifier and quantifier in '+*':
+                    write(f"this.repeats[{i}] = 0")
+                indent -= 1
+                write(f"}}")
+                write(f"rule = this.rules[{i}]")
+                #write(f"rule.reset()")
+
+                if quantifier:
+                    write(f"save_pos = get_pos(this)")
+                    write(f"if(char === FAIL){{")
+                    indent += 1
+                    if quantifier == '+':
+                        write(f"if(this.repeats[{i}] == 0){{")
+                        indent += 1
+                        write(f"reset_pos(this, this.pos)")
+                        write(f"return this.origin.feed(FAIL)")
+                        indent -= 1
+                        write(f"}}")
+                    write(f"this.expect = {next_if_ok}")
+                    write(f"reset_pos(this, save_pos)")
+                    write(f"return this.feed(read_char(this))")
+                    indent -= 1
+                    write(f"}}else if(char === DONE){{")
+                    indent += 1
+                    write(f"this.result_store[{i}] = this.result_store[{i}] || []")
+                    write(f"this.result_store[{i}].push([save_pos, get_pos(this)])")
+                    write(f"console.log('result_store {rule}', this.result_store)")
+                    write(f"this.repeats[{i}] += 1")
+                    write(f"console.log('nb repeats', this.repeats[{i}])")
+                    write(f"rule.reset()")
+                    write(f"return this")
+                    indent -= 1
+                    write(f"}}else if(char === END){{")
+                    indent += 1
+                    write(f"this.expect = {next_if_ok}")
+                    write(f"return this.feed(char)")
+                    indent -= 1
+                    write(f"}}else{{")
+                    indent += 1
+                    if quantifier == '?':
+                        write(f"this.expect = {next_if_ok}")
+                        write(f"return res")
+                    else:
+                        write(f"return rule.feed(char)")
+                    indent -= 1
+                    write(f"}}")
+                else:
+                    write(f"if(char === FAIL){{")
                     indent += 1
                     if alt:
                         write(f"this.expect = {alt_index}")
-                        write(f"reset_pos(this, save_pos)")
+                        write(f"reset_pos(this, this.pos)")
                         write(f"return this.feed(read_char(this))")
                     else:
-                        write("return res")
+                        write(f"return this.origin.feed(FAIL)")
                     indent -= 1
-                    write(f"}}")
-                    write(f"this.expect = {next_if_ok}")
-                    write(f"return res")
-                elif isinstance(option, (Rule, Charset)):
-                    if isinstance(option, Rule):
-                        write(f"if(! this.rules[{i}]){{")
-                        indent += 1
-                        write(f"this.rules[{i}] = new {option.value}_rule(this, {next_if_ok})")
-                        if quantifier and quantifier in '+*':
-                            write(f"this.repeats[{i}] = 0")
-                        indent -= 1
-                        write(f"}}")
-                        write(f"rule = this.rules[{i}]")
-                        write(f"rule.reset()")
-                        if quantifier:
-                            write(f"save_pos = get_pos(this)")
-                            write(f"res = rule.feed(char)")
-                            write(f"if(res === FAIL){{")
-                            indent += 1
-                            if quantifier == '+':
-                                write(f"if(this.repeats[{i}] == 0){{")
-                                indent += 1
-                                write("return FAIL")
-                                indent -= 1
-                                write(f"}}")
-                            if quantifier and quantifier in '+*':
-                                write(f"this.result_store[{i}] = this.result_store[{i}] || []")
-                                write(f"this.result_store[{i}].push([save_pos, get_pos(this)])")
-                                write(f"console.log('result_store {rule}', this.result_store)")
-                            write(f"this.expect = {next_if_ok}")
-                            write(f"reset_pos(this, save_pos)")
-                            write(f"return this.feed(read_char(this))")
-                            indent -= 1
-                            write(f"}}else{{")
-                            indent += 1
-                            if quantifier == '?':
-                                write(f"this.expect = {next_if_ok}")
-                                write(f"return res")
-                            else:
-                                write(f"this.repeats[{i}] += 1")
-                                write(f"console.log('nb repeats', this.repeats[{i}])")
-                                write(f"return res")
-                            indent -= 1
-                            write(f"}}")
-                        else:
-                            write(f"this.expect = {next_if_ok}")
-                            if alt:
-                                write(f"save_pos = get_pos(this)")
-                                write(f"res = rule.feed(char)")
-                                write(f"if(res === FAIL){{")
-                                indent += 1
-                                write(f"this.expect = {alt_index}")
-                                write(f"reset_pos(this, save_pos)")
-                                write(f"return this.feed(read_char(this))")
-                                indent -= 1
-                                write(f"}}")
-                                write(f"return res")
-                            else:
-                                write(f"return rule.feed(char)")
-                    else:
-                        charset = option.value.replace("'", "\\'")
-                        write(f"rule = new CHARSET_rule(this, '{charset}', {next_if_ok})")
-                elif option is End:
-                    write(f"if(char == END){{")
+                    write(f"}}else if(char === DONE){{")
                     indent += 1
-                    write(f"console.log('fin');alert()")
+                    if alt:
+                        write(f"return this.origin.feed(char)")
+                    else:
+                        write(f"this.expect = {next_if_ok}")
+                        write(f"return this")
+                    indent -= 1
+                    write(f"}}else if(char === END){{")
+                    indent += 1
+                    if alt:
+                        write(f"this.expect = -1")
+                    else:
+                        write(f"this.expect = {next_if_ok}")
+                    write(f"return this")
+                    indent -= 1
+                    write(f"}}else{{")
+                    indent += 1
+                    write(f"return rule.feed(char)")
                     indent -= 1
                     write(f"}}")
-                    write("break")
-                else:
-                    print('unhandled type', option, type(option))
-                    input()
                 indent -= 2
                 num += 1
-            indent += 1
-            write(f"case -1:")
-            indent += 1
-            write(f"return this.origin.feed(char)")
 
-            indent -= 2
+            if options[-1] is not End:
+                indent += 1
+                write(f"case -1:")
+                indent += 1
+                write(f"return this.origin.feed(char)")
+                indent -= 2
+
             write(f"}}") # close "switch"
             write(f"return this")
             indent -= 1
@@ -174,38 +199,42 @@ def generate_parser(rules):
             write(f"}}")
             write('')
 
+if __name__ == "__main__":
+    grammar = """
+    tag::= '<' NAME S* attr? '>'
+    attr::= NAME S* '=' S* attr_value
+    attr_value::= '"' [^&"]* '"'
+    """
 
-grammar = """
-tag::= '<' NAME S* attr? '>'
-attr::= NAME S* '=' S* attr_value
-attr_value::= '"' [^&"]* '"'
-"""
+    grammar = """
+    tag ::= ("'" CHAR* "'" | '"' CHAR* '"')
+    """
 
-grammar = """
-tag ::= ("'" CHAR* "'" | '"' CHAR* '"')
-"""
+    grammar = """
+    document  ::=  prolog element Misc*
+    prolog       ::=  XMLDecl? Misc* (doctypedecl Misc*)?
+    XMLDecl      ::=  '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
+    VersionInfo  ::=  S 'version' Eq ("'" VersionNum "'" | '"' VersionNum '"')
+    Eq           ::=  S? '=' S?
+    VersionNum   ::=  '1.0'
+    EncodingDecl  ::=  S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
+    EncName       ::=  [A-Za-z] ([A-Za-z0-9._] | '-')*
+    SDDecl  ::=  S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
+    """
 
-grammar = """
-document  ::=  prolog element Misc*
-prolog       ::=  XMLDecl? Misc* (doctypedecl Misc*)?
-XMLDecl      ::=  '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
-VersionInfo  ::=  S 'version' Eq ("'" VersionNum "'" | '"' VersionNum '"')
-Eq           ::=  S? '=' S?
-VersionNum   ::=  '1.0'
-EncodingDecl  ::=  S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
-EncName       ::=  [A-Za-z] ([A-Za-z0-9._] | '-')*
-SDDecl  ::=  S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
-"""
+    grammar = """
+    document  ::=   '<' NAME S+ attributes* '>'
+    attributes ::= attribute (S+ attribute)*
+    attribute ::= NAME S* '=' S* attr_value
+    attr_value ::= ('"' NAME '"' | "'" NAME "'")
+    """
 
-grammar = """
-document  ::=   '<' NAME S+ attributes* '>'
-attributes ::= attribute (S+ attribute)*
-attribute ::= NAME S* '=' S* attr_value
-attr_value ::= ('"' NAME '"' | "'" NAME "'")
-"""
+    grammar = """
+    document ::= 'abcd' | 'abxy'
+    """
 
-rules = make_rules(grammar)
+    rules = make_rules(grammar)
 
-print(rules)
+    print(rules)
 
-generate_parser(rules)
+    generate_parser(rules)

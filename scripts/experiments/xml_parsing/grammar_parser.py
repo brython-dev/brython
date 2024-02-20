@@ -28,6 +28,8 @@ class Minus(GE):
 class Literal(GE):
 
     def __repr__(self):
+        if isinstance(self.value, int):
+            return chr(self.value)
         if not "'" in self.value:
             return f"'{self.value}'"
         elif not '"' in self.value:
@@ -60,6 +62,7 @@ class Charset(GE):
 
 
 rule_def_re = re.compile(r'^(.*?)\s*::=(.*)$')
+hex_re = re.compile(r'^#x([a-fA-F0-9]+)')
 
 def handle_alts(rules):
     add_rules = {}
@@ -234,6 +237,13 @@ def rule_def_tokenizer(rule_def):
             charset = True
             chars = ''
             pos += 1
+        elif char == '#':
+            mo = hex_re.match(rule_def[pos:])
+            if mo is None:
+                raise Exception(f"invalid syntax at pos {pos}")
+            cp = mo.groups()[0]
+            yield Literal(int(f"0x{cp}", 16))
+            pos += mo.end()
         else:
             pos += 1
 
@@ -283,7 +293,7 @@ if __name__ == "__main__":
     """
 
     grammar = """
-    tag  ::=   ('ab' | 'ac') 'x'
+    tag  ::=   document ::= Char  ::=  #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
     """
     rules = make_rules(grammar)
 
