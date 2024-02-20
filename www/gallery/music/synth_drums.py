@@ -77,7 +77,8 @@ def save_score(ev, score):
 def create_score(notes_per_bar):
 
     document["notes_per_bar"].clear()
-    
+    document["score"].clear()
+
     score = drum_score.Score(instruments, notes_per_bar)
 
     document['score'] <= html.DIV('Patterns')
@@ -86,6 +87,9 @@ def create_score(notes_per_bar):
     score.new_tab()
 
     bpm = document["bpm"]
+    bpm.clear()
+
+    document['load'].clear()
 
     play_control = html.BUTTON("&#x23f5",
                              id="play_score", Class="pure-button start_loop")
