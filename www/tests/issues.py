@@ -3255,7 +3255,8 @@ print(isNum.__annotations__)
 """
 assert_raises(NameError, exec, not_postponed, {},
     msg="name 'Fraction' is not defined")
-    
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

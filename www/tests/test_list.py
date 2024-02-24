@@ -483,5 +483,14 @@ assert [1, 2, 3] > [1, 2]
 assert not [1, 2] > [1, 2]
 assert [1, 2] >= [1, 2]
 
+# issue 2374
+*a, b = [1]
+assert a == []
+assert b == 1
+
+a, *b, c = [1, 2]
+assert a == 1
+assert b == []
+assert c == 2
 
 print("passed all tests..")

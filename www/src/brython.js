@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-20 12:03:39.219296"
-__BRYTHON__.timestamp=1708427019219
+__BRYTHON__.compiled_date="2024-02-24 10:42:23.948739"
+__BRYTHON__.timestamp=1708767743948
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -1423,8 +1423,10 @@ if(has_starred){var nb_after_starred=arguments[3]
 position_rank++}
 position=$B.decode_position(arguments[position_rank])
 var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
-if(right_length < left_length){var exc=_b_.ValueError.$factory(`not enough values to unpack `+
-`(expected ${left_length}, got ${right_length})`)
+if((! has_starred &&(right_length < nb_targets))||
+(has_starred &&(right_length < nb_targets-1))){var exc=_b_.ValueError.$factory(`not enough values to unpack `+
+`(expected ${has_starred ? ' at least ' : ''} `+
+`${left_length}, got ${right_length})`)
 if(position){$B.set_exception_offsets(exc,position)}
 throw exc}
 if((! has_starred)&& right_length > left_length){var exc=_b_.ValueError.$factory("too many values to unpack "+

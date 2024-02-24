@@ -896,9 +896,11 @@ $B.unpacker = function(obj, nb_targets, has_starred){
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
 
-    if(right_length < left_length){
+    if((! has_starred && (right_length < nb_targets)) ||
+            (has_starred && (right_length < nb_targets - 1))){
         var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
-            `(expected ${left_length}, got ${right_length})`)
+            `(expected ${has_starred ? ' at least ' : ''} ` +
+            `${left_length}, got ${right_length})`)
         if(position){
             $B.set_exception_offsets(exc, position)
         }
