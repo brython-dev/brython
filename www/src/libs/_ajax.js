@@ -288,6 +288,16 @@ ajax.send = function(self, params){
     return _b_.None
 }
 
+ajax.responseType = _b_.property.$factory(
+    function(_self){
+        return _self.responseType
+    },
+    function(_self, value){
+        console.log('set response type', value)
+        _self.js.responseType = value
+    }
+)
+
 ajax.set_header = function(self, key, value){
     self.headers[key.toLowerCase()] = value
 }
