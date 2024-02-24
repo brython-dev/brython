@@ -13,8 +13,6 @@ import player
 
 instruments = player.instruments
 
-
-
 load_button = document['load_score']
 
 @bind(load_button, "input")
@@ -121,6 +119,10 @@ def change_bpm(ev, score):
     document["bpm_value"].text = ev.target.value
     score.bpm = int(ev.target.value)
 
+def end_play(ev):
+    print('END PALY')
+    ev.target.html = "&#x23f5"
+
 def play_score(ev, score):
     if player.Sequencer.running:
         ev.target.html = '&#x23f5;'
@@ -130,4 +132,6 @@ def play_score(ev, score):
     ev.target.html = '&#x23f9;'
     score.bpm = int(document['bpm_control'].value)
     seq, nb_bars = score.get_seq()
+    duration = nb_bars * 240 / score.bpm
+    timer.set_timeout(end_play, duration * 1000, ev)
     player.start_loop(seq, nb_bars, score, None)
