@@ -95,6 +95,9 @@ def handle_alts(rules):
             options[i].alt = options[i + 1]
             options[i].rule_name = rule_name
         rules[rule_name] = options
+        if rule_name == "BaseChar":
+            print(rule_name, options)
+            input()
     rules.update(add_rules)
 
 def handle_minus(rules):

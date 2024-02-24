@@ -79,7 +79,7 @@ def generate_parser(rules):
                     write(f"{lhs} = new CHARSET_rule(this, '{charset}')")
                 elif isinstance(option, Rule):
                     if option.value == 'S':
-                        write("{lhs} = new LITERAL(this, ' ')")
+                        write(f"{lhs} = new LITERAL(this, ' ')")
                     else:
                         write(f"{lhs} = new {option.value}_rule(this)")
                 if quantifier and quantifier in '+*':
@@ -112,7 +112,9 @@ def generate_parser(rules):
                     write(f"this.repeats[{i}] += 1")
                     write(f"console.log('nb repeats', this.repeats[{i}])")
                     write(f"rule.reset()")
-                    write(f"return this")
+                    if quantifier == '?':
+                        write(f"this.expect = {next_if_ok}")
+                    write(f"return this.feed(read_char(this))")
                     indent -= 1
                     write(f"}}else if(char === END){{")
                     indent += 1
@@ -121,11 +123,7 @@ def generate_parser(rules):
                     indent -= 1
                     write(f"}}else{{")
                     indent += 1
-                    if quantifier == '?':
-                        write(f"this.expect = {next_if_ok}")
-                        write(f"return res")
-                    else:
-                        write(f"return rule.feed(char)")
+                    write(f"return rule.feed(char)")
                     indent -= 1
                     write(f"}}")
                 else:
@@ -134,17 +132,18 @@ def generate_parser(rules):
                     if alt:
                         write(f"this.expect = {alt_index}")
                         write(f"reset_pos(this, this.pos)")
-                        write(f"return this.feed(read_char(this))")
+                        write(f"return this.origin.feed(read_char(this))")
                     else:
                         write(f"return this.origin.feed(FAIL)")
                     indent -= 1
                     write(f"}}else if(char === DONE){{")
                     indent += 1
-                    if alt:
+                    write(f"rule.reset()")
+                    if alt or next_if_ok == -1:
                         write(f"return this.origin.feed(char)")
                     else:
                         write(f"this.expect = {next_if_ok}")
-                        write(f"return this")
+                        write(f"return this.feed(read_char(this))")
                     indent -= 1
                     write(f"}}else if(char === END){{")
                     indent += 1
@@ -166,7 +165,7 @@ def generate_parser(rules):
                 indent += 1
                 write(f"case -1:")
                 indent += 1
-                write(f"return this.origin.feed(char)")
+                write(f"return this.origin.feed(DONE)")
                 indent -= 2
 
             write(f"}}") # close "switch"
@@ -230,7 +229,7 @@ if __name__ == "__main__":
     """
 
     grammar = """
-    document ::= 'abcd' | 'abxy'
+    document ::= [a-zA-Z0-9]+
     """
 
     rules = make_rules(grammar)

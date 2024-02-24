@@ -93,7 +93,6 @@ function LITERAL(origin, string, next_if_ok, args){
 
 LITERAL.prototype.reset = function(){
     this.str_pos = 0
-    delete this.done
 }
 
 LITERAL.prototype.feed = function(char){
@@ -101,11 +100,11 @@ LITERAL.prototype.feed = function(char){
     if(this.string == '<!DOCTYPE>'){
         console.log('LITERAL feed', this.string, char, this.str_pos)
     }
+    if(this.str_pos == this.string.length){
+        return this.origin.feed(DONE)
+    }
     if(char == this.string[this.str_pos]){
         this.str_pos++
-        if(this.str_pos == this.string.length){
-            return this.origin.feed(DONE)
-        }
         return this
     }else{
         return this.origin.feed(FAIL)
@@ -136,17 +135,17 @@ NAME_rule.prototype.reset = function(){
 }
 
 NAME_rule.prototype.feed = function(char){
+    console.log('NAME_rule, value', this.value, 'char', char)
   if(this.value == ''){
     if(is_id_start(char)){
       this.value = char
     }else{
-      return FAIL
+      return this.origin.feed(FAIL)
     }
   }else if(is_id_continue(char)){
     this.value += char
   }else{
-    this.origin.expect = this.next_if_ok
-    return this.origin.feed(char)
+    return this.origin.feed(DONE)
   }
   return this
 }
@@ -259,9 +258,11 @@ function CHARSET_rule(origin, charset, next_if_ok){
 
     var ranges = []
     for(var mo of body.matchAll(charset_range_re)){
+        console.log('mo', mo)
         ranges.push(mo.slice(1))
     }
     if(ranges.length > 0){
+        console.log('ranges', ranges)
         if(negative){
             this.test = function(char){
                 for(var range of ranges){
@@ -292,13 +293,39 @@ function CHARSET_rule(origin, charset, next_if_ok){
 }
 
 CHARSET_rule.prototype.reset = function(){
-    // ignore
+    this.done = false
 }
 
 CHARSET_rule.prototype.feed = function(char){
     console.log('charset feed', this.charset, char, this.test(char))
-    if(! this.test(char)){
-        return FAIL
+    alert()
+    if(this.done){
+        console.log('CHARSET done')
+        return this.origin.feed(DONE)
+    }else if(! this.test(char)){
+        return this.origin.feed(FAIL)
     }
-    return this.origin
+    console.log('set CHARSET done')
+    this.done = true
+    return this
+}
+
+function BaseChar_rule(origin){
+    this.origin = origin
+}
+
+BaseChar_rule.prototype.reset = function(){
+    delete this.done
+}
+
+BaseChar_rule.prototype.feed = function(char){
+    console.log('BaseChar_rule, char', char, 'this.done', this.done)
+    if(this.done){
+        return this.origin.feed(DONE)
+    }else if(/\p{L}/u.exec(char)){
+        this.done = true
+        return this
+    }else{
+        return this.origin.feed(FAIL)
+    }
 }
