@@ -3256,6 +3256,12 @@ print(isNum.__annotations__)
 assert_raises(NameError, exec, not_postponed, {},
     msg="name 'Fraction' is not defined")
 
+# issue 2374
+a = 0
+b = [0, 1]
+c = [0, 1]
+
+assert a in b == c # same as (a in b) and (b == c)
 
 # ==========================================
 # Finally, report that all tests have passed
