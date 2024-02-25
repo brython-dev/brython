@@ -1536,7 +1536,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     js += '\n$B.trace_return_and_leave(frame, _b_.None)\n' +
           `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}])\n` +
-          `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
+          `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 

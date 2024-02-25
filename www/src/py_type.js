@@ -45,7 +45,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         dict = class_obj_proxy.$target
     }
     var module = class_obj_proxy.__module__
-
+    
     // bool is not a valid base
     for(var base of bases){
         if(base.__flags__ !== undefined &&

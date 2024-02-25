@@ -49,3 +49,11 @@ def func[T:(int, 1/0)](arg):
 
 assert t == ['dec2', 'dec1']
 func(0)
+
+# issue 2375
+from typing import Protocol
+from collections.abc import Sized
+class MySized(Sized, Protocol):
+    pass
+
+print('all tests pass...')

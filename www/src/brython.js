@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-24 10:42:23.948739"
-__BRYTHON__.timestamp=1708767743948
+__BRYTHON__.compiled_date="2024-02-25 18:33:19.841486"
+__BRYTHON__.timestamp=1708882399841
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -11806,7 +11806,7 @@ scopes.pop()
 js+='\n$B.trace_return_and_leave(frame, _b_.None)\n'+
 `return $B.$class_constructor('${this.name}', locals, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}])\n`+
-`})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
+`})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
 var class_ref=reference(scopes,enclosing_scope,this.name)
 if(decorated){class_ref=`decorated${$B.UUID()}`
 js+='var '}
