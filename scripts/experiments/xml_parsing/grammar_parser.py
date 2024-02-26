@@ -95,9 +95,6 @@ def handle_alts(rules):
             options[i].alt = options[i + 1]
             options[i].rule_name = rule_name
         rules[rule_name] = options
-        if rule_name == "BaseChar":
-            print(rule_name, options)
-            input()
     rules.update(add_rules)
 
 def handle_minus(rules):
@@ -125,7 +122,7 @@ def handle_minus(rules):
             options.append(rule[start_minus])
         else:
             subrule_name = next(temp_count)
-            add_rules[subrule_name] = rule[start_alt:]
+            add_rules[subrule_name] = rule[start_minus:]
             options.append(Rule(subrule_name))
         for i, option in enumerate(options[:-1]):
             options[i].minus = options[i + 1]

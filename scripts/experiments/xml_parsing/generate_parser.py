@@ -31,7 +31,8 @@ def generate_parser(rules):
             write('')
             write(f"{rule}_rule.prototype.feed = function(char){{")
             indent += 1
-            write(f"console.log('{rule}_rule expects', this.items[this.expect] || 'END', 'char', char)")
+            write(f"console.log('{rule}_rule pos', this.pos, 'expects', this.items[this.expect] || 'END', 'char', char)")
+            #write(f"alert()")
             write(f"var res, rule, save_pos")
             write(f"switch(this.expect){{")
             for i, option in enumerate(options):
@@ -57,7 +58,14 @@ def generate_parser(rules):
                 alt = getattr(option, 'alt', None)
                 minus = getattr(option, 'minus', None)
                 quantifier = getattr(option, 'quantifier', None)
-                next_if_ok = -1 if i == len(options) - 1 else i + 1
+                if i == len(options) - 1:
+                    next_if_ok = -1
+                elif minus:
+                    next_if_ok = i + 2
+                    if next_if_ok == len(options):
+                        next_if_ok = -1
+                else:
+                    next_if_ok = i + 1
                 if alt:
                     alt_index = options.index(alt)
                     next_if_ok = -1
@@ -87,8 +95,7 @@ def generate_parser(rules):
                 indent -= 1
                 write(f"}}")
                 write(f"rule = this.rules[{i}]")
-                #write(f"rule.reset()")
-
+                
                 if quantifier:
                     write(f"save_pos = get_pos(this)")
                     write(f"if(char === FAIL){{")
@@ -96,12 +103,13 @@ def generate_parser(rules):
                     if quantifier == '+':
                         write(f"if(this.repeats[{i}] == 0){{")
                         indent += 1
-                        write(f"reset_pos(this, this.pos)")
+                        write(f"reset_pos(this, rule.pos)")
                         write(f"return this.origin.feed(FAIL)")
                         indent -= 1
                         write(f"}}")
-                    write(f"this.expect = {next_if_ok}")
-                    write(f"reset_pos(this, save_pos)")
+                    write(f"set_expect(this, {next_if_ok})")
+                    write(f"reset_pos(this, rule.pos)")
+                    write(f"rule.reset()")
                     write(f"return this.feed(read_char(this))")
                     indent -= 1
                     write(f"}}else if(char === DONE){{")
@@ -111,14 +119,15 @@ def generate_parser(rules):
                     write(f"console.log('result_store {rule}', this.result_store)")
                     write(f"this.repeats[{i}] += 1")
                     write(f"console.log('nb repeats', this.repeats[{i}])")
+                    write(f"rule.pos = get_pos(this)")
                     write(f"rule.reset()")
                     if quantifier == '?':
-                        write(f"this.expect = {next_if_ok}")
+                        write(f"set_expect(this, {next_if_ok})")
                     write(f"return this.feed(read_char(this))")
                     indent -= 1
                     write(f"}}else if(char === END){{")
                     indent += 1
-                    write(f"this.expect = {next_if_ok}")
+                    write(f"set_expect(this, {next_if_ok})")
                     write(f"return this.feed(char)")
                     indent -= 1
                     write(f"}}else{{")
@@ -130,8 +139,8 @@ def generate_parser(rules):
                     write(f"if(char === FAIL){{")
                     indent += 1
                     if alt:
-                        write(f"this.expect = {alt_index}")
-                        write(f"reset_pos(this, this.pos)")
+                        write(f"set_expect(this, {alt_index})")
+                        write(f"reset_pos(this, rule.pos)")
                         write(f"return this.origin.feed(read_char(this))")
                     else:
                         write(f"return this.origin.feed(FAIL)")
@@ -142,15 +151,15 @@ def generate_parser(rules):
                     if alt or next_if_ok == -1:
                         write(f"return this.origin.feed(char)")
                     else:
-                        write(f"this.expect = {next_if_ok}")
+                        write(f"set_expect(this, {next_if_ok})")
                         write(f"return this.feed(read_char(this))")
                     indent -= 1
                     write(f"}}else if(char === END){{")
                     indent += 1
                     if alt:
-                        write(f"this.expect = -1")
+                        write(f"set_expect(this, -1)")
                     else:
-                        write(f"this.expect = {next_if_ok}")
+                        write(f"set_expect(this, {next_if_ok})")
                     write(f"return this")
                     indent -= 1
                     write(f"}}else{{")

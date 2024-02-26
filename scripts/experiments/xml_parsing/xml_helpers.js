@@ -34,7 +34,35 @@ function get_pos(element){
 }
 
 function reset_pos(element, pos){
+    if(pos === undefined){
+        throw Error('reset at undefined')
+    }
+    console.log('reset pos at', pos)
+    if(pos == 62){
+        console.log(Error('pos reset at 62').stack)
+        alert()
+    }
     get_top(element)._pos = pos
+}
+
+function set_expect(element, expect){
+    if(element.constructor.name == 'tmp_54_rule'){
+        console.log('set expect of', element)
+        console.log(`  >>> set expect of ${element.constructor.name} to ${expect}`)
+    }
+    element.expect = expect
+    if(element.rules[expect]){
+        var pos = get_pos(element)
+        element.rules[expect].pos = pos
+        if(element.rules[expect].rules && element.rules[expect].length > 0){
+            var rule = element.rules[expect].rules[0]
+            rule.pos = pos
+            while(rule.rules && rule.rules[0]){
+                rule.rules[0].pos = pos
+                rule = rule.rules[0]
+            }
+        }
+    }
 }
 
 function read_char(element){
@@ -235,6 +263,7 @@ function CHARSET_rule(origin, charset, next_if_ok){
     this.origin = origin
     this.charset = charset
     this.next_if_ok = next_if_ok
+    this.pos = get_pos(origin)
     var negative = charset.startsWith('^'),
         body = negative ? charset.substr(1) : charset
 
@@ -293,25 +322,23 @@ function CHARSET_rule(origin, charset, next_if_ok){
 }
 
 CHARSET_rule.prototype.reset = function(){
-    this.done = false
+    delete this.done
 }
 
 CHARSET_rule.prototype.feed = function(char){
     console.log('charset feed', this.charset, char, this.test(char))
-    alert()
     if(this.done){
-        console.log('CHARSET done')
         return this.origin.feed(DONE)
     }else if(! this.test(char)){
         return this.origin.feed(FAIL)
     }
-    console.log('set CHARSET done')
     this.done = true
     return this
 }
 
 function BaseChar_rule(origin){
     this.origin = origin
+    this.pos = get_pos(origin)
 }
 
 BaseChar_rule.prototype.reset = function(){
@@ -323,6 +350,47 @@ BaseChar_rule.prototype.feed = function(char){
     if(this.done){
         return this.origin.feed(DONE)
     }else if(/\p{L}/u.exec(char)){
+        this.done = true
+        return this
+    }else{
+        return this.origin.feed(FAIL)
+    }
+}
+
+function Letter_rule(origin){
+    this.origin = origin
+    this.pos = get_pos(origin)
+}
+
+Letter_rule.prototype.reset = function(){
+    delete this.done
+}
+
+Letter_rule.prototype.feed = function(char){
+    if(this.done){
+        return this.origin.feed(DONE)
+    }
+    if(/\p{L}/u.exec(char)){
+        this.done = true
+        return this
+    }else{
+        return this.origin.feed(FAIL)
+    }
+}
+
+function NameChar_rule(origin){
+    this.origin = origin
+    this.pos = get_pos(origin)
+}
+
+NameChar_rule.prototype.reset = function(){
+    delete this.done
+}
+
+NameChar_rule.prototype.feed = function(char){
+    if(this.done){
+        return this.origin.feed(DONE)
+    }else if(is_id_continue(char)){
         this.done = true
         return this
     }else{
