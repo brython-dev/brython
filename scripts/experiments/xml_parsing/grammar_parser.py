@@ -142,11 +142,6 @@ def handle_quantifiers(rules):
                 del rule[i]
             i -= 1
 
-def handle_single_sequences(rules):
-    for rule_name, rule in rules.items():
-        for i, option in enumerate(rule):
-            if isinstance(option, SEQUENCE) and len(option) == 1:
-                rule[i] = option[0]
 
 def replace_groups(tokens, rules):
     closing = {} # maps position of ( to position of matching )
@@ -189,6 +184,7 @@ def add_rule_def(rule_name, rule_def):
 def rule_def_tokenizer(rule_def):
     pos = 0
     charset = False
+    chars = ''
     while pos < len(rule_def):
         char = rule_def[pos]
         if charset:
