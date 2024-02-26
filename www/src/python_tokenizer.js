@@ -738,7 +738,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                         line_num, pos - line_start + 1,
                                         line)
                                     closing_brace.metadata = src.substring(
-                                        line_start + fstring_start + 2, pos - 1)
+                                        line_start + fstring_expr_start, pos - 1)
                                     yield closing_brace
                                     token_modes.pop()
                                     token_mode = token_modes[token_modes.length - 1]

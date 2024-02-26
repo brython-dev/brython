@@ -130,4 +130,9 @@ assert f"{f"{f"{f"{f"{f"{1+1}"}"}"}"}"}" == '2'
 x = 8
 assert rf'raw\n{x}' == 'raw\\n8'
 
+# issue 2376
+a = 5
+b = 6
+assert f"{a=} {b=}" == 'a=5 b=6'
+
 print("passed all tests")
