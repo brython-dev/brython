@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-26 18:34:33.387446"
-__BRYTHON__.timestamp=1708968873386
+__BRYTHON__.compiled_date="2024-02-26 22:43:22.012487"
+__BRYTHON__.timestamp=1708983802011
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -11555,6 +11555,8 @@ if(namespaces.exec_locals !==namespaces.exec_globals){for(let key in namespaces.
 return name}
 function compiler_check(obj){var check_func=Object.getPrototypeOf(obj)._check
 if(check_func){obj._check()}}
+function check_assign_or_delete(obj,target,action){action=action ?? 'assign to'
+if(target instanceof $B.ast.Attribute){if(target.attr=='__debug__'){compiler_error(obj,`cannot ${action} __debug__`,target)}}else if(target instanceof $B.ast.Name){if(target.id=='__debug__'){compiler_error(obj,`cannot ${action} __debug__`,target)}}else if(target instanceof $B.ast.Tuple){for(var elt of target.elts){check_assign_or_delete(elt,elt,action)}}else if(target instanceof $B.ast.Starred){check_assign_or_delete(obj,target.value,action)}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
@@ -11614,6 +11616,7 @@ for(let target of this.targets){if(!(target instanceof $B.ast.Tuple)&&
 !(target instanceof $B.ast.List)){assigns.push(assign_one(target,value_id))}else{assigns.push(assign_many(target,value_id))}}
 js+=assigns.join('\n')
 return js}
+$B.ast.Assign.prototype._check=function(){for(var target of this.targets){check_assign_or_delete(this,target)}}
 $B.ast.AsyncFor.prototype.to_js=function(scopes){if(!(last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){compiler_error(this,"'async for' outside async function")}
 return $B.ast.For.prototype.to_js.bind(this)(scopes)}
 $B.ast.AsyncFunctionDef.prototype.to_js=function(scopes){return $B.ast.FunctionDef.prototype.to_js.bind(this)(scopes)}
@@ -11659,7 +11662,6 @@ var has_generator=scope.is_generator
 for(let item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
-if(this.value instanceof $B.ast.Name && this.value.id=='axw'){return `${$B.js_from_ast(this.value, scopes)}.${attr}`}
 var position=encode_position(this.value.col_offset,this.value.col_offset,this.end_col_offset)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', ${position})`}
@@ -11854,6 +11856,7 @@ js+=`$B.$delete("${target.id}")\n`}else if(target instanceof $B.ast.Subscript){j
 `${$B.js_from_ast(target.slice, scopes)})\n`}else if(target instanceof $B.ast.Attribute){js+=`_b_.delattr(${$B.js_from_ast(target.value, scopes)}, `+
 `'${target.attr}')\n`}}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
+$B.ast.Delete.prototype._check=function(){for(var target of this.targets){check_assign_or_delete(this,target,'delete')}}
 $B.ast.Dict.prototype.to_js=function(scopes){var items=[],keys=this.keys,has_packed=false
 function no_key(i){return keys[i]===_b_.None ||keys[i]===undefined}
 for(let i=0,len=this.keys.length;i < len;i++){if(no_key(i)){
@@ -11876,6 +11879,7 @@ $B.js_from_ast(this.value,scopes)}
 $B.ast.Expression.prototype.to_js=function(scopes){init_scopes.bind(this)('expression',scopes)
 return $B.js_from_ast(this.body,scopes)}
 $B.ast.For.prototype.to_js=function(scopes){
+compiler_check(this)
 var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js=`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
@@ -12673,7 +12677,7 @@ return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 return res}}
-$B.ast.NamedExpr.prototype.to_js=function(scopes){
+$B.ast.NamedExpr.prototype.to_js=function(scopes){compiler_check(this)
 var i=scopes.length-1
 while(scopes[i].type=='comprehension'){i--}
 var enclosing_scopes=scopes.slice(0,i+1)
@@ -12681,6 +12685,7 @@ enclosing_scopes.symtable=scopes.symtable
 bind(this.target.id,enclosing_scopes)
 return '('+$B.js_from_ast(this.target,enclosing_scopes)+' = '+
 $B.js_from_ast(this.value,scopes)+')'}
+$B.ast.NamedExpr.prototype._check=function(){check_assign_or_delete(this,this.target)}
 $B.ast.Nonlocal.prototype.to_js=function(scopes){var scope=$B.last(scopes)
 for(var name of this.names){scope.nonlocals.add(name)}
 return ''}
@@ -14206,7 +14211,7 @@ var value=e.value
 if(value===_b_.None){return "None";}
 if(value===false){return "False";}
 if(value===true){return "True";}
-if(value.type=='ellipsis'){return "ellipsis";}
+if(value===_b_.Ellipsis){return "ellipsis";}
 return "literal";
 case 'Compare':
 return "comparison";
@@ -14426,7 +14431,7 @@ if(targets_type==DEL_TARGETS){return e;}
 return $B._PyPegen.get_invalid_target(e.value,targets_type);
 case $B.ast.Compare:
 if(targets_type==FOR_TARGETS){var cmpop=e.ops[0]
-if(cmpop==$B.ast.In){return $B._PyPegen.get_invalid_target(e.left,targets_type);}
+if(cmpop instanceof $B.ast.In){return $B._PyPegen.get_invalid_target(e.left,targets_type);}
 return NULL;}
 return e;
 case $B.ast.Name:

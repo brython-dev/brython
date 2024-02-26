@@ -931,6 +931,25 @@ function compiler_check(obj){
     }
 }
 
+function check_assign_or_delete(obj, target, action){
+    action = action ?? 'assign to'
+    if(target instanceof $B.ast.Attribute){
+        if(target.attr == '__debug__'){
+            compiler_error(obj, `cannot ${action} __debug__`, target)
+        }
+    }else if(target instanceof $B.ast.Name){
+        if(target.id == '__debug__'){
+            compiler_error(obj, `cannot ${action} __debug__`, target)
+        }
+    }else if(target instanceof $B.ast.Tuple){
+        for(var elt of target.elts){
+            check_assign_or_delete(elt, elt, action)
+        }
+    }else if(target instanceof $B.ast.Starred){
+        check_assign_or_delete(obj, target.value, action)
+    }
+}
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
@@ -1070,6 +1089,13 @@ $B.ast.Assign.prototype.to_js = function(scopes){
     return js
 }
 
+
+$B.ast.Assign.prototype._check = function(){
+    for(var target of this.targets){
+        check_assign_or_delete(this, target)
+    }
+}
+
 $B.ast.AsyncFor.prototype.to_js = function(scopes){
     if(! (last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){
         compiler_error(this, "'async for' outside async function")
@@ -1177,9 +1203,6 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
-    if(this.value instanceof $B.ast.Name && this.value.id == 'axw'){
-        return `${$B.js_from_ast(this.value, scopes)}.${attr}`
-    }
     var position = encode_position(this.value.col_offset,
                                 this.value.col_offset,
                                 this.end_col_offset)
@@ -1679,6 +1702,13 @@ $B.ast.Delete.prototype.to_js = function(scopes){
     }
     return `$B.set_lineno(frame, ${this.lineno})\n` + js
 }
+
+$B.ast.Delete.prototype._check = function(){
+    for(var target of this.targets){
+        check_assign_or_delete(this, target, 'delete')
+    }
+}
+
 $B.ast.Dict.prototype.to_js = function(scopes){
     var items = [],
         keys = this.keys,
@@ -1744,6 +1774,7 @@ $B.ast.Expression.prototype.to_js = function(scopes){
 $B.ast.For.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
+    compiler_check(this)
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes),
         js = `frame.$lineno = ${this.lineno}\n`
@@ -3343,6 +3374,7 @@ $B.ast.Name.prototype.to_js = function(scopes){
 }
 
 $B.ast.NamedExpr.prototype.to_js = function(scopes){
+    compiler_check(this)
     // Named expressions in a comprehension are bound in the enclosing scope
     var i = scopes.length - 1
     while(scopes[i].type == 'comprehension'){
@@ -3353,6 +3385,10 @@ $B.ast.NamedExpr.prototype.to_js = function(scopes){
     bind(this.target.id, enclosing_scopes)
     return '(' + $B.js_from_ast(this.target, enclosing_scopes) + ' = ' +
         $B.js_from_ast(this.value, scopes) + ')'
+}
+
+$B.ast.NamedExpr.prototype._check = function(){
+    check_assign_or_delete(this, this.target)
 }
 
 $B.ast.Nonlocal.prototype.to_js = function(scopes){

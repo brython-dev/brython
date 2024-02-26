@@ -228,6 +228,7 @@ var helper_functions = {
     },
 
     _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
+        console.log('RAISE INVLAID TARGET')
         var invalid_target = $B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,
             $B._PyPegen.get_invalid_target(e, type));
         if (invalid_target != NULL) {

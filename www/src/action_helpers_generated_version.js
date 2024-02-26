@@ -504,7 +504,7 @@ $B._PyPegen.get_expr_name = function(e){
             if (value === true) {
                 return "True";
             }
-            if (value.type == 'ellipsis') {
+            if (value === _b_.Ellipsis) {
                 return "ellipsis";
             }
             return "literal";
@@ -1100,7 +1100,7 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
             // for invalid targets.
             if (targets_type == FOR_TARGETS) {
                 var cmpop = e.ops[0]
-                if (cmpop == $B.ast.In) {
+                if (cmpop instanceof $B.ast.In) {
                     return $B._PyPegen.get_invalid_target(e.left, targets_type);
                 }
                 return NULL;
