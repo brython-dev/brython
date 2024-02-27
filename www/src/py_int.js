@@ -337,7 +337,12 @@ int.__init__ = () => _b_.None
 
 int.__int__ = (self) => self
 
-int.__invert__ = (self) => ~self
+int.__invert__ = function(self){
+    if(Math.abs(self) < 2 ** 31){
+        return ~self
+    }
+    return $B.rich_op('__sub__', $B.rich_op('__mul__', self, -1), 1)
+}
 
 int.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
@@ -1035,7 +1040,7 @@ bool.__new__ = function (cls, value) {
         throw _b_.TypeError.$factory(`bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
     } else if (!_b_.issubclass(cls, bool)) {
         let class_name = $B.class_name(cls)
-        throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`) 
+        throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)
     }
     if (arguments.length > 2) {
         throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)

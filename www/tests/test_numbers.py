@@ -775,5 +775,19 @@ assert_raises(TypeError, float, lambda: None,
 # issue 2363
 assert_raises(ValueError, int, '')
 
+# issue
+ints = [1, 10, 20, 30, 40, 50, 60]
+
+expected = ["-8000000000000000",
+            "-040000000000000",
+            "-000100000000000",
+            "-000000400000000",
+            "-000000001000000",
+            "-000000000004000",
+            "-000000000000010"]
+
+for imm6, exp in zip(ints, expected):
+    assert f"{(~((1 << (64 - imm6)) - 1)):016X}" == exp
+
 
 print('passed all tests...')

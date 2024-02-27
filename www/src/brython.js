@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 19:39:39.418352"
-__BRYTHON__.timestamp=1709059179418
+__BRYTHON__.compiled_date="2024-02-27 22:21:57.175201"
+__BRYTHON__.timestamp=1709068917174
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -7394,7 +7394,8 @@ return self.valueOf()}
 int.__index__=(self)=> int_value(self)
 int.__init__=()=> _b_.None
 int.__int__=(self)=> self
-int.__invert__=(self)=> ~self
+int.__invert__=function(self){if(Math.abs(self)< 2**31){return ~self}
+return $B.rich_op('__sub__',$B.rich_op('__mul__',self,-1),1)}
 int.__mod__=function(self,other){
 if($B.$isinstance(other,_b_.tuple)&& other.length==1){other=other[0]}
 if(other.__class__===$B.long_int){self=BigInt(self)
