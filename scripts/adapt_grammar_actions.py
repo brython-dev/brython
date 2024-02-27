@@ -8,12 +8,12 @@ def transform_action(action):
     action2 = re.sub(r'\(\(.*_ty\) (.*?)\)', r'\1', action1)
     action3 = re.sub(r'\([^(]+ \*\)', '', action2)
     action4 = re.sub(r'\([a-z_]*\*?\)_Py', '_Py', action3)
-    action5 = re.sub(r'([a-z_]+)\*', r'\1', action4)
+    # the negative lookahead below is for case 'except*' in invalid_try_stmt
+    action5 = re.sub(r"([a-z_]+)\*(?!')", r'\1', action4)
     action6 = re.sub(r'\s*->\s*', '.', action5)
     action7 = re.sub('_PyPegen_', '$B._PyPegen.', action6)
     action7 = re.sub('PyPegen_', '$B.PyPegen.', action7)
     action8 = re.sub('_PyAST_', 'new $B._PyAST.', action7)
-    #action9 = re.sub(operators_re, r'$B.ast.\1', action8)
     action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
 
     for name in operators + ['Module']:
@@ -109,6 +109,7 @@ helper_functions = [
     "RAISE_SYNTAX_ERROR_INVALID_TARGET",
     "_RAISE_SYNTAX_ERROR_INVALID_TARGET",
     "RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN",
+    "RAISE_SYNTAX_ERROR_STARTING_FROM",
     "asdl_seq_LEN",
     "asdl_seq_GET"]
 

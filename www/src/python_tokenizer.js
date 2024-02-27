@@ -806,6 +806,9 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             }
                             err_msg += ` character '${char}' (U+` +
                                           `${cp.toString(16).toUpperCase()})`
+                            if(char == '$'){
+                                err_msg = 'invalid syntax'
+                            }
                             var err_token = Token('ERRORTOKEN', char,
                                 line_num, pos - line_start,
                                 line_num, pos - line_start + 1,

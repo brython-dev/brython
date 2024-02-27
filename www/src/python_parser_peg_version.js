@@ -241,6 +241,14 @@ var helper_functions = {
         return helper_functions.RAISE_SYNTAX_ERROR(p, msg)
     },
 
+    RAISE_SYNTAX_ERROR_STARTING_FROM: function(p, a, msg, ...args){
+        var last = p.tokens[p.tokens.length - 1]
+        return helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
+            a.lineno, a.col_offset,
+            last.end_lineno, last.end_col_offset - 1,
+            msg, ...args)
+    },
+    
     asdl_seq_LEN: (t) => t.length,
 
     asdl_seq_GET: (t, i) => t[i]

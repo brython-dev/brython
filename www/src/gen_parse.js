@@ -7512,7 +7512,7 @@ function type_param_rule(p)
                 (e = expression_rule(p))  // expression
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with TypeVarTuple" : "cannot use bound with TypeVarTuple");
                 break;
             }
             p.mark = _mark;
@@ -7558,7 +7558,7 @@ function type_param_rule(p)
                 (e = expression_rule(p))  // expression
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p, colon, e.kind == Tuple_kind ? "cannot use constraints with ParamSpec" : "cannot use bound with ParamSpec");
                 break;
             }
             p.mark = _mark;
@@ -15896,7 +15896,7 @@ function invalid_import_rule(p)
                 (dotted_name_var = dotted_name_rule(p))  // dotted_name
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "Did you mean to use 'from ... import ...' instead?");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "Did you mean to use 'from ... import ...' instead?");
                 break;
             }
             p.mark = _mark;
@@ -16193,7 +16193,7 @@ function invalid_try_stmt_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot have both 'except' and 'except' on the same 'try'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p, a, b, "cannot have both 'except' and 'except*' on the same 'try'");
                 break;
             }
             p.mark = _mark;
@@ -16226,7 +16226,7 @@ function invalid_try_stmt_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot have both 'except' and 'except' on the same 'try'");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, "cannot have both 'except' and 'except*' on the same 'try'");
                 break;
             }
             p.mark = _mark;
@@ -16279,7 +16279,7 @@ function invalid_except_stmt_rule(p)
                 (_literal_1 = $B._PyPegen.expect_token(p, 11))  // token=':'
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "multiple exception types must be parenthesized");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "multiple exception types must be parenthesized");
                 break;
             }
             p.mark = _mark;
@@ -16497,7 +16497,7 @@ function invalid_except_star_stmt_indent_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, INDENT)  // token=INDENT
             )
             {
-                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except' statement on line %d", a.lineno);
+                _res = $B.helper_functions.RAISE_INDENTATION_ERROR(p, "expected an indented block after 'except*' statement on line %d", a.lineno);
                 break;
             }
             p.mark = _mark;
@@ -17268,7 +17268,7 @@ function invalid_double_starred_kvpairs_rule(p)
                 (bitwise_or_var = bitwise_or_rule(p))  // bitwise_or
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
                 break;
             }
             p.mark = _mark;
@@ -17344,7 +17344,7 @@ function invalid_kvpair_rule(p)
                 (bitwise_or_var = bitwise_or_rule(p))  // bitwise_or
             )
             {
-                _res = RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
+                _res = $B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p, a, "cannot use a starred expression in a dictionary value");
                 break;
             }
             p.mark = _mark;

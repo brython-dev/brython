@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 09:02:16.013547"
-__BRYTHON__.timestamp=1709020936013
+__BRYTHON__.compiled_date="2024-02-27 14:17:40.093322"
+__BRYTHON__.timestamp=1709039860093
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -511,6 +511,7 @@ var cp=char.codePointAt(0),err_msg='invalid'
 if(unprintable_re.exec(char)){err_msg+=' non-printable'}
 err_msg+=` character '${char}' (U+`+
 `${cp.toString(16).toUpperCase()})`
+if(char=='$'){err_msg='invalid syntax'}
 var err_token=Token('ERRORTOKEN',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 $B.raise_error_known_token(_b_.SyntaxError,filename,err_token,err_msg)}}
 break
@@ -14684,7 +14685,8 @@ type==$B.parser_constants.FOR_TARGETS){msg="cannot assign to %s";}else{msg="cann
 return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
 p,invalid_target,msg,$B._PyPegen.get_expr_name(invalid_target)
 )}
-return NULL;},RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN:function(p,msg){return helper_functions.RAISE_SYNTAX_ERROR(p,msg)},asdl_seq_LEN:(t)=> t.length,asdl_seq_GET:(t,i)=> t[i]}
+return NULL;},RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN:function(p,msg){return helper_functions.RAISE_SYNTAX_ERROR(p,msg)},RAISE_SYNTAX_ERROR_STARTING_FROM:function(p,a,msg,...args){var last=p.tokens[p.tokens.length-1]
+return helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,last.end_lineno,last.end_col_offset-1,msg,...args)},asdl_seq_LEN:(t)=> t.length,asdl_seq_GET:(t,i)=> t[i]}
 $B.helper_functions=helper_functions
 function raise_error_known_location(type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=type.$factory(message)
 exc.filename=filename
@@ -19526,7 +19528,7 @@ if(
 &&
 (e=expression_rule(p))
 )
-{_res=RAISE_SYNTAX_ERROR_STARTING_FROM(p,colon,e.kind==Tuple_kind ? "cannot use constraints with TypeVarTuple" :"cannot use bound with TypeVarTuple");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p,colon,e.kind==Tuple_kind ? "cannot use constraints with TypeVarTuple" :"cannot use bound with TypeVarTuple");
 break;}
 p.mark=_mark;}
 {
@@ -19560,7 +19562,7 @@ if(
 &&
 (e=expression_rule(p))
 )
-{_res=RAISE_SYNTAX_ERROR_STARTING_FROM(p,colon,e.kind==Tuple_kind ? "cannot use constraints with ParamSpec" :"cannot use bound with ParamSpec");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p,colon,e.kind==Tuple_kind ? "cannot use constraints with ParamSpec" :"cannot use bound with ParamSpec");
 break;}
 p.mark=_mark;}
 {
@@ -24994,7 +24996,7 @@ if(
 &&
 (dotted_name_var=dotted_name_rule(p))
 )
-{_res=RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"Did you mean to use 'from ... import ...' instead?");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"Did you mean to use 'from ... import ...' instead?");
 break;}
 p.mark=_mark;}
 _res=NULL;
@@ -25211,7 +25213,7 @@ if(
 &&
 (_literal_1=$B._PyPegen.expect_token(p,11))
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,b,"cannot have both 'except' and 'except' on the same 'try'");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,b,"cannot have both 'except' and 'except*' on the same 'try'");
 break;}
 p.mark=_mark;}
 {
@@ -25239,7 +25241,7 @@ if(
 &&
 (_literal_1=$B._PyPegen.expect_token(p,11))
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,a,"cannot have both 'except' and 'except' on the same 'try'");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,a,"cannot have both 'except' and 'except*' on the same 'try'");
 break;}
 p.mark=_mark;}
 _res=NULL;
@@ -25275,7 +25277,7 @@ if(
 &&
 (_literal_1=$B._PyPegen.expect_token(p,11))
 )
-{_res=RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"multiple exception types must be parenthesized");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"multiple exception types must be parenthesized");
 break;}
 p.mark=_mark;}
 {
@@ -25431,7 +25433,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,INDENT)
 )
-{_res=$B.helper_functions.RAISE_INDENTATION_ERROR(p,"expected an indented block after 'except' statement on line %d",a.lineno);
+{_res=$B.helper_functions.RAISE_INDENTATION_ERROR(p,"expected an indented block after 'except*' statement on line %d",a.lineno);
 break;}
 p.mark=_mark;}
 _res=NULL;
@@ -25969,7 +25971,7 @@ if(
 &&
 (bitwise_or_var=bitwise_or_rule(p))
 )
-{_res=RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"cannot use a starred expression in a dictionary value");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"cannot use a starred expression in a dictionary value");
 break;}
 p.mark=_mark;}
 {
@@ -26019,7 +26021,7 @@ if(
 &&
 (bitwise_or_var=bitwise_or_rule(p))
 )
-{_res=RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"cannot use a starred expression in a dictionary value");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_STARTING_FROM(p,a,"cannot use a starred expression in a dictionary value");
 break;}
 p.mark=_mark;}
 {
