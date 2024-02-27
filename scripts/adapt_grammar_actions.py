@@ -11,6 +11,7 @@ def transform_action(action):
     action5 = re.sub(r'([a-z_]+)\*', r'\1', action4)
     action6 = re.sub(r'\s*->\s*', '.', action5)
     action7 = re.sub('_PyPegen_', '$B._PyPegen.', action6)
+    action7 = re.sub('PyPegen_', '$B.PyPegen.', action7)
     action8 = re.sub('_PyAST_', 'new $B._PyAST.', action7)
     #action9 = re.sub(operators_re, r'$B.ast.\1', action8)
     action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
@@ -60,7 +61,7 @@ def transform_action(action):
     if type_decl:
         action9 = type_decl.groups()[0]
 
-    action9 = action9.replace('void', '_void')
+    action9 = action9.replace('void', 'NULL')
 
     action9 = re.sub(r'RAISE_(.*?)\s*\(([^p])', r'RAISE_\1(p, \2', action9)
     action10 = action9.strip('{}')
@@ -90,7 +91,8 @@ parser_constants = [
     'asdl_type_param_seq',
     'AugOperator', 'Py_Ellipsis', 'Py_False', 'Py_True', 'Py_None',
     'PyExc_SyntaxError',
-    'STAR_TARGETS', 'DEL_TARGETS', 'FOR_TARGETS'
+    'STAR_TARGETS', 'DEL_TARGETS', 'FOR_TARGETS',
+    'PyBytes_AS_STRING'
     ]
 
 helper_functions = [

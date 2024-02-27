@@ -962,6 +962,7 @@ function annotation_to_str(obj, scopes){
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
+    compiler_check(this)
     var postpone_annotation = scopes.symtable.table.future.features &
             $B.CO_FUTURE_ANNOTATIONS
     var scope = last_scope(scopes)
@@ -1005,6 +1006,10 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         }
     }
     return `$B.set_lineno(frame, ${this.lineno})\n` + js
+}
+
+$B.ast.AnnAssign.prototype._check = function(){
+    check_assign_or_delete(this, this.target)
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
@@ -1211,6 +1216,7 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
+    compiler_check(this)
     var js,
         op_class = this.op.$name ? this.op : this.op.constructor
     for(var op in $B.op2ast_class){
@@ -1250,6 +1256,10 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
         js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     }
     return `$B.set_lineno(frame, ${this.lineno})\n` + js
+}
+
+$B.ast.AugAssign.prototype._check = function(){
+    check_assign_or_delete(this, this.target)
 }
 
 $B.ast.Await.prototype.to_js = function(scopes){
@@ -1349,6 +1359,7 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
+    compiler_check(this)
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}`
 
@@ -1361,6 +1372,14 @@ $B.ast.Call.prototype.to_js = function(scopes){
 
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
+}
+
+$B.ast.Call.prototype._check = function(){
+    for(var kw of this.keywords){
+        if(kw.arg == '__debug__'){
+            compiler_error(this, "cannot assign to __debug__", kw)
+        }
+    }
 }
 
 function make_args(scopes){

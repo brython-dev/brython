@@ -38,7 +38,8 @@ $B.parser_constants = {
     PyExc_SyntaxError: _b_.SyntaxError,
     STAR_TARGETS: 1,
     DEL_TARGETS: 2,
-    FOR_TARGETS: 3
+    FOR_TARGETS: 3,
+    PyBytes_AS_STRING: (b) => b
 }
 
 // actions such as Add, Not, etc.
@@ -200,7 +201,10 @@ var helper_functions = {
     },
 
     RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(p, a, b, msg){
-        var extra_args = arguments[3]
+        var extra_args = arguments[4]
+        if(extra_args){
+            msg = _b_.str.__mod__(msg, extra_args)
+        }
         helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             a.lineno, a.col_offset,
             b.end_lineno, b.end_col_offset,

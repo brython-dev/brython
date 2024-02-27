@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-26 22:43:22.012487"
-__BRYTHON__.timestamp=1708983802011
+__BRYTHON__.compiled_date="2024-02-27 09:02:16.013547"
+__BRYTHON__.timestamp=1709020936013
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -246,6 +246,7 @@ op2=['**','//','>>','<<'],augm_op='+-*/%^|&=<>@',closing={'}':'{',']':'[',')':'(
 function Token(type,string,lineno,col_offset,end_lineno,end_col_offset,line){var res={type,string,line,lineno,col_offset,end_lineno,end_col_offset}
 res.num_type=$B.py_tokens[type]
 if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='NAME' &&['async','await'].includes(string)){res.num_type=$B.py_tokens[string.toUpperCase()]}else if(type=='ENCODING'){res.num_type=$B.py_tokens.ENCODING}
+res.bytes=res.string 
 return res}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
@@ -11561,7 +11562,8 @@ $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)}
-$B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes.symtable.table.future.features &
+$B.ast.AnnAssign.prototype.to_js=function(scopes){compiler_check(this)
+var postpone_annotation=scopes.symtable.table.future.features &
 $B.CO_FUTURE_ANNOTATIONS
 var scope=last_scope(scopes)
 var js=''
@@ -11583,6 +11585,7 @@ js+=`${target_ref} = ann`}else if(this.target instanceof $B.ast.Attribute){js+=`
 js+=`$B.$setitem(locals.__annotations__, `+
 `'${mangled}', ${ann_value})`}}}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
+$B.ast.AnnAssign.prototype._check=function(){check_assign_or_delete(this,this.target)}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
 var js=this.lineno ? `$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
 function assign_one(target,value){if(target instanceof $B.ast.Name){return $B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
@@ -11665,7 +11668,8 @@ $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_sc
 var position=encode_position(this.value.col_offset,this.value.col_offset,this.end_col_offset)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', ${position})`}
-$B.ast.AugAssign.prototype.to_js=function(scopes){var js,op_class=this.op.$name ? this.op :this.op.constructor
+$B.ast.AugAssign.prototype.to_js=function(scopes){compiler_check(this)
+var js,op_class=this.op.$name ? this.op :this.op.constructor
 for(var op in $B.op2ast_class){if($B.op2ast_class[op][1]===op_class){var iop=op+'='
 break}}
 var value=$B.js_from_ast(this.value,scopes)
@@ -11683,6 +11687,7 @@ js=`$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), `+
 `$B.$getattr(locals.$tg, '${mangled}'), '${iop}', ${value}))`}else{let target=$B.js_from_ast(this.target,scopes),value=$B.js_from_ast(this.value,scopes)
 js=`${target} = $B.augm_assign(${target}, '${iop}', ${value})`}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
+$B.ast.AugAssign.prototype._check=function(){check_assign_or_delete(this,this.target)}
 $B.ast.Await.prototype.to_js=function(scopes){var ix=scopes.length-1
 while(scopes[ix].parent){ix--}
 scopes[ix].nb_await=scopes[ix].nb_await===undefined ? 1 :
@@ -11722,13 +11727,15 @@ scope.ast instanceof $B.ast.While){js+=`no_break_${scope.id} = false\n`
 break}}
 js+=`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`
+$B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
+var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`
 var position=encode_position(this.col_offset,this.col_offset,this.end_col_offset)
 js+=`, ${position}`
 js+=')'
 var args=make_args.bind(this)(scopes)
 return js+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
+$B.ast.Call.prototype._check=function(){for(var kw of this.keywords){if(kw.arg=='__debug__'){compiler_error(this,"cannot assign to __debug__",kw)}}}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
 for(let arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
 has_starred=true}else{named_args.push($B.js_from_ast(arg,scopes))}}
@@ -14625,7 +14632,7 @@ type:'int',value:[10,num.value]}}}}}})(__BRYTHON__)
 
 (function($B){var _b_=$B.builtins,debug=0
 var p={feature_version:$B.version_info[1]}
-$B.parser_constants={Store:new $B.ast.Store(),Load:new $B.ast.Load(),Del:new $B.ast.Del(),NULL:undefined,alias_ty:$B.ast.alias,keyword_ty:$B.ast.keyword,arguments_ty:$B.ast.arguments,expr_ty:$B.ast.expr,asdl_stmt_seq:Array,asdl_int_seq:Array,asdl_expr_seq:Array,asdl_keyword_seq:Array,asdl_identifier_seq:Array,asdl_pattern_seq:Array,asdl_type_param_seq:Array,AugOperator:$B.ast.AugAssign,IsNot:$B.ast.IsNot,Py_Ellipsis:_b_.Ellipsis,Py_False:false,Py_True:true,Py_None:_b_.None,PyExc_SyntaxError:_b_.SyntaxError,STAR_TARGETS:1,DEL_TARGETS:2,FOR_TARGETS:3}
+$B.parser_constants={Store:new $B.ast.Store(),Load:new $B.ast.Load(),Del:new $B.ast.Del(),NULL:undefined,alias_ty:$B.ast.alias,keyword_ty:$B.ast.keyword,arguments_ty:$B.ast.arguments,expr_ty:$B.ast.expr,asdl_stmt_seq:Array,asdl_int_seq:Array,asdl_expr_seq:Array,asdl_keyword_seq:Array,asdl_identifier_seq:Array,asdl_pattern_seq:Array,asdl_type_param_seq:Array,AugOperator:$B.ast.AugAssign,IsNot:$B.ast.IsNot,Py_Ellipsis:_b_.Ellipsis,Py_False:false,Py_True:true,Py_None:_b_.None,PyExc_SyntaxError:_b_.SyntaxError,STAR_TARGETS:1,DEL_TARGETS:2,FOR_TARGETS:3,PyBytes_AS_STRING:(b)=> b}
 for(var op_type of $B.op_types){for(var key in op_type){var klass_name=op_type[key]
 $B.parser_constants[klass_name]=new $B.ast[klass_name]()}}
 var NULL=$B.parser_constants.NULL
@@ -14668,7 +14675,8 @@ if(src){for(var token of $B.tokenizer(src)){if(token.type=="ENDMARKER"){break}
 last_token=token}}}
 get_last_token(p)
 $B._PyPegen.raise_error(p,_b_.IndentationError,msg)},RAISE_SYNTAX_ERROR_KNOWN_LOCATION:function(p,a,err_msg,arg){if(arg !==undefined){err_msg=_b_.str.__mod__(err_msg,arg)}
-helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,a.end_lineno,a.end_col_offset,err_msg)},RAISE_SYNTAX_ERROR_KNOWN_RANGE:function(p,a,b,msg){var extra_args=arguments[3]
+helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,a.end_lineno,a.end_col_offset,err_msg)},RAISE_SYNTAX_ERROR_KNOWN_RANGE:function(p,a,b,msg){var extra_args=arguments[4]
+if(extra_args){msg=_b_.str.__mod__(msg,extra_args)}
 helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,b.end_lineno,b.end_col_offset,msg,extra_args)},RAISE_SYNTAX_ERROR_INVALID_TARGET:function(p,type,e){return helper_functions._RAISE_SYNTAX_ERROR_INVALID_TARGET(p,type,e)},_RAISE_SYNTAX_ERROR_INVALID_TARGET(p,type,e){var invalid_target=$B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,$B._PyPegen.get_invalid_target(e,type));
 if(invalid_target !=NULL){var msg;
 if(type==$B.parser_constants.STAR_TARGETS ||
@@ -15086,7 +15094,8 @@ if(p==NULL){return error()}
 result=_PyPegen_run_parser(p);
 _PyPegen_Parser_Free(p);
 function error(){
-return result;}}})(__BRYTHON__)
+return result;}}
+$B.PyPegen={last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__)
 ;
 
 function fprintf(dest,format){var args=Array.from(arguments).slice(2)
@@ -23685,7 +23694,7 @@ if(
 &&
 (_opt_var=_tmp_151_rule(p),!p.error_indicator)
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,$B._PyPegen.get_last_comprehension_item(PyPegen_last_item(b,$B.ast.comprehension )),"Generator expression must be parenthesized");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,$B._PyPegen.get_last_comprehension_item($B.PyPegen.last_item(b,$B.ast.comprehension )),"Generator expression must be parenthesized");
 break;}
 p.mark=_mark;}
 {
@@ -23751,7 +23760,7 @@ if(
 &&
 (b=for_if_clauses_rule(p))
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,$B._PyPegen.get_last_comprehension_item(PyPegen_last_item(b,$B.ast.comprehension )),"Generator expression must be parenthesized");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,$B._PyPegen.get_last_comprehension_item($B.PyPegen.last_item(b,$B.ast.comprehension )),"Generator expression must be parenthesized");
 break;}
 p.mark=_mark;}
 {
@@ -23785,7 +23794,7 @@ if(
 &&
 (b=$B._PyPegen.expect_token(p,22))
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,b,"cannot assign to %s",PyBytes_AS_STRING(a.bytes ));
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,b,"cannot assign to %s",$B.parser_constants.PyBytes_AS_STRING(a.bytes ));
 break;}
 p.mark=_mark;}
 {
@@ -24260,7 +24269,7 @@ if(
 &&
 (for_if_clauses_var=for_if_clauses_rule(p))
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,PyPegen_last_item(b,$B.ast.expr ),"did you forget parentheses around the comprehension target?");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,a,$B.PyPegen.last_item(b,$B.ast.expr ),"did you forget parentheses around the comprehension target?");
 break;}
 p.mark=_mark;}
 {
@@ -25444,7 +25453,7 @@ if(
 &&
 (newline_var=$B._PyPegen.expect_token(p,NEWLINE))
 )
-{_res=$B.helper_functions.CHECK_VERSION(_void,10,"Pattern matching is",$B.helper_functions.RAISE_SYNTAX_ERROR(p,"expected ':'" ));
+{_res=$B.helper_functions.CHECK_VERSION(NULL,10,"Pattern matching is",$B.helper_functions.RAISE_SYNTAX_ERROR(p,"expected ':'" ));
 break;}
 p.mark=_mark;}
 {
@@ -25575,7 +25584,7 @@ if(
 &&
 (a=invalid_class_argument_pattern_rule(p))
 )
-{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,PyPegen_first_item(a,$B.ast.pattern ),PyPegen_last_item(a,$B.ast.pattern ),"positional patterns follow keyword patterns");
+{_res=$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,$B.PyPegen.first_item(a,$B.ast.pattern ),$B.PyPegen.last_item(a,$B.ast.pattern ),"positional patterns follow keyword patterns");
 break;}
 p.mark=_mark;}
 _res=NULL;

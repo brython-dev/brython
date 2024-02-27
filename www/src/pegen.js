@@ -1048,4 +1048,10 @@ $B._PyPegen.run_parser_from_string = function(str, start_rule, filename_ob,
     }
 }
 
+$B.PyPegen = {
+    last_item: function(a, ptype){
+        return a[a.length - 1]
+    }
+}
+
 })(__BRYTHON__)

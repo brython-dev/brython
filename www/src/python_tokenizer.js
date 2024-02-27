@@ -162,6 +162,7 @@ function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
     }else if(type == 'ENCODING'){
         res.num_type = $B.py_tokens.ENCODING
     }
+    res.bytes = res.string // cheating
     return res
 }
 
