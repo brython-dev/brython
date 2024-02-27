@@ -276,7 +276,7 @@ _b_.compile = function() {
     $B.url2name[filename] = module_name
 
     if ($.flags & $B.PyCF_TYPE_COMMENTS) {
-        throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')
+        // throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')
     }
 
     if($B.$isinstance($.source, _b_.bytes)){

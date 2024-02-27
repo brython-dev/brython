@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 17:35:25.398589"
-__BRYTHON__.timestamp=1709051725397
+__BRYTHON__.compiled_date="2024-02-27 19:39:39.418352"
+__BRYTHON__.timestamp=1709059179418
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -248,9 +248,15 @@ res.num_type=$B.py_tokens[type]
 if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='NAME' &&['async','await'].includes(string)){res.num_type=$B.py_tokens[string.toUpperCase()]}else if(type=='ENCODING'){res.num_type=$B.py_tokens.ENCODING}
 res.bytes=res.string 
 return res}
-function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
+function get_comment(parser,src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
-while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),line_num,start-line_start,line_num,pos-line_start+1,line))
+while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){if(parser && parser.flags & $B.PyCF_TYPE_COMMENTS){var comment=src.substring(start-1,pos),mo=/^#\s*type\s*:(.*)/.exec(comment)
+if(mo){var is_type_ignore=false
+if(mo[1].startsWith('ignore')){if(mo[1].length==6){is_type_ignore=true}else{var char=mo[1][6]
+if(char.charCodeAt(0)<=128 &&/[a-zA-Z0-9]/.exec(char)===null){is_type_ignore=true}}}
+if(is_type_ignore){t.push(Token('TYPE_IGNORE',comment,line_num,start-line_start,line_num,pos-line_start+1,line))}else{t.push(Token('TYPE_COMMENT',comment,line_num,start-line_start,line_num,pos-line_start+1,line))}
+return{t,pos}}}
+t.push(Token('COMMENT',src.substring(start-1,pos),line_num,start-line_start,line_num,pos-line_start+1,line))
 if(ix !==undefined){var nb=1
 if(src[pos]=='\r' && src[pos+1]=='\n'){nb++}else if(src[pos]===undefined){
 nb=0}
@@ -351,7 +357,7 @@ line_num++
 if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))){
 yield Token('NL',mo[0],line_num,0,line_num,mo[0].length,line)
 pos+=mo[0].length-1
-continue}else if(char=='#'){comment=get_comment(src,pos,line_num,line_start,'NL',line)
+continue}else if(char=='#'){comment=get_comment(parser,src,pos,line_num,line_start,'NL',line)
 for(var item of comment.t){yield item}
 pos=comment.pos
 state='line_start'
@@ -374,7 +380,7 @@ if(pos==src.length){
 line_num--
 break}
 if(src[pos]=='#'){
-var comment=get_comment(src,pos+1,line_num,line_start,'NL',line)
+comment=get_comment(parser,src,pos+1,line_num,line_start,'NL',line)
 for(var item of comment.t){yield item}
 pos=comment.pos
 continue}else if(src[pos]=='\\'){if(/^\f?(\r\n|\r|\n)/.exec(src[pos+1])){line_num++
@@ -410,7 +416,7 @@ prefix=""
 break
 case '#':
 var token_name=braces.length > 0 ? 'NL' :'NEWLINE'
-comment=get_comment(src,pos,line_num,line_start,token_name,line)
+comment=get_comment(parser,src,pos,line_num,line_start,token_name,line)
 for(var item of comment.t){yield item}
 pos=comment.pos
 if(braces.length==0){state='line_start'}else{state=null
@@ -601,7 +607,6 @@ state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.
 state=null
 pos--}
 break}}
-console.log('state end',state)
 switch(state){case 'line_start':
 line_num++
 break
@@ -2669,7 +2674,7 @@ var filename=$.co_filename=$.filename
 var interactive=$.mode=="single" &&($.flags & 0x200)
 $B.file_cache[filename]=$.source
 $B.url2name[filename]=module_name
-if($.flags & $B.PyCF_TYPE_COMMENTS){throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')}
+if($.flags & $B.PyCF_TYPE_COMMENTS){}
 if($B.$isinstance($.source,_b_.bytes)){var encoding='utf-8',lfpos=$.source.source.indexOf(10),first_line,second_line
 if(lfpos==-1){first_line=$.source}else{first_line=_b_.bytes.$factory($.source.source.slice(0,lfpos))}
 first_line=_b_.bytes.decode(first_line,'latin-1')

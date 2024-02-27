@@ -142,6 +142,7 @@ function ord(char){
     return code
 }
 
+
 function $last(array){
   return array[array.length - 1]
 }
@@ -166,12 +167,41 @@ function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
     return res
 }
 
-function get_comment(src, pos, line_num, line_start, token_name, line){
+function get_comment(parser, src, pos, line_num, line_start, token_name, line){
     var start = pos,
         ix
     var t = []
     while(true){
         if(pos >= src.length || (ix = '\r\n'.indexOf(src[pos])) > -1){
+            if(parser && parser.flags & $B.PyCF_TYPE_COMMENTS){
+                var comment = src.substring(start - 1, pos),
+                    mo = /^#\s*type\s*:(.*)/.exec(comment)
+                if(mo){
+                    var is_type_ignore = false
+                    if(mo[1].startsWith('ignore')){
+                        if(mo[1].length == 6){
+                            is_type_ignore = true
+                        }else{
+                            var char = mo[1][6]
+                            if(char.charCodeAt(0) <= 128 && /[a-zA-Z0-9]/.exec(char) === null){
+                                is_type_ignore = true
+                            }
+                        }
+                    }
+                    if(is_type_ignore){
+                        t.push(Token('TYPE_IGNORE', comment,
+                                     line_num, start - line_start,
+                                     line_num, pos - line_start + 1,
+                                     line))
+                    }else{
+                        t.push(Token('TYPE_COMMENT', comment,
+                                     line_num, start - line_start,
+                                     line_num, pos - line_start + 1,
+                                     line))
+                    }
+                    return {t, pos}
+                }
+            }
             t.push(Token('COMMENT', src.substring(start - 1, pos),
                  line_num, start - line_start,
                  line_num, pos - line_start + 1,
@@ -291,7 +321,6 @@ $B.tokenizer = function*(src, filename, mode, parser){
 
     while(pos < src.length){
         char = src[pos]
-        // console.log('char', char, 'state', state, 'token mode', token_mode)
         cp = src.charCodeAt(pos)
         if(cp >= 0xD800 && cp <= 0xDBFF){
             // code point encoded by a surrogate pair
@@ -457,8 +486,8 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     pos += mo[0].length - 1
                     continue
                 }else if(char == '#'){
-                    comment = get_comment(src, pos, line_num, line_start,
-                        'NL', line)
+                    comment = get_comment(parser, src, pos, line_num,
+                        line_start, 'NL', line)
                     for(var item of comment.t){
                         yield item
                     }
@@ -511,7 +540,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     }
                     if(src[pos] == '#'){
                         // ignore leading whitespace if line is a comment
-                        var comment = get_comment(src, pos + 1, line_num,
+                        comment = get_comment(parser, src, pos + 1, line_num,
                             line_start, 'NL', line)
                         for(var item of comment.t){
                             yield item
@@ -586,7 +615,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                         break
                     case '#':
                         var token_name = braces.length > 0 ? 'NL' : 'NEWLINE'
-                        comment = get_comment(src, pos, line_num, line_start,
+                        comment = get_comment(parser, src, pos, line_num, line_start,
                             token_name, line)
                         for(var item of comment.t){
                             yield item
@@ -1011,8 +1040,6 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 break
         }
     }
-
-    console.log('state end', state)
 
     switch(state){
         case 'line_start':
