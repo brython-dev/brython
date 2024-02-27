@@ -1042,10 +1042,16 @@ $B.tokenizer = function*(src, filename, mode, parser){
               line)
             break
         case 'STRING':
-            throw SyntaxError(
-                `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
-                `string literal (detected at line ${line_num})`)
-    }
+            var msg = `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
+                `string literal (detected at line ${line_num})`,
+                line_num = string_start[0],
+                col_offset = string_start[1]
+            $B.raise_error_known_location(_b_.SyntaxError,
+                filename, line_num, col_offset,
+                line_num, col_offset,
+                line,
+                msg)
+}
 
     if(! src.endsWith('\n') && state != line_start){
         yield Token('NEWLINE', '', line_num, pos - line_start + 1,
