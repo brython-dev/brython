@@ -94,6 +94,8 @@ def parse_grammar_options(line):
     return option
 
 grammar = {}
+
+options = []
 with open(grammar_file, encoding='utf-8') as f:
     rule = None
     for line in f:
