@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 15:11:51.526834"
-__BRYTHON__.timestamp=1709043111526
+__BRYTHON__.compiled_date="2024-02-27 15:52:28.663497"
+__BRYTHON__.timestamp=1709045548663
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -13089,8 +13089,8 @@ var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' i
 "assignment expression cannot rebind comprehension iteration variable '%s'",NAMED_EXPR_COMP_INNER_LOOP_CONFLICT=
 "comprehension inner loop cannot rebind assignment expression target '%s'",NAMED_EXPR_COMP_ITER_EXPR=
 "assignment expression cannot be used in a comprehension iterable expression",ANNOTATION_NOT_ALLOWED=
-"'%s' can not be used within an annotation",DUPLICATE_ARGUMENT="duplicate argument '%s' in function definition",TYPEVAR_BOUND_NOT_ALLOWED="'%s' can not be used within a TypeVar bound",TYPEALIAS_NOT_ALLOWED="'%s' can not be used within a type alias",TYPEPARAM_NOT_ALLOWED=
-"'%s' can not be used within the definition of a generic",DUPLICATE_TYPE_PARAM="duplicate type parameter '%s'"
+"'%s' can not be used within an annotation",DUPLICATE_ARGUMENT="duplicate argument '%s' in function definition",TYPEVAR_BOUND_NOT_ALLOWED="%s cannot be used within a TypeVar bound",TYPEALIAS_NOT_ALLOWED="%s cannot be used within a type alias",TYPEPARAM_NOT_ALLOWED=
+"%s cannot be used within the definition of a generic",DUPLICATE_TYPE_PARAM="duplicate type parameter '%s'"
 var DEF_GLOBAL=1,
 DEF_LOCAL=2 ,
 DEF_PARAM=2 << 1,
@@ -14088,7 +14088,7 @@ $B._PyPegen={}
 $B._PyPegen.constant_from_string=function(p,token){var prepared=$B.prepare_string(token)
 var is_bytes=prepared.value.startsWith('b')
 if(! is_bytes){var value=make_string_for_ast_value(prepared.value)}else{value=prepared.value.substr(2,prepared.value.length-3)
-try{value=_b_.bytes.$factory(encode_bytestring(value))}catch(err){$B._PyPegen.raise_error_known_location(p,_b_.SyntaxError,token.start[0],token.start[1],token.end[0],token.end[1],'bytes can only contain ASCII literal characters')}}
+try{value=_b_.bytes.$factory(encode_bytestring(value))}catch(err){$B._PyPegen.raise_error_known_location(p,_b_.SyntaxError,token.lineno,token.col_offset,token.end_lineno,token.end_col_offset,'bytes can only contain ASCII literal characters')}}
 var ast_obj=new $B.ast.Constant(value)
 set_position_from_token(ast_obj,token)
 return ast_obj}
@@ -15045,8 +15045,11 @@ return err==E_EOF ||err==E_EOFS ||err==E_EOLS;}
 $B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var last_token=p.tokens[p.fill-1]
 var tokenizer=$B.tokenizer(p.src,p.filename,p.mode,p)
 for(var token of tokenizer){}
-if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno=brace.line_num
-if(p.tokens.length==0 ||$B.last(p.tokens).lineno >=err_lineno){if('([{'.includes(brace.char)){msg=`'${brace.char}' was never closed`}else{msg=`unmatched '${brace.char}'`}
+if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno,msg
+if('([{'.includes(brace.char)){err_lineno=brace.line_num}else{if(p.braces.length > 1){err_lineno=p.braces[p.braces.length-2].line_num}else{err_lineno=brace.line_num}}
+if(p.tokens.length==0 ||$B.last(p.tokens).lineno >=err_lineno){if('([{'.includes(brace.char)){msg=`'${brace.char}' was never closed`}else if(p.braces.length > 1){var closing=brace.char,opening=p.braces[p.braces.length-2].char
+msg=`closing parenthesis '${closing}' does not match `+
+`opening parenthesis '${opening}'`}else{msg=`unmatched '${brace.char}'`}
 $B.raise_error_known_location(_b_.SyntaxError,p.filename,brace.line_num,brace.pos-brace.line_start,brace.line_num,brace.pos-brace.line_start+1,brace.line,msg)}}}
 $B._PyPegen.set_syntax_error=function(p,last_token){
 if(p.fill==0){$B.helper_functions.RAISE_SYNTAX_ERROR(p,"error at start before reading any input");}

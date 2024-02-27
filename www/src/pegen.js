@@ -873,10 +873,25 @@ $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
     }
     if(p.braces.length > 0){
         var brace = $B.last(p.braces),
+            err_lineno,
+            msg
+        if('([{'.includes(brace.char)){
             err_lineno =  brace.line_num
+        }else{
+            if(p.braces.length > 1){
+                err_lineno = p.braces[p.braces.length - 2].line_num
+            }else{
+                err_lineno = brace.line_num
+            }
+        }
         if(p.tokens.length == 0 || $B.last(p.tokens).lineno >= err_lineno){
             if('([{'.includes(brace.char)){
                 msg = `'${brace.char}' was never closed`
+            }else if(p.braces.length > 1){
+                var closing = brace.char,
+                    opening = p.braces[p.braces.length - 2].char
+                msg = `closing parenthesis '${closing}' does not match ` +
+                      `opening parenthesis '${opening}'`
             }else{
                 msg = `unmatched '${brace.char}'`
             }

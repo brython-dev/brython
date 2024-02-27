@@ -235,7 +235,8 @@ $B._PyPegen.constant_from_string = function(p, token){
         }catch(err){
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
-                token.start[0], token.start[1], token.end[0], token.end[1],
+                token.lineno, token.col_offset, 
+                token.end_lineno, token.end_col_offset,
                 'bytes can only contain ASCII literal characters')
         }
     }
