@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 14:17:40.093322"
-__BRYTHON__.timestamp=1709039860093
+__BRYTHON__.compiled_date="2024-02-27 15:11:51.526834"
+__BRYTHON__.timestamp=1709043111526
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -509,9 +509,10 @@ line_start+fstring_start+2,pos-1)
 yield token}}else if(char==' ' ||char=='\t'){}else{
 var cp=char.codePointAt(0),err_msg='invalid'
 if(unprintable_re.exec(char)){err_msg+=' non-printable'}
-err_msg+=` character '${char}' (U+`+
-`${cp.toString(16).toUpperCase()})`
-if(char=='$'){err_msg='invalid syntax'}
+var unicode=cp.toString(16).toUpperCase()
+while(unicode.length < 4){unicode='0'+unicode}
+err_msg+=` character '${char}' (U+${unicode})`
+if(char=='$' ||char=='`'){err_msg='invalid syntax'}
 var err_token=Token('ERRORTOKEN',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 $B.raise_error_known_token(_b_.SyntaxError,filename,err_token,err_msg)}}
 break
@@ -11255,10 +11256,10 @@ exc.filename=state.filename
 if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
 exc.text=line}else{exc.text=_b_.None}
 exc.lineno=ast_obj.lineno
-exc.offset=ast_obj.col_offset
+exc.offset=ast_obj.col_offset+1
 end=end ||ast_obj
 exc.end_lineno=end.end_lineno
-exc.end_offset=end.end_col_offset
+exc.end_offset=end.end_col_offset+1
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 exc.$frame_obj=$B.frame_obj
 if($B.frame_obj===null){}
@@ -12243,7 +12244,8 @@ if(tp.bound){if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(local
 `'__constraints__', BOUND_OF_${name})\n`}}
 return js}
 $B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
-$B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
+$B.ast.FunctionDef.prototype.to_js=function(scopes){compiler_check(this)
+var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
 if(in_class){var class_scope=last_scope(scopes)}
 var func_name_scope=bind(this.name,scopes)
@@ -12424,6 +12426,9 @@ for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}else{js+=`var locals_${type_params_ref} = TYPE_PARAMS_OF_${name2}()\n`}}
 js=decs_declare+js
 return js}
+$B.ast.FunctionDef.prototype._check=function(){for(var arg of this.args.args){if(arg instanceof $B.ast.arg){if(arg.arg=='__debug__'){compiler_error(arg,'cannot assign to __debug__')}}}
+for(var arg of this.args.kwonlyargs){if(arg instanceof $B.ast.arg){if(arg.arg=='__debug__'){compiler_error(arg,'cannot assign to __debug__')}}}
+if(this.args.kwarg && this.args.kwarg.arg=='__debug__'){compiler_error(this.args.kwarg,'cannot assign to __debug__')}}
 $B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
@@ -15097,7 +15102,7 @@ result=_PyPegen_run_parser(p);
 _PyPegen_Parser_Free(p);
 function error(){
 return result;}}
-$B.PyPegen={last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__)
+$B.PyPegen={first_item:function(a,type){return a[0]},last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__)
 ;
 
 function fprintf(dest,format){var args=Array.from(arguments).slice(2)

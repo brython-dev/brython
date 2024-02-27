@@ -804,9 +804,12 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             if(unprintable_re.exec(char)){
                                 err_msg += ' non-printable'
                             }
-                            err_msg += ` character '${char}' (U+` +
-                                          `${cp.toString(16).toUpperCase()})`
-                            if(char == '$'){
+                            var unicode = cp.toString(16).toUpperCase()
+                            while(unicode.length < 4){
+                                unicode = '0' + unicode
+                            }
+                            err_msg += ` character '${char}' (U+${unicode})`
+                            if(char == '$' || char == '`'){
                                 err_msg = 'invalid syntax'
                             }
                             var err_token = Token('ERRORTOKEN', char,

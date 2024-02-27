@@ -98,10 +98,10 @@ function compiler_error(ast_obj, message, end){
         exc.text = _b_.None
     }
     exc.lineno = ast_obj.lineno
-    exc.offset = ast_obj.col_offset
+    exc.offset = ast_obj.col_offset + 1
     end = end || ast_obj
     exc.end_lineno = end.end_lineno
-    exc.end_offset = end.end_col_offset
+    exc.end_offset = end.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     exc.$frame_obj = $B.frame_obj
@@ -2414,6 +2414,7 @@ $B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
 
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
+    compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
         is_async = this instanceof $B.ast.AsyncFunctionDef
@@ -2787,6 +2788,26 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
     js = decs_declare + js
     return js
+}
+
+$B.ast.FunctionDef.prototype._check = function(){
+    for(var arg of this.args.args){
+        if(arg instanceof $B.ast.arg){
+            if(arg.arg == '__debug__'){
+                compiler_error(arg, 'cannot assign to __debug__')
+            }
+        }
+    }
+    for(var arg of this.args.kwonlyargs){
+        if(arg instanceof $B.ast.arg){
+            if(arg.arg == '__debug__'){
+                compiler_error(arg, 'cannot assign to __debug__')
+            }
+        }
+    }
+    if(this.args.kwarg && this.args.kwarg.arg == '__debug__'){
+        compiler_error(this.args.kwarg, 'cannot assign to __debug__')
+    }
 }
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
