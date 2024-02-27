@@ -291,7 +291,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
 
     while(pos < src.length){
         char = src[pos]
-        //console.log('char', char, 'state', state, 'token mode', token_mode)
+        // console.log('char', char, 'state', state, 'token mode', token_mode)
         cp = src.charCodeAt(pos)
         if(cp >= 0xD800 && cp <= 0xDBFF){
             // code point encoded by a surrogate pair
@@ -919,27 +919,15 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     case '\n':
                         if(! escaped && ! triple_quote){
                             // unterminated string
-                            // go back to yield whitespace as ERRORTOKEN
-                            var quote_pos = string_start[1] + line_start - 1
-                            pos = quote_pos
-                            while(src[pos - 1] == ' '){
-                                pos--
-                            }
-                            while(pos < quote_pos){
-                                yield Token('ERRORTOKEN', ' ',
-                                    line_num, pos - line_start + 1,
-                                    line_num, pos - line_start + 2,
-                                    line)
-                                pos++
-                            }
-                            pos++
-                            yield Token('ERRORTOKEN', quote,
-                                    line_num, pos - line_start,
-                                    line_num, pos - line_start + 1,
-                                    line)
-                            state = null
-                            pos++
-                            break
+                            var msg = `unterminated string literal ` +
+                                      `(detected at line ${line_num})`,
+                                line_num = string_start[0],
+                                col_offset = string_start[1]
+                            $B.raise_error_known_location(_b_.SyntaxError,
+                                filename, line_num, col_offset,
+                                line_num, col_offset,
+                                line,
+                                msg)
                         }
                         string += char
                         line_num++
@@ -1024,6 +1012,8 @@ $B.tokenizer = function*(src, filename, mode, parser){
         }
     }
 
+    console.log('state end', state)
+
     switch(state){
         case 'line_start':
             line_num++
@@ -1042,9 +1032,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
               line)
             break
         case 'STRING':
+            line_num = string_start[0]
+            line = lines[line_num - 1]
             var msg = `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
                 `string literal (detected at line ${line_num})`,
-                line_num = string_start[0],
                 col_offset = string_start[1]
             $B.raise_error_known_location(_b_.SyntaxError,
                 filename, line_num, col_offset,

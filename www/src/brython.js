@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 16:08:01.652044"
-__BRYTHON__.timestamp=1709046481652
+__BRYTHON__.compiled_date="2024-02-27 17:35:25.398589"
+__BRYTHON__.timestamp=1709051725397
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -563,16 +563,9 @@ break
 case '\r':
 case '\n':
 if(! escaped && ! triple_quote){
-var quote_pos=string_start[1]+line_start-1
-pos=quote_pos
-while(src[pos-1]==' '){pos--}
-while(pos < quote_pos){yield Token('ERRORTOKEN',' ',line_num,pos-line_start+1,line_num,pos-line_start+2,line)
-pos++}
-pos++
-yield Token('ERRORTOKEN',quote,line_num,pos-line_start,line_num,pos-line_start+1,line)
-state=null
-pos++
-break}
+var msg=`unterminated string literal `+
+`(detected at line ${line_num})`,line_num=string_start[0],col_offset=string_start[1]
+$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg)}
 string+=char
 line_num++
 line_start=pos+1
@@ -608,6 +601,7 @@ state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.
 state=null
 pos--}
 break}}
+console.log('state end',state)
 switch(state){case 'line_start':
 line_num++
 break
@@ -618,8 +612,10 @@ case 'NUMBER':
 yield Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line)
 break
 case 'STRING':
+line_num=string_start[0]
+line=lines[line_num-1]
 var msg=`unterminated ${triple_quote ? 'triple-quoted ' : ''}`+
-`string literal (detected at line ${line_num})`,line_num=string_start[0],col_offset=string_start[1]
+`string literal (detected at line ${line_num})`,col_offset=string_start[1]
 $B.raise_error_known_location(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg)}
 if(! src.endsWith('\n')&& state !=line_start){yield Token('NEWLINE','',line_num,pos-line_start+1,line_num,pos-line_start+1,line+'\n')
 line_num++}
