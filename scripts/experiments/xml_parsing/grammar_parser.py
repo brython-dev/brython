@@ -29,7 +29,7 @@ class Literal(GE):
 
     def __repr__(self):
         if isinstance(self.value, int):
-            return chr(self.value)
+            return repr(chr(self.value))
         if not "'" in self.value:
             return f"'{self.value}'"
         elif not '"' in self.value:

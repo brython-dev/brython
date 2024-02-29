@@ -33,6 +33,12 @@ function get_pos(element){
     return get_top(element)._pos
 }
 
+function show_position(element, pos){
+    var src = get_top(element)._buffer
+    console.log('    ' + src)
+    console.log('    ' + ' '.repeat(pos) + '^')
+}
+
 function reset_pos(element, pos){
     if(pos === undefined){
         throw Error('reset at undefined')
@@ -45,23 +51,60 @@ function reset_pos(element, pos){
     get_top(element)._pos = pos
 }
 
+function update_pos(element, pos){
+    delete_pos(element)
+    element.pos = pos
+}
+
+function delete_pos(rule){
+    delete rule.pos
+    if(rule.rules){
+        for(var r of rule.rules){
+            delete_pos(r)
+        }
+    }
+}
+
+function show_path(rule){
+    if(rule.constructor === undefined){
+        console.log('rule', rule, 'no constructor')
+        alert()
+    }
+    var name = rule.constructor.name
+    if(name.endsWith('_rule')){
+        name = name.substr(0, name.length - 5)
+    }
+    var t = [name + '@' + rule.pos]
+    while(rule.origin){
+        if(rule.origin.constructor === Object){
+            break
+        }
+        name = rule.origin.constructor.name
+        if(name.endsWith('_rule_')){
+            name = name.substr(0, name.length - 5)
+        }
+        t.push(name + '@' + rule.origin.pos)
+        rule = rule.origin
+    }
+
+    console.log('show path', t)
+}
+
 function set_expect(element, expect){
-    if(element.constructor.name == 'tmp_54_rule'){
+    var test = element.constructor.name == 'Attribute_rule' && expect == 1
+    if(test){
         console.log('set expect of', element)
         console.log(`  >>> set expect of ${element.constructor.name} to ${expect}`)
+        alert()
     }
     element.expect = expect
     if(element.rules[expect]){
-        var pos = get_pos(element)
-        element.rules[expect].pos = pos
-        if(element.rules[expect].rules && element.rules[expect].length > 0){
-            var rule = element.rules[expect].rules[0]
-            rule.pos = pos
-            while(rule.rules && rule.rules[0]){
-                rule.rules[0].pos = pos
-                rule = rule.rules[0]
-            }
-        }
+        var rule = element.rules[expect]
+        delete_pos(rule)
+    }
+    if(test){
+        console.log('   !!! after set expect', element)
+        alert()
     }
 }
 
