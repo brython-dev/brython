@@ -81,19 +81,20 @@ function handle_kwargs(self, kw, method){
         headers={},
         cache,
         mode = "text",
-        timeout = {}
+        timeout = {},
+        rawdata
 
     for(var item of _b_.dict.$iter_items(kw)){
         var key = item.key
         if(key == "data"){
-            var params = item.value
-            if(typeof params == "string" || params instanceof FormData){
-                data = params
-            }else if(params.__class__ === _b_.dict){
-                data = stringify(params)
+            var rawdata = item.value
+            if(typeof rawdata == "string" || rawdata instanceof FormData){
+                data = rawdata
+            }else if(rawdata.__class__ === _b_.dict){
+                data = stringify(rawdata)
             }else{
                 throw _b_.TypeError.$factory("wrong type for data: " +
-                    $B.class_name(params))
+                    $B.class_name(rawdata))
             }
         }else if(key == "encoding"){
             encoding = item.value
@@ -132,7 +133,7 @@ function handle_kwargs(self, kw, method){
                                  "application/x-www-form-urlencoded")
     }
 
-    return {cache, data, encoding, headers, mode, timeout}
+    return {cache, data, rawdata, encoding, headers, mode, timeout}
 }
 
 var ajax = $B.make_class('ajax')
@@ -488,7 +489,7 @@ function file_upload(){
     var self = ajax.$factory()
 
     var items = handle_kwargs(self, kw, method),
-        data = items.data,
+        rawdata = items.rawdata,
         headers = items.headers
 
     for(var key in headers){
@@ -510,14 +511,14 @@ function file_upload(){
     var formdata = new FormData()
     formdata.append(field_name, file, file.name)
 
-    if(data){
-        if(data instanceof FormData){
+    if(rawdata){
+        if(rawdata instanceof FormData){
             // append additional data
-            for(var d of data){
+            for(var d of rawdata){
                 formdata.append(d[0], d[1])
             }
-        }else if($B.$isinstance(data, _b_.dict)){
-            for(var item of _b_.dict.$iter_items(data)){
+        }else if($B.$isinstance(rawdata, _b_.dict)){
+            for(var item of _b_.dict.$iter_items(rawdata)){
                 formdata.append(item.key, item.value)
             }
         }else{
