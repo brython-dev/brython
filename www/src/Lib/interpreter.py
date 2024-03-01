@@ -354,7 +354,7 @@ class Interpreter:
         src = self.get_content().strip()
         if self._status == "main":
             currentLine = src[src.rfind('\n>>>') + 5:]
-        elif self._status == "3string":
+        elif self._status in ["3string", "parenth_expr"]:
             currentLine = src[src.rfind('\n>>>') + 5:]
             currentLine = currentLine.replace('\n... ', '\n')
         else:
@@ -368,7 +368,7 @@ class Interpreter:
             return
         self.add_to_history(currentLine)
         self.current = len(self.history)
-        if self._status in ["main", "3string"]:
+        if self._status in ["main", "3string", "parenth_expr"]:
             # special case
             if currentLine == "help":
                 self.write(_help)
@@ -392,14 +392,26 @@ class Interpreter:
                     self.insert_continuation()
                     self._status = "parenth_expr"
                 else:
-                    self.insert_cr()
                     try:
                         code = compile(currentLine, '<stdin>', 'exec')
                         exec(code, self.globals, self.locals)
+                    except SyntaxError as exc:
+                        if exc.args[0].startswith('expected an indented block'):
+                            self.insert_continuation()
+                            self._status = "block"
+                        else:
+                            self.insert_cr()
+                            self.print_tb(exc)
+                            self.insert_prompt()
                     except Exception as exc:
+                        self.insert_cr()
                         self.print_tb(msg)
-                    self.insert_prompt()
-                    self._status = "main"
+                        self.insert_prompt()
+                        self._status = "main"
+                    else:
+                        self.insert_cr()
+                        self.insert_prompt()
+                        self._status = "main"
             except Exception as exc:
                 # the full traceback includes the call to eval(); to
                 # remove it, it is stored in a buffer and the 2nd and 3rd
