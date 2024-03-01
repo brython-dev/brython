@@ -182,5 +182,4 @@ except Exception as error:
     print(error)
     print("Warning - no changelog file")
 
-print('Not over yet - must update version number in pyproject.toml\n' +
-    'then run python -m build in /setup directory before "twine upload dist/*"')
+import make_pyproject_toml
