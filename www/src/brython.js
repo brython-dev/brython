@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,1,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-02-27 22:21:57.175201"
-__BRYTHON__.timestamp=1709068917174
+__BRYTHON__.compiled_date="2024-03-01 13:31:43.761007"
+__BRYTHON__.timestamp=1709296303760
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -9532,7 +9532,7 @@ return jsobj
 case 'string':
 return $B.String(jsobj)}
 if(Array.isArray(jsobj)){
-Object.defineProperty(jsobj,"$is_js_array",{value:true});
+try{Object.defineProperty(jsobj,"$is_js_array",{value:true});}catch(err){}
 return jsobj}
 let pyobj=jsobj[PYOBJ]
 if(pyobj !==undefined){return pyobj}

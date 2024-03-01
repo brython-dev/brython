@@ -146,7 +146,11 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
 
     if(Array.isArray(jsobj)){
         // set it as non-enumerable, prevents issues when looping on it in JS.
-        Object.defineProperty(jsobj, "$is_js_array", {value: true});
+        try{
+            Object.defineProperty(jsobj, "$is_js_array", {value: true});
+        }catch(err){
+            // ignore; cf. issue #2379
+        }
         return jsobj
     }
 
