@@ -371,8 +371,11 @@ class Interpreter:
         if self._status in ["main", "3string", "parenth_expr"]:
             # special case
             if currentLine == "help":
+                self.insert_cr()
                 self.write(_help)
+                self.insert_cr()
                 self.insert_prompt()
+                self.cursor_to_end()
                 if event is not None:
                     event.preventDefault()
                 return
