@@ -73,7 +73,7 @@ $B.make_import_paths = function(filename){
     // - finder_static_stlib : use the script stdlib_path.js to identify the
     //   packages and modules in the standard distribution
     // - finder_path : search module at different urls
-    var filepath = $B.domain ? $B.domain + '/' + filename : filename
+    var filepath = $B.script_domain ? $B.script_domain + '/' + filename : filename
     var elts = filepath.split('/')
     elts.pop()
     var script_dir = elts.join('/'),

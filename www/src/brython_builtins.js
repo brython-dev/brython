@@ -86,6 +86,14 @@ var path = _window.location.origin + _window.location.pathname,
 path_elts.pop()
 $B.script_dir = path_elts.join("/")
 
+mo = parts_re.exec($B.script_dir)
+if(mo){
+    if(['http', 'https'].includes(mo[1])){
+        $B.script_domain = mo[1] + '://' + mo[2]
+    }
+}
+
+
 $B.strip_host = function(url){
     var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
         mo = parts_re.exec(url)
