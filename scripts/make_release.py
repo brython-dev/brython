@@ -51,17 +51,17 @@ print("Update readme and install doc pages...", vname)
 README_page = os.path.join(pdir, "README.md")
 with open(README_page, encoding="utf-8") as f:
     content = f.read()
-    content = re.sub("npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
+    content = re.sub(r"npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
         content)
-    content = re.sub("npm/brython@\d\.\d+\s", "npm/brython@" + vname2,
+    content = re.sub(r"npm/brython@\d\.\d+\s", "npm/brython@" + vname2,
         content)
-    content = re.sub("npm/brython@\d\.\d+\.x", "npm/brython@" + vname2 + '.x',
+    content = re.sub(r"npm/brython@\d\.\d+\.x", "npm/brython@" + vname2 + '.x',
         content)
-    content = re.sub("npm/brython@\d\s", "npm/brython@" + vname1,
+    content = re.sub(r"npm/brython@\d\s", "npm/brython@" + vname1,
         content)
-    content = re.sub("npm/brython@\d\.x\.y", "npm/brython@" + vname1 + '.x.y',
+    content = re.sub(r"npm/brython@\d\.x\.y", "npm/brython@" + vname1 + '.x.y',
         content)
-    content = re.sub("3\.\d+\.x", f'3.{version.version[1]}.x', content)
+    content = re.sub(r"3\.\d+\.x", f'3.{version.version[1]}.x', content)
 
 with open(README_page, "w", encoding="utf-8") as out:
     out.write(content)
