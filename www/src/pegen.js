@@ -739,7 +739,7 @@ function bad_single_statement(p){
     var pos = 0
 
     for (;;) {
-        while (c == ' ' || c == '\t' || c == '\n' || c == '\014') {
+        while (c == ' ' || c == '\t' || c == '\n' || c == '\f') {
             c = cur[pos++]
         }
 
