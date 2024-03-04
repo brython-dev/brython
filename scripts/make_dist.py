@@ -37,12 +37,12 @@ def run():
     # build brython.js from base Javascript files
     sources = [
         'brython_builtins',
-        
+
         'py_ast_classes',
         'stdlib_paths',
         'unicode_data',
         'version_info',
-        
+
         'py_tokens',
         'python_tokenizer',
         'py_ast',
@@ -74,7 +74,7 @@ def run():
         'builtin_modules',
         'ast_to_js',
         'symtable',
-        
+
         'action_helpers_generated_version',
         'string_parser',
         'number_parser',
@@ -112,7 +112,8 @@ def run():
     # remove strict mode for brython.js - better to silently ignore than to
     # get weird errors at runtime
     res = re.sub('"use strict";\n', "", res)
-
+    res_no_static = re.sub('"use strict";\n', "", res_no_static)
+    
     res = re.sub(r'\bcontext\b', 'C', res)
     res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)
 
