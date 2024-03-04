@@ -169,8 +169,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,2,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-03 21:41:29.884662"
-__BRYTHON__.timestamp=1709498489882
+__BRYTHON__.compiled_date="2024-03-04 13:22:25.621393"
+__BRYTHON__.timestamp=1709554945620
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -10763,7 +10763,7 @@ throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__)
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1074287874:['UnicodeError','NameError','NotADirectoryError','TabError','IndentationError','BlockingIOError','SystemError','BaseException','EnvironmentError','InterruptedError','ImportError','SystemExit','PermissionError','UserWarning','SyntaxWarning','EncodingWarning','Exception','ProcessLookupError','RecursionError','ArithmeticError','IOError','ReferenceError','ImportWarning','SyntaxError','TypeError','ConnectionResetError','StopIteration','BrokenPipeError','IndexError','FutureWarning','BytesWarning','FloatingPointError','UnicodeTranslateError','IsADirectoryError','LookupError','GeneratorExit','TimeoutError','UnicodeEncodeError','ConnectionAbortedError','ValueError','AssertionError','ChildProcessError','PendingDeprecationWarning','RuntimeError','UnicodeWarning','AttributeError','ResourceWarning','OSError','WindowsError','StopAsyncIteration','EOFError','DeprecationWarning','FileExistsError','ModuleNotFoundError','BufferError','Warning','ConnectionError','KeyboardInterrupt','NotImplementedError','FileNotFoundError','ZeroDivisionError','ConnectionRefusedError','UnboundLocalError','RuntimeWarning','UnicodeDecodeError','MemoryError','KeyError','OverflowError','BaseExceptionGroup'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['bytearray','float'],138941698:['bytes'],546050:['property','staticmethod','map','classmethod','reversed','filter','enumerate','super','zip'],529666:['object','complex'],541611330:['dict'],4740354:['set','frozenset'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['classmethod_descriptor','coroutine','generator','getset_descriptor','async_generator','member_descriptor','frame','method-wrapper'],547202:['builtin_function_or_method'],545026:['traceback','cell'],528642:['NoneType','ellipsis','NotImplementedType','code'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1074287874:['MemoryError','StopAsyncIteration','ResourceWarning','PendingDeprecationWarning','AttributeError','InterruptedError','UnicodeEncodeError','SystemExit','RuntimeError','FileNotFoundError','ImportWarning','UnicodeError','WindowsError','UnicodeWarning','RuntimeWarning','SystemError','StopIteration','ChildProcessError','EncodingWarning','NotADirectoryError','PermissionError','ConnectionResetError','EnvironmentError','OverflowError','KeyError','ValueError','TimeoutError','NameError','SyntaxError','UnicodeDecodeError','DeprecationWarning','AssertionError','IOError','IndexError','EOFError','FileExistsError','GeneratorExit','KeyboardInterrupt','ZeroDivisionError','IndentationError','FutureWarning','NotImplementedError','RecursionError','TypeError','ConnectionAbortedError','FloatingPointError','ConnectionRefusedError','BytesWarning','SyntaxWarning','BaseException','ArithmeticError','ImportError','OSError','LookupError','ProcessLookupError','UnicodeTranslateError','IsADirectoryError','Warning','BrokenPipeError','UserWarning','BufferError','ReferenceError','ConnectionError','BlockingIOError','TabError','ModuleNotFoundError','BaseExceptionGroup','Exception','UnboundLocalError'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['float','bytearray'],138941698:['bytes'],546050:['classmethod','super','enumerate','reversed','property','zip','filter','staticmethod','map'],529666:['object','complex'],541611330:['dict'],4740354:['frozenset','set'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['generator','member_descriptor','classmethod_descriptor','method-wrapper','coroutine','frame','getset_descriptor','async_generator'],547202:['builtin_function_or_method'],545026:['traceback','cell'],528642:['code','NoneType','NotImplementedType','ellipsis'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
@@ -14495,7 +14495,7 @@ string_error(token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
 if(value > 0x10FFFF){string_error(token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
-$B.prepare_string=function(token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",C={type:'str'}
+$B.prepare_string=function(token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,C={type:'str'}
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
 if(s.substr(pos,3)==quote.repeat(3)){_type="triple_string"
@@ -14995,7 +14995,7 @@ return res}
 function bad_single_statement(p){var cur=p.tok.cur;
 var c=cur;
 var pos=0
-for(;;){while(c==' ' ||c=='\t' ||c=='\n' ||c=='\014'){c=cur[pos++]}
+for(;;){while(c==' ' ||c=='\t' ||c=='\n' ||c=='\f'){c=cur[pos++]}
 if(!c){return 0;}
 if(c !='#'){return 1;}
 while(c && c !='\n'){c=cur[pos++]}}}
