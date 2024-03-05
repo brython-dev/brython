@@ -310,7 +310,7 @@ class Interpreter:
         # put caret at the end of text
         sel.setBaseAndExtent(last_child, pos, last_child, pos)
         # make sure last line is visible
-        self.zone.lastChild.scrollIntoView()
+        self.zone.lastChild.scrollIntoView({"block": "end", "behaviour": "smooth"})
 
     def focus(self, *args):
         """When the interpreter gets focus, set sys.stdout and stderr"""
