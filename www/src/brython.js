@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-04 22:26:16.931325"
-__BRYTHON__.timestamp=1709587576930
+__BRYTHON__.compiled_date="2024-03-05 07:28:21.971473"
+__BRYTHON__.timestamp=1709620101971
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -10915,26 +10915,26 @@ js_constr.__class__=_b_.type
 return function(obj){obj.__bases__.splice(0,0,js_constr)
 obj.__mro__.splice(0,0,js_constr)
 return obj}},import_js:function(){
-var $=$B.args('import_js',2,{url:null,name:null},['url','name'],arguments,{name:_b_.None},null,null),url=$.url,name=$.name
+var $=$B.args('import_js',2,{url:null,alias:null},['url','alias'],arguments,{alias:_b_.None},null,null),url=$.url,alias=$.alias
 var xhr=new XMLHttpRequest(),result
 xhr.open('GET',url,false)
 xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var js=this.responseText+'\nreturn $module',f=new Function(js)
 console.log('f',f,f+'')
 var $module=f()
-if(typeof $module !=='undefined'){result=$B.module.$factory(name)
+if(typeof $module !=='undefined'){result=$B.module.$factory(alias)
 for(var key in $module){result[key]=$B.jsobj2pyobj($module[key])}
 result.__file__=url}else{console.log(this.responseText)
 result=_b_.ImportError.$factory('Javascript '+
-`module at ${url} doesn't define $module`)}}else{result=_b_.ModuleNotFoundError.$factory(name)}}}
+`module at ${url} doesn't define $module`)}}else{result=_b_.ModuleNotFoundError.$factory(url)}}}
 xhr.send()
-if($B.$isinstance(result,_b_.BaseException)){$B.handle_error(result)}else{if(name===_b_.None){
-name=url.split('.')
+if($B.$isinstance(result,_b_.BaseException)){$B.handle_error(result)}else{if(alias===_b_.None){
+var name=url.split('.')
 if(name.length > 1){name.pop()}
-name=name.join('.')
-result.__name__=name}
-$B.imported[name]=result
+alias=name.join('.')
+result.__name__=alias}
+$B.imported[alias]=result
 var frame=$B.frame_obj.frame
-frame[1][name]=result}},import_modules:function(refs,callback,loaded){
+frame[1][alias]=result}},import_modules:function(refs,callback,loaded){
 if(loaded===undefined){loaded=[]}
 if(! Array.isArray(refs)){throw _b_.TypeError.$factory(
 `first argument must be a list, got ${$B.class_name(refs)}`)}
