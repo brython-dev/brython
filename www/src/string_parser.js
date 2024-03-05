@@ -109,6 +109,7 @@ $B.prepare_string = function(token){
         pos = 0,
         string_modifier,
         _type = "string",
+        quote,
         context = {type: 'str'} // XXX
 
     while(pos < len){

@@ -3,6 +3,89 @@
 
 var _b_ = $B.builtins
 
+function ast_dump(tree, indent){
+    var attr,
+        value
+    indent = indent || 0
+    if(tree === _b_.None){
+        // happens in dictionary keys for **kw
+        return 'None'
+    }else if(typeof tree == 'string'){
+        return `'${tree}'`
+    }else if(typeof tree == 'number'){
+        return tree + ''
+    }else if(tree.imaginary){
+        return tree.value + 'j'
+    }else if(Array.isArray(tree)){
+        if(tree.length == 0){
+            return '[]'
+        }
+        res = '[\n'
+        var items = []
+        for(var x of tree){
+            try{
+                items.push(ast_dump(x, indent + 1))
+            }catch(err){
+                console.log('error', tree)
+                console.log('for item', x)
+                throw err
+            }
+        }
+        res += items.join(',\n')
+        return res + ']'
+    }else if(tree.$name){
+        return tree.$name + '()'
+    }else if(tree instanceof ast.MatchSingleton){
+        return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
+    }else if(tree instanceof ast.Constant){
+        value = tree.value
+        // For imaginary numbers, value is an object with
+        // attribute "imaginary" set
+        if(value.imaginary){
+            return `Constant(value=${_b_.repr(value.value)}j)`
+        }
+        return `Constant(value=${$B.AST.$convert(value)})`
+    }
+    var proto = Object.getPrototypeOf(tree).constructor
+    var res = '  ' .repeat(indent) + proto.$name + '('
+    if($B.ast_classes[proto.$name] === undefined){
+        console.log('no ast class', proto)
+    }
+    var attr_names = $B.ast_classes[proto.$name].split(','),
+        attrs = []
+    // remove trailing * in attribute names
+    attr_names = attr_names.map(x => (x.endsWith('*') || x.endsWith('?')) ?
+                                     x.substr(0, x.length - 1) : x)
+    if([ast.Name].indexOf(proto) > -1){
+        for(attr of attr_names){
+            if(tree[attr] !== undefined){
+                attrs.push(`${attr}=${ast_dump(tree[attr])}`)
+            }
+        }
+        return res + attrs.join(', ') + ')'
+    }
+    for(attr of attr_names){
+        if(tree[attr] !== undefined){
+            value = tree[attr]
+            attrs.push(attr + '=' +
+                ast_dump(tree[attr], indent + 1).trimStart())
+        }
+    }
+    if(attrs.length > 0){
+        res += '\n'
+        res += attrs.map(x => '  '.repeat(indent + 1) + x).join(',\n')
+    }
+    res  += ')'
+    return res
+}
+
+
+function string_from_ast_value(value){
+    // remove escaped "'" in string value
+    return value.replace(new RegExp("\\\\'", 'g'), "'")
+}
+
+
 function compiler_error(ast_obj, message, end){
     var exc = _b_.SyntaxError.$factory(message)
     exc.filename = state.filename
@@ -15,15 +98,15 @@ function compiler_error(ast_obj, message, end){
         exc.text = _b_.None
     }
     exc.lineno = ast_obj.lineno
-    exc.offset = ast_obj.col_offset
+    exc.offset = ast_obj.col_offset + 1
     end = end || ast_obj
     exc.end_lineno = end.end_lineno
-    exc.end_offset = end.end_col_offset
+    exc.end_offset = end.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     exc.$frame_obj = $B.frame_obj
     if($B.frame_obj === null){
-        console.log('frame obj is null')
+        // console.log('frame obj is null')
     }
     throw exc
 }
@@ -848,6 +931,25 @@ function compiler_check(obj){
     }
 }
 
+function check_assign_or_delete(obj, target, action){
+    action = action ?? 'assign to'
+    if(target instanceof $B.ast.Attribute){
+        if(target.attr == '__debug__'){
+            compiler_error(obj, `cannot ${action} __debug__`, target)
+        }
+    }else if(target instanceof $B.ast.Name){
+        if(target.id == '__debug__'){
+            compiler_error(obj, `cannot ${action} __debug__`, target)
+        }
+    }else if(target instanceof $B.ast.Tuple){
+        for(var elt of target.elts){
+            check_assign_or_delete(elt, elt, action)
+        }
+    }else if(target instanceof $B.ast.Starred){
+        check_assign_or_delete(obj, target.value, action)
+    }
+}
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
@@ -860,6 +962,7 @@ function annotation_to_str(obj, scopes){
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
+    compiler_check(this)
     var postpone_annotation = scopes.symtable.table.future.features &
             $B.CO_FUTURE_ANNOTATIONS
     var scope = last_scope(scopes)
@@ -903,6 +1006,10 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         }
     }
     return `$B.set_lineno(frame, ${this.lineno})\n` + js
+}
+
+$B.ast.AnnAssign.prototype._check = function(){
+    check_assign_or_delete(this, this.target)
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
@@ -985,6 +1092,13 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 
     js += assigns.join('\n')
     return js
+}
+
+
+$B.ast.Assign.prototype._check = function(){
+    for(var target of this.targets){
+        check_assign_or_delete(this, target)
+    }
 }
 
 $B.ast.AsyncFor.prototype.to_js = function(scopes){
@@ -1094,9 +1208,6 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
-    if(this.value instanceof $B.ast.Name && this.value.id == 'axw'){
-        return `${$B.js_from_ast(this.value, scopes)}.${attr}`
-    }
     var position = encode_position(this.value.col_offset,
                                 this.value.col_offset,
                                 this.end_col_offset)
@@ -1105,6 +1216,7 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
+    compiler_check(this)
     var js,
         op_class = this.op.$name ? this.op : this.op.constructor
     for(var op in $B.op2ast_class){
@@ -1144,6 +1256,10 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
         js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     }
     return `$B.set_lineno(frame, ${this.lineno})\n` + js
+}
+
+$B.ast.AugAssign.prototype._check = function(){
+    check_assign_or_delete(this, this.target)
 }
 
 $B.ast.Await.prototype.to_js = function(scopes){
@@ -1243,6 +1359,7 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
+    compiler_check(this)
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}`
 
@@ -1255,6 +1372,14 @@ $B.ast.Call.prototype.to_js = function(scopes){
 
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
+}
+
+$B.ast.Call.prototype._check = function(){
+    for(var kw of this.keywords){
+        if(kw.arg == '__debug__'){
+            compiler_error(this, "cannot assign to __debug__", kw)
+        }
+    }
 }
 
 function make_args(scopes){
@@ -1453,7 +1578,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     js += '\n$B.trace_return_and_leave(frame, _b_.None)\n' +
           `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}])\n` +
-          `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
+          `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
@@ -1596,6 +1721,13 @@ $B.ast.Delete.prototype.to_js = function(scopes){
     }
     return `$B.set_lineno(frame, ${this.lineno})\n` + js
 }
+
+$B.ast.Delete.prototype._check = function(){
+    for(var target of this.targets){
+        check_assign_or_delete(this, target, 'delete')
+    }
+}
+
 $B.ast.Dict.prototype.to_js = function(scopes){
     var items = [],
         keys = this.keys,
@@ -1618,7 +1750,7 @@ $B.ast.Dict.prototype.to_js = function(scopes){
             if(this.keys[i] instanceof $B.ast.Constant){
                 var v = this.keys[i].value
                 if(typeof v == 'string'){
-                    item += ', ' + $B.$hash($B.string_from_ast_value(v))
+                    item += ', ' + $B.$hash(string_from_ast_value(v))
                 }else{
                     try{
                         var hash = $B.$hash(this.keys[i].value)
@@ -1661,6 +1793,7 @@ $B.ast.Expression.prototype.to_js = function(scopes){
 $B.ast.For.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
+    compiler_check(this)
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes),
         js = `frame.$lineno = ${this.lineno}\n`
@@ -2281,6 +2414,7 @@ $B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
 
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
+    compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
         is_async = this instanceof $B.ast.AsyncFunctionDef
@@ -2656,6 +2790,26 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.FunctionDef.prototype._check = function(){
+    for(var arg of this.args.args){
+        if(arg instanceof $B.ast.arg){
+            if(arg.arg == '__debug__'){
+                compiler_error(arg, 'cannot assign to __debug__')
+            }
+        }
+    }
+    for(var arg of this.args.kwonlyargs){
+        if(arg instanceof $B.ast.arg){
+            if(arg.arg == '__debug__'){
+                compiler_error(arg, 'cannot assign to __debug__')
+            }
+        }
+    }
+    if(this.args.kwarg && this.args.kwarg.arg == '__debug__'){
+        compiler_error(this.args.kwarg, 'cannot assign to __debug__')
+    }
+}
+
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     var id = $B.UUID(),
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
@@ -2823,6 +2977,53 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
             bind(alias.name, scopes)
         }
     }
+    return js
+}
+
+$B.ast.Interactive.prototype.to_js = function(scopes){
+    mark_parents(this)
+    // create top scope
+    var name = init_scopes.bind(this)('module', scopes)
+
+    var module_id = name,
+        global_name = make_scope_name(scopes),
+        mod_name = module_name(scopes)
+
+    var js = `// Javascript code generated from ast\n` +
+             `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+
+    js += `${global_name} = {}, // $B.imported["${mod_name}"],\n` +
+          `locals = ${global_name},\n` +
+          `frame = ["${module_id}", locals, "${module_id}", locals]`
+
+    js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
+          `locals.__name__ = '${name}'\n` +
+          `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
+
+    if(! scopes.imported){
+          js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
+    }
+
+
+        // for exec(), frame is put on top of the stack inside
+        // py_builtin_functions.js / $$eval()
+
+    js += `frame.$f_trace = $B.enter_frame(frame)\n`
+    js += `$B.set_lineno(frame, 1)\n` +
+        '\nvar _frame_obj = $B.frame_obj\n'
+    js += 'var stack_length = $B.count_frames()\n'
+
+    js += `try{\n` +
+              add_body(this.body, scopes) + '\n' +
+              `$B.leave_frame({locals, value: _b_.None})\n` +
+          `}catch(err){\n` +
+              `$B.set_exc_and_trace(frame, err)\n` +
+              `$B.leave_frame({locals, value: _b_.None})\n` +
+              'throw err\n' +
+          `}`
+    scopes.pop()
+
+    console.log('Interactive', js)
     return js
 }
 
@@ -3172,9 +3373,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
 
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
-
-    js += `frame.$f_trace = $B.enter_frame(frame)\n`
     if(! namespaces){
+          js += `frame.$f_trace = $B.enter_frame(frame)\n`
           js += `$B.set_lineno(frame, 1)\n` +
                 '\nvar _frame_obj = $B.frame_obj\n'
     }
@@ -3214,6 +3414,7 @@ $B.ast.Name.prototype.to_js = function(scopes){
 }
 
 $B.ast.NamedExpr.prototype.to_js = function(scopes){
+    compiler_check(this)
     // Named expressions in a comprehension are bound in the enclosing scope
     var i = scopes.length - 1
     while(scopes[i].type == 'comprehension'){
@@ -3224,6 +3425,10 @@ $B.ast.NamedExpr.prototype.to_js = function(scopes){
     bind(this.target.id, enclosing_scopes)
     return '(' + $B.js_from_ast(this.target, enclosing_scopes) + ' = ' +
         $B.js_from_ast(this.value, scopes) + ')'
+}
+
+$B.ast.NamedExpr.prototype._check = function(){
+    check_assign_or_delete(this, this.target)
 }
 
 $B.ast.Nonlocal.prototype.to_js = function(scopes){
@@ -3253,6 +3458,10 @@ $B.ast.Raise.prototype.to_js = function(scopes){
 
 $B.ast.Return.prototype.to_js = function(scopes){
     // check that return is inside a function
+    if(last_scope(scopes).type != 'def'){
+        compiler_error(this, "'return' outside function")
+    }
+
     compiler_check(this)
     var js = `$B.set_lineno(frame, ${this.lineno})\n` +
              'var result = ' +
@@ -3299,7 +3508,7 @@ $B.ast.Starred.prototype.to_js = function(scopes){
         compiler_error(this,
             "starred assignment target must be in a list or tuple")
     }else{
-        compiler_error(this, "invalid syntax")
+        compiler_error(this, "can't use starred expression here")
     }
 }
 

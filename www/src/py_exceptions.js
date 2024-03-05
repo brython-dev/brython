@@ -183,6 +183,10 @@ var frame = $B.frame = $B.make_class("frame",
     }
 )
 
+frame.__bool__ = function(){
+    return true
+}
+
 frame.__delattr__ = function(_self, attr){
     if(attr == "f_trace"){
         _self.$f_trace = _b_.None
@@ -222,7 +226,7 @@ frame.__getattr__ = function(_self, attr){
         return _self.$f_trace
     }
 
-    console.log('no attr', attr, 'for frame', _self)
+    //console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
 
@@ -1099,7 +1103,7 @@ $B.error_trace = function(err){
             var start = err.offset - indent - 1,
                 end_offset = err.end_offset - 1 +
                     (err.end_offset == err.offset ? 1 : 0),
-                marks = '    ' + ' '.repeat(start),
+                marks = '    ' + ' '.repeat(Math.max(0, start)),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){

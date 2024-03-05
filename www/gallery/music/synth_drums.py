@@ -8,150 +8,10 @@ import json
 from browser import bind, console, document, html, timer, window
 
 import drum_score
-
-class Config:
-
-    context = None
+import player
 
 
-def setup():
-    if Config.context is None:
-        Config.context = window.AudioContext.new()
-
-kick_freq = document['kick_freq']
-
-class Kick:
-
-    checked = 'o'
-
-    def __init__(self):
-        setup()
-
-    def setup(self):
-        self.osc = Config.context.createOscillator()
-        self.gain = Config.context.createGain()
-        self.osc.connect(self.gain)
-        self.gain.connect(Config.context.destination)
-
-    def trigger(self, time=None):
-        time = time or Config.context.currentTime
-        self.setup()
-
-        self.osc.frequency.setValueAtTime(int(kick_freq.value), time)
-        self.gain.gain.setValueAtTime(1, time)
-
-        self.osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5)
-        self.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5)
-
-        self.osc.start(time)
-
-        self.osc.stop(time + 0.5)
-
-
-class Snare:
-
-    checked = 'o'
-
-    def __init__(self):
-        setup()
-        self.setup()
-
-    def setup(self):
-        self.noise = Config.context.createBufferSource()
-        self.noise.buffer = self.noiseBuffer()
-
-        noiseFilter = Config.context.createBiquadFilter()
-        noiseFilter.type = 'highpass'
-        noiseFilter.frequency.value = 1000
-        self.noise.connect(noiseFilter)
-
-        self.noiseEnvelope = Config.context.createGain()
-        noiseFilter.connect(self.noiseEnvelope)
-
-        self.noiseEnvelope.connect(Config.context.destination)
-
-    def noiseBuffer(self):
-        bufferSize = Config.context.sampleRate
-        buffer = Config.context.createBuffer(1, bufferSize,
-                                             Config.context.sampleRate)
-        output = buffer.getChannelData(0)
-
-        for i in range(bufferSize):
-          output[i] = random.random() * 2 - 1
-
-        return buffer
-
-    def trigger(self, time=None):
-
-        time = time or Config.context.currentTime
-        self.osc = Config.context.createOscillator()
-        self.osc.type = 'triangle'
-
-        self.oscEnvelope = Config.context.createGain()
-        self.osc.connect(self.oscEnvelope)
-        self.oscEnvelope.connect(Config.context.destination)
-
-        self.noiseEnvelope.gain.cancelScheduledValues(time)
-
-        self.noiseEnvelope.gain.setValueAtTime(1, time)
-        self.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2)
-        self.noise.start(time)
-
-        self.osc.frequency.setValueAtTime(100, time)
-        self.oscEnvelope.gain.setValueAtTime(0.7, time)
-        self.oscEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.1)
-        self.osc.start(time)
-
-        self.osc.stop(time + 0.2)
-        self.noise.stop(time + 0.2)
-
-class HiHat:
-
-    buffer = None
-    checked = 'x'
-
-    def setup(self, time):
-        self.source = Config.context.createBufferSource()
-        self.source.buffer = self.buffer
-        self.source.connect(Config.context.destination)
-        self.play(time)
-
-    def trigger(self, time=None):
-        if self.buffer is None:
-            Config.context = window.AudioContext.new()
-            time = time or Config.context.currentTime
-            sampleLoader('samples/hihat.wav', HiHat, lambda: self.setup(time))
-        else:
-            time = time or Config.context.currentTime
-            self.setup(time)
-
-    def play(self, time):
-        time = Config.context.currentTime if time is None else time
-        self.source.start(time)
-
-instruments = [HiHat, Snare, Kick]
-
-score = drum_score.Score(instruments)
-document['score'] <= html.DIV('Patterns')
-
-document['score'] <= score
-score.new_tab()
-
-
-def sampleLoader(url, cls, callback):
-    request = window.XMLHttpRequest.new()
-    request.open("GET", url, True)
-    request.responseType = "arraybuffer"
-
-    def f(buffer):
-        cls.buffer = buffer
-        callback()
-
-    @bind(request, 'load')
-    def load(ev):
-        Config.context.decodeAudioData(request.response, f)
-
-    request.send()
+instruments = player.instruments
 
 load_button = document['load_score']
 
@@ -163,16 +23,19 @@ def file_read(ev):
         event.target.
         The file content, as text, is the FileReader instance's "result"
         attribute."""
-        global score
         data = json.loads(event.target.result)
-        score = drum_score.Score(instruments)
+        print('data', data)
         document['score'].clear()
+        score = create_score(data.get('notes_per_bar', 16))
         document['score'] <= score
+        while score.tabs:
+            score.remove_tab(score.tabs[-1])
         score.patterns.value = data['patterns']
         for i, notes in enumerate(data['bars']):
             score.new_tab(notes=notes)
+        document["bpm_control"].value = document["bpm_value"].text = data['bpm']
         # set attribute "download" to file name
-        save_button.attrs["download"] = file.name
+        ev.target.attrs["download"] = file.name
 
     # Get the selected file as a DOM File object
     file = load_button.files[0]
@@ -182,10 +45,10 @@ def file_read(ev):
     reader.readAsText(file)
     reader.bind("load", onload)
 
-save_button = document['save_score']
+#save_button = document['save_score']
 
-@bind(save_button, "mousedown")
-def mousedown(evt):
+#@bind(save_button, "mousedown")
+def save_score(ev, score):
       """Create a "data URI" to set the downloaded file content
       Cf. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
       """
@@ -197,73 +60,78 @@ def mousedown(evt):
               sbar[instrument.__name__] = bar.notes[instrument]
           bars.append(sbar)
 
-      data = json.dumps({'patterns': score.patterns.value, 'bars': bars})
+      data = json.dumps({'patterns': score.patterns.value,
+                         'bars': bars,
+                         'bpm': score.bpm,
+                         'notes_per_bar': score.notes_per_bar
+                         })
 
       content = window.encodeURIComponent(data)
       # set attribute "href" of save link
+      save_button = ev.target
       save_button.attrs["download"] = 'drum_score.json'
       save_button.attrs["href"] = "data:text/json," + content
 
+def create_score(notes_per_bar):
 
-look_ahead = 0.1
-schedule_period = 1000 * 0.05 # milliseconds
+    document["notes_per_bar"].clear()
+    document["score"].clear()
 
-bpm_control = document['bpm']
+    score = drum_score.Score(instruments, notes_per_bar)
 
-@bind('#bpm', 'input')
-def change_bpm(ev):
-    Sequencer.read_sequence()
+    document['score'] <= html.DIV('Patterns')
 
-def get_bpm():
-    return int(bpm_control.value)
+    document['score'] <= score
+    score.new_tab()
 
-class Sequencer:
+    bpm = document["bpm"]
+    bpm.clear()
 
-    running = False
-    pattern = None
+    document['load'].clear()
 
-    @classmethod
-    def read_sequence(cls):
-        cls.seq, cls.nb_bars = score.get_seq(get_bpm())
+    play_control = html.BUTTON("&#x23f5",
+                             id="play_score", Class="pure-button start_loop")
+    play_control.bind('click', lambda ev: play_score(ev, score))
+    bpm <= play_control
+
+    bpm_control = html.INPUT(id="bpm_control",
+                             type="range", min=30, max=300, step=1, value=120)
+    bpm <= bpm_control
+    bpm_control.bind('input', lambda ev: change_bpm(ev, score))
+    bpm_value = html.SPAN(id="bpm_value")
+    bpm <= bpm_value
+
+    score.bpm = bpm_control.value
+
+    save_control = html.A("SAVE", href="#", id="save_score",
+                          download=True, Class="pure-button")
+    save_control.bind('click', lambda ev: save_score(ev, score))
+    document["score"] <= save_control
+
+    return score
+
+@bind("#notes_per_bar button", "click")
+def create_12_16(ev):
+    create_score(int(ev.target.text))
 
 
-@bind('#start_loop', 'click')
-def start_loop(ev):
-    setup()
-    if Sequencer.running:
+def change_bpm(ev, score):
+    document["bpm_value"].text = ev.target.value
+    score.bpm = int(ev.target.value)
+
+def end_play(ev):
+    print('END PALY')
+    ev.target.html = "&#x23f5"
+
+def play_score(ev, score):
+    if player.Sequencer.running:
+        ev.target.html = '&#x23f5;'
+        player.Sequencer.running = False
         return
-    Sequencer.read_sequence()
-    if not Sequencer.seq:
-        return
-    Sequencer.running = True
-    Sequencer.pattern = None
-    loop(Config.context.currentTime, 0)
-
-@bind('#end_loop', 'click')
-def end_loop(ev):
-    Sequencer.running = False
-
-def loop(t0, i):
-    dt = Config.context.currentTime - t0
-
-    if not Sequencer.running:
-        return
-
-    while dt > Sequencer.seq[i][1] - look_ahead:
-        line_num, t, pattern, cell = Sequencer.seq[i]
-        instrument = score.instruments[line_num]()
-        if pattern != Sequencer.pattern:
-            score.show_pattern(pattern)
-            Sequencer.pattern = pattern
-        score.flash(cell)
-        start = t0 + t
-        instrument.trigger(start + 0.1)
-        i += 1
-        if i >= len(Sequencer.seq):
-            i = 0
-            bpm = get_bpm()
-            t0 = t0 + Sequencer.nb_bars * 240 / bpm # bar duration (4 quarter notes)
-            Sequencer.read_sequence()
-            break
-
-    timer.set_timeout(loop, schedule_period, t0, i)
+    player.Sequencer.running = True
+    ev.target.html = '&#x23f9;'
+    score.bpm = int(document['bpm_control'].value)
+    seq, nb_bars = score.get_seq()
+    duration = nb_bars * 240 / score.bpm
+    timer.set_timeout(end_play, duration * 1000, ev)
+    player.start_loop(seq, nb_bars, score, None)

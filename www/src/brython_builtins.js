@@ -86,6 +86,14 @@ var path = _window.location.origin + _window.location.pathname,
 path_elts.pop()
 $B.script_dir = path_elts.join("/")
 
+mo = parts_re.exec($B.script_dir)
+if(mo){
+    if(['http', 'https'].includes(mo[1])){
+        $B.script_domain = mo[1] + '://' + mo[2]
+    }
+}
+
+
 $B.strip_host = function(url){
     var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
         mo = parts_re.exec(url)
@@ -173,6 +181,7 @@ $B.tz_name = long.substr(ix).trim()
 $B.PyCF_ONLY_AST = 1024
 $B.PyCF_TYPE_COMMENTS = 0x1000
 $B.CO_FUTURE_ANNOTATIONS = 0x1000000
+$B.PyCF_ALLOW_INCOMPLETE_INPUT = 0x4000
 
 if($B.isWebWorker){
     $B.charset = "utf-8"
@@ -196,8 +205,59 @@ $B.max_array_size = 2 ** 32 - 1
 
 $B.recursion_limit = 200
 
-// PEP 657 – Include Fine Grained Error Locations in Traceback (Python 3.11)
-$B.pep657 = true
+// Mapping between operators and special Python method names
+$B.op2method = {
+    operations: {
+        "**": "pow", "//": "floordiv", "<<": "lshift", ">>": "rshift",
+        "+": "add", "-": "sub", "*": "mul", "/": "truediv", "%": "mod",
+        "@": "matmul" // PEP 465
+    },
+    augmented_assigns: {
+        "//=": "ifloordiv", ">>=": "irshift", "<<=": "ilshift", "**=": "ipow",
+        "+=": "iadd","-=": "isub", "*=": "imul", "/=": "itruediv",
+        "%=": "imod", "&=": "iand","|=": "ior","^=": "ixor", "@=": "imatmul"
+    },
+    binary: {
+        "&": "and", "|": "or", "~": "invert", "^": "xor"
+    },
+    comparisons: {
+        "<": "lt", ">": "gt", "<=": "le", ">=": "ge", "==": "eq", "!=": "ne"
+    },
+    boolean: {
+        "or": "or", "and": "and", "in": "in", "not": "not", "is": "is"
+    },
+    subset: function(){
+        var res = {},
+            keys = []
+        if(arguments[0] == "all"){
+            keys = Object.keys($B.op2method)
+            keys.splice(keys.indexOf("subset"), 1)
+        }else{
+            for(var arg of arguments){
+                keys.push(arg)
+            }
+        }
+        for(var key of keys){
+            var ops = $B.op2method[key]
+            if(ops === undefined){
+                throw Error(key)
+            }
+            for(var attr in ops){
+                res[attr] = ops[attr]
+            }
+        }
+        return res
+    }
+}
+
+$B.method_to_op = {}
+for(var category in $B.op2method){
+    for(var op in $B.op2method[category]){
+        var method = `__${$B.op2method[category][op]}__`
+        $B.method_to_op[method] = op
+    }
+}
+
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {

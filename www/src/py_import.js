@@ -73,7 +73,7 @@ $B.make_import_paths = function(filename){
     // - finder_static_stlib : use the script stdlib_path.js to identify the
     //   packages and modules in the standard distribution
     // - finder_path : search module at different urls
-    var filepath = $B.domain ? $B.domain + '/' + filename : filename
+    var filepath = $B.script_domain ? $B.script_domain + '/' + filename : filename
     var elts = filepath.split('/')
     elts.pop()
     var script_dir = elts.join('/'),
@@ -233,7 +233,7 @@ function run_js(module_contents, path, _module){
 
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
-    var filename = $B.strip_host(path)
+    var filename = module.__file__
     $B.file_cache[filename] = module_contents
     $B.url2name[filename] = module.__name__
     var root,

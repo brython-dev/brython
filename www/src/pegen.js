@@ -15,6 +15,11 @@
 var _b_ = __BRYTHON__.builtins
 
 const Load = new $B.ast.Load()
+const NULL = undefined;
+const ENDMARKER = 0,
+      NAME = 1,
+      NUMBER = 2,
+      STRING = 3
 
 function strchr(s, char){
     return s.includes(char)
@@ -50,22 +55,11 @@ const NSTATISTICS = 2000,
       ERRORTOKEN = 'ERRORTOKEN',
       NEWLINE = $B.py_tokens.NEWLINE,
       DEDENT = $B.py_tokens.DEDENT,
-      Py_single_input = 'py_single_input'
+      Py_single_input = 'py_single_input',
+      PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 
 function PyUnicode_IS_ASCII(char){
     return char.codePointAt(0) < 128
-}
-
-function PyBytes_FromStringAndSize(s){
-    var dest = new Uint8Array(s.length * 3)
-    var encoder = new TextEncoder()
-    var result = encoder.encodeInto(s, dest)
-    return $B.fast_bytes(Array.from(dest.slice(0, result.written)))
-}
-
-function _PyArena_AddPyObject(arena, obj){
-    // arena.a_objects.push(obj)
-    return 1
 }
 
 function set_position_from_token(ast_obj, token){
@@ -253,12 +247,9 @@ function initialize_token(p, parser_token, new_token, token_type) {
         console.log('keywords', p.keywords)
         alert()
     }
-    parser_token.bytes = PyBytes_FromStringAndSize(new_token.string)
 
-    _PyArena_AddPyObject(p.arena, parser_token.bytes)
     parser_token.metadata = NULL;
     if (new_token.metadata != NULL) {
-        _PyArena_AddPyObject(p.arena, new_token.metadata)
         parser_token.metadata = new_token.metadata;
         new_token.metadata = NULL;
     }
@@ -292,11 +283,22 @@ function _PyTokenizer_Get(tok, new_token){
     return token.num_type
 }
 
-
 function get_next_token(p, new_token){
     var token = p.tokens[p.fill] ?? p.read_token()
     for(var key in token){
         new_token[key] = token[key]
+    }
+    if(token.num_type == $B.py_tokens.ENDMARKER){
+        // on 'single' mode, insert a NEWLINE before ENDMARKER
+        if(p.mode == 'single'){
+            var end_token = p.tokens[p.tokens.length - 2]
+            if(end_token.num_type != $B.py_tokens.NEWLINE){
+                var newline = $B.clone(end_token)
+                newline.num_type = $B.py_tokens.NEWLINE
+                p.tokens.splice(p.tokens.length - 1, 0, newline)
+                token = newline
+            }
+        }
     }
     return token.num_type
 }
@@ -466,7 +468,8 @@ $B._PyPegen.expect_forced_token = function(p, type, expected) {
     }
     var t = p.tokens[p.mark];
     if (t.num_type != type) {
-        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(t, "expected '%s'", expected);
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, t,
+            `expected '${expected}'`);
         return NULL;
     }
     p.mark += 1;
@@ -540,10 +543,6 @@ $B._PyPegen.new_identifier = function(p, n){
         id = id2;
     }
     PyUnicode_InternInPlace(id);
-    if (_PyArena_AddPyObject(p.arena, id) < 0)
-    {
-        return error()
-    }
     return id;
 
     function error(){
@@ -589,7 +588,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
     }
     var the_token;
     var size;
-    the_token = _b_.bytes.decode(t.bytes, 'iso-8859-1');
+    the_token = t.string; // _b_.bytes.decode(t.bytes, 'iso-8859-1');
     for (let keyword = p.soft_keywords; keyword != NULL; keyword++) {
         if (strncmp(keyword, the_token, size) == 0) {
             return $B._PyPegen.name_from_token(p, t);
@@ -601,11 +600,24 @@ $B._PyPegen.soft_keyword_token = function(p) {
 function prepared_number_value(prepared){
     switch(prepared.type){
         case 'float':
-            return parseFloat(prepared.value)
+            return $B.fast_float(prepared.value)
         case 'imaginary':
             return $B.make_complex(0, prepared_number_value(prepared.value))
         case 'int':
-            return parseInt(prepared.value[1], prepared.value[0])
+            var res = parseInt(prepared.value[1], prepared.value[0])
+            if(! Number.isSafeInteger(res)){
+                var base = prepared.value[0],
+                    num_str = prepared.value[1]
+                switch(base){
+                    case 8:
+                        return $B.fast_long_int(BigInt('0x' + num_str))
+                    case 10:
+                        return $B.fast_long_int(BigInt(num_str))
+                    case 16:
+                        return $B.fast_long_int(BigInt('0x' + num_str))
+                }
+            }
+            return res
     }
 }
 
@@ -689,7 +701,7 @@ $B._PyPegen.number_token = function(p){
     }
 
     var c = parsenumber(num_raw);
-    
+
     if (c == NULL) {
         p.error_indicator = 1;
         var tstate = _PyThreadState_GET();
@@ -713,11 +725,6 @@ $B._PyPegen.number_token = function(p){
         return NULL;
     }
 
-    if (_PyArena_AddPyObject(p.arena, c) < 0) {
-        Py_DECREF(c);
-        p.error_indicator = 1;
-        return NULL;
-    }
     var res = new $B.ast.Constant(c, NULL);
     set_position_from_token(res, t)
     return res
@@ -732,7 +739,7 @@ function bad_single_statement(p){
     var pos = 0
 
     for (;;) {
-        while (c == ' ' || c == '\t' || c == '\n' || c == '\014') {
+        while (c == ' ' || c == '\t' || c == '\n' || c == '\f') {
             c = cur[pos++]
         }
 
@@ -851,13 +858,86 @@ function reset_parser_state_for_error_pass(p){
     p.call_invalid_rules = 1;
     // Don't try to get extra tokens in interactive mode when trying to
     // raise specialized errors in the second pass.
-    p.tok.interactive_underflow = IUNDERFLOW_STOP;
+    // p.tok.interactive_underflow = IUNDERFLOW_STOP;
 }
 
 function _is_end_of_source(p) {
     var err = p.tok.done;
     return err == E_EOF || err == E_EOFS || err == E_EOLS;
 }
+
+$B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
+    var last_token = p.tokens[p.fill - 1]
+    var tokenizer = $B.tokenizer(p.src, p.filename, p.mode, p)
+    for(var token of tokenizer){
+    }
+    if(p.braces.length > 0){
+        var brace = $B.last(p.braces),
+            err_lineno,
+            msg
+        if('([{'.includes(brace.char)){
+            err_lineno =  brace.line_num
+        }else{
+            if(p.braces.length > 1){
+                err_lineno = p.braces[p.braces.length - 2].line_num
+            }else{
+                err_lineno = brace.line_num
+            }
+        }
+        if(p.tokens.length == 0 || $B.last(p.tokens).lineno >= err_lineno){
+            if('([{'.includes(brace.char)){
+                msg = `'${brace.char}' was never closed`
+            }else if(p.braces.length > 1){
+                var closing = brace.char,
+                    opening = p.braces[p.braces.length - 2].char
+                msg = `closing parenthesis '${closing}' does not match ` +
+                      `opening parenthesis '${opening}'`
+            }else{
+                msg = `unmatched '${brace.char}'`
+            }
+            $B.raise_error_known_location(_b_.SyntaxError,
+                            p.filename,
+                            brace.line_num, brace.pos - brace.line_start,
+                            brace.line_num, brace.pos - brace.line_start + 1,
+                            brace.line,
+                            msg)
+        }
+    }
+}
+
+$B._PyPegen.set_syntax_error = function(p, last_token) {
+    // Initialization error
+    if (p.fill == 0) {
+        $B.helper_functions.RAISE_SYNTAX_ERROR(p,
+            "error at start before reading any input");
+    }
+    $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+
+    // Parser encountered EOF (End of File) unexpectedtly
+    if (last_token.num_type == ERRORTOKEN && p.tok.done == E_EOF) {
+        if (p.tok.level) {
+            raise_unclosed_parentheses_error(p);
+        } else {
+            $B.helper_functions.RAISE_SYNTAX_ERROR(p, "unexpected EOF while parsing");
+        }
+        return;
+    }
+    // Indentation error in the tokenizer
+    if (last_token.num_type == INDENT || last_token.num_type == DEDENT) {
+        $B.helper_functions.RAISE_INDENTATION_ERROR(p,
+            last_token.num_type == INDENT ? "unexpected indent" : "unexpected unindent");
+        return;
+    }
+    // Unknown error (generic case)
+    $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
+    // Use the last token we found on the first pass to avoid reporting
+    // incorrect locations for generic syntax errors just because we reached
+    // further away when trying to find specific syntax errors in the second
+    // pass.
+    $B.raise_error_known_token(_b_.SyntaxError, p.filename, last_token,
+        "invalid syntax");
+}
+
 
 $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
@@ -867,20 +947,22 @@ $B._PyPegen.run_parser = function(p){
             PyErr_Clear();
             return RAISE_SYNTAX_ERROR("incomplete input");
         }
-        if (PyErr_Occurred() && !PyErr_ExceptionMatches(PyExc_SyntaxError)) {
-            return NULL;
-        }
-       // Make a second parser pass. In this pass we activate heavier and slower checks
+        // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"
         // rules will be active during parsing.
         var last_token = p.tokens[p.fill - 1];
         reset_parser_state_for_error_pass(p);
-        _PyPegen_parse(p);
-
+        try{
+            $B._PyPegen.parse(p);
+        }catch(err){
+            last_token = p.tokens[p.fill - 1]
+            // check if a parenthesis error occurred before
+            $B._PyPegen.tokenize_full_source_to_check_for_errors(p)
+            throw err
+        }
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
-        _Pypegen_set_syntax_error(p, last_token);
-       return NULL;
+        $B._PyPegen.set_syntax_error(p, last_token);
     }
 
     if (p.start_rule == Py_single_input && bad_single_statement(p)) {
@@ -890,14 +972,16 @@ $B._PyPegen.run_parser = function(p){
 
     // test_peg_generator defines _Py_TEST_PEGEN to not call PyAST_Validate()
 // #if defined(Py_DEBUG) && !defined(_Py_TEST_PEGEN)
-    if (p.start_rule == Py_single_input ||
-        p.start_rule == Py_file_input ||
-        p.start_rule == Py_eval_input)
+    /*
+    if (p.mode == 'single' ||
+        p.mode == 'file' ||
+        p.mode == 'eval')
     {
         if (!_PyAST_Validate(res)) {
             return NULL;
         }
     }
+    */
 // #endif
     return res;
 }
@@ -976,6 +1060,15 @@ $B._PyPegen.run_parser_from_string = function(str, start_rule, filename_ob,
     function error(){
         // _PyTokenizer_Free(tok);
         return result;
+    }
+}
+
+$B.PyPegen = {
+    first_item: function(a, type){
+        return a[0]
+    },
+    last_item: function(a, ptype){
+        return a[a.length - 1]
     }
 }
 

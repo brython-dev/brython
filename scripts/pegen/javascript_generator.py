@@ -135,21 +135,22 @@ const EXTRA = {}
 
 
 EXTENSION_SUFFIX = """
-$B._PyPegen_parse = function(p){
+$B._PyPegen.parse = function(p){
     p.keywords = reserved_keywords;
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
-
-    // skip first token (ENCODING)
-    p.tok.next()
 
     switch(p.mode){
         case 'file':
             return file_rule(p)
         case 'eval':
             return eval_rule(p)
+        case 'single':
+            return interactive_rule(p)
+        default:
+            console.log('unknown mode', p.mode)
+            alert()
     }
-
 }
 """
 
@@ -673,34 +674,34 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         with self.indent():
             self.add_level()
             self._check_for_errors()
-            if memoize:
-                self.print(f"var _res = {{value: NULL}};")
-                self.print(f"if ($B._PyPegen.is_memoized(p, {node.name}_type, _res)) {{")
-                with self.indent():
-                    self.add_return("_res.value")
-                self.print("}")
+            self.print("while (1) {")
+            with self.indent():
+                if memoize:
+                    self.print(f"var _res = {{value: NULL}};")
+                    self.print(f"if ($B._PyPegen.is_memoized(p, {node.name}_type, _res)) {{")
+                    with self.indent():
+                        self.add_return("_res.value")
+                    self.print("}")
+                    self.print("_res = NULL;")
+                else:
+                    self.print("var _res = NULL;")
+                self.print("var _mark = p.mark;")
+                if any(alt.action and "EXTRA" in alt.action for alt in rhs.alts):
+                    self._set_up_token_start_metadata_extraction()
+                self.visit(
+                    rhs,
+                    is_loop=False,
+                    is_gather=node.is_gather(),
+                    rulename=node.name,
+                )
+                if self.debug:
+                    self.print(f'D(fprintf(stderr, "Fail at %d: {node.name}\\n", p.mark));')
                 self.print("_res = NULL;")
-            else:
-                self.print("var _res = NULL;")
-            self.print("var _mark = p.mark;")
-            if any(alt.action and "EXTRA" in alt.action for alt in rhs.alts):
-                self._set_up_token_start_metadata_extraction()
-            self.visit(
-                rhs,
-                is_loop=False,
-                is_gather=node.is_gather(),
-                rulename=node.name,
-            )
-            if self.debug:
-                self.print(f'D(fprintf(stderr, "Fail at %d: {node.name}\\n", p.mark));')
-            self.print("_res = NULL;")
-        self.print("  function done(){")
-
-        with self.indent():
+                self.print("break;")
+            self.print("}")
             if memoize:
                 self.print(f"$B._PyPegen.insert_memo(p, _mark, {node.name}_type, _res);")
             self.add_return("_res")
-            self.print('}')
 
     def _handle_loop_rule_body(self, node: Rule, rhs: Rhs) -> None:
         memoize = self._should_memoize(node)
@@ -878,7 +879,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
                 self.emit_default_action(is_gather, node)
 
             # As the current option has parsed correctly, do not continue with the rest.
-            self.print(f"return done();")
+            self.print(f"break;")
         self.print("}")
 
     def handle_alt_loop(self, node: Alt, is_gather: bool, rulename: Optional[str]) -> None:

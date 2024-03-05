@@ -458,10 +458,10 @@
             // load JS script at specified url
             // If it exposes a variable $module, use it as the namespace of imported
             // module named "name"
-            var $ = $B.args('import_js', 2, {url: null, name: null},
-                    ['url', 'name'], arguments, {name: _b_.None}, null, null),
+            var $ = $B.args('import_js', 2, {url: null, alias: null},
+                    ['url', 'alias'], arguments, {alias: _b_.None}, null, null),
                 url = $.url,
-                name = $.name
+                alias = $.alias
             var xhr = new XMLHttpRequest(),
                 result
             xhr.open('GET', url, false)
@@ -473,7 +473,7 @@
                         console.log('f', f, f+'')
                         var $module = f()
                         if(typeof $module !== 'undefined'){
-                            result = $B.module.$factory(name)
+                            result = $B.module.$factory(alias)
                             for(var key in $module){
                                 result[key] = $B.jsobj2pyobj($module[key])
                             }
@@ -484,7 +484,7 @@
                                 `module at ${url} doesn't define $module`)
                         }
                     }else{
-                        result = _b_.ModuleNotFoundError.$factory(name)
+                        result = _b_.ModuleNotFoundError.$factory(url)
                     }
                 }
             }
@@ -492,18 +492,18 @@
             if($B.$isinstance(result, _b_.BaseException)){
                 $B.handle_error(result)
             }else{
-                if(name === _b_.None){
+                if(alias === _b_.None){
                     // set module name from url
-                    name = url.split('.')
+                    var name = url.split('.')
                     if(name.length > 1){
                         name.pop() // remove extension
                     }
-                    name = name.join('.')
-                    result.__name__ = name
+                    alias = name.join('.')
+                    result.__name__ = alias
                 }
-                $B.imported[name] = result
+                $B.imported[alias] = result
                 var frame = $B.frame_obj.frame
-                frame[1][name] = result
+                frame[1][alias] = result
             }
         },
         import_modules: function(refs, callback, loaded){

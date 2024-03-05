@@ -24,10 +24,10 @@ var GLOBAL_PARAM = "name '%s' is parameter and global",
     ANNOTATION_NOT_ALLOWED =
     "'%s' can not be used within an annotation",
     DUPLICATE_ARGUMENT = "duplicate argument '%s' in function definition",
-    TYPEVAR_BOUND_NOT_ALLOWED = "'%s' can not be used within a TypeVar bound",
-    TYPEALIAS_NOT_ALLOWED = "'%s' can not be used within a type alias",
+    TYPEVAR_BOUND_NOT_ALLOWED = "%s cannot be used within a TypeVar bound",
+    TYPEALIAS_NOT_ALLOWED = "%s cannot be used within a type alias",
     TYPEPARAM_NOT_ALLOWED =
-        "'%s' can not be used within the definition of a generic",
+        "%s cannot be used within the definition of a generic",
     DUPLICATE_TYPE_PARAM = "duplicate type parameter '%s'"
 
 /* Flags for def-use information */

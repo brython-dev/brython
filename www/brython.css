@@ -211,7 +211,7 @@ select.language {
     border-color:#888;
     border-radius: 10px;
     width:auto;
-    font-family: "Consolas";
+    font-family: "Consolas", monospace;
 }
 
 .pycode-in-html{
@@ -251,7 +251,7 @@ li {
 }
 
 pre{
-    font-family: Consolas;
+    font-family: Consolas, monospace;
 }
 pre.marked {
   color:var(--dark-3);
@@ -292,7 +292,7 @@ span.html-attrs{
 
 code {
   color:var(--dark-3);
-  font-family: Consolas;
+  font-family: Consolas, monospace;
 }
 
 code.file{

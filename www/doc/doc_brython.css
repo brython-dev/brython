@@ -146,7 +146,7 @@ select.language {
     border-color:#888;
     border-radius: 10px;
     width:auto;
-    font-family: "Consolas";
+    font-family: "Consolas", monospace;
 }
 
 .xml{
@@ -176,7 +176,7 @@ li {
 }
 
 pre{
-    font-family: Consolas;
+    font-family: Consolas, monospace;
 }
 pre.marked {
   color:var(--header-color);
@@ -200,7 +200,7 @@ span.python-builtin{
 
 code {
   color:var(--special-text-color);
-  font-family: Consolas;
+  font-family: Consolas, monospace;
 }
 
 em {

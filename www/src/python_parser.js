@@ -228,6 +228,7 @@ var helper_functions = {
     },
 
     _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
+        console.log('RAISE INVLAID TARGET')
         var invalid_target = $B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,
             $B._PyPegen.get_invalid_target(e, type));
         if (invalid_target != NULL) {
@@ -356,6 +357,7 @@ var Parser = $B.Parser = function(src, filename, mode){
     if(filename){
         p.filename = filename
     }
+
 }
 
 Parser.prototype.parse = function(){
@@ -429,10 +431,16 @@ Parser.prototype.set_memo = function(rule, position, value){
     this.memo[rule.name][position] = value
 }
 
+var rule_indent = -1
+var rule_stack = []
+$B.rule_stack = rule_stack
+
 Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
-    if(debug){
-        console.log('apply rule', rule, 'at position', position, this.tokens[position])
+    if(this.use_invalid){ //debug || rule.name.includes('invalid')){
+        rule_indent++
+        rule_stack.push(rule)
+        console.log('  '.repeat(rule_indent) + 'apply rule', rule.name, 'at position', position) //, this.tokens[position])
     }
     var memoized = this.RECALL(rule, position),
         result
@@ -460,6 +468,11 @@ Parser.prototype.apply_rule = function(rule, position){
         }else{
             result = memoized === FAIL ? memoized : memoized.match
         }
+    }
+    if(this.use_invalid){ // debug || rule.name.includes('invalid')){
+        console.log('  '.repeat(rule_indent) + 'result of apply rule', rule.name, result)
+        rule_stack.pop()
+        rule_indent--
     }
     return result
 }
@@ -595,6 +608,10 @@ Parser.prototype.eval_option_once = function(rule, position){
         var match = {rule, matches, start, end: position}
         if(this.use_invalid && rule.parent_rule &&
                 rule.parent_rule.startsWith('invalid_')){
+            console.log('match invalid rule', show_rule(rule))
+            for(var m of matches){
+                console.log(m)
+            }
             var _ast = make_ast(match, tokens)
             if(_ast === undefined){
                 return FAIL

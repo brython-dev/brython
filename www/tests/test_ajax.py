@@ -131,6 +131,16 @@ ajax.file_upload('https://httpbin.org/anything',
                  data=data,
                  oncomplete=lambda req: check(2, req, expected2))
 
+expected3 = {
+                'files': {'filetosave': content},
+                'form': {'name': 'coucou3'}
+            }
+data = {'name': 'coucou3'}
+ajax.file_upload('https://httpbin.org/anything',
+                 file,
+                 data=data,
+                 oncomplete=lambda req: check(2, req, expected3))
+
 # issue 2346
 import json
 

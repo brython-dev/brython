@@ -146,7 +146,11 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
 
     if(Array.isArray(jsobj)){
         // set it as non-enumerable, prevents issues when looping on it in JS.
-        Object.defineProperty(jsobj, "$is_js_array", {value: true});
+        try{
+            Object.defineProperty(jsobj, "$is_js_array", {value: true});
+        }catch(err){
+            // ignore; cf. issue #2379
+        }
         return jsobj
     }
 
@@ -556,7 +560,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "Date"
+    var test = attr == "line"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -625,7 +629,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     }
     if(js_attr !== null &&
             js_attr.toString &&
-            typeof js_attr.toString == 'function' &&
+            typeof js_attr == 'function' &&
             js_attr.toString().startsWith('class ')){
         // Javascript class
         return jsclass2pyclass(js_attr)
@@ -798,6 +802,10 @@ function convert_to_python(obj){
         return obj.map(convert_to_python)
     }
     if($B.$isinstance(obj, $B.JSObj)){
+        if(typeof obj == 'number'){
+            // float
+            return $B.fast_float(obj)
+        }
         var res = $B.empty_dict()
         for(var key in obj){
             _b_.dict.$setitem_string(res, key, convert_to_python(obj[key]))
