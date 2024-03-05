@@ -510,6 +510,8 @@ class Interpreter:
 
     def write(self, data):
         """Use for stdout / stderr."""
+        if not data:
+            return
         data = str(data)
         mo = color_character_pattern.search(data)
         if mo:
