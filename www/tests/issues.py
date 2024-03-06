@@ -3263,6 +3263,9 @@ c = [0, 1]
 
 assert a in b == c # same as (a in b) and (b == c)
 
+# issue 2386
+import html
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-05 21:42:07.813583"
-__BRYTHON__.timestamp=1709671327813
+__BRYTHON__.compiled_date="2024-03-06 15:39:57.964435"
+__BRYTHON__.timestamp=1709735997964
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -14471,6 +14471,7 @@ pos++}}
 return bytes}
 function string_error(token,msg){var a={lineno:token.start[0],col_offset:token.start[1],end_lineno:token.end[0],end_col_offset:token.end[1]}
 $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a,msg)}
+function SurrogatePair(value){this.value=value}
 function test_escape(token,C,text,string_start,antislash_pos){
 var seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
@@ -14496,7 +14497,7 @@ $token.value.start[1]=seq_end
 string_error(token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
-if(value > 0x10FFFF){string_error(token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
+if(value > 0x10FFFF){string_error(token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
 $B.prepare_string=function(token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,C={type:'str'}
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
@@ -14564,7 +14565,7 @@ if(search===null){string_error(token,"(unicode error) "+
 var cp=parseInt(search[1],16)
 zone+=String.fromCodePoint(cp)
 end=end_lit+1}else{end++}}else{var esc=test_escape(token,C,src,string_start,end)
-if(esc){if(esc[0]=='\\'){zone+='\\\\'}else{zone+=esc[0]}
+if(esc){if(esc[0]=='\\'){zone+='\\\\'}else if(esc[0]instanceof SurrogatePair){zone+=String.fromCodePoint(esc[0].value)}else{zone+=esc[0]}
 end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
 zone+='\\'

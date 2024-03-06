@@ -41,6 +41,10 @@ function string_error(token, msg){
     $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, msg)
 }
 
+function SurrogatePair(value){
+    this.value = value
+}
+
 function test_escape(token, context, text, string_start, antislash_pos){
     // Test if the escape sequence starting at position "antislah_pos" in text
     // is is valid
@@ -95,7 +99,7 @@ function test_escape(token, context, text, string_start, antislash_pos){
                 if(value > 0x10FFFF){
                     string_error(token, 'invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
-                    return [SurrogatePair(value), 2 + mo[0].length]
+                    return [new SurrogatePair(value), 2 + mo[0].length]
                 }else{
                     return [String.fromCharCode(value), 2 + mo[0].length]
                 }
@@ -257,6 +261,8 @@ $B.prepare_string = function(token){
                     if(esc){
                         if(esc[0] == '\\'){
                             zone += '\\\\'
+                        }else if(esc[0] instanceof SurrogatePair){
+                            zone += String.fromCodePoint(esc[0].value)
                         }else{
                             zone += esc[0]
                         }
