@@ -333,7 +333,7 @@ $B.ajax_load_script = function(s){
                     var src = this.responseText
                     if(s.is_ww){
                         $B.webworkers[name] = script
-                        $B.file_cache[url] = src
+                        $B.file_cache[filename] = src
                         // dispatch 'load' event (cf. issue 2215)
                         $B.dispatch_load_event(script)
                     }else{

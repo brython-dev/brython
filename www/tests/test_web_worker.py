@@ -1,4 +1,4 @@
-from browser import worker, is_webworker
+from browser import worker, is_webworker, document
 from tester import async_tester
 
 msg_num = 0
@@ -25,3 +25,16 @@ def onmessage(ev):
     msg_num += 1
 
 worker.create_worker('test_web_worker', main, onmessage)
+
+# issue 2389
+wid="webworker_82c5f471-0adf-47b1-8d1c-7bcc11aa54e6"
+element = document.getElementById(wid)
+
+def onready(*args):
+  print('ready')
+def onmessage(*args):
+  print('message')
+def onerror(*args):
+  print('error')
+  
+worker.create_worker(wid, onready, onmessage, onerror)
