@@ -23,12 +23,9 @@ def generate_parser(rules):
         for rule, options in rules.items():
             print('rule', rule)
             print('  options', options, type(options))
-            write(f"function {rule}_rule(origin, next_if_ok, args){{")
+            write(f"function {rule}_rule(origin){{")
             indent += 1
             write(f"this.origin = origin")
-            write(f"this.rank = origin.expect")
-            write(f"this.next_if_ok = next_if_ok")
-            write(f"this.args = args")
             write(f"this.pos = get_pos(this)")
             write(f"this.result_store = {{}}")
             write(f"this.expect = 0 // {options[0]}")
@@ -40,11 +37,11 @@ def generate_parser(rules):
             write('')
             write(f"{rule}_rule.prototype.feed = function(char){{")
             indent += 1
-            write(f"console.log('{rule}_rule pos', this.pos, 'expects', this.items[this.expect] || 'END', 'char', char)")
-            write(f"show_path(this)")
-            write(f"show_position(this, get_pos(this))")
+            #write(f"console.log('{rule}_rule pos', this.pos, 'expects', this.items[this.expect] || 'END', 'char', char)")
+            #write(f"show_path(this)")
+            #write(f"show_position(this, get_pos(this))")
             #write(f"alert()")
-            write(f"var res, rule, save_pos")
+            write(f"var res, rule")
             write(f"switch(this.expect){{")
             for i, option in enumerate(options):
                 print('option', option)
@@ -108,47 +105,18 @@ def generate_parser(rules):
                 write(f"rule = this.rules[{i}]")
                 write(f"rule.pos = rule.pos ?? get_pos(this)")
 
-                if quantifier:
-                    write(f"save_pos = get_pos(this)")
-                    write(f"if(char === FAIL){{")
-                    indent += 1
-                    if quantifier == '+':
-                        write(f"if(this.repeats[{i}] == 0){{")
-                        indent += 1
-                        write(f"reset_pos(this, rule.pos)")
-                        write(f"return this.origin.feed(FAIL)")
-                        indent -= 1
-                        write(f"}}")
-                    write(f"set_expect(this, {next_if_ok})")
-                    write(f"reset_pos(this, rule.pos)")
-                    write(f"rule.reset()")
-                    write(f"return this.feed(read_char(this))")
-                    indent -= 1
-                    write(f"}}else if(char === DONE){{")
-                    indent += 1
-                    write(f"this.result_store[{i}] = this.result_store[{i}] || []")
-                    write(f"this.result_store[{i}].push([save_pos, get_pos(this)])")
-                    write(f"console.log('result_store {rule}', this.result_store)")
-                    write(f"this.repeats[{i}] += 1")
-                    write(f"console.log('nb repeats', this.repeats[{i}])")
-                    write(f"if(this.repeats[{i}] > 20){{alert()}}")
-                    write(f"rule.pos = this.pos = get_pos(this)")
-                    write(f"update_pos(this, get_pos(this))")
-                    write(f"rule.reset()")
-                    if quantifier == '?':
-                        write(f"set_expect(this, {next_if_ok})")
-                    write(f"return this.feed(read_char(this))")
-                    indent -= 1
-                    write(f"}}else if(char === END){{")
-                    indent += 1
-                    write(f"set_expect(this, {next_if_ok})")
-                    write(f"return this.feed(char)")
-                    indent -= 1
-                    write(f"}}else{{")
-                    indent += 1
-                    write(f"return rule.feed(char)")
-                    indent -= 1
-                    write(f"}}")
+                if quantifier == '+':
+                    write(f"return handle_plus(this, {i},{next_if_ok}, rule, char)")
+                elif quantifier == '*':
+                    write(f"return handle_star(this, {i}, {next_if_ok}, rule, char)")
+                elif quantifier == '?':
+                    write(f"return handle_zero_or_one(this, {i}, {next_if_ok}, rule, char)")
+                elif alt:
+                    write(f"return handle_alt(this, {alt_index}, rule, char)")
+                elif next_if_ok != -1:
+                    write(f"return handle_simple(this, {next_if_ok}, rule, char)")
+                elif next_if_ok == -1:
+                    write(f"return handle_last(this, rule, char)")
                 else:
                     write(f"if(char === FAIL){{")
                     indent += 1
@@ -197,26 +165,10 @@ def generate_parser(rules):
             write('}')
             write('')
 
-            """
-            write(f"{rule}_rule.prototype.store_result = function(obj){{")
-            indent += 1
-            write(f"console.log('store result', obj)")
-            write(f"var rank = obj.rank")
-            write(f"this.result_store[rank] = this.result_store[rank] ?? []")
-            write(f"this.result_store[rank].push([obj.pos, get_pos(this)])")
-            write(f"console.log('results', this.result_store)")
-            write(f"if(obj.next_if_ok == -1){{")
-            indent += 1
-            write(f"console.log('remonte stockage au niveau', obj.origin)")
-            indent -= 1
-            write(f"}}")
-            indent -= 1
-            write(f"}}\n")
-            """
-
             write(f"{rule}_rule.prototype.reset = function(){{")
             indent += 1
             write(f"this.expect = 0")
+            write(f"delete_pos(this)")
             indent -= 1
             write(f"}}")
             write('')

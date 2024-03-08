@@ -33,6 +33,10 @@ function get_pos(element){
     return get_top(element)._pos
 }
 
+function get_sub(element, start, end){
+    return get_top(element)._buffer.substring(start, end)
+}
+
 function show_position(element, pos){
     var src = get_top(element)._buffer
     console.log('    ' + src)
@@ -42,11 +46,6 @@ function show_position(element, pos){
 function reset_pos(element, pos){
     if(pos === undefined){
         throw Error('reset at undefined')
-    }
-    console.log('reset pos at', pos)
-    if(pos == 62){
-        console.log(Error('pos reset at 62').stack)
-        alert()
     }
     get_top(element)._pos = pos
 }
@@ -91,7 +90,7 @@ function show_path(rule){
 }
 
 function set_expect(element, expect){
-    var test = element.constructor.name == 'Attribute_rule' && expect == 1
+    var test = false // element.constructor.name == 'Attribute_rule' && expect == 1
     if(test){
         console.log('set expect of', element)
         console.log(`  >>> set expect of ${element.constructor.name} to ${expect}`)
@@ -137,6 +136,124 @@ function raise_error(element, char){
     raise_error_known_position(head, message)
 }
 
+function handle_simple(element, next_if_ok, rule, char){
+    if(char === FAIL){
+        return element.origin.feed(FAIL)
+    }else if(char === DONE){
+        console.log('DONE', rule.constructor.name, get_sub(element, rule.pos, get_pos(element)))
+        console.log('  ', rule)
+        rule.reset()
+        set_expect(element, next_if_ok)
+        return element.feed(read_char(element))
+    }else if(char === END){
+        set_expect(element, next_if_ok)
+        return element
+    }else{
+        return rule.feed(char)
+    }
+}
+
+function handle_plus(element, rank, next_if_ok, rule, char){
+    if(char === FAIL){
+        if(element.repeats[{i}] == 0){
+            reset_pos(element, rule.pos)
+            return element.origin.feed(FAIL)
+        }
+        set_expect(element, next_if_ok)
+        reset_pos(element, rule.pos)
+        rule.reset()
+        return element.feed(read_char(element))
+    }else if(char === DONE){
+        element.result_store[rank] = element.result_store[rank] || []
+        element.result_store[rank].push(get_sub(element, rule.pos, get_pos(this)))
+        console.log(`result_store ${rule}`, element.result_store)
+        element.repeats[rank] += 1
+        update_pos(element, get_pos(element))
+        rule.reset()
+        return element.feed(read_char(element))
+    }else if(char === END){
+        set_expect(element, next_if_ok)
+        return element.feed(char)
+    }else{
+        return rule.feed(char)
+    }
+}
+
+function handle_star(element, rank, next_if_ok, rule, char){
+    if(char === FAIL){
+        set_expect(element, next_if_ok)
+        reset_pos(element, rule.pos)
+        rule.reset()
+        return element.feed(read_char(element))
+    }else if(char === DONE){
+        element.result_store[rank] = element.result_store[rank] || []
+        element.result_store[rank].push(get_sub(element, rule.pos, get_pos(element)))
+        console.log(`result_store ${rule.constructor.name}`, element.result_store)
+        element.repeats[rank] += 1
+        update_pos(element, get_pos(element))
+        rule.reset()
+        return element.feed(read_char(element))
+    }else if(char === END){
+        set_expect(element, next_if_ok)
+        return element.feed(char)
+    }else{
+        return rule.feed(char)
+    }
+}
+
+function handle_zero_or_one(element, rank, next_if_ok, rule, char){
+    if(char === FAIL){
+        set_expect(element, next_if_ok)
+        reset_pos(element, rule.pos)
+        rule.reset()
+        return element.feed(read_char(element))
+    }else if(char === DONE){
+        element.result_store[rank] = element.result_store[rank] || []
+        element.result_store[rank].push(get_sub(element, rule.pos, get_pos(element)))
+        console.log(`result_store ${rule.constructor.name}`, element.result_store)
+        element.repeats[rank] += 1
+        update_pos(element, get_pos(element))
+        rule.reset()
+        set_expect(element, next_if_ok)
+        return element.feed(read_char(element))
+    }else if(char === END){
+        set_expect(element, next_if_ok)
+        return element.feed(char)
+    }else{
+        return rule.feed(char)
+    }
+}
+
+function handle_alt(element, alt_index, rule, char){
+    if(char === FAIL){
+        set_expect(element, alt_index)
+        reset_pos(element, element.pos)
+        return element.origin.feed(read_char(element))
+    }else if(char === DONE){
+        rule.reset()
+        return element.origin.feed(char)
+    }else if(char === END){
+        set_expect(element, -1)
+        return element
+    }else{
+        return rule.feed(char)
+    }
+}
+
+function handle_last(element, rule, char){
+    if(char === FAIL){
+        return element.origin.feed(FAIL)
+    }else if(char === DONE){
+        rule.reset()
+        return element.origin.feed(char)
+    }else if(char === END){
+        set_expect(element, -1)
+        return element
+    }else{
+        return rule.feed(char)
+    }
+}
+
 function expect_literal(element, literal, char){
     if(! element.hasOwnProperty('expected_pos')){
         element.expected_pos = 0
@@ -167,7 +284,7 @@ LITERAL.prototype.reset = function(){
 }
 
 LITERAL.prototype.feed = function(char){
-    console.log('LITERAL', this.string, 'expects', this.string[this.str_pos], 'char', char)
+    //console.log('LITERAL', this.string, 'expects', this.string[this.str_pos], 'char', char)
     if(this.string == '<!DOCTYPE>'){
         console.log('LITERAL feed', this.string, char, this.str_pos)
     }
@@ -180,17 +297,6 @@ LITERAL.prototype.feed = function(char){
     }else{
         return this.origin.feed(FAIL)
     }
-}
-
-LITERAL.prototype.handle_fail = function(char){
-    console.log('LITERAL', this, this.string, 'handle fail on char', char)
-    var q = this.args.quantifier
-    if(q == '*'){
-        this.origin.expect = this.next_if_ok
-        reset_pos(this, this.pos)
-        return this.origin
-    }
-    return this.origin.handle_fail(char)
 }
 
 function NAME_rule(origin, next_if_ok){
@@ -369,7 +475,7 @@ CHARSET_rule.prototype.reset = function(){
 }
 
 CHARSET_rule.prototype.feed = function(char){
-    console.log('charset feed', this.charset, char, this.test(char))
+    //console.log('charset feed', this.charset, char, this.test(char))
     if(this.done){
         return this.origin.feed(DONE)
     }else if(! this.test(char)){
@@ -389,7 +495,7 @@ BaseChar_rule.prototype.reset = function(){
 }
 
 BaseChar_rule.prototype.feed = function(char){
-    console.log('BaseChar_rule, char', char, 'this.done', this.done)
+    //console.log('BaseChar_rule, char', char, 'this.done', this.done)
     if(this.done){
         return this.origin.feed(DONE)
     }else if(/\p{L}/u.exec(char)){
@@ -412,8 +518,7 @@ Letter_rule.prototype.reset = function(){
 Letter_rule.prototype.feed = function(char){
     if(this.done){
         return this.origin.feed(DONE)
-    }
-    if(/\p{L}/u.exec(char)){
+    }else if(/\p{L}/u.exec(char)){
         this.done = true
         return this
     }else{
