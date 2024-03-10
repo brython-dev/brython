@@ -277,7 +277,7 @@ $B.$py_next_hash = Math.pow(2, 53) - 1
 
 // $py_UUID guarantees a unique id.  Do not use this variable
 // directly, use the $B.UUID function defined in py_utils.js
-$B.$py_UUID = 0
+$B.$py_UUID = Math.floor(Math.random() * 2 ** 50)
 
 // Magic name used in lambdas
 $B.lambda_magic = Math.random().toString(36).substr(2, 8)
