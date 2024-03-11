@@ -416,8 +416,11 @@ $B.is_exc = function(exc, exc_list){
 $B.is_recursion_error = function(js_exc){
     // Test if the JS exception matches Python RecursionError
     var msg = js_exc + "",
-        parts = msg.split(":"),
-        err_type = parts[0].trim(),
+        parts = msg.split(":")
+    if(parts.length == 1){
+        return false
+    }
+    var err_type = parts[0].trim(),
         err_msg = parts[1].trim()
     return (err_type == 'InternalError' && err_msg == 'too much recursion') ||
         (err_type == 'Error' && err_msg == 'Out of stack space') ||
