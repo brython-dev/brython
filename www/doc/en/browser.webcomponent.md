@@ -121,7 +121,7 @@ webcomponent.define("bold-italic", BoldItalic)
 To handle changes to some attributes, add list `observedAttributes` and method
 `attributeChangedCallback()` as in the example below (note that this time, a
 new custom element is created with the function `maketag` in module
-[html](html.html) and dynamically added to the document):
+[browser.html](browser.html.html) and dynamically added to the document):
 
 ```python
 observed_tag = html.maketag("observed-element")

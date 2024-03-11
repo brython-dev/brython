@@ -35,7 +35,7 @@ define('my-paragraph', MyParagraph, {'extends': 'p'})
 
 
 > Si la classe du composant hérite d'une classe définie dans le module
-> [browser.html](browser.html.html), l'option "extends" est automatiquement
+> [browser.html](browser.html), l'option "extends" est automatiquement
 > ajoutée avec comme valeur le nom de cette classe. Le code ci-dessus peut 
 > donc être remplacé par
 
@@ -121,7 +121,7 @@ webcomponent.define("bold-italic", BoldItalic)
 Pour gérer les changements apportés à certains attributs, ajouter la liste
 `observedAttributes` et la méthode  `attributeChangedCallback()` comme
 ci-dessous (notez que cette fois un nouveau composant personnalisé est créé
-en utilisant la fonction `maketag` du module [html](html.html) et ajouté
+en utilisant la fonction `maketag` du module [browser.html](browser.html.html) et ajouté
 dynamiquement au document):
 
 ```python

@@ -194,7 +194,7 @@ jq.each(jq('span'), show)
 
 ### Other examples
 
-You will find in the [gallery](../../gallery/gallery_en.html) other examples
+You will find in the [gallery](/gallery/gallery_en.html) other examples
 of how to use Javascript libraries (Three, Highcharts, Raphael) in Brython
 scripts.
 
@@ -251,7 +251,7 @@ jquery("#test").text("I can use jQuery here !")
 By default, Brython only exposes two names in the global Javascript namespace:
 
 > `brython()` : function that triggers execution of the Python scripts in the page
-> (see [Execution options](/static_doc/en/options.html))
+> (see [Execution options](options.html))
 
 > `__BRYTHON__` : an object used internally by Brython to store the objects
 > needed for scripts execution

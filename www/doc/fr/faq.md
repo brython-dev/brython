@@ -17,7 +17,7 @@ _nettement_ meilleure) sur Firefox que sur Chrome.
 
 __Q__ : _quelle est la performance de Brython par rapport à CPython ?_
 
-__R__ : [cette page](../../speed_results.html) compare le temps d'exécution d'un
+__R__ : [cette page](/speed_results.html) compare le temps d'exécution d'un
 certain nombre d'opérations entre Brython et CPython sur Firefox. Les
 résultats sont variables selon les opérations, mais dans l'ensemble l'ordre de
 grandeur est le même.
