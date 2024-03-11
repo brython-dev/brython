@@ -789,5 +789,27 @@ expected = ["-8000000000000000",
 for imm6, exp in zip(ints, expected):
     assert f"{(~((1 << (64 - imm6)) - 1)):016X}" == exp
 
+# issue 2396
+x = (-1.1 - 1j)
+x + 1
+x += 1
+x + 2j
+x += 2j
+x + 1.5 + 2j
+x += 1.5 + 2j
+
+x - 1
+x -=1
+x - 2j
+x -= 2j
+x - 1.5 - 2j
+x -= 1.5 + 2j
+
+x * 1
+x *= 1
+x * 2j
+x *= 2j
+x * (1.5 + 2j)
+x *= (1.5 + 2j)
 
 print('passed all tests...')

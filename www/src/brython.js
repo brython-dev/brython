@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-11 09:38:39.340229"
-__BRYTHON__.timestamp=1710146319339
+__BRYTHON__.compiled_date="2024-03-11 16:59:23.519936"
+__BRYTHON__.timestamp=1710172763518
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -8404,7 +8404,7 @@ return $B.fast_float(mag)}
 complex.__add__=function(self,other){if($B.$isinstance(other,complex)){return make_complex(self.$real.value+other.$real.value,self.$imag.value+other.$imag.value)}
 if($B.$isinstance(other,_b_.int)){other=_b_.int.numerator(other)
 return make_complex(
-$B.rich_op('__add__',self.$real.value,other.valueOf()),self.$imag.value)}
+$B.rich_op('__add__',self.$real,other).value,self.$imag.value)}
 if($B.$isinstance(other,_b_.float)){return make_complex(self.$real.value+other.value,self.$imag.value)}
 return _b_.NotImplemented}
 complex.__bool__=function(self){return(! $B.rich_comp('__eq__',self.$real,0))||
