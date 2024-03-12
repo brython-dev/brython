@@ -1056,6 +1056,11 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
             return new bases[0].$js_func(...arguments)
         }
     }`
+    var proto = bases[0].$js_func.prototype
+    if(proto instanceof Node){
+        throw _b_.TypeError.$factory(`class ${class_name} cannot inherit ` +
+            `a subclass of Node`)
+    }
     var new_js_class = Function('cl_dict', 'bases', body)(cl_dict, bases)
     new_js_class.prototype = Object.create(bases[0].$js_func.prototype)
     new_js_class.prototype.constructor = new_js_class

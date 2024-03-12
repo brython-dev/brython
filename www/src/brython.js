@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-11 16:59:23.519936"
-__BRYTHON__.timestamp=1710172763518
+__BRYTHON__.compiled_date="2024-03-12 08:33:04.314546"
+__BRYTHON__.timestamp=1710228784313
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -2224,7 +2224,7 @@ case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
-var $test=attr=="toString" 
+var $test=false 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
 if(klass.__class__ &&
 klass.__class__[attr]&&
@@ -9865,6 +9865,9 @@ var body=`
             return new bases[0].$js_func(...arguments)
         }
     }`
+var proto=bases[0].$js_func.prototype
+if(proto instanceof Node){throw _b_.TypeError.$factory(`class ${class_name} cannot inherit `+
+`a subclass of Node`)}
 var new_js_class=Function('cl_dict','bases',body)(cl_dict,bases)
 new_js_class.prototype=Object.create(bases[0].$js_func.prototype)
 new_js_class.prototype.constructor=new_js_class

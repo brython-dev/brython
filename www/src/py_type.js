@@ -45,7 +45,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         dict = class_obj_proxy.$target
     }
     var module = class_obj_proxy.__module__
-    
+
     // bool is not a valid base
     for(var base of bases){
         if(base.__flags__ !== undefined &&
@@ -524,7 +524,7 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = attr == "toString" // && klass.__name__ == 'Pattern'
+    var $test = false // attr == "__new__" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
