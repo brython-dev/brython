@@ -141,7 +141,9 @@ function handle_simple(element, next_if_ok, rule, char){
         return element.origin.feed(FAIL)
     }else if(char === DONE){
         console.log('DONE', rule.constructor.name, get_sub(element, rule.pos, get_pos(element)))
+        element.result_store[element.expect] = get_sub(element, rule.pos, get_pos(element))
         console.log('  ', rule)
+        console.log('  rule store', rule.result_store)
         rule.reset()
         set_expect(element, next_if_ok)
         return element.feed(read_char(element))
@@ -244,7 +246,10 @@ function handle_last(element, rule, char){
     if(char === FAIL){
         return element.origin.feed(FAIL)
     }else if(char === DONE){
+        element.result_store[element.expect] = get_sub(element,
+            rule.pos, get_pos(this))
         rule.reset()
+        set_expect(element, -1)
         return element.origin.feed(char)
     }else if(char === END){
         set_expect(element, -1)

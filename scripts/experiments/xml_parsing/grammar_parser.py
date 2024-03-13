@@ -163,10 +163,16 @@ def replace_groups(tokens, rules):
     starts = list(closing[max_level])
     starts.sort(reverse=True)
     for start in starts:
-        rule_name = next(temp_count)
         end = closing[max_level][start]
-        rules[rule_name] = tokens[start + 1:end]
-        tokens[start:end + 1] = [Rule(rule_name)]
+        seq = tokens[start + 1:end]
+        if len(seq) == 1:
+            print('one-element rule', seq)
+            input()
+            tokens[start:end + 1] = [seq[0]]
+        else:
+            rule_name = next(temp_count)
+            rules[rule_name] = seq
+            tokens[start:end + 1] = [Rule(rule_name)]
     replace_groups(tokens, rules)
 
 
