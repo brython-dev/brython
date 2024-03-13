@@ -796,6 +796,29 @@ $B.class_name = function(obj){
     }
 }
 
+$B.unpack_mapping = function*(func, obj){
+    var klass = $B.get_class(obj)
+    var getitem = $B.$getattr(klass, '__getitem__', null)
+    if(getitem === null){
+        throw _b_.TypeError.$factory(`'${$B.class_name(obj)}' object ` +
+            'is not subscriptable')
+    }
+    getitem = $B.$call(getitem)
+    var key_func = $B.$getattr(klass, 'keys', null)
+    if(key_func === null){
+        var f = `${func.$infos.__module__}.${func.$infos.__name__}`
+        throw _b_.TypeError.$factory(`${f}() argument after **` +
+            ` must be a mapping, not ${$B.class_name(obj)}`)
+    }
+    var keys = $B.$call($B.$getattr(klass, 'keys'))(obj)
+    for(var key of $B.make_js_iterator(keys)){
+        if(! _b_.isinstance(key, _b_.str)){
+            throw _b_.TypeError.$factory('keywords must be strings')
+        }
+        yield {key, value: getitem(obj, key)}
+    }
+}
+
 $B.make_js_iterator = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
     // "for(item of $B.make_js_iterator(...)){"
@@ -859,25 +882,28 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     }
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
-    var next_func = $B.$call($B.$getattr(_b_.iter(iterator),
-                    '__next__'))
-    return {
-        [Symbol.iterator](){
-            return this
-        },
-        next(){
-            set_lineno(frame, lineno)
-            try{
-                var value = next_func()
-                return {done: false, value}
-            }catch(err){
-                if($B.is_exc(err, [_b_.StopIteration])){
-                    return {done: true, value: null}
+    var next_func = $B.$getattr(_b_.iter(iterator), '__next__', null)
+    if(next_func !== null){
+        next_func = $B.$call(next_func)
+        return {
+            [Symbol.iterator](){
+                return this
+            },
+            next(){
+                set_lineno(frame, lineno)
+                try{
+                    var value = next_func()
+                    return {done: false, value}
+                }catch(err){
+                    if($B.is_exc(err, [_b_.StopIteration])){
+                        return {done: true, value: null}
+                    }
+                    throw err
                 }
-                throw err
             }
         }
     }
+
 }
 
 $B.unpacker = function(obj, nb_targets, has_starred){

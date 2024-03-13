@@ -1574,11 +1574,10 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
 // Utility class for iterators built from objects that have a __getitem__ and
 // __len__ method
 var iterator_class = $B.make_class("iterator",
-    function(getitem, len){
+    function(getitem){
         return {
             __class__: iterator_class,
             getitem: getitem,
-            len: len,
             counter: -1
         }
     }
@@ -1586,9 +1585,6 @@ var iterator_class = $B.make_class("iterator",
 
 iterator_class.__next__ = function(self){
     self.counter++
-    if(self.len !== null && self.counter == self.len){
-        throw _b_.StopIteration.$factory('')
-    }
     try{
         return self.getitem(self.counter)
     }catch(err){
@@ -1635,13 +1631,7 @@ $B.$iter = function(obj, sentinel){
                     var gi_method = $B.$call($B.$getattr(klass, '__getitem__')),
                         gi = function(i){return gi_method(obj, i)},
                         len
-                    try{
-                        len = len(obj)
-                    }catch(err){
-                        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
-                            "' object is not iterable")
-                    }
-                    return iterator_class.$factory(gi, len)
+                    return iterator_class.$factory(gi)
                 }catch(err){
                     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
                         "' object is not iterable")
@@ -1694,7 +1684,7 @@ var len = _b_.len = function(obj){
     }
 
     if(!$B.rich_comp('__ge__', res, 0)) {
-        throw _b_.ValueError.$factory('ValueError: __len__() should return >= 0')   
+        throw _b_.ValueError.$factory('ValueError: __len__() should return >= 0')
     }
 
     return res

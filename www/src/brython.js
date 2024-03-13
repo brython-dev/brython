@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-13 13:53:49.775303"
-__BRYTHON__.timestamp=1710334429774
+__BRYTHON__.compiled_date="2024-03-13 23:05:27.704313"
+__BRYTHON__.timestamp=1710367527704
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -1397,6 +1397,18 @@ if(klass===undefined){return $B.get_jsobj_class(obj)}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
+$B.unpack_mapping=function*(func,obj){var klass=$B.get_class(obj)
+var getitem=$B.$getattr(klass,'__getitem__',null)
+if(getitem===null){throw _b_.TypeError.$factory(`'${$B.class_name(obj)}' object `+
+'is not subscriptable')}
+getitem=$B.$call(getitem)
+var key_func=$B.$getattr(klass,'keys',null)
+if(key_func===null){var f=`${func.$infos.__module__}.${func.$infos.__name__}`
+throw _b_.TypeError.$factory(`${f}() argument after **`+
+` must be a mapping, not ${$B.class_name(obj)}`)}
+var keys=$B.$call($B.$getattr(klass,'keys'))(obj)
+for(var key of $B.make_js_iterator(keys)){if(! _b_.isinstance(key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
+yield{key,value:getitem(obj,key)}}}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
 if(frame===undefined){if($B.frame_obj===null){function set_lineno(){}}else{frame=$B.frame_obj.frame
@@ -1417,12 +1429,13 @@ if(iterator[Symbol.iterator]&& ! iterator.$is_js_array){var it=iterator[Symbol.i
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}
-var next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))
+var next_func=$B.$getattr(_b_.iter(iterator),'__next__',null)
+if(next_func !==null){next_func=$B.$call(next_func)
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 try{var value=next_func()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
-throw err}}}}
+throw err}}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
 var position,position_rank=3
 if(has_starred){var nb_after_starred=arguments[3]
@@ -3119,11 +3132,10 @@ if(klass===classinfo ||mro.indexOf(classinfo)>-1){return true}
 var sch=$B.$getattr(classinfo.__class__ ||$B.get_class(classinfo),'__subclasscheck__',_b_.None)
 if(sch==_b_.None){return false}
 return sch(classinfo,klass)}
-var iterator_class=$B.make_class("iterator",function(getitem,len){return{
-__class__:iterator_class,getitem:getitem,len:len,counter:-1}}
+var iterator_class=$B.make_class("iterator",function(getitem){return{
+__class__:iterator_class,getitem:getitem,counter:-1}}
 )
 iterator_class.__next__=function(self){self.counter++
-if(self.len !==null && self.counter==self.len){throw _b_.StopIteration.$factory('')}
 try{return self.getitem(self.counter)}catch(err){throw _b_.StopIteration.$factory('')}}
 $B.set_func_names(iterator_class,"builtins")
 const callable_iterator=$B.make_class("callable_iterator",function(func,sentinel){return{
@@ -3137,9 +3149,7 @@ $B.set_func_names(callable_iterator,"builtins")
 $B.$iter=function(obj,sentinel){
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},len
-try{len=len(obj)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
-"' object is not iterable")}
-return iterator_class.$factory(gi,len)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+return iterator_class.$factory(gi)}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not iterable")}}
 throw err}
 var res=$B.$call(_iter)(obj)
@@ -12041,7 +12051,7 @@ if(! hasPos && ! hasNamedOnly && ! hasKWargs ){fct+=`
         }
         for(let id = 1; id < ARGS_NAMED.length; ++id ) {
             const kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) { //TODO: not optimal
+            for(let argname of $B.unpack_mapping( fct, kargs) ) { //TODO: not optimal
                 $B.args0_old(fct, args);
                 throw new Error('No named arguments expected !!!');
             }
@@ -12138,14 +12148,16 @@ fct+=`
     }
     for(let id = 1; id < ARGS_NAMED.length; ++id ) {
         const kargs = ARGS_NAMED[id];
-        for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
+        
+        for(let item of $B.unpack_mapping(fct, kargs) ) {
+            let argname = item.key
             if( typeof argname !== "string") {
                 $B.args0_old(fct, args);
                 throw new Error('Non string key passed in **kargs');
             }
             `;
 if(! hasKWargs ){fct+=`
-            result[ argname ] = $B.$getitem(kargs, argname);
+            result[ argname ] = item.value;
             ++nb_named_args;
 `;}
 if(hasKWargs ){if(! hasNamedOnly && ! hasPos ){fct+=`

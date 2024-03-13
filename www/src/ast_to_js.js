@@ -2057,7 +2057,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
         for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
             const kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) { //TODO: not optimal
+            for(let argname of $B.unpack_mapping( fct, kargs) ) { //TODO: not optimal
                 $B.args0_old(fct, args);
                 throw new Error('No named arguments expected !!!');
             }
@@ -2221,9 +2221,9 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
         const kargs = ARGS_NAMED[id];
-
-        for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
-
+        
+        for(let item of $B.unpack_mapping(fct, kargs) ) {
+            let argname = item.key
             if( typeof argname !== "string") {
                 $B.args0_old(fct, args);
                 throw new Error('Non string key passed in **kargs');
@@ -2232,7 +2232,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
 
             if( ! hasKWargs ) {
                 fct += `
-            result[ argname ] = $B.$getitem(kargs, argname);
+            result[ argname ] = item.value;
             ++nb_named_args;
 `;
             }
