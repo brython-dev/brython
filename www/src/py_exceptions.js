@@ -373,7 +373,7 @@ $B.exception = function(js_exc){
             // same Python exception
             return js_exc.$py_exc
         }
-        if($B.get_option('debug', err) > 1){
+        if($B.get_option('debug', exc) > 1){
             console.log('Javascript error', js_exc)
         }
         var msg = js_exc.name + ': ' + js_exc.message

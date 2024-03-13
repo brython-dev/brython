@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-13 09:03:34.029287"
-__BRYTHON__.timestamp=1710317014029
+__BRYTHON__.compiled_date="2024-03-13 13:53:49.775303"
+__BRYTHON__.timestamp=1710334429774
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -4190,7 +4190,7 @@ $B.exception=function(js_exc){
 var exc
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-if($B.get_option('debug',err)> 1){console.log('Javascript error',js_exc)}
+if($B.get_option('debug',exc)> 1){console.log('Javascript error',js_exc)}
 var msg=js_exc.name+': '+js_exc.message
 exc=_b_.JavascriptError.$factory(msg)
 exc.$js_exc=js_exc
