@@ -373,7 +373,10 @@ $B.exception = function(js_exc){
             // same Python exception
             return js_exc.$py_exc
         }
-        var msg = js_exc.name+ ': ' + js_exc.message
+        if($B.get_option('debug', err) > 1){
+            console.log('Javascript error', js_exc)
+        }
+        var msg = js_exc.name + ': ' + js_exc.message
         exc = _b_.JavascriptError.$factory(msg)
         exc.$js_exc = js_exc
         if($B.is_recursion_error(js_exc)){
