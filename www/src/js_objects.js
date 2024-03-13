@@ -1029,6 +1029,13 @@ $B.JSMeta.__getattribute__ = function(cls, attr){
     if(cls[attr] !== undefined){
         return cls[attr]
     }else if($B.JSMeta[attr] !== undefined){
+        if(attr == '__new__'){
+            return function(){
+                var res = new cls.$js_func(...Array.from(arguments).slice(1))
+                res.__class__ = cls
+                return res
+            }
+        }
         return $B.JSMeta[attr]
     }else{
         // Search in type
@@ -1046,6 +1053,7 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     var body = `
     var _b_ = __BRYTHON__.builtins
     return function(){
+        console.log('call inner function, bases', bases)
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
@@ -1068,9 +1076,12 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
                           {value: bases[0].$js_func})
     new_js_class.__class__ = $B.JSMeta
     new_js_class.__bases__ = [bases[0]]
-    new_js_class.__mro__ = [bases[0], _b_.type]
+    new_js_class.__mro__ = [bases[0], _b_.object]
     new_js_class.__qualname__ = new_js_class.__name__ = class_name
     new_js_class.$is_js_class = true
+    for(var item of _b_.dict.$iter_items(cl_dict)){
+        new_js_class[item.key] = item.value
+    }
     return new_js_class
 }
 

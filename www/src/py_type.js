@@ -557,7 +557,7 @@ type.__getattribute__ = function(klass, attr){
             }else{
                 var mro = klass.__mro__
                 if(mro === undefined){
-                    console.log("no mro for", klass)
+                    console.log("no mro for", klass, 'attr', attr)
                 }
                 for(let i = 0; i < mro.length; i++){
                     if(mro[i].hasOwnProperty(attr)){

@@ -399,4 +399,19 @@ t = o.to_dict()   # prints {'num': 1, 'val':  {}}
 assert t["num"] == 1
 assert t["val"] == 2.3
 
+# issue 2394
+class X( window.Map ):
+    def __init__(self):
+        t.append('__init__')
+    def foo(self):
+        t.append('foo')
+
+t = []
+
+y = X.__new__(X)
+y.__init__()
+assert t == ['__init__']
+y.foo()
+assert t == ['__init__', 'foo']
+
 print("all tests ok...")

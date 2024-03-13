@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-12 08:33:04.314546"
-__BRYTHON__.timestamp=1710228784313
+__BRYTHON__.compiled_date="2024-03-13 08:58:32.893390"
+__BRYTHON__.timestamp=1710316712892
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -2238,7 +2238,7 @@ if(v===undefined){if($test){console.log(attr,'not in klass[attr], search in __di
 if(klass.__dict__ && klass.__dict__.__class__===_b_.dict &&
 _b_.dict.$contains_string(klass.__dict__,attr)){res=klass[attr]=_b_.dict.$getitem_string(klass.__dict__,attr)
 if($test){console.log('found in __dict__',v)}}else{var mro=klass.__mro__
-if(mro===undefined){console.log("no mro for",klass)}
+if(mro===undefined){console.log("no mro for",klass,'attr',attr)}
 for(let i=0;i < mro.length;i++){if(mro[i].hasOwnProperty(attr)){res=mro[i][attr]
 break}}}}else{res=v}}
 if(res===undefined){
@@ -9848,13 +9848,17 @@ var args=[instance].concat(extra_args)
 init_func.apply(null,args)}}
 return instance}
 $B.JSMeta.__mro__=[_b_.type,_b_.object]
-$B.JSMeta.__getattribute__=function(cls,attr){if(cls[attr]!==undefined){return cls[attr]}else if($B.JSMeta[attr]!==undefined){return $B.JSMeta[attr]}else{
+$B.JSMeta.__getattribute__=function(cls,attr){if(cls[attr]!==undefined){return cls[attr]}else if($B.JSMeta[attr]!==undefined){if(attr=='__new__'){return function(){var res=new cls.$js_func(...Array.from(arguments).slice(1))
+res.__class__=cls
+return res}}
+return $B.JSMeta[attr]}else{
 return _b_.type.__getattribute__(cls,attr)}}
 $B.JSMeta.__init_subclass__=function(){}
 $B.JSMeta.__new__=function(metaclass,class_name,bases,cl_dict){
 var body=`
     var _b_ = __BRYTHON__.builtins
     return function(){
+        console.log('call inner function, bases', bases)
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
@@ -9874,9 +9878,10 @@ new_js_class.prototype.constructor=new_js_class
 Object.defineProperty(new_js_class,'$js_func',{value:bases[0].$js_func})
 new_js_class.__class__=$B.JSMeta
 new_js_class.__bases__=[bases[0]]
-new_js_class.__mro__=[bases[0],_b_.type]
+new_js_class.__mro__=[bases[0],_b_.object]
 new_js_class.__qualname__=new_js_class.__name__=class_name
 new_js_class.$is_js_class=true
+for(var item of _b_.dict.$iter_items(cl_dict)){new_js_class[item.key]=item.value}
 return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
