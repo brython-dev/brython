@@ -136,14 +136,36 @@ function raise_error(element, char){
     raise_error_known_position(head, message)
 }
 
+function get_string(rule){
+    if(rule instanceof LITERAL){
+        return rule.string
+    }
+    if(rule.items === undefined){
+        console.log('no items for rule', rule)
+    }
+    var s = ''
+    for(var i = 0, len = rule.items.length; i < len; i++){
+        var item = rule.items[i],
+            last = item[item.length - 1]
+        if(rule.result_store[i] === undefined){
+            continue
+        }
+        if('?+*'.includes(last)){
+            s += rule.result_store[i].join('')
+        }else{
+            s += rule.result_store[i]
+        }
+    }
+    return s
+}
+
 function handle_simple(element, next_if_ok, rule, char){
     if(char === FAIL){
         return element.origin.feed(FAIL)
     }else if(char === DONE){
-        console.log('DONE', rule.constructor.name, get_sub(element, rule.pos, get_pos(element)))
-        element.result_store[element.expect] = get_sub(element, rule.pos, get_pos(element))
+        console.log('DONE', rule.constructor.name)
         console.log('  ', rule)
-        console.log('  rule store', rule.result_store)
+        console.log('  rule store', get_string(rule))
         rule.reset()
         set_expect(element, next_if_ok)
         return element.feed(read_char(element))
@@ -190,7 +212,6 @@ function handle_star(element, rank, next_if_ok, rule, char){
     }else if(char === DONE){
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(get_sub(element, rule.pos, get_pos(element)))
-        console.log(`result_store ${rule.constructor.name}`, element.result_store)
         element.repeats[rank] += 1
         update_pos(element, get_pos(element))
         rule.reset()
@@ -232,6 +253,8 @@ function handle_alt(element, alt_index, rule, char){
         reset_pos(element, element.pos)
         return element.origin.feed(read_char(element))
     }else if(char === DONE){
+        element.result_store[element.expect] = get_sub(element,
+            rule.pos, get_pos(this))
         rule.reset()
         return element.origin.feed(char)
     }else if(char === END){
