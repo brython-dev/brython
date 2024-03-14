@@ -13,6 +13,8 @@ class _dataclass(tuple):
     def __getitem__(self, key):
         if isinstance(key, int) and 0 <= key <= len(self.keys):
             return self.__dict__[self.keys[key]]
+        elif isinstance(key, slice):
+            return [self.__dict__[k] for k in self.keys[key]]
         raise KeyError(key)
 
     def __iter__(self):
@@ -189,7 +191,6 @@ class _comparable:
 
         return NotImplemented
 
-
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
 version_info = make_dataclass('version_info', [_comparable])(
     major = __BRYTHON__.version_info[0],
@@ -236,7 +237,7 @@ _implementation_info = make_dataclass('version_info', [_comparable])(
     micro = __BRYTHON__.implementation[2],
     releaselevel = __BRYTHON__.implementation[3],
     serial = __BRYTHON__.implementation[4])
-    
+
 implementation = SimpleNamespace(
     name = 'Brython',
     cache_tag = None,

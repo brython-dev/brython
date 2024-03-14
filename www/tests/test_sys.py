@@ -182,4 +182,8 @@ assert flag is True
 assert 'ZeroDivisionError' in out.getvalue()
 sys.stderr = save_stderr
 
+# issue 2398
+sys.version_info[:2]
 
+
+print('all tests ok...')
