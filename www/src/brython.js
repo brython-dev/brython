@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-14 08:17:54.743915"
-__BRYTHON__.timestamp=1710400674743
+__BRYTHON__.compiled_date="2024-03-14 21:59:26.781154"
+__BRYTHON__.timestamp=1710449966781
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -9551,7 +9551,7 @@ try{Object.defineProperty(jsobj,"$is_js_array",{value:true});}catch(err){}
 return jsobj}
 let pyobj=jsobj[PYOBJ]
 if(pyobj !==undefined){return pyobj}
-if(jsobj instanceof Promise ||typeof jsobj.then=="function"){
+if(jsobj instanceof Promise){
 var save_frame_obj=$B.frame_obj
 jsobj.$frame_obj=$B.frame_obj
 return jsobj.then(function(x){$B.frame_obj=save_frame_obj
