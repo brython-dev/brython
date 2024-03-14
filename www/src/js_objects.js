@@ -159,9 +159,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return pyobj
     }
 
-    // check if obj is an instance of Promise or supports the Thenable interface
+    // check if obj is an instance of Promise
     // cf. issue #2321
-    if(jsobj instanceof Promise || typeof jsobj.then == "function"){
+    if(jsobj instanceof Promise){
         // save frame obj and restore it on resolve / reject
         var save_frame_obj = $B.frame_obj
         jsobj.$frame_obj = $B.frame_obj
