@@ -139,6 +139,11 @@ function raise_error(element, char){
 function get_string(rule){
     if(rule instanceof LITERAL){
         return rule.string
+    }else if(rule instanceof Letter_rule ||
+            rule instanceof CHARSET_rule){
+        var s = get_sub(rule, rule.pos, rule.pos + 1)
+        console.log('Letter_rule', s)
+        return s
     }
     if(rule.items === undefined){
         console.log('no items for rule', rule)
@@ -163,9 +168,11 @@ function handle_simple(element, next_if_ok, rule, char){
     if(char === FAIL){
         return element.origin.feed(FAIL)
     }else if(char === DONE){
-        console.log('DONE', rule.constructor.name)
-        console.log('  ', rule)
-        console.log('  rule store', get_string(rule))
+        element.result_store[element.expect] = get_string(rule)
+        if(rule.constructor.name == 'element_rule' ||
+                rule.constructor.name == 'Attribute_rule'){
+            console.log(rule.constructor.name, element.result_store[element.expect])
+        }
         rule.reset()
         set_expect(element, next_if_ok)
         return element.feed(read_char(element))
@@ -189,8 +196,7 @@ function handle_plus(element, rank, next_if_ok, rule, char){
         return element.feed(read_char(element))
     }else if(char === DONE){
         element.result_store[rank] = element.result_store[rank] || []
-        element.result_store[rank].push(get_sub(element, rule.pos, get_pos(this)))
-        console.log(`result_store ${rule}`, element.result_store)
+        element.result_store[rank].push(get_string(rule))
         element.repeats[rank] += 1
         update_pos(element, get_pos(element))
         rule.reset()
@@ -253,8 +259,11 @@ function handle_alt(element, alt_index, rule, char){
         reset_pos(element, element.pos)
         return element.origin.feed(read_char(element))
     }else if(char === DONE){
-        element.result_store[element.expect] = get_sub(element,
-            rule.pos, get_pos(this))
+        if(['tmp11_rule', 'tmp_12_rule'].includes(rule.constructor.name)){
+            console.log(rule.constructor.name, get_string(rule))
+        }
+        var s = get_string(rule)
+        element.result_store[element.expect] = s
         rule.reset()
         return element.origin.feed(char)
     }else if(char === END){
@@ -269,8 +278,12 @@ function handle_last(element, rule, char){
     if(char === FAIL){
         return element.origin.feed(FAIL)
     }else if(char === DONE){
-        element.result_store[element.expect] = get_sub(element,
-            rule.pos, get_pos(this))
+        element.result_store[element.expect] = get_string(rule)
+        if(rule.constructor.name == 'AttValue_rule' ||
+                rule.constructor.name == 'Attribute_rule'){
+            console.log(rule.constructor.name, element.result_store[element.expect])
+        }
+
         rule.reset()
         set_expect(element, -1)
         return element.origin.feed(char)
