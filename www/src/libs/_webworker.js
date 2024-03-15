@@ -11,12 +11,12 @@ function scripts_to_load(debug_level){
     if(debug_level > 2){
         var brython_scripts = [
             'brython_builtins',
-            
+
             'py_ast_classes',
             'stdlib_paths',
             'unicode_data',
             'version_info',
-            
+
             'py_tokens',
             'python_tokenizer',
             'py_ast',
@@ -48,7 +48,7 @@ function scripts_to_load(debug_level){
             'builtin_modules',
             'ast_to_js',
             'symtable',
-            
+
             'action_helpers_generated_version',
             'string_parser',
             'number_parser',
@@ -198,6 +198,7 @@ function create_worker(){
     var module = $B.module.$factory("${script_id}")
     module.__file__ = "${filename}"
     module.__doc__ = _b_.None
+    $B.script_domain = "${$B.script_domain}"
     $B.imported["${script_id}"] = module\n`
 
     header += '$B.file_cache[module.__file__] = `' + src + '`\n'

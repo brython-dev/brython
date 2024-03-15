@@ -124,7 +124,6 @@ $B.make_import_paths = function(filename){
         meta_path.push($B.finders.path)
         path_hooks.push($B.url_hook)
     }
-
     $B.import_info[filename] = {meta_path, path_hooks, path}
 }
 
@@ -133,14 +132,14 @@ function $download_module(mod, url){
         fake_qs = "?v=" + (new Date().getTime()),
         res = null,
         mod_name = mod.__name__
-    var timer = _window.setTimeout(function(){
-            xhr.abort()
-        }, 5000)
     if($B.get_option('cache')){
         xhr.open("GET", url, false)
     }else{
         xhr.open("GET", url + fake_qs, false)
     }
+    var timer = _window.setTimeout(function(){
+            xhr.abort()
+        }, 5000)
     xhr.send()
 
     if($B.$CORS){
@@ -728,7 +727,7 @@ PathEntryFinder.find_spec = function(self, fullname){
         modpaths = modpaths.concat([[base_path + py_ext, "py", false],
             [base_path + "/__init__" + py_ext, "py", true]])
     }
-
+    
     for(var j = 0; notfound && j < modpaths.length; ++j){
         try{
             var file_info = modpaths[j],
@@ -1152,10 +1151,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // fromlist.length == 1 && fromlist[0] == "aliases"
+    var test = false // mod_name == 'some_module' // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
-        alert()
+        // alert()
     }
     // special case
     if(mod_name == '_frozen_importlib_external'){
@@ -1224,7 +1223,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
 
     if(test){
         console.log('step 2, mod_name', mod_name, 'fromlist', fromlist)
-        alert()
+        //alert()
     }
 
     if($B.get_option('debug') == 10){
@@ -1249,14 +1248,14 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         $B.$getattr(__import__, "__call__")
     if(test){
         console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
-        alert()
+        //alert()
     }
     var modobj = importer(mod_name, globals, undefined, fromlist, 0)
 
     if(test){
         console.log('step 3, mod_name', mod_name, 'fromlist', fromlist)
         console.log('modobj', modobj)
-        alert()
+        //alert()
     }
 
     // Apply bindings upon local namespace
@@ -1276,7 +1275,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         if(fromlist && fromlist[0] == "*"){
             if(test){
                 console.log('import *', modobj)
-                alert()
+                //alert()
             }
             __all__ = $B.$getattr(modobj, "__all__", thunk);
             if(__all__ !== thunk){

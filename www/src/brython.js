@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-14 21:59:26.781154"
-__BRYTHON__.timestamp=1710449966781
+__BRYTHON__.compiled_date="2024-03-15 18:04:31.708402"
+__BRYTHON__.timestamp=1710522271708
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -5710,8 +5710,8 @@ if($B.protocol !=="file"){meta_path.push($B.finders.path)
 path_hooks.push($B.url_hook)}
 $B.import_info[filename]={meta_path,path_hooks,path}}
 function $download_module(mod,url){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
-var timer=_window.setTimeout(function(){xhr.abort()},5000)
 if($B.get_option('cache')){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
+var timer=_window.setTimeout(function(){xhr.abort()},5000)
 xhr.send()
 if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=_b_.ModuleNotFoundError.$factory("No module named '"+
 mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
@@ -6077,8 +6077,7 @@ mod_name=module}}
 return $B.imported[package_name]}}
 $B.$import=function(mod_name,fromlist,aliases,locals){
 var test=false 
-if(test){console.log('import',mod_name,fromlist,aliases)
-alert()}
+if(test){console.log('import',mod_name,fromlist,aliases)}
 if(mod_name=='_frozen_importlib_external'){
 let alias=aliases[mod_name]||mod_name
 $B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals)
@@ -6109,8 +6108,7 @@ mod_name=norm_parts.join(".")
 fromlist=fromlist===undefined ?[]:fromlist
 aliases=aliases===undefined ?{}:aliases
 locals=locals===undefined ?{}:locals
-if(test){console.log('step 2, mod_name',mod_name,'fromlist',fromlist)
-alert()}
+if(test){console.log('step 2, mod_name',mod_name,'fromlist',fromlist)}
 if($B.get_option('debug')==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+
@@ -6121,17 +6119,14 @@ __import__=$B.$__import__}
 var importer=typeof __import__=="function" ?
 __import__ :
 $B.$getattr(__import__,"__call__")
-if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)
-alert()}
+if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)}
 var modobj=importer(mod_name,globals,undefined,fromlist,0)
 if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
-console.log('modobj',modobj)
-alert()}
+console.log('modobj',modobj)}
 if(! fromlist ||fromlist.length==0){
 let alias=aliases[mod_name]
 if(alias){locals[alias]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj}}else{var __all__=fromlist,thunk={}
-if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)
-alert()}
+if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)}
 __all__=$B.$getattr(modobj,"__all__",thunk);
 if(__all__ !==thunk){
 aliases={}}}
