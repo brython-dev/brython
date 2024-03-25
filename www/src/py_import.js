@@ -727,7 +727,7 @@ PathEntryFinder.find_spec = function(self, fullname){
         modpaths = modpaths.concat([[base_path + py_ext, "py", false],
             [base_path + "/__init__" + py_ext, "py", true]])
     }
-    
+
     for(var j = 0; notfound && j < modpaths.length; ++j){
         try{
             var file_info = modpaths[j],
@@ -1299,6 +1299,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 try{
                     // [Import spec] Check if module has an attribute by that name
                     locals[alias] = $B.$getattr(modobj, name)
+                    if(locals[alias].$js_func){ // issue 2395
+                        locals[alias] = locals[alias].$js_func
+                    }
                 }catch($err1){
                     if(! $B.is_exc($err1, [_b_.AttributeError])){
                         throw $err1

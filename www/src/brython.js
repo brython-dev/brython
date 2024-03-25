@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-25 18:15:59.365681"
-__BRYTHON__.timestamp=1711386959365
+__BRYTHON__.compiled_date="2024-03-25 21:32:28.955024"
+__BRYTHON__.timestamp=1711398748955
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -6139,7 +6139,9 @@ if(__all__===thunk){
 for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
 for(let name of __all__){var alias=aliases[name]||name
 try{
-locals[alias]=$B.$getattr(modobj,name)}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){throw $err1}
+locals[alias]=$B.$getattr(modobj,name)
+if(locals[alias].$js_func){
+locals[alias]=locals[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){throw $err1}
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
@@ -14493,8 +14495,7 @@ while(pos < s.length){if(s[pos]=='\\'){bytes[bytes.length]=escaped_to_byte(s[pos
 pos+=2}else{bytes[bytes.length]=s.charCodeAt(pos)
 pos++}}
 return bytes}
-function string_error(p,token,msg){
-$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,token,msg)}
+function string_error(p,token,msg){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,token,msg)}
 function SurrogatePair(value){this.value=value}
 function test_escape(p,token,C,text,string_start,antislash_pos){
 var seq_end,mo
