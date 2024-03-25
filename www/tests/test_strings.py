@@ -482,4 +482,11 @@ assert 'abcdef'[3:1] == ''
 # issue 2155
 assert_raises(TypeError, ord, 'ab')
 
+# issue 2403
+assert '%.*E' % (1, 0.9999) == '1.0E+00'
+assert '%.*E' % (1, 9.9999) == '1.0E+01'
+
+assert float('%.3g' % 9.99999e-06) == 1e-05
+
+
 print("passed all tests...")

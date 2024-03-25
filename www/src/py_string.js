@@ -663,7 +663,10 @@ var _floating_exp_helper = function(val, precision, flags, upper){
         parts = mant.split('.')
         parts[0] = '1'
         mant = parts.join('.')
-        exp = parseInt(exp) + 1
+        exp = parseInt(exp) + (exp_sign == '+' ? 1 : -1)
+        if(exp == 0){
+            exp_sign = '+'
+        }
     }
     if(flags.alternate && mant.indexOf('.') == -1){
         mant += '.'
@@ -678,7 +681,6 @@ var _floating_exp_helper = function(val, precision, flags, upper){
 
 // eE
 var floating_point_exponential_format = function(val, upper, flags){
-
     val = _float_helper(val, flags)
     return format_padding(format_sign(val, flags) +
         format_float_precision(val, upper, flags, _floating_exp_helper), flags)
