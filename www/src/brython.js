@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-25 17:51:41.114995"
-__BRYTHON__.timestamp=1711385501114
+__BRYTHON__.compiled_date="2024-03-25 18:15:59.365681"
+__BRYTHON__.timestamp=1711386959365
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -14113,7 +14113,7 @@ function _seq_number_of_starred_exprs(seq){var n=0
 for(var k of seq){if(! k.is_keyword){n++;}}
 return n}
 $B._PyPegen={}
-$B._PyPegen.constant_from_string=function(p,token){var prepared=$B.prepare_string(token)
+$B._PyPegen.constant_from_string=function(p,token){var prepared=$B.prepare_string(p,token)
 var is_bytes=prepared.value.startsWith('b')
 if(! is_bytes){var value=make_string_for_ast_value(prepared.value)}else{value=prepared.value.substr(2,prepared.value.length-3)
 try{value=_b_.bytes.$factory(encode_bytestring(value))}catch(err){$B._PyPegen.raise_error_known_location(p,_b_.SyntaxError,token.lineno,token.col_offset,token.end_lineno,token.end_col_offset,'bytes can only contain ASCII literal characters')}}
@@ -14493,36 +14493,33 @@ while(pos < s.length){if(s[pos]=='\\'){bytes[bytes.length]=escaped_to_byte(s[pos
 pos+=2}else{bytes[bytes.length]=s.charCodeAt(pos)
 pos++}}
 return bytes}
-function string_error(token,msg){var a={lineno:token.start[0],col_offset:token.start[1],end_lineno:token.end[0],end_col_offset:token.end[1]}
-$B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a,msg)}
+function string_error(p,token,msg){
+$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,token,msg)}
 function SurrogatePair(value){this.value=value}
-function test_escape(token,C,text,string_start,antislash_pos){
+function test_escape(p,token,C,text,string_start,antislash_pos){
 var seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
 if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
 switch(text[antislash_pos+1]){case "x":
 var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=2){seq_end=antislash_pos+mo[0].length+1
-$token.value.start[1]=seq_end
-string_error(token,["(unicode error) 'unicodeescape' codec can't decode "+
+string_error(p,token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\xXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "u":
 var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=4){seq_end=antislash_pos+mo[0].length+1
-$token.value.start[1]=seq_end
-string_error(token,["(unicode error) 'unicodeescape' codec can't decode "+
+string_error(p,token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "U":
 var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=8){seq_end=antislash_pos+mo[0].length+1
-$token.value.start[1]=seq_end
-string_error(token,["(unicode error) 'unicodeescape' codec can't decode "+
+string_error(p,token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
-"\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
-if(value > 0x10FFFF){string_error(token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
-$B.prepare_string=function(token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,C={type:'str'}
+"\\UXXXXXXXX escape"])}else{var value=parseInt(mo[0],16)
+if(value > 0x10FFFF){string_error(p,token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
+$B.prepare_string=function(p,token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,C={type:'str'}
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
 if(s.substr(pos,3)==quote.repeat(3)){_type="triple_string"
@@ -14570,10 +14567,10 @@ end++}
 escaped=true}else{if(src.charAt(end+1)=='\n'){
 end+=2}else if(src.substr(end+1,2)=='N{'){
 var end_lit=end+3,re=new RegExp("[-a-zA-Z0-9 ]+"),search=re.exec(src.substr(end_lit))
-if(search===null){string_error(token,"(unicode error) "+
+if(search===null){string_error(p,token,"(unicode error) "+
 "malformed \\N character escape",pos)}
 var end_lit=end_lit+search[0].length
-if(src.charAt(end_lit)!="}"){string_error(token,"(unicode error) "+
+if(src.charAt(end_lit)!="}"){string_error(p,token,"(unicode error) "+
 "malformed \\N character escape")}
 var description=search[0].toUpperCase()
 if($B.unicodedb===undefined){var xhr=new XMLHttpRequest
@@ -14584,11 +14581,11 @@ xhr.send()}
 if($B.unicodedb !==undefined){var re=new RegExp("^([0-9A-F]+);"+
 description+";.*$","m")
 search=re.exec($B.unicodedb)
-if(search===null){string_error(token,"(unicode error) "+
+if(search===null){string_error(p,token,"(unicode error) "+
 "unknown Unicode character name")}
 var cp=parseInt(search[1],16)
 zone+=String.fromCodePoint(cp)
-end=end_lit+1}else{end++}}else{var esc=test_escape(token,C,src,string_start,end)
+end=end_lit+1}else{end++}}else{var esc=test_escape(p,token,C,src,string_start,end)
 if(esc){if(esc[0]=='\\'){zone+='\\\\'}else if(esc[0]instanceof SurrogatePair){zone+=String.fromCodePoint(esc[0].value)}else{zone+=esc[0]}
 end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
@@ -14596,7 +14593,7 @@ zone+='\\'
 escaped=true
 end++}}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
 console.log(pos,end,src.substring(pos,end))
-string_error(token,["EOL while scanning string literal"])}else{zone+=src.charAt(end)
+string_error(p,token,["EOL while scanning string literal"])}else{zone+=src.charAt(end)
 end++}}
 var $string=zone,string=''
 for(var i=0;i < $string.length;i++){var $car=$string.charAt(i)
@@ -14607,7 +14604,7 @@ while($string.charAt(j)=='\\'){j--}
 if((i-j-1)% 2==0){string+='\\'}}}
 string+=$car}
 if(fstring){try{var re=new RegExp("\\\\"+quote,"g"),string_no_bs=string.replace(re,quote)
-var elts=$B.parse_fstring(string_no_bs)}catch(err){string_error(token,err.message)}}
+var elts=$B.parse_fstring(string_no_bs)}catch(err){string_error(p,token,err.message)}}
 if(bytes){result.value='b'+quote+string+quote
 result.bytes=to_bytes(string)}else if(fstring){result.value=elts}else{result.value=quote+string+quote}
 C.raw=raw;

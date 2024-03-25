@@ -224,7 +224,7 @@ function _seq_number_of_starred_exprs(seq){
 $B._PyPegen = {}
 
 $B._PyPegen.constant_from_string = function(p, token){
-    var prepared = $B.prepare_string(token)
+    var prepared = $B.prepare_string(p, token) // in string_parser.js
     var is_bytes = prepared.value.startsWith('b')
     if(! is_bytes){
         var value = make_string_for_ast_value(prepared.value)
@@ -235,7 +235,7 @@ $B._PyPegen.constant_from_string = function(p, token){
         }catch(err){
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
-                token.lineno, token.col_offset, 
+                token.lineno, token.col_offset,
                 token.end_lineno, token.end_col_offset,
                 'bytes can only contain ASCII literal characters')
         }
