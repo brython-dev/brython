@@ -441,8 +441,11 @@ int.__pow__ = function(self, other, z){
                 return 0
             }
             var result = 1n,
-                base = self % z,
-                exponent = other
+                exponent = other,
+                base = self % z
+            if(base < 0){
+                base += z
+            }
             if(exponent < 0){
                 var gcd, inv, _
                 [gcd, inv, _] = extended_euclidean(self, z)
