@@ -3266,6 +3266,35 @@ assert a in b == c # same as (a in b) and (b == c)
 # issue 2386
 import html
 
+# issue 2406
+class A:
+  __name__ = 'coucou'
+
+class B:
+  pass
+
+class C(A):
+  pass
+
+assert A.__name__ == 'A'
+assert A.__dict__['__name__'] == 'coucou'
+assert A().__name__ == 'coucou'
+
+assert B.__name__ == 'B'
+assert not '__name__' in B.__dict__
+assert not '__name__' in B().__dict__
+
+assert A.__name__ == 'A'
+assert A.__dict__['__name__'] == 'coucou'
+assert A().__name__ == 'coucou'
+
+assert C.__name__ == 'C'
+assert not '__name__' in C.__dict__
+assert not '__name__' in C().__dict__
+
+assert not hasattr(range(3), '__name__')
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

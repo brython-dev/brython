@@ -171,8 +171,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-25 08:05:21.657270"
-__BRYTHON__.timestamp=1711350321655
+__BRYTHON__.compiled_date="2024-03-25 17:51:41.114995"
+__BRYTHON__.timestamp=1711385501114
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -1892,8 +1892,12 @@ if(dict.__class__===$B.getset_descriptor){return dict.cls[attr]}
 var in_dict=_b_.dict.$get_string(dict,attr)
 if(in_dict !==_b_.dict.$missing){return in_dict}}
 if(res===undefined){
-function check(obj,kl,attr){var v=kl[attr]
-if(v !==undefined){return v}}
+function check(obj,kl,attr){var v
+if(kl.__dict__){v=_b_.dict.$get_string(kl.__dict__,attr)
+if(v !==_b_.dict.$missing){return v}}
+v=kl[attr]
+if(v !==undefined){if($test){console.log('check, kl',kl,'attr',attr,'v',v)}
+return v}}
 res=check(obj,klass,attr)
 if(res===undefined){var mro=klass.__mro__
 for(let i=0,len=mro.length;i < len;i++){res=check(obj,mro[i],attr)
@@ -2235,7 +2239,8 @@ function(kls,key,value){kls[key]=value}
 return method_wrapper.$factory(attr,klass,func)
 case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
-return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
+return method_wrapper.$factory(attr,klass,function(key){if(klass.__dict__){_b_.dict.__delitem__(klass.__dict__,key)}
+delete klass[key]})}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
 var $test=false 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
@@ -2974,7 +2979,7 @@ if(object_attr !==undefined){klass[attr]=object_attr}else{if($test){console.log(
 var attrs=obj.__dict__
 if(attrs && _b_.dict.$contains_string(attrs,attr)){return _b_.dict.$getitem_string(attrs,attr)}
 if(_default===undefined){throw $B.attr_error(attr,obj)}
-return _default}}
+return _default}}else if(['__name__','__qualname__'].includes(attr)){attr_error(attr,obj)}
 if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr](obj)}
 if(typeof klass[attr]=='function'){var func=klass[attr]
 if(attr=='__new__'){func.$type="staticmethod"}

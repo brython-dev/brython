@@ -323,12 +323,10 @@ dict.$contains = function(self, key){
 }
 
 dict.__delitem__ = function(){
-
     var $ = $B.args("__eq__", 2, {self: null, key: null},
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
-
     if(self.$all_str){
         if(typeof key == 'string'){
             if(self.$strings.hasOwnProperty(key)){

@@ -104,7 +104,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'bar' // false // attr == "__args__"
+    var $test = false // attr == 'x' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -140,8 +140,18 @@ object.__getattribute__ = function(obj, attr){
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
         function check(obj, kl, attr){
-            var v = kl[attr]
+            var v
+            if(kl.__dict__){
+                v = _b_.dict.$get_string(kl.__dict__, attr)
+                if(v !== _b_.dict.$missing){
+                    return v
+                }
+            }
+            v = kl[attr]
             if(v !== undefined){
+                if($test){
+                    console.log('check, kl', kl, 'attr', attr, 'v', v)
+                }
                 return v
             }
         }

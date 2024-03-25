@@ -1081,6 +1081,8 @@ $B.$getattr = function(obj, attr, _default){
                 }
                 return _default
             }
+        }else if(['__name__', '__qualname__'].includes(attr)){
+            attr_error(attr, obj)
         }
         if(klass.$descriptors && klass.$descriptors[attr] !== undefined){
             return klass[attr](obj)

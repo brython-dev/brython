@@ -520,7 +520,12 @@ type.__getattribute__ = function(klass, attr){
                 return klass["__delattr__"]
             }
             return method_wrapper.$factory(attr, klass,
-                function(key){delete klass[key]})
+                function(key){
+                    if(klass.__dict__){
+                        _b_.dict.__delitem__(klass.__dict__, key)
+                    }
+                    delete klass[key]
+                })
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
