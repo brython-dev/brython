@@ -3212,7 +3212,7 @@ $B.function = {
 
 $B.function.__delattr__ = function(self, attr){
     if(attr == "__dict__"){
-        throw _b_.TypeError.$factory("can't deleted function __dict__")
+        throw _b_.TypeError.$factory("can't delete function __dict__")
     }
 }
 
