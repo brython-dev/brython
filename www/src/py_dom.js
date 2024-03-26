@@ -351,7 +351,7 @@ DOMEvent.__getattribute__ = function(ev, attr){
         case 'data':
             if(ev.dataTransfer !== null && ev.dataTransfer !== undefined){
                 return Clipboard.$factory(ev.dataTransfer)
-            }else if(ev.target instanceof Worker){
+            }else if(typeof Worker !== 'undefined' && ev.target instanceof Worker){
                 // main script receiving a MessageEvent from a worker
                 return $B.structuredclone2pyobj(ev.data)
             }else if(typeof DedicatedWorkerGlobalScope !== 'undefined' &&
