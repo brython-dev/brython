@@ -54,7 +54,7 @@ After a handler function is run, if element.data has changed, the element is
 rendered again, with the new value of element.data.
 """
 import tb as traceback
-from browser import document, html
+from browser import document, html, console
 
 # HTML elements that don't need a closing tag
 # Cf. http://w3c.github.io/html/syntax.html#void-elements
@@ -137,7 +137,7 @@ class Template:
         self.add("    " * self.indent + content, elt)
 
     def write(self, content):
-        self.html += str(content) + "\n"
+        self.html += str(content)
 
     def parse(self, elt):
         """Parse the element recursively to generate the Python code that
@@ -262,7 +262,6 @@ class Template:
             else:
                 tb = exc.__traceback__
                 while tb is not None:
-                    print('template 265, tb', tb, tb.tb_frame, tb.tb_lineno)
                     line_no = tb.tb_lineno
                     tb = tb.tb_next
             elt = self.line_mapping[line_no]
