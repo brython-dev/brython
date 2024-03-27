@@ -91,8 +91,14 @@ if(mo){
     if(['http', 'https'].includes(mo[1])){
         $B.script_domain = mo[1] + '://' + mo[2]
     }
+}else{
+    var parts_re_root = new RegExp('(.*?)://(.*?)'),
+        mo = parts_re_root.exec($B.script_dir)
+    if(mo && ['http', 'https'].includes(mo[1])){
+        // script is at server root (issue #2412)
+        $B.script_domain = $B.script_dir
+    }
 }
-
 
 $B.strip_host = function(url){
     var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
