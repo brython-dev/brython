@@ -299,6 +299,16 @@ ajax.responseType = _b_.property.$factory(
     }
 )
 
+ajax.withCredentials = _b_.property.$factory(
+    function(_self){
+        return _self.withCredentials
+    },
+    function(_self, value){
+        console.log('set with credentials', value)
+        _self.js.withCredentials = value
+    }
+)
+
 ajax.set_header = function(self, key, value){
     self.headers[key.toLowerCase()] = value
 }

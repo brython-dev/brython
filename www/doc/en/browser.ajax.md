@@ -200,7 +200,10 @@ Once the request is opened, attributes can be specified:
 > the specified encoding
 
 `responseType`
-> the expected rresponse type (cf. [documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType))
+> the expected response type (cf. [documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType))
+
+`withCredentials`
+> whether or not cross-site Access-Control requests should be made using credentials such as cookies, authorization headers or TLS client certificates (cf. [documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials))
 
 `set_header(`_name, value_`)`
 > sets the _value_ of the header _name_.
