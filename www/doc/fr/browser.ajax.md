@@ -204,6 +204,9 @@ Quand la requête est ouverte, on peut spécifier certaines de ses propriétés:
 `responseType`
 > le type de réponse attendu (cf. [documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType))
 
+`withCredentials`
+> indique si les requêtes Access-Control doivent utitiler des credentials tels que les cookies, les entêtes d'autorization ou les certificats client TLS  (cf. [documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials))
+
 `set_header(`_nom,valeur_`)`
 > affecte la _valeur_ à l'entête _nom_.
 
