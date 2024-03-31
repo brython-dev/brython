@@ -173,8 +173,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-03-27 09:50:29.347571"
-__BRYTHON__.timestamp=1711529429347
+__BRYTHON__.compiled_date="2024-03-31 08:19:18.096164"
+__BRYTHON__.timestamp=1711865958083
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -9557,12 +9557,8 @@ try{Object.defineProperty(jsobj,"$is_js_array",{value:true});}catch(err){}
 return jsobj}
 let pyobj=jsobj[PYOBJ]
 if(pyobj !==undefined){return pyobj}
-if(jsobj instanceof Promise){
-var save_frame_obj=$B.frame_obj
-jsobj.$frame_obj=$B.frame_obj
-return jsobj.then(function(x){$B.frame_obj=save_frame_obj
-return jsobj2pyobj(x)}).catch(function(err){$B.frame_obj=save_frame_obj
-throw $B.exception(err)})}
+if(jsobj instanceof Promise ||typeof jsobj.then=="function"){
+return jsobj}
 if(typeof jsobj==="function"){
 _this=_this===undefined ? null :_this
 if(_this===null){const pyobj=jsobj[PYOBJFCT];
@@ -10781,7 +10777,11 @@ $B.promise=function(obj){if(obj.__class__===coroutine){
 obj.$frame_obj=$B.frame_obj
 return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
-if(obj instanceof Promise ||typeof obj.then=="function"){return obj}
+if(obj instanceof Promise ||typeof obj.then=="function"){
+obj.frame_obj=$B.frame_obj
+return obj.then(function(x){$B.frame_obj=obj.frame_obj
+return $B.jsobj2pyobj(x)}).catch(function(err){$B.frame_obj=obj.frame_obj
+throw $B.exception(err)})}
 var awaitable=$B.$getattr(obj,'__await__',null)
 if(awaitable !==null){
 awaitable=$B.$call(awaitable)()
