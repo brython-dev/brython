@@ -82,6 +82,12 @@
             }
         },
         console: self.console && $B.jsobj2pyobj(self.console),
+        run_script: function(){
+            var $ = $B.args("run_script", 2, {src: null, name: null},
+                ["src", "name"], arguments, {name: "script_" + $B.UUID()},
+                null, null)
+            $B.runPythonSource($.src, $.name)
+        },
         self: win,
         win: win,
         window: win
@@ -174,21 +180,13 @@
                     }
                 }
             },
-            run_script: function(){
-                var $ = $B.args("run_script", 2, {src: null, name: null},
-                    ["src", "name"], arguments, {name: "script_" + $B.UUID()},
-                    null, null)
-                var script = document.createElement('script')
-                script.setAttribute('id', $.name)
-                $B.run_script(script, $.src, $.name, $B.script_path, true)
-            },
             URLParameter:function(name) {
-            name = name.replace(/[[]/, "\\[").replace(/[\]]/, "\\]");
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                results = regex.exec(location.search);
-            results = results === null ? "" :
-                decodeURIComponent(results[1].replace(/\+/g, " "));
-            return $B.builtins.str.$factory(results);
+                name = name.replace(/[[]/, "\\[").replace(/[\]]/, "\\]");
+                var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search);
+                results = results === null ? "" :
+                    decodeURIComponent(results[1].replace(/\+/g, " "));
+                return $B.builtins.str.$factory(results);
             }
         })
 
