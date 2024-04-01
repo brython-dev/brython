@@ -221,7 +221,8 @@ function create_worker(){
              `${js}\n` +
              `self.postMessage('${ok_token}')\n` +
          `}catch(err){\n` +
-             `self.postMessage("${error_token}Error in worker ${id}\\n" + $B.error_trace(err))\n` +
+             `self.postMessage('${error_token}Error in worker "${id}"\\n'` +
+             ` + $B.error_trace(err))\n` +
          `}\n})`
     js = header + js
 
@@ -240,7 +241,7 @@ function create_worker(){
                 resolve(res)
             }else if(typeof ev.data == 'string' &&
                     ev.data.startsWith(error_token)){
-                reject(ev.data.substr(error_token.length))
+                reject(_b_.Exception.$factory(ev.data.substr(error_token.length)))
             }else{
                 if(onmessage !== _b_.None){
                     onmessage(ev)
