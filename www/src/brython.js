@@ -173,8 +173,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-04-01 11:34:07.323437"
-__BRYTHON__.timestamp=1711964047322
+__BRYTHON__.compiled_date="2024-04-01 16:35:08.406131"
+__BRYTHON__.timestamp=1711982108406
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -2114,8 +2114,8 @@ metaclass=kw_meta}
 if(bases && bases.length > 0){if(bases[0].__class__===undefined){
 if(typeof bases[0]=="function"){if(bases.length !=1){throw _b_.TypeError.$factory("A Brython class "+
 "can inherit at most 1 Javascript constructor")}
-metaclass=bases[0].__class__=$B.JSMeta
-$B.set_func_names(bases[0],module)}else{throw _b_.TypeError.$factory("Argument of "+class_name+
+$B.set_func_names(bases[0],module)
+return $B.JSMeta}else{throw _b_.TypeError.$factory("Argument of "+class_name+
 " is not a class (type '"+$B.class_name(bases[0])+
 "')")}}
 for(var base of bases){var mc=base.__class__
@@ -9601,6 +9601,8 @@ if(typeof key !=="string"){key=_b_.str.$factory(key)}
 if(typeof entry.value==='function'){
 entry.value.bind(jsobj)}
 jsobj[key]=pyobj2jsobj(entry.value)}
+pyobj[JSOBJ]=jsobj
+jsobj[PYOBJ]=pyobj
 return jsobj}
 if(has_type(klass,_b_.str)){
 return pyobj.valueOf()}
@@ -9694,7 +9696,7 @@ klass.__mro__=[py_parent].concat(klass.__mro__)}
 var frame=$B.frame_obj.frame
 if(frame){$B.set_func_names(klass,frame[2])}
 return klass}
-$B.JSObj.__getattribute__=function(_self,attr){var test=attr=="line"
+$B.JSObj.__getattribute__=function(_self,attr){var test=false 
 if(test){console.log("__ga__",_self,attr)}
 if(attr=="new" && typeof _self=="function"){
 var new_func

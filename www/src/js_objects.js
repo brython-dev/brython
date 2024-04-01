@@ -288,6 +288,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }
             jsobj[key] = pyobj2jsobj(entry.value)
         }
+        pyobj[JSOBJ] = jsobj
+        jsobj[PYOBJ] = pyobj
         return jsobj
 
     }
@@ -552,7 +554,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = attr == "line"
+    var test = false // attr == "get"
     if(test){
         console.log("__ga__", _self, attr)
     }

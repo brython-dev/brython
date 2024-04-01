@@ -135,8 +135,8 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
                     throw _b_.TypeError.$factory("A Brython class " +
                         "can inherit at most 1 Javascript constructor")
                 }
-                metaclass = bases[0].__class__ = $B.JSMeta
                 $B.set_func_names(bases[0], module)
+                return $B.JSMeta
             }else{
                 throw _b_.TypeError.$factory("Argument of " + class_name +
                     " is not a class (type '" + $B.class_name(bases[0]) +

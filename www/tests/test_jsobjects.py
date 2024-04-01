@@ -414,4 +414,11 @@ assert t == ['__init__']
 y.foo()
 assert t == ['__init__', 'foo']
 
+# issue 2250
+x = {}
+m = window.Map.new()
+m.set(x, 42)
+assert m.get(x) == 42
+
+
 print("all tests ok...")
