@@ -8,8 +8,10 @@ Defining options
 ----------------
 
 Declaring options for the whole page is done through the attributes of a
-specific HTML tag `<brython-options>`. For instance, to define options
-`debug` and `cache`:
+specific HTML tag `<brython-options>`. This tag should be placed preferably in
+section `<body>` of the document, not in `<head>`.
+
+For instance, to define the options `debug` and `cache`:
 
 ```xml
 <brython-options debug="1" cache="true">

@@ -9,8 +9,10 @@ Définition des options
 ----------------------
 
 La déclaration d'options valables pour toute la page se fait par les attributs
-d'une balise spécifique `<brython-options>`. Par exemple pour définir
-les options `debug` et `cache`:
+d'une balise spécifique `<brython-options>`. Cette balise doit être placée de
+préfence dans la partie `<body>` du document plutôt que `<head>`.
+
+Par exemple, pour définir les options `debug` et `cache`:
 
 ```xml
 <brython-options debug="1" cache="true">
