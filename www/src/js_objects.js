@@ -1047,7 +1047,6 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     var body = `
     var _b_ = __BRYTHON__.builtins
     return function(){
-        console.log('call inner function, bases', bases)
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
