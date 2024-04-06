@@ -54,16 +54,6 @@ function update_pos(element, pos){
     element.pos = pos
 }
 
-function delete_pos(rule){
-    return
-    delete rule.pos
-    if(rule.rules){
-        for(var r of rule.rules){
-            delete_pos(r)
-        }
-    }
-}
-
 function show_path(rule){
     if(rule.constructor === undefined){
         console.log('rule', rule, 'no constructor')
@@ -168,9 +158,17 @@ function get_string(rule){
 }
 
 var handler = {
+    ETag: function(rule){
+        var name = rule.rules[1].result_store[0],
+            extra = rule.rules[1].result_store[1]
+        if(extra.length){
+            name += extra[0].value
+        }
+        return {name}
+    },
     STag: function(rule){
-        var name = rule.rules[1].result_store[0]
-        var extra = rule.rules[1].result_store[1]
+        var name = rule.rules[1].result_store[0],
+            extra = rule.rules[1].result_store[1]
         if(extra.length){
             name += extra[0].value
         }
@@ -181,19 +179,55 @@ var handler = {
                 var attr_name_obj = attr.result_store[1].rules[0].result_store,
                     attr_name = attr_name_obj[0]
                 if(attr_name_obj[1].length){
-                    console.log(attr_name_obj[1])
                     attr_name += attr_name_obj[1][0].value
                 }
                 var attr_value = attr.result_store[1].result_store[2]
                 var alt_rank = Object.keys(attr_value.result_store)[0]
                 var value_store = attr_value.rules[alt_rank].result_store[1],
                     value = ''
-                for(var item of value_store){
-                    value += item.result_store[0]
+                var store_rank = Object.keys(value_store[0].result_store)[0],
+                    store = value_store[0].result_store[store_rank]
+                if(attr_name == 'y'){
+                    console.log('value_store for', attr_name, value_store)
+                    console.log('store_rank', store_rank)
+                    alert()
+                }
+                switch(store_rank){
+                    case "0":
+                        for(var item of value_store){
+                            value += item.result_store[0]
+                        }
+                        break
+                    case "1":
+                        console.log('store', store)
+                        var sub_rank = Object.keys(store.result_store)[0]
+
+                        switch(sub_rank){
+                            case "0":
+                                value = store.result_store[sub_rank]
+                                break
+                            case "1": // CharRef
+                                var CharRefStore = store.result_store[sub_rank],
+                                    CharRefRank = Object.keys(CharRefStore.result_store)[0]
+                                switch(CharRefRank){
+                                    case "0": // form "0xddd;"
+                                        console.log(CharRefStore, CharRefRank)
+                                        value = CharRefStore.rules[CharRefRank].result_store[1][0].value
+                                        value = '&#' + value + ';'
+                                        break
+                                    case "1": // form "&#x[0-f]+;"
+                                        value = CharRefStore.rules[CharRefRank].result_store[1][0].value
+                                        value = '&#x' + value + ';'
+                                        break
+                                }
+                                break
+                        }
+                        break
                 }
                 attr_result[attr_name] = value
             }
         }
+        console.log('STag', name, attr_result)
         return {name, attr_result}
     }
 }
@@ -202,15 +236,16 @@ function emit(rule){
     // called when a rule is done
     var rname = rule.constructor.name
     rname = rname.substr(0, rname.length - 5)
-    if(['element', 'STag'].includes(rname)){
-        if(handler[rname]){
-            console.log('handler', handler[rname](rule))
-        }
+    if(handler[rname]){
+        console.log('emit', rname, handler[rname](rule))
     }
 }
 
 function handle_simple(element, next_if_ok, rule, char){
     if(char === FAIL){
+        if(typeof element.origin.feed !== 'function'){
+            console.log('not a func', element)
+        }
         return element.origin.feed(FAIL)
     }else if(char === DONE){
         element.result_store[element.expect] = get_sub(rule, rule.pos, get_pos(rule)) // get_string(rule)
@@ -234,7 +269,7 @@ function handle_simple(element, next_if_ok, rule, char){
 
 function handle_plus(element, rank, next_if_ok, rule, char){
     if(char === FAIL){
-        if(element.repeats[{i}] == 0){
+        if(element.repeats[rank] == 0){
             reset_pos(element, rule.pos)
             return element.origin.feed(FAIL)
         }
@@ -249,6 +284,7 @@ function handle_plus(element, rank, next_if_ok, rule, char){
         update_pos(element, get_pos(element))
         //rule.reset()
         emit(rule)
+        set_expect(element, next_if_ok)
         delete element.rules[rank]
         return element.feed(read_char(element))
     }else if(char === END){
@@ -336,7 +372,7 @@ function handle_alt(element, alt_index, rule, char){
 }
 
 function handle_last(element, rule, char){
-    var test = false // rule instanceof LITERAL && rule.string == '?>'
+    var test = rule instanceof CHARSET_rule
     if(test){
         console.log('handle_last', rule, char)
         alert()
@@ -520,6 +556,7 @@ function CHARSET_rule(origin, charset, next_if_ok){
     this.charset = charset
     this.next_if_ok = next_if_ok
     this.pos = get_pos(origin)
+    this.value = ''
     var negative = charset.startsWith('^'),
         body = negative ? charset.substr(1) : charset
 
@@ -581,14 +618,14 @@ CHARSET_rule.prototype.reset = function(){
 }
 
 CHARSET_rule.prototype.feed = function(char){
-    //console.log('charset feed', this.charset, char, this.test(char))
-    if(this.done){
+    if(this.test(char)){
+        this.value += char
+        return this
+    }else if(this.value.length > 0){
         return this.origin.feed(DONE)
-    }else if(! this.test(char)){
+    }else{
         return this.origin.feed(FAIL)
     }
-    this.done = true
-    return this
 }
 
 function BaseChar_rule(origin){

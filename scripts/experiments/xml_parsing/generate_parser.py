@@ -168,7 +168,6 @@ def generate_parser(rules):
             write(f"{rule}_rule.prototype.reset = function(){{")
             indent += 1
             write(f"this.expect = 0")
-            write(f"delete_pos(this)")
             indent -= 1
             write(f"}}")
             write('')
