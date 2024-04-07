@@ -157,77 +157,48 @@ function get_string(rule){
     return s
 }
 
-var handler = {
-    ETag: function(rule){
-        var name = rule.rules[1].result_store[0],
-            extra = rule.rules[1].result_store[1]
-        if(extra.length){
-            name += extra[0].value
+function get_value(rule){
+    // get string value for rule
+    var res = ''
+    if(rule.alt){
+        return get_value(rule.selected_rule)
+    }else if(rule.value){
+        res = rule.value
+    }else{
+        for(var rank in rule.result_store){
+            var rules = rule.result_store[rank]
+            if(Array.isArray(rules)){
+                res += rules.map(get_value).join('')
+            }else{
+                res += get_value(rules)
+            }
         }
-        return {name}
+    }
+    return res
+}
+
+function get_rank(rule){
+    return parseInt(Object.keys(rule.result_store)[0])
+}
+
+var handler = {
+    CharData: function(rule){
+        return {value: get_value(rule)}
+    },
+    ETag: function(rule){
+        return {name: get_value(rule.rules[1])}
     },
     STag: function(rule){
-        var name = rule.rules[1].result_store[0],
-            extra = rule.rules[1].result_store[1]
-        if(extra.length){
-            name += extra[0].value
-        }
+        var name = get_value(rule.rules[1])
         var attrs = rule.result_store[2],
             attr_result = {}
         if(attrs){
             for(var attr of attrs){
-                var attr_name_obj = attr.result_store[1].rules[0].result_store,
-                    attr_name = attr_name_obj[0]
-                if(attr_name_obj[1].length){
-                    attr_name += attr_name_obj[1][0].value
-                }
-                var attr_value = attr.result_store[1].result_store[2]
-                var alt_rank = Object.keys(attr_value.result_store)[0]
-                var value_store = attr_value.rules[alt_rank].result_store[1],
-                    value = ''
-                var store_rank = Object.keys(value_store[0].result_store)[0],
-                    store = value_store[0].result_store[store_rank]
-                if(attr_name == 'y'){
-                    console.log('value_store for', attr_name, value_store)
-                    console.log('store_rank', store_rank)
-                    alert()
-                }
-                switch(store_rank){
-                    case "0":
-                        for(var item of value_store){
-                            value += item.result_store[0]
-                        }
-                        break
-                    case "1":
-                        console.log('store', store)
-                        var sub_rank = Object.keys(store.result_store)[0]
-
-                        switch(sub_rank){
-                            case "0":
-                                value = store.result_store[sub_rank]
-                                break
-                            case "1": // CharRef
-                                var CharRefStore = store.result_store[sub_rank],
-                                    CharRefRank = Object.keys(CharRefStore.result_store)[0]
-                                switch(CharRefRank){
-                                    case "0": // form "0xddd;"
-                                        console.log(CharRefStore, CharRefRank)
-                                        value = CharRefStore.rules[CharRefRank].result_store[1][0].value
-                                        value = '&#' + value + ';'
-                                        break
-                                    case "1": // form "&#x[0-f]+;"
-                                        value = CharRefStore.rules[CharRefRank].result_store[1][0].value
-                                        value = '&#x' + value + ';'
-                                        break
-                                }
-                                break
-                        }
-                        break
-                }
-                attr_result[attr_name] = value
+                var attr_name = get_value(attr.result_store[1].result_store[0]),
+                    attr_value = get_value(attr.result_store[1].result_store[2])
+                attr_result[attr_name] = attr_value
             }
         }
-        console.log('STag', name, attr_result)
         return {name, attr_result}
     }
 }
@@ -248,13 +219,9 @@ function handle_simple(element, next_if_ok, rule, char){
         }
         return element.origin.feed(FAIL)
     }else if(char === DONE){
-        element.result_store[element.expect] = get_sub(rule, rule.pos, get_pos(rule)) // get_string(rule)
+        element.result_store[element.expect] = rule // get_sub(rule, rule.pos, get_pos(rule)) // get_string(rule)
         var test = (rule.constructor.name == 'element_rule' ||
                 rule.constructor.name == 'Attribute_rule')
-        if(test){
-            console.log(rule.constructor.name, element.result_store[element.expect])
-            console.log('set expect of element', element, 'to', element.items[next_if_ok])
-        }
         rule.reset()
         emit(rule)
         set_expect(element, next_if_ok)
@@ -304,12 +271,6 @@ function handle_star(element, rank, next_if_ok, rule, char){
     }else if(char === DONE){
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(rule)
-        if(rule.constructor.name == 'XXXtmp_49_rule'){
-            console.log('DONE', rule.constructor.name)
-            console.log('element', element)
-            console.log('element.result_store[rank]', element.result_store[rank])
-            alert()
-        }
         element.repeats[rank] += 1
         update_pos(element, get_pos(element))
         //rule.reset()
@@ -358,8 +319,9 @@ function handle_alt(element, alt_index, rule, char){
             console.log('  ', rule)
             alert()
         }
-        var s = get_sub(rule, rule.pos, get_pos(rule))
-        element.result_store[element.expect] = s
+        element.selected_option = element.expect
+        element.selected_rule = rule
+        element.result_store[element.expect] = rule
         emit(rule)
         rule.reset()
         return element.origin.feed(char)
@@ -381,6 +343,10 @@ function handle_last(element, rule, char){
         return element.origin.feed(FAIL)
     }else if(char === DONE){
         element.result_store[element.expect] = rule
+        if(element.alt){
+            element.selected_option = element.expect
+            element.selected_rule = rule
+        }
         emit(rule)
         rule.reset()
         set_expect(element, -1)
@@ -432,6 +398,7 @@ LITERAL.prototype.feed = function(char){
         console.log('LITERAL feed', this.string, char, this.str_pos)
     }
     if(this.str_pos == this.string.length){
+        this.value = this.string
         return this.origin.feed(DONE)
     }
     if(char == this.string[this.str_pos]){
@@ -583,7 +550,6 @@ function CHARSET_rule(origin, charset, next_if_ok){
         ranges.push(mo.slice(1))
     }
     if(ranges.length > 0){
-        console.log('ranges', ranges)
         if(negative){
             this.test = function(char){
                 for(var range of ranges){
@@ -663,6 +629,7 @@ Letter_rule.prototype.feed = function(char){
         return this.origin.feed(DONE)
     }else if(/\p{L}/u.exec(char)){
         this.done = true
+        this.value = char
         return this
     }else{
         return this.origin.feed(FAIL)

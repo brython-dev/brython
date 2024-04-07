@@ -25,6 +25,8 @@ def generate_parser(rules):
             print('  options', options, type(options))
             write(f"function {rule}_rule(origin){{")
             indent += 1
+            if hasattr(options[0], 'alt'):
+                write("this.alt = true")
             write(f"this.origin = origin")
             write(f"this.pos = get_pos(this)")
             write(f"this.result_store = {{}}")

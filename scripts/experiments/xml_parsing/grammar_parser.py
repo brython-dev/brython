@@ -166,8 +166,7 @@ def replace_groups(tokens, rules):
         end = closing[max_level][start]
         seq = tokens[start + 1:end]
         if len(seq) == 1:
-            print('one-element rule', seq)
-            input()
+            # one-element rule
             tokens[start:end + 1] = [seq[0]]
         else:
             rule_name = next(temp_count)
