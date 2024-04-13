@@ -2,7 +2,7 @@ import re
 
 from generate_parser import make_rules, generate_parser
 
-with open("xml.gram", encoding="utf-8") as f:
+with open("custom_xml.gram", encoding="utf-8") as f:
     grammar = f.readlines()
 
 lines = []

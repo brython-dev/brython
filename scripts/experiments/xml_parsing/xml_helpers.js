@@ -655,3 +655,95 @@ NameChar_rule.prototype.feed = function(char){
         return this.origin.feed(DONE)
     }
 }
+
+function PIText_rule(origin){
+    this.origin = origin
+    this.value = ''
+    this.pos = get_pos(origin)
+}
+
+PIText_rule.prototype.reset = function(){}
+
+PIText_rule.prototype.feed = function(char){
+    if(char === END){
+        return this.origin.feed(FAIL)
+    }
+    this.value += char
+    if(this.value.endsWith('?>')){
+        reset_pos(this, get_pos(this) - 1)
+        this.value = this.value.substr(0, this.value.length - 2)
+        return this.origin.feed(DONE)
+    }
+    return this
+}
+
+function CommentText_rule(origin){
+    this.origin = origin
+    this.value = ''
+    this.pos = get_pos(origin)
+}
+
+CommentText_rule.prototype.reset = function(){}
+
+CommentText_rule.prototype.feed = function(char){
+    if(char === END){
+        return this.origin.feed(FAIL)
+    }
+    this.value += char
+    if(this.value.endsWith('-->')){
+        reset_pos(this, get_pos(this) - 2)
+        this.value = this.value.substr(0, this.value.length - 3)
+        if(this.value.endsWith('-')){
+            return this.origin.feed(FAIL)
+        }
+        return this.origin.feed(DONE)
+    }
+    return this
+}
+
+function CharData_rule(origin){
+    this.origin = origin
+    this.pos = get_pos(origin)
+    this.value = ''
+}
+
+CharData_rule.prototype.reset = function(){}
+
+CharData_rule.prototype.feed = function(char){
+    // [^<&]* - ([^<&]* ']]>' [^<&]*)
+    if(char === END){
+        return this.origin.feed(FAIL)
+    }
+    if('<&'.includes(char)){
+        return this.origin.feed(DONE)
+    }
+    this.value += char
+    if(this.value.endsWith(']]>')){
+        reset_pos(this, get_pos(this) - 2)
+        this.value = this.value.substr(0, this.value.length - 3)
+        return this.origin.feed(DONE)
+    }
+    return this
+}
+
+function CData_rule(origin){
+    this.origin = origin
+    this.pos = get_pos(origin)
+    this.value = ''
+}
+
+CData_rule.prototype.reset = function(){}
+
+CData_rule.prototype.feed = function(char){
+     // (Char* - (Char* ']]>' Char*))
+    if(char === END){
+        return this.origin.feed(FAIL)
+    }
+    this.value += char
+    if(this.value.endsWith(']]>')){
+        reset_pos(this, get_pos(this) - 2)
+        this.value = this.value.substr(0, this.value.length - 3)
+        return this.origin.feed(DONE)
+    }
+    return this
+}
