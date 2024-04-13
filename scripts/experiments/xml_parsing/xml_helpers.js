@@ -735,7 +735,7 @@ function CData_rule(origin){
 CData_rule.prototype.reset = function(){}
 
 CData_rule.prototype.feed = function(char){
-     // (Char* - (Char* ']]>' Char*))
+    // (Char* - (Char* ']]>' Char*))
     if(char === END){
         return this.origin.feed(FAIL)
     }
@@ -747,3 +747,26 @@ CData_rule.prototype.feed = function(char){
     }
     return this
 }
+
+function Ignore_rule(origin){
+    this.origin = origin
+    this.pos = get_pos(origin)
+    this.value = ''
+}
+
+Ignore_rule.prototype.reset = function(){}
+    
+Ignore_rule.prototype.feed = function(char){
+    // Char* - (Char* ('<![' | ']]>') Char*)
+    if(char === END){
+        return this.origin.feed(FAIL)
+    }
+    this.value += char
+    if(this.value.endsWith('<![') || this.value.endsWith(']]>')){
+        reset_pos(this, get_pos(this) - 2)
+        this.value = this.value.substr(0, this.value.length - 3)
+        return this.origin.feed(DONE)
+    }
+    return this
+}
+
