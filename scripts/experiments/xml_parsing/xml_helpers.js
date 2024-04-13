@@ -7,11 +7,11 @@ function is_id_start(char){
 }
 
 function is_id_continue(char){
-  return char !== END && char.match(/[a-zA-Z_0-9]/)
+  return char !== END && (".-:_".includes(char) || char.match(/[a-zA-Z_0-9]/))
 }
 
 function is_space(char){
-    return char !== END && ' \t'.includes(char)
+    return char !== END && ' \t\r\n'.includes(char)
 }
 
 function is_num(char){
@@ -470,12 +470,10 @@ NUMBER_rule.prototype.feed = function(char){
   return this
 }
 
-function S_rule(origin, next_if_ok, args){
+function S_rule(origin){
   this.origin = origin
   this.pos = get_pos(this)
   this.rank = this.origin.expect
-  this.next_if_ok = next_if_ok
-  this.args = args
   this.value = ''
 }
 
@@ -484,20 +482,15 @@ S_rule.prototype.reset = function(){
 }
 
 S_rule.prototype.feed = function(char){
-    console.log('S_rule, char', char, 'value', this.value.length)
-  if(this.value == ''){
-      if(! is_space(char)){
-          return FAIL
-      }
-      this.value = char
-  }else if(is_space(char)){
+  if(is_space(char)){
       this.value += char
+      return this
+  }else if(this.value.length > 0){
+      return this.origin.feed(DONE)
   }else{
-      return this.origin.feed(char)
+      return this.origin.feed(FAIL)
   }
-  return this
 }
-
 
 function CHAR_rule(origin, next_if_ok, args){
   this.origin = origin
@@ -584,7 +577,7 @@ CHARSET_rule.prototype.reset = function(){
 }
 
 CHARSET_rule.prototype.feed = function(char){
-    if(this.test(char)){
+    if(char !== END && this.test(char)){
         this.value += char
         return this
     }else if(this.value.length > 0){

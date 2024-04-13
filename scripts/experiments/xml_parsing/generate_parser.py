@@ -96,10 +96,7 @@ def generate_parser(rules):
                     charset = option.value.replace("'", "\\'")
                     write(f"{lhs} = new CHARSET_rule(this, '{charset}')")
                 elif isinstance(option, Rule):
-                    if option.value == 'S':
-                        write(f"{lhs} = new LITERAL(this, ' ')")
-                    else:
-                        write(f"{lhs} = new {option.value}_rule(this)")
+                    write(f"{lhs} = new {option.value}_rule(this)")
                 if quantifier:
                     write(f"this.repeats[{i}] = 0")
                 indent -= 1
