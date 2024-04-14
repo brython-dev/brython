@@ -27,10 +27,12 @@ EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
 AttValue       ::=  '"' ([^<&"] | Reference)* '"'
                  |  "'" ([^<&'] | Reference)* "'"
 SystemLiteral  ::=  ('"' [^"]* '"') | ("'" [^']* "'")
-PubidLiteral   ::=  '"' PubidChar* '"' | "'" (PubidChar - "'")* "'"
+PubidLiteral   ::=  '"' PubidChar* '"' | "'" PubidCharNoQuote* "'"
 PubidChar      ::=  #x20 | #xD | #xA | [a-zA-Z0-9]
                  |  [-'()+,./:=?;!*#@$_%]
-
+PubidCharNoQuote ::=  #x20 | #xD | #xA | [a-zA-Z0-9]
+                 |  [-()+,./:=?;!*#@$_%]
+                 
 Character Data
 
 
@@ -42,7 +44,6 @@ Comment  ::=  '<!--' CommentText '-->'
 Processing Instructions
 
 PI        ::=  '<?' PITarget (S PIText)? '?>'
-PITarget  ::=  Name - (('X' | 'x') ('M' | 'm') ('L' | 'l'))
 
 CDATA Sections
 

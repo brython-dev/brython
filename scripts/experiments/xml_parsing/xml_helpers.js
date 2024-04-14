@@ -182,6 +182,9 @@ function get_rank(rule){
 }
 
 var handler = {
+    CData: function(rule){
+        return {value: get_value(rule)}
+    },
     CharData: function(rule){
         return {value: get_value(rule)}
     },
@@ -755,7 +758,7 @@ function Ignore_rule(origin){
 }
 
 Ignore_rule.prototype.reset = function(){}
-    
+
 Ignore_rule.prototype.feed = function(char){
     // Char* - (Char* ('<![' | ']]>') Char*)
     if(char === END){
@@ -770,3 +773,43 @@ Ignore_rule.prototype.feed = function(char){
     return this
 }
 
+function PITarget_rule(origin){
+  this.origin = origin
+  this.pos = get_pos(this)
+  this.result_store = {}
+  this.expect = 0 // Name
+  this.items = ['Name', 'tmp_21']
+  this.rules = []
+  this.repeats = []
+}
+
+PITarget_rule.prototype.feed = function(char){
+  var res, rule
+  switch(this.expect){
+    case 0: // Name
+      if(! this.rules[0]){
+        this.rules[0] = new Name_rule(this)
+      }
+      rule = this.rules[0]
+      rule.pos = rule.pos ?? get_pos(this)
+      return handle_last(this, rule, char)
+    case 1: // tmp_21
+      if(! this.rules[1]){
+        this.rules[1] = new tmp_21_rule(this)
+      }
+      rule = this.rules[1]
+      rule.pos = rule.pos ?? get_pos(this)
+      return handle_last(this, rule, char)
+    case -1:
+      var value = get_value(this)
+      if(value.toLowerCase() == 'xml'){
+          return this.origin.feed(FAIL)
+      }
+      return this.origin.feed(DONE)
+  }
+  return this
+}
+
+PITarget_rule.prototype.reset = function(){
+  this.expect = 0
+}

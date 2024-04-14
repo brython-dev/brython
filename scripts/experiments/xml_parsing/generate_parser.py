@@ -80,6 +80,9 @@ def generate_parser(rules):
                     alt_index = options.index(alt)
                     next_if_ok = -1
                 if minus:
+                    print('option has minus', option)
+                    print(rule, options)
+                    input()
                     minus_index = options.index(minus)
 
                 write(f"if(! this.rules[{i}]){{")
