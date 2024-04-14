@@ -181,15 +181,122 @@ function get_rank(rule){
     return parseInt(Object.keys(rule.result_store)[0])
 }
 
+function external_id(ext_id){
+    var ext_id_value = get_value(ext_id),
+        systemId,
+        publicId
+    if(ext_id_value){
+        switch(ext_id.selected_option){
+            case 0:
+                systemId = get_value(ext_id.selected_rule.rules[2])
+                break
+            case 1:
+                publicId = get_value(ext_id.selected_rule.rules[2])
+                systemId = get_value(ext_id.selected_rule.rules[4])
+        }
+    }
+    return {publicId, systemId}
+}
+
 var handler = {
+    AttDef: function(rule){
+        // S Name S AttType S DefaultDecl
+        var defaultdecl = rule.rules[5],
+            def_value,
+            required
+        switch(defaultdecl.selected_option){
+            case 0:
+                required = true
+                break
+            case 2:
+                def_value = get_value(defaultdecl.rules[2].rules[1])
+                break
+        }
+        return {
+            elname: get_value(rule.origin.rules[2]),
+            attname: get_value(rule.rules[1]),
+            type: get_value(rule.rules[3]),
+            default: def_value,
+            required
+        }
+    },
     CData: function(rule){
         return {value: get_value(rule)}
     },
     CharData: function(rule){
         return {value: get_value(rule)}
     },
+    doctypedecl: function(rule){
+        var ext_id = external_id(rule.rules[3])
+        return {name: get_value(rule.rules[2]),
+                systemId: ext_id.systemId,
+                publicId: ext_id.publicId,
+                has_internal_subset: get_value(rule.rules[5].rules[1]) != ''
+               }
+    },
+    elementdecl: function(rule){
+        return {
+            name: get_value(rule.rules[2]),
+            model: get_value(rule.rules[4])
+        }
+    },
     ETag: function(rule){
         return {name: get_value(rule.rules[1])}
+    },
+    GEDecl: function(rule){
+        // '<!ENTITY' S Name S EntityDef S? '>'
+        var entitydef = rule.rules[4],
+            value,
+            systemId,
+            publicId,
+            notationName
+        // EntityValue | (ExternalID NDataDecl?)
+        switch(entitydef.selected_option){
+            case 0:
+                // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
+                //  |  "'" ([^%&'] | PEReference | Reference)* "'"
+                console.log('entitydef.selected', entitydef.selected_rule.selected_rule)
+                value = get_value(entitydef.selected_rule.selected_rule)
+                break
+            case 1:
+                var ext_id = external_id(entitydef.selected_rule.rules[0])
+                systemId = ext_id.systemId
+                publicId = ext_id.publicId
+                if(entitydef.selected_rule.result_store[1]){
+                    // NDataDecl ::=  S 'NDATA' S Name
+                    notationName = get_value(entitydef.selected_rule.rules[1].rules[3])
+                }
+        }
+        return {
+            name: get_value(rule.rules[2]),
+            is_parameter_entity: false,
+            value,
+            systemId,
+            publicId,
+            notationName
+        }
+    },
+    NotationDecl: function(rule){
+        // '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
+        var systemId,
+            publicId,
+            ext_or_public = rule.rules[4]
+
+        switch(ext_or_public.selected_option){
+            case 0:
+                var ext_id = external_id(ext_or_public.selected_rule)
+                systemId = ext_id.systemId
+                publicId = ext_id.publicId
+                break
+            case 1:
+                publicId = get_value(ext_or_public.selected_rule.rules[2])
+                break
+        }
+        return {
+            name: get_value(rule.rules[2]),
+            systemId: ext_id.systemId,
+            publicId: ext_id.publicId
+        }
     },
     STag: function(rule){
         var name = get_value(rule.rules[1])
@@ -203,6 +310,25 @@ var handler = {
             }
         }
         return {name, attr_result}
+    },
+    XMLDecl: function(rule){
+        // '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
+        var encoding,
+            standalone
+        if(rule.result_store[2]){
+            // S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
+            encoding = get_value(rule.rules[2].rules[3].selected_rule.rules[1])
+        }
+        if(rule.result_store[3]){
+            // S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
+            sddecl = rule.rules[3]
+            standalone = get_value(sddecl.rules[3].selected_rule.rules[1])
+        }
+        return {
+            version: get_value(rule.rules[1].rules[3].selected_rule.rules[1]),
+            encoding,
+            standalone
+        }
     }
 }
 
