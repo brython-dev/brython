@@ -255,8 +255,7 @@ var handler = {
             case 0:
                 // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
                 //  |  "'" ([^%&'] | PEReference | Reference)* "'"
-                console.log('entitydef.selected', entitydef.selected_rule.selected_rule)
-                value = get_value(entitydef.selected_rule.selected_rule)
+                value = get_value(entitydef.selected_rule.selected_rule.result_store[1])
                 break
             case 1:
                 var ext_id = external_id(entitydef.selected_rule.rules[0])
@@ -392,12 +391,19 @@ function handle_plus(element, rank, next_if_ok, rule, char){
 }
 
 function handle_star(element, rank, next_if_ok, rule, char){
+    var test = false // rule instanceof tmp_6_rule
+    if(test){
+        console.log('HANDLE STAR', rule, 'char', char)
+    }
     if(char === FAIL){
         set_expect(element, next_if_ok)
         reset_pos(element, rule.pos)
         rule.reset()
         return element.feed(read_char(element))
     }else if(char === DONE){
+        if(test){
+            console.log(rule, 'DONE')
+        }
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(rule)
         element.repeats[rank] += 1
@@ -463,7 +469,7 @@ function handle_alt(element, alt_index, rule, char){
 }
 
 function handle_last(element, rule, char){
-    var test = rule instanceof CHARSET_rule
+    var test = false // element instanceof tmp_6_rule
     if(test){
         console.log('handle_last', rule, char)
         alert()
@@ -475,6 +481,12 @@ function handle_last(element, rule, char){
         if(element.alt){
             element.selected_option = element.expect
             element.selected_rule = rule
+            if(test){
+                console.log('set selected', element)
+                console.log('value', get_value(rule))
+                element.coucou = 'ici'
+                alert()
+            }
         }
         emit(rule)
         rule.reset()
