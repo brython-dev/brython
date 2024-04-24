@@ -1212,7 +1212,25 @@ $B.$delitem = function(obj, item){
         obj.splice(item, 1)
         return
     }else if(obj.__class__ === _b_.dict){
-        _b_.dict.__delitem__(obj, item)
+        if(obj.$is_namespace){
+            // Deleting a name from a namespace should trigger a NameError in
+            // the next references to the name. Cf issue #2423.
+            Object.defineProperty(obj.$jsobj, item,
+                {
+                    get(){
+                        throw $B.name_error(item)
+                    },
+                    set(value){
+                        // resetting a value in the namespace: redefine the
+                        // property
+                        Object.defineProperty(obj.$jsobj, item, {value})
+                        return _b_.None
+                    }
+                }
+            )
+        }else{
+            _b_.dict.__delitem__(obj, item)
+        }
         return
     }else if(obj.__class__ === _b_.list){
         return _b_.list.__delitem__(obj, item)

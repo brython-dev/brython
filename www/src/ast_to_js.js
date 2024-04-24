@@ -2221,7 +2221,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     for(let id = 1; id < ARGS_NAMED.length; ++id ) {
 
         const kargs = ARGS_NAMED[id];
-        
+
         for(let item of $B.unpack_mapping(fct, kargs) ) {
             let argname = item.key
             if( typeof argname !== "string") {

@@ -173,8 +173,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-04-24 08:32:35.016531"
-__BRYTHON__.timestamp=1713940355005
+__BRYTHON__.compiled_date="2024-04-24 11:28:23.665413"
+__BRYTHON__.timestamp=1713950903665
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -1549,7 +1549,11 @@ typeof item=="number" &&
 !$B.$isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list deletion index out of range")}
 obj.splice(item,1)
-return}else if(obj.__class__===_b_.dict){_b_.dict.__delitem__(obj,item)
+return}else if(obj.__class__===_b_.dict){if(obj.$is_namespace){
+Object.defineProperty(obj.$jsobj,item,{get(){throw $B.name_error(item)},set(value){
+Object.defineProperty(obj.$jsobj,item,{value})
+return _b_.None}}
+)}else{_b_.dict.__delitem__(obj,item)}
 return}else if(obj.__class__===_b_.list){return _b_.list.__delitem__(obj,item)}
 var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
 if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
@@ -2867,7 +2871,7 @@ console.log('-- python source\n',src)}
 $B.frame_obj=save_frame_obj
 throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frame_obj)}catch(err){if($B.get_option('debug')> 2){console.log(
-'Python code\n',src,'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
+'Python code\n',src,'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js,'\n    err',err.__class__,err.args,err.$frame_obj)}
 $B.frame_obj=save_frame_obj
 throw err}
 if(_globals !==_b_.None && ! _globals.$jsobj){for(var _key in exec_globals){if(! _key.startsWith('$')){_b_.dict.$setitem(_globals,_key,exec_globals[_key])}}}
@@ -4396,6 +4400,7 @@ if(name===_b_.None){return _b_.None}
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name
+if(exc.$frame_obj===null){return _b_.None}
 frame=frame ||exc.$frame_obj.frame
 if(typeof name !='string'){return _b_.None}
 var locals=Object.keys(frame[1]).filter(x=> !(x.startsWith('$')))
@@ -4542,7 +4547,7 @@ trace+=name+(args_str ? ': '+args_str :'')
 var save_frame_obj=$B.frame_obj
 $B.frame_obj=err.$frame_obj
 if(err.__class__===_b_.NameError){let suggestion=$B.offer_suggestions_for_name_error(err)
-if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}
+if(suggestion !==_b_.None && suggestion !==err.name){trace+=`. Did you mean: '${suggestion}'?`}
 if($B.stdlib_module_names.indexOf(err.name)>-1){
 trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){let suggestion=$B.offer_suggestions_for_attribute_error(err)
 if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}
@@ -12156,7 +12161,6 @@ fct+=`
     }
     for(let id = 1; id < ARGS_NAMED.length; ++id ) {
         const kargs = ARGS_NAMED[id];
-        
         for(let item of $B.unpack_mapping(fct, kargs) ) {
             let argname = item.key
             if( typeof argname !== "string") {

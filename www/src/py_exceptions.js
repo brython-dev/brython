@@ -797,6 +797,9 @@ $B.offer_suggestions_for_attribute_error = function(exc){
 
 $B.offer_suggestions_for_name_error = function(exc, frame){
     var name = exc.name
+    if(exc.$frame_obj === null){
+        return _b_.None
+    }
     frame = frame || exc.$frame_obj.frame
     if(typeof name != 'string'){
         return _b_.None
@@ -1135,7 +1138,7 @@ $B.error_trace = function(err){
         $B.frame_obj = err.$frame_obj
         if(err.__class__ === _b_.NameError){
             let suggestion = $B.offer_suggestions_for_name_error(err)
-            if(suggestion !== _b_.None){
+            if(suggestion !== _b_.None && suggestion !== err.name){
                 trace += `. Did you mean: '${suggestion}'?`
             }
             if($B.stdlib_module_names.indexOf(err.name) > -1){

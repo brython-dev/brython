@@ -771,7 +771,8 @@ var $$eval = _b_.eval = function(){
                 '\n    exec_globals', exec_globals,
                 '\n    frame', frame,
                 '\n    _ast', _ast,
-                '\n    js', js)
+                '\n    js', js,
+                '\n    err', err.__class__, err.args, err.$frame_obj)
         }
         $B.frame_obj = save_frame_obj
         throw err

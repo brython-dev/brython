@@ -1109,4 +1109,15 @@ def f(**kw):
 
 assert f(**d) == {'a': 7}
 
+# issue 2422
+a2422 = 0
+del globals()['a2422']
+assert_raises(NameError, eval, 'a2422')
+
+a2422 = 9
+assert a2422 == 9
+
+del globals()['a2422']
+assert_raises(NameError, eval, 'a2422')
+
 print('passed all tests...')
