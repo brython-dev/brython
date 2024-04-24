@@ -108,7 +108,7 @@ $B.structuredclone2pyobj = function(obj){
     }
 }
 
-const JSOBJ = Symbol('JSOBJ')
+const JSOBJ = $B.JSOBJ = Symbol('JSOBJ')
 const PYOBJ = Symbol('PYOBJ')
 const PYOBJFCT = Symbol('PYOBJFCT')
 const PYOBJFCTS = Symbol('PYOBJFCTS')
@@ -291,7 +291,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         pyobj[JSOBJ] = jsobj
         jsobj[PYOBJ] = pyobj
         return jsobj
-
     }
     if(has_type(klass, _b_.str)){
         // Python strings are converted to the underlying value

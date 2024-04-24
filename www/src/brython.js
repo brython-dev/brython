@@ -173,8 +173,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-04-01 16:35:08.406131"
-__BRYTHON__.timestamp=1711982108406
+__BRYTHON__.compiled_date="2024-04-24 08:32:35.016531"
+__BRYTHON__.timestamp=1713940355005
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -8739,6 +8739,7 @@ dict.__delitem__=function(){var $=$B.args("__eq__",2,{self:null,key:null},["self
 if(self.$all_str){if(typeof key=='string'){if(self.$strings.hasOwnProperty(key)){dict.$delete_string(self,key)
 return _b_.None}else{throw _b_.KeyError.$factory(key)}}
 if(! dict.__contains__(self,key)){throw _b_.KeyError.$factory(_b_.str.$factory(key))}}
+if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
 if(self.$jsobj){if(self.$jsobj[key]===undefined){throw _b_.KeyError.$factory(key)}
 delete self.$jsobj[key]
 return _b_.None}
@@ -8952,6 +8953,8 @@ if(self.$all_str){if(typeof key=='string'){var int=parseInt(key)
 if(isNaN(int)||int >=0){self.$strings[key]=value
 return _b_.None}else{
 convert_all_str(self)}}else{convert_all_str(self)}}
+if(self[$B.JSOBJ]){
+self[$B.JSOBJ][key]=$B.pyobj2jsobj(value)}
 if(self.$jsobj){if(self.$from_js){
 value=$B.pyobj2jsobj(value)}
 if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=value
@@ -9535,7 +9538,7 @@ let res=$B.empty_dict()
 for(var key in obj){_b_.dict.$setitem(res,key,$B.structuredclone2pyobj(obj[key]))}
 return res}else{return obj}}else{throw _b_.TypeError.$factory(_b_.str.$factory(obj)+
 " does not support the structured clone algorithm")}}
-const JSOBJ=Symbol('JSOBJ')
+const JSOBJ=$B.JSOBJ=Symbol('JSOBJ')
 const PYOBJ=Symbol('PYOBJ')
 const PYOBJFCT=Symbol('PYOBJFCT')
 const PYOBJFCTS=Symbol('PYOBJFCTS')
@@ -9873,7 +9876,6 @@ $B.JSMeta.__new__=function(metaclass,class_name,bases,cl_dict){
 var body=`
     var _b_ = __BRYTHON__.builtins
     return function(){
-        console.log('call inner function, bases', bases)
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){

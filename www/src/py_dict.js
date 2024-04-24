@@ -340,6 +340,9 @@ dict.__delitem__ = function(){
             throw _b_.KeyError.$factory(_b_.str.$factory(key))
         }
     }
+    if(self[$B.JSOBJ]){
+        delete self[$B.JSOBJ][key]
+    }
     if(self.$jsobj){
         if(self.$jsobj[key] === undefined){
             throw _b_.KeyError.$factory(key)
@@ -974,6 +977,10 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         }else{
             convert_all_str(self)
         }
+    }
+    if(self[$B.JSOBJ]){
+        // Python dictionary is used in a Javascript object
+        self[$B.JSOBJ][key] = $B.pyobj2jsobj(value)
     }
     if(self.$jsobj){
         if(self.$from_js){

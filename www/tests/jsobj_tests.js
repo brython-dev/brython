@@ -262,3 +262,20 @@ window.js_async_raises_error = js_async_raises_error
 
 // issue 2347
 window.nestedJSObj = {e:{a:1, b:2}, f:{c:3, d:4}}
+
+// issue 2420
+window.jsObj2420 = {item: {}};
+window.GetTest2420 = function () { return window.jsObj2420; };
+window.testValue2420 = function () {
+    var sub = window.jsObj2420.item['sub']
+    if(sub.length != 2 || sub[0] != 3 || sub[1] != 4){
+        throw Error(`item[sub] should be [3, 4], got [${sub}]`)
+    }
+};
+window.testDeletedAttr2420 = function(expected) {
+  var value = window.jsObj2420.item.a
+  if((expected && value !== undefined) ||
+          ((! expected) && value === undefined)){
+    throw Error('expected deleted ' + expected + ', got ' + value)
+  }
+}
