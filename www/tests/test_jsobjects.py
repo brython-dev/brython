@@ -422,7 +422,7 @@ assert m.get(x) == 42
 
 # issue 2420
 jsObj2420 = window.jsObj2420
-jsObj2420.item = {'sub': [], 1.5: 23, 'a': 8}
+jsObj2420.item = {'sub': [], 'a': 8}
 jsObj2420.item['sub'] = [3, 4]
 window.testValue2420()
 window.testDeletedAttr2420(False)
