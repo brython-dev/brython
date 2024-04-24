@@ -294,7 +294,6 @@ ajax.responseType = _b_.property.$factory(
         return _self.responseType
     },
     function(_self, value){
-        console.log('set response type', value)
         _self.js.responseType = value
     }
 )
@@ -304,7 +303,6 @@ ajax.withCredentials = _b_.property.$factory(
         return _self.withCredentials
     },
     function(_self, value){
-        console.log('set with credentials', value)
         _self.js.withCredentials = value
     }
 )
