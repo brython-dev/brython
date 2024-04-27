@@ -431,10 +431,44 @@ $B.python_to_js = function(src, script_id){
 
 $B.pythonToJS = $B.python_to_js
 
-$B.runPythonSource = function(src, script_id){
-    var js = from_py(src, script_id) + '\nreturn locals'
-    var func = new Function('$B', '_b_', js)
-    $B.imported[script_id] = func($B, $B.builtins)
+function fakeScript(filename){
+    this.options = {}
+}
+
+fakeScript.prototype.getAttribute = function(key){
+    return this.options[key] ?? null
+}
+
+fakeScript.prototype.dispatchEvent = function(){
+    // ignore
+}
+
+$B.runPythonSource = function(src, options){
+    var script_id
+
+    if(options){
+        if(typeof options == 'string'){
+            script_id = options
+        }else if(options.constructor === Object){
+            if(options.hasOwnProperty('id')){
+                script_id = options.id
+                delete options.id
+            }
+        }else{
+            console.debug('invalid options argument:', options)
+        }
+    }
+    // Simulate an HTML <script> tag so we can use $B.run_script()
+    var script = new fakeScript(),
+        url = $B.script_path = globalThis.location.href.split('#')[0]
+    // Set options to the fake <script> tag
+    if(options){
+        for(var [key, value] of Object.entries(options)){
+            script.options[key] = value
+        }
+    }
+    script_id = script_id ?? 'python_script_' + $B.UUID()
+    $B.run_script(script, src, script_id, url, true)
     return $B.imported[script_id]
 }
 

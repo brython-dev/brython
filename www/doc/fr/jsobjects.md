@@ -370,18 +370,31 @@ s1.addEventListener('load', function(script){
 > contient la traduction de ce code source en Javascript. Le résultat
 > peut être exécuté par `eval()` pour déclencher l'exécution du script.
 
-*`__BRYTHON__`.runPythonSource(_src_[, _script_id_])*
+*`__BRYTHON__`.runPythonSource(_src_[, _attributs_])*
 
 > exécute le code source Python `src` comme s'il s'agissait d'un script avec
-> comme identifiant optionnel _script_id_. Retourne l'objet Javascript qui
-> représente le module (également accessible par
-> `__BRYTHON__.getPythonModule(script_id)`)
+> les _attributs_ spécifiés. Si _attributs_ est une chaine de caractères, elle
+> correspond à l'attribut _id_. Sinon il doit s'agir d'un objet Javascript.
+
+> Les [options d'exécution](options.html) telles que niveau de débogage,
+> chemin pour les imports, etc. peuvent être passées comme attributs, par
+> exemple
+
+<blockquote>
+```xml
+var src = "import un_module"
+__BRYTHON__.runPythonSource(src, {pythonpath: 'mes_modules', debug: 2})
+```
+</blockquote>
+
+
+> Retourne l'objet Javascript qui représente le module (également accessible
+> par `__BRYTHON__.getPythonModule(script_id)`)
 
 <blockquote>
 ```xml
 <script type="text/py-disabled" id="s1">
 from browser import alert
-import re
 
 string = "script s2"
 integer = 8

@@ -368,17 +368,29 @@ s1.addEventListener('load', function(script){
 > translation to Javascript. The result can be executed by `eval()`
 > to trigger the script execution.
 
-*`__BRYTHON__`.runPythonSource(_src_[, _script_id_])*
+*`__BRYTHON__`.runPythonSource(_src_[, _attributes_])*
 
-> executes Python source code `src` as if it was a script with optional
-> identifier _script_id_. Returns the Javascript object that represents the
+> executes Python source code `src` as if it was a script with the specified
+> _attributes_. If _attributes_ is a string, it is the script `id`, otherwise
+> it must be a Javascript object.
+
+> [Execution options](options.html) such as debug level, path for imports, 
+> etc. can be passed as attributes, for instance
+
+<blockquote>
+```xml
+var src = "import some_module"
+__BRYTHON__.runPythonSource(src, {pythonpath: 'my_modules', debug: 2})
+```
+</blockquote>
+
+> Returns the Javascript object that represents the
 > module (also available as `__BRYTHON__.getPythonModule(script_id)`)
 
 <blockquote>
 ```xml
 <script type="text/py-disabled" id="s1">
 from browser import alert
-import re
 
 string = "script s2"
 integer = 8
@@ -395,7 +407,7 @@ alert('run py-disabled')
 document.getElementById('btn').addEventListener('click',
     function(ev){
         var script = document.getElementById('s1'),
-            modobj = __BRYTHON__.runPythonSource(script.innerText, 's1')
+            modobj = __BRYTHON__.runPythonSource(script.innerText, {id: 's1'})
         console.log(modobj)
     }
 )

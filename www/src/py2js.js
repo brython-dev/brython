@@ -619,6 +619,8 @@ function convert_option(option, value){
     if(option == 'debug'){
         if(typeof value == 'string' && value.match(/^\d+$/)){
             return parseInt(value)
+        }else if(typeof value == 'number'){
+            return value
         }else{
             if(value !== null && value !== undefined){
                 console.debug(`Invalid value for debug: ${value}`)

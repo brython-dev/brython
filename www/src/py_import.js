@@ -118,7 +118,6 @@ $B.make_import_paths = function(filename){
              path.splice(ix, 1, ...pythonpath)
         }
     }
-
     // Use the defaut finder using sys.path if protocol is not file://
     if($B.protocol !== "file"){
         meta_path.push($B.finders.path)
