@@ -411,7 +411,7 @@ if(!($B.isWebWorker || $B.isNode)){
     });
 }
 
-var brython_options = {}
+var brython_options = $B.brython_options = {}
 
 var python_scripts = []
 

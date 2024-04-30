@@ -431,7 +431,7 @@ $B.python_to_js = function(src, script_id){
 
 $B.pythonToJS = $B.python_to_js
 
-function fakeScript(filename){
+var fakeScript = $B.fakeScript = function(filename){
     this.options = {}
 }
 

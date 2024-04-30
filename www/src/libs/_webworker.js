@@ -174,7 +174,7 @@ function create_worker(){
     $B.url2name[filename] = script_id
 
     var brython_scripts = scripts_to_load(
-        $B.get_option_from_filename('debug', filename))
+            $B.get_option_from_filename('debug', filename))
 
     var js = $B.py2js({src, filename}, script_id).to_js(),
         header = '';
@@ -204,11 +204,27 @@ function create_worker(){
     header += '$B.file_cache[module.__file__] = `' + src + '`\n'
     // restore brython_path
     header += `$B.brython_path = "${$B.brython_path}"\n`
+    // inject script attributes to get options
+    header += `var script = $B.scripts["${filename}"] = new $B.fakeScript()\n`
+    for(var key in $B.brython_options){
+        var value = $B.brython_options[key]
+        if(Array.isArray(value)){
+            value = `[${value.map(x => '"' + x + '"')}]`
+        }else{
+            value = `"${value}"`
+        }
+        header += `script.options["${key}"] = ${value}\n`
+    }
+
+    for(var attr of worker_script.attributes){
+        header += `script.options["${attr.name}"] = "${attr.value}"\n`
+    }
+
     // restore path for imports (cf. issue #1305)
     header += `$B.make_import_paths("${filename}")\n`
 
     // Call brython() to initialize internal Brython values
-    var save_option = JSON.stringify($B.save_options)
+    var save_option = JSON.stringify($B.brython_options)
     header += `brython(${save_option})\n`
 
     // send dummy message to trigger resolution of Promise

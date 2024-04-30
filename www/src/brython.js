@@ -148,7 +148,7 @@ $B.getPythonModule=function(name){return $B.imported[name]}
 $B.python_to_js=function(src,script_id){
 return "(function() {\n"+from_py(src,script_id)+"\nreturn locals}())"}
 $B.pythonToJS=$B.python_to_js
-function fakeScript(filename){this.options={}}
+var fakeScript=$B.fakeScript=function(filename){this.options={}}
 fakeScript.prototype.getAttribute=function(key){return this.options[key]?? null}
 fakeScript.prototype.dispatchEvent=function(){}
 $B.runPythonSource=function(src,options){var script_id
@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-04-27 08:04:32.357791"
-__BRYTHON__.timestamp=1714197872357
+__BRYTHON__.compiled_date="2024-04-30 14:36:49.337002"
+__BRYTHON__.timestamp=1714480609336
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -838,7 +838,7 @@ $B.options_parsed=true
 return options}
 if(!($B.isWebWorker ||$B.isNode)){var startup_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){addPythonScript(addedNode);}}});
 startup_observer.observe(document.documentElement,{childList:true,subtree:true});}
-var brython_options={}
+var brython_options=$B.brython_options={}
 var python_scripts=[]
 if(!$B.isWebWorker){
 python_scripts=python_scripts.concat(Array.from(
@@ -5724,7 +5724,9 @@ path.shift()}}
 var pythonpath=$B.get_option_from_filename('pythonpath',filename)
 if(pythonpath){
 var ix=path.indexOf(script_dir)
-if(ix===-1){console.log('bizarre, script_dir',script_dir,'not in path',path)}else{path.splice(ix,1,...pythonpath)}}
+if(ix===-1){console.log('bizarre, script_dir',script_dir,'not in path',path)}else{var fullpaths=[]
+for(var p of pythonpath){if(p=='.'){fullpaths.push(script_dir)}else if(! p.startsWith($B.script_domain)){fullpaths.push(script_dir+'/'+p)}else{fullpaths.push(p)}}
+path.splice(ix,1,...fullpaths)}}
 if($B.protocol !=="file"){meta_path.push($B.finders.path)
 path_hooks.push($B.url_hook)}
 $B.import_info[filename]={meta_path,path_hooks,path}}

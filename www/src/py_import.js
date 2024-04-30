@@ -115,7 +115,17 @@ $B.make_import_paths = function(filename){
             console.log('bizarre, script_dir', script_dir,
                 'not in path', path)
         }else{
-             path.splice(ix, 1, ...pythonpath)
+            var fullpaths = []
+            for(var p of pythonpath){
+                if(p == '.'){
+                    fullpaths.push(script_dir)
+                }else if(! p.startsWith($B.script_domain)){
+                    fullpaths.push(script_dir + '/' + p)
+                }else{
+                    fullpaths.push(p)
+                }
+             }
+             path.splice(ix, 1, ...fullpaths)
         }
     }
     // Use the defaut finder using sys.path if protocol is not file://
