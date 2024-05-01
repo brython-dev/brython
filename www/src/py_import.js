@@ -119,6 +119,9 @@ $B.make_import_paths = function(filename){
             for(var p of pythonpath){
                 if(p == '.'){
                     fullpaths.push(script_dir)
+                }else if(p.startsWith('/')){
+                    // issue 2428
+                    fullpaths.push($B.script_domain + p)
                 }else if(! p.startsWith($B.script_domain)){
                     fullpaths.push(script_dir + '/' + p)
                 }else{
