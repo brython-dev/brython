@@ -19,7 +19,8 @@ Un exemple simple :
 ```xml
 <html>
 <head>
-<script src="/brython.js"></script>
+<script src="/src/brython.js"></script>
+<script src="/src/brython_stdlib.js"></script>
 </head>
 
 <body>
@@ -61,7 +62,9 @@ document["echo"].bind("click", click)
 </table>
 
 Pour faire fonctionner les scripts Python, il suffit d'importer le script
-_**brython.js**_.
+_**brython.js**_ (le noyau Brython) et _**brython_stdlib**_ (la librairie
+standard). Le chemin (ici _/src/brython.js_) doit être adapté en fonction de
+l'emplacement du script.
 
 Si le programme Python est volumineux, une autre possibilité est de l'écrire
 dans un fichier séparé, et de le charger dans la page en utilisant l'attribut

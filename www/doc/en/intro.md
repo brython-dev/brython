@@ -17,8 +17,8 @@ A simple example :
 <html>
 
 <head>
-<script src="/brython.js"></script>
-<script type="text/javascript" src="/brython_stdlib.js"></script>
+<script src="/src/brython.js"></script>
+<script src="/src/brython_stdlib.js"></script>
 </head>
 
 <body>
@@ -63,7 +63,9 @@ document["echo"].bind("click", click)
 </table>
 
 In order for the Python script to be processed, all there is to do is to
-include __brython.js__.
+include __brython.js__ (the core Brython engine) and __brython_stdlib.js__
+(the standard library). The actual path (here _/src/brython.js_) must be 
+adapted depending on the location of the scripts.
 
 If the Python program is large, another option is to write it in a separate
 file, and to load it using the _src_ attribute of the `<script>` tag :
@@ -72,7 +74,8 @@ file, and to load it using the _src_ attribute of the `<script>` tag :
 <html>
 
 <head>
-<script src="/brython.js"></script>
+<script src="/src/brython.js"></script>
+<script src="/src/brython_stdlib.js"></script>
 </head>
 
 <body>
@@ -112,6 +115,6 @@ In Brython, the output can be accomplished in various ways, including with the
 function `alert()` (also defined in **browser**) which shows a popup window
 with the text passed as an argument.
 
-In this example, we use a module from Brython standard distribution,
+In this example, we use a module from the Brython standard distribution,
 **browser.widgets.dialog**, with a class `InfoDialog` that displays
 a popup window.
