@@ -18,6 +18,7 @@ A simple example :
 
 <head>
 <script src="/brython.js"></script>
+<script type="text/javascript" src="/brython_stdlib.js"></script>
 </head>
 
 <body>
