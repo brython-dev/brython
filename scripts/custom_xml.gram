@@ -1,0 +1,240 @@
+Document
+
+document  ::=  prolog element Misc*
+
+Character Range
+
+Char  ::=  #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+
+# Whitespace
+
+S  ::=  (#x20 | #x9 | #xD | #xA)+
+
+Names and Tokens
+
+NameChar  ::=  Letter | Digit
+            |  '.' | '-' | '_' | ':'
+            |  CombiningChar | Extender
+Name      ::=  (Letter | '_' | ':') (NameChar)*
+Names     ::=  Name (#x20 Name)*
+Nmtoken   ::=  (NameChar)+
+Nmtokens  ::=  Nmtoken (#x20 Nmtoken)*
+
+Literals
+
+EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
+                 |  "'" ([^%&'] | PEReference | Reference)* "'"
+AttValue       ::=  '"' ([^<&"] | Reference)* '"'
+                 |  "'" ([^<&'] | Reference)* "'"
+SystemLiteral  ::=  ('"' [^"]* '"') | ("'" [^']* "'")
+PubidLiteral   ::=  '"' PubidChar* '"' | "'" PubidCharNoQuote* "'"
+PubidChar      ::=  #x20 | #xD | #xA | [a-zA-Z0-9]
+                 |  [-'()+,./:=?;!*#@$_%]
+PubidCharNoQuote ::=  #x20 | #xD | #xA | [a-zA-Z0-9]
+                 |  [-()+,./:=?;!*#@$_%]
+                 
+Character Data
+
+
+
+Comments
+
+Comment  ::=  '<!--' CommentText '-->'
+
+Processing Instructions
+
+PI        ::=  '<?' PITarget (S PIText)? '?>'
+
+CDATA Sections
+
+CDSect   ::=  CDStart CData CDEnd
+CDStart  ::=  '<![CDATA['
+CDEnd    ::=  ']]>'
+
+Prolog
+
+prolog       ::=  XMLDecl? Misc* (doctypedecl Misc*)?
+XMLDecl      ::=  '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
+VersionInfo  ::=  S 'version' Eq ("'" VersionNum "'" | '"' VersionNum '"')
+Eq           ::=  S? '=' S?
+VersionNum   ::=  '1.0'
+Misc         ::=  Comment | PI | S
+
+Document Type Definition
+
+doctypedecl    ::=  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
+DeclSep        ::=  PEReference | S
+intSubset      ::=  (markupdecl | DeclSep)*
+markupdecl     ::=  elementdecl | AttlistDecl | EntityDecl | NotationDecl
+                 |  PI | Comment
+extSubset      ::=  TextDecl? extSubsetDecl
+extSubsetDecl  ::=  ( markupdecl | conditionalSect | DeclSep)*
+
+Standalone Document Declaration
+
+SDDecl  ::=  S 'standalone' Eq
+             (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
+
+Elements, Tags and Element Content
+
+element       ::=  EmptyElemTag  | STag content ETag
+STag          ::=  '<' Name (S Attribute)* S? '>'
+Attribute     ::=  Name Eq AttValue
+ETag          ::=  '</' Name S? '>'
+content       ::=  CharData?
+                   ((element | Reference | CDSect | PI | Comment) CharData?)*
+EmptyElemTag  ::=  '<' Name (S Attribute)* S? '/>'
+
+Elements in the DTD
+
+elementdecl  ::=  '<!ELEMENT' S Name S contentspec S? '>'
+contentspec  ::=  'EMPTY' | 'ANY' | Mixed | children
+children     ::=  (choice | seq) ('?' | '*' | '+')?
+cp           ::=  (Name | choice | seq) ('?' | '*' | '+')?
+choice       ::=  '(' S? cp ( S? '|' S? cp )+ S? ')'
+seq          ::=  '(' S? cp ( S? ',' S? cp )* S? ')'
+Mixed        ::=  '(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
+               |  '(' S? '#PCDATA' S? ')'
+
+Attributes in the DTD
+
+AttlistDecl       ::=  '<!ATTLIST' S Name AttDef* S? '>'
+AttDef            ::=  S Name S AttType S DefaultDecl
+AttType           ::=  StringType | TokenizedType | EnumeratedType
+StringType        ::=  'CDATA'
+TokenizedType     ::=  'ID' | 'IDREF' | 'IDREFS' | 'ENTITY'
+                    |  'ENTITIES' | 'NMTOKEN' | 'NMTOKENS'
+EnumeratedType    ::=  NotationType | Enumeration
+NotationType      ::=  'NOTATION' S '(' S? Name (S? '|' S? Name)* S? ')'
+Enumeration       ::=  '(' S? Nmtoken (S? '|' S? Nmtoken)* S? ')'
+DefaultDecl       ::=  '#REQUIRED' | '#IMPLIED' | (('#FIXED' S)? AttValue)
+
+Conditional Section
+
+conditionalSect     ::=  includeSect | ignoreSect
+includeSect         ::=  '<![' S? 'INCLUDE' S? '[' extSubsetDecl ']]>'
+ignoreSect          ::=  '<![' S? 'IGNORE' S? '[' ignoreSectContents* ']]>'
+ignoreSectContents  ::= Ignore ('<![' ignoreSectContents ']]>' Ignore)*
+
+
+Character and Entity References
+
+CharRef      ::=  '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'
+Reference    ::=  EntityRef | CharRef
+EntityRef    ::=  '&' Name ';'
+PEReference  ::=  '%' Name ';'
+
+Entity Declarations
+
+EntityDecl        ::=  GEDecl | PEDecl
+GEDecl            ::=  '<!ENTITY' S Name S EntityDef S? '>'
+PEDecl            ::=  '<!ENTITY' S '%' S Name S PEDef S? '>'
+EntityDef         ::=  EntityValue | (ExternalID NDataDecl?)
+PEDef             ::=  EntityValue | ExternalID
+ExternalID        ::=  'SYSTEM' S SystemLiteral
+                    |  'PUBLIC' S PubidLiteral S SystemLiteral
+NDataDecl         ::=  S 'NDATA' S Name
+
+Parsed Entities
+
+TextDecl      ::=  '<?xml' VersionInfo? EncodingDecl S? '?>'
+extParsedEnt  ::=  TextDecl? content
+EncodingDecl  ::=  S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
+EncName       ::=  [A-Za-z] ([A-Za-z0-9._] | '-')*
+NotationDecl  ::=  '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
+PublicID      ::=  'PUBLIC' S PubidLiteral
+
+Characters
+
+Letter         ::=  BaseChar | Ideographic
+BaseChar       ::=  [#x41-#x5A] | [#x61-#x7A] | [#xC0-#xD6]
+                 |  [#xD8-#xF6] | [#xF8-#xFF] | [#x100-#x131]
+                 |  [#x134-#x13E] | [#x141-#x148] | [#x14A-#x17E]
+                 |  [#x180-#x1C3] | [#x1CD-#x1F0] | [#x1F4-#x1F5]
+                 |  [#x1FA-#x217] | [#x250-#x2A8] | [#x2BB-#x2C1]
+                 |  #x386 | [#x388-#x38A] | #x38C | [#x38E-#x3A1]
+                 |  [#x3A3-#x3CE] | [#x3D0-#x3D6] | #x3DA | #x3DC
+                 |  #x3DE | #x3E0 | [#x3E2-#x3F3] | [#x401-#x40C]
+                 |  [#x40E-#x44F] | [#x451-#x45C] | [#x45E-#x481]
+                 |  [#x490-#x4C4] | [#x4C7-#x4C8] | [#x4CB-#x4CC]
+                 |  [#x4D0-#x4EB] | [#x4EE-#x4F5] | [#x4F8-#x4F9]
+                 |  [#x531-#x556] | #x559 | [#x561-#x586]
+                 |  [#x5D0-#x5EA] | [#x5F0-#x5F2] | [#x621-#x63A]
+                 |  [#x641-#x64A] | [#x671-#x6B7] | [#x6BA-#x6BE]
+                 |  [#x6C0-#x6CE] | [#x6D0-#x6D3] | #x6D5 | [#x6E5-#x6E6]
+                 |  [#x905-#x939] | #x93D | [#x958-#x961] | [#x985-#x98C]
+                 |  [#x98F-#x990] | [#x993-#x9A8] | [#x9AA-#x9B0]
+                 |  #x9B2 | [#x9B6-#x9B9] | [#x9DC-#x9DD] | [#x9DF-#x9E1]
+                 |  [#x9F0-#x9F1] | [#xA05-#xA0A] | [#xA0F-#xA10]
+                 |  [#xA13-#xA28] | [#xA2A-#xA30] | [#xA32-#xA33]
+                 |  [#xA35-#xA36] | [#xA38-#xA39] | [#xA59-#xA5C]
+                 |  #xA5E | [#xA72-#xA74] | [#xA85-#xA8B] | #xA8D
+                 |  [#xA8F-#xA91] | [#xA93-#xAA8] | [#xAAA-#xAB0]
+                 |  [#xAB2-#xAB3] | [#xAB5-#xAB9] | #xABD | #xAE0
+                 |  [#xB05-#xB0C] | [#xB0F-#xB10] | [#xB13-#xB28]
+                 |  [#xB2A-#xB30] | [#xB32-#xB33] | [#xB36-#xB39]
+                 |  #xB3D | [#xB5C-#xB5D] | [#xB5F-#xB61]
+                 |  [#xB85-#xB8A] | [#xB8E-#xB90] | [#xB92-#xB95]
+                 |  [#xB99-#xB9A] | #xB9C | [#xB9E-#xB9F]
+                 |  [#xBA3-#xBA4] | [#xBA8-#xBAA] | [#xBAE-#xBB5]
+                 |  [#xBB7-#xBB9] | [#xC05-#xC0C] | [#xC0E-#xC10]
+                 |  [#xC12-#xC28] | [#xC2A-#xC33] | [#xC35-#xC39]
+                 |  [#xC60-#xC61] | [#xC85-#xC8C] | [#xC8E-#xC90]
+                 |  [#xC92-#xCA8] | [#xCAA-#xCB3] | [#xCB5-#xCB9]
+                 |  #xCDE | [#xCE0-#xCE1] | [#xD05-#xD0C] | [#xD0E-#xD10]
+                 |  [#xD12-#xD28] | [#xD2A-#xD39] | [#xD60-#xD61]
+                 |  [#xE01-#xE2E] | #xE30 | [#xE32-#xE33] | [#xE40-#xE45]
+                 |  [#xE81-#xE82] | #xE84 | [#xE87-#xE88] | #xE8A
+                 |  #xE8D | [#xE94-#xE97] | [#xE99-#xE9F] | [#xEA1-#xEA3]
+                 |  #xEA5 | #xEA7 | [#xEAA-#xEAB] | [#xEAD-#xEAE] | #xEB0
+                 |  [#xEB2-#xEB3] | #xEBD | [#xEC0-#xEC4] | [#xF40-#xF47]
+                 |  [#xF49-#xF69] | [#x10A0-#x10C5] | [#x10D0-#x10F6] | #x1100
+                 |  [#x1102-#x1103] | [#x1105-#x1107] | #x1109 | [#x110B-#x110C]
+                 |  [#x110E-#x1112] | #x113C | #x113E | #x1140 | #x114C | #x114E
+                 |  #x1150 | [#x1154-#x1155] | #x1159 | [#x115F-#x1161] | #x1163
+                 |  #x1165 | #x1167 | #x1169 | [#x116D-#x116E] | [#x1172-#x1173]
+                 |  #x1175 | #x119E | #x11A8 | #x11AB | [#x11AE-#x11AF]
+                 |  [#x11B7-#x11B8] | #x11BA | [#x11BC-#x11C2] | #x11EB | #x11F0
+                 |  #x11F9 | [#x1E00-#x1E9B] | [#x1EA0-#x1EF9] | [#x1F00-#x1F15]
+                 |  [#x1F18-#x1F1D] | [#x1F20-#x1F45] | [#x1F48-#x1F4D]
+                 |  [#x1F50-#x1F57] | #x1F59 | #x1F5B | #x1F5D | [#x1F5F-#x1F7D]
+                 |  [#x1F80-#x1FB4] | [#x1FB6-#x1FBC] | #x1FBE | [#x1FC2-#x1FC4]
+                 |  [#x1FC6-#x1FCC] | [#x1FD0-#x1FD3] | [#x1FD6-#x1FDB]
+                 |  [#x1FE0-#x1FEC] | [#x1FF2-#x1FF4] | [#x1FF6-#x1FFC] | #x2126
+                 |  [#x212A-#x212B] | #x212E | [#x2180-#x2182] | [#x3041-#x3094]
+                 |  [#x30A1-#x30FA] | [#x3105-#x312C] | [#xAC00-#xD7A3]
+Ideographic    ::=  [#x4E00-#x9FA5] | #x3007 | [#x3021-#x3029]
+CombiningChar  ::=  [#x300-#x345] | [#x360-#x361] | [#x483-#x486]
+                 |  [#x591-#x5A1] | [#x5A3-#x5B9] | [#x5BB-#x5BD] | #x5BF
+                 |  [#x5C1-#x5C2] | #x5C4 | [#x64B-#x652] | #x670
+                 |  [#x6D6-#x6DC] | [#x6DD-#x6DF] | [#x6E0-#x6E4]
+                 |  [#x6E7-#x6E8] | [#x6EA-#x6ED] | [#x901-#x903]
+                 |  #x93C | [#x93E-#x94C] | #x94D | [#x951-#x954]
+                 |  [#x962-#x963] | [#x981-#x983] | #x9BC | #x9BE
+                 |  #x9BF | [#x9C0-#x9C4] | [#x9C7-#x9C8] | [#x9CB-#x9CD]
+                 |  #x9D7 | [#x9E2-#x9E3] | #xA02 | #xA3C | #xA3E | #xA3F
+                 |  [#xA40-#xA42] | [#xA47-#xA48] | [#xA4B-#xA4D]
+                 |  [#xA70-#xA71] | [#xA81-#xA83] | #xABC | [#xABE-#xAC5]
+                 |  [#xAC7-#xAC9] | [#xACB-#xACD] | [#xB01-#xB03] | #xB3C
+                 |  [#xB3E-#xB43] | [#xB47-#xB48] | [#xB4B-#xB4D]
+                 |  [#xB56-#xB57] | [#xB82-#xB83] | [#xBBE-#xBC2]
+                 |  [#xBC6-#xBC8] | [#xBCA-#xBCD] | #xBD7 | [#xC01-#xC03]
+                 |  [#xC3E-#xC44] | [#xC46-#xC48] | [#xC4A-#xC4D]
+                 |  [#xC55-#xC56] | [#xC82-#xC83] | [#xCBE-#xCC4]
+                 |  [#xCC6-#xCC8] | [#xCCA-#xCCD] | [#xCD5-#xCD6]
+                 |  [#xD02-#xD03] | [#xD3E-#xD43] | [#xD46-#xD48]
+                 |  [#xD4A-#xD4D] | #xD57 | #xE31 | [#xE34-#xE3A]
+                 |  [#xE47-#xE4E] | #xEB1 | [#xEB4-#xEB9] | [#xEBB-#xEBC]
+                 |  [#xEC8-#xECD] | [#xF18-#xF19] | #xF35 | #xF37 | #xF39
+                 |  #xF3E | #xF3F | [#xF71-#xF84] | [#xF86-#xF8B]
+                 |  [#xF90-#xF95] | #xF97 | [#xF99-#xFAD] | [#xFB1-#xFB7]
+                 |  #xFB9 | [#x20D0-#x20DC] | #x20E1 | [#x302A-#x302F]
+                 |  #x3099 | #x309A
+Digit          ::=  [#x30-#x39] | [#x660-#x669] | [#x6F0-#x6F9]
+                 |  [#x966-#x96F] | [#x9E6-#x9EF] | [#xA66-#xA6F]
+                 |  [#xAE6-#xAEF] | [#xB66-#xB6F] | [#xBE7-#xBEF]
+                 |  [#xC66-#xC6F] | [#xCE6-#xCEF] | [#xD66-#xD6F]
+                 |  [#xE50-#xE59] | [#xED0-#xED9] | [#xF20-#xF29]
+Extender       ::=  #xB7 | #x2D0 | #x2D1 | #x387 | #x640 | #xE46
+                 |  #xEC6 | #x3005 | [#x3031-#x3035] | [#x309D-#x309E]
+                 |  [#x30FC-#x30FE]
