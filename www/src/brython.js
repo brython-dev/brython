@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-07 17:27:09.121896"
-__BRYTHON__.timestamp=1715095629121
+__BRYTHON__.compiled_date="2024-05-07 17:57:44.100560"
+__BRYTHON__.timestamp=1715097464099
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -8893,10 +8893,8 @@ gi=$B.$call(gi)
 let kiter=_b_.iter($B.$call(keys)())
 while(true){try{let key=_b_.next(kiter),value=gi(key)
 dict.__setitem__(self,key,value)}catch(err){if(err.__class__===_b_.StopIteration){break}
-throw err}}
-return _b_.None}}
-if(! Array.isArray(args)){args=_b_.list.$factory(args)}
-init_from_list(self,args)}}
+throw err}}}}else{if(! Array.isArray(args)){args=_b_.list.$factory(args)}
+init_from_list(self,args)}}}
 for(let item of _b_.dict.$iter_items($.second)){dict.$setitem(self,item.key,item.value)}
 return _b_.None}
 dict.__iter__=function(self){return _b_.iter(dict.keys(self))}

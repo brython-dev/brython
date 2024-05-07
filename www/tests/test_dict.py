@@ -277,4 +277,12 @@ data = {
 d = dict(reversed(data['values'].items()))
 assert str(d) == "{'final': 100, 'third': 3, 'second': 2, 'first': 1}"
 
+# issue 2433
+from collections import ChainMap
+
+a = {"a": 1}
+b = {"b": 2}
+m = ChainMap(a)
+assert dict(m, **b) == {'a': 1, 'b': 2}
+
 print("passed all tests..")

@@ -757,13 +757,13 @@ dict.__init__ = function(self, first, second){
                             throw err
                         }
                     }
-                    return _b_.None
                 }
+            }else{
+                if(! Array.isArray(args)){
+                    args = _b_.list.$factory(args)
+                }
+                init_from_list(self, args)
             }
-            if(! Array.isArray(args)){
-                args = _b_.list.$factory(args)
-            }
-            init_from_list(self, args)
         }
     }
 
