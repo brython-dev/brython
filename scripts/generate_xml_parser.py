@@ -1,4 +1,4 @@
-from grammar_parser import make_rules, Literal, Rule, Charset, End
+from xml_grammar_parser import make_rules, Literal, Rule, Charset, End
 
 class ARGS(dict):
 
@@ -9,7 +9,7 @@ class ARGS(dict):
 def generate_parser(rules, dest=None):
     dest = dest or 'parser.js'
     indent = 0
-    with open('parser.js', 'w', encoding='utf-8') as out:
+    with open(dest, 'w', encoding='utf-8') as out:
         write = lambda x: out.write(indent * '  ' + x + '\n')
 
         write(f"var rules = {{")

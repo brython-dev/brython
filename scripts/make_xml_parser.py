@@ -1,6 +1,7 @@
 import re
 
-from generate_parser import make_rules, generate_parser
+import make_dist
+from generate_xml_parser import make_rules, generate_parser
 
 with open("custom_xml.gram", encoding="utf-8") as f:
     grammar = f.readlines()
@@ -30,4 +31,5 @@ for line in lines:
 norm_grammar = '\n'.join(filtered)
 
 rules = make_rules(norm_grammar)
-generate_parser(rules)
+dest = make_dist.abs_path('libs/xml_parser.js')
+generate_parser(rules, dest)
