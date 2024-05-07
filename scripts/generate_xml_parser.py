@@ -175,6 +175,10 @@ def generate_parser(rules, dest=None):
             write(f"}}")
             write('')
 
+        write("__BRYTHON__.addToImported('xml_parser', {")
+        write("    DOCUMENT: document_rule")
+        write("})")
+    
 if __name__ == "__main__":
     grammar = """
     tag::= '<' NAME S* attr? '>'

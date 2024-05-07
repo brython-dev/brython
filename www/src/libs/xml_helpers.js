@@ -159,11 +159,14 @@ function get_string(rule){
 
 function get_value(rule){
     // get string value for rule
+    if(rule === undefined){
+        console.log(Error().stack)
+    }
     var res = ''
-    if(rule.alt){
+    if(rule.value){
+        return rule.value
+    }else if(rule.alt){
         return get_value(rule.selected_rule)
-    }else if(rule.value){
-        res = rule.value
     }else{
         for(var rank in rule.result_store){
             var rules = rule.result_store[rank]
@@ -228,10 +231,15 @@ var handler = {
     },
     doctypedecl: function(rule){
         var ext_id = external_id(rule.rules[3])
-        return {name: get_value(rule.rules[2]),
+        var name = get_value(rule.rules[2])
+        var has_internal_subset = false
+        if(rule.rules[5].rules[1]){
+            has_internal_subset = get_value(rule.rules[5].rules[1]) != ''
+        }
+        return {name,
                 systemId: ext_id.systemId,
                 publicId: ext_id.publicId,
-                has_internal_subset: get_value(rule.rules[5].rules[1]) != ''
+                has_internal_subset
                }
     },
     elementdecl: function(rule){
@@ -304,9 +312,13 @@ var handler = {
         if(attrs){
             for(var attr of attrs){
                 var attr_name = get_value(attr.result_store[1].result_store[0]),
-                    attr_value = get_value(attr.result_store[1].result_store[2])
+                    attr_value = get_value(attr.result_store[1].result_store[2]])
                 attr_result[attr_name] = attr_value
             }
+        }
+        var parser = get_top(rule)
+        if(parser.StartElementHandler){
+            parser.StartElementHandler(name, $B.obj_dict(attr_result))
         }
         return {name, attr_result}
     },

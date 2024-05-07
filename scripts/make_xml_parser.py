@@ -33,3 +33,12 @@ norm_grammar = '\n'.join(filtered)
 rules = make_rules(norm_grammar)
 dest = make_dist.abs_path('libs/xml_parser.js')
 generate_parser(rules, dest)
+
+with open(make_dist.abs_path('libs/xml_helpers.js'), encoding='utf-8') as f:
+    helpers = f.read()
+
+with open(dest, encoding='utf-8') as f:
+    content = f.read()
+
+with open(dest, 'w', encoding='utf-8') as out:
+    out.write(helpers + '\n' + content)

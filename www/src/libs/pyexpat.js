@@ -1,5 +1,12 @@
 (function($B){
 
+console.log('import pyexpat')
+alert()
+
+$B.$import('xml_parser')
+
+console.log('xml parser', $B.imported.xml_parser)
+
 var _b_ = $B.builtins
 
 const XML_PARAM_ENTITY_PARSING_NEVER = 0,
@@ -233,7 +240,7 @@ xmlparser.StartElementHandler = _b_.None
 
 xmlparser.xml_tokenizer = function*(self){
     // convert bytes to string
-    self._element = new DOCUMENT(self)
+    self._element = new $B.imported.xml_parser.DOCUMENT(self)
     while(self._pos < self._buffer_length){
         var char = self._buffer[self._pos]
         self._element = self._element.feed(char)
