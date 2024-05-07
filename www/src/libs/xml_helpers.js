@@ -1,3 +1,5 @@
+var _b_ = $B.builtins
+
 var FAIL = {FAIL: true}
 var DONE = {DONE: true}
 var END = {END: true}
@@ -202,7 +204,7 @@ function external_id(ext_id){
 }
 
 var handler = {
-    AttDef: function(rule){
+    AttDef: function(parser, rule){
         // S Name S AttType S DefaultDecl
         var defaultdecl = rule.rules[5],
             def_value,
@@ -223,13 +225,17 @@ var handler = {
             required
         }
     },
-    CData: function(rule){
+    CData: function(parser, rule){
         return {value: get_value(rule)}
     },
-    CharData: function(rule){
+    CharData: function(parser, rule){
+        var value = get_value(rule)
+        if(parser.CharacterDataHandler){
+            parser.CharacterDataHandler(value)
+        }
         return {value: get_value(rule)}
     },
-    doctypedecl: function(rule){
+    doctypedecl: function(parser, rule){
         var ext_id = external_id(rule.rules[3])
         var name = get_value(rule.rules[2])
         var has_internal_subset = false
@@ -242,16 +248,20 @@ var handler = {
                 has_internal_subset
                }
     },
-    elementdecl: function(rule){
+    elementdecl: function(parser, rule){
         return {
             name: get_value(rule.rules[2]),
             model: get_value(rule.rules[4])
         }
     },
-    ETag: function(rule){
+    ETag: function(parser, rule){
+        var name = get_value(rule.rules[1])
+        if(parser.EndElementHandler){
+            parser.EndElementHandler(name)
+        }
         return {name: get_value(rule.rules[1])}
     },
-    GEDecl: function(rule){
+    GEDecl: function(parser, rule){
         // '<!ENTITY' S Name S EntityDef S? '>'
         var entitydef = rule.rules[4],
             value,
@@ -283,7 +293,7 @@ var handler = {
             notationName
         }
     },
-    NotationDecl: function(rule){
+    NotationDecl: function(parser, rule){
         // '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
         var systemId,
             publicId,
@@ -305,24 +315,24 @@ var handler = {
             publicId: ext_id.publicId
         }
     },
-    STag: function(rule){
+    STag: function(parser, rule){
         var name = get_value(rule.rules[1])
         var attrs = rule.result_store[2],
-            attr_result = {}
+            attr_result = $B.empty_dict()
         if(attrs){
             for(var attr of attrs){
+                var attr_value_rule = attr.result_store[1].result_store[2].selected_rule.result_store[1][0]
                 var attr_name = get_value(attr.result_store[1].result_store[0]),
-                    attr_value = get_value(attr.result_store[1].result_store[2]])
-                attr_result[attr_name] = attr_value
+                    attr_value = get_value(attr_value_rule)
+                _b_.dict.$setitem(attr_result, attr_name, attr_value)
             }
         }
-        var parser = get_top(rule)
         if(parser.StartElementHandler){
-            parser.StartElementHandler(name, $B.obj_dict(attr_result))
+            parser.StartElementHandler(name, attr_result)
         }
         return {name, attr_result}
     },
-    XMLDecl: function(rule){
+    XMLDecl: function(parser, rule){
         // '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
         var encoding,
             standalone
@@ -348,7 +358,9 @@ function emit(rule){
     var rname = rule.constructor.name
     rname = rname.substr(0, rname.length - 5)
     if(handler[rname]){
-        console.log('emit', rname, handler[rname](rule))
+        var parser = get_top(rule)
+        // console.log('emit', rname)
+        handler[rname](parser, rule)
     }
 }
 

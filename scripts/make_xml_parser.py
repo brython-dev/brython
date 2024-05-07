@@ -41,4 +41,6 @@ with open(dest, encoding='utf-8') as f:
     content = f.read()
 
 with open(dest, 'w', encoding='utf-8') as out:
+    out.write("(function($B){\n")
     out.write(helpers + '\n' + content)
+    out.write("\n})(__BRYTHON__)")

@@ -1,11 +1,6 @@
 (function($B){
 
-console.log('import pyexpat')
-alert()
-
 $B.$import('xml_parser')
-
-console.log('xml parser', $B.imported.xml_parser)
 
 var _b_ = $B.builtins
 
