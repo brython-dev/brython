@@ -302,5 +302,14 @@ set2 = {'a'}
 
 assert len(set1.union(set2)) == 2
 
+# issue 2432
+assert "\b" in {"\b"}
+assert "\f" in {"\f"}
+assert "\n" in {"\n"}
+assert "\r" in {"\r"}
+assert "\t" in {"\t"}
+
+assert '\123' in {"\123"}
+assert '\xf5' in {'\xf5'}
 
 print("passed all tests..")

@@ -3471,13 +3471,24 @@ $B.ast.Return.prototype.to_js = function(scopes){
     return js
 }
 
+function remove_escapes(value){
+    for(var key in $B.escape2cp){ // in py_string.js
+        value = value.replace(new RegExp('\\\\' + key, 'g'), $B.escape2cp[key])
+    }
+    return value
+}
+
 $B.ast.Set.prototype.to_js = function(scopes){
     var elts = []
     for(var elt of this.elts){
         var js
         if(elt instanceof $B.ast.Constant){
+            var v = elt.value
+            if(typeof v == 'string'){
+                v = remove_escapes(v)
+            }
             js = `{constant: [${$B.js_from_ast(elt, scopes)}, ` +
-                 `${$B.$hash(elt.value)}]}`
+                 `${$B.$hash(v)}]}`
         }else if(elt instanceof $B.ast.Starred){
             js = `{starred: ${$B.js_from_ast(elt.value, scopes)}}`
         }else{

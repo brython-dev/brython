@@ -4,7 +4,7 @@
 var _b_ = $B.builtins
 
 // build tables from data in unicode_data.js
-var escape2cp = {b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'}
+var escape2cp = $B.escape2cp = {b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'}
 
 $B.surrogates = function(s){
     var s1 = '',

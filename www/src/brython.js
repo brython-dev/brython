@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-01 22:29:28.081918"
-__BRYTHON__.timestamp=1714595368081
+__BRYTHON__.compiled_date="2024-05-07 07:44:43.825337"
+__BRYTHON__.timestamp=1715060683825
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata"]
 ;
 
@@ -6218,7 +6218,7 @@ _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module 
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
-var escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
+var escape2cp=$B.escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
 $B.surrogates=function(s){var s1='',escaped=false
 for(var char of s){if(escaped){var echar=escape2cp[char]
 if(echar !==undefined){s1+=echar}else{s1+='\\'+char}
@@ -12767,10 +12767,15 @@ var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 '\n'+
 `$B.trace_return_and_leave(frame, result)\nreturn result\n`
 return js}
+function remove_escapes(value){for(var key in $B.escape2cp){
+value=value.replace(new RegExp('\\\\'+key,'g'),$B.escape2cp[key])}
+return value}
 $B.ast.Set.prototype.to_js=function(scopes){var elts=[]
 for(var elt of this.elts){var js
-if(elt instanceof $B.ast.Constant){js=`{constant: [${$B.js_from_ast(elt, scopes)}, `+
-`${$B.$hash(elt.value)}]}`}else if(elt instanceof $B.ast.Starred){js=`{starred: ${$B.js_from_ast(elt.value, scopes)}}`}else{js=`{item: ${$B.js_from_ast(elt, scopes)}}`}
+if(elt instanceof $B.ast.Constant){var v=elt.value
+if(typeof v=='string'){v=remove_escapes(v)}
+js=`{constant: [${$B.js_from_ast(elt, scopes)}, `+
+`${$B.$hash(v)}]}`}else if(elt instanceof $B.ast.Starred){js=`{starred: ${$B.js_from_ast(elt.value, scopes)}}`}else{js=`{item: ${$B.js_from_ast(elt, scopes)}}`}
 elts.push(js)}
 return `_b_.set.$literal([${elts.join(', ')}])`}
 $B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
