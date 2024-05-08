@@ -154,7 +154,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return jsobj
     }
 
-    let pyobj = objMap.get(jsobj)
+    let pyobj = jsobj[PYOBJ]
     if(pyobj !== undefined) {
         return pyobj
     }
@@ -236,9 +236,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     return jsobj
 }
 
-// JS Map mapping JS objects to matching Python dicts
-var objMap = new Map()
-
 var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     // conversion of a Python object into a Javascript object
     // Immutable types
@@ -292,9 +289,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             jsobj[key] = pyobj2jsobj(entry.value)
         }
         pyobj[JSOBJ] = jsobj
-        // don't set attribute PYOBJ to jsobj (cf. issue #2420), use a Map
-        // instead
-        objMap.set(jsobj, pyobj)
+        jsobj[PYOBJ] = pyobj
         return jsobj
     }
     if(has_type(klass, _b_.str)){
