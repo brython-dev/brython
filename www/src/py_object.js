@@ -202,7 +202,7 @@ object.__getattribute__ = function(obj, attr){
                 // Bound method
                 return res
             }
-            return res.__get__(obj, klass)
+            return $B.method.__get__(res)
         }
 
         var get = res.__get__

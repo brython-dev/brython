@@ -1094,4 +1094,10 @@ class A:
 A().f(1, x=2)
 assert A.f.__code__.co_varnames == ('self', '_A__v', '_A__kw')
 
+# issue 2435
+class A:
+    a = "-".join
+
+assert A().a(['a', 'b']) == 'a-b'
+
 print('passed all tests..')

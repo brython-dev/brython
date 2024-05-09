@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-09 18:41:57.090855"
-__BRYTHON__.timestamp=1715272917090
+__BRYTHON__.compiled_date="2024-05-09 18:54:18.743090"
+__BRYTHON__.timestamp=1715273658743
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -1924,7 +1924,7 @@ if(res !==undefined){if($test){console.log(res)}
 if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,obj,klass)}
 if(res.__class__===$B.method){if(res.$infos.__self__){
 return res}
-return res.__get__(obj,klass)}
+return $B.method.__get__(res)}
 var get=res.__get__
 if(get===undefined && res.__class__){get=res.__class__.__get__
 for(let i=0;i < res.__class__.__mro__.length &&
