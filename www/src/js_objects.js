@@ -563,12 +563,12 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         if(_self.$js_func){
             new_func = function(){
                 var args = pyargs2jsargs(arguments)
-                return jsobj2pyobj(new _self.$js_func(...args))
+                return new _self.$js_func(...args)
             }
         }else{
             new_func = function(){
                 var args = pyargs2jsargs(arguments)
-                return jsobj2pyobj(new _self(...args))
+                return new _self(...args)
             }
         }
         Object.defineProperty(new_func, '$infos',

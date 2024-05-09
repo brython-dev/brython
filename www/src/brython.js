@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-08 17:55:43.208827"
-__BRYTHON__.timestamp=1715183743198
+__BRYTHON__.compiled_date="2024-05-09 15:09:12.031546"
+__BRYTHON__.timestamp=1715260152031
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -9717,8 +9717,8 @@ if(test){console.log("__ga__",_self,attr)}
 if(attr=="new" && typeof _self=="function"){
 var new_func
 if(_self.$js_func){new_func=function(){var args=pyargs2jsargs(arguments)
-return jsobj2pyobj(new _self.$js_func(...args))}}else{new_func=function(){var args=pyargs2jsargs(arguments)
-return jsobj2pyobj(new _self(...args))}}
+return new _self.$js_func(...args)}}else{new_func=function(){var args=pyargs2jsargs(arguments)
+return new _self(...args)}}
 Object.defineProperty(new_func,'$infos',{value:{__name__:attr,__qualname__:attr},writable:true})
 return new_func}
 var js_attr=_self[attr]
