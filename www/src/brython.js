@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-09 15:09:12.031546"
-__BRYTHON__.timestamp=1715260152031
+__BRYTHON__.compiled_date="2024-05-09 18:41:57.090855"
+__BRYTHON__.timestamp=1715272917090
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -12293,8 +12293,9 @@ return js}
 $B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){compiler_check(this)
 var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
-var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
-if(in_class){var class_scope=last_scope(scopes)}
+var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,mangle_arg=x=> x
+if(in_class){var class_scope=last_scope(scopes)
+mangle_arg=x=> mangle(scopes,class_scope,x)}
 var func_name_scope=bind(this.name,scopes)
 var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var decorators=[],decorated=false,decs_declare=this.decorator_list.length > 0 ?
@@ -12332,10 +12333,10 @@ scopes.push(func_scope)
 var args=positional.concat(this.args.kwonlyargs),slots=[],arg_names=[]
 for(let arg of args){slots.push(arg.arg+': null')
 bind(arg.arg,scopes)}
-for(let arg of this.args.posonlyargs){arg_names.push(`'${arg.arg}'`)}
-for(let arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${arg.arg}'`)}
-if(this.args.vararg){bind(this.args.vararg.arg,scopes)}
-if(this.args.kwarg){bind(this.args.kwarg.arg,scopes)}
+for(let arg of this.args.posonlyargs){arg_names.push(`'${mangle_arg(arg.arg)}'`)}
+for(let arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${mangle_arg(arg.arg)}'`)}
+if(this.args.vararg){bind(mangle_arg(this.args.vararg.arg),scopes)}
+if(this.args.kwarg){bind(mangle_arg(this.args.kwarg.arg),scopes)}
 var function_body
 if(this.$is_lambda){var _return=new $B.ast.Return(this.body)
 copy_position(_return,this.body)
@@ -12351,8 +12352,8 @@ js+=`var ${locals_name},
                locals\n`
 parse_args.push('arguments')
 var args_vararg=this.args.vararg===undefined ? 'null' :
-"'"+this.args.vararg.arg+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
-"'"+this.args.kwarg.arg+"'"
+"'"+mangle_arg(this.args.vararg.arg)+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
+"'"+mangle_arg(this.args.kwarg.arg)+"'"
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`

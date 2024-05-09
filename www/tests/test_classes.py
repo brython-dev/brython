@@ -1082,5 +1082,16 @@ assert a.x == 'I am x'
 
 assert_raises(AttributeError, setattr, a, 'x', 'coucou',
   msg="property 'x' of 'A' object has no setter")
-  
+
+# issue 2434
+class A:
+    def f(self, __v, **__kw):
+        assert __v == 1
+        assert _A__v == 1
+        assert __kw == {'x': 2}
+        assert _A__kw == {'x': 2}
+
+A().f(1, x=2)
+assert A.f.__code__.co_varnames == ('self', '_A__v', '_A__kw')
+
 print('passed all tests..')

@@ -2417,9 +2417,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
-        is_async = this instanceof $B.ast.AsyncFunctionDef
+        is_async = this instanceof $B.ast.AsyncFunctionDef,
+        mangle_arg = x => x
     if(in_class){
         var class_scope = last_scope(scopes)
+        mangle_arg = x => mangle(scopes, class_scope, x)
     }
 
     // bind function name in function enclosing scope
@@ -2499,18 +2501,18 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         bind(arg.arg, scopes)
     }
     for(let arg of this.args.posonlyargs){
-        arg_names.push(`'${arg.arg}'`)
+        arg_names.push(`'${mangle_arg(arg.arg)}'`)
     }
 
     for(let arg of this.args.args.concat(this.args.kwonlyargs)){
-        arg_names.push(`'${arg.arg}'`)
+        arg_names.push(`'${mangle_arg(arg.arg)}'`)
     }
 
     if(this.args.vararg){
-        bind(this.args.vararg.arg, scopes)
+        bind(mangle_arg(this.args.vararg.arg), scopes)
     }
     if(this.args.kwarg){
-        bind(this.args.kwarg.arg, scopes)
+        bind(mangle_arg(this.args.kwarg.arg), scopes)
     }
 
     // process body first to detect possible "yield"s
@@ -2543,9 +2545,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     parse_args.push('arguments')
 
     var args_vararg = this.args.vararg === undefined ? 'null' :
-                      "'" + this.args.vararg.arg + "'",
+                      "'" + mangle_arg(this.args.vararg.arg) + "'",
         args_kwarg = this.args.kwarg === undefined ? 'null':
-                     "'" + this.args.kwarg.arg + "'"
+                     "'" + mangle_arg(this.args.kwarg.arg) + "'"
 
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
