@@ -92,5 +92,24 @@ assert flike.read() == b'muche'
 flike.seek(0, 2)
 assert flike.tell() == 9
 
+# issue 2437
+import io
+import array
+
+bio = io.BytesIO(bytes('1234', encoding='ascii'))
+bio.seek(0)
+bio.write(b"HI")
+assert bio.getvalue() == b'HI34'
+buf = bio.getbuffer()
+assert isinstance(buf, memoryview)
+assert bytes(buf) == b'HI34'
+
+bio = io.BytesIO(bytes('1234', encoding='ascii'))
+bio.seek(14)
+assert bio.getvalue() == b'1234'
+bio.write(b"HI")
+assert bio.getvalue() == b'1234\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00HI'
+buf = bio.getbuffer()
+assert bytes(buf) == bio.getvalue()
 
 print('all tests passed...')

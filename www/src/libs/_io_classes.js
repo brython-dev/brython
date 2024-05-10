@@ -116,6 +116,9 @@ StringIO.write = function(){
     }
     var text = $.self.$content,
         position = $.self.$counter
+    if(position > text.length){
+        text += String.fromCodePoint(0).repeat(position - text.length)
+    }
     text = text.substr(0, position) + $.data +
         text.substr(position + $.data.length)
     $.self.$content = text
@@ -143,7 +146,7 @@ BytesIO.__mro__ = [$B.Reader, _b_.object]
 
 BytesIO.getbuffer = function(){
     var self = get_self("getbuffer", arguments)
-    return self.$content
+    return _b_.memoryview.$factory(self.$content)
 }
 
 BytesIO.getvalue = function(){
@@ -175,9 +178,21 @@ BytesIO.read = function(){
 BytesIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
-    $.self.$content.source = $.self.$content.source.concat(
-        $.data.source)
-    $.self.$counter += $.data.source.length
+    var data_cls = $B.get_class($.data)
+    if(! data_cls.$buffer_protocol){
+        throw _b_.TypeError.$factory('a bytes-like object is required, ' +
+            `not '${$B.class_name($.data)}'`)
+    }
+    var source = $.self.$content.source,
+        counter = $.self.$counter,
+        data = _b_.bytes.$factory($.data)
+    if(counter > source.length){
+        // pad with 0's
+        var padding = (new Array(counter - source.length)).fill(0)
+        source.splice(source.length, 0, ...padding)
+    }
+    source.splice(counter, data.source.length, ...data.source)
+    $.self.$counter += data.source.length
     return _b_.None
 }
 
