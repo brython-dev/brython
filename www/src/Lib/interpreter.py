@@ -512,7 +512,7 @@ class Interpreter:
         """Use for stdout / stderr."""
         if not data:
             return
-        data = str(data)
+        data = str(data.replace(chr(0), ' '))
         mo = color_character_pattern.search(data)
         if mo:
             data = data[mo.end():]

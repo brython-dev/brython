@@ -468,7 +468,6 @@
                     if(this.status == 200){
                         var js = this.responseText + '\nreturn $module',
                             f = new Function(js)
-                        console.log('f', f, f+'')
                         var $module = f()
                         if(typeof $module !== 'undefined'){
                             result = $B.module.$factory(alias)
@@ -633,7 +632,11 @@
 
     $io.flush = function(self){
         if(self.buf){
-            console[self.out](self.buf.join(''))
+            // replace chr(0) by ' ' for printing
+            var s = self.buf.join(''),
+                chr0 = String.fromCodePoint(0)
+            s = s.replace(new RegExp(chr0, 'g'), ' ')
+            console[self.out](s)
             self.buf = []
         }
     }
