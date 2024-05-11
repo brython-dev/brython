@@ -101,7 +101,7 @@ if(mo){
 }
 
 $B.strip_host = function(url){
-    var parts_re = new RegExp('(.*?)://(.*?)[/#]?(.*)'),
+    var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
         mo = parts_re.exec(url)
     if(mo){
         return mo[3]
