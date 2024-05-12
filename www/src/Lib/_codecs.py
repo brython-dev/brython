@@ -122,11 +122,57 @@ def unicode_internal_decode(*args,**kw):
 def unicode_internal_encode(*args,**kw):
     pass
 
-def utf_16_be_decode(*args,**kw):
-    pass
+def _reader(b, nb, endian):
+    pos = 0
+    while pos < len(b):
+        res = 0
+        if endian == 'big':
+            coef = 256 ** (nb - 1)
+            for _ in range(nb):
+                res += coef * b[pos]
+                pos += 1
+                coef //= 256
+        else:
+            coef = 1
+            for _ in range(nb):
+                res += coef * b[pos]
+                pos += 1
+                coef *= 256
+        yield res
 
-def utf_16_be_encode(*args,**kw):
-    pass
+def _to_codepoint(lo, hi):
+    cp = 0x400 * (hi - 0xd800)
+    cp += lo - 0xdc00
+    return cp + 0x10000
+
+def utf_16_be_decode(b, errors, *args):
+    t = []
+    reader = _reader(b, 2, 'big')
+    for cp in reader:
+        if cp < 0xd800:
+            t.append(chr(cp))
+        else:
+            hi = cp
+            lo = next(reader)
+            t.append(chr(_to_codepoint(lo, hi)))
+    return ''.join(t), len(t)
+
+def utf_16_be_encode(arg):
+    t = []
+    for char in arg:
+        cp = ord(char)
+        if cp > 2 ** 16:
+            # surrogate pair
+            code = cp - 2 ** 16
+            hi = 0xD800 | (code >> 10)
+            lo = 0xDC00 | (code & 0x3FF)
+            t += divmod(hi, 256)
+            t += divmod(lo, 256)
+        else:
+            t.append(0)
+            t.append(cp)
+
+    return bytes(t), len(arg)
 
 def utf_16_decode(*args,**kw):
     pass
@@ -137,17 +183,52 @@ def utf_16_encode(*args,**kw):
 def utf_16_ex_decode(*args,**kw):
     pass
 
-def utf_16_le_decode(*args,**kw):
-    pass
+def utf_16_le_decode(b, errors, *args):
+    t = []
+    reader = _reader(b, 2, 'little')
+    for cp in reader:
+        if cp < 0xd800:
+            t.append(chr(cp))
+        else:
+            hi = cp
+            lo = next(reader)
+            t.append(chr(_to_codepoint(lo, hi)))
+    return ''.join(t), len(t)
 
-def utf_16_le_encode(*args,**kw):
-    pass
+def utf_16_le_encode(arg):
+    t = []
+    for char in arg:
+        cp = ord(char)
+        if cp > 2 ** 16:
+            # surrogate pair
+            code = cp - 2 ** 16
+            hi = 0xD800 | (code >> 10)
+            lo = 0xDC00 | (code & 0x3FF)
+            t += reversed(divmod(hi, 256))
+            t += reversed(divmod(lo, 256))
+        else:
+            t.append(cp)
+            t.append(0)
+    return bytes(t), len(arg)
 
-def utf_32_be_decode(*args,**kw):
-    pass
+def utf_32_be_decode(b, errors, *args):
+    t = []
+    reader = _reader(b, 4, 'big')
+    for cp in reader:
+        t.append(chr(cp))
+    return ''.join(t), len(t)
 
-def utf_32_be_encode(*args,**kw):
-    pass
+def utf_32_be_encode(s):
+    res = []
+    for char in s:
+        t = []
+        x = ord(char)
+        print('x', x)
+        for i in range(4):
+            x, y = divmod(x, 256)
+            t.append(y)
+        res += reversed(t)
+    return bytes(res), len(s)
 
 def utf_32_decode(*args,**kw):
     pass
@@ -158,11 +239,24 @@ def utf_32_encode(*args,**kw):
 def utf_32_ex_decode(*args,**kw):
     pass
 
-def utf_32_le_decode(*args,**kw):
-    pass
+def utf_32_le_decode(b, errors, *args):
+    t = []
+    reader = _reader(b, 4, 'little')
+    for cp in reader:
+        t.append(chr(cp))
+    return ''.join(t), len(t)
 
-def utf_32_le_encode(*args,**kw):
-    pass
+def utf_32_le_encode(s):
+    res = []
+    for char in s:
+        t = []
+        x = ord(char)
+        print('x', x)
+        for i in range(4):
+            x, y = divmod(x, 256)
+            t.append(y)
+        res += t
+    return bytes(res), len(s)
 
 def utf_7_decode(*args,**kw):
     pass

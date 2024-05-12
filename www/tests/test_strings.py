@@ -488,5 +488,22 @@ assert '%.*E' % (1, 9.9999) == '1.0E+01'
 
 assert float('%.3g' % 9.99999e-06) == 1e-05
 
+# issue 2438
+b = "a🐑 :".encode("utf_16_le")
+assert list(b) == [97, 0, 61, 216, 17, 220, 32, 0, 58, 0]
+assert b.decode('utf_16_le') == "a🐑 :"
+
+b = "a🐑 :".encode("utf_16_be")
+assert list(b) == [0, 97, 216, 61, 220, 17, 0, 32, 0, 58]
+assert b.decode('utf_16_be') == "a🐑 :"
+
+b = "a🐑 :".encode("utf_32_be")
+assert list(b) == [0, 0, 0, 97, 0, 1, 244, 17, 0, 0, 0, 32, 0, 0, 0, 58]
+assert b.decode('utf_32_be') == "a🐑 :"
+
+b = "a🐑 :".encode("utf_32_le")
+assert list(b) == [97, 0, 0, 0, 17, 244, 1, 0, 32, 0, 0, 0, 58, 0, 0, 0]
+assert b.decode('utf_32_le') == "a🐑 :"
+
 
 print("passed all tests...")
