@@ -52,7 +52,6 @@ $B.make_String = function(s, surrogates){
     return res
 }
 
-
 function pypos2jspos(s, pypos){
     // convert Python position to JS position
     if(s.surrogates === undefined){
@@ -1353,7 +1352,6 @@ str.encode = function(){
         var res = ""
         for(var i = 0, len = _self.length; i < len ; i++){
             var char = _self.charAt(i)
-            console.log('char', char)
             if(("a" <= char && char <= "m") || ("A" <= char && char <= "M")){
                 res += String.fromCharCode(char.charCodeAt(0) + 13)
             }else if(("m" < char && char <= "z") ||

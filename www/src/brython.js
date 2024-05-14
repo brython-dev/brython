@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-12 22:05:12.940264"
-__BRYTHON__.timestamp=1715544312939
+__BRYTHON__.compiled_date="2024-05-14 11:25:29.464454"
+__BRYTHON__.timestamp=1715678729464
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -6670,10 +6670,14 @@ str.encode=function(){var $=$B.args("encode",3,{self:null,encoding:null,errors:n
 if($.encoding=="rot13" ||$.encoding=="rot_13"){
 var res=""
 for(var i=0,len=_self.length;i < len ;i++){var char=_self.charAt(i)
-console.log('char',char)
 if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(char.charCodeAt(0)+13)}else if(("m" < char && char <="z")||
 ("M" < char && char <="Z")){res+=String.fromCharCode(char.charCodeAt(0)-13)}else{res+=char}}
-return res}
+return res}else if(false &&['utf16','utf_16'].includes($.encoding)){
+var t=[0xff,0xfe],s=_self+''
+for(var i=0,len=s.length;i < len;i++){var cc=s.charCodeAt(i)
+t.push(cc-256*Math.floor(cc/256))
+t.push(Math.floor(cc/256))}
+return $B.fast_bytes(t)}
 return _b_.bytes.__new__(_b_.bytes,$.self,$.encoding,$.errors)}
 str.endswith=function(){
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},["self","suffix","start","end"],arguments,{start:0,end:null},null,null),_self

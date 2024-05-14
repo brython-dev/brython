@@ -66,7 +66,6 @@ def lookup(encoding):
     Looks up a codec tuple in the Python codec registry and returns
     a CodecInfo object."""
     if encoding in ('utf-8', 'utf_8'):
-       from browser import console
        import encodings.utf_8
        return encodings.utf_8.getregentry()
 
@@ -174,11 +173,14 @@ def utf_16_be_encode(arg):
 
     return bytes(t), len(arg)
 
-def utf_16_decode(*args,**kw):
-    pass
+def utf_16_decode(b, errors, *args):
+    if b[0] == 0xfe and b[1] == 0xff:
+        return utf_16_le_decode(b[2:], errors, *args)
+    return utf_16_le_decode(b, errors, *args)
 
-def utf_16_encode(*args,**kw):
-    pass
+def utf_16_encode(arg):
+    b = utf_16_le_encode(arg)[0]
+    return bytes([0xfe, 0xff]) + b, len(arg)
 
 def utf_16_ex_decode(*args,**kw):
     pass
@@ -223,7 +225,6 @@ def utf_32_be_encode(s):
     for char in s:
         t = []
         x = ord(char)
-        print('x', x)
         for i in range(4):
             x, y = divmod(x, 256)
             t.append(y)
@@ -251,7 +252,6 @@ def utf_32_le_encode(s):
     for char in s:
         t = []
         x = ord(char)
-        print('x', x)
         for i in range(4):
             x, y = divmod(x, 256)
             t.append(y)
