@@ -120,7 +120,6 @@ def change_bpm(ev, score):
     score.bpm = int(ev.target.value)
 
 def end_play(ev):
-    print('END PALY')
     ev.target.html = "&#x23f5"
 
 def play_score(ev, score):
