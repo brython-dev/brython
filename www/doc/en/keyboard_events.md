@@ -8,13 +8,6 @@ from browser import document, alert
 Keyboard events are
 
 <table cellpadding=3 border=1>
-<tr>
-<td>*input*</td>
-<td>triggered when the value of an &lt;input&gt; or &lt;textarea&gt;
-element is modified, or the content of a `contenteditable` element is
-modified
-</td>
-</tr>
 
 <tr>
 <td>*keydown*</td><td>fired when any key on the keyboard is pressed down</td>

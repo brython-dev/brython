@@ -4,12 +4,6 @@ Evénements clavier
 Les événements relatifs au clavier sont
 
 <table cellpadding=3 border=1>
-<tr>
-<td>*input*</td>
-<td>déclenché quand la valeur d'un élément &lt;input&gt; ou &lt;textarea&gt;
-est modifié, ou quand le contenu d'un élément `contenteditable` est modifié
-</td>
-</tr>
 
 <tr>
 <td>*keydown*</td><td>appui sur une touche quelconque du clavier</td>
