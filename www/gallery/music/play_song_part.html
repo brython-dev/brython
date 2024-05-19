@@ -9,72 +9,37 @@ body,td,th{
 }
 </style>
 
-<script type="text/javascript" src="/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/src/brython.js"></script>
 
-<script type="text/javascript" src="/src/py_ast_classes.js"></script>
-<script type="text/javascript" src="/src/stdlib_paths.js"></script>
-<script type="text/javascript" src="/src/unicode_data.js"></script>
-<script type="text/javascript" src="/src/version_info.js"></script>
-
-<script type="text/javascript" src="/src/py_tokens.js"></script>
-<script type="text/javascript" src="/src/python_tokenizer.js"></script>
-<script type="text/javascript" src="/src/py_ast.js"></script>
-<script type="text/javascript" src="/src/py2js.js"></script>
-<script type="text/javascript" src="/src/loaders.js"></script>
-<script type="text/javascript" src="/src/py_utils.js"></script>
-<script type="text/javascript" src="/src/py_object.js"></script>
-<script type="text/javascript" src="/src/py_type.js"></script>
-<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
-<script type="text/javascript" src="/src/py_sort.js"></script>
-<script type="text/javascript" src="/src/py_exceptions.js"></script>
-<script type="text/javascript" src="/src/py_range_slice.js"></script>
-<script type="text/javascript" src="/src/py_bytes.js"></script>
-<script type="text/javascript" src="/src/py_set.js"></script>
-<script type="text/javascript" src="/src/py_import.js"></script>
-<script type="text/javascript" src="/src/py_string.js"></script>
-<script type="text/javascript" src="/src/py_int.js"></script>
-<script type="text/javascript" src="/src/py_long_int.js"></script>
-<script type="text/javascript" src="/src/py_float.js"></script>
-<script type="text/javascript" src="/src/py_complex.js"></script>
-<script type="text/javascript" src="/src/py_dict.js"></script>
-<script type="text/javascript" src="/src/py_list.js"></script>
-<script type="text/javascript" src="/src/js_objects.js"></script>
-<script type="text/javascript" src="/src/py_generator.js"></script>
-<script type="text/javascript" src="/src/py_dom.js"></script>
-<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
-<script type="text/javascript" src="/src/async.js"></script>
-<script type="text/javascript" src="/src/py_flags.js"></script>
-<script type="text/javascript" src="/src/builtin_modules.js"></script>
-<script type="text/javascript" src="/src/ast_to_js.js"></script>
-<script type="text/javascript" src="/src/symtable.js"></script>
-
-<!-- scripts for PEG parser -->
-<script type="text/javascript" src="/src/action_helpers_generated_version.js"></script>
-<script type="text/javascript" src="/src/string_parser.js"></script>
-<script type="text/javascript" src="/src/number_parser.js"></script>
-<script type="text/javascript" src="/src/python_parser_peg_version.js"></script>
-<script type="text/javascript" src="/src/pegen.js"></script>
-<script type="text/javascript" src="/src/gen_parse.js"></script>
-
-<script type="text/javascript" src="/src/brython_ready.js"></script>
-
-<!-- script type="text/javascript" src="/src/brython_stdlib.js"></script -->
+<script type="text/javascript" src="/src/brython_stdlib.js"></script>
 
 <style>
 #rule{
   position: absolute;
-  background-color: blue;
-  height: 50px;
+  background-color: #789;
 }
 
 .mute{
   position: absolute;
-  background-color: blue;
+  background-color: #789;
 }
 
 #selection{
   position: absolute;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.playing {
+  background-color: #b0c4de;
+}
+
+.not_playing {
   background-color: green;
+}
+
+.loading {
+  background-color: red;
 }
 
 .slide{
@@ -83,29 +48,38 @@ body,td,th{
   font-size: 3em;
 }
 
+#play{
+  font-size: 3em;
+}
+
 #controls {
   position: absolute;
   height: 100px;
-  padding-top: 70px;
+  width: 100%;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 2em;
 }
 
 #cursor{
   background-color: #000;
+}
+
+#song{
+  font-size: 2em;
 }
 </style>
 
 </head>
 <body>
 
-
-<input id="song" type="file">
 <div id="controls">
-<button id="play">&#x23f5</button>
+<input id="song" type="file">
 </div>
 
 <div id="rule">
 <span id="before" class="mute"></span>
-<span id="selection"></span>
+<span id="selection" class="not_playing"></span>
 <span id="after" class="mute"></span>
 </div>
 <div class="slide" id="start">&#x25e2;</div>
@@ -116,7 +90,7 @@ body,td,th{
 
 <script type="text/python" debug="2">
 import random
-from browser import window, document, bind, timer
+from browser import window, document, bind, timer, html
 
 play_char = chr(0x23f5)
 stop_char = chr(0x23f9)
@@ -163,8 +137,8 @@ class ElementMove:
             after.left += dx
             selection.width += dx
         cursor.left = selection.left + left_margin + start.width
-        set_controls_position()
         event.preventDefault()
+        event.stopPropagation()
 
     def stop(self, event):
         """When user releases the mouse button, stop moving the element"""
@@ -194,7 +168,7 @@ left_margin = int(0.05 * w)
 
 rule = document["rule"]
 rule.top = controls.top + controls.height + 10
-controls.left = left_margin
+rule.height = int(0.3 * window.innerHeight)
 rule.left = left_margin + start.width
 rule.width = int(0.8 * w)
 
@@ -216,8 +190,6 @@ cursor.width = 3
 end.left = rule.left + rule.width
 end.top = rule.top + rule.height + 5
 max_end_pos = end.left
-
-set_controls_position()
 
 ElementMove(end)
 ElementMove(start)
@@ -244,6 +216,7 @@ def createSoundWithBuffer(blob):
         Config.t = offset
         Config.timer = timer.set_interval(set_cursor, 50)
         Config.audioSource.start(0, offset)
+        set_play()
 
     def onload(ev):
         Config.buffer = ev.target.result
@@ -262,20 +235,27 @@ def createSoundWithBuffer(blob):
 def resize(ev):
      document['resize'].value = f'resize {random.randint(0, 100)}'
 
-@bind('#play', 'click')
+@bind(selection, 'click')
 def play(ev):
-    if ev.target.text == play_char:
+    if not getattr(Config, 'play', False):
+        Config.play = True
+        set_load()
         createSoundWithBuffer(Config.blob)
-        ev.target.text = stop_char
     else:
         Config.audioSource.stop()
         timer.clear_interval(Config.timer)
-        ev.target.text = play_char
+        Config.play = False
+        set_stop()
 
-@bind('#stop', 'click')
-def stop(ev):
-    Config.audioSource.stop()
-    timer.clear_interval(Config.timer)
+def set_load():
+    selection.className = "loading"
+
+def set_play():
+    selection.className = "playing"
+
+def set_stop():
+    selection.className = "not_playing"
+
 
 @bind(load_btn, "input")
 def file_read(ev):
