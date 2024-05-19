@@ -1723,41 +1723,21 @@ var map = _b_.map = $B.make_class("map",
         for(var arg of $.args){
             iter_args.push($B.make_js_iterator(arg))
         }
-        var obj = {
+        return {
             __class__: map,
             args: iter_args,
             func: func
         }
-        obj[Symbol.iterator] = function(){
-            this.iters = []
-            for(var arg of this.args){
-                this.iters.push(arg[Symbol.iterator]())
-            }
-            return this
-        }
-        obj.next = function(){
-            var args = []
-            for(var iter of this.iters){
-                var arg = iter.next()
-                if(arg.done){
-                    return {done: true, value: null}
-                }
-                args.push(arg.value)
-            }
-            return {done: false, value: this.func.apply(null, args)}
-        }
-        return obj
     }
 )
 
 map.__iter__ = function (self){
-    self[Symbol.iterator]()
     return self
 }
 
 map.__next__ = function(self){
     var args = []
-    for(var iter of self.iters){
+    for(var iter of self.args){
         var arg = iter.next()
         if(arg.done){
             throw _b_.StopIteration.$factory('')

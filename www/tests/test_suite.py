@@ -1120,4 +1120,16 @@ assert a2422 == 9
 del globals()['a2422']
 assert_raises(NameError, eval, 'a2422')
 
+# issue 2443
+m = map(str, range(42))
+assert iter(m) is m
+assert next(m) == '0'
+
+def f(x, y):
+  return str(x + y)
+
+m = map(f, range(42), range(9))
+assert [x for x in m] == ['0', '2', '4', '6', '8', '10', '12', '14', '16']
+
+
 print('passed all tests...')

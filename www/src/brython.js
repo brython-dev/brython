@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-19 16:14:12.255692"
-__BRYTHON__.timestamp=1716128052254
+__BRYTHON__.compiled_date="2024-05-19 16:40:48.917874"
+__BRYTHON__.timestamp=1716129648917
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -3200,21 +3200,12 @@ return res}
 var map=_b_.map=$B.make_class("map",function(){var $=$B.args('map',2,{func:null,it1:null},['func','it1'],arguments,{},'args',null),func=$B.$call($.func)
 var iter_args=[$B.make_js_iterator($.it1)]
 for(var arg of $.args){iter_args.push($B.make_js_iterator(arg))}
-var obj={__class__:map,args:iter_args,func:func}
-obj[Symbol.iterator]=function(){this.iters=[]
-for(var arg of this.args){this.iters.push(arg[Symbol.iterator]())}
-return this}
-obj.next=function(){var args=[]
-for(var iter of this.iters){var arg=iter.next()
-if(arg.done){return{done:true,value:null}}
-args.push(arg.value)}
-return{done:false,value:this.func.apply(null,args)}}
-return obj}
+return{
+__class__:map,args:iter_args,func:func}}
 )
-map.__iter__=function(self){self[Symbol.iterator]()
-return self}
+map.__iter__=function(self){return self}
 map.__next__=function(self){var args=[]
-for(var iter of self.iters){var arg=iter.next()
+for(var iter of self.args){var arg=iter.next()
 if(arg.done){throw _b_.StopIteration.$factory('')}
 args.push(arg.value)}
 return self.func.apply(null,args)}
