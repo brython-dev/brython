@@ -1039,7 +1039,10 @@ property.__init__ = function(){
         fset = $.fset,
         fdel = $.fdel,
         doc = $.doc
-    self.__doc__ = doc || ""
+    self.__doc__ = doc
+    if($B.$getattr && doc === _b_.None){
+        self.__doc__ = $B.$getattr(fget, '__doc__', doc)
+    }
     self.$type = fget.$type
     self.fget = fget
     self.fset = fset
