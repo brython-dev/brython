@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-19 16:40:48.917874"
-__BRYTHON__.timestamp=1716129648917
+__BRYTHON__.compiled_date="2024-05-19 17:12:16.975704"
+__BRYTHON__.timestamp=1716131536975
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -9560,11 +9560,11 @@ case 'bigint':
 return jsobj 
 case 'string':
 return $B.String(jsobj)}
+let pyobj=jsobj[PYOBJ]
+if(pyobj !==undefined){return pyobj}
 if(Array.isArray(jsobj)){
 try{Object.defineProperty(jsobj,"$is_js_array",{value:true});}catch(err){}
 return jsobj}
-let pyobj=jsobj[PYOBJ]
-if(pyobj !==undefined){return pyobj}
 if(jsobj instanceof Promise ||typeof jsobj.then=="function"){
 return jsobj}
 if(typeof jsobj==="function"){
@@ -9601,7 +9601,9 @@ var klass=$B.get_class(pyobj)
 function has_type(cls,base){return cls===base ||cls.__mro__.includes(base)}
 if(has_type(klass,$B.DOMNode)){return pyobj}
 if(has_type(klass,_b_.list)||has_type(klass,_b_.tuple)){
-return pyobj.map(pyobj2jsobj)}
+var jsobj=pyobj.map(pyobj2jsobj)
+jsobj[PYOBJ]=pyobj
+return jsobj}
 if(has_type(klass,_b_.dict)){
 let jsobj={}
 for(var entry of _b_.dict.$iter_items(pyobj)){var key=entry.key

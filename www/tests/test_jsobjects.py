@@ -429,4 +429,11 @@ window.testDeletedAttr2420(False)
 del jsObj2420.item['a']
 window.testDeletedAttr2420(True)
 
+# issue 2445
+def is_bomb(point):
+    bombs = [(1, 2), (3, 4)]
+    assert point in bombs
+
+window.setTimeout(is_bomb, 100, (1, 2))
+
 print("all tests ok...")

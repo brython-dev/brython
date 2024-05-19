@@ -144,6 +144,11 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             return $B.String(jsobj)
     }
 
+    let pyobj = jsobj[PYOBJ]
+    if(pyobj !== undefined) {
+        return pyobj
+    }
+
     if(Array.isArray(jsobj)){
         // set it as non-enumerable, prevents issues when looping on it in JS.
         try{
@@ -154,10 +159,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return jsobj
     }
 
-    let pyobj = jsobj[PYOBJ]
-    if(pyobj !== undefined) {
-        return pyobj
-    }
 
     // check if obj is an instance of Promise
     // cf. issue #2321
@@ -267,7 +268,9 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
     if(has_type(klass, _b_.list) || has_type(klass, _b_.tuple)){
         // Python list : transform its elements
-        return pyobj.map(pyobj2jsobj)
+        var jsobj = pyobj.map(pyobj2jsobj)
+        jsobj[PYOBJ] = pyobj
+        return jsobj
     }
 
     if(has_type(klass, _b_.dict)){
