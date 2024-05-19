@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-14 11:25:29.464454"
-__BRYTHON__.timestamp=1715678729464
+__BRYTHON__.compiled_date="2024-05-19 16:14:12.255692"
+__BRYTHON__.timestamp=1716128052254
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -2444,7 +2444,8 @@ property.__init__(res,fget,fset,fdel,doc)
 return res}
 )
 property.__init__=function(){var $=$B.args('__init__',5,{self:null,fget:null,fset:null,fdel:null,doc:null},['self','fget','fset','fdel','doc'],arguments,{fget:_b_.None,fset:_b_.None,fdel:_b_.None,doc:_b_.None},null,null),self=$.self,fget=$.fget,fset=$.fset,fdel=$.fdel,doc=$.doc
-self.__doc__=doc ||""
+self.__doc__=doc
+if($B.$getattr && doc===_b_.None){self.__doc__=$B.$getattr(fget,'__doc__',doc)}
 self.$type=fget.$type
 self.fget=fget
 self.fset=fset
@@ -3446,7 +3447,9 @@ if($B.$is_member(attr,mangled_slots(klass))){has_slot=true}else{for(var cls of k
 break}}}
 if(! has_slot){throw $B.attr_error(attr,klass)}}}
 if($test){console.log("attr",attr,"use _setattr",_setattr)}
-if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,attr,value)}
+if(!_setattr){if(obj.__dict__===undefined){if(obj.hasOwnProperty(attr)){obj[attr]=value}else{throw _b_.AttributeError.$factory(`'${$B.class_name(obj)}' `+
+`object has no attribute '${attr}' and no __dict__ for `+
+`setting new attributes`)}}else{_b_.dict.$setitem(obj.__dict__,attr,value)}
 if($test){console.log("no setattr, obj",obj)}}else{if($test){console.log('apply _setattr',obj,attr)}
 _setattr(obj,attr,value)}
 return None}
@@ -3613,7 +3616,7 @@ $BufferedReader.read=function(self,size){if(self.$read_func===undefined){return 
 return self.$read_func(size ||-1)}
 var $TextIOWrapper=$B.make_class('_io.TextIOWrapper',function(){var $=$B.args("TextIOWrapper",6,{buffer:null,encoding:null,errors:null,newline:null,line_buffering:null,write_through:null},["buffer","encoding","errors","newline","line_buffering","write_through"],arguments,{encoding:"utf-8",errors:_b_.None,newline:_b_.None,line_buffering:_b_.False,write_through:_b_.False},null,null)
 return{
-__class__:$TextIOWrapper,$content:_b_.bytes.decode($.buffer.$content,$.encoding),encoding:$.encoding,errors:$.errors,newline:$.newline}}
+__class__:$TextIOWrapper,__dict__:$B.empty_dict(),$content:_b_.bytes.decode($.buffer.$content,$.encoding),encoding:$.encoding,errors:$.errors,newline:$.newline}}
 )
 $TextIOWrapper.__mro__=[$Reader,_b_.object]
 $B.set_func_names($TextIOWrapper,"builtins")
@@ -4143,7 +4146,7 @@ if($B.$isinstance(exc,_b_.SyntaxError)){frame_obj=frame_obj.prev}
 var $linenums=$B.make_linenums(frame_obj)
 return{
 __class__ :traceback,$stack:make_frames_stack(frame_obj),
-$linenums,pos:0}}
+$linenums,pos:0,tb_next:_b_.None}}
 )
 traceback.__getattribute__=function(_self,attr){switch(attr){case "tb_frame":
 return _self.$stack[_self.pos]
@@ -4517,8 +4520,7 @@ trace_line+='    '+' '.repeat(paddings[0])+
 '~'.repeat(paddings[1])+
 '^'.repeat(paddings[2])
 if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
-trace.push(trace_line)}}}else{console.log('no src for filename',filename)
-console.log('in file_cache',Object.keys($B.file_cache).join('\n'))}}
+trace.push(trace_line)}}}else{console.log('no src for filename',filename)}}
 if(count_repeats > 1){let len=trace.length
 for(let i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
@@ -6672,12 +6674,7 @@ var res=""
 for(var i=0,len=_self.length;i < len ;i++){var char=_self.charAt(i)
 if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(char.charCodeAt(0)+13)}else if(("m" < char && char <="z")||
 ("M" < char && char <="Z")){res+=String.fromCharCode(char.charCodeAt(0)-13)}else{res+=char}}
-return res}else if(false &&['utf16','utf_16'].includes($.encoding)){
-var t=[0xff,0xfe],s=_self+''
-for(var i=0,len=s.length;i < len;i++){var cc=s.charCodeAt(i)
-t.push(cc-256*Math.floor(cc/256))
-t.push(Math.floor(cc/256))}
-return $B.fast_bytes(t)}
+return res}
 return _b_.bytes.__new__(_b_.bytes,$.self,$.encoding,$.errors)}
 str.endswith=function(){
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},["self","suffix","start","end"],arguments,{start:0,end:null},null,null),_self

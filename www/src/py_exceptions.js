@@ -146,7 +146,8 @@ var traceback = $B.traceback = $B.make_class("traceback",
             __class__ : traceback,
             $stack: make_frames_stack(frame_obj), // frames stack as list
             $linenums,
-            pos: 0
+            pos: 0,
+            tb_next: _b_.None
         }
     }
 )
@@ -1061,7 +1062,7 @@ function trace_from_stack(err){
             }
         }else{
             console.log('no src for filename', filename)
-            console.log('in file_cache', Object.keys($B.file_cache).join('\n'))
+            //console.log('in file_cache', Object.keys($B.file_cache).join('\n'))
         }
     }
     if(count_repeats > 1){

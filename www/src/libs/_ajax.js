@@ -46,7 +46,8 @@ function _read(req){
         }
     }else if(typeof xhr.response == "string"){
         if(req.mode == 'binary'){
-            return _b_.str.encode(xhr.response, req.encoding || 'utf-8')
+            return _b_.str.encode(xhr.response,
+                $B.$getattr(req, 'encoding', 'utf-8'))
         }
         return xhr.response
     }else{
@@ -54,13 +55,14 @@ function _read(req){
         var buf = new Uint8Array(xhr.response),
             bytes = Array.from(buf.values())
     }
-    var b = _b_.bytes.$factory(bytes)
-    if(req.mode == "binary"){
+    var b = _b_.bytes.$factory(bytes),
+        mode = $B.$getattr(req, 'mode', null)
+    if(mode == "binary"){
         return b
-    }else if(req.mode == "document"){
+    }else if(mode == "document"){
         return $B.jsobj2pyobj(xhr.response)
     }else{
-        var encoding = req.encoding || "utf-8"
+        var encoding = $B.$getattr(req, 'encoding', "utf-8")
         return _b_.bytes.decode(b, encoding)
     }
 }
@@ -180,6 +182,7 @@ ajax.__getattribute__ = function(self, attr){
     }else if(attr == "xml"){
         return $B.jsobj2pyobj(self.js.responseXML)
     }
+    return _b_.object.__getattribute__(self, attr)
 }
 
 ajax.bind = function(self, evt, func){
@@ -232,7 +235,8 @@ ajax.send = function(self, params){
             content_type = value
         }
     }
-    if((self.encoding || self.blocking) && ! self.hasMimeType){
+    if(($B.$getattr(self, 'encoding', false) ||
+            $B.$getattr(self, 'blocking', false)) && ! self.hasMimeType){
         // On blocking mode, or if an encoding has been specified,
         // override Mime type so that bytes are not processed
         // (unless the Mime type has been explicitely set)
@@ -348,6 +352,7 @@ ajax.$factory = function(){
     }
     var res = {
         __class__: ajax,
+        __dict__: $B.empty_dict(),
         js: xmlhttp,
         headers: {}
     }
@@ -367,9 +372,11 @@ function _request_without_body(method){
     var self = ajax.$factory()
     self.blocking = $.blocking
     var items = handle_kwargs(self, kw, method),
-        mode = self.mode = items.mode,
-        encoding = self.encoding = items.encoding,
+        mode = items.mode,
+        encoding = items.encoding,
         qs = items.data
+    $B.$setattr(self, 'mode', mode)
+    $B.$setattr(self, 'encoding', encoding)
     if(qs){
         url += "?" + qs
     }
