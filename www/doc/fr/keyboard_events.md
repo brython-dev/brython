@@ -1,6 +1,8 @@
 Evénements clavier
 ==================
 
+_Documentation complète sur le [site MDN](https://developer.mozilla.org/fr/docs/Web/API/KeyboardEvent)_
+
 Les événements relatifs au clavier sont
 
 <table cellpadding=3 border=1>
@@ -32,8 +34,6 @@ L'instance de `DOMEvent` possède les attributs suivants
 `altKey`
 > booléen, indique si la touche Alt (ou Option sur Mac) était enfoncée quand
 > l'événement clavier a été déclenché
-
-> Cet attribut n'est pas disponible pour l'événement *input*
 
 > Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a
 > entré Alt+&lt;key&gt; ou seulement &lt;key&gt;
@@ -112,8 +112,6 @@ document["key_keyup"].bind("keyup", keyevent)
 > booléen, indique si la touche Ctrl était enfoncée quand l'événement
 > clavier a été déclenché
 
-> Cet attribut n'est pas disponible pour l'événement *input*
-
 > Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a
 > entré Ctrl+&lt;key&gt; ou seulement &lt;key&gt;
 </td>
@@ -189,8 +187,6 @@ document["codeKeyup"].bind("keyup", keyCode)
 `shiftKey`
 > booléen, indique si la touche Majuscule était enfoncée quand l'événement
 > clavier a été déclenché
-
-> Cet attribut n'est pas disponible pour l'événement *input*
 
 > Il est normalement utilisé avec *keypress*, pour pouvoir tester si on a
 > entré Shift+&lt;key&gt; ou seulement &lt;key&gt;
