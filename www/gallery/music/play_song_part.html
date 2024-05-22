@@ -72,7 +72,7 @@ body,td,th{
 
 </head>
 <body>
-<input id="time">
+
 <div id="controls">
 <input id="song" type="file">
 </div>
@@ -196,7 +196,6 @@ ElementMove(start)
 
 def set_cursor():
     d = Config.context.currentTime - Config.startTime
-    document['time'].value = format_time(d) + ' ' + format_time(Config.length)
     if d > Config.length:
         Config.startTime = Config.context.currentTime - (d - Config.length)
     cursor.left = start.left + start.width + int(d * Config.dxPerSecond)
