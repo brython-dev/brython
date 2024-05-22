@@ -72,7 +72,7 @@ body,td,th{
 
 </head>
 <body>
-
+<input id="time">
 <div id="controls">
 <input id="song" type="file">
 </div>
@@ -196,32 +196,38 @@ ElementMove(start)
 
 def set_cursor():
     d = Config.context.currentTime - Config.startTime
+    document['time'].value = format_time(d) + ' ' + format_time(Config.length)
     if d > Config.length:
         Config.startTime = Config.context.currentTime - (d - Config.length)
     cursor.left = start.left + start.width + int(d * Config.dxPerSecond)
 
+def format_time(secs):
+    minutes, seconds = divmod(secs, 60)
+    return f'{int(minutes)}:{int(seconds)}'
+
 def createSoundWithBuffer(blob):
 
     def play(buffer):
-        d = Config.length
+        d = buffer.duration
+        Config.dxPerSecond = rule.width / d
         Config.audioSource.buffer = buffer
-        offset = d * (start.left - rule.left - start.width) / rule.width
+        offset = d * (start.left - rule.left + start.width) / rule.width
         offset = max(0, offset)
         length = d * (end.x - start.x - start.width) / rule.width
+        print('song length', format_time(d), 'selection length', format_time(length))
         Config.audioSource.loop = True
         Config.length = length
         Config.audioSource.loopEnd = offset + length
         Config.audioSource.loopStart = offset
+        print('loopStart', format_time(offset), 'loopEnd', format_time(Config.audioSource.loopEnd))
         Config.startTime = Config.context.currentTime
         Config.t = offset
         Config.timer = timer.set_interval(set_cursor, 50)
-        Config.audioSource.start(0, offset)
+        Config.audioSource.start(Config.startTime, offset)
         set_play()
 
     def onload(ev):
         Config.buffer = ev.target.result
-        Config.length = Config.buffer.byteLength / 12_000
-        Config.dxPerSecond = rule.width / Config.length
         Config.context = window.AudioContext.new()
         Config.audioSource = Config.context.createBufferSource()
         Config.audioSource.connect(Config.context.destination)
@@ -231,9 +237,6 @@ def createSoundWithBuffer(blob):
     reader.bind('load', onload)
     reader.readAsArrayBuffer(Config.blob)
 
-@bind(window, 'resize')
-def resize(ev):
-     document['resize'].value = f'resize {random.randint(0, 100)}'
 
 @bind(selection, 'click')
 def play(ev):
