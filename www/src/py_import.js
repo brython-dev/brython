@@ -1311,7 +1311,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                 try{
                     // [Import spec] Check if module has an attribute by that name
                     locals[alias] = $B.$getattr(modobj, name)
-                    if(locals[alias].$js_func){ // issue 2395
+                    if(locals[alias] && locals[alias].$js_func){ // issue 2395
                         locals[alias] = locals[alias].$js_func
                     }
                 }catch($err1){
