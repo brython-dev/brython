@@ -1,5 +1,6 @@
 import datetime
 from browser import document, timer, window
+from javascript import NULL
 
 b_highchart = window.Highcharts.Chart.new
 
@@ -7,7 +8,7 @@ class Now:
 
     def __init__(self):
         now = datetime.datetime.now()
-            
+
         self.hours = now.hour + now.minute / 60
         self.minutes = now.minute * 12 / 60 + now.second * 12 / 3600
         self.seconds = now.second * 12 / 60
@@ -17,22 +18,22 @@ now = Now()
 chart = b_highchart({
     'chart': {
         'type': 'gauge',
-        'plotBackgroundColor': None,
-        'plotBackgroundImage': None,
+        'plotBackgroundColor': NULL,
+        'plotBackgroundImage': NULL,
         'plotBorderWidth': 0,
         'plotShadow': False,
         'height': 200,
         'renderTo': 'container'
     },
-    
+
     'credits': {
         'enabled': False
     },
-    
+
     'title': {
         'text': 'The Highcharts clock'
     },
-    
+
     'pane': {
         'background': [{
             # default background
@@ -51,7 +52,7 @@ chart = b_highchart({
             }
         }]
     },
-    
+
     'yAxis': {
         'labels': {
             'distance': -20
@@ -60,7 +61,7 @@ chart = b_highchart({
         'max': 12,
         'lineWidth': 0,
         'showFirstLabel': False,
-        
+
         'minorTickInterval': 'auto',
         'minorTickWidth': 1,
         'minorTickLength': 5,
@@ -79,12 +80,12 @@ chart = b_highchart({
                 'color': '#BBB',
                 'fontWeight': 'normal',
                 'fontSize': '8px',
-                'lineHeight': '10px'                
+                'lineHeight': '10px'
             },
             'y': 10
         }
     },
-    
+
     'tooltip': {
     },
 
@@ -131,7 +132,7 @@ def move():
     animation = False
     if now.seconds == 0:
         animation = {'easing': 'easeOutElastic'}
-            
+
     hour.update(now.hours, True, animation)
     minute.update(now.minutes, True, animation)
     second.update(now.seconds, True, animation)

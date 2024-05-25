@@ -1,11 +1,13 @@
 from browser import window
 
+from javascript import NULL
+
 b_highchart = window.Highcharts.Chart.new
 
-b_highchart({        
+b_highchart({
     'chart': {
-        'plotBackgroundColor': None,
-        'plotBorderWidth': None,
+        'plotBackgroundColor': NULL,
+        'plotBorderWidth': NULL,
         'plotShadow': False,
         'renderTo': 'container'
     },
