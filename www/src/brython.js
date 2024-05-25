@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-19 17:12:16.975704"
-__BRYTHON__.timestamp=1716131536975
+__BRYTHON__.compiled_date="2024-05-25 08:29:00.871395"
+__BRYTHON__.timestamp=1716618540871
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -3438,9 +3438,9 @@ if($B.$is_member(attr,mangled_slots(klass))){has_slot=true}else{for(var cls of k
 break}}}
 if(! has_slot){throw $B.attr_error(attr,klass)}}}
 if($test){console.log("attr",attr,"use _setattr",_setattr)}
-if(!_setattr){if(obj.__dict__===undefined){if(obj.hasOwnProperty(attr)){obj[attr]=value}else{throw _b_.AttributeError.$factory(`'${$B.class_name(obj)}' `+
+if(!_setattr){if(obj[attr]!==undefined){obj[attr]=value}else if(obj.__dict__===undefined){throw _b_.AttributeError.$factory(`'${$B.class_name(obj)}' `+
 `object has no attribute '${attr}' and no __dict__ for `+
-`setting new attributes`)}}else{_b_.dict.$setitem(obj.__dict__,attr,value)}
+`setting new attributes`)}else{_b_.dict.$setitem(obj.__dict__,attr,value)}
 if($test){console.log("no setattr, obj",obj)}}else{if($test){console.log('apply _setattr',obj,attr)}
 _setattr(obj,attr,value)}
 return None}
@@ -6150,7 +6150,7 @@ for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
 for(let name of __all__){var alias=aliases[name]||name
 try{
 locals[alias]=$B.$getattr(modobj,name)
-if(locals[alias].$js_func){
+if(locals[alias]&& locals[alias].$js_func){
 locals[alias]=locals[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){throw $err1}
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){

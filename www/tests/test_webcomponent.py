@@ -1,6 +1,6 @@
 import json
 
-from browser import webcomponent
+from browser import webcomponent, document
 
 
 # issue 1893
@@ -231,5 +231,87 @@ webcomponent.define("my-div_a_2295", MyDivA2295)
 webcomponent.define("my-div_b_2295", MyDivB2295)
 
 webcomponent.define("my-div_c_2295", MyDivC2295)
+
+# issue 2447
+class BaseComponent2447:
+
+    _registry = []
+    _initialized = False
+    _logic_obj = None
+    _is_container: bool = False
+
+    @staticmethod
+    def un_camel(word: str) -> str:
+        upper_chars: str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        last_char: str = word[0]
+        output: list = [last_char.lower()]
+        for c in word[1:]:
+            if c == "_":
+                output.append("-")
+                continue
+            if c in upper_chars:
+                if last_char not in upper_chars:
+                    output.append('-')
+                output.append(c.lower())
+            else:
+                output.append(c)
+            last_char = c
+        return "".join(output)
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        BaseComponent2447._registry.append(cls)
+
+    @classmethod
+    def remove_from_registry(cls, component):
+        print(cls._registry, component)
+        if component in cls._registry:
+            cls._registry.remove(component)
+
+    @classmethod
+    def register(cls):
+        registry = cls._registry
+        for web_component in registry:
+            web_component_name = cls.un_camel(web_component.__name__)
+            component_name = f"ui-{web_component_name}"
+            webcomponent.define(component_name, web_component)
+
+    def add_class(self, class_name):
+        classes = self.className.split()
+        if class_name not in classes:
+            classes.append(class_name)
+        self.className = " ".join(classes)
+
+    def add_classes(self, *classes):
+        for class_name in classes:
+            self.add_class(class_name)
+
+
+class Icon(BaseComponent2447):
+
+    def connectedCallback(self):
+        if not self._initialized:
+            self.add_classes("icon", "f7-icons")
+            self._initialized = True
+
+    def set_icon(self, icon):
+        #self.text = icon
+        self.innerText = icon
+
+    @property
+    def icon(self):
+        return self.innerText
+
+    @icon.setter
+    def icon(self, value):
+        self.innerText = value
+
+
+BaseComponent2447.register()
+
+icon = document.getElementById("icon")
+assert icon.className == "demo icon f7-icons"
+icon.className = "TEST"
+assert icon.className == "TEST"
 
 print('all tests passed...')
