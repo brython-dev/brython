@@ -1361,10 +1361,14 @@ $B.ast.Break.prototype.to_js = function(scopes){
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
     var func =  $B.js_from_ast(this.func, scopes),
-        js = `$B.$call(${func}`
+        js = `$B.$call(${func}`,
+        end_col_offset = this.end_col_offset
+    if(this.end_lineno > this.lineno){
+        end_col_offset = this.col_offset + 1
+    }
 
     var position = encode_position(this.col_offset, this.col_offset,
-                            this.end_col_offset)
+                            end_col_offset)
     js += `, ${position}`
 
     js += ')'
