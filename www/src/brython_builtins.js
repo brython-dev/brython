@@ -209,7 +209,7 @@ $B.str_digits_check_threshold = 640
 // maximum array size (Javascript constraint)
 $B.max_array_size = 2 ** 32 - 1
 
-$B.recursion_limit = 200
+$B.recursion_limit = 900
 
 // Mapping between operators and special Python method names
 $B.op2method = {

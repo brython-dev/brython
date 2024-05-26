@@ -381,7 +381,8 @@ $B.exception = function(js_exc){
         exc = _b_.JavascriptError.$factory(msg)
         exc.$js_exc = js_exc
         if($B.is_recursion_error(js_exc)){
-            return _b_.RecursionError.$factory("too much recursion")
+            msg = "maximum recursion depth exceeded"
+            exc = _b_.RecursionError.$factory(msg)
         }
         exc.__cause__ = _b_.None
         exc.__context__ = _b_.None
@@ -676,6 +677,7 @@ $B.name_error = function(name){
 $B.recursion_error = function(frame){
     var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
     $B.set_exc(exc, frame)
+    $B.freeze(exc)
     return exc
 }
 
