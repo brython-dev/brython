@@ -92,4 +92,7 @@ inStr = 'text_1'
 outStr = re.sub(r'\W+', '', inStr)
 assert outStr == 'text_1'
 
+# issue 2448
+re.RegexFlag
+
 print('all tests ok..')
