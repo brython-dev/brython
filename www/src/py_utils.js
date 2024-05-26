@@ -1582,7 +1582,7 @@ $B.int_or_bool = function(v){
 $B.enter_frame = function(frame){
     // Enter execution frame
     var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
-    if(count > 1000){
+    if(count > $B.recursion_limit){
         var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
         $B.set_exc(exc, frame)
         throw exc
