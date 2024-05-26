@@ -86,7 +86,7 @@ $B.min_float=new Number(Number.MIN_VALUE)
 $B.int_max_str_digits=4300
 $B.str_digits_check_threshold=640
 $B.max_array_size=2**32-1
-$B.recursion_limit=200
+$B.recursion_limit=900
 $B.op2method={operations:{"**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","@":"matmul" },augmented_assigns:{"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"},binary:{"&":"and","|":"or","~":"invert","^":"xor"},comparisons:{"<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne"},boolean:{"or":"or","and":"and","in":"in","not":"not","is":"is"},subset:function(){var res={},keys=[]
 if(arguments[0]=="all"){keys=Object.keys($B.op2method)
 keys.splice(keys.indexOf("subset"),1)}else{for(var arg of arguments){keys.push(arg)}}
@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-25 08:29:00.871395"
-__BRYTHON__.timestamp=1716618540871
+__BRYTHON__.compiled_date="2024-05-26 11:50:17.686236"
+__BRYTHON__.timestamp=1716717017686
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -1692,7 +1692,7 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
 var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
-if(count > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
+if(count > $B.recursion_limit){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
@@ -2521,7 +2521,7 @@ other.$infos !==undefined &&
 self.$infos.__func__===other.$infos.__func__ &&
 self.$infos.__self__===other.$infos.__self__}
 method.__ne__=function(self,other){return ! $B.method.__eq__(self,other)}
-method.__get__=function(self){var f=function(){return self(arguments)}
+method.__get__=function(self){var f=function(){return self(...arguments)}
 f.__class__=$B.method_wrapper
 f.$infos=method.$infos
 return f}
@@ -4216,7 +4216,8 @@ if($B.get_option('debug',exc)> 1){console.log('Javascript error',js_exc)}
 var msg=js_exc.name+': '+js_exc.message
 exc=_b_.JavascriptError.$factory(msg)
 exc.$js_exc=js_exc
-if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}
+if($B.is_recursion_error(js_exc)){msg="maximum recursion depth exceeded"
+exc=_b_.RecursionError.$factory(msg)}
 exc.__cause__=_b_.None
 exc.__context__=_b_.None
 exc.__suppress_context__=false
@@ -4351,6 +4352,7 @@ exc.$frame_obj=$B.frame_obj
 return exc}
 $B.recursion_error=function(frame){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
+$B.freeze(exc)
 return exc}
 var MAX_CANDIDATE_ITEMS=750,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
@@ -11772,8 +11774,9 @@ break}}
 js+=`break`
 return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
-var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`
-var position=encode_position(this.col_offset,this.col_offset,this.end_col_offset)
+var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`,end_col_offset=this.end_col_offset
+if(this.end_lineno > this.lineno){end_col_offset=this.col_offset+1}
+var position=encode_position(this.col_offset,this.col_offset,end_col_offset)
 js+=`, ${position}`
 js+=')'
 var args=make_args.bind(this)(scopes)

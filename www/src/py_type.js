@@ -1254,7 +1254,7 @@ method.__ne__ = function(self, other){
 }
 
 method.__get__ = function(self){
-    var f = function(){return self(arguments)}
+    var f = function(){return self(...arguments)}
     f.__class__ = $B.method_wrapper
     f.$infos = method.$infos
     return f

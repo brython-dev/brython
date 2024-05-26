@@ -1100,4 +1100,20 @@ class A:
 
 assert A().a(['a', 'b']) == 'a-b'
 
+# setting a classmethod
+class A:
+
+  @classmethod
+  def f(cls, value):
+      return value
+
+  def g(self, value):
+      self.__class__.func = self.__class__.f
+      return self.__class__.func(value)
+
+a = A()
+
+assert a.f(5) == 5
+assert a.g(77) == 77
+
 print('passed all tests..')
