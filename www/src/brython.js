@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-26 11:50:17.686236"
-__BRYTHON__.timestamp=1716717017686
+__BRYTHON__.compiled_date="2024-05-29 09:56:12.092280"
+__BRYTHON__.timestamp=1716969372092
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -3531,7 +3531,8 @@ $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-if(size < 0){size=self.$length-self.$counter}
+var len=_b_.len(self.$content)
+if(size < 0){size=len-self.$counter}
 var res
 if(self.$binary){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter,size)}
 self.$counter+=size
@@ -3540,8 +3541,8 @@ $Reader.readable=function(){return true}
 function make_lines(self){
 if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")
 if($B.last(self.$lines)==''){self.$lines.pop()}
-self.$lines=self.$lines.map(x=> x+'\n')}else{var lines=[],pos=0,source=self.$content.source
-while(pos < self.$length){var ix=source.indexOf(10,pos)
+self.$lines=self.$lines.map(x=> x+'\n')}else{var lines=[],pos=0,source=self.$content.source,len=source.length
+while(pos < len){var ix=source.indexOf(10,pos)
 if(ix==-1){lines.push({__class__:_b_.bytes,source:source.slice(pos)})
 break}else{lines.push({__class__:_b_.bytes,source:source.slice(pos,ix+1)})
 pos=ix+1}}
@@ -3583,7 +3584,7 @@ lines.push(self.$lines[self.$lc])}}
 return lines}
 $Reader.seek=function(self,offset,whence){if(self.closed===True){throw _b_.ValueError.$factory('I/O operation on closed file')}
 if(whence===undefined){whence=0}
-if(whence===0){self.$counter=offset}else if(whence===1){self.$counter+=offset}else if(whence===2){self.$counter=self.$length+offset}
+if(whence===0){self.$counter=offset}else if(whence===1){self.$counter+=offset}else if(whence===2){self.$counter=_b_.len(self.$content)+offset}
 return None}
 $Reader.seekable=function(){return true}
 $Reader.tell=function(self){return self.$counter}

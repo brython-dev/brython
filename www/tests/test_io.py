@@ -112,4 +112,17 @@ assert bio.getvalue() == b'1234\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00HI'
 buf = bio.getbuffer()
 assert bytes(buf) == bio.getvalue()
 
+# issue 2451
+s = io.StringIO('1234')
+assert s.read() == '1234'
+assert s.tell() == 4
+assert s.getvalue() == '1234'
+s.seek(2)
+assert s.read() == '34'
+
+s = io.BytesIO(b'abcd')
+assert s.read() == b'abcd'
+assert s.tell() == 4
+assert s.getvalue() == b'abcd'
+
 print('all tests passed...')

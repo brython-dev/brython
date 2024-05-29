@@ -2703,8 +2703,9 @@ $Reader.read = function(){
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
+    var len = _b_.len(self.$content)
     if(size < 0){
-        size = self.$length - self.$counter
+        size = len - self.$counter
     }
     var res
     if(self.$binary){
@@ -2734,8 +2735,9 @@ function make_lines(self){
         }else{
             var lines = [],
                 pos = 0,
-                source = self.$content.source
-            while(pos < self.$length){
+                source = self.$content.source,
+                len = source.length
+            while(pos < len){
                 var ix = source.indexOf(10, pos)
                 if(ix == -1){
                     lines.push({__class__: _b_.bytes, source: source.slice(pos)})
@@ -2835,7 +2837,7 @@ $Reader.readlines = function(){
     }
     self.$lc = self.$lc === undefined ? -1 : self.$lc
     make_lines(self)
-
+    
     var lines
     if(hint < 0){
         lines = self.$lines.slice(self.$lc + 1)
@@ -2862,7 +2864,7 @@ $Reader.seek = function(self, offset, whence){
     }else if(whence === 1){
         self.$counter += offset
     }else if(whence === 2){
-        self.$counter = self.$length + offset
+        self.$counter = _b_.len(self.$content) + offset
     }
     return None
 }
