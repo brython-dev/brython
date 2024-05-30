@@ -1325,16 +1325,23 @@ $B.$hash = function(obj){
     // d = {A():1}
     //
     // throws an exception : unhashable type: 'A'
-
+    function check_int(v){
+        if((! Number.isInteger(v)) && ! $B.$isinstance(v, _b_.int)){
+            throw _b_.TypeError.$factory(
+                '__hash__ method should return an integer')
+        }
+        return v
+    }
+    var res
     if(hash_method.$infos.__func__ === _b_.object.__hash__){
         if(_b_.type.__getattribute__(klass, '__eq__') !== _b_.object.__eq__){
             throw _b_.TypeError.$factory("unhashable type: '" +
                 $B.class_name(obj) + "'", 'hash')
         }else{
-            return obj.__hashvalue__ = _b_.object.__hash__(obj)
+            return obj.__hashvalue__ = check_int(_b_.object.__hash__(obj))
         }
     }else{
-        return $B.$call(hash_method)(obj)
+        return check_int($B.$call(hash_method)(obj))
     }
 }
 
@@ -2837,7 +2844,7 @@ $Reader.readlines = function(){
     }
     self.$lc = self.$lc === undefined ? -1 : self.$lc
     make_lines(self)
-    
+
     var lines
     if(hint < 0){
         lines = self.$lines.slice(self.$lc + 1)

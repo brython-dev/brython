@@ -1116,4 +1116,23 @@ a = A()
 assert a.f(5) == 5
 assert a.g(77) == 77
 
+# issue 2452
+class C:
+    def __init__(self, x):
+        self.x = x
+
+    def __eq__(self, other):
+        return self.x == other.x
+
+    def __hash__(self):
+        return 'strings are not allowed'
+
+
+c = C(5)
+assert_raises(TypeError, hash, c,
+    msg='__hash__ method should return an integer')
+s = set()
+assert_raises(TypeError, exec, "c in s", globals(),
+    msg='__hash__ method should return an integer')
+    
 print('passed all tests..')

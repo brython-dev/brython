@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-29 09:56:12.092280"
-__BRYTHON__.timestamp=1716969372092
+__BRYTHON__.compiled_date="2024-05-30 08:58:20.882528"
+__BRYTHON__.timestamp=1717052300882
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -3069,8 +3069,12 @@ _b_.str.$factory($B.jsobj2pyobj(obj))+"'")}
 var hash_method=_b_.type.__getattribute__(klass,'__hash__',_b_.None)
 if(hash_method===_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'")}
+function check_int(v){if((! Number.isInteger(v))&& ! $B.$isinstance(v,_b_.int)){throw _b_.TypeError.$factory(
+'__hash__ method should return an integer')}
+return v}
+var res
 if(hash_method.$infos.__func__===_b_.object.__hash__){if(_b_.type.__getattribute__(klass,'__eq__')!==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
-$B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return $B.$call(hash_method)(obj)}}
+$B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=check_int(_b_.object.__hash__(obj))}}else{return check_int($B.$call(hash_method)(obj))}}
 var help=_b_.help=function(obj){if(obj===undefined){obj='help'}
 if(typeof obj=='string'){var lib_url='https://docs.python.org/3/library'
 var parts=obj.split('.'),head=[],url
