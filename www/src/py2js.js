@@ -698,7 +698,7 @@ $B.get_option = function(option, err){
 }
 
 $B.get_option_from_filename = function(option, filename){
-    if((! filename) || ! $B.scripts[filename]){
+    if(filename === undefined || ! $B.scripts[filename]){
         return $B.get_page_option(option)
     }
     var value = $B.scripts[filename].getAttribute(option)

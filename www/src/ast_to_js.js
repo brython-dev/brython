@@ -3002,7 +3002,7 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
           `locals = ${global_name},\n` +
           `frame = ["${module_id}", locals, "${module_id}", locals]`
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
+    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3368,7 +3368,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         }
     }
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n` +
+    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 

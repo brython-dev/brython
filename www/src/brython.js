@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-05-30 08:58:20.882528"
-__BRYTHON__.timestamp=1717052300882
+__BRYTHON__.compiled_date="2024-06-03 15:23:31.792849"
+__BRYTHON__.timestamp=1717421011791
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser"]
 ;
 
@@ -918,7 +918,7 @@ return brython_options[option]}else{return default_option[option]}}
 $B.get_option=function(option,err){var filename=$B.script_filename
 if(err && err.$frame_obj){filename=$B.get_frame_at(0,err.$frame_obj).__file__}else{filename=$B.get_filename()}
 return $B.get_option_from_filename(option,filename)}
-$B.get_option_from_filename=function(option,filename){if((! filename)||! $B.scripts[filename]){return $B.get_page_option(option)}
+$B.get_option_from_filename=function(option,filename){if(filename===undefined ||! $B.scripts[filename]){return $B.get_page_option(option)}
 var value=$B.scripts[filename].getAttribute(option)
 if(value !==null){return convert_option(option,value)}else{return $B.get_page_option(option)}}
 function run_scripts(_scripts){
@@ -12562,7 +12562,7 @@ var js=`// Javascript code generated from ast\n`+
 js+=`${global_name} = {}, // $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`
-js+=`\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n`+
+js+=`\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
@@ -12716,7 +12716,7 @@ js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name}`
 if(name){let local_name=('locals_'+name).replace(/\./g,'_')
 js+=`,\n${local_name} = locals`}}
-js+=`\nvar __file__ = frame.__file__ = '${scopes.filename || "<string>"}'\n`+
+js+=`\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
