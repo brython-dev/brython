@@ -1,6 +1,6 @@
 import json
 
-from browser import webcomponent, document
+from browser import webcomponent, document, console
 
 
 # issue 1893
@@ -313,5 +313,92 @@ icon = document.getElementById("icon")
 assert icon.className == "demo icon f7-icons"
 icon.className = "TEST"
 assert icon.className == "TEST"
+
+# issue 2454
+class BaseComponent2454:
+
+    _registry = []
+    _initialized = False
+    _logic_obj = None
+    _is_container: bool = False
+    _observed_attributes: list = ['abcd']
+
+    @property
+    def observedAttributes(self):
+        return self._observed_attributes
+
+    def attributeChangedCallback(self, name, old, new, ns):
+        print(f"attribute {name} changed from {old} to {new}")
+
+    @staticmethod
+    def un_camel(word: str) -> str:
+        upper_chars: str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        last_char: str = word[0]
+        output: list = [last_char.lower()]
+        for c in word[1:]:
+            if c == "_":
+                output.append("-")
+                continue
+            if c in upper_chars:
+                if last_char not in upper_chars:
+                    output.append('-')
+                output.append(c.lower())
+            else:
+                output.append(c)
+            last_char = c
+        return "".join(output)
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        BaseComponent2454._registry.append(cls)
+
+    @classmethod
+    def remove_from_registry(cls, component):
+        print(cls._registry, component)
+        if component in cls._registry:
+            cls._registry.remove(component)
+
+    @classmethod
+    def register(cls):
+        registry = cls._registry
+        for web_component in registry:
+            web_component_name = cls.un_camel(web_component.__name__)
+            component_name = f"ui-{web_component_name}"
+            console.debug(f"registering web component {web_component} as {component_name}...")
+            webcomponent.define(component_name, web_component)
+
+    def add_class(self, class_name):
+        classes = self.className.split()
+        if class_name not in classes:
+            classes.append(class_name)
+        self.className = " ".join(classes)
+
+    def add_classes(self, *classes):
+        for class_name in classes:
+            self.add_class(class_name)
+
+
+class Icon2454(BaseComponent2454):
+
+    def connectedCallback(self):
+        if not self._initialized:
+            console.debug("calling add_classes...")
+            self.add_classes("icon", "f7-icons")
+            self._initialized = True
+
+    def set_icon(self, icon):
+        #self.text = icon
+        self.innerText = icon
+
+    @property
+    def icon(self):
+        return self.innerText
+
+    @icon.setter
+    def icon(self, value):
+        self.innerText = value
+
+
+BaseComponent2454.register()
 
 print('all tests passed...')

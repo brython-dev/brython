@@ -105,6 +105,12 @@ function define(tag_name, cls, options){
             var obs_attr = $B.$getattr(cls, "observedAttributes", null)
             if(obs_attr === null){
                 return []
+            }
+            if($B.$isinstance(obs_attr, _b_.property)){ // issue 2454
+                obs_attr = obs_attr.fget(cls)
+            }
+            if(obs_attr === null){
+                return []
             }else if(typeof obs_attr == "function"){
                 var warning = _b_.DeprecationWarning.$factory(
                     "Setting observedAttributes as a method " +
