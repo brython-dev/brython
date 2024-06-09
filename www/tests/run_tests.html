@@ -14,6 +14,9 @@
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
     <script src="//code.jquery.com/qunit/qunit-2.6.2.js" crossorigin="anonymous"></script>
+    <script>
+        QUnit.config.autostart = false;
+    </script>
 
     <!-- Testem integration -->
     <script src="/testem.js"></script>
@@ -168,6 +171,8 @@ qunit_add_tests(test_utils.load_brython_test_cases('.'))
 for test_name in ('test.test_syntax', 'test.test_bool'):
     suite = defaultTestLoader.loadTestsFromName(test_name)
     qunit_add_tests(suite, default_caption = 'CPython')
+
+_QUnit.start()
 </script>
 
 <!-- for Web Components tests -->
