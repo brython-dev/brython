@@ -1,7 +1,7 @@
 __BRYTHON__.implementation = [3, 12, 3, 'dev', 0]
 __BRYTHON__.version_info = [3, 12, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2024-06-06 09:32:21.891837"
-__BRYTHON__.timestamp = 1717659141891
+__BRYTHON__.compiled_date = "2024-06-09 01:47:29.595940"
+__BRYTHON__.timestamp = 1717912049595
 __BRYTHON__.builtin_module_names = ["_ajax",
     "_ast",
     "_base64",
@@ -24,13 +24,10 @@ __BRYTHON__.builtin_module_names = ["_ajax",
     "_webcomponent",
     "_webworker",
     "_zlib_utils",
-    "_zlib_utils1",
-    "_zlib_utils_kozh",
     "array",
     "builtins",
     "dis",
     "encoding_cp932",
-    "encoding_cp932_v2",
     "hashlib",
     "html_parser",
     "marshal",
@@ -39,7 +36,6 @@ __BRYTHON__.builtin_module_names = ["_ajax",
     "posix",
     "pyexpat",
     "python_re",
-    "python_re_new",
     "unicodedata",
     "xml_helpers",
     "xml_parser"]

@@ -1,3 +1,5 @@
+import unittest
+
 CHAR_MAX = 127
 
 CHAR_MIN = -128
@@ -192,7 +194,7 @@ def raise_memoryerror(*args,**kw):
     pass
 
 def run_in_subinterp(*args,**kw):
-    pass
+    raise unittest.SkipTest("Brython does not support subinterpreters")
 
 def set_exc_info(*args,**kw):
     pass
