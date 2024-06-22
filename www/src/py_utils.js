@@ -55,7 +55,7 @@ function pos_only_passed_as_keyword(fname, arg){
 function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, slots){
     var nb_pos = args.length,
         last = $B.last(args)
-    if(last.$kw){
+    if(last !== null && last !== undefined && last.$kw){
         // Unexpected keyword args take precedence
         if(! kwarg){
             var kw = $B.parse_kwargs(last.$kw, fname)
