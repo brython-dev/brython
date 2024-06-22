@@ -231,8 +231,9 @@ var handler = {
     },
     CharData: function(parser, rule){
         var value = get_value(rule)
-        if(parser.CharacterDataHandler){
-            parser.CharacterDataHandler(value)
+        var f = $B.$getattr(parser, "CharacterDataHandler", null)
+        if(f !== null){
+            f(value)
         }
         return {value: get_value(rule)}
     },
@@ -257,8 +258,9 @@ var handler = {
     },
     ETag: function(parser, rule){
         var name = get_value(rule.rules[1])
-        if(parser.EndElementHandler){
-            parser.EndElementHandler(name)
+        var f = $B.$getattr(parser, "EndElementHandler", null)
+        if(f !== null){
+            f(name)
         }
         return {name: get_value(rule.rules[1])}
     },
@@ -328,8 +330,9 @@ var handler = {
                 _b_.dict.$setitem(attr_result, attr_name, attr_value)
             }
         }
-        if(parser.StartElementHandler){
-            parser.StartElementHandler(name, attr_result)
+        var f = $B.$getattr(parser, "StartElementHandler", null)
+        if(f !== null){
+            f(name, attr_result)
         }
         return {name, attr_result}
     },
@@ -360,7 +363,7 @@ function emit(rule){
     rname = rname.substr(0, rname.length - 5)
     if(handler[rname]){
         var parser = get_top(rule)
-        // console.log('emit', rname)
+        // console.log('emit', rname, handler[rname])
         handler[rname](parser, rule)
     }
 }

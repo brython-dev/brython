@@ -22,6 +22,7 @@ var xmlparser = $B.make_class('xmlparser',
     function(encoding, namespace_separator, intern){
         return {
             __class__: xmlparser,
+            __dict__: $B.empty_dict(),
             encoding,
             namespace_separator,
             intern,
@@ -244,7 +245,9 @@ xmlparser.xml_tokenizer = function*(self){
         }
         self._pos++
     }
+    console.log('element', self._element)
     console.log('fini')
+    alert()
 }
 
 $B.set_func_names(xmlparser, 'expat')
