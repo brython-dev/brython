@@ -189,16 +189,21 @@ function get_rank(rule){
 
 function external_id(ext_id){
     var ext_id_value = get_value(ext_id),
-        systemId,
-        publicId
+        systemId = _b_.None,
+        publicId = _b_.None
     if(ext_id_value){
+        console.log('external id', ext_id_value, 'ext_id', ext_id)
         switch(ext_id.selected_option){
             case 0:
                 systemId = get_value(ext_id.selected_rule.rules[2])
+                systemId = systemId.substr(1, systemId.length - 2)
                 break
             case 1:
                 publicId = get_value(ext_id.selected_rule.rules[2])
                 systemId = get_value(ext_id.selected_rule.rules[4])
+                publicId = publicId.substr(1, publicId.length - 2)
+                systemId = systemId.substr(1, systemId.length - 2)
+                break
         }
     }
     return {publicId, systemId}
@@ -233,20 +238,47 @@ var handler = {
         var value = get_value(rule)
         var f = $B.$getattr(parser, "CharacterDataHandler", null)
         if(f !== null){
-            f(value)
+            $B.$call(f)(value)
         }
         return {value: get_value(rule)}
     },
+    Comment: function(parser, rule){
+        console.log('comment', rule)
+        var value = get_value(rule.rules[1])
+        var f = $B.$getattr(parser, "CommentHandler", null)
+        if(f !== null){
+            $B.$call(f)(value)
+        }
+        return {value}
+    },
     doctypedecl: function(parser, rule){
-        var ext_id = external_id(rule.rules[3])
+        console.log('doctype', rule, 'ext id', get_value(rule.rules[3]))
+        var systemId = _b_.None,
+            publicId = _b_.None
+        if(get_value(rule.rules[3])){
+            ext_id = external_id(rule.rules[3].rules[1])
+            console.log('ext_id 259', ext_id)
+            systemId = ext_id.systemId
+            publicId = ext_id.publicId
+            if(parser.standalone == 0){
+                var f = $B.$getattr(parser, "NotStandaloneHandler", null)
+                if(f !== null){
+                    $B.$call(f)()
+                }
+            }
+        }
         var name = get_value(rule.rules[2])
         var has_internal_subset = false
         if(rule.rules[5].rules[1]){
             has_internal_subset = get_value(rule.rules[5].rules[1]) != ''
         }
+        var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(name, systemId, publicId, has_internal_subset)
+        }
         return {name,
-                systemId: ext_id.systemId,
-                publicId: ext_id.publicId,
+                systemId,
+                publicId,
                 has_internal_subset
                }
     },
@@ -260,7 +292,7 @@ var handler = {
         var name = get_value(rule.rules[1])
         var f = $B.$getattr(parser, "EndElementHandler", null)
         if(f !== null){
-            f(name)
+            $B.$call(f)(name)
         }
         return {name: get_value(rule.rules[1])}
     },
@@ -318,6 +350,16 @@ var handler = {
             publicId: ext_id.publicId
         }
     },
+    PI: function(parser, rule){
+        console.log('PI', rule)
+        var name = get_value(rule.rules[1].rules[0]),
+            attrs = get_value(rule.rules[2]).trimLeft()
+        var f = $B.$getattr(parser, "ProcessingInstructionHandler", null)
+        if(f !== null){
+            $B.$call(f)(name, attrs)
+        }
+        return {name, attrs}
+    },
     STag: function(parser, rule){
         var name = get_value(rule.rules[1])
         var attrs = rule.result_store[2],
@@ -332,14 +374,14 @@ var handler = {
         }
         var f = $B.$getattr(parser, "StartElementHandler", null)
         if(f !== null){
-            f(name, attr_result)
+            $B.$call(f)(name, attr_result)
         }
         return {name, attr_result}
     },
     XMLDecl: function(parser, rule){
         // '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
         var encoding,
-            standalone
+            standalone = -1
         if(rule.result_store[2]){
             // S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
             encoding = get_value(rule.rules[2].rules[3].selected_rule.rules[1])
@@ -348,14 +390,26 @@ var handler = {
             // S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
             sddecl = rule.rules[3]
             standalone = get_value(sddecl.rules[3].selected_rule.rules[1])
+            standalone = standalone == 'yes' ? 1 : 0
         }
-        return {
-            version: get_value(rule.rules[1].rules[3].selected_rule.rules[1]),
-            encoding,
-            standalone
+        parser.standalone = standalone // used for NotStandaloneHandler
+        var attr_result = $B.empty_dict(),
+            attrs = {
+                version: get_value(rule.rules[1].rules[3].selected_rule.rules[1]),
+                encoding,
+                standalone
+            }
+        for(var attr in attrs){
+            _b_.dict.$setitem(attr_result, attr, attrs[attr])
         }
+        var f = $B.$getattr(parser, "XmlDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(attrs.version, attrs.encoding, attrs.standalone)
+        }
+        return {name, attr_result}
     }
 }
+
 
 function emit(rule){
     // called when a rule is done
@@ -363,7 +417,7 @@ function emit(rule){
     rname = rname.substr(0, rname.length - 5)
     if(handler[rname]){
         var parser = get_top(rule)
-        // console.log('emit', rname, handler[rname])
+        // console.log('emit', rname)
         handler[rname](parser, rule)
     }
 }

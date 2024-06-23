@@ -119,7 +119,8 @@ const handler_names = [
     'CharacterDataHandler',
     'CommentHandler',
     'StartElementHandler',
-    'EndElementHandler'
+    'EndElementHandler',
+    'XmlDeclHandler'
     ]
 
 xmlparser.Parse = function(){
@@ -214,7 +215,8 @@ xmlparser.ParseFile = function(){
     var reader = $B.$call($B.$getattr(file, 'read'))
     while(true){
         var data = reader(self._chunk_size)
-        if(data.length == 0){
+        console.log('ParseFile, data', data)
+        if(_b_.len(data) == 0){
             return xmlparser.Parse(self, data, true)
         }else{
             xmlparser.Parse(self, data, false)
