@@ -1,4 +1,20 @@
+import xml.parsers.expat
+
 from xml_grammar_parser import make_rules, Literal, Rule, Charset, End
+
+models = (
+    "XML_CTYPE_ANY",
+    "XML_CTYPE_CHOICE",
+    "XML_CTYPE_EMPTY",
+    "XML_CTYPE_MIXED",
+    "XML_CTYPE_NAME",
+    "XML_CTYPE_SEQ"
+)
+
+models_code = "var models = {\n"
+for model in models:
+    models_code += f"   {model}: {getattr(xml.parsers.expat.model, model)}," + "\n"
+models_code += "}\n"
 
 class ARGS(dict):
 
@@ -175,10 +191,12 @@ def generate_parser(rules, dest=None):
             write(f"}}")
             write('')
 
+        write(models_code)
         write("__BRYTHON__.addToImported('xml_parser', {")
-        write("    DOCUMENT: document_rule")
+        write("    DOCUMENT: document_rule,")
+        write("    models")
         write("})")
-    
+
 if __name__ == "__main__":
     grammar = """
     tag::= '<' NAME S* attr? '>'

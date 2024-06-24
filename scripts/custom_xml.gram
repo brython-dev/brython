@@ -62,7 +62,7 @@ Misc         ::=  Comment | PI | S
 
 Document Type Definition
 
-doctypedecl    ::=  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' intSubset ']' S?)? '>'
+doctypedecl    ::=  '<!DOCTYPE' S Name (S ExternalID)? S? ('[' start_intSubset  intSubset ']' S?)? '>'
 DeclSep        ::=  PEReference | S
 intSubset      ::=  (markupdecl | DeclSep)*
 markupdecl     ::=  elementdecl | AttlistDecl | EntityDecl | NotationDecl

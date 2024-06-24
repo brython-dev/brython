@@ -2,6 +2,9 @@
 
 $B.$import('xml_parser')
 
+var model = $B.imported.xml_parser.models
+console.log('model', model)
+
 var _b_ = $B.builtins
 
 const XML_PARAM_ENTITY_PARSING_NEVER = 0,
@@ -1577,8 +1580,7 @@ function is_char(char){
             (0x10000 <= cp && cp <= 0x10ffff)
 }
 
-var model = 'model',
-    errors = 'errors'
+var errors = 'errors'
 
 $B.addToImported('pyexpat',
     {

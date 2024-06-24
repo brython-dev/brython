@@ -186,6 +186,31 @@ function get_rank(rule){
     return parseInt(Object.keys(rule.result_store)[0])
 }
 
+function get_parent(rule, type){
+    var parent = rule.origin
+    while(parent){
+        if(parent instanceof type){
+            return parent
+        }
+        parent = parent.origin
+    }
+    return null
+}
+
+function get_doctype_info(rule){
+    console.log('get doctype info', rule)
+    var systemId = _b_.None,
+        publicId = _b_.None
+    if(get_value(rule.rules[3])){
+        ext_id = external_id(rule.rules[3].rules[1])
+        console.log('ext_id 259', ext_id)
+        systemId = ext_id.systemId
+        publicId = ext_id.publicId
+    }
+    var name = get_value(rule.rules[2])
+    return {name, systemId, publicId}
+}
+
 function external_id(ext_id){
     var ext_id_value = get_value(ext_id),
         systemId = _b_.None,
@@ -212,8 +237,8 @@ var handler = {
     AttDef: function(parser, rule){
         // S Name S AttType S DefaultDecl
         var defaultdecl = rule.rules[5],
-            def_value,
-            required
+            def_value = _b_.None,
+            required = _b_.None
         switch(defaultdecl.selected_option){
             case 0:
                 required = true
@@ -222,13 +247,18 @@ var handler = {
                 def_value = get_value(defaultdecl.rules[2].rules[1])
                 break
         }
-        return {
+        var res = {
             elname: get_value(rule.origin.rules[2]),
             attname: get_value(rule.rules[1]),
             type: get_value(rule.rules[3]),
             default: def_value,
             required
         }
+        var f = $B.$getattr(parser, "AttlistDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(res.elname, res.attname, res.type, res.default, res.required)
+        }
+        return res
     },
     CData: function(parser, rule){
         return {value: get_value(rule)}
@@ -252,40 +282,35 @@ var handler = {
     },
     doctypedecl: function(parser, rule){
         console.log('doctype', rule, 'ext id', get_value(rule.rules[3]))
-        var systemId = _b_.None,
-            publicId = _b_.None
-        if(get_value(rule.rules[3])){
-            ext_id = external_id(rule.rules[3].rules[1])
-            console.log('ext_id 259', ext_id)
-            systemId = ext_id.systemId
-            publicId = ext_id.publicId
-            if(parser.standalone == 0){
-                var f = $B.$getattr(parser, "NotStandaloneHandler", null)
-                if(f !== null){
-                    $B.$call(f)()
-                }
+        if(! rule.start_done){
+            // if doctype has no intSubset
+            var info = get_doctype_info(rule)
+            var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
+            if(f !== null){
+                $B.$call(f)(info.name, info.systemId, info.publicId, false)
             }
         }
-        var name = get_value(rule.rules[2])
-        var has_internal_subset = false
-        if(rule.rules[5].rules[1]){
-            has_internal_subset = get_value(rule.rules[5].rules[1]) != ''
-        }
-        var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
+        var f = $B.$getattr(parser, "EndDoctypeDeclHandler", null)
         if(f !== null){
-            $B.$call(f)(name, systemId, publicId, has_internal_subset)
+            $B.$call(f)()
         }
-        return {name,
-                systemId,
-                publicId,
-                has_internal_subset
-               }
+
     },
     elementdecl: function(parser, rule){
-        return {
-            name: get_value(rule.rules[2]),
-            model: get_value(rule.rules[4])
+        console.log('element decl', rule)
+        var name = get_value(rule.rules[2]),
+            model = get_value(rule.rules[4])
+        switch(model){
+            case 'ANY':
+                model = $B.fast_tuple([models.XML_CTYPE_ANY, 0, _b_.None, $B.fast_tuple([])])
+                break
         }
+        var f = $B.$getattr(parser, "ElementDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(name, model)
+        }
+
+        return {name, model}
     },
     ETag: function(parser, rule){
         var name = get_value(rule.rules[1])
@@ -294,6 +319,17 @@ var handler = {
             $B.$call(f)(name)
         }
         return {name: get_value(rule.rules[1])}
+    },
+    ExternalID: function(parser, rule){
+        if(! parser.sentNotStandalone){
+            parser.sentNotStandalone = true
+            if(parser.standalone == 0){
+                var f = $B.$getattr(parser, "NotStandaloneHandler", null)
+                if(f !== null){
+                    $B.$call(f)()
+                }
+            }
+        }
     },
     GEDecl: function(parser, rule){
         // '<!ENTITY' S Name S EntityDef S? '>'
@@ -326,6 +362,18 @@ var handler = {
             publicId,
             notationName
         }
+    },
+    start_intSubset: function(parser, rule){
+        // Found when starting an internal subset inside a doctype declaration
+        // Used to call StartDoctypeHandler with has_internal_subset set
+        var doctype_decl = get_parent(rule, doctypedecl_rule),
+            info = get_doctype_info(doctype_decl)
+        doctype_decl.start_done = true
+        var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(info.name, info.systemId, info.publicId, true)
+        }
+
     },
     NotationDecl: function(parser, rule){
         // '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
@@ -690,6 +738,22 @@ NUMBER_rule.prototype.feed = function(char){
     return this.origin.feed(char)
   }
   return this
+}
+
+function start_intSubset_rule(origin){
+  this.origin = origin
+  this.pos = get_pos(this)
+  this.rank = this.origin.expect
+  this.value = ''
+}
+
+start_intSubset_rule.prototype.feed = function(char){
+    // always succeeds
+    return this.origin.feed(DONE)
+}
+
+start_intSubset_rule.prototype.reset = function(){
+    // ignore
 }
 
 function S_rule(origin){
