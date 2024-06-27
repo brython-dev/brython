@@ -30,7 +30,7 @@ for line in lines:
         filtered.append(line)
 
 norm_grammar = '\n'.join(filtered)
-
+ 
 rules = make_rules(norm_grammar)
 dest = make_dist.abs_path('libs/xml_parser.js')
 generate_parser(rules, dest)

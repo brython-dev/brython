@@ -168,7 +168,10 @@ function get_value(rule){
     var res = ''
     if(rule.value){
         return rule.value
-    }else if(rule.alt){
+    }else if(rule.alt && rule.selected_rule){
+        if(false){ //get_parent(rule, tmp_7_rule)){
+            console.log('get_value, selected rule', rule.selected_rule)
+        }
         return get_value(rule.selected_rule)
     }else{
         for(var rank in rule.result_store){
@@ -217,7 +220,6 @@ function external_id(ext_id){
         systemId = _b_.None,
         publicId = _b_.None
     if(ext_id_value){
-        console.log('external id', ext_id_value, 'ext_id', ext_id)
         switch(ext_id.selected_option){
             case 0:
                 systemId = get_value(ext_id.selected_rule.rules[2])
@@ -234,12 +236,21 @@ function external_id(ext_id){
     return {publicId, systemId}
 }
 
+function fromCharRef(v){
+    if(v.startsWith('&#x')){
+        v = String.fromCodePoint(parseInt(v.substr(3)))
+    }else if(v.startsWith('&#')){
+        v = String.fromCodePoint(parseInt(v.substr(2)))
+    }
+    return v
+}
+
 var handler = {
     AttDef: function(parser, rule){
         // S Name S AttType S DefaultDecl
         var defaultdecl = rule.rules[5],
             def_value = _b_.None,
-            required = _b_.None
+            required = 0
         switch(defaultdecl.selected_option){
             case 0:
                 required = true
@@ -291,6 +302,12 @@ var handler = {
                 $B.$call(f)(info.name, info.systemId, info.publicId, false)
             }
         }
+        if(rule.hasExternal && parser.standalone == 0){
+            var f = $B.$getattr(parser, "NotStandaloneHandler", null)
+            if(f !== null){
+                $B.$call(f)()
+            }
+        }
         var f = $B.$getattr(parser, "EndDoctypeDeclHandler", null)
         if(f !== null){
             $B.$call(f)()
@@ -322,29 +339,30 @@ var handler = {
         return {name: get_value(rule.rules[1])}
     },
     ExternalID: function(parser, rule){
-        if(! parser.sentNotStandalone){
-            parser.sentNotStandalone = true
-            if(parser.standalone == 0){
-                var f = $B.$getattr(parser, "NotStandaloneHandler", null)
-                if(f !== null){
-                    $B.$call(f)()
-                }
-            }
-        }
+        var doctype = get_parent(rule, doctypedecl_rule)
+        doctype.hasExternal = true
     },
     GEDecl: function(parser, rule){
         // '<!ENTITY' S Name S EntityDef S? '>'
         var entitydef = rule.rules[4],
-            value,
-            systemId,
-            publicId,
-            notationName
+            value = _b_.None,
+            base = _b_.None,
+            systemId = _b_.None,
+            publicId = _b_.None,
+            notationName = _b_.None
         // EntityValue | (ExternalID NDataDecl?)
         switch(entitydef.selected_option){
             case 0:
                 // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
                 //  |  "'" ([^%&'] | PEReference | Reference)* "'"
-                value = get_value(entitydef.selected_rule.selected_rule.result_store[1])
+                var entity_value = entitydef.selected_rule.selected_rule
+                console.log('entity value', entity_value)
+                var value = ''
+                for(var item of entity_value.result_store[1]){
+                    var v = get_value(entity_value.result_store[1][0])
+                    value += fromCharRef(v)
+                }
+                console.log('value', v)
                 break
             case 1:
                 var ext_id = external_id(entitydef.selected_rule.rules[0])
@@ -355,21 +373,46 @@ var handler = {
                     notationName = get_value(entitydef.selected_rule.rules[1].rules[3])
                 }
         }
-        return {
+        // EntityDeclHandler(entityName, is_parameter_entity, value, base, systemId, publicId, notationName)
+        var res = {
             name: get_value(rule.rules[2]),
-            is_parameter_entity: false,
+            is_parameter_entity: 0,
             value,
             systemId,
             publicId,
             notationName
         }
+        var unparsed_handled
+        if(res.name == "unparsed_entity"){
+            var f = $B.$getattr(parser, "UnparsedEntityDeclHandler", null)
+            if(f !== null){
+                unparsed_handled = true
+                $B.$call(f)(res.name, base,
+                            res.systemId, res.publicId, res.notationName)
+            }
+        }
+        if(! unparsed_handled){
+            var f = $B.$getattr(parser, "EntityDeclHandler", null)
+            if(f !== null){
+                $B.$call(f)(res.name, res.is_parameter_entity, res.value, base,
+                            res.systemId, res.publicId, res.notationName)
+            }
+        }
+        return res
     },
     start_intSubset: function(parser, rule){
         // Found when starting an internal subset inside a doctype declaration
         // Used to call StartDoctypeHandler with has_internal_subset set
         var doctype_decl = get_parent(rule, doctypedecl_rule),
             info = get_doctype_info(doctype_decl)
+        if(doctype_decl.hasExternal && ! parser.standalone){
+            var f = $B.$getattr(parser, "NotStandaloneHandler", null)
+            if(f !== null){
+                $B.$call(f)()
+            }
+        }
         doctype_decl.start_done = true
+        delete doctype_decl.sentNotStandalone
         var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
         if(f !== null){
             $B.$call(f)(info.name, info.systemId, info.publicId, true)
@@ -378,8 +421,9 @@ var handler = {
     },
     NotationDecl: function(parser, rule){
         // '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
-        var systemId,
-            publicId,
+        var base = _b_.None,
+            systemId = _b_.None,
+            publicId = _b_.None,
             ext_or_public = rule.rules[4]
 
         switch(ext_or_public.selected_option){
@@ -392,11 +436,18 @@ var handler = {
                 publicId = get_value(ext_or_public.selected_rule.rules[2])
                 break
         }
-        return {
+        var res = {
             name: get_value(rule.rules[2]),
-            systemId: ext_id.systemId,
-            publicId: ext_id.publicId
+            base,
+            systemId,
+            publicId
         }
+        var f = $B.$getattr(parser, "NotationDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(res.name, res.base, res.systemId, res.publicId)
+        }
+
+        return res
     },
     PI: function(parser, rule){
         console.log('PI', rule)
@@ -414,9 +465,13 @@ var handler = {
             attr_result = $B.empty_dict()
         if(attrs){
             for(var attr of attrs){
-                var attr_value_rule = attr.result_store[1].result_store[2].selected_rule.result_store[1][0]
-                var attr_name = get_value(attr.result_store[1].result_store[0]),
-                    attr_value = get_value(attr_value_rule)
+                var attr_value_store = attr.result_store[1].result_store[2].selected_rule.result_store[1],
+                    attr_value = ''
+                for(var item of attr_value_store){
+                    var v = get_value(item)
+                    attr_value += fromCharRef(v)
+                }
+                var attr_name = get_value(attr.result_store[1].result_store[0])
                 _b_.dict.$setitem(attr_result, attr_name, attr_value)
             }
         }
@@ -533,6 +588,10 @@ function handle_star(element, rank, next_if_ok, rule, char){
     }else if(char === DONE){
         if(test){
             console.log(rule, 'DONE')
+        }
+        if(rule.alt){
+            element.selected_option = element.expect
+            element.selected_rule = rule
         }
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(rule)
