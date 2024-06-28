@@ -273,9 +273,23 @@ var handler = {
         return res
     },
     CData: function(parser, rule){
+        var f = $B.$getattr(parser, "StartCdataSectionHandler", null)
+        if(f !== null){
+            $B.$call(f)()
+        }
+        var chardata = get_value(rule)
+        var f = $B.$getattr(parser, "CharacterDataHandler", null)
+        if(f !== null){
+            $B.$call(f)(chardata)
+        }
+        var f = $B.$getattr(parser, "EndCdataSectionHandler", null)
+        if(f !== null){
+            $B.$call(f)()
+        }
         return {value: get_value(rule)}
     },
     CharData: function(parser, rule){
+        console.log('chardata', rule)
         var value = get_value(rule)
         var f = $B.$getattr(parser, "CharacterDataHandler", null)
         if(f !== null){
@@ -331,10 +345,22 @@ var handler = {
         return {name, model}
     },
     ETag: function(parser, rule){
-        var name = get_value(rule.rules[1])
+        var name = get_value(rule.rules[1]),
+            is_ns_decl
+        if(parser.namespaces && parser.namespaces.hasOwnProperty(name)){
+            var ns_name = name.split(':')[0]
+            is_ns_decl = true
+            name = parser.namespaces[name]
+        }
         var f = $B.$getattr(parser, "EndElementHandler", null)
         if(f !== null){
             $B.$call(f)(name)
+        }
+        if(is_ns_decl){
+            var f = $B.$getattr(parser, "EndNamespaceDeclHandler", null)
+            if(f !== null){
+                $B.$call(f)(ns_name)
+            }
         }
         return {name: get_value(rule.rules[1])}
     },
@@ -472,7 +498,20 @@ var handler = {
                     attr_value += fromCharRef(v)
                 }
                 var attr_name = get_value(attr.result_store[1].result_store[0])
-                _b_.dict.$setitem(attr_result, attr_name, attr_value)
+                if(attr_name.startsWith('xmlns:')){
+                    var prefix = attr_name.substr(6),
+                        uri = attr_value
+                    var name1 = uri + '!' + name.split(':')[1]
+                    parser.namespaces = parser.namespaces ?? {}
+                    parser.namespaces[name] = name1
+                    name = name1
+                    var f = $B.$getattr(parser, "StartNamespaceDeclHandler", null)
+                    if(f !== null){
+                        $B.$call(f)(prefix, uri)
+                    }
+                }else{
+                    _b_.dict.$setitem(attr_result, attr_name, attr_value)
+                }
             }
         }
         var f = $B.$getattr(parser, "StartElementHandler", null)
