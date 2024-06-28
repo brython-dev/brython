@@ -767,9 +767,6 @@ function run_scripts(_scripts){
                 src = src.substr(0, src.length - 1)
             }
             // store source code
-            $B.file_cache[filename] = src
-            $B.url2name[filename] = module_name
-            $B.scripts[filename] = script
             $B.tasks.push([$B.run_script, script, src, module_name,
                            $B.script_path, true])
         }
@@ -780,7 +777,7 @@ function run_scripts(_scripts){
 $B.run_script = function(script, src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
-    var filename = $B.script_filename = $B.strip_host(url)
+    var filename = $B.script_filename = $B.strip_host(url + '#' + name)
 
     // set script dir
     var script_elts = url.split('/')

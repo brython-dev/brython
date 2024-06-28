@@ -1034,9 +1034,13 @@ function trace_from_stack(err){
                 trace.push('    ' + line.trim())
             }else{
                 console.log('no line', line)
+                console.log('lineno', lineno)
+                console.log('filename', filename)
+                //console.log('src', src)
+                //console.log('stack', stack)
             }
             // preliminary for PEP 657
-            if(err.$positions !== undefined){
+            if(err.$positions !== undefined && line){
                 var position = err.$positions[frame_num],
                     trace_line = ''
                 if(position && (

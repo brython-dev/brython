@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-06-28 15:48:12.098561"
-__BRYTHON__.timestamp=1719582492098
+__BRYTHON__.compiled_date="2024-06-28 22:44:53.820938"
+__BRYTHON__.timestamp=1719607493820
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -947,13 +947,10 @@ src=(script.innerHTML ||script.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
 if(src.endsWith('\n')){src=src.substr(0,src.length-1)}
-$B.file_cache[filename]=src
-$B.url2name[filename]=module_name
-$B.scripts[filename]=script
 $B.tasks.push([$B.run_script,script,src,module_name,$B.script_path,true])}}
 $B.loop()}
 $B.run_script=function(script,src,name,url,run_loop){
-var filename=$B.script_filename=$B.strip_host(url)
+var filename=$B.script_filename=$B.strip_host(url+'#'+name)
 var script_elts=url.split('/')
 script_elts.pop()
 $B.script_dir=script_elts.join('/')
@@ -4505,8 +4502,10 @@ var src=$B.file_cache[filename]
 trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
-if(line){trace.push('    '+line.trim())}else{console.log('no line',line)}
-if(err.$positions !==undefined){var position=err.$positions[frame_num],trace_line=''
+if(line){trace.push('    '+line.trim())}else{console.log('no line',line)
+console.log('lineno',lineno)
+console.log('filename',filename)}
+if(err.$positions !==undefined && line){var position=err.$positions[frame_num],trace_line=''
 if(position &&(
 (position[1]!=position[0]||
 (position[2]-position[1])!=line.trim().length ||
