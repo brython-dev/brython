@@ -1494,7 +1494,9 @@ $B.$isinstance = function(obj, cls){
         }
     }
 
-    if(cls === _b_.int && (obj === True || obj === False)){return True}
+    if(cls === _b_.int && (obj === True || obj === False)){
+        return true
+    }
 
     if(cls === _b_.bool){
         switch(typeof obj){
@@ -1510,16 +1512,21 @@ $B.$isinstance = function(obj, cls){
 
     if(klass == undefined){
         if(typeof obj == 'string'){
-            if(cls == _b_.str){return true}
-            else if($B.builtin_classes.indexOf(cls) > -1){
+            if(cls == _b_.str){
+                return true
+            }else if($B.builtin_classes.includes(cls)){
                 return false
             }
         }else if(typeof obj == 'number' && Number.isFinite(obj)){
-            if(Number.isFinite(obj) && cls == _b_.int){return true}
+            if(Number.isFinite(obj) && cls == _b_.int){
+                return true
+            }
         }
         klass = $B.get_class(obj)
     }
-    if(klass === undefined){return false}
+    if(klass === undefined){
+        return false
+    }
 
     if(klass ===  cls){
         return true

@@ -821,4 +821,8 @@ d = pow(e, -1, (p-1) * (q-1))
 
 assert d == 21203499539617337777
 
+# issue 2465
+assert type(2 ** 53) == int
+
+
 print('passed all tests...')

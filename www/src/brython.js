@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,3,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-06-28 22:44:53.820938"
-__BRYTHON__.timestamp=1719607493820
+__BRYTHON__.compiled_date="2024-06-29 07:58:02.572698"
+__BRYTHON__.timestamp=1719640682572
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2163,7 +2163,9 @@ var kwarg={}
 for(var item of _b_.dict.$iter_items(kw)){kwarg[item.key]=item.value}
 var kwargs={$kw:[kwarg]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
-return $B.get_class(kls)}else{var module=$B.frame_obj.frame[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
+var res=$B.get_class(kls)
+if(res===$B.long_int){return _b_.int}
+return res}else{var module=$B.frame_obj.frame[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
 return type.__call__(metaclass,kls,resolved_bases,cl_dict,kwargs)}}
 )
 type.__class__=type
@@ -3120,7 +3122,7 @@ throw _b_.TypeError.$factory(
 'isinstance() arg 2 cannot be a parameterized generic')}
 if((!cls.__class__)&&(! cls.$is_class)){if(! $B.$getattr(cls,'__instancecheck__',false)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
 "or tuple of types")}}
-if(cls===_b_.int &&(obj===True ||obj===False)){return True}
+if(cls===_b_.int &&(obj===True ||obj===False)){return true}
 if(cls===_b_.bool){switch(typeof obj){case "string":
 return false
 case "number":
@@ -3128,8 +3130,7 @@ return false
 case "boolean":
 return true}}
 var klass=obj.__class__
-if(klass==undefined){if(typeof obj=='string'){if(cls==_b_.str){return true}
-else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}}
+if(klass==undefined){if(typeof obj=='string'){if(cls==_b_.str){return true}else if($B.builtin_classes.includes(cls)){return false}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}}
 klass=$B.get_class(obj)}
 if(klass===undefined){return false}
 if(klass===cls){return true}
