@@ -624,6 +624,7 @@
         function(out){
             return {
                 __class__: $io,
+                __dict__: $B.empty_dict(),
                 out,
                 encoding: 'utf-8'
             }
