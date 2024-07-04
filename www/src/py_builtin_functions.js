@@ -249,6 +249,10 @@ code.__repr__ = code.__str__ = function(_self){
 }
 
 code.__getattribute__ = function(self, attr){
+    if(attr == 'co_positions'){
+        // fake value
+        return () => [[0, 0, 0, 0]]
+    }
     return self[attr]
 }
 
@@ -3318,7 +3322,8 @@ $B.make_function_infos = function(f, __module__, __defaults__,
     co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
-        co_posonlyargcount, co_qualname, co_varnames}
+        co_posonlyargcount, co_qualname, co_varnames,
+        co_positions: {}}
 }
 
 $B.make_args_parser = function(f){

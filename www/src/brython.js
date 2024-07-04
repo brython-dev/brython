@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-04 08:12:47.380542"
-__BRYTHON__.timestamp=1720073567380
+__BRYTHON__.compiled_date="2024-07-04 09:39:49.791767"
+__BRYTHON__.timestamp=1720078789791
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2142,7 +2142,6 @@ set_attr_if_absent(class_dict,'__module__',module)
 set_attr_if_absent(class_dict,'__qualname__',qualname)}}
 if(class_dict.__class__===_b_.dict){if(class_dict.$all_str){return class_dict.$strings}
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return _b_.dict}else if(prop=='$target'){return target}
-console.log('get attr',prop,'of',target)
 if(_b_.dict.$contains_string(target,prop)){return _b_.dict.$getitem_string(target,prop)}
 return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}})}else{var setitem=$B.$getattr(class_dict,"__setitem__"),getitem=$B.$getattr(class_dict,"__getitem__")
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return $B.get_class(target)}else if(prop=='$target'){return target}
@@ -2697,7 +2696,9 @@ return $B.make_String(s,[0])}else{return String.fromCodePoint(i)}}
 var code=_b_.code=$B.make_class("code")
 code.__repr__=code.__str__=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
 `line ${_self.co_firstlineno || 1}>`}
-code.__getattribute__=function(self,attr){return self[attr]}
+code.__getattribute__=function(self,attr){if(attr=='co_positions'){
+return()=>[[0,0,0,0]]}
+return self[attr]}
 $B.set_func_names(code,"builtins")
 _b_.compile=function(){var $=$B.args('compile',7,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
@@ -3012,8 +3013,7 @@ var attr_func
 if(is_class){if($test){console.log('obj is class',obj)
 console.log('is a type ?',_b_.isinstance(klass,_b_.type))
 console.log('is type',klass===_b_.type)}
-if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else if(klass.__class__===klass && klass.__name__=='type'){
-attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}
+if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}
 if($test){console.log('attr func',attr_func)}}else{attr_func=klass.__getattribute__
 if(attr_func===undefined){for(var cls of klass.__mro__){attr_func=cls['__getattribute__']
 if(attr_func !==undefined){break}}}
@@ -3732,7 +3732,7 @@ f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
 co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
-f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames}}
+f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
 $B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
 var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
@@ -4171,7 +4171,8 @@ while(frame_obj !==null){if(frame_obj.frame===_self){break}
 frame_obj=frame_obj.prev}
 if(frame_obj.prev !==null){return frame.$factory(frame_obj.prev.frame)}
 return _b_.None}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){if(_self.$f_trace===undefined){return _b_.None}
-return _self.$f_trace}
+return _self.$f_trace}else if(attr=="f_lasti"){
+return 0}
 throw $B.attr_error(attr,_self)}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
 _self.$f_trace=value}}
@@ -11030,8 +11031,7 @@ if(typeof msg !="string"){throw _b_.TypeError.$factory("write() argument must be
 $B.class_name(msg))}
 self.buf.push(msg)
 return _b_.None}
-modules['_sys']={
-_getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth,frame_obj=$B.frame_obj
+modules['_sys']={_getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth,frame_obj=$B.frame_obj
 for(var i=0;i < depth;i++){frame_obj=frame_obj.prev}
 var res=frame_obj.frame
 res.$pos=$B.count_frames()-depth-1

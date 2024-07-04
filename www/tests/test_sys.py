@@ -185,5 +185,12 @@ sys.stderr = save_stderr
 # issue 2398
 sys.version_info[:2]
 
+# issue 2468
+import inspect
+
+def test():
+    print(inspect.getframeinfo(sys._getframe(1)))
+
+test()
 
 print('all tests ok...')

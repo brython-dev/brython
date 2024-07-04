@@ -225,8 +225,10 @@ frame.__getattr__ = function(_self, attr){
             return _b_.None
         }
         return _self.$f_trace
+    }else if(attr == "f_lasti"){
+        // last instruction not relevant in Brython
+        return 0
     }
-
     //console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
