@@ -1433,6 +1433,8 @@ $B.$call = function(callable, position){
 $B.$call1 = function(callable){
     if(callable.__class__ === $B.method){
         return callable
+    }else if(callable.__class__ === _b_.staticmethod){
+        return callable.__func__
     }else if(callable.$factory){
         return callable.$factory
     }else if(callable.$is_class){
