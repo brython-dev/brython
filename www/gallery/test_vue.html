@@ -142,7 +142,7 @@ app7 = Vue.new({
 })
 
 def created():
-    this().todos.push({"id":1, "text": "ADDED"})
+    this().todos.append({"id":1, "text": "ADDED"})
 
 Vue.new({
     "created": created,
@@ -156,7 +156,7 @@ _id = 1
 def add_item(*args):
     global _id
     _id += 1
-    this().todos.push({"id": _id, "text": "ADDED"})
+    this().todos.append({"id": _id, "text": "ADDED"})
 
 Vue.new({
     "methods": {
