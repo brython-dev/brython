@@ -293,7 +293,11 @@ var type = $B.make_class("type",
             if(bases !== missing){
                 throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
             }
-            return $B.get_class(kls)
+            var res = $B.get_class(kls)
+            if(res === $B.long_int){
+                return _b_.int
+            }
+            return res
         }else{
             var module = $B.frame_obj.frame[2],
                 resolved_bases = $B.resolve_mro_entries(bases),

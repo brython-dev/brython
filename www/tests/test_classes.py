@@ -1134,5 +1134,13 @@ assert_raises(TypeError, hash, c,
 s = set()
 assert_raises(TypeError, exec, "c in s", globals(),
     msg='__hash__ method should return an integer')
-    
+
+# issue 2467
+class MyClass(object):
+    @staticmethod
+    def __call__(arg):
+        return arg
+
+assert MyClass.__call__(42) == 42
+
 print('passed all tests..')

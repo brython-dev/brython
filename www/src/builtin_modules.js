@@ -624,6 +624,7 @@
         function(out){
             return {
                 __class__: $io,
+                __dict__: $B.empty_dict(),
                 out,
                 encoding: 'utf-8'
             }
@@ -658,8 +659,6 @@
     // see https://github.com/brython-dev/brython/issues/189
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     modules['_sys'] = {
-        // Called "Getframe" because "_getframe" wouldn't be imported in
-        // sys.py with "from _sys import *"
         _getframe : function(){
             var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
                     arguments, {depth: 0}, null, null),

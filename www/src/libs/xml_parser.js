@@ -168,7 +168,10 @@ function get_value(rule){
     var res = ''
     if(rule.value){
         return rule.value
-    }else if(rule.alt){
+    }else if(rule.alt && rule.selected_rule){
+        if(false){ //get_parent(rule, tmp_7_rule)){
+            console.log('get_value, selected rule', rule.selected_rule)
+        }
         return get_value(rule.selected_rule)
     }else{
         for(var rank in rule.result_store){
@@ -187,29 +190,67 @@ function get_rank(rule){
     return parseInt(Object.keys(rule.result_store)[0])
 }
 
+function get_parent(rule, type){
+    var parent = rule.origin
+    while(parent){
+        if(parent instanceof type){
+            return parent
+        }
+        parent = parent.origin
+    }
+    return null
+}
+
+function get_doctype_info(rule){
+    console.log('get doctype info', rule)
+    var systemId = _b_.None,
+        publicId = _b_.None
+    if(get_value(rule.rules[3])){
+        ext_id = external_id(rule.rules[3].rules[1])
+        console.log('ext_id 259', ext_id)
+        systemId = ext_id.systemId
+        publicId = ext_id.publicId
+    }
+    var name = get_value(rule.rules[2])
+    return {name, systemId, publicId}
+}
+
 function external_id(ext_id){
     var ext_id_value = get_value(ext_id),
-        systemId,
-        publicId
+        systemId = _b_.None,
+        publicId = _b_.None
     if(ext_id_value){
         switch(ext_id.selected_option){
             case 0:
                 systemId = get_value(ext_id.selected_rule.rules[2])
+                systemId = systemId.substr(1, systemId.length - 2)
                 break
             case 1:
                 publicId = get_value(ext_id.selected_rule.rules[2])
                 systemId = get_value(ext_id.selected_rule.rules[4])
+                publicId = publicId.substr(1, publicId.length - 2)
+                systemId = systemId.substr(1, systemId.length - 2)
+                break
         }
     }
     return {publicId, systemId}
+}
+
+function fromCharRef(v){
+    if(v.startsWith('&#x')){
+        v = String.fromCodePoint(parseInt(v.substr(3)))
+    }else if(v.startsWith('&#')){
+        v = String.fromCodePoint(parseInt(v.substr(2)))
+    }
+    return v
 }
 
 var handler = {
     AttDef: function(parser, rule){
         // S Name S AttType S DefaultDecl
         var defaultdecl = rule.rules[5],
-            def_value,
-            required
+            def_value = _b_.None,
+            required = 0
         switch(defaultdecl.selected_option){
             case 0:
                 required = true
@@ -218,63 +259,136 @@ var handler = {
                 def_value = get_value(defaultdecl.rules[2].rules[1])
                 break
         }
-        return {
+        var res = {
             elname: get_value(rule.origin.rules[2]),
             attname: get_value(rule.rules[1]),
             type: get_value(rule.rules[3]),
             default: def_value,
             required
         }
+        var f = $B.$getattr(parser, "AttlistDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(res.elname, res.attname, res.type, res.default, res.required)
+        }
+        return res
     },
     CData: function(parser, rule){
+        var f = $B.$getattr(parser, "StartCdataSectionHandler", null)
+        if(f !== null){
+            $B.$call(f)()
+        }
+        var chardata = get_value(rule)
+        var f = $B.$getattr(parser, "CharacterDataHandler", null)
+        if(f !== null){
+            $B.$call(f)(chardata)
+        }
+        var f = $B.$getattr(parser, "EndCdataSectionHandler", null)
+        if(f !== null){
+            $B.$call(f)()
+        }
         return {value: get_value(rule)}
     },
     CharData: function(parser, rule){
+        console.log('chardata', rule)
         var value = get_value(rule)
-        if(parser.CharacterDataHandler){
-            parser.CharacterDataHandler(value)
+        var f = $B.$getattr(parser, "CharacterDataHandler", null)
+        if(f !== null){
+            $B.$call(f)(value)
         }
         return {value: get_value(rule)}
     },
-    doctypedecl: function(parser, rule){
-        var ext_id = external_id(rule.rules[3])
-        var name = get_value(rule.rules[2])
-        var has_internal_subset = false
-        if(rule.rules[5].rules[1]){
-            has_internal_subset = get_value(rule.rules[5].rules[1]) != ''
+    Comment: function(parser, rule){
+        console.log('comment', rule)
+        var value = get_value(rule.rules[1])
+        var f = $B.$getattr(parser, "CommentHandler", null)
+        if(f !== null){
+            $B.$call(f)(value)
         }
-        return {name,
-                systemId: ext_id.systemId,
-                publicId: ext_id.publicId,
-                has_internal_subset
-               }
+        return {value}
+    },
+    doctypedecl: function(parser, rule){
+        console.log('doctype', rule, 'ext id', get_value(rule.rules[3]))
+        if(! rule.start_done){
+            // if doctype has no intSubset
+            var info = get_doctype_info(rule)
+            var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
+            if(f !== null){
+                $B.$call(f)(info.name, info.systemId, info.publicId, false)
+            }
+        }
+        if(rule.hasExternal && parser.standalone == 0){
+            var f = $B.$getattr(parser, "NotStandaloneHandler", null)
+            if(f !== null){
+                $B.$call(f)()
+            }
+        }
+        var f = $B.$getattr(parser, "EndDoctypeDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)()
+        }
+
     },
     elementdecl: function(parser, rule){
-        return {
-            name: get_value(rule.rules[2]),
-            model: get_value(rule.rules[4])
+        console.log('element decl', rule)
+        var name = get_value(rule.rules[2]),
+            model = get_value(rule.rules[4])
+        switch(model){
+            case 'ANY':
+                model = $B.fast_tuple([models.XML_CTYPE_ANY, 0, _b_.None, $B.fast_tuple([])])
+                break
         }
+        var f = $B.$getattr(parser, "ElementDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(name, model)
+        }
+
+        return {name, model}
     },
     ETag: function(parser, rule){
-        var name = get_value(rule.rules[1])
-        if(parser.EndElementHandler){
-            parser.EndElementHandler(name)
+        var name = get_value(rule.rules[1]),
+            is_ns_decl
+        if(parser.namespaces && parser.namespaces.hasOwnProperty(name)){
+            var ns_name = name.split(':')[0]
+            is_ns_decl = true
+            name = parser.namespaces[name]
+        }
+        var f = $B.$getattr(parser, "EndElementHandler", null)
+        if(f !== null){
+            $B.$call(f)(name)
+        }
+        if(is_ns_decl){
+            var f = $B.$getattr(parser, "EndNamespaceDeclHandler", null)
+            if(f !== null){
+                $B.$call(f)(ns_name)
+            }
         }
         return {name: get_value(rule.rules[1])}
+    },
+    ExternalID: function(parser, rule){
+        var doctype = get_parent(rule, doctypedecl_rule)
+        doctype.hasExternal = true
     },
     GEDecl: function(parser, rule){
         // '<!ENTITY' S Name S EntityDef S? '>'
         var entitydef = rule.rules[4],
-            value,
-            systemId,
-            publicId,
-            notationName
+            value = _b_.None,
+            base = _b_.None,
+            systemId = _b_.None,
+            publicId = _b_.None,
+            notationName = _b_.None
         // EntityValue | (ExternalID NDataDecl?)
         switch(entitydef.selected_option){
             case 0:
                 // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
                 //  |  "'" ([^%&'] | PEReference | Reference)* "'"
-                value = get_value(entitydef.selected_rule.selected_rule.result_store[1])
+                var entity_value = entitydef.selected_rule.selected_rule
+                console.log('entity value', entity_value)
+                var value = ''
+                for(var item of entity_value.result_store[1]){
+                    var v = get_value(entity_value.result_store[1][0])
+                    value += fromCharRef(v)
+                }
+                console.log('value', v)
                 break
             case 1:
                 var ext_id = external_id(entitydef.selected_rule.rules[0])
@@ -285,19 +399,57 @@ var handler = {
                     notationName = get_value(entitydef.selected_rule.rules[1].rules[3])
                 }
         }
-        return {
+        // EntityDeclHandler(entityName, is_parameter_entity, value, base, systemId, publicId, notationName)
+        var res = {
             name: get_value(rule.rules[2]),
-            is_parameter_entity: false,
+            is_parameter_entity: 0,
             value,
             systemId,
             publicId,
             notationName
         }
+        var unparsed_handled
+        if(res.name == "unparsed_entity"){
+            var f = $B.$getattr(parser, "UnparsedEntityDeclHandler", null)
+            if(f !== null){
+                unparsed_handled = true
+                $B.$call(f)(res.name, base,
+                            res.systemId, res.publicId, res.notationName)
+            }
+        }
+        if(! unparsed_handled){
+            var f = $B.$getattr(parser, "EntityDeclHandler", null)
+            if(f !== null){
+                $B.$call(f)(res.name, res.is_parameter_entity, res.value, base,
+                            res.systemId, res.publicId, res.notationName)
+            }
+        }
+        return res
+    },
+    start_intSubset: function(parser, rule){
+        // Found when starting an internal subset inside a doctype declaration
+        // Used to call StartDoctypeHandler with has_internal_subset set
+        var doctype_decl = get_parent(rule, doctypedecl_rule),
+            info = get_doctype_info(doctype_decl)
+        if(doctype_decl.hasExternal && ! parser.standalone){
+            var f = $B.$getattr(parser, "NotStandaloneHandler", null)
+            if(f !== null){
+                $B.$call(f)()
+            }
+        }
+        doctype_decl.start_done = true
+        delete doctype_decl.sentNotStandalone
+        var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(info.name, info.systemId, info.publicId, true)
+        }
+
     },
     NotationDecl: function(parser, rule){
         // '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
-        var systemId,
-            publicId,
+        var base = _b_.None,
+            systemId = _b_.None,
+            publicId = _b_.None,
             ext_or_public = rule.rules[4]
 
         switch(ext_or_public.selected_option){
@@ -310,11 +462,28 @@ var handler = {
                 publicId = get_value(ext_or_public.selected_rule.rules[2])
                 break
         }
-        return {
+        var res = {
             name: get_value(rule.rules[2]),
-            systemId: ext_id.systemId,
-            publicId: ext_id.publicId
+            base,
+            systemId,
+            publicId
         }
+        var f = $B.$getattr(parser, "NotationDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(res.name, res.base, res.systemId, res.publicId)
+        }
+
+        return res
+    },
+    PI: function(parser, rule){
+        console.log('PI', rule)
+        var name = get_value(rule.rules[1].rules[0]),
+            attrs = get_value(rule.rules[2]).trimLeft()
+        var f = $B.$getattr(parser, "ProcessingInstructionHandler", null)
+        if(f !== null){
+            $B.$call(f)(name, attrs)
+        }
+        return {name, attrs}
     },
     STag: function(parser, rule){
         var name = get_value(rule.rules[1])
@@ -322,21 +491,39 @@ var handler = {
             attr_result = $B.empty_dict()
         if(attrs){
             for(var attr of attrs){
-                var attr_value_rule = attr.result_store[1].result_store[2].selected_rule.result_store[1][0]
-                var attr_name = get_value(attr.result_store[1].result_store[0]),
-                    attr_value = get_value(attr_value_rule)
-                _b_.dict.$setitem(attr_result, attr_name, attr_value)
+                var attr_value_store = attr.result_store[1].result_store[2].selected_rule.result_store[1],
+                    attr_value = ''
+                for(var item of attr_value_store){
+                    var v = get_value(item)
+                    attr_value += fromCharRef(v)
+                }
+                var attr_name = get_value(attr.result_store[1].result_store[0])
+                if(attr_name.startsWith('xmlns:')){
+                    var prefix = attr_name.substr(6),
+                        uri = attr_value
+                    var name1 = uri + '!' + name.split(':')[1]
+                    parser.namespaces = parser.namespaces ?? {}
+                    parser.namespaces[name] = name1
+                    name = name1
+                    var f = $B.$getattr(parser, "StartNamespaceDeclHandler", null)
+                    if(f !== null){
+                        $B.$call(f)(prefix, uri)
+                    }
+                }else{
+                    _b_.dict.$setitem(attr_result, attr_name, attr_value)
+                }
             }
         }
-        if(parser.StartElementHandler){
-            parser.StartElementHandler(name, attr_result)
+        var f = $B.$getattr(parser, "StartElementHandler", null)
+        if(f !== null){
+            $B.$call(f)(name, attr_result)
         }
         return {name, attr_result}
     },
     XMLDecl: function(parser, rule){
         // '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
         var encoding,
-            standalone
+            standalone = -1
         if(rule.result_store[2]){
             // S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
             encoding = get_value(rule.rules[2].rules[3].selected_rule.rules[1])
@@ -345,14 +532,26 @@ var handler = {
             // S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
             sddecl = rule.rules[3]
             standalone = get_value(sddecl.rules[3].selected_rule.rules[1])
+            standalone = standalone == 'yes' ? 1 : 0
         }
-        return {
-            version: get_value(rule.rules[1].rules[3].selected_rule.rules[1]),
-            encoding,
-            standalone
+        parser.standalone = standalone // used for NotStandaloneHandler
+        var attr_result = $B.empty_dict(),
+            attrs = {
+                version: get_value(rule.rules[1].rules[3].selected_rule.rules[1]),
+                encoding,
+                standalone
+            }
+        for(var attr in attrs){
+            _b_.dict.$setitem(attr_result, attr, attrs[attr])
         }
+        var f = $B.$getattr(parser, "XmlDeclHandler", null)
+        if(f !== null){
+            $B.$call(f)(attrs.version, attrs.encoding, attrs.standalone)
+        }
+        return {name, attr_result}
     }
 }
+
 
 function emit(rule){
     // called when a rule is done
@@ -428,6 +627,10 @@ function handle_star(element, rank, next_if_ok, rule, char){
     }else if(char === DONE){
         if(test){
             console.log(rule, 'DONE')
+        }
+        if(rule.alt){
+            element.selected_option = element.expect
+            element.selected_rule = rule
         }
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(rule)
@@ -634,6 +837,22 @@ NUMBER_rule.prototype.feed = function(char){
     return this.origin.feed(char)
   }
   return this
+}
+
+function start_intSubset_rule(origin){
+  this.origin = origin
+  this.pos = get_pos(this)
+  this.rank = this.origin.expect
+  this.value = ''
+}
+
+start_intSubset_rule.prototype.feed = function(char){
+    // always succeeds
+    return this.origin.feed(DONE)
+}
+
+start_intSubset_rule.prototype.reset = function(){
+    // ignore
 }
 
 function S_rule(origin){
@@ -1024,7 +1243,7 @@ Eq: `[S?, '=', S?]`,
 VersionNum: `['1.0']`,
 Misc: `[Comment, PI, S]`,
 doctypedecl: `['<!DOCTYPE', S, Name, tmp_23?, S?, tmp_22?, '>']`,
-tmp_22: `['[', intSubset, ']', S?]`,
+tmp_22: `['[', start_intSubset, intSubset, ']', S?]`,
 tmp_23: `[S, ExternalID]`,
 DeclSep: `[PEReference, S]`,
 intSubset: `[tmp_24*]`,
@@ -3138,7 +3357,7 @@ function tmp_22_rule(origin){
   this.pos = get_pos(this)
   this.result_store = {}
   this.expect = 0 // '['
-  this.items = ["'['", 'intSubset', "']'", 'S?']
+  this.items = ["'['", 'start_intSubset', 'intSubset', "']'", 'S?']
   this.rules = []
   this.repeats = []
 }
@@ -3153,28 +3372,35 @@ tmp_22_rule.prototype.feed = function(char){
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
-    case 1: // intSubset
+    case 1: // start_intSubset
       if(! this.rules[1]){
-        this.rules[1] = new intSubset_rule(this)
+        this.rules[1] = new start_intSubset_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
-    case 2: // ']'
+    case 2: // intSubset
       if(! this.rules[2]){
-        this.rules[2] = new LITERAL(this, ']')
+        this.rules[2] = new intSubset_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
-    case 3: // S?
+    case 3: // ']'
       if(! this.rules[3]){
-        this.rules[3] = new S_rule(this)
-        this.repeats[3] = 0
+        this.rules[3] = new LITERAL(this, ']')
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
-      return handle_zero_or_one(this, 3, -1, rule, char)
+      return handle_simple(this, 4, rule, char)
+    case 4: // S?
+      if(! this.rules[4]){
+        this.rules[4] = new S_rule(this)
+        this.repeats[4] = 0
+      }
+      rule = this.rules[4]
+      rule.pos = rule.pos ?? get_pos(this)
+      return handle_zero_or_one(this, 4, -1, rule, char)
     case -1:
       return this.origin.feed(DONE)
   }
@@ -7338,8 +7564,18 @@ PublicID_rule.prototype.reset = function(){
   this.expect = 0
 }
 
+var models = {
+   XML_CTYPE_ANY: 2,
+   XML_CTYPE_CHOICE: 5,
+   XML_CTYPE_EMPTY: 1,
+   XML_CTYPE_MIXED: 3,
+   XML_CTYPE_NAME: 4,
+   XML_CTYPE_SEQ: 6,
+}
+
 __BRYTHON__.addToImported('xml_parser', {
-    DOCUMENT: document_rule
+    DOCUMENT: document_rule,
+    models
 })
 
 })(__BRYTHON__)

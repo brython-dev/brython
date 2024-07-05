@@ -34,7 +34,7 @@ list.__add__ = function(self, other){
     var res = self.slice(),
         is_js = other.$is_js_array // list of JS objects
     for(const item of other){
-        res.push(is_js ? $B.$jsobj2pyobj(item) : item)
+        res.push(is_js ? $B.$pyobj2jsobj(item) : item)
     }
     if(isinstance(self, tuple)){
         res = tuple.$factory(res)
@@ -68,7 +68,6 @@ list.__contains__ = function(){
 }
 
 list.__delitem__ = function(self, arg){
-
     if(isinstance(arg, _b_.int)){
         let pos = arg
         if(arg < 0){
@@ -138,6 +137,9 @@ list.__delitem__ = function(self, arg){
 }
 
 list.__eq__ = function(self, other){
+    if(other[$B.PYOBJ]){
+        other = other[$B.PYOBJ]
+    }
     var klass = isinstance(self, list) ? list : tuple
     if(isinstance(other, klass)){
        if(other.length == self.length){
@@ -509,7 +511,11 @@ list.$setitem = function(self, arg, value){
 
 list.append = function(self, x){
     $B.check_nb_args_no_kw("append", 2, arguments)
-    self[self.length] = x
+    if(self.$is_js_array){
+        self.push($B.pyobj2jsobj(x))
+    }else{
+        self[self.length] = x
+    }
     return _b_.None
 }
 
@@ -545,8 +551,14 @@ list.count = function(){
 list.extend = function(){
     var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
         arguments, {}, null, null)
-    for(var item of $B.make_js_iterator($.t)){
-        $.self[$.self.length] = item
+    if(self.$is_js_array){
+        for(var item of $B.make_js_iterator($.t)){
+            $.self[$.self.length] = $B.pyobj2jsobj(item)
+        }
+    }else{
+        for(var item of $B.make_js_iterator($.t)){
+            $.self[$.self.length] = item
+        }
     }
     return _b_.None
 }
@@ -588,7 +600,11 @@ list.index = function(){
 list.insert = function(){
     var $ = $B.args("insert", 3, {self: null, i: null, item: null},
         ["self", "i", "item"], arguments, {}, null, null)
-    $.self.splice($.i, 0, $.item)
+    if(self.$is_js_array){
+        $.self.splice($.i, 0, $B.pyobj2jsobj($.item))
+    }else{
+        $.self.splice($.i, 0, $.item)
+    }
     return _b_.None
 }
 

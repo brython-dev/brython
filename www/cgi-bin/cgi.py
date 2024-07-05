@@ -54,7 +54,7 @@ __all__ = ["MiniFieldStorage", "FieldStorage", "parse", "parse_multipart",
            "print_environ_usage"]
 
 
-warnings._deprecated(__name__, remove=(3,13))
+#warnings._deprecated(__name__, remove=(3,13))
 
 # Logging support
 # ===============

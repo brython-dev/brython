@@ -1,6 +1,7 @@
 (function($B){
 
-var dict = $B.builtins.dict
+var _b_ = $B.builtins,
+    dict = $B.builtins.dict
 var mod = {
     dis:function(src){
         $B.$py_module_path['__main__'] = $B.brython_path
@@ -17,7 +18,10 @@ var mod = {
     COROUTINE: 128,
     ITERABLE_COROUTINE: 256,
     ASYNC_GENERATOR: 512,
-    COMPILER_FLAG_NAMES: $B.builtins.dict.$factory()
+    COMPILER_FLAG_NAMES: $B.builtins.dict.$factory(),
+    Positions: function(){
+        return _b_.None
+    }
 }
 mod.COMPILER_FLAG_NAMES = dict.$factory([
      [1, "OPTIMIZED"],

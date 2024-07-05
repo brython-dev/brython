@@ -225,8 +225,10 @@ frame.__getattr__ = function(_self, attr){
             return _b_.None
         }
         return _self.$f_trace
+    }else if(attr == "f_lasti"){
+        // last instruction not relevant in Brython
+        return 0
     }
-
     //console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
@@ -1034,9 +1036,13 @@ function trace_from_stack(err){
                 trace.push('    ' + line.trim())
             }else{
                 console.log('no line', line)
+                console.log('lineno', lineno)
+                console.log('filename', filename)
+                //console.log('src', src)
+                //console.log('stack', stack)
             }
             // preliminary for PEP 657
-            if(err.$positions !== undefined){
+            if(err.$positions !== undefined && line){
                 var position = err.$positions[frame_num],
                     trace_line = ''
                 if(position && (

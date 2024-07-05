@@ -61,5 +61,32 @@ assert s.hexdigest() == "9f14aecd5a945a6f81a1f8a11633aa428e2a404e39fea50c385a46d
 assert hashlib.sha512(b"hashlib test").hexdigest() == \
     "6f2c547d3681c2369a05916a5fcce16c0aed6fd7356362d9e188d64efd29c3cbc6837b61ffb7bac43b1c4161005e570762fb740af99671d366b39babde3daef5"
 
+# issue 2458
+data = "secret_keys_string_hey".encode()
+
+block_size = {
+    'md5': 64,
+    'sha1': 64,
+    'sha224': 64,
+    'sha256': 64,
+    'sha384': 128,
+    'sha512': 128,
+    'sha3_224': 144,
+    'sha3_256': 136,
+    'sha3_384': 104,
+    'sha3_512': 72
+}
+
+for algo in "md5 sha1 sha224 sha256 sha384 sha512 sha3_224 sha3_256 sha3_384 sha3_512".split():
+    f = getattr(hashlib, algo, None)
+    if f is not None:
+        hashed = f(data, usedforsecurity=True)
+        assert hashed.block_size == block_size[algo]
+
+import hmac
+hmac_hash = hmac.new("secret_keys_string_hey".encode(), "message".encode(), 'sha256')
+
+assert (hmac_hash.digest_size, hmac_hash.block_size) == (32, 64)
+
 print("passed all tests..")
 
