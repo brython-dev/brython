@@ -706,8 +706,11 @@ int.$factory = function(){
     }else if(explicit_base && ! $B.$isinstance(value, _b_.str)){
         throw _b_.TypeError.$factory(
             "int() can't convert non-string with explicit base")
-    }else if($B.$isinstance(value, _b_.memoryview)){
-        value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
+    }else{
+        let klass = $B.get_class(value)
+        if (klass.$buffer_protocol) {
+            value = $B.$getattr(klass.tobytes(value), 'decode')('latin-1')
+        }
     }
 
     if(! $B.$isinstance(value, _b_.str)){
@@ -758,10 +761,6 @@ int.$factory = function(){
         }
     }
 
-    if(value.length == 0){
-        throw _b_.ValueError.$factory(
-            `invalid literal for int() with base 10: ${_b_.repr(value)}`)
-    }
     base = base === missing ? 10: $B.PyNumber_Index(base)
 
     if(! (base >=2 && base <= 36)){
@@ -786,6 +785,10 @@ int.$factory = function(){
     if(_value.startsWith('+') || _value.startsWith('-')){
         sign = _value[0]
         _value = _value.substr(1)
+    }
+
+    if (_value.length == 0) {
+        invalid(base)
     }
 
     if(_value.length == 2 && base == 0 &&
@@ -880,8 +883,9 @@ int.$factory = function(){
         res = BigInt('0x' + _value)
     }else{
         if($B.int_max_str_digits != 0 &&
-                _value.length > $B.int_max_str_digits){
-            throw _b_.ValueError.$factory("Exceeds the limit " +
+           _value.length > $B.int_max_str_digits &&
+           ((base & (base - 1)) !== 0) // base is not a power of 2
+        ){            throw _b_.ValueError.$factory("Exceeds the limit " +
                 `(${$B.int_max_str_digits}) for integer string conversion: ` +
                 `value has ${value.length} digits; use ` +
                 "sys.set_int_max_str_digits() to increase the limit.")
