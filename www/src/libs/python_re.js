@@ -2242,9 +2242,6 @@ CharacterSet.prototype.match = function(string, pos, endpos){
 
         for(var cp1 of cps){
             for(var item of this.set.items){
-                if(typeof item == 'string'){
-
-                }
                 if(Array.isArray(item.ord)){
                     if(cp1 >= item.ord[0] &&
                             cp1 <= item.ord[1]){
@@ -2266,6 +2263,9 @@ CharacterSet.prototype.match = function(string, pos, endpos){
                     }
                 }else if(item instanceof CharacterClass){
                     test = !! item.match(string, pos + i, endpos) // boolean
+                    if(test){
+                        break
+                    }
                 }else{
                     if(item.ord == cp1){
                         test = true
@@ -3798,10 +3798,6 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                             mos.push(mo)
                             pos = mo.end
                         }
-                        i++
-                    }else if(false && item instanceof Group &&
-                            item.type == "negative_lookahead_assertion"){
-                        log("negative lookahead assertion", item, "fails : ok !")
                         i++
                     }else{
                         if(_debug.value){

@@ -95,4 +95,7 @@ assert outStr == 'text_1'
 # issue 2448
 re.RegexFlag
 
+# issue 2472
+assert re.sub(r'/\*[\s\S]*?\*/', '', 'a/*b c*/') == 'a'
+
 print('all tests ok..')
