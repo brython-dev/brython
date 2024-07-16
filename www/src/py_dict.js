@@ -965,7 +965,8 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
     // Set a dictionary item mapping key and value.
     if(self[$B.JSOBJ]){
         // Python dictionary is used in a Javascript object
-        self[$B.JSOBJ][key] = $B.pyobj2jsobj(value)
+        value = $B.pyobj2jsobj(value)
+        self[$B.JSOBJ][key] = value
     }
     if(self.$all_str){
         if(typeof key == 'string'){

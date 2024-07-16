@@ -279,3 +279,26 @@ window.testDeletedAttr2420 = function(expected) {
     throw Error('expected deleted ' + expected + ', got ' + value)
   }
 }
+
+// issue 2474
+function func_js2474() {
+    var d = window['my_dict2474']['my_array_d'];
+    d.push(40);
+};
+
+function test_2474(){
+    var d = window['my_dict2474']['my_array_d'];
+    if(d.length !== 6){
+      alert('d.length is not 6')
+    }else{
+      var i = 0,
+          expected = [7, 8, 77, 40, 77, 40]
+      while(i < 6){
+        if(d[i] !== expected[i]){
+          alert('difference at index ' + i)
+          break
+        }
+        i++
+     }
+   }
+}

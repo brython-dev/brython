@@ -436,4 +436,18 @@ def is_bomb(point):
 
 window.setTimeout(is_bomb, 100, (1, 2))
 
+# issue 2474
+window['my_dict2474'] = {}
+window['my_dict2474']['my_array_d'] = [7, 8]
+
+def func_py2474():
+    d = window['my_dict2474']['my_array_d']
+    d.append(77)
+
+func_py2474()
+window.func_js2474()
+func_py2474()
+window.func_js2474()
+window.test_2474()
+
 print("all tests ok...")
