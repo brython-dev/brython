@@ -450,4 +450,12 @@ func_py2474()
 window.func_js2474()
 window.test_2474()
 
+window['dict_2474'] = {}
+
+window['dict_2474']['arr3'] = [{ "C": "String C" }]
+window['dict_2474']['arr4'] = []
+window['dict_2474']['arr4'].append({ "D": "String D" })
+
+window.func_js2474_2()
+
 print("all tests ok...")

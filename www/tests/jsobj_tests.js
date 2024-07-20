@@ -302,3 +302,12 @@ function test_2474(){
      }
    }
 }
+
+function func_js2474_2() {
+    if(window['dict_2474']['arr3'][0]["C"] !== "String C"){
+        throw _b_.AssertionError.$factory('not equal to String C')
+    }
+    if(window['dict_2474']['arr4'][0]["D"] !== "String D"){
+        throw _b_.AssertionError.$factory('not equal to String C')
+    }
+}

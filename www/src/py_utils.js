@@ -1457,6 +1457,15 @@ $B.$call1 = function(callable){
                 (callable.$infos.__code__.co_flags & 32)){
             $B.frame_obj.frame.$has_generators = true
         }
+        if(callable.$is_async){
+            return function(){
+                var res = callable.apply(null, arguments)
+
+                    //console.log('res', res)
+
+                return res
+            }
+        }
         return callable
     }
     try{

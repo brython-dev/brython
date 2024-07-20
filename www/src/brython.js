@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-16 09:49:10.455266"
-__BRYTHON__.timestamp=1721116150454
+__BRYTHON__.compiled_date="2024-07-20 08:45:13.682037"
+__BRYTHON__.timestamp=1721457913681
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9369,7 +9369,8 @@ return _b_.None}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(arg))}
 list.append=function(self,x){$B.check_nb_args_no_kw("append",2,arguments)
-if(self.$is_js_array){self.push($B.pyobj2jsobj(x))}else{self[self.length]=x}
+if(self[$B.PYOBJ]){self[$B.PYOBJ].push(x)
+self.push($B.pyobj2jsobj(x))}else if(self.$is_js_array){self.push($B.pyobj2jsobj(x))}else{self[self.length]=x}
 return _b_.None}
 list.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 while($.self.length){$.self.pop()}

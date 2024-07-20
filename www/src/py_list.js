@@ -511,7 +511,10 @@ list.$setitem = function(self, arg, value){
 
 list.append = function(self, x){
     $B.check_nb_args_no_kw("append", 2, arguments)
-    if(self.$is_js_array){
+    if(self[$B.PYOBJ]){
+        self[$B.PYOBJ].push(x)
+        self.push($B.pyobj2jsobj(x))
+    }else if(self.$is_js_array){
         self.push($B.pyobj2jsobj(x))
     }else{
         self[self.length] = x
