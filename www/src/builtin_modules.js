@@ -905,21 +905,27 @@
                 throw syntax_error
             }
             var warning_message,
+                filename,
                 file,
                 lineno,
                 line
             if(category === _b_.SyntaxWarning){
-                file = message.filename,
+                filename = message.filename,
                 lineno = message.lineno,
                 line = message.text
+                var src = $B.file_cache[file]
+                if(src){
+                    var lines = src.split('\n'),
+                        line = lines[lineno - 1]
+                }
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
                     category,
-                    filename: message.filename,
-                    lineno: message.lineno,
+                    filename,
+                    lineno,
                     file: _b_.None,
-                    line: _b_.None,
+                    line,
                     source: _b_.None,
                     _category_name: category.__name__
                 }

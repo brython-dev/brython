@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-20 08:55:46.870710"
-__BRYTHON__.timestamp=1721458546870
+__BRYTHON__.compiled_date="2024-07-20 09:58:33.395853"
+__BRYTHON__.timestamp=1721462313395
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1478,10 +1478,10 @@ klass=klass[ref]}
 return klass}
 $B.warn=function(klass,message,filename,token){var warning=klass.$factory(message)
 warning.filename=filename
-if(klass===_b_.SyntaxWarning){warning.lineno=token.start[0]
-warning.offset=token.start[1]
-warning.end_lineno=token.end[0]
-warning.end_offset=token.end[1]
+if(klass===_b_.SyntaxWarning){warning.lineno=token.lineno
+warning.offset=token.col_offset
+warning.end_lineno=token.end_lineno
+warning.end_offset=token.end_coloffset
 warning.text=token.line
 warning.args[1]=$B.fast_tuple([filename,warning.lineno,warning.offset,warning.text,warning.end_lineno,warning.end_offset])}
 $B.imported._warnings.warn(warning)}
@@ -11106,9 +11106,11 @@ syntax_error.lineno=message.lineno
 syntax_error.offset=message.offset
 syntax_error.line=message.line
 throw syntax_error}
-var warning_message,file,lineno,line
-if(category===_b_.SyntaxWarning){file=message.filename,lineno=message.lineno,line=message.text
-warning_message={__class__:WarningMessage,message:message,category,filename:message.filename,lineno:message.lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}}else{let frame_rank=Math.max(0,$B.count_frames()-stacklevel),frame=$B.get_frame_at(frame_rank)
+var warning_message,filename,file,lineno,line
+if(category===_b_.SyntaxWarning){filename=message.filename,lineno=message.lineno,line=message.text
+var src=$B.file_cache[file]
+if(src){var lines=src.split('\n'),line=lines[lineno-1]}
+warning_message={__class__:WarningMessage,message:message,category,filename,lineno,file:_b_.None,line,source:_b_.None,_category_name:category.__name__}}else{let frame_rank=Math.max(0,$B.count_frames()-stacklevel),frame=$B.get_frame_at(frame_rank)
 file=frame.__file__
 let f_code=$B._frame.f_code.__get__(frame),src=$B.file_cache[file]
 lineno=frame.$lineno
@@ -11621,6 +11623,16 @@ function compiler_check(obj){var check_func=Object.getPrototypeOf(obj)._check
 if(check_func){obj._check()}}
 function check_assign_or_delete(obj,target,action){action=action ?? 'assign to'
 if(target instanceof $B.ast.Attribute){if(target.attr=='__debug__'){compiler_error(obj,`cannot ${action} __debug__`,target)}}else if(target instanceof $B.ast.Name){if(target.id=='__debug__'){compiler_error(obj,`cannot ${action} __debug__`,target)}}else if(target instanceof $B.ast.Tuple){for(var elt of target.elts){check_assign_or_delete(elt,elt,action)}}else if(target instanceof $B.ast.Starred){check_assign_or_delete(obj,target.value,action)}}
+function check_is_arg(e){if(!(e instanceof $B.ast.Constant)){return true}
+var value=e.value
+return(value===_b_.None
+||value===false
+||value===true
+||value===_b_.Ellipsis)}
+function check_compare(op_name,left,right,scopes){var test_left=check_is_arg(left),test_right=check_is_arg(right)
+if(! test_left ||! test_right){var item=test_left ? right :left,name=$B.class_name(item.value)
+$B.warn(_b_.SyntaxWarning,`"${op_name}" with '${name}' literal. `+
+`Did you mean "=="?`,scopes.filename,item)}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
@@ -11889,15 +11901,18 @@ var decorate=class_ref
 for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate+'\n'}
 return js}
-$B.ast.Compare.prototype.to_js=function(scopes){var left=$B.js_from_ast(this.left,scopes),comps=[]
+$B.ast.Compare.prototype.to_js=function(scopes){var test_left=check_is_arg(this.left)
+var left=$B.js_from_ast(this.left,scopes),comps=[]
 var len=this.ops.length,prefix=len > 1 ? 'locals.$op = ' :''
 for(var i=0;i < len;i++){var name=this.ops[i].$name ? this.ops[i].$name :this.ops[i].constructor.$name,op=opclass2dunder[name],right=this.comparators[i]
 if(op===undefined){console.log('op undefined',this.ops[i])
 alert()}
 if(this.ops[i]instanceof $B.ast.In){comps.push(`$B.$is_member(${left}, `+
 `${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.NotIn){comps.push(`! $B.$is_member(${left}, `+
-`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.Is){comps.push(`$B.$is(${left}, `+
-`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.IsNot){comps.push(`! $B.$is(${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.Is){check_compare('is',this.left,right,scopes)
+comps.push(`$B.$is(${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.IsNot){check_compare('is not',this.left,right,scopes)
+comps.push(`! $B.$is(${left}, `+
 `${prefix}${$B.js_from_ast(right, scopes)})`)}else{comps.push(`$B.rich_comp('${op}', ${left}, `+
 `${prefix}${$B.js_from_ast(right, scopes)})`)}
 if(len > 1){left='locals.$op'}}

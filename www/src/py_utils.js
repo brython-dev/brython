@@ -989,10 +989,10 @@ $B.warn = function(klass, message, filename, token){
     var warning = klass.$factory(message)
     warning.filename = filename
     if(klass === _b_.SyntaxWarning){
-        warning.lineno = token.start[0]
-        warning.offset = token.start[1]
-        warning.end_lineno = token.end[0]
-        warning.end_offset = token.end[1]
+        warning.lineno = token.lineno
+        warning.offset = token.col_offset
+        warning.end_lineno = token.end_lineno
+        warning.end_offset = token.end_coloffset
         warning.text = token.line
         warning.args[1] = $B.fast_tuple([filename,
                                          warning.lineno, warning.offset,

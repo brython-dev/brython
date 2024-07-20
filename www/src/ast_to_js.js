@@ -950,6 +950,29 @@ function check_assign_or_delete(obj, target, action){
     }
 }
 
+function check_is_arg(e){
+    if (! (e instanceof $B.ast.Constant)){
+        return true
+    }
+    var value = e.value
+    return (value === _b_.None
+         || value === false
+         || value === true
+         || value === _b_.Ellipsis)
+}
+
+function check_compare(op_name, left, right, scopes){
+    var test_left = check_is_arg(left),
+        test_right = check_is_arg(right)
+    if(! test_left || ! test_right){
+        var item = test_left ? right : left,
+            name = $B.class_name(item.value)
+        $B.warn(_b_.SyntaxWarning, `"${op_name}" with '${name}' literal. ` +
+                        `Did you mean "=="?`,
+                        scopes.filename, item)
+    }
+}
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
@@ -1606,6 +1629,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 }
 
 $B.ast.Compare.prototype.to_js = function(scopes){
+    var test_left = check_is_arg(this.left)
     var left = $B.js_from_ast(this.left, scopes),
         comps = []
     // For chained comparison, store each intermediate result in locals.$op
@@ -1627,9 +1651,11 @@ $B.ast.Compare.prototype.to_js = function(scopes){
             comps.push(`! $B.$is_member(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.Is){
+            check_compare('is', this.left, right, scopes)
             comps.push(`$B.$is(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.IsNot){
+            check_compare('is not', this.left, right,scopes)
             comps.push(`! $B.$is(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else{
