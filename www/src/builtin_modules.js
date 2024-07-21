@@ -930,21 +930,21 @@
                     _category_name: category.__name__
                 }
             }else{
-                let frame_rank = Math.max(0, $B.count_frames() - stacklevel),
-                    frame = $B.get_frame_at(frame_rank)
+                let frame_rank = Math.max(0, $B.count_frames() - stacklevel)
+                var frame = $B.get_frame_at(frame_rank)
                 file = frame.__file__
                 let f_code = $B._frame.f_code.__get__(frame),
                     src = $B.file_cache[file]
-                lineno = frame.$lineno
+                lineno = message.lineno || frame.$lineno
                 line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
                     category,
                     filename: message.filename || f_code.co_filename,
-                    lineno: message.lineno || lineno,
+                    lineno,
                     file: _b_.None,
-                    line: _b_.None,
+                    line: line || _b_.None,
                     source: _b_.None,
                     _category_name: category.__name__
                 }

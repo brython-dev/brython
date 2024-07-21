@@ -1458,12 +1458,9 @@ $B.$call1 = function(callable){
             $B.frame_obj.frame.$has_generators = true
         }
         if(callable.$is_async){
-            return function(){
-                var res = callable.apply(null, arguments)
-
-                    //console.log('res', res)
-
-                return res
+            if($B.frame_obj !== null){
+                var frame = $B.frame_obj.frame
+                frame.$async = callable
             }
         }
         return callable
@@ -1694,6 +1691,17 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frame_obj.frame
+    if(frame.$coroutine){
+        if(! frame.$coroutine.$sent){
+            var cname = frame.$coroutine.$func.$infos.__name__
+            var message = _b_.RuntimeWarning.$factory(
+                `coroutine '${cname}' was never awaited`)
+            message.lineno = frame.$coroutine.$lineno
+            console.log('not awatied', cname, $B.frame_obj)
+            alert()
+            $B.imported._warnings.warn(message)
+        }
+    }
     $B.frame_obj = $B.frame_obj.prev
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the

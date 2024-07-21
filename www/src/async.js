@@ -6,8 +6,12 @@ var _b_ = $B.builtins
 
 var coroutine = $B.coroutine = $B.make_class("coroutine")
 
-coroutine.close = function(self){}
+coroutine.close = function(self){
+    self.$sent = true // avoids RuntimeWarning
+}
+
 coroutine.send = function(self){
+    self.$sent = true
     if(! $B.$isinstance(self, coroutine)){
         var msg = "object is not a coroutine"
         if(typeof self == "function" && self.$infos && self.$infos.__code__ &&
@@ -47,11 +51,17 @@ $B.make_async = func => {
     }
     var f = function(){
         var args = arguments
-        return {
+        var res = {
             __class__: coroutine,
             $args: args,
             $func: func
         }
+        if($B.frame_obj !== null){
+            var frame = $B.frame_obj.frame
+            frame.$coroutine = res
+            res.$lineno = frame.$lineno
+        }
+        return res
     }
     f.$infos = func.$infos
     f.$is_func = true

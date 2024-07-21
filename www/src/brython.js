@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-20 09:58:33.395853"
-__BRYTHON__.timestamp=1721462313395
+__BRYTHON__.compiled_date="2024-07-21 16:31:56.842871"
+__BRYTHON__.timestamp=1721572316842
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1633,8 +1633,8 @@ return callable.$factory=function(){return new callable(...arguments)}}else if(c
 return function(){var res=callable(...arguments)
 return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$infos && callable.$infos.__code__ &&
 (callable.$infos.__code__.co_flags & 32)){$B.frame_obj.frame.$has_generators=true}
-if(callable.$is_async){return function(){var res=callable.apply(null,arguments)
-return res}}
+if(callable.$is_async){if($B.frame_obj !==null){var frame=$B.frame_obj.frame
+frame.$async=callable}}
 return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
@@ -1731,6 +1731,13 @@ if($B.frame_obj===null){return}
 if(arg && arg.value !==undefined && $B.tracefunc !==_b_.None){if($B.frame_obj.frame.$f_trace===undefined){$B.frame_obj.frame.$f_trace=$B.tracefunc}
 if($B.frame_obj.frame.$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frame_obj.frame
+if(frame.$coroutine){if(! frame.$coroutine.$sent){var cname=frame.$coroutine.$func.$infos.__name__
+var message=_b_.RuntimeWarning.$factory(
+`coroutine '${cname}' was never awaited`)
+message.lineno=frame.$coroutine.$lineno
+console.log('not awatied',cname,$B.frame_obj)
+alert()
+$B.imported._warnings.warn(message)}}
 $B.frame_obj=$B.frame_obj.prev
 if(frame.$has_generators){for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
 if(gen.$frame===undefined){continue}
@@ -10784,8 +10791,9 @@ return false}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")
-coroutine.close=function(self){}
-coroutine.send=function(self){if(! $B.$isinstance(self,coroutine)){var msg="object is not a coroutine"
+coroutine.close=function(self){self.$sent=true }
+coroutine.send=function(self){self.$sent=true
+if(! $B.$isinstance(self,coroutine)){var msg="object is not a coroutine"
 if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
 self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
 throw _b_.TypeError.$factory(msg)}
@@ -10798,8 +10806,11 @@ $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
 if(func.$is_genfunc){return func}
 var f=function(){var args=arguments
-return{
-__class__:coroutine,$args:args,$func:func}}
+var res={__class__:coroutine,$args:args,$func:func}
+if($B.frame_obj !==null){var frame=$B.frame_obj.frame
+frame.$coroutine=res
+res.$lineno=frame.$lineno}
+return res}
 f.$infos=func.$infos
 f.$is_func=true
 f.$is_async=true
@@ -11110,12 +11121,13 @@ var warning_message,filename,file,lineno,line
 if(category===_b_.SyntaxWarning){filename=message.filename,lineno=message.lineno,line=message.text
 var src=$B.file_cache[file]
 if(src){var lines=src.split('\n'),line=lines[lineno-1]}
-warning_message={__class__:WarningMessage,message:message,category,filename,lineno,file:_b_.None,line,source:_b_.None,_category_name:category.__name__}}else{let frame_rank=Math.max(0,$B.count_frames()-stacklevel),frame=$B.get_frame_at(frame_rank)
+warning_message={__class__:WarningMessage,message:message,category,filename,lineno,file:_b_.None,line,source:_b_.None,_category_name:category.__name__}}else{let frame_rank=Math.max(0,$B.count_frames()-stacklevel)
+var frame=$B.get_frame_at(frame_rank)
 file=frame.__file__
 let f_code=$B._frame.f_code.__get__(frame),src=$B.file_cache[file]
-lineno=frame.$lineno
+lineno=message.lineno ||frame.$lineno
 line=src ? src.split('\n')[lineno-1]:null
-warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||f_code.co_filename,lineno:message.lineno ||lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}}
+warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||f_code.co_filename,lineno,file:_b_.None,line:line ||_b_.None,source:_b_.None,_category_name:category.__name__}}
 if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var trace=''
 if(file && lineno){trace+=`${file}:${lineno}: `}
 trace+=$B.class_name(message)+': '+message.args[0]
