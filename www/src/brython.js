@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-21 16:31:56.842871"
-__BRYTHON__.timestamp=1721572316842
+__BRYTHON__.compiled_date="2024-07-21 16:36:02.749736"
+__BRYTHON__.timestamp=1721572562749
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1735,8 +1735,6 @@ if(frame.$coroutine){if(! frame.$coroutine.$sent){var cname=frame.$coroutine.$fu
 var message=_b_.RuntimeWarning.$factory(
 `coroutine '${cname}' was never awaited`)
 message.lineno=frame.$coroutine.$lineno
-console.log('not awatied',cname,$B.frame_obj)
-alert()
 $B.imported._warnings.warn(message)}}
 $B.frame_obj=$B.frame_obj.prev
 if(frame.$has_generators){for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]

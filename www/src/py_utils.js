@@ -1697,8 +1697,6 @@ $B.leave_frame = function(arg){
             var message = _b_.RuntimeWarning.$factory(
                 `coroutine '${cname}' was never awaited`)
             message.lineno = frame.$coroutine.$lineno
-            console.log('not awatied', cname, $B.frame_obj)
-            alert()
             $B.imported._warnings.warn(message)
         }
     }
