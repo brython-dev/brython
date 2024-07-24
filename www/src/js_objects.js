@@ -269,6 +269,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // Python list : transform its elements
         var jsobj = pyobj.map(pyobj2jsobj)
         jsobj[PYOBJ] = pyobj
+        jsobj.__class__ = js_array
         return jsobj
     }
 
@@ -291,7 +292,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             jsobj[key] = pyobj2jsobj(entry.value)
         }
         pyobj[JSOBJ] = jsobj
-        jsobj[PYOBJ] = pyobj
         return jsobj
     }
     if(has_type(klass, _b_.str)){
@@ -432,6 +432,11 @@ $B.JSObj.__bool__ = function(_self){
 
 $B.JSObj.__contains__ = function(_self, key){
     return key in _self
+}
+
+$B.JSObj.__delitem__ = function(_self, key){
+    delete _self[key]
+    return _b_.None
 }
 
 $B.JSObj.__dir__ = function(_self){
@@ -911,7 +916,6 @@ var js_array = $B.js_array = $B.make_class('Array')
 js_array.__class__ = js_list_meta
 js_array.__mro__ = [$B.JSObj, _b_.object]
 
-
 js_array.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
@@ -936,6 +940,10 @@ js_array.__getattribute__ = function(_self, attr){
 js_array.__getitem__ = function(_self, i){
     i = $B.PyNumber_Index(i)
     return jsobj2pyobj(_self[i])
+}
+
+js_array.__iter__ = function(_self){
+    return js_array_iterator.$factory(_self)
 }
 
 var js_array_iterator = $B.make_class('JSArray_iterator',

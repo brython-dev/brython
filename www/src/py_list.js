@@ -259,7 +259,7 @@ list.__hash__ = _b_.None
 list.__iadd__ = function() {
     var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
-    var x = list.$factory($B.$iter($.x))
+    var x = list.$factory($.x)
     for(var i = 0; i < x.length; i++){
         $.self.push(x[i])
     }

@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-21 16:36:02.749736"
-__BRYTHON__.timestamp=1721572562749
+__BRYTHON__.compiled_date="2024-07-24 08:13:22.210196"
+__BRYTHON__.timestamp=1721801602210
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9285,7 +9285,7 @@ if(res===_b_.NotImplemented){return res}
 return res}
 list.__hash__=_b_.None
 list.__iadd__=function(){var $=$B.args("__iadd__",2,{self:null,x:null},["self","x"],arguments,{},null,null)
-var x=list.$factory($B.$iter($.x))
+var x=list.$factory($.x)
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
 return $.self}
 list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","x"],arguments,{},null,null),x=$B.$GetInt($.x),len=$.self.length,pos=len
@@ -9625,6 +9625,7 @@ if(has_type(klass,$B.DOMNode)){return pyobj}
 if(has_type(klass,_b_.list)||has_type(klass,_b_.tuple)){
 var jsobj=pyobj.map(pyobj2jsobj)
 jsobj[PYOBJ]=pyobj
+jsobj.__class__=js_array
 return jsobj}
 if(has_type(klass,_b_.dict)){
 let jsobj={}
@@ -9634,7 +9635,6 @@ if(typeof entry.value==='function'){
 entry.value.bind(jsobj)}
 jsobj[key]=pyobj2jsobj(entry.value)}
 pyobj[JSOBJ]=jsobj
-jsobj[PYOBJ]=pyobj
 return jsobj}
 if(has_type(klass,_b_.str)){
 return pyobj.valueOf()}
@@ -9684,6 +9684,8 @@ $B.JSObj.__bool__=function(_self){if(typeof _self=='object'){for(var key in _sel
 return false}
 return !! _self}
 $B.JSObj.__contains__=function(_self,key){return key in _self}
+$B.JSObj.__delitem__=function(_self,key){delete _self[key]
+return _b_.None}
 $B.JSObj.__dir__=function(_self){var attrs=Object.keys(_self);
 attrs=attrs.sort()
 return attrs}
@@ -9863,6 +9865,7 @@ return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return jsobj2pyobj(_self[i])}
+js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
 var js_array_iterator=$B.make_class('JSArray_iterator',function(obj){return{
 __class__:js_array_iterator,it:obj[Symbol.iterator]()}}
 )
