@@ -158,8 +158,6 @@ function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
     res.num_type = $B.py_tokens[type]
     if(type == 'OP'){
         res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
-    }else if(type == 'NAME' && ['async', 'await'].includes(string)){
-        res.num_type = $B.py_tokens[string.toUpperCase()]
     }else if(type == 'ENCODING'){
         res.num_type = $B.py_tokens.ENCODING
     }

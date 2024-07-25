@@ -193,7 +193,7 @@ var helper_functions = {
         if(arg !== undefined){
             err_msg = _b_.str.__mod__(err_msg, arg)
         }
-        
+
         helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             a.lineno, a.col_offset,
             a.end_lineno, a.end_col_offset,

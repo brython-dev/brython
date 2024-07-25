@@ -59,8 +59,6 @@ const tokens = [
     'COLONEQUAL',
     'EXCLAMATION',
     'OP',
-    'AWAIT',
-    'ASYNC',
     'TYPE_IGNORE',
     'TYPE_COMMENT',
     'SOFT_KEYWORD',
