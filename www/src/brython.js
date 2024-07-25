@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-25 08:56:47.763595"
-__BRYTHON__.timestamp=1721890607763
+__BRYTHON__.compiled_date="2024-07-25 19:46:32.247041"
+__BRYTHON__.timestamp=1721929592246
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -320,7 +320,7 @@ char=token_mode.quote.repeat(3)
 pos+=2}
 if(fstring_buffer.length > 0){
 yield Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line)}
-yield Token(FSTRING_END,char,line_num,pos,line_num,pos,line)
+yield Token(FSTRING_END,char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 token_modes.pop()
 token_mode=$B.last(token_modes)
 state=null
