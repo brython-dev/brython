@@ -311,3 +311,18 @@ function func_js2474_2() {
         throw _b_.AssertionError.$factory('not equal to String C')
     }
 }
+
+function func_js2474_3() {
+    if(window['dictA']['arrA'].length != 2){
+        throw Error('length is not 2')
+    }
+    if(window['dictB']['arrB'].length != 2){
+        throw Error('length is not 2')
+    }
+    if(window.dictA.arrA[1] != "A"){
+        throw Error('should be "A", got ' + window.dictA.arrA[1])
+    }
+    if(window.dictB.arrB[1] != "B"){
+        throw Error('should be "B", got ' + window.dictB.arrB[1])
+    }
+}

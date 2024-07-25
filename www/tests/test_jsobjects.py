@@ -458,4 +458,16 @@ window['dict_2474']['arr4'].append({ "D": "String D" })
 
 window.func_js2474_2()
 
+window['dictA'] = {}
+window['dictA']['arrA'] = [1.25]
+assert type(window['dictA']['arrA'][0]) is float
+window['dictA']['arrA'].append('A')
+
+window['dictB'] = { "arrB": [2.35] }
+window['dictB']['arrB'].append('B')
+
+assert window['dictA']['arrA'] == [1.25, "A"]
+assert window['dictB']['arrB'] == [2.35, "B"]
+window.func_js2474_3()
+
 print("all tests ok...")
