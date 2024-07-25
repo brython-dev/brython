@@ -363,8 +363,8 @@ $B.tokenizer = function*(src, filename, mode, parser){
                         line_num, fstring_start + fstring_buffer.length,
                         line)
                 }
-                yield Token(FSTRING_END, char, line_num, pos,
-                            line_num, pos, line)
+                yield Token(FSTRING_END, char, line_num, pos - line_start,
+                            line_num, pos - line_start + 1, line)
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
