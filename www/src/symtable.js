@@ -1719,33 +1719,56 @@ visitor.expr = function(st, e){
     VISIT_QUIT(st, 1);
 }
 
+visitor.type_param_bound_or_default = function(st, e, name, key){
+    if(e){
+        var is_in_class = st.cur.can_see_class_scope;
+        if(! symtable_enter_block(st, name, TypeVarBoundBlock, key, LOCATION(e))){
+            return 0
+        }
+        st.cur.can_see_class_scope = is_in_class
+        if(is_in_class && !symtable_add_def(st, '__classdict__', USE, LOCATION(e))){
+            VISIT_QUIT(st, 0)
+        }
+        VISIT(st, expr, e)
+        if (!symtable_exit_block(st)){
+            return 0
+        }
+    }
+    return 1
+}
+
 visitor.type_param = function(st, tp){
   switch(tp.constructor) {
     case $B.ast.TypeVar:
-        if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
+        if(! symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp))){
             VISIT_QUIT(st, 0);
-        if (tp.bound) {
-            var is_in_class = st.cur.can_see_class_scope;
-            if (!symtable_enter_block(st, tp.name,
-                                      TypeVarBoundBlock, tp,
-                                      LOCATION(tp)))
-                VISIT_QUIT(st, 0);
-            st.cur.can_see_class_scope = is_in_class;
-            if (is_in_class && !symtable_add_def(st, "__classdict__", USE, LOCATION(tp.bound))) {
-                VISIT_QUIT(st, 0);
-            }
-            VISIT(st, expr, tp.bound);
-            if (!symtable_exit_block(st))
-                VISIT_QUIT(st, 0);
+        }
+        if(! visitor.type_param_bound_or_default(st, tp.bound,
+                tp.name, tp)){
+            VISIT_QUIT(st, 0)
+        }
+        if(! visitor.type_param_bound_or_default(st, tp.default_value,
+                tp.name, tp + 1)){
+            VISIT_QUIT(st, 0)
         }
         break;
     case $B.ast.TypeVarTuple:
-        if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
-            VISIT_QUIT(st, 0);
+        if(! symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp))){
+            VISIT_QUIT(st, 0)
+        }
+        if(! visitor.type_param_bound_or_default(st, tp.default_value,
+                tp.name, tp)){
+            VISIT_QUIT(st, 0)
+        }
         break;
     case $B.ast.ParamSpec:
-        if (!symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp)))
-            VISIT_QUIT(st, 0);
+        if(! symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp))){
+            VISIT_QUIT(st, 0)
+        }
+        if(! visitor.type_param_bound_or_default(st, tp.default_value, 
+                tp.name, tp)){
+            VISIT_QUIT(st, 0)
+        }
         break;
     }
     VISIT_QUIT(st, 1);
