@@ -6,10 +6,34 @@ import shutil
 bdir = os.path.join(os.path.dirname(os.getcwd()),
     "www", "src", "Lib")
 
-old = "3.12"
+old = "3.13"
 new = "3.13"
 p_old_dir = rf'c:\Python{old.replace(".", "")}\Lib'
 p_new_dir = rf'c:\Python{new.replace(".", "")}\Lib'
+
+force_update = ['argparse.py',
+    'base64.py',
+    'bdb.py',
+    'calendar.py',
+    'code.py',
+    'codeop.py',
+    'configparser.py',
+    'copy.py',
+    'dataclasses.py',
+    'enum.py',
+    'fractions.py',
+    'functools.py',
+    'glob.py',
+    'inspect.py',
+    'operator.py',
+    'pdb.py',
+    'pickle.py',
+    'symtable.py',
+    'traceback.py',
+    'typing.py',
+    'zipimport.py',
+    '_pydatetime.py'
+    ]
 
 for dirpath, dirnames, filenames in os.walk(bdir):
     if "site-packages" in dirnames:
@@ -45,6 +69,9 @@ for dirpath, dirnames, filenames in os.walk(bdir):
                         pass
                     else:
                         print('***', brython_short, f'not the same as CPython {old}')
+                        if brython_short in force_update:
+                            print('>>> force update', brython_short)
+                            shutil.copyfile(p_new_path, brython_path)
                 else:
                     print('***', brython_short, f"not in Python {new}")
         else:

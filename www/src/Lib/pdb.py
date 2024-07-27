@@ -392,9 +392,12 @@ class Pdb(bdb.Bdb, cmd.Cmd):
             self.tb_lineno[tb.tb_frame] = lineno
             tb = tb.tb_next
         self.curframe = self.stack[self.curindex][0]
-        # The f_locals dictionary is updated from the actual frame
-        # locals whenever the .f_locals accessor is called, so we
-        # cache it here to ensure that modifications are not overwritten.
+        # The f_locals dictionary used to be updated from the actual frame
+        # locals whenever the .f_locals accessor was called, so it was
+        # cached here to ensure that modifications were not overwritten. While
+        # the caching is no longer required now that f_locals is a direct proxy
+        # on optimized frames, it's also harmless, so the code structure has
+        # been left unchanged.
         self.curframe_locals = self.curframe.f_locals
         self.set_convenience_variable(self.curframe, '_frame', self.curframe)
 
@@ -516,7 +519,7 @@ class Pdb(bdb.Bdb, cmd.Cmd):
 
     # Called before loop, handles display expressions
     # Set up convenience variable containers
-    def preloop(self):
+    def _show_display(self):
         displaying = self.displaying.get(self.curframe)
         if displaying:
             for expr, oldvalue in displaying.items():
@@ -602,10 +605,16 @@ class Pdb(bdb.Bdb, cmd.Cmd):
             assert tb is not None, "main exception must have a traceback"
         with self._hold_exceptions(_chained_exceptions):
             self.setup(frame, tb)
-            # if we have more commands to process, do not show the stack entry
-            if not self.cmdqueue:
-                self.print_stack_entry(self.stack[self.curindex])
+            # We should print the stack entry if and only if the user input
+            # is expected, and we should print it right before the user input.
+            # We achieve this by appending _pdbcmd_print_frame_status to the
+            # command queue. If cmdqueue is not exausted, the user input is
+            # not expected and we will not print the stack entry.
+            self.cmdqueue.append('_pdbcmd_print_frame_status')
             self._cmdloop()
+            # If _pdbcmd_print_frame_status is not used, pop it out
+            if self.cmdqueue and self.cmdqueue[-1] == '_pdbcmd_print_frame_status':
+                self.cmdqueue.pop()
             self.forget()
 
     def displayhook(self, obj):
@@ -837,6 +846,10 @@ class Pdb(bdb.Bdb, cmd.Cmd):
         """
         if not self.commands_defining:
             self._validate_file_mtime()
+            if line.startswith('_pdbcmd'):
+                command, arg, line = self.parseline(line)
+                if hasattr(self, command):
+                    return getattr(self, command)(arg)
             return cmd.Cmd.onecmd(self, line)
         else:
             return self.handle_command_def(line)
@@ -969,6 +982,12 @@ class Pdb(bdb.Bdb, cmd.Cmd):
             matches.append(match)
             state += 1
         return matches
+
+    # Pdb meta commands, only intended to be used internally by pdb
+
+    def _pdbcmd_print_frame_status(self, arg):
+        self.print_stack_entry(self.stack[self.curindex])
+        self._show_display()
 
     # Command definitions, called by cmdloop()
     # The argument is the remaining string on the command line
@@ -2441,9 +2460,12 @@ def main():
             traceback.print_exception(e, colorize=_colorize.can_colorize())
             print("Uncaught exception. Entering post mortem debugging")
             print("Running 'cont' or 'step' will restart the program")
-            pdb.interaction(None, e)
-            print(f"Post mortem debugger finished. The {target} will "
-                  "be restarted")
+            try:
+                pdb.interaction(None, e)
+            except Restart:
+                print("Restarting", target, "with arguments:")
+                print("\t" + " ".join(sys.argv[1:]))
+                continue
         if pdb._user_requested_quit:
             break
         print("The program finished and will be restarted")

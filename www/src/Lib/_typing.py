@@ -184,6 +184,7 @@ class TypeVar:
         self.__covariant__ = covariant
         self.__contravariant__ = contravariant
         self.__infer_variance__ = infer_variance
+        self._has_default = default != NoDefault
         self._lazy_eval = {}
 
 
@@ -220,6 +221,9 @@ class TypeVar:
                 raise
         return super().__getattribute__(attr)
 
+    def has_default(self):
+        return self._has_default
+        
 class TypeVarTuple:
     """Type variable tuple.
 
@@ -447,26 +451,27 @@ class ParamSpec:
         return args
 
 class Generic:
-    """Abstract base class for generic types.
+    """    Abstract base class for generic types.
 
-    A generic type is typically declared by inheriting from
-    this class parameterized with one or more type variables.
-    For example, a generic mapping type might be defined as::
+    On Python 3.12 and newer, generic classes implicitly inherit from
+    Generic when they declare a parameter list after the class's name::
 
-      class Mapping(Generic[KT, VT]):
-          def __getitem__(self, key: KT) -> VT:
-              ...
-          # Etc.
+        class Mapping[KT, VT]:
+            def __getitem__(self, key: KT) -> VT:
+                ...
+            # Etc.
 
-    This class can then be used as follows::
+    On older versions of Python, however, generic classes have to
+    explicitly inherit from Generic.
 
-      def lookup_name(mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-          try:
-              return mapping[key]
-          except KeyError:
-              return default
-    """
-    __module__ = 'typing'
+    After a class has been declared to be generic, it can then be used as
+    follows::
+
+        def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
+            try:
+                return mapping[key]
+            except KeyError:
+                return default"""
     __slots__ = ()
     _is_protocol = False
 
