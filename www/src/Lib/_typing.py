@@ -8,6 +8,8 @@ class Typing:
 
 typing = Typing()
 
+NoDefault = "typing.NoDefault"
+
 def _idfunc(_, x):
     return x
 
@@ -169,7 +171,7 @@ class TypeVar:
 
     def __init__(self, name, *constraints, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True):
+                 infer_variance=True, default=NoDefault):
         self.__name__ = name
         if constraints and bound is not None:
             raise TypeError("Constraints cannot be combined with bound=...")

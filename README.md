@@ -62,7 +62,7 @@ You can choose the latest stable release :
 
 ```html
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.12.4/brython.min.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.13.0/brython.min.js">
 </script>
 ```
 
@@ -72,12 +72,12 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```html
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.12.4/brython_stdlib.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.13.0/brython_stdlib.js">
 </script>
 ```
 
 jsDelivr supports version ranges, so if you want the latest of the
-3.12.x versions:
+3.13.x versions:
 
 ```html
 <script type="text/javascript"
