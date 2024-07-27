@@ -368,7 +368,7 @@ _b_.compile = function() {
             if(tester && (
                     (tester.type == "NEWLINE" && ($.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT)) ||
                     (tester.type == "DEDENT" && ($.flags & 0x200)))){
-                err.__class__ = _b_.IncompleteInputError
+                err.__class__ = _b_._IncompleteInputError
                 err.args[0] = 'incomplete input'
             }
         }
@@ -955,7 +955,7 @@ $B.$getattr = function(obj, attr, _default){
                     }
                     return f
                 }else{
-                    return $B.$jsobj2pyobj(res)
+                    return $B.jsobj2pyobj(res)
                 }
             }
             if(_default !== undefined){
@@ -1004,7 +1004,11 @@ $B.$getattr = function(obj, attr, _default){
                       }
                   }
               }
-              dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__')
+              dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__',
+                  function(){
+                      // here for compliance, what should it do ?
+                  }
+              )
               return {
                   __class__: $B.mappingproxy, // in py_dict.js
                   $jsobj: dict,

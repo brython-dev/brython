@@ -945,7 +945,7 @@ $B._PyPegen.run_parser = function(p){
     if (res == NULL) {
         if ((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
             return $B.helper_functions.RAISE_ERROR(p, 
-                _b_.IncompleteInputError, "incomplete input");
+                _b_._IncompleteInputError, "incomplete input");
         }
         // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"

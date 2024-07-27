@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-27 11:23:14.577571"
-__BRYTHON__.timestamp=1722072194577
+__BRYTHON__.compiled_date="2024-07-27 18:52:00.176397"
+__BRYTHON__.timestamp=1722099120175
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2197,8 +2197,7 @@ $B.set_func_names(staticmethod,"builtins")
 $B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr,getter,setter){var res={__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr,getter,setter}
 return res}
 )
-$B.getset_descriptor.__get__=function(self,obj,klass){console.log('__get__',self,obj,klass)
-if(obj===_b_.None){return self}
+$B.getset_descriptor.__get__=function(self,obj,klass){if(obj===_b_.None){return self}
 return self.getter(self,obj,klass)}
 $B.getset_descriptor.__set__=function(self,klass,value){return self.setter(self,klass,value)}
 $B.getset_descriptor.__repr__=function(self){return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`}
@@ -2556,7 +2555,7 @@ if(message){throw _b_.RuntimeError.$factory(message)}}
 self.counter++
 if(self.counter < self.items.length){var item=self.items[self.counter]
 if(self.items.$is_js_array){
-item=$B.$jsobj2pyobj(item)}
+item=$B.jsobj2pyobj(item)}
 return item}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
@@ -2755,7 +2754,7 @@ parser.flags=$.flags
 _ast=$B._PyPegen.run_parser(parser)}catch(err){if($.mode=='single'){var tester=parser.tokens[parser.tokens.length-2]
 if(tester &&(
 (tester.type=="NEWLINE" &&($.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT))||
-(tester.type=="DEDENT" &&($.flags & 0x200)))){err.__class__=_b_.IncompleteInputError
+(tester.type=="DEDENT" &&($.flags & 0x200)))){err.__class__=_b_._IncompleteInputError
 err.args[0]='incomplete input'}}
 throw err}
 if($.mode=='single' && _ast.body.length==1 &&
@@ -2958,7 +2957,7 @@ res=obj[attr]
 if(res !==undefined){if(typeof res=="function"){var f=function(){
 return res.apply(obj,arguments)}
 f.$infos={__name__:attr,__qualname__:attr}
-return f}else{return $B.$jsobj2pyobj(res)}}
+return f}else{return $B.jsobj2pyobj(res)}}
 if(_default !==undefined){return _default}
 throw $B.attr_error(rawname,obj)}}
 switch(attr){case '__call__':
@@ -2976,7 +2975,8 @@ return klass
 case '__dict__':
 if(is_class){var dict={},key
 if(obj.__dict__){for(key of _b_.dict.$keys_string(obj.__dict__)){dict[key]=_b_.dict.$getitem_string(obj.__dict__,key)}}else{for(key in obj){if(! key.startsWith("$")){dict[key]=obj[key]}}}
-dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__')
+dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__',function(){}
+)
 return{
 __class__:$B.mappingproxy,
 $jsobj:dict,$version:0}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
@@ -4308,7 +4308,7 @@ make_builtin_exception(["IndexError","KeyError"],_b_.LookupError)
 make_builtin_exception(["BlockingIOError","ChildProcessError","ConnectionError","FileExistsError","FileNotFoundError","InterruptedError","IsADirectoryError","NotADirectoryError","PermissionError","ProcessLookupError","TimeoutError"],_b_.OSError)
 make_builtin_exception(["BrokenPipeError","ConnectionAbortedError","ConnectionRefusedError","ConnectionResetError"],_b_.ConnectionError)
 make_builtin_exception(["NotImplementedError","RecursionError","PythonFinalizationError"],_b_.RuntimeError)
-make_builtin_exception(["IndentationError","IncompleteInputError"],_b_.SyntaxError,"msg")
+make_builtin_exception(["IndentationError","_IncompleteInputError"],_b_.SyntaxError,"msg")
 make_builtin_exception("TabError",_b_.IndentationError)
 make_builtin_exception("UnicodeError",_b_.ValueError)
 make_builtin_exception(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
@@ -15159,7 +15159,7 @@ return;}
 $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
 $B.raise_error_known_token(_b_.SyntaxError,p.filename,last_token,"invalid syntax");}
 $B._PyPegen.run_parser=function(p){var res=$B._PyPegen.parse(p);
-if(res==NULL){if((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(p)){return $B.helper_functions.RAISE_ERROR(p,_b_.IncompleteInputError,"incomplete input");}
+if(res==NULL){if((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(p)){return $B.helper_functions.RAISE_ERROR(p,_b_._IncompleteInputError,"incomplete input");}
 var last_token=p.tokens[p.fill-1];
 reset_parser_state_for_error_pass(p);
 try{$B._PyPegen.parse(p);}catch(err){last_token=p.tokens[p.fill-1]

@@ -567,7 +567,7 @@ make_builtin_exception(["NotImplementedError", "RecursionError",
     "PythonFinalizationError"],
     _b_.RuntimeError)
 
-make_builtin_exception(["IndentationError", "IncompleteInputError"],
+make_builtin_exception(["IndentationError", "_IncompleteInputError"],
     _b_.SyntaxError, "msg")
 make_builtin_exception("TabError", _b_.IndentationError)
 make_builtin_exception("UnicodeError", _b_.ValueError)
