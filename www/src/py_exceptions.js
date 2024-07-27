@@ -563,10 +563,12 @@ make_builtin_exception(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"],
     _b_.ConnectionError)
 
-make_builtin_exception(["NotImplementedError", "RecursionError"],
+make_builtin_exception(["NotImplementedError", "RecursionError", 
+    "PythonFinalizationError"],
     _b_.RuntimeError)
 
-make_builtin_exception("IndentationError", _b_.SyntaxError, "msg")
+make_builtin_exception(["IndentationError", "IncompleteInputError"],
+    _b_.SyntaxError, "msg")
 make_builtin_exception("TabError", _b_.IndentationError)
 make_builtin_exception("UnicodeError", _b_.ValueError)
 make_builtin_exception(["UnicodeDecodeError", "UnicodeEncodeError",

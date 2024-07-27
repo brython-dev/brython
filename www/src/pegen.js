@@ -863,7 +863,7 @@ function reset_parser_state_for_error_pass(p){
 
 function _is_end_of_source(p) {
     var err = p.tok.done;
-    return err == E_EOF || err == E_EOFS || err == E_EOLS;
+    return p.tokens[p.tokens.length - 1].type == 'ENDMARKER'
 }
 
 $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
@@ -943,9 +943,9 @@ $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
     // assert(p->level == 0);
     if (res == NULL) {
-        if ((p.flags & PyPARSE_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
-            PyErr_Clear();
-            return RAISE_SYNTAX_ERROR("incomplete input");
+        if ((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
+            return $B.helper_functions.RAISE_ERROR(p, 
+                _b_.IncompleteInputError, "incomplete input");
         }
         // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"

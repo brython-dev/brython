@@ -365,11 +365,10 @@ _b_.compile = function() {
     }catch(err){
         if($.mode == 'single'){
             var tester = parser.tokens[parser.tokens.length - 2]
-
             if(tester && (
-                    (tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
+                    (tester.type == "NEWLINE" && ($.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT)) ||
                     (tester.type == "DEDENT" && ($.flags & 0x200)))){
-                err.__class__ = _b_.SyntaxError
+                err.__class__ = _b_.IncompleteInputError
                 err.args[0] = 'incomplete input'
             }
         }

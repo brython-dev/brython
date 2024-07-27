@@ -159,6 +159,15 @@ var helper_functions = {
         return NULL;
     },
 
+    RAISE_ERROR: function(p, errtype, msg){
+        var extra_args = []
+        for(var i = 1, len = arguments.length; i < len; i++){
+            extra_args.push(arguments[i])
+        }
+        get_last_token(p)
+        $B._PyPegen.raise_error(p, errtype, msg, ...extra_args)
+    },
+    
     RAISE_SYNTAX_ERROR: function(p, msg){
         var extra_args = []
         for(var i = 1, len = arguments.length; i < len; i++){
