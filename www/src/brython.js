@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-27 18:52:00.176397"
-__BRYTHON__.timestamp=1722099120175
+__BRYTHON__.compiled_date="2024-07-29 12:22:49.565332"
+__BRYTHON__.timestamp=1722248569564
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1982,7 +1982,8 @@ return _b_.None}
 object.__le__=function(){return _b_.NotImplemented}
 object.__lt__=function(){return _b_.NotImplemented}
 object.__mro__=[]
-object.$new=function(cls){return function(){if(arguments.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}
+object.$new=function(cls){return function(){var $=$B.args('__new__',0,[],[],arguments,{},'args','kwargs')
+if($.args.length > 0 ||_b_.dict.__len__($.kwargs)> 0){throw _b_.TypeError.$factory("object() takes no parameters")}
 var res=Object.create(null)
 res.__class__=cls
 res.__dict__=$B.obj_dict({})
@@ -2587,8 +2588,13 @@ function(){return $B.fast_tuple([])}
 $B.GenericAlias.__repr__=function(self){var items=Array.isArray(self.items)? self.items :[self.items]
 var reprs=[]
 for(var item of items){if(item===_b_.Ellipsis){reprs.push('...')}else{if(item.$is_class){reprs.push(item.__name__)}else{reprs.push(_b_.repr(item))}}}
-return self.origin_class.__qualname__+'['+
+var iv=$B.$getattr(self.origin_class,'__infer_variance__',true)
+var prefix=iv ? '' :'~'
+return prefix+$B.$getattr(self.origin_class,'__qualname__')+'['+
 reprs.join(", ")+']'}
+$B.GenericAlias.__type_params__=_b_.property.$factory(
+function(self){return $B.$getattr(self.origin_class,'__type_params__')}
+)
 $B.set_func_names($B.GenericAlias,"types")
 $B.UnionType=$B.make_class("UnionType",function(items){return{
 __class__:$B.UnionType,items}}
@@ -11646,6 +11652,10 @@ function check_compare(op_name,left,right,scopes){var test_left=check_is_arg(lef
 if(! test_left ||! test_right){var item=test_left ? right :left,name=$B.class_name(item.value)
 $B.warn(_b_.SyntaxWarning,`"${op_name}" with '${name}' literal. `+
 `Did you mean "=="?`,scopes.filename,item)}}
+function check_type_params(ast_obj){var type_params=ast_obj.type_params
+if(Array.isArray(type_params)){var has_defaults=false
+for(var type_param of type_params){if(type_param.default_value===undefined && has_defaults){throw compiler_error(type_param,`non-default type `+
+`parameter '${type_param.name}' follows default type parameter`)}else if(type_param.default_value){has_defaults=true}}}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
@@ -11866,7 +11876,8 @@ while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.as
 ix--}else{break}}
 var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
 var has_type_params=this.type_params.length > 0
-if(has_type_params){js+=`$B.$import('_typing')\n`+
+if(has_type_params){check_type_params(this)
+js+=`$B.$import('_typing')\n`+
 `var _typing = $B.imported._typing\n`
 var params=[]
 for(let item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)}else if(item instanceof $B.ast.ParamSpec){params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)}}
@@ -12328,7 +12339,7 @@ js+=`function BOUND_OF_${name}(){\n`+
 `throw err\n}\n}\n`
 scopes.pop()}
 js+=`locals_${ref}.${name} = `+
-`$B.$call(_typing.${param_type})('${name}')\n`+
+`$B.$call(_typing.${param_type})('${name}', {$kw: [{infer_variance: true}]})\n`+
 `type_params.push(locals_${ref}.${name})\n`
 if(tp.bound){if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__bound__', BOUND_OF_${name})\n`}else{js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
@@ -12357,6 +12368,7 @@ kw_defaults=kw_default_names.length==0 ? '_b_.None' :
 var id=$B.UUID(),name2=this.name+id
 var has_type_params=this.type_params.length > 0,type_params=''
 if(has_type_params){
+check_type_params(this)
 var tp_name=`type_params_${name2}`
 var type_params_scope=new Scope(tp_name,'type_params',this.type_params)
 scopes.push(type_params_scope)
@@ -12958,6 +12970,7 @@ scopes.push(type_param_scope)
 var type_alias_scope=new Scope('type_alias','type_alias',this)
 scopes.push(type_alias_scope)
 var type_params_names=[]
+check_type_params(this)
 for(var type_param of this.type_params){if(type_param instanceof $B.ast.TypeVar){type_params_names.push(type_param.name)}else if(type_param instanceof $B.ast.TypeVarTuple ||
 type_param instanceof $B.ast.ParamSpec){type_params_names.push(type_param.name.id)}}
 for(var name of type_params_names){bind(name,scopes)}
@@ -12982,7 +12995,9 @@ js+=`var res = $B.$call($B.imported._typing.TypeAliasType)`+
 `}\n`+
 `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
 return js}
-$B.ast.TypeVar.prototype.to_js=function(){return `$B.$call($B.imported._typing.TypeVar)('${this.name}')`}
+$B.ast.TypeVar.prototype.to_js=function(){check_type_params(this)
+return `$B.$call($B.imported._typing.TypeVar)('${this.name}', `+
+`{$kw: [{infer_variance: true}]})`}
 $B.ast.TypeVarTuple.prototype.to_js=function(){return `$B.$call($B.imported._typing.TypeVarTuple)('${this.name.id}')`}
 $B.ast.ParamSpec.prototype.to_js=function(){return `$B.$call($B.imported._typing.ParamSpec)('${this.name.id}')`}
 $B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
@@ -13921,7 +13936,7 @@ return 1}
 visitor.type_param=function(st,tp){switch(tp.constructor){case $B.ast.TypeVar:
 if(! symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0);}
 if(! visitor.type_param_bound_or_default(st,tp.bound,tp.name,tp)){VISIT_QUIT(st,0)}
-if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,tp+1)){VISIT_QUIT(st,0)}
+if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,{$id:$B.UUID()})){VISIT_QUIT(st,0)}
 break;
 case $B.ast.TypeVarTuple:
 if(! symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}

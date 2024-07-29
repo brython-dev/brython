@@ -1459,9 +1459,17 @@ $B.GenericAlias.__repr__ = function(self){
             }
         }
     }
-    return self.origin_class.__qualname__ + '[' +
+    var iv = $B.$getattr(self.origin_class, '__infer_variance__', true)
+    var prefix = iv ? '' : '~'
+    return prefix + $B.$getattr(self.origin_class, '__qualname__') + '[' +
         reprs.join(", ") + ']'
 }
+
+$B.GenericAlias.__type_params__ = _b_.property.$factory(
+    function(self){
+        return $B.$getattr(self.origin_class, '__type_params__')
+    }
+)
 
 $B.set_func_names($B.GenericAlias, "types")
 

@@ -1748,7 +1748,7 @@ visitor.type_param = function(st, tp){
             VISIT_QUIT(st, 0)
         }
         if(! visitor.type_param_bound_or_default(st, tp.default_value,
-                tp.name, tp + 1)){
+                tp.name, {$id: $B.UUID()})){
             VISIT_QUIT(st, 0)
         }
         break;
@@ -1765,7 +1765,7 @@ visitor.type_param = function(st, tp){
         if(! symtable_add_def(st, tp.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(tp))){
             VISIT_QUIT(st, 0)
         }
-        if(! visitor.type_param_bound_or_default(st, tp.default_value, 
+        if(! visitor.type_param_bound_or_default(st, tp.default_value,
                 tp.name, tp)){
             VISIT_QUIT(st, 0)
         }

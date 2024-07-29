@@ -973,6 +973,21 @@ function check_compare(op_name, left, right, scopes){
     }
 }
 
+function check_type_params(ast_obj){
+    var type_params = ast_obj.type_params
+    if(Array.isArray(type_params)){
+        var has_defaults = false
+        for(var type_param of type_params){
+            if(type_param.default_value === undefined && has_defaults){
+                throw compiler_error(type_param, `non-default type ` +
+                    `parameter '${type_param.name}' follows default type parameter`)
+            }else if(type_param.default_value){
+                has_defaults = true
+            }
+        }
+    }
+}
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
@@ -1534,6 +1549,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
     if(has_type_params){
+        check_type_params(this)
         js += `$B.$import('_typing')\n` +
               `var _typing = $B.imported._typing\n`
         var params = []
@@ -2424,7 +2440,7 @@ function type_param_in_def(tp, ref, scopes){
         scopes.pop()
     }
     js += `locals_${ref}.${name} = ` +
-        `$B.$call(_typing.${param_type})('${name}')\n` +
+        `$B.$call(_typing.${param_type})('${name}', {$kw: [{infer_variance: true}]})\n` +
         `type_params.push(locals_${ref}.${name})\n`
     if(tp.bound){
         if(! tp.bound.elts){
@@ -2496,6 +2512,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(has_type_params){
         // create a scope for type params
+        check_type_params(this)
         var tp_name = `type_params_${name2}`
         var type_params_scope = new Scope(tp_name, 'type_params',
             this.type_params)
@@ -3812,6 +3829,8 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
 
     var type_params_names = []
 
+    check_type_params(this)
+
     for(var type_param of this.type_params){
         if(type_param instanceof $B.ast.TypeVar){
             type_params_names.push(type_param.name)
@@ -3858,7 +3877,9 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
 }
 
 $B.ast.TypeVar.prototype.to_js = function(){
-    return `$B.$call($B.imported._typing.TypeVar)('${this.name}')`
+    check_type_params(this)
+    return `$B.$call($B.imported._typing.TypeVar)('${this.name}', ` +
+        `{$kw: [{infer_variance: true}]})`
 }
 
 $B.ast.TypeVarTuple.prototype.to_js = function(){

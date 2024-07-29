@@ -1,5 +1,7 @@
 # Brython-only
 
+GenericAlias = type(list[str])
+
 class Typing:
 
     def __getattr__(self, attr):
@@ -171,7 +173,7 @@ class TypeVar:
 
     def __init__(self, name, *constraints, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True, default=NoDefault):
+                 infer_variance=False, default=NoDefault):
         self.__name__ = name
         if constraints and bound is not None:
             raise TypeError("Constraints cannot be combined with bound=...")
@@ -183,10 +185,25 @@ class TypeVar:
         self.__module__ = 'typing'
         self.__covariant__ = covariant
         self.__contravariant__ = contravariant
+        self.__default__ = default
         self.__infer_variance__ = infer_variance
         self._has_default = default != NoDefault
         self._lazy_eval = {}
 
+    def __typing_prepare_subst__(self, alias, args):
+        params = alias.__parameters__
+        if self not in params:
+            return
+        i = params.index(self)
+        if i < len(args):
+            return args
+        elif i == len(args):
+            default = self.__default__
+            if default != NoDefault:
+                return (default,) + args
+        raise TypeError(
+             "Too few arguments for %S; actual %d, expected at least %d".format(
+             alias, len(args), i + 1))
 
     def __typing_subst__(self, arg):
         msg = "Parameters to generic types must be types."
@@ -223,7 +240,7 @@ class TypeVar:
 
     def has_default(self):
         return self._has_default
-        
+
 class TypeVarTuple:
     """Type variable tuple.
 
@@ -492,10 +509,16 @@ class Generic:
 
 class TypeAliasType:
 
-    def __init__(self, name, value):
+    def __init__(self, name, value, type_params=None):
         self.__name__ = name
-        self.__type_params__ = ()
+        self.__qualname__ = name
+        self.__type_params__ = () if type_params is None else type_params
         self._value = value
+
+    def __getitem__(self, params):
+        if not hasattr(self, '__type_params__'):
+            raise TypeError("Only generic type aliases are subscriptable")
+        return GenericAlias(self, params)
 
     @property
     def __value__(self):
