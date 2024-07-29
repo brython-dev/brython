@@ -381,7 +381,8 @@ object.__mro__ = []
 
 object.$new = function(cls){
     return function(){
-        if(arguments.length > 0){
+        var $ = $B.args('__new__', 0, [], [], arguments, {}, 'args', 'kwargs')
+        if($.args.length > 0 || _b_.dict.__len__($.kwargs) > 0){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
         var res = Object.create(null)
