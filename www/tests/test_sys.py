@@ -197,12 +197,21 @@ test()
 class C:
     x = 1
     sys._getframe().f_locals['x'] = 2
+    sys._getframe().f_globals['z'] = 22
+    assert z == 22
     assert x == 2
 
 def f():
     x = 1
     sys._getframe().f_locals['x'] = 3
+    sys._getframe().f_globals['z'] = 10
+    assert z == 10
     assert x == 3
 f()
+
+y = 4
+sys._getframe().f_locals['y'] = 5
+assert y == 5
+assert z == 10
 
 print('all tests ok...')
