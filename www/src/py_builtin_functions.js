@@ -930,7 +930,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__call__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "f_locals" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1202,7 +1202,7 @@ $B.$getattr = function(obj, attr, _default){
         if($test){console.log("result of attr_func", res)}
     }catch(err){
         if($test){
-            console.log('attr_func raised error', err.args, err.name)
+            console.log('attr_func raised error', err.__class__, err.args, err.name)
         }
         if(klass === $B.module){
             // try __getattr__ at module level (PEP 562)

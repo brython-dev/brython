@@ -229,7 +229,6 @@ frame.__getattr__ = function(_self, attr){
         // last instruction not relevant in Brython
         return 0
     }
-    //console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
 
@@ -563,7 +562,7 @@ make_builtin_exception(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"],
     _b_.ConnectionError)
 
-make_builtin_exception(["NotImplementedError", "RecursionError", 
+make_builtin_exception(["NotImplementedError", "RecursionError",
     "PythonFinalizationError"],
     _b_.RuntimeError)
 

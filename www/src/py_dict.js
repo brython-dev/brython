@@ -1600,7 +1600,7 @@ function jsobj2dict(x, exclude){
 
 $B.obj_dict = function(obj, exclude){
     var klass = obj.__class__ || $B.get_class(obj)
-    if(klass !== undefined && klass.$native){
+    if(! (obj instanceof $B.str_dict) && klass !== undefined && klass.$native){
         throw $B.attr_error("__dict__", obj)
     }
     var res = {

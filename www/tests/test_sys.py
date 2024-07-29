@@ -193,4 +193,16 @@ def test():
 
 test()
 
+# PEP 667
+class C:
+    x = 1
+    sys._getframe().f_locals['x'] = 2
+    assert x == 2
+
+def f():
+    x = 1
+    sys._getframe().f_locals['x'] = 3
+    assert x == 3
+f()
+
 print('all tests ok...')
