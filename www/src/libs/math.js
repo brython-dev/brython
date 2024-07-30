@@ -1195,6 +1195,147 @@ function floor(x){
     }
 }
 
+var _fma = (function () {
+    // copied from 
+    // https://gist.github.com/Yaffle/fb47de4c18b63147699e0b621f1031f7
+
+  "use strict";
+
+  var SPLIT = Math.pow(2, 27) + 1;
+  var MIN_VALUE = Math.pow(2, -1022);
+  var EPSILON = Math.pow(2, -52);
+  // (1022 + 52) / 3 < C <= (1022 - 53 - 53 + 4) / 2 - ?
+  var C = 416;
+  var A = Math.pow(2, +C);
+  var B = Math.pow(2, -C);
+
+  var multiply = function (a, b) {
+    var at = SPLIT * a;
+    var ahi = at - (at - a);
+    var alo = a - ahi;
+    var bt = SPLIT * b;
+    var bhi = bt - (bt - b);
+    var blo = b - bhi;
+    var p = a * b;
+    var e = ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
+    return {
+      p: p,
+      e: e
+    };
+  };
+
+  var add = function (a, b) {
+    var s = a + b;
+    var v = s - a;
+    var e = (a - (s - v)) + (b - v);
+    return {
+      s: s,
+      e: e
+    };
+  };
+
+  var adjust = function (x, y) {
+    return x !== 0 && y !== 0 && SPLIT * x - (SPLIT * x - x) === x ? x * (1 + (x < 0 ? -1 : +1) * (y < 0 ? -1 : +1) * EPSILON) : x;
+  };
+
+  var fma = function (x, y, z) {
+    x = Number(x);
+    y = Number(y);
+    z = Number(z);
+
+    if (x === 0 || x !== x || x === +1 / 0 || x === -1 / 0 ||
+        y === 0 || y !== y || y === +1 / 0 || y === -1 / 0) {
+      return x * y + z;
+    }
+    if (z === 0) {
+      return x * y;
+    }
+    if (z !== z || z === +1 / 0 || z === -1 / 0) {
+      return z;
+    }
+
+    var scale = 1;
+    while (Math.abs(x) > A) {
+      scale *= A;
+      x *= B;
+    }
+    while (Math.abs(y) > A) {
+      scale *= A;
+      y *= B;
+    }
+    if (scale === 1 / 0) {
+      return x * y * scale;
+    }
+    while (Math.abs(x) < B) {
+      scale *= B;
+      x *= A;
+    }
+    while (Math.abs(y) < B) {
+      scale *= B;
+      y *= A;
+    }
+    if (scale === 0) {
+      return z;
+    }
+
+    var xs = x;
+    var ys = y;
+    var zs = z / scale;
+
+    if (Math.abs(zs) > Math.abs(xs * ys) * 4 / EPSILON) {
+      return z;
+    }
+    if (Math.abs(zs) < Math.abs(xs * ys) * EPSILON / 4 * EPSILON / 4) {
+      zs = (z < 0 ? -1 : +1) * MIN_VALUE;
+    }
+
+    var xy = multiply(xs, ys);
+    var s = add(xy.p, zs);
+    var u = add(xy.e, s.e);
+    var i = add(s.s, u.s);
+
+    var f = i.s + adjust(i.e, u.e);
+    if (f === 0) {
+      return f;
+    }
+
+    var fs = f * scale;
+    if (Math.abs(fs) > MIN_VALUE) {
+      return fs;
+    }
+
+    // It is possible that there was extra rounding for a denormalized value.
+    return fs + adjust(f - fs / scale, i.e) * scale;
+  };
+
+  return fma
+
+}());
+
+function fma(x, y, z){
+    var $ = $B.args('fma', 3, {x: null, y: null, z: null}, ['x', 'y', 'z'],
+            arguments, {}, null, null),
+        x = float_check($.x),
+        y = float_check($.y),
+        z = float_check($.z)
+
+    var res =_fma(x, y, z)
+    if(isFinite(res)){
+        return $B.fast_float(res)
+    }
+    if(isNaN(res)){
+        if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+            /* NaN result from non-NaN inputs. */
+            throw _b_.ValueError.$factory("invalid operation in fma");
+        }
+    }else if(isFinite(x) && isFinite(y) && isFinite(z)) {
+        /* Infinite result from finite inputs. */
+        throw _b_.OverflowError.$factory("overflow in fma");
+    }
+
+    return $B.fast_float(res)
+}
+
 function fmod(x, y){
     $B.check_nb_args_no_kw('fmod', 2, arguments)
     if($B.$isinstance(x, _b_.float)){
@@ -2361,28 +2502,12 @@ function sumprod(p, q){
         var finished;
         p_i = p_it.next()
         if (p_i.done) {
-            /*
-            if (PyErr_Occurred()) {
-                if (!PyErr_ExceptionMatches(PyExc_StopIteration)) {
-                    goto err_exit;
-                }
-                PyErr_Clear();
-            }
-            */
             p_stopped = true;
         }else{
             p_i = p_i.value
         }
         q_i = q_it.next()
         if (q_i.done) {
-            /*
-            if (PyErr_Occurred()) {
-                if (!PyErr_ExceptionMatches(PyExc_StopIteration)) {
-                    goto err_exit;
-                }
-                PyErr_Clear();
-            }
-            */
             q_stopped = true;
         }else{
             q_i = q_i.value
@@ -2597,6 +2722,7 @@ var _mod = {
     fabs,
     factorial,
     floor,
+    fma,
     fmod,
     frexp,
     fsum,
