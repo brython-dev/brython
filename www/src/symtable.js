@@ -1307,8 +1307,8 @@ visitor.stmt = function(st, s){
         break
     case $B.ast.Try:
         VISIT_SEQ(st, stmt, s.body)
-        VISIT_SEQ(st, stmt, s.orelse)
         VISIT_SEQ(st, excepthandler, s.handlers)
+        VISIT_SEQ(st, stmt, s.orelse)
         VISIT_SEQ(st, stmt, s.finalbody)
         break
     case $B.ast.TryStar:
