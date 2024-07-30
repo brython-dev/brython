@@ -988,6 +988,29 @@ function check_type_params(ast_obj){
     }
 }
 
+function maybe_add_static(attr, scopes){
+    // If last scope is a function inside a class and the value of attr is
+    // "self", add attr to the class static_attributes set
+    var last = last_scope(scopes)
+    if(last.type == "def"){
+        var ix = scopes.indexOf(last) - 1
+        while(scopes[ix]){
+            last = last_scope(scopes.slice(0, ix + 1))
+            if(last.type == "class"){
+                last.static_attributes = last.static_attributes ??
+                    new Set()
+                last.static_attributes.add(attr.attr)
+                return
+            }else if(last.type == "def"){
+                ix = scopes.indexOf(last) - 1
+            }else{
+                return
+            }
+        }
+    }
+}
+
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
@@ -1064,6 +1087,9 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
                 `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`
         }else if(target instanceof $B.ast.Attribute){
+            if(target.value.id == 'self'){
+                maybe_add_static(target, scopes)
+            }
             var attr = mangle(scopes, last_scope(scopes), target.attr)
             return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
                 `, "${attr}", ${value})`
@@ -1245,6 +1271,20 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
+    if(this.value.id == "self"){
+        maybe_add_static(this, scopes)
+    }
+    if(scopes.length >= 2 && scopes[scopes.length - 1].type == "def" &&
+            scopes[scopes.length - 2].type == "class"){
+        console.log('attr in method', this)
+        if(this.value.id == "self"){
+            console.log('static attr', this)
+            var class_scope = scopes[scopes.length - 2]
+            class_scope.static_attributes = class_scope.static_attributes ??
+                new Set()
+            class_scope.static_attributes.add(this.attr)
+        }
+    }
     var attr = mangle(scopes, last_scope(scopes), this.attr)
     var position = encode_position(this.value.col_offset,
                                 this.value.col_offset,
@@ -1618,9 +1658,15 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
+    var static_attrs = []
+    if(class_scope.static_attributes){
+        static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
+    }
+
     js += '\n$B.trace_return_and_leave(frame, _b_.None)\n' +
           `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
-              `resolved_bases, bases, [${keywords.join(', ')}])\n` +
+              `resolved_bases, bases, [${keywords.join(', ')}], ` +
+              `[${static_attrs}])\n` +
           `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
 
     var class_ref = reference(scopes, enclosing_scope, this.name)

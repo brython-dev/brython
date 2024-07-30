@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-29 15:38:30.240036"
-__BRYTHON__.timestamp=1722260310239
+__BRYTHON__.compiled_date="2024-07-30 12:34:26.034784"
+__BRYTHON__.timestamp=1722335666034
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2095,7 +2095,7 @@ _b_.object=object})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 const TPFLAGS={STATIC_BUILTIN:1 << 1,MANAGED_WEAKREF:1 << 3,MANAGED_DICT:1 << 4,SEQUENCE:1 << 5,MAPPING:1 << 6,DISALLOW_INSTANTIATION:1 << 7,IMMUTABLETYPE:1 << 8,HEAPTYPE:1 << 9,BASETYPE:1 << 10,HAVE_VECTORCALL:1 << 11,READY:1 << 12,READYING:1 << 13,HAVE_GC:1 << 14,METHOD_DESCRIPTOR:1 << 17,VALID_VERSION_TAG:1 << 19,IS_ABSTRACT:1 << 20,MATCH_SELF:1 << 22,LONG_SUBCLASS:1 << 24,LIST_SUBCLASS:1 << 25,TUPLE_SUBCLASS:1 << 26,BYTES_SUBCLASS:1 << 27,UNICODE_SUBCLASS:1 << 28,DICT_SUBCLASS:1 << 29,BASE_EXC_SUBCLASS:1 << 30,TYPE_SUBCLASS:1 << 31,HAVE_FINALIZE:1 << 0,HAVE_VERSION_TAG:1 << 18}
-$B.$class_constructor=function(class_name,class_obj_proxy,metaclass,resolved_bases,bases,kwargs){var dict
+$B.$class_constructor=function(class_name,class_obj_proxy,metaclass,resolved_bases,bases,kwargs,static_attributes){var dict
 if(class_obj_proxy instanceof $B.str_dict){dict=$B.empty_dict()
 dict.$strings=class_obj_proxy}else{dict=class_obj_proxy.$target}
 var module=class_obj_proxy.__module__
@@ -2117,6 +2117,7 @@ var kls=meta_new(metaclass,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})
 kls.__module__=module
 kls.$subclasses=[]
 kls.$is_class=true
+kls.__static_attributes__=$B.fast_tuple(static_attributes)
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}
@@ -11656,6 +11657,14 @@ function check_type_params(ast_obj){var type_params=ast_obj.type_params
 if(Array.isArray(type_params)){var has_defaults=false
 for(var type_param of type_params){if(type_param.default_value===undefined && has_defaults){throw compiler_error(type_param,`non-default type `+
 `parameter '${type_param.name}' follows default type parameter`)}else if(type_param.default_value){has_defaults=true}}}}
+function maybe_add_static(attr,scopes){
+var last=last_scope(scopes)
+if(last.type=="def"){var ix=scopes.indexOf(last)-1
+while(scopes[ix]){last=last_scope(scopes.slice(0,ix+1))
+if(last.type=="class"){last.static_attributes=last.static_attributes ??
+new Set()
+last.static_attributes.add(attr.attr)
+return}else if(last.type=="def"){ix=scopes.indexOf(last)-1}else{return}}}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
@@ -11687,7 +11696,8 @@ $B.ast.AnnAssign.prototype._check=function(){check_assign_or_delete(this,this.ta
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
 var js=this.lineno ? `$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
 function assign_one(target,value){if(target instanceof $B.ast.Name){return $B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
-`, ${$B.js_from_ast(target.slice, scopes)}, ${value})`}else if(target instanceof $B.ast.Attribute){var attr=mangle(scopes,last_scope(scopes),target.attr)
+`, ${$B.js_from_ast(target.slice, scopes)}, ${value})`}else if(target instanceof $B.ast.Attribute){if(target.value.id=='self'){maybe_add_static(target,scopes)}
+var attr=mangle(scopes,last_scope(scopes),target.attr)
 return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}`+
 `, "${attr}", ${value})`}}
 function assign_many(target,value){var js=''
@@ -11762,7 +11772,15 @@ var js=add_body(this.body,scopes)+'\n'
 var has_generator=scope.is_generator
 for(let item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
-$B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
+$B.ast.Attribute.prototype.to_js=function(scopes){if(this.value.id=="self"){maybe_add_static(this,scopes)}
+if(scopes.length >=2 && scopes[scopes.length-1].type=="def" &&
+scopes[scopes.length-2].type=="class"){console.log('attr in method',this)
+if(this.value.id=="self"){console.log('static attr',this)
+var class_scope=scopes[scopes.length-2]
+class_scope.static_attributes=class_scope.static_attributes ??
+new Set()
+class_scope.static_attributes.add(this.attr)}}
+var attr=mangle(scopes,last_scope(scopes),this.attr)
 var position=encode_position(this.value.col_offset,this.value.col_offset,this.end_col_offset)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', ${position})`}
@@ -11912,9 +11930,12 @@ js+=`locals = ${locals_name}\n`+
 scopes.push(class_scope)
 js+=add_body(this.body,scopes)
 scopes.pop()
+var static_attrs=[]
+if(class_scope.static_attributes){static_attrs=Array.from(class_scope.static_attributes).map(x=> `"${x}"`)}
 js+='\n$B.trace_return_and_leave(frame, _b_.None)\n'+
 `return $B.$class_constructor('${this.name}', locals, metaclass, `+
-`resolved_bases, bases, [${keywords.join(', ')}])\n`+
+`resolved_bases, bases, [${keywords.join(', ')}], `+
+`[${static_attrs}])\n`+
 `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
 var class_ref=reference(scopes,enclosing_scope,this.name)
 if(decorated){class_ref=`decorated${$B.UUID()}`
