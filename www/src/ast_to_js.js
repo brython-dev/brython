@@ -914,9 +914,16 @@ function init_scopes(type, scopes){
             }
         }
         if(namespaces.exec_locals !== namespaces.exec_globals){
-            for(let key in namespaces.exec_locals){
-                if(! key.startsWith('$')){
-                    top_scope.locals.add(key)
+            if(namespaces.exec_locals[$B.LOCALS_PROXY]){
+                // used for locals in exec / eval
+                for(let item of $B.make_js_iterator(namespaces.exec_locals.$target)){
+                    top_scope.locals.add(item)
+                }
+            }else{
+                for(let key in namespaces.exec_locals){
+                    if(! key.startsWith('$')){
+                        top_scope.locals.add(key)
+                    }
                 }
             }
         }

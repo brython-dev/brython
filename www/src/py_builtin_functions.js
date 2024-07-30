@@ -530,6 +530,8 @@ enumerate.__next__ = function(self){
 
 $B.set_func_names(enumerate, "builtins")
 
+$B.LOCALS_PROXY = Symbol('locals_proxy')
+
 //eval() (built in function)
 var $$eval = _b_.eval = function(){
     var $ = $B.args("eval", 4,
@@ -665,6 +667,8 @@ var $$eval = _b_.eval = function(){
                         get(target, prop){
                             if(prop == '$target'){
                                 return target
+                            }else if(prop == $B.LOCALS_PROXY){
+                                return true
                             }
                             try{
                                 return getitem(target, prop)
@@ -757,7 +761,6 @@ var $$eval = _b_.eval = function(){
         throw err
     }
 
-    // console.log('exec func', $B.format_indent(exec_func + '', 0))
     try{
         var res = exec_func($B, _b_,
                             exec_locals, exec_globals, frame, _frame_obj)
@@ -796,7 +799,7 @@ $$eval.$is_func = true
 var exec = _b_.exec = function(){
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
         ["src", "globals", "locals"], arguments,
-        {globals: _b_.None, locals: _b_.None}, null, null, 3),
+        {globals: _b_.None, locals: _b_.None}, null, null, 1),
         src = $.src,
         globals = $.globals,
         locals = $.locals

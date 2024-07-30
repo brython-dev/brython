@@ -206,4 +206,11 @@ x = 10
 y = 60
 assert eval('x < 100 and True and y < 100') is True
 
+# in Python 3.13 locals and globals can be passed as keywords
+locs = {'x': 'hello'}
+globs = {'x': 'coucou'}
+exec("y = x", locals=locs, globals=globs)
+assert locs['y'] == 'hello'
+
+
 print("passed all tests...")
