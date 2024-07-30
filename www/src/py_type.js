@@ -36,7 +36,8 @@ const TPFLAGS = {
 // generic code for class constructor
 $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
                                  resolved_bases, bases,
-                                 kwargs, static_attributes){
+                                 kwargs, static_attributes,
+                                 firstlineno){
     var dict
     if(class_obj_proxy instanceof $B.str_dict){
         dict = $B.empty_dict()
@@ -100,6 +101,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     kls.$is_class = true
 
     kls.__static_attributes__ = $B.fast_tuple(static_attributes)
+    kls.__firstlineno__ = firstlineno
 
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
