@@ -1281,17 +1281,6 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
     if(this.value.id == "self"){
         maybe_add_static(this, scopes)
     }
-    if(scopes.length >= 2 && scopes[scopes.length - 1].type == "def" &&
-            scopes[scopes.length - 2].type == "class"){
-        console.log('attr in method', this)
-        if(this.value.id == "self"){
-            console.log('static attr', this)
-            var class_scope = scopes[scopes.length - 2]
-            class_scope.static_attributes = class_scope.static_attributes ??
-                new Set()
-            class_scope.static_attributes.add(this.attr)
-        }
-    }
     var attr = mangle(scopes, last_scope(scopes), this.attr)
     var position = encode_position(this.value.col_offset,
                                 this.value.col_offset,
