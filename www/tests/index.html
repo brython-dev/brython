@@ -77,7 +77,7 @@
 </script>
 
 <script type="text/python" class="webworker" id="test_web_worker">
-from browser import self, bind, is_webworker
+from browser import self, bind, is_webworker, console
 from tester import async_tester
 import z # cf issue #2402
 
@@ -96,6 +96,9 @@ def message(ev):
       self.send(ev.data[:-1])
     elif msg_num == 2:
       self.send(['coucou', {'x': 1}])
+    elif msg_num == 3:
+      console.log('send last')
+      self.send( [1, {"a": [2]}] )
     msg_num += 1
 
 </script>

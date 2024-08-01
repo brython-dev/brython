@@ -62,7 +62,11 @@ $B.pyobj2structuredclone = function(obj, strict){
     }else if(obj.__class__ === $B.long_int){
         return obj.value
     }else if($B.$isinstance(obj, $B.JSObj)){
-        return obj
+        var res = {}
+        for(var key in obj){
+            res[key] = $B.pyobj2structuredclone(obj[key])
+        }
+        return res
     }
     throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)
 }

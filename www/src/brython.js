@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-07-25 15:06:59.157514"
-__BRYTHON__.timestamp=1721912819157
+__BRYTHON__.compiled_date="2024-08-01 19:15:08.937134"
+__BRYTHON__.timestamp=1722532508937
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9552,7 +9552,9 @@ return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var key of $B.ma
 "keys does not support structured clone")}}}
 let res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
-return res}else if(obj.__class__===$B.long_int){return obj.value}else if($B.$isinstance(obj,$B.JSObj)){return obj}
+return res}else if(obj.__class__===$B.long_int){return obj.value}else if($B.$isinstance(obj,$B.JSObj)){var res={}
+for(var key in obj){res[key]=$B.pyobj2structuredclone(obj[key])}
+return res}
 throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean"){return obj}else if(typeof obj=="string" ||obj instanceof String){return $B.String(obj)}else if(typeof obj=="number" ||obj instanceof Number){obj+=0 
 return Number.isInteger(obj)?

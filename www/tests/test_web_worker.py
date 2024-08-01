@@ -21,6 +21,9 @@ def onmessage(ev):
         ww.send(1)
     elif msg_num == 2:
         async_tester.assertEqual(ev.data, ['coucou', {'x': 1}])
+        ww.send(2)
+    elif msg_num == 3:
+        async_tester.assertEqual(ev.data, [1, {"a": [2]}])
         print('all tests ok')
     msg_num += 1
 
@@ -36,5 +39,5 @@ def onmessage(*args):
   print('message')
 def onerror(*args):
   print('error')
-  
+
 worker.create_worker(wid, onready, onmessage, onerror)
