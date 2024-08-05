@@ -39,7 +39,7 @@ $B.pyobj2structuredclone = function(obj, strict){
     }else if(obj === _b_.None){
         return null // _b_.None
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
-            obj.__class__ === _b_.tuple){
+            obj.__class__ === _b_.tuple || obj.__class__ === js_array){
         let res = new Array(obj.length);
         for(var i = 0, len = obj.length; i < len; ++i){
             res[i] = $B.pyobj2structuredclone(obj[i]);
@@ -61,7 +61,13 @@ $B.pyobj2structuredclone = function(obj, strict){
         return res
     }else if(obj.__class__ === $B.long_int){
         return obj.value
-    }else if($B.$isinstance(obj, $B.JSObj)){
+    }else if(Object.getPrototypeOf(obj).constructor === Object){
+        var res = {}
+        for(var key in obj){
+            res[key] = $B.pyobj2structuredclone(obj[key])
+        }
+        return res
+    }else{
         return obj
     }
     throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)
