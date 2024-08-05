@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-01 19:53:22.235550"
-__BRYTHON__.timestamp=1722534802235
+__BRYTHON__.compiled_date="2024-08-05 15:18:00.782807"
+__BRYTHON__.timestamp=1722863880782
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9547,15 +9547,15 @@ $B.pyobj2structuredclone=function(obj,strict){
 strict=strict===undefined ? true :strict
 if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string" ||obj instanceof String){return obj}else if(obj.__class__===_b_.float){return obj.value}else if(obj===_b_.None){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
-obj.__class__===_b_.tuple){let res=new Array(obj.length);
+obj.__class__===_b_.tuple ||obj.__class__===js_array){let res=new Array(obj.length);
 for(var i=0,len=obj.length;i < len;++i){res[i]=$B.pyobj2structuredclone(obj[i]);}
 return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
 "keys does not support structured clone")}}}
 let res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
-return res}else if(obj.__class__===$B.long_int){return obj.value}else if($B.$isinstance(obj,$B.JSObj)){var res={}
+return res}else if(obj.__class__===$B.long_int){return obj.value}else if(Object.getPrototypeOf(obj).constructor===Object){var res={}
 for(var key in obj){res[key]=$B.pyobj2structuredclone(obj[key])}
-return res}
+return res}else{return obj}
 throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean"){return obj}else if(typeof obj=="string" ||obj instanceof String){return $B.String(obj)}else if(typeof obj=="number" ||obj instanceof Number){obj+=0 
 return Number.isInteger(obj)?
