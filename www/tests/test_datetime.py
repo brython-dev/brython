@@ -1,4 +1,4 @@
-from datetime import MINYEAR, MAXYEAR, timedelta, date, datetime, timezone
+from datetime import MINYEAR, MAXYEAR, UTC, timedelta, date, datetime, timezone
 #todo: issue when importing from a module, one object at a time.
 # for example, the next three lines
 #from datetime import tzinfo
@@ -165,6 +165,29 @@ assert list(time.strptime('9-9-2013', '%d-%m-%Y')) == \
     [2013, 9, 9, 0, 0, 0, 0, 252, -1]
 
 # issue 1917
-datetime.utcnow().replace(tzinfo=timezone.utc).astimezone(tz=None)
+datetime.now(UTC).replace(tzinfo=timezone.utc).astimezone(tz=None)
+
+# https://groups.google.com/g/brython/c/jC3c2aP4bFw/m/G-uyAe8lAwAJ
+from tester import assert_raises
+
+dt = datetime
+
+for date_str, exp_date_obj in [
+        ("July 21, 2024 1:30 AM", dt(2024, 7, 21, 1, 30)),
+        ("July 21, 2024 11:30 AM", dt(2024, 7, 21, 11, 30)),
+        ("July 21, 2024 12:30 AM", dt(2024, 7, 21, 0, 30)),
+        ("July 21, 2024 1:30 PM", dt(2024, 7, 21, 13, 30)),
+        ("July 21, 2024 12:30 PM", dt(2024, 7, 21, 12, 30)),
+  ]:
+    date_obj = dt.strptime(date_str, "%B %d, %Y %I:%M %p")
+    assert date_obj == exp_date_obj, (date_obj, exp_date_obj)
+
+for date_str in [
+        ("July 21, 2024 13:30 AM"),
+        ("July 21, 2024 0:30 AM"),
+        ("July 21, 2024 0:30 PM"),
+        ("July 21, 2024 13:30 PM")
+        ]:
+    assert_raises(ValueError, dt.strptime, date_str, "%B %d, %Y %I:%M %p")
 
 print('passed all tests')
