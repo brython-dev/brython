@@ -1162,13 +1162,13 @@ class C:
 
 assert sorted(C.__static_attributes__) == ["u", "v", "x", "y", "z"]
 
-class C:
+class A:
 
   def f(self):
-    self.x
-    self.y[3]
+    self.x = 8
+    self.y[3] = 7
     self.z()
 
-assert sorted(C.__static_attributes__) == ["x", "y", "z"]
+assert sorted(A.__static_attributes__) == ['x']
 
 print('passed all tests..')

@@ -1278,9 +1278,6 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
-    if(this.value.id == "self"){
-        maybe_add_static(this, scopes)
-    }
     var attr = mangle(scopes, last_scope(scopes), this.attr)
     var position = encode_position(this.value.col_offset,
                                 this.value.col_offset,
