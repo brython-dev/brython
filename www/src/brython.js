@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-05 16:34:07.232558"
-__BRYTHON__.timestamp=1722868447232
+__BRYTHON__.compiled_date="2024-08-05 18:00:31.534699"
+__BRYTHON__.timestamp=1722873631534
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9599,7 +9599,11 @@ if(pyobj !==undefined){return pyobj}}else{const pyobjfcts=_this[PYOBJFCTS]
 if(pyobjfcts !==undefined){const pyobj=pyobjfcts.get(jsobj)
 if(pyobj !==undefined){return pyobj}}else{try{_this[PYOBJFCTS]=new Map()}catch(err){}}}
 var res=function(){var args=new Array(arguments.length)
-for(var i=0,len=arguments.length;i < len;++i){args[i]=pyobj2jsobj(arguments[i])}
+for(var i=0,len=arguments.length;i < len;++i){var arg=arguments[i]
+if(arg.constructor===Object && arg.$kw){throw _b_.TypeError.$factory(
+'keyword arguments are not supported for '+
+'Javascript functions')}
+args[i]=pyobj2jsobj(arg)}
 try{return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
 if(_this===null){jsobj[PYOBJFCT]=res;}else if(_this[PYOBJFCTS]!==undefined){_this[PYOBJFCTS].set(jsobj,res)}
 res[JSOBJ]=jsobj
