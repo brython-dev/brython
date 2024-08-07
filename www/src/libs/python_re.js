@@ -3956,7 +3956,7 @@ var module = {
         if(data.type == "bytes" && $B.$isinstance(res, _b_.str)){
             res = _b_.str.encode(res, 'latin1')
         }
-        return $B.$list(res)
+        return res
     },
     findall: function(){
         /* Return all non-overlapping matches of pattern in string, as a list

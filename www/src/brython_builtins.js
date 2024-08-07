@@ -110,9 +110,6 @@ $B.strip_host = function(url){
     throw Error('not a url: ' + url)
 }
 
-// Populated in py2js.brython(), used for sys.argv
-$B.__ARGV = []
-
 // For all the scripts defined in the page as webworkers, mapping between
 // script name and its source code
 $B.webworkers = {}

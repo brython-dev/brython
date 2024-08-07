@@ -47,7 +47,6 @@ $B.strip_host=function(url){var parts_re=new RegExp('(.*?)://([^/]*)?[/#]?(.*)')
 if(mo){return mo[3]}
 console.log(Error().stack)
 throw Error('not a url: '+url)}
-$B.__ARGV=[]
 $B.webworkers={}
 $B.file_cache={}
 $B.url2name={}
@@ -180,8 +179,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-07 08:25:18.110793"
-__BRYTHON__.timestamp=1723011918110
+__BRYTHON__.compiled_date="2024-08-07 10:09:33.444064"
+__BRYTHON__.timestamp=1723018173444
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -10972,9 +10971,7 @@ var super_class=$B.make_class("JavascriptSuper",function(){
 var res=_b_.super.$factory()
 var js_constr=res.__thisclass__.__bases__[0]
 return function(){var obj=new js_constr.$js_func(...arguments)
-console.log('obj from js constr',obj)
-for(var attr in obj){console.log('attr',attr)
-res.__self_class__.__dict__[attr]=$B.jsobj2pyobj(obj[attr])}
+for(var attr in obj){res.__self_class__.__dict__[attr]=$B.jsobj2pyobj(obj[attr])}
 return obj}}
 )
 super_class.__getattribute__=function(self,attr){if(attr=="__init__" ||attr=="__call__"){return self.__init__}
@@ -11026,8 +11023,7 @@ script.src=ref
 script.addEventListener('load',function(){loaded.push(script)
 $B.imported.javascript.import_scripts(refs,callback,loaded)}
 )
-document.body.appendChild(script)}else{console.log('appel callback',loaded)
-return $B.$call(callback).apply(null,loaded)}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
+document.body.appendChild(script)}else{return $B.$call(callback).apply(null,loaded)}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.jsobj2pyobj(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
@@ -11084,15 +11080,15 @@ function(){return $B.imported._sys.exception()},function(value){$B.frame_obj.fra
 function(){return $B.obj_dict($B.imported)},function(){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
 function(){var filename=$B.get_filename_for_import()
-return $B.import_info[filename].path},function(self,value){var filename=$B.get_filename_for_import()
+return $B.$list($B.import_info[filename].path)},function(self,value){var filename=$B.get_filename_for_import()
 $B.import_info[filename].path=value}
 ),meta_path:_b_.property.$factory(
 function(){var filename=$B.get_filename()
-return $B.import_info[filename].meta_path},function(self,value){var filename=$B.get_filename()
+return $B.$list($B.import_info[filename].meta_path)},function(self,value){var filename=$B.get_filename()
 $B.import_info[filename].meta_path=value}
 ),path_hooks:_b_.property.$factory(
 function(){var filename=$B.get_filename()
-return $B.import_info[filename].path_hooks},function(self,value){var filename=$B.get_filename()
+return $B.$list($B.import_info[filename].path_hooks)},function(self,value){var filename=$B.get_filename()
 $B.import_info[filename].path_hooks=value}
 ),path_importer_cache:_b_.property.$factory(
 function(){return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))},function(){throw _b_.TypeError.$factory("Read only property"+
@@ -11301,6 +11297,7 @@ break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}el
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
+$B.__ARGV=$B.$list([])
 $B.tracefunc=_b_.None})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
