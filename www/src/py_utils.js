@@ -1831,7 +1831,8 @@ $B.rich_comp = function(op, x, y){
         "' and '" + $B.class_name(y) + "'")
 }
 
-var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*"}
+var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*",
+    __and__: '&', __or__: '|'}
 
 $B.rich_op = function(op, x, y, position){
     try{
