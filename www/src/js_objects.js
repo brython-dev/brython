@@ -138,13 +138,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         case 'number':
              // convert JS numbers with no decimal to a Python int
              if(jsobj % 1 === 0){
-                 return _b_.int.$factory(jsobj)
+                 return Number.isSafeInteger(jsobj) ? jsobj : $B.fast_long_int(jsobj)
              }
              // other numbers to Python floats
              return _b_.float.$factory(jsobj)
 
         case 'bigint':
-            return jsobj // $B.fast_long_int(jsobj)
+            return jsobj
 
         case 'string':
             return $B.String(jsobj)
@@ -168,7 +168,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     // check if obj is an instance of Promise
     // cf. issue #2321
     if(jsobj instanceof Promise || typeof jsobj.then == "function"){
-        //jsobj.$frame_obj=$B.frame_obj
         return jsobj
     }
 
@@ -281,7 +280,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // Python list : transform its elements
         var jsobj = pyobj.map(pyobj2jsobj)
         jsobj[PYOBJ] = pyobj
-        jsobj.__class__ = js_array
+        //jsobj.__class__ = js_array
         return jsobj
     }
 

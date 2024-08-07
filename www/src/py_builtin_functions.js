@@ -519,6 +519,8 @@ var enumerate = _b_.enumerate = $B.make_class("enumerate",
     }
 )
 
+enumerate.__class_getitem__ = $B.$class_getitem
+
 enumerate.__iter__ = function(self){
     self.counter = self.start - 1
     return self
@@ -530,6 +532,8 @@ enumerate.__next__ = function(self){
 }
 
 $B.set_func_names(enumerate, "builtins")
+
+enumerate.__class_getitem__ = _b_.classmethod.$factory(enumerate.__class_getitem__)
 
 //eval() (built in function)
 var $$eval = _b_.eval = function(){
@@ -2867,7 +2871,7 @@ $Reader.readlines = function(){
             lines.push(self.$lines[self.$lc])
         }
     }
-    return lines
+    return $B.$list(lines)
 }
 
 $Reader.seek = function(self, offset, whence){

@@ -880,6 +880,9 @@ _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGFroup",
 )
 
 _b_.BaseExceptionGroup.__bases__ = [_b_.BaseException]
+
+_b_.BaseExceptionGroup.__class_getitem__ = $B.$class_getitem
+
 _b_.BaseExceptionGroup.__mro__ = _b_.type.mro(_b_.BaseExceptionGroup)
 
 _b_.BaseExceptionGroup.__str__ = function(self){
@@ -937,6 +940,9 @@ _b_.BaseExceptionGroup.subgroup = function(self, condition){
 }
 
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
+
+_b_.BaseExceptionGroup.__class_getitem__ = 
+    _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
 
 _b_.ExceptionGroup = $B.make_class("ExceptionGFroup",
     function(){

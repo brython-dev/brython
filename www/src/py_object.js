@@ -447,7 +447,7 @@ object.__reduce__ = function(self){
             break
         }
     }
-    var args = [D, B]
+    var args = $B.$list([D, B])
     if(B === object){
         args.push(_b_.None)
     }else{

@@ -868,13 +868,13 @@
         _filters_mutated: function(){
         },
         _onceregistry: $B.empty_dict(),
-        filters: [
+        filters: $B.$list([
             $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.PendingDeprecationWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ResourceWarning, _b_.None, 0])
-        ],
+        ]),
         warn: function(){
             // Issue a warning, or maybe ignore it or raise an exception.
             var $ = $B.args('warn', 4,

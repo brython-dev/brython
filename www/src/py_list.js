@@ -37,22 +37,17 @@ list.__add__ = function(self, other){
         res.push(is_js ? $B.$pyobj2jsobj(item) : item)
     }
     if(isinstance(self, tuple)){
-        res = tuple.$factory(res)
+        return tuple.$factory(res)
+    }else{
+        return $B.$list(res)
     }
-    return res
 }
 
 list.__bool__ = function(self){
     return list.__len__(self) > 0
 }
 
-list.__class_getitem__ = function(cls, item){
-    // PEP 585
-    if(! Array.isArray(item)){
-        item = [item]
-    }
-    return $B.GenericAlias.$factory(cls, item)
-}
+list.__class_getitem__ = $B.$class_getitem
 
 list.__contains__ = function(){
     var $ = $B.args("__contains__", 2, {self: null, item: null},
@@ -535,7 +530,7 @@ list.copy = function(){
     var $ = $B.args("copy", 1, {self: null}, ["self"],
         arguments, {}, null, null)
     var res = $.self.slice()
-    res.__class__ = self.__class__
+    res.__class__ = $.self.__class__
     return res
 }
 
@@ -767,14 +762,18 @@ var factory = function(){
         obj = $.obj
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
+        /*
         if(obj.__class__ == tuple){
             let res = obj.slice()
             res.__class__ = list
             return res
         }
+        */
+        obj.__class__ = klass
         return obj
     }
     let res = Array.from($B.make_js_iterator(obj))
+    res.__class__ = klass
     return res
 }
 
