@@ -80,7 +80,7 @@ const dict_view_op = {
                 }
             }
         }
-        return items
+        return $B.$list(items)
     },
     __or__: function(t1, t2){
         var items = t1

@@ -1304,6 +1304,7 @@ bytes.splitlines = function() {
     }
     return $B.$list(res)
 }
+
 bytes.startswith = function(){
     var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
         ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
