@@ -1383,7 +1383,7 @@ Pattern.findall = function(self){
     while(true){
         var next = iter.next()
         if(next.done){
-            return res
+            return $B.$list(res)
         }
         var bmo = next.value,
             mo = bmo.mo,
@@ -3956,7 +3956,7 @@ var module = {
         if(data.type == "bytes" && $B.$isinstance(res, _b_.str)){
             res = _b_.str.encode(res, 'latin1')
         }
-        return res
+        return $B.$list(res)
     },
     findall: function(){
         /* Return all non-overlapping matches of pattern in string, as a list
@@ -3996,7 +3996,7 @@ var module = {
         while(true){
             var next = iter.next()
             if(next.done){
-                return res
+                return $B.$list(res)
             }
             var bmo = next.value,
                 mo = bmo.mo,
@@ -4228,7 +4228,7 @@ var module = {
                 }
             )
         }
-        return res
+        return $B.$list(res)
     },
     sub: function(){
         var $ = $B.args("sub", 5,
