@@ -251,7 +251,7 @@ code.__repr__ = code.__str__ = function(_self){
 code.__getattribute__ = function(self, attr){
     if(attr == 'co_positions'){
         // fake value
-        return () => [[0, 0, 0, 0]]
+        return () => $B.$list([$B.$list([0, 0, 0, 0])])
     }
     return self[attr]
 }
@@ -1047,7 +1047,9 @@ $B.$getattr = function(obj, attr, _default){
       case '__subclasses__':
           if(klass.$factory || klass.$is_class){
               var subclasses = obj.$subclasses || []
-              return function(){return subclasses}
+              return function(){
+                  return $B.$list(subclasses)
+              }
           }
           break
     }
@@ -3233,9 +3235,9 @@ $B.function.__dir__ = function(self){
     var infos = self.$infos || {},
         attrs = self.$attrs || {}
 
-    return Object.keys(infos).
+    return $B.$list(Object.keys(infos).
                concat(Object.keys(attrs)).
-               filter(x => !x.startsWith('$'))
+               filter(x => !x.startsWith('$')))
 }
 
 $B.function.__get__ = function(self, obj){
