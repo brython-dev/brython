@@ -128,7 +128,9 @@ array.append = function(self, value){
 array.count = function(self, x){
     $B.args("count", 2, {self: null, x: null},
         ["self", "x"], arguments, {}, null, null)
-    if(self.obj === null){return 0}
+    if(self.obj === null){
+        return 0
+    }
     return self.obj.filter(function(item){return item == x}).length
 }
 
@@ -292,7 +294,7 @@ array.tolist = function(self){
     if(self.obj === null){
         return $B.$list([])
     }
-    return Array.prototype.slice.call(self.obj)
+    return $B.$list(Array.prototype.slice.call(self.obj))
 }
 
 array.tostring = array.tobytes

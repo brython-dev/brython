@@ -2361,28 +2361,12 @@ function sumprod(p, q){
         var finished;
         p_i = p_it.next()
         if (p_i.done) {
-            /*
-            if (PyErr_Occurred()) {
-                if (!PyErr_ExceptionMatches(PyExc_StopIteration)) {
-                    goto err_exit;
-                }
-                PyErr_Clear();
-            }
-            */
             p_stopped = true;
         }else{
             p_i = p_i.value
         }
         q_i = q_it.next()
         if (q_i.done) {
-            /*
-            if (PyErr_Occurred()) {
-                if (!PyErr_ExceptionMatches(PyExc_StopIteration)) {
-                    goto err_exit;
-                }
-                PyErr_Clear();
-            }
-            */
             q_stopped = true;
         }else{
             q_i = q_i.value
@@ -2533,11 +2517,18 @@ function trunc(x) {
     $B.check_nb_args('trunc', 1, arguments)
     $B.check_no_kw('trunc', x)
 
-   try{return $B.$getattr(x, '__trunc__')()}catch(err){}
+   try{
+       return $B.$getattr(x, '__trunc__')()
+   }catch(err){
+   }
    var x1 = float_check(x)
    if(!isNaN(parseFloat(x1)) && isFinite(x1)){
-      if(Math.trunc !== undefined){return _b_.int.$factory(Math.trunc(x1))}
-      if(x1 > 0){return _b_.int.$factory(Math.floor(x1))}
+      if(Math.trunc !== undefined){
+          return _b_.int.$factory(Math.trunc(x1))
+      }
+      if(x1 > 0){
+          return _b_.int.$factory(Math.floor(x1))
+      }
       return _b_.int.$factory(Math.ceil(x1))  // x1 < 0
    }
    throw _b_.ValueError.$factory(
