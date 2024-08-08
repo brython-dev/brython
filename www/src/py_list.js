@@ -34,7 +34,7 @@ list.__add__ = function(self, other){
     var res = self.slice(),
         is_js = other.$is_js_array // list of JS objects
     for(const item of other){
-        res.push(is_js ? $B.$pyobj2jsobj(item) : item)
+        res.push(item)
     }
     if(isinstance(self, tuple)){
         return tuple.$factory(res)
@@ -371,8 +371,13 @@ list.__mul__ = function(self, other){
     try{
         other = $B.PyNumber_Index(other)
     }catch(err){
-        throw _b_.TypeError.$factory("can't multiply sequence by non-int " +
-            `of type '${$B.class_name(other)}'`)
+        var this_name = $B.class_name(self)
+        var radd = $B.$getattr(other, '__rmul__', null)
+        if(radd === null){
+            throw _b_.TypeError.$factory("can't multiply sequence by " +
+                `non-int of type '${$B.class_name(other)}'`)
+        }
+        return _b_.NotImplemented
     }
     if(self.length == 0){
         return list.__new__(list)
@@ -760,7 +765,7 @@ var factory = function(){
     var $ = $B.args(klass.__name__, 1, {obj: null}, ["obj"],
         arguments, {}, null, null),
         obj = $.obj
-    if(Array.isArray(obj)){ // most simple case
+    if(Array.isArray(obj) && obj.__class__){ // most simple case
         obj = obj.slice() // list(t) is not t
         obj.__class__ = klass
         return obj

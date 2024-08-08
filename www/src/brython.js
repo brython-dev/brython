@@ -179,8 +179,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-08 08:49:30.410782"
-__BRYTHON__.timestamp=1723099770410
+__BRYTHON__.compiled_date="2024-08-08 20:13:50.318670"
+__BRYTHON__.timestamp=1723140830318
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1415,7 +1415,7 @@ for(var key of $B.make_js_iterator(keys)){if(! _b_.isinstance(key,_b_.str)){thro
 yield{key,value:getitem(obj,key)}}}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
-if(frame===undefined){if($B.frame_obj===null){function set_lineno(){}}else{frame=$B.frame_obj.frame
+if(frame===undefined){if($B.frame_obj===null){set_lineno=function(){}}else{frame=$B.frame_obj.frame
 lineno=frame.$lineno}}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
 if(iterator.step > 0){return{
@@ -1838,10 +1838,7 @@ if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory(
 `unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-if((op=='__add__' ||op=='__mul__')&&
-(Array.isArray(x)||typeof x=='string' ||
-$B.$isinstance(x,[_b_.str,_b_.bytes,_b_.bytearray,_b_.memoryview]))){
-try{res=method(x,y)}catch(err){res=_b_.NotImplemented}}else{res=method(x,y)}
+res=method(x,y)
 if(res===_b_.NotImplemented){try{method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
 throw _b_.TypeError.$factory(
 `unsupported operand type(s) for ${$B.method_to_op[op]}:`+
@@ -2553,7 +2550,7 @@ if(message){throw _b_.RuntimeError.$factory(message)}}
 self.counter++
 if(self.counter < self.items.length){var item=self.items[self.counter]
 if(self.items.$is_js_array){
-item=$B.$jsobj2pyobj(item)}
+item=$B.jsobj2pyobj(item)}
 return item}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
@@ -2957,7 +2954,7 @@ res=obj[attr]
 if(res !==undefined){if(typeof res=="function"){var f=function(){
 return res.apply(obj,arguments)}
 f.$infos={__name__:attr,__qualname__:attr}
-return f}else{return $B.$jsobj2pyobj(res)}}
+return f}else{return $B.jsobj2pyobj(res)}}
 if(_default !==undefined){return _default}
 throw $B.attr_error(rawname,obj)}}
 switch(attr){case '__call__':
@@ -9208,7 +9205,7 @@ this_name+' (not "'+$B.class_name(other)+
 '") to '+this_name)}
 return _b_.NotImplemented}
 var res=self.slice(),is_js=other.$is_js_array 
-for(const item of other){res.push(is_js ? $B.$pyobj2jsobj(item):item)}
+for(const item of other){res.push(item)}
 if(isinstance(self,tuple)){return tuple.$factory(res)}else{return $B.$list(res)}}
 list.__bool__=function(self){return list.__len__(self)> 0}
 list.__class_getitem__=$B.$class_getitem
@@ -9325,8 +9322,11 @@ return self.length < other.length}
 if(i==other.length){
 return false}
 return $B.rich_comp('__lt__',self[i],other[i])}
-list.__mul__=function(self,other){try{other=$B.PyNumber_Index(other)}catch(err){throw _b_.TypeError.$factory("can't multiply sequence by non-int "+
-`of type '${$B.class_name(other)}'`)}
+list.__mul__=function(self,other){try{other=$B.PyNumber_Index(other)}catch(err){var this_name=$B.class_name(self)
+var radd=$B.$getattr(other,'__rmul__',null)
+if(radd===null){throw _b_.TypeError.$factory("can't multiply sequence by "+
+`non-int of type '${$B.class_name(other)}'`)}
+return _b_.NotImplemented}
 if(self.length==0){return list.__new__(list)}
 if(typeof other=='number'){if(other < 0){return list.__new__(list)}
 if(self.length > $B.max_array_size/other){throw _b_.OverflowError.$factory(`cannot fit `+
@@ -9455,7 +9455,7 @@ return t}
 var factory=function(){var klass=this 
 if(arguments.length==0){return $B.$list([])}
 var $=$B.args(klass.__name__,1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
-if(Array.isArray(obj)){
+if(Array.isArray(obj)&& obj.__class__){
 obj=obj.slice()
 obj.__class__=klass
 return obj}
@@ -9823,17 +9823,18 @@ return $B.jsobj2pyobj(obj)}
 $B.set_func_names($B.JSObj,"builtins")
 var js_list_meta=$B.make_class('js_list_meta')
 js_list_meta.__mro__=[_b_.type,_b_.object]
-js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
-if(js_array.hasOwnProperty(attr)){return js_array[attr]}
+js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){if(js_array.hasOwnProperty(attr)){return js_array[attr]}
+throw _b_.AttributeError.$factory(attr)}
 if(['__delitem__','__setitem__'].indexOf(attr)>-1){
 return function(){var args=new Array(arguments.length)
 args[0]=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){args[i]=pyobj2jsobj(arguments[i])}
-return _b_.list[attr].apply(null,args)}}else if(['__add__','__contains__','__eq__','__getitem__','__mul__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
+return _b_.list[attr].apply(null,args)}}else if(['__contains__','__eq__','__getitem__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
 return function(){var pylist=$B.$list(arguments[0].map(jsobj2pyobj))
-return jsobj2pyobj(_b_.list[attr].call(null,pylist,...Array.from(arguments).slice(1)))}}
-return function(){var js_array=arguments[0],t=jsobj2pyobj(js_array),args=[t]
-return _b_.list[attr].apply(null,args)}}
+return jsobj2pyobj(_b_.list[attr].call(null,pylist,...Array.from(arguments).slice(1)))}}else if(js_array.hasOwnProperty(attr)){return js_array[attr]}else if(['__repr__','__str__'].includes(attr)){return function(js_array){var t=jsobj2pyobj(js_array)
+return _b_.list[attr]($B.$list(t))}}
+return function(js_array){var t=jsobj2pyobj(js_array)
+return _b_.list[attr](t)}}
 $B.set_func_names(js_list_meta,'builtins')
 $B.SizedJSObj=$B.make_class('SizedJavascriptObject')
 $B.SizedJSObj.__bases__=[$B.JSObj]
@@ -9855,18 +9856,26 @@ $B.set_func_names($B.IterableJSObj,'builtins')
 var js_array=$B.js_array=$B.make_class('Array')
 js_array.__class__=js_list_meta
 js_array.__mro__=[$B.JSObj,_b_.object]
+js_array.__add__=function(_self,other){var res=_self.slice()
+if($B.$isinstance(other,js_array)){return _self.slice().concat(other)}
+for(var item of $B.make_js_iterator(other)){res.push(pyobj2jsobj(item))}
+return res}
 js_array.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
 var proto=Object.getPrototypeOf(_self),res=proto[attr]
 if(res !==undefined){
 return jsobj2pyobj(res,_self)}
 if(_self.hasOwnProperty(attr)){
 return jsobj2pyobj(_self[attr])}
+if(js_array.hasOwnProperty(attr)){return js_array[attr]}
 throw $B.attr_error(attr,_self)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return jsobj2pyobj(_self[i])}
 js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
+js_array.__mul__=function(_self,nb){var res=_self.slice()
+for(var i=1;i < nb;i++){res=res.concat(_self)}
+return res}
 var js_array_iterator=$B.make_class('JSArray_iterator',function(obj){return{
 __class__:js_array_iterator,it:obj[Symbol.iterator]()}}
 )
@@ -9875,6 +9884,9 @@ if(v.done){throw _b_.StopIteration.$factory('')}
 return jsobj2pyobj(v.value)}
 $B.set_func_names(js_array_iterator,'builtins')
 js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
+js_array.__radd__=function(_self,other){var res=other.slice()
+for(var item of _self){res.push($B.pyobj2jsobj(item))}
+return res}
 js_array.__repr__=function(_self){if($B.repr.enter(_self)){
 return '[...]'}
 var _r=new Array(_self.length),res

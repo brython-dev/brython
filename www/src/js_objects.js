@@ -838,10 +838,10 @@ js_list_meta.__mro__ = [_b_.type, _b_.object]
 js_list_meta.__getattribute__ = function(_self, attr){
 
     if(_b_.list[attr] === undefined){
+        if(js_array.hasOwnProperty(attr)){
+            return js_array[attr]
+        }
         throw _b_.AttributeError.$factory(attr)
-    }
-    if(js_array.hasOwnProperty(attr)){
-        return js_array[attr]
     }
     if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
         // Transform Python values to Javascript values before setting item
@@ -853,7 +853,7 @@ js_list_meta.__getattribute__ = function(_self, attr){
             }
             return _b_.list[attr].apply(null, args)
         }
-    }else if(['__add__', '__contains__', '__eq__', '__getitem__', '__mul__',
+    }else if(['__contains__', '__eq__', '__getitem__',
               '__ge__', '__gt__', '__le__', '__lt__'].indexOf(attr) > -1){
         // Apply to a Python copy of the JS list
         return function(){
@@ -862,12 +862,17 @@ js_list_meta.__getattribute__ = function(_self, attr){
                 pylist,
                 ...Array.from(arguments).slice(1)))
         }
+    }else if(js_array.hasOwnProperty(attr)){
+        return js_array[attr]
+    }else if(['__repr__', '__str__'].includes(attr)){
+        return function(js_array){
+            var t = jsobj2pyobj(js_array)
+            return _b_.list[attr]($B.$list(t))
+        }
     }
-    return function(){
-        var js_array = arguments[0],
-            t = jsobj2pyobj(js_array),
-            args = [t]
-        return _b_.list[attr].apply(null, args)
+    return function(js_array){
+        var t = jsobj2pyobj(js_array)
+        return _b_.list[attr](t)
     }
 }
 
@@ -927,6 +932,17 @@ var js_array = $B.js_array = $B.make_class('Array')
 js_array.__class__ = js_list_meta
 js_array.__mro__ = [$B.JSObj, _b_.object]
 
+js_array.__add__ = function(_self, other){
+    var res = _self.slice()
+    if($B.$isinstance(other, js_array)){
+        return _self.slice().concat(other)
+    }
+    for(var item of $B.make_js_iterator(other)){
+        res.push(pyobj2jsobj(item))
+    }
+    return res
+}
+
 js_array.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
@@ -939,6 +955,9 @@ js_array.__getattribute__ = function(_self, attr){
         }
         if(_self.hasOwnProperty(attr)){ // issue 2172
             return jsobj2pyobj(_self[attr])
+        }
+        if(js_array.hasOwnProperty(attr)){
+            return js_array[attr]
         }
         throw $B.attr_error(attr, _self)
     }
@@ -955,6 +974,14 @@ js_array.__getitem__ = function(_self, i){
 
 js_array.__iter__ = function(_self){
     return js_array_iterator.$factory(_self)
+}
+
+js_array.__mul__ = function(_self, nb){
+    var res = _self.slice()
+    for(var i = 1; i < nb; i++){
+        res = res.concat(_self)
+    }
+    return res
 }
 
 var js_array_iterator = $B.make_class('JSArray_iterator',
@@ -979,6 +1006,14 @@ $B.set_func_names(js_array_iterator, 'builtins')
 
 js_array.__iter__ = function(_self){
     return js_array_iterator.$factory(_self)
+}
+
+js_array.__radd__ = function(_self, other){
+    var res = other.slice()
+    for(var item of _self){
+        res.push($B.pyobj2jsobj(item))
+    }
+    return res
 }
 
 js_array.__repr__ = function(_self){
