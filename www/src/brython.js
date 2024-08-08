@@ -179,8 +179,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-07 10:09:33.444064"
-__BRYTHON__.timestamp=1723018173444
+__BRYTHON__.compiled_date="2024-08-08 08:01:52.409419"
+__BRYTHON__.timestamp=1723096912409
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1785,7 +1785,7 @@ if(op=="__eq__"){return _b_.False}else if(op=="__ne__"){return _b_.True}
 throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
-var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*"}
+var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*",__and__:'&',__or__:'|'}
 $B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,$B.decode_position(position))}
 throw exc}}
 $B.rich_op1=function(op,x,y){
@@ -2701,7 +2701,7 @@ var code=_b_.code=$B.make_class("code")
 code.__repr__=code.__str__=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
 `line ${_self.co_firstlineno || 1}>`}
 code.__getattribute__=function(self,attr){if(attr=='co_positions'){
-return()=>[[0,0,0,0]]}
+return()=> $B.$list([$B.$list([0,0,0,0])])}
 return self[attr]}
 $B.set_func_names(code,"builtins")
 _b_.compile=function(){var $=$B.args('compile',7,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
@@ -2988,7 +2988,7 @@ _b_.dict.$contains_string(obj.__dict__,'__mro__')){return _b_.dict.$getitem_stri
 throw $B.attr_error(attr,obj)
 case '__subclasses__':
 if(klass.$factory ||klass.$is_class){var subclasses=obj.$subclasses ||[]
-return function(){return subclasses}}
+return function(){return $B.$list(subclasses)}}
 break}
 if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
@@ -3708,9 +3708,9 @@ var FunctionGlobals=$B.make_class("function globals")
 $B.function={__class__:_b_.type,__code__:{__class__:FunctionCode,__name__:'function code'},__globals__:{__class__:FunctionGlobals,__name__:'function globals'},__mro__:[_b_.object],__name__:'function',__qualname__:'function',$is_class:true}
 $B.function.__delattr__=function(self,attr){if(attr=="__dict__"){throw _b_.TypeError.$factory("can't delete function __dict__")}}
 $B.function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs ||{}
-return Object.keys(infos).
+return $B.$list(Object.keys(infos).
 concat(Object.keys(attrs)).
-filter(x=> !x.startsWith('$'))}
+filter(x=> !x.startsWith('$')))}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
@@ -4160,7 +4160,7 @@ case "tb_next":
 if(_self.pos < _self.$stack.length-1){_self.pos++
 return _self}else{return _b_.None}
 case "stack":
-return _self.$stack
+return $B.$list(_self.$stack)
 default:
 return _b_.object.__getattribute__(_self,attr)}}
 $B.set_func_names(traceback,"builtins")
@@ -4176,8 +4176,7 @@ var frame_obj=$B.frame_obj
 while(frame_obj !==null){if(frame_obj.frame===_self){break}
 frame_obj=frame_obj.prev}
 if(frame_obj.prev !==null){return frame.$factory(frame_obj.prev.frame)}
-return _b_.None}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){if(_self.$f_trace===undefined){return _b_.None}
-return _self.$f_trace}else if(attr=="f_lasti"){
+return _b_.None}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){return _self.$f_trace ?? _b_.None}else if(attr=="f_lasti"){
 return 0}
 throw $B.attr_error(attr,_self)}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
@@ -4290,7 +4289,7 @@ return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
 _b_.BaseException.add_note=function(self,note){
 if(! $B.$isinstance(note,_b_.str)){throw _b_.TypeError.$factory('note must be a str, not '+
 `'${$B.class_name(note)}'`)}
-if(self.__notes__ !==undefined){self.__notes__.push(note)}else{self.__notes__=[note]}}
+if(self.__notes__ !==undefined){self.__notes__.push(note)}else{self.__notes__=$B.$list([note])}}
 _b_.BaseException.with_traceback=function(_self,tb){_self.__traceback__=tb
 return _self}
 $B.set_func_names(_b_.BaseException,'builtins')
@@ -4574,10 +4573,8 @@ $B.frame_obj=save_frame_obj}else{trace=err+""}
 if(err.$js_exc){trace+='\n'
 if($B.get_option('debug',err)> 1){trace+=err.$js_exc.stack}}
 return trace}
-$B.get_stderr=function(){if($B.imported.sys){return $B.imported.sys.stderr}
-return $B.imported._sys.stderr}
-$B.get_stdout=function(){if($B.imported.sys){return $B.imported.sys.stdout}
-return $B.imported._sys.stdout}
+$B.get_stderr=function(){return $B.imported.sys ? $B.imported.sys.stderr :$B.imported._sys.stderr}
+$B.get_stdout=function(){return $B.imported.sys ? $B.imported.sys.stdout :$B.imported._sys.stdout}
 $B.show_error=function(err){var trace=$B.error_trace($B.exception(err))
 try{var stderr=$B.get_stderr()
 $B.$getattr(stderr,'write')(trace)
@@ -8700,7 +8697,7 @@ for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i]
 for(var j=0,jlen=t2.length;j < jlen;j++){if($B.rich_comp("__eq__",x,t2[j])){t2.splice(j,1)
 items.push(x)
 break}}}
-return items},__or__:function(t1,t2){var items=t1
+return $B.$list(items)},__or__:function(t1,t2){var items=t1
 for(var j=0,jlen=t2.length;j < jlen;j++){var y=t2[j],flag=false
 for(var i=0,ilen=t1.length;i < ilen;i++){if($B.rich_comp("__eq__",y,t1[i])){t2.splice(j,1)
 flag=true
@@ -8957,7 +8954,7 @@ return self}
 klass.__next__=function(self){var res=self.iter.next()
 if(res.done){throw _b_.StopIteration.$factory('')}
 return res.value}
-klass.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([Array.from(self.make_iter())])])}
+klass.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])}
 $B.set_func_names(klass,'builtins')
 return klass}
 const dict_reversekeyiterator=make_reverse_iterator(
@@ -10133,11 +10130,11 @@ Attributes.get=function(){var $=$B.args("get",3,{self:null,key:null,deflt:null},
 try{return Attributes.__getitem__($.self,$.key)}catch(err){if(err.__class__===_b_.KeyError){return $.deflt}else{throw err}}}
 Attributes.keys=function(){return Attributes.__iter__.apply(null,arguments)}
 Attributes.items=function(){var $=$B.args("values",1,{self:null},["self"],arguments,{},null,null),attrs=$.self.elt.attributes,values=[]
-for(var i=0;i < attrs.length;i++){values.push([attrs[i].name,attrs[i].value])}
-return _b_.list.__iter__(values)}
+for(var i=0;i < attrs.length;i++){values.push($B.$list([attrs[i].name,attrs[i].value]))}
+return _b_.list.__iter__($B.$list(values))}
 Attributes.values=function(){var $=$B.args("values",1,{self:null},["self"],arguments,{},null,null),attrs=$.self.elt.attributes,values=[]
 for(var i=0;i < attrs.length;i++){values.push(attrs[i].value)}
-return _b_.list.__iter__(values)}
+return _b_.list.__iter__($B.$list(values))}
 $B.set_func_names(Attributes,"<dom>")
 var DOMEvent=$B.DOMEvent=$B.make_class("DOMEvent",function(evt_name){
 return DOMEvent.__new__(DOMEvent,evt_name)}
@@ -10212,8 +10209,7 @@ res.children=[self]
 var pos=1
 if($B.$isinstance(other,TagSum)){res.children=res.children.concat(other.children)}else if($B.$isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(
 document.createTextNode(_b_.str.$factory(other)))}else if($B.$isinstance(other,DOMNode)){res.children[pos++]=other}else{
-try{res.children=res.children.concat(_b_.list.$factory(other))}
-catch(err){throw _b_.TypeError.$factory("can't add '"+
+try{res.children=res.children.concat(_b_.list.$factory(other))}catch(err){throw _b_.TypeError.$factory("can't add '"+
 $B.class_name(other)+"' object to DOMNode instance")}}
 return res}
 DOMNode.__bool__=function(){return true}
@@ -10237,7 +10233,7 @@ DOMNode.__dir__=function(self){var res=[]
 for(let attr in self){if(attr.charAt(0)!="$"){res.push(attr)}}
 for(let attr in DOMNode){if(res.indexOf(attr)==-1){res.push(attr)}}
 res.sort()
-return res}
+return $B.$list(res)}
 DOMNode.__eq__=function(self,other){return self==other}
 DOMNode.__getattribute__=function(self,attr){switch(attr){case "attrs":
 return Attributes.$factory(self)
@@ -10289,7 +10285,7 @@ if(attr=="select" && self.nodeType==1 &&
 return _b_.None}
 return DOMNode.select(self,selector)}}
 if(attr=="query" && self.nodeType==9){
-let res={__class__:Query,_keys :[],_values :{}}
+let res={__class__:Query,_keys :$B.$list([]),_values :{}}
 let qs=location.search.substr(1).split('&')
 if(location.search !=""){for(let i=0;i < qs.length;i++){let pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
 if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(key)
@@ -10460,11 +10456,11 @@ return self}
 DOMNode.children=function(self){var res=[]
 if(self.nodeType==9){self=self.body}
 for(var child of self.children){res.push(DOMNode.$factory(child))}
-return res}
+return $B.$list(res)}
 DOMNode.child_nodes=function(self){var res=[]
 if(self.nodeType==9){self=self.body}
 for(var child of self.childNodes){res.push(DOMNode.$factory(child))}
-return res}
+return $B.$list(res)}
 DOMNode.clear=function(){
 var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null),self=$.self
 if(self.nodeType==9){self=self.body}
@@ -10490,10 +10486,10 @@ return res}
 DOMNode.events=function(self,event){self.$events=self.$events ||{}
 var evt_list=self.$events[event]=self.$events[event]||[],callbacks=[]
 evt_list.forEach(function(evt){callbacks.push(evt[1])})
-return callbacks}
+return $B.$list(callbacks)}
 function make_list(node_list){var res=[]
 for(var i=0;i < node_list.length;i++){res.push(DOMNode.$factory(node_list[i]))}
-return res}
+return $B.$list(res)}
 DOMNode.get=function(self){
 var args=[]
 for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
@@ -10511,11 +10507,11 @@ if($dict["id"]!==undefined){if(self.getElementById===undefined){throw _b_.TypeEr
 "selection by id")}
 var id_res=document.getElementById($dict['id'])
 if(! id_res){return[]}
-return[DOMNode.$factory(id_res)]}
+return $B.$list([DOMNode.$factory(id_res)])}
 if($dict["selector"]!==undefined){if(self.querySelectorAll===undefined){throw _b_.TypeError.$factory("DOMNode object doesn't support "+
 "selection by selector")}
 return make_list(self.querySelectorAll($dict['selector']))}
-return[]}
+return $B.$list([])}
 DOMNode.getContext=function(self){
 if(!("getContext" in self)){throw _b_.AttributeError.$factory("object has no attribute 'getContext'")}
 return function(ctx){return $B.jsobj2pyobj(self.getContext(ctx))}}
@@ -10641,11 +10637,8 @@ if(result===undefined){if(_default===undefined){return _b_.None}
 return _default}
 return result[0]}
 Query.getlist=function(self,key){
-var result=self._values[key]
-if(result===undefined){return[]}
-return result}
-Query.getvalue=function(self,key,_default){try{return Query.__getitem__(self,key)}
-catch(err){if(_default===undefined){return _b_.None}
+return $B.$list(self._values[key]??[])}
+Query.getvalue=function(self,key,_default){try{return Query.__getitem__(self,key)}catch(err){if(_default===undefined){return _b_.None}
 return _default}}
 Query.keys=function(self){return self._keys}
 $B.set_func_names(Query,"<dom>")

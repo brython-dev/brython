@@ -168,7 +168,7 @@ traceback.__getattribute__ = function(_self, attr){
                 return _b_.None
             }
         case "stack":
-            return _self.$stack
+            return $B.$list(_self.$stack)
         default:
             return _b_.object.__getattribute__(_self, attr)
     }
@@ -221,15 +221,11 @@ frame.__getattr__ = function(_self, attr){
             // XXX fix me
         }
     }else if(attr == "f_trace"){
-        if(_self.$f_trace === undefined){
-            return _b_.None
-        }
-        return _self.$f_trace
+        return _self.$f_trace ?? _b_.None
     }else if(attr == "f_lasti"){
         // last instruction not relevant in Brython
         return 0
     }
-    //console.log('no attr', attr, 'for frame', _self)
     throw $B.attr_error(attr, _self)
 }
 
@@ -518,7 +514,7 @@ _b_.BaseException.add_note = function(self, note){
     if(self.__notes__ !== undefined){
         self.__notes__.push(note)
     }else{
-        self.__notes__ = [note]
+        self.__notes__ = $B.$list([note])
     }
 }
 
@@ -1184,17 +1180,11 @@ $B.error_trace = function(err){
 }
 
 $B.get_stderr = function(){
-    if($B.imported.sys){
-        return $B.imported.sys.stderr
-    }
-    return $B.imported._sys.stderr
+    return $B.imported.sys ? $B.imported.sys.stderr : $B.imported._sys.stderr
 }
 
 $B.get_stdout = function(){
-    if($B.imported.sys){
-        return $B.imported.sys.stdout
-    }
-    return $B.imported._sys.stdout
+    return $B.imported.sys ? $B.imported.sys.stdout : $B.imported._sys.stdout
 }
 
 $B.show_error = function(err){

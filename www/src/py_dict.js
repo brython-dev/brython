@@ -914,7 +914,7 @@ function make_reverse_iterator(name, iter_func){
 
     klass.__reduce_ex__ = function(self){
         return $B.fast_tuple([_b_.iter,
-            $B.fast_tuple([Array.from(self.make_iter())])])
+            $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
     }
 
     $B.set_func_names(klass, 'builtins')
