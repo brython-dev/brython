@@ -820,7 +820,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     var set_lineno = $B.set_lineno
     if(frame === undefined){
         if($B.frame_obj === null){
-            function set_lineno(){
+            set_lineno = function(){
                 // does nothing
             }
         }else{
@@ -1965,21 +1965,7 @@ $B.rich_op1 = function(op, x, y){
             `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
             ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
     }
-    if((op == '__add__' || op == '__mul__') &&
-            (Array.isArray(x) || typeof x == 'string' ||
-            $B.$isinstance(x, [_b_.str, _b_.bytes,
-                          _b_.bytearray, _b_.memoryview]))){
-        // Special case for addition and repetition of sequences:
-        // if type(x).__add__(y) raises an exception, use type(y).__radd__(x),
-        // as if it had returned NotImplemented
-        try{
-            res = method(x, y)
-        }catch(err){
-            res = _b_.NotImplemented
-        }
-    }else{
-        res = method(x, y)
-    }
+    res = method(x, y)
     if(res === _b_.NotImplemented){
         try{
             method = $B.$getattr(y_class, rop)
