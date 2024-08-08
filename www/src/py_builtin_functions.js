@@ -935,7 +935,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__call__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__radd__" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -960,7 +960,7 @@ $B.$getattr = function(obj, attr, _default){
                     }
                     return f
                 }else{
-                    return $B.$jsobj2pyobj(res)
+                    return $B.jsobj2pyobj(res)
                 }
             }
             if(_default !== undefined){

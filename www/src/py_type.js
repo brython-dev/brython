@@ -1357,7 +1357,7 @@ $B.make_iterator_class = function(name){
                 if(self.items.$is_js_array){
                     // iteration on Javascript lists produces Python objects
                     // cf. issue #1388
-                    item = $B.$jsobj2pyobj(item)
+                    item = $B.jsobj2pyobj(item)
                 }
                 return item
             }
