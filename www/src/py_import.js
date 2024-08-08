@@ -32,7 +32,7 @@ Module.__dir__ = function(self){
         }
         res[res.length] = key
     }
-    return res.sort()
+    return $B.$list(res.sort())
 }
 
 Module.__new__ = function(cls, name, doc, $package){
@@ -411,7 +411,7 @@ VFSFinder.find_spec = function(cls, fullname){
             // FIXME : Better origin string.
             origin : is_builtin? "built-in" : "brython_stdlib",
             // FIXME: Namespace packages ?
-            submodule_search_locations: is_package? [] : _b_.None,
+            submodule_search_locations: is_package? $B.$list([]) : _b_.None,
             loader_state: {
                 stored: stored,
                 timestamp:timestamp
@@ -483,7 +483,9 @@ VFSLoader.exec_module = function(self, modobj){
                 // yet in precompiled
                 continue
             }
-            if(Array.isArray(mod_js)){mod_js = mod_js[0]}
+            if(Array.isArray(mod_js)){
+                mod_js = mod_js[0]
+            }
             var mod = $B.imported[parent] = Module.$factory(parent,
                 undefined, is_package)
             mod.__initialized__ = true
@@ -592,7 +594,9 @@ StdlibStaticFinder.find_spec = function(self, fullname){
             if(elts.length > 1){
                 elts.pop()
                 var $package = $B.stdlib[elts.join(".")]
-                if($package && $package[1]){address = ["py"]}
+                if($package && $package[1]){
+                    address = ["py"]
+                }
             }
         }
         if(address !== undefined){
@@ -616,7 +620,7 @@ StdlibStaticFinder.find_spec = function(self, fullname){
                 loader: PathLoader.$factory(),
                 // FIXME : Better origin string.
                 origin : metadata.path,
-                submodule_search_locations: is_pkg? [path] : _b_.None,
+                submodule_search_locations: is_pkg? $B.$list([path]) : _b_.None,
                 loader_state: metadata,
                 // FIXME : Where exactly compiled module is stored ?
                 cached: _b_.None,
@@ -777,7 +781,7 @@ PathEntryFinder.find_spec = function(self, fullname){
             origin : loader_data.path,
             // FIXME: Namespace packages ?
             submodule_search_locations: loader_data.is_package?
-                [base_path]: _b_.None,
+                $B.$list([base_path]): _b_.None,
             loader_state: loader_data,
             // FIXME : Where exactly compiled module is stored ?
             cached: _b_.None,
@@ -1169,7 +1173,6 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     var test = false // mod_name == 'some_module' // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
-        // alert()
     }
     // special case
     if(mod_name == '_frozen_importlib_external'){

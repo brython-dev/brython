@@ -179,8 +179,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-08 08:01:52.409419"
-__BRYTHON__.timestamp=1723096912409
+__BRYTHON__.compiled_date="2024-08-08 08:49:30.410782"
+__BRYTHON__.timestamp=1723099770410
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1887,8 +1887,7 @@ res=_b_.list.$factory(_b_.set.$factory(res))
 _b_.list.sort(res)
 return res}
 object.__eq__=function(self,other){
-if(self===other){return true}
-return _b_.NotImplemented}
+return self===other ? true :_b_.NotImplemented}
 object.__format__=function(){var $=$B.args("__format__",2,{self:null,spec:null},["self","spec"],arguments,{},null,null)
 if($.spec !==""){throw _b_.TypeError.$factory(
 "non-empty format string passed to object.__format__")}
@@ -2400,7 +2399,7 @@ update_subclasses(kls,'__setattr__','$tp_setattr',value)
 break}
 if($test){console.log("after setattr",kls)}
 return _b_.None}
-type.mro=function(cls){
+type.$mro=function(cls){
 if(cls===undefined){throw _b_.TypeError.$factory(
 'unbound method type.mro() needs an argument')}
 var bases=cls.__bases__,seqs=[],pos1=0
@@ -2435,6 +2434,7 @@ if(seq[0]===candidate){
 seqs[i].shift()}}}
 if(mro[mro.length-1]!==_b_.object){mro[mpos++]=_b_.object}
 return mro}
+type.mro=function(cls){return $B.$list(type.$mro(cls))}
 type.__subclasscheck__=function(self,subclass){
 var klass=self
 if(subclass.__bases__===undefined){return self===_b_.object}
@@ -4268,7 +4268,7 @@ err.__suppress_context__=false
 return err}
 )
 exc_class.__bases__=[base]
-exc_class.__mro__=_b_.type.mro(exc_class).slice(1)
+exc_class.__mro__=_b_.type.$mro(exc_class).slice(1)
 $B.set_func_names(exc_class,'builtins')
 _b_[exc_name]=exc_class}
 make_builtin_exception("BaseException",_b_.object)
@@ -4329,7 +4329,7 @@ err.__suppress_context__=false
 return err}
 )
 _b_.AttributeError.__bases__=[_b_.Exception]
-_b_.AttributeError.__mro__=_b_.type.mro(_b_.AttributeError)
+_b_.AttributeError.__mro__=_b_.type.$mro(_b_.AttributeError)
 _b_.AttributeError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){var msg
@@ -4351,7 +4351,7 @@ err.__suppress_context__=false
 return err}
 )
 _b_.NameError.__bases__=[_b_.Exception]
-_b_.NameError.__mro__=_b_.type.mro(_b_.NameError).slice(1)
+_b_.NameError.__mro__=_b_.type.$mro(_b_.NameError).slice(1)
 _b_.NameError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.NameError,'builtins')
 make_builtin_exception("UnboundLocalError",_b_.NameError)
@@ -4452,7 +4452,7 @@ return err}
 )
 _b_.BaseExceptionGroup.__bases__=[_b_.BaseException]
 _b_.BaseExceptionGroup.__class_getitem__=$B.$class_getitem
-_b_.BaseExceptionGroup.__mro__=_b_.type.mro(_b_.BaseExceptionGroup)
+_b_.BaseExceptionGroup.__mro__=_b_.type.$mro(_b_.BaseExceptionGroup)
 _b_.BaseExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
 `${self.exceptions.length > 1 ? 's' : ''})`}
 _b_.BaseExceptionGroup.split=function(self,condition){
@@ -4492,7 +4492,7 @@ err.__suppress_context__=false
 return err}
 )
 _b_.ExceptionGroup.__bases__=[_b_.BaseExceptionGroup,_b_.Exception]
-_b_.ExceptionGroup.__mro__=_b_.type.mro(_b_.ExceptionGroup)
+_b_.ExceptionGroup.__mro__=_b_.type.$mro(_b_.ExceptionGroup)
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
@@ -5710,7 +5710,7 @@ Module.__dir__=function(self){if(self.__dir__){return $B.$call(self.__dir__)()}
 var res=[]
 for(var key in self){if(key.startsWith('$')||key=='__class__'){continue}
 res[res.length]=key}
-return res.sort()}
+return $B.$list(res.sort())}
 Module.__new__=function(cls,name,doc,$package){return{
 __class__:cls,__builtins__:_b_.__builtins__,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 Module.__repr__=Module.__str__=function(self){var res="<module "+self.__name__
@@ -5849,7 +5849,7 @@ timestamp=stored.timestamp
 if(stored){var is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
 return ModuleSpec.$factory({name :fullname,loader:VFSLoader.$factory(),
 origin :is_builtin? "built-in" :"brython_stdlib",
-submodule_search_locations:is_package?[]:_b_.None,loader_state:{stored:stored,timestamp:timestamp},
+submodule_search_locations:is_package? $B.$list([]):_b_.None,loader_state:{stored:stored,timestamp:timestamp},
 cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
 $B.set_func_names(VFSFinder,"<import>")
 for(let method in VFSFinder){if(typeof VFSFinder[method]=="function"){VFSFinder[method]=_b_.classmethod.$factory(
@@ -5934,7 +5934,7 @@ fullname.replace(/\./g,"/"),metadata={ext:ext,is_package:is_pkg,path:path+(is_pk
 ((ext=="py")? ".py" :".js")),address:address},_module=Module.$factory(fullname)
 metadata.code=$download_module(_module,metadata.path)
 var res=ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),
-origin :metadata.path,submodule_search_locations:is_pkg?[path]:_b_.None,loader_state:metadata,
+origin :metadata.path,submodule_search_locations:is_pkg? $B.$list([path]):_b_.None,loader_state:metadata,
 cached:_b_.None,parent:is_pkg ? fullname :parent_package(fullname),has_location:_b_.True})
 return res}}
 return _b_.None}
@@ -5987,7 +5987,7 @@ $B.$call(url_hook)(base_path+'/',self.hint)}
 loader_data.path=file_info[0]}catch(err){if(err.__class__ !==_b_.ModuleNotFoundError){throw err}}}
 if(!notfound){return ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),origin :loader_data.path,
 submodule_search_locations:loader_data.is_package?
-[base_path]:_b_.None,loader_state:loader_data,
+$B.$list([base_path]):_b_.None,loader_state:loader_data,
 cached:_b_.None,parent:loader_data.is_package? fullname :
 parent_package(fullname),has_location:_b_.True})}
 return _b_.None}
@@ -7016,7 +7016,7 @@ str.rsplit=function(){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null
 var rev_str=reverse(_self),rev_sep=sep===_b_.None ? sep :reverse(sep),rev_res=str.split(rev_str,rev_sep,$.maxsplit)
 rev_res.reverse()
 for(var i=0;i < rev_res.length;i++){rev_res[i]=reverse(rev_res[i])}
-return rev_res}
+return $B.$list(rev_res)}
 str.rstrip=function(){var $=$B.args("rstrip",2,{self:null,chars:null},["self","chars"],arguments,{chars:_b_.None},null,null),chars=$.chars,_self=to_string($.self)
 if(chars===_b_.None){return _self.trimEnd()}
 chars=to_string(chars)
@@ -8118,6 +8118,8 @@ r[0]=(r[0]-hipart)*mp2_31
 var x=hipart+parseInt(r[0])+(r[1]<< 15)
 x &=0xFFFFFFFF
 $B.float_hash_cache.set(_v,x)
+if($B.float_hash_cache.size > 10000){
+$B.float_hash_cache.clear()}
 return self.__hashvalue__=x}
 function isninf(x){var x1=float_value(x).value
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
@@ -8347,12 +8349,10 @@ float['__'+r_opname+'__']){float["__r"+r_opname+"__"]=(function(name){return fun
 if(other_as_num !==null){var other_as_float=$B.fast_float(other_as_num)
 return float["__"+name+"__"](other_as_float,self)}
 return _b_.NotImplemented}})(r_opname)}}
-function $FloatClass(value){return new Number(value)}
 function to_digits(s){
 var arabic_digits="\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",res=""
 for(var i=0;i < s.length;i++){var x=arabic_digits.indexOf(s[i])
-if(x >-1){res+=x}
-else{res+=s[i]}}
+if(x >-1){res+=x}else{res+=s[i]}}
 return res}
 const fast_float=$B.fast_float=function(value){return{__class__:_b_.float,value}}
 float.$factory=function(value){if(value===undefined){return fast_float(0)}
@@ -8423,7 +8423,6 @@ return float.$factory(res.value)}
 throw _b_.TypeError.$factory('__float__ returned non-float'+
 ` (type ${$B.class_name(res)})`)}
 return res}
-$B.$FloatClass=$FloatClass
 $B.set_func_names(float,"builtins")
 float.fromhex=_b_.classmethod.$factory(float.fromhex)
 _b_.float=float

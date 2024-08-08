@@ -762,13 +762,6 @@ var factory = function(){
         obj = $.obj
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
-        /*
-        if(obj.__class__ == tuple){
-            let res = obj.slice()
-            res.__class__ = list
-            return res
-        }
-        */
         obj.__class__ = klass
         return obj
     }

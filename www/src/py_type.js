@@ -910,7 +910,7 @@ type.__setattr__ = function(kls, attr, value){
     return _b_.None
 }
 
-type.mro = function(cls){
+type.$mro = function(cls){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
@@ -997,6 +997,10 @@ type.mro = function(cls){
         mro[mpos++] = _b_.object
     }
     return mro
+}
+
+type.mro = function(cls){
+    return $B.$list(type.$mro(cls))
 }
 
 type.__subclasscheck__ = function(self, subclass){

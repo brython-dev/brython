@@ -2,23 +2,6 @@
 (function($B){
 
 // Implementation of generators
-//
-// The original generator function is transformed into another function
-// that returns iterators
-//
-// For each iteration at rank r, a function F(r) is run and returns a
-// 2-element list : [value, yield_node_id] where value is the yielded value
-// and yield_node_id identifies the node in the function tree structure where
-// the value was yielded
-//
-// For the first iteration, the function F(0) is built from the original
-// generator function
-//
-// For the iteration r+1 it is built from the function F(r), taking into
-// account yield_node_id :
-// - if it is the same as in the previous iteration, F(r+1) = F(r)
-// - else the new function is built to run the rest of the function after the
-//   yielding node
 
 var _b_ = $B.builtins
 
@@ -83,7 +66,6 @@ $B.generator.close = function(self){
 }
 
 $B.generator.send = function(self, value){
-    // version for ast_to_js
     // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
     // to decide if a generator with "yield" inside context managers must
     // be applied method .return()

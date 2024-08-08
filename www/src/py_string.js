@@ -2339,7 +2339,7 @@ str.rsplit = function() {
     for(var i = 0; i < rev_res.length; i++){
         rev_res[i] = reverse(rev_res[i])
     }
-    return rev_res
+    return $B.$list(rev_res)
 }
 
 str.rstrip = function(){

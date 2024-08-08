@@ -458,7 +458,7 @@ function make_builtin_exception(exc_name, base, set_value){
         }
     )
     exc_class.__bases__ = [base]
-    exc_class.__mro__ = _b_.type.mro(exc_class).slice(1)
+    exc_class.__mro__ = _b_.type.$mro(exc_class).slice(1)
     $B.set_func_names(exc_class, 'builtins')
     _b_[exc_name] = exc_class
 }
@@ -603,7 +603,7 @@ _b_.AttributeError = $B.make_class('AttributeError',
 )
 
 _b_.AttributeError.__bases__ = [_b_.Exception]
-_b_.AttributeError.__mro__ = _b_.type.mro(_b_.AttributeError)
+_b_.AttributeError.__mro__ = _b_.type.$mro(_b_.AttributeError)
 
 _b_.AttributeError.__str__ = function(self){
     return self.args[0]
@@ -648,7 +648,7 @@ _b_.NameError = $B.make_class('NameError',
 )
 
 _b_.NameError.__bases__ = [_b_.Exception]
-_b_.NameError.__mro__ = _b_.type.mro(_b_.NameError).slice(1)
+_b_.NameError.__mro__ = _b_.type.$mro(_b_.NameError).slice(1)
 
 _b_.NameError.__str__ = function(self){
     return self.args[0]
@@ -879,7 +879,7 @@ _b_.BaseExceptionGroup.__bases__ = [_b_.BaseException]
 
 _b_.BaseExceptionGroup.__class_getitem__ = $B.$class_getitem
 
-_b_.BaseExceptionGroup.__mro__ = _b_.type.mro(_b_.BaseExceptionGroup)
+_b_.BaseExceptionGroup.__mro__ = _b_.type.$mro(_b_.BaseExceptionGroup)
 
 _b_.BaseExceptionGroup.__str__ = function(self){
     return `${self.message} (${self.exceptions.length} sub-exception` +
@@ -978,7 +978,7 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGFroup",
 )
 
 _b_.ExceptionGroup.__bases__ = [_b_.BaseExceptionGroup, _b_.Exception]
-_b_.ExceptionGroup.__mro__ = _b_.type.mro(_b_.ExceptionGroup)
+_b_.ExceptionGroup.__mro__ = _b_.type.$mro(_b_.ExceptionGroup)
 
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
