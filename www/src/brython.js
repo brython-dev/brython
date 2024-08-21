@@ -179,8 +179,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-08 20:13:50.318670"
-__BRYTHON__.timestamp=1723140830318
+__BRYTHON__.compiled_date="2024-08-21 12:22:56.688912"
+__BRYTHON__.timestamp=1724235776688
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9204,7 +9204,7 @@ if(radd===null){throw _b_.TypeError.$factory('can only concatenate '+
 this_name+' (not "'+$B.class_name(other)+
 '") to '+this_name)}
 return _b_.NotImplemented}
-var res=self.slice(),is_js=other.$is_js_array 
+var res=self.slice()
 for(const item of other){res.push(item)}
 if(isinstance(self,tuple)){return tuple.$factory(res)}else{return $B.$list(res)}}
 list.__bool__=function(self){return list.__len__(self)> 0}
@@ -9868,10 +9868,13 @@ if(_self.hasOwnProperty(attr)){
 return jsobj2pyobj(_self[attr])}
 if(js_array.hasOwnProperty(attr)){return js_array[attr]}
 throw $B.attr_error(attr,_self)}
+if(js_array.hasOwnProperty(attr)){return function(){return js_array[attr](_self,...arguments)}}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return jsobj2pyobj(_self[i])}
+js_array.__iadd__=function(_self,other){if($B.$isinstance(other,js_array)){for(var item of other){_self.push(item)}}else{for(var item of $B.make_js_iterator(other)){_self.push($B.pyobj2jsobj(item))}}
+return _self}
 js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
 js_array.__mul__=function(_self,nb){var res=_self.slice()
 for(var i=1;i < nb;i++){res=res.concat(_self)}
@@ -9885,7 +9888,10 @@ return jsobj2pyobj(v.value)}
 $B.set_func_names(js_array_iterator,'builtins')
 js_array.__iter__=function(_self){return js_array_iterator.$factory(_self)}
 js_array.__radd__=function(_self,other){var res=other.slice()
-for(var item of _self){res.push($B.pyobj2jsobj(item))}
+if($B.$isinstance(other,js_array)){res=res.concat(_self)
+return res}
+for(var item of _self){res.push($B.jsobj2pyobj(item))}
+res.__class__=other.__class__
 return res}
 js_array.__repr__=function(_self){if($B.repr.enter(_self)){
 return '[...]'}
@@ -9894,6 +9900,9 @@ for(var i=0;i < _self.length;++i){_r[i]=_b_.str.$factory(_self[i])}
 res="["+_r.join(", ")+"]"
 $B.repr.leave(_self)
 return res}
+js_array.append=function(_self,x){_self.push(pyobj2jsobj(x))
+if(_self[PYOBJ]){_self[PYOBJ].push(x)}
+return _b_.None}
 $B.set_func_names(js_array,'javascript')
 $B.get_jsobj_class=function(obj){if(typeof obj=='function'){return $B.JSObj}
 var proto=Object.getPrototypeOf(obj)
@@ -14575,7 +14584,8 @@ function SurrogatePair(value){this.value=value}
 function test_escape(p,token,C,text,string_start,antislash_pos){
 var seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
-if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
+if(mo){if(mo[0].length==3 && mo[0][0]>='4'){$B.warn(_b_.SyntaxWarning,`invalid octal escape sequence '\\${mo[0]}'`,p.filename,token)}
+return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
 switch(text[antislash_pos+1]){case "x":
 var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=2){seq_end=antislash_pos+mo[0].length+1
