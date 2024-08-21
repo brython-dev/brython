@@ -31,8 +31,7 @@ list.__add__ = function(self, other){
         }
         return _b_.NotImplemented
     }
-    var res = self.slice(),
-        is_js = other.$is_js_array // list of JS objects
+    var res = self.slice()
     for(const item of other){
         res.push(item)
     }

@@ -961,6 +961,11 @@ js_array.__getattribute__ = function(_self, attr){
         }
         throw $B.attr_error(attr, _self)
     }
+    if(js_array.hasOwnProperty(attr)){
+        return function(){
+            return js_array[attr](_self, ...arguments)
+        }
+    }
     return function(){
         var args = pyobj2jsobj(Array.from(arguments))
         return _b_.list[attr].call(null, _self, ...args)
@@ -970,6 +975,19 @@ js_array.__getattribute__ = function(_self, attr){
 js_array.__getitem__ = function(_self, i){
     i = $B.PyNumber_Index(i)
     return jsobj2pyobj(_self[i])
+}
+
+js_array.__iadd__ = function(_self, other){
+    if($B.$isinstance(other, js_array)){
+        for(var item of other){
+            _self.push(item)
+        }
+    }else{
+        for(var item of $B.make_js_iterator(other)){
+            _self.push($B.pyobj2jsobj(item))
+        }
+    }
+    return _self
 }
 
 js_array.__iter__ = function(_self){
@@ -1010,9 +1028,14 @@ js_array.__iter__ = function(_self){
 
 js_array.__radd__ = function(_self, other){
     var res = other.slice()
-    for(var item of _self){
-        res.push($B.pyobj2jsobj(item))
+    if($B.$isinstance(other, js_array)){
+        res = res.concat(_self)
+        return res
     }
+    for(var item of _self){
+        res.push($B.jsobj2pyobj(item))
+    }
+    res.__class__ = other.__class__
     return res
 }
 
@@ -1030,6 +1053,14 @@ js_array.__repr__ = function(_self){
     res = "[" + _r.join(", ") + "]"
     $B.repr.leave(_self)
     return res
+}
+
+js_array.append = function(_self, x){
+    _self.push(pyobj2jsobj(x))
+    if(_self[PYOBJ]){
+        _self[PYOBJ].push(x)
+    }
+    return _b_.None
 }
 
 $B.set_func_names(js_array, 'javascript')
