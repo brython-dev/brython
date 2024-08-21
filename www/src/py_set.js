@@ -289,14 +289,7 @@ set.__and__ = function(self, other){
     return set_intersection(self, other)
 }
 
-set.__class_getitem__ = function(cls, item){
-    // PEP 585
-    // Set as a classmethod at the end of this script, after $B.set_func_names()
-    if(! Array.isArray(item)){
-        item = [item]
-    }
-    return $B.GenericAlias.$factory(cls, item)
-}
+set.__class_getitem__ = $B.$class_getitem
 
 set.__contains__ = function(self, item){
     return set_contains(self, item)
@@ -426,7 +419,7 @@ function set_make_items(so){
     for(var hash in so.$store){
         items = items.concat(so.$store[hash])
     }
-    return items
+    return $B.$list(items)
 }
 
 set.__le__ = function(self, other){

@@ -639,6 +639,10 @@ float.$hash_func = function(self){
     var x = hipart + parseInt(r[0]) + (r[1] << 15)
     x &= 0xFFFFFFFF
     $B.float_hash_cache.set(_v, x)
+    if($B.float_hash_cache.size > 10000){
+        // avoid memory issues
+        $B.float_hash_cache.clear()
+    }
     return self.__hashvalue__ = x
 }
 
@@ -1227,10 +1231,6 @@ for(var r_opname of r_opnames){
     }
 }
 
-function $FloatClass(value){
-    return new Number(value)
-}
-
 function to_digits(s){
     // Transform a string to another string where all arabic-indic digits
     // are converted to latin digits
@@ -1238,8 +1238,11 @@ function to_digits(s){
         res = ""
     for(var i = 0; i < s.length; i++){
         var x = arabic_digits.indexOf(s[i])
-        if(x > -1){res += x}
-        else{res += s[i]}
+        if(x > -1){
+            res += x
+        }else{
+            res += s[i]
+        }
     }
     return res
 }
@@ -1383,8 +1386,6 @@ float.$factory = function(value){
 
     return res
 }
-
-$B.$FloatClass = $FloatClass
 
 $B.set_func_names(float, "builtins")
 

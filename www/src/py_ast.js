@@ -33,7 +33,7 @@ for(var kl in $B.ast_classes){
             for(var arg of args.split(',')){
                 if(arg.endsWith('*')){
                     arg = arg.substr(0, arg.length - 1)
-                    body += ` this.${arg} = ${arg} === undefined ? [] : ${arg}\n`
+                    body += ` this.${arg} = $B.$list(${arg} === undefined ? [] : ${arg})\n`
                 }else if(arg.endsWith('?')){
                     arg = arg.substr(0, arg.length - 1)
                     body += ` this.${arg} = ${arg}\n`
@@ -58,7 +58,7 @@ $B.ast_js_to_py = function(obj){
     if(obj === undefined){
         return _b_.None
     }else if(Array.isArray(obj)){
-        return obj.map($B.ast_js_to_py)
+        return $B.$list(obj.map($B.ast_js_to_py))
     }else{
         var class_name = obj.constructor.$name,
             py_class = $B.python_ast_classes[class_name],

@@ -87,11 +87,6 @@ function rfind2(text, start, pos){
         text.hash_pos[h] = {pos, next: null}
         return -1
     }else{
-        /*
-        console.log('pos', pos, 'found hash', h, 'in hash_pos')
-        console.log(text.hash_pos[h])
-        alert()
-        */
         var item = text.hash_pos[h]
         // discard items before start
         while(item.pos < start){
@@ -125,7 +120,9 @@ function rfind(buf, seq){
                 break
             }
         }
-        if(found){return i}
+        if(found){
+            return i
+        }
     }
     return -1
 }
@@ -169,97 +166,6 @@ var mod = {
         return (crc ^ (-1)) >>> 0;
     },
 
-    lz_generator_old: function(text, size, min_len){
-        /*
-        Returns a list of items based on the LZ algorithm, using the
-        specified window size and a minimum match length.
-        The items are a tuple (length, distance) if a match has been
-        found, and a byte otherwise.
-        */
-        // 'text' is an instance of Python 'bytes' class, the actual
-        // bytes are in text.source
-        text = text.source
-        if(min_len === undefined){
-            min_len = 3
-        }
-        var pos = 0, // position in text
-            items = [], // returned items
-            start
-        var t0 = globalThis.performance.now()
-        var nb = 1000,
-            delta = 1000
-        while(pos < text.length){
-            if(items.length > nb){
-                // console.log(items.length)
-                nb += delta
-                //console.log(items)
-                // alert()
-            }
-            sequence = text.slice(pos, pos + min_len)
-            if(sequence.length < 3){
-                for(var i = pos; i < text.length; i++){
-                    items.push(text[i])
-                }
-                break
-            }
-            // Search the sequence in the 'size' previous bytes
-            //buf = text.slice(Math.max(0, pos - size), pos)
-            start = Math.max(0, pos - size)
-            buf_pos = rfind1(text, start, pos, sequence)
-            console.log('buf pos', buf_pos)
-            if(buf_pos > -1){
-                // Match of length 3 found; search a longer one
-                var len = 1
-                while(len < 258 &&
-                        buf_pos + len < pos &&
-                        pos + len < text.length &&
-                        text[pos + len] == text[buf_pos + len]){
-                    len += 1
-                }
-                if(len > 1 && nb > 105000){
-                    //console.log('len', len, to_str(text.slice(pos, pos + len)))
-                    //alert()
-                }
-                // "Lazy matching": search longer match starting at next
-                // position
-                longer_match = false
-                if(pos + len < text.length - 2){
-                    match2 = text.slice(pos + 1, pos + len + 2)
-                    var start1 = pos + 1
-                    end = pos + len + 2
-                    longer_buf_pos = rfind1(text, start1, end, match2)
-                    if(longer_buf_pos > -1){
-                        // found longer match : emit current byte as
-                        // literal and move 1 byte forward
-                        console.log('found longer match')
-                        longer_match = true
-                        char = text[pos]
-                        items.push(char)
-                        pos += 1
-                    }
-                }
-                if(! longer_match){
-                    // position of match start in text is buf_pos
-                    // distance is pos - buf_pos
-                    distance = pos - buf_pos
-                    items.push($B.fast_tuple([len, distance]))
-                    if(pos + len == text.length){
-                        break
-                    }else{
-                        pos += len
-                        items.push(text[pos])
-                        pos += 1
-                    }
-                }
-            }else{
-                char = text[pos]
-                items.push(char)
-                pos += 1
-            }
-        }
-        console.log('fini, items', items.length)
-        return items
-    },
     lz_generator: function(text, size, min_len){
         /*
         Returns a list of items based on the LZ algorithm, using the
@@ -334,7 +240,7 @@ var mod = {
                 pos += 1
             }
         }
-        return items
+        return $B.$list(items)
     }
 
 }

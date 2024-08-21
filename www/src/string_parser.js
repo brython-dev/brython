@@ -40,7 +40,7 @@ function SurrogatePair(value){
 }
 
 function test_escape(p, token, context, text, string_start, antislash_pos){
-    // Test if the escape sequence starting at position "antislah_pos" in text
+    // Test if the escape sequence starting at position "antislash_pos" in text
     // is is valid
     // $pos is set at the position before the string quote in original string
     // string_start is the position of the first character after the quote
@@ -51,6 +51,11 @@ function test_escape(p, token, context, text, string_start, antislash_pos){
     // 1 to 3 octal digits = Unicode char
     mo = /^[0-7]{1,3}/.exec(text.substr(antislash_pos + 1))
     if(mo){
+        if(mo[0].length == 3 && mo[0][0] >= '4'){
+            $B.warn(_b_.SyntaxWarning,
+                `invalid octal escape sequence '\\${mo[0]}'`, 
+                p.filename, token)
+        }
         return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
     }
     switch(text[antislash_pos + 1]){
@@ -250,7 +255,7 @@ $B.prepare_string = function(p, token){
                         end++
                     }
                 }else{
-                    var esc = test_escape(p, token, context, src, 
+                    var esc = test_escape(p, token, context, src,
                                           string_start, end)
                     if(esc){
                         if(esc[0] == '\\'){

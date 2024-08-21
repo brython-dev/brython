@@ -291,9 +291,9 @@ Attributes.items = function(){
         attrs = $.self.elt.attributes,
         values = []
     for(var i = 0; i < attrs.length; i++){
-        values.push([attrs[i].name, attrs[i].value])
+        values.push($B.$list([attrs[i].name, attrs[i].value]))
     }
-    return _b_.list.__iter__(values)
+    return _b_.list.__iter__($B.$list(values))
 }
 
 Attributes.values = function(){
@@ -304,8 +304,9 @@ Attributes.values = function(){
     for(var i = 0; i < attrs.length; i++){
         values.push(attrs[i].value)
     }
-    return _b_.list.__iter__(values)
+    return _b_.list.__iter__($B.$list(values))
 }
+
 $B.set_func_names(Attributes, "<dom>")
 
 // Class for DOM events
@@ -474,8 +475,9 @@ DOMNode.__add__ = function(self, other){
         res.children[pos++] = other
     }else{
         // If other is iterable, add all items
-        try{res.children = res.children.concat(_b_.list.$factory(other))}
-        catch(err){throw _b_.TypeError.$factory("can't add '" +
+        try{
+            res.children = res.children.concat(_b_.list.$factory(other))
+        }catch(err){throw _b_.TypeError.$factory("can't add '" +
             $B.class_name(other) + "' object to DOMNode instance")
         }
     }
@@ -540,7 +542,7 @@ DOMNode.__dir__ = function(self){
         }
     }
     res.sort()
-    return res
+    return $B.$list(res)
 }
 
 DOMNode.__eq__ = function(self, other){
@@ -647,7 +649,7 @@ DOMNode.__getattribute__ = function(self, attr){
         // Query String
         let res = {
             __class__: Query,
-            _keys : [],
+            _keys : $B.$list([]),
             _values : {}
         }
         let qs = location.search.substr(1).split('&')
@@ -1134,7 +1136,7 @@ DOMNode.children = function(self){
     for(var child of self.children){
         res.push(DOMNode.$factory(child))
     }
-    return res
+    return $B.$list(res)
 }
 
 
@@ -1146,7 +1148,7 @@ DOMNode.child_nodes = function(self){
     for(var child of self.childNodes){
         res.push(DOMNode.$factory(child))
     }
-    return res
+    return $B.$list(res)
 }
 
 DOMNode.clear = function(){
@@ -1215,7 +1217,7 @@ DOMNode.events = function(self, event){
     evt_list.forEach(function(evt){
         callbacks.push(evt[1])
     })
-    return callbacks
+    return $B.$list(callbacks)
 }
 
 function make_list(node_list){
@@ -1223,7 +1225,7 @@ function make_list(node_list){
     for(var i = 0; i < node_list.length; i++){
         res.push(DOMNode.$factory(node_list[i]))
     }
-    return res
+    return $B.$list(res)
 }
 
 DOMNode.get = function(self){
@@ -1263,7 +1265,7 @@ DOMNode.get = function(self){
         }
         var id_res = document.getElementById($dict['id'])
         if(! id_res){return []}
-        return [DOMNode.$factory(id_res)]
+        return $B.$list([DOMNode.$factory(id_res)])
     }
     if($dict["selector"] !== undefined){
         if(self.querySelectorAll === undefined){
@@ -1272,7 +1274,7 @@ DOMNode.get = function(self){
         }
         return make_list(self.querySelectorAll($dict['selector']))
     }
-    return []
+    return $B.$list([])
 }
 
 DOMNode.getContext = function(self){ // for CANVAS tag
@@ -1406,7 +1408,9 @@ DOMNode.set_class_name = function(self, arg){
 }
 
 DOMNode.set_html = function(self, value){
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == 9){
+        self = self.body
+    }
     self.innerHTML = _b_.str.$factory(value)
 }
 
@@ -1454,7 +1458,9 @@ DOMNode.submit = function(self){ // for FORM
 }
 
 DOMNode.text = function(self){
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == 9){
+        self = self.body
+    }
     var res = self.innerText || self.textContent
     if(res === null){
         res = _b_.None
@@ -1604,15 +1610,16 @@ Query.getfirst = function(self, key, _default){
 
 Query.getlist = function(self, key){
     // always return a list
-    var result = self._values[key]
-    if(result === undefined){return []}
-    return result
+    return $B.$list(self._values[key] ?? [])
 }
 
 Query.getvalue = function(self, key, _default){
-    try{return Query.__getitem__(self, key)}
-    catch(err){
-        if(_default === undefined){return _b_.None}
+    try{
+        return Query.__getitem__(self, key)
+    }catch(err){
+        if(_default === undefined){
+            return _b_.None
+        }
         return _default
     }
 }
@@ -1645,7 +1652,9 @@ TagSum.__add__ = function(self, other){
                                _b_.dict, _b_.set, _b_.list])){
         self.children = self.children.concat(
             DOMNode.$factory(document.createTextNode(other)))
-    }else{self.children.push(other)}
+    }else{
+        self.children.push(other)
+    }
     return self
 }
 

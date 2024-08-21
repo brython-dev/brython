@@ -802,7 +802,7 @@ function make_comp(scopes){
         js += `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
     }
     if(this instanceof $B.ast.ListComp){
-        js += `var result_${id} = []\n`
+        js += `var result_${id} = $B.$list([])\n`
     }else if(this instanceof $B.ast.SetComp){
         js += `var result_${id} = _b_.set.$factory()\n`
     }else if(this instanceof $B.ast.DictComp){
@@ -2835,7 +2835,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
             }
         }
-        js += `${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`
+        js += `${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`
     }else{
         js += `${func_ref}.__annotations__ = $B.empty_dict()\n`
     }

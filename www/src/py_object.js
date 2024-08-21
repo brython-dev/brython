@@ -82,8 +82,7 @@ object.__dir__ = function(self) {
 object.__eq__ = function(self, other){
     // equality test defaults to identity of objects
     //test_issue_1393
-    if(self === other){return true}
-    return _b_.NotImplemented
+    return self === other ?  true : _b_.NotImplemented
 }
 
 object.__format__ = function(){
@@ -95,7 +94,9 @@ object.__format__ = function(){
     return _b_.getattr($.self, "__str__")()
 }
 
-object.__ge__ = function(){return _b_.NotImplemented}
+object.__ge__ = function(){
+    return _b_.NotImplemented
+}
 
 $B.nb_from_dict = 0
 
@@ -448,7 +449,7 @@ object.__reduce__ = function(self){
             break
         }
     }
-    var args = [D, B]
+    var args = $B.$list([D, B])
     if(B === object){
         args.push(_b_.None)
     }else{

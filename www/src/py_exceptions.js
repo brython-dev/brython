@@ -168,7 +168,7 @@ traceback.__getattribute__ = function(_self, attr){
                 return _b_.None
             }
         case "stack":
-            return _self.$stack
+            return $B.$list(_self.$stack)
         default:
             return _b_.object.__getattribute__(_self, attr)
     }
@@ -221,10 +221,7 @@ frame.__getattr__ = function(_self, attr){
             // XXX fix me
         }
     }else if(attr == "f_trace"){
-        if(_self.$f_trace === undefined){
-            return _b_.None
-        }
-        return _self.$f_trace
+        return _self.$f_trace ?? _b_.None
     }else if(attr == "f_lasti"){
         // last instruction not relevant in Brython
         return 0
@@ -461,7 +458,7 @@ function make_builtin_exception(exc_name, base, set_value){
         }
     )
     exc_class.__bases__ = [base]
-    exc_class.__mro__ = _b_.type.mro(exc_class).slice(1)
+    exc_class.__mro__ = _b_.type.$mro(exc_class).slice(1)
     $B.set_func_names(exc_class, 'builtins')
     _b_[exc_name] = exc_class
 }
@@ -517,7 +514,7 @@ _b_.BaseException.add_note = function(self, note){
     if(self.__notes__ !== undefined){
         self.__notes__.push(note)
     }else{
-        self.__notes__ = [note]
+        self.__notes__ = $B.$list([note])
     }
 }
 
@@ -608,7 +605,7 @@ _b_.AttributeError = $B.make_class('AttributeError',
 )
 
 _b_.AttributeError.__bases__ = [_b_.Exception]
-_b_.AttributeError.__mro__ = _b_.type.mro(_b_.AttributeError)
+_b_.AttributeError.__mro__ = _b_.type.$mro(_b_.AttributeError)
 
 _b_.AttributeError.__str__ = function(self){
     return self.args[0]
@@ -653,7 +650,7 @@ _b_.NameError = $B.make_class('NameError',
 )
 
 _b_.NameError.__bases__ = [_b_.Exception]
-_b_.NameError.__mro__ = _b_.type.mro(_b_.NameError).slice(1)
+_b_.NameError.__mro__ = _b_.type.$mro(_b_.NameError).slice(1)
 
 _b_.NameError.__str__ = function(self){
     return self.args[0]
@@ -881,7 +878,10 @@ _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGFroup",
 )
 
 _b_.BaseExceptionGroup.__bases__ = [_b_.BaseException]
-_b_.BaseExceptionGroup.__mro__ = _b_.type.mro(_b_.BaseExceptionGroup)
+
+_b_.BaseExceptionGroup.__class_getitem__ = $B.$class_getitem
+
+_b_.BaseExceptionGroup.__mro__ = _b_.type.$mro(_b_.BaseExceptionGroup)
 
 _b_.BaseExceptionGroup.__str__ = function(self){
     return `${self.message} (${self.exceptions.length} sub-exception` +
@@ -939,6 +939,9 @@ _b_.BaseExceptionGroup.subgroup = function(self, condition){
 
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
+_b_.BaseExceptionGroup.__class_getitem__ = 
+    _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
+
 _b_.ExceptionGroup = $B.make_class("ExceptionGFroup",
     function(){
         var missing = {},
@@ -977,7 +980,7 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGFroup",
 )
 
 _b_.ExceptionGroup.__bases__ = [_b_.BaseExceptionGroup, _b_.Exception]
-_b_.ExceptionGroup.__mro__ = _b_.type.mro(_b_.ExceptionGroup)
+_b_.ExceptionGroup.__mro__ = _b_.type.$mro(_b_.ExceptionGroup)
 
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
@@ -1179,17 +1182,11 @@ $B.error_trace = function(err){
 }
 
 $B.get_stderr = function(){
-    if($B.imported.sys){
-        return $B.imported.sys.stderr
-    }
-    return $B.imported._sys.stderr
+    return $B.imported.sys ? $B.imported.sys.stderr : $B.imported._sys.stderr
 }
 
 $B.get_stdout = function(){
-    if($B.imported.sys){
-        return $B.imported.sys.stdout
-    }
-    return $B.imported._sys.stdout
+    return $B.imported.sys ? $B.imported.sys.stdout : $B.imported._sys.stdout
 }
 
 $B.show_error = function(err){

@@ -70,11 +70,13 @@ var Base64 = {
             var car = String.fromCharCode(input[i])
             var char_num = alphabet.indexOf(car)
             if(char_num == -1){
-                if(validate){throw Base64.error("Non-base64 digit found: " +
-                    car)}
+                if(validate){
+                    throw Base64.error("Non-base64 digit found: " + car)
+                }
             }else if(char_num == 64 && i < input.length - 2){
-                if(validate){throw Base64.error("Non-base64 digit found: " +
-                    car)}
+                if(validate){
+                    throw Base64.error("Non-base64 digit found: " + car)
+                }
             }else if(char_num == 64 && i >= input.length - 2){
                 padding++
                 _input += car
@@ -83,8 +85,12 @@ var Base64 = {
             }
         }
         input = _input
-        if(_input.length == padding){return _b_.bytes.$factory([])}
-        if( _input.length % 4 > 0){throw Base64.error("Incorrect padding")}
+        if(_input.length == padding){
+            return _b_.bytes.$factory([])
+        }
+        if( _input.length % 4 > 0){
+            throw Base64.error("Incorrect padding")
+        }
 
         var i = 0
         while(i < input.length){
@@ -100,8 +106,12 @@ var Base64 = {
 
             output.push(chr1)
 
-            if(enc3 != 64){output.push(chr2)}
-            if(enc4 != 64){output.push(chr3)}
+            if(enc3 != 64){
+                output.push(chr2)
+            }
+            if(enc4 != 64){
+                output.push(chr3)
+            }
 
         }
         // return Python bytes
@@ -109,7 +119,7 @@ var Base64 = {
 
     },
 
-    _utf8_encode: function(string) {
+    _utf8_encode: function(string){
         string = string.replace(/\r\n/g, "\n")
         var utftext = "";
 

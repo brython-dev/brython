@@ -392,10 +392,11 @@ Random.seed = function(){
         self = $.self,
         n = $.n
 
-    if (self._random === undefined)
+    if (self._random === undefined){
         self._random = RandomStream(n)
-    else
+    }else{
         self._random.seed(n)
+    }
 }
 
 Random.setstate = function(){

@@ -458,13 +458,7 @@ type.__call__ = function(){
     return instance
 }
 
-type.__class_getitem__ = function(kls, origin, args){
-    // subclasses of type that don't define __class_getitem__ are
-    // not subscriptable, but type[] is valid
-    if(kls !== type){
-        throw _b_.TypeError.$factory(`type '${kls.__qualname__}' ` +
-            "is not subscriptable")
-    }
+$B.$class_getitem = function(kls, origin, args){
     return $B.GenericAlias.$factory(kls, origin, args)
 }
 
@@ -919,7 +913,7 @@ type.__setattr__ = function(kls, attr, value){
     return _b_.None
 }
 
-type.mro = function(cls){
+type.$mro = function(cls){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
@@ -1006,6 +1000,10 @@ type.mro = function(cls){
         mro[mpos++] = _b_.object
     }
     return mro
+}
+
+type.mro = function(cls){
+    return $B.$list(type.$mro(cls))
 }
 
 type.__subclasscheck__ = function(self, subclass){

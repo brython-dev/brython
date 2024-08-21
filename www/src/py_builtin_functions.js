@@ -251,7 +251,7 @@ code.__repr__ = code.__str__ = function(_self){
 code.__getattribute__ = function(self, attr){
     if(attr == 'co_positions'){
         // fake value
-        return () => [[0, 0, 0, 0]]
+        return () => $B.$list([$B.$list([0, 0, 0, 0])])
     }
     return self[attr]
 }
@@ -518,6 +518,8 @@ var enumerate = _b_.enumerate = $B.make_class("enumerate",
     }
 )
 
+enumerate.__class_getitem__ = $B.$class_getitem
+
 enumerate.__iter__ = function(self){
     self.counter = self.start - 1
     return self
@@ -531,6 +533,8 @@ enumerate.__next__ = function(self){
 $B.set_func_names(enumerate, "builtins")
 
 $B.LOCALS_PROXY = Symbol('locals_proxy')
+
+enumerate.__class_getitem__ = _b_.classmethod.$factory(enumerate.__class_getitem__)
 
 //eval() (built in function)
 var $$eval = _b_.eval = function(){
@@ -1049,7 +1053,9 @@ $B.$getattr = function(obj, attr, _default){
       case '__subclasses__':
           if(klass.$factory || klass.$is_class){
               var subclasses = obj.$subclasses || []
-              return function(){return subclasses}
+              return function(){
+                  return $B.$list(subclasses)
+              }
           }
           break
     }
@@ -2873,7 +2879,7 @@ $Reader.readlines = function(){
             lines.push(self.$lines[self.$lc])
         }
     }
-    return lines
+    return $B.$list(lines)
 }
 
 $Reader.seek = function(self, offset, whence){
@@ -3235,9 +3241,9 @@ $B.function.__dir__ = function(self){
     var infos = self.$infos || {},
         attrs = self.$attrs || {}
 
-    return Object.keys(infos).
+    return $B.$list(Object.keys(infos).
                concat(Object.keys(attrs)).
-               filter(x => !x.startsWith('$'))
+               filter(x => !x.startsWith('$')))
 }
 
 $B.function.__get__ = function(self, obj){

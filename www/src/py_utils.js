@@ -760,12 +760,7 @@ $B.get_class = function(obj){
                 }
             case "object":
                 if(Array.isArray(obj)){
-                    if(obj.$is_js_array){
-                        return $B.js_array
-                    }else if(Object.getPrototypeOf(obj) === Array.prototype){
-                        obj.__class__ = _b_.list
-                        return _b_.list
-                    }
+                    return $B.js_array
                 }else if(obj instanceof $B.str_dict){
                     return _b_.dict
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
@@ -825,7 +820,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     var set_lineno = $B.set_lineno
     if(frame === undefined){
         if($B.frame_obj === null){
-            function set_lineno(){
+            set_lineno = function(){
                 // does nothing
             }
         }else{
@@ -951,7 +946,7 @@ $B.unpacker = function(obj, nb_targets, has_starred){
         t.index++
         var res = t.slice(t.index, t.length - nb_after_starred)
         t.index = t.length - nb_after_starred - 1
-        return res
+        return $B.$list(res)
     }
     return t
 }
@@ -1027,6 +1022,12 @@ $B.$getitem = function(obj, item, position){
 
     // PEP 560
     if(obj.$is_class){
+        if(! Array.isArray(item)){
+            item = $B.fast_tuple([item])
+        }
+        if(obj === _b_.type){
+            return $B.$class_getitem(obj, item)
+        }
         var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
             return $B.$call(class_gi)(item)
@@ -1035,9 +1036,9 @@ $B.$getitem = function(obj, item, position){
             if(class_gi !== _b_.None){
                 return class_gi(obj, item)
             }else{
-                throw _b_.TypeError.$factory("'" +
-                    $B.class_name(obj.__class__) +
-                    "' object is not subscriptable")
+                throw _b_.TypeError.$factory("type '" +
+                    $B.$getattr(obj, '__qualname__') +
+                    "' is not subscriptable")
             }
         }
     }
@@ -1830,7 +1831,8 @@ $B.rich_comp = function(op, x, y){
         "' and '" + $B.class_name(y) + "'")
 }
 
-var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*"}
+var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*",
+    __and__: '&', __or__: '|'}
 
 $B.rich_op = function(op, x, y, position){
     try{
@@ -1963,21 +1965,7 @@ $B.rich_op1 = function(op, x, y){
             `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
             ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
     }
-    if((op == '__add__' || op == '__mul__') &&
-            (Array.isArray(x) || typeof x == 'string' ||
-            $B.$isinstance(x, [_b_.str, _b_.bytes,
-                          _b_.bytearray, _b_.memoryview]))){
-        // Special case for addition and repetition of sequences:
-        // if type(x).__add__(y) raises an exception, use type(y).__radd__(x),
-        // as if it had returned NotImplemented
-        try{
-            res = method(x, y)
-        }catch(err){
-            res = _b_.NotImplemented
-        }
-    }else{
-        res = method(x, y)
-    }
+    res = method(x, y)
     if(res === _b_.NotImplemented){
         try{
             method = $B.$getattr(y_class, rop)

@@ -410,9 +410,7 @@
             var js_constr = res.__thisclass__.__bases__[0]
             return function(){
                 var obj = new js_constr.$js_func(...arguments)
-                console.log('obj from js constr', obj)
                 for(var attr in obj){
-                    console.log('attr', attr)
                     res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
                 }
                 return obj
@@ -551,7 +549,6 @@
                 )
                 document.body.appendChild(script)
             }else{
-                console.log('appel callback', loaded)
                 return $B.$call(callback).apply(null, loaded)
             }
         },
@@ -762,7 +759,7 @@
         path: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename_for_import()
-                return $B.import_info[filename].path
+                return $B.$list($B.import_info[filename].path)
             },
             function(self, value){
                 var filename = $B.get_filename_for_import()
@@ -772,7 +769,7 @@
         meta_path: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename()
-                return $B.import_info[filename].meta_path
+                return $B.$list($B.import_info[filename].meta_path)
             },
             function(self, value){
                 var filename = $B.get_filename()
@@ -782,7 +779,7 @@
         path_hooks: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename()
-                return $B.import_info[filename].path_hooks
+                return $B.$list($B.import_info[filename].path_hooks)
             },
             function(self, value){
                 var filename = $B.get_filename()
@@ -868,13 +865,13 @@
         _filters_mutated: function(){
         },
         _onceregistry: $B.empty_dict(),
-        filters: [
+        filters: $B.$list([
             $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.PendingDeprecationWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ResourceWarning, _b_.None, 0])
-        ],
+        ]),
         warn: function(){
             // Issue a warning, or maybe ignore it or raise an exception.
             var $ = $B.args('warn', 4,
@@ -1477,6 +1474,9 @@ $B.stdin = {
         return ""
     }
 }
+
+// Populated in py2js.brython(), used for sys.argv
+$B.__ARGV = $B.$list([])
 
 // set default trace function (cf. sys.settrace)
 $B.tracefunc = _b_.None

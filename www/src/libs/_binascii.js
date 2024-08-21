@@ -24,11 +24,13 @@ function decode(bytes, altchars, validate){
         var car = String.fromCharCode(input[i])
         var char_num = alphabet.indexOf(car)
         if(char_num == -1){
-            if(validate){throw error.$factory("Non-base64 digit found: " +
-                car)}
+            if(validate){
+                throw error.$factory("Non-base64 digit found: " + car)
+            }
         }else if(char_num == 64 && i < input.length - 2){
-            if(validate){throw error.$factory("Non-base64 digit found: " +
-                car)}
+            if(validate){
+                throw error.$factory("Non-base64 digit found: " + car)
+            }
         }else if(char_num == 64 && i >= input.length - 2){
             padding++
             _input += car
@@ -37,8 +39,12 @@ function decode(bytes, altchars, validate){
         }
     }
     input = _input
-    if(_input.length == padding){return _b_.bytes.$factory([])}
-    if( _input.length % 4 > 0){throw error.$factory("Incorrect padding")}
+    if(_input.length == padding){
+        return _b_.bytes.$factory([])
+    }
+    if( _input.length % 4 > 0){
+        throw error.$factory("Incorrect padding")
+    }
 
     var i = 0
     while(i < input.length){
@@ -83,7 +89,7 @@ function make_alphabet(altchars){
 
 var module = {
     a2b_base64: function(){
-        var $ = $B.args("a2b_base64", 2, {s: null, strict_mode: null}, 
+        var $ = $B.args("a2b_base64", 2, {s: null, strict_mode: null},
                 ['s', 'strict_mode'],
                 arguments, {strict_mode: false}, null, null)
         var bytes
@@ -126,7 +132,9 @@ var module = {
 
         var string = $B.to_bytes($.data),
             res = btoa(String.fromCharCode.apply(null, string))
-        if(newline){res += "\n"}
+        if(newline){
+            res += "\n"
+        }
         return _b_.bytes.$factory(res, "ascii")
     },
     b2a_hex: function(obj){

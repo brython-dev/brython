@@ -2339,7 +2339,7 @@ str.rsplit = function() {
     for(var i = 0; i < rev_res.length; i++){
         rev_res[i] = reverse(rev_res[i])
     }
-    return rev_res
+    return $B.$list(rev_res)
 }
 
 str.rstrip = function(){
@@ -2388,7 +2388,7 @@ str.split = function(){
             pos++
         }
         if(pos === _self.length - 1){
-            return [_self]
+            return $B.$list([_self])
         }
         let name = ""
         while(1){
@@ -2417,14 +2417,14 @@ str.split = function(){
                 break
             }
         }
-        return res.map($B.String)
+        return $B.$list(res.map($B.String))
     }else{
         sep = to_string(sep)
         let res = [],
             s = "",
             seplen = sep.length
         if(maxsplit == 0){
-            return [$.self]
+            return $B.$list([$.self])
         }
         while(pos < _self.length){
             if(_self.substr(pos, seplen) == sep){
@@ -2441,7 +2441,7 @@ str.split = function(){
             }
         }
         res.push(s)
-        return res.map($B.String)
+        return $B.$list(res.map($B.String))
     }
 }
 
@@ -2454,7 +2454,7 @@ str.splitlines = function() {
             $B.get_class($.keepends).__name)
     }
     var keepends = _b_.int.$factory($.keepends),
-        res = [],
+        res = $B.$list([]),
         start = 0,
         pos = 0,
         _self = to_string($.self)
@@ -2475,7 +2475,7 @@ str.splitlines = function() {
     if(start < _self.length){
         res.push(_self.slice(start))
     }
-    return res.map($B.String)
+    return $B.$list(res.map($B.String))
 }
 
 str.startswith = function(){

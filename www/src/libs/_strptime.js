@@ -133,6 +133,38 @@
                         }else{
                             error(s, fmt)
                         }
+                    }else if(spec == 'p'){
+                        // AM or PM
+                        var next2 = s.substr(pos_s, 2)
+                        if(next2.toUpperCase() == 'AM'){
+                            if(dt.hasOwnProperty('hour')){
+                                if(dt.hour > 0 && dt.hour < 12){
+                                    // ok
+                                }else if(dt.hour == 12){
+                                    dt.hour = 0
+                                }else{
+                                    error(s, fmt)
+                                }
+                            }else{
+                                error(s, fmt)
+                            }
+                        }else if(next2.toUpperCase() == 'PM'){
+                            if(dt.hasOwnProperty('hour')){
+                                if(dt.hour > 0 && dt.hour < 12){
+                                    dt.hour += 12
+                                }else if(dt.hour == 12){
+                                    dt.hour = 12
+                                }else{
+                                    error(s, fmt)
+                                }
+                            }else{
+                                error(s, fmt)
+                            }
+                        }else{
+                            error(s, fmt)
+                        }
+                        pos_fmt += 2
+                        pos_s += 2
                     }else{
                         pos_fmt++
                     }
