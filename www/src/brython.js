@@ -179,8 +179,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-23 08:43:50.481756"
-__BRYTHON__.timestamp=1724395430481
+__BRYTHON__.compiled_date="2024-08-26 09:45:02.639427"
+__BRYTHON__.timestamp=1724658302639
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1012,16 +1012,15 @@ function idb_get(module){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules"),req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
+function remove_outdated(db,outdated,callback){var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
+if(outdated.length > 0){let module=outdated.pop(),req=store.delete(module)
+req.onsuccess=(function(mod){return function(){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
+report_remove_outdated(mod)
+remove_outdated(db,outdated,callback)}})(module)}else{report_close()
+callback()}}
 $B.idb_open_promise=function(){return new Promise(function(resolve,reject){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
-if(!db.objectStoreNames.contains("modules")){var version=db.version
-db.close()
-idb_cx=indexedDB.open($B.idb_name,version+1)
-idb_cx.onupgradeneeded=function(){var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=resolve}
-idb_cx.onsuccess=function(){var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=resolve}}else{
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(){reject("open cursor error")}
@@ -1031,8 +1030,7 @@ if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
 if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}}else{
 outdated.push(record.name)}}else{outdated.push(record.name)}
-cursor.continue()}else{$B.outdated=outdated
-resolve()}}}}
+cursor.continue()}else{remove_outdated(db,outdated,resolve)}}}
 idb_cx.onupgradeneeded=function(){var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=resolve}
 idb_cx.onerror=function(){
@@ -1043,17 +1041,7 @@ reject('could not open indexedDB database')}})}
 $B.idb_open=function(){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
-if(! db.objectStoreNames.contains("modules")){var version=db.version
-db.close()
-console.info('create object store',version)
-idb_cx=indexedDB.open($B.idb_name,version+1)
-idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
-var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}
-idb_cx.onversionchanged=function(){console.log("version changed")}
-idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
-var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}}else{if($B.get_page_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
+if($B.get_page_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(evt){console.log("open cursor error",evt)}
@@ -1065,8 +1053,7 @@ if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.preco
 if($B.get_page_option('debug')> 1){console.info("load from cache",record.name)}}else{
 outdated.push(record.name)}}else{outdated.push(record.name)}
 cursor.continue()}else{if($B.get_page_option('debug')> 1){console.log("done")}
-$B.outdated=outdated
-loop()}}}}
+remove_outdated(db,outdated,loop)}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
@@ -1074,7 +1061,8 @@ idb_cx.onerror=function(){console.info('could not open indexedDB database')
 $B.idb_cx=null
 $B.idb_name=null
 $B.$options.indexeddb=false
-loop()}}
+loop()}
+idb_cx.onversionchange=function(){console.log('version change')}}
 $B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_path=url.substr($B.script_dir.length+1)
 if($B.files && $B.files.hasOwnProperty(rel_path)){
 var src=atob($B.files[rel_path].content)
@@ -1096,22 +1084,13 @@ source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
 $B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
-if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1]
-if(ext==".py"){if($B.idb_cx && !$B.idb_cx.$closed){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
+if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
-function report_precompile(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
-' from cache'}))}}
+function report_remove_outdated(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:`remove outdated ${mod} from cache`}))}}
 function report_close(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
 function report_done(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:_b_.dict.$from_js($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
-if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
-while($B.outdated.length > 0){let module=$B.outdated.pop(),req=store.delete(module)
-req.onsuccess=(function(mod){return function(){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
-report_precompile(mod)}})(module)}
-report_close()
-$B.idb_cx.result.close()
-$B.idb_cx.$closed=true}
 report_done()
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
@@ -5819,7 +5798,6 @@ if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
 $B.run_js=run_js
-function save_in_indexedDB(record){if(dbUpdater && $B.get_page_option('indexeddb')&& $B.indexedDB){dbUpdater.postMessage(record)}}
 var ModuleSpec=$B.make_class("ModuleSpec",function(fields){fields.__class__=ModuleSpec
 return fields}
 )
@@ -5997,7 +5975,7 @@ return _b_.None}
 PathLoader.exec_module=function(self,module){
 var metadata=module.__spec__.loader_state
 module.$is_package=metadata.is_package
-if(metadata.ext=="py"){var record=run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
+if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
 var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
