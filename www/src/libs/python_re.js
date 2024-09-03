@@ -3333,10 +3333,15 @@ function GroupMO(node, start, matches, string, groups, endpos){
     // Match Object for Groups
     this.node = node
     this.start = start
-    this.matches = matches
+    this._matches = matches
+    this.matches = this.node.non_greedy ? matches.slice(0, this.node.repeat.min) : matches.slice()
     this.string = string
-    this.end = matches.length > 0 ? $last(matches).end : start
-    this.endpos = endpos === undefined ? this.end : endpos
+    this.end = this.matches.length > 0 ? $last(matches).end : start
+    this.endpos = endpos === undefined
+        ? matches.length > 0
+            ? $last(matches).end
+            : start
+        : endpos
     this.$groups = groups
 }
 
@@ -3383,17 +3388,29 @@ GroupMO.prototype.backtrack = function(string, groups){
         }
     }
     // Else, remove last match if possible
-    if(this.matches.length > this.node.repeat.min &&
-            this.matches.length >= 1){
-        this.matches.pop()
-        if(this.matches.length > 0){
+    if(this.node.non_greedy){
+        if(this.matches.length < this._matches.length){
+            this.matches.push(this._matches[this.matches.length])
             this.end = $last(this.matches).end
+            return true
         }else{
             // remove this group and its children from groups
             del_groups(groups, this.node)
             this.end = this.start
         }
-        return true
+    }else{
+        if(this.matches.length > this.node.repeat.min &&
+                this.matches.length >= 1){
+            this.matches.pop()
+            if(this.matches.length > 0){
+                this.end = $last(this.matches).end
+            }else{
+                // remove this group and its children from groups
+                del_groups(groups, this.node)
+                this.end = this.start
+            }
+            return true
+        }
     }
     // Group fails; if some of its subgroups succeded, remove them from
     // groups
@@ -3703,6 +3720,9 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
     // Follow the pattern tree structure
     if(_debug.value){
         console.log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
+        if(pattern.text == "\\."){
+            console.log('  ', pattern)
+        }
         alert()
     }
     if(endpos !== undefined){
