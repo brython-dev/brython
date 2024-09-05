@@ -76,6 +76,7 @@ $B.PyCF_ONLY_AST=1024
 $B.PyCF_TYPE_COMMENTS=0x1000
 $B.CO_FUTURE_ANNOTATIONS=0x1000000
 $B.PyCF_ALLOW_INCOMPLETE_INPUT=0x4000
+$B.COMPILER_FLAGS={OPTIMIZED:1,NEWLOCALS:2,VARARGS:4,VARKEYWORDS:8,NESTED:16,GENERATOR:32,NOFREE:64,COROUTINE:128,ITERABLE_COROUTINE:256,ASYNC_GENERATOR:512}
 if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)-1
@@ -179,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,5,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-09-03 09:26:08.818776"
-__BRYTHON__.timestamp=1725348368816
+__BRYTHON__.compiled_date="2024-09-05 18:35:19.245759"
+__BRYTHON__.timestamp=1725554119245
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1507,8 +1508,7 @@ step=$B.$GetInt(step)
 if(start===null){start=step > 0 ? 0 :obj.length-1}else{start=$B.$GetInt(start)}
 if(stop===null){stop=step > 0 ? obj.length :-1}else{stop=$B.$GetInt(stop)}
 var repl=_b_.list.$factory(value),j=0,test,nb=0
-if(step > 0){test=function(i){return i < stop}}
-else{test=function(i){return i > stop}}
+if(step > 0){test=function(i){return i < stop}}else{test=function(i){return i > stop}}
 for(var i=start;test(i);i+=step){nb++}
 if(nb !=repl.length){throw _b_.ValueError.$factory(
 "attempt to assign sequence of size "+repl.length+
@@ -1662,36 +1662,41 @@ return v ? 1 :0
 case "number":
 return v
 case "object":
-if(v.__class__===$B.long_int){return v}
-else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
+if(v.__class__===$B.long_int){return v}else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-$B.enter_frame=function(frame){
+$B.enter_frame=function(frame,__file__,lineno){
 var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
 if(count > $B.recursion_limit){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
+frame.__file__=__file__
+frame.$lineno=lineno
+frame.$f_trace=_b_.None
+frame.$has_generators=!! frame[1].$has_generators
 $B.frame_obj={prev:$B.frame_obj,frame,count:count+1}
 if($B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
 $B.tracefunc.$frame_id=frame[0]
-return _b_.None}else{
+frame.$f_trace=_b_.None
+return}else{
 var frame_obj=$B.frame_obj
-while(frame_obj !==null){if(frame_obj.frame[0]==$B.tracefunc.$frame_id){return _b_.None}
+while(frame_obj !==null){if(frame_obj.frame[0]==$B.tracefunc.$frame_id){frame.$f_trace=_b_.None
+return}
 frame_obj=frame_obj.prev}
 try{var res=$B.tracefunc(frame,'call',_b_.None)
 var frame_obj=$B.frame_obj
 while(frame_obj !==null){if(frame_obj.frame[4]==res){return _b_.None}
 frame_obj=frame_obj.prev}
-return res}catch(err){$B.set_exc(err,frame)
+frame.$f_trace=res
+return}catch(err){$B.set_exc(err,frame)
 $B.frame_obj=$B.frame_obj.prev
 err.$in_trace_func=true
-throw err}}}
-return _b_.None}
+throw err}}}}
 $B.trace_exception=function(){var frame=$B.frame_obj.frame
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 var trace_func=frame.$f_trace,exc=frame[1].$current_exception
@@ -2838,10 +2843,8 @@ var save_frame_obj=$B.frame_obj
 var _ast
 frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
-frame.__file__=filename
-frame.$f_trace=$B.enter_frame(frame)
+$B.enter_frame(frame,filename,1)
 var _frame_obj=$B.frame_obj
-frame.$lineno=1
 if(src.__class__===code){_ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
 try{if(! _ast){var _mode=mode=='eval' ? 'eval' :'file'
@@ -3707,14 +3710,16 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames
+$B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
 ){f.$is_func=true
+f.$args_parser=$B.make_args_parser_and_parse
+if(co_flags & $B.COMPILER_FLAGS.COROUTINE){f.$is_async=true}
 f.$infos={__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
 co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
-f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
+f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
 $B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
 var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
@@ -10814,6 +10819,7 @@ return res}
 f.$infos=func.$infos
 f.$is_func=true
 f.$is_async=true
+f.$args_parser=func.$args_parser
 return f}
 $B.promise=function(obj){if(obj.__class__===coroutine){
 obj.$frame_obj=$B.frame_obj
@@ -11890,9 +11896,7 @@ js+=`locals = ${locals_name}\n`+
 `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n`+
 `locals.__doc__ = ${docstring}\n`+
 `var frame = [name, locals, module, ${globals_name}]\n`+
-`frame.__file__ = __file__\n`+
-`frame.$lineno = ${this.lineno}\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`+
+`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 `var _frame_obj = $B.frame_obj\n`+
 `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
 scopes.push(class_scope)
@@ -12314,9 +12318,7 @@ scopes.push(typevarscope)
 js+=`function BOUND_OF_${name}(){\n`+
 `var current_frame = $B.frame_obj.frame,\n`+
 `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`+
-`frame.__file__ = '${scopes.filename}'\n`+
-`frame.$lineno = ${tp.bound.lineno}\n`+
+`$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n`+
 `try{\n`+
 `var res = ${tp.bound.to_js(scopes)}\n`+
 `$B.leave_frame()\nreturn res\n`+
@@ -12365,8 +12367,7 @@ type_params=`$B.$import('_typing')\n`+
 `locals = locals_${type_params_ref},\n`+
 `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n`+
 `type_params = []\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`+
-`frame.__file__ = '${scopes.filename}'\n`
+`$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
 for(var item of this.type_params){type_params+=type_param_in_def(item,type_params_ref,scopes)}
 type_params_func+=type_params}
 var func_scope=new Scope(this.name,'def',this)
@@ -12401,14 +12402,9 @@ this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`
 js+=`if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`}else{js+=`${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
-    if(locals.$has_generators){
-        frame.$has_generators = true
-    }
-    frame.__file__ = __file__
-    frame.$lineno = ${this.lineno}
-    frame.$f_trace = $B.enter_frame(frame)\n`
+    $B.enter_frame(frame, __file__, ${this.lineno})\n`
 if(func_scope.needs_stack_length){js+=`var stack_length = $B.count_frames()\n`}
-if(func_scope.needs_frames ||is_async){js+=`var _frame_obj = $B.frame_obj\n`+
+if(func_scope.needs_frames ||is_async){js+=`var _frame_obj = $B.frame_obj,\n`+
 `_linenums = $B.make_linenums()\n`}
 if(is_async){js+='frame.$async = true\n'}
 if(is_generator){js+=`locals.$is_generator = true\n`
@@ -12444,11 +12440,11 @@ if(is_generator){js+=`, '${this.name}')\n`+
 scopes.pop()
 var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
 this.name
-var flags=3
-if(this.args.vararg){flags |=4}
-if(this.args.kwarg){flags |=8}
-if(is_generator){flags |=32}
-if(is_async){flags |=128}
+var flags=$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS
+if(this.args.vararg){flags |=$B.COMPILER_FLAGS.VARARGS}
+if(this.args.kwarg){flags |=$B.COMPILER_FLAGS.VARKEYWORDS}
+if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
+if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
 var parameters=[],locals=[],identifiers=_b_.dict.$keys_string(symtable_block.symbols)
 var free_vars=[]
 for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SCOPE_OFF)& SCOPE_MASK
@@ -12456,7 +12452,6 @@ if(_scope==FREE){free_vars.push(`'${ident}'`)}
 if(flag & DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 if(in_class){js+=`${name2}.$is_method = true\n`}
-if(is_async){js+=`${name2}.$is_async = true\n`}
 js+=`$B.make_function_infos(${name2}, `+
 `'${gname}', `+
 `${defaults}, `+
@@ -12472,12 +12467,10 @@ js+=`$B.make_function_infos(${name2}, `+
 `[${free_vars}], `+
 `${this.args.kwonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
-`${varnames.length}, `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
 `[${varnames}])\n`;
 if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
-js+=`${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
 if(decorated){func_ref=`decorated${$B.UUID()}`
 js+='var '}
@@ -12526,10 +12519,10 @@ scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
 var head=init_comprehension(comp,scopes)
 var first=this.generators[0]
-var js=`$B.enter_frame(frame)\n`+
+var js=`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`
+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -12599,13 +12592,12 @@ var js=`// Javascript code generated from ast\n`+
 js+=`${global_name} = {}, // $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`
-js+=`\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n`+
+js+=`\nvar __file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
-js+=`frame.$f_trace = $B.enter_frame(frame)\n`
-js+=`$B.set_lineno(frame, 1)\n`+
-'\nvar _frame_obj = $B.frame_obj\n'
+js+=`$B.enter_frame(frame, __file__, 1)\n`
+js+='\nvar _frame_obj = $B.frame_obj\n'
 js+='var stack_length = $B.count_frames()\n'
 js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
@@ -12753,13 +12745,12 @@ js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name}`
 if(name){let local_name=('locals_'+name).replace(/\./g,'_')
 js+=`,\n${local_name} = locals`}}
-js+=`\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n`+
+js+=`\nvar __file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
-if(! namespaces){js+=`frame.$f_trace = $B.enter_frame(frame)\n`
-js+=`$B.set_lineno(frame, 1)\n`+
-'\nvar _frame_obj = $B.frame_obj\n'}
+if(! namespaces){js+=`$B.enter_frame(frame, __file__, 1)\n`
+js+='\nvar _frame_obj = $B.frame_obj\n'}
 js+='var stack_length = $B.count_frames()\n'
 js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+

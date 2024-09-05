@@ -1136,7 +1136,9 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
         return $B.set_list_slice(obj, start, stop, value)
     }
 
-    if(step == 0){throw _b_.ValueError.$factory("slice step cannot be zero")}
+    if(step == 0){
+        throw _b_.ValueError.$factory("slice step cannot be zero")
+    }
     step = $B.$GetInt(step)
 
     if(start === null){
@@ -1155,12 +1157,21 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
         j = 0,
         test,
         nb = 0
-    if(step > 0){test = function(i){return i < stop}}
-    else{test = function(i){return i > stop}}
+    if(step > 0){
+        test = function(i){
+            return i < stop
+        }
+    }else{
+        test = function(i){
+            return i > stop
+        }
+    }
 
     // Test if number of values in the specified slice is equal to the
     // length of the replacement sequence
-    for(var i = start; test(i); i += step){nb++}
+    for(var i = start; test(i); i += step){
+        nb++
+    }
     if(nb != repl.length){
         throw _b_.ValueError.$factory(
             "attempt to assign sequence of size " + repl.length +
@@ -1577,8 +1588,9 @@ $B.int_or_bool = function(v){
         case "number":
             return v
         case "object":
-            if(v.__class__ === $B.long_int){return v}
-            else{
+            if(v.__class__ === $B.long_int){
+                return v
+            }else{
                 throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
             }
@@ -1588,7 +1600,7 @@ $B.int_or_bool = function(v){
     }
 }
 
-$B.enter_frame = function(frame){
+$B.enter_frame = function(frame, __file__, lineno){
     // Enter execution frame
     var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
     if(count > $B.recursion_limit){
@@ -1597,6 +1609,10 @@ $B.enter_frame = function(frame){
         throw exc
     }
     frame.__class__ = $B.frame
+    frame.__file__ = __file__
+    frame.$lineno = lineno
+    frame.$f_trace = _b_.None
+    frame.$has_generators = !! frame[1].$has_generators
     $B.frame_obj = {
         prev: $B.frame_obj,
         frame,
@@ -1608,7 +1624,8 @@ $B.enter_frame = function(frame){
                  frame[4] === $B.tracefunc.$infos.__func__)){
             // to avoid recursion, don't run the trace function inside itself
             $B.tracefunc.$frame_id = frame[0]
-            return _b_.None
+            frame.$f_trace = _b_.None
+            return
         }else{
             // also to avoid recursion, don't run the trace function in the
             // frame "below" it (ie in functions that the trace function
@@ -1616,7 +1633,8 @@ $B.enter_frame = function(frame){
             var frame_obj = $B.frame_obj
             while(frame_obj !== null){
                 if(frame_obj.frame[0] == $B.tracefunc.$frame_id){
-                    return _b_.None
+                    frame.$f_trace = _b_.None
+                    return
                 }
                 frame_obj = frame_obj.prev
             }
@@ -1629,7 +1647,8 @@ $B.enter_frame = function(frame){
                     }
                     frame_obj = frame_obj.prev
                 }
-                return res
+                frame.$f_trace = res
+                return
             }catch(err){
                 $B.set_exc(err, frame)
                 $B.frame_obj = $B.frame_obj.prev
@@ -1638,7 +1657,6 @@ $B.enter_frame = function(frame){
             }
         }
     }
-    return _b_.None
 }
 
 $B.trace_exception = function(){

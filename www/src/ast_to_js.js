@@ -1590,9 +1590,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `locals.__doc__ = ${docstring}\n` +
           `var frame = [name, locals, module, ${globals_name}]\n` +
-          `frame.__file__ = __file__\n` +
-          `frame.$lineno = ${this.lineno}\n` +
-          `frame.$f_trace = $B.enter_frame(frame)\n` +
+          `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           `var _frame_obj = $B.frame_obj\n` +
           `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
 
@@ -2412,9 +2410,7 @@ function type_param_in_def(tp, ref, scopes){
         js += `function BOUND_OF_${name}(){\n` +
               `var current_frame = $B.frame_obj.frame,\n` +
               `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `frame.__file__ = '${scopes.filename}'\n` +
-              `frame.$lineno = ${tp.bound.lineno}\n` +
+              `$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n` +
               `try{\n` +
               `var res = ${tp.bound.to_js(scopes)}\n` +
               `$B.leave_frame()\nreturn res\n` +
@@ -2511,8 +2507,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               `locals = locals_${type_params_ref},\n` +
               `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
               `type_params = []\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `frame.__file__ = '${scopes.filename}'\n`
+              `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
         for(var item of this.type_params){
             type_params += type_param_in_def(item, type_params_ref, scopes)
         }
@@ -2591,19 +2586,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]
-    if(locals.$has_generators){
-        frame.$has_generators = true
-    }
-    frame.__file__ = __file__
-    frame.$lineno = ${this.lineno}
-    frame.$f_trace = $B.enter_frame(frame)\n`
+    $B.enter_frame(frame, __file__, ${this.lineno})\n`
 
     if(func_scope.needs_stack_length){
         js += `var stack_length = $B.count_frames()\n`
     }
 
     if(func_scope.needs_frames || is_async){
-        js += `var _frame_obj = $B.frame_obj\n` +
+        js += `var _frame_obj = $B.frame_obj,\n` +
                   `_linenums = $B.make_linenums()\n`
     }
 
@@ -2674,11 +2664,19 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                               this.name
 
     // Flags
-    var flags = 3
-    if(this.args.vararg){flags |= 4}
-    if(this.args.kwarg){flags |= 8}
-    if(is_generator){flags |= 32}
-    if(is_async){flags |= 128}
+    var flags = $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
+    if(this.args.vararg){
+        flags |= $B.COMPILER_FLAGS.VARARGS
+    }
+    if(this.args.kwarg){
+        flags |= $B.COMPILER_FLAGS.VARKEYWORDS
+    }
+    if(is_generator){
+        flags |= $B.COMPILER_FLAGS.GENERATOR
+    }
+    if(is_async){
+        flags |= $B.COMPILER_FLAGS.COROUTINE
+    }
 
     var parameters = [],
         locals = [],
@@ -2703,9 +2701,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(in_class){
         js += `${name2}.$is_method = true\n`
     }
-    if(is_async){
-        js += `${name2}.$is_async = true\n`
-    }
+    
     // Set admin infos
     js += `$B.make_function_infos(${name2}, ` +
         `'${gname}', ` +
@@ -2723,7 +2719,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `[${free_vars}], ` +
         `${this.args.kwonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
-        `${varnames.length}, ` +
         `${this.args.posonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': qualname}', ` +
         `[${varnames}])\n`;
@@ -2731,9 +2726,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
     }
-
-    js += `${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
-
 
     var mangled = mangle(scopes, func_name_scope, this.name),
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
@@ -2864,10 +2856,10 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    var js = `$B.enter_frame(frame)\n` +
+    var js = `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
           `for(var next_${id} of next_func_${id}){\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n`
+              `$B.enter_frame(frame, __file__, ${this.lineno})\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -3028,7 +3020,7 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
           `locals = ${global_name},\n` +
           `frame = ["${module_id}", locals, "${module_id}", locals]`
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3040,9 +3032,8 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
 
-    js += `frame.$f_trace = $B.enter_frame(frame)\n`
-    js += `$B.set_lineno(frame, 1)\n` +
-        '\nvar _frame_obj = $B.frame_obj\n'
+    js += `$B.enter_frame(frame, __file__, 1)\n`
+    js += '\nvar _frame_obj = $B.frame_obj\n'
     js += 'var stack_length = $B.count_frames()\n'
 
     js += `try{\n` +
@@ -3394,7 +3385,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         }
     }
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3406,9 +3397,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
     if(! namespaces){
-          js += `frame.$f_trace = $B.enter_frame(frame)\n`
-          js += `$B.set_lineno(frame, 1)\n` +
-                '\nvar _frame_obj = $B.frame_obj\n'
+          js += `$B.enter_frame(frame, __file__, 1)\n`
+          js += '\nvar _frame_obj = $B.frame_obj\n'
     }
     js += 'var stack_length = $B.count_frames()\n'
 
