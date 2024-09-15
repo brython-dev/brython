@@ -1350,7 +1350,7 @@ $B.make_iterator_class = function(name){
                     throw _b_.RuntimeError.$factory(message)
                 }
             }
-
+            
             self.counter++
             if(self.counter < self.items.length){
                 var item = self.items[self.counter]

@@ -111,12 +111,18 @@ function compiler_error(ast_obj, message, end){
     throw exc
 }
 
+var uuid = Math.floor(Math.random() * 1000000)
+function make_id(){
+    uuid += 1
+    return uuid
+}
+
 function fast_id(obj){
     // faster than calling _b_.id
     if(obj.$id !== undefined){
         return obj.$id
     }
-    return obj.$id = $B.UUID()
+    return obj.$id = make_id()
 }
 
 function copy_position(target, origin){
@@ -766,7 +772,7 @@ function init_genexpr(comp, scopes){
 
 function make_comp(scopes){
     // Code common to list / set / dict comprehensions
-    var id = $B.UUID(),
+    var id = make_id(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`),
@@ -1067,7 +1073,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                 break
             }
         }
-        var iter_id = 'it_' + $B.UUID()
+        var iter_id = 'it_' + make_id()
         js += `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
         if(nb_after_starred !== undefined){
@@ -1100,7 +1106,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             return js
         }
     }
-    var value_id = 'v' + $B.UUID()
+    var value_id = 'v' + make_id()
     js += `var ${value_id} = ${value}\n`
 
     var assigns = []
@@ -1171,7 +1177,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
     }
 
     function add_item(item, js){
-        var id = $B.UUID()
+        var id = make_id()
         var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n` +
@@ -1504,14 +1510,14 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     var js = '',
         locals_name = make_scope_name(scopes, class_scope),
-        ref = this.name + $B.UUID(),
+        ref = this.name + make_id(),
         glob = scopes[0].name,
         globals_name = make_scope_name(scopes, scopes[0]),
         decorators = [],
         decorated = false
     for(let dec of this.decorator_list){
         decorated = true
-        var dec_id = 'decorator' + $B.UUID()
+        var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
         js += `$B.set_lineno(frame, ${dec.lineno})\n` +
               `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
@@ -1608,7 +1614,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
     if(decorated){
-        class_ref = `decorated${$B.UUID()}`
+        class_ref = `decorated${make_id()}`
         js += 'var '
     }
 
@@ -1668,7 +1674,7 @@ $B.ast.Compare.prototype.to_js = function(scopes){
 }
 
 $B.ast.comprehension.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
+    var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes)
 
     var js = `var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n` +
@@ -1822,7 +1828,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     compiler_check(this)
-    var id = $B.UUID(),
+    var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes),
         js = `frame.$lineno = ${this.lineno}\n`
     // Create a new scope with the same name to avoid binding in the enclosing
@@ -2464,7 +2470,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // evaluate decorator in enclosing scope
     for(let dec of this.decorator_list){
         decorated = true
-        var dec_id = 'decorator' + $B.UUID()
+        var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
         decs_declare += `$B.set_lineno(frame, ${dec.lineno})\n`
         decs_declare += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
@@ -2483,7 +2489,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
             `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
 
-    var id = $B.UUID(),
+    var id = make_id(),
         name2 = this.name + id
 
     // Type params (PEP 695)
@@ -2579,7 +2585,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             this.args.kwarg === undefined){
         js += `${locals_name} = locals = {};\n`
         // generate error message
-        js += `if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`
+        js += `if(arguments.length !== 0){\n` +
+                  `${name2}.$args_parser(${parse_args.join(', ')})\n` +
+              `}\n`
     }else{
         js += `${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
     }
@@ -2701,7 +2709,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(in_class){
         js += `${name2}.$is_method = true\n`
     }
-    
+
     // Set admin infos
     js += `$B.make_function_infos(${name2}, ` +
         `'${gname}', ` +
@@ -2731,7 +2739,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
 
     if(decorated){
-        func_ref = `decorated${$B.UUID()}`
+        func_ref = `decorated${make_id()}`
         js += 'var '
     }
 
@@ -2835,7 +2843,7 @@ $B.ast.FunctionDef.prototype._check = function(){
 }
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
+    var id = make_id(),
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
@@ -3060,7 +3068,7 @@ $B.ast.JoinedStr.prototype.to_js = function(scopes){
 
 $B.ast.Lambda.prototype.to_js = function(scopes){
     // Reuse FunctionDef, with a specific name
-    var id = $B.UUID(),
+    var id = make_id(),
         name = 'lambda_' + $B.lambda_magic + '_' + id
     var f = new $B.ast.FunctionDef(name, this.args, this.body, [])
     f.lineno = this.lineno
@@ -3560,7 +3568,7 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 
 $B.ast.Try.prototype.to_js = function(scopes){
     compiler_check(this)
-    var id = $B.UUID(),
+    var id = make_id(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
@@ -3674,7 +3682,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
 
 $B.ast.TryStar.prototype.to_js = function(scopes){
     // PEP 654 try...except*...
-    var id = $B.UUID(),
+    var id = make_id(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
@@ -3876,7 +3884,7 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.While.prototype.to_js = function(scopes){
-    var id = $B.UUID()
+    var id = make_id()
 
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
@@ -3938,7 +3946,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     */
 
     function add_item(item, js){
-        var id = $B.UUID()
+        var id = make_id()
         var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `klass = $B.get_class(mgr_${id})\n` +
@@ -4078,7 +4086,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
     }
     scope.is_generator = true
     var value = $B.js_from_ast(this.value, scopes)
-    var n = $B.UUID()
+    var n = make_id()
     return `yield* (function* f(){
         var _i${n} = _b_.iter(${value}),
                 _r${n}
