@@ -98,4 +98,25 @@ re.RegexFlag
 # issue 2472
 assert re.sub(r'/\*[\s\S]*?\*/', '', 'a/*b c*/') == 'a'
 
+# issue 2490
+p = r'/X(.|\n)*?X/'
+s = 'a/XbzhX/.../XcX/d'
+
+mo = re.search(p, s)
+assert mo.string[mo.start():mo.end()] == '/XbzhX/'
+
+t = []
+for mo in re.finditer(p, s):
+  t.append(mo.string[mo.start():mo.end()])
+
+assert t == ['/XbzhX/', '/XcX/']
+
+assert re.sub(p, '', s) == 'a...d'
+
+p = r'/X(.|\n)*X/'
+mo = re.search(p, s)
+assert mo.string[mo.start():mo.end()] == '/XbzhX/.../XcX/'
+
+assert re.sub(r'/\*(.|\n)*?\*/', '', 'a/*b*/.../*c*/d') == 'a...d'
+
 print('all tests ok..')

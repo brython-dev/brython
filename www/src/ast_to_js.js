@@ -111,12 +111,18 @@ function compiler_error(ast_obj, message, end){
     throw exc
 }
 
+var uuid = Math.floor(Math.random() * 1000000)
+function make_id(){
+    uuid += 1
+    return uuid
+}
+
 function fast_id(obj){
     // faster than calling _b_.id
     if(obj.$id !== undefined){
         return obj.$id
     }
-    return obj.$id = $B.UUID()
+    return obj.$id = make_id()
 }
 
 function copy_position(target, origin){
@@ -766,7 +772,7 @@ function init_genexpr(comp, scopes){
 
 function make_comp(scopes){
     // Code common to list / set / dict comprehensions
-    var id = $B.UUID(),
+    var id = make_id(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`),
@@ -1115,7 +1121,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                 break
             }
         }
-        var iter_id = 'it_' + $B.UUID()
+        var iter_id = 'it_' + make_id()
         js += `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
         if(nb_after_starred !== undefined){
@@ -1148,7 +1154,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             return js
         }
     }
-    var value_id = 'v' + $B.UUID()
+    var value_id = 'v' + make_id()
     js += `var ${value_id} = ${value}\n`
 
     var assigns = []
@@ -1219,7 +1225,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
     }
 
     function add_item(item, js){
-        var id = $B.UUID()
+        var id = make_id()
         var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n` +
@@ -1552,14 +1558,14 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     var js = '',
         locals_name = make_scope_name(scopes, class_scope),
-        ref = this.name + $B.UUID(),
+        ref = this.name + make_id(),
         glob = scopes[0].name,
         globals_name = make_scope_name(scopes, scopes[0]),
         decorators = [],
         decorated = false
     for(let dec of this.decorator_list){
         decorated = true
-        var dec_id = 'decorator' + $B.UUID()
+        var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
         js += `$B.set_lineno(frame, ${dec.lineno})\n` +
               `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
@@ -1639,9 +1645,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `locals.__doc__ = ${docstring}\n` +
           `var frame = [name, locals, module, ${globals_name}]\n` +
-          `frame.__file__ = __file__\n` +
-          `frame.$lineno = ${this.lineno}\n` +
-          `frame.$f_trace = $B.enter_frame(frame)\n` +
+          `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           `var _frame_obj = $B.frame_obj\n` +
           `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
 
@@ -1665,7 +1669,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
     if(decorated){
-        class_ref = `decorated${$B.UUID()}`
+        class_ref = `decorated${make_id()}`
         js += 'var '
     }
 
@@ -1725,7 +1729,7 @@ $B.ast.Compare.prototype.to_js = function(scopes){
 }
 
 $B.ast.comprehension.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
+    var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes)
 
     var js = `var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n` +
@@ -1879,7 +1883,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     compiler_check(this)
-    var id = $B.UUID(),
+    var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes),
         js = `frame.$lineno = ${this.lineno}\n`
     // Create a new scope with the same name to avoid binding in the enclosing
@@ -2467,9 +2471,7 @@ function type_param_in_def(tp, ref, scopes){
         js += `function BOUND_OF_${name}(){\n` +
               `var current_frame = $B.frame_obj.frame,\n` +
               `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `frame.__file__ = '${scopes.filename}'\n` +
-              `frame.$lineno = ${tp.bound.lineno}\n` +
+              `$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n` +
               `try{\n` +
               `var res = ${tp.bound.to_js(scopes)}\n` +
               `$B.leave_frame()\nreturn res\n` +
@@ -2523,7 +2525,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // evaluate decorator in enclosing scope
     for(let dec of this.decorator_list){
         decorated = true
-        var dec_id = 'decorator' + $B.UUID()
+        var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
         decs_declare += `$B.set_lineno(frame, ${dec.lineno})\n`
         decs_declare += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
@@ -2542,7 +2544,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
             `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
 
-    var id = $B.UUID(),
+    var id = make_id(),
         name2 = this.name + id
 
     // Type params (PEP 695)
@@ -2567,8 +2569,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               `locals = locals_${type_params_ref},\n` +
               `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
               `type_params = []\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `frame.__file__ = '${scopes.filename}'\n`
+              `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
         for(var item of this.type_params){
             type_params += type_param_in_def(item, type_params_ref, scopes)
         }
@@ -2640,26 +2641,23 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             this.args.kwarg === undefined){
         js += `${locals_name} = locals = {};\n`
         // generate error message
-        js += `if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`
+        js += `if(arguments.length !== 0){\n` +
+                  `${name2}.$args_parser(${parse_args.join(', ')})\n` +
+              `}\n`
     }else{
         js += `${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
     }
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]
-    if(locals.$has_generators){
-        frame.$has_generators = true
-    }
-    frame.__file__ = __file__
-    frame.$lineno = ${this.lineno}
-    frame.$f_trace = $B.enter_frame(frame)\n`
+    $B.enter_frame(frame, __file__, ${this.lineno})\n`
 
     if(func_scope.needs_stack_length){
         js += `var stack_length = $B.count_frames()\n`
     }
 
     if(func_scope.needs_frames || is_async){
-        js += `var _frame_obj = $B.frame_obj\n` +
+        js += `var _frame_obj = $B.frame_obj,\n` +
                   `_linenums = $B.make_linenums()\n`
     }
 
@@ -2730,11 +2728,19 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                               this.name
 
     // Flags
-    var flags = 3
-    if(this.args.vararg){flags |= 4}
-    if(this.args.kwarg){flags |= 8}
-    if(is_generator){flags |= 32}
-    if(is_async){flags |= 128}
+    var flags = $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
+    if(this.args.vararg){
+        flags |= $B.COMPILER_FLAGS.VARARGS
+    }
+    if(this.args.kwarg){
+        flags |= $B.COMPILER_FLAGS.VARKEYWORDS
+    }
+    if(is_generator){
+        flags |= $B.COMPILER_FLAGS.GENERATOR
+    }
+    if(is_async){
+        flags |= $B.COMPILER_FLAGS.COROUTINE
+    }
 
     var parameters = [],
         locals = [],
@@ -2759,9 +2765,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(in_class){
         js += `${name2}.$is_method = true\n`
     }
-    if(is_async){
-        js += `${name2}.$is_async = true\n`
-    }
+
     // Set admin infos
     js += `$B.make_function_infos(${name2}, ` +
         `'${gname}', ` +
@@ -2779,7 +2783,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `[${free_vars}], ` +
         `${this.args.kwonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
-        `${varnames.length}, ` +
         `${this.args.posonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': qualname}', ` +
         `[${varnames}])\n`;
@@ -2788,14 +2791,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += `${name2} = $B.make_async(${name2})\n`
     }
 
-    js += `${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
-
-
     var mangled = mangle(scopes, func_name_scope, this.name),
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
 
     if(decorated){
-        func_ref = `decorated${$B.UUID()}`
+        func_ref = `decorated${make_id()}`
         js += 'var '
     }
 
@@ -2899,7 +2899,7 @@ $B.ast.FunctionDef.prototype._check = function(){
 }
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
+    var id = make_id(),
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
@@ -2920,10 +2920,10 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    var js = `$B.enter_frame(frame)\n` +
+    var js = `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
           `for(var next_${id} of next_func_${id}){\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n`
+              `$B.enter_frame(frame, __file__, ${this.lineno})\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -3084,7 +3084,7 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
           `locals = ${global_name},\n` +
           `frame = ["${module_id}", locals, "${module_id}", locals]`
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3096,9 +3096,8 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
 
-    js += `frame.$f_trace = $B.enter_frame(frame)\n`
-    js += `$B.set_lineno(frame, 1)\n` +
-        '\nvar _frame_obj = $B.frame_obj\n'
+    js += `$B.enter_frame(frame, __file__, 1)\n`
+    js += '\nvar _frame_obj = $B.frame_obj\n'
     js += 'var stack_length = $B.count_frames()\n'
 
     js += `try{\n` +
@@ -3125,7 +3124,7 @@ $B.ast.JoinedStr.prototype.to_js = function(scopes){
 
 $B.ast.Lambda.prototype.to_js = function(scopes){
     // Reuse FunctionDef, with a specific name
-    var id = $B.UUID(),
+    var id = make_id(),
         name = 'lambda_' + $B.lambda_magic + '_' + id
     var f = new $B.ast.FunctionDef(name, this.args, this.body, [])
     f.lineno = this.lineno
@@ -3450,7 +3449,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         }
     }
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3462,9 +3461,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
     if(! namespaces){
-          js += `frame.$f_trace = $B.enter_frame(frame)\n`
-          js += `$B.set_lineno(frame, 1)\n` +
-                '\nvar _frame_obj = $B.frame_obj\n'
+          js += `$B.enter_frame(frame, __file__, 1)\n`
+          js += '\nvar _frame_obj = $B.frame_obj\n'
     }
     js += 'var stack_length = $B.count_frames()\n'
 
@@ -3626,7 +3624,7 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 
 $B.ast.Try.prototype.to_js = function(scopes){
     compiler_check(this)
-    var id = $B.UUID(),
+    var id = make_id(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
@@ -3740,7 +3738,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
 
 $B.ast.TryStar.prototype.to_js = function(scopes){
     // PEP 654 try...except*...
-    var id = $B.UUID(),
+    var id = make_id(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
@@ -3946,7 +3944,7 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.While.prototype.to_js = function(scopes){
-    var id = $B.UUID()
+    var id = make_id()
 
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
@@ -4008,7 +4006,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     */
 
     function add_item(item, js){
-        var id = $B.UUID()
+        var id = make_id()
         var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `klass = $B.get_class(mgr_${id})\n` +
@@ -4148,7 +4146,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
     }
     scope.is_generator = true
     var value = $B.js_from_ast(this.value, scopes)
-    var n = $B.UUID()
+    var n = make_id()
     return `yield* (function* f(){
         var _i${n} = _b_.iter(${value}),
                 _r${n}

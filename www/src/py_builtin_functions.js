@@ -695,10 +695,8 @@ var $$eval = _b_.eval = function(){
 
     frame = [__name__, exec_locals, __name__, exec_globals]
     frame.is_exec_top = true
-    frame.__file__ = filename
-    frame.$f_trace = $B.enter_frame(frame)
+    $B.enter_frame(frame, filename, 1)
     var _frame_obj = $B.frame_obj
-    frame.$lineno = 1
 
     if(src.__class__ === code){
         _ast = src._ast
@@ -3065,12 +3063,16 @@ _b_.open = function(){
                         file + ' : status ' + status)
                 }else{
                     var bytes = []
-                    for(var i = 0, len = this.response.length; i < len; i++){
-                        var cp = this.response.codePointAt(i)
+                    var flag = 0
+                    var t0 = performance.now()
+                    var response = this.response
+                    for(var codePoint of this.response){
+                        var cp = codePoint.codePointAt(0)
                         if(cp > 0xf700){
                             cp -= 0xf700
+
                         }
-                        bytes.push(cp)
+                        bytes[bytes.length] = cp
                     }
                     result.content = _b_.bytes.$factory(bytes)
                     if(! is_binary){
@@ -3321,10 +3323,14 @@ $B.make_function_infos = function(f, __module__, __defaults__,
         __kwdefaults__, __doc__, arg_names,
         vararg, kwarg,
         co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_flags, co_freevars, co_kwonlyargcount, co_name,
         co_posonlyargcount, co_qualname, co_varnames
         ){
     f.$is_func = true
+    f.$args_parser = $B.make_args_parser_and_parse
+    if(co_flags & $B.COMPILER_FLAGS.COROUTINE){
+        f.$is_async = true
+    }
     f.$infos = {__module__,
         __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg}
@@ -3333,7 +3339,8 @@ $B.make_function_infos = function(f, __module__, __defaults__,
     co_freevars.__class__ = _b_.tuple
     co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
+        co_flags, co_freevars, co_kwonlyargcount, co_name,
+        co_nlocals: co_varnames.length,
         co_posonlyargcount, co_qualname, co_varnames,
         co_positions: {}}
 }

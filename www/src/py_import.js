@@ -347,11 +347,6 @@ function run_py(module_contents, path, module, compiled) {
 $B.run_py = run_py // used in importlib.basehook
 $B.run_js = run_js
 
-function save_in_indexedDB(record){
-    if(dbUpdater && $B.get_page_option('indexeddb') && $B.indexedDB){
-        dbUpdater.postMessage(record)
-    }
-}
 
 var ModuleSpec = $B.make_class("ModuleSpec",
     function(fields) {
@@ -816,9 +811,7 @@ PathLoader.exec_module = function(self, module){
     var metadata = module.__spec__.loader_state
     module.$is_package = metadata.is_package
     if(metadata.ext == "py"){
-        var record = run_py(metadata.code, metadata.path, module)
-        //record.python_source = metadata.code
-        //save_in_indexedDB(record)
+        run_py(metadata.code, metadata.path, module)
     }else{
         run_js(metadata.code, metadata.path, module)
     }

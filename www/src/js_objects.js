@@ -518,6 +518,7 @@ $B.JSObj.__ne__ = function(_self, other){
 
 function jsclass2pyclass(js_class){
     // Create a Python class based on a Javascript class
+    //console.log('jsclass', js_class)
     var proto = js_class.prototype,
         klass = $B.make_class(js_class.name)
     klass.__init__ = function(self){
@@ -558,6 +559,14 @@ function jsclass2pyclass(js_class){
             })(key)
         }
     }
+    for(var name of Object.getOwnPropertyNames(js_class)){
+        klass[name] = (function(k){
+            return function(self){
+                var args = Array.from(arguments).map(pyobj2jsobj)
+                return js_class[k].apply(self, args)
+            }
+        })(name)
+    }
     var js_parent = Object.getPrototypeOf(proto).constructor
     if(js_parent.toString().startsWith('class ')){
         var py_parent = jsclass2pyclass(js_parent)
@@ -571,7 +580,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "todos"
+    var test = false // attr == "setFilter"
     if(test){
         console.log("__ga__", _self, attr)
     }

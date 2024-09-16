@@ -76,6 +76,7 @@ $B.PyCF_ONLY_AST=1024
 $B.PyCF_TYPE_COMMENTS=0x1000
 $B.CO_FUTURE_ANNOTATIONS=0x1000000
 $B.PyCF_ALLOW_INCOMPLETE_INPUT=0x4000
+$B.COMPILER_FLAGS={OPTIMIZED:1,NEWLOCALS:2,VARARGS:4,VARKEYWORDS:8,NESTED:16,GENERATOR:32,NOFREE:64,COROUTINE:128,ITERABLE_COROUTINE:256,ASYNC_GENERATOR:512}
 if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)-1
@@ -179,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-08-21 17:01:34.092744"
-__BRYTHON__.timestamp=1724252494092
+__BRYTHON__.compiled_date="2024-09-16 07:45:50.064680"
+__BRYTHON__.timestamp=1726465550064
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1012,16 +1013,15 @@ function idb_get(module){
 var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules"),req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
+function remove_outdated(db,outdated,callback){var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
+if(outdated.length > 0){let module=outdated.pop(),req=store.delete(module)
+req.onsuccess=(function(mod){return function(){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
+report_remove_outdated(mod)
+remove_outdated(db,outdated,callback)}})(module)}else{report_close()
+callback()}}
 $B.idb_open_promise=function(){return new Promise(function(resolve,reject){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
-if(!db.objectStoreNames.contains("modules")){var version=db.version
-db.close()
-idb_cx=indexedDB.open($B.idb_name,version+1)
-idb_cx.onupgradeneeded=function(){var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=resolve}
-idb_cx.onsuccess=function(){var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=resolve}}else{
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(){reject("open cursor error")}
@@ -1031,8 +1031,7 @@ if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
 $B.VFS[record.name].timestamp==record.source_ts){
 if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}}else{
 outdated.push(record.name)}}else{outdated.push(record.name)}
-cursor.continue()}else{$B.outdated=outdated
-resolve()}}}}
+cursor.continue()}else{remove_outdated(db,outdated,resolve)}}}
 idb_cx.onupgradeneeded=function(){var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=resolve}
 idb_cx.onerror=function(){
@@ -1043,17 +1042,7 @@ reject('could not open indexedDB database')}})}
 $B.idb_open=function(){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
-if(! db.objectStoreNames.contains("modules")){var version=db.version
-db.close()
-console.info('create object store',version)
-idb_cx=indexedDB.open($B.idb_name,version+1)
-idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
-var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}
-idb_cx.onversionchanged=function(){console.log("version changed")}
-idb_cx.onsuccess=function(){console.info("db opened",idb_cx)
-var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
-store.onsuccess=loop}}else{if($B.get_page_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
+if($B.get_page_option('debug')> 1){console.info("using indexedDB for stdlib modules cache")}
 var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
 var openCursor=store.openCursor()
 openCursor.onerror=function(evt){console.log("open cursor error",evt)}
@@ -1065,8 +1054,7 @@ if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.preco
 if($B.get_page_option('debug')> 1){console.info("load from cache",record.name)}}else{
 outdated.push(record.name)}}else{outdated.push(record.name)}
 cursor.continue()}else{if($B.get_page_option('debug')> 1){console.log("done")}
-$B.outdated=outdated
-loop()}}}}
+remove_outdated(db,outdated,loop)}}}
 idb_cx.onupgradeneeded=function(){console.info("upgrade needed")
 var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
 store.onsuccess=loop}
@@ -1074,7 +1062,8 @@ idb_cx.onerror=function(){console.info('could not open indexedDB database')
 $B.idb_cx=null
 $B.idb_name=null
 $B.$options.indexeddb=false
-loop()}}
+loop()}
+idb_cx.onversionchange=function(){console.log('version change')}}
 $B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_path=url.substr($B.script_dir.length+1)
 if($B.files && $B.files.hasOwnProperty(rel_path)){
 var src=atob($B.files[rel_path].content)
@@ -1096,22 +1085,13 @@ source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
 $B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
-if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1]
-if(ext==".py"){if($B.idb_cx && !$B.idb_cx.$closed){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
+if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
-function report_precompile(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
-' from cache'}))}}
+function report_remove_outdated(mod){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:`remove outdated ${mod} from cache`}))}}
 function report_close(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
 function report_done(){if(!$B.isWebWorker){document.dispatchEvent(new CustomEvent("brython_done",{detail:_b_.dict.$from_js($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
-if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
-while($B.outdated.length > 0){let module=$B.outdated.pop(),req=store.delete(module)
-req.onsuccess=(function(mod){return function(){if($B.get_page_option('debug')> 1){console.info("delete outdated",mod)}
-report_precompile(mod)}})(module)}
-report_close()
-$B.idb_cx.result.close()
-$B.idb_cx.$closed=true}
 report_done()
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
@@ -1528,8 +1508,7 @@ step=$B.$GetInt(step)
 if(start===null){start=step > 0 ? 0 :obj.length-1}else{start=$B.$GetInt(start)}
 if(stop===null){stop=step > 0 ? obj.length :-1}else{stop=$B.$GetInt(stop)}
 var repl=_b_.list.$factory(value),j=0,test,nb=0
-if(step > 0){test=function(i){return i < stop}}
-else{test=function(i){return i > stop}}
+if(step > 0){test=function(i){return i < stop}}else{test=function(i){return i > stop}}
 for(var i=start;test(i);i+=step){nb++}
 if(nb !=repl.length){throw _b_.ValueError.$factory(
 "attempt to assign sequence of size "+repl.length+
@@ -1683,36 +1662,41 @@ return v ? 1 :0
 case "number":
 return v
 case "object":
-if(v.__class__===$B.long_int){return v}
-else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
+if(v.__class__===$B.long_int){return v}else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-$B.enter_frame=function(frame){
+$B.enter_frame=function(frame,__file__,lineno){
 var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
 if(count > $B.recursion_limit){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
+frame.__file__=__file__
+frame.$lineno=lineno
+frame.$f_trace=_b_.None
+frame.$has_generators=!! frame[1].$has_generators
 $B.frame_obj={prev:$B.frame_obj,frame,count:count+1}
 if($B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
 $B.tracefunc.$frame_id=frame[0]
-return _b_.None}else{
+frame.$f_trace=_b_.None
+return}else{
 var frame_obj=$B.frame_obj
-while(frame_obj !==null){if(frame_obj.frame[0]==$B.tracefunc.$frame_id){return _b_.None}
+while(frame_obj !==null){if(frame_obj.frame[0]==$B.tracefunc.$frame_id){frame.$f_trace=_b_.None
+return}
 frame_obj=frame_obj.prev}
 try{var res=$B.tracefunc(frame,'call',_b_.None)
 var frame_obj=$B.frame_obj
 while(frame_obj !==null){if(frame_obj.frame[4]==res){return _b_.None}
 frame_obj=frame_obj.prev}
-return res}catch(err){$B.set_exc(err,frame)
+frame.$f_trace=res
+return}catch(err){$B.set_exc(err,frame)
 $B.frame_obj=$B.frame_obj.prev
 err.$in_trace_func=true
-throw err}}}
-return _b_.None}
+throw err}}}}
 $B.trace_exception=function(){var frame=$B.frame_obj.frame
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 var trace_func=frame.$f_trace,exc=frame[1].$current_exception
@@ -2867,10 +2851,8 @@ var save_frame_obj=$B.frame_obj
 var _ast
 frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
-frame.__file__=filename
-frame.$f_trace=$B.enter_frame(frame)
+$B.enter_frame(frame,filename,1)
 var _frame_obj=$B.frame_obj
-frame.$lineno=1
 if(src.__class__===code){_ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
 try{if(! _ast){var _mode=mode=='eval' ? 'eval' :'file'
@@ -3657,9 +3639,12 @@ req.onreadystatechange=function(){if(this.readyState !=4){return}
 var status=this.status
 if(status==404){result.error=_b_.FileNotFoundError.$factory(file)}else if(status !=200){result.error=_b_.IOError.$factory('Could not open file '+
 file+' : status '+status)}else{var bytes=[]
-for(var i=0,len=this.response.length;i < len;i++){var cp=this.response.codePointAt(i)
+var flag=0
+var t0=performance.now()
+var response=this.response
+for(var codePoint of this.response){var cp=codePoint.codePointAt(0)
 if(cp > 0xf700){cp-=0xf700}
-bytes.push(cp)}
+bytes[bytes.length]=cp}
 result.content=_b_.bytes.$factory(bytes)
 if(! is_binary){
 try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}}
@@ -3737,14 +3722,16 @@ return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos &&
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
-$B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames
+$B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
 ){f.$is_func=true
+f.$args_parser=$B.make_args_parser_and_parse
+if(co_flags & $B.COMPILER_FLAGS.COROUTINE){f.$is_async=true}
 f.$infos={__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
 co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
-f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
+f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
 $B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
 var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
@@ -5828,7 +5815,6 @@ if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
 $B.run_js=run_js
-function save_in_indexedDB(record){if(dbUpdater && $B.get_page_option('indexeddb')&& $B.indexedDB){dbUpdater.postMessage(record)}}
 var ModuleSpec=$B.make_class("ModuleSpec",function(fields){fields.__class__=ModuleSpec
 return fields}
 )
@@ -6006,7 +5992,7 @@ return _b_.None}
 PathLoader.exec_module=function(self,module){
 var metadata=module.__spec__.loader_state
 module.$is_package=metadata.is_package
-if(metadata.ext=="py"){var record=run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
+if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
 var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
 return PathEntryFinder.$factory(path_entry)}
@@ -9734,6 +9720,8 @@ for([key,value]of Object.entries(Object.getOwnPropertyDescriptors(proto))){if(ke
 if(value.get){var getter=(function(v){return function(self){return v.get.call(self.__dict__.$jsobj)}})(value),setter=(function(v){return function(self,x){v.set.call(self.__dict__.$jsobj,x)}})(value)
 klass[key]=_b_.property.$factory(getter,setter)}else{klass[key]=(function(m){return function(self){var args=Array.from(arguments).slice(1)
 return proto[m].apply(self.__dict__.$jsobj,args)}})(key)}}
+for(var name of Object.getOwnPropertyNames(js_class)){klass[name]=(function(k){return function(self){var args=Array.from(arguments).map(pyobj2jsobj)
+return js_class[k].apply(self,args)}})(name)}
 var js_parent=Object.getPrototypeOf(proto).constructor
 if(js_parent.toString().startsWith('class ')){var py_parent=jsclass2pyclass(js_parent)
 klass.__mro__=[py_parent].concat(klass.__mro__)}
@@ -10843,6 +10831,7 @@ return res}
 f.$infos=func.$infos
 f.$is_func=true
 f.$is_async=true
+f.$args_parser=func.$args_parser
 return f}
 $B.promise=function(obj){if(obj.__class__===coroutine){
 obj.$frame_obj=$B.frame_obj
@@ -11366,9 +11355,12 @@ exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_
 exc.$frame_obj=$B.frame_obj
 if($B.frame_obj===null){}
 throw exc}
+var uuid=Math.floor(Math.random()*1000000)
+function make_id(){uuid+=1
+return uuid}
 function fast_id(obj){
 if(obj.$id !==undefined){return obj.$id}
-return obj.$id=$B.UUID()}
+return obj.$id=make_id()}
 function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
@@ -11603,7 +11595,7 @@ return `var ${comp.locals_name} = {},\n`+
 `frame.$f_trace = _b_.None\n`+
 `var _frame_obj = $B.frame_obj\n`}
 function make_comp(scopes){
-var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
+var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
 while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent}
 var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
@@ -11725,7 +11717,7 @@ var nb_targets=target.elts.length,has_starred=false,nb_after_starred
 for(var i=0,len=nb_targets;i < len;i++){if(target.elts[i]instanceof $B.ast.Starred){has_starred=true
 nb_after_starred=len-i-1
 break}}
-var iter_id='it_'+$B.UUID()
+var iter_id='it_'+make_id()
 js+=`var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, `+
 `${has_starred}`
 if(nb_after_starred !==undefined){js+=`, ${nb_after_starred}`}
@@ -11740,7 +11732,7 @@ if(this.targets.length==1){let target=this.targets[0]
 if(!(target instanceof $B.ast.Tuple)&&
 !(target instanceof $B.ast.List)){js+=assign_one(this.targets[0],value)
 return js}}
-var value_id='v'+$B.UUID()
+var value_id='v'+make_id()
 js+=`var ${value_id} = ${value}\n`
 var assigns=[]
 for(let target of this.targets){if(!(target instanceof $B.ast.Tuple)&&
@@ -11754,7 +11746,7 @@ $B.ast.AsyncFunctionDef.prototype.to_js=function(scopes){return $B.ast.FunctionD
 $B.ast.AsyncWith.prototype.to_js=function(scopes){
 if(!(last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){compiler_error(this,"'async with' outside async function")}
 function bind_vars(vars,scopes){if(vars instanceof $B.ast.Name){bind(vars.id,scopes)}else if(vars instanceof $B.ast.Tuple){for(var var_item of vars.elts){bind_vars(var_item,scopes)}}}
-function add_item(item,js){var id=$B.UUID()
+function add_item(item,js){var id=make_id()
 var s=`var mgr_${id} = `+
 $B.js_from_ast(item.context_expr,scopes)+',\n'+
 `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n`+
@@ -11893,9 +11885,9 @@ if(args.length > 0){if(has_starred){kw=`.concat([${kw}])`}else{kw=', '+kw}}
 return{has_starred,js:js+`${args}${kw}`}}}
 $B.ast.ClassDef.prototype.to_js=function(scopes){var enclosing_scope=bind(this.name,scopes)
 var class_scope=new Scope(this.name,'class',this)
-var js='',locals_name=make_scope_name(scopes,class_scope),ref=this.name+$B.UUID(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
+var js='',locals_name=make_scope_name(scopes,class_scope),ref=this.name+make_id(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
 for(let dec of this.decorator_list){decorated=true
-var dec_id='decorator'+$B.UUID()
+var dec_id='decorator'+make_id()
 decorators.push(dec_id)
 js+=`$B.set_lineno(frame, ${dec.lineno})\n`+
 `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
@@ -11934,9 +11926,7 @@ js+=`locals = ${locals_name}\n`+
 `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n`+
 `locals.__doc__ = ${docstring}\n`+
 `var frame = [name, locals, module, ${globals_name}]\n`+
-`frame.__file__ = __file__\n`+
-`frame.$lineno = ${this.lineno}\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`+
+`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 `var _frame_obj = $B.frame_obj\n`+
 `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
 scopes.push(class_scope)
@@ -11950,7 +11940,7 @@ js+='\n$B.trace_return_and_leave(frame, _b_.None)\n'+
 `[${static_attrs}], ${this.lineno})\n`+
 `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
 var class_ref=reference(scopes,enclosing_scope,this.name)
-if(decorated){class_ref=`decorated${$B.UUID()}`
+if(decorated){class_ref=`decorated${make_id()}`
 js+='var '}
 js+=`${class_ref} = ${ref}\n`
 if(decorated){js+=reference(scopes,enclosing_scope,this.name)+' = '
@@ -11974,7 +11964,7 @@ comps.push(`! $B.$is(${left}, `+
 `${prefix}${$B.js_from_ast(right, scopes)})`)}
 if(len > 1){left='locals.$op'}}
 return comps.join(' && ')}
-$B.ast.comprehension.prototype.to_js=function(scopes){var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes)
+$B.ast.comprehension.prototype.to_js=function(scopes){var id=make_id(),iter=$B.js_from_ast(this.iter,scopes)
 var js=`var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
@@ -12023,7 +12013,7 @@ $B.ast.Expression.prototype.to_js=function(scopes){init_scopes.bind(this)('expre
 return $B.js_from_ast(this.body,scopes)}
 $B.ast.For.prototype.to_js=function(scopes){
 compiler_check(this)
-var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js=`frame.$lineno = ${this.lineno}\n`
+var id=make_id(),iter=$B.js_from_ast(this.iter,scopes),js=`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
 if(this instanceof $B.ast.AsyncFor){js+=`var no_break_${id} = true,\n`+
@@ -12361,9 +12351,7 @@ scopes.push(typevarscope)
 js+=`function BOUND_OF_${name}(){\n`+
 `var current_frame = $B.frame_obj.frame,\n`+
 `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`+
-`frame.__file__ = '${scopes.filename}'\n`+
-`frame.$lineno = ${tp.bound.lineno}\n`+
+`$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n`+
 `try{\n`+
 `var res = ${tp.bound.to_js(scopes)}\n`+
 `$B.leave_frame()\nreturn res\n`+
@@ -12389,7 +12377,7 @@ var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var decorators=[],decorated=false,decs_declare=this.decorator_list.length > 0 ?
 '// declare decorators\n' :''
 for(let dec of this.decorator_list){decorated=true
-var dec_id='decorator'+$B.UUID()
+var dec_id='decorator'+make_id()
 decorators.push(dec_id)
 decs_declare+=`$B.set_lineno(frame, ${dec.lineno})\n`
 decs_declare+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
@@ -12398,7 +12386,7 @@ var parsed_args=transform_args.bind(this)(scopes),positional=parsed_args.positio
 var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
 kw_defaults=kw_default_names.length==0 ? '_b_.None' :
 `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
-var id=$B.UUID(),name2=this.name+id
+var id=make_id(),name2=this.name+id
 var has_type_params=this.type_params.length > 0,type_params=''
 if(has_type_params){
 check_type_params(this)
@@ -12413,8 +12401,7 @@ type_params=`$B.$import('_typing')\n`+
 `locals = locals_${type_params_ref},\n`+
 `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n`+
 `type_params = []\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`+
-`frame.__file__ = '${scopes.filename}'\n`
+`$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
 for(var item of this.type_params){type_params+=type_param_in_def(item,type_params_ref,scopes)}
 type_params_func+=type_params}
 var func_scope=new Scope(this.name,'def',this)
@@ -12446,17 +12433,14 @@ var args_vararg=this.args.vararg===undefined ? 'null' :
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`
-js+=`if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`}else{js+=`${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
+js+=`if(arguments.length !== 0){\n`+
+`${name2}.$args_parser(${parse_args.join(', ')})\n`+
+`}\n`}else{js+=`${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
-    if(locals.$has_generators){
-        frame.$has_generators = true
-    }
-    frame.__file__ = __file__
-    frame.$lineno = ${this.lineno}
-    frame.$f_trace = $B.enter_frame(frame)\n`
+    $B.enter_frame(frame, __file__, ${this.lineno})\n`
 if(func_scope.needs_stack_length){js+=`var stack_length = $B.count_frames()\n`}
-if(func_scope.needs_frames ||is_async){js+=`var _frame_obj = $B.frame_obj\n`+
+if(func_scope.needs_frames ||is_async){js+=`var _frame_obj = $B.frame_obj,\n`+
 `_linenums = $B.make_linenums()\n`}
 if(is_async){js+='frame.$async = true\n'}
 if(is_generator){js+=`locals.$is_generator = true\n`
@@ -12492,11 +12476,11 @@ if(is_generator){js+=`, '${this.name}')\n`+
 scopes.pop()
 var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
 this.name
-var flags=3
-if(this.args.vararg){flags |=4}
-if(this.args.kwarg){flags |=8}
-if(is_generator){flags |=32}
-if(is_async){flags |=128}
+var flags=$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS
+if(this.args.vararg){flags |=$B.COMPILER_FLAGS.VARARGS}
+if(this.args.kwarg){flags |=$B.COMPILER_FLAGS.VARKEYWORDS}
+if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
+if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
 var parameters=[],locals=[],identifiers=_b_.dict.$keys_string(symtable_block.symbols)
 var free_vars=[]
 for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SCOPE_OFF)& SCOPE_MASK
@@ -12504,7 +12488,6 @@ if(_scope==FREE){free_vars.push(`'${ident}'`)}
 if(flag & DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 if(in_class){js+=`${name2}.$is_method = true\n`}
-if(is_async){js+=`${name2}.$is_async = true\n`}
 js+=`$B.make_function_infos(${name2}, `+
 `'${gname}', `+
 `${defaults}, `+
@@ -12520,14 +12503,12 @@ js+=`$B.make_function_infos(${name2}, `+
 `[${free_vars}], `+
 `${this.args.kwonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
-`${varnames.length}, `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
 `[${varnames}])\n`;
 if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
-js+=`${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
-if(decorated){func_ref=`decorated${$B.UUID()}`
+if(decorated){func_ref=`decorated${make_id()}`
 js+='var '}
 js+=`${func_ref} = ${name2}\n`
 if(this.returns ||parsed_args.annotations){var features=scopes.symtable.table.future.features,postponed=features & $B.CO_FUTURE_ANNOTATIONS
@@ -12566,7 +12547,7 @@ return js}
 $B.ast.FunctionDef.prototype._check=function(){for(var arg of this.args.args){if(arg instanceof $B.ast.arg){if(arg.arg=='__debug__'){compiler_error(arg,'cannot assign to __debug__')}}}
 for(var arg of this.args.kwonlyargs){if(arg instanceof $B.ast.arg){if(arg.arg=='__debug__'){compiler_error(arg,'cannot assign to __debug__')}}}
 if(this.args.kwarg && this.args.kwarg.arg=='__debug__'){compiler_error(this.args.kwarg,'cannot assign to __debug__')}}
-$B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
+$B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=make_id(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
@@ -12574,10 +12555,10 @@ scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
 var head=init_comprehension(comp,scopes)
 var first=this.generators[0]
-var js=`$B.enter_frame(frame)\n`+
+var js=`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`+
-`frame.$f_trace = $B.enter_frame(frame)\n`
+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -12647,13 +12628,12 @@ var js=`// Javascript code generated from ast\n`+
 js+=`${global_name} = {}, // $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`
-js+=`\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n`+
+js+=`\nvar __file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
-js+=`frame.$f_trace = $B.enter_frame(frame)\n`
-js+=`$B.set_lineno(frame, 1)\n`+
-'\nvar _frame_obj = $B.frame_obj\n'
+js+=`$B.enter_frame(frame, __file__, 1)\n`
+js+='\nvar _frame_obj = $B.frame_obj\n'
 js+='var stack_length = $B.count_frames()\n'
 js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
@@ -12670,7 +12650,7 @@ $B.ast.JoinedStr.prototype.to_js=function(scopes){var items=this.values.map(s=> 
 if(items.length==0){return "''"}
 return items.join(' + ')}
 $B.ast.Lambda.prototype.to_js=function(scopes){
-var id=$B.UUID(),name='lambda_'+$B.lambda_magic+'_'+id
+var id=make_id(),name='lambda_'+$B.lambda_magic+'_'+id
 var f=new $B.ast.FunctionDef(name,this.args,this.body,[])
 f.lineno=this.lineno
 f.$id=fast_id(this)
@@ -12801,13 +12781,12 @@ js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name}`
 if(name){let local_name=('locals_'+name).replace(/\./g,'_')
 js+=`,\n${local_name} = locals`}}
-js+=`\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n`+
+js+=`\nvar __file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
-if(! namespaces){js+=`frame.$f_trace = $B.enter_frame(frame)\n`
-js+=`$B.set_lineno(frame, 1)\n`+
-'\nvar _frame_obj = $B.frame_obj\n'}
+if(! namespaces){js+=`$B.enter_frame(frame, __file__, 1)\n`
+js+='\nvar _frame_obj = $B.frame_obj\n'}
 js+='var stack_length = $B.count_frames()\n'
 js+=`try{\n`+
 add_body(this.body,scopes)+'\n'+
@@ -12875,7 +12854,7 @@ $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.
 if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position(this.value.col_offset,this.slice.col_offset,this.slice.end_col_offset)
 return `$B.$getitem(${value}, ${slice},${position})`}}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
-var id=$B.UUID(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
+var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
 var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`
 js+=`var stack_length_${id} = $B.count_frames()\n`
 if(has_finally){js+=`var save_frame_obj_${id} = $B.frames_obj\n`}
@@ -12929,7 +12908,7 @@ js+='\n}\n' }else{js+='}\n' }
 scopes.pop()
 return js}
 $B.ast.TryStar.prototype.to_js=function(scopes){
-var id=$B.UUID(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
+var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
 var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`
 js+=`var stack_length_${id} = $B.count_frames()\n`
 if(has_finally){js+=`var save_frame_obj_${id} = $B.frame_obj\n`}
@@ -13038,7 +13017,7 @@ if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
 if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $B.ast.UAdd){return operand+''}else if(this.op instanceof $B.ast.USub){return-operand+''}}
 var method=opclass2dunder[this.op.constructor.$name]
 return `$B.$getattr($B.get_class(locals.$result = ${operand}), '${method}')(locals.$result)`}
-$B.ast.While.prototype.to_js=function(scopes){var id=$B.UUID()
+$B.ast.While.prototype.to_js=function(scopes){var id=make_id()
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
 var js=`var no_break_${id} = true\n`
@@ -13051,7 +13030,7 @@ if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+
 add_body(this.orelse,scopes)+'}\n'}
 return js}
 $B.ast.With.prototype.to_js=function(scopes){
-function add_item(item,js){var id=$B.UUID()
+function add_item(item,js){var id=make_id()
 var s=`var mgr_${id} = `+
 $B.js_from_ast(item.context_expr,scopes)+',\n'+
 `klass = $B.get_class(mgr_${id})\n`+
@@ -13118,7 +13097,7 @@ var scope=last_scope(scopes)
 if(scope.type !='def'){compiler_error(this,"'yield' outside function")}
 scope.is_generator=true
 var value=$B.js_from_ast(this.value,scopes)
-var n=$B.UUID()
+var n=make_id()
 return `yield* (function* f(){
         var _i${n} = _b_.iter(${value}),
                 _r${n}
