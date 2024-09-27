@@ -17,7 +17,7 @@ import argparse
 import urllib.parse
 import socketserver
 
-from server_modular_send_head import CGIHTTPRequestHandler
+from server_modular_send_head import CGIHTTPRequestHandler, SimpleHTTPRequestHandler
 
 import http.cookiejar
 
@@ -231,7 +231,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-port = int(args.port) if args.port else 8000
+port = int(args.port) if args.port else 8001
 ip   = str(args.ip) if args.port else "0.0.0.0"
 
 if not args.no_docs:
@@ -248,7 +248,7 @@ os.chdir(os.path.join(os.getcwd(), 'www'))
 
 cgi_dir = os.path.join(os.path.dirname(os.getcwd()), 'cgi-bin')
 
-server_address, handler = (ip, port), CompressedHandler
+server_address, handler = (ip, port), SimpleHTTPRequestHandler
 httpd = socketserver.ThreadingTCPServer(server_address, handler)
 httpd.server_name = "Brython built-in server"
 httpd.server_port = port
