@@ -176,4 +176,7 @@ assert dataset.toto == 'tutu'
 
 assert dataset.to_dict() == {'value': 'coucou', 'toto': 'tutu'}
 
+# issue 2489
+assert not hasattr(document, 'closest')
+assert_raises(AttributeError, exec, "document.closest", globals())
 print('all tests pass...')

@@ -601,6 +601,9 @@ DOMNode.__getattribute__ = function(self, attr){
             break
         case "clear":
         case "closest":
+            if(! self.hasOwnProperty(attr)){
+                throw $B.attr_error(self, attr)
+            }
             return function(){
                 return DOMNode[attr].call(null, self, ...arguments)
             }
@@ -1193,6 +1196,10 @@ DOMNode.closest = function(){
                 ["self", "selector"], arguments, {}, null, null),
         self = $.self,
         selector = $.selector
+    if(self.closest === undefined){
+        throw _b_.AttributeError.$factory(_b_.str.$factory(self) +
+            " has no attribute 'closest'")
+    }
     var res = self.closest(selector)
     if(res === null){
         throw _b_.KeyError.$factory("no parent with selector " + selector)
