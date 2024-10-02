@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-09-16 07:45:50.064680"
-__BRYTHON__.timestamp=1726465550064
+__BRYTHON__.compiled_date="2024-10-02 08:21:51.947792"
+__BRYTHON__.timestamp=1727850111947
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -3639,9 +3639,6 @@ req.onreadystatechange=function(){if(this.readyState !=4){return}
 var status=this.status
 if(status==404){result.error=_b_.FileNotFoundError.$factory(file)}else if(status !=200){result.error=_b_.IOError.$factory('Could not open file '+
 file+' : status '+status)}else{var bytes=[]
-var flag=0
-var t0=performance.now()
-var response=this.response
 for(var codePoint of this.response){var cp=codePoint.codePointAt(0)
 if(cp > 0xf700){cp-=0xf700}
 bytes[bytes.length]=cp}
@@ -10280,6 +10277,7 @@ return attr=="x" ? pos.left :pos.top}
 break
 case "clear":
 case "closest":
+if(! self.hasOwnProperty(attr)){throw $B.attr_error(self,attr)}
 return function(){return DOMNode[attr].call(null,self,...arguments)}
 case "headers":
 if(self.nodeType==9){
@@ -10493,6 +10491,8 @@ DOMNode.bind(res,event,func)})}
 return res}
 DOMNode.closest=function(){
 var $=$B.args("closest",2,{self:null,selector:null},["self","selector"],arguments,{},null,null),self=$.self,selector=$.selector
+if(self.closest===undefined){throw _b_.AttributeError.$factory(_b_.str.$factory(self)+
+" has no attribute 'closest'")}
 var res=self.closest(selector)
 if(res===null){throw _b_.KeyError.$factory("no parent with selector "+selector)}
 return DOMNode.$factory(res)}
@@ -12424,18 +12424,17 @@ var js=`$B.set_lineno(frame, ${this.lineno})\n`
 if(is_async && ! is_generator){js+='async '}
 js+=`function ${name2}(){\n`
 var locals_name=make_scope_name(scopes,func_scope)
-js+=`var ${locals_name},
-               locals\n`
+js+=`var locals\n`
 parse_args.push('arguments')
 var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+mangle_arg(this.args.vararg.arg)+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+mangle_arg(this.args.kwarg.arg)+"'"
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=`${locals_name} = locals = {};\n`
+this.args.kwarg===undefined){js+=`var ${locals_name} = locals = {};\n`
 js+=`if(arguments.length !== 0){\n`+
 `${name2}.$args_parser(${parse_args.join(', ')})\n`+
-`}\n`}else{js+=`${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
+`}\n`}else{js+=`var ${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     $B.enter_frame(frame, __file__, ${this.lineno})\n`
@@ -12772,8 +12771,7 @@ this.value instanceof $B.ast.Attribute){return `value: ${$B.js_from_ast(this.val
 $B.ast.Module.prototype.to_js=function(scopes){mark_parents(this)
 var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
 var module_id=name,global_name=make_scope_name(scopes),mod_name=module_name(scopes)
-var js=`// Javascript code generated from ast\n`+
-`var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+var js=`var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
 if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`}else{
