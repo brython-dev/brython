@@ -486,19 +486,23 @@ class Interpreter:
             event.preventDefault()
             event.stopPropagation()
         elif event.key == "ArrowUp":
-            if self.current > 0:
-                last_child = self.zone.lastChild
-                last_child.text = last_child.text[:4] + self.history[self.current - 1]
-                self.current -= 1
-                self.cursor_to_end()
-            event.preventDefault()
+            line = sel.anchorNode.data
+            if not line.startswith('\n...'):
+                if self.current > 0:
+                    last_child = self.zone.lastChild
+                    last_child.text = last_child.text[:4] + self.history[self.current - 1]
+                    self.current -= 1
+                    self.cursor_to_end()
+                event.preventDefault()
         elif event.key == "ArrowDown":
-            if self.current < len(self.history) - 1:
-                self.current += 1
-                last_child = self.zone.lastChild
-                last_child.text = last_child.text[:4] + self.history[self.current]
-                self.cursor_to_end()
-            event.preventDefault()
+            node = sel.anchorNode.parentNode
+            if not node.nextSibling:
+                if self.current < len(self.history) - 1:
+                    self.current += 1
+                    last_child = self.zone.lastChild
+                    last_child.text = last_child.text[:4] + self.history[self.current]
+                    self.cursor_to_end()
+                event.preventDefault()
         elif event.key in ["PageUp", "PageDown"]:
             event.preventDefault()
 
