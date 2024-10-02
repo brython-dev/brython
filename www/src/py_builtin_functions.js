@@ -3063,9 +3063,6 @@ _b_.open = function(){
                         file + ' : status ' + status)
                 }else{
                     var bytes = []
-                    var flag = 0
-                    var t0 = performance.now()
-                    var response = this.response
                     for(var codePoint of this.response){
                         var cp = codePoint.codePointAt(0)
                         if(cp > 0xf700){
@@ -3249,7 +3246,7 @@ $B.function.__dir__ = function(self){
 }
 
 $B.function.__get__ = function(self, obj){
-    // adapated from
+    // adapted from
     // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
     if(obj === _b_.None){
         return self

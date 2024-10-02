@@ -2626,8 +2626,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `function ${name2}(){\n`
 
     var locals_name = make_scope_name(scopes, func_scope)
-    js += `var ${locals_name},
-               locals\n`
+    js += `var locals\n`
 
     parse_args.push('arguments')
 
@@ -2639,13 +2638,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
-        js += `${locals_name} = locals = {};\n`
+        js += `var ${locals_name} = locals = {};\n`
         // generate error message
         js += `if(arguments.length !== 0){\n` +
                   `${name2}.$args_parser(${parse_args.join(', ')})\n` +
               `}\n`
     }else{
-        js += `${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
+        js += `var ${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
     }
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
@@ -2721,8 +2720,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     scopes.pop()
-
-    //var in_class = func_name_scope.ast instanceof $B.ast.ClassDef
 
     var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
                               this.name
@@ -3433,8 +3430,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         global_name = make_scope_name(scopes),
         mod_name = module_name(scopes)
 
-    var js = `// Javascript code generated from ast\n` +
-             `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+    var js = `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
         js += `${global_name} = $B.imported["${mod_name}"],\n` +
               `locals = ${global_name},\n` +
@@ -3458,8 +3454,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
 
 
-        // for exec(), frame is put on top of the stack inside
-        // py_builtin_functions.js / $$eval()
+    // for exec(), frame is put on top of the stack inside
+    // py_builtin_functions.js / $eval()
     if(! namespaces){
           js += `$B.enter_frame(frame, __file__, 1)\n`
           js += '\nvar _frame_obj = $B.frame_obj\n'
