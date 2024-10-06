@@ -3294,6 +3294,8 @@ assert not '__name__' in C().__dict__
 
 assert not hasattr(range(3), '__name__')
 
+# issue 2493
+import http
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -180,8 +180,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,12,6,'dev',0]
 __BRYTHON__.version_info=[3,12,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-01 08:35:27.958091"
-__BRYTHON__.timestamp=1727764527957
+__BRYTHON__.compiled_date="2024-10-06 18:54:18.353665"
+__BRYTHON__.timestamp=1728233658353
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2953,7 +2953,9 @@ return klass_from_dict}}
 return klass
 case '__dict__':
 if(is_class){var dict={},key
-if(obj.__dict__){for(key of _b_.dict.$keys_string(obj.__dict__)){dict[key]=_b_.dict.$getitem_string(obj.__dict__,key)}}else{for(key in obj){if(! key.startsWith("$")){dict[key]=obj[key]}}}
+if(obj.__dict__){for(key of _b_.dict.$keys_string(obj.__dict__)){dict[key]=_b_.dict.$getitem_string(obj.__dict__,key)
+if(key=='__new__' && dict[key].__class__ !==_b_.staticmethod){dict[key]=_b_.staticmethod.$factory(dict[key])}}}else{for(key in obj){if(! key.startsWith("$")){dict[key]=obj[key]
+if(key=='__new__' && dict[key].__class__ !==_b_.staticmethod){dict[key]=_b_.staticmethod.$factory(dict[key])}}}}
 dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__')
 return{
 __class__:$B.mappingproxy,

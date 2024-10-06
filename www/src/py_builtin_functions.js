@@ -999,11 +999,17 @@ $B.$getattr = function(obj, attr, _default){
               if(obj.__dict__){
                   for(key of _b_.dict.$keys_string(obj.__dict__)){
                       dict[key] = _b_.dict.$getitem_string(obj.__dict__, key)
+                      if(key == '__new__' && dict[key].__class__ !== _b_.staticmethod){
+                          dict[key] = _b_.staticmethod.$factory(dict[key])
+                      }
                   }
               }else{
                   for(key in obj){
                       if(! key.startsWith("$")){
                           dict[key] = obj[key]
+                          if(key == '__new__' && dict[key].__class__ !== _b_.staticmethod){
+                              dict[key] = _b_.staticmethod.$factory(dict[key])
+                          }
                       }
                   }
               }
