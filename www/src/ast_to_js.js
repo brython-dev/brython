@@ -310,18 +310,7 @@ function bind(name, scopes){
     return scope
 }
 
-var CELL = 5,
-    FREE = 4,
-    LOCAL = 1,
-    SCOPE_MASK = 15,
-    SCOPE_OFF = 12
-
-var TYPE_CLASS = 1,
-    TYPE_MODULE = 2
-
-var DEF_LOCAL = 2 ,           /* assignment in code block */
-    DEF_PARAM = 2 << 1,       /* formal parameter */
-    DEF_COMP_ITER = 2 << 8    /* this name is a comprehension iteration variable */
+var SF = $B.SYMBOL_FLAGS // in brython_builtins.js
 
 function name_reference(name, scopes, position){
     var scope = name_scope(name, scopes)
@@ -329,8 +318,16 @@ function name_reference(name, scopes, position){
 }
 
 function make_ref(name, scopes, scope, position){
+    var test = false // name == 'record' && scopes[scopes.length - 1].name == "g"
+    if(test){
+        console.log('make ref', name, scopes.slice(), scope)
+    }
     if(scope.found){
-        return reference(scopes, scope.found, name)
+        var res = reference(scopes, scope.found, name)
+        if(test){
+            console.log('res', res)
+        }
+        return res
     }else if(scope.resolve == 'all'){
         var scope_names = make_search_namespaces(scopes)
         return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`
@@ -362,7 +359,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'x'
+    var test = false // name == 'record' && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -387,6 +384,9 @@ function name_scope(name, scopes){
         console.log('scopes', scopes.slice())
         console.log('symtable', scopes.symtable)
     }
+    if(test){
+        console.log('block symbols', block.symbols)
+    }
     try{
         flags = _b_.dict.$getitem_string(block.symbols, name)
     }catch(err){
@@ -395,33 +395,37 @@ function name_scope(name, scopes){
         console.log('scopes', scopes.slice())
         return {found: false, resolve: 'all'}
     }
-    let __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
-        is_local = [LOCAL, CELL].indexOf(__scope) > -1
+    let __scope = (flags >> SF.SCOPE_OFF) & SF.SCOPE_MASK,
+        is_local = [SF.LOCAL, SF.CELL].indexOf(__scope) > -1
     if(test){
         console.log('block', block, 'is local', is_local, '__scope', __scope)
+        console.log('flags', flags, 'scopeoff', SF.SCOPE_OFF, 'scope mask', SF.SCOPE_MASK)
     }
     if(up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name){
         return {found: false, resolve: 'own_class_name'}
     }
     // special case
     if(name == '__annotations__'){
-        if(block.type == TYPE_CLASS && up_scope.has_annotation){
+        if(block.type == SF.TYPE_CLASS && up_scope.has_annotation){
             is_local = true
-        }else if(block.type == TYPE_MODULE){
+        }else if(block.type == SF.TYPE_MODULE){
             is_local = true
         }
+    }
+    if(test){
+        console.log('is local ???', is_local, 'scope', scope)
     }
     if(is_local){
         // name is local (symtable) but may not have yet been bound in scope
         // If scope is a "subscope", look in its parents
         var l_scope = local_scope(name, scope)
         if(! l_scope.found){
-            if(block.type == TYPE_CLASS){
+            if(block.type == SF.TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
                 scope.needs_frames = true
                 return {found: false, resolve: 'global'}
-            }else if(block.type == TYPE_MODULE){
+            }else if(block.type == SF.TYPE_MODULE){
                 scope.needs_frames = true
                 return {found: false, resolve: 'global'}
             }
@@ -443,7 +447,7 @@ function name_scope(name, scopes){
             if(block && _b_.dict.$contains_string(block.symbols, name)){
                 var fl = _b_.dict.$getitem_string(block.symbols, name),
                     local_to_block =
-                        [LOCAL, CELL].indexOf((fl >> SCOPE_OFF) & SCOPE_MASK) > -1
+                        [SF.LOCAL, SF.CELL].indexOf((fl >> SF.SCOPE_OFF) & SF.SCOPE_MASK) > -1
                 if(! local_to_block){
                     continue
                 }
@@ -471,8 +475,8 @@ function name_scope(name, scopes){
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
         }else if(block && _b_.dict.$contains_string(block.symbols, name)){
             flags = _b_.dict.$getitem_string(block.symbols, name)
-            let __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
-            if([LOCAL, CELL].indexOf(__scope) > -1){
+            let __scope = (flags >> SF.SCOPE_OFF) & SF.SCOPE_MASK
+            if([SF.LOCAL, SF.CELL].indexOf(__scope) > -1){
                 /* name is local to a surrounding scope but not yet bound
                 Example :
                     i = 5
@@ -775,7 +779,7 @@ function make_comp(scopes){
     var id = make_id(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
-        varnames = symtable_block.varnames.map(x => `"${x}"`),
+        varnames = Object.keys(symtable_block.symbols.$strings).map(x => `"${x}"`),
         comp_iter,
         comp_scope = $B.last(scopes),
         upper_comp_scope = comp_scope
@@ -783,11 +787,15 @@ function make_comp(scopes){
         upper_comp_scope = upper_comp_scope.parent
     }
 
+    var comp_scope_block = scopes.symtable.table.blocks.get(
+                                 fast_id(upper_comp_scope.ast)),
+        comp_scope_symbols = comp_scope_block.symbols
+
     var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                             upper_comp_scope.nb_await
 
     for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){
-        if(symbol.value & DEF_COMP_ITER){
+        if(symbol.value & SF.DEF_COMP_ITER){
             comp_iter = symbol.key
         }
     }
@@ -819,10 +827,19 @@ function make_comp(scopes){
     var first = this.generators[0]
     js += `try{\n` +
               `for(var next_${id} of next_func_${id}){\n`
+    var save_target_flags
+    if(first.target instanceof $B.ast.Name){
+        var target_name = first.target.id
+        if(comp_scope_symbols.$strings.hasOwnProperty(target_name)){
+            save_target_flags = comp_scope_symbols.$strings[target_name]
+            comp_scope_symbols.$strings[target_name] = SF.LOCAL << SF.SCOPE_OFF
+        }
+    }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
     name.to_js = function(){return `next_${id}`}
+
     var assign = new $B.ast.Assign([first.target], name)
     assign.lineno = this.lineno
     js += assign.to_js(scopes) + '\n'
@@ -849,6 +866,9 @@ function make_comp(scopes){
         var elt = $B.js_from_ast(this.elt, scopes)
     }
 
+    if(save_target_flags){
+        comp_scope_symbols.$strings[target_name] = save_target_flags
+    }
     // count if nb_await was incremented
     var final_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                                   upper_comp_scope.nb_await
@@ -879,7 +899,7 @@ function make_comp(scopes){
     if(comp_iter_scope.found){
         js += `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
     }else{
-        js += `delete ${comp.locals_name}.${comp_iter}\n`
+        js += `// delete ${comp.locals_name}.${comp_iter}\n`
     }
     js += `return result_${id}\n` +
           `}\n` +
@@ -2690,13 +2710,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var free_vars = []
     for(var ident of identifiers){
         var flag = _b_.dict.$getitem_string(symtable_block.symbols, ident),
-            _scope = (flag >> SCOPE_OFF) & SCOPE_MASK
-        if(_scope == FREE){
+            _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
+        if(_scope == SF.FREE){
             free_vars.push(`'${ident}'`)
         }
-        if(flag & DEF_PARAM){
+        if(flag & SF.DEF_PARAM){
             parameters.push(`'${ident}'`)
-        }else if(flag & DEF_LOCAL){
+        }else if(flag & SF.DEF_LOCAL){
             locals.push(`'${ident}'`)
         }
     }
