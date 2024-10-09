@@ -77,6 +77,35 @@ $B.PyCF_TYPE_COMMENTS=0x1000
 $B.CO_FUTURE_ANNOTATIONS=0x1000000
 $B.PyCF_ALLOW_INCOMPLETE_INPUT=0x4000
 $B.COMPILER_FLAGS={OPTIMIZED:1,NEWLOCALS:2,VARARGS:4,VARKEYWORDS:8,NESTED:16,GENERATOR:32,NOFREE:64,COROUTINE:128,ITERABLE_COROUTINE:256,ASYNC_GENERATOR:512}
+var DEF_GLOBAL=1,
+DEF_LOCAL=2 ,
+DEF_PARAM=2 << 1,
+DEF_NONLOCAL=2 << 2,
+USE=2 << 3 ,
+DEF_FREE=2 << 4 ,
+DEF_FREE_CLASS=2 << 5,
+DEF_IMPORT=2 << 6,
+DEF_ANNOT=2 << 7,
+DEF_COMP_ITER=2 << 8,
+DEF_TYPE_PARAM=2 << 9,
+DEF_COMP_CELL=2 << 10 
+var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
+var SCOPE_OFFSET=12,SCOPE_OFF=SCOPE_OFFSET,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
+var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
+var TYPE_CLASS=1,TYPE_FUNCTION=0,TYPE_MODULE=2
+$B.SYMBOL_FLAGS={DEF_GLOBAL,
+DEF_LOCAL,
+DEF_PARAM,
+DEF_NONLOCAL,
+USE,
+DEF_FREE,
+DEF_FREE_CLASS,
+DEF_IMPORT,
+DEF_ANNOT,
+DEF_COMP_ITER,
+DEF_TYPE_PARAM,
+DEF_COMP_CELL,
+DEF_BOUND,SCOPE_OFFSET,SCOPE_OFF,SCOPE_MASK,LOCAL,GLOBAL_EXPLICIT,GLOBAL_IMPLICIT,FREE,CELL,TYPE_CLASS,TYPE_FUNCTION,TYPE_MODULE}
 if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
 $B.max_int=Math.pow(2,53)-1
@@ -180,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-02 14:08:01.722661"
-__BRYTHON__.timestamp=1727870881722
+__BRYTHON__.compiled_date="2024-10-09 19:04:37.127363"
+__BRYTHON__.timestamp=1728493477127
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2961,7 +2990,9 @@ return klass_from_dict}}
 return klass
 case '__dict__':
 if(is_class){var dict={},key
-if(obj.__dict__){for(key of _b_.dict.$keys_string(obj.__dict__)){dict[key]=_b_.dict.$getitem_string(obj.__dict__,key)}}else{for(key in obj){if(! key.startsWith("$")){dict[key]=obj[key]}}}
+if(obj.__dict__){for(key of _b_.dict.$keys_string(obj.__dict__)){dict[key]=_b_.dict.$getitem_string(obj.__dict__,key)
+if(key=='__new__' && dict[key].__class__ !==_b_.staticmethod){dict[key]=_b_.staticmethod.$factory(dict[key])}}}else{for(key in obj){if(! key.startsWith("$")){dict[key]=obj[key]
+if(key=='__new__' && dict[key].__class__ !==_b_.staticmethod){dict[key]=_b_.staticmethod.$factory(dict[key])}}}}
 dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__',function(){}
 )
 return{
@@ -10277,7 +10308,7 @@ return attr=="x" ? pos.left :pos.top}
 break
 case "clear":
 case "closest":
-if(! self.hasOwnProperty(attr)){throw $B.attr_error(self,attr)}
+if(! self[attr]){throw $B.attr_error(self,attr)}
 return function(){return DOMNode[attr].call(null,self,...arguments)}
 case "headers":
 if(self.nodeType==9){
@@ -11427,14 +11458,14 @@ name=mangle(scopes,up_scope,name)
 if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)){return scopes[i]}}}
 scope.locals.add(name)
 return scope}
-var CELL=5,FREE=4,LOCAL=1,SCOPE_MASK=15,SCOPE_OFF=12
-var TYPE_CLASS=1,TYPE_MODULE=2
-var DEF_LOCAL=2 ,
-DEF_PARAM=2 << 1,
-DEF_COMP_ITER=2 << 8 
+var SF=$B.SYMBOL_FLAGS 
 function name_reference(name,scopes,position){var scope=name_scope(name,scopes)
 return make_ref(name,scopes,scope,position)}
-function make_ref(name,scopes,scope,position){if(scope.found){return reference(scopes,scope.found,name)}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
+function make_ref(name,scopes,scope,position){var test=false 
+if(test){console.log('make ref',name,scopes.slice(),scope)}
+if(scope.found){var res=reference(scopes,scope.found,name)
+if(test){console.log('res',res)}
+return res}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
 return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}', _frame_obj)`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
 function local_scope(name,scope){
 var s=scope
@@ -11455,19 +11486,22 @@ block=scopes.symtable.table.blocks.get(fast_id(up_scope.ast))
 if(block===undefined){console.log('no block',scope,scope.ast,'id',fast_id(up_scope.ast))
 console.log('scopes',scopes.slice())
 console.log('symtable',scopes.symtable)}
+if(test){console.log('block symbols',block.symbols)}
 try{flags=_b_.dict.$getitem_string(block.symbols,name)}catch(err){console.log('name',name,'not in symbols of block',block)
 console.log('symtables',scopes.symtable)
 console.log('scopes',scopes.slice())
 return{found:false,resolve:'all'}}
-let __scope=(flags >> SCOPE_OFF)& SCOPE_MASK,is_local=[LOCAL,CELL].indexOf(__scope)>-1
-if(test){console.log('block',block,'is local',is_local,'__scope',__scope)}
+let __scope=(flags >> SF.SCOPE_OFF)& SF.SCOPE_MASK,is_local=[SF.LOCAL,SF.CELL].indexOf(__scope)>-1
+if(test){console.log('block',block,'is local',is_local,'__scope',__scope)
+console.log('flags',flags,'scopeoff',SF.SCOPE_OFF,'scope mask',SF.SCOPE_MASK)}
 if(up_scope.ast instanceof $B.ast.ClassDef && name==up_scope.name){return{found:false,resolve:'own_class_name'}}
-if(name=='__annotations__'){if(block.type==TYPE_CLASS && up_scope.has_annotation){is_local=true}else if(block.type==TYPE_MODULE){is_local=true}}
+if(name=='__annotations__'){if(block.type==SF.TYPE_CLASS && up_scope.has_annotation){is_local=true}else if(block.type==SF.TYPE_MODULE){is_local=true}}
+if(test){console.log('is local ???',is_local,'scope',scope)}
 if(is_local){
 var l_scope=local_scope(name,scope)
-if(! l_scope.found){if(block.type==TYPE_CLASS){
+if(! l_scope.found){if(block.type==SF.TYPE_CLASS){
 scope.needs_frames=true
-return{found:false,resolve:'global'}}else if(block.type==TYPE_MODULE){scope.needs_frames=true
+return{found:false,resolve:'global'}}else if(block.type==SF.TYPE_MODULE){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 return{found:false,resolve:'local'}}else{return{found:l_scope.scope}}}else if(scope.globals.has(name)){var global_scope=scopes[0]
 if(global_scope.locals.has(name)){return{found:global_scope}}
@@ -11475,7 +11509,7 @@ scope.needs_frames=true
 return{found:false,resolve:'global'}}else if(scope.nonlocals.has(name)){
 for(let i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
 if(block && _b_.dict.$contains_string(block.symbols,name)){var fl=_b_.dict.$getitem_string(block.symbols,name),local_to_block=
-[LOCAL,CELL].indexOf((fl >> SCOPE_OFF)& SCOPE_MASK)>-1
+[SF.LOCAL,SF.CELL].indexOf((fl >> SF.SCOPE_OFF)& SF.SCOPE_MASK)>-1
 if(! local_to_block){continue}
 return{found:scopes[i]}}}}
 if(scope.has_import_star){if(! is_local){scope.needs_frames=true}
@@ -11485,8 +11519,8 @@ if(scopes[i].ast){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
 if(scopes[i].globals.has(name)){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 if(scopes[i].locals.has(name)&& scopes[i].type !='class'){return{found:scopes[i]}}else if(block && _b_.dict.$contains_string(block.symbols,name)){flags=_b_.dict.$getitem_string(block.symbols,name)
-let __scope=(flags >> SCOPE_OFF)& SCOPE_MASK
-if([LOCAL,CELL].indexOf(__scope)>-1){
+let __scope=(flags >> SF.SCOPE_OFF)& SF.SCOPE_MASK
+if([SF.LOCAL,SF.CELL].indexOf(__scope)>-1){
 return{found:false,resolve:'all'}}}
 if(scopes[i].has_import_star){return{found:false,resolve:'all'}}}
 if(builtins_scope.locals.has(name)){return{found:builtins_scope}}
@@ -11595,11 +11629,13 @@ return `var ${comp.locals_name} = {},\n`+
 `frame.$f_trace = _b_.None\n`+
 `var _frame_obj = $B.frame_obj\n`}
 function make_comp(scopes){
-var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
+var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=Object.keys(symtable_block.symbols.$strings).map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
 while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent}
+var comp_scope_block=scopes.symtable.table.blocks.get(
+fast_id(upper_comp_scope.ast)),comp_scope_symbols=comp_scope_block.symbols
 var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
-for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){if(symbol.value & DEF_COMP_ITER){comp_iter=symbol.key}}
+for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){if(symbol.value & SF.DEF_COMP_ITER){comp_iter=symbol.key}}
 var comp_iter_scope=name_scope(comp_iter,scopes)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
@@ -11610,6 +11646,10 @@ if(this instanceof $B.ast.ListComp){js+=`var result_${id} = $B.$list([])\n`}else
 var first=this.generators[0]
 js+=`try{\n`+
 `for(var next_${id} of next_func_${id}){\n`
+var save_target_flags
+if(first.target instanceof $B.ast.Name){var target_name=first.target.id
+if(comp_scope_symbols.$strings.hasOwnProperty(target_name)){save_target_flags=comp_scope_symbols.$strings[target_name]
+comp_scope_symbols.$strings[target_name]=SF.LOCAL << SF.SCOPE_OFF}}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -11622,6 +11662,7 @@ for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scope
 nb_paren++
 for(let _if of comprehension.ifs){nb_paren++}}
 if(this instanceof $B.ast.DictComp){var key=$B.js_from_ast(this.key,scopes),value=$B.js_from_ast(this.value,scopes)}else{var elt=$B.js_from_ast(this.elt,scopes)}
+if(save_target_flags){comp_scope_symbols.$strings[target_name]=save_target_flags}
 var final_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
 var has_await=final_nb_await_in_scope > initial_nb_await_in_scope
@@ -11634,7 +11675,7 @@ js+=`}catch(err){\n`+
 `$B.set_exc(err, frame)\n`+
 `throw err\n}\n`+
 (has_await ? `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` :'')
-if(comp_iter_scope.found){js+=`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}else{js+=`delete ${comp.locals_name}.${comp_iter}\n`}
+if(comp_iter_scope.found){js+=`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}else{js+=`// delete ${comp.locals_name}.${comp_iter}\n`}
 js+=`return result_${id}\n`+
 `}\n`+
 `)(${outmost_expr})\n`
@@ -12482,9 +12523,9 @@ if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
 if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
 var parameters=[],locals=[],identifiers=_b_.dict.$keys_string(symtable_block.symbols)
 var free_vars=[]
-for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SCOPE_OFF)& SCOPE_MASK
-if(_scope==FREE){free_vars.push(`'${ident}'`)}
-if(flag & DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & DEF_LOCAL){locals.push(`'${ident}'`)}}
+for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
+if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
+if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 if(in_class){js+=`${name2}.$is_method = true\n`}
 js+=`$B.make_function_infos(${name2}, `+
@@ -13213,22 +13254,7 @@ var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' i
 "assignment expression cannot be used in a comprehension iterable expression",ANNOTATION_NOT_ALLOWED=
 "'%s' can not be used within an annotation",DUPLICATE_ARGUMENT="duplicate argument '%s' in function definition",TYPEVAR_BOUND_NOT_ALLOWED="%s cannot be used within a TypeVar bound",TYPEALIAS_NOT_ALLOWED="%s cannot be used within a type alias",TYPEPARAM_NOT_ALLOWED=
 "%s cannot be used within the definition of a generic",DUPLICATE_TYPE_PARAM="duplicate type parameter '%s'"
-var DEF_GLOBAL=1,
-DEF_LOCAL=2 ,
-DEF_PARAM=2 << 1,
-DEF_NONLOCAL=2 << 2,
-USE=2 << 3 ,
-DEF_FREE=2 << 4 ,
-DEF_FREE_CLASS=2 << 5,
-DEF_IMPORT=2 << 6,
-DEF_ANNOT=2 << 7,
-DEF_COMP_ITER=2 << 8,
-DEF_TYPE_PARAM=2 << 9,
-DEF_COMP_CELL=2 << 10 
-var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
-var SCOPE_OFFSET=12,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
-var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
-var TYPE_MODULE=2
+var SF=$B.SYMBOL_FLAGS 
 var NULL=undefined
 var ModuleBlock=2,ClassBlock=1,FunctionBlock=0,AnnotationBlock=4,TypeVarBoundBlock=5,TypeAliasBlock=6,TypeParamBlock=7
 var PyExc_SyntaxError=_b_.SyntaxError
@@ -13281,7 +13307,7 @@ return ste}
 $B._PySymtable_Build=function(mod,filename,future){var st=new Symtable(),seq
 st.filename=filename;
 st.future=future ||{}
-st.type=TYPE_MODULE
+st.type=SF.TYPE_MODULE
 if(!symtable_enter_block(st,'top',ModuleBlock,mod,0,0,0,0)){return NULL;}
 st.top=st.cur
 switch(mod.constructor){case $B.ast.Module:
@@ -13300,7 +13326,7 @@ return st.top;}
 function _PyST_GetSymbol(ste,name){if(! _b_.dict.$contains_string(ste.symbols,name)){return 0}
 return _b_.dict.$getitem_string(ste.symbols,name)}
 function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name);
-return(symbol >> SCOPE_OFFSET)& SCOPE_MASK;}
+return(symbol >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;}
 function _PyST_IsFunctionLike(ste){return ste.type==FunctionBlock
 ||ste.type==TypeVarBoundBlock
 ||ste.type==TypeAliasBlock
@@ -13324,32 +13350,32 @@ throw _b_.RuntimeError.$factory(
 "BUG: internal directive bookkeeping broken")}
 function SET_SCOPE(DICT,NAME,I){DICT[NAME]=I}
 function is_free_in_any_child(entry,key){for(var child_ste of entry.ste_children){var scope=_PyST_GetScope(child_ste,key)
-if(scope==FREE){return 1}}
+if(scope==SF.FREE){return 1}}
 return 0}
 function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(var item of _b_.dict.$iter_items(comp.symbols)){
 var k=item.key,comp_flags=item.value;
-if(comp_flags & DEF_PARAM){
+if(comp_flags & SF.DEF_PARAM){
 continue;}
-var scope=(comp_flags >> SCOPE_OFFSET)& SCOPE_MASK;
-var only_flags=comp_flags &((1 << SCOPE_OFFSET)-1)
-if(scope==CELL ||only_flags & DEF_COMP_CELL){inlined_cells.add(k)}
+var scope=(comp_flags >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;
+var only_flags=comp_flags &((1 << SF.SCOPE_OFFSET)-1)
+if(scope==SF.CELL ||only_flags & SF.DEF_COMP_CELL){inlined_cells.add(k)}
 var existing=_b_.dict.$contains_string(ste.symbols,k)
 if(!existing){
 var v_flags=only_flags
 _b_.dict.$setitem(ste.symbols,k,v_flags);
 SET_SCOPE(scopes,k,scope);}else{
-if((existing & DEF_BOUND)&&
+if((existing & SF.DEF_BOUND)&&
 !is_free_in_any_child(comp,k)&&
 ste.type !==ClassBlock){_b_.set.remove(comp_free,k)}}}
 return 1;}
-function analyze_name(ste,scopes,name,flags,bound,local,free,global,type_params,class_entry){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){let exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
+function analyze_name(ste,scopes,name,flags,bound,local,free,global,type_params,class_entry){if(flags & SF.DEF_GLOBAL){if(flags & SF.DEF_NONLOCAL){let exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
 error_at_directive(exc,ste,name)
 throw exc}
-SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
+SET_SCOPE(scopes,name,SF.GLOBAL_EXPLICIT)
 global.add(name)
 if(bound){bound.delete(name)}
 return 1}
-if(flags & DEF_NONLOCAL){if(!bound){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
+if(flags & SF.DEF_NONLOCAL){if(!bound){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
 error_at_directive(exc,ste,name)
 throw exc}
 if(! bound.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"no binding for nonlocal '%s' found",name)
@@ -13358,36 +13384,36 @@ throw exc}
 if(type_params.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal binding not allowed for type parameter '%s'",name);
 error_at_directive(exc,ste,name)
 throw exc}
-SET_SCOPE(scopes,name,FREE)
+SET_SCOPE(scopes,name,SF.FREE)
 ste.free=1
 free.add(name)
 return 1}
-if(flags & DEF_BOUND){SET_SCOPE(scopes,name,LOCAL)
+if(flags & SF.DEF_BOUND){SET_SCOPE(scopes,name,SF.LOCAL)
 local.add(name)
 global.delete(name)
-if(flags & DEF_TYPE_PARAM){type_params.add(name)}else{type_params.delete(name)}
+if(flags & SF.DEF_TYPE_PARAM){type_params.add(name)}else{type_params.delete(name)}
 return 1}
 if(class_entry !=NULL){var class_flags=_PyST_GetSymbol(class_entry,name);
-if(class_flags & DEF_GLOBAL){SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
-return 1;}else if(class_flags & DEF_BOUND &&
-!(class_flags & DEF_NONLOCAL)){SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
+if(class_flags & SF.DEF_GLOBAL){SET_SCOPE(scopes,name,SF.GLOBAL_EXPLICIT)
+return 1;}else if(class_flags & SF.DEF_BOUND &&
+!(class_flags & SF.DEF_NONLOCAL)){SET_SCOPE(scopes,name,SF.GLOBAL_IMPLICIT)
 return 1}}
-if(bound && bound.has(name)){SET_SCOPE(scopes,name,FREE)
+if(bound && bound.has(name)){SET_SCOPE(scopes,name,SF.FREE)
 ste.free=1
 free.add(name)
 return 1}
-if(global && global.has(name)){SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
+if(global && global.has(name)){SET_SCOPE(scopes,name,SF.GLOBAL_IMPLICIT)
 return 1}
 if(ste.nested){ste.free=1}
-SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
+SET_SCOPE(scopes,name,SF.GLOBAL_IMPLICIT)
 return 1}
 function analyze_cells(scopes,free,inlined_cells){var v,v_cell;
-v_cell=CELL;
+v_cell=SF.CELL;
 if(!v_cell){return 0;}
 for(let name in scopes){v=scopes[name]
 var scope=v;
-if(scope !=LOCAL){continue;}
-if(free.has(name)&& ! inlined_cells.has(name)){continue;}
+if(scope !=SF.LOCAL){continue;}
+if(! free.has(name)&& ! inlined_cells.has(name)){continue;}
 scopes[name]=v_cell
 free.delete(name)}
 return 1}
@@ -13399,21 +13425,21 @@ return 1}
 function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var v,v_scope,v_new,v_free
 for(let name of _b_.dict.$keys_string(symbols)){var test=false 
 let flags=_b_.dict.$getitem_string(symbols,name)
-if(test){console.log('in update symbols, name',name,'flags',flags,flags & DEF_COMP_CELL)}
-if(inlined_cells.has(name)){flags |=DEF_COMP_CELL}
+if(test){console.log('in update symbols, name',name,'flags',flags,flags & SF.DEF_COMP_CELL)}
+if(inlined_cells.has(name)){flags |=SF.DEF_COMP_CELL}
 v_scope=scopes[name]
 var scope=v_scope
-if(test){console.log('name',name,'scopes[name]',scopes[name],' flags |=',scope << SCOPE_OFFSET)}
-flags |=(scope << SCOPE_OFFSET)
+if(test){console.log('name',name,'scopes[name]',scopes[name],' flags |=',scope << SF.SCOPE_OFFSET)}
+flags |=(scope << SF.SCOPE_OFFSET)
 v_new=flags
 if(!v_new){return 0;}
-if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',DEF_COMP_CELL,v_new & DEF_COMP_CELL)}
+if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',SF.DEF_COMP_CELL,v_new & SF.DEF_COMP_CELL)}
 _b_.dict.$setitem_string(symbols,name,v_new)}
-v_free=FREE << SCOPE_OFFSET
+v_free=SF.FREE << SF.SCOPE_OFFSET
 for(let name of free){v=_b_.dict.$get_string(symbols,name)
 if(v !==_b_.dict.$missing){
 if(classflag &&
-v &(DEF_BOUND |DEF_GLOBAL)){let flags=v |DEF_FREE_CLASS;
+v &(SF.DEF_BOUND |SF.DEF_GLOBAL)){let flags=v |SF.DEF_FREE_CLASS;
 v_new=flags;
 if(! v_new){return 0;}
 _b_.dict.$setitem_string(symbols,name,v_new)}
@@ -13491,23 +13517,23 @@ if(!mangled){return 0}
 dict=ste.symbols
 if(_b_.dict.$contains_string(dict,mangled)){o=_b_.dict.$getitem_string(dict,mangled)
 val=o
-if((flag & DEF_PARAM)&&(val & DEF_PARAM)){
+if((flag & SF.DEF_PARAM)&&(val & SF.DEF_PARAM)){
 let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
 set_exc_info(exc,st.filename,..._location)
 throw exc}
-if((flag & DEF_TYPE_PARAM)&&(val & DEF_TYPE_PARAM)){let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_TYPE_PARAM,name);
+if((flag & SF.DEF_TYPE_PARAM)&&(val & SF.DEF_TYPE_PARAM)){let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_TYPE_PARAM,name);
 set_exc_info(exc,st.filename,...location);
 throw exc}
 val |=flag}else{val=flag}
 if(ste.comp_iter_target){
-if(val &(DEF_GLOBAL |DEF_NONLOCAL)){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
+if(val &(SF.DEF_GLOBAL |SF.DEF_NONLOCAL)){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
 set_exc_info(exc,st.filename,..._location)
 throw exc}
-val |=DEF_COMP_ITER}
+val |=SF.DEF_COMP_ITER}
 o=val
 if(o==NULL){return 0}
 _b_.dict.$setitem(dict,mangled,o)
-if(flag & DEF_PARAM){ste.varnames.push(mangled)}else if(flag & DEF_GLOBAL){
+if(flag & SF.DEF_PARAM){ste.varnames.push(mangled)}else if(flag & SF.DEF_GLOBAL){
 val=flag
 if(st.global.hasOwnProperty(mangled)){
 val |=st.global[mangled]}
@@ -13520,18 +13546,18 @@ function symtable_enter_type_param_block(st,name,ast,has_defaults,has_kwdefaults
 if(!symtable_enter_block(st,name,TypeParamBlock,ast,..._location)){return 0;}
 prev.$type_param=st.cur
 if(current_type===ClassBlock){st.cur.can_see_class_scope=1;
-if(!symtable_add_def(st,"__classdict__",USE,_location)){return 0;}}
+if(!symtable_add_def(st,"__classdict__",SF.USE,_location)){return 0;}}
 if(kind==$B.ast.ClassDef){
-if(!symtable_add_def(st,"type_params",DEF_LOCAL,_location)){return 0;}
-if(!symtable_add_def(st,"type_params",USE,_location)){return 0;}
+if(!symtable_add_def(st,"type_params",SF.DEF_LOCAL,_location)){return 0;}
+if(!symtable_add_def(st,"type_params",SF.USE,_location)){return 0;}
 st.st_private=name;
 var generic_base=".generic_base";
-if(!symtable_add_def(st,generic_base,DEF_LOCAL,_location)){return 0;}
-if(!symtable_add_def(st,generic_base,USE,_location)){return 0;}}
+if(!symtable_add_def(st,generic_base,SF.DEF_LOCAL,_location)){return 0;}
+if(!symtable_add_def(st,generic_base,SF.USE,_location)){return 0;}}
 if(has_defaults){var defaults=".defaults";
-if(!symtable_add_def(st,defaults,DEF_PARAM,_location)){return 0;}}
+if(!symtable_add_def(st,defaults,SF.DEF_PARAM,_location)){return 0;}}
 if(has_kwdefaults){var kwdefaults=".kwdefaults";
-if(!symtable_add_def(st,kwdefaults,DEF_PARAM,_location)){return 0;}}
+if(!symtable_add_def(st,kwdefaults,SF.DEF_PARAM,_location)){return 0;}}
 return 1;}
 function VISIT_QUIT(ST,X){return X}
 function VISIT(ST,TYPE,V){var f=visitor[TYPE]
@@ -13552,7 +13578,7 @@ function has_kwonlydefaults(kwonlyargs,kw_defaults){for(var i=0,len=kwonlyargs.l
 return 0;}
 var visitor={}
 visitor.stmt=function(st,s){switch(s.constructor){case $B.ast.FunctionDef:
-if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
+if(!symtable_add_def(st,s.name,SF.DEF_LOCAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(s.args.defaults)
 VISIT_SEQ(st,expr,s.args.defaults)
@@ -13572,7 +13598,7 @@ if(s.type_params.length > 0){if(!symtable_exit_block(st)){VISIT_QUIT(st,0)}}
 break;
 case $B.ast.ClassDef:
 var tmp;
-if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
+if(!symtable_add_def(st,s.name,SF.DEF_LOCAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 VISIT_SEQ(st,expr,s.bases)
 VISIT_SEQ(st,keyword,s.keywords)
@@ -13586,8 +13612,8 @@ if(!symtable_enter_block(st,s.name,ClassBlock,s,s.lineno,s.col_offset,s.end_line
 VISIT_QUIT(st,0)
 tmp=st.private
 st.private=s.name
-if(s.type_params.length > 0){if(!symtable_add_def(st,'__type_params__',DEF_LOCAL,LOCATION(s))){VISIT_QUIT(st,0);}
-if(!symtable_add_def(st,'type_params',USE,LOCATION(s))){VISIT_QUIT(st,0);}}
+if(s.type_params.length > 0){if(!symtable_add_def(st,'__type_params__',SF.DEF_LOCAL,LOCATION(s))){VISIT_QUIT(st,0);}
+if(!symtable_add_def(st,'type_params',SF.USE,LOCATION(s))){VISIT_QUIT(st,0);}}
 VISIT_SEQ(st,stmt,s.body)
 st.private=tmp
 if(! symtable_exit_block(st))
@@ -13604,7 +13630,7 @@ st,name,s.type_params,false,false,s.kind,LOCATION(s))){VISIT_QUIT(st,0);}
 VISIT_SEQ(st,type_param,s.type_params);}
 if(!symtable_enter_block(st,name,TypeAliasBlock,s,LOCATION(s))){VISIT_QUIT(st,0);}
 st.cur.can_see_class_scope=is_in_class;
-if(is_in_class && !symtable_add_def(st,'__classdict__',USE,LOCATION(s.value))){VISIT_QUIT(st,0);}
+if(is_in_class && !symtable_add_def(st,'__classdict__',SF.USE,LOCATION(s.value))){VISIT_QUIT(st,0);}
 VISIT(st,expr,s.value);
 if(!symtable_exit_block(st)){VISIT_QUIT(st,0);}
 if(is_generic){if(!symtable_exit_block(st))
@@ -13625,14 +13651,14 @@ case $B.ast.AnnAssign:
 if(s.target instanceof $B.ast.Name){var e_name=s.target
 var cur=symtable_lookup(st,e_name.id)
 if(cur < 0){VISIT_QUIT(st,0)}
-if((cur &(DEF_GLOBAL |DEF_NONLOCAL))
+if((cur &(SF.DEF_GLOBAL |SF.DEF_NONLOCAL))
 &&(st.cur.symbols !=st.global)
-&& s.simple){var exc=PyErr_Format(_b_.SyntaxError,cur & DEF_GLOBAL ? GLOBAL_ANNOT :NONLOCAL_ANNOT,e_name.id)
+&& s.simple){var exc=PyErr_Format(_b_.SyntaxError,cur & SF.DEF_GLOBAL ? GLOBAL_ANNOT :NONLOCAL_ANNOT,e_name.id)
 exc.args[1]=[st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1]
 throw exc}
 if(s.simple &&
-! symtable_add_def(st,e_name.id,DEF_ANNOT |DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}else{if(s.value
-&& !symtable_add_def(st,e_name.id,DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}}}else{VISIT(st,expr,s.target)}
+! symtable_add_def(st,e_name.id,SF.DEF_ANNOT |SF.DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}else{if(s.value
+&& !symtable_add_def(st,e_name.id,SF.DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}}}else{VISIT(st,expr,s.target)}
 if(!visitor.annotation(st,s.annotation)){VISIT_QUIT(st,0)}
 if(s.value){VISIT(st,expr,s.value)}
 break
@@ -13690,13 +13716,13 @@ case $B.ast.Global:
 var seq=s.names
 for(var name of seq){var cur=symtable_lookup(st,name)
 if(cur < 0){VISIT_QUIT(st,0)}
-if(cur &(DEF_PARAM |DEF_LOCAL |USE |DEF_ANNOT)){var msg
-if(cur & DEF_PARAM){msg=GLOBAL_PARAM}else if(cur & USE){msg=GLOBAL_AFTER_USE}else if(cur & DEF_ANNOT){msg=GLOBAL_ANNOT}else{
+if(cur &(SF.DEF_PARAM |SF.DEF_LOCAL |SF.USE |SF.DEF_ANNOT)){var msg
+if(cur & SF.DEF_PARAM){msg=GLOBAL_PARAM}else if(cur & SF.USE){msg=GLOBAL_AFTER_USE}else if(cur & SF.DEF_ANNOT){msg=GLOBAL_ANNOT}else{
 msg=GLOBAL_AFTER_ASSIGN}
 var exc=PyErr_Format(_b_.SyntaxError,msg,name)
 set_exc_info(exc,st.filename,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset)
 throw exc}
-if(! symtable_add_def(st,name,DEF_GLOBAL,LOCATION(s)))
+if(! symtable_add_def(st,name,SF.DEF_GLOBAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(! symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
 VISIT_QUIT(st,0)}
@@ -13705,13 +13731,13 @@ case $B.ast.Nonlocal:
 var seq=s.names;
 for(var name of seq){var cur=symtable_lookup(st,name)
 if(cur < 0){VISIT_QUIT(st,0)}
-if(cur &(DEF_PARAM |DEF_LOCAL |USE |DEF_ANNOT)){var msg
-if(cur & DEF_PARAM){msg=NONLOCAL_PARAM}else if(cur & USE){msg=NONLOCAL_AFTER_USE}else if(cur & DEF_ANNOT){msg=NONLOCAL_ANNOT}else{
+if(cur &(SF.DEF_PARAM |SF.DEF_LOCAL |SF.USE |SF.DEF_ANNOT)){var msg
+if(cur & SF.DEF_PARAM){msg=NONLOCAL_PARAM}else if(cur & SF.USE){msg=NONLOCAL_AFTER_USE}else if(cur & SF.DEF_ANNOT){msg=NONLOCAL_ANNOT}else{
 msg=NONLOCAL_AFTER_ASSIGN}
 var exc=PyErr_Format(_b_.SyntaxError,msg,name)
 set_exc_info(exc,st.filename,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset)
 throw exc}
-if(!symtable_add_def(st,name,DEF_NONLOCAL,LOCATION(s)))
+if(!symtable_add_def(st,name,SF.DEF_NONLOCAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(!symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
 VISIT_QUIT(st,0)}
@@ -13728,7 +13754,7 @@ VISIT_SEQ(st,'withitem',s.items)
 VISIT_SEQ(st,stmt,s.body)
 break
 case $B.ast.AsyncFunctionDef:
-if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
+if(!symtable_add_def(st,s.name,SF.DEF_LOCAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(s.args.defaults)
 VISIT_SEQ(st,expr,s.args.defaults)
@@ -13775,23 +13801,23 @@ size=st.stack.length
 assert(size)
 for(i=size-1;i >=0;i--){ste=st.stack[i]
 if(ste.comprehension){let target_in_scope=_PyST_GetSymbol(ste,target_name);
-if(target_in_scope & DEF_COMP_ITER){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name);
+if(target_in_scope & SF.DEF_COMP_ITER){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name);
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.ed_lineno,e.end_col_offset)
 throw exc}
 continue;}
 if(_PyST_IsFunctionLike(ste)){let target_in_scope=_PyST_GetSymbol(ste,target_name);
-if(target_in_scope & DEF_GLOBAL){if(!symtable_add_def(st,target_name,DEF_GLOBAL,LOCATION(e)))
+if(target_in_scope & SF.DEF_GLOBAL){if(!symtable_add_def(st,target_name,SF.DEF_GLOBAL,LOCATION(e)))
 VISIT_QUIT(st,0);}else{
-if(!symtable_add_def(st,target_name,DEF_NONLOCAL,LOCATION(e)))
+if(!symtable_add_def(st,target_name,SF.DEF_NONLOCAL,LOCATION(e)))
 VISIT_QUIT(st,0);}
 if(!symtable_record_directive(st,target_name,LOCATION(e)))
 VISIT_QUIT(st,0);
-return symtable_add_def_helper(st,target_name,DEF_LOCAL,ste,LOCATION(e));}
-if(ste.type==ModuleBlock){if(!symtable_add_def(st,target_name,DEF_GLOBAL,LOCATION(e)))
+return symtable_add_def_helper(st,target_name,SF.DEF_LOCAL,ste,LOCATION(e));}
+if(ste.type==ModuleBlock){if(!symtable_add_def(st,target_name,SF.DEF_GLOBAL,LOCATION(e)))
 VISIT_QUIT(st,0);
 if(!symtable_record_directive(st,target_name,LOCATION(e)))
 VISIT_QUIT(st,0);
-return symtable_add_def_helper(st,target_name,DEF_GLOBAL,ste,LOCATION(e));}
+return symtable_add_def_helper(st,target_name,SF.DEF_GLOBAL,ste,LOCATION(e));}
 if(ste.type==ClassBlock){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_IN_CLASS);
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
 throw exc}}
@@ -13920,13 +13946,13 @@ if(e.step)
 VISIT(st,expr,e.step)
 break;
 case $B.ast.Name:
-var flag=e.ctx instanceof $B.ast.Load ? USE :DEF_LOCAL
+var flag=e.ctx instanceof $B.ast.Load ? SF.USE :SF.DEF_LOCAL
 if(! symtable_add_def(st,e.id,flag,LOCATION(e)))
 VISIT_QUIT(st,0);
 if(e.ctx instanceof $B.ast.Load &&
 _PyST_IsFunctionLike(st.cur)&&
 e.id=="super"){if(!GET_IDENTIFIER('__class__')||
-!symtable_add_def(st,'__class__',USE,LOCATION(e)))
+!symtable_add_def(st,'__class__',SF.USE,LOCATION(e)))
 VISIT_QUIT(st,0);}
 break;
 case $B.ast.List:
@@ -13939,21 +13965,21 @@ VISIT_QUIT(st,1);}
 visitor.type_param_bound_or_default=function(st,e,name,key){if(e){var is_in_class=st.cur.can_see_class_scope;
 if(! symtable_enter_block(st,name,TypeVarBoundBlock,key,LOCATION(e))){return 0}
 st.cur.can_see_class_scope=is_in_class
-if(is_in_class && !symtable_add_def(st,'__classdict__',USE,LOCATION(e))){VISIT_QUIT(st,0)}
+if(is_in_class && !symtable_add_def(st,'__classdict__',SF.USE,LOCATION(e))){VISIT_QUIT(st,0)}
 VISIT(st,expr,e)
 if(!symtable_exit_block(st)){return 0}}
 return 1}
 visitor.type_param=function(st,tp){switch(tp.constructor){case $B.ast.TypeVar:
-if(! symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0);}
+if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0);}
 if(! visitor.type_param_bound_or_default(st,tp.bound,tp.name,tp)){VISIT_QUIT(st,0)}
 if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,{$id:$B.UUID()})){VISIT_QUIT(st,0)}
 break;
 case $B.ast.TypeVarTuple:
-if(! symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
+if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
 if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,tp)){VISIT_QUIT(st,0)}
 break;
 case $B.ast.ParamSpec:
-if(! symtable_add_def(st,tp.name,DEF_TYPE_PARAM |DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
+if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
 if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,tp)){VISIT_QUIT(st,0)}
 break;}
 VISIT_QUIT(st,1);}
@@ -13966,12 +13992,12 @@ case $B.ast.MatchSequence:
 VISIT_SEQ(st,pattern,p.patterns);
 break;
 case $B.ast.MatchStar:
-if(p.name){symtable_add_def(st,p.name,DEF_LOCAL,LOCATION(p));}
+if(p.name){symtable_add_def(st,p.name,SF.DEF_LOCAL,LOCATION(p));}
 break;
 case $B.ast.MatchMapping:
 VISIT_SEQ(st,expr,p.keys);
 VISIT_SEQ(st,pattern,p.patterns);
-if(p.rest){symtable_add_def(st,p.rest,DEF_LOCAL,LOCATION(p));}
+if(p.rest){symtable_add_def(st,p.rest,SF.DEF_LOCAL,LOCATION(p));}
 break;
 case $B.ast.MatchClass:
 VISIT(st,expr,p.cls);
@@ -13980,17 +14006,17 @@ VISIT_SEQ(st,pattern,p.kwd_patterns);
 break;
 case $B.ast.MatchAs:
 if(p.pattern){VISIT(st,pattern,p.pattern);}
-if(p.name){symtable_add_def(st,p.name,DEF_LOCAL,LOCATION(p));}
+if(p.name){symtable_add_def(st,p.name,SF.DEF_LOCAL,LOCATION(p));}
 break;
 case $B.ast.MatchOr:
 VISIT_SEQ(st,pattern,p.patterns);
 break;}
 VISIT_QUIT(st,1);}
 function symtable_implicit_arg(st,pos){var id='.'+pos
-if(!symtable_add_def(st,id,DEF_PARAM,ST_LOCATION(st.cur))){return 0;}
+if(!symtable_add_def(st,id,SF.DEF_PARAM,ST_LOCATION(st.cur))){return 0;}
 return 1;}
 visitor.params=function(st,args){if(! args){return-1}
-for(var arg of args){if(! symtable_add_def(st,arg.arg,DEF_PARAM,LOCATION(arg)))
+for(var arg of args){if(! symtable_add_def(st,arg.arg,SF.DEF_PARAM,LOCATION(arg)))
 return 0}
 return 1}
 visitor.annotation=function(st,annotation){var future_annotations=st.future.features & $B.CO_FUTURE_ANNOTATIONS
@@ -14025,17 +14051,17 @@ if(a.args && !visitor.params(st,a.args))
 return 0;
 if(a.kwonlyargs && !visitor.params(st,a.kwonlyargs))
 return 0;
-if(a.vararg){if(!symtable_add_def(st,a.vararg.arg,DEF_PARAM,LOCATION(a.vararg)))
+if(a.vararg){if(!symtable_add_def(st,a.vararg.arg,SF.DEF_PARAM,LOCATION(a.vararg)))
 return 0;
 st.cur.varargs=1;}
-if(a.kwarg){if(!symtable_add_def(st,a.kwarg.arg,DEF_PARAM,LOCATION(a.kwarg)))
+if(a.kwarg){if(!symtable_add_def(st,a.kwarg.arg,SF.DEF_PARAM,LOCATION(a.kwarg)))
 return 0;
 st.cur.varkeywords=1;}
 return 1;}
 visitor.excepthandler=function(st,eh){if(eh.type)
 VISIT(st,expr,eh.type);
 if(eh.name)
-if(!symtable_add_def(st,eh.name,DEF_LOCAL,LOCATION(eh)))
+if(!symtable_add_def(st,eh.name,SF.DEF_LOCAL,LOCATION(eh)))
 return 0;
 VISIT_SEQ(st,stmt,eh.body);
 return 1;}
@@ -14052,7 +14078,7 @@ var dot=name.search('\\.');
 if(dot !=-1){store_name=name.substring(0,dot);
 if(!store_name)
 return 0;}else{store_name=name;}
-if(name !="*"){var r=symtable_add_def(st,store_name,DEF_IMPORT,LOCATION(a));
+if(name !="*"){var r=symtable_add_def(st,store_name,SF.DEF_IMPORT,LOCATION(a));
 return r;}else{if(st.cur.type !=ModuleBlock){var lineno=a.lineno,col_offset=a.col_offset,end_lineno=a.end_lineno,end_col_offset=a.end_col_offset;
 var exc=PyErr_SetString(PyExc_SyntaxError,IMPORT_STAR_WARNING);
 set_exc_info(exc,st.filename,lineno,col_offset,end_lineno,end_col_offset);
