@@ -179,4 +179,10 @@ assert dataset.to_dict() == {'value': 'coucou', 'toto': 'tutu'}
 # issue 2489
 assert not hasattr(document, 'closest')
 assert_raises(AttributeError, exec, "document.closest", globals())
+
+# issue 2495
+target = document["test_closest_2495"]
+assert target.closest('.test') is document['test_2495']
+
+
 print('all tests pass...')

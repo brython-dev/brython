@@ -601,7 +601,7 @@ DOMNode.__getattribute__ = function(self, attr){
             break
         case "clear":
         case "closest":
-            if(! self.hasOwnProperty(attr)){
+            if(! self[attr]){
                 throw $B.attr_error(self, attr)
             }
             return function(){

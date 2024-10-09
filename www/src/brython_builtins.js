@@ -198,6 +198,69 @@ $B.COMPILER_FLAGS = {
     ITERABLE_COROUTINE: 256,
     ASYNC_GENERATOR: 512
 }
+var DEF_GLOBAL = 1,           /* global stmt */
+    DEF_LOCAL = 2 ,           /* assignment in code block */
+    DEF_PARAM = 2 << 1,         /* formal parameter */
+    DEF_NONLOCAL = 2 << 2,      /* nonlocal stmt */
+    USE = 2 << 3 ,              /* name is used */
+    DEF_FREE = 2 << 4 ,         /* name used but not defined in nested block */
+    DEF_FREE_CLASS = 2 << 5,    /* free variable from class's method */
+    DEF_IMPORT = 2 << 6,        /* assignment occurred via import */
+    DEF_ANNOT = 2 << 7,         /* this name is annotated */
+    DEF_COMP_ITER = 2 << 8,     /* this name is a comprehension iteration variable */
+    DEF_TYPE_PARAM = 2 << 9,    /* this name is a type parameter */
+    DEF_COMP_CELL = 2 << 10       /* this name is a cell in an inlined comprehension */
+
+var DEF_BOUND = DEF_LOCAL | DEF_PARAM | DEF_IMPORT
+
+/* GLOBAL_EXPLICIT and GLOBAL_IMPLICIT are used internally by the symbol
+   table.  GLOBAL is returned from PyST_GetScope() for either of them.
+   It is stored in ste_symbols at bits 12-15.
+*/
+var SCOPE_OFFSET = 12,
+    SCOPE_OFF = SCOPE_OFFSET,
+    SCOPE_MASK = (DEF_GLOBAL | DEF_LOCAL | DEF_PARAM | DEF_NONLOCAL)
+
+var LOCAL = 1,
+    GLOBAL_EXPLICIT = 2,
+    GLOBAL_IMPLICIT = 3,
+    FREE = 4,
+    CELL = 5
+
+var TYPE_CLASS = 1,
+    TYPE_FUNCTION = 0,
+    TYPE_MODULE = 2
+
+$B.SYMBOL_FLAGS = {
+    DEF_GLOBAL,       /* global stmt */
+    DEF_LOCAL,        /* assignment in code block */
+    DEF_PARAM,        /* formal parameter */
+    DEF_NONLOCAL,     /* nonlocal stmt */
+    USE,              /* name is used */
+    DEF_FREE,         /* name used but not defined in nested block */
+    DEF_FREE_CLASS,   /* free variable from class's method */
+    DEF_IMPORT,       /* assignment occurred via import */
+    DEF_ANNOT,        /* this name is annotated */
+    DEF_COMP_ITER,    /* this name is a comprehension iteration variable */
+    DEF_TYPE_PARAM,   /* this name is a type parameter */
+    DEF_COMP_CELL,    /* this name is a cell in an inlined comprehension */
+
+    DEF_BOUND,
+
+    SCOPE_OFFSET,
+    SCOPE_OFF,
+    SCOPE_MASK,
+
+    LOCAL,
+    GLOBAL_EXPLICIT,
+    GLOBAL_IMPLICIT,
+    FREE,
+    CELL,
+
+    TYPE_CLASS,
+    TYPE_FUNCTION,
+    TYPE_MODULE
+}
 
 if($B.isWebWorker){
     $B.charset = "utf-8"

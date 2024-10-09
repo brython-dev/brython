@@ -3294,6 +3294,20 @@ assert not '__name__' in C().__dict__
 
 assert not hasattr(range(3), '__name__')
 
+# issue 2493
+import http
+
+# issue 2494
+def f():
+  record = "A"
+  def g():
+    record_list = ["B"]
+    response = [ record for record in record_list ]
+    return response
+  return g()
+
+assert f() == ['B']
+
 
 # ==========================================
 # Finally, report that all tests have passed
