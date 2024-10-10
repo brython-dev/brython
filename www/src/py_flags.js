@@ -2,15 +2,15 @@
 (function($B){
 $B.builtin_class_flags = {
     builtins: {
-        1073763586: ['NameError', 'RecursionError', 'BufferError', 'ImportError', 'RuntimeError', 'FileExistsError', 'MemoryError', 'BaseExceptionGroup', 'TimeoutError', 'SystemError', 'ZeroDivisionError', 'FloatingPointError', 'BlockingIOError', 'EnvironmentError', 'InterruptedError', 'BrokenPipeError', 'ConnectionResetError', 'ArithmeticError', 'AssertionError', 'IndentationError', 'LookupError', 'RuntimeWarning', 'AttributeError', 'SyntaxError', 'UnicodeTranslateError', 'ProcessLookupError', 'StopAsyncIteration', 'FileNotFoundError', 'FutureWarning', 'ReferenceError', 'TabError', 'ChildProcessError', 'OSError', 'IOError', 'PermissionError', 'ImportWarning', 'ModuleNotFoundError', 'EOFError', 'UnicodeError', 'SystemExit', 'UnicodeWarning', 'SyntaxWarning', 'ConnectionAbortedError', 'BytesWarning', 'ConnectionRefusedError', 'EncodingWarning', 'GeneratorExit', 'IndexError', 'NotADirectoryError', 'PythonFinalizationError', 'DeprecationWarning', 'ResourceWarning', 'StopIteration', 'OverflowError', 'ValueError', 'UnicodeEncodeError', 'IsADirectoryError', '_IncompleteInputError', 'TypeError', 'KeyboardInterrupt', 'UnboundLocalError', 'WindowsError', 'UserWarning', 'NotImplementedError', 'Warning', 'KeyError', 'Exception', 'BaseException', 'PendingDeprecationWarning', 'ConnectionError', 'UnicodeDecodeError'],
+        1073763586: ['ImportError', 'StopIteration', 'ArithmeticError', 'PythonFinalizationError', 'EnvironmentError', 'GeneratorExit', 'RuntimeError', 'IOError', 'NotImplementedError', 'FileNotFoundError', 'KeyError', 'UnboundLocalError', 'WindowsError', 'TimeoutError', 'NotADirectoryError', 'OverflowError', 'IndexError', 'AttributeError', 'ResourceWarning', 'BaseException', 'ConnectionResetError', 'ChildProcessError', 'Warning', 'UnicodeDecodeError', 'UnicodeTranslateError', 'RuntimeWarning', 'FutureWarning', 'BytesWarning', 'InterruptedError', 'BaseExceptionGroup', 'TabError', 'AssertionError', 'ImportWarning', 'ConnectionError', 'OSError', 'ConnectionAbortedError', 'ConnectionRefusedError', 'EncodingWarning', 'EOFError', 'TypeError', 'UserWarning', 'Exception', 'PermissionError', 'UnicodeEncodeError', 'FloatingPointError', 'ModuleNotFoundError', 'SyntaxWarning', 'MemoryError', 'SystemExit', 'ReferenceError', 'SyntaxError', '_IncompleteInputError', 'PendingDeprecationWarning', 'SystemError', 'DeprecationWarning', 'IsADirectoryError', 'ValueError', 'FileExistsError', 'BufferError', 'RecursionError', 'ProcessLookupError', 'LookupError', 'BlockingIOError', 'BrokenPipeError', 'IndentationError', 'StopAsyncIteration', 'NameError', 'UnicodeError', 'UnicodeWarning', 'KeyboardInterrupt', 'ZeroDivisionError'],
         1073763848: ['ExceptionGroup'],
         20975874: ['bool'],
-        4199682: ['bytearray', 'float'],
+        4199682: ['float', 'bytearray'],
         138417410: ['bytes'],
-        21762: ['staticmethod', 'classmethod', 'property', 'enumerate', 'map', 'super', 'filter', 'reversed', 'zip'],
+        21762: ['super', 'enumerate', 'staticmethod', 'classmethod', 'property', 'zip', 'map', 'reversed', 'filter'],
         5378: ['object', 'complex'],
         541087042: ['dict'],
-        4216066: ['set', 'frozenset'],
+        4216066: ['frozenset', 'set'],
         20976898: ['int'],
         37770530: ['list'],
         20770: ['memoryview'],
@@ -21,10 +21,10 @@ $B.builtin_class_flags = {
         2155896066: ['type'],
     },
     types: {
-        20866: ['frame', 'getset_descriptor', 'member_descriptor', 'async_generator', 'method-wrapper', 'classmethod_descriptor', 'generator', 'coroutine'],
+        20866: ['generator', 'member_descriptor', 'method-wrapper', 'classmethod_descriptor', 'async_generator', 'coroutine', 'frame', 'getset_descriptor'],
         22914: ['builtin_function_or_method'],
         20738: ['cell', 'traceback'],
-        4354: ['ellipsis', 'code', 'NotImplementedType', 'NoneType'],
+        4354: ['ellipsis', 'NoneType', 'code', 'NotImplementedType'],
         153858: ['function'],
         20802: ['mappingproxy'],
         153986: ['method_descriptor'],
