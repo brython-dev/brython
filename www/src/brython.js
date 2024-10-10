@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-09 19:04:37.127363"
-__BRYTHON__.timestamp=1728493477127
+__BRYTHON__.compiled_date="2024-10-10 09:26:16.202810"
+__BRYTHON__.timestamp=1728545176202
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9618,7 +9618,7 @@ if(pyobjfcts !==undefined){const pyobj=pyobjfcts.get(jsobj)
 if(pyobj !==undefined){return pyobj}}else{try{_this[PYOBJFCTS]=new Map()}catch(err){}}}
 var res=function(){var args=new Array(arguments.length)
 for(var i=0,len=arguments.length;i < len;++i){var arg=arguments[i]
-if(arg.constructor===Object && arg.$kw){throw _b_.TypeError.$factory(
+if(arg !==null && arg.constructor===Object && arg.$kw){throw _b_.TypeError.$factory(
 'keyword arguments are not supported for '+
 'Javascript functions')}
 args[i]=pyobj2jsobj(arg)}
@@ -10306,7 +10306,6 @@ case "y":
 if(!(self instanceof SVGElement)){let pos=$getPosition(self)
 return attr=="x" ? pos.left :pos.top}
 break
-case "clear":
 case "closest":
 if(! self[attr]){throw $B.attr_error(self,attr)}
 return function(){return DOMNode[attr].call(null,self,...arguments)}
@@ -10883,7 +10882,7 @@ throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__)
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1074287874:['BaseExceptionGroup','UnicodeTranslateError','Warning','NameError','SystemError','ReferenceError','AssertionError','BlockingIOError','ImportError','UnicodeEncodeError','UnicodeError','UnicodeDecodeError','ConnectionRefusedError','LookupError','StopAsyncIteration','RuntimeWarning','BytesWarning','TabError','ValueError','EncodingWarning','InterruptedError','UnboundLocalError','PythonFinalizationError','SyntaxWarning','SystemExit','ZeroDivisionError','ProcessLookupError','OverflowError','ModuleNotFoundError','MemoryError','BaseException','StopIteration','GeneratorExit','ConnectionAbortedError','KeyError','IOError','EnvironmentError','ConnectionError','BrokenPipeError','Exception','TimeoutError','WindowsError','BufferError','IndexError','PermissionError','KeyboardInterrupt','ImportWarning','NotADirectoryError','EOFError','SyntaxError','DeprecationWarning','ChildProcessError','AttributeError','FutureWarning','RecursionError','UserWarning','UnicodeWarning','NotImplementedError','PendingDeprecationWarning','ResourceWarning','FileExistsError','ArithmeticError','IncompleteInputError','FloatingPointError','OSError','IndentationError','TypeError','ConnectionResetError','RuntimeError','FileNotFoundError','IsADirectoryError'],1073763848:['ExceptionGroup'],21500162:['bool'],4723970:['float','bytearray'],138941698:['bytes'],546050:['property','reversed','staticmethod','map','classmethod','super','filter','zip','enumerate'],529666:['object','complex'],541611330:['dict'],4740354:['frozenset','set'],21501186:['int'],38294818:['list'],545058:['memoryview'],528674:['range'],545026:['slice'],273159426:['str'],71849250:['tuple'],2156420354:['type'],},types:{545154:['classmethod_descriptor','async_generator','member_descriptor','generator','frame','method-wrapper','getset_descriptor','coroutine'],547202:['builtin_function_or_method'],545026:['cell','traceback'],528642:['code','NoneType','ellipsis','NotImplementedType'],678146:['function'],545090:['mappingproxy'],678274:['method_descriptor'],547074:['method'],546050:['module'],676226:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1073763586:['NameError','RecursionError','BufferError','ImportError','RuntimeError','FileExistsError','MemoryError','BaseExceptionGroup','TimeoutError','SystemError','ZeroDivisionError','FloatingPointError','BlockingIOError','EnvironmentError','InterruptedError','BrokenPipeError','ConnectionResetError','ArithmeticError','AssertionError','IndentationError','LookupError','RuntimeWarning','AttributeError','SyntaxError','UnicodeTranslateError','ProcessLookupError','StopAsyncIteration','FileNotFoundError','FutureWarning','ReferenceError','TabError','ChildProcessError','OSError','IOError','PermissionError','ImportWarning','ModuleNotFoundError','EOFError','UnicodeError','SystemExit','UnicodeWarning','SyntaxWarning','ConnectionAbortedError','BytesWarning','ConnectionRefusedError','EncodingWarning','GeneratorExit','IndexError','NotADirectoryError','PythonFinalizationError','DeprecationWarning','ResourceWarning','StopIteration','OverflowError','ValueError','UnicodeEncodeError','IsADirectoryError','_IncompleteInputError','TypeError','KeyboardInterrupt','UnboundLocalError','WindowsError','UserWarning','NotImplementedError','Warning','KeyError','Exception','BaseException','PendingDeprecationWarning','ConnectionError','UnicodeDecodeError'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['staticmethod','classmethod','property','enumerate','map','super','filter','reversed','zip'],5378:['object','complex'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['frame','getset_descriptor','member_descriptor','async_generator','method-wrapper','classmethod_descriptor','generator','coroutine'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['ellipsis','code','NotImplementedType','NoneType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
