@@ -599,7 +599,6 @@ DOMNode.__getattribute__ = function(self, attr){
                 return attr == "x" ? pos.left : pos.top
             }
             break
-        case "clear":
         case "closest":
             if(! self[attr]){
                 throw $B.attr_error(self, attr)
