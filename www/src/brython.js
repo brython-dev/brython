@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-10 09:45:40.204033"
-__BRYTHON__.timestamp=1728546340203
+__BRYTHON__.compiled_date="2024-10-13 10:31:29.949329"
+__BRYTHON__.timestamp=1728808289949
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1096,6 +1096,10 @@ idb_cx.onversionchange=function(){console.log('version change')}}
 $B.ajax_load_script=function(s){var script=s.script,url=s.url,name=s.name,rel_path=url.substr($B.script_dir.length+1)
 if($B.files && $B.files.hasOwnProperty(rel_path)){
 var src=atob($B.files[rel_path].content)
+if(s.is_ww){$B.webworkers[name]=script
+var filename=$B.script_filename=$B.strip_host(url)
+$B.file_cache[filename]=src
+$B.dispatch_load_event(script)}
 $B.tasks.splice(0,0,[$B.run_script,script,src,name,url,true])
 loop()}else if($B.protocol !="file"){var filename=$B.script_filename=$B.strip_host(url)
 $B.scripts[filename]=script

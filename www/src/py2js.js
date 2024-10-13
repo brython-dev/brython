@@ -475,11 +475,11 @@ var defined_ids = {},
 function addPythonScript(addedNode){
     // callback function for the MutationObserver used once this script is
     // loaded (startup_observer)
-   if(addedNode.tagName == 'SCRIPT' &&
+    if(addedNode.tagName == 'SCRIPT' &&
            (addedNode.type == "text/python" ||
             addedNode.type == "text/python3")){
-       python_scripts.push(addedNode)
-   }
+        python_scripts.push(addedNode)
+    }
 }
 
 var status = {
@@ -496,10 +496,10 @@ $B.dispatch_load_event = function(script){
 function injectPythonScript(addedNode){
     // callback function for the MutationObserver used after brython() has
     // been called
-   if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
-       set_script_id(addedNode)
-       run_scripts([addedNode])
-   }
+    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
+        set_script_id(addedNode)
+        run_scripts([addedNode])
+    }
 }
 
 function set_script_id(script){

@@ -303,6 +303,13 @@ $B.ajax_load_script = function(s){
     if($B.files && $B.files.hasOwnProperty(rel_path)){
         // File is present in Virtual File System
         var src = atob($B.files[rel_path].content)
+        if(s.is_ww){
+            $B.webworkers[name] = script
+            var filename = $B.script_filename = $B.strip_host(url)
+            $B.file_cache[filename] = src
+            // dispatch 'load' event (cf. issue 2215)
+            $B.dispatch_load_event(script)
+        }
         $B.tasks.splice(0, 0, [$B.run_script,
             script, src, name, url, true])
         loop()
