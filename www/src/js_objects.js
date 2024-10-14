@@ -321,7 +321,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     }
 
     if(klass === $B.function || klass === $B.method){
-        if(pyobj.prototype &&
+        if(typeof pyobj == 'function' && pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&
                 ! pyobj.$is_func){
             // pyobj is a Javascript constructor - this happens with
@@ -351,7 +351,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 }
                 // Apply Python arguments to Python function
                 let res
-                if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
+                if(pyobj.prototype && pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
                     res = new pyobj(...args)
                 }else{
                     res = pyobj.apply(this, args)
