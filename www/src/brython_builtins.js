@@ -101,13 +101,13 @@ if(mo){
 }
 
 $B.strip_host = function(url){
-    var parts_re = new RegExp('(.*?)://([^/]*)?[/#]?(.*)'),
-        mo = parts_re.exec(url)
-    if(mo){
-        return mo[3]
+    try{
+        var parsed_url = new URL(url)
+        return parsed_url.pathname + parsed_url.search + parsed_url.hash
+    }catch{
+        console.log(Error().stack)
+        throw Error("not a url: " + url)
     }
-    console.log(Error().stack)
-    throw Error('not a url: ' + url)
 }
 
 // For all the scripts defined in the page as webworkers, mapping between
