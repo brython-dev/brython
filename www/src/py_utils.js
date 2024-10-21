@@ -1949,7 +1949,7 @@ $B.rich_op1 = function(op, x, y){
         }
         return method(x, y)
     }
-
+    
     if(_b_.issubclass(y_class, x_class)){
         // issue #1686
         var reflected_left = $B.$getattr(x_class, rop, false),

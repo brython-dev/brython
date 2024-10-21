@@ -1386,14 +1386,27 @@ $B.ast.Await.prototype.to_js = function(scopes){
 }
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
-    // temporarily support old (py2js.js) and new (python_parser.js) versions
-    var name = this.op.$name ? this.op.$name : this.op.constructor.$name
-    var op = opclass2dunder[name]
-    var res = `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
-        `${$B.js_from_ast(this.right, scopes)}`
+    var res
     var position = encode_position(this.left.col_offset, this.col_offset,
                                     this.end_col_offset, this.right.end_col_offset)
-    return res + `, ${position})`
+    var name = this.op.constructor.$name
+    var op = opclass2dunder[name]
+    if(this.left instanceof $B.ast.Constant &&
+            this.right instanceof $B.ast.Constant){
+        // calculate result at translation time
+        try{
+            res = $B.rich_op(op, this.left.value, this.right.value, position)
+            if(typeof res == 'string'){
+                res = res.replace(new RegExp("'", 'g'), "\\'")
+            }
+            var ast_obj = new $B.ast.Constant(res)
+            return ast_obj.to_js(scopes)
+        }catch(err){
+            // error will be handled at runtime
+        }
+    }
+    return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
+        `${$B.js_from_ast(this.right, scopes)}, ${position})`
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){

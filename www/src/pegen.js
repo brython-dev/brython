@@ -600,7 +600,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
 function prepared_number_value(prepared){
     switch(prepared.type){
         case 'float':
-            return $B.fast_float(prepared.value)
+            return $B.fast_float(parseFloat(prepared.value))
         case 'imaginary':
             return $B.make_complex(0, prepared_number_value(prepared.value))
         case 'int':
@@ -624,46 +624,6 @@ function prepared_number_value(prepared){
 function parsenumber_raw(s){
     var prepared = $B.prepare_number(s) // in number_parser.js
     return prepared_number_value(prepared)
-    /*
-    var nd,
-        x,
-        dx,
-        compl,
-        imflag;
-
-    // assert(s != NULL);
-    errno = 0;
-    end = strlen(s) - 1;
-    console.log('end', end, 'last', s[end])
-    imflag = s[end] == 'j' || s[end] == 'J';
-    if (s[0] == '0') {
-        x = PyOS_strtoul(s, end, 0);
-        if (x < 0 && errno == 0) {
-            return PyLong_FromString(s, 0, 0);
-        }
-    } else {
-        x = PyOS_strtol(s, end, 0);
-    }
-    if (end == '\0') {
-        if (errno != 0) {
-            return PyLong_FromString(s, 0, 0);
-        }
-        return PyLong_FromLong(x);
-    }
-    if (imflag) {
-        compl.real = 0.;
-        compl.imag = PyOS_string_to_double(s, end, NULL);
-        if (compl.imag == -1.0 && PyErr_Occurred()) {
-            return NULL;
-        }
-        return PyComplex_FromCComplex(compl);
-    }
-    dx = PyOS_string_to_double(s, NULL, NULL);
-    if (dx == -1.0 && PyErr_Occurred()) {
-        return NULL;
-    }
-    return PyFloat_FromDouble(dx);
-    */
 }
 
 function parsenumber(s){
@@ -701,7 +661,7 @@ $B._PyPegen.number_token = function(p){
     }
 
     var c = parsenumber(num_raw);
-
+    
     if (c == NULL) {
         p.error_indicator = 1;
         var tstate = _PyThreadState_GET();
@@ -944,7 +904,7 @@ $B._PyPegen.run_parser = function(p){
     // assert(p->level == 0);
     if (res == NULL) {
         if ((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
-            return $B.helper_functions.RAISE_ERROR(p, 
+            return $B.helper_functions.RAISE_ERROR(p,
                 _b_._IncompleteInputError, "incomplete input");
         }
         // Make a second parser pass. In this pass we activate heavier and slower checks
