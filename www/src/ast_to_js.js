@@ -3077,9 +3077,9 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
                 $B.last(this.names))
         }
     }
-
+    
     var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             `var module = $B.$import_from("${this.module || ''}", `
+             `$B.$import_from("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),
         aliases = []
     for(var name of this.names){
@@ -3095,7 +3095,6 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         }else if(alias.name == '*'){
             // mark scope as "blurred" by the presence of "from X import *"
             last_scope(scopes).blurred = true
-            js += `\n$B.import_all(locals, module)`
         }else{
             bind(alias.name, scopes)
         }

@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-22 10:41:13.685139"
-__BRYTHON__.timestamp=1729586473684
+__BRYTHON__.compiled_date="2024-10-22 11:19:26.874407"
+__BRYTHON__.timestamp=1729588766874
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -12665,13 +12665,12 @@ js+=`locals, true)\n`}
 return js.trimRight()}
 $B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
 var js=`$B.set_lineno(frame, ${this.lineno})\n`+
-`var module = $B.$import_from("${this.module || ''}", `
+`$B.$import_from("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
 for(var name of this.names){if(name.asname){aliases.push(`${name.name}: '${name.asname}'`)}}
 js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
 for(var alias of this.names){if(alias.asname){bind(alias.asname,scopes)}else if(alias.name=='*'){
-last_scope(scopes).blurred=true
-js+=`\n$B.import_all(locals, module)`}else{bind(alias.name,scopes)}}
+last_scope(scopes).blurred=true}else{bind(alias.name,scopes)}}
 return js}
 $B.ast.Interactive.prototype.to_js=function(scopes){mark_parents(this)
 var name=init_scopes.bind(this)('module',scopes)
