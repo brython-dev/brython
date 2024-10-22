@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-22 11:21:57.013392"
-__BRYTHON__.timestamp=1729588917013
+__BRYTHON__.compiled_date="2024-10-22 11:39:56.780587"
+__BRYTHON__.timestamp=1729589996780
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1496,6 +1496,10 @@ warning.end_offset=token.end_coloffset
 warning.text=token.line
 warning.args[1]=$B.fast_tuple([filename,warning.lineno,warning.offset,warning.text,warning.end_lineno,warning.end_offset])}
 $B.imported._warnings.warn(warning)}
+$B.assert=function(test,msg,position){if(! $B.$bool(test)){var exc=_b_.AssertionError.$factory(msg)
+position=$B.decode_position(position)
+$B.set_exception_offsets(exc,position)
+throw exc}}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 throw _b_.IndexError.$factory(type+" index out of range")}
 $B.$getitem=function(obj,item,position){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
@@ -11719,9 +11723,9 @@ if(last.type=="class"){last.static_attributes=last.static_attributes ??
 new Set()
 last.static_attributes.add(attr.attr)
 return}else if(last.type=="def"){ix=scopes.indexOf(last)-1}else{return}}}}
-$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
-return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n`+
-`throw _b_.AssertionError.$factory(${msg})}\n`}
+$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''",position=encode_position(this.test.col_offset,this.test.col_offset,this.test.end_col_offset)
+var js=`$B.set_lineno(frame, ${this.lineno})\n`
+return js+`$B.assert(${test}, ${msg}, ${position})`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){compiler_check(this)
 var postpone_annotation=scopes.symtable.table.future.features &

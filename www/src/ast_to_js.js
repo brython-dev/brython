@@ -1046,9 +1046,11 @@ function maybe_add_static(attr, scopes){
 
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
-        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
-    return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n` +
-           `throw _b_.AssertionError.$factory(${msg})}\n`
+        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : "''",
+        position = encode_position(this.test.col_offset, 
+            this.test.col_offset, this.test.end_col_offset)
+    var js = `$B.set_lineno(frame, ${this.lineno})\n`
+    return js + `$B.assert(${test}, ${msg}, ${position})`
 }
 
 function annotation_to_str(obj, scopes){
@@ -3077,7 +3079,7 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
                 $B.last(this.names))
         }
     }
-    
+
     var js = `$B.set_lineno(frame, ${this.lineno})\n` +
              `$B.$import_from("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),

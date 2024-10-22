@@ -998,6 +998,16 @@ $B.warn = function(klass, message, filename, token){
     $B.imported._warnings.warn(warning)
 }
 
+// assert
+$B.assert = function(test, msg, position){
+    if(! $B.$bool(test)){
+        var exc = _b_.AssertionError.$factory(msg)
+        position = $B.decode_position(position)
+        $B.set_exception_offsets(exc, position)
+        throw exc
+    }
+}
+
 // get item
 function index_error(obj){
     var type = typeof obj == "string" ? "string" : "list"
@@ -1949,7 +1959,7 @@ $B.rich_op1 = function(op, x, y){
         }
         return method(x, y)
     }
-    
+
     if(_b_.issubclass(y_class, x_class)){
         // issue #1686
         var reflected_left = $B.$getattr(x_class, rop, false),
