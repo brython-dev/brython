@@ -359,7 +359,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'record' && scopes[scopes.length - 1].name == "g"
+    var test = false //name == 'x' // && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -3031,7 +3031,11 @@ $B.ast.If.prototype.to_js = function(scopes){
             js += 'else ' + $B.js_from_ast(this.orelse[0], scopes) +
                   add_body(this.orelse.slice(1), scopes)
         }else{
-            js += '\nelse{\n' + add_body(this.orelse, scopes) + '\n}'
+            js += '\nelse{\n'
+            scopes.push(copy_scope(scope, this))
+            js += add_body(this.orelse, scopes)
+            scopes.pop()
+            js += '\n}'
         }
     }
     return js

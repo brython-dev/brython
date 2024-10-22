@@ -1131,5 +1131,15 @@ def f(x, y):
 m = map(f, range(42), range(9))
 assert [x for x in m] == ['0', '2', '4', '6', '8', '10', '12', '14', '16']
 
+# issue 2501
+def f():
+    if True:
+        if False:
+            xjq = 0
+    else:
+        xjq = None
+    print(xjq)
+
+assert_raises(UnboundLocalError, f)
 
 print('passed all tests...')

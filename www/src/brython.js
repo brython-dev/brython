@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-21 21:24:38.664275"
-__BRYTHON__.timestamp=1729538678664
+__BRYTHON__.compiled_date="2024-10-22 08:11:09.767214"
+__BRYTHON__.timestamp=1729577469766
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -12644,7 +12644,11 @@ scopes.push(new_scope)
 js+=add_body(this.body,scopes)+'\n}'
 scopes.pop()
 if(this.orelse.length > 0){if(this.orelse[0]instanceof $B.ast.If && this.orelse.length==1){js+='else '+$B.js_from_ast(this.orelse[0],scopes)+
-add_body(this.orelse.slice(1),scopes)}else{js+='\nelse{\n'+add_body(this.orelse,scopes)+'\n}'}}
+add_body(this.orelse.slice(1),scopes)}else{js+='\nelse{\n'
+scopes.push(copy_scope(scope,this))
+js+=add_body(this.orelse,scopes)
+scopes.pop()
+js+='\n}'}}
 return js}
 $B.ast.IfExp.prototype.to_js=function(scopes){return '($B.$bool('+$B.js_from_ast(this.test,scopes)+') ? '+
 $B.js_from_ast(this.body,scopes)+': '+
