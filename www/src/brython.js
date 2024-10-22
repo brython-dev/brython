@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-22 11:39:56.780587"
-__BRYTHON__.timestamp=1729589996780
+__BRYTHON__.compiled_date="2024-10-22 12:15:17.960499"
+__BRYTHON__.timestamp=1729592117960
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1766,7 +1766,8 @@ _b_.None,_b_.None,_b_.None)}}}}}
 delete frame[1].$current_exception
 return _b_.None}
 $B.trace_return_and_leave=function(frame,return_value){if(frame.$f_trace !==_b_.None){$B.trace_return(return_value)}
-return $B.leave_frame()}
+$B.leave_frame()
+return return_value}
 $B.push_frame=function(frame){var count=$B.frame_obj===null ? 0 :$B.frame_obj.count
 return{
 prev:$B.frame_obj,frame,count:count+1}}
@@ -4129,7 +4130,8 @@ throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.set_exc_and_trace=function(frame,exc){$B.set_exc(exc,frame)
 if((! exc.$in_trace_func)&& frame.$f_trace !==_b_.None){frame.$f_trace=$B.trace_exception()}}
 $B.set_exc_and_leave=function(frame,exc){$B.set_exc_and_trace(frame,exc)
-$B.leave_frame()}
+$B.leave_frame()
+throw exc}
 $B.get_exc=function(){var frame=$B.frame_obj.frame
 return frame[1].$current_exception}
 $B.set_exception_offsets=function(exc,position){
@@ -12506,18 +12508,16 @@ js+=`locals.__class__ =  `+
 `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`}
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
-js+='var result = _b_.None\n'+
-'$B.trace_return_and_leave(frame, result)\n'+
-'return result\n'}
+js+='return $B.trace_return_and_leave(frame, _b_.None)\n'}
 js+=`}catch(err){\n`
 if(func_scope.needs_frames){
 js+=`$B.set_exc_and_trace(frame, err)\n`+
 `err.$frame_obj = _frame_obj\n`+
 `_linenums[_linenums.length - 1] = frame.$lineno\n`+
 `err.$linenums = _linenums\n`+
-`$B.leave_frame()\n`}else{js+=`$B.set_exc_and_leave(frame, err)\n`}
-js+=`throw err
-    }
+`$B.leave_frame()\n`+
+`throw err\n`}else{js+=`$B.set_exc_and_leave(frame, err)\n`}
+js+=`}
     }\n`
 if(is_generator){js+=`, '${this.name}')\n`+
 `var _gen_${id} = gen_${id}()\n`+
@@ -12882,10 +12882,9 @@ $B.ast.Return.prototype.to_js=function(scopes){
 if(last_scope(scopes).type !='def'){compiler_error(this,"'return' outside function")}
 compiler_check(this)
 var js=`$B.set_lineno(frame, ${this.lineno})\n`+
-'var result = '+
+`return $B.trace_return_and_leave(frame, `+
 (this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')+
-'\n'+
-`$B.trace_return_and_leave(frame, result)\nreturn result\n`
+')\n'
 return js}
 function remove_escapes(value){for(var key in $B.escape2cp){
 value=value.replace(new RegExp('\\\\'+key,'g'),$B.escape2cp[key])}

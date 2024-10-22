@@ -33,6 +33,7 @@ $B.set_exc_and_trace = function(frame, exc){
 $B.set_exc_and_leave = function(frame, exc){
     $B.set_exc_and_trace(frame, exc)
     $B.leave_frame()
+    throw exc
 }
 
 $B.get_exc = function(){
@@ -939,7 +940,7 @@ _b_.BaseExceptionGroup.subgroup = function(self, condition){
 
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
-_b_.BaseExceptionGroup.__class_getitem__ = 
+_b_.BaseExceptionGroup.__class_getitem__ =
     _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
 
 _b_.ExceptionGroup = $B.make_class("ExceptionGFroup",

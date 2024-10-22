@@ -1047,7 +1047,7 @@ function maybe_add_static(attr, scopes){
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : "''",
-        position = encode_position(this.test.col_offset, 
+        position = encode_position(this.test.col_offset,
             this.test.col_offset, this.test.end_col_offset)
     var js = `$B.set_lineno(frame, ${this.lineno})\n`
     return js + `$B.assert(${test}, ${msg}, ${position})`
@@ -2726,9 +2726,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if((! this.$is_lambda) && ! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
-        js += 'var result = _b_.None\n' +
-              '$B.trace_return_and_leave(frame, result)\n' +
-              'return result\n'
+        js += 'return $B.trace_return_and_leave(frame, _b_.None)\n'
     }
 
     js += `}catch(err){\n`
@@ -2739,12 +2737,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               `err.$frame_obj = _frame_obj\n` +
               `_linenums[_linenums.length - 1] = frame.$lineno\n` +
               `err.$linenums = _linenums\n` +
-              `$B.leave_frame()\n`
+              `$B.leave_frame()\n` +
+              `throw err\n`
     }else{
         js += `$B.set_exc_and_leave(frame, err)\n`
     }
-    js += `throw err
-    }
+    js += `}
     }\n`
 
     if(is_generator){
@@ -3585,10 +3583,9 @@ $B.ast.Return.prototype.to_js = function(scopes){
 
     compiler_check(this)
     var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             'var result = ' +
+             `return $B.trace_return_and_leave(frame, ` +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None') +
-             '\n' +
-             `$B.trace_return_and_leave(frame, result)\nreturn result\n`
+             ')\n'
     return js
 }
 
