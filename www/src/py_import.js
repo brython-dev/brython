@@ -1429,15 +1429,6 @@ $B.$import_from = function(module, names, aliases, level, locals){
     }
 }
 
-$B.import_all = function(locals, module){
-    // Used for "from module import *"
-    for(var attr in module){
-        if('_$'.indexOf(attr.charAt(0)) == -1){
-            locals[attr] = module[attr]
-        }
-    }
-}
-
 // List of finders, also used by brython()
 $B.$meta_path = [VFSFinder, StdlibStaticFinder, PathFinder]
 

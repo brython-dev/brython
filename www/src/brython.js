@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-22 11:19:26.874407"
-__BRYTHON__.timestamp=1729588766874
+__BRYTHON__.compiled_date="2024-10-22 11:21:57.013392"
+__BRYTHON__.timestamp=1729588917013
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -6240,8 +6240,6 @@ var sub_module=current_module.__name__+'.'+name
 $B.$import(sub_module,[],{},{})
 locals[alias]=$B.imported[sub_module]}}}}else{
 $B.$import(module,names,aliases,locals)}}
-$B.import_all=function(locals,module){
-for(var attr in module){if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
