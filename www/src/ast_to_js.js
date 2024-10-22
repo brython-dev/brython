@@ -1724,9 +1724,8 @@ $B.ast.Compare.prototype.to_js = function(scopes){
     var test_left = check_is_arg(this.left)
     var left = $B.js_from_ast(this.left, scopes),
         comps = []
-    // For chained comparison, store each intermediate result in locals.$op
     var len = this.ops.length,
-        prefix = len > 1 ? 'locals.$op = ' : ''
+        prefix
 
     for(var i = 0; i < len; i++){
         var name = this.ops[i].$name ? this.ops[i].$name : this.ops[i].constructor.$name,
@@ -1736,6 +1735,8 @@ $B.ast.Compare.prototype.to_js = function(scopes){
             console.log('op undefined', this.ops[i])
             alert()
         }
+        // For chained comparison, store each intermediate result in locals.$op
+        prefix = i < len - 1 ? 'locals.$op = ' : ''
         if(this.ops[i] instanceof $B.ast.In){
             comps.push(`$B.$is_member(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
@@ -1747,7 +1748,7 @@ $B.ast.Compare.prototype.to_js = function(scopes){
             comps.push(`$B.$is(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.IsNot){
-            check_compare('is not', this.left, right,scopes)
+            check_compare('is not', this.left, right, scopes)
             comps.push(`! $B.$is(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else{
