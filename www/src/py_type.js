@@ -179,7 +179,7 @@ function set_attr_if_absent(dict, attr, value){
 
 
 $B.make_class_namespace = function(metaclass, class_name, module, qualname,
-                                   bases){
+                                   orig_bases, bases){
     // Use __prepare__ (PEP 3115)
     var class_dict = _b_.dict.$literal([
                          ['__module__', module],
@@ -193,7 +193,9 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
             set_attr_if_absent(class_dict, '__qualname__', qualname)
         }
     }
-
+    if(orig_bases !== bases){
+        $B.$setitem(class_dict, '__orig_bases__', orig_bases)
+    }
     if(class_dict.__class__ === _b_.dict){
         if(class_dict.$all_str){
             return class_dict.$strings
@@ -1353,7 +1355,7 @@ $B.make_iterator_class = function(name){
                     throw _b_.RuntimeError.$factory(message)
                 }
             }
-            
+
             self.counter++
             if(self.counter < self.items.length){
                 var item = self.items[self.counter]

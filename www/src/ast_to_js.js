@@ -1674,10 +1674,9 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     js += ')\n'
 
     js += `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
-              `name, module ,"${qualname}", resolved_bases),\n`
+              `name, module, "${qualname}", bases, resolved_bases),\n`
 
     js += `locals = ${locals_name}\n` +
-          `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `locals.__doc__ = ${docstring}\n` +
           `var frame = [name, locals, module, ${globals_name}]\n` +
           `$B.enter_frame(frame, __file__, ${this.lineno})\n` +

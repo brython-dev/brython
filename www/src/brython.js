@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-22 12:15:17.960499"
-__BRYTHON__.timestamp=1729592117960
+__BRYTHON__.compiled_date="2024-10-22 17:39:27.757840"
+__BRYTHON__.timestamp=1729611567757
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2161,13 +2161,14 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=metaclass ||_b_.type}
 return metaclass}
 function set_attr_if_absent(dict,attr,value){try{$B.$getitem(dict,attr)}catch(err){$B.$setitem(dict,attr,value)}}
-$B.make_class_namespace=function(metaclass,class_name,module,qualname,bases){
+$B.make_class_namespace=function(metaclass,class_name,module,qualname,orig_bases,bases){
 var class_dict=_b_.dict.$literal([['__module__',module],['__qualname__',qualname]
 ])
 if(metaclass !==_b_.type){var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None)
 if(prepare !==_b_.None){class_dict=$B.$call(prepare)(class_name,bases)
 set_attr_if_absent(class_dict,'__module__',module)
 set_attr_if_absent(class_dict,'__qualname__',qualname)}}
+if(orig_bases !==bases){$B.$setitem(class_dict,'__orig_bases__',orig_bases)}
 if(class_dict.__class__===_b_.dict){if(class_dict.$all_str){return class_dict.$strings}
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return _b_.dict}else if(prop=='$target'){return target}
 if(_b_.dict.$contains_string(target,prop)){return _b_.dict.$getitem_string(target,prop)}
@@ -11974,9 +11975,8 @@ js+=`var ${ref} = (function(name, module, bases){\n`+
 if(metaclass){js+=`, ${metaclass.to_js(scopes)}`}
 js+=')\n'
 js+=`var ${locals_name} = $B.make_class_namespace(metaclass, `+
-`name, module ,"${qualname}", resolved_bases),\n`
+`name, module, "${qualname}", bases, resolved_bases),\n`
 js+=`locals = ${locals_name}\n`+
-`if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n`+
 `locals.__doc__ = ${docstring}\n`+
 `var frame = [name, locals, module, ${globals_name}]\n`+
 `$B.enter_frame(frame, __file__, ${this.lineno})\n`+
