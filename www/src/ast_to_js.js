@@ -1651,25 +1651,31 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
 
     var keywords = [],
-        metaclass
+        metaclass,
+        meta = ''
     for(var keyword of this.keywords){
         if(keyword.arg == 'metaclass'){
             metaclass = keyword.value
+            meta = metaclass.to_js(scopes)
+        }else{
+            keywords.push(`["${keyword.arg}", ` +
+                $B.js_from_ast(keyword.value, scopes) + ']')
         }
-        keywords.push(`["${keyword.arg}", ` +
-            $B.js_from_ast(keyword.value, scopes) + ']')
     }
 
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
-    js += `var ${ref} = (function(name, module, bases){\n` +
+    js += `var ${ref} = (function(name, module, bases`
+              + (metaclass ? ', meta' : '') +
+              `){\n` +
               `var _frame_obj = $B.frame_obj,\n` +
                   `resolved_bases = $B.resolve_mro_entries(bases),\n` +
                   `metaclass = $B.get_metaclass(name, module, ` +
                   `resolved_bases`
+
     if(metaclass){
-        js += `, ${metaclass.to_js(scopes)}`
+        js += `, meta`
     }
     js += ')\n'
 
@@ -1698,7 +1704,10 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}], ` +
               `[${static_attrs}], ${this.lineno})\n` +
-          `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
+          `})('${this.name}',${globals_name}.__name__ ?? '${glob}', ` +
+          `$B.fast_tuple([${bases}])` +
+          (metaclass ? ', ' + meta : '') +
+          `)\n`
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
@@ -3520,6 +3529,10 @@ $B.ast.Name.prototype.to_js = function(scopes){
         }
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
+        var scope = name_scope(this.id, scopes)
+        if(scope.found === $B.last(scopes)){
+            return 'locals.' + mangle(scopes, scope.found, this.id)
+        }
         var res = name_reference(this.id, scopes,
              [this.col_offset, this.col_offset, this.end_col_offset])
         if(this.id == '__debugger__' && res.startsWith('$B.resolve_in_scopes')){

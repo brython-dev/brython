@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-22 17:39:27.757840"
-__BRYTHON__.timestamp=1729611567757
+__BRYTHON__.compiled_date="2024-10-23 11:28:24.862104"
+__BRYTHON__.timestamp=1729675704861
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11962,17 +11962,19 @@ bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,`+
 for(let item of this.type_params){var name,param_type=item.constructor.$name
 if(param_type=='TypeVar'){name=item.name}else{name=item.name.id}
 js+=`locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`}}
-var keywords=[],metaclass
-for(var keyword of this.keywords){if(keyword.arg=='metaclass'){metaclass=keyword.value}
-keywords.push(`["${keyword.arg}", `+
-$B.js_from_ast(keyword.value,scopes)+']')}
+var keywords=[],metaclass,meta=''
+for(var keyword of this.keywords){if(keyword.arg=='metaclass'){metaclass=keyword.value
+meta=metaclass.to_js(scopes)}else{keywords.push(`["${keyword.arg}", `+
+$B.js_from_ast(keyword.value,scopes)+']')}}
 var docstring=extract_docstring(this,scopes)
-js+=`var ${ref} = (function(name, module, bases){\n`+
+js+=`var ${ref} = (function(name, module, bases`
++(metaclass ? ', meta' :'')+
+`){\n`+
 `var _frame_obj = $B.frame_obj,\n`+
 `resolved_bases = $B.resolve_mro_entries(bases),\n`+
 `metaclass = $B.get_metaclass(name, module, `+
 `resolved_bases`
-if(metaclass){js+=`, ${metaclass.to_js(scopes)}`}
+if(metaclass){js+=`, meta`}
 js+=')\n'
 js+=`var ${locals_name} = $B.make_class_namespace(metaclass, `+
 `name, module, "${qualname}", bases, resolved_bases),\n`
@@ -11991,7 +11993,10 @@ js+='\n$B.trace_return_and_leave(frame, _b_.None)\n'+
 `return $B.$class_constructor('${this.name}', locals, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}], `+
 `[${static_attrs}], ${this.lineno})\n`+
-`})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
+`})('${this.name}',${globals_name}.__name__ ?? '${glob}', `+
+`$B.fast_tuple([${bases}])`+
+(metaclass ? ', '+meta :'')+
+`)\n`
 var class_ref=reference(scopes,enclosing_scope,this.name)
 if(decorated){class_ref=`decorated${make_id()}`
 js+='var '}
@@ -12855,7 +12860,9 @@ $B.ast.Name.prototype.to_js=function(scopes){if(this.ctx instanceof $B.ast.Store
 var scope=bind(this.id,scopes)
 if(scope===$B.last(scopes)&& scope.freevars.has(this.id)){
 scope.freevars.delete(this.id)}
-return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var res=name_reference(this.id,scopes,[this.col_offset,this.col_offset,this.end_col_offset])
+return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var scope=name_scope(this.id,scopes)
+if(scope.found===$B.last(scopes)){return 'locals.'+mangle(scopes,scope.found,this.id)}
+var res=name_reference(this.id,scopes,[this.col_offset,this.col_offset,this.end_col_offset])
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 return res}}
