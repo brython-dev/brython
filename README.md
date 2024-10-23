@@ -163,6 +163,8 @@ Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/Ho
 A [tutorial](https://github.com/brython-dev/brython/wiki/Writing-an-Android-application)
 explains how to build Android applications with Brython.
 
+You can also [Ask Brython Guru](https://gurubase.io/g/brython), it is a Brython-focused AI to answer your questions.
+
 Community (questions, feedback, issues, new features, ...)
 ==========================================================
 You can subscribe and post to the
