@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-23 11:28:24.862104"
-__BRYTHON__.timestamp=1729675704861
+__BRYTHON__.compiled_date="2024-10-28 22:16:29.713431"
+__BRYTHON__.timestamp=1730150189713
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -7928,6 +7928,11 @@ __class__:$B.long_int,value:value}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 function float_value(obj){return obj.__class__===float ? obj :fast_float(obj.value)}
+function copysign(x,y){var x1=Math.abs(x)
+var y1=y
+var sign=Math.sign(y1)
+sign=(sign==1 ||Object.is(sign,+0))? 1 :-1
+return x1*sign}
 var float={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'float',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 float.$float_value=float_value
 float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
@@ -7960,9 +7965,23 @@ return _b_.bool.$factory(self.value)}
 float.__ceil__=function(self){check_self_is_float(self,'__ceil__')
 if(isnan(self)){throw _b_.ValueError.$factory('cannot convert float NaN to integer')}else if(isinf(self)){throw _b_.OverflowError.$factory('cannot convert float infinity to integer')}
 return Math.ceil(self.value)}
+function _float_div_mod(vx,wx){
+var mod=vx % wx
+var div=(vx-mod)/wx
+if(mod){
+if((wx < 0)!=(mod < 0)){mod+=wx;
+div-=1.0;}}else{
+mod=copysign(0.0,wx)}
+var floordiv
+if(div){floordiv=Math.floor(div);
+if(div-floordiv > 0.5){floordiv+=1.0;}}else{
+floordiv=copysign(0.0,vx/wx);}
+return{floordiv,mod}}
 float.__divmod__=function(self,other){check_self_is_float(self,'__divmod__')
 if(! $B.$isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
-return $B.fast_tuple([float.__floordiv__(self,other),float.__mod__(self,other)])}
+var vx=self.value,wx=float.$factory(other).value
+var divmod=_float_div_mod(vx,wx)
+return $B.fast_tuple([$B.fast_float(divmod.floordiv),$B.fast_float(divmod.mod)])}
 float.__eq__=function(self,other){check_self_is_float(self,'__eq__')
 if(isNaN(self.value)&&
 ($B.$isinstance(other,float)&& isNaN(other.value))){return false}
@@ -7975,11 +7994,10 @@ float.__floor__=function(self){check_self_is_float(self,'__floor__')
 if(isnan(self)){throw _b_.ValueError.$factory('cannot convert float NaN to integer')}else if(isinf(self)){throw _b_.OverflowError.$factory('cannot convert float infinity to integer')}
 return Math.floor(self.value)}
 float.__floordiv__=function(self,other){check_self_is_float(self,'__floordiv__')
-if($B.$isinstance(other,float)){if(other.value==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
-return fast_float(Math.floor(self.value/other.value))}
-if($B.$isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
-return fast_float(Math.floor(self.value/other))}
-return _b_.NotImplemented}
+if(! $B.$isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
+var vx=self.value,wx=float.$factory(other).value
+var divmod=_float_div_mod(vx,wx)
+return $B.fast_float(divmod.floordiv)}
 const DBL_MANT_DIG=53,LONG_MAX=$B.MAX_VALUE,DBL_MAX_EXP=2**10,LONG_MIN=$B.MIN_VALUE,DBL_MIN_EXP=-1021
 float.fromhex=function(klass,s){function hex_from_char(char){return parseInt(char,16)}
 function finished(){

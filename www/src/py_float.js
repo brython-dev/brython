@@ -7,6 +7,14 @@ function float_value(obj){
     return obj.__class__ === float ? obj : fast_float(obj.value)
 }
 
+function copysign(x, y){
+    var x1 = Math.abs(x)
+    var y1 = y
+    var sign = Math.sign(y1)
+    sign = (sign == 1 || Object.is(sign, +0)) ? 1 : - 1
+    return x1 * sign
+}
+
 // dictionary for built-in class 'float'
 var float = {
     __class__: _b_.type,
@@ -115,13 +123,48 @@ float.__ceil__ = function(self){
     return Math.ceil(self.value)
 }
 
+function _float_div_mod(vx, wx){
+    // copied from CPython floatobject.c
+    var mod = vx % wx
+    var div = (vx - mod) / wx
+    if(mod){
+        /* ensure the remainder has the same sign as the denominator */
+        if((wx < 0) != (mod < 0)) {
+            mod += wx;
+            div -= 1.0;
+        }
+    }else{
+        /* the remainder is zero, and in the presence of signed zeroes
+           fmod returns different results across platforms; ensure
+           it has the same sign as the denominator. */
+        mod = copysign(0.0, wx)
+    }
+    /* snap quotient to nearest integral value */
+    var floordiv
+    if(div){
+        floordiv = Math.floor(div);
+        if(div - floordiv > 0.5){
+            floordiv += 1.0;
+        }
+    }else{
+        /* div is zero - get the same sign as the true quotient */
+        floordiv = copysign(0.0, vx / wx); /* zero w/ sign of vx/wx */
+    }
+
+    return {floordiv, mod}
+}
+
 float.__divmod__ = function(self, other){
     check_self_is_float(self, '__divmod__')
     if(! $B.$isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
-    return $B.fast_tuple([float.__floordiv__(self, other),
-        float.__mod__(self, other)])
+
+    var vx = self.value,
+        wx = float.$factory(other).value
+    var divmod = _float_div_mod(vx, wx)
+    return $B.fast_tuple([$B.fast_float(divmod.floordiv), 
+                          $B.fast_float(divmod.mod)])
 }
 
 float.__eq__ = function(self, other){
@@ -157,19 +200,13 @@ float.__floor__ = function(self){
 
 float.__floordiv__ = function(self, other){
     check_self_is_float(self, '__floordiv__')
-    if($B.$isinstance(other, float)){
-        if(other.value == 0){
-            throw _b_.ZeroDivisionError.$factory('division by zero')
-        }
-        return fast_float(Math.floor(self.value / other.value))
+    if(! $B.$isinstance(other, [_b_.int, float])){
+        return _b_.NotImplemented
     }
-    if($B.$isinstance(other, _b_.int)){
-        if(other.valueOf() == 0){
-            throw _b_.ZeroDivisionError.$factory('division by zero')
-        }
-        return fast_float(Math.floor(self.value / other))
-    }
-    return _b_.NotImplemented
+    var vx = self.value,
+        wx = float.$factory(other).value
+    var divmod = _float_div_mod(vx, wx)
+    return $B.fast_float(divmod.floordiv)
 }
 
 const DBL_MANT_DIG = 53,

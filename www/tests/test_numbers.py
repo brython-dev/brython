@@ -824,5 +824,10 @@ assert d == 21203499539617337777
 # issue 2465
 assert type(2 ** 53) == int
 
+# issue 2506
+assert 1.0 // 0.1 == 9, 1.0 // 0.1
+assert divmod(1.0, 0.1) == (9.0, 0.09999999999999995)
+assert float.__divmod__(2.5, 7) == (0.0, 2.5)
+assert float.__divmod__(6.3, 2 ** 64) == (0.0, 6.3)
 
 print('passed all tests...')
