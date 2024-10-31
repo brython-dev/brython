@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,0,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-28 22:16:29.713431"
-__BRYTHON__.timestamp=1730150189713
+__BRYTHON__.compiled_date="2024-10-31 15:43:12.709673"
+__BRYTHON__.timestamp=1730385792709
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1660,12 +1660,11 @@ $B.make_rmethods=function(klass){for(var r_opname of r_opnames){if(klass["__r"+r
 klass['__'+r_opname+'__']){klass["__r"+r_opname+"__"]=(function(name){return function(self,other){return klass["__"+name+"__"](other,self)}})(r_opname)}}}
 $B.UUID=function(){return $B.$py_UUID++}
 $B.$GetInt=function(value){
-if(typeof value=="number" ||value.constructor===Number){return value}
-else if(typeof value==="boolean"){return value ? 1 :0}
-else if($B.$isinstance(value,_b_.int)){return value}
-else if($B.$isinstance(value,_b_.float)){return value.valueOf()}
-if(! value.$is_class){try{var v=$B.$getattr(value,"__int__")();return v}catch(e){}
-try{var v=$B.$getattr(value,"__index__")();return v}catch(e){}}
+if(typeof value=="number" ||value.constructor===Number){return value}else if(typeof value==="boolean"){return value ? 1 :0}else if($B.$isinstance(value,_b_.int)){return value}else if($B.$isinstance(value,_b_.float)){return value.valueOf()}
+if(! value.$is_class){try{var v=$B.$getattr(value,"__int__")()
+return v}catch(e){}
+try{var v=$B.$getattr(value,"__index__")()
+return v}catch(e){}}
 throw _b_.TypeError.$factory("'"+$B.class_name(value)+
 "' object cannot be interpreted as an integer")}
 $B.to_num=function(obj,methods){
@@ -5421,9 +5420,10 @@ return res}
 function make_new_set_base_type(so){return $B.$isinstance(so,set)?
 set.$factory():
 frozenset.$factory()}
-function set_add(so,item,hash){hash=hash===undefined ? $B.$hash(item):hash
-if(set_contains(so,item,hash)){return}else{so.$store[hash]=so.$store[hash]||[]
-so.$store[hash].push(item)
+function set_add(so,item,hash){hash=hash ?? $B.$hash(item)
+var stored=so.$store[hash]
+if(stored && set_contains(so,item,hash)){return}else{stored=so.$store[hash]=[]
+stored[stored.length]=item
 so.$used++
 so.$version++}}
 function set_contains(so,key,hash){return !! set_lookkey(so,key,hash)}

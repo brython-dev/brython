@@ -31,12 +31,13 @@ function make_new_set_base_type(so){
 }
 
 function set_add(so, item, hash){
-    hash = hash === undefined ? $B.$hash(item) : hash
-    if(set_contains(so, item, hash)){
+    hash = hash ?? $B.$hash(item)
+    var stored = so.$store[hash]
+    if(stored && set_contains(so, item, hash)){
         return
     }else{
-        so.$store[hash] = so.$store[hash] || []
-        so.$store[hash].push(item)
+        stored = so.$store[hash] = []
+        stored[stored.length] = item
         so.$used++
         so.$version++
     }
