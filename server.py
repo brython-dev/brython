@@ -231,7 +231,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-port = int(args.port) if args.port else 8001
+port = int(args.port) if args.port else 8000
 ip   = str(args.ip) if args.port else "0.0.0.0"
 
 if not args.no_docs:
