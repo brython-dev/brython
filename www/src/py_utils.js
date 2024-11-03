@@ -1122,78 +1122,6 @@ $B.$getattr_pep657 = function(obj, attr, position){
     }
 }
 
-// Set list key or slice
-$B.set_list_slice = function(obj, start, stop, value){
-    if(start === null){
-        start = 0
-    }else{
-        start = $B.$GetInt(start)
-        if(start < 0){start = Math.max(0, start + obj.length)}
-    }
-    if(stop === null){
-        stop = obj.length
-    }
-    stop = $B.$GetInt(stop)
-    if(stop < 0){
-        stop = Math.max(0, stop + obj.length)
-    }
-    var res = _b_.list.$factory(value)
-    obj.splice.apply(obj,[start, stop - start].concat(res))
-}
-
-$B.set_list_slice_step = function(obj, start, stop, step, value){
-    if(step === null || step == 1){
-        return $B.set_list_slice(obj, start, stop, value)
-    }
-
-    if(step == 0){
-        throw _b_.ValueError.$factory("slice step cannot be zero")
-    }
-    step = $B.$GetInt(step)
-
-    if(start === null){
-        start = step > 0 ? 0 : obj.length - 1
-    }else{
-        start = $B.$GetInt(start)
-    }
-
-    if(stop === null){
-        stop = step > 0 ? obj.length : -1
-    }else{
-        stop = $B.$GetInt(stop)
-    }
-
-    var repl = _b_.list.$factory(value),
-        j = 0,
-        test,
-        nb = 0
-    if(step > 0){
-        test = function(i){
-            return i < stop
-        }
-    }else{
-        test = function(i){
-            return i > stop
-        }
-    }
-
-    // Test if number of values in the specified slice is equal to the
-    // length of the replacement sequence
-    for(var i = start; test(i); i += step){
-        nb++
-    }
-    if(nb != repl.length){
-        throw _b_.ValueError.$factory(
-            "attempt to assign sequence of size " + repl.length +
-            " to extended slice of size " + nb)
-    }
-
-    for(var i = start; test(i); i += step){
-        obj[i] = repl[j]
-        j++
-    }
-}
-
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             ! obj.$is_js_array &&
@@ -1517,23 +1445,11 @@ $B.make_rmethods = function(klass){
 }
 
 // UUID is a function to produce a unique id.
-// the variable $B.py_UUID is defined in py2js.js (in the brython function)
-$B.UUID = function(){return $B.$py_UUID++}
-
-$B.$GetInt = function(value) {
-  // convert value to an integer
-  if(typeof value == "number" || value.constructor === Number){return value}
-  else if(typeof value === "boolean"){return value ? 1 : 0}
-  else if($B.$isinstance(value, _b_.int)){return value}
-  else if($B.$isinstance(value, _b_.float)){return value.valueOf()}
-  if(! value.$is_class){
-      try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
-      try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
-  }
-  throw _b_.TypeError.$factory("'" + $B.class_name(value) +
-      "' object cannot be interpreted as an integer")
+// the variable $B.py_UUID is defined in brython_builtins.js
+// It is a random number, reset at each Brython run
+$B.UUID = function(){
+    return $B.$py_UUID++
 }
-
 
 $B.to_num = function(obj, methods){
     // If object's class defines one of the methods, return the result
@@ -1970,6 +1886,16 @@ $B.rich_op1 = function(op, x, y){
             return reflected_right(y, x)
         }
     }
+    if(op == '__mul__'){
+        if(x_class.$is_sequence && $B.$isinstance(y, [_b_.float, _b_.complex])){
+            throw _b_.TypeError.$factory("can't multiply sequence by " +
+                `non-int of type '${$B.class_name(y)}'`)
+        }
+        if(y_class.$is_sequence && $B.$isinstance(x, [_b_.float, _b_.complex])){
+            throw _b_.TypeError.$factory("can't multiply sequence by " +
+                `non-int of type '${$B.class_name(x)}'`)
+        }
+    }
     var res
     try{
         // Test if object has attribute op. If so, it is not used in the
@@ -1986,9 +1912,12 @@ $B.rich_op1 = function(op, x, y){
         if(err.__class__ !== _b_.AttributeError){
             throw err
         }
-        res = $B.$call($B.$getattr(y, rop))(x)
-        if(res !== _b_.NotImplemented){
-            return res
+        var rmethod = $B.$getattr(y_class, rop, null)
+        if(rmethod !== null){
+            res = $B.$call(rmethod)(y, x)
+            if(res !== _b_.NotImplemented){
+                return res
+            }
         }
         throw _b_.TypeError.$factory(
             `unsupported operand type(s) for ${$B.method_to_op[op]}:` +

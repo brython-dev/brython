@@ -99,6 +99,7 @@ var str = {
     __dir__: _b_.object.__dir__,
     __qualname__: 'str',
     $is_class: true,
+    $is_sequence: true,
     $native: true
 }
 
@@ -1405,7 +1406,7 @@ str.expandtabs = function() {
     var $ = $B.args("expandtabs", 2, {self: null, tabsize: null},
             ["self", "tabsize"], arguments, {tabsize: 8}, null, null),
         _self = to_string($.self)
-    var s = $B.$GetInt($.tabsize),
+    var s = $B.PyNumber_Index($.tabsize),
         col = 0,
         pos = 0,
         res = "",

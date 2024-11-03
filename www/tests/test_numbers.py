@@ -830,4 +830,13 @@ assert divmod(1.0, 0.1) == (9.0, 0.09999999999999995)
 assert float.__divmod__(2.5, 7) == (0.0, 2.5)
 assert float.__divmod__(6.3, 2 ** 64) == (0.0, 6.3)
 
+# use __index__ for sequence multiplication
+class X:
+
+  def __index__(self):
+      return 2
+
+assert [2] * X() == [2, 2]
+assert X() * [3] == [3, 3]
+
 print('passed all tests...')

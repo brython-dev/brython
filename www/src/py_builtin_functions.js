@@ -166,7 +166,7 @@ function $builtin_base_convert_helper(obj, base) {
       return res
   }
 
-  var value = $B.$GetInt(obj)
+  var value = $B.PyNumber_Index(obj)
 
   if(value === undefined){
      // need to raise an error
@@ -1893,6 +1893,7 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
 memoryview.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
 memoryview.$buffer_protocol = true
 memoryview.$not_basetype = true // cannot be a base class
+memoryview.$is_sequence = true
 
 memoryview.__eq__ = function(self, other){
     if(other.__class__ !== memoryview){return false}
@@ -2733,7 +2734,7 @@ $Reader.read = function(){
     var $ = $B.args("read", 2, {self: null, size: null},
             ["self", "size"], arguments, {size: -1}, null, null),
             self = $.self,
-            size = $B.$GetInt($.size)
+            size = $B.PyNumber_Index($.size)
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
@@ -2864,7 +2865,7 @@ $Reader.readlines = function(){
     var $ = $B.args("readlines", 2, {self: null, hint: null},
             ["self", "hint"], arguments, {hint: -1}, null, null),
             self = $.self,
-            hint = $B.$GetInt($.hint)
+            hint = $B.PyNumber_Index($.hint)
     var nb_read = 0
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')

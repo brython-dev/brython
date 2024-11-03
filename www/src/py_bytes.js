@@ -66,6 +66,7 @@ var bytearray = {
     __mro__: [_b_.object],
     __qualname__: 'bytearray',
     $buffer_protocol: true,
+    $is_sequence: true,
     $is_class: true
 }
 
@@ -206,6 +207,7 @@ var bytes = {
     __mro__: [_b_.object],
     __qualname__: 'bytes',
     $buffer_protocol: true,
+    $is_sequence: true,
     $is_class: true
 }
 

@@ -103,7 +103,7 @@ if(mo){
 $B.strip_host = function(url){
     try{
         var parsed_url = new URL(url)
-        return parsed_url.pathname.substr(1) + parsed_url.search + 
+        return parsed_url.pathname.substr(1) + parsed_url.search +
             parsed_url.hash
     }catch{
         console.log(Error().stack)

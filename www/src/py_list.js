@@ -16,7 +16,8 @@ var list = {
     __mro__: [_b_.object],
     $is_class: true,
     $native: true,
-    $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
+    $match_sequence_pattern: true, // for Pattern Matching (PEP 634),
+    $is_sequence: true,
     __dir__: _b_.object.__dir__
 }
 
@@ -263,9 +264,15 @@ list.__iadd__ = function() {
 list.__imul__ = function() {
     var $ = $B.args("__imul__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null),
-        x = $B.$GetInt($.x),
         len = $.self.length,
         pos = len
+    console.log('list imul', $)
+    try{
+        var x = $B.PyNumber_Index($.x)
+    }catch(err){
+        throw _b_.TypeError.$factory(`can't multiply sequence by non-int` +
+            ` of type '${$B.class_name($.x)}'`)
+    }
     if(x == 0){
         list.clear($.self)
         return $.self
@@ -367,19 +374,17 @@ list.__lt__ = function(self, other){
 }
 
 list.__mul__ = function(self, other){
-    try{
-        other = $B.PyNumber_Index(other)
-    }catch(err){
-        var this_name = $B.class_name(self)
-        var radd = $B.$getattr(other, '__rmul__', null)
-        if(radd === null){
-            throw _b_.TypeError.$factory("can't multiply sequence by " +
-                `non-int of type '${$B.class_name(other)}'`)
-        }
-        return _b_.NotImplemented
+    if($B.$isinstance(other, [_b_.float, _b_.complex])){
+        throw _b_.TypeError.$factory("'" + $B.class_name(other) +
+                "' object cannot be interpreted as an integer")
     }
     if(self.length == 0){
         return list.__new__(list)
+    }
+    try{
+        other = $B.PyNumber_Index(other)
+    }catch(err){
+        return _b_.NotImplemented
     }
     if(typeof other == 'number'){
         if(other < 0){
@@ -402,6 +407,8 @@ list.__mul__ = function(self, other){
     }else if(isinstance(other, $B.long_int)){
         throw _b_.OverflowError.$factory(`cannot fit ` +
         `'${$B.class_name(other)}' into an index-sized integer`)
+    }else{
+        return _b_.NotImplemented
     }
 }
 
@@ -475,6 +482,53 @@ list.__setitem__ = function(){
     list.$setitem(self, arg, value)
 }
 
+
+// Set list key or slice
+function set_list_slice(obj, start, stop, value){
+    var res = _b_.list.$factory(value)
+    obj.splice.apply(obj,[start, stop - start].concat(res))
+}
+
+function set_list_slice_step(obj, start, stop, step, value){
+    if(step == 1){
+        return set_list_slice(obj, start, stop, value)
+    }
+
+    if(step == 0){
+        throw _b_.ValueError.$factory("slice step cannot be zero")
+    }
+
+    var repl = _b_.list.$factory(value),
+        j = 0,
+        test,
+        nb = 0
+    if(step > 0){
+        test = function(i){
+            return i < stop
+        }
+    }else{
+        test = function(i){
+            return i > stop
+        }
+    }
+
+    // Test if number of values in the specified slice is equal to the
+    // length of the replacement sequence
+    for(var i = start; test(i); i += step){
+        nb++
+    }
+    if(nb != repl.length){
+        throw _b_.ValueError.$factory(
+            "attempt to assign sequence of size " + repl.length +
+            " to extended slice of size " + nb)
+    }
+
+    for(var i = start; test(i); i += step){
+        obj[i] = repl[j]
+        j++
+    }
+}
+
 list.$setitem = function(self, arg, value){
     // Used internally to avoid using $B.args
     if(typeof arg == "number" || isinstance(arg, _b_.int)){
@@ -492,9 +546,9 @@ list.$setitem = function(self, arg, value){
     if(isinstance(arg, _b_.slice)){
         var s = _b_.slice.$conv_for_seq(arg, self.length)
         if(arg.step === null){
-            $B.set_list_slice(self, s.start, s.stop, value)
+            set_list_slice(self, s.start, s.stop, value)
         }else{
-            $B.set_list_slice_step(self, s.start, s.stop, s.step, value)
+            set_list_slice_step(self, s.start, s.stop, s.step, value)
         }
         return _b_.None
     }
@@ -620,7 +674,7 @@ list.pop = function(){
     if(pos === missing){
         pos = self.length - 1
     }
-    pos = $B.$GetInt(pos)
+    pos = $B.PyNumber_Index(pos)
     if(pos < 0){
         pos += self.length
     }
@@ -808,6 +862,7 @@ var tuple = {
     $is_class: true,
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
+    $is_sequence: true
 }
 
 var tuple_iterator = $B.make_iterator_class("tuple_iterator")

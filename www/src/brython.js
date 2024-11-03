@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 13, 0, 'final', 0]
-// implementation [3, 13, 0, 'dev', 0]
+// implementation [3, 13, 1, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=globalThis.__BRYTHON__ ||{}
@@ -207,10 +207,10 @@ $B.digits_starts=[48,1632,1776,1984,2406,2534,2662,2790,2918,3046,3174,3302,3430
 $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912:[953,776,769],944:[965,776,769],1415:[1381,1410],7830:[104,817],7831:[116,776],7832:[119,778],7833:[121,778],7834:[97,702],7838:[223],8016:[965,787],8018:[965,787,768],8020:[965,787,769],8022:[965,787,834],8064:[7936,953],8065:[7937,953],8066:[7938,953],8067:[7939,953],8068:[7940,953],8069:[7941,953],8070:[7942,953],8071:[7943,953],8072:[8064],8073:[8065],8074:[8066],8075:[8067],8076:[8068],8077:[8069],8078:[8070],8079:[8071],8080:[7968,953],8081:[7969,953],8082:[7970,953],8083:[7971,953],8084:[7972,953],8085:[7973,953],8086:[7974,953],8087:[7975,953],8088:[8080],8089:[8081],8090:[8082],8091:[8083],8092:[8084],8093:[8085],8094:[8086],8095:[8087],8096:[8032,953],8097:[8033,953],8098:[8034,953],8099:[8035,953],8100:[8036,953],8101:[8037,953],8102:[8038,953],8103:[8039,953],8104:[8096],8105:[8097],8106:[8098],8107:[8099],8108:[8100],8109:[8101],8110:[8102],8111:[8103],8114:[8048,953],8115:[945,953],8116:[940,953],8118:[945,834],8119:[945,834,953],8124:[8115],8130:[8052,953],8131:[951,953],8132:[942,953],8134:[951,834],8135:[951,834,953],8140:[8131],8146:[953,776,768],8147:[912],8150:[953,834],8151:[953,776,834],8162:[965,776,768],8163:[944],8164:[961,787],8166:[965,834],8167:[965,776,834],8178:[8060,953],8179:[969,953],8180:[974,953],8182:[969,834],8183:[969,834,953],8188:[8179],64256:[102,102],64257:[102,105],64258:[102,108],64259:[102,102,105],64260:[102,102,108],64261:[64262],64262:[115,116],64275:[1396,1398],64276:[1396,1381],64277:[1396,1387],64278:[1406,1398],64279:[1396,1389]}
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 ;
-__BRYTHON__.implementation=[3,13,0,'dev',0]
+__BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-10-31 15:43:12.709673"
-__BRYTHON__.timestamp=1730385792709
+__BRYTHON__.compiled_date="2024-11-03 17:32:43.553300"
+__BRYTHON__.timestamp=1730651563553
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1532,26 +1532,6 @@ return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
 $B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,$B.decode_position(position))
 throw err}}
-$B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}else{start=$B.$GetInt(start)
-if(start < 0){start=Math.max(0,start+obj.length)}}
-if(stop===null){stop=obj.length}
-stop=$B.$GetInt(stop)
-if(stop < 0){stop=Math.max(0,stop+obj.length)}
-var res=_b_.list.$factory(value)
-obj.splice.apply(obj,[start,stop-start].concat(res))}
-$B.set_list_slice_step=function(obj,start,stop,step,value){if(step===null ||step==1){return $B.set_list_slice(obj,start,stop,value)}
-if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
-step=$B.$GetInt(step)
-if(start===null){start=step > 0 ? 0 :obj.length-1}else{start=$B.$GetInt(start)}
-if(stop===null){stop=step > 0 ? obj.length :-1}else{stop=$B.$GetInt(stop)}
-var repl=_b_.list.$factory(value),j=0,test,nb=0
-if(step > 0){test=function(i){return i < stop}}else{test=function(i){return i > stop}}
-for(var i=start;test(i);i+=step){nb++}
-if(nb !=repl.length){throw _b_.ValueError.$factory(
-"attempt to assign sequence of size "+repl.length+
-" to extended slice of size "+nb)}
-for(var i=start;test(i);i+=step){obj[i]=repl[j]
-j++}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
 ! obj.$is_js_array &&
 typeof item=="number" &&
@@ -1659,14 +1639,6 @@ var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 $B.make_rmethods=function(klass){for(var r_opname of r_opnames){if(klass["__r"+r_opname+"__"]===undefined &&
 klass['__'+r_opname+'__']){klass["__r"+r_opname+"__"]=(function(name){return function(self,other){return klass["__"+name+"__"](other,self)}})(r_opname)}}}
 $B.UUID=function(){return $B.$py_UUID++}
-$B.$GetInt=function(value){
-if(typeof value=="number" ||value.constructor===Number){return value}else if(typeof value==="boolean"){return value ? 1 :0}else if($B.$isinstance(value,_b_.int)){return value}else if($B.$isinstance(value,_b_.float)){return value.valueOf()}
-if(! value.$is_class){try{var v=$B.$getattr(value,"__int__")()
-return v}catch(e){}
-try{var v=$B.$getattr(value,"__index__")()
-return v}catch(e){}}
-throw _b_.TypeError.$factory("'"+$B.class_name(value)+
-"' object cannot be interpreted as an integer")}
 $B.to_num=function(obj,methods){
 var expected_class={"__complex__":_b_.complex,"__float__":_b_.float,"__index__":_b_.int,"__int__":_b_.int}
 var klass=obj.__class__ ||$B.get_class(obj)
@@ -1850,12 +1822,17 @@ if(_b_.issubclass(y_class,x_class)){
 var reflected_left=$B.$getattr(x_class,rop,false),reflected_right=$B.$getattr(y_class,rop,false)
 if(reflected_right && reflected_left &&
 reflected_right !==reflected_left){return reflected_right(y,x)}}
+if(op=='__mul__'){if(x_class.$is_sequence && $B.$isinstance(y,[_b_.float,_b_.complex])){throw _b_.TypeError.$factory("can't multiply sequence by "+
+`non-int of type '${$B.class_name(y)}'`)}
+if(y_class.$is_sequence && $B.$isinstance(x,[_b_.float,_b_.complex])){throw _b_.TypeError.$factory("can't multiply sequence by "+
+`non-int of type '${$B.class_name(x)}'`)}}
 var res
 try{
 var attr=$B.$getattr(x,op)
 method=$B.$getattr(x_class,op)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
-res=$B.$call($B.$getattr(y,rop))(x)
-if(res !==_b_.NotImplemented){return res}
+var rmethod=$B.$getattr(y_class,rop,null)
+if(rmethod !==null){res=$B.$call(rmethod)(y,x)
+if(res !==_b_.NotImplemented){return res}}
 throw _b_.TypeError.$factory(
 `unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
@@ -2697,7 +2674,7 @@ default:
 console.log('invalid base:'+base)}
 if(obj.__class__===$B.long_int){var res=prefix+obj.value.toString(base)
 return res}
-var value=$B.$GetInt(obj)
+var value=$B.PyNumber_Index(obj)
 if(value===undefined){
 throw _b_.TypeError.$factory('Error, argument must be an integer or'+
 ' contains an __index__ function')}
@@ -3289,6 +3266,7 @@ format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b
 memoryview.$match_sequence_pattern=true,
 memoryview.$buffer_protocol=true
 memoryview.$not_basetype=true 
+memoryview.$is_sequence=true
 memoryview.__eq__=function(self,other){if(other.__class__ !==memoryview){return false}
 return $B.$getattr(self.obj,'__eq__')(other.obj)}
 memoryview.__getitem__=function(self,key){var res
@@ -3567,7 +3545,7 @@ $Reader.__new__=function(cls){return{
 __class__:cls}}
 $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(){return None}
-$Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
+$Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.PyNumber_Index($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 var len=_b_.len(self.$content)
 if(size < 0){size=len-self.$counter}
@@ -3609,7 +3587,7 @@ if(size >-1){result=result.substr(0,size)}
 self.$counter=ix+1
 self.$lc+=1
 return result}}}
-$Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},["self","hint"],arguments,{hint:-1},null,null),self=$.self,hint=$B.$GetInt($.hint)
+$Reader.readlines=function(){var $=$B.args("readlines",2,{self:null,hint:null},["self","hint"],arguments,{hint:-1},null,null),self=$.self,hint=$B.PyNumber_Index($.hint)
 var nb_read=0
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 self.$lc=self.$lc===undefined ?-1 :self.$lc
@@ -4618,7 +4596,7 @@ $B.show_error(err)
 throw err}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins,None=_b_.None,range={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'range',$is_class:true,$native:true,$match_sequence_pattern:true,
-$not_basetype:true,
+$is_sequence:true,$not_basetype:true,
 $descriptors:{start:true,step:true,stop:true}}
 range.__contains__=function(self,other){if(range.__len__(self)==0){return false}
 try{other=$B.int_or_bool(other)}catch(err){
@@ -4641,7 +4619,8 @@ if(len==0){return r.start}else if(i > len){return r.stop}
 return $B.rich_op('__add__',r.start,$B.rich_op('__mul__',r.step,i))}
 range.__getitem__=function(self,rank){if($B.$isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,range.__len__(self)),substep=$B.rich_op('__mul__',self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
 return range.$factory(substart,substop,substep)}
-if(typeof rank !="number"){rank=$B.$GetInt(rank)}
+try{rank=$B.PyNumber_Index(rank)}catch(err){throw _b_.TypeError.$factory("range indices must be integers "+
+`or slices, not ${$B.class_name(rank)}`)}
 if($B.rich_comp('__gt__',0,rank)){rank=$B.rich_op('__add__',rank,range.__len__(self))}
 var res=$B.rich_op('__add__',self.start,$B.rich_op('__mul__',rank,self.step))
 if(($B.rich_comp('__gt__',self.step,0)&&
@@ -4748,7 +4727,7 @@ slice.step=function(self){return self.step}
 slice.stop=function(self){return self.stop}
 slice.indices=function(self){
 var $=$B.args("indices",2,{self:null,length:null},["self","length"],arguments,{},null,null)
-var len=$B.$GetInt($.length)
+var len=$B.PyNumber_Index($.length)
 if(len < 0){throw _b_.ValueError.$factory("length should not be negative")}
 var _step=(self.step==_b_.None)? 1 :self.step,_start,_stop
 if(_step < 0){_start=self.start
@@ -4791,7 +4770,7 @@ let i
 for(i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break}}
 return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
-var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_class:true}
+var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_sequence:true,$is_class:true}
 var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse"]
 for(var method of mutable_methods){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
@@ -4835,7 +4814,7 @@ _b_.list.insert(self.source,pos,b)}
 bytearray.$factory=function(){var args=[bytearray]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return bytearray.__new__.apply(null,args)}
-var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer_protocol:true,$is_class:true}
+var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer_protocol:true,$is_sequence:true,$is_class:true}
 bytes.__add__=function(self,other){var other_bytes
 if($B.$isinstance(other,[bytes,bytearray])){other_bytes=other.source}else if($B.$isinstance(other,_b_.memoryview)){other_bytes=_b_.memoryview.tobytes(other).source}
 if(other_bytes !==undefined){return{
@@ -6289,7 +6268,7 @@ return jspos-nb}
 function to_string(args){if(typeof args=='string'){return args}
 if(Array.isArray(args)){for(var i=0,len=args.length;i < len;i++){args[i]=to_string(args[i])}
 return args}else{if(args.__class__ && !(args instanceof String)){return args.$brython_value}else{return args}}}
-var str={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'str',$is_class:true,$native:true}
+var str={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'str',$is_class:true,$is_sequence:true,$native:true}
 str.$to_string=to_string
 function normalize_start_end($){var len
 if(typeof $.self=="string"){len=$.self.length}else{len=str.__len__($.self)}
@@ -6730,7 +6709,7 @@ if(suffix.length <=s.length &&
 s.slice(s.length-suffix.length).join('')==suffix){return true}}
 return false}
 str.expandtabs=function(){var $=$B.args("expandtabs",2,{self:null,tabsize:null},["self","tabsize"],arguments,{tabsize:8},null,null),_self=to_string($.self)
-var s=$B.$GetInt($.tabsize),col=0,pos=0,res="",chars=to_chars(_self)
+var s=$B.PyNumber_Index($.tabsize),col=0,pos=0,res="",chars=to_chars(_self)
 if(s==1){return _self.replace(/\t/g," ")}
 while(pos < chars.length){var car=chars[pos]
 switch(car){case "\t":
@@ -7353,7 +7332,7 @@ if(typeof obj=="boolean"){return obj ? 1 :0}
 return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 function bigint_value(obj){
 if(typeof obj=="boolean"){return obj ? 1n :0n}else if(typeof obj=="number"){return BigInt(obj)}else if(obj.__class__===$B.long_int){return obj.value}else if($B.$isinstance(obj,_b_.int)){return bigint_value(obj.$brython_value)}}
-var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],__qualname__:'int',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true},$is_int_subclass:true}
+var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],__qualname__:'int',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true},$is_int_subclass:true,$is_number:true}
 var int_or_long=int.$int_or_long=function(bigint){var res=Number(bigint)
 return Number.isSafeInteger(res)? res :$B.fast_long_int(bigint)}
 int.$to_js_number=function(obj){
@@ -7703,7 +7682,7 @@ if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should re
 if(test){console.log('bool method returns',res)}
 return res}}}
 var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],__qualname__:'bool',$is_class:true,$not_basetype:true,
-$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+$is_number:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 bool.__and__=function(self,other){if($B.$isinstance(other,bool)){return self && other}else if($B.$isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
 bool.__float__=function(self){return self ? $B.fast_float(1):$B.fast_float(0)}
@@ -8377,8 +8356,14 @@ if($B.$isinstance(other, _b_.float)){
     return self.value > other.value}
 if($B.$isinstance(other, _b_.bool)) {
     return self.value > _b_.bool.__hash__(other)}
-if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
-   return _b_.int.__gt__(self.value, $B.$GetInt(other))}
+var int_method = $B.$getattr(other, "__int__", null)
+if(int_method !== null){
+    var v = int_method()
+    return _b_.int.__gt__(self.value, v)}
+var index_method = $B.$getattr(other, "__index__", null)
+if(index_method !== null){
+    var v = index_method()
+    return _b_.int.__gt__(self.value, v)}
 // See if other has the opposite operator, eg <= for >
 var inv_op = $B.$getattr(other, "__le__", _b_.None)
 if(inv_op !== _b_.None){
@@ -9247,7 +9232,7 @@ return res}})(__BRYTHON__)
 (function($B){var _b_=$B.builtins,isinstance=$B.$isinstance
 function check_not_tuple(self,attr){if(self.__class__===tuple){throw $B.attr_error(attr,self)}}
 var list={__class__:_b_.type,__qualname__:'list',__mro__:[_b_.object],$is_class:true,$native:true,$match_sequence_pattern:true,
-__dir__:_b_.object.__dir__}
+$is_sequence:true,__dir__:_b_.object.__dir__}
 list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var this_name=$B.class_name(self)
 var radd=$B.$getattr(other,'__radd__',null)
 if(radd===null){throw _b_.TypeError.$factory('can only concatenate '+
@@ -9333,7 +9318,10 @@ list.__iadd__=function(){var $=$B.args("__iadd__",2,{self:null,x:null},["self","
 var x=list.$factory($.x)
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
 return $.self}
-list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","x"],arguments,{},null,null),x=$B.$GetInt($.x),len=$.self.length,pos=len
+list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","x"],arguments,{},null,null),len=$.self.length,pos=len
+console.log('list imul',$)
+try{var x=$B.PyNumber_Index($.x)}catch(err){throw _b_.TypeError.$factory(`can't multiply sequence by non-int`+
+` of type '${$B.class_name($.x)}'`)}
 if(x==0){list.clear($.self)
 return $.self}
 for(var i=1;i < x;i++){for(var j=0;j < len;j++){$.self[pos++]=$.self[j]}}
@@ -9372,12 +9360,10 @@ return self.length < other.length}
 if(i==other.length){
 return false}
 return $B.rich_comp('__lt__',self[i],other[i])}
-list.__mul__=function(self,other){try{other=$B.PyNumber_Index(other)}catch(err){var this_name=$B.class_name(self)
-var radd=$B.$getattr(other,'__rmul__',null)
-if(radd===null){throw _b_.TypeError.$factory("can't multiply sequence by "+
-`non-int of type '${$B.class_name(other)}'`)}
-return _b_.NotImplemented}
+list.__mul__=function(self,other){if($B.$isinstance(other,[_b_.float,_b_.complex])){throw _b_.TypeError.$factory("'"+$B.class_name(other)+
+"' object cannot be interpreted as an integer")}
 if(self.length==0){return list.__new__(list)}
+try{other=$B.PyNumber_Index(other)}catch(err){return _b_.NotImplemented}
 if(typeof other=='number'){if(other < 0){return list.__new__(list)}
 if(self.length > $B.max_array_size/other){throw _b_.OverflowError.$factory(`cannot fit `+
 `'${$B.class_name(other)}' into an index-sized integer`)}
@@ -9385,7 +9371,7 @@ var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 return res}else if(isinstance(other,$B.long_int)){throw _b_.OverflowError.$factory(`cannot fit `+
-`'${$B.class_name(other)}' into an index-sized integer`)}}
+`'${$B.class_name(other)}' into an index-sized integer`)}else{return _b_.NotImplemented}}
 list.__new__=function(cls){
 if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
@@ -9411,13 +9397,25 @@ _b_.dict.$setitem(self.__dict__,attr,value)
 return _b_.None}
 list.__setitem__=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
 list.$setitem(self,arg,value)}
+function set_list_slice(obj,start,stop,value){var res=_b_.list.$factory(value)
+obj.splice.apply(obj,[start,stop-start].concat(res))}
+function set_list_slice_step(obj,start,stop,step,value){if(step==1){return set_list_slice(obj,start,stop,value)}
+if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
+var repl=_b_.list.$factory(value),j=0,test,nb=0
+if(step > 0){test=function(i){return i < stop}}else{test=function(i){return i > stop}}
+for(var i=start;test(i);i+=step){nb++}
+if(nb !=repl.length){throw _b_.ValueError.$factory(
+"attempt to assign sequence of size "+repl.length+
+" to extended slice of size "+nb)}
+for(var i=start;test(i);i+=step){obj[i]=repl[j]
+j++}}
 list.$setitem=function(self,arg,value){
 if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.length+pos}
 if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list index out of range")}
 return _b_.None}
 if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
-if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
+if(arg.step===null){set_list_slice(self,s.start,s.stop,value)}else{set_list_slice_step(self,s.start,s.stop,s.step,value)}
 return _b_.None}
 if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
 return _b_.None}
@@ -9457,7 +9455,7 @@ list.pop=function(){var missing={}
 var $=$B.args("pop",2,{self:null,pos:null},["self","pos"],arguments,{pos:missing},null,null),self=$.self,pos=$.pos
 check_not_tuple(self,"pop")
 if(pos===missing){pos=self.length-1}
-pos=$B.$GetInt(pos)
+pos=$B.PyNumber_Index(pos)
 if(pos < 0){pos+=self.length}
 var res=self[pos]
 if(res===undefined){throw _b_.IndexError.$factory("pop index out of range")}
@@ -9520,7 +9518,8 @@ $B.$call($B.$getattr(it,"__next__"))}catch(err1){if($B.is_exc(err1,[_b_.TypeErro
 throw err1}
 throw err}}
 $B.set_func_names(list,"builtins")
-var tuple={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'tuple',$is_class:true,$native:true,$match_sequence_pattern:true,}
+var tuple={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'tuple',$is_class:true,$native:true,$match_sequence_pattern:true,
+$is_sequence:true}
 var tuple_iterator=$B.make_iterator_class("tuple_iterator")
 tuple.__iter__=function(self){return tuple_iterator.$factory(self)}
 tuple.$factory=function(){var obj=factory.apply(tuple,arguments)

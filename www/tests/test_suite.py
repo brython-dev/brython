@@ -1142,4 +1142,14 @@ def f():
 
 assert_raises(UnboundLocalError, f)
 
+# sequence multiplication
+assert_raises(TypeError, exec, "2.4 * [2]",
+  msg="can't multiply sequence by non-int of type 'float'")
+assert_raises(TypeError, exec, "[2] * 2.4",
+  msg="can't multiply sequence by non-int of type 'float'")
+  
+assert float.__mul__(2.4, [2]) is NotImplemented
+assert_raises(TypeError, list.__mul__, [2], 2.4,
+  msg="'float' object cannot be interpreted as an integer")
+
 print('passed all tests...')

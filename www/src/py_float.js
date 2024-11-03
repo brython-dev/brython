@@ -163,7 +163,7 @@ float.__divmod__ = function(self, other){
     var vx = self.value,
         wx = float.$factory(other).value
     var divmod = _float_div_mod(vx, wx)
-    return $B.fast_tuple([$B.fast_float(divmod.floordiv), 
+    return $B.fast_tuple([$B.fast_float(divmod.floordiv),
                           $B.fast_float(divmod.mod)])
 }
 
@@ -1227,8 +1227,16 @@ if($B.$isinstance(other, _b_.float)){
 if($B.$isinstance(other, _b_.bool)) {
     return self.value > _b_.bool.__hash__(other)
 }
-if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
-   return _b_.int.__gt__(self.value, $B.$GetInt(other))
+
+var int_method = $B.$getattr(other, "__int__", null)
+if(int_method !== null){
+    var v = int_method()
+    return _b_.int.__gt__(self.value, v)
+}
+var index_method = $B.$getattr(other, "__index__", null)
+if(index_method !== null){
+    var v = index_method()
+    return _b_.int.__gt__(self.value, v)
 }
 
 // See if other has the opposite operator, eg <= for >
