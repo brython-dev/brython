@@ -328,6 +328,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         imported = src.imported
         src = src.src
     }
+
+    // normalize line ends to \n
+    src = src.replace(/\r\n/g, '\n').
+              replace(/\r/g, '\n')    
     var locals_is_module = Array.isArray(locals_id)
     if(locals_is_module){
         locals_id = locals_id[0]

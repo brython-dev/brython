@@ -566,6 +566,9 @@ var $$eval = _b_.eval = function(){
         // src might be an instance of JS String if source has surrogate pairs
         // cf. issue #1772
         src = src.valueOf()
+        // nomalize line ends
+        src = src.replace(/\r\n/g, '\n').
+                  replace(/\r/g, '\n')
     }
 
     var __name__ = 'exec'

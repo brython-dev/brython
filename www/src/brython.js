@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-03 17:32:43.553300"
-__BRYTHON__.timestamp=1730651563553
+__BRYTHON__.compiled_date="2024-11-04 22:08:45.912843"
+__BRYTHON__.timestamp=1730754525912
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -320,8 +320,6 @@ while(ix >=0){var mode=token_modes[ix]
 if(mode.nesting !==undefined){return mode.nesting}
 ix--}}
 $B.tokenizer=function*(src,filename,mode,parser){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
-src=src.replace(/\r\n/g,'\n').
-replace(/\r/g,'\n')
 if(mode !='eval' && ! src.endsWith('\n')){src+='\n'}
 var lines=src.split('\n'),linenum=0,line_at={}
 for(let i=0,len=src.length;i < len;i++){line_at[i]=linenum
@@ -841,6 +839,8 @@ var filename,imported
 if(typeof src=='object'){filename=src.filename
 imported=src.imported
 src=src.src}
+src=src.replace(/\r\n/g,'\n').
+replace(/\r/g,'\n')
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 var t0=globalThis.performance.now()
@@ -2825,7 +2825,9 @@ _b_.print(">",$.src.source.trim())}
 var filename='<string>'
 if(src.__class__===code){filename=src.filename}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
 " bytes or code object")}else{
-src=src.valueOf()}
+src=src.valueOf()
+src=src.replace(/\r\n/g,'\n').
+replace(/\r/g,'\n')}
 var __name__='exec'
 if(_globals !==_b_.None && _globals.__class__==_b_.dict &&
 _b_.dict.$contains_string(_globals,'__name__')){__name__=_b_.dict.$getitem_string(_globals,'__name__')}
@@ -11423,11 +11425,12 @@ target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
 function encode_position(a,b,c,d){if(d===undefined){return `[${[a, b, c]}]`}else{return `[${[a, b, c, d]}]`}}
 $B.decode_position=function(pos){return pos}
-function get_source_from_position(src,ast_obj){var lines=src.split('\n'),start_line=lines[ast_obj.lineno-1]
-if(ast_obj.end_lineno==ast_obj.lineno){return start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
-while(line_num < ast_obj.end_lineno){res+=lines[line_num-1]}
-res+=lines[ast_obj.end_lineno-1].substr(0,ast_obj.end_col_offset)
-return res}}
+function get_source_from_position(src,ast_obj){var lines=src.split('\n'),start_line=lines[ast_obj.lineno-1],res
+if(ast_obj.end_lineno==ast_obj.lineno){res=start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
+while(line_num < ast_obj.end_lineno){res+=lines[line_num-1].trimLeft()
+line_num++}
+res+=lines[ast_obj.end_lineno-1].substr(0,ast_obj.end_col_offset).trimLeft()}
+return res.replace(new RegExp("'",'g'),"\\'")}
 function get_names(ast_obj){
 var res=new Set()
 if(ast_obj instanceof $B.ast.Name){res.add(ast_obj)}else if(ast_obj instanceof $B.ast.Subscript){for(var item of get_names(ast_obj.value)){res.add(item)}}
@@ -14903,7 +14906,6 @@ throw exc}
 $B.raise_error_known_token=raise_error_known_token
 function set_position_from_EXTRA(ast_obj,EXTRA){for(var key in EXTRA){ast_obj[key]=EXTRA[key]}}
 var Parser=$B.Parser=function(src,filename,mode){
-src=src.replace(/\r\n/gm,"\n")
 var tokenizer=$B.tokenizer(src,filename,mode,this)
 this.tokenizer=tokenizer
 this.tok=tokenizer

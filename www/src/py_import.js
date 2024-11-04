@@ -288,6 +288,8 @@ function run_py(module_contents, path, module, compiled) {
         js += module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
             "return $module"
         var module_id = prefix + module.__name__.replace(/\./g, '_')
+        //console.log(module.__name__, js.length)
+        //console.log(js)
         var mod = (new Function(module_id, js))(module)
     }catch(err){
         err.$frame_obj = err.$frame_obj || $B.frame_obj
