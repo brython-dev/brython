@@ -146,18 +146,20 @@ $B.decode_position = function(pos){
 
 function get_source_from_position(src, ast_obj){
     var lines = src.split('\n'),
-        start_line = lines[ast_obj.lineno - 1]
+        start_line = lines[ast_obj.lineno - 1],
+        res
     if(ast_obj.end_lineno == ast_obj.lineno){
-        return start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
+        res = start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
     }else{
         var res = start_line.substr(ast_obj.col_offset),
             line_num = ast_obj.lineno + 1
         while(line_num < ast_obj.end_lineno){
-            res += lines[line_num - 1]
+            res += lines[line_num - 1].trimLeft()
+            line_num++
         }
-        res += lines[ast_obj.end_lineno - 1].substr(0, ast_obj.end_col_offset)
-        return res
+        res += lines[ast_obj.end_lineno - 1].substr(0, ast_obj.end_col_offset).trimLeft()
     }
+    return res.replace(new RegExp("'", 'g'), "\\'")
 }
 
 function get_names(ast_obj){
@@ -4286,7 +4288,7 @@ $B.js_from_root = function(arg){
         src = arg.src,
         namespaces = arg.namespaces,
         imported = arg.imported
-
+    
     if($B.show_ast_dump){
         console.log($B.ast_dump(ast_root))
     }
