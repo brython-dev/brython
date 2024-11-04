@@ -128,7 +128,7 @@ function to_json(obj, level){
         return '"' + res.replace(new RegExp('"', "g"), '\\"') + '"'
     }
 
-    if($B.$isinstance(obj, _b_.list)){
+    if($B.$isinstance(obj, [_b_.list, _b_.tuple])){
         var res = []
         var sep = item_separator,
             first = '[',
