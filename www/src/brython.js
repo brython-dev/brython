@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-05 10:25:30.265416"
-__BRYTHON__.timestamp=1730798730264
+__BRYTHON__.compiled_date="2024-11-05 13:35:50.668375"
+__BRYTHON__.timestamp=1730810150668
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -283,9 +283,16 @@ return code}
 function $last(array){return array[array.length-1]}
 var ops='.,:;+-*/%~^|&=<>[](){}@',
 op2=['**','//','>>','<<'],augm_op='+-*/%^|&=<>@',closing={'}':'{',']':'[',')':'('}
+function ErrorToken(){var args=Array.from(arguments)
+args.$error_token=true
+return args}
+function ErrorTokenKnownToken(){var args=Array.from(arguments)
+args.$error_token_known_token=true
+return args}
 function Token(type,string,lineno,col_offset,end_lineno,end_col_offset,line){var res={type,string,line,lineno,col_offset,end_lineno,end_col_offset}
 res.num_type=$B.py_tokens[type]
-if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='ENCODING'){res.num_type=$B.py_tokens.ENCODING}
+if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='ENCODING'){
+res.parser_ignored=true}else if(type=='NL' ||type=='COMMENT'){res.parser_ignored=true}
 res.bytes=res.string 
 return res}
 function get_comment(parser,src,pos,line_num,line_start,token_name,line){var start=pos,ix
@@ -319,7 +326,7 @@ function nesting_level(token_modes){var ix=token_modes.length-1
 while(ix >=0){var mode=token_modes[ix]
 if(mode.nesting !==undefined){return mode.nesting}
 ix--}}
-$B.tokenizer=function*(src,filename,mode,parser){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+$B.tokenizer=function(src,filename,mode,parser){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,t=[]
 if(mode !='eval' && ! src.endsWith('\n')){src+='\n'}
 var lines=src.split('\n'),linenum=0,line_at={}
 for(let i=0,len=src.length;i < len;i++){line_at[i]=linenum
@@ -327,7 +334,7 @@ if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
 var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
 if(parser){parser.braces=braces}
-yield Token('ENCODING','utf-8',0,0,0,0,'')
+t.push(Token('ENCODING','utf-8',0,0,0,0,''))
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
 if(cp >=0xD800 && cp <=0xDBFF){
@@ -346,8 +353,8 @@ continue}
 char=token_mode.quote.repeat(3)
 pos+=2}
 if(fstring_buffer.length > 0){
-yield Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line)}
-yield Token(FSTRING_END,char,line_num,pos-line_start,line_num,pos-line_start+1,line)
+t.push(Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line))}
+t.push(Token(FSTRING_END,char,line_num,pos-line_start,line_num,pos-line_start+1,line))
 token_modes.pop()
 token_mode=$B.last(token_modes)
 state=null
@@ -355,7 +362,7 @@ continue}else if(char=='{'){if(src.charAt(pos)=='{'){
 fstring_buffer+=char
 pos++
 continue}else{
-if(fstring_buffer.length > 0){yield Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line)}
+if(fstring_buffer.length > 0){t.push(Token(FSTRING_MIDDLE,fstring_buffer,line_num,fstring_start,line_num,fstring_start+fstring_buffer.length,line))}
 token_mode='regular_within_fstring'
 fstring_expr_start=pos-line_start
 state=null
@@ -363,7 +370,7 @@ token_modes.push(token_mode)}}else if(char=='}'){if(src.charAt(pos)=='}'){
 fstring_buffer+=char
 pos++
 continue}else{
-yield Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
+t.push(Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line))
 continue}}else if(char=='\\'){if(token_mode.raw){fstring_buffer+=char+char}else{if(fstring_escape){fstring_buffer+='\\'+char}
 fstring_escape=! fstring_escape}
 continue}else{if(fstring_escape){fstring_buffer+='\\'}
@@ -371,17 +378,17 @@ fstring_buffer+=char
 fstring_escape=false
 if(char=='\n'){line_num++}
 continue}}else if(token_mode=='format_specifier'){if(char==quote){if(format_specifier.length > 0){
-yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
+t.push(Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line))
 token_modes.pop()
 token_mode=$B.last(token_modes)
 continue}}else if(char=='{'){
-yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
+t.push(Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line))
 token_mode='regular_within_fstring'
 fstring_expr_start=pos-line_start
 state=null
 token_modes.push(token_mode)}else if(char=='}'){
-yield Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line)
-yield Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
+t.push(Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line))
+t.push(Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line))
 if(braces.length==0 ||$B.last(braces).char !=='{'){throw Error('wrong braces')}
 braces.pop()
 token_modes.pop()
@@ -393,20 +400,19 @@ line=get_line_at(pos-1)
 line_start=pos
 line_num++
 if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))){
-yield Token('NL',mo[0],line_num,0,line_num,mo[0].length,line)
+t.push(Token('NL',mo[0],line_num,0,line_num,mo[0].length,line))
 pos+=mo[0].length-1
 continue}else if(char=='#'){comment=get_comment(parser,src,pos,line_num,line_start,'NL',line)
-for(var item of comment.t){yield item}
+for(var item of comment.t){t.push(item)}
 pos=comment.pos
 state='line_start'
 continue}
 indent=0
 if(char==' '){indent=1}else if(char=='\t'){indent=8}
 if(indent){var broken=false
-while(pos < src.length){if(broken && indent > 0 && ' \t'.includes(src[pos])){console.log('indentation error 479')
-$B.raise_error_known_location(
-_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,'unindent does not match any outer indentation level'
-)}
+while(pos < src.length){if(broken && indent > 0 && ' \t'.includes(src[pos])){t.push(ErrorToken(
+_b_.IndentationError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,'unindent does not match any outer indentation level'))
+return t}
 if(src[pos]==' '){indent++}else if(src[pos]=='\t'){indent+=8}else if(src[pos]=='\\' && src[pos+1]=='\n'){
 pos++
 line_start=pos+2
@@ -419,24 +425,26 @@ line_num--
 break}
 if(src[pos]=='#'){
 comment=get_comment(parser,src,pos+1,line_num,line_start,'NL',line)
-for(var item of comment.t){yield item}
+for(var item of comment.t){t.push(item)}
 pos=comment.pos
 continue}else if(src[pos]=='\\'){if(/^\f?(\r\n|\r|\n)/.exec(src[pos+1])){line_num++
 pos++
-continue}else{$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos+2-line_start,line_num,pos+3-line_start,line,'unexpected character after line continuation character')}}else if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
-yield Token('NL','',line_num,pos-line_start+1,line_num,pos-line_start+1+mo[0].length,line)
+continue}else{t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos+2-line_start,line_num,pos+3-line_start,line,'unexpected character after line continuation character'))
+return t}}else if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
+t.push(Token('NL','',line_num,pos-line_start+1,line_num,pos-line_start+1+mo[0].length,line))
 pos+=mo[0].length
 continue}
 if(indents.length==0 ||indent > $last(indents)){indents.push(indent)
-yield Token('INDENT','',line_num,0,line_num,indent,line)}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
+t.push(Token('INDENT','',line_num,0,line_num,indent,line))}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
 if(ix==-1){var message='unindent does not match '+
 'any outer indentation level'
-$B.raise_error_known_location(_b_.IndentationError,filename,line_num,0,line_num,0,line,message)}
+t.push(ErrorToken(_b_.IndentationError,filename,line_num,0,line_num,0,line,message))
+return t}
 for(var i=indents.length-1;i > ix;i--){indents.pop()
-yield Token('DEDENT','',line_num,indent,line_num,indent,line)}}
+t.push(Token('DEDENT','',line_num,indent,line_num,indent,line))}}
 state=null}else{
 while(indents.length > 0){indents.pop()
-yield Token('DEDENT','',line_num,indent,line_num,indent,line)}
+t.push(Token('DEDENT','',line_num,indent,line_num,indent,line))}
 state=null
 pos--}
 break
@@ -455,7 +463,7 @@ break
 case '#':
 var token_name=braces.length > 0 ? 'NL' :'NEWLINE'
 comment=get_comment(parser,src,pos,line_num,line_start,token_name,line)
-for(var item of comment.t){yield item}
+for(var item of comment.t){t.push(item)}
 pos=comment.pos
 if(braces.length==0){state='line_start'}else{state=null
 line_num++
@@ -475,7 +483,8 @@ continue}
 let msg='leading zeros in decimal integer '+
 'literals are not permitted; use an 0o prefix '+
 'for octal integers'
-$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,msg)}else{break}}}
+t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,msg))
+return t}else{break}}}
 break
 case '.':
 if(src[pos]&& $B.in_unicode_category('Nd',ord(src[pos]))){state='NUMBER'
@@ -485,28 +494,30 @@ while(src[pos]==char){pos++
 op+=char}
 var dot_pos=pos-line_start-op.length+1
 while(op.length >=3){
-yield Token('OP','...',line_num,dot_pos,line_num,dot_pos+3,line)
+t.push(Token('OP','...',line_num,dot_pos,line_num,dot_pos+3,line))
 op=op.substr(3)}
-for(var i=0;i < op.length;i++){yield Token('OP','.',line_num,dot_pos,line_num,dot_pos+1,line)
+for(var i=0;i < op.length;i++){t.push(Token('OP','.',line_num,dot_pos,line_num,dot_pos+1,line))
 dot_pos++}}
 break
 case '\\':
 var mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
 if(mo){if(pos==src.length-1){var msg='unexpected EOF while parsing'
-$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg)}
+t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg))
+return t}
 line_num++
 pos+=mo[0].length
 line_start=pos+1
 line=get_line_at(pos)}else{pos++;
 var msg='unexpected character after line '+
 'continuation character'
-$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg)}
+t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg))
+return t}
 break
 case '\n':
 case '\r':
 var token_name=braces.length > 0 ? 'NL':'NEWLINE'
 mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))
-yield Token(token_name,mo[0],line_num,pos-line_start,line_num,pos-line_start+mo[0].length,line)
+t.push(Token(token_name,mo[0],line_num,pos-line_start,line_num,pos-line_start+mo[0].length,line))
 pos+=mo[0].length-1
 if(token_name=='NEWLINE'){state='line_start'}else{line_num++
 line_start=pos+1
@@ -522,7 +533,7 @@ number=char}else if(ops.includes(char)){if(token_mode=='regular_within_fstring' 
 if(nesting_level(token_modes)==braces.length-1){let colon=Token('OP',char,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)
 colon.metadata=src.substr(
 line_start+fstring_expr_start,pos-line_start-fstring_expr_start-1)
-yield colon
+t.push(colon)
 token_modes.pop()
 token_mode='format_specifier'
 token_modes.push(token_mode)
@@ -530,10 +541,11 @@ continue}}else{
 let closing_brace=Token('OP',char,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)
 closing_brace.metadata=src.substring(
 line_start+fstring_expr_start,pos-1)
-yield closing_brace
+t.push(closing_brace)
 token_modes.pop()
 token_mode=token_modes[token_modes.length-1]
-if(braces.length==0 ||$B.last(braces).char !=='{'){throw Error('wrong braces')}
+if(braces.length==0 ||$B.last(braces).char !=='{'){t.push(Error('wrong braces'))
+return t}
 braces.pop()
 continue}}
 var op=char
@@ -545,12 +557,12 @@ pos++}else if((char=='-' && src[pos]=='>')||
 (char==':' && src[pos]=='=')){op+=src[pos]
 pos++}
 if('[({'.includes(char)){braces.push({char,pos,line_num,line_start,line})}else if('])}'.includes(char)){if(braces.length && $last(braces).char==closing[char]){braces.pop()}else{braces.push({char,pos,line_num,line_start,line})}}
-yield Token('OP',op,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)}else if(char=='!'){if(src[pos]=='='){yield Token('OP','!=',line_num,pos-line_start,line_num,pos-line_start+2,line)
+t.push(Token('OP',op,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line))}else if(char=='!'){if(src[pos]=='='){t.push(Token('OP','!=',line_num,pos-line_start,line_num,pos-line_start+2,line))
 pos++}else{
 let token=Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
 token.metadata=src.substring(
 line_start+fstring_start+2,pos-1)
-yield token}}else if(char==' ' ||char=='\t'){}else{
+t.push(token)}}else if(char==' ' ||char=='\t'){}else{
 var cp=char.codePointAt(0),err_msg='invalid'
 if(unprintable_re.exec(char)){err_msg+=' non-printable'}
 var unicode=cp.toString(16).toUpperCase()
@@ -558,7 +570,8 @@ while(unicode.length < 4){unicode='0'+unicode}
 err_msg+=` character '${char}' (U+${unicode})`
 if(char=='$' ||char=='`'){err_msg='invalid syntax'}
 var err_token=Token('ERRORTOKEN',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
-$B.raise_error_known_token(_b_.SyntaxError,filename,err_token,err_msg)}}
+t.push(ErrorTokenKnownToken(_b_.SyntaxError,filename,err_token,err_msg))
+return t}}
 break
 case 'NAME':
 if($B.is_XID_Continue(ord(char))){name+=char}else if(char=='"' ||char=="'"){if(string_prefix.exec(name)||bytes_prefix.exec(name)){
@@ -576,13 +589,13 @@ token_mode.raw=prefix.toLowerCase().includes('r')
 token_modes.push(token_mode)
 var s=triple_quote ? quote.repeat(3):quote
 var end_col=fstring_start+name.length+s.length
-yield Token(FSTRING_START,prefix+s,line_num,fstring_start,line_num,end_col,line)
+t.push(Token(FSTRING_START,prefix+s,line_num,fstring_start,line_num,end_col,line))
 continue}
 escaped=false
 string_start=[line_num,pos-line_start-name.length,line_start]
-string=''}else{yield Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line)
+string=''}else{t.push(Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line))
 state=null
-pos--}}else{yield Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line)
+pos--}}else{t.push(Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line))
 state=null
 pos--}
 break
@@ -595,11 +608,11 @@ string_start[2]-1,pos+2)}
 var full_string
 if(! triple_quote){full_string=prefix+quote+string+
 quote
-yield Token('STRING',full_string,string_start[0],string_start[1],line_num,pos-line_start+1,string_line)
+t.push(Token('STRING',full_string,string_start[0],string_start[1],line_num,pos-line_start+1,string_line))
 state=null}else if(char+src.substr(pos,2)==
 quote.repeat(3)){full_string=prefix+quote.repeat(3)+
 string+quote.repeat(3)
-yield Token('STRING',full_string,string_start[0],string_start[1],line_num,pos-line_start+3,string_line)
+t.push(Token('STRING',full_string,string_start[0],string_start[1],line_num,pos-line_start+3,string_line))
 pos+=2
 state=null}else{string+=char}}else{string+=char}
 escaped=false
@@ -609,7 +622,8 @@ case '\n':
 if(! escaped && ! triple_quote){
 var msg=`unterminated string literal `+
 `(detected at line ${line_num})`,line_num=string_start[0],col_offset=string_start[1]
-$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg)}
+t.push(ErrorToken(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg))
+return t}
 string+=char
 line_num++
 line_start=pos+1
@@ -631,17 +645,18 @@ break
 case 'NUMBER':
 if(test_num(num_type,char)){number+=char}else if(char=='_' && ! number.endsWith('.')){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}else if(src[pos]===undefined ||
 ! test_num(num_type,src[pos])){
-yield Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line)
+t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
 state=null
 pos--}else{number+=char}}else if(char=='.' && ! number.includes(char)){number+=char}else if(char.toLowerCase()=='e' &&
 ! number.toLowerCase().includes('e')){if('+-'.includes(src[pos])||
-$B.in_unicode_category('Nd',ord(src[pos]))){number+=char}else{yield Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line)
+$B.in_unicode_category('Nd',ord(src[pos]))){number+=char}else{t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
 state=null
 pos--}}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){
 number+=char
-yield Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line)
-state=null}else if(char.match(/\p{Letter}/u)){$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,'invalid decimal literal')}else{yield Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line)
+t.push(Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line))
+state=null}else if(char.match(/\p{Letter}/u)){t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,'invalid decimal literal'))
+return t}else{t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
 state=null
 pos--}
 break}}
@@ -649,22 +664,24 @@ switch(state){case 'line_start':
 line_num++
 break
 case 'NAME':
-yield Token('NAME',name,line_num,pos-line_start-name.length+1,line_num,pos-line_start+1,line)
+t.push(Token('NAME',name,line_num,pos-line_start-name.length+1,line_num,pos-line_start+1,line))
 break
 case 'NUMBER':
-yield Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line)
+t.push(Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line))
 break
 case 'STRING':
 line_num=string_start[0]
 line=lines[line_num-1]
 var msg=`unterminated ${triple_quote ? 'triple-quoted ' : ''}`+
 `string literal (detected at line ${line_num})`,col_offset=string_start[1]
-$B.raise_error_known_location(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg)}
-if(! src.endsWith('\n')&& state !=line_start){yield Token('NEWLINE','',line_num,pos-line_start+1,line_num,pos-line_start+1,line+'\n')
+t.push(ErrorToken(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg))
+return t}
+if(! src.endsWith('\n')&& state !=line_start){t.push(Token('NEWLINE','',line_num,pos-line_start+1,line_num,pos-line_start+1,line+'\n'))
 line_num++}
 while(indents.length > 0){indents.pop()
-yield Token('DEDENT','',line_num,0,line_num,0,'')}
-yield Token('ENDMARKER','',line_num,0,line_num,0,'')}})(__BRYTHON__)
+t.push(Token('DEDENT','',line_num,0,line_num,0,''))}
+t.push(Token('ENDMARKER','',line_num,0,line_num,0,''))
+return t}})(__BRYTHON__)
 ;
 (function($B){
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
@@ -14906,9 +14923,9 @@ throw exc}
 $B.raise_error_known_token=raise_error_known_token
 function set_position_from_EXTRA(ast_obj,EXTRA){for(var key in EXTRA){ast_obj[key]=EXTRA[key]}}
 var Parser=$B.Parser=function(src,filename,mode){
-var tokenizer=$B.tokenizer(src,filename,mode,this)
-this.tokenizer=tokenizer
-this.tok=tokenizer
+this._tokens=$B.tokenizer(src,filename,mode,this)
+this.pos=0
+this.tok={}
 this.mark=0
 this.fill=0
 this.level=0
@@ -14922,10 +14939,11 @@ this.mode=mode
 this.memo={}
 this.arena={a_objects:[]}
 if(filename){p.filename=filename}}
-var ignored=[$B.py_tokens.ENCODING,$B.py_tokens.NL,$B.py_tokens.COMMENT]
-Parser.prototype.read_token=function(){while(true){var next=this.tokenizer.next()
-if(! next.done){var value=next.value
-if(! ignored.includes(value.num_type)){this.tokens.push(value)
+Parser.prototype.read_token=function(){while(true){var next=this._tokens[this.pos++]
+if(next){var value=next
+if(! value.parser_ignored){
+if(value.$error_token){$B.raise_error_known_location(...value)}else if(value.$error_token_known_token){$B.raise_error_known_token(...value)}
+this.tokens[this.tokens.length]=value
 return value}}else{throw Error('tokenizer exhausted')}}}})(__BRYTHON__)
 ;
 (function($B){
@@ -15030,10 +15048,8 @@ while(type==TYPE_IGNORE){type=get_next_token(p,new_token);}
 if(p.start_rule==Py_single_input && type==ENDMARKER && p.parsing_started){type=NEWLINE;
 p.parsing_started=0;
 if(p.tok.indent && !(p.flags & PyPARSE_DONT_IMPLY_DEDENT)){p.tok.pendin=-p.tok.indent;
-p.tok.indent=0;}}
-else{
-p.parsing_started=1;}
-var t=p.tokens[p.fill];
+p.tok.indent=0;}}else{p.parsing_started=1;}
+var t=p.tokens[p.fill]
 return initialize_token(p,t,new_token,type);}
 $B._PyPegen.clear_memo_statistics=function(){for(let i=0;i < NSTATISTICS;i++){memo_statistics[i]=0;}}
 $B._PyPegen.get_memo_statistics=function(){var ret=new Array(NSTATISTICS);
@@ -15232,7 +15248,7 @@ function _is_end_of_source(p){var err=p.tok.done;
 return p.tokens[p.tokens.length-1].type=='ENDMARKER'}
 $B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var last_token=p.tokens[p.fill-1]
 var tokenizer=$B.tokenizer(p.src,p.filename,p.mode,p)
-for(var token of tokenizer){}
+p.tokens=p._tokens
 if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno,msg
 if('([{'.includes(brace.char)){err_lineno=brace.line_num}else{if(p.braces.length > 1){err_lineno=p.braces[p.braces.length-2].line_num}else{err_lineno=brace.line_num}}
 if(p.tokens.length==0 ||$B.last(p.tokens).lineno >=err_lineno){if('([{'.includes(brace.char)){msg=`'${brace.char}' was never closed`}else if(p.braces.length > 1){var closing=brace.char,opening=p.braces[p.braces.length-2].char

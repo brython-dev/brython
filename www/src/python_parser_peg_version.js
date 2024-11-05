@@ -167,7 +167,7 @@ var helper_functions = {
         get_last_token(p)
         $B._PyPegen.raise_error(p, errtype, msg, ...extra_args)
     },
-    
+
     RAISE_SYNTAX_ERROR: function(p, msg){
         var extra_args = []
         for(var i = 1, len = arguments.length; i < len; i++){
@@ -308,13 +308,11 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
     }
 }
 
-
 var Parser = $B.Parser = function(src, filename, mode){
     // mode is 'file' for a script or exec(), 'eval' for eval()
-    // Normalize line ends
-    var tokenizer = $B.tokenizer(src, filename, mode, this)
-    this.tokenizer = tokenizer
-    this.tok = tokenizer
+    this._tokens = $B.tokenizer(src, filename, mode, this) // array
+    this.pos = 0
+    this.tok = {}
     this.mark = 0
     this.fill = 0
     this.level = 0
@@ -322,7 +320,7 @@ var Parser = $B.Parser = function(src, filename, mode){
     this.starting_lineno = 0;
     this.starting_col_offset = 0;
 
-    this.tokens = [] // generator_as_list(tokenizer)
+    this.tokens = []
     this.src = src
     this.filename = filename
     this.mode = mode
@@ -335,17 +333,18 @@ var Parser = $B.Parser = function(src, filename, mode){
     }
 }
 
-var ignored = [$B.py_tokens.ENCODING,
-    $B.py_tokens.NL,
-    $B.py_tokens.COMMENT]
-
 Parser.prototype.read_token = function(){
     while(true){
-        var next = this.tokenizer.next()
-        if(! next.done){
-            var value = next.value
-            if(! ignored.includes(value.num_type)){
-                this.tokens.push(value)
+        var next = this._tokens[this.pos++]
+        if(next){
+            var value = next
+            if(! value.parser_ignored){ // ENCODING, NL, COMMENT are ignored
+                if(value.$error_token){
+                    $B.raise_error_known_location(...value)
+                }else if(value.$error_token_known_token){
+                    $B.raise_error_known_token(...value)
+                }
+                this.tokens[this.tokens.length] = value
                 return value
             }
         }else{

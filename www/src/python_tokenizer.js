@@ -152,6 +152,18 @@ var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
     augm_op = '+-*/%^|&=<>@',
     closing = {'}': '{', ']': '[', ')': '('}
 
+function ErrorToken(){
+    var args = Array.from(arguments)
+    args.$error_token = true
+    return args
+}
+
+function ErrorTokenKnownToken(){
+    var args = Array.from(arguments)
+    args.$error_token_known_token = true
+    return args
+}
+
 function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
         line){
     var res = {type, string, line, lineno, col_offset, end_lineno, end_col_offset}
@@ -159,7 +171,10 @@ function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
     if(type == 'OP'){
         res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
     }else if(type == 'ENCODING'){
-        res.num_type = $B.py_tokens.ENCODING
+        //res.num_type = $B.py_tokens.ENCODING
+        res.parser_ignored = true
+    }else if(type == 'NL' || type == 'COMMENT'){
+        res.parser_ignored = true
     }
     res.bytes = res.string // cheating
     return res
@@ -256,9 +271,10 @@ function nesting_level(token_modes){
     }
 }
 
-$B.tokenizer = function*(src, filename, mode, parser){
+$B.tokenizer = function(src, filename, mode, parser){
     var string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
-        bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+        bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,
+        t = []
 
     if(mode != 'eval' && ! src.endsWith('\n')){
         src += '\n'
@@ -313,7 +329,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
         parser.braces = braces
     }
 
-    yield Token('ENCODING', 'utf-8', 0, 0, 0, 0, '')
+    t.push(Token('ENCODING', 'utf-8', 0, 0, 0, 0, ''))
 
     while(pos < src.length){
         char = src[pos]
@@ -354,13 +370,13 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 }
                 if(fstring_buffer.length > 0){
                     // emit FSTRING_MIDDLE token
-                    yield Token(FSTRING_MIDDLE, fstring_buffer,
+                    t.push(Token(FSTRING_MIDDLE, fstring_buffer,
                         line_num, fstring_start,
                         line_num, fstring_start + fstring_buffer.length,
-                        line)
+                        line))
                 }
-                yield Token(FSTRING_END, char, line_num, pos - line_start,
-                            line_num, pos - line_start + 1, line)
+                t.push(Token(FSTRING_END, char, line_num, pos - line_start,
+                            line_num, pos - line_start + 1, line))
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
@@ -375,10 +391,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 }else{
                     // emit FSTRING_MIDDLE if not empty
                     if(fstring_buffer.length > 0){
-                        yield Token(FSTRING_MIDDLE, fstring_buffer,
+                        t.push(Token(FSTRING_MIDDLE, fstring_buffer,
                             line_num, fstring_start,
                             line_num, fstring_start + fstring_buffer.length,
-                            line)
+                            line))
                     }
                     token_mode = 'regular_within_fstring'
                     fstring_expr_start = pos - line_start
@@ -393,10 +409,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     continue
                 }else{
                     // emit closing bracket token
-                    yield Token('OP', char,
+                    t.push(Token('OP', char,
                         line_num, pos - line_start,
                         line_num, pos - line_start + 1,
-                        line)
+                        line))
                     continue
                 }
             }else if(char == '\\'){
@@ -424,10 +440,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
             if(char == quote){
                 if(format_specifier.length > 0){
                     // emit FSTRING_MIDDLE token
-                    yield Token(FSTRING_MIDDLE, format_specifier,
+                    t.push(Token(FSTRING_MIDDLE, format_specifier,
                         line_num, fstring_start,
                         line_num, fstring_start + format_specifier.length,
-                        line)
+                        line))
                     // pop from token modes
                     token_modes.pop()
                     token_mode = $B.last(token_modes)
@@ -435,25 +451,25 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 }
             }else if(char == '{'){
                 // emit FSTRING_MIDDLE
-                yield Token(FSTRING_MIDDLE, format_specifier,
+                t.push(Token(FSTRING_MIDDLE, format_specifier,
                     line_num, fstring_start,
                     line_num, fstring_start + format_specifier.length,
-                    line)
+                    line))
                 token_mode = 'regular_within_fstring'
                 fstring_expr_start = pos - line_start
                 state = null
                 token_modes.push(token_mode)
             }else if(char == '}'){
                 // emit FSTRING_MIDDLE
-                yield Token(FSTRING_MIDDLE, format_specifier,
+                t.push(Token(FSTRING_MIDDLE, format_specifier,
                     line_num, fstring_start,
                     line_num, fstring_start + format_specifier.length,
-                    line)
+                    line))
                 // emit closing bracket token
-                yield Token('OP', char,
+                t.push(Token('OP', char,
                     line_num, pos - line_start,
                     line_num, pos - line_start + 1,
-                    line)
+                    line))
                 if(braces.length == 0 || $B.last(braces).char !== '{'){
                     throw Error('wrong braces')
                 }
@@ -476,16 +492,16 @@ $B.tokenizer = function*(src, filename, mode, parser){
                 line_num++
                 if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos - 1))){
                     // line break
-                    yield Token('NL', mo[0], line_num, 0,
+                    t.push(Token('NL', mo[0], line_num, 0,
                         line_num, mo[0].length,
-                        line)
+                        line))
                     pos += mo[0].length - 1
                     continue
                 }else if(char == '#'){
                     comment = get_comment(parser, src, pos, line_num,
                         line_start, 'NL', line)
                     for(var item of comment.t){
-                        yield item
+                        t.push(item)
                     }
                     pos = comment.pos
                     state = 'line_start'
@@ -502,15 +518,14 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     var broken = false
                     while(pos < src.length){
                         if(broken && indent > 0 && ' \t'.includes(src[pos])){
-                            console.log('indentation error 479')
-                            $B.raise_error_known_location(
+                            t.push(ErrorToken(
                                 _b_.IndentationError,
                                 filename,
                                 line_num, pos - line_start,
                                 line_num, pos - line_start + 1,
                                 line,
-                                'unindent does not match any outer indentation level'
-                            )
+                                'unindent does not match any outer indentation level'))
+                            return t
                         }
                         if(src[pos] == ' '){
                             indent++
@@ -539,7 +554,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                         comment = get_comment(parser, src, pos + 1, line_num,
                             line_start, 'NL', line)
                         for(var item of comment.t){
-                            yield item
+                            t.push(item)
                         }
                         pos = comment.pos
                         continue
@@ -549,36 +564,38 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             pos++
                             continue
                         }else{
-                            $B.raise_error_known_location(_b_.SyntaxError,
+                            t.push(ErrorToken(_b_.SyntaxError,
                                 filename, line_num, pos + 2 - line_start,
                                 line_num, pos + 3 - line_start,
                                 line,
-                                'unexpected character after line continuation character')
+                                'unexpected character after line continuation character'))
+                            return t
                         }
                     }else if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
                         // whitespace-only line
-                        yield Token('NL', '', line_num, pos - line_start + 1,
-                          line_num, pos - line_start + 1 + mo[0].length, line)
+                        t.push(Token('NL', '', line_num, pos - line_start + 1,
+                          line_num, pos - line_start + 1 + mo[0].length, line))
                         pos += mo[0].length
                         continue
                     }
                     if(indents.length == 0 || indent > $last(indents)){
                         indents.push(indent)
-                        yield Token('INDENT', '', line_num, 0,
-                            line_num, indent, line)
+                        t.push(Token('INDENT', '', line_num, 0,
+                            line_num, indent, line))
                     }else if(indent < $last(indents)){
                         var ix = indents.indexOf(indent)
                         if(ix == -1){
                             var message = 'unindent does not match ' +
                                 'any outer indentation level'
-                            $B.raise_error_known_location(_b_.IndentationError,
+                            t.push(ErrorToken(_b_.IndentationError,
                                 filename, line_num, 0,
-                                line_num, 0, line, message)
+                                line_num, 0, line, message))
+                            return t
                         }
                         for(var i = indents.length - 1; i > ix; i--){
                             indents.pop()
-                            yield Token('DEDENT', '', line_num, indent,
-                                line_num, indent, line)
+                            t.push(Token('DEDENT', '', line_num, indent,
+                                line_num, indent, line))
                         }
                     }
                     state = null
@@ -586,8 +603,8 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     // dedent all
                     while(indents.length > 0){
                         indents.pop()
-                        yield Token('DEDENT', '', line_num, indent,
-                          line_num, indent, line)
+                        t.push(Token('DEDENT', '', line_num, indent,
+                          line_num, indent, line))
                     }
                     state = null
                     pos--
@@ -614,7 +631,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                         comment = get_comment(parser, src, pos, line_num, line_start,
                             token_name, line)
                         for(var item of comment.t){
-                            yield item
+                            t.push(item)
                         }
                         pos = comment.pos
                         if(braces.length == 0){
@@ -650,11 +667,12 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                     let msg = 'leading zeros in decimal integer ' +
                                         'literals are not permitted; use an 0o prefix ' +
                                         'for octal integers'
-                                    $B.raise_error_known_location(_b_.SyntaxError,
+                                    t.push(ErrorToken(_b_.SyntaxError,
                                         filename,
                                         line_num, pos - line_start - number.length,
                                         line_num, pos - line_start,
-                                        line, msg)
+                                        line, msg))
+                                    return t
                                 }else{
                                     break
                                 }
@@ -676,13 +694,13 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             while(op.length >= 3){
                                 // sequences of 3 consecutive dots are sent
                                 // as a single token for Ellipsis
-                                yield Token('OP', '...', line_num, dot_pos,
-                                    line_num, dot_pos + 3, line)
+                                t.push(Token('OP', '...', line_num, dot_pos,
+                                    line_num, dot_pos + 3, line))
                                 op = op.substr(3)
                             }
                             for(var i = 0; i < op.length; i++){
-                                yield Token('OP', '.', line_num, dot_pos,
-                                    line_num, dot_pos + 1, line)
+                                t.push(Token('OP', '.', line_num, dot_pos,
+                                    line_num, dot_pos + 1, line))
                                 dot_pos++
                             }
                         }
@@ -692,9 +710,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                         if(mo){
                             if(pos == src.length - 1){
                                 var msg = 'unexpected EOF while parsing'
-                                $B.raise_error_known_location(_b_.SyntaxError,
+                                t.push(ErrorToken(_b_.SyntaxError,
                                     filename, line_num, pos - line_start, line_num, pos - line_start + 1,
-                                    line, msg)
+                                    line, msg))
+                                return t
                             }
                             line_num++
                             pos += mo[0].length
@@ -704,18 +723,19 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             pos++;
                             var msg = 'unexpected character after line ' +
                                 'continuation character'
-                            $B.raise_error_known_location(_b_.SyntaxError,
+                            t.push(ErrorToken(_b_.SyntaxError,
                                 filename, line_num, pos - line_start, line_num, pos - line_start + 1,
-                                line, msg)
+                                line, msg))
+                            return t
                         }
                         break
                     case '\n':
                     case '\r':
                         var token_name = braces.length > 0 ? 'NL': 'NEWLINE'
                         mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos - 1))
-                        yield Token(token_name, mo[0],
+                        t.push(Token(token_name, mo[0],
                             line_num, pos - line_start,
-                            line_num, pos - line_start + mo[0].length, line)
+                            line_num, pos - line_start + mo[0].length, line))
                         pos += mo[0].length - 1
                         if(token_name == 'NEWLINE'){
                             state = 'line_start'
@@ -751,7 +771,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                         colon.metadata = src.substr(
                                             line_start + fstring_expr_start,
                                             pos - line_start - fstring_expr_start - 1)
-                                        yield colon
+                                        t.push(colon)
                                         token_modes.pop()
                                         token_mode = 'format_specifier'
                                         token_modes.push(token_mode)
@@ -765,11 +785,12 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                         line)
                                     closing_brace.metadata = src.substring(
                                         line_start + fstring_expr_start, pos - 1)
-                                    yield closing_brace
+                                    t.push(closing_brace)
                                     token_modes.pop()
                                     token_mode = token_modes[token_modes.length - 1]
                                     if(braces.length == 0 || $B.last(braces).char !== '{'){
-                                        throw Error('wrong braces')
+                                        t.push(Error('wrong braces'))
+                                        return t
                                     }
                                     braces.pop()
                                     continue
@@ -798,16 +819,16 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                     braces.push({char, pos, line_num, line_start, line})
                                 }
                             }
-                            yield Token('OP', op,
+                            t.push(Token('OP', op,
                                 line_num, pos - line_start - op.length + 1,
                                 line_num, pos - line_start + 1,
-                                line)
+                                line))
                         }else if(char == '!'){
                             if(src[pos] == '='){
-                                yield Token('OP', '!=',
+                                t.push(Token('OP', '!=',
                                     line_num, pos - line_start,
                                     line_num, pos - line_start + 2,
-                                    line)
+                                    line))
                                 pos++
                             }else{
                                 // conversion
@@ -818,7 +839,7 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                 // used on fstring debug mode
                                 token.metadata = src.substring(
                                     line_start + fstring_start + 2, pos - 1)
-                                yield token
+                                t.push(token)
                             }
                         }else if(char == ' ' || char == '\t'){
                             // ignore
@@ -841,8 +862,9 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                 line_num, pos - line_start,
                                 line_num, pos - line_start + 1,
                                 line)
-                            $B.raise_error_known_token(_b_.SyntaxError, filename,
-                                err_token, err_msg)
+                            t.push(ErrorTokenKnownToken(_b_.SyntaxError, filename,
+                                err_token, err_msg))
+                            return t
                         }
               }
               break
@@ -870,10 +892,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             token_modes.push(token_mode)
                             var s = triple_quote ? quote.repeat(3) : quote
                             var end_col = fstring_start + name.length + s.length
-                            yield Token(FSTRING_START, prefix + s,
+                            t.push(Token(FSTRING_START, prefix + s,
                                 line_num, fstring_start,
                                 line_num, end_col,
-                                line)
+                                line))
                             continue
                         }
                         escaped = false
@@ -881,18 +903,18 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             pos - line_start - name.length, line_start]
                         string = ''
                     }else{
-                        yield Token('NAME', name,
+                        t.push(Token('NAME', name,
                             line_num, pos - line_start - name.length,
                             line_num, pos - line_start,
-                            line)
+                            line))
                         state = null
                         pos--
                     }
                 }else{
-                    yield Token('NAME', name,
+                    t.push(Token('NAME', name,
                         line_num, pos - line_start - name.length,
                         line_num, pos - line_start,
-                        line)
+                        line))
                     state = null
                     pos--
                 }
@@ -914,10 +936,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             if(! triple_quote){
                                 full_string = prefix + quote + string +
                                   quote
-                                yield Token('STRING', full_string,
+                                t.push(Token('STRING', full_string,
                                     string_start[0], string_start[1],
                                     line_num, pos - line_start + 1,
-                                    string_line)
+                                    string_line))
                                 state = null
                             }else if(char + src.substr(pos, 2) ==
                                     quote.repeat(3)){
@@ -926,10 +948,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                 // For triple-quoted strings, if it spans over
                                 // several lines, "line" is extended until the
                                 // last quote
-                                yield Token('STRING', full_string,
+                                t.push(Token('STRING', full_string,
                                     string_start[0], string_start[1],
                                     line_num, pos - line_start + 3,
-                                    string_line)
+                                    string_line))
                                 pos += 2
                                 state = null
                             }else{
@@ -948,11 +970,12 @@ $B.tokenizer = function*(src, filename, mode, parser){
                                       `(detected at line ${line_num})`,
                                 line_num = string_start[0],
                                 col_offset = string_start[1]
-                            $B.raise_error_known_location(_b_.SyntaxError,
+                            t.push(ErrorToken(_b_.SyntaxError,
                                 filename, line_num, col_offset,
                                 line_num, col_offset,
                                 line,
-                                msg)
+                                msg))
+                            return t
                         }
                         string += char
                         line_num++
@@ -985,10 +1008,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     }else if(src[pos] === undefined ||
                             ! test_num(num_type, src[pos])){
                         // eg 12_
-                        yield Token('NUMBER', number,
+                        t.push(Token('NUMBER', number,
                             line_num, pos - line_start - number.length,
                             line_num, pos - line_start,
-                            line)
+                            line))
                         state = null
                         pos--
                     }else{
@@ -1002,10 +1025,10 @@ $B.tokenizer = function*(src, filename, mode, parser){
                             $B.in_unicode_category('Nd', ord(src[pos]))){
                         number += char
                     }else{
-                        yield Token('NUMBER', number,
+                        t.push(Token('NUMBER', number,
                             line_num, pos - line_start - number.length,
                             line_num, pos - line_start,
-                            line)
+                            line))
                         state = null
                         pos--
                     }
@@ -1014,22 +1037,23 @@ $B.tokenizer = function*(src, filename, mode, parser){
                     number += char
                 }else if(char.toLowerCase() == 'j'){ // complex number
                     number += char
-                    yield Token('NUMBER', number,
+                    t.push(Token('NUMBER', number,
                         line_num, pos - line_start - number.length + 1,
                         line_num, pos - line_start + 1,
-                        line)
+                        line))
                     state = null
                 }else if(char.match(/\p{Letter}/u)){
-                    $B.raise_error_known_location(_b_.SyntaxError,
+                    t.push(ErrorToken(_b_.SyntaxError,
                         filename,
                         line_num, pos - line_start - number.length,
                         line_num, pos - line_start,
-                        line, 'invalid decimal literal')
+                        line, 'invalid decimal literal'))
+                    return t
                 }else{
-                    yield Token('NUMBER', number,
+                    t.push(Token('NUMBER', number,
                         line_num, pos - line_start - number.length,
                         line_num, pos - line_start,
-                        line)
+                        line))
                     state = null
                     pos--
                 }
@@ -1042,17 +1066,17 @@ $B.tokenizer = function*(src, filename, mode, parser){
             line_num++
             break
         case 'NAME':
-            yield Token('NAME', name,
+            t.push(Token('NAME', name,
                 line_num, pos - line_start - name.length + 1,
                 line_num, pos - line_start + 1,
-                line)
+                line))
 
             break
         case 'NUMBER':
-            yield Token('NUMBER', number,
+            t.push(Token('NUMBER', number,
               line_num, pos - line_start - number.length + 1,
               line_num, pos - line_start + 1,
-              line)
+              line))
             break
         case 'STRING':
             line_num = string_start[0]
@@ -1060,24 +1084,27 @@ $B.tokenizer = function*(src, filename, mode, parser){
             var msg = `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
                 `string literal (detected at line ${line_num})`,
                 col_offset = string_start[1]
-            $B.raise_error_known_location(_b_.SyntaxError,
+            t.push(ErrorToken(_b_.SyntaxError,
                 filename, line_num, col_offset,
                 line_num, col_offset,
                 line,
-                msg)
+                msg))
+            return t
 }
 
     if(! src.endsWith('\n') && state != line_start){
-        yield Token('NEWLINE', '', line_num, pos - line_start + 1,
-            line_num, pos - line_start + 1, line +'\n')
+        t.push(Token('NEWLINE', '', line_num, pos - line_start + 1,
+            line_num, pos - line_start + 1, line +'\n'))
         line_num++
     }
 
     while(indents.length > 0){
         indents.pop()
-        yield Token('DEDENT', '', line_num, 0, line_num, 0, '')
+        t.push(Token('DEDENT', '', line_num, 0, line_num, 0, ''))
     }
-    yield Token('ENDMARKER', '', line_num, 0, line_num, 0, '')
+    t.push(Token('ENDMARKER', '', line_num, 0, line_num, 0, ''))
+
+    return t
 
 }
 })(__BRYTHON__)

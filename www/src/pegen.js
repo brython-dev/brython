@@ -322,14 +322,12 @@ $B._PyPegen.fill_token = function(p){
             p.tok.pendin = -p.tok.indent;
             p.tok.indent = 0;
         }
-    }
-    else {
+    }else{
         p.parsing_started = 1;
     }
 
-    var t = p.tokens[p.fill];
+    var t = p.tokens[p.fill]
     return initialize_token(p, t, new_token, type);
-
 }
 
 /*
@@ -435,7 +433,7 @@ $B._PyPegen.expect_token = function(p, type){
         }
     }
     var t = p.tokens[p.mark];
-    if (t.num_type != type) {
+    if(t.num_type != type){
        return NULL;
     }
     p.mark += 1;
@@ -829,8 +827,7 @@ function _is_end_of_source(p) {
 $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
     var last_token = p.tokens[p.fill - 1]
     var tokenizer = $B.tokenizer(p.src, p.filename, p.mode, p)
-    for(var token of tokenizer){
-    }
+    p.tokens = p._tokens
     if(p.braces.length > 0){
         var brace = $B.last(p.braces),
             err_lineno,
