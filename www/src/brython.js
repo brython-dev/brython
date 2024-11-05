@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-05 08:16:06.546261"
-__BRYTHON__.timestamp=1730790966546
+__BRYTHON__.compiled_date="2024-11-05 10:25:30.265416"
+__BRYTHON__.timestamp=1730798730264
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11424,7 +11424,8 @@ target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
 function encode_position(a,b,c,d){if(d===undefined){return `[${[a, b, c]}]`}else{return `[${[a, b, c, d]}]`}}
 $B.decode_position=function(pos){return pos}
-function get_source_from_position(src,ast_obj){var lines=src.split('\n'),start_line=lines[ast_obj.lineno-1],res
+function get_source_from_position(scopes,ast_obj){scopes.lines=scopes.lines ?? scopes.src.split('\n')
+var lines=scopes.lines,start_line=lines[ast_obj.lineno-1],res
 if(ast_obj.end_lineno==ast_obj.lineno){res=start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
 while(line_num < ast_obj.end_lineno){res+=lines[line_num-1].trimLeft()
 line_num++}
@@ -11748,7 +11749,7 @@ return}else if(last.type=="def"){ix=scopes.indexOf(last)-1}else{return}}}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''",position=encode_position(this.test.col_offset,this.test.col_offset,this.test.end_col_offset)
 var js=`$B.set_lineno(frame, ${this.lineno})\n`
 return js+`$B.assert(${test}, ${msg}, ${position})`}
-function annotation_to_str(obj,scopes){return get_source_from_position(scopes.src,obj)}
+function annotation_to_str(obj,scopes){return get_source_from_position(scopes,obj)}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){compiler_check(this)
 var postpone_annotation=scopes.symtable.table.future.features &
 $B.CO_FUTURE_ANNOTATIONS

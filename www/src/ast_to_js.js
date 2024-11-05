@@ -144,8 +144,9 @@ $B.decode_position = function(pos){
     return pos
 }
 
-function get_source_from_position(src, ast_obj){
-    var lines = src.split('\n'),
+function get_source_from_position(scopes, ast_obj){
+    scopes.lines = scopes.lines ?? scopes.src.split('\n')
+    var lines = scopes.lines,
         start_line = lines[ast_obj.lineno - 1],
         res
     if(ast_obj.end_lineno == ast_obj.lineno){
@@ -1056,7 +1057,7 @@ $B.ast.Assert.prototype.to_js = function(scopes){
 }
 
 function annotation_to_str(obj, scopes){
-    return get_source_from_position(scopes.src, obj)
+    return get_source_from_position(scopes, obj)
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
@@ -4288,7 +4289,7 @@ $B.js_from_root = function(arg){
         src = arg.src,
         namespaces = arg.namespaces,
         imported = arg.imported
-    
+
     if($B.show_ast_dump){
         console.log($B.ast_dump(ast_root))
     }
