@@ -661,7 +661,7 @@ $B._PyPegen.number_token = function(p){
     }
 
     var c = parsenumber(num_raw);
-    
+
     if (c == NULL) {
         p.error_indicator = 1;
         var tstate = _PyThreadState_GET();

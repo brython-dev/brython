@@ -331,7 +331,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
 
     // normalize line ends to \n
     src = src.replace(/\r\n/g, '\n').
-              replace(/\r/g, '\n')    
+              replace(/\r/g, '\n')
     var locals_is_module = Array.isArray(locals_id)
     if(locals_is_module){
         locals_id = locals_id[0]
@@ -693,7 +693,9 @@ $B.get_page_option = function(option){
 
 $B.get_option = function(option, err){
     var filename = $B.script_filename
-    if(err && err.$frame_obj){
+    if(err && err.filename){
+        filename = err.filename
+    }else if(err && err.$frame_obj){
         filename = $B.get_frame_at(0, err.$frame_obj).__file__
     }else{
         filename = $B.get_filename()
@@ -808,7 +810,6 @@ $B.run_script = function(script, src, name, url, run_loop){
             console.log($B.format_indent(js, 0))
         }
     }catch(err){
-        console.log('err', err)
         return $B.handle_error($B.exception(err)) // in loaders.js
     }
     var _script = {
