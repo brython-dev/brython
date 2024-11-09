@@ -87,6 +87,7 @@ function string_from_ast_value(value){
 
 
 function compiler_error(ast_obj, message, end){
+    prefix = ''
     var exc = _b_.SyntaxError.$factory(message)
     exc.filename = state.filename
     if(exc.filename != '<string>'){
@@ -105,9 +106,6 @@ function compiler_error(ast_obj, message, end){
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     exc.$frame_obj = $B.frame_obj
-    if($B.frame_obj === null){
-        // console.log('frame obj is null')
-    }
     throw exc
 }
 
@@ -708,6 +706,16 @@ function mark_parents(node){
     }
 }
 
+var prefix = '',
+    tab = '  '
+
+function indent(){
+    prefix += tab
+}
+function dedent(){
+    prefix = prefix.substr(tab.length)
+}
+
 function add_body(body, scopes){
     var res = '';
     let js;
@@ -1113,23 +1121,23 @@ $B.ast.AnnAssign.prototype._check = function(){
 
 $B.ast.Assign.prototype.to_js = function(scopes){
     compiler_check(this)
-    var js = this.lineno ? `$B.set_lineno(frame, ${this.lineno})\n` : '',
+    var js = this.lineno ? prefix + `$B.set_lineno(frame, ${this.lineno})\n` : '',
         value = $B.js_from_ast(this.value, scopes)
 
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
-            return $B.js_from_ast(target, scopes) + ' = ' + value
+            return prefix + $B.js_from_ast(target, scopes) + ' = ' + value
         }else if(target instanceof $B.ast.Starred){
             return assign_one(target.value, value)
         }else if(target instanceof $B.ast.Subscript){
-            return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
+            return prefix + `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
                 `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`
         }else if(target instanceof $B.ast.Attribute){
             if(target.value.id == 'self'){
                 maybe_add_static(target, scopes)
             }
             var attr = mangle(scopes, last_scope(scopes), target.attr)
-            return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
+            return prefix + `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
                 `, "${attr}", ${value})`
         }
     }
@@ -1410,7 +1418,7 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
             // error will be handled at runtime
         }
     }
-    return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
+    return prefix + `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
         `${$B.js_from_ast(this.right, scopes)}, ${position})`
 }
 
@@ -1917,7 +1925,7 @@ $B.ast.DictComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
-    return `$B.set_lineno(frame, ${this.lineno});\n`+
+    return prefix + `$B.set_lineno(frame, ${this.lineno});\n`+
         $B.js_from_ast(this.value, scopes)
 }
 
@@ -2651,6 +2659,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     // process body first to detect possible "yield"s
     var function_body
+    indent()
+    indent()
     if(this.$is_lambda){
         var _return = new $B.ast.Return(this.body)
         copy_position(_return, this.body)
@@ -2659,12 +2669,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         function_body = add_body(this.body, scopes)
     }
+    dedent()
+    dedent()
 
     var is_generator = symtable_block.generator
 
     var parse_args = [name2]
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\n`
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` + prefix
 
     if(is_async && ! is_generator){
         js += 'async '
@@ -2672,8 +2684,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `function ${name2}(){\n`
 
+    indent()
+
     var locals_name = make_scope_name(scopes, func_scope)
-    js += `var locals\n`
+    js += prefix + `var locals\n`
 
     parse_args.push('arguments')
 
@@ -2685,41 +2699,44 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
-        js += `var ${locals_name} = locals = {};\n`
+        js += prefix + `var ${locals_name} = locals = {};\n`
         // generate error message
-        js += `if(arguments.length !== 0){\n` +
-                  `${name2}.$args_parser(${parse_args.join(', ')})\n` +
-              `}\n`
+        js += prefix + `if(arguments.length !== 0){\n` +
+              prefix + tab + `${name2}.$args_parser(${parse_args.join(', ')})\n` +
+              prefix + `}\n`
     }else{
-        js += `var ${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
+        js += prefix + `var ${locals_name} = locals = ` +
+              `${name2}.$args_parser(${parse_args.join(', ')})\n`
     }
 
-    js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
-          `locals, "${gname}", ${globals_name}, ${name2}]
-    $B.enter_frame(frame, __file__, ${this.lineno})\n`
+    js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
+          `locals, "${gname}", ${globals_name}, ${name2}]\n` +
+          prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
 
     if(func_scope.needs_stack_length){
-        js += `var stack_length = $B.count_frames()\n`
+        js += prefix + `var stack_length = $B.count_frames()\n`
     }
 
     if(func_scope.needs_frames || is_async){
-        js += `var _frame_obj = $B.frame_obj,\n` +
-                  `_linenums = $B.make_linenums()\n`
+        js += prefix + `var _frame_obj = $B.frame_obj,\n` +
+              prefix + tab + `_linenums = $B.make_linenums()\n`
     }
 
     if(is_async){
-        js += 'frame.$async = true\n'
+        js += prefix + 'frame.$async = true\n'
     }
 
     if(is_generator){
-        js += `locals.$is_generator = true\n`
+        js += prefix + `locals.$is_generator = true\n`
         if(is_async){
-            js += `var gen_${id} = $B.async_generator.$factory(async function*(){\n`
+            js += prefix + `var gen_${id} = $B.async_generator.$factory(async function*(){\n`
         }else{
-            js += `var gen_${id} = $B.generator.$factory(function*(){\n`
+            js += prefix + `var gen_${id} = $B.generator.$factory(function*(){\n`
         }
     }
-    js += `try{\n$B.js_this = this\n`
+    js += prefix + `try{\n`
+    indent()
+    js += prefix + `$B.js_this = this\n`
     if(in_class){
         // Set local name "__class__"
         var ix = scopes.indexOf(class_scope),
@@ -2737,24 +2754,28 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if((! this.$is_lambda) && ! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
-        js += 'return $B.trace_return_and_leave(frame, _b_.None)\n'
+        js += prefix + 'return $B.trace_return_and_leave(frame, _b_.None)\n'
     }
 
-    js += `}catch(err){\n`
+    dedent()
+    js += prefix + `}catch(err){\n`
+    indent()
 
     if(func_scope.needs_frames){
         // set exception $frame_obj and $linenums
-        js += `$B.set_exc_and_trace(frame, err)\n` +
+        js += prefix + `$B.set_exc_and_trace(frame, err)\n` +
               `err.$frame_obj = _frame_obj\n` +
               `_linenums[_linenums.length - 1] = frame.$lineno\n` +
               `err.$linenums = _linenums\n` +
               `$B.leave_frame()\n` +
               `throw err\n`
     }else{
-        js += `$B.set_exc_and_leave(frame, err)\n`
+        js += prefix + `$B.set_exc_and_leave(frame, err)\n`
     }
-    js += `}
-    }\n`
+    dedent()
+    js += prefix + `}\n`
+    dedent()
+    js += prefix + `}\n`
 
     if(is_generator){
         js += `, '${this.name}')\n` +
@@ -2809,7 +2830,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     // Set admin infos
-    js += `$B.make_function_infos(${name2}, ` +
+    js += prefix + `$B.make_function_infos(${name2}, ` +
         `'${gname}', ` +
         `${defaults}, ` +
         `${kw_defaults}, ` +
@@ -2830,7 +2851,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `[${varnames}])\n`;
 
     if(is_async && ! is_generator){
-        js += `${name2} = $B.make_async(${name2})\n`
+        js += prefix + `${name2} = $B.make_async(${name2})\n`
     }
 
     var mangled = mangle(scopes, func_name_scope, this.name),
@@ -2841,7 +2862,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    js += `${func_ref} = ${name2}\n`
+    js += prefix + `${func_ref} = ${name2}\n`
     if(this.returns || parsed_args.annotations){
         var features = scopes.symtable.table.future.features,
             postponed = features & $B.CO_FUTURE_ANNOTATIONS
@@ -2877,10 +2898,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
             }
         }
-        js += `${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`
+        js += prefix + `${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`
     }else{
-        js += `${func_ref}.__annotations__ = $B.empty_dict()\n`
+        js += prefix + `${func_ref}.__annotations__ = $B.empty_dict()\n`
     }
+
+    dedent()
 
     if(has_type_params){
         scopes.pop()
@@ -3060,9 +3083,9 @@ $B.ast.IfExp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Import.prototype.to_js = function(scopes){
-    var js = `$B.set_lineno(frame, ${this.lineno})\n`
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     for(var alias of this.names){
-        js += `$B.$import("${alias.name}", [], `
+        js += prefix + `$B.$import("${alias.name}", [], `
         if(alias.asname){
             js += `{'${alias.name}' : '${alias.asname}'}, `
             bind(alias.asname, scopes)
@@ -3469,6 +3492,9 @@ $B.ast.MatchValue.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
+    if(prefix.length != 0){
+        console.log('prefix length at start', prefix.length)
+    }
     mark_parents(this)
     // create top scope; namespaces can be passed by exec()
     var name = init_scopes.bind(this)('module', scopes),
@@ -3478,18 +3504,18 @@ $B.ast.Module.prototype.to_js = function(scopes){
         global_name = make_scope_name(scopes),
         mod_name = module_name(scopes)
 
-    var js = `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+    var js = `var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `${global_name} = $B.imported["${mod_name}"],\n` +
-              `locals = ${global_name},\n` +
-              `frame = ["${module_id}", locals, "${module_id}", locals]`
+        js += `    ${global_name} = $B.imported["${mod_name}"],\n` +
+              `    locals = ${global_name},\n` +
+              `    frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         // If module is run in an exec(), name "frame" is defined
-        js += `locals = ${namespaces.local_name},\n` +
-              `globals = ${namespaces.global_name}`
+        js += `    locals = ${namespaces.local_name},\n` +
+              `    globals = ${namespaces.global_name}`
         if(name){
             let local_name = ('locals_' + name).replace(/\./g, '_')
-            js += `,\n${local_name} = locals`
+            js += `,\n    ${local_name} = locals`
         }
     }
 
@@ -3510,15 +3536,24 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     js += 'var stack_length = $B.count_frames()\n'
 
-    js += `try{\n` +
-              add_body(this.body, scopes) + '\n' +
-              `$B.leave_frame({locals, value: _b_.None})\n` +
-          `}catch(err){\n` +
-              `$B.set_exc_and_trace(frame, err)\n` +
-              `$B.leave_frame({locals, value: _b_.None})\n` +
-              'throw err\n' +
-          `}`
+    js += `try{\n`
+    indent()
+    js += add_body(this.body, scopes) + '\n' +
+          prefix + `$B.leave_frame({locals, value: _b_.None})\n`
+    dedent()
+    js += prefix + `}catch(err){\n`
+    indent()
+    js += prefix + `$B.set_exc_and_trace(frame, err)\n` +
+              prefix + `$B.leave_frame({locals, value: _b_.None})\n` +
+              prefix + 'throw err\n'
+    dedent()
+    js += prefix + `}`
     scopes.pop()
+    if(prefix.length != 0){
+        console.log('wrong indent !', prefix.length)
+        console.log(scopes.src)
+        throw Error()
+    }
     return js
 }
 
@@ -3574,8 +3609,8 @@ $B.ast.Nonlocal.prototype.to_js = function(scopes){
 }
 
 $B.ast.Pass.prototype.to_js = function(){
-    return `$B.set_lineno(frame, ${this.lineno})\n` +
-           'void(0)'
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+           prefix + 'void(0)'
 }
 
 $B.ast.Raise.prototype.to_js = function(scopes){
@@ -4304,6 +4339,7 @@ $B.js_from_root = function(arg){
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}
+    scopes.indent = 0
     var js = ast_root.to_js(scopes)
     return {js, imports: scopes.imports}
 }

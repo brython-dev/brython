@@ -807,7 +807,7 @@ $B.run_script = function(script, src, name, url, run_loop){
         root = $B.py2js({src: src, filename}, name, name)
         js = root.to_js()
         if($B.get_option_from_filename('debug', filename) > 1){
-            console.log($B.format_indent(js, 0))
+            console.log(js) //$B.format_indent(js, 0))
         }
     }catch(err){
         return $B.handle_error($B.exception(err)) // in loaders.js
