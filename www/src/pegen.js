@@ -826,7 +826,7 @@ function _is_end_of_source(p) {
 
 $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
     var last_token = p.tokens[p.fill - 1]
-    var tokenizer = $B.tokenizer(p.src, p.filename, p.mode, p)
+    $B.tokenizer(p.src, p.filename, p.mode, p)
     p.tokens = p._tokens
     if(p.braces.length > 0){
         var brace = $B.last(p.braces),
