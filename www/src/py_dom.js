@@ -1167,7 +1167,9 @@ DOMNode.clear = function(){
 }
 
 DOMNode.Class = function(self){
-    if(self.className !== undefined){return self.className}
+    if(self.className !== undefined){
+        return self.className
+    }
     return _b_.None
 }
 
@@ -1219,11 +1221,8 @@ DOMNode.bindings = function(self){
 DOMNode.events = function(self, event){
     self.$events = self.$events || {}
     var evt_list = self.$events[event] = self.$events[event] || [],
-        callbacks = []
-    evt_list.forEach(function(evt){
-        callbacks.push(evt[1])
-    })
-    return $B.$list(callbacks)
+        funcs = evt_list.map(x => x[0])
+    return $B.$list(funcs)
 }
 
 function make_list(node_list){
@@ -1494,8 +1493,7 @@ DOMNode.unbind = function(self, event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
-    self.$events = self.$events || {}
-    if(self.$events === {}){
+    if(! self.$events){
         return _b_.None
     }
 
@@ -1523,26 +1521,10 @@ DOMNode.unbind = function(self, event){
     }
 
     for(let i = 2; i < arguments.length; i++){
-        let callback = arguments[i],
-            flag = false,
-            func = callback.$func
-        if(func === undefined){
-            // If a callback is created by an assignment to an existing
-            // function
-            let found = false
-            for(let evt of events){
-                if($B.is_or_equals(evt[0], callback)){
-                    func = callback
-                    found = true
-                    break
-                }
-            }
-            if(! found){
-                throw _b_.TypeError.$factory("function is not an event callback")
-            }
-        }
-        for(let j = 0; j < events.length; j++){
-            if($B.$getattr(func, '__eq__')(events[j][0])){
+        let func = arguments[i],
+            flag = false
+        for(let j = 0, len = events.length; j < len; j++){
+            if($B.is_or_equals(func, events[j][0])){
                 let _callback = events[j][1]
                 self.removeEventListener(event, _callback, false)
                 events.splice(j, 1)
@@ -1551,7 +1533,7 @@ DOMNode.unbind = function(self, event){
             }
         }
         // The indicated func was not found, error is thrown
-        if(!flag){
+        if(! flag){
             throw _b_.KeyError.$factory('missing callback for event ' + event)
         }
     }

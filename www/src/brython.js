@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-05 13:35:50.668375"
-__BRYTHON__.timestamp=1730810150668
+__BRYTHON__.compiled_date="2024-11-09 20:44:30.532335"
+__BRYTHON__.timestamp=1731181470532
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1008,7 +1008,7 @@ _b_.__debug__=$B.get_option('debug')> 0
 var root,js
 try{root=$B.py2js({src:src,filename},name,name)
 js=root.to_js()
-if($B.get_option_from_filename('debug',filename)> 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error($B.exception(err))}
+if($B.get_option_from_filename('debug',filename)> 1){console.log(js)}}catch(err){return $B.handle_error($B.exception(err))}
 var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
 $B.tasks.push(["execute",_script])
 if(run_loop){$B.loop()}}
@@ -9337,7 +9337,6 @@ var x=list.$factory($.x)
 for(var i=0;i < x.length;i++){$.self.push(x[i])}
 return $.self}
 list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","x"],arguments,{},null,null),len=$.self.length,pos=len
-console.log('list imul',$)
 try{var x=$B.PyNumber_Index($.x)}catch(err){throw _b_.TypeError.$factory(`can't multiply sequence by non-int`+
 ` of type '${$B.class_name($.x)}'`)}
 if(x==0){list.clear($.self)
@@ -10575,9 +10574,8 @@ var res=$B.empty_dict()
 for(var key in self.$events){_b_.dict.$setitem(res,key,self.$events[key].map(x=> x[1]))}
 return res}
 DOMNode.events=function(self,event){self.$events=self.$events ||{}
-var evt_list=self.$events[event]=self.$events[event]||[],callbacks=[]
-evt_list.forEach(function(evt){callbacks.push(evt[1])})
-return $B.$list(callbacks)}
+var evt_list=self.$events[event]=self.$events[event]||[],funcs=evt_list.map(x=> x[0])
+return $B.$list(funcs)}
 function make_list(node_list){var res=[]
 for(var i=0;i < node_list.length;i++){res.push(DOMNode.$factory(node_list[i]))}
 return $B.$list(res)}
@@ -10682,8 +10680,7 @@ if(self.fireEvent){self.fireEvent("on"+etype)}else{var evObj=document.createEven
 evObj.initEvent(etype,true,false)
 self.dispatchEvent(evObj)}}
 DOMNode.unbind=function(self,event){
-self.$events=self.$events ||{}
-if(self.$events==={}){return _b_.None}
+if(! self.$events){return _b_.None}
 if(event===undefined){for(let evt in self.$events){DOMNode.unbind(self,evt)}
 return _b_.None}
 if(self.$events[event]===undefined ||
@@ -10694,19 +10691,13 @@ for(let evt of events){var callback=evt[1]
 self.removeEventListener(event,callback,false)}
 self.$events[event]=[]
 return _b_.None}
-for(let i=2;i < arguments.length;i++){let callback=arguments[i],flag=false,func=callback.$func
-if(func===undefined){
-let found=false
-for(let evt of events){if($B.is_or_equals(evt[0],callback)){func=callback
-found=true
-break}}
-if(! found){throw _b_.TypeError.$factory("function is not an event callback")}}
-for(let j=0;j < events.length;j++){if($B.$getattr(func,'__eq__')(events[j][0])){let _callback=events[j][1]
+for(let i=2;i < arguments.length;i++){let func=arguments[i],flag=false
+for(let j=0,len=events.length;j < len;j++){if($B.is_or_equals(func,events[j][0])){let _callback=events[j][1]
 self.removeEventListener(event,_callback,false)
 events.splice(j,1)
 flag=true
 break}}
-if(!flag){throw _b_.KeyError.$factory('missing callback for event '+event)}}}
+if(! flag){throw _b_.KeyError.$factory('missing callback for event '+event)}}}
 $B.set_func_names(DOMNode,"builtins")
 var Query=$B.make_class("query")
 Query.__contains__=function(self,key){return self._keys.indexOf(key)>-1}
@@ -11416,7 +11407,8 @@ res+=')'
 return res}
 function string_from_ast_value(value){
 return value.replace(new RegExp("\\\\'",'g'),"'")}
-function compiler_error(ast_obj,message,end){var exc=_b_.SyntaxError.$factory(message)
+function compiler_error(ast_obj,message,end){prefix=''
+var exc=_b_.SyntaxError.$factory(message)
 exc.filename=state.filename
 if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
 exc.text=line}else{exc.text=_b_.None}
@@ -11427,7 +11419,6 @@ exc.end_lineno=end.end_lineno
 exc.end_offset=end.end_col_offset+1
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 exc.$frame_obj=$B.frame_obj
-if($B.frame_obj===null){}
 throw exc}
 var uuid=Math.floor(Math.random()*1000000)
 function make_id(){uuid+=1
@@ -11633,6 +11624,9 @@ mark_parents(child)}}else if(node.handlers){
 var p={$parent:node,'type':'except_handler'}
 for(let child of node.handlers){child.$parent=p
 mark_parents(child)}}}
+var prefix='',tab='  '
+function indent(){prefix+=tab}
+function dedent(){prefix=prefix.substr(tab.length)}
 function add_body(body,scopes){var res='';
 let js;
 for(var item of body){js=$B.js_from_ast(item,scopes)
@@ -11792,11 +11786,11 @@ js+=`$B.$setitem(locals.__annotations__, `+
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.AnnAssign.prototype._check=function(){check_assign_or_delete(this,this.target)}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
-var js=this.lineno ? `$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
-function assign_one(target,value){if(target instanceof $B.ast.Name){return $B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
+var js=this.lineno ? prefix+`$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
+function assign_one(target,value){if(target instanceof $B.ast.Name){return prefix+$B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return prefix+`$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
 `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`}else if(target instanceof $B.ast.Attribute){if(target.value.id=='self'){maybe_add_static(target,scopes)}
 var attr=mangle(scopes,last_scope(scopes),target.attr)
-return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}`+
+return prefix+`$B.$setattr(${$B.js_from_ast(target.value, scopes)}`+
 `, "${attr}", ${value})`}}
 function assign_many(target,value){var js=''
 var nb_targets=target.elts.length,has_starred=false,nb_after_starred
@@ -11915,7 +11909,7 @@ try{res=$B.rich_op(op,this.left.value,this.right.value,position)
 if(typeof res=='string'){res=res.replace(new RegExp("'",'g'),"\\'")}
 var ast_obj=new $B.ast.Constant(res)
 return ast_obj.to_js(scopes)}catch(err){}}
-return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
+return prefix+`$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
 `${$B.js_from_ast(this.right, scopes)}, ${position})`}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
 var tests=[]
@@ -12103,7 +12097,7 @@ for(let i=1,len=items.length;i < len;i++){let arg=no_key(i)? items[i]:`[${items[
 js+=`.concat(${arg})`}
 return js+')'}
 $B.ast.DictComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
-$B.ast.Expr.prototype.to_js=function(scopes){return `$B.set_lineno(frame, ${this.lineno});\n`+
+$B.ast.Expr.prototype.to_js=function(scopes){return prefix+`$B.set_lineno(frame, ${this.lineno});\n`+
 $B.js_from_ast(this.value,scopes)}
 $B.ast.Expression.prototype.to_js=function(scopes){init_scopes.bind(this)('expression',scopes)
 return $B.js_from_ast(this.body,scopes)}
@@ -12510,37 +12504,45 @@ for(let arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${m
 if(this.args.vararg){bind(mangle_arg(this.args.vararg.arg),scopes)}
 if(this.args.kwarg){bind(mangle_arg(this.args.kwarg.arg),scopes)}
 var function_body
+indent()
+indent()
 if(this.$is_lambda){var _return=new $B.ast.Return(this.body)
 copy_position(_return,this.body)
 var body=[_return]
 function_body=add_body(body,scopes)}else{function_body=add_body(this.body,scopes)}
+dedent()
+dedent()
 var is_generator=symtable_block.generator
 var parse_args=[name2]
-var js=`$B.set_lineno(frame, ${this.lineno})\n`
+var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+prefix
 if(is_async && ! is_generator){js+='async '}
 js+=`function ${name2}(){\n`
+indent()
 var locals_name=make_scope_name(scopes,func_scope)
-js+=`var locals\n`
+js+=prefix+`var locals\n`
 parse_args.push('arguments')
 var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+mangle_arg(this.args.vararg.arg)+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+mangle_arg(this.args.kwarg.arg)+"'"
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=`var ${locals_name} = locals = {};\n`
-js+=`if(arguments.length !== 0){\n`+
-`${name2}.$args_parser(${parse_args.join(', ')})\n`+
-`}\n`}else{js+=`var ${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`}
-js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
-`locals, "${gname}", ${globals_name}, ${name2}]
-    $B.enter_frame(frame, __file__, ${this.lineno})\n`
-if(func_scope.needs_stack_length){js+=`var stack_length = $B.count_frames()\n`}
-if(func_scope.needs_frames ||is_async){js+=`var _frame_obj = $B.frame_obj,\n`+
-`_linenums = $B.make_linenums()\n`}
-if(is_async){js+='frame.$async = true\n'}
-if(is_generator){js+=`locals.$is_generator = true\n`
-if(is_async){js+=`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=`var gen_${id} = $B.generator.$factory(function*(){\n`}}
-js+=`try{\n$B.js_this = this\n`
+this.args.kwarg===undefined){js+=prefix+`var ${locals_name} = locals = {};\n`
+js+=prefix+`if(arguments.length !== 0){\n`+
+prefix+tab+`${name2}.$args_parser(${parse_args.join(', ')})\n`+
+prefix+`}\n`}else{js+=prefix+`var ${locals_name} = locals = `+
+`${name2}.$args_parser(${parse_args.join(', ')})\n`}
+js+=prefix+`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
+`locals, "${gname}", ${globals_name}, ${name2}]\n`+
+prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
+if(func_scope.needs_stack_length){js+=prefix+`var stack_length = $B.count_frames()\n`}
+if(func_scope.needs_frames ||is_async){js+=prefix+`var _frame_obj = $B.frame_obj,\n`+
+prefix+tab+`_linenums = $B.make_linenums()\n`}
+if(is_async){js+=prefix+'frame.$async = true\n'}
+if(is_generator){js+=prefix+`locals.$is_generator = true\n`
+if(is_async){js+=prefix+`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=prefix+`var gen_${id} = $B.generator.$factory(function*(){\n`}}
+js+=prefix+`try{\n`
+indent()
+js+=prefix+`$B.js_this = this\n`
 if(in_class){
 var ix=scopes.indexOf(class_scope),parent=scopes[ix-1]
 var scope_ref=make_scope_name(scopes,parent),class_ref=class_scope.name,
@@ -12550,17 +12552,21 @@ js+=`locals.__class__ =  `+
 `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`}
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
-js+='return $B.trace_return_and_leave(frame, _b_.None)\n'}
-js+=`}catch(err){\n`
+js+=prefix+'return $B.trace_return_and_leave(frame, _b_.None)\n'}
+dedent()
+js+=prefix+`}catch(err){\n`
+indent()
 if(func_scope.needs_frames){
-js+=`$B.set_exc_and_trace(frame, err)\n`+
+js+=prefix+`$B.set_exc_and_trace(frame, err)\n`+
 `err.$frame_obj = _frame_obj\n`+
 `_linenums[_linenums.length - 1] = frame.$lineno\n`+
 `err.$linenums = _linenums\n`+
 `$B.leave_frame()\n`+
-`throw err\n`}else{js+=`$B.set_exc_and_leave(frame, err)\n`}
-js+=`}
-    }\n`
+`throw err\n`}else{js+=prefix+`$B.set_exc_and_leave(frame, err)\n`}
+dedent()
+js+=prefix+`}\n`
+dedent()
+js+=prefix+`}\n`
 if(is_generator){js+=`, '${this.name}')\n`+
 `var _gen_${id} = gen_${id}()\n`+
 `_gen_${id}.$frame = frame\n`+
@@ -12581,7 +12587,7 @@ if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
 if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 if(in_class){js+=`${name2}.$is_method = true\n`}
-js+=`$B.make_function_infos(${name2}, `+
+js+=prefix+`$B.make_function_infos(${name2}, `+
 `'${gname}', `+
 `${defaults}, `+
 `${kw_defaults}, `+
@@ -12599,11 +12605,11 @@ js+=`$B.make_function_infos(${name2}, `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
 `[${varnames}])\n`;
-if(is_async && ! is_generator){js+=`${name2} = $B.make_async(${name2})\n`}
+if(is_async && ! is_generator){js+=prefix+`${name2} = $B.make_async(${name2})\n`}
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
 if(decorated){func_ref=`decorated${make_id()}`
 js+='var '}
-js+=`${func_ref} = ${name2}\n`
+js+=prefix+`${func_ref} = ${name2}\n`
 if(this.returns ||parsed_args.annotations){var features=scopes.symtable.table.future.features,postponed=features & $B.CO_FUTURE_ANNOTATIONS
 if(postponed){
 var src=scopes.src
@@ -12617,7 +12623,8 @@ ann_items.push(`['${arg_ann}', '${ann_str}']`)}else{var value=ann_ast.to_js(scop
 ann_items.push(`['${arg_ann}', ${value}]`)}}}
 if(this.returns){if(postponed){var ann_str=annotation_to_str(this.returns,scopes)
 ann_items.push(`['return', '${ann_str}']`)}else{ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}}
-js+=`${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`}else{js+=`${func_ref}.__annotations__ = $B.empty_dict()\n`}
+js+=prefix+`${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`}else{js+=prefix+`${func_ref}.__annotations__ = $B.empty_dict()\n`}
+dedent()
 if(has_type_params){scopes.pop()}
 if(decorated && ! has_type_params){js+=`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
 let decorate=func_ref
@@ -12698,8 +12705,8 @@ return js}
 $B.ast.IfExp.prototype.to_js=function(scopes){return '($B.$bool('+$B.js_from_ast(this.test,scopes)+') ? '+
 $B.js_from_ast(this.body,scopes)+': '+
 $B.js_from_ast(this.orelse,scopes)+')'}
-$B.ast.Import.prototype.to_js=function(scopes){var js=`$B.set_lineno(frame, ${this.lineno})\n`
-for(var alias of this.names){js+=`$B.$import("${alias.name}", [], `
+$B.ast.Import.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
+for(var alias of this.names){js+=prefix+`$B.$import("${alias.name}", [], `
 if(alias.asname){js+=`{'${alias.name}' : '${alias.asname}'}, `
 bind(alias.asname,scopes)}else{js+='{}, '
 bind(alias.name,scopes)}
@@ -12865,17 +12872,18 @@ $B.ast.MatchValue.prototype.to_js=function(scopes){if(this.value instanceof $B.a
 this.value instanceof $B.ast.UnaryOp ||
 this.value instanceof $B.ast.BinOp ||
 this.value instanceof $B.ast.Attribute){return `value: ${$B.js_from_ast(this.value, scopes)}`}else{compiler_error(this,'patterns may only match literals and attribute lookups')}}
-$B.ast.Module.prototype.to_js=function(scopes){mark_parents(this)
+$B.ast.Module.prototype.to_js=function(scopes){if(prefix.length !=0){console.log('prefix length at start',prefix.length)}
+mark_parents(this)
 var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
 var module_id=name,global_name=make_scope_name(scopes),mod_name=module_name(scopes)
-var js=`var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
-if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
-`locals = ${global_name},\n`+
-`frame = ["${module_id}", locals, "${module_id}", locals]`}else{
-js+=`locals = ${namespaces.local_name},\n`+
-`globals = ${namespaces.global_name}`
+var js=`var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
+if(! namespaces){js+=`    ${global_name} = $B.imported["${mod_name}"],\n`+
+`    locals = ${global_name},\n`+
+`    frame = ["${module_id}", locals, "${module_id}", locals]`}else{
+js+=`    locals = ${namespaces.local_name},\n`+
+`    globals = ${namespaces.global_name}`
 if(name){let local_name=('locals_'+name).replace(/\./g,'_')
-js+=`,\n${local_name} = locals`}}
+js+=`,\n    ${local_name} = locals`}}
 js+=`\nvar __file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
@@ -12883,15 +12891,22 @@ if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B
 if(! namespaces){js+=`$B.enter_frame(frame, __file__, 1)\n`
 js+='\nvar _frame_obj = $B.frame_obj\n'}
 js+='var stack_length = $B.count_frames()\n'
-js+=`try{\n`+
-add_body(this.body,scopes)+'\n'+
-`$B.leave_frame({locals, value: _b_.None})\n`+
-`}catch(err){\n`+
-`$B.set_exc_and_trace(frame, err)\n`+
-`$B.leave_frame({locals, value: _b_.None})\n`+
-'throw err\n'+
-`}`
+js+=`try{\n`
+indent()
+js+=add_body(this.body,scopes)+'\n'+
+prefix+`$B.leave_frame({locals, value: _b_.None})\n`
+dedent()
+js+=prefix+`}catch(err){\n`
+indent()
+js+=prefix+`$B.set_exc_and_trace(frame, err)\n`+
+prefix+`$B.leave_frame({locals, value: _b_.None})\n`+
+prefix+'throw err\n'
+dedent()
+js+=prefix+`}`
 scopes.pop()
+if(prefix.length !=0){console.log('wrong indent !',prefix.length)
+console.log(scopes.src)
+throw Error()}
 return js}
 $B.ast.Name.prototype.to_js=function(scopes){if(this.ctx instanceof $B.ast.Store){
 var scope=bind(this.id,scopes)
@@ -12915,8 +12930,8 @@ $B.ast.NamedExpr.prototype._check=function(){check_assign_or_delete(this,this.ta
 $B.ast.Nonlocal.prototype.to_js=function(scopes){var scope=$B.last(scopes)
 for(var name of this.names){scope.nonlocals.add(name)}
 return ''}
-$B.ast.Pass.prototype.to_js=function(){return `$B.set_lineno(frame, ${this.lineno})\n`+
-'void(0)'}
+$B.ast.Pass.prototype.to_js=function(){return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+'void(0)'}
 $B.ast.Raise.prototype.to_js=function(scopes){var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 '$B.$raise('
 if(this.exc){js+=$B.js_from_ast(this.exc,scopes)}
@@ -13291,6 +13306,7 @@ scopes.src=src
 scopes.namespaces=namespaces
 scopes.imported=imported
 scopes.imports={}
+scopes.indent=0
 var js=ast_root.to_js(scopes)
 return{js,imports:scopes.imports}}
 $B.js_from_ast=function(ast,scopes){if(! scopes.symtable){throw Error('perdu symtable')}
@@ -15247,7 +15263,7 @@ p.call_invalid_rules=1;}
 function _is_end_of_source(p){var err=p.tok.done;
 return p.tokens[p.tokens.length-1].type=='ENDMARKER'}
 $B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var last_token=p.tokens[p.fill-1]
-var tokenizer=$B.tokenizer(p.src,p.filename,p.mode,p)
+$B.tokenizer(p.src,p.filename,p.mode,p)
 p.tokens=p._tokens
 if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno,msg
 if('([{'.includes(brace.char)){err_lineno=brace.line_num}else{if(p.braces.length > 1){err_lineno=p.braces[p.braces.length-2].line_num}else{err_lineno=brace.line_num}}
