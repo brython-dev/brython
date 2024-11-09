@@ -266,7 +266,6 @@ list.__imul__ = function() {
         arguments, {}, null, null),
         len = $.self.length,
         pos = len
-    console.log('list imul', $)
     try{
         var x = $B.PyNumber_Index($.x)
     }catch(err){
