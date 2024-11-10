@@ -467,7 +467,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             toks.append(f"{s} {value} = {key}")
 
         self.print(', \n'.join(toks))
-        
+
         subheader = self.grammar.metas.get("subheader", "")
         if subheader:
             self.print(subheader)
@@ -480,17 +480,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         types = 'const ' + ', \n'.join(types)
         self.print(types)
         self.print()
-        """
-        for rulename, rule in self.all_rules.items():
-            if rule.is_loop() or rule.is_gather():
-                type = "asdl_seq *"
-            elif rule.type:
-                type = rule.type + " "
-            else:
-                type = "void *"
-            self.print(f"static {type}{rulename}_rule(p);")
-        self.print()
-        """
         for rulename, rule in list(self.all_rules.items()):
             self.print()
             if rule.left_recursive:
@@ -602,7 +591,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             self.print(f"p.mark = _resmark;")
             self.add_return("_res")
         self.print("}")
-        # self.print(f"static {result_type}")
         self.print(f"function {node.name}_raw(p)")
 
     def _should_memoize(self, node: Rule) -> bool:
@@ -677,10 +665,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
                     # self.print("// PyMem_Free(_children);")
                     self.add_return("NULL")
                 self.print("}")
-            #self.print("var _seq = [];")
-            # self.out_of_memory_return(f"!_seq", cleanup_code="PyMem_Free(_children);")
-            #self.print("for (let i = 0; i < _n; i++){_seq[i] = _children[i]};")
-            #self.print("// PyMem_Free(_children);")
             if memoize and node.name:
                 self.print(f"$B._PyPegen.insert_memo(p, _start_mark, {node.name}_type, _seq);")
             self.add_return("_children")
@@ -701,7 +685,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         if node.left_recursive and node.leader:
             self.print(f"function {node.name}_raw(){{}};")
 
-        # self.print(f"static {result_type}")
         self.print(f"function {node.name}_rule(p)")
 
         if node.left_recursive and node.leader:
@@ -754,16 +737,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
     def emit_action(self, node: Alt, cleanup_code: Optional[str] = None) -> None:
         _action = transform_action(node.action)
         self.print(f"_res = {_action};")
-
-        """
-        self.print("if (_res == NULL && XXXPyErr_Occurred()) {")
-        with self.indent():
-            self.print("p.error_indicator = 1;")
-            if cleanup_code:
-                self.print(cleanup_code)
-            self.add_return("NULL")
-        self.print("}")
-        """
 
         if self.debug:
             node = str(node).replace('"', '\\"')
@@ -840,17 +813,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
 
             # Add the result of rule to the temporary buffer of children. This buffer
             # will populate later an asdl_seq with all elements to return.
-            """
-            self.print("if (_n == _children_capacity) {")
-            with self.indent():
-                self.print("_children_capacity *= 2;")
-                self.print(
-                    "var _new_children = PyMem_Realloc(_children, _children_capacity * sizeof(void *));"
-                )
-                self.out_of_memory_return(f"!_new_children", cleanup_code="PyMem_Free(_children);")
-                self.print("_children = _new_children;")
-            self.print("}")
-            """
             self.print("_children[_n++] = _res;")
             self.print("_mark = p.mark;")
         self.print("}")
