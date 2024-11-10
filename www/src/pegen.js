@@ -262,6 +262,8 @@ function initialize_token(p, parser_token, new_token, token_type) {
     parser_token.end_col_offset = p.tok.lineno == p.starting_lineno ? p.starting_col_offset + new_token.end_col_offset
                                                                  : new_token.end_col_offset;
 
+    p.arena.lineno = parser_token.lineno
+    
     p.fill += 1;
 
     if (token_type == ERRORTOKEN && p.tok.done == E_DECODE) {
