@@ -311,6 +311,20 @@ frame.f_trace = {
 $B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
 
+$B.make_f_code = function(frame, varnames){
+    frame.f_code = {
+       co_argcount: 1,
+       co_firstlineno: frame.$lineno,
+       co_name: "<genexpr>",
+       co_filename: frame.__file__,
+       co_flags: 115,
+       co_freevars: $B.fast_tuple([]),
+       co_kwonlyargcount: 0,
+       co_posonlyargount: 0,
+       co_qualname: "genexpr",
+       co_varnames: $B.fast_tuple(['.0'].concat(varnames))
+    }
+}
 
 $B.deep_copy = function(stack){
     var res = []
