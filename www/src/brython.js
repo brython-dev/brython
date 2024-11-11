@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-10 16:29:09.536425"
-__BRYTHON__.timestamp=1731252549536
+__BRYTHON__.compiled_date="2024-11-11 11:24:02.020366"
+__BRYTHON__.timestamp=1731320642019
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11705,7 +11705,7 @@ if(save_target_flags){comp_scope_symbols.$strings[target_name]=save_target_flags
 var final_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
 var has_await=final_nb_await_in_scope > initial_nb_await_in_scope
-js=comp_prefix+`(${has_await ? 'async ' : ''}function(expr){\n`+js
+js=`(${has_await ? 'async ' : ''}function(expr){\n`+js
 js+=has_await ? 'var save_frame_obj = $B.frame_obj;\n' :''
 if(this instanceof $B.ast.ListComp){js+=prefix+`result_${id}.push(${elt})\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`_b_.set.add(result_${id}, ${elt})\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}
 dedent()
@@ -12011,15 +12011,24 @@ ix--}else{break}}
 var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
 var has_type_params=this.type_params.length > 0
 if(has_type_params){check_type_params(this)
+js+=prefix+`function TYPE_PARAMS_OF_${this.name}(){\n`
+indent()
 js+=prefix+`$B.$import('_typing')\n`+
 prefix+`var _typing = $B.imported._typing\n`
-var params=[]
-for(let item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)}else if(item instanceof $B.ast.ParamSpec){params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)}}
-bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,`+
-` $B.fast_tuple([${params}]))`)
+var params=[],need_typing_module
+for(let item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`${item.name}`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`unpack(${item.name})`)
+need_typing_module=true}else if(item instanceof $B.ast.ParamSpec){params.push(`${item.name}`)}}
+bases.push(`generic_base`)
+if(need_typing_module){js+=prefix+`$B.$import('typing')\n`+
+prefix+'var typing = $B.imported.typing\n'+
+prefix+`var unpack = $B.$call($B.$getattr(typing.Unpack, '__getitem__'))\n`}
+var name_map=new Map()
 for(let item of this.type_params){var name,param_type=item.constructor.$name
-if(param_type=='TypeVar'){name=item.name}else{name=item.name.id}
-js+=prefix+`locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`}}
+if(['TypeVar','TypeVarTuple','ParamSpec'].includes(param_type)){name=item.name}else{name=item.name.id}
+name_map.set(item,name)
+js+=prefix+`var ${name} = $B.$call(_typing.${param_type})('${name}')\n`}
+js+=prefix+`var generic_base = _typing.Generic.__class_getitem__(_typing.Generic,`+
+` $B.fast_tuple([${params.join(', ')}]))\n`}
 var keywords=[],metaclass,meta=''
 for(var keyword of this.keywords){if(keyword.arg=='metaclass'){metaclass=keyword.value
 meta=metaclass.to_js(scopes)}else{keywords.push(`["${keyword.arg}", `+
@@ -12049,6 +12058,9 @@ prefix+`var _frame_obj = $B.frame_obj\n`+
 prefix+`if(frame.$f_trace !== _b_.None){\n`+
 prefix+tab+`$B.trace_line()\n`+
 prefix+`}\n`
+if(has_type_params){var tp_refs=[]
+for(var item of this.type_params){tp_refs.push(`${name_map.get(item)}`)}
+js+=prefix+`locals.__type_params__ = $B.fast_tuple([${tp_refs.join(', ')}])\n`}
 scopes.push(class_scope)
 js+=add_body(this.body,scopes)
 scopes.pop()
@@ -12063,10 +12075,14 @@ js+=prefix+`})('${this.name}',${globals_name}.__name__ ?? '${glob}', `+
 `$B.fast_tuple([${bases}])`+
 (metaclass ? ', '+meta :'')+
 `)\n`
+if(has_type_params){js+=prefix+`return ${ref}\n`
+dedent()
+js+=prefix+'}\n'}
 var class_ref=reference(scopes,enclosing_scope,this.name)
 if(decorated){class_ref=`decorated${make_id()}`
 js+='var '}
-js+=prefix+`${class_ref} = ${ref}\n`
+js+=prefix+`${class_ref} = `
+if(has_type_params){js+=`TYPE_PARAMS_OF_${this.name}()\n`}else{js+=`${ref}\n`}
 if(decorated){js+=reference(scopes,enclosing_scope,this.name)+' = '
 var decorate=class_ref
 for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
@@ -12107,7 +12123,7 @@ if(srg.length==0){return `'${s}'`}
 return `$B.make_String('${s}', [${srg}])`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){if(Number.isInteger(this.value)){return this.value}else{return `({__class__: _b_.float, value: ${this.value}})`}}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
 throw SyntaxError('bad value',this.value)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
-return 'continue'}
+return prefix+'continue'}
 $B.ast.Delete.prototype.to_js=function(scopes){compiler_check(this)
 var js=''
 for(var target of this.targets){if(target instanceof $B.ast.Name){var scope=name_scope(target.id,scopes)
@@ -12115,7 +12131,8 @@ if(scope.found){scope.found.locals.delete(target.id)}
 js+=`$B.$delete("${target.id}")\n`}else if(target instanceof $B.ast.Subscript){js+=`$B.$delitem(${$B.js_from_ast(target.value, scopes)}, `+
 `${$B.js_from_ast(target.slice, scopes)})\n`}else if(target instanceof $B.ast.Attribute){js+=`_b_.delattr(${$B.js_from_ast(target.value, scopes)}, `+
 `'${target.attr}')\n`}}
-return `$B.set_lineno(frame, ${this.lineno})\n`+js}
+return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+js}
 $B.ast.Delete.prototype._check=function(){for(var target of this.targets){check_assign_or_delete(this,target,'delete')}}
 $B.ast.Dict.prototype.to_js=function(scopes){var items=[],keys=this.keys,has_packed=false
 function no_key(i){return keys[i]===_b_.None ||keys[i]===undefined}
@@ -12135,40 +12152,51 @@ js+=`.concat(${arg})`}
 return js+')'}
 $B.ast.DictComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
 $B.ast.Expr.prototype.to_js=function(scopes){return prefix+`$B.set_lineno(frame, ${this.lineno});\n`+
-$B.js_from_ast(this.value,scopes)}
+prefix+$B.js_from_ast(this.value,scopes)}
 $B.ast.Expression.prototype.to_js=function(scopes){init_scopes.bind(this)('expression',scopes)
 return $B.js_from_ast(this.body,scopes)}
 $B.ast.For.prototype.to_js=function(scopes){
 compiler_check(this)
-var id=make_id(),iter=$B.js_from_ast(this.iter,scopes),js=`frame.$lineno = ${this.lineno}\n`
+var id=make_id(),iter=$B.js_from_ast(this.iter,scopes),js=prefix+`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
-if(this instanceof $B.ast.AsyncFor){js+=`var no_break_${id} = true,\n`+
-`iter_${id} = ${iter},\n`+
-`type_${id} = _b_.type.$factory(iter_${id})\n`+
-`iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
-`type_${id} = _b_.type.$factory(iter_${id})\n`+
-`var next_func_${id} = $B.$call(`+
+if(this instanceof $B.ast.AsyncFor){js+=prefix+`var no_break_${id} = true,\n`+
+prefix+tab+tab+`iter_${id} = ${iter},\n`+
+prefix+tab+tab+`type_${id} = _b_.type.$factory(iter_${id})\n`+
+prefix+`iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
+prefix+`type_${id} = _b_.type.$factory(iter_${id})\n`+
+prefix+`var next_func_${id} = $B.$call(`+
 `$B.$getattr(type_${id}, '__anext__'))\n`+
-`while(true){\n`+
-`  try{\n`+
-`    var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n`+
-`  }catch(err){\n`+
-`    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n`+
-`    else{\nthrow err}\n`+
-`  }\n`}else{js+=`var no_break_${id} = true,\n`+
-`iterator_${id} = ${iter}\n`+
-`for(var next_${id} of $B.make_js_iterator(iterator_${id}, frame, ${this.lineno})){\n`}
+prefix+`while(true){\n`
+indent()
+js+=prefix+`try{\n`+
+prefix+tab+`var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n`+
+prefix+`}catch(err){\n`+
+prefix+tab+`if($B.is_exc(err, [_b_.StopAsyncIteration])){\n`+
+prefix+tab+tab+`break\n`+
+prefix+tab+`}else{\n`+
+prefix+tab+tab+`throw err\n`+
+prefix+tab+'}\n'+
+prefix+`}\n`
+dedent()}else{js+=prefix+`var no_break_${id} = true,\n`+
+prefix+tab+tab+`iterator_${id} = ${iter}\n`+
+prefix+`for(var next_${id} of $B.make_js_iterator(`+
+`iterator_${id}, frame, ${this.lineno})){\n`}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
 name.to_js=function(){return `next_${id}`}
 var assign=new $B.ast.Assign([this.target],name)
+indent()
 js+=assign.to_js(scopes)+'\n'
 js+=add_body(this.body,scopes)
-js+='\n}' 
+dedent()
+js+='\n'+prefix+'}\n' 
 scopes.pop()
-if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+
-add_body(this.orelse,scopes)+'}\n'}
+if(this.orelse.length > 0){js+=prefix+`if(no_break_${id}){\n`
+indent()
+js+=add_body(this.orelse,scopes)+'\n'
+dedent()
+js+=prefix+'}\n'}
 return js}
 $B.ast.FormattedValue.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes)
 if(this.conversion==114){value=`_b_.repr(${value})`}else if(this.conversion==115){value=`_b_.str.$factory(${value})`}else if(this.conversion==97){value=`_b_.ascii(${value})`}
@@ -12470,7 +12498,7 @@ return fct;}
 function type_param_in_def(tp,ref,scopes){var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var js=''
 var name,param_type=tp.constructor.$name
-if(param_type=='TypeVar'){name=tp.name}else{name=tp.name.id}
+if(['TypeVar','TypeVarTuple','ParamSpec'].includes(param_type)){name=tp.name}else{name=tp.name.id}
 bind(name,scopes)
 if(tp.bound){
 var typevarscope=new Scope(name,'typevarbound',tp)
@@ -12486,9 +12514,9 @@ js+=`function BOUND_OF_${name}(){\n`+
 `$B.leave_frame()\n`+
 `throw err\n}\n}\n`
 scopes.pop()}
-js+=`locals_${ref}.${name} = `+
+js+=prefix+`locals_${ref}.${name} = `+
 `$B.$call(_typing.${param_type})('${name}', {$kw: [{infer_variance: true}]})\n`+
-`type_params.push(locals_${ref}.${name})\n`
+prefix+`type_params.push(locals_${ref}.${name})\n`
 if(tp.bound){if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__bound__', BOUND_OF_${name})\n`}else{js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__constraints__', BOUND_OF_${name})\n`}}
@@ -12522,13 +12550,13 @@ var type_params_scope=new Scope(tp_name,'type_params',this.type_params)
 scopes.push(type_params_scope)
 var type_params_ref=qualified_scope_name(scopes,type_params_scope)
 var type_params_func=`function TYPE_PARAMS_OF_${name2}(){\n`
-type_params=`$B.$import('_typing')\n`+
-`var _typing = $B.imported._typing\n`+
-`var locals_${type_params_ref} = {\n},\n`+
-`locals = locals_${type_params_ref},\n`+
-`frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n`+
-`type_params = []\n`+
-`$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
+type_params=prefix+`$B.$import('_typing')\n`+
+prefix+`var _typing = $B.imported._typing\n`+
+prefix+`var locals_${type_params_ref} = {},\n`+
+prefix+tab+tab+`locals = locals_${type_params_ref},\n`+
+prefix+tab+tab+`frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n`+
+prefix+tab+tab+`type_params = []\n`+
+prefix+`$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
 for(var item of this.type_params){type_params+=type_param_in_def(item,type_params_ref,scopes)}
 type_params_func+=type_params}
 var func_scope=new Scope(this.name,'def',this)
@@ -12585,7 +12613,7 @@ var ix=scopes.indexOf(class_scope),parent=scopes[ix-1]
 var scope_ref=make_scope_name(scopes,parent),class_ref=class_scope.name,
 refs=class_ref.split('.').map(x=> `'${x}'`)
 bind("__class__",scopes)
-js+=`locals.__class__ =  `+
+js+=prefix+`locals.__class__ =  `+
 `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`}
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
@@ -12623,7 +12651,7 @@ for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.s
 if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
 if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
-if(in_class){js+=`${name2}.$is_method = true\n`}
+if(in_class){js+=prefix+`${name2}.$is_method = true\n`}
 js+=prefix+`$B.make_function_infos(${name2}, `+
 `'${gname}', `+
 `${defaults}, `+
@@ -13154,22 +13182,26 @@ var qualified_name=qualified_scope_name(scopes,type_alias_scope)
 var value=this.value.to_js(scopes)
 scopes.pop()
 scopes.pop()
-var js=`$B.$import('_typing')\n`
-js+=`var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
-js+=`function TYPE_PARAMS_OF_${this.name.id}(){\n`+
-`var locals_${qualified_name} = {},\n`+
-`    locals = locals_${qualified_name}, \n`+
-`    type_params = $B.fast_tuple([])\n`
-for(var i=0,len=this.type_params.length;i < len;i++){js+=`type_params.push(locals.${type_params_names[i]} = `+
+var js=prefix+`$B.$import('_typing')\n`
+js+=prefix+`var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+js+=prefix+`function TYPE_PARAMS_OF_${this.name.id}(){\n`
+indent()
+js+=prefix+`var locals_${qualified_name} = {},\n`+
+prefix+tab+tab+`locals = locals_${qualified_name}, \n`+
+prefix+tab+tab+`type_params = $B.fast_tuple([])\n`
+for(var i=0,len=this.type_params.length;i < len;i++){js+=prefix+`type_params.push(locals.${type_params_names[i]} = `+
 `${this.type_params[i].to_js()})\n`}
-js+=`function get_value(){\nreturn ${value}\n}\n`
-js+=`var res = $B.$call($B.imported._typing.TypeAliasType)`+
+js+=prefix+`function get_value(){\n`+
+prefix+tab+`return ${value}\n`+
+prefix+`}\n`
+js+=prefix+`var res = $B.$call($B.imported._typing.TypeAliasType)`+
 `('${this.name.id}', get_value)\n`+
-`$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n`+
-`$B.$setattr(res, '__type_params__', type_params)\n`+
-`return res\n`+
-`}\n`+
-`locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
+prefix+`$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n`+
+prefix+`$B.$setattr(res, '__type_params__', type_params)\n`+
+prefix+`return res\n`
+dedent()
+js+=prefix+`}\n`+
+prefix+`locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
 return js}
 $B.ast.TypeVar.prototype.to_js=function(){check_type_params(this)
 return `$B.$call($B.imported._typing.TypeVar)('${this.name}', `+

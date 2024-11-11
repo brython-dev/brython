@@ -426,7 +426,8 @@ class ParamSpec:
 
     def __init__(self, name, *, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True):
+                 infer_variance=True,
+                 default=None):
         self.__name__ = name
         super().__init__(bound, covariant, contravariant)
         def_mod = _caller()
@@ -436,6 +437,7 @@ class ParamSpec:
         self.__covariant__ = covariant
         self.__contravariant__ = contravariant
         self.__infer_variance__ = infer_variance
+        self.default = default
 
     def __repr__(self):
         if self.__infer_variance__:
@@ -466,6 +468,10 @@ class ParamSpec:
         elif isinstance(args[i], list):
             args = (*args[:i], tuple(args[i]), *args[i+1:])
         return args
+
+    def has_default(self):
+        return self.default is not None
+
 
 class Generic:
     """    Abstract base class for generic types.

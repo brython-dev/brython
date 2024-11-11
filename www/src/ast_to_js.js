@@ -888,7 +888,7 @@ function make_comp(scopes){
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
-    js = comp_prefix + `(${has_await ? 'async ' : ''}function(expr){\n` + js
+    js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
 
     js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
 
@@ -1665,30 +1665,42 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var has_type_params = this.type_params.length > 0
     if(has_type_params){
         check_type_params(this)
+        js += prefix + `function TYPE_PARAMS_OF_${this.name}(){\n`
+        indent()
         js += prefix + `$B.$import('_typing')\n` +
               prefix + `var _typing = $B.imported._typing\n`
-        var params = []
+        var params = [],
+            need_typing_module
         for(let item of this.type_params){
             if(item instanceof $B.ast.TypeVar){
-                params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)
+                params.push(`${item.name}`)
             }else if(item instanceof $B.ast.TypeVarTuple){
-                params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)
+                params.push(`unpack(${item.name})`)
+                need_typing_module = true
             }else if(item instanceof $B.ast.ParamSpec){
-                params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)
+                params.push(`${item.name}`)
             }
         }
-        bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,` +
-                ` $B.fast_tuple([${params}]))`)
+        bases.push(`generic_base`)
+        if(need_typing_module){
+            js += prefix + `$B.$import('typing')\n` +
+                  prefix + 'var typing = $B.imported.typing\n' +
+                  prefix + `var unpack = $B.$call($B.$getattr(typing.Unpack, '__getitem__'))\n`
+        }
+        var name_map = new Map()
         for(let item of this.type_params){
             var name,
                 param_type = item.constructor.$name
-            if(param_type == 'TypeVar'){
+            if(['TypeVar', 'TypeVarTuple', 'ParamSpec'].includes(param_type)){
                 name = item.name
             }else{
                 name = item.name.id
             }
-            js += prefix + `locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`
+            name_map.set(item, name)
+            js += prefix + `var ${name} = $B.$call(_typing.${param_type})('${name}')\n`
         }
+        js += prefix + `var generic_base = _typing.Generic.__class_getitem__(_typing.Generic,` +
+                ` $B.fast_tuple([${params.join(', ')}]))\n`
     }
 
     var keywords = [],
@@ -1737,6 +1749,14 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           prefix + tab + `$B.trace_line()\n` +
           prefix + `}\n`
 
+    if(has_type_params){
+        var tp_refs = []
+        for(var item of this.type_params){
+            tp_refs.push(`${name_map.get(item)}`)
+        }
+        js += prefix + `locals.__type_params__ = $B.fast_tuple([${tp_refs.join(', ')}])\n`
+    }
+
     scopes.push(class_scope)
 
     js += add_body(this.body, scopes)
@@ -1758,6 +1778,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           (metaclass ? ', ' + meta : '') +
           `)\n`
 
+    if(has_type_params){
+        js += prefix + `return ${ref}\n`
+        dedent()
+        js += prefix + '}\n'
+    }
+
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
     if(decorated){
@@ -1765,8 +1791,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    js += prefix + `${class_ref} = ${ref}\n`
-
+    js += prefix + `${class_ref} = `
+    if(has_type_params){
+        js += `TYPE_PARAMS_OF_${this.name}()\n`
+    }else{
+        js += `${ref}\n`
+    }
     if(decorated){
         js += reference(scopes, enclosing_scope, this.name) + ' = '
         var decorate = class_ref
@@ -1882,7 +1912,7 @@ $B.ast.Continue.prototype.to_js = function(scopes){
     if(! in_loop(scopes)){
         compiler_error(this, "'continue' not properly in loop")
     }
-    return 'continue'
+    return prefix + 'continue'
 }
 
 $B.ast.Delete.prototype.to_js = function(scopes){
@@ -1903,7 +1933,8 @@ $B.ast.Delete.prototype.to_js = function(scopes){
                   `'${target.attr}')\n`
         }
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n` + js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+           prefix + js
 }
 
 $B.ast.Delete.prototype._check = function(){
@@ -1965,8 +1996,8 @@ $B.ast.DictComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
-    return prefix + `$B.set_lineno(frame, ${this.lineno});\n`+
-        $B.js_from_ast(this.value, scopes)
+    return prefix + `$B.set_lineno(frame, ${this.lineno});\n` +
+           prefix + $B.js_from_ast(this.value, scopes)
 }
 
 $B.ast.Expression.prototype.to_js = function(scopes){
@@ -1980,7 +2011,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     compiler_check(this)
     var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes),
-        js = `frame.$lineno = ${this.lineno}\n`
+        js = prefix + `frame.$lineno = ${this.lineno}\n`
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     var scope = $B.last(scopes),
@@ -1988,42 +2019,54 @@ $B.ast.For.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     if(this instanceof $B.ast.AsyncFor){
-        js += `var no_break_${id} = true,\n` +
-                 `iter_${id} = ${iter},\n` +
-                 `type_${id} = _b_.type.$factory(iter_${id})\n` +
-            `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
-            `type_${id} = _b_.type.$factory(iter_${id})\n` +
-            `var next_func_${id} = $B.$call(` +
-            `$B.$getattr(type_${id}, '__anext__'))\n` +
-            `while(true){\n`+
-            `  try{\n`+
-            `    var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n` +
-            `  }catch(err){\n`+
-            `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n` +
-            `    else{\nthrow err}\n`+
-            `  }\n`
+        js += prefix + `var no_break_${id} = true,\n` +
+              prefix + tab + tab + `iter_${id} = ${iter},\n` +
+              prefix + tab + tab + `type_${id} = _b_.type.$factory(iter_${id})\n` +
+              prefix + `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
+              prefix + `type_${id} = _b_.type.$factory(iter_${id})\n` +
+              prefix + `var next_func_${id} = $B.$call(` +
+                  `$B.$getattr(type_${id}, '__anext__'))\n` +
+              prefix + `while(true){\n`
+        indent()
+        js += prefix + `try{\n`+
+              prefix + tab + `var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n` +
+              prefix + `}catch(err){\n`+
+              prefix + tab + `if($B.is_exc(err, [_b_.StopAsyncIteration])){\n` +
+              prefix + tab + tab + `break\n` +
+              prefix + tab + `}else{\n` +
+              prefix + tab + tab + `throw err\n` +
+              prefix + tab + '}\n' +
+              prefix + `}\n`
+        dedent()
     }else{
-        js += `var no_break_${id} = true,\n` +
-                 `iterator_${id} = ${iter}\n` +
-             `for(var next_${id} of $B.make_js_iterator(iterator_${id}, frame, ${this.lineno})){\n`
+        js += prefix + `var no_break_${id} = true,\n` +
+              prefix + tab + tab + `iterator_${id} = ${iter}\n` +
+              prefix + `for(var next_${id} of $B.make_js_iterator(` +
+                  `iterator_${id}, frame, ${this.lineno})){\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, this.iter)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
-    //assign.lineno = this.lineno
+
+    indent()
+
     js += assign.to_js(scopes) + '\n'
 
     js += add_body(this.body, scopes)
 
-    js += '\n}' // close 'while' loop
+    dedent()
+    js += '\n' + prefix + '}\n' // close 'while' loop
 
     scopes.pop()
 
     if(this.orelse.length > 0){
-        js += `\nif(no_break_${id}){\n` +
-              add_body(this.orelse, scopes) + '}\n'
+        js += prefix + `if(no_break_${id}){\n`
+        indent()
+        js += add_body(this.orelse, scopes) + '\n'
+        dedent()
+        js += prefix + '}\n'
     }
 
     return js
@@ -2552,7 +2595,7 @@ function type_param_in_def(tp, ref, scopes){
     var js = ''
     var name,
         param_type = tp.constructor.$name
-    if(param_type == 'TypeVar'){
+    if(['TypeVar', 'TypeVarTuple', 'ParamSpec'].includes(param_type) ){
         name = tp.name
     }else{
         name = tp.name.id
@@ -2575,9 +2618,9 @@ function type_param_in_def(tp, ref, scopes){
               `throw err\n}\n}\n`
         scopes.pop()
     }
-    js += `locals_${ref}.${name} = ` +
+    js += prefix + `locals_${ref}.${name} = ` +
         `$B.$call(_typing.${param_type})('${name}', {$kw: [{infer_variance: true}]})\n` +
-        `type_params.push(locals_${ref}.${name})\n`
+        prefix + `type_params.push(locals_${ref}.${name})\n`
     if(tp.bound){
         if(! tp.bound.elts){
             js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
@@ -2658,13 +2701,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         var type_params_func = `function TYPE_PARAMS_OF_${name2}(){\n`
 
         // generate code to store type params in the scope namespace
-        type_params = `$B.$import('_typing')\n` +
-              `var _typing = $B.imported._typing\n` +
-              `var locals_${type_params_ref} = {\n},\n` +
-              `locals = locals_${type_params_ref},\n` +
-              `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
-              `type_params = []\n` +
-              `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
+        type_params = prefix + `$B.$import('_typing')\n` +
+              prefix + `var _typing = $B.imported._typing\n` +
+              prefix + `var locals_${type_params_ref} = {},\n` +
+              prefix + tab + tab + `locals = locals_${type_params_ref},\n` +
+              prefix + tab + tab + `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
+              prefix + tab + tab + `type_params = []\n` +
+              prefix + `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
         for(var item of this.type_params){
             type_params += type_param_in_def(item, type_params_ref, scopes)
         }
@@ -2786,7 +2829,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
         bind("__class__", scopes)
-        js += `locals.__class__ =  ` +
+        js += prefix + `locals.__class__ =  ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
 
@@ -2866,7 +2909,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
     if(in_class){
-        js += `${name2}.$is_method = true\n`
+        js += prefix + `${name2}.$is_method = true\n`
     }
 
     // Set admin infos
@@ -4027,31 +4070,35 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
     var value = this.value.to_js(scopes)
     scopes.pop()
     scopes.pop()
-    var js = `$B.$import('_typing')\n`
+    var js = prefix + `$B.$import('_typing')\n`
     // create locals for the type param scope
-    js += `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+    js += prefix + `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
     // emulate the function that creates the instance of TypeAliasType
     // as explained in Python Reference
     // https://docs.python.org/3/reference/compound_stmts.html#generic-type-aliases
-    js += `function TYPE_PARAMS_OF_${this.name.id}(){\n` +
-               `var locals_${qualified_name} = {},\n` +
-               `    locals = locals_${qualified_name}, \n` +
-               `    type_params = $B.fast_tuple([])\n`
+    js += prefix + `function TYPE_PARAMS_OF_${this.name.id}(){\n`
+    indent()
+    js += prefix + `var locals_${qualified_name} = {},\n` +
+          prefix + tab + tab + `locals = locals_${qualified_name}, \n` +
+          prefix + tab + tab + `type_params = $B.fast_tuple([])\n`
     for(var i = 0, len = this.type_params.length; i < len; i++){
-        js += `type_params.push(locals.${type_params_names[i]} = ` +
+        js += prefix + `type_params.push(locals.${type_params_names[i]} = ` +
                   `${this.type_params[i].to_js()})\n`
     }
     // create the function called when the attribute __value__ of the
     // TypeAliasType instance is resolved ("lazy evaluation")
-    js += `function get_value(){\nreturn ${value}\n}\n`
+    js += prefix + `function get_value(){\n` +
+          prefix + tab + `return ${value}\n` +
+          prefix + `}\n`
     // The function returns an instance of _typing.TypeAliasType
-    js += `var res = $B.$call($B.imported._typing.TypeAliasType)` +
+    js += prefix + `var res = $B.$call($B.imported._typing.TypeAliasType)` +
           `('${this.name.id}', get_value)\n` +
-          `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
-          `$B.$setattr(res, '__type_params__', type_params)\n` +
-          `return res\n` +
-          `}\n` +
-          `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
+          prefix + `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
+          prefix + `$B.$setattr(res, '__type_params__', type_params)\n` +
+          prefix + `return res\n`
+    dedent()
+    js += prefix + `}\n` +
+          prefix + `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
     return js
 }
 
