@@ -816,8 +816,7 @@ function make_comp(scopes){
 
     indent()
     if(prefix.length > plen + tab.length){
-        console.log('bizarre')
-        alert()
+        console.warn('JS indentation issue')
     }
     var js = init_comprehension(comp, scopes)
 
@@ -2740,10 +2739,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         bind(mangle_arg(this.args.kwarg.arg), scopes)
     }
 
+    var is_generator = symtable_block.generator
+
     // process body first to detect possible "yield"s
     var function_body
-    indent()
-    indent()
+    indent(is_generator ? 3 : 2)
+
     if(this.$is_lambda){
         var _return = new $B.ast.Return(this.body)
         copy_position(_return, this.body)
@@ -2752,10 +2753,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         function_body = add_body(this.body, scopes)
     }
-    dedent()
-    dedent()
-
-    var is_generator = symtable_block.generator
+    dedent(is_generator ? 3 : 2)
 
     var parse_args = [name2]
 
@@ -2812,10 +2810,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_generator){
         js += prefix + `locals.$is_generator = true\n`
         if(is_async){
-            js += prefix + `var gen_${id} = $B.async_generator.$factory(async function*(){\n`
+            js += prefix + `var gen_${id} = async function*(){\n`
         }else{
-            js += prefix + `var gen_${id} = $B.generator.$factory(function*(){\n`
+            js += prefix + `var gen_${id} = function*(){\n`
         }
+        indent()
     }
     js += prefix + `try{\n`
     indent()
@@ -2858,14 +2857,24 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     dedent()
     js += prefix + `}\n`
     dedent()
-    js += prefix + `}\n`
+    js += prefix + `}`
 
     if(is_generator){
-        js += `, '${this.name}')\n` +
-              `var _gen_${id} = gen_${id}()\n` +
-              `_gen_${id}.$frame = frame\n` +
-              `$B.leave_frame()\n` +
-              `return _gen_${id}}\n` // close gen
+        js += '\n' + prefix + `gen_${id} = `
+        if(is_async){
+            js += `$B.async_generator.$factory(`
+        }else{
+            js += `$B.generator.$factory(`
+        }
+        js += `gen_${id}, '${this.name}')\n`
+        js += prefix + `var _gen_${id} = gen_${id}()\n` +
+              prefix + `_gen_${id}.$frame = frame\n` +
+              prefix + `$B.leave_frame()\n` +
+              prefix + `return _gen_${id}\n` // close gen
+        dedent()
+        js += prefix + '}\n'
+    }else{
+        js += '\n'
     }
 
     scopes.pop()
@@ -2922,7 +2931,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${args_vararg}, ` +
         `${args_kwarg},\n` +
         // make f.__code__
-        `${positional.length}, ` +
+        prefix + `${positional.length}, ` +
         `__file__, ` +
         `${this.lineno}, ` +
         `${flags}, ` +
@@ -3154,7 +3163,7 @@ $B.ast.If.prototype.to_js = function(scopes){
         new_scope = copy_scope(scope, this)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    var js = `if($B.set_lineno(frame, ${this.lineno}) && `
+    var js = prefix + `if($B.set_lineno(frame, ${this.lineno}) && `
     if(this.test instanceof $B.ast.BoolOp){
         this.test.$dont_evaluate = true
         js += `${$B.js_from_ast(this.test, scopes)}){\n`
@@ -3162,18 +3171,25 @@ $B.ast.If.prototype.to_js = function(scopes){
         js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     }
     scopes.push(new_scope)
-    js += add_body(this.body, scopes) + '\n}'
+    indent()
+    js += add_body(this.body, scopes) + '\n'
+    dedent()
+    js += prefix +'}'
     scopes.pop()
     if(this.orelse.length > 0){
         if(this.orelse[0] instanceof $B.ast.If && this.orelse.length == 1){
-            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes) +
-                  add_body(this.orelse.slice(1), scopes)
+            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes).trimLeft()
+            indent()
+            js += add_body(this.orelse.slice(1), scopes)
+            dedent()
         }else{
-            js += '\nelse{\n'
+            js += 'else{\n'
             scopes.push(copy_scope(scope, this))
+            indent()
             js += add_body(this.orelse, scopes)
+            dedent()
             scopes.pop()
-            js += '\n}'
+            js += '\n' + prefix + '}'
         }
     }
     return js
@@ -3215,8 +3231,8 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         }
     }
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             `$B.$import_from("${this.module || ''}", `
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `$B.$import_from("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),
         aliases = []
     for(var name of this.names){
@@ -3301,10 +3317,13 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     f.lineno = this.lineno
     f.$id = fast_id(this) // FunctionDef accesses symtable through id
     f.$is_lambda = true
+    indent()
     var js = f.to_js(scopes),
         lambda_ref = reference(scopes, last_scope(scopes), name)
-    return `(function(){ ${js}\n` +
-        `return ${lambda_ref}\n})()`
+    js = `(function(){\n${js}\n` +
+        prefix + `return ${lambda_ref}\n`
+    dedent()
+    return js + prefix + `})()`
 }
 
 function list_or_tuple_to_js(func, scopes){
@@ -3352,8 +3371,10 @@ $B.ast.match_case.prototype.to_js = function(scopes){
         js += ` && $B.$bool(${$B.js_from_ast(this.guard, scopes)})`
     }
     js += `){\n`
-
-    js += add_body(this.body, scopes) + '\n}'
+    indent()
+    js += add_body(this.body, scopes) + '\n'
+    dedent()
+    js += prefix + '}'
 
     return js
 }
@@ -3422,7 +3443,7 @@ function pattern_bindings(pattern){
 
 $B.ast.Match.prototype.to_js = function(scopes){
     var irrefutable
-    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,
+    var js = prefix + `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,
         first = true
     for(var _case of this.cases){
         if(! _case.guard){
@@ -3432,15 +3453,15 @@ $B.ast.Match.prototype.to_js = function(scopes){
             irrefutable = is_irrefutable(_case.pattern)
         }
 
-        var case_js = $B.js_from_ast(_case, scopes)
         if(first){
-            js += 'if' + case_js
+            js += prefix + 'if'
             first = false
         }else{
-            js += 'else if' + case_js
+            js += 'else if'
         }
+        js += $B.js_from_ast(_case, scopes)
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n`+ js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n`+ js
 }
 
 $B.ast.MatchAs.prototype.to_js = function(scopes){
@@ -3653,9 +3674,10 @@ $B.ast.Module.prototype.to_js = function(scopes){
     js += prefix + `}`
     scopes.pop()
     if(prefix.length != 0){
-        console.log('wrong indent !', prefix.length)
-        console.log(scopes.src)
-        throw Error()
+        console.warn('wrong indent !', prefix.length)
+        // console.warn(scopes.src)
+        // throw Error()
+        prefix = ''
     }
     return js
 }
@@ -3717,8 +3739,8 @@ $B.ast.Pass.prototype.to_js = function(){
 }
 
 $B.ast.Raise.prototype.to_js = function(scopes){
-    var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             '$B.$raise('
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + '$B.$raise('
     if(this.exc){
         js += $B.js_from_ast(this.exc, scopes)
     }
@@ -3735,8 +3757,8 @@ $B.ast.Return.prototype.to_js = function(scopes){
     }
 
     compiler_check(this)
-    var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             `return $B.trace_return_and_leave(frame, ` +
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `return $B.trace_return_and_leave(frame, ` +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None') +
              ')\n'
     return js
@@ -3814,41 +3836,45 @@ $B.ast.Try.prototype.to_js = function(scopes){
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\ntry{\n`
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `try{\n`
+    indent()
 
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
     // don't execute the 'else' clause
-    js += `var stack_length_${id} = $B.count_frames()\n`
+    js += prefix + `var stack_length_${id} = $B.count_frames()\n`
 
     // Save execution stack in case there are return statements and a finally
     // block
     if(has_finally){
-        js += `var save_frame_obj_${id} = $B.frames_obj\n`
+        js += prefix + `var save_frame_obj_${id} = $B.frames_obj\n`
     }
     if(has_else){
-        js += `var failed${id} = false\n`
+        js += prefix + `var failed${id} = false\n`
     }
 
     var try_scope = copy_scope($B.last(scopes))
     scopes.push(try_scope)
     js += add_body(this.body, scopes) + '\n'
+    dedent()
     if(has_except_handlers){
         var err = 'err' + id
-        js += '}\n' // close try
-        js += `catch(${err}){\n` +
-              `$B.set_exc_and_trace(frame, ${err})\n`
+        js += prefix + '}' // close try
+        js += `catch(${err}){\n`
+        indent()
+        js += prefix + `$B.set_exc_and_trace(frame, ${err})\n`
         if(has_else){
-            js += `failed${id} = true\n`
+            js += prefix + `failed${id} = true\n`
         }
         var first = true,
             has_untyped_except = false
         for(var handler of this.handlers){
             if(first){
-                js += 'if'
+                js += prefix + 'if'
                 first = false
             }else{
-                js += '}else if'
+                js += prefix + '}else if'
             }
             js += `($B.set_lineno(frame, ${handler.lineno})`
             if(handler.type){
@@ -3863,57 +3889,73 @@ $B.ast.Try.prototype.to_js = function(scopes){
                 has_untyped_except = true
                 js += '){\n'
             }
+            indent()
             if(handler.name){
                 bind(handler.name, scopes)
                 var mangled = mangle(scopes, try_scope, handler.name)
-                js += `locals.${mangled} = ${err}\n`
+                js += prefix + `locals.${mangled} = ${err}\n`
             }
             js += add_body(handler.body, scopes) + '\n'
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                 // delete current exception
-                js += '$B.del_exc(frame)\n'
+                js += prefix + '$B.del_exc(frame)\n'
             }
+            dedent()
         }
         if(! has_untyped_except){
             // handle other exceptions
-            js += `}else{\nthrow ${err}\n`
+            js += prefix + `}else{\n` +
+                  prefix + tab + `throw ${err}\n`
         }
         // close last if
-        js += '}\n'
+        js += prefix + '}\n'
+        dedent()
     }
     if(has_else || has_finally){
-        js += '}\n' // close try
+        js += prefix + '}' // close try
         js += 'finally{\n'
-        var finalbody = `var exit = false\n` +
-                        `if($B.count_frames() < stack_length_${id}){\n` +
-                            `exit = true\n` +
-                            `$B.frame_obj = $B.push_frame(frame)\n` +
-                        `}\n` +
+        indent()
+        if(has_else && has_finally){
+            // "else" will be wrapped in a 'try' and
+            // "finally" in a 'finally'
+            indent()
+        }
+        var finalbody = prefix + `var exit = false\n` +
+                        prefix + `if($B.count_frames() < stack_length_${id}){\n` +
+                        prefix + tab + `exit = true\n` +
+                        prefix + tab +`$B.frame_obj = $B.push_frame(frame)\n` +
+                        prefix + `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
                 ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
-            finalbody += `\nif(exit){\n` +
-                           `$B.leave_frame()\n` +
-                        `}`
+            finalbody += '\n' + prefix + `if(exit){\n` +
+                         prefix + tab + `$B.leave_frame()\n` +
+                         prefix + `}`
         }
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
-        var elsebody = `if($B.count_frames() == stack_length_${id} ` +
-                       `&& ! failed${id}){\n` +
-                       add_body(this.orelse, scopes) +
-                       '\n}' // close "if"
+        var elsebody = prefix + `if($B.count_frames() == stack_length_${id} ` +
+                       `&& ! failed${id}){\n`
+        indent()
+        elsebody += add_body(this.orelse, scopes)
+        dedent()
+        elsebody += '\n' + prefix + '}' // close "if"
+
         if(has_else && has_finally){
-            js += `try{\n` +
+            dedent()
+            js += prefix + `try{\n` +
                   elsebody +
-                  '\n}\n' + // close "try"
-                  `finally{\n` + finalbody + '}\n'
+                  '\n' + prefix + '}' + // close "try"
+                  `finally{\n` + finalbody + '\n' +
+                  prefix + '}\n'
         }else if(has_else && ! has_finally){
-            js += elsebody
+            js += elsebody + '\n'
         }else{
-            js += finalbody
+            js += finalbody + '\n'
         }
-        js += '\n}\n' // close "finally"
+        dedent()
+        js += prefix + '}\n' // close "finally"
     }else{
         js += '}\n' // close catch
     }
@@ -3928,20 +3970,21 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\ntry{\n`
-
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `try{\n`
+    indent()
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
     // don't execute the 'else' clause
-    js += `var stack_length_${id} = $B.count_frames()\n`
+    js += prefix + `var stack_length_${id} = $B.count_frames()\n`
 
     // Save execution stack in case there are return statements and a finally
     // block
     if(has_finally){
-        js += `var save_frame_obj_${id} = $B.frame_obj\n`
+        js += prefix + `var save_frame_obj_${id} = $B.frame_obj\n`
     }
     if(has_else){
-        js += `var failed${id} = false\n`
+        js += prefix + `var failed${id} = false\n`
     }
 
     var try_scope = copy_scope($B.last(scopes))
@@ -3949,89 +3992,105 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
     js += add_body(this.body, scopes) + '\n'
     if(has_except_handlers){
         var err = 'err' + id
-        js += '}\n' // close try
-        js += `catch(${err}){\n` +
-              `$B.set_exc_and_trace(frame, ${err})\n` +
-              `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
-                  `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
-              '}\n' +
-              `function fake_split(exc, condition){\n` +
-              `return condition(exc) ? ` +
-              `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n` +
-              '}\n'
+        dedent()
+        js += prefix + '}' // close try
+        js += `catch(${err}){\n`
+        indent()
+        js += prefix + `$B.set_exc_and_trace(frame, ${err})\n` +
+              prefix + `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
+              prefix + tab + `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
+              prefix + '}\n' +
+              prefix + `function fake_split(exc, condition){\n` +
+              prefix + tab + `return condition(exc) ? ` +
+                  `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n` +
+              prefix + '}\n'
         if(has_else){
-            js += `failed${id} = true\n`
+            js += prefix + `failed${id} = true\n`
         }
         for(var handler of this.handlers){
-            js += `$B.set_lineno(frame, ${handler.lineno})\n`
+            js += prefix + `$B.set_lineno(frame, ${handler.lineno})\n`
             if(handler.type){
-                js += "var condition = function(exc){\n" +
-                      "    return $B.$isinstance(exc, " +
+                js += prefix + "var condition = function(exc){\n" +
+                      prefix + tab + "return $B.$isinstance(exc, " +
                       `${$B.js_from_ast(handler.type, scopes)})\n` +
-                      "}\n" +
-                      `var klass = $B.get_class(${err}),\n` +
-                          `split_method = $B.$getattr(klass, 'split'),\n` +
-                          `split = $B.$call(split_method)(${err}, condition),\n` +
-                      '    matching = split[0],\n' +
-                      '    rest = split[1]\n' +
-                      'if(matching.exceptions !== _b_.None){\n' +
-                      '    for(var err of matching.exceptions){\n'
-
+                      prefix + "}\n" +
+                      prefix + `var klass = $B.get_class(${err}),\n`
+                indent()
+                js += prefix + `split_method = $B.$getattr(klass, 'split'),\n` +
+                      prefix + `split = $B.$call(split_method)(${err}, condition),\n` +
+                      prefix + 'matching = split[0],\n' +
+                      prefix + 'rest = split[1]\n'
+                dedent()
+                js += prefix + 'if(matching.exceptions !== _b_.None){\n'
+                indent()
+                js += prefix + 'for(var err of matching.exceptions){\n'
+                indent()
                 if(handler.name){
                     bind(handler.name, scopes)
                     var mangled = mangle(scopes, try_scope, handler.name)
-                    js += `locals.${mangled} = ${err}\n`
+                    js += prefix + `locals.${mangled} = ${err}\n`
                 }
                 js += add_body(handler.body, scopes) + '\n'
                 if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                     // delete current exception
-                    js += '$B.del_exc(frame)\n'
+                    js += prefix + '$B.del_exc(frame)\n'
                 }
-                js += '}\n'
-                js += '}\n'
-                js += `${err} = rest\n`
+                dedent()
+                js += prefix + '}\n'
+                dedent()
+                js += prefix + '}\n'
+                js += prefix + `${err} = rest\n`
             }
         }
-        js += `if(${err}.exceptions !== _b_.None){\n` +
-                  `throw ${err}\n` +
-              '}\n'
-
+        js += prefix + `if(${err}.exceptions !== _b_.None){\n` +
+              prefix + tab + `throw ${err}\n` +
+              prefix + '}\n'
+        dedent()
     }
     if(has_else || has_finally){
-        js += '}\n' // close try
+        js += prefix + '}' // close try
         js += 'finally{\n'
-        var finalbody = `var exit = false\n` +
-                        `if($B.count_frames() < stack_length_${id}){\n` +
-                            `exit = true\n` +
-                            `$B.frame_obj = $B.push_frame(frame)\n` +
-                        `}\n` +
+        indent()
+        if(has_else && has_finally){
+            indent()
+        }
+        var finalbody = prefix + `var exit = false\n` +
+                        prefix + `if($B.count_frames() < stack_length_${id}){\n` +
+                        prefix + tab + `exit = true\n` +
+                        prefix + tab + `$B.frame_obj = $B.push_frame(frame)\n` +
+                        prefix + `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
                 ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
-            finalbody += `\nif(exit){\n` +
-                           `$B.leave_frame(locals)\n` +
-                        `}`
+            finalbody += '\n' + prefix + `if(exit){\n` +
+                         prefix + tab + `$B.leave_frame(locals)\n` +
+                         prefix + `}`
         }
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
-        var elsebody = `if($B.count_frames() == stack_length_${id} ` +
-                       `&& ! failed${id}){\n` +
-                       add_body(this.orelse, scopes) +
-                       '\n}' // close "if"
+        var elsebody = prefix + `if($B.count_frames() == stack_length_${id} ` +
+                       `&& ! failed${id}){\n`
+        indent()
+        elsebody += add_body(this.orelse, scopes)
+        dedent()
+        elsebody += '\n' + prefix + '}' // close "if"
         if(has_else && has_finally){
-            js += `try{\n` +
-                  elsebody +
-                  '\n}\n' + // close "try"
-                  `finally{\n` + finalbody + '}\n'
+            dedent()
+            js += prefix + `try{\n` +
+                  elsebody + '\n' +
+                  prefix + '}' + // close "try"
+                  `finally{\n` + finalbody + '\n' +
+                  prefix + '}'
         }else if(has_else && ! has_finally){
             js += elsebody
         }else{
             js += finalbody
         }
-        js += '\n}\n' // close "finally"
+        dedent()
+        js += '\n' + prefix + '}\n' // close "finally"
     }else{
-        js += '}\n' // close catch
+        js += prefix + '}\n' // close catch
     }
     scopes.pop()
     return js
@@ -4143,24 +4202,29 @@ $B.ast.While.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     // Set a variable to detect a "break"
-    var js = `var no_break_${id} = true\n`
+    var js = prefix + `var no_break_${id} = true\n`
 
-    js += `while($B.set_lineno(frame, ${this.lineno}) && `
+    js += prefix + `while($B.set_lineno(frame, ${this.lineno}) && `
     if(this.test instanceof $B.ast.BoolOp){
         this.test.$dont_evaluate = true
         js += `${$B.js_from_ast(this.test, scopes)}){\n`
     }else{
         js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     }
-    js += add_body(this.body, scopes) + '\n}'
+    indent()
+    js += add_body(this.body, scopes)
+    dedent()
+    js += '\n' + prefix + '}\n'
 
     scopes.pop()
 
     if(this.orelse.length > 0){
-        js += `\nif(no_break_${id}){\n` +
-              add_body(this.orelse, scopes) + '}\n'
+        js += prefix + `if(no_break_${id}){\n`
+        indent()
+        js += add_body(this.orelse, scopes)
+        dedent()
+        js += '\n' + prefix + '}\n'
     }
-
 
     return js
 }
@@ -4355,92 +4419,122 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
     scope.is_generator = true
     var value = $B.js_from_ast(this.value, scopes)
     var n = make_id()
-    return `yield* (function* f(){
-        var _i${n} = _b_.iter(${value}),
-                _r${n}
-            var failed${n} = false
-            try{
-                var _y${n} = _b_.next(_i${n})
-            }catch(_e){
-                $B.set_exc(_e, frame)
-                failed${n} = true
-                $B.pmframe = $B.frame_obj.frame
-                _e = $B.exception(_e)
-                if(_e.__class__ === _b_.StopIteration){
-                    var _r${n} = $B.$getattr(_e, "value")
-                }else{
-                    throw _e
-                }
+    var res = `yield* (function* f(){\n`
+    indent()
+    var js = `
+        var _i${n} = _b_.iter(${value.trimRight()}),
+            _r${n}
+        var failed${n} = false
+        try{
+            var _y${n} = _b_.next(_i${n})
+        }catch(_e){
+            $B.set_exc(_e, frame)
+            failed${n} = true
+            $B.pmframe = $B.frame_obj.frame
+            _e = $B.exception(_e)
+            if(_e.__class__ === _b_.StopIteration){
+                var _r${n} = $B.$getattr(_e, "value")
+            }else{
+                throw _e
             }
-            if(! failed${n}){
-                while(true){
-                    var failed1${n} = false
-                    try{
-                        $B.leave_frame()
-                        var _s${n} = yield _y${n}
-                        $B.frame_obj = $B.push_frame(frame)
-                    }catch(_e){
-                        $B.set_exc(_e, frame)
-                        if(_e.__class__ === _b_.GeneratorExit){
-                            var failed2${n} = false
-                            try{
-                                var _m${n} = $B.$getattr(_i${n}, "close")
-                            }catch(_e1){
-                                failed2${n} = true
-                                if(_e1.__class__ !== _b_.AttributeError){
-                                    throw _e1
-                                }
-                            }
-                            if(! failed2${n}){
-                                $B.$call(_m${n})()
-                            }
-                            throw _e
-                        }else if($B.is_exc(_e, [_b_.BaseException])){
-                            var sys_module = $B.imported._sys,
-                                _x${n} = sys_module.exc_info()
-                            var failed3${n} = false
-                            try{
-                                var _m${n} = $B.$getattr(_i${n}, "throw")
-                            }catch(err){
-                                failed3${n} = true
-                                if($B.is_exc(err, [_b_.AttributeError])){
-                                    throw err
-                                }
-                            }
-                            if(! failed3${n}){
-                                try{
-                                    _y${n} = $B.$call(_m${n}).apply(null,
-                                        _b_.list.$factory(_x${n}))
-                                }catch(err){
-                                    if($B.is_exc(err, [_b_.StopIteration])){
-                                        _r${n} = $B.$getattr(err, "value")
-                                        break
-                                    }
-                                    throw err
-                                }
-                            }
-                        }
-                    }
-                    if(! failed1${n}){
+        }
+        if(! failed${n}){
+            while(true){
+                var failed1${n} = false
+                try{
+                    $B.leave_frame()
+                    var _s${n} = yield _y${n}
+                    $B.frame_obj = $B.push_frame(frame)
+                }catch(_e){
+                    $B.set_exc(_e, frame)
+                    if(_e.__class__ === _b_.GeneratorExit){
+                        var failed2${n} = false
                         try{
-                            if(_s${n} === _b_.None){
-                                _y${n} = _b_.next(_i${n})
-                            }else{
-                                _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            var _m${n} = $B.$getattr(_i${n}, "close")
+                        }catch(_e1){
+                            failed2${n} = true
+                            if(_e1.__class__ !== _b_.AttributeError){
+                                throw _e1
                             }
+                        }
+                        if(! failed2${n}){
+                            $B.$call(_m${n})()
+                        }
+                        throw _e
+                    }else if($B.is_exc(_e, [_b_.BaseException])){
+                        var sys_module = $B.imported._sys,
+                            _x${n} = sys_module.exc_info()
+                        var failed3${n} = false
+                        try{
+                            var _m${n} = $B.$getattr(_i${n}, "throw")
                         }catch(err){
-                            if($B.is_exc(err, [_b_.StopIteration])){
-                                _r${n} = $B.$getattr(err, "value")
-                                break
+                            failed3${n} = true
+                            if($B.is_exc(err, [_b_.AttributeError])){
+                                throw err
                             }
-                            throw err
+                        }
+                        if(! failed3${n}){
+                            try{
+                                _y${n} = $B.$call(_m${n}).apply(null,
+                                    _b_.list.$factory(_x${n}))
+                            }catch(err){
+                                if($B.is_exc(err, [_b_.StopIteration])){
+                                    _r${n} = $B.$getattr(err, "value")
+                                    break
+                                }
+                                throw err
+                            }
                         }
                     }
                 }
+                if(! failed1${n}){
+                    try{
+                        if(_s${n} === _b_.None){
+                            _y${n} = _b_.next(_i${n})
+                        }else{
+                            _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                        }
+                    }catch(err){
+                        if($B.is_exc(err, [_b_.StopIteration])){
+                            _r${n} = $B.$getattr(err, "value")
+                            break
+                        }
+                        throw err
+                    }
+                }
             }
-            return _r${n}
-        })()`
+        }
+        return _r${n}`
+    var lines = js.split('\n').slice(1)
+    var head = lines[0].length - lines[0].trimLeft().length
+    for(var line of lines){
+        var trimmed = line.trimLeft(),
+            tlen = trimmed.length
+        if(tlen == 0){
+            res += '\n'
+            continue
+        }
+        var line_head = line.length - tlen
+        var line_indent = (line_head - head) / 4
+        if(line_indent < 0){
+            /*
+            console.log(js)
+            console.log('bug for line', line)
+            console.log(scopes.filename)
+            console.log('code for value\n', value)
+            console.log('value ends with LN ?', value.endsWith('\n'))
+            */
+            console.warn('wrong indentation')
+            line_indent = 0
+        }
+        res += prefix + tab.repeat(line_indent) + trimmed + '\n'
+    }
+    dedent()
+    res += prefix + '})()'
+
+    return res
 }
+
 var state = {}
 
 $B.js_from_root = function(arg){

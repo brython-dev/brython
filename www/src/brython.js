@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-11 11:24:02.020366"
-__BRYTHON__.timestamp=1731320642019
+__BRYTHON__.compiled_date="2024-11-12 14:46:30.882733"
+__BRYTHON__.timestamp=1731419190882
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11674,8 +11674,7 @@ var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
 indent()
-if(prefix.length > plen+tab.length){console.log('bizarre')
-alert()}
+if(prefix.length > plen+tab.length){console.warn('JS indentation issue')}
 var js=init_comprehension(comp,scopes)
 if(comp_iter_scope.found){js+=prefix+`var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`}
 if(this instanceof $B.ast.ListComp){js+=prefix+`var result_${id} = $B.$list([])\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`var result_${id} = $B.empty_dict()\n`}
@@ -12568,16 +12567,14 @@ for(let arg of this.args.posonlyargs){arg_names.push(`'${mangle_arg(arg.arg)}'`)
 for(let arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${mangle_arg(arg.arg)}'`)}
 if(this.args.vararg){bind(mangle_arg(this.args.vararg.arg),scopes)}
 if(this.args.kwarg){bind(mangle_arg(this.args.kwarg.arg),scopes)}
+var is_generator=symtable_block.generator
 var function_body
-indent()
-indent()
+indent(is_generator ? 3 :2)
 if(this.$is_lambda){var _return=new $B.ast.Return(this.body)
 copy_position(_return,this.body)
 var body=[_return]
 function_body=add_body(body,scopes)}else{function_body=add_body(this.body,scopes)}
-dedent()
-dedent()
-var is_generator=symtable_block.generator
+dedent(is_generator ? 3 :2)
 var parse_args=[name2]
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+prefix
 if(is_async && ! is_generator){js+='async '}
@@ -12604,7 +12601,8 @@ if(func_scope.needs_frames ||is_async){js+=prefix+`var _frame_obj = $B.frame_obj
 prefix+tab+`_linenums = $B.make_linenums()\n`}
 if(is_async){js+=prefix+'frame.$async = true\n'}
 if(is_generator){js+=prefix+`locals.$is_generator = true\n`
-if(is_async){js+=prefix+`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=prefix+`var gen_${id} = $B.generator.$factory(function*(){\n`}}
+if(is_async){js+=prefix+`var gen_${id} = async function*(){\n`}else{js+=prefix+`var gen_${id} = function*(){\n`}
+indent()}
 js+=prefix+`try{\n`
 indent()
 js+=prefix+`$B.js_this = this\n`
@@ -12631,12 +12629,16 @@ js+=prefix+`$B.set_exc_and_trace(frame, err)\n`+
 dedent()
 js+=prefix+`}\n`
 dedent()
-js+=prefix+`}\n`
-if(is_generator){js+=`, '${this.name}')\n`+
-`var _gen_${id} = gen_${id}()\n`+
-`_gen_${id}.$frame = frame\n`+
-`$B.leave_frame()\n`+
-`return _gen_${id}}\n` }
+js+=prefix+`}`
+if(is_generator){js+='\n'+prefix+`gen_${id} = `
+if(is_async){js+=`$B.async_generator.$factory(`}else{js+=`$B.generator.$factory(`}
+js+=`gen_${id}, '${this.name}')\n`
+js+=prefix+`var _gen_${id} = gen_${id}()\n`+
+prefix+`_gen_${id}.$frame = frame\n`+
+prefix+`$B.leave_frame()\n`+
+prefix+`return _gen_${id}\n` 
+dedent()
+js+=prefix+'}\n'}else{js+='\n'}
 scopes.pop()
 var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
 this.name
@@ -12660,7 +12662,7 @@ js+=prefix+`$B.make_function_infos(${name2}, `+
 `[${arg_names}], `+
 `${args_vararg}, `+
 `${args_kwarg},\n`+
-`${positional.length}, `+
+prefix+`${positional.length}, `+
 `__file__, `+
 `${this.lineno}, `+
 `${flags}, `+
@@ -12770,18 +12772,25 @@ $B.ast.Global.prototype.to_js=function(scopes){var scope=last_scope(scopes)
 for(var name of this.names){scope.globals.add(name)}
 return ''}
 $B.ast.If.prototype.to_js=function(scopes){var scope=$B.last(scopes),new_scope=copy_scope(scope,this)
-var js=`if($B.set_lineno(frame, ${this.lineno}) && `
+var js=prefix+`if($B.set_lineno(frame, ${this.lineno}) && `
 if(this.test instanceof $B.ast.BoolOp){this.test.$dont_evaluate=true
 js+=`${$B.js_from_ast(this.test, scopes)}){\n`}else{js+=`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`}
 scopes.push(new_scope)
-js+=add_body(this.body,scopes)+'\n}'
+indent()
+js+=add_body(this.body,scopes)+'\n'
+dedent()
+js+=prefix+'}'
 scopes.pop()
-if(this.orelse.length > 0){if(this.orelse[0]instanceof $B.ast.If && this.orelse.length==1){js+='else '+$B.js_from_ast(this.orelse[0],scopes)+
-add_body(this.orelse.slice(1),scopes)}else{js+='\nelse{\n'
+if(this.orelse.length > 0){if(this.orelse[0]instanceof $B.ast.If && this.orelse.length==1){js+='else '+$B.js_from_ast(this.orelse[0],scopes).trimLeft()
+indent()
+js+=add_body(this.orelse.slice(1),scopes)
+dedent()}else{js+='else{\n'
 scopes.push(copy_scope(scope,this))
+indent()
 js+=add_body(this.orelse,scopes)
+dedent()
 scopes.pop()
-js+='\n}'}}
+js+='\n'+prefix+'}'}}
 return js}
 $B.ast.IfExp.prototype.to_js=function(scopes){return '($B.$bool('+$B.js_from_ast(this.test,scopes)+') ? '+
 $B.js_from_ast(this.body,scopes)+': '+
@@ -12796,8 +12805,8 @@ for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=t
 js+=`locals, true)\n`}
 return js.trimRight()}
 $B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
-var js=`$B.set_lineno(frame, ${this.lineno})\n`+
-`$B.$import_from("${this.module || ''}", `
+var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+`$B.$import_from("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
 for(var name of this.names){if(name.asname){aliases.push(`${name.name}: '${name.asname}'`)}}
 js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
@@ -12839,9 +12848,12 @@ var f=new $B.ast.FunctionDef(name,this.args,this.body,[])
 f.lineno=this.lineno
 f.$id=fast_id(this)
 f.$is_lambda=true
+indent()
 var js=f.to_js(scopes),lambda_ref=reference(scopes,last_scope(scopes),name)
-return `(function(){ ${js}\n`+
-`return ${lambda_ref}\n})()`}
+js=`(function(){\n${js}\n`+
+prefix+`return ${lambda_ref}\n`
+dedent()
+return js+prefix+`})()`}
 function list_or_tuple_to_js(func,scopes){if(this.elts.filter(x=> x instanceof $B.ast.Starred).length > 0){var parts=[],simple=[]
 for(var elt of this.elts){if(elt instanceof $B.ast.Starred){elt.$handled=true
 parts.push(`[${simple.join(', ')}]`)
@@ -12861,7 +12873,10 @@ $B.ast.match_case.prototype.to_js=function(scopes){var js=`($B.set_lineno(frame,
 `${$B.js_from_ast(this.pattern, scopes)}})`
 if(this.guard){js+=` && $B.$bool(${$B.js_from_ast(this.guard, scopes)})`}
 js+=`){\n`
-js+=add_body(this.body,scopes)+'\n}'
+indent()
+js+=add_body(this.body,scopes)+'\n'
+dedent()
+js+=prefix+'}'
 return js}
 function is_irrefutable(pattern){switch(pattern.constructor){case $B.ast.MatchAs:
 if(pattern.pattern===undefined){return pattern}else{return is_irrefutable(pattern.pattern)}
@@ -12888,13 +12903,13 @@ if(_bindings.length !=bindings.length){compiler_error(pattern,err_msg)}else{for(
 break}
 return bindings.sort()}
 $B.ast.Match.prototype.to_js=function(scopes){var irrefutable
-var js=`var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,first=true
+var js=prefix+`var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,first=true
 for(var _case of this.cases){if(! _case.guard){if(irrefutable){irrefutable_error(irrefutable)}
 irrefutable=is_irrefutable(_case.pattern)}
-var case_js=$B.js_from_ast(_case,scopes)
-if(first){js+='if'+case_js
-first=false}else{js+='else if'+case_js}}
-return `$B.set_lineno(frame, ${this.lineno})\n`+js}
+if(first){js+=prefix+'if'
+first=false}else{js+='else if'}
+js+=$B.js_from_ast(_case,scopes)}
+return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.MatchAs.prototype.to_js=function(scopes){
 var scope=$B.last(scopes)
 var name=this.name===undefined ? '_' :this.name,params
@@ -12985,9 +13000,8 @@ prefix+'throw err\n'
 dedent()
 js+=prefix+`}`
 scopes.pop()
-if(prefix.length !=0){console.log('wrong indent !',prefix.length)
-console.log(scopes.src)
-throw Error()}
+if(prefix.length !=0){console.warn('wrong indent !',prefix.length)
+prefix=''}
 return js}
 $B.ast.Name.prototype.to_js=function(scopes){if(this.ctx instanceof $B.ast.Store){
 var scope=bind(this.id,scopes)
@@ -13013,16 +13027,16 @@ for(var name of this.names){scope.nonlocals.add(name)}
 return ''}
 $B.ast.Pass.prototype.to_js=function(){return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
 prefix+'void(0)'}
-$B.ast.Raise.prototype.to_js=function(scopes){var js=`$B.set_lineno(frame, ${this.lineno})\n`+
-'$B.$raise('
+$B.ast.Raise.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+'$B.$raise('
 if(this.exc){js+=$B.js_from_ast(this.exc,scopes)}
 if(this.cause){js+=', '+$B.js_from_ast(this.cause,scopes)}
 return js+')'}
 $B.ast.Return.prototype.to_js=function(scopes){
 if(last_scope(scopes).type !='def'){compiler_error(this,"'return' outside function")}
 compiler_check(this)
-var js=`$B.set_lineno(frame, ${this.lineno})\n`+
-`return $B.trace_return_and_leave(frame, `+
+var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+`return $B.trace_return_and_leave(frame, `+
 (this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')+
 ')\n'
 return js}
@@ -13047,124 +13061,158 @@ if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slic
 return `$B.$getitem(${value}, ${slice},${position})`}}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
 var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
-var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`
-js+=`var stack_length_${id} = $B.count_frames()\n`
-if(has_finally){js+=`var save_frame_obj_${id} = $B.frames_obj\n`}
-if(has_else){js+=`var failed${id} = false\n`}
+var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+`try{\n`
+indent()
+js+=prefix+`var stack_length_${id} = $B.count_frames()\n`
+if(has_finally){js+=prefix+`var save_frame_obj_${id} = $B.frames_obj\n`}
+if(has_else){js+=prefix+`var failed${id} = false\n`}
 var try_scope=copy_scope($B.last(scopes))
 scopes.push(try_scope)
 js+=add_body(this.body,scopes)+'\n'
+dedent()
 if(has_except_handlers){var err='err'+id
-js+='}\n' 
-js+=`catch(${err}){\n`+
-`$B.set_exc_and_trace(frame, ${err})\n`
-if(has_else){js+=`failed${id} = true\n`}
+js+=prefix+'}' 
+js+=`catch(${err}){\n`
+indent()
+js+=prefix+`$B.set_exc_and_trace(frame, ${err})\n`
+if(has_else){js+=prefix+`failed${id} = true\n`}
 var first=true,has_untyped_except=false
-for(var handler of this.handlers){if(first){js+='if'
-first=false}else{js+='}else if'}
+for(var handler of this.handlers){if(first){js+=prefix+'if'
+first=false}else{js+=prefix+'}else if'}
 js+=`($B.set_lineno(frame, ${handler.lineno})`
 if(handler.type){js+=` && $B.is_exc(${err}, `
 if(handler.type instanceof $B.ast.Tuple){js+=`${$B.js_from_ast(handler.type, scopes)}`}else{js+=`[${$B.js_from_ast(handler.type, scopes)}]`}
 js+=`)){\n`}else{has_untyped_except=true
 js+='){\n'}
+indent()
 if(handler.name){bind(handler.name,scopes)
 var mangled=mangle(scopes,try_scope,handler.name)
-js+=`locals.${mangled} = ${err}\n`}
+js+=prefix+`locals.${mangled} = ${err}\n`}
 js+=add_body(handler.body,scopes)+'\n'
 if(!($B.last(handler.body)instanceof $B.ast.Return)){
-js+='$B.del_exc(frame)\n'}}
+js+=prefix+'$B.del_exc(frame)\n'}
+dedent()}
 if(! has_untyped_except){
-js+=`}else{\nthrow ${err}\n`}
-js+='}\n'}
-if(has_else ||has_finally){js+='}\n' 
+js+=prefix+`}else{\n`+
+prefix+tab+`throw ${err}\n`}
+js+=prefix+'}\n'
+dedent()}
+if(has_else ||has_finally){js+=prefix+'}' 
 js+='finally{\n'
-var finalbody=`var exit = false\n`+
-`if($B.count_frames() < stack_length_${id}){\n`+
-`exit = true\n`+
-`$B.frame_obj = $B.push_frame(frame)\n`+
-`}\n`+
+indent()
+if(has_else && has_finally){
+indent()}
+var finalbody=prefix+`var exit = false\n`+
+prefix+`if($B.count_frames() < stack_length_${id}){\n`+
+prefix+tab+`exit = true\n`+
+prefix+tab+`$B.frame_obj = $B.push_frame(frame)\n`+
+prefix+`}\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
-!($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+=`\nif(exit){\n`+
-`$B.leave_frame()\n`+
-`}`}
-var elsebody=`if($B.count_frames() == stack_length_${id} `+
-`&& ! failed${id}){\n`+
-add_body(this.orelse,scopes)+
-'\n}' 
-if(has_else && has_finally){js+=`try{\n`+
+!($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+='\n'+prefix+`if(exit){\n`+
+prefix+tab+`$B.leave_frame()\n`+
+prefix+`}`}
+var elsebody=prefix+`if($B.count_frames() == stack_length_${id} `+
+`&& ! failed${id}){\n`
+indent()
+elsebody+=add_body(this.orelse,scopes)
+dedent()
+elsebody+='\n'+prefix+'}' 
+if(has_else && has_finally){dedent()
+js+=prefix+`try{\n`+
 elsebody+
-'\n}\n'+
-`finally{\n`+finalbody+'}\n'}else if(has_else && ! has_finally){js+=elsebody}else{js+=finalbody}
-js+='\n}\n' }else{js+='}\n' }
+'\n'+prefix+'}'+
+`finally{\n`+finalbody+'\n'+
+prefix+'}\n'}else if(has_else && ! has_finally){js+=elsebody+'\n'}else{js+=finalbody+'\n'}
+dedent()
+js+=prefix+'}\n' }else{js+='}\n' }
 scopes.pop()
 return js}
 $B.ast.TryStar.prototype.to_js=function(scopes){
 var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
-var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`
-js+=`var stack_length_${id} = $B.count_frames()\n`
-if(has_finally){js+=`var save_frame_obj_${id} = $B.frame_obj\n`}
-if(has_else){js+=`var failed${id} = false\n`}
+var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
+prefix+`try{\n`
+indent()
+js+=prefix+`var stack_length_${id} = $B.count_frames()\n`
+if(has_finally){js+=prefix+`var save_frame_obj_${id} = $B.frame_obj\n`}
+if(has_else){js+=prefix+`var failed${id} = false\n`}
 var try_scope=copy_scope($B.last(scopes))
 scopes.push(try_scope)
 js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
-js+='}\n' 
-js+=`catch(${err}){\n`+
-`$B.set_exc_and_trace(frame, ${err})\n`+
-`if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
-`${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
-'}\n'+
-`function fake_split(exc, condition){\n`+
-`return condition(exc) ? `+
+dedent()
+js+=prefix+'}' 
+js+=`catch(${err}){\n`
+indent()
+js+=prefix+`$B.set_exc_and_trace(frame, ${err})\n`+
+prefix+`if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
+prefix+tab+`${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
+prefix+'}\n'+
+prefix+`function fake_split(exc, condition){\n`+
+prefix+tab+`return condition(exc) ? `+
 `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n`+
-'}\n'
-if(has_else){js+=`failed${id} = true\n`}
-for(var handler of this.handlers){js+=`$B.set_lineno(frame, ${handler.lineno})\n`
-if(handler.type){js+="var condition = function(exc){\n"+
-"    return $B.$isinstance(exc, "+
+prefix+'}\n'
+if(has_else){js+=prefix+`failed${id} = true\n`}
+for(var handler of this.handlers){js+=prefix+`$B.set_lineno(frame, ${handler.lineno})\n`
+if(handler.type){js+=prefix+"var condition = function(exc){\n"+
+prefix+tab+"return $B.$isinstance(exc, "+
 `${$B.js_from_ast(handler.type, scopes)})\n`+
-"}\n"+
-`var klass = $B.get_class(${err}),\n`+
-`split_method = $B.$getattr(klass, 'split'),\n`+
-`split = $B.$call(split_method)(${err}, condition),\n`+
-'    matching = split[0],\n'+
-'    rest = split[1]\n'+
-'if(matching.exceptions !== _b_.None){\n'+
-'    for(var err of matching.exceptions){\n'
+prefix+"}\n"+
+prefix+`var klass = $B.get_class(${err}),\n`
+indent()
+js+=prefix+`split_method = $B.$getattr(klass, 'split'),\n`+
+prefix+`split = $B.$call(split_method)(${err}, condition),\n`+
+prefix+'matching = split[0],\n'+
+prefix+'rest = split[1]\n'
+dedent()
+js+=prefix+'if(matching.exceptions !== _b_.None){\n'
+indent()
+js+=prefix+'for(var err of matching.exceptions){\n'
+indent()
 if(handler.name){bind(handler.name,scopes)
 var mangled=mangle(scopes,try_scope,handler.name)
-js+=`locals.${mangled} = ${err}\n`}
+js+=prefix+`locals.${mangled} = ${err}\n`}
 js+=add_body(handler.body,scopes)+'\n'
 if(!($B.last(handler.body)instanceof $B.ast.Return)){
-js+='$B.del_exc(frame)\n'}
-js+='}\n'
-js+='}\n'
-js+=`${err} = rest\n`}}
-js+=`if(${err}.exceptions !== _b_.None){\n`+
-`throw ${err}\n`+
-'}\n'}
-if(has_else ||has_finally){js+='}\n' 
+js+=prefix+'$B.del_exc(frame)\n'}
+dedent()
+js+=prefix+'}\n'
+dedent()
+js+=prefix+'}\n'
+js+=prefix+`${err} = rest\n`}}
+js+=prefix+`if(${err}.exceptions !== _b_.None){\n`+
+prefix+tab+`throw ${err}\n`+
+prefix+'}\n'
+dedent()}
+if(has_else ||has_finally){js+=prefix+'}' 
 js+='finally{\n'
-var finalbody=`var exit = false\n`+
-`if($B.count_frames() < stack_length_${id}){\n`+
-`exit = true\n`+
-`$B.frame_obj = $B.push_frame(frame)\n`+
-`}\n`+
+indent()
+if(has_else && has_finally){indent()}
+var finalbody=prefix+`var exit = false\n`+
+prefix+`if($B.count_frames() < stack_length_${id}){\n`+
+prefix+tab+`exit = true\n`+
+prefix+tab+`$B.frame_obj = $B.push_frame(frame)\n`+
+prefix+`}\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
-!($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+=`\nif(exit){\n`+
-`$B.leave_frame(locals)\n`+
-`}`}
-var elsebody=`if($B.count_frames() == stack_length_${id} `+
-`&& ! failed${id}){\n`+
-add_body(this.orelse,scopes)+
-'\n}' 
-if(has_else && has_finally){js+=`try{\n`+
-elsebody+
-'\n}\n'+
-`finally{\n`+finalbody+'}\n'}else if(has_else && ! has_finally){js+=elsebody}else{js+=finalbody}
-js+='\n}\n' }else{js+='}\n' }
+!($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+='\n'+prefix+`if(exit){\n`+
+prefix+tab+`$B.leave_frame(locals)\n`+
+prefix+`}`}
+var elsebody=prefix+`if($B.count_frames() == stack_length_${id} `+
+`&& ! failed${id}){\n`
+indent()
+elsebody+=add_body(this.orelse,scopes)
+dedent()
+elsebody+='\n'+prefix+'}' 
+if(has_else && has_finally){dedent()
+js+=prefix+`try{\n`+
+elsebody+'\n'+
+prefix+'}'+
+`finally{\n`+finalbody+'\n'+
+prefix+'}'}else if(has_else && ! has_finally){js+=elsebody}else{js+=finalbody}
+dedent()
+js+='\n'+prefix+'}\n' }else{js+=prefix+'}\n' }
 scopes.pop()
 return js}
 $B.ast.Tuple.prototype.to_js=function(scopes){return list_or_tuple_to_js.bind(this)('$B.fast_tuple',scopes)}
@@ -13216,14 +13264,20 @@ return `$B.$getattr($B.get_class(locals.$result = ${operand}), '${method}')(loca
 $B.ast.While.prototype.to_js=function(scopes){var id=make_id()
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
-var js=`var no_break_${id} = true\n`
-js+=`while($B.set_lineno(frame, ${this.lineno}) && `
+var js=prefix+`var no_break_${id} = true\n`
+js+=prefix+`while($B.set_lineno(frame, ${this.lineno}) && `
 if(this.test instanceof $B.ast.BoolOp){this.test.$dont_evaluate=true
 js+=`${$B.js_from_ast(this.test, scopes)}){\n`}else{js+=`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`}
-js+=add_body(this.body,scopes)+'\n}'
+indent()
+js+=add_body(this.body,scopes)
+dedent()
+js+='\n'+prefix+'}\n'
 scopes.pop()
-if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+
-add_body(this.orelse,scopes)+'}\n'}
+if(this.orelse.length > 0){js+=prefix+`if(no_break_${id}){\n`
+indent()
+js+=add_body(this.orelse,scopes)
+dedent()
+js+='\n'+prefix+'}\n'}
 return js}
 $B.ast.With.prototype.to_js=function(scopes){
 function add_item(item,js){var id=make_id()
@@ -13314,91 +13368,106 @@ if(scope.type !='def'){compiler_error(this,"'yield' outside function")}
 scope.is_generator=true
 var value=$B.js_from_ast(this.value,scopes)
 var n=make_id()
-return `yield* (function* f(){
-        var _i${n} = _b_.iter(${value}),
-                _r${n}
-            var failed${n} = false
-            try{
-                var _y${n} = _b_.next(_i${n})
-            }catch(_e){
-                $B.set_exc(_e, frame)
-                failed${n} = true
-                $B.pmframe = $B.frame_obj.frame
-                _e = $B.exception(_e)
-                if(_e.__class__ === _b_.StopIteration){
-                    var _r${n} = $B.$getattr(_e, "value")
-                }else{
-                    throw _e
-                }
+var res=`yield* (function* f(){\n`
+indent()
+var js=`
+        var _i${n} = _b_.iter(${value.trimRight()}),
+            _r${n}
+        var failed${n} = false
+        try{
+            var _y${n} = _b_.next(_i${n})
+        }catch(_e){
+            $B.set_exc(_e, frame)
+            failed${n} = true
+            $B.pmframe = $B.frame_obj.frame
+            _e = $B.exception(_e)
+            if(_e.__class__ === _b_.StopIteration){
+                var _r${n} = $B.$getattr(_e, "value")
+            }else{
+                throw _e
             }
-            if(! failed${n}){
-                while(true){
-                    var failed1${n} = false
-                    try{
-                        $B.leave_frame()
-                        var _s${n} = yield _y${n}
-                        $B.frame_obj = $B.push_frame(frame)
-                    }catch(_e){
-                        $B.set_exc(_e, frame)
-                        if(_e.__class__ === _b_.GeneratorExit){
-                            var failed2${n} = false
-                            try{
-                                var _m${n} = $B.$getattr(_i${n}, "close")
-                            }catch(_e1){
-                                failed2${n} = true
-                                if(_e1.__class__ !== _b_.AttributeError){
-                                    throw _e1
-                                }
-                            }
-                            if(! failed2${n}){
-                                $B.$call(_m${n})()
-                            }
-                            throw _e
-                        }else if($B.is_exc(_e, [_b_.BaseException])){
-                            var sys_module = $B.imported._sys,
-                                _x${n} = sys_module.exc_info()
-                            var failed3${n} = false
-                            try{
-                                var _m${n} = $B.$getattr(_i${n}, "throw")
-                            }catch(err){
-                                failed3${n} = true
-                                if($B.is_exc(err, [_b_.AttributeError])){
-                                    throw err
-                                }
-                            }
-                            if(! failed3${n}){
-                                try{
-                                    _y${n} = $B.$call(_m${n}).apply(null,
-                                        _b_.list.$factory(_x${n}))
-                                }catch(err){
-                                    if($B.is_exc(err, [_b_.StopIteration])){
-                                        _r${n} = $B.$getattr(err, "value")
-                                        break
-                                    }
-                                    throw err
-                                }
-                            }
-                        }
-                    }
-                    if(! failed1${n}){
+        }
+        if(! failed${n}){
+            while(true){
+                var failed1${n} = false
+                try{
+                    $B.leave_frame()
+                    var _s${n} = yield _y${n}
+                    $B.frame_obj = $B.push_frame(frame)
+                }catch(_e){
+                    $B.set_exc(_e, frame)
+                    if(_e.__class__ === _b_.GeneratorExit){
+                        var failed2${n} = false
                         try{
-                            if(_s${n} === _b_.None){
-                                _y${n} = _b_.next(_i${n})
-                            }else{
-                                _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            var _m${n} = $B.$getattr(_i${n}, "close")
+                        }catch(_e1){
+                            failed2${n} = true
+                            if(_e1.__class__ !== _b_.AttributeError){
+                                throw _e1
                             }
+                        }
+                        if(! failed2${n}){
+                            $B.$call(_m${n})()
+                        }
+                        throw _e
+                    }else if($B.is_exc(_e, [_b_.BaseException])){
+                        var sys_module = $B.imported._sys,
+                            _x${n} = sys_module.exc_info()
+                        var failed3${n} = false
+                        try{
+                            var _m${n} = $B.$getattr(_i${n}, "throw")
                         }catch(err){
-                            if($B.is_exc(err, [_b_.StopIteration])){
-                                _r${n} = $B.$getattr(err, "value")
-                                break
+                            failed3${n} = true
+                            if($B.is_exc(err, [_b_.AttributeError])){
+                                throw err
                             }
-                            throw err
+                        }
+                        if(! failed3${n}){
+                            try{
+                                _y${n} = $B.$call(_m${n}).apply(null,
+                                    _b_.list.$factory(_x${n}))
+                            }catch(err){
+                                if($B.is_exc(err, [_b_.StopIteration])){
+                                    _r${n} = $B.$getattr(err, "value")
+                                    break
+                                }
+                                throw err
+                            }
                         }
                     }
                 }
+                if(! failed1${n}){
+                    try{
+                        if(_s${n} === _b_.None){
+                            _y${n} = _b_.next(_i${n})
+                        }else{
+                            _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                        }
+                    }catch(err){
+                        if($B.is_exc(err, [_b_.StopIteration])){
+                            _r${n} = $B.$getattr(err, "value")
+                            break
+                        }
+                        throw err
+                    }
+                }
             }
-            return _r${n}
-        })()`}
+        }
+        return _r${n}`
+var lines=js.split('\n').slice(1)
+var head=lines[0].length-lines[0].trimLeft().length
+for(var line of lines){var trimmed=line.trimLeft(),tlen=trimmed.length
+if(tlen==0){res+='\n'
+continue}
+var line_head=line.length-tlen
+var line_indent=(line_head-head)/4
+if(line_indent < 0){
+console.warn('wrong indentation')
+line_indent=0}
+res+=prefix+tab.repeat(line_indent)+trimmed+'\n'}
+dedent()
+res+=prefix+'})()'
+return res}
 var state={}
 $B.js_from_root=function(arg){var ast_root=arg.ast,symtable=arg.symtable,filename=arg.filename,src=arg.src,namespaces=arg.namespaces,imported=arg.imported
 if($B.show_ast_dump){console.log($B.ast_dump(ast_root))}
