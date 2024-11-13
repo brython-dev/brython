@@ -78,6 +78,11 @@ de la page.
 - 10 : la traduction du code Python et des modules importés est affichée dans
   la console
 
+*js_tab* : indentation du code Javascript
+
+> un entier compris entre 1 et 4 qui indique le nombre d'espaces utilisés pour
+> indenter le code Javascript généré par Brython. Vaut 2 par défaut.
+
 *pythonpath*
 
 > une liste, séparée par des espaces, de chemins dans lesquels chercher les
