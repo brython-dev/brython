@@ -924,7 +924,7 @@ function make_comp(scopes){
             'end', prefix.length)
         console.log('file', scopes.filename)
         console.log(this)
-        console.log(js)
+        console.log('>>>\n', js, '\n<<<')
     }
 
     return js
@@ -1524,10 +1524,11 @@ $B.ast.Call.prototype.to_js = function(scopes){
     js += `, ${position}`
 
     js += ')'
-    var args = make_args.bind(this)(scopes)
+    var args = make_args.bind(this)(scopes),
+        args_js = args.js.trim()
 
-    return js + (args.has_starred ? `.apply(null, ${args.js})` :
-                                    `(${args.js})`)
+    return js + (args.has_starred ? `.apply(null, ${args_js})` :
+                                    `(${args_js})`)
 }
 
 $B.ast.Call.prototype._check = function(){
@@ -3140,7 +3141,6 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     dedent()
     js += prefix + '}\n'
     js += prefix + '$B.leave_frame()\n'
-    dedent()
     js += prefix + '}, "<genexpr>")(expr)\n'
 
     scopes.pop()

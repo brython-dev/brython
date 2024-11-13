@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-13 09:05:01.405850"
-__BRYTHON__.timestamp=1731485101405
+__BRYTHON__.compiled_date="2024-11-13 10:38:04.194668"
+__BRYTHON__.timestamp=1731490684194
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11730,7 +11730,7 @@ js+=prefix+`}`+`)(${outmost_expr})\n`
 if(prefix.length !=plen){console.log('comprehension, prefix length start',plen,'end',prefix.length)
 console.log('file',scopes.filename)
 console.log(this)
-console.log(js)}
+console.log('>>>\n',js,'\n<<<')}
 return js}
 function init_scopes(type,scopes){
 var filename=scopes?.symtable?.table?.filename,name=$B.url2name[filename]
@@ -11969,9 +11969,9 @@ if(this.end_lineno > this.lineno){end_col_offset=this.col_offset+1}
 var position=encode_position(this.col_offset,this.col_offset,end_col_offset)
 js+=`, ${position}`
 js+=')'
-var args=make_args.bind(this)(scopes)
-return js+(args.has_starred ? `.apply(null, ${args.js})` :
-`(${args.js})`)}
+var args=make_args.bind(this)(scopes),args_js=args.js.trim()
+return js+(args.has_starred ? `.apply(null, ${args_js})` :
+`(${args_js})`)}
 $B.ast.Call.prototype._check=function(){for(var kw of this.keywords){if(kw.arg=='__debug__'){compiler_error(this,"cannot assign to __debug__",kw)}}}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
 for(let arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
@@ -12766,7 +12766,6 @@ js+=prefix+'$B.leave_frame()\n'
 dedent()
 js+=prefix+'}\n'
 js+=prefix+'$B.leave_frame()\n'
-dedent()
 js+=prefix+'}, "<genexpr>")(expr)\n'
 scopes.pop()
 var func=`${head}\n${js}\n`+prefix+`return gen${id}`
