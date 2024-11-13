@@ -4560,6 +4560,8 @@ $B.js_from_root = function(arg){
     scopes.imported = imported
     scopes.imports = {}
     scopes.indent = 0
+    var js_tab = $B.get_option('js_tab')
+    tab = ' '.repeat(js_tab)
     var js = ast_root.to_js(scopes)
     return {js, imports: scopes.imports}
 }

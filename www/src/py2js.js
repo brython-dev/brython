@@ -648,6 +648,17 @@ function convert_option(option, value){
             }
             return value.trim().split(/\s+/)
         }
+    }else if(option == 'js_tab'){
+        if(/\d+/.test(value)){
+            var res = parseInt(value)
+            if(res < 1 || res > 4){
+                console.log('Warning: option "js_tab" must be between ' +
+                    `1 and 4, got ${res}`)
+                res = 2
+            }
+            return res
+        }
+        console.warn('illegal value for js_tab', value)
     }
     return value
 }
@@ -658,7 +669,8 @@ const default_option = {
     debug: 1,
     indexeddb: true,
     python_extension: '.py',
-    static_stdlib_import: true
+    static_stdlib_import: true,
+    js_tab: 2
 }
 
 $B.get_filename = function(){
@@ -698,7 +710,7 @@ $B.get_option = function(option, err){
     }else if(err && err.$frame_obj){
         filename = $B.get_frame_at(0, err.$frame_obj).__file__
     }else{
-        filename = $B.get_filename()
+        filename = $B.get_filename() ?? filename
     }
     return $B.get_option_from_filename(option, filename)
 }

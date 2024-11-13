@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-12 14:46:30.882733"
-__BRYTHON__.timestamp=1731419190882
+__BRYTHON__.compiled_date="2024-11-13 09:05:01.405850"
+__BRYTHON__.timestamp=1731485101405
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -949,9 +949,14 @@ if(option=='debug'){if(typeof value=='string' && value.match(/^\d+$/)){return pa
 option=='indexeddb' ||
 option=='static_stdlib_import'){if(value=='1' ||value.toLowerCase()=='true'){return true}else if(value=='0' ||value.toLowerCase()=='false'){return false}else{console.debug(`Invalid value for ${option}: ${value}`)}}else if(option=='ids' ||option=='pythonpath' ||option=='args'){
 if(typeof value=='string'){if(value.trim().length==0){return[]}
-return value.trim().split(/\s+/)}}
+return value.trim().split(/\s+/)}}else if(option=='js_tab'){if(/\d+/.test(value)){var res=parseInt(value)
+if(res < 1 ||res > 4){console.log('Warning: option "js_tab" must be between '+
+`1 and 4, got ${res}`)
+res=2}
+return res}
+console.warn('illegal value for js_tab',value)}
 return value}
-const default_option={args:[],cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true}
+const default_option={args:[],cache:false,debug:1,indexeddb:true,python_extension:'.py',static_stdlib_import:true,js_tab:2}
 $B.get_filename=function(){if($B.count_frames()> 0){return $B.get_frame_at(0).__file__}}
 $B.get_filename_for_import=function(){var filename=$B.get_filename()
 if($B.import_info[filename]===undefined){$B.make_import_paths(filename)}
@@ -962,7 +967,7 @@ if($B.$options.hasOwnProperty(option)){
 return $B.$options[option]}else if(brython_options.hasOwnProperty(option)){
 return brython_options[option]}else{return default_option[option]}}
 $B.get_option=function(option,err){var filename=$B.script_filename
-if(err && err.filename){filename=err.filename}else if(err && err.$frame_obj){filename=$B.get_frame_at(0,err.$frame_obj).__file__}else{filename=$B.get_filename()}
+if(err && err.filename){filename=err.filename}else if(err && err.$frame_obj){filename=$B.get_frame_at(0,err.$frame_obj).__file__}else{filename=$B.get_filename()?? filename}
 return $B.get_option_from_filename(option,filename)}
 $B.get_option_from_filename=function(option,filename){if(filename===undefined ||! $B.scripts[filename]){return $B.get_page_option(option)}
 var value=$B.scripts[filename].getAttribute(option)
@@ -13481,6 +13486,8 @@ scopes.namespaces=namespaces
 scopes.imported=imported
 scopes.imports={}
 scopes.indent=0
+var js_tab=$B.get_option('js_tab')
+tab=' '.repeat(js_tab)
 var js=ast_root.to_js(scopes)
 return{js,imports:scopes.imports}}
 $B.js_from_ast=function(ast,scopes){if(! scopes.symtable){throw Error('perdu symtable')}
