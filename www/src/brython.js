@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-13 10:38:04.194668"
-__BRYTHON__.timestamp=1731490684194
+__BRYTHON__.compiled_date="2024-11-13 10:50:08.615408"
+__BRYTHON__.timestamp=1731491408613
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4536,6 +4536,7 @@ if(count_repeats > 0){trace.push(`[Previous line repeated ${count_repeats} more`
 ` time${count_repeats > 1 ? 's' : ''}]`)}}}
 var trace=[],save_filename,save_lineno,save_scope,count_repeats=0,stack=err.$frame_obj===undefined ?[]:make_frames_stack(err.$frame_obj),linenos=err.$linenums
 for(let frame_num=0,len=stack.length;frame_num < len;frame_num++){let frame=stack[frame_num],lineno=linenos[frame_num],filename=frame.__file__,scope=frame[0]==frame[2]? '<module>' :frame[0]
+if(err.lineno){lineno=err.lineno}
 if(filename==save_filename && scope==save_scope && lineno==save_lineno){count_repeats++
 continue}
 handle_repeats(src,count_repeats)
@@ -11501,14 +11502,14 @@ if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_sc
 scope.locals.add(name)
 return scope}
 var SF=$B.SYMBOL_FLAGS 
-function name_reference(name,scopes,position){var scope=name_scope(name,scopes)
-return make_ref(name,scopes,scope,position)}
-function make_ref(name,scopes,scope,position){var test=false 
+function name_reference(name,scopes,position,lineno){var scope=name_scope(name,scopes)
+return make_ref(name,scopes,scope,position,lineno)}
+function make_ref(name,scopes,scope,position,lineno){var test=false 
 if(test){console.log('make ref',name,scopes.slice(),scope)}
 if(scope.found){var res=reference(scopes,scope.found,name)
 if(test){console.log('res',res)}
 return res}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
-return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}', _frame_obj)`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
+return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}', _frame_obj)`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}], ${lineno})`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
 function local_scope(name,scope){
 var s=scope
 while(true){if(s.locals.has(name)){return{found:true,scope:s}}
@@ -11595,7 +11596,7 @@ var exc=_b_.UnboundLocalError.$factory(`cannot access local variable `+
 `'${name}' where it is not associated with a value`)
 if(position && $B.frame_obj){$B.set_exception_offsets(exc,position)}
 throw exc}
-$B.resolve_in_scopes=function(name,namespaces,position){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
+$B.resolve_in_scopes=function(name,namespaces,position,lineno){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
 while(frame_obj !==null){frame=frame_obj.frame
 if(frame.is_exec_top){exec_top=frame
 break}
@@ -11605,6 +11606,7 @@ if(v.found){return v.value}}}}else{let v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}
 var exc=$B.name_error(name)
 if(position){$B.set_exception_offsets(exc,position)}
+if(lineno){exc.lineno=lineno}
 throw exc}
 $B.resolve_global=function(name,frame_obj){
 while(frame_obj !==null){var frame=frame_obj.frame,v=resolve_in_namespace(name,frame[3])
@@ -13013,7 +13015,7 @@ if(scope===$B.last(scopes)&& scope.freevars.has(this.id)){
 scope.freevars.delete(this.id)}
 return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var scope=name_scope(this.id,scopes)
 if(scope.found===$B.last(scopes)){return 'locals.'+mangle(scopes,scope.found,this.id)}
-var res=name_reference(this.id,scopes,[this.col_offset,this.col_offset,this.end_col_offset])
+var res=name_reference(this.id,scopes,[this.col_offset,this.col_offset,this.end_col_offset],this.lineno)
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 return res}}

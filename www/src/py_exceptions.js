@@ -1036,6 +1036,9 @@ function trace_from_stack(err){
             lineno = linenos[frame_num],
             filename = frame.__file__,
             scope = frame[0] == frame[2] ? '<module>' : frame[0]
+        if(err.lineno){
+            lineno = err.lineno
+        }
         if(filename == save_filename && scope == save_scope && lineno == save_lineno){
             count_repeats++
             continue

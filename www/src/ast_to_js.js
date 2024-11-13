@@ -313,12 +313,12 @@ function bind(name, scopes){
 
 var SF = $B.SYMBOL_FLAGS // in brython_builtins.js
 
-function name_reference(name, scopes, position){
+function name_reference(name, scopes, position, lineno){
     var scope = name_scope(name, scopes)
-    return make_ref(name, scopes, scope, position)
+    return make_ref(name, scopes, scope, position, lineno)
 }
 
-function make_ref(name, scopes, scope, position){
+function make_ref(name, scopes, scope, position, lineno){
     var test = false // name == 'record' && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('make ref', name, scopes.slice(), scope)
@@ -337,7 +337,7 @@ function make_ref(name, scopes, scope, position){
     }else if(scope.resolve == 'global'){
         return `$B.resolve_global('${name}', _frame_obj)`
     }else if(Array.isArray(scope.resolve)){
-        return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`
+        return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}], ${lineno})`
     }else if(scope.resolve == 'own_class_name'){
         return `$B.own_class_name('${name}')`
     }
@@ -606,7 +606,7 @@ $B.resolve_local = function(name, position){
     throw exc
 }
 
-$B.resolve_in_scopes = function(name, namespaces, position){
+$B.resolve_in_scopes = function(name, namespaces, position, lineno){
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top,
@@ -638,6 +638,9 @@ $B.resolve_in_scopes = function(name, namespaces, position){
     var exc = $B.name_error(name)
     if(position){
         $B.set_exception_offsets(exc, position)
+    }
+    if(lineno){
+        exc.lineno = lineno
     }
     throw exc
 }
@@ -3697,7 +3700,8 @@ $B.ast.Name.prototype.to_js = function(scopes){
             return 'locals.' + mangle(scopes, scope.found, this.id)
         }
         var res = name_reference(this.id, scopes,
-             [this.col_offset, this.col_offset, this.end_col_offset])
+             [this.col_offset, this.col_offset, this.end_col_offset],
+             this.lineno)
         if(this.id == '__debugger__' && res.startsWith('$B.resolve_in_scopes')){
             // Special case : name __debugger__ is translated to Javascript
             // "debugger" if not bound in Brython code
