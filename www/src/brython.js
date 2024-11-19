@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-13 10:50:08.615408"
-__BRYTHON__.timestamp=1731491408613
+__BRYTHON__.compiled_date="2024-11-19 08:15:13.160628"
+__BRYTHON__.timestamp=1732000513160
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -3770,6 +3770,7 @@ f.$infos.__qualname__=co_qualname
 co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
+$B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
 $B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
 var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
@@ -5592,13 +5593,13 @@ for(let entry of set_iter_with_hash(other)){if(! set_contains(self,entry.item,en
 res.__class__=self.__class__
 return res}
 $B.make_rmethods(set)
-set.add=function(){var $=$B.args("add",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
+set.add=function(self,item){$B.check_nb_args_no_kw('set.add',2,arguments)
 set_add(self,item)
 return _b_.None}
-set.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
-$.self.$used=0
-$.self.$store=Object.create(null)
-$.self.$version++
+set.clear=function(self){$B.check_nb_args_no_kw('set.clear',1,arguments)
+self.$used=0
+self.$store=Object.create(null)
+self.$version++
 return $N}
 set.copy=function(self){$B.check_nb_args_no_kw('copy',1,arguments)
 return set_copy(self)}
@@ -5606,8 +5607,8 @@ set.difference_update=function(self){var $=$B.args("difference_update",1,{self:n
 for(var arg of $.args){set_difference_update(self,arg)}
 self.$version++
 return _b_.None}
-set.discard=function(){var $=$B.args("discard",2,{self:null,item:null},["self","item"],arguments,{},null,null)
-var result=set_discard_entry($.self,$.item)
+set.discard=function(self,item){$B.check_nb_args_no_kw('set.discard',2,arguments)
+var result=set_discard_entry(self,item)
 if(result !=DISCARD_NOTFOUND){self.$version++}
 return _b_.None}
 set.intersection_update=function(){
@@ -5616,8 +5617,8 @@ var temp=set_intersection_multi(self,args)
 set_swap_bodies(self,temp)
 self.$version++
 return _b_.None}
-set.isdisjoint=function(){
-var $=$B.args("isdisjoint",2,{self:null,other:null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
+set.isdisjoint=function(self,other){
+$B.check_nb_args_no_kw('set.isdisjoint',2,arguments)
 var intersection=set_intersection(self,other)
 return intersection.$used==0}
 set.pop=function(self){if(arguments.length > 1){throw _b_.TypeError.$factory(`set.pop() takes no arguments`+
@@ -5630,14 +5631,14 @@ if(self.$store[hash].length==0){delete self.$store[hash]}
 self.$used--
 self.$version++
 return item}
-set.remove=function(){
-var $=$B.args("remove",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
+set.remove=function(self,item){
+$B.check_nb_args_no_kw('set.remove',2,arguments)
 var result=set_discard_entry(self,item)
 if(result==DISCARD_NOTFOUND){throw _b_.KeyError.$factory(item)}
 self.$version++
 return _b_.None}
-set.symmetric_difference_update=function(){
-var $=$B.args("symmetric_difference_update",2,{self:null,s:null},["self","s"],arguments,{},null,null),self=$.self,s=$.s
+set.symmetric_difference_update=function(self,s){
+$B.check_nb_args_no_kw('set.symmetric_difference_update',2,arguments)
 return set_symmetric_difference_update(self,s)}
 set.update=function(self){
 var $=$B.args("update",1,{self:null},["self"],arguments,{},"args",null)
@@ -5655,7 +5656,7 @@ set.intersection=function(){var $=$B.args("difference",1,{self:null},["self"],ar
 if($.args.length==0){return set.copy($.self)}
 return set_intersection_multi($.self,$.args)}
 set.symmetric_difference=function(self,other){
-$B.args("symmetric_difference",2,{self:null,other:null},["self","other"],arguments,{},null,null)
+$B.check_nb_args_no_kw('set.symmetric_difference',2,arguments)
 var res=set_copy(self)
 set_symmetric_difference_update(res,other)
 return res}
@@ -5666,16 +5667,16 @@ for(let arg of $.args){if($B.$isinstance(arg,[set,frozenset])){for(let entry of 
 for(let entry of _b_.dict.$iter_items(arg)){set_add(res,entry.key,entry.hash)}}else{let other=set.$factory(arg)
 res=set.union(res,other)}}
 return res}
-set.issubset=function(){
-var $=$B.args("issubset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
+set.issubset=function(self,other){
+$B.check_nb_args_no_kw('set.issubset',2,arguments)
 if($B.$isinstance(other,[set,frozenset])){if(set.__len__(self)> set.__len__(other)){return false}
 for(let entry of set_iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
 return true}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
 return true}else{var member_func=$B.member_func(other)
 for(let entry of set_iter_with_hash(self)){if(! member_func(entry.item)){return false}}
 return true}}
-set.issuperset=function(){
-var $=$B.args("issuperset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
+set.issuperset=function(self,other){
+$B.check_nb_args_no_kw('set.issuperset',2,arguments)
 if($B.$isinstance(other,[set,frozenset])){return set.issubset(other,self)}else{return set.issubset(set.$factory(other),self)}}
 set.__iand__=function(self,other){if(! $B.$isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.intersection_update(self,other)
@@ -6357,10 +6358,26 @@ return $B.String(res)}
 var prefix=2,suffix=3
 str.$getnewargs=function(self){return $B.fast_tuple([to_string(self)])}
 str.__getnewargs__=function(){return str.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
+function cyrb53(str){let h1=0xdeadbeef,h2=0x41c6ce57;
+for(let i=0,ch;i < str.length;i++){ch=str.charCodeAt(i);
+h1=Math.imul(h1 ^ ch,2654435761);
+h2=Math.imul(h2 ^ ch,1597334677);}
+h1=Math.imul(h1 ^(h1 >>> 16),2246822507);
+h1 ^=Math.imul(h2 ^(h2 >>> 13),3266489909);
+h2=Math.imul(h2 ^(h2 >>> 16),2246822507);
+h2 ^=Math.imul(h1 ^(h1 >>> 13),3266489909);
+return 4294967296*(2097151 & h2)+(h1 >>> 0);};
 str.__hash__=function(_self){
 var s=to_string(_self)
-for(var i=0,h=0,len=s.length;i < len;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0;}
-return h;}
+let h1=0xdeadbeef,h2=0x41c6ce57;
+for(let i=0,ch;i < s.length;i++){ch=s.charCodeAt(i);
+h1=Math.imul(h1 ^ ch,2654435761);
+h2=Math.imul(h2 ^ ch,1597334677);}
+h1=Math.imul(h1 ^(h1 >>> 16),2246822507);
+h1 ^=Math.imul(h2 ^(h2 >>> 13),3266489909);
+h2=Math.imul(h2 ^(h2 >>> 16),2246822507);
+h2 ^=Math.imul(h1 ^(h1 >>> 13),3266489909);
+return 4294967296*(2097151 & h2)+(h1 >>> 0);}
 str.__init__=function(){
 return _b_.None}
 var str_iterator=$B.make_class("str_iterator",function(s){return{
@@ -10291,11 +10308,6 @@ __class__ :Clipboard,__dict__:$B.empty_dict(),data :data}}
 Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
 Clipboard.__setitem__=function(self,name,value){self.data.setData(name,value)}
 $B.set_func_names(Clipboard,"<dom>")
-var dom={File :function(){},FileReader :function(){}}
-dom.File.__class__=_b_.type
-dom.File.__str__=function(){return "<class 'File'>"}
-dom.FileReader.__class__=_b_.type
-dom.FileReader.__str__=function(){return "<class 'FileReader'>"}
 var DOMNode=$B.make_class('DOMNode',function(elt){return elt}
 )
 DOMNode.__add__=function(self,other){
@@ -10309,7 +10321,7 @@ $B.class_name(other)+"' object to DOMNode instance")}}
 return res}
 DOMNode.__bool__=function(){return true}
 DOMNode.__contains__=function(self,key){
-if(self.nodeType==9 && typeof key=="string"){return document.getElementById(key)!==null}
+if(self.nodeType==Node.DOCUMENT_NODE && typeof key=="string"){return document.getElementById(key)!==null}
 if(self.length !==undefined && typeof self.item=="function"){for(var i=0,len=self.length;i < len;i++){if(self.item(i)===key){return true}}}
 return false}
 DOMNode.__del__=function(self){
@@ -10319,7 +10331,7 @@ DOMNode.__delattr__=function(self,attr){if(self[attr]===undefined){throw _b_.Att
 `cannot delete DOMNode attribute '${attr}'`)}
 delete self[attr]
 return _b_.None}
-DOMNode.__delitem__=function(self,key){if(self.nodeType==9){
+DOMNode.__delitem__=function(self,key){if(self.nodeType==Node.DOCUMENT_NODE){
 var res=self.getElementById(key)
 if(res){res.parentNode.removeChild(res)}
 else{throw _b_.KeyError.$factory(key)}}else{
@@ -10360,7 +10372,7 @@ case "closest":
 if(! self[attr]){throw $B.attr_error(self,attr)}
 return function(){return DOMNode[attr].call(null,self,...arguments)}
 case "headers":
-if(self.nodeType==9){
+if(self.nodeType==Node.DOCUMENT_NODE){
 let req=new XMLHttpRequest();
 req.open("GET",document.location,false)
 req.send(null);
@@ -10379,7 +10391,7 @@ if(attr=="select" && self.nodeType==1 &&
 ["INPUT","TEXTAREA"].indexOf(self.tagName.toUpperCase())>-1){return function(selector){if(selector===undefined){self.select()
 return _b_.None}
 return DOMNode.select(self,selector)}}
-if(attr=="query" && self.nodeType==9){
+if(attr=="query" && self.nodeType==Node.DOCUMENT_NODE){
 let res={__class__:Query,_keys :$B.$list([]),_values :{}}
 let qs=location.search.substr(1).split('&')
 if(location.search !=""){for(let i=0;i < qs.length;i++){let pos=qs[i].search("="),elts=[qs[i].substr(0,pos),qs[i].substr(pos+1)],key=decodeURIComponent(elts[0]),value=decodeURIComponent(elts[1])
@@ -10438,7 +10450,7 @@ if(Array.isArray(res)){
 return res}
 return js_immutable_to_py(res)}
 return object.__getattribute__(self,attr)}
-DOMNode.__getitem__=function(self,key){if(self.nodeType==9){
+DOMNode.__getitem__=function(self,key){if(self.nodeType==Node.DOCUMENT_NODE){
 if(typeof key.valueOf()=="string"){let res=self.getElementById(key)
 if(res){return DOMNode.$factory(res)}
 throw _b_.KeyError.$factory(key)}else{try{let elts=self.getElementsByTagName(key.__name__),res=[]
@@ -10461,7 +10473,7 @@ var items=[]
 if(self.length !==undefined && typeof self.item=="function"){for(let i=0,len=self.length;i < len;i++){items.push(DOMNode.$factory(self.item(i)))}}else if(self.childNodes !==undefined){for(let child of self.childNodes){items.push(DOMNode.$factory(child))}}
 return $B.$iter(items)}
 DOMNode.__le__=function(self,other){
-if(self.nodeType==9){self=self.body}
+if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 if($B.$isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){self.appendChild(other.children[i])}}else if(typeof other=="string" ||typeof other=="number"){var txt=document.createTextNode(other.toString())
 self.appendChild(txt)}else if(other instanceof Node){self.appendChild(other)}else{try{
 var items=_b_.list.$factory(other)
@@ -10549,16 +10561,16 @@ self.$events[event]=self.$events[event]||[]
 self.$events[event].push([func,callback])
 return self}
 DOMNode.children=function(self){var res=[]
-if(self.nodeType==9){self=self.body}
+if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 for(var child of self.children){res.push(DOMNode.$factory(child))}
 return $B.$list(res)}
 DOMNode.child_nodes=function(self){var res=[]
-if(self.nodeType==9){self=self.body}
+if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 for(var child of self.childNodes){res.push(DOMNode.$factory(child))}
 return $B.$list(res)}
 DOMNode.clear=function(){
 var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null),self=$.self
-if(self.nodeType==9){self=self.body}
+if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 while(self.firstChild){self.removeChild(self.firstChild)}}
 DOMNode.Class=function(self){if(self.className !==undefined){return self.className}
 return _b_.None}
@@ -10614,7 +10626,7 @@ return function(ctx){return $B.jsobj2pyobj(self.getContext(ctx))}}
 DOMNode.getSelectionRange=function(self){
 if(self["getSelectionRange"]!==undefined){return self.getSelectionRange.apply(null,arguments)}}
 DOMNode.html=function(self){var res=self.innerHTML
-if(res===undefined){if(self.nodeType==9 && self.body){res=self.body.innerHTML}else{res=_b_.None}}
+if(res===undefined){if(self.nodeType==Node.DOCUMENT_NODE && self.body){res=self.body.innerHTML}else{res=_b_.None}}
 return res}
 DOMNode.index=function(self,selector){var items
 if(selector===undefined){items=self.parentElement.childNodes}else{items=self.parentElement.querySelectorAll(selector)}
@@ -10654,7 +10666,7 @@ range.moveEnd("character",start_pos)
 range.moveStart("character",end_pos)
 range.select()}})(this)}}
 DOMNode.set_class_name=function(self,arg){self.setAttribute("class",arg)}
-DOMNode.set_html=function(self,value){if(self.nodeType==9){self=self.body}
+DOMNode.set_html=function(self,value){if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 self.innerHTML=_b_.str.$factory(value)}
 DOMNode.set_style=function(self,style){
 if(typeof style==='string'){self.style=style
@@ -10670,13 +10682,13 @@ case "height":
 case "borderWidth":
 if($B.$isinstance(value,_b_.int)){value=value+"px"}}
 self.style[key]=value}}}
-DOMNode.set_text=function(self,value){if(self.nodeType==9){self=self.body}
+DOMNode.set_text=function(self,value){if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 self.innerText=_b_.str.$factory(value)
 self.textContent=_b_.str.$factory(value)}
 DOMNode.set_value=function(self,value){self.value=_b_.str.$factory(value)}
 DOMNode.submit=function(self){
 return function(){self.submit()}}
-DOMNode.text=function(self){if(self.nodeType==9){self=self.body}
+DOMNode.text=function(self){if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 var res=self.innerText ||self.textContent
 if(res===null){res=_b_.None}
 return res}
@@ -12085,11 +12097,12 @@ if(has_type_params){js+=prefix+`return ${ref}\n`
 dedent()
 js+=prefix+'}\n'}
 var class_ref=reference(scopes,enclosing_scope,this.name)
+js+=prefix
 if(decorated){class_ref=`decorated${make_id()}`
 js+='var '}
-js+=prefix+`${class_ref} = `
+js+=`${class_ref} = `
 if(has_type_params){js+=`TYPE_PARAMS_OF_${this.name}()\n`}else{js+=`${ref}\n`}
-if(decorated){js+=reference(scopes,enclosing_scope,this.name)+' = '
+if(decorated){js+=prefix+reference(scopes,enclosing_scope,this.name)+' = '
 var decorate=class_ref
 for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate+'\n'}
@@ -12527,7 +12540,6 @@ if(tp.bound){if(! tp.bound.elts){js+=`_typing.${param_type}._set_lazy_eval(local
 `'__bound__', BOUND_OF_${name})\n`}else{js+=`_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, `+
 `'__constraints__', BOUND_OF_${name})\n`}}
 return js}
-$B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){compiler_check(this)
 var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,mangle_arg=x=> x
@@ -12536,12 +12548,12 @@ mangle_arg=x=> mangle(scopes,class_scope,x)}
 var func_name_scope=bind(this.name,scopes)
 var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var decorators=[],decorated=false,decs_declare=this.decorator_list.length > 0 ?
-'// declare decorators\n' :''
+prefix+'// declare decorators\n' :''
 for(let dec of this.decorator_list){decorated=true
 var dec_id='decorator'+make_id()
 decorators.push(dec_id)
-decs_declare+=`$B.set_lineno(frame, ${dec.lineno})\n`
-decs_declare+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
+decs_declare+=prefix+`$B.set_lineno(frame, ${dec.lineno})\n`
+decs_declare+=prefix+`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
 var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),positional=parsed_args.positional,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
 var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
@@ -12699,7 +12711,7 @@ if(this.returns){if(postponed){var ann_str=annotation_to_str(this.returns,scopes
 ann_items.push(`['return', '${ann_str}']`)}else{ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}}
 js+=prefix+`${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`}else{js+=prefix+`${func_ref}.__annotations__ = $B.empty_dict()\n`}
 if(has_type_params){scopes.pop()}
-if(decorated && ! has_type_params){js+=`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
+if(decorated && ! has_type_params){js+=prefix+`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
 let decorate=func_ref
 for(let dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}
