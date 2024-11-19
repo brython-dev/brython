@@ -1789,19 +1789,20 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
+    js += prefix
     if(decorated){
         class_ref = `decorated${make_id()}`
         js += 'var '
     }
 
-    js += prefix + `${class_ref} = `
+    js += `${class_ref} = `
     if(has_type_params){
         js += `TYPE_PARAMS_OF_${this.name}()\n`
     }else{
         js += `${ref}\n`
     }
     if(decorated){
-        js += reference(scopes, enclosing_scope, this.name) + ' = '
+        js += prefix + reference(scopes, enclosing_scope, this.name) + ' = '
         var decorate = class_ref
         for(let dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
@@ -2274,6 +2275,7 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     }
 
 
+
     // verify if it truly has no kw arguments.
     if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
         fct += `
@@ -2636,10 +2638,6 @@ function type_param_in_def(tp, ref, scopes){
     return js
 }
 
-$B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
-    return $B.make_args_parser(fct)(fct, args);
-}
-
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
     compiler_check(this)
@@ -2661,15 +2659,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var decorators = [],
         decorated = false,
         decs_declare = this.decorator_list.length > 0 ?
-                           '// declare decorators\n' : ''
+                           prefix + '// declare decorators\n' : ''
 
     // evaluate decorator in enclosing scope
     for(let dec of this.decorator_list){
         decorated = true
         var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
-        decs_declare += `$B.set_lineno(frame, ${dec.lineno})\n`
-        decs_declare += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
+        decs_declare += prefix + `$B.set_lineno(frame, ${dec.lineno})\n`
+        decs_declare += prefix + `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
     // Detect doc string
@@ -3006,7 +3004,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     if(decorated && ! has_type_params){
-        js += `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
+        js += prefix + `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
         let decorate = func_ref
         for(let dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`

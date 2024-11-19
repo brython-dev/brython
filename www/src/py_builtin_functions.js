@@ -3352,6 +3352,11 @@ $B.make_function_infos = function(f, __module__, __defaults__,
         co_positions: {}}
 }
 
+
+$B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
+    return $B.make_args_parser(fct)(fct, args);
+}
+
 $B.make_args_parser = function(f){
     if(f.$infos === undefined || f.$infos.__code__ === undefined){
         throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);
