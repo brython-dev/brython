@@ -871,7 +871,9 @@ for(var attr in set){
           if(frozenset[attr] == undefined){
               if(typeof set[attr] == "function"){
                   frozenset[attr] = (function(x){
-                      return function(){return set[x].apply(null, arguments)}
+                      return function(){
+                          return set[x].apply(null, arguments)
+                      }
                   })(attr)
               }else{
                   frozenset[attr] = set[attr]

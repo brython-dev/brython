@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-19 08:15:13.160628"
-__BRYTHON__.timestamp=1732000513160
+__BRYTHON__.compiled_date="2024-11-19 08:49:56.602863"
+__BRYTHON__.timestamp=1732002596602
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -6642,11 +6642,12 @@ str.__mod__=function(_self,args){_self=to_string(_self)
 var res=$B.printf_format(_self,'str',args)
 return $B.String(res)}
 str.__mro__=[_b_.object]
-str.__mul__=function(){var $=$B.args("__mul__",2,{self:null,other:null},["self","other"],arguments,{},null,null),_self=to_string($.self)
-if(! $B.$isinstance($.other,_b_.int)){throw _b_.TypeError.$factory(
+str.__mul__=function(self,other){$B.check_nb_args_no_kw('str.__mul__',2,arguments)
+var _self=to_string(self)
+if(! $B.$isinstance(other,_b_.int)){throw _b_.TypeError.$factory(
 "Can't multiply sequence by non-int of type '"+
-$B.class_name($.other)+"'")}
-return _self.repeat($.other < 0 ? 0 :$.other)}
+$B.class_name(other)+"'")}
+return _self.repeat(other < 0 ? 0 :other)}
 str.__ne__=function(_self,other){var eq=str.__eq__(_self,other)
 return eq===_b_.NotImplemented ? eq :! eq}
 str.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("str.__new__(): not enough arguments")}else if(cls===_b_.str){return value}else{return{
@@ -6666,9 +6667,9 @@ if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(_self.
 var qesc=new RegExp("'","g")
 res="'"+res.replace(qesc,"\\'")+"'"
 return res}
-str.__rmod__=function(){var $=$B.args('__rmod__',2,{self:null,other:null},['self','other'],arguments,{},null,null)
-if(! $B.$isinstance($.other,str)){return _b_.NotImplemented}
-return str.__mod__($.other,$.self)}
+str.__rmod__=function(self,other){$B.check_nb_args_no_kw('str.__rmod__',2,arguments)
+if(! $B.$isinstance(other,str)){return _b_.NotImplemented}
+return str.__mod__(other,self)}
 str.__rmul__=function(_self,other){_self=to_string(_self)
 if($B.$isinstance(other,_b_.int)){other=_b_.int.numerator(other)
 var res=''
@@ -6699,10 +6700,12 @@ if(typeof other !== typeof _self){
     return _self.$brython_value > other.$brython_value}`
 var comps={">":"gt",">=":"ge","<":"lt","<=":"le"}
 for(var op in comps){str[`__${comps[op]}__`]=Function('_self','other',body.replace(/>/gm,op))}
-str.capitalize=function(){var $=$B.args("capitalize",1,{self},["self"],arguments,{},null,null),_self=to_string($.self)
+str.capitalize=function(self){$B.check_nb_args_no_kw('str.capitalize',1,arguments)
+var _self=to_string(self)
 if(_self.length==0){return ""}
 return _self.charAt(0).toUpperCase()+_self.substr(1).toLowerCase()}
-str.casefold=function(){var $=$B.args("casefold",1,{self},["self"],arguments,{},null,null),res="",char,cf,_self=to_string($.self),chars=to_chars(_self)
+str.casefold=function(self){$B.check_nb_args_no_kw('set.remove',2,arguments)
+var res="",char,cf,_self=to_string(self),chars=to_chars(_self)
 for(var i=0,len=chars.length;i < len;i++){char=chars[i]
 cf=$B.unicode_casefold[char]
 if(cf){cf.forEach(function(cp){res+=String.fromCharCode(cp)})}else{res+=char.toLowerCase()}}
@@ -6858,20 +6861,20 @@ value=$B.$getattr(value,ext.substr(1))}else{
 var key=ext.substr(1,ext.length-2)
 if(key.charAt(0).search(/\d/)>-1){key=parseInt(key)}
 value=$B.$getattr(value,"__getitem__")(key)}}
-if(fmt.conv=="a"){value=_b_.ascii(value)}
-else if(fmt.conv=="r"){value=_b_.repr(value)}
-else if(fmt.conv=="s"){value=_b_.str.$factory(value)}
+if(fmt.conv=="a"){value=_b_.ascii(value)}else if(fmt.conv=="r"){value=_b_.repr(value)}else if(fmt.conv=="s"){value=_b_.str.$factory(value)}
 if(value.$is_class ||value.$factory){
 res+=value.__class__.__format__(value,fmt.spec)}else{res+=$B.$getattr(value,"__format__")(fmt.spec)}}
 return res}
-str.format_map=function(){var $=$B.args("format_map",2,{self:null,mapping:null},['self','mapping'],arguments,{},null,null),_self=to_string($.self)
-return str.format(_self,{$nat:'mapping',mapping:$.mapping})}
+str.format_map=function(self,mapping){$B.check_nb_args_no_kw('str.format_map',2,arguments)
+var _self=to_string(self)
+return str.format(_self,{$nat:'mapping',mapping})}
 str.index=function(){
 var res=str.find.apply(null,arguments)
 if(res===-1){throw _b_.ValueError.$factory("substring not found")}
 return res}
-str.isascii=function(){
-var $=$B.args("isascii",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.isascii=function(self){
+$B.check_nb_args_no_kw('str.format_map',1,arguments)
+var _self=to_string(self)
 for(var i=0,len=_self.length;i < len;i++){if(_self.charCodeAt(i)> 127){return false}}
 return true}
 var unicode_categories_contain_character=function(categories,cp){for(var cat of categories){console.log(cat,cp);
@@ -6879,84 +6882,95 @@ if($B.in_unicode_category(cat,cp)){return true}}
 return false}
 var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
 var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
-str.isalnum=function(){
-var $=$B.args("isalnum",1,{self:null},["self"],arguments,{},null,null)
-var _self=to_string($.self);
+str.isalnum=function(self){
+$B.check_nb_args_no_kw('str.isalnum',2,arguments)
+var _self=to_string(self);
 if(_self.length==0){return false}
 for(var char of _self){if(!unicode_categories_contain_character(alnum_categories,_b_.ord(char))){return false}}
 return true}
-str.isalpha=function(){
-var $=$B.args("isalpha",1,{self:null},["self"],arguments,{},null,null)
-var _self=to_string($.self);
+str.isalpha=function(self){
+$B.check_nb_args_no_kw('str.isalpha',1,arguments)
+var _self=to_string(self);
 if(_self.length==0){return false}
 for(var char of _self){if(!unicode_categories_contain_character(alpha_categories,_b_.ord(char))){return false}}
 return true}
-str.isdecimal=function(){
-var $=$B.args("isdecimal",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
+str.isdecimal=function(self){
+$B.check_nb_args_no_kw('str.isdecimal',2,arguments)
+var cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if(! $B.in_unicode_category('Nd',cp)){return false}}
 return _self.length > 0}
-str.isdigit=function(){
-var $=$B.args("isdigit",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
+str.isdigit=function(self){
+$B.check_nb_args_no_kw('str.isdigit',1,arguments)
+var cp,_self=to_string(self)
 for(var char of _self){if(/\p{Nd}/u.test(char)){continue}
 cp=_b_.ord(char)
 if(! $B.in_unicode_category('No_digits',cp)){return false}}
 return _self.length > 0}
-str.isidentifier=function(){
-var $=$B.args("isidentifier",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.isidentifier=function(self){
+$B.check_nb_args_no_kw('str.isidentifier',1,arguments)
+var _self=to_string(self)
 if(_self.length==0){return false}
 var chars=to_chars(_self)
 if(! $B.is_XID_Start(_b_.ord(chars[0]))){return false}else{for(var char of chars){var cp=_b_.ord(char)
 if(! $B.is_XID_Continue(cp)){return false}}}
 return true}
-str.islower=function(){
-var $=$B.args("islower",1,{self:null},["self"],arguments,{},null,null),has_cased=false,cp,_self=to_string($.self)
+str.islower=function(self){
+$B.check_nb_args_no_kw('str.islower',1,arguments)
+var has_cased=false,cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if($B.in_unicode_category('Ll',cp)){has_cased=true
 continue}else if($B.in_unicode_category('Lu',cp)||
 $B.in_unicode_category('Lt',cp)){return false}}
 return has_cased}
 const numeric_re=/\p{Nd}|\p{Nl}|\p{No}/u
-str.isnumeric=function(){
-var $=$B.args("isnumeric",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.isnumeric=function(self){
+$B.check_nb_args_no_kw('str.isnumeric',1,arguments)
+var _self=to_string(self)
 for(var char of _self){if((! numeric_re.test(char))&&
 ! $B.in_unicode_category('Lo_numeric',_b_.ord(char))){return false}}
 return _self.length > 0}
 var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
-str.isprintable=function(){
-var $=$B.args("isprintable",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.isprintable=function(self){
+$B.check_nb_args_no_kw('str.isprintable',1,arguments)
+var _self=to_string(self)
 for(var char of _self){if(char==' '){continue}
 if(unprintable_re.test(char)){return false}}
 return true}
-str.isspace=function(){
-var $=$B.args("isspace",1,{self:null},["self"],arguments,{},null,null),cp,_self=to_string($.self)
+str.isspace=function(self){
+$B.check_nb_args_no_kw('str.isspace',1,arguments)
+var cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if(! $B.in_unicode_category('Zs',cp)&&
 $B.unicode_bidi_whitespace.indexOf(cp)==-1){return false}}
 return _self.length > 0}
-str.istitle=function(){
-var $=$B.args("istitle",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.istitle=function(self){
+$B.check_nb_args_no_kw('str.istitle',1,arguments)
+var _self=to_string(self)
 return _self.length > 0 && str.title(_self)==_self}
-str.isupper=function(){
-var $=$B.args("islower",1,{self:null},["self"],arguments,{},null,null),is_upper=false,cp,_self=to_string($.self)
+str.isupper=function(self){
+$B.check_nb_args_no_kw('str.isupper',1,arguments)
+var is_upper=false,cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if($B.in_unicode_category('Lu',cp)){is_upper=true
 continue}else if($B.in_unicode_category('Ll',cp)||
 $B.in_unicode_category('Lt',cp)){return false}}
 return is_upper}
-str.join=function(){var $=$B.args("join",2,{self:null,iterable:null},["self","iterable"],arguments,{},null,null),_self=to_string($.self)
-var iterable=_b_.iter($.iterable),res=[],count=0
+str.join=function(self,iterable){$B.check_nb_args_no_kw('str.join',2,arguments)
+var _self=to_string(self)
+iterable=_b_.iter(iterable)
+var res=[],count=0
 while(1){try{var obj2=_b_.next(iterable)
 if(! $B.$isinstance(obj2,str)){throw _b_.TypeError.$factory("sequence item "+count+
 ": expected str instance, "+$B.class_name(obj2)+
 " found")}
-res.push(obj2)}catch(err){if($B.$isinstance(err,_b_.StopIteration)){break}
-else{throw err}}}
+res.push(obj2)}catch(err){if($B.$isinstance(err,_b_.StopIteration)){break}else{throw err}}}
 return res.join(_self)}
 str.ljust=function(){var $=$B.args("ljust",3,{self:null,width:null,fillchar:null},["self","width","fillchar"],arguments,{fillchar:" "},null,null),_self=to_string($.self),len=str.__len__(_self);
 if($.width <=len){return _self}
 return _self+$.fillchar.repeat($.width-len)}
-str.lower=function(){var $=$B.args("lower",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.lower=function(self){$B.check_nb_args_no_kw('str.lower',1,arguments)
+var _self=to_string(self)
 return _self.toLowerCase()}
 str.lstrip=function(){var $=$B.args("lstrip",2,{self:null,chars:null},["self","chars"],arguments,{chars:_b_.None},null,null),_self=$.self,chars=$.chars
 if(chars===_b_.None){return _self.trimStart()}
@@ -6991,23 +7005,26 @@ _b_.dict.$setitem(_t,key,value)}
 for(let k in toNone){_b_.dict.$setitem(_t,parseInt(k),_b_.None)}
 return _t}}}
 str.maketrans.$type="staticmethod"
-str.partition=function(){var $=$B.args("partition",2,{self:null,sep:null},["self","sep"],arguments,{},null,null),_self,sep
-if($.sep==""){throw _b_.ValueError.$factory("empty separator")}
-check_str($.sep);
-[_self,sep]=to_string([$.self,$.sep])
+str.partition=function(self,sep){$B.check_nb_args_no_kw('str.partition',2,arguments)
+var _self
+if(sep==""){throw _b_.ValueError.$factory("empty separator")}
+check_str(sep);
+[_self,sep]=to_string([self,sep])
 var chars=to_chars(_self),i=_self.indexOf(sep)
 if(i==-1){return _b_.tuple.$factory([_self,"",""])}
 return _b_.tuple.$factory([chars.slice(0,i).join(''),sep,chars.slice(i+sep.length).join('')])}
-str.removeprefix=function(){var $=$B.args("removeprefix",2,{self:null,prefix:null},["self","prefix"],arguments,{},null,null),_self
-if(!$B.$isinstance($.prefix,str)){throw _b_.ValueError.$factory("prefix should be str, not "+
-`'${$B.class_name($.prefix)}'`)}
-[_self,prefix]=to_string([$.self,$.prefix])
+str.removeprefix=function(self,prefix){$B.check_nb_args_no_kw('str.removeprefix',2,arguments)
+var _self
+if(!$B.$isinstance(prefix,str)){throw _b_.ValueError.$factory("prefix should be str, not "+
+`'${$B.class_name(prefix)}'`)}
+[_self,prefix]=to_string([self,prefix])
 if(str.startswith(_self,prefix)){return _self.substr(prefix.length)}
 return _self.substr(0)}
-str.removesuffix=function(){var $=$B.args("removesuffix",2,{self:null,suffix:null},["self","suffix"],arguments,{},null,null),_self
-if(!$B.$isinstance($.suffix,str)){throw _b_.ValueError.$factory("suffix should be str, not "+
-`'${$B.class_name($.prefix)}'`)}
-[_self,suffix]=to_string([$.self,$.suffix])
+str.removesuffix=function(self,suffix){$B.check_nb_args_no_kw('str.removesuffix',2,arguments)
+var _self
+if(!$B.$isinstance(suffix,str)){throw _b_.ValueError.$factory("suffix should be str, not "+
+`'${$B.class_name(suffix)}'`)}
+[_self,suffix]=to_string([self,suffix])
 if(suffix.length > 0 && str.endswith(_self,suffix)){return _self.substr(0,_self.length-suffix.length)}
 return _self.substr(0)}
 str.replace=function(){
@@ -7054,10 +7071,9 @@ str.rjust=function(){var $=$B.args("rjust",3,{self:null,width:null,fillchar:null
 var len=str.__len__(_self)
 if($.width <=len){return _self}
 return $B.String($.fillchar.repeat($.width-len)+_self)}
-str.rpartition=function(self,sep){var $=$B.args("rpartition",2,{self:null,sep:null},["self","sep"],arguments,{},null,null),_self
-check_str($.sep);
-[_self,sep]=[$.self,$.sep]
-_self=reverse(_self),sep=reverse(sep)
+str.rpartition=function(self,sep){$B.check_nb_args_no_kw('str.rpartition',2,arguments)
+check_str(sep)
+var _self=reverse(self),sep=reverse(sep)
 var items=str.partition(_self,sep).reverse()
 for(var i=0;i < items.length;i++){items[i]=items[i].split("").reverse().join("")}
 return items}
@@ -7127,11 +7143,13 @@ return false}
 str.strip=function(){var $=$B.args("strip",2,{self:null,chars:null},["self","chars"],arguments,{chars:_b_.None},null,null)
 if($.chars===_b_.None){return $.self.trim()}
 return str.rstrip(str.lstrip($.self,$.chars),$.chars)}
-str.swapcase=function(self){var $=$B.args("swapcase",1,{self},["self"],arguments,{},null,null),res="",cp,_self=to_string($.self)
+str.swapcase=function(self){$B.check_nb_args_no_kw('str.swapcase',1,arguments)
+var res="",cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if($B.in_unicode_category('Ll',cp)){res+=char.toUpperCase()}else if($B.in_unicode_category('Lu',cp)){res+=char.toLowerCase()}else{res+=char}}
 return res}
-str.title=function(self){var $=$B.args("title",1,{self},["self"],arguments,{},null,null),state,cp,res="",_self=to_string($.self)
+str.title=function(self){$B.check_nb_args_no_kw('str.title',1,arguments)
+var state,cp,res="",_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if($B.in_unicode_category('Ll',cp)){if(! state){res+=char.toUpperCase()
 state="word"}else{res+=char}}else if($B.in_unicode_category('Lu',cp)||
@@ -7139,22 +7157,25 @@ $B.in_unicode_category('Lt',cp)){res+=state ? char.toLowerCase():char
 state="word"}else{state=null
 res+=char}}
 return res}
-str.translate=function(){var $=$B.args('translate',2,{self:null,table:null},['self','table'],arguments,{},null,null),table=$.table,res=[],getitem=$B.$getattr(table,"__getitem__"),cp,_self=to_string($.self)
+str.translate=function(self,table){$B.check_nb_args_no_kw('str.translate',2,arguments)
+var res=[],getitem=$B.$getattr(table,"__getitem__"),cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 try{var repl=getitem(cp)
 if(repl !==_b_.None){if(typeof repl=="string"){res.push(repl)}else if(typeof repl=="number"){res.push(String.fromCharCode(repl))}}}catch(err){res.push(char)}}
 return res.join("")}
-str.upper=function(){var $=$B.args("upper",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
+str.upper=function(self){$B.check_nb_args_no_kw('str.upper',1,arguments)
+var _self=to_string(self)
 return _self.toUpperCase()}
-str.zfill=function(){var $=$B.args("zfill",2,{self:null,width:null},["self","width"],arguments,{},null,null),_self=to_string($.self)
+str.zfill=function(self,width){$B.check_nb_args_no_kw('str.zfill',2,arguments)
+var _self=to_string(self)
 var len=str.__len__(_self)
-if($.width <=len){return _self}
+if(width <=len){return _self}
 switch(_self.charAt(0)){case "+":
 case "-":
 return _self.charAt(0)+
-"0".repeat($.width-len)+_self.substr(1)
+"0".repeat(width-len)+_self.substr(1)
 default:
-return "0".repeat($.width-len)+_self}}
+return "0".repeat(width-len)+_self}}
 str.$factory=function(arg,encoding){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
