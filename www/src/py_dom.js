@@ -442,18 +442,8 @@ Clipboard.__setitem__ = function(self, name, value){
 
 $B.set_func_names(Clipboard, "<dom>")
 
-var dom = {
-    File : function(){},
-    FileReader : function(){}
-    }
-dom.File.__class__ = _b_.type
-dom.File.__str__ = function(){return "<class 'File'>"}
-dom.FileReader.__class__ = _b_.type
-dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
-
 
 // Class for DOM nodes
-
 var DOMNode = $B.make_class('DOMNode',
     function(elt){
         return elt
@@ -491,7 +481,7 @@ DOMNode.__bool__ = function(){
 DOMNode.__contains__ = function(self, key){
     // For document, if key is a string, "key in document" tells if an element
     // with id "key" is in the document
-    if(self.nodeType == 9 && typeof key == "string"){
+    if(self.nodeType == Node.DOCUMENT_NODE && typeof key == "string"){
         return document.getElementById(key) !== null
     }
     if(self.length !== undefined && typeof self.item == "function"){
@@ -521,7 +511,7 @@ DOMNode.__delattr__ = function(self, attr){
 }
 
 DOMNode.__delitem__ = function(self, key){
-    if(self.nodeType == 9){ // document : remove by id
+    if(self.nodeType == Node.DOCUMENT_NODE){ // document : remove by id
         var res = self.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
         else{throw _b_.KeyError.$factory(key)}
@@ -607,7 +597,7 @@ DOMNode.__getattribute__ = function(self, attr){
                 return DOMNode[attr].call(null, self, ...arguments)
             }
         case "headers":
-          if(self.nodeType == 9){
+          if(self.nodeType == Node.DOCUMENT_NODE){
               // HTTP headers
               let req = new XMLHttpRequest();
               req.open("GET", document.location, false)
@@ -646,7 +636,7 @@ DOMNode.__getattribute__ = function(self, attr){
             return DOMNode.select(self, selector)
         }
     }
-    if(attr == "query" && self.nodeType == 9){
+    if(attr == "query" && self.nodeType == Node.DOCUMENT_NODE){
         // document.query is a instance of class Query, representing the
         // Query String
         let res = {
@@ -816,7 +806,7 @@ DOMNode.__getattribute__ = function(self, attr){
 }
 
 DOMNode.__getitem__ = function(self, key){
-    if(self.nodeType == 9){ // Document
+    if(self.nodeType == Node.DOCUMENT_NODE){ // Document
         if(typeof key.valueOf() == "string"){
             let res = self.getElementById(key)
             if(res){
@@ -882,7 +872,7 @@ DOMNode.__iter__ = function(self){
 
 DOMNode.__le__ = function(self, other){
     // for document, append child to document.body
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     if($B.$isinstance(other, TagSum)){
@@ -1132,7 +1122,7 @@ DOMNode.bind = function(){
 
 DOMNode.children = function(self){
     var res = []
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     for(var child of self.children){
@@ -1144,7 +1134,7 @@ DOMNode.children = function(self){
 
 DOMNode.child_nodes = function(self){
     var res = []
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     for(var child of self.childNodes){
@@ -1158,7 +1148,7 @@ DOMNode.clear = function(){
     var $ = $B.args("clear", 1, {self: null}, ["self"], arguments, {},
                 null, null),
         self = $.self
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     while(self.firstChild){
@@ -1238,7 +1228,9 @@ DOMNode.get = function(self){
     // with specified keys/values
     // key can be 'id','name' or 'selector'
     var args = []
-    for(var i = 1; i < arguments.length; i++){args.push(arguments[i])}
+    for(var i = 1; i < arguments.length; i++){
+        args.push(arguments[i])
+    }
     var $ns = $B.args("get", 0, {}, [], args, {}, null, "kw"),
         $dict = _b_.dict.$to_obj($ns.kw)
 
@@ -1300,7 +1292,7 @@ DOMNode.getSelectionRange = function(self){ // for TEXTAREA
 DOMNode.html = function(self){
     var res = self.innerHTML
     if(res === undefined){
-        if(self.nodeType == 9 && self.body){
+        if(self.nodeType == Node.DOCUMENT_NODE && self.body){
             res = self.body.innerHTML
         }else{
             res = _b_.None
@@ -1413,7 +1405,7 @@ DOMNode.set_class_name = function(self, arg){
 }
 
 DOMNode.set_html = function(self, value){
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     self.innerHTML = _b_.str.$factory(value)
@@ -1449,7 +1441,9 @@ DOMNode.set_style = function(self, style){ // style is a dict
 }
 
 DOMNode.set_text = function(self,value){
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == Node.DOCUMENT_NODE){
+        self = self.body
+    }
     self.innerText = _b_.str.$factory(value)
     self.textContent = _b_.str.$factory(value)
 }
@@ -1463,7 +1457,7 @@ DOMNode.submit = function(self){ // for FORM
 }
 
 DOMNode.text = function(self){
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     var res = self.innerText || self.textContent
