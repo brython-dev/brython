@@ -1276,7 +1276,7 @@ str.capitalize = function(self){
 }
 
 str.casefold = function(self){
-    $B.check_nb_args_no_kw('set.remove', 2, arguments)
+    $B.check_nb_args_no_kw('set.remove', 1, arguments)
     var res = "",
         char,
         cf,
@@ -1760,7 +1760,7 @@ str.isascii = function(self){
     /* Return true if the string is empty or all characters in the string are
     ASCII, false otherwise. ASCII characters have code points in the range
     U+0000-U+007F. */
-    $B.check_nb_args_no_kw('str.format_map', 1, arguments)
+    $B.check_nb_args_no_kw('str.isascii', 1, arguments)
     var _self = to_string(self)
     for(var i = 0, len = _self.length; i < len; i++){
         if(_self.charCodeAt(i) > 127){
@@ -1788,7 +1788,7 @@ str.isalnum = function(self){
     is at least one character, false otherwise. A character c is alphanumeric
     if one of the following returns True: c.isalpha(), c.isdecimal(),
     c.isdigit(), or c.isnumeric(). */
-    $B.check_nb_args_no_kw('str.isalnum', 2, arguments)
+    $B.check_nb_args_no_kw('str.isalnum', 1, arguments)
     var _self = to_string(self);
     if (_self.length == 0) {
         return false
@@ -1826,7 +1826,7 @@ str.isdecimal = function(self){
     those that can be used to form numbers in base 10, e.g. U+0660,
     ARABIC-INDIC DIGIT ZERO. Formally a decimal character is a character in
     the Unicode General Category "Nd". */
-    $B.check_nb_args_no_kw('str.isdecimal', 2, arguments)
+    $B.check_nb_args_no_kw('str.isdecimal', 1, arguments)
     var cp,
         _self = to_string(self)
     for(var char of _self){

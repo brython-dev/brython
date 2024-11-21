@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-19 08:49:56.602863"
-__BRYTHON__.timestamp=1732002596602
+__BRYTHON__.compiled_date="2024-11-21 08:42:34.541247"
+__BRYTHON__.timestamp=1732174954541
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -6704,7 +6704,7 @@ str.capitalize=function(self){$B.check_nb_args_no_kw('str.capitalize',1,argument
 var _self=to_string(self)
 if(_self.length==0){return ""}
 return _self.charAt(0).toUpperCase()+_self.substr(1).toLowerCase()}
-str.casefold=function(self){$B.check_nb_args_no_kw('set.remove',2,arguments)
+str.casefold=function(self){$B.check_nb_args_no_kw('set.remove',1,arguments)
 var res="",char,cf,_self=to_string(self),chars=to_chars(_self)
 for(var i=0,len=chars.length;i < len;i++){char=chars[i]
 cf=$B.unicode_casefold[char]
@@ -6873,7 +6873,7 @@ var res=str.find.apply(null,arguments)
 if(res===-1){throw _b_.ValueError.$factory("substring not found")}
 return res}
 str.isascii=function(self){
-$B.check_nb_args_no_kw('str.format_map',1,arguments)
+$B.check_nb_args_no_kw('str.isascii',1,arguments)
 var _self=to_string(self)
 for(var i=0,len=_self.length;i < len;i++){if(_self.charCodeAt(i)> 127){return false}}
 return true}
@@ -6883,7 +6883,7 @@ return false}
 var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
 var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
 str.isalnum=function(self){
-$B.check_nb_args_no_kw('str.isalnum',2,arguments)
+$B.check_nb_args_no_kw('str.isalnum',1,arguments)
 var _self=to_string(self);
 if(_self.length==0){return false}
 for(var char of _self){if(!unicode_categories_contain_character(alnum_categories,_b_.ord(char))){return false}}
@@ -6895,7 +6895,7 @@ if(_self.length==0){return false}
 for(var char of _self){if(!unicode_categories_contain_character(alpha_categories,_b_.ord(char))){return false}}
 return true}
 str.isdecimal=function(self){
-$B.check_nb_args_no_kw('str.isdecimal',2,arguments)
+$B.check_nb_args_no_kw('str.isdecimal',1,arguments)
 var cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
 if(! $B.in_unicode_category('Nd',cp)){return false}}
