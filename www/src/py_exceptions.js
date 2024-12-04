@@ -1075,7 +1075,7 @@ function trace_from_stack(err){
                     var paddings = [position[0] - indent,
                                     position[1] - position[0],
                                     position[2] - position[1]]
-                    for(var padding in paddings){
+                    for(var padding of paddings){
                         if(padding < 0){
                             console.log('wrong values, position', position, 'indent', indent)
                             paddings[paddings.indexOf(padding)] = 0
