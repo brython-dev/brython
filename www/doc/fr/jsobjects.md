@@ -370,6 +370,12 @@ s1.addEventListener('load', function(script){
 > contient la traduction de ce code source en Javascript. Le résultat
 > peut être exécuté par `eval()` pour déclencher l'exécution du script.
 
+*`__BRYTHON__`.pythonToAST(_src_[, _filename_, _mode_])*
+
+> génère l'AST (Abstract Syntax Tree) à partir du code Python _src_ sous la
+> forme d'un objet Javascript de même structure que celui décrit dans la
+> [documentation Python](https://docs.python.org/3/library/ast.html)
+
 *`__BRYTHON__`.runPythonSource(_src_[, _attributs_])*
 
 > exécute le code source Python `src` comme s'il s'agissait d'un script avec

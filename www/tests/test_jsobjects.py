@@ -470,4 +470,7 @@ assert window['dictA']['arrA'] == [1.25, "A"]
 assert window['dictB']['arrB'] == [2.35, "B"]
 window.func_js2474_3()
 
+# test functions to use Python code from Javascript
+window.test_use_python()
+
 print("all tests ok...")

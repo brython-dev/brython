@@ -485,6 +485,11 @@ $B.getPythonModule = function(name){
     return $B.imported[name]
 }
 
+$B.pythonToAST = function(python_code, filename, mode){
+    let parser = new $B.Parser(python_code, filename ?? 'test', mode ?? 'file')
+    return $B._PyPegen.run_parser(parser)
+}
+
 $B.python_to_js = function(src, script_id){
     /*
 

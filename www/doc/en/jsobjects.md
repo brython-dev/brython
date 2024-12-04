@@ -368,13 +368,19 @@ s1.addEventListener('load', function(script){
 > translation to Javascript. The result can be executed by `eval()`
 > to trigger the script execution.
 
+*`__BRYTHON__`.pythonToAST(_src_[, _filename_, _mode_])*
+
+> gererates the AST (Abstract Syntax Tree) for the Python source code _src_
+> under the forme of a Javascript object with the same structure as described
+> in the [Python documentation](https://docs.python.org/3/library/ast.html)
+
 *`__BRYTHON__`.runPythonSource(_src_[, _attributes_])*
 
 > executes Python source code `src` as if it was a script with the specified
 > _attributes_. If _attributes_ is a string, it is the script `id`, otherwise
 > it must be a Javascript object.
 
-> [Execution options](options.html) such as debug level, path for imports, 
+> [Execution options](options.html) such as debug level, path for imports,
 > etc. can be passed as attributes, for instance
 
 <blockquote>

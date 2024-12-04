@@ -326,3 +326,11 @@ function func_js2474_3() {
         throw Error('should be "B", got ' + window.dictB.arrB[1])
     }
 }
+
+window.test_use_python = function(){
+    let code = "for i in range(10):\n  print(i)"
+    $B.pythonToAST(code)
+    $B.pythonToAST(code, 'test')
+    $B.pythonToJS(code)
+    $B.pythonToJS(code, 'test')
+}
