@@ -209,8 +209,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-11-22 12:14:59.692161"
-__BRYTHON__.timestamp=1732274099691
+__BRYTHON__.compiled_date="2024-12-04 11:05:59.978242"
+__BRYTHON__.timestamp=1733306759978
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4558,7 +4558,7 @@ if(position &&(
 (position[2]-position[1])!=line.trim().length ||
 position[3]))){var indent=line.length-line.trimLeft().length
 var paddings=[position[0]-indent,position[1]-position[0],position[2]-position[1]]
-for(var padding in paddings){if(padding < 0){console.log('wrong values, position',position,'indent',indent)
+for(var padding of paddings){if(padding < 0){console.log('wrong values, position',position,'indent',indent)
 paddings[paddings.indexOf(padding)]=0}}
 trace_line+='    '+' '.repeat(paddings[0])+
 '~'.repeat(paddings[1])+
