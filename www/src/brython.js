@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-07 16:54:34.070573"
-__BRYTHON__.timestamp=1733586874070
+__BRYTHON__.compiled_date="2024-12-07 17:00:12.283164"
+__BRYTHON__.timestamp=1733587212282
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11428,16 +11428,16 @@ for(var x of tree){try{items.push(ast_dump(x,indent+1))}catch(err){console.log('
 console.log('for item',x)
 throw err}}
 res+=items.join(',\n')
-return res+']'}else if(tree.$name){return tree.$name+'()'}else if(tree instanceof ast.MatchSingleton){return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`}else if(tree instanceof ast.Constant){value=tree.value
+return res+']'}else if(tree.$name){return tree.$name+'()'}else if(tree instanceof $B.ast.MatchSingleton){return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`}else if(tree instanceof $B.ast.Constant){value=tree.value
 if(value.imaginary){return `Constant(value=${_b_.repr(value.value)}j)`}
 return `Constant(value=${$B.AST.$convert(value)})`}
 var proto=Object.getPrototypeOf(tree).constructor
-var res='  ' .repeat(indent)+proto.$name+'('
+var res='  '.repeat(indent)+proto.$name+'('
 if($B.ast_classes[proto.$name]===undefined){console.log('no ast class',proto)}
 var attr_names=$B.ast_classes[proto.$name].split(','),attrs=[]
 attr_names=attr_names.map(x=>(x.endsWith('*')||x.endsWith('?'))?
 x.substr(0,x.length-1):x)
-if([ast.Name].indexOf(proto)>-1){for(attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
+if([$B.ast.Name].indexOf(proto)>-1){for(attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
 return res+attrs.join(', ')+')'}
 for(attr of attr_names){if(tree[attr]!==undefined){value=tree[attr]
 attrs.push(attr+'='+
