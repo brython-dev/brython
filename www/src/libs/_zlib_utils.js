@@ -116,34 +116,12 @@ Text.prototype.at = function(pos){
     return this.bytes[pos]
 }
 
-Text.prototype.make_hashes = function(start, end){
-    // for all 3-elt sequences from start to end, store the position of the
-    // hash
-    for(var pos = start; pos < end; pos++){
-        if(this.hash.hasOwnProperty(pos)){
-            continue
-        }
-        var hash = this.hash[pos] = this.make_hash(pos)
-        if(pos == 27){
-            console.log('hash for pos', pos)
-            console.log(this.hash_pos[hash])
-            alert()
-        }
-        if(this.hash_pos.hasOwnProperty(hash)){
-            var item = this.hash_pos[hash]
-            while(item.next !== null){
-                item = item.next
-            }
-            item.next = {pos, next: null}
-        }else{
-            this.hash_pos[hash] = {pos, next: null}
-        }
-    }
-    if(end == 28){
-        console.log('start', start, 'end', end)
-        console.log(this.hash_pos)
-        alert()
-    }
+$B.nb_dup = 0
+
+function make_hash(bytes, pos){
+    var res = bytes[pos] + (bytes[pos + 1] << 8) +
+           (bytes[pos + 2] << 16)
+    return res
 }
 
 Text.prototype.make_hash = function(pos, nb){
@@ -154,6 +132,7 @@ Text.prototype.make_hash = function(pos, nb){
         coeff *= 2
     }
     if(this.hashed[pos] !== undefined){
+        $B.nb_dup++
         return res
     }
     this.hashed[pos] = res
@@ -169,45 +148,6 @@ Text.prototype.make_hash = function(pos, nb){
     }
     return res
 }
-
-function rfind3(text, start, pos, min_len){
-    //text.make_hashes(start, pos)
-    var h = text.make_hash(pos, min_len) // sets text.hashes[hash] to {pos, previous}
-    var item = text.hashes[h],
-        found
-    //console.log('at pos', pos, 'h', h, 'item', item, 'start', start)
-    if(item === undefined){
-        console.log('no text.hashes for pos', pos)
-    }
-    if(item.previous === null){
-        // no previous sequence with the same hash
-        return -1
-    }else{
-        item = item.previous
-        if(item.pos >= start){
-            found = item
-            // discard items before start
-            while(item.previous !== null){
-                var previous = item.previous
-                if(previous.pos < start){
-                    item.previous = null
-                    break
-                }else{
-                    if(previous.pos == item.pos - 1){
-                        // repetition of the same byte
-                        found = previous
-                    }
-                    item = previous
-                }
-            }
-        }
-        if(found){
-            return found.pos
-        }
-    }
-    return -1
-}
-
 
 function to_str(bytes){
     return bytes.map(x => String.fromCodePoint(x)).join('')
@@ -237,6 +177,9 @@ for(var n = 0; n < 256; n++){
     crcTable[n] = c
 }
 
+$B.count_matches = 0
+$B.count_matches1 = 0
+
 var mod = {
     crc32: function(bytes, crc) {
         var crc = crc ^ (-1)
@@ -254,87 +197,68 @@ var mod = {
         The items are a tuple (length, distance) if a match has been
         found, and a byte otherwise.
         'text' is an instance of Python 'bytes' class, the actual bytes are in
-        in text.source
+        text.source
         */
-        window_mask = 2 ** Math.log2(size) - 1 //size - 1
-        window_size = size
-        ht = []
-        chain = []
-        text = new Text(text.source)
+        var window_mask = 2 ** Math.log2(size) - 1 //size - 1
+        var window_size = size
+        var bytes = text.source
+        var text_length = bytes.length
+        //text = new Text(text.source)
         if(min_len === undefined){
             min_len = 3
         }
         var pos = 0, // position in text
             items = [], // returned items
-            start
+            start,
+            h,
+            hashes = {}
         var t0 = globalThis.performance.now()
-        var nb = 1000,
-            delta = 1000
-        while(pos < text.length){
-            //findMatch(text.bytes, text.length, pos)
-            //insert(text.bytes, pos)
-            if(pos > text.length - min_len){
-                for(var i = pos; i < text.length; i++){
-                    items.push(text.at(i))
+        while(pos < text_length){
+            if(pos > text_length - min_len){
+                for(var i = pos; i < text_length; i++){
+                    items.push($B.fast_tuple([0, bytes[i]]))
                 }
                 break
             }
             // Search the sequence in the 'size' previous bytes
             start = Math.max(0, pos - size)
-            buf_pos = rfind3(text, start, pos, min_len)
-            if(buf_pos > -1){
-                // console.log('found at buf_pos', buf_pos, 'pos - min-len', pos - min_len)
-            }
-            if(buf_pos > -1 && buf_pos < pos - min_len){
-                // Match of length min_len found; search a longer one
-                var len = 1
-                // console.log('match found at pos', pos, 'length', len, 'buf_pos', buf_pos)
-                text.make_hash(pos + len, min_len)
-                while(len < 258 &&
-                        // buf_pos + len < pos &&
-                        pos + len < text.length &&
-                        text.at(pos + len) == text.at(buf_pos + len)){
-                    len += 1
-                    text.make_hash(pos + len, min_len)
-                }
-                // "Lazy matching": search longer match starting at next
-                // position
-                longer_match = false
-                if(len < 258 && pos + len < text.length - 2){
-                    var start1 = pos + 1,
-                        end = pos + len + 2
-                    longer_buf_pos = rfind3(text, start1, end, min_len)
-                    if(longer_buf_pos > -1){
-                        // found longer match : emit current byte as
-                        // literal and move 1 byte forward
-                        longer_match = true
-                        char = text.at(pos)
-                        items.push(char)
-                        pos += 1
-                        text.make_hash(pos)
-                    }
-                }
-                if(! longer_match){
-                    // position of match start in text is buf_pos
-                    // distance is pos - buf_pos
-                    var distance = pos - buf_pos
-                    items.push($B.fast_tuple([len, distance]))
-                    if(pos + len == text.length){
-                        break
-                    }else{
-                        pos += len
-                    }
-                }
-            }else{
-                char = text.bytes[pos]
-                items.push(char)
+            h = bytes[pos] + (bytes[pos + 1] << 8) + (bytes[pos + 2] << 16)
+            if((! hashes[h]) || hashes[h].pos < start){
+                hashes[h] = {pos, previous: null}
+                items.push($B.fast_tuple([0, bytes[pos]]))
                 pos += 1
+            }else{
+                var match = hashes[h]
+                var nb_matches = 0,
+                    best_match_length = min_len,
+                    best_match = match
+                while(match && nb_matches < 8){
+                    var mpos = match.pos + min_len,
+                        npos = pos + min_len,
+                        match_len = min_len
+                    while(++match_len < 258 && npos < text_length &&
+                            bytes[mpos] == bytes[npos]){
+                        mpos++
+                        npos++
+                    }
+                    if(npos - pos > best_match_length){
+                        best_match_length = npos - pos
+                        best_match = match
+                    }
+                    if(match.previous && match.previous.pos < start){
+                        match.previous = null
+                    }
+                    match = match.previous
+                    nb_matches++
+                }
+                hashes[h] = {pos, previous: hashes[h]}
+                var distance = pos - best_match.pos
+                items.push($B.fast_tuple([best_match_length, pos - best_match.pos]))
+                pos += best_match_length
             }
         }
         return $B.$list(items)
     }
-
-
 }
 
 $B.addToImported('_zlib_utils', mod)

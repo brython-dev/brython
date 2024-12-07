@@ -28,7 +28,7 @@ Z_RLE = 3
 Z_SYNC_FLUSH = 2
 Z_TREES = 6
 
-trace = False
+trace = 0
 
 class BitIO:
 
@@ -263,19 +263,15 @@ def codelengths_from_frequencies(freqs, maxlength):
 
 def normalized(codelengths):
     car, codelength = codelengths[0]
-    value = 0
-    codes = {car: "0" * codelength}
+    v = 0
+    codes = {car: (0, codelength)}
 
     for (newcar, nbits) in codelengths[1:]:
-        value += 1
-        bvalue = str(bin(value))[2:]
-        bvalue = "0" * (codelength - len(bvalue)) + bvalue
+        v += 1
         if nbits > codelength:
+            v <<= nbits - codelength
             codelength = nbits
-            bvalue += "0" * (codelength - len(bvalue))
-            value = int(bvalue, 2)
-        assert len(bvalue) == nbits, (len(bvalue), '!=', nbits, 'for', newcar, nbits)
-        codes[newcar] = bvalue
+        codes[newcar] = (v, codelength)
 
     return codes
 
@@ -301,11 +297,14 @@ def decompresser(codelengths):
     # remove items with value = 0
     lengths = [x for x in lengths if x[1] > 0]
     lengths.sort(key=lambda item:(item[1], item[0]))
-    codes = normalized(lengths)
-    codes = {value : key for key, value in codes.items()}
+    codes1 = normalized(lengths)
+    codes2 = {}
+    for key, (value, length) in codes1.items():
+        b = bin(value)[2:]
+        codes2["0" * (length - len(b)) + b] = key
     root = Node()
-    make_tree(root, codes)
-    return {"root": root, "codes": codes}
+    make_tree(root, codes2)
+    return {"root": root, "codes": codes2}
 
 def tree_from_codelengths(codelengths):
     return decompresser(codelengths)["root"]
@@ -344,9 +343,9 @@ def decomp_repeat(n):
     return t
 
 def cl_encode(lengths):
-    """lengths is a list of (char, code) tuples. Return a list of lengths
-    encoded as specified in section 3.2.7"""
-    dic = {char: len(code) for (char, code) in lengths.items()}
+    """lengths is a dictionary lengths[char] = (value, length).
+    Return a list of lengths encoded as specified in section 3.2.7"""
+    dic = {char: code[1] for (char, code) in lengths.items()}
     items = [dic.get(i, 0) for i in range(max(dic) + 1)]
     pos = 0
     while pos < len(items):
@@ -578,7 +577,7 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
     # Create a Huffman tree for the codelengths
     codelengths_codes = normalized(
         codelengths_from_frequencies(codelengths_count, 7))
-    codelengths_dict = {char: len(value)
+    codelengths_dict = {char: value[1]
         for (char, value) in codelengths_codes.items()}
 
     alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
@@ -607,8 +606,7 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
     for item in coded_lit_len + coded_distance:
         if isinstance(item, tuple):
             length, extra = item
-            code = codelengths_codes[length]
-            value, nbits = int(code, 2), len(code)
+            value, nbits = codelengths_codes[length]
             write_int(value, nbits, order="msf")
             if length == 16:
                 write_int(extra, 2)
@@ -617,8 +615,7 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
             elif length == 18:
                 write_int(extra, 7)
         else:
-            code = codelengths_codes[item]
-            value, nbits = int(code, 2), len(code)
+            value, nbits  = codelengths_codes[item]
             write_int(value, nbits, order="msf")
 
     if trace:
@@ -630,24 +627,21 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
         if isinstance(item, tuple):
             length, extra_length, distance, extra_distance = item
             # Length code
-            code = lit_len_codes[length]
-            value, nb = int(code, 2), len(code)
+            value, nb = lit_len_codes[length]
             write_int(value, nb, order="msf")
             # Extra bits for length
             value, nb = extra_length
             if nb:
                 write_int(value, nb)
             # Distance code
-            code = distance_codes[distance]
-            value, nb = int(code, 2), len(code)
+            value, nb = distance_codes[distance]
             write_int(value, nb, order="msf")
             # Extra bits for distance
             value, nb = extra_distance
             if nb:
                 write_int(value, nb)
         else:
-            code = lit_len_codes[item]
-            value, nb = int(code, 2), len(code)
+            value, nb = lit_len_codes[item]
             write_int(value, nb, order="msf")
 
     if trace:
@@ -740,7 +734,11 @@ class _Compressor:
         t0 = timer()
 
         for item in lz_generator(source, self.window_size):
-            if isinstance(item, tuple):
+            if item[0] == 0:
+                literal = item[1]
+                lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
+                store.append(literal)
+            else:
                 nb_tuples += 1
                 length, distance = item # Raw values as integers
                 replaced += length
@@ -760,10 +758,6 @@ class _Compressor:
                 # Add to store for use in next steps
                 store.append((length_code, extra_length, distance_code,
                               extra_dist))
-            else:
-                literal = item
-                lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
-                store.append(literal)
 
         store.append(256) # end of block
         if trace:
