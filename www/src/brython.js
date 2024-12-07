@@ -174,6 +174,8 @@ $B.imported[script_id]={}
 var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope)
 return root.to_js()}
 $B.getPythonModule=function(name){return $B.imported[name]}
+$B.pythonToAST=function(python_code,filename,mode){let parser=new $B.Parser(python_code,filename ?? 'test',mode ?? 'file')
+return $B._PyPegen.run_parser(parser)}
 $B.python_to_js=function(src,script_id){
 return "(function() {\n"+from_py(src,script_id)+"\nreturn locals}())"}
 $B.pythonToJS=$B.python_to_js
@@ -209,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-04 11:05:59.978242"
-__BRYTHON__.timestamp=1733306759978
+__BRYTHON__.compiled_date="2024-12-07 16:54:34.070573"
+__BRYTHON__.timestamp=1733586874070
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2078,10 +2080,9 @@ res.push(key_value_iterator)
 return _b_.tuple.$factory(res)}
 object.__repr__=function(self){if(self===object){return "<class 'object'>"}
 if(self.__class__===_b_.type){return "<class '"+self.__name__+"'>"}
-var module=self.__class__.__module__
+var klass=$B.get_class(self),module=klass.__module__
 if(module !==undefined && !module.startsWith("$")&&
-module !=="builtins"){return "<"+self.__class__.__module__+"."+
-$B.class_name(self)+" object>"}else{return "<"+$B.class_name(self)+" object>"}}
+module !=="builtins"){return `<${module}.${$B.class_name(self)} object>`}else{return "<"+$B.class_name(self)+" object>"}}
 object.__setattr__=function(self,attr,val){if(val===undefined){
 throw _b_.TypeError.$factory(
 "can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
