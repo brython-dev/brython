@@ -561,11 +561,11 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    var module = self.__class__.__module__
+    var klass = $B.get_class(self),
+        module = klass.__module__
     if(module !== undefined && !module.startsWith("$") &&
             module !== "builtins"){
-        return "<" + self.__class__.__module__ + "." +
-            $B.class_name(self) + " object>"
+        return `<${module}.${$B.class_name(self)} object>`
     }else{
         return "<" + $B.class_name(self) + " object>"
     }
