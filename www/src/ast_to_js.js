@@ -35,9 +35,9 @@ function ast_dump(tree, indent){
         return res + ']'
     }else if(tree.$name){
         return tree.$name + '()'
-    }else if(tree instanceof ast.MatchSingleton){
+    }else if(tree instanceof $B.ast.MatchSingleton){
         return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
-    }else if(tree instanceof ast.Constant){
+    }else if(tree instanceof $B.ast.Constant){
         value = tree.value
         // For imaginary numbers, value is an object with
         // attribute "imaginary" set
@@ -47,7 +47,7 @@ function ast_dump(tree, indent){
         return `Constant(value=${$B.AST.$convert(value)})`
     }
     var proto = Object.getPrototypeOf(tree).constructor
-    var res = '  ' .repeat(indent) + proto.$name + '('
+    var res = '  '.repeat(indent) + proto.$name + '('
     if($B.ast_classes[proto.$name] === undefined){
         console.log('no ast class', proto)
     }
@@ -56,7 +56,7 @@ function ast_dump(tree, indent){
     // remove trailing * in attribute names
     attr_names = attr_names.map(x => (x.endsWith('*') || x.endsWith('?')) ?
                                      x.substr(0, x.length - 1) : x)
-    if([ast.Name].indexOf(proto) > -1){
+    if([$B.ast.Name].indexOf(proto) > -1){
         for(attr of attr_names){
             if(tree[attr] !== undefined){
                 attrs.push(`${attr}=${ast_dump(tree[attr])}`)
