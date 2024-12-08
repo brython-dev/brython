@@ -2,7 +2,7 @@
 Reference: https://www.rfc-editor.org/rfc/rfc1951.pdf
 """
 
-from _zlib_utils import lz_generator, crc32
+from _zlib_utils import lz_generator, crc32, BitWriter
 from time import perf_counter as timer
 
 DEFLATED = 8
@@ -74,44 +74,6 @@ class BitIO:
             res += s + " "
         return res
 
-    def write(self, *bits):
-        for bit in bits:
-            self.write_bit(bit)
-
-    def write_int(self, value, nb, order="lsf"):
-        """Write integer on nb bits."""
-        v = value
-        if value >= 2 ** nb:
-            raise ValueError(f"can't write value {value} on {nb} bits")
-        b = bin(value)[2:]
-        nb_pad = nb - len(b)
-        if order == 'lsf':
-            b = b[::-1]
-            for car in b:
-                self.write_bit(0 if car == '0' else 1)
-            for _ in range(nb_pad):
-                self.write_bit(0)
-        else:
-            for _ in range(nb_pad):
-                self.write_bit(0)
-            for car in b:
-                self.write_bit(0 if car == '0' else 1)
-
-    def write_bit(self, v):
-        if v == 1:
-            self.revbits += v << self.bitrank
-        self.bitrank += 1
-        if self.bitrank == 8:
-            self.flush()
-
-    def pad_last(self):
-        if self.bitrank != 0:
-            self.flush()
-
-    def flush(self):
-        self.bytestream.append(self.revbits)
-        self.bitrank = 0
-        self.revbits = 0
 
 
 class Error(Exception):
@@ -538,8 +500,7 @@ def adler32(source):
     return a, b
 
 
-def compress_dynamic(out, source, store, lit_len_count, distance_count):
-    write_int = out.write_int
+def compress_dynamic(writer, source, store, lit_len_count, distance_count):
     t0 = timer()
 
     # Add 1 occurrence of the End Of Block character
@@ -590,15 +551,16 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
         codelengths_list.pop()
     HCLEN = len(codelengths_list) - 4
 
-    out.write(0, 1) # BTYPE = dynamic Huffman codes
+    writer.writeBit(0)
+    writer.writeBit(1)
+    writer.writeInt(HLIT, 5)
+    writer.writeInt(HDIST, 5)
+    writer.writeInt(HCLEN, 4)
 
-    write_int(HLIT, 5)
-    write_int(HDIST, 5)
-    write_int(HCLEN, 4)
 
     # Write codelengths for codelengths tree
     for length, car in zip(codelengths_list, alphabet):
-        write_int(length, 3)
+        writer.writeInt(length, 3)
 
     # Write lit_len and distance tables
     t = []
@@ -607,16 +569,16 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
         if isinstance(item, tuple):
             length, extra = item
             value, nbits = codelengths_codes[length]
-            write_int(value, nbits, order="msf")
+            writer.writeInt(value, nbits, 'msf')
             if length == 16:
-                write_int(extra, 2)
+                writer.writeInt(extra, 2)
             elif length == 17:
-                write_int(extra, 3)
+                writer.writeInt(extra, 3)
             elif length == 18:
-                write_int(extra, 7)
+                writer.writeInt(extra, 7)
         else:
             value, nbits  = codelengths_codes[item]
-            write_int(value, nbits, order="msf")
+            writer.writeInt(value, nbits, 'msf')
 
     if trace:
         print('write lit-len and distance tables', timer() - t0)
@@ -628,29 +590,31 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
             length, extra_length, distance, extra_distance = item
             # Length code
             value, nb = lit_len_codes[length]
-            write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
             # Extra bits for length
             value, nb = extra_length
             if nb:
-                write_int(value, nb)
+                writer.writeInt(value, nb)
             # Distance code
             value, nb = distance_codes[distance]
-            write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
+
             # Extra bits for distance
             value, nb = extra_distance
             if nb:
-                write_int(value, nb)
+                writer.writeInt(value, nb)
         else:
             value, nb = lit_len_codes[item]
-            write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
 
     if trace:
         print('write items produced by LZ', timer() - t0)
 
 
-def compress_fixed(out, source, items):
+def compress_fixed(writer, source, items):
     """Use fixed Huffman code."""
-    out.write(1, 0) # BTYPE = fixed Huffman codes
+    writer.writeBit(1)
+    writer.writeBit(0)
 
     for item in items:
         if isinstance(item, tuple):
@@ -658,40 +622,40 @@ def compress_fixed(out, source, items):
             # length code
             code = fixed_lit_len_codes[length]
             value, nb = int(code, 2), len(code)
-            out.write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
             # extra bits for length
             value, nb = extra_length
             if nb:
-                out.write_int(value, nb)
+                writer.writeInt(value, nb)
             # distance
-            out.write_int(distance, 5, order="msf")
+            writer.writeInt(distance, 5, 'msf')
             # extra bits for distance
             value, nb = extra_distance
             if nb:
-                out.write_int(value, nb)
+                writer.writeInt(value, nb)
         else:
             literal = item
             code = fixed_lit_len_codes[item]
             value, nb = int(code, 2), len(code)
-            out.write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
 
 def compress(data, /, level=-1, wbits=MAX_WBITS):
 
     window_size = 32 * 1024
 
     # Create the output bit stream
-    out = BitIO()
+    out = BitWriter()
 
     # Write zlib headers (RFC 1950)
-    out.write_int(8, 4) # compression method = 8
+    out.writeInt(8, 4) # compression method = 8
     size = window_size >> 8
     nb = 0
     while size > 1:
         size >>= 1
         nb += 1
-    out.write_int(nb, 4) # window size = 2 ** (8 + 7)
-    out.write_int(0x9c, 8) # FLG
-    header = out.bytestream
+    out.writeInt(nb, 4) # window size = 2 ** (8 + 7)
+    out.writeInt(0x9c, 8) # FLG
+    header = out.current
     compressor = _Compressor(level)
     payload = compressor.compress(data) + compressor.flush()
     a, b = adler32(data)
@@ -769,19 +733,19 @@ class _Compressor:
         score = replaced - 100 - (nb_tuples * 20 // 8)
 
         # output bit stream
-        out = BitIO()
+        writer = BitWriter()
 
-        out.write(1) # BFINAL = 1
+        writer.writeBit(1) # BFINAL = 1
 
         if score < 0:
-            compress_fixed(out, source, store)
+            compress_fixed(writer, source, store)
         else:
-            compress_dynamic(out, source, store, lit_len_count, distance_count)
+            compress_dynamic(writer, source, store, lit_len_count, distance_count)
 
         # Pad last byte with 0's
-        out.pad_last()
+        writer.padLast()
 
-        self._compressed = bytes(out.bytestream)
+        self._compressed = bytes(writer.current)
 
         return b''
 

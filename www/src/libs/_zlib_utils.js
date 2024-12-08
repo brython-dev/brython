@@ -10,6 +10,81 @@ function clone(obj){
     return res
 }
 
+function BitWriter(){
+    return new _BitWriter()
+}
+
+function _BitWriter(){
+    this.current = []
+    this.bits = 0
+    this.position = 0
+}
+
+_BitWriter.prototype.writeBit = function(v){
+    this.bits = (v << this.position) | this.bits
+    //console.log('xxx after writeBit', v, 'this.bits', this.bits, this.bits.toString(2))
+    this.position++
+    if(this.position >= 8){
+        this.flush()
+    }
+}
+
+_BitWriter.prototype.flush = function(){
+    this.position = 0
+    this.current.push(this.bits)
+    //console.log('xxx flush, this.bits', this.bits, 'position', this.position)
+    this.bits = 0
+}
+
+_BitWriter.prototype.writeInt = function(v, nb, order){
+    order = order ?? 'lsf'
+    // console.log('xxx write', v, 'on', nb, 'bits', order)
+    switch(order){
+        case 'msf':
+            var coef = 1 << (nb - 1)
+            //console.log('xxx write', v, 'on', nb, 'bits', order)
+            var n = 0
+            while(coef > v){
+                //console.log('coef', coef, '>', v, 'write 0')
+                this.writeBit(0)
+                coef >>= 1
+                n++
+            }
+            //console.log('wrote', n, 'zeroes')
+            while(coef > 0){
+                this.writeBit(v & coef ? 1 : 0)
+                //console.log('write', v & coef ? 1 : 0)
+                coef >>= 1
+            }
+            //console.log('this.bits', this.bits)
+            break
+        case 'lsf':
+            var coef = 1
+            var b = 0
+            var n = 0
+            while(coef <= v){
+                this.writeBit(v & coef ? 1 : 0)
+                coef <<= 1
+                n++
+            }
+            while(n < nb){
+                this.writeBit(0)
+                coef <<= 1
+                n++
+            }
+            if(n != nb){
+                console.log('n', n, 'nb', nb)
+                throw Error()
+            }
+    }
+}
+
+_BitWriter.prototype.padLast = function(){
+    if(this.position != 0){
+        this.flush()
+    }
+}
+
 function BitIO(bytestream){
     this.bytestream = []
     this.bytenum = 0
@@ -181,6 +256,7 @@ $B.count_matches = 0
 $B.count_matches1 = 0
 
 var mod = {
+    BitWriter,
     crc32: function(bytes, crc) {
         var crc = crc ^ (-1)
 
