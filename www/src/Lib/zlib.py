@@ -36,12 +36,6 @@ class BitIO:
         self.bytestream = bytearray(bytestream or [])
         self.bytenum = 0
         self.bitnum = 0
-        self.revbits = 0
-        self.bitrank = 0
-
-    @property
-    def pos(self):
-        return self.bytenum * 8 + self.bitnum
 
     def read(self, nb, order="lsf", trace=False):
         result = 0
@@ -65,15 +59,6 @@ class BitIO:
             else:
                 coef //= 2
         return result
-
-    def show(self):
-        res = ""
-        for x in self.bytestream:
-            s = str(bin(x))[2:]
-            s = "0" * (8 - len(s)) + s
-            res += s + " "
-        return res
-
 
 
 class Error(Exception):
@@ -698,6 +683,7 @@ class _Compressor:
         t0 = timer()
 
         for item in lz_generator(source, self.window_size):
+            #t.append(item)
             if item[0] == 0:
                 literal = item[1]
                 lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
