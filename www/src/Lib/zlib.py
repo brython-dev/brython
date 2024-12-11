@@ -2,7 +2,7 @@
 Reference: https://www.rfc-editor.org/rfc/rfc1951.pdf
 """
 
-from _zlib_utils import lz_generator, crc32, BitWriter
+from _zlib_utils import lz_generator, crc32, BitWriter, adler32
 from time import perf_counter as timer
 
 DEFLATED = 8
@@ -474,7 +474,7 @@ def read_literal_or_length(reader, root):
         else:
             node = child
 
-def adler32(source):
+def _adler32(source):
     a = 1
     b = 0
     for byte in source:
@@ -625,27 +625,8 @@ def compress_fixed(writer, source, items):
             writer.writeInt(value, nb, 'msf')
 
 def compress(data, /, level=-1, wbits=MAX_WBITS):
-
-    window_size = 32 * 1024
-
-    # Create the output bit stream
-    out = BitWriter()
-
-    # Write zlib headers (RFC 1950)
-    out.writeInt(8, 4) # compression method = 8
-    size = window_size >> 8
-    nb = 0
-    while size > 1:
-        size >>= 1
-        nb += 1
-    out.writeInt(nb, 4) # window size = 2 ** (8 + 7)
-    out.writeInt(0x9c, 8) # FLG
-    header = out.current
-    compressor = _Compressor(level)
-    payload = compressor.compress(data) + compressor.flush()
-    a, b = adler32(data)
-    checksum = divmod(b, 256) + divmod(a, 256)
-    return bytes(header + payload + bytes(checksum))
+    compressor = _Compressor(level, wbits=wbits)
+    return bytes(compressor.compress(data) + compressor.flush())
 
 def convert32bits(n):
     result = []
@@ -662,13 +643,57 @@ class _Compressor:
         self.level = level
         self.method = method
         self.wbits = wbits
-        self.window_size = 32 * 1024 # XXX compute from wbits
+        if 9 <= wbits <= 15:
+            self.window_size = 1 << wbits
+            self.header_trailer = 'zlib'
+        elif -15 <= wbits <= -9:
+            self.window_size = 1 << abs(wbits)
+            self.header_trailer = None
+        elif 25 <= wibts <= 31:
+            self.window_size = 1 << (wbits - 16)
+            self.header_trailer = 'gzip'
+        else:
+            raise ValueError(f'invalid value for wbits: {wbits}')
         self.memLevel = memLevel
         self.strategy = strategy
         self.zdict = zdict
         self._flushed = False
+        self.started = False
+        self.adler_a = 1
+        self.adler_b = 0
+
+    def header(self):
+        if self.header_trailer == 'zlib':
+            out = BitWriter()
+            # Write zlib headers (RFC 1950)
+            out.writeInt(8, 4) # compression method = 8
+            size = self.window_size >> 8
+            nb = 0
+            while size > 1:
+                size >>= 1
+                nb += 1
+            out.writeInt(nb, 4) # window size = 2 ** (8 + 7)
+            out.writeInt(0x9c, 8) # FLG
+            return out.current
+        elif self.header_trailer == 'gzip':
+            pass # todo
+        else:
+            return []
+
+    def checksum(self):
+        if self.header_trailer == 'zlib':
+            return divmod(self.adler_b, 256) + divmod(self.adler_a, 256)
+        elif self.header_trailer == 'gzip':
+            return divmod(self.adler_b, 256) + divmod(self.adler_a, 256)
+        return []
 
     def compress(self, source):
+        if not self.started:
+            self._compressed = bytes(self.header())
+            self.started = True
+        else:
+            self._compressed = bytes()
+
         # Counter for frequency of literals and lengths, encoded in the range
         # [0, 285] (cf. 3.2.5)
         lit_len_count = {}
@@ -682,34 +707,8 @@ class _Compressor:
 
         t0 = timer()
 
-        for item in lz_generator(source, self.window_size):
-            #t.append(item)
-            if item[0] == 0:
-                literal = item[1]
-                lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
-                store.append(literal)
-            else:
-                nb_tuples += 1
-                length, distance = item # Raw values as integers
-                replaced += length
-                # Transform raw length in range [3...258] into a code in the range
-                # [257, 285] and a number of extra bits. Cf. 3.2.5
-                length_code, *extra_length = length_to_code(length)
-                # Increment literals / lengths counter
-                lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
+        store, lit_len_count, distance_count, replaced = lz_generator(source, self.window_size)
 
-                # Transform raw distance in range [1...window_size] into a code in
-                # the range [0...29] and a number of extra bits
-                distance_code, *extra_dist = distance_to_code(distance)
-                # Increment distances counter
-                distance_count[distance_code] = \
-                    distance_count.get(distance_code, 0) + 1
-
-                # Add to store for use in next steps
-                store.append((length_code, extra_length, distance_code,
-                              extra_dist))
-
-        store.append(256) # end of block
         if trace:
             print('build store', timer() - t0)
 
@@ -728,10 +727,21 @@ class _Compressor:
         else:
             compress_dynamic(writer, source, store, lit_len_count, distance_count)
 
+        t0 = timer()
         # Pad last byte with 0's
         writer.padLast()
 
-        self._compressed = bytes(writer.current)
+        self._compressed += bytes(writer.current)
+        if trace:
+            print('transform to bytes', timer() - t0)
+            t0 = timer()
+
+        adler = adler32(source, self.adler_a, self.adler_b)
+        self.adler_a = adler.a
+        self.adler_b = adler.b
+
+        if trace:
+            print('compute adler32', timer() - t0)
 
         return b''
 
@@ -739,7 +749,7 @@ class _Compressor:
         if self._flushed:
             raise Error('inconsistent flush state')
         self._flushed = True
-        return self._compressed
+        return self._compressed + bytes(self.checksum())
 
 
 def compressobj(level=-1, method=DEFLATED, wbits=MAX_WBITS,
@@ -759,7 +769,8 @@ def decompress(data, /, wbits=MAX_WBITS, bufsize=DEF_BUF_SIZE):
         checksum = data[-4:]
         a = 256 * checksum[2] + checksum[3]
         b = 256 * checksum[0] + checksum[1]
-        assert a, b == adler32(data)
+        adler = adler32(data)
+        assert a, b == (adler.a, adler.b)
         return decompressor.decompress(data[2:-4])
     else:
         decompressor = _Decompressor(-wbits, bufsize)
@@ -826,7 +837,6 @@ class _Decompressor:
                 # Read Huffman code trees
                 lit_len_tree, distance_tree = dynamic_trees(reader)
 
-                t = []
                 while True:
                     # read a literal or length
                     _type, value = read_literal_or_length(reader, lit_len_tree)
@@ -834,12 +844,10 @@ class _Decompressor:
                         break
                     elif _type == 'literal':
                         result.append(value)
-                        t.append(value)
                     elif _type == 'length':
                         # read a distance
                         length = value
                         distance = read_distance(reader, distance_tree)
-                        t.append([length, distance])
                         for _ in range(length):
                             result.append(result[-distance])
 
