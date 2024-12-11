@@ -204,6 +204,7 @@ var mod = {
         var distance_count = {}
         var store = []
         var replaced = 0
+        var nb_tuples = 0
         var pos = 0, // position in text
             start,
             h,
@@ -216,6 +217,7 @@ var mod = {
 
         function store_length_distance(length, distance){
             replaced += length
+            nb_tuples += 1
             let lcode = length_to_code(length)
             let length_code = lcode[0]
             let extra_length = lcode.slice(1)
@@ -251,9 +253,9 @@ var mod = {
             }else{
                 var match = hashes[h]
                 var best = best_match(bytes, match, pos, start, min_len)
-                // Optimization: if there is a match at position pos + 1
+                // Lazy matching: if there is a match at position pos + 1
                 // and its length is at least 1 byte longer than the match at
-                // pos, it is more efficient to store the byte at pos and
+                // pos, it is more efficient to emit the byte at pos and
                 // emit [length, distance] for the match at pos + 1
                 var next_h = bytes[pos + 1] + (bytes[pos + 2] << 8) +
                         (bytes[pos + 3] << 16)
@@ -273,8 +275,8 @@ var mod = {
                 }
                 var distance = pos - best.match.pos
                 store_length_distance(best.length, distance)
+                // store hashes at positions between pos + 1 and next pos
                 for(var i = 1; i < best.length; i++){
-                    // store hashes at positions between pos + 1 and next pos
                     var ih = bytes[pos + i] + (bytes[pos + i + 1] << 8) +
                              (bytes[pos + i + 2] << 16)
                     if(hashes[ih] && hashes[ih].pos > start){
@@ -299,7 +301,49 @@ var mod = {
         for(let key in distance_count){
             _b_.dict.$setitem(distance_dict, parseInt(key), distance_count[key])
         }
-        return [$B.$list(store), lit_len_dict, distance_dict, replaced]
+
+        return [$B.$list(store), lit_len_dict, distance_dict, replaced,
+            nb_tuples]
+    },
+    _write_items: function(writer, store, lit_len_dict, distance_dict){
+        var lit_len_codes = {}
+        for(var entry of _b_.dict.$iter_items(lit_len_dict)){
+            lit_len_codes[entry.key] = entry.value
+        }
+        var distance_codes = {}
+        for(var entry of _b_.dict.$iter_items(distance_dict)){
+            distance_codes[entry.key] = entry.value
+        }
+        var value,
+            nb,
+            length, extra_length, distance, extra_distance,
+            lit_len,
+            dist
+        for(let item of store){
+            if(Array.isArray(item)){
+                [length, extra_length, distance, extra_distance] = item
+                // Length code
+                lit_len = lit_len_codes[length];
+                [value, nb] = lit_len
+                writer.writeInt(value, nb, 'msf');
+                // Extra bits for length
+                [value, nb] = extra_length
+                if(nb > 0){
+                    writer.writeInt(value, nb)
+                };
+                // Distance code
+                [value, nb] = distance_codes[distance]
+                writer.writeInt(value, nb, 'msf');
+                // Extra bits for distance
+                [value, nb] = extra_distance
+                if(nb > 0){
+                    writer.writeInt(value, nb)
+                }
+            }else{
+                [value, nb] = lit_len_codes[item]
+                writer.writeInt(value, nb, 'msf')
+            }
+        }
     }
 }
 

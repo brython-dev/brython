@@ -2,7 +2,7 @@
 Reference: https://www.rfc-editor.org/rfc/rfc1951.pdf
 """
 
-from _zlib_utils import lz_generator, crc32, BitWriter, adler32
+from _zlib_utils import lz_generator, crc32, BitWriter, adler32, _write_items
 from time import perf_counter as timer
 
 DEFLATED = 8
@@ -485,7 +485,7 @@ def _adler32(source):
     return a, b
 
 
-def compress_dynamic(writer, source, store, lit_len_count, distance_count):
+def compress_dynamic(writer, store, lit_len_count, distance_count):
     t0 = timer()
 
     # Add 1 occurrence of the End Of Block character
@@ -570,33 +570,13 @@ def compress_dynamic(writer, source, store, lit_len_count, distance_count):
         t0 = timer()
 
     # Write items produced by the LZ algorithm, Huffman-encoded
-    for item in store:
-        if isinstance(item, tuple):
-            length, extra_length, distance, extra_distance = item
-            # Length code
-            value, nb = lit_len_codes[length]
-            writer.writeInt(value, nb, 'msf')
-            # Extra bits for length
-            value, nb = extra_length
-            if nb:
-                writer.writeInt(value, nb)
-            # Distance code
-            value, nb = distance_codes[distance]
-            writer.writeInt(value, nb, 'msf')
-
-            # Extra bits for distance
-            value, nb = extra_distance
-            if nb:
-                writer.writeInt(value, nb)
-        else:
-            value, nb = lit_len_codes[item]
-            writer.writeInt(value, nb, 'msf')
-
+    _write_items(writer, store, lit_len_codes, distance_codes)
+    
     if trace:
         print('write items produced by LZ', timer() - t0)
 
 
-def compress_fixed(writer, source, items):
+def compress_fixed(writer, items):
     """Use fixed Huffman code."""
     writer.writeBit(1)
     writer.writeBit(0)
@@ -694,20 +674,10 @@ class _Compressor:
         else:
             self._compressed = bytes()
 
-        # Counter for frequency of literals and lengths, encoded in the range
-        # [0, 285] (cf. 3.2.5)
-        lit_len_count = {}
-        # Counter for frequency of distances, encoded in the range [0, 29]
-        # (cf. 3.2.5)
-        distance_count = {}
-
-        store = [] # Store of items produced by the LZ algorithm
-        replaced = 0 # Count length of replaced sequences
-        nb_tuples = 0 # Count number of tuples produced by the LZ algorithm
-
         t0 = timer()
 
-        store, lit_len_count, distance_count, replaced = lz_generator(source, self.window_size)
+        store, lit_len_count, distance_count, replaced, nb_tuples = \
+            lz_generator(source, self.window_size)
 
         if trace:
             print('build store', timer() - t0)
@@ -723,9 +693,9 @@ class _Compressor:
         writer.writeBit(1) # BFINAL = 1
 
         if score < 0:
-            compress_fixed(writer, source, store)
+            compress_fixed(writer, store)
         else:
-            compress_dynamic(writer, source, store, lit_len_count, distance_count)
+            compress_dynamic(writer, store, lit_len_count, distance_count)
 
         t0 = timer()
         # Pad last byte with 0's
