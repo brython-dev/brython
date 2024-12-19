@@ -493,4 +493,10 @@ assert a == 1
 assert b == []
 assert c == 2
 
+# issue 2526
+t = [1, 1]
+t[True] = 5
+assert t[1] == 5
+assert t[True] == 5
+
 print("passed all tests..")
