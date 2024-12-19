@@ -799,6 +799,11 @@ function calculate_suggestions(dir, name){
             suggestion_distance = current_distance
         }
     }
+    if(suggestion == name){
+        // avoid messages such as
+        // "object has no attribute 'foo'. Did you mean: 'foo'?"
+        return null
+    }
     return suggestion
 }
 

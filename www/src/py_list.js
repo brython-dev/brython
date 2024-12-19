@@ -531,7 +531,7 @@ function set_list_slice_step(obj, start, stop, step, value){
 list.$setitem = function(self, arg, value){
     // Used internally to avoid using $B.args
     if(typeof arg == "number" || isinstance(arg, _b_.int)){
-        var pos = arg
+        var pos = $B.PyNumber_Index(arg)
         if(arg < 0){
             pos = self.length + pos
         }
