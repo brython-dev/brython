@@ -2523,16 +2523,12 @@ var $$super = _b_.super = $B.make_class("super",
                 pyframe = $B.imported["_sys"]._getframe(),
                 code = $B.frame.f_code.__get__(pyframe),
                 co_varnames = code.co_varnames
-            console.log('co varnames', co_varnames)
             if(co_varnames.length > 0){
                 _type = frame[1].__class__
-                console.log('_type from frame[1]', _type)
-                console.log('frame', frame)
                 if(_type === undefined){
                     throw _b_.RuntimeError.$factory("super(): no arguments")
                 }
                 object_or_type = frame[1][code.co_varnames[0]]
-                console.log('get object_or_type from frame', object_or_type)
             }else{
                 throw _b_.RuntimeError.$factory("super(): no arguments")
             }
@@ -2550,8 +2546,6 @@ var $$super = _b_.super = $B.make_class("super",
             }else if($B.$isinstance(object_or_type, _type)){
                 $arg2 = 'object'
             }else{
-                console.log('error for object_or_type', object_or_type)
-                console.log('_type', _type)
                 throw _b_.TypeError.$factory(
                     'super(type, obj): obj must be an instance ' +
                     'or subtype of type')
@@ -2590,7 +2584,7 @@ $$super.__getattribute__ = function(self, attr){
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = attr == "new" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = false // attr == "new" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }
@@ -3282,11 +3276,11 @@ $B.function.__get__ = function(self, obj){
     return $B.method.$factory(self, obj)
 }
 
-const func_attrs = ['name', 'defaults', 'kw_defaults', 'docstring',
+const func_attrs = ['__module__', 'defaults', 'kw_defaults', 'docstring',
     'arg_names', 'args_vararg', 'args_kwarg', 'positional_length',
     '__file__', 'lineno', 'flags', 'free_vars',
-    'kwonlyargs_length', 'lambda_or_name', 'posonlyargs_length',
-    'qualname', 'varnames']
+    'kwonlyargs_length', 'name', 'posonlyargs_length',
+    'qualname', 'varnames', 'method_class']
 
 var i = 0
 $B.func_attrs = {}

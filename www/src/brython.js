@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-17 09:52:12.519850"
-__BRYTHON__.timestamp=1734425532519
+__BRYTHON__.compiled_date="2024-12-19 21:58:15.440724"
+__BRYTHON__.timestamp=1734641895440
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1506,7 +1506,7 @@ if(frame.$f_trace !==_b_.None){$B.trace_line()}
 return true}
 $B.get_method_class=function(method,ns,qualname,refs){
 var klass=ns
-if(method.$infos && method.$infos.$class){return method.$infos.$class}
+if(method.$function_infos && method.$function_infos[$B.func_attrs.method_class]){return method.$function_infos[$B.func_attrs.method_class]}
 for(var ref of refs){if(klass[ref]===undefined){return $B.make_class(qualname)}
 klass=klass[ref]}
 return klass}
@@ -2372,7 +2372,10 @@ class_dict[key]=v
 if(v.__class__){
 var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
 if(set_name !==_b_.None){set_name(v,class_dict,key)}}
-if(typeof v=="function"){}}
+if(typeof v=="function"){if(v.$function_infos===undefined){
+if(v.$infos){v.$infos.__qualname__=name+'.'+v.$infos.__name__}}else{v.$function_infos[$B.func_attrs.method_class]=class_dict
+v.$function_infos[$B.func_attrs.qualname]=name+'.'+
+v.$function_infos[$B.func_attrs.name]}}}
 class_dict.$tp_setattr=$B.search_in_mro(class_dict,'__setattr__')
 var sup=_b_.super.$factory(class_dict,class_dict)
 var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
@@ -3024,9 +3027,11 @@ if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
 if((! is_class)&& klass.$native){if(obj.$method_cache && obj.$method_cache[attr]){return obj.$method_cache[attr]}
 if($test){console.log("native class",klass,klass[attr])}
-if(klass[attr]===undefined){var object_attr=_b_.object[attr]
-if($test){console.log("object attr",object_attr)}
-if(object_attr !==undefined){klass[attr]=object_attr}else{if($test){console.log("obj[attr]",obj[attr])}
+if(klass[attr]===undefined){var parent_attr
+for(var parent_class of klass.__mro__){if(parent_class[attr]!==undefined){parent_attr=parent_class[attr]
+break}}
+if($test){console.log("parent class attr",parent_attr)}
+if(parent_attr !==undefined){klass[attr]=parent_attr}else{if($test){console.log("obj[attr]",obj[attr])}
 var attrs=obj.__dict__
 if(attrs && _b_.dict.$contains_string(attrs,attr)){return _b_.dict.$getitem_string(attrs,attr)}
 if(_default===undefined){throw $B.attr_error(attr,obj)}
@@ -3175,6 +3180,10 @@ if(klass===cls){return true}
 var mro=klass.__mro__
 for(var i=0;i < mro.length;i++){if(mro[i]===cls){return true}}
 var instancecheck=$B.$getattr(cls.__class__ ||$B.get_class(cls),'__instancecheck__',_b_.None)
+if(cls.__name__=='DemoComponent2169'){console.log('use instance check',obj,cls,instancecheck)
+console.log('class of obj',$B.get_class(obj))
+console.log('same as cls ?',$B.get_class(obj)===cls)
+console.log('result',instancecheck(cls,obj))}
 if(instancecheck !==_b_.None){return instancecheck(cls,obj)}
 return false}
 var issubclass=_b_.issubclass=function(klass,classinfo){check_nb_args_no_kw('issubclass',2,arguments)
@@ -3521,7 +3530,7 @@ return function(){mro[0].$js_func.call(self.__self_class__,...arguments)}}}
 var object_or_type=self.__self_class__,mro=self.$arg2=='type' ? object_or_type.__mro__ :
 $B.get_class(object_or_type).__mro__
 var search_start=mro.indexOf(self.__thisclass__)+1,search_classes=mro.slice(search_start)
-var $test=attr=="new" 
+var $test=false 
 if($test){console.log('super.__ga__, self',self,'search classes',search_classes)}
 var f
 for(var klass of search_classes){if(klass===undefined){console.log('klass undef in super',self)
@@ -3745,7 +3754,7 @@ filter(x=> !x.startsWith('$')))}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
-const func_attrs=['name','defaults','kw_defaults','docstring','arg_names','args_vararg','args_kwarg','positional_length','__file__','lineno','flags','free_vars','kwonlyargs_length','lambda_or_name','posonlyargs_length','qualname','varnames']
+const func_attrs=['__module__','defaults','kw_defaults','docstring','arg_names','args_vararg','args_kwarg','positional_length','__file__','lineno','flags','free_vars','kwonlyargs_length','name','posonlyargs_length','qualname','varnames','method_class']
 var i=0
 $B.func_attrs={}
 for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
@@ -4453,6 +4462,8 @@ levenshtein_distance(name,item,max_distance)
 if(current_distance > max_distance){continue}
 if(!suggestion ||current_distance < suggestion_distance){suggestion=item
 suggestion_distance=current_distance}}
+if(suggestion==name){
+return null}
 return suggestion}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 if(name===_b_.None){return _b_.None}
@@ -9483,7 +9494,7 @@ if(nb !=repl.length){throw _b_.ValueError.$factory(
 for(var i=start;test(i);i+=step){obj[i]=repl[j]
 j++}}
 list.$setitem=function(self,arg,value){
-if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=arg
+if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=$B.PyNumber_Index(arg)
 if(arg < 0){pos=self.length+pos}
 if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list index out of range")}
 return _b_.None}

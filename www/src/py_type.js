@@ -814,8 +814,16 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
             }
         }
         if(typeof v == "function"){
-            //v.$infos.$class = class_dict
-            //v.$infos.__qualname__ = name + '.' + v.$infos.__name__
+            if(v.$function_infos === undefined){
+                // internal functions have $infos
+                if(v.$infos){
+                    v.$infos.__qualname__ = name + '.' + v.$infos.__name__
+                }
+            }else{
+                v.$function_infos[$B.func_attrs.method_class] = class_dict
+                v.$function_infos[$B.func_attrs.qualname] = name + '.' +
+                    v.$function_infos[$B.func_attrs.name]
+            }
         }
     }
 
