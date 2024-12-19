@@ -938,7 +938,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "f_locals" // && obj === _b_.list // "Point"
+    var $test = false // attr == "bit_count" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1086,12 +1086,18 @@ $B.$getattr = function(obj, attr, _default){
             console.log("native class", klass, klass[attr])
         }
         if(klass[attr] === undefined){
-            var object_attr = _b_.object[attr]
-            if($test){
-                console.log("object attr", object_attr)
+            var parent_attr
+            for(var parent_class of klass.__mro__){
+                if(parent_class[attr] !== undefined){
+                    parent_attr = parent_class[attr]
+                    break
+                }
             }
-            if(object_attr !== undefined){
-                klass[attr] = object_attr
+            if($test){
+                console.log("parent class attr", parent_attr)
+            }
+            if(parent_attr !== undefined){
+                klass[attr] = parent_attr
             }else{
                 if($test){
                     console.log("obj[attr]", obj[attr])

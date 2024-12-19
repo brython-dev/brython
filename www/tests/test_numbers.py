@@ -839,4 +839,10 @@ class X:
 assert [2] * X() == [2, 2]
 assert X() * [3] == [3, 3]
 
+# issue 2527
+False.as_integer_ratio()
+False.bit_count
+False.bit_length
+False.to_bytes()
+
 print('passed all tests...')

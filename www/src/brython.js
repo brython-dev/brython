@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-19 20:41:26.670244"
-__BRYTHON__.timestamp=1734637286669
+__BRYTHON__.compiled_date="2024-12-19 20:55:28.876118"
+__BRYTHON__.timestamp=1734638128875
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -3023,9 +3023,11 @@ if(typeof obj=='function'){var value=obj[attr]
 if(value !==undefined){if(attr=='__module__'){return value}}}
 if((! is_class)&& klass.$native){if(obj.$method_cache && obj.$method_cache[attr]){return obj.$method_cache[attr]}
 if($test){console.log("native class",klass,klass[attr])}
-if(klass[attr]===undefined){var object_attr=_b_.object[attr]
-if($test){console.log("object attr",object_attr)}
-if(object_attr !==undefined){klass[attr]=object_attr}else{if($test){console.log("obj[attr]",obj[attr])}
+if(klass[attr]===undefined){var parent_attr
+for(var parent_class of klass.__mro__){if(parent_class[attr]!==undefined){parent_attr=parent_class[attr]
+break}}
+if($test){console.log("parent class attr",parent_attr)}
+if(parent_attr !==undefined){klass[attr]=parent_attr}else{if($test){console.log("obj[attr]",obj[attr])}
 var attrs=obj.__dict__
 if(attrs && _b_.dict.$contains_string(attrs,attr)){return _b_.dict.$getitem_string(attrs,attr)}
 if(_default===undefined){throw $B.attr_error(attr,obj)}
@@ -4443,6 +4445,8 @@ levenshtein_distance(name,item,max_distance)
 if(current_distance > max_distance){continue}
 if(!suggestion ||current_distance < suggestion_distance){suggestion=item
 suggestion_distance=current_distance}}
+if(suggestion==name){
+return null}
 return suggestion}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 if(name===_b_.None){return _b_.None}
