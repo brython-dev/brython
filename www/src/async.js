@@ -63,7 +63,7 @@ $B.make_async = func => {
         }
         return res
     }
-    f.$infos = func.$infos
+    f.$function_infos = func.$function_infos
     f.$is_func = true
     f.$is_async = true
     f.$args_parser = func.$args_parser

@@ -1356,7 +1356,7 @@ $B.$hash = function(obj){
         return v
     }
     var res
-    if(hash_method.$infos.__func__ === _b_.object.__hash__){
+    if(hash_method === _b_.object.__hash__){
         if(_b_.type.__getattribute__(klass, '__eq__') !== _b_.object.__eq__){
             throw _b_.TypeError.$factory("unhashable type: '" +
                 $B.class_name(obj) + "'", 'hash')
@@ -1564,6 +1564,12 @@ $B.$isinstance = function(obj, cls){
     // Search __instancecheck__ on cls's class (ie its metaclass)
     var instancecheck = $B.$getattr(cls.__class__ || $B.get_class(cls),
         '__instancecheck__', _b_.None)
+    if(cls.__name__ == 'DemoComponent2169'){
+        console.log('use instance check', obj, cls, instancecheck)
+        console.log('class of obj', $B.get_class(obj))
+        console.log('same as cls ?', $B.get_class(obj) === cls)
+        console.log('result', instancecheck(cls, obj))
+    }
     if(instancecheck !== _b_.None){
         return instancecheck(cls, obj)
     }
@@ -2511,12 +2517,16 @@ var $$super = _b_.super = $B.make_class("super",
                 pyframe = $B.imported["_sys"]._getframe(),
                 code = $B.frame.f_code.__get__(pyframe),
                 co_varnames = code.co_varnames
+            console.log('co varnames', co_varnames)
             if(co_varnames.length > 0){
                 _type = frame[1].__class__
+                console.log('_type from frame[1]', _type)
+                console.log('frame', frame)
                 if(_type === undefined){
                     throw _b_.RuntimeError.$factory("super(): no arguments")
                 }
                 object_or_type = frame[1][code.co_varnames[0]]
+                console.log('get object_or_type from frame', object_or_type)
             }else{
                 throw _b_.RuntimeError.$factory("super(): no arguments")
             }
@@ -2534,6 +2544,8 @@ var $$super = _b_.super = $B.make_class("super",
             }else if($B.$isinstance(object_or_type, _type)){
                 $arg2 = 'object'
             }else{
+                console.log('error for object_or_type', object_or_type)
+                console.log('_type', _type)
                 throw _b_.TypeError.$factory(
                     'super(type, obj): obj must be an instance ' +
                     'or subtype of type')
@@ -3264,7 +3276,27 @@ $B.function.__get__ = function(self, obj){
     return $B.method.$factory(self, obj)
 }
 
+const func_attrs = ['name', 'defaults', 'kw_defaults', 'docstring',
+    'arg_names', 'args_vararg', 'args_kwarg', 'positional_length',
+    '__file__', 'lineno', 'flags', 'free_vars',
+    'kwonlyargs_length', 'lambda_or_name', 'posonlyargs_length',
+    'qualname', 'varnames']
+
+var i = 0
+$B.func_attrs = {}
+for(var func_attr of func_attrs){
+    $B.func_attrs[func_attr] = i++
+}
+
 $B.function.__getattribute__ = function(self, attr){
+    // Functions created from Python code have an attribute $function_infos, a
+    // list [name, defaults, kw_defaults, docstring, arg_names, args_vararg,
+    // args_kwarg, positional.length, __file__, lineno, flags, free_vars,
+    // args.kwonlyargs.length, '<lambda>' or name, args.posonlyargs.length,
+    // '<lambda>' or qualname, varnames]
+    if(! self.$infos && self.$function_infos){
+        $B.make_function_infos(self, ...self.$function_infos)
+    }
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
     if(self.$infos && self.$infos[attr] !== undefined){
@@ -3280,6 +3312,8 @@ $B.function.__getattribute__ = function(self, attr){
         }else if(attr == '__annotations__'){
             // annotations is stored as a Javascript object
             return $B.obj_dict(self.$infos[attr])
+        }else if(attr == '__defaults__'){
+            return $B.fast_tuple(self.$infos.__defaults__)
         }else if(self.$infos.hasOwnProperty(attr)){
             return self.$infos[attr]
         }
@@ -3316,7 +3350,9 @@ $B.function.__getattribute__ = function(self, attr){
 }
 
 $B.function.__repr__ = function(self){
-    if(self.$infos === undefined){
+    if(self.$function_infos){
+        return `<function ${self.$function_infos[$B.func_attrs.qualname]}>`
+    }else if(self.$infos === undefined){
         return '<function ' + self.name + '>'
     }else{
         return '<function ' + self.$infos.__qualname__ + '>'
@@ -3358,7 +3394,12 @@ $B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
 }
 
 $B.make_args_parser = function(f){
+    if((! f.$infos) && f.$function_infos){
+        //console.log('make function infos', f)
+        $B.make_function_infos(f, ...f.$function_infos)
+    }
     if(f.$infos === undefined || f.$infos.__code__ === undefined){
+        console.log('f', f)
         throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);
     }
     const varnames = f.$infos.__code__.co_varnames,
@@ -3426,6 +3467,9 @@ $B.make_args_parser = function(f){
 }
 
 $B.function.__setattr__ = function(self, attr, value){
+    if(self.$infos === undefined){
+        $B.make_function_infos(self, ...self.$function_infos)
+    }
     if(attr == "__closure__"){
         throw _b_.AttributeError.$factory("readonly attribute")
     }else if(attr == "__defaults__"){

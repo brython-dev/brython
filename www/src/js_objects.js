@@ -323,7 +323,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     if(klass === $B.function || klass === $B.method){
         if(typeof pyobj == 'function' && pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&
-                ! pyobj.$is_func){
+                ! pyobj.$function_infos){
             // pyobj is a Javascript constructor - this happens with
             // javascript.extends. Cf. issue #1439
             return pyobj
@@ -351,7 +351,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 }
                 // Apply Python arguments to Python function
                 let res
-                if(pyobj.prototype && pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
+                if(pyobj.prototype && pyobj.prototype.constructor === pyobj && 
+                        ! pyobj.$function_infos){
                     res = new pyobj(...args)
                 }else{
                     res = pyobj.apply(this, args)
@@ -507,6 +508,13 @@ iterator.__next__ = function(_self){
 }
 
 $B.set_func_names(iterator, 'builtins')
+
+$B.JSObj.__hash__ = function(_self){
+    // must not be the same object as object.__hash__ because, since
+    // JSObj.__eq__ is not the same as object.__eq__, JSObj instances
+    // would be unhashable
+    return _b_.object.__hash__(_self)
+}
 
 $B.JSObj.__iter__ = function(_self){
     return iterator.$factory(_self)

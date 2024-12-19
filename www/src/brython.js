@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-16 07:57:45.616831"
-__BRYTHON__.timestamp=1734332265616
+__BRYTHON__.compiled_date="2024-12-17 09:52:12.519850"
+__BRYTHON__.timestamp=1734425532519
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1650,8 +1650,9 @@ $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}
 return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_class){
 return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$in_js_module){
 return function(){var res=callable(...arguments)
-return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$infos && callable.$infos.__code__ &&
-(callable.$infos.__code__.co_flags & 32)){$B.frame_obj.frame.$has_generators=true}
+return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$function_infos &&
+(callable.$function_infos[$B.func_attrs.flags]& 32)){
+$B.frame_obj.frame.$has_generators=true}
 if(callable.$is_async){if($B.frame_obj !==null){var frame=$B.frame_obj.frame
 frame.$async=callable}}
 return callable}
@@ -2326,7 +2327,8 @@ result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.__na
 return result}else if(res.__class__ && res.__class__.__get__){
 if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
 if(typeof res=="function"){
-if(res.$infos===undefined && $B.get_option('debug')> 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
+if(res.$infos===undefined && res.$function_infos===undefined
+&& $B.get_option('debug')> 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
 if($test){console.log("res is function",res)}
 if(attr=="__new__" ||
 res.__class__===$B.builtin_function_or_method){res.$type="staticmethod"}
@@ -2370,8 +2372,7 @@ class_dict[key]=v
 if(v.__class__){
 var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
 if(set_name !==_b_.None){set_name(v,class_dict,key)}}
-if(typeof v=="function"){v.$infos.$class=class_dict
-v.$infos.__qualname__=name+'.'+v.$infos.__name__}}
+if(typeof v=="function"){}}
 class_dict.$tp_setattr=$B.search_in_mro(class_dict,'__setattr__')
 var sup=_b_.super.$factory(class_dict,class_dict)
 var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
@@ -3109,7 +3110,7 @@ function check_int(v){if((! Number.isInteger(v))&& ! $B.$isinstance(v,_b_.int)){
 '__hash__ method should return an integer')}
 return v}
 var res
-if(hash_method.$infos.__func__===_b_.object.__hash__){if(_b_.type.__getattribute__(klass,'__eq__')!==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
+if(hash_method===_b_.object.__hash__){if(_b_.type.__getattribute__(klass,'__eq__')!==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=check_int(_b_.object.__hash__(obj))}}else{return check_int($B.$call(hash_method)(obj))}}
 var help=_b_.help=function(obj){if(obj===undefined){obj='help'}
 if(typeof obj=='string'){var lib_url='https://docs.python.org/3/library'
@@ -3744,14 +3745,19 @@ filter(x=> !x.startsWith('$')))}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
+const func_attrs=['name','defaults','kw_defaults','docstring','arg_names','args_vararg','args_kwarg','positional_length','__file__','lineno','flags','free_vars','kwonlyargs_length','lambda_or_name','posonlyargs_length','qualname','varnames']
+var i=0
+$B.func_attrs={}
+for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
 $B.function.__getattribute__=function(self,attr){
+if(! self.$infos && self.$function_infos){$B.make_function_infos(self,...self.$function_infos)}
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var _attr in self.$infos.__code__){res[_attr]=self.$infos.__code__[_attr]}
 res.name=self.$infos.__name__
 res.filename=self.$infos.__code__.co_filename
 res.co_code=self+"" 
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else if(self.$infos.hasOwnProperty(attr)){return self.$infos[attr]}}else if(self.$infos && self.$infos.__dict__ &&
+return $B.obj_dict(self.$infos[attr])}else if(attr=='__defaults__'){return $B.fast_tuple(self.$infos.__defaults__)}else if(self.$infos.hasOwnProperty(attr)){return self.$infos[attr]}}else if(self.$infos && self.$infos.__dict__ &&
 _b_.dict.$contains_string(self.$infos.__dict__,attr)){return _b_.dict.$getitem_string(self.$infos.__dict__,attr)}else if(attr=="__closure__"){var free_vars=self.$infos.__code__.co_freevars
 if(free_vars.length==0){return None}
 var cells=[]
@@ -3759,7 +3765,7 @@ for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_
 cells.push($B.cell.$factory(None))}}
 return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-$B.function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
+$B.function.__repr__=function(self){if(self.$function_infos){return `<function ${self.$function_infos[$B.func_attrs.qualname]}>`}else if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
 $B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
 ){f.$is_func=true
@@ -3772,7 +3778,10 @@ co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
 $B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
-$B.make_args_parser=function(f){if(f.$infos===undefined ||f.$infos.__code__===undefined){throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
+$B.make_args_parser=function(f){if((! f.$infos)&& f.$function_infos){
+$B.make_function_infos(f,...f.$function_infos)}
+if(f.$infos===undefined ||f.$infos.__code__===undefined){console.log('f',f)
+throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);}
 const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
 var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
 _b_.dict.__len__(f.$infos.__kwdefaults__)
@@ -3802,7 +3811,8 @@ f.$args_parser=f.$infos.args_parser=$B.getArgs0(
 PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
 )
 return f.$args_parser}
-$B.function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
+$B.function.__setattr__=function(self,attr,value){if(self.$infos===undefined){$B.make_function_infos(self,...self.$function_infos)}
+if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
 if(self.$infos){self.$infos.__defaults__=value
@@ -4220,7 +4230,7 @@ frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self
 frame.f_code.__get__(_self).co_name+'>'}
 frame.f_builtins={__get__:function(_self){return $B.$getattr(_self[3].__builtins__,'__dict__')}}
 frame.f_code={__get__:function(_self){var res
-if(_self[4]){res=_self[4].$infos.__code__}else if(_self.f_code){
+if(_self[4]){res=$B.$getattr(_self[4],'__code__')}else if(_self.f_code){
 res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}
 res.co_qualname=res.co_name }
 res.__class__=_b_.code
@@ -9756,7 +9766,7 @@ if(has_type(klass,_b_.float)){
 return pyobj.value}
 if(klass===$B.function ||klass===$B.method){if(typeof pyobj=='function' && pyobj.prototype &&
 pyobj.prototype.constructor===pyobj &&
-! pyobj.$is_func){
+! pyobj.$function_infos){
 return pyobj}
 if(pyobj.$is_async){
 let jsobj=function(){var res=pyobj.apply(null,arguments)
@@ -9768,7 +9778,8 @@ let jsobj=function(){try{
 var args=new Array(arguments.length)
 for(var i=0;i < arguments.length;++i){args[i]=jsobj2pyobj(arguments[i])}
 let res
-if(pyobj.prototype && pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){res=new pyobj(...args)}else{res=pyobj.apply(this,args)}
+if(pyobj.prototype && pyobj.prototype.constructor===pyobj && 
+! pyobj.$function_infos){res=new pyobj(...args)}else{res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}
 pyobj[JSOBJ]=jsobj
 jsobj[PYOBJ]=pyobj
@@ -9822,6 +9833,8 @@ iterator.__next__=function(_self){_self.counter++
 if(_self.counter==_self.length){throw _b_.StopIteration.$factory('')}
 return _self.keys[_self.counter]}
 $B.set_func_names(iterator,'builtins')
+$B.JSObj.__hash__=function(_self){
+return _b_.object.__hash__(_self)}
 $B.JSObj.__iter__=function(_self){return iterator.$factory(_self)}
 $B.JSObj.__ne__=function(_self,other){return ! $B.JSObj.__eq__(_self,other)}
 function jsclass2pyclass(js_class){
@@ -10452,7 +10465,7 @@ if(res !==undefined){if(res===null){return res}
 if(typeof res==="function"){if(self.__class__ && self.__class__.$webcomponent){var method=$B.$getattr(self.__class__,attr,null)
 if(method !==null){
 return res.bind(self)}}
-if(res.$is_func){
+if(res.$function_infos){
 return res}
 var func=(function(f,elt){return function(){var args=[]
 for(var i=0;i < arguments.length;i++){var arg=arguments[i]
@@ -10934,7 +10947,7 @@ if($B.frame_obj !==null){var frame=$B.frame_obj.frame
 frame.$coroutine=res
 res.$lineno=frame.$lineno}
 return res}
-f.$infos=func.$infos
+f.$function_infos=func.$function_infos
 f.$is_func=true
 f.$is_async=true
 f.$args_parser=func.$args_parser
@@ -12578,7 +12591,7 @@ decs_declare+=prefix+`$B.set_lineno(frame, ${dec.lineno})\n`
 decs_declare+=prefix+`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
 var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),positional=parsed_args.positional,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
-var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
+var defaults=`[${this.args.defaults.map(x => x.to_js(scopes))}]`
 kw_defaults=kw_default_names.length==0 ? '_b_.None' :
 `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
 var id=make_id(),name2=this.name+id
@@ -12695,7 +12708,7 @@ if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
 if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 if(in_class){js+=prefix+`${name2}.$is_method = true\n`}
-js+=prefix+`$B.make_function_infos(${name2}, `+
+js+=prefix+`${name2}.$function_infos = [`+
 `'${gname}', `+
 `${defaults}, `+
 `${kw_defaults}, `+
@@ -12703,7 +12716,7 @@ js+=prefix+`$B.make_function_infos(${name2}, `+
 `[${arg_names}], `+
 `${args_vararg}, `+
 `${args_kwarg},\n`+
-prefix+`${positional.length}, `+
+prefix+tab+`${positional.length}, `+
 `__file__, `+
 `${this.lineno}, `+
 `${flags}, `+
@@ -12712,7 +12725,8 @@ prefix+`${positional.length}, `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
 `${this.args.posonlyargs.length}, `+
 `'${this.$is_lambda ? '<lambda>': qualname}', `+
-`[${varnames}])\n`;
+`[${varnames}]]\n`;
+js+=prefix+`${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 if(is_async && ! is_generator){js+=prefix+`${name2} = $B.make_async(${name2})\n`}
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
 if(decorated){func_ref=`decorated${make_id()}`

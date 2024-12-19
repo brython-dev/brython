@@ -2679,7 +2679,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         kw_defaults = parsed_args.kw_defaults,
         kw_default_names = parsed_args.kw_default_names
 
-    var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
+    var defaults = `[${this.args.defaults.map(x => x.to_js(scopes))}]`
     kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
             `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
 
@@ -2924,7 +2924,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     // Set admin infos
-    js += prefix + `$B.make_function_infos(${name2}, ` +
+    js += prefix + `${name2}.$function_infos = [` +
         `'${gname}', ` +
         `${defaults}, ` +
         `${kw_defaults}, ` +
@@ -2933,7 +2933,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${args_vararg}, ` +
         `${args_kwarg},\n` +
         // make f.__code__
-        prefix + `${positional.length}, ` +
+        prefix + tab + `${positional.length}, ` +
         `__file__, ` +
         `${this.lineno}, ` +
         `${flags}, ` +
@@ -2942,7 +2942,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
         `${this.args.posonlyargs.length}, ` +
         `'${this.$is_lambda ? '<lambda>': qualname}', ` +
-        `[${varnames}])\n`;
+        `[${varnames}]]\n`;
+
+    js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 
     if(is_async && ! is_generator){
         js += prefix + `${name2} = $B.make_async(${name2})\n`

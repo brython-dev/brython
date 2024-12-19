@@ -1403,8 +1403,10 @@ $B.$call1 = function(callable){
             return res === undefined ? _b_.None : res
         }
     }else if(callable.$is_func || typeof callable == "function"){
-        if(callable.$infos && callable.$infos.__code__ &&
-                (callable.$infos.__code__.co_flags & 32)){
+        if(callable.$function_infos &&
+                (callable.$function_infos[$B.func_attrs.flags] & 32)){
+            // Mark frame as having generators. Used in leave_frame for
+            // generators inside context managers
             $B.frame_obj.frame.$has_generators = true
         }
         if(callable.$is_async){

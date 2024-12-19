@@ -31,7 +31,7 @@ Z_RLE = 3
 Z_SYNC_FLUSH = 2
 Z_TREES = 6
 
-trace = 0
+trace = 1
 
 class Error(Exception):
     pass
@@ -212,10 +212,6 @@ def make_tree(node, codes):
             make_tree(child, codes)
 
 
-class error(Exception):
-    pass
-
-
 fixed_codelengths = {}
 for car in range(144):
     fixed_codelengths[car] = 8
@@ -230,7 +226,7 @@ fixed_decomp = _decompresser(fixed_codelengths)
 fixed_lit_len_tree = fixed_decomp["root"]
 codes = fixed_decomp["codes"]
 
-fixed_lit_len_codes = {codes[key]: key for key in codes} #fixed_decomp["codes"]
+fixed_lit_len_codes = {codes[key]: key for key in codes}
 
 def decomp_repeat(n):
     if n <= 6:
@@ -336,20 +332,19 @@ def compress_dynamic(writer, store, lit_len_count, distance_count):
         codelengths_list.pop()
     HCLEN = len(codelengths_list) - 4
 
+    # BTYPE for dynamic coding = 10
     writer.writeBit(0)
     writer.writeBit(1)
-    writer.writeInt(HLIT, 5)
-    writer.writeInt(HDIST, 5)
-    writer.writeInt(HCLEN, 4)
-
+    
+    writer.writeInt(HLIT, 5) # number of literal / length codes - 257
+    writer.writeInt(HDIST, 5) # number of distance codes - 1
+    writer.writeInt(HCLEN, 4) # number of code length codes - 4
 
     # Write codelengths for codelengths tree
     for length, car in zip(codelengths_list, alphabet):
         writer.writeInt(length, 3)
 
     # Write lit_len and distance tables
-    t = []
-    pr = lambda *args: t.append(args)
     for item in coded_lit_len + coded_distance:
         if isinstance(item, tuple):
             length, extra = item

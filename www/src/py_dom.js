@@ -743,7 +743,7 @@ DOMNode.__getattribute__ = function(self, attr){
                     return res.bind(self)
                 }
             }
-            if(res.$is_func){
+            if(res.$function_infos){
                 // If the attribute was set in __setattr__ (elt.foo = func),
                 // then getattr(elt, "foo") must be "func"
                 return res

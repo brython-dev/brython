@@ -392,10 +392,6 @@ function _decomp_dynamic(reader, result){
             let distance = _read_distance(reader, distance_tree)
             for(var i = 0; i < length; i++){
                 result.push(result[result.length - distance])
-                if(result[result.length - distance] === undefined){
-                    console.log('tiens', result.length, distance)
-                    throw Error()
-                }
             }
             len += length
         }

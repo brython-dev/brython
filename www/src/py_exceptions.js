@@ -253,7 +253,7 @@ frame.f_code = {
     __get__: function(_self){
         var res
         if(_self[4]){
-            res = _self[4].$infos.__code__
+            res = $B.$getattr(_self[4], '__code__')
         }else if(_self.f_code){
             // set in comprehensions
             res = _self.f_code
