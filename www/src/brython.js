@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-19 20:55:28.876118"
-__BRYTHON__.timestamp=1734638128875
+__BRYTHON__.compiled_date="2024-12-21 18:33:56.128489"
+__BRYTHON__.timestamp=1734802436128
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2564,17 +2564,26 @@ $B.set_func_names(method,"builtins")
 $B.method_descriptor=$B.make_class("method_descriptor")
 $B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
 _b_.object.__class__=type
-$B.make_iterator_class=function(name){
+$B.make_iterator_class=function(name,reverse){
 var klass={__class__:_b_.type,__mro__:[_b_.object],__name__:name,__qualname__:name,$factory:function(items){return{
-__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length,$builtin_iterator:true}},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
+__class__:klass,__dict__:$B.empty_dict(),counter:reverse ? items.length :-1,items:items,len:items.length,$builtin_iterator:true}},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=
+self.counter===undefined
+? reverse
+? self.items.length
+:-1
+:self.counter
 self.len=self.items.length
 return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.test_change=="function"){var message=self.test_change()
 if(message){throw _b_.RuntimeError.$factory(message)}}
-self.counter++
+if(reverse){self.counter--
+if(self.counter >=0){var item=self.items[self.counter]
+if(self.items.$is_js_array){
+item=$B.jsobj2pyobj(item)}
+return item}}else{self.counter++
 if(self.counter < self.items.length){var item=self.items[self.counter]
 if(self.items.$is_js_array){
 item=$B.jsobj2pyobj(item)}
-return item}
+return item}}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
@@ -9455,6 +9464,9 @@ for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
 if(isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
 $B.repr.leave(self)
 return res}
+var list_reverseiterator=$B.make_iterator_class("list_reverseiterator",true)
+list_reverseiterator.__reduce__=list_reverseiterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
+list.__reversed__=function(self){return list_reverseiterator.$factory(self)}
 list.__rmul__=function(self,other){return list.__mul__(self,other)}
 list.__setattr__=function(self,attr,value){if(self.__class__===list ||self.__class__===tuple){var cl_name=$B.class_name(self)
 if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'"+cl_name+

@@ -1312,7 +1312,7 @@ $B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type
 
-$B.make_iterator_class = function(name){
+$B.make_iterator_class = function(name, reverse){
     // Builds a class to iterate over items
 
     var klass = {
@@ -1325,7 +1325,7 @@ $B.make_iterator_class = function(name){
             return {
                 __class__: klass,
                 __dict__: $B.empty_dict(),
-                counter: -1,
+                counter: reverse ? items.length : -1,
                 items: items,
                 len: items.length,
                 $builtin_iterator: true
@@ -1335,7 +1335,12 @@ $B.make_iterator_class = function(name){
         $iterator_class: true,
 
         __iter__: function(self){
-            self.counter = self.counter === undefined ? -1 : self.counter
+            self.counter =
+                self.counter === undefined
+                    ? reverse
+                        ? self.items.length
+                        : - 1
+                    : self.counter
             self.len = self.items.length
             return self
         },
@@ -1356,15 +1361,28 @@ $B.make_iterator_class = function(name){
                 }
             }
 
-            self.counter++
-            if(self.counter < self.items.length){
-                var item = self.items[self.counter]
-                if(self.items.$is_js_array){
-                    // iteration on Javascript lists produces Python objects
-                    // cf. issue #1388
-                    item = $B.jsobj2pyobj(item)
+            if(reverse){
+                self.counter--
+                if(self.counter >= 0){
+                    var item = self.items[self.counter]
+                    if(self.items.$is_js_array){
+                        // iteration on Javascript lists produces Python objects
+                        // cf. issue #1388
+                        item = $B.jsobj2pyobj(item)
+                    }
+                    return item
                 }
-                return item
+            }else{
+                self.counter++
+                if(self.counter < self.items.length){
+                    var item = self.items[self.counter]
+                    if(self.items.$is_js_array){
+                        // iteration on Javascript lists produces Python objects
+                        // cf. issue #1388
+                        item = $B.jsobj2pyobj(item)
+                    }
+                    return item
+                }
             }
             throw _b_.StopIteration.$factory("StopIteration")
         },
