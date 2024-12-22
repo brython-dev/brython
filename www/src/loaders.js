@@ -430,6 +430,9 @@ var loop = $B.loop = function(){
                     err = err.$py_exc
                 }else{
                     $B.freeze(err)
+                    if($B.get_option('debug') > 2){
+                        console.log('JS error stack', err.stack)
+                    }
                     var stack = err.$stack,
                         frame_obj = err.$frame_obj,
                         linenums = err.$linenums
