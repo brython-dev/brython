@@ -499,4 +499,9 @@ t[True] = 5
 assert t[1] == 5
 assert t[True] == 5
 
+# issue 2528
+t = [1, 2]
+u = [item for item in list.__reversed__(t)]
+assert u == [2, 1]
+
 print("passed all tests..")

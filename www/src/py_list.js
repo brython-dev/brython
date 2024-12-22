@@ -452,6 +452,16 @@ function list_repr(self){
     return res
 }
 
+var list_reverseiterator = $B.make_iterator_class("list_reverseiterator", true)
+
+list_reverseiterator.__reduce__ = list_reverseiterator.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
+}
+
+list.__reversed__ = function(self){
+    return list_reverseiterator.$factory(self)
+}
+
 list.__rmul__ = function(self, other){
     return list.__mul__(self, other)
 }
