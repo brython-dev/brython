@@ -14,8 +14,8 @@ coroutine.send = function(self){
     self.$sent = true
     if(! $B.$isinstance(self, coroutine)){
         var msg = "object is not a coroutine"
-        if(typeof self == "function" && self.$infos && self.$infos.__code__ &&
-                self.$infos.__code__.co_flags & 128){
+        if(typeof self == "function" && self.$function_infos &&
+                self.$function_infos[$B.func_attrs.flags] & 128){
             msg += '. Maybe you forgot to call the async function ?'
         }
         throw _b_.TypeError.$factory(msg)
@@ -36,8 +36,8 @@ coroutine.send = function(self){
 }
 
 coroutine.__repr__ = coroutine.__str__ = function(self){
-    if(self.$func.$infos){
-        return "<coroutine " + self.$func.$infos.__name__ + ">"
+    if(self.$func.$function_infos){
+        return "<coroutine " + self.$func.$function_infos[$B.func_attrs.name] + ">"
     }else{
         return "<coroutine object>"
     }

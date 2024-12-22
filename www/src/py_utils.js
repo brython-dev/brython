@@ -1640,7 +1640,7 @@ $B.leave_frame = function(arg){
     var frame = $B.frame_obj.frame
     if(frame.$coroutine){
         if(! frame.$coroutine.$sent){
-            var cname = frame.$coroutine.$func.$infos.__name__
+            var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.name]
             var message = _b_.RuntimeWarning.$factory(
                 `coroutine '${cname}' was never awaited`)
             message.lineno = frame.$coroutine.$lineno
