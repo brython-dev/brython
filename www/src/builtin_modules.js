@@ -1145,6 +1145,8 @@
             func.$infos = {
                 __name__: "ajax_" + method
             }
+            func.$function_infos = []
+            func.$function_infos[$B.func_attrs.name] = `ajax_${method}`
             return {
                 __class__: $B.coroutine,
                 $args: [url, args],
@@ -1182,7 +1184,7 @@
             return f.__class__ === $B.coroutine
         },
         iscoroutinefunction: function(f){
-            return (f.$infos.__code__.co_flags & 128) != 0
+            return (f.$function_infos[$B.func_attrs.flags] & 128) != 0
         },
         post: function(){
             return $B.imported['browser.aio'].ajax.bind(null, "POST").apply(null, arguments)
@@ -1220,6 +1222,8 @@
             func.$infos = {
                 __name__: "sleep"
             }
+            func.$function_infos = []
+            func.$function_infos[$B.func_attrs.name] = 'sleep'
             return {
                 __class__: $B.coroutine,
                 $args: [seconds],
@@ -1248,6 +1252,13 @@
                     __name__: attr,
                     __qualname__: name + '.' + attr
                 }
+                $B.set_function_infos(module_obj[attr],
+                    {
+                        __module__: name,
+                        __name__: attr,
+                        __qualname__: name + '.' + attr
+                    }
+                )
             }
         }
     }
@@ -1324,6 +1335,12 @@
                 __name__: name,
                 __qualname__: name
             }
+            $B.set_function_infos(builtin,
+                {
+                    __name__: name,
+                    __qualname__: name
+                }
+            )
         }
     }
 

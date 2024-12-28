@@ -230,6 +230,16 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             },
             writable: true
         })
+        let value = []
+        value[$B.func_attrs.name] = jsobj.name
+        value[$B.func_attrs.qualname] = jsobj.name
+        Object.defineProperty(res, '$function_infos',
+            {
+                value,
+                writable: true
+            }
+        )
+
         return res
     }
 
@@ -351,7 +361,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 }
                 // Apply Python arguments to Python function
                 let res
-                if(pyobj.prototype && pyobj.prototype.constructor === pyobj && 
+                if(pyobj.prototype && pyobj.prototype.constructor === pyobj &&
                         ! pyobj.$function_infos){
                     res = new pyobj(...args)
                 }else{
@@ -613,7 +623,18 @@ $B.JSObj.__getattribute__ = function(_self, attr){
                     __qualname__: attr
                 },
                 writable: true
-            })
+            }
+        )
+        let value = []
+        value[$B.func_attrs.name] = attr
+        value[$B.func_attrs.qualname] = attr
+        Object.defineProperty(new_func, '$function_infos',
+            {
+                value,
+                writable: true
+            }
+        )
+        
         return new_func
     }
     var js_attr = _self[attr]

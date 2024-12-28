@@ -2679,9 +2679,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         kw_defaults = parsed_args.kw_defaults,
         kw_default_names = parsed_args.kw_default_names
 
-    var defaults = `[${this.args.defaults.map(x => x.to_js(scopes))}]`
+    var defaults = this.args.defaults.length == 0 ? '_b_.None' :
+            `[${this.args.defaults.map(x => x.to_js(scopes))}]`
     kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
-            `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
+            `{${kw_defaults.join(', ')}}`
 
     var id = make_id(),
         name2 = this.name + id

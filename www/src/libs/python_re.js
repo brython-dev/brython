@@ -4318,6 +4318,7 @@ var VERBOSE = module.X = module.VERBOSE = Flag.$factory(64)
 module.cache = cache
 module._compile = module.compile
 
+$B.set_func_names(module, 're')
 
 var inline_flags = {
     i: IGNORECASE,

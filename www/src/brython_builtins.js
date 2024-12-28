@@ -362,7 +362,20 @@ $B.$py_UUID = Math.floor(Math.random() * 2 ** 50)
 // Magic name used in lambdas
 $B.lambda_magic = Math.random().toString(36).substr(2, 8)
 
-// Set __name__ attribute of klass methods
+// Function attributes
+const func_attrs = ['__module__', '__defaults__', '__kwdefaults__', '__doc__',
+    'arg_names', 'args_vararg', 'args_kwarg', 'positional_length',
+    '__file__', 'lineno', 'flags', 'free_vars',
+    'kwonlyargs_length', '__name__', 'posonlyargs_length',
+    '__qualname__', 'varnames', 'method_class']
+
+var i = 0
+$B.func_attrs = {}
+for(var func_attr of func_attrs){
+    $B.func_attrs[func_attr] = i++
+}
+
+// Set attributes of klass methods
 $B.set_func_names = function(klass, module){
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
@@ -372,6 +385,14 @@ $B.set_func_names = function(klass, module){
                 __qualname__ : klass.__qualname__ + '.' + attr,
                 __name__: attr
             }
+            $B.set_function_infos(klass[attr],
+                {
+                    __doc__: klass[attr].__doc__ || '',
+                    __module__: module,
+                    __name__: attr,
+                    __qualname__ : klass.__qualname__ + '.' + attr
+                }
+            )
             if(klass[attr].$type == "classmethod"){
                 klass[attr].__class__ = $B.method
             }
@@ -379,6 +400,18 @@ $B.set_func_names = function(klass, module){
     }
     klass.__module__ = module
 }
+
+// Set function attributes
+$B.set_function_infos = function(f, attrs){
+    f.$function_infos = f.$function_infos ?? []
+    for(var key in attrs){
+        if($B.func_attrs[key] === undefined){
+            throw Error('no function attribute ' + key)
+        }
+        f.$function_infos[$B.func_attrs[key]] = attrs[key]
+    }
+}
+
 
 var has_storage = typeof(Storage) !== "undefined"
 if(has_storage){

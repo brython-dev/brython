@@ -679,6 +679,10 @@ type.__getattribute__ = function(klass, attr){
         }
         if(typeof res == "function"){
             // method
+            if(res.$infos !== undefined && res.$function_infos === undefined){
+                console.log('$infos not undef', res, res.$infos)
+                throw Error()
+            }
             if(res.$infos === undefined && res.$function_infos === undefined
                     && $B.get_option('debug') > 1){
                 console.log("warning: no attribute $infos for", res,
@@ -821,8 +825,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
                 }
             }else{
                 v.$function_infos[$B.func_attrs.method_class] = class_dict
-                v.$function_infos[$B.func_attrs.qualname] = name + '.' +
-                    v.$function_infos[$B.func_attrs.name]
+                v.$function_infos[$B.func_attrs.__qualname__] = name + '.' +
+                    v.$function_infos[$B.func_attrs.__name__]
             }
         }
     }

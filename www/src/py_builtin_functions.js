@@ -961,6 +961,12 @@ $B.$getattr = function(obj, attr, _default){
                         __name__: attr,
                         __qualname__: attr
                     }
+                    $B.set_function_infos(f,
+                        {
+                            name: attr,
+                            qualname: attr
+                        }
+                    )
                     return f
                 }else{
                     return $B.jsobj2pyobj(res)
@@ -1031,6 +1037,9 @@ $B.$getattr = function(obj, attr, _default){
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
+              }else if(obj.$function_infos){
+                  obj.$dict = obj.$dict || $B.empty_dict()
+                  return obj.$dict
               }else if(obj.$infos){
                   if(obj.$infos.hasOwnProperty("__dict__")){
                       return obj.$infos.__dict__
@@ -3276,18 +3285,6 @@ $B.function.__get__ = function(self, obj){
     return $B.method.$factory(self, obj)
 }
 
-const func_attrs = ['__module__', 'defaults', 'kw_defaults', 'docstring',
-    'arg_names', 'args_vararg', 'args_kwarg', 'positional_length',
-    '__file__', 'lineno', 'flags', 'free_vars',
-    'kwonlyargs_length', 'name', 'posonlyargs_length',
-    'qualname', 'varnames', 'method_class']
-
-var i = 0
-$B.func_attrs = {}
-for(var func_attr of func_attrs){
-    $B.func_attrs[func_attr] = i++
-}
-
 $B.function.__getattribute__ = function(self, attr){
     // Functions created from Python code have an attribute $function_infos, a
     // list [name, defaults, kw_defaults, docstring, arg_names, args_vararg,
@@ -3295,7 +3292,7 @@ $B.function.__getattribute__ = function(self, attr){
     // args.kwonlyargs.length, '<lambda>' or name, args.posonlyargs.length,
     // '<lambda>' or qualname, varnames]
     if(! self.$infos && self.$function_infos){
-        $B.make_function_infos(self, ...self.$function_infos)
+        // $B.make_function_infos(self, ...self.$function_infos)
     }
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
@@ -3317,12 +3314,23 @@ $B.function.__getattribute__ = function(self, attr){
         }else if(self.$infos.hasOwnProperty(attr)){
             return self.$infos[attr]
         }
+    }else if(self.$function_infos && self.$function_infos[$B.func_attrs[attr]] !== undefined){
+        var rank = $B.func_attrs[attr]
+        var res = self.$function_infos[rank]
+        if(attr == '__defaults__' && res !== _b_.None){
+            res.__class__ = _b_.tuple
+        }else if(attr == '__kwdefaults__' && res !== _b_.None && res.__class__ !== _b_.dict){
+            res = _b_.dict.$from_js(res)
+        }
+        return res
+    }else if(self.$dict && _b_.dict.$contains_string(self.$dict, attr)){
+        return _b_.dict.$getitem_string(self.$dict, attr)
     }else if(self.$infos && self.$infos.__dict__ &&
                 _b_.dict.$contains_string(self.$infos.__dict__, attr)){
             return _b_.dict.$getitem_string(self.$infos.__dict__, attr)
     }else if(attr == "__closure__"){
-        var free_vars = self.$infos.__code__.co_freevars
-        if(free_vars.length == 0){
+        var free_vars = self.$function_infos[$B.func_attrs.free_vars]
+        if(free_vars === undefined || free_vars.length == 0){
             return None
         }
         var cells = []
@@ -3335,6 +3343,11 @@ $B.function.__getattribute__ = function(self, attr){
             }
         }
         return _b_.tuple.$factory(cells)
+    }else if(attr == '__code__'){
+        if(self.$f_code === undefined){
+            $B.make_function_code(self, ... self.$function_infos)
+        }
+        return self.$f_code
     }else if(attr == '__builtins__'){
         if(self.$infos && self.$infos.__globals__){
             return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
@@ -3345,13 +3358,16 @@ $B.function.__getattribute__ = function(self, attr){
     }else if(self.$attrs && self.$attrs[attr] !== undefined){
         return self.$attrs[attr]
     }else{
+        if(attr == 'abc'){
+            console.log('function', attr, 'use object.__ga__')
+        }
         return _b_.object.__getattribute__(self, attr)
     }
 }
 
 $B.function.__repr__ = function(self){
     if(self.$function_infos){
-        return `<function ${self.$function_infos[$B.func_attrs.qualname]}>`
+        return `<function ${self.$function_infos[$B.func_attrs.__qualname__]}>`
     }else if(self.$infos === undefined){
         return '<function ' + self.name + '>'
     }else{
@@ -3374,6 +3390,9 @@ $B.make_function_infos = function(f, __module__, __defaults__,
     if(co_flags & $B.COMPILER_FLAGS.COROUTINE){
         f.$is_async = true
     }
+    __defaults__ = __defaults__ === _b_.None ? [] : __defaults__
+    __kwdefaults__ = __kwdefaults__ === _b_.None ? _b_.None :
+        _b_.dict.$from_js(__kwdefaults__)
     f.$infos = {__module__,
         __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg}
@@ -3388,6 +3407,25 @@ $B.make_function_infos = function(f, __module__, __defaults__,
         co_positions: {}}
 }
 
+$B.make_function_code = function(f, __module__, __defaults__,
+        __kwdefaults__, __doc__, arg_names,
+        vararg, kwarg,
+        co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name,
+        co_posonlyargcount, co_qualname, co_varnames
+        ){
+    co_freevars.__class__ = _b_.tuple
+    co_varnames.__class__ = _b_.tuple
+    f.$f_code = {
+        __class__: _b_.code,
+        co_argcount, co_filename, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount, co_name,
+        co_nlocals: co_varnames.length,
+        co_posonlyargcount, co_qualname, co_varnames,
+        co_positions: {},
+        co_code: f + '' // best effort: co_code is the Javascript version
+    }
+}
 
 $B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
     return $B.make_args_parser(fct)(fct, args);
@@ -3468,7 +3506,7 @@ $B.make_args_parser = function(f){
 
 $B.function.__setattr__ = function(self, attr, value){
     if(self.$infos === undefined){
-        $B.make_function_infos(self, ...self.$function_infos)
+        // $B.make_function_infos(self, ...self.$function_infos)
     }
     if(attr == "__closure__"){
         throw _b_.AttributeError.$factory("readonly attribute")
@@ -3480,6 +3518,9 @@ $B.function.__setattr__ = function(self, attr, value){
         }else if(! $B.$isinstance(value, _b_.tuple)){
             throw _b_.TypeError.$factory(
                 "__defaults__ must be set to a tuple object")
+        }
+        if(! self.$infos){
+            $B.make_function_infos(self, ...self.$function_infos)
         }
         if(self.$infos){
             self.$infos.__defaults__ = value
@@ -3495,6 +3536,9 @@ $B.function.__setattr__ = function(self, attr, value){
             throw _b_.TypeError.$factory(
                 "__kwdefaults__ must be set to a dict object")
         }
+        if(! self.$infos){
+            $B.make_function_infos(self, ...self.$function_infos)
+        }
         if(self.$infos){
             self.$infos.__kwdefaults__ = value
             $B.make_args_parser(self)
@@ -3503,8 +3547,12 @@ $B.function.__setattr__ = function(self, attr, value){
                 " of " + _b_.str.$factory(self))
         }
     }
-    if(self.$infos[attr] !== undefined){
-        self.$infos[attr] = value
+    if(self.$function_infos === undefined){
+        console.log('no function infos', self)
+        throw Error()
+    }
+    if(self.$function_infos[$B.func_attrs[attr]] !== undefined){
+        self.$function_infos[$B.func_attrs[attr]] = value
     }else{
         self.$attrs = self.$attrs || {}
         self.$attrs[attr] = value
@@ -3536,17 +3584,17 @@ var builtin_function = $B.builtin_function_or_method = $B.make_class(
 
 builtin_function.__getattribute__ = $B.function.__getattribute__
 builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
-    return self.$infos.__name__
+    return self.$function_infos[$B.func_attrs.__name__]
 }
 builtin_function.__repr__ = builtin_function.__str__ = function(self){
-    return '<built-in function ' + self.$infos.__name__ + '>'
+    return '<built-in function ' + self.$function_infos[$B.func_attrs.__name__] + '>'
 }
 $B.set_func_names(builtin_function, "builtins")
 
 var method_wrapper = $B.make_class("method_wrapper")
 
 method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
-    return "<method wrapper '" + self.$infos.__name__ + "' of function object>"
+    return "<method wrapper '" + self.$function_infos[$B.func_attrs.__name__] + "' of function object>"
 }
 $B.set_func_names(method_wrapper, "builtins")
 
@@ -3576,6 +3624,13 @@ for(var name of builtin_names){
                 __name__: name,
                 __qualname__: name
             }
+            $B.set_function_infos(_b_[name],
+                {
+                    __module__: 'builtins',
+                    __name__: name,
+                    __qualname__: name
+                }
+            )
         }
     }catch(err){
         // Error for the built-in names that are not defined in this script,
