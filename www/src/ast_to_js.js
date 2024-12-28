@@ -308,6 +308,10 @@ function bind(name, scopes){
         }
     }
     scope.locals.add(name)
+    if(up_scope.type == 'class'){
+        up_scope.maybe_locals = up_scope.maybe_locals ?? new Set()
+        //up_scope.maybe_locals.add(name)
+    }
     return scope
 }
 
@@ -360,7 +364,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false //name == 'x' // && scopes[scopes.length - 1].name == "g"
+    var test = false // name == 'xw' // && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -420,11 +424,17 @@ function name_scope(name, scopes){
         // name is local (symtable) but may not have yet been bound in scope
         // If scope is a "subscope", look in its parents
         var l_scope = local_scope(name, scope)
+        if(test){
+            console.log('l_scope', l_scope)
+        }
         if(! l_scope.found){
             if(block.type == SF.TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
                 scope.needs_frames = true
+                if(scope.maybe_locals && scope.maybe_locals.has(name)){
+                    return {found: false, resolve: 'local'}
+                }
                 return {found: false, resolve: 'global'}
             }else if(block.type == SF.TYPE_MODULE){
                 scope.needs_frames = true
