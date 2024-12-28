@@ -74,7 +74,7 @@ def format_exc():
     handle_repeats(filename, lineno, count_repeats)
 
     if isinstance(exc, SyntaxError):
-        trace.write(syntax_error(exc.args))
+        trace.write(syntax_error(exc))
     else:
         message = exc_msg
         if isinstance(exc, AttributeError):
@@ -96,8 +96,13 @@ def print_exc(file=None):
         file = sys.stderr
     file.write(format_exc())
 
-def syntax_error(args):
+def syntax_error(exc):
     trace = Trace()
+    args = exc.args
+    name = exc.__class__.__name__
+    if not args:
+        trace.write(f"{name}:", '<no detail available>')
+        return trace.format()
     info, [filename, lineno, offset, line, *extra] = args
     trace.write(f'  File "{filename}", line {lineno}')
     indent = len(line) - len(line.lstrip())
@@ -111,5 +116,5 @@ def syntax_error(args):
             nb_marks = end_offset - offset
     nb_marks = max(nb_marks, 1)
     trace.write("    " + (offset - 1) * " " + "^" * nb_marks)
-    trace.write("SyntaxError:", info)
+    trace.write(f"{name}:", info)
     return trace.format()

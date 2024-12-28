@@ -1132,11 +1132,13 @@ $B.error_trace = function(err){
             err.__class__ === _b_.IndentationError){
         err.$frame_obj = err.$frame_obj === null ? null : err.$frame_obj.prev
         trace += trace_from_stack(err)
-        var filename = err.filename,
-            line = err.text,
-            indent = line.length - line.trimLeft().length
-        trace += `  File "${filename}", line ${err.args[1][1]}\n` +
-                     `    ${line.trim()}\n`
+        if(err.args.length > 0){
+            var filename = err.filename,
+                line = err.text,
+                indent = line.length - line.trimLeft().length
+            trace += `  File "${filename}", line ${err.args[1][1]}\n` +
+                         `    ${line.trim()}\n`
+        }
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){
             // add ^ under the line
@@ -1164,7 +1166,8 @@ $B.error_trace = function(err){
             marks += '^'.repeat(nb_marks) + '\n'
             trace += marks
         }
-        trace += `${err.__class__.__name__}: ${err.args[0]}`
+        
+        trace += `${err.__class__.__name__}: ${err.args[0] ?? '<no detail available>'}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
         trace += trace_from_stack(err)

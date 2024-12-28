@@ -190,7 +190,7 @@ def trace_exc(run_frame, src, ns):
 
     handle_repeats(save_filename, save_lineno, count_repeats)
 
-    if isinstance(exc_value, SyntaxError):
+    if isinstance(exc_value, SyntaxError) and exc_value.args:
         filename = exc_value.args[1][0]
         lineno = exc_value.args[1][1]
         result_lines.append(f'  File {filename}, line {lineno}')
@@ -202,6 +202,8 @@ def trace_exc(run_frame, src, ns):
             result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
 
     message = str(exc_value) + suggestion(exc_value)
+    if isinstance(exc_value, SyntaxError) and not exc_value.args:
+        message = '<no detail available>'
     result_lines.append(f'{exc_type.__name__}: {message}')
     return '\n'.join(result_lines)
 
