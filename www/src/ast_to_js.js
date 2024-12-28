@@ -788,9 +788,25 @@ function init_genexpr(comp, scopes){
            prefix + `var _frame_obj = $B.frame_obj\n`
 }
 
+function comp_bindings(comp, bindings){
+    if(comp.target instanceof $B.ast.Name){
+        bindings.add(comp.target.id)
+    }else if(comp.target.elts){
+        for(var elt of comp.target.elts){
+            comp_bindings({target: elt}, bindings)
+        }
+    }
+    return bindings
+}
 
 function make_comp(scopes){
     // Code common to list / set / dict comprehensions
+    // List all names bound inside the comprehension generators
+    var bindings = new Set()
+    for(var gen of this.generators){
+        comp_bindings(gen, bindings)
+    }
+    var save_locals = new Set()
     var plen = prefix.length
     var comp_prefix = prefix
     var id = make_id(),
@@ -800,10 +816,22 @@ function make_comp(scopes){
         comp_iter,
         comp_scope = $B.last(scopes),
         upper_comp_scope = comp_scope
+
+    // Check the names bound in the comprehension that would shadow names
+    // in the comprehension scope
+    for(var name of comp_scope.locals){
+        if(bindings.has(name)){
+            save_locals.add(name)
+        }
+    }
     while(upper_comp_scope.parent){
         upper_comp_scope = upper_comp_scope.parent
+        for(var name of upper_comp_scope.locals){
+            if(bindings.has(name)){
+                save_locals.add(name)
+            }
+        }
     }
-
     var comp_scope_block = scopes.symtable.table.blocks.get(
                                  fast_id(upper_comp_scope.ast)),
         comp_scope_symbols = comp_scope_block.symbols
@@ -835,6 +863,9 @@ function make_comp(scopes){
 
     if(comp_iter_scope.found){
         js += prefix + `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
+    }
+    for(var name of save_locals){
+        js += prefix + `var save_${name} = ${name_reference(name, scopes)}\n`
     }
     if(this instanceof $B.ast.ListComp){
         js += prefix + `var result_${id} = $B.$list([])\n`
@@ -926,6 +957,9 @@ function make_comp(scopes){
     js += prefix + `}\n` +
           (has_await ? prefix + `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
 
+    for(var name of save_locals){
+        js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
+    }
     if(comp_iter_scope.found){
         js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
     }
