@@ -207,4 +207,12 @@ except TypeError as exc:
     message = out.getvalue()
     assert f'line {lineno + 2}' in message
 
+# issue 2530
+assert IOError is OSError
+assert WindowsError is OSError
+assert EnvironmentError is OSError
+
+ioerror = IOError()
+assert type(ioerror) is OSError
+
 print('all tests passed...')

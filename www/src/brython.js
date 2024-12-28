@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-28 17:52:48.060921"
-__BRYTHON__.timestamp=1735404768059
+__BRYTHON__.compiled_date="2024-12-28 18:14:55.951972"
+__BRYTHON__.timestamp=1735406095951
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4357,7 +4357,9 @@ make_builtin_exception("TabError",_b_.IndentationError)
 make_builtin_exception("UnicodeError",_b_.ValueError)
 make_builtin_exception(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
 make_builtin_exception(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"],_b_.Warning)
-make_builtin_exception(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
+_b_.EnvironmentError=_b_.OSError
+_b_.WindowsError=_b_.OSError
+_b_.IOError=_b_.OSError
 _b_.AttributeError=$B.make_class('AttributeError',function(){var $=$B.args("AttributeError",3,{"msg":null,"name":null,"obj":null},["msg","name","obj"],arguments,{msg:_b_.None,name:_b_.None,obj:_b_.None},"*",null)
 var err=Error()
 err.__class__=_b_.AttributeError
@@ -4478,7 +4480,7 @@ return _b_.None}
 $B.offer_suggestions_for_unexpected_keyword_error=function(arg_names,key){if(key===_b_.None){return _b_.None}
 var suggestions=calculate_suggestions(arg_names,key)
 return suggestions ||_b_.None}
-_b_.BaseExceptionGroup=$B.make_class("BaseExceptionGFroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
+_b_.BaseExceptionGroup=$B.make_class("BaseExceptionGroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=_b_.BaseExceptionGroup
@@ -4521,7 +4523,7 @@ _b_.BaseExceptionGroup.subgroup=function(self,condition){return _b_.BaseExceptio
 $B.set_func_names(_b_.BaseExceptionGroup,"builtins")
 _b_.BaseExceptionGroup.__class_getitem__=
 _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
-_b_.ExceptionGroup=$B.make_class("ExceptionGFroup",function(){var missing={},$=$B.args("ExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
+_b_.ExceptionGroup=$B.make_class("ExceptionGroup",function(){var missing={},$=$B.args("ExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=_b_.ExceptionGroup
@@ -11381,9 +11383,9 @@ var tp_dict=_b_.type.__dict__=$B.empty_dict(),setitem=_b_.dict.$setitem
 for(let method in _b_.type){if(method.startsWith('__')&& method.endsWith('__')){setitem(tp_dict,method,_b_.type[method])}}
 setitem(tp_dict,'__mro__',{__get__:function(cls){return $B.fast_tuple([cls].concat(cls.__mro__))}})
 for(var name in _b_){var builtin=_b_[name]
-if(_b_[name].__class__===_b_.type){_b_[name].__qualname__=name
+if(_b_[name].__class__===_b_.type){_b_[name].__qualname__=_b_[name].__qualname__ ?? name
 _b_[name].__module__='builtins'
-_b_[name].__name__=name
+_b_[name].__name__=_b_[name].__name__ ?? name
 _b_[name].$is_builtin_class=true
 $B.builtin_classes.push(_b_[name])
 for(var key in _b_[name]){var value=_b_[name][key]

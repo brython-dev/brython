@@ -590,8 +590,9 @@ make_builtin_exception(["DeprecationWarning", "PendingDeprecationWarning",
     "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning",
     "EncodingWarning"], _b_.Warning)
 
-make_builtin_exception(["EnvironmentError", "IOError", "VMSError",
-        "WindowsError"], _b_.OSError)
+_b_.EnvironmentError = _b_.OSError
+_b_.WindowsError = _b_.OSError
+_b_.IOError = _b_.OSError
 
 // AttributeError supports keyword-only "name" and "obj" parameters
 _b_.AttributeError = $B.make_class('AttributeError',
@@ -859,7 +860,7 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
 }
 
 // PEP 654
-_b_.BaseExceptionGroup = $B.make_class("BaseExceptionGFroup",
+_b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup",
     function(){
         var missing = {},
             $ = $B.args("BaseExceptionGroup", 2,
@@ -962,7 +963,7 @@ $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 _b_.BaseExceptionGroup.__class_getitem__ =
     _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
 
-_b_.ExceptionGroup = $B.make_class("ExceptionGFroup",
+_b_.ExceptionGroup = $B.make_class("ExceptionGroup",
     function(){
         var missing = {},
             $ = $B.args("ExceptionGroup", 2, {message: null, exceptions: null},
@@ -1166,7 +1167,7 @@ $B.error_trace = function(err){
             marks += '^'.repeat(nb_marks) + '\n'
             trace += marks
         }
-        
+
         trace += `${err.__class__.__name__}: ${err.args[0] ?? '<no detail available>'}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)

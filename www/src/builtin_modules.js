@@ -1300,9 +1300,9 @@
     for(var name in _b_){
         var builtin = _b_[name]
         if(_b_[name].__class__ === _b_.type){
-            _b_[name].__qualname__ = name
+            _b_[name].__qualname__ = _b_[name].__qualname__ ?? name
             _b_[name].__module__ = 'builtins'
-            _b_[name].__name__ = name
+            _b_[name].__name__ = _b_[name].__name__ ?? name
             _b_[name].$is_builtin_class = true
             $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
             for(var key in _b_[name]){
