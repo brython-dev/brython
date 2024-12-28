@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-28 18:14:55.951972"
-__BRYTHON__.timestamp=1735406095951
+__BRYTHON__.compiled_date="2024-12-28 23:16:20.202846"
+__BRYTHON__.timestamp=1735424180202
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11552,6 +11552,8 @@ function bind(name,scopes){var scope=$B.last(scopes),up_scope=last_scope(scopes)
 name=mangle(scopes,up_scope,name)
 if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)){return scopes[i]}}}
 scope.locals.add(name)
+if(up_scope.type=='class'){up_scope.maybe_locals=up_scope.maybe_locals ?? new Set()
+up_scope.maybe_locals.add(name)}
 return scope}
 var SF=$B.SYMBOL_FLAGS 
 function name_reference(name,scopes,position,lineno){var scope=name_scope(name,scopes)
@@ -11594,8 +11596,10 @@ if(name=='__annotations__'){if(block.type==SF.TYPE_CLASS && up_scope.has_annotat
 if(test){console.log('is local ???',is_local,'scope',scope)}
 if(is_local){
 var l_scope=local_scope(name,scope)
+if(test){console.log('l_scope',l_scope)}
 if(! l_scope.found){if(block.type==SF.TYPE_CLASS){
 scope.needs_frames=true
+if(scope.maybe_locals && scope.maybe_locals.has(name)){return{found:false,resolve:'local'}}
 return{found:false,resolve:'global'}}else if(block.type==SF.TYPE_MODULE){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 return{found:false,resolve:'local'}}else{return{found:l_scope.scope}}}else if(scope.globals.has(name)){var global_scope=scopes[0]
@@ -11718,11 +11722,18 @@ prefix+`$B.make_f_code(frame, [${varnames}])\n`+
 prefix+`var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`+
 prefix+`frame.$f_trace = _b_.None\n`+
 prefix+`var _frame_obj = $B.frame_obj\n`}
+function comp_bindings(comp,bindings){if(comp.target instanceof $B.ast.Name){bindings.add(comp.target.id)}else if(comp.target.elts){for(var elt of comp.target.elts){comp_bindings({target:elt},bindings)}}
+return bindings}
 function make_comp(scopes){
+var bindings=new Set()
+for(var gen of this.generators){comp_bindings(gen,bindings)}
+var save_locals=new Set()
 var plen=prefix.length
 var comp_prefix=prefix
 var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=Object.keys(symtable_block.symbols.$strings).map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
-while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent}
+for(var name of comp_scope.locals){if(bindings.has(name)){save_locals.add(name)}}
+while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent
+for(var name of upper_comp_scope.locals){if(bindings.has(name)){save_locals.add(name)}}}
 var comp_scope_block=scopes.symtable.table.blocks.get(
 fast_id(upper_comp_scope.ast)),comp_scope_symbols=comp_scope_block.symbols
 var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
@@ -11736,6 +11747,7 @@ indent()
 if(prefix.length > plen+tab.length){console.warn('JS indentation issue')}
 var js=init_comprehension(comp,scopes)
 if(comp_iter_scope.found){js+=prefix+`var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`}
+for(var name of save_locals){js+=prefix+`var save_${name} = ${name_reference(name, scopes)}\n`}
 if(this instanceof $B.ast.ListComp){js+=prefix+`var result_${id} = $B.$list([])\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`var result_${id} = $B.empty_dict()\n`}
 var first=this.generators[0]
 js+=prefix+`try{\n`
@@ -11777,6 +11789,7 @@ prefix+`throw err\n`
 dedent()
 js+=prefix+`}\n`+
 (has_await ? prefix+`\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` :'')
+for(var name of save_locals){js+=prefix+`${name_reference(name, scopes)} = save_${name}\n`}
 if(comp_iter_scope.found){js+=prefix+`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}
 js+=prefix+`return result_${id}\n`
 dedent()
