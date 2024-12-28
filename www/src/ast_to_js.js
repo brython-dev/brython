@@ -310,7 +310,7 @@ function bind(name, scopes){
     scope.locals.add(name)
     if(up_scope.type == 'class'){
         up_scope.maybe_locals = up_scope.maybe_locals ?? new Set()
-        //up_scope.maybe_locals.add(name)
+        up_scope.maybe_locals.add(name)
     }
     return scope
 }
