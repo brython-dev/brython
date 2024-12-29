@@ -1037,10 +1037,10 @@ $B.$getattr = function(obj, attr, _default){
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
-              }else if(obj.$function_infos){
-                  obj.$dict = obj.$dict || $B.empty_dict()
-                  return obj.$dict
-              }else if(obj.$infos){
+              }else if(obj.$function_infos || obj.$infos){
+                  if(! obj.$infos){
+                      $B.make_function_infos(obj, ...obj.$function_infos)
+                  }
                   if(obj.$infos.hasOwnProperty("__dict__")){
                       return obj.$infos.__dict__
                   }else if(obj.$infos.hasOwnProperty("__func__")){
@@ -3292,11 +3292,11 @@ $B.function.__getattribute__ = function(self, attr){
     // args.kwonlyargs.length, '<lambda>' or name, args.posonlyargs.length,
     // '<lambda>' or qualname, varnames]
     if(! self.$infos && self.$function_infos){
-        // $B.make_function_infos(self, ...self.$function_infos)
+        $B.make_function_infos(self, ...self.$function_infos)
     }
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
-    if(self.$infos && self.$infos[attr] !== undefined){
+    if(self.$infos[attr] !== undefined){
         if(attr == '__code__'){
             var res = {__class__: code}
             for(var _attr in self.$infos.__code__){
@@ -3314,17 +3314,6 @@ $B.function.__getattribute__ = function(self, attr){
         }else if(self.$infos.hasOwnProperty(attr)){
             return self.$infos[attr]
         }
-    }else if(self.$function_infos && self.$function_infos[$B.func_attrs[attr]] !== undefined){
-        var rank = $B.func_attrs[attr]
-        var res = self.$function_infos[rank]
-        if(attr == '__defaults__' && res !== _b_.None){
-            res.__class__ = _b_.tuple
-        }else if(attr == '__kwdefaults__' && res !== _b_.None && res.__class__ !== _b_.dict){
-            res = _b_.dict.$from_js(res)
-        }
-        return res
-    }else if(self.$dict && _b_.dict.$contains_string(self.$dict, attr)){
-        return _b_.dict.$getitem_string(self.$dict, attr)
     }else if(self.$infos && self.$infos.__dict__ &&
                 _b_.dict.$contains_string(self.$infos.__dict__, attr)){
             return _b_.dict.$getitem_string(self.$infos.__dict__, attr)
@@ -3377,6 +3366,60 @@ $B.function.__repr__ = function(self){
 
 $B.function.__mro__ = [_b_.object]
 
+$B.function.__setattr__ = function(self, attr, value){
+    if(self.$infos === undefined){
+        $B.make_function_infos(self, ...self.$function_infos)
+    }
+    if(attr == "__closure__"){
+        throw _b_.AttributeError.$factory("readonly attribute")
+    }else if(attr == "__defaults__"){
+        // Setting attribute __defaults__ requires making a new version of
+        // function attribute $defaults
+        if(value === _b_.None){
+            value = []
+        }else if(! $B.$isinstance(value, _b_.tuple)){
+            throw _b_.TypeError.$factory(
+                "__defaults__ must be set to a tuple object")
+        }
+        if(! self.$infos){
+            $B.make_function_infos(self, ...self.$function_infos)
+        }
+        if(self.$infos){
+            self.$infos.__defaults__ = value
+            $B.make_args_parser(self)
+        }else{
+            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
+                " of " + _b_.str.$factory(self))
+        }
+    }else if(attr == "__kwdefaults__"){
+        if(value === _b_.None){
+            value = $B.empty_dict
+        }else if(! $B.$isinstance(value, _b_.dict)){
+            throw _b_.TypeError.$factory(
+                "__kwdefaults__ must be set to a dict object")
+        }
+        if(! self.$infos){
+            $B.make_function_infos(self, ...self.$function_infos)
+        }
+        if(self.$infos){
+            self.$infos.__kwdefaults__ = value
+            $B.make_args_parser(self)
+        }else{
+            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
+                " of " + _b_.str.$factory(self))
+        }
+    }
+    if(self.$function_infos === undefined){
+        console.log('no function infos', self)
+        throw Error()
+    }
+    if(self.$infos[attr] !== undefined){
+        self.$infos[attr] = value
+    }else{
+        self.$attrs = self.$attrs || {}
+        self.$attrs[attr] = value
+    }
+}
 
 $B.make_function_infos = function(f, __module__, __defaults__,
         __kwdefaults__, __doc__, arg_names,
@@ -3433,7 +3476,6 @@ $B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
 
 $B.make_args_parser = function(f){
     if((! f.$infos) && f.$function_infos){
-        //console.log('make function infos', f)
         $B.make_function_infos(f, ...f.$function_infos)
     }
     if(f.$infos === undefined || f.$infos.__code__ === undefined){
@@ -3504,60 +3546,7 @@ $B.make_args_parser = function(f){
     return f.$args_parser
 }
 
-$B.function.__setattr__ = function(self, attr, value){
-    if(self.$infos === undefined){
-        // $B.make_function_infos(self, ...self.$function_infos)
-    }
-    if(attr == "__closure__"){
-        throw _b_.AttributeError.$factory("readonly attribute")
-    }else if(attr == "__defaults__"){
-        // Setting attribute __defaults__ requires making a new version of
-        // function attribute $defaults
-        if(value === _b_.None){
-            value = []
-        }else if(! $B.$isinstance(value, _b_.tuple)){
-            throw _b_.TypeError.$factory(
-                "__defaults__ must be set to a tuple object")
-        }
-        if(! self.$infos){
-            $B.make_function_infos(self, ...self.$function_infos)
-        }
-        if(self.$infos){
-            self.$infos.__defaults__ = value
-            $B.make_args_parser(self)
-        }else{
-            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
-                " of " + _b_.str.$factory(self))
-        }
-    }else if(attr == "__kwdefaults__"){
-        if(value === _b_.None){
-            value = $B.empty_dict
-        }else if(! $B.$isinstance(value, _b_.dict)){
-            throw _b_.TypeError.$factory(
-                "__kwdefaults__ must be set to a dict object")
-        }
-        if(! self.$infos){
-            $B.make_function_infos(self, ...self.$function_infos)
-        }
-        if(self.$infos){
-            self.$infos.__kwdefaults__ = value
-            $B.make_args_parser(self)
-        }else{
-            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
-                " of " + _b_.str.$factory(self))
-        }
-    }
-    if(self.$function_infos === undefined){
-        console.log('no function infos', self)
-        throw Error()
-    }
-    if(self.$function_infos[$B.func_attrs[attr]] !== undefined){
-        self.$function_infos[$B.func_attrs[attr]] = value
-    }else{
-        self.$attrs = self.$attrs || {}
-        self.$attrs[attr] = value
-    }
-}
+
 
 $B.function.$factory = function(){}
 

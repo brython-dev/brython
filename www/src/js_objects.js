@@ -626,8 +626,8 @@ $B.JSObj.__getattribute__ = function(_self, attr){
             }
         )
         let value = []
-        value[$B.func_attrs.name] = attr
-        value[$B.func_attrs.qualname] = attr
+        value[$B.func_attrs.__name__] = attr
+        value[$B.func_attrs.__qualname__] = attr
         Object.defineProperty(new_func, '$function_infos',
             {
                 value,
