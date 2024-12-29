@@ -399,7 +399,8 @@ class Interpreter:
                         code = compile(currentLine, '<stdin>', 'exec')
                         exec(code, self.globals, self.locals)
                     except SyntaxError as exc:
-                        if exc.args[0].startswith('expected an indented block'):
+                        if exc.args and \
+                                exc.args[0].startswith('expected an indented block'):
                             self.insert_continuation()
                             self._status = "block"
                         else:
