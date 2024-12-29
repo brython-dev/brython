@@ -3421,7 +3421,7 @@ $B.function.__setattr__ = function(self, attr, value){
     }
 }
 
-$B.make_function_infos = function(f, __module__, co_name, co_qualname, 
+$B.make_function_infos = function(f, __module__, co_name, co_qualname,
         co_filename, __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg,
         co_argcount, co_firstlineno,
@@ -3452,7 +3452,7 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
         co_positions: {}}
 }
 
-$B.make_function_code = function(f, __module__, co_name, co_qualname, 
+$B.make_function_code = function(f, __module__, co_name, co_qualname,
         co_filename, __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg,
         co_argcount, co_firstlineno,

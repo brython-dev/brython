@@ -767,7 +767,6 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // becomes the __bases__ attribute; and the dict dictionary is the
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
-
     // arguments passed as keywords in class definition
     extra_kwargs = extra_kwargs === undefined ? {$kw: [{}]} :
         extra_kwargs
@@ -786,9 +785,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         __name__: name,
         $is_class: true
     }
-
-    let slots = _b_.dict.$get_string(cl_dict, '__slots__', null)
-    if(slots !== null){
+    let slots = _b_.dict.$get_string(cl_dict, '__slots__', _b_.None)
+    if(slots !== _b_.None){
         for(let key of $B.make_js_iterator(slots)){
             class_dict[key] = member_descriptor.$factory(key, class_dict)
         }

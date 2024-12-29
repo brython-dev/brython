@@ -219,8 +219,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-29 09:06:50.901301"
-__BRYTHON__.timestamp=1735459610901
+__BRYTHON__.compiled_date="2024-12-29 16:00:15.427425"
+__BRYTHON__.timestamp=1735484415427
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2372,8 +2372,8 @@ extra_kwargs
 var module=_b_.dict.$get_string(cl_dict,'__module__',$B.frame_obj.frame[2])
 var qualname=_b_.dict.$get_string(cl_dict,'__qualname__',name)
 var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,__dict__ :cl_dict,__qualname__:qualname,__module__:module,__name__:name,$is_class:true}
-let slots=_b_.dict.$get_string(cl_dict,'__slots__',null)
-if(slots !==null){for(let key of $B.make_js_iterator(slots)){class_dict[key]=member_descriptor.$factory(key,class_dict)}}
+let slots=_b_.dict.$get_string(cl_dict,'__slots__',_b_.None)
+if(slots !==_b_.None){for(let key of $B.make_js_iterator(slots)){class_dict[key]=member_descriptor.$factory(key,class_dict)}}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 for(var entry of _b_.dict.$iter_items(cl_dict)){var key=entry.key,v=entry.value
 if(['__module__','__class__','__name__','__qualname__'].includes(key)){continue}
