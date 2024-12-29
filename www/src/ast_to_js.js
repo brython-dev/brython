@@ -2971,6 +2971,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set admin infos
     js += prefix + `${name2}.$function_infos = [` +
         `'${gname}', ` +
+        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
+        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
+        `__file__, ` +
         `${defaults}, ` +
         `${kw_defaults}, ` +
         `${docstring}, ` +
@@ -2979,14 +2982,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${args_kwarg},\n` +
         // make f.__code__
         prefix + tab + `${positional.length}, ` +
-        `__file__, ` +
         `${this.lineno}, ` +
         `${flags}, ` +
         `[${free_vars}], ` +
         `${this.args.kwonlyargs.length}, ` +
-        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
         `${this.args.posonlyargs.length}, ` +
-        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
         `[${varnames}]]\n`;
 
     js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`

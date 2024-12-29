@@ -3421,12 +3421,12 @@ $B.function.__setattr__ = function(self, attr, value){
     }
 }
 
-$B.make_function_infos = function(f, __module__, __defaults__,
-        __kwdefaults__, __doc__, arg_names,
+$B.make_function_infos = function(f, __module__, co_name, co_qualname, 
+        co_filename, __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg,
-        co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name,
-        co_posonlyargcount, co_qualname, co_varnames
+        co_argcount, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount,
+        co_posonlyargcount, co_varnames
         ){
     f.$is_func = true
     f.$args_parser = $B.make_args_parser_and_parse
@@ -3441,7 +3441,9 @@ $B.make_function_infos = function(f, __module__, __defaults__,
         vararg, kwarg}
     f.$infos.__name__ = co_name
     f.$infos.__qualname__ = co_qualname
+    co_freevars = co_freevars ?? []
     co_freevars.__class__ = _b_.tuple
+    co_varnames = co_varnames ?? []
     co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount, co_name,
@@ -3450,12 +3452,12 @@ $B.make_function_infos = function(f, __module__, __defaults__,
         co_positions: {}}
 }
 
-$B.make_function_code = function(f, __module__, __defaults__,
-        __kwdefaults__, __doc__, arg_names,
+$B.make_function_code = function(f, __module__, co_name, co_qualname, 
+        co_filename, __defaults__, __kwdefaults__, __doc__, arg_names,
         vararg, kwarg,
-        co_argcount, co_filename, co_firstlineno,
-        co_flags, co_freevars, co_kwonlyargcount, co_name,
-        co_posonlyargcount, co_qualname, co_varnames
+        co_argcount, co_firstlineno,
+        co_flags, co_freevars, co_kwonlyargcount,
+        co_posonlyargcount, co_varnames
         ){
     co_freevars.__class__ = _b_.tuple
     co_varnames.__class__ = _b_.tuple

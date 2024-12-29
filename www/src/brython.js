@@ -130,12 +130,11 @@ $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=Math.floor(Math.random()*2**50)
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
-const func_attrs=['__module__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','__file__','lineno','flags','free_vars','kwonlyargs_length','__name__','posonlyargs_length','__qualname__','varnames','method_class']
+const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','lineno','flags','free_vars','kwonlyargs_length','posonlyargs_length','varnames','method_class']
 var i=0
 $B.func_attrs={}
 for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
-$B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__doc__:klass[attr].__doc__ ||"",__module__:module,__qualname__ :klass.__qualname__+'.'+attr,__name__:attr}
-$B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :klass.__qualname__+'.'+attr}
+$B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){$B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :klass.__qualname__+'.'+attr}
 )
 if(klass[attr].$type=="classmethod"){klass[attr].__class__=$B.method}}}
 klass.__module__=module}
@@ -220,8 +219,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-29 08:51:07.345052"
-__BRYTHON__.timestamp=1735458667344
+__BRYTHON__.compiled_date="2024-12-29 09:06:50.901301"
+__BRYTHON__.timestamp=1735459610901
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -3815,7 +3814,7 @@ if(self.$function_infos===undefined){console.log('no function infos',self)
 throw Error()}
 if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.$attrs ||{}
 self.$attrs[attr]=value}}
-$B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
+$B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames
 ){f.$is_func=true
 f.$args_parser=$B.make_args_parser_and_parse
 if(co_flags & $B.COMPILER_FLAGS.COROUTINE){f.$is_async=true}
@@ -3825,10 +3824,12 @@ _b_.dict.$from_js(__kwdefaults__)
 f.$infos={__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
+co_freevars=co_freevars ??[]
 co_freevars.__class__=_b_.tuple
+co_varnames=co_varnames ??[]
 co_varnames.__class__=_b_.tuple
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
-$B.make_function_code=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
+$B.make_function_code=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames
 ){co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
 f.$f_code={__class__:_b_.code,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{},co_code:f+'' }}
@@ -12793,6 +12794,9 @@ var varnames=parameters.concat(locals)
 if(in_class){js+=prefix+`${name2}.$is_method = true\n`}
 js+=prefix+`${name2}.$function_infos = [`+
 `'${gname}', `+
+`'${this.$is_lambda ? '<lambda>': this.name}', `+
+`'${this.$is_lambda ? '<lambda>': qualname}', `+
+`__file__, `+
 `${defaults}, `+
 `${kw_defaults}, `+
 `${docstring}, `+
@@ -12800,14 +12804,11 @@ js+=prefix+`${name2}.$function_infos = [`+
 `${args_vararg}, `+
 `${args_kwarg},\n`+
 prefix+tab+`${positional.length}, `+
-`__file__, `+
 `${this.lineno}, `+
 `${flags}, `+
 `[${free_vars}], `+
 `${this.args.kwonlyargs.length}, `+
-`'${this.$is_lambda ? '<lambda>': this.name}', `+
 `${this.args.posonlyargs.length}, `+
-`'${this.$is_lambda ? '<lambda>': qualname}', `+
 `[${varnames}]]\n`;
 js+=prefix+`${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 if(is_async && ! is_generator){js+=prefix+`${name2} = $B.make_async(${name2})\n`}
