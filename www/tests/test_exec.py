@@ -212,5 +212,18 @@ globs = {'x': 'coucou'}
 exec("y = x", locals=locs, globals=globs)
 assert locs['y'] == 'hello'
 
+# set __name__
+t = []
+exec("""
+t.append(__name__)
+""")
+assert t == [__name__]
+
+ns = {'__name__': 'exec', 't': []}
+exec("""
+t.append(__name__)
+""", ns)
+assert ns['t'] == ['exec']
+
 
 print("passed all tests...")
