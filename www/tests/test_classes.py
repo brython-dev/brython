@@ -1171,4 +1171,10 @@ class A:
 
 assert sorted(A.__static_attributes__) == ['x']
 
+# issue 2533
+class A:
+  if True:
+    x = 9
+  assert x == 9
+  
 print('passed all tests..')
