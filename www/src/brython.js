@@ -130,9 +130,18 @@ $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=Math.floor(Math.random()*2**50)
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
+const func_attrs=['__module__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','__file__','lineno','flags','free_vars','kwonlyargs_length','__name__','posonlyargs_length','__qualname__','varnames','method_class']
+var i=0
+$B.func_attrs={}
+for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
 $B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){klass[attr].$infos={__doc__:klass[attr].__doc__ ||"",__module__:module,__qualname__ :klass.__qualname__+'.'+attr,__name__:attr}
+$B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :klass.__qualname__+'.'+attr}
+)
 if(klass[attr].$type=="classmethod"){klass[attr].__class__=$B.method}}}
 klass.__module__=module}
+$B.set_function_infos=function(f,attrs){f.$function_infos=f.$function_infos ??[]
+for(var key in attrs){if($B.func_attrs[key]===undefined){throw Error('no function attribute '+key)}
+f.$function_infos[$B.func_attrs[key]]=attrs[key]}}
 var has_storage=typeof(Storage)!=="undefined"
 if(has_storage){$B.has_local_storage=false
 try{if(localStorage){$B.local_storage=localStorage
@@ -211,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-19 21:58:15.440724"
-__BRYTHON__.timestamp=1734641895440
+__BRYTHON__.compiled_date="2024-12-29 08:01:15.197022"
+__BRYTHON__.timestamp=1735455675196
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1159,6 +1168,7 @@ try{var modobj=new Function(script.js+`\nreturn locals`)()
 for(var key in modobj){if(! key.startsWith('$')){module[key]=modobj[key]}}
 $B.dispatch_load_event(script.script_element)}catch(err){
 if(err.__class__===undefined){if(err.$py_exc){err=err.$py_exc}else{$B.freeze(err)
+if($B.get_option('debug')> 2){console.log('JS error stack',err.stack)}
 var stack=err.$stack,frame_obj=err.$frame_obj,linenums=err.$linenums
 var lineNumber=err.lineNumber
 if(lineNumber !==undefined){console.log('around line',lineNumber)
@@ -1747,7 +1757,7 @@ if($B.frame_obj===null){return}
 if(arg && arg.value !==undefined && $B.tracefunc !==_b_.None){if($B.frame_obj.frame.$f_trace===undefined){$B.frame_obj.frame.$f_trace=$B.tracefunc}
 if($B.frame_obj.frame.$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frame_obj.frame
-if(frame.$coroutine){if(! frame.$coroutine.$sent){var cname=frame.$coroutine.$func.$infos.__name__
+if(frame.$coroutine){if(! frame.$coroutine.$sent){var cname=frame.$coroutine.$func.$function_infos[$B.func_attrs.name]
 var message=_b_.RuntimeWarning.$factory(
 `coroutine '${cname}' was never awaited`)
 message.lineno=frame.$coroutine.$lineno
@@ -2327,6 +2337,8 @@ result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.__na
 return result}else if(res.__class__ && res.__class__.__get__){
 if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
 if(typeof res=="function"){
+if(res.$infos !==undefined && res.$function_infos===undefined){console.log('$infos not undef',res,res.$infos)
+throw Error()}
 if(res.$infos===undefined && res.$function_infos===undefined
 && $B.get_option('debug')> 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
 if($test){console.log("res is function",res)}
@@ -2374,8 +2386,8 @@ var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
 if(set_name !==_b_.None){set_name(v,class_dict,key)}}
 if(typeof v=="function"){if(v.$function_infos===undefined){
 if(v.$infos){v.$infos.__qualname__=name+'.'+v.$infos.__name__}}else{v.$function_infos[$B.func_attrs.method_class]=class_dict
-v.$function_infos[$B.func_attrs.qualname]=name+'.'+
-v.$function_infos[$B.func_attrs.name]}}}
+v.$function_infos[$B.func_attrs.__qualname__]=name+'.'+
+v.$function_infos[$B.func_attrs.__name__]}}}
 class_dict.$tp_setattr=$B.search_in_mro(class_dict,'__setattr__')
 var sup=_b_.super.$factory(class_dict,class_dict)
 var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
@@ -2568,17 +2580,26 @@ $B.set_func_names(method,"builtins")
 $B.method_descriptor=$B.make_class("method_descriptor")
 $B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
 _b_.object.__class__=type
-$B.make_iterator_class=function(name){
+$B.make_iterator_class=function(name,reverse){
 var klass={__class__:_b_.type,__mro__:[_b_.object],__name__:name,__qualname__:name,$factory:function(items){return{
-__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length,$builtin_iterator:true}},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
+__class__:klass,__dict__:$B.empty_dict(),counter:reverse ? items.length :-1,items:items,len:items.length,$builtin_iterator:true}},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=
+self.counter===undefined
+? reverse
+? self.items.length
+:-1
+:self.counter
 self.len=self.items.length
 return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.test_change=="function"){var message=self.test_change()
 if(message){throw _b_.RuntimeError.$factory(message)}}
-self.counter++
+if(reverse){self.counter--
+if(self.counter >=0){var item=self.items[self.counter]
+if(self.items.$is_js_array){
+item=$B.jsobj2pyobj(item)}
+return item}}else{self.counter++
 if(self.counter < self.items.length){var item=self.items[self.counter]
 if(self.items.$is_js_array){
 item=$B.jsobj2pyobj(item)}
-return item}
+return item}}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
@@ -2987,6 +3008,8 @@ res=obj[attr]
 if(res !==undefined){if(typeof res=="function"){var f=function(){
 return res.apply(obj,arguments)}
 f.$infos={__name__:attr,__qualname__:attr}
+$B.set_function_infos(f,{name:attr,qualname:attr}
+)
 return f}else{return $B.jsobj2pyobj(res)}}
 if(_default !==undefined){return _default}
 throw $B.attr_error(rawname,obj)}}
@@ -3011,7 +3034,8 @@ dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__',function(){}
 )
 return{
 __class__:$B.mappingproxy,
-$jsobj:dict,$version:0}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
+$jsobj:dict,$version:0}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$function_infos){obj.$dict=obj.$dict ||$B.empty_dict()
+return obj.$dict}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
 return $B.obj_dict(obj,function(attr){return['__class__'].indexOf(attr)>-1}
 )}
 break
@@ -3754,38 +3778,46 @@ filter(x=> !x.startsWith('$')))}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
-const func_attrs=['__module__','defaults','kw_defaults','docstring','arg_names','args_vararg','args_kwarg','positional_length','__file__','lineno','flags','free_vars','kwonlyargs_length','name','posonlyargs_length','qualname','varnames','method_class']
-var i=0
-$B.func_attrs={}
-for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
 $B.function.__getattribute__=function(self,attr){
-if(! self.$infos && self.$function_infos){$B.make_function_infos(self,...self.$function_infos)}
+if(! self.$infos && self.$function_infos){}
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var _attr in self.$infos.__code__){res[_attr]=self.$infos.__code__[_attr]}
 res.name=self.$infos.__name__
 res.filename=self.$infos.__code__.co_filename
 res.co_code=self+"" 
 return res}else if(attr=='__annotations__'){
-return $B.obj_dict(self.$infos[attr])}else if(attr=='__defaults__'){return $B.fast_tuple(self.$infos.__defaults__)}else if(self.$infos.hasOwnProperty(attr)){return self.$infos[attr]}}else if(self.$infos && self.$infos.__dict__ &&
-_b_.dict.$contains_string(self.$infos.__dict__,attr)){return _b_.dict.$getitem_string(self.$infos.__dict__,attr)}else if(attr=="__closure__"){var free_vars=self.$infos.__code__.co_freevars
-if(free_vars.length==0){return None}
+return $B.obj_dict(self.$infos[attr])}else if(attr=='__defaults__'){return $B.fast_tuple(self.$infos.__defaults__)}else if(self.$infos.hasOwnProperty(attr)){return self.$infos[attr]}}else if(self.$function_infos && self.$function_infos[$B.func_attrs[attr]]!==undefined){var rank=$B.func_attrs[attr]
+var res=self.$function_infos[rank]
+if(attr=='__defaults__' && res !==_b_.None){res.__class__=_b_.tuple}else if(attr=='__kwdefaults__' && res !==_b_.None && res.__class__ !==_b_.dict){res=_b_.dict.$from_js(res)}
+return res}else if(self.$dict && _b_.dict.$contains_string(self.$dict,attr)){return _b_.dict.$getitem_string(self.$dict,attr)}else if(self.$infos && self.$infos.__dict__ &&
+_b_.dict.$contains_string(self.$infos.__dict__,attr)){return _b_.dict.$getitem_string(self.$infos.__dict__,attr)}else if(attr=="__closure__"){var free_vars=self.$function_infos[$B.func_attrs.free_vars]
+if(free_vars===undefined ||free_vars.length==0){return None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(None))}}
-return _b_.tuple.$factory(cells)}else if(attr=='__builtins__'){if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
-return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-$B.function.__repr__=function(self){if(self.$function_infos){return `<function ${self.$function_infos[$B.func_attrs.qualname]}>`}else if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
+return _b_.tuple.$factory(cells)}else if(attr=='__code__'){if(self.$f_code===undefined){$B.make_function_code(self,... self.$function_infos)}
+return self.$f_code}else if(attr=='__builtins__'){if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
+return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{if(attr=='abc'){console.log('function',attr,'use object.__ga__')}
+return _b_.object.__getattribute__(self,attr)}}
+$B.function.__repr__=function(self){if(self.$function_infos){return `<function ${self.$function_infos[$B.func_attrs.__qualname__]}>`}else if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
 $B.make_function_infos=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
 ){f.$is_func=true
 f.$args_parser=$B.make_args_parser_and_parse
 if(co_flags & $B.COMPILER_FLAGS.COROUTINE){f.$is_async=true}
+__defaults__=__defaults__===_b_.None ?[]:__defaults__
+__kwdefaults__=__kwdefaults__===_b_.None ? _b_.None :
+_b_.dict.$from_js(__kwdefaults__)
 f.$infos={__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
 co_freevars.__class__=_b_.tuple
 co_varnames.__class__=_b_.tuple
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
+$B.make_function_code=function(f,__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_posonlyargcount,co_qualname,co_varnames
+){co_freevars.__class__=_b_.tuple
+co_varnames.__class__=_b_.tuple
+f.$f_code={__class__:_b_.code,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{},co_code:f+'' }}
 $B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
 $B.make_args_parser=function(f){if((! f.$infos)&& f.$function_infos){
 $B.make_function_infos(f,...f.$function_infos)}
@@ -3820,18 +3852,22 @@ f.$args_parser=f.$infos.args_parser=$B.getArgs0(
 PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
 )
 return f.$args_parser}
-$B.function.__setattr__=function(self,attr,value){if(self.$infos===undefined){$B.make_function_infos(self,...self.$function_infos)}
+$B.function.__setattr__=function(self,attr,value){if(self.$infos===undefined){}
 if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
+if(! self.$infos){$B.make_function_infos(self,...self.$function_infos)}
 if(self.$infos){self.$infos.__defaults__=value
 $B.make_args_parser(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
 " of "+_b_.str.$factory(self))}}else if(attr=="__kwdefaults__"){if(value===_b_.None){value=$B.empty_dict}else if(! $B.$isinstance(value,_b_.dict)){throw _b_.TypeError.$factory(
 "__kwdefaults__ must be set to a dict object")}
+if(! self.$infos){$B.make_function_infos(self,...self.$function_infos)}
 if(self.$infos){self.$infos.__kwdefaults__=value
 $B.make_args_parser(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
 " of "+_b_.str.$factory(self))}}
-if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.$attrs ||{}
+if(self.$function_infos===undefined){console.log('no function infos',self)
+throw Error()}
+if(self.$function_infos[$B.func_attrs[attr]]!==undefined){self.$function_infos[$B.func_attrs[attr]]=value}else{self.$attrs=self.$attrs ||{}
 self.$attrs[attr]=value}}
 $B.function.$factory=function(){}
 $B.set_func_names($B.function,"builtins")
@@ -3842,11 +3878,11 @@ var builtin_function=$B.builtin_function_or_method=$B.make_class(
 "builtin_function_or_method",function(f){f.__class__=builtin_function
 return f})
 builtin_function.__getattribute__=$B.function.__getattribute__
-builtin_function.__reduce_ex__=builtin_function.__reduce__=function(self){return self.$infos.__name__}
-builtin_function.__repr__=builtin_function.__str__=function(self){return '<built-in function '+self.$infos.__name__+'>'}
+builtin_function.__reduce_ex__=builtin_function.__reduce__=function(self){return self.$function_infos[$B.func_attrs.__name__]}
+builtin_function.__repr__=builtin_function.__str__=function(self){return '<built-in function '+self.$function_infos[$B.func_attrs.__name__]+'>'}
 $B.set_func_names(builtin_function,"builtins")
 var method_wrapper=$B.make_class("method_wrapper")
-method_wrapper.__repr__=method_wrapper.__str__=function(self){return "<method wrapper '"+self.$infos.__name__+"' of function object>"}
+method_wrapper.__repr__=method_wrapper.__str__=function(self){return "<method wrapper '"+self.$function_infos[$B.func_attrs.__name__]+"' of function object>"}
 $B.set_func_names(method_wrapper,"builtins")
 $B.builtin_classes=["bool","bytearray","bytes","classmethod","complex","dict","enumerate","filter","float","frozenset","int","list","map","memoryview","object","property","range","reversed","set","slice","staticmethod","str","super","tuple","type","zip"
 ]
@@ -3856,7 +3892,9 @@ var builtin_names=$B.builtin_funcs.
 concat($B.builtin_classes).
 concat(other_builtins)
 for(var name of builtin_names){try{if($B.builtin_funcs.indexOf(name)>-1){_b_[name].__class__=builtin_function
-_b_[name].$infos={__module__:'builtins',__name__:name,__qualname__:name}}}catch(err){}}
+_b_[name].$infos={__module__:'builtins',__name__:name,__qualname__:name}
+$B.set_function_infos(_b_[name],{__module__:'builtins',__name__:name,__qualname__:name}
+)}}catch(err){}}
 _b_.object.__init__.__class__=$B.wrapper_descriptor 
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;
@@ -4365,7 +4403,9 @@ make_builtin_exception("TabError",_b_.IndentationError)
 make_builtin_exception("UnicodeError",_b_.ValueError)
 make_builtin_exception(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
 make_builtin_exception(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"],_b_.Warning)
-make_builtin_exception(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
+_b_.EnvironmentError=_b_.OSError
+_b_.WindowsError=_b_.OSError
+_b_.IOError=_b_.OSError
 _b_.AttributeError=$B.make_class('AttributeError',function(){var $=$B.args("AttributeError",3,{"msg":null,"name":null,"obj":null},["msg","name","obj"],arguments,{msg:_b_.None,name:_b_.None,obj:_b_.None},"*",null)
 var err=Error()
 err.__class__=_b_.AttributeError
@@ -4486,7 +4526,7 @@ return _b_.None}
 $B.offer_suggestions_for_unexpected_keyword_error=function(arg_names,key){if(key===_b_.None){return _b_.None}
 var suggestions=calculate_suggestions(arg_names,key)
 return suggestions ||_b_.None}
-_b_.BaseExceptionGroup=$B.make_class("BaseExceptionGFroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
+_b_.BaseExceptionGroup=$B.make_class("BaseExceptionGroup",function(){var missing={},$=$B.args("BaseExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=_b_.BaseExceptionGroup
@@ -4529,7 +4569,7 @@ _b_.BaseExceptionGroup.subgroup=function(self,condition){return _b_.BaseExceptio
 $B.set_func_names(_b_.BaseExceptionGroup,"builtins")
 _b_.BaseExceptionGroup.__class_getitem__=
 _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
-_b_.ExceptionGroup=$B.make_class("ExceptionGFroup",function(){var missing={},$=$B.args("ExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
+_b_.ExceptionGroup=$B.make_class("ExceptionGroup",function(){var missing={},$=$B.args("ExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=_b_.ExceptionGroup
@@ -4600,9 +4640,9 @@ if(stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
 err.__class__===_b_.IndentationError){err.$frame_obj=err.$frame_obj===null ? null :err.$frame_obj.prev
 trace+=trace_from_stack(err)
-var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
+if(err.args.length > 0){var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
 trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
-`    ${line.trim()}\n`
+`    ${line.trim()}\n`}
 if(err.__class__ !==_b_.IndentationError &&
 err.text){
 if($B.get_option('debug',err)> 1){console.log('error args',err.args[1])
@@ -4615,7 +4655,7 @@ if(nb_marks==0 &&
 err.end_offset==line.substr(indent).length){nb_marks=1}}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
-trace+=`${err.__class__.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
+trace+=`${err.__class__.__name__}: ${err.args[0] ?? '<no detail available>'}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
 trace+=trace_from_stack(err)
 var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
@@ -9472,6 +9512,9 @@ for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
 if(isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
 $B.repr.leave(self)
 return res}
+var list_reverseiterator=$B.make_iterator_class("list_reverseiterator",true)
+list_reverseiterator.__reduce__=list_reverseiterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
+list.__reversed__=function(self){return list_reverseiterator.$factory(self)}
 list.__rmul__=function(self,other){return list.__mul__(self,other)}
 list.__setattr__=function(self,attr,value){if(self.__class__===list ||self.__class__===tuple){var cl_name=$B.class_name(self)
 if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'"+cl_name+
@@ -9737,6 +9780,11 @@ if(_this===null){jsobj[PYOBJFCT]=res;}else if(_this[PYOBJFCTS]!==undefined){_thi
 res[JSOBJ]=jsobj
 Object.defineProperty(res,'$js_func',{value:jsobj})
 Object.defineProperty(res,'$infos',{value:{__name__:jsobj.name,__qualname__:jsobj.name},writable:true})
+let value=[]
+value[$B.func_attrs.name]=jsobj.name
+value[$B.func_attrs.qualname]=jsobj.name
+Object.defineProperty(res,'$function_infos',{value,writable:true}
+)
 return res}
 if(jsobj.$kw){return jsobj}
 if($B.$isNode(jsobj)){const res=$B.DOMNode.$factory(jsobj)
@@ -9789,7 +9837,7 @@ let jsobj=function(){try{
 var args=new Array(arguments.length)
 for(var i=0;i < arguments.length;++i){args[i]=jsobj2pyobj(arguments[i])}
 let res
-if(pyobj.prototype && pyobj.prototype.constructor===pyobj && 
+if(pyobj.prototype && pyobj.prototype.constructor===pyobj &&
 ! pyobj.$function_infos){res=new pyobj(...args)}else{res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}
 pyobj[JSOBJ]=jsobj
@@ -9876,7 +9924,13 @@ var new_func
 if(_self.$js_func){new_func=function(){var args=pyargs2jsargs(arguments)
 return new _self.$js_func(...args)}}else{new_func=function(){var args=pyargs2jsargs(arguments)
 return new _self(...args)}}
-Object.defineProperty(new_func,'$infos',{value:{__name__:attr,__qualname__:attr},writable:true})
+Object.defineProperty(new_func,'$infos',{value:{__name__:attr,__qualname__:attr},writable:true}
+)
+let value=[]
+value[$B.func_attrs.name]=attr
+value[$B.func_attrs.qualname]=attr
+Object.defineProperty(new_func,'$function_infos',{value,writable:true}
+)
 return new_func}
 var js_attr=_self[attr]
 if(js_attr==undefined && typeof _self=="function"){js_attr=_self.$js_func[attr]}
@@ -10941,14 +10995,14 @@ var coroutine=$B.coroutine=$B.make_class("coroutine")
 coroutine.close=function(self){self.$sent=true }
 coroutine.send=function(self){self.$sent=true
 if(! $B.$isinstance(self,coroutine)){var msg="object is not a coroutine"
-if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
-self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
+if(typeof self=="function" && self.$function_infos &&
+self.$function_infos[$B.func_attrs.flags]& 128){msg+='. Maybe you forgot to call the async function ?'}
 throw _b_.TypeError.$factory(msg)}
 var res=self.$func.apply(null,self.$args)
 res.then(function(){if(self.$frame_obj){$B.frame_obj=self.$frame_obj}}).
 catch(function(err){if(err.$frame_obj){$B.frame_obj=err.$frame_obj}})
 return res}
-coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
+coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$function_infos){return "<coroutine "+self.$func.$function_infos[$B.func_attrs.name]+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
 if(func.$is_genfunc){return func}
@@ -11348,6 +11402,8 @@ resolve(this)}}
 if(args.body &&
 ['POST','PUT','DELETE','PATCH'].indexOf(method)>-1){xhr.send(args.body)}else{xhr.send()}})}
 func.$infos={__name__:"ajax_"+method}
+func.$function_infos=[]
+func.$function_infos[$B.func_attrs.name]=`ajax_${method}`
 return{
 __class__:$B.coroutine,$args:[url,args],$func:func}},event:function(){
 var $=$B.args("event",1,{element:null},["element"],arguments,{},"names",null),element=$.element,names=$.names
@@ -11356,7 +11412,7 @@ names.forEach(function(name){var callback=function(evt){
 callbacks.forEach(function(items){$B.DOMNode.unbind(element,items[0],items[1])})
 resolve($B.$DOMEvent(evt))}
 callbacks.push([name,callback])
-$B.DOMNode.bind(element,name,callback)})})},get:function(){return $B.imported['browser.aio'].ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return f.__class__===$B.coroutine},iscoroutinefunction:function(f){return(f.$infos.__code__.co_flags & 128)!=0},post:function(){return $B.imported['browser.aio'].ajax.bind(null,"POST").apply(null,arguments)},run:function(){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error
+$B.DOMNode.bind(element,name,callback)})})},get:function(){return $B.imported['browser.aio'].ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return f.__class__===$B.coroutine},iscoroutinefunction:function(f){return(f.$function_infos[$B.func_attrs.flags]& 128)!=0},post:function(){return $B.imported['browser.aio'].ajax.bind(null,"POST").apply(null,arguments)},run:function(){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error
 var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},["coro","onsuccess","onerror"],arguments,{onsuccess:handle_success,onerror:handle_error},null,null),coro=$.coro,onsuccess=$.onsuccess,onerror=$.onerror
 var save_frame_obj=$B.frame_obj
 $B.coroutine.send(coro).then(onsuccess).catch(onerror)
@@ -11366,6 +11422,8 @@ return _b_.None},sleep:function(seconds){if(seconds.__class__===_b_.float){secon
 var func=function(){return new Promise(resolve=> setTimeout(
 function(){resolve(_b_.None)},1000*seconds))}
 func.$infos={__name__:"sleep"}
+func.$function_infos=[]
+func.$function_infos[$B.func_attrs.name]='sleep'
 return{
 __class__:$B.coroutine,$args:[seconds],$func:func}},Future,__getattr__:function(attr){
 $B.$import('_aio')
@@ -11374,7 +11432,9 @@ function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
 $B.imported[name]=module_obj
-for(var attr in module_obj){if(typeof module_obj[attr]=='function'){module_obj[attr].$infos={__module__:name,__name__:attr,__qualname__:name+'.'+attr}}}}
+for(var attr in module_obj){if(typeof module_obj[attr]=='function'){module_obj[attr].$infos={__module__:name,__name__:attr,__qualname__:name+'.'+attr}
+$B.set_function_infos(module_obj[attr],{__module__:name,__name__:attr,__qualname__:name+'.'+attr}
+)}}}
 for(let attr in modules){load(attr,modules[attr])}
 if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']
 modules['browser'].aio=modules['browser.aio']}
@@ -11389,15 +11449,17 @@ var tp_dict=_b_.type.__dict__=$B.empty_dict(),setitem=_b_.dict.$setitem
 for(let method in _b_.type){if(method.startsWith('__')&& method.endsWith('__')){setitem(tp_dict,method,_b_.type[method])}}
 setitem(tp_dict,'__mro__',{__get__:function(cls){return $B.fast_tuple([cls].concat(cls.__mro__))}})
 for(var name in _b_){var builtin=_b_[name]
-if(_b_[name].__class__===_b_.type){_b_[name].__qualname__=name
+if(_b_[name].__class__===_b_.type){_b_[name].__qualname__=_b_[name].__qualname__ ?? name
 _b_[name].__module__='builtins'
-_b_[name].__name__=name
+_b_[name].__name__=_b_[name].__name__ ?? name
 _b_[name].$is_builtin_class=true
 $B.builtin_classes.push(_b_[name])
 for(var key in _b_[name]){var value=_b_[name][key]
 if(value===undefined ||value.__class__ ||
 typeof value !='function'){continue}else if(key=="__new__"){value.__class__=$B.builtin_function_or_method}else if(key.startsWith("__")){value.__class__=$B.wrapper_descriptor}else{value.__class__=$B.method_descriptor}
-value.__objclass__=_b_[name]}}else if(typeof builtin=='function'){builtin.$infos={__name__:name,__qualname__:name}}}
+value.__objclass__=_b_[name]}}else if(typeof builtin=='function'){builtin.$infos={__name__:name,__qualname__:name}
+$B.set_function_infos(builtin,{__name__:name,__qualname__:name}
+)}}
 for(let attr in $B){if(Array.isArray($B[attr])){$B[attr].__class__=_b_.list}}
 $B.cell=$B.make_class("cell",function(value){return{
 __class__:$B.cell,$cell_contents:value}}
@@ -11558,6 +11620,8 @@ function bind(name,scopes){var scope=$B.last(scopes),up_scope=last_scope(scopes)
 name=mangle(scopes,up_scope,name)
 if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)){return scopes[i]}}}
 scope.locals.add(name)
+if(up_scope.type=='class'){up_scope.maybe_locals=up_scope.maybe_locals ?? new Set()
+up_scope.maybe_locals.add(name)}
 return scope}
 var SF=$B.SYMBOL_FLAGS 
 function name_reference(name,scopes,position,lineno){var scope=name_scope(name,scopes)
@@ -11600,8 +11664,10 @@ if(name=='__annotations__'){if(block.type==SF.TYPE_CLASS && up_scope.has_annotat
 if(test){console.log('is local ???',is_local,'scope',scope)}
 if(is_local){
 var l_scope=local_scope(name,scope)
+if(test){console.log('l_scope',l_scope)}
 if(! l_scope.found){if(block.type==SF.TYPE_CLASS){
 scope.needs_frames=true
+if(scope.maybe_locals && scope.maybe_locals.has(name)){return{found:false,resolve:'local'}}
 return{found:false,resolve:'global'}}else if(block.type==SF.TYPE_MODULE){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 return{found:false,resolve:'local'}}else{return{found:l_scope.scope}}}else if(scope.globals.has(name)){var global_scope=scopes[0]
@@ -11724,11 +11790,18 @@ prefix+`$B.make_f_code(frame, [${varnames}])\n`+
 prefix+`var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`+
 prefix+`frame.$f_trace = _b_.None\n`+
 prefix+`var _frame_obj = $B.frame_obj\n`}
+function comp_bindings(comp,bindings){if(comp.target instanceof $B.ast.Name){bindings.add(comp.target.id)}else if(comp.target.elts){for(var elt of comp.target.elts){comp_bindings({target:elt},bindings)}}
+return bindings}
 function make_comp(scopes){
+var bindings=new Set()
+for(var gen of this.generators){comp_bindings(gen,bindings)}
+var save_locals=new Set()
 var plen=prefix.length
 var comp_prefix=prefix
 var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=Object.keys(symtable_block.symbols.$strings).map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
-while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent}
+for(var name of comp_scope.locals){if(bindings.has(name)){save_locals.add(name)}}
+while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent
+for(var name of upper_comp_scope.locals){if(bindings.has(name)){save_locals.add(name)}}}
 var comp_scope_block=scopes.symtable.table.blocks.get(
 fast_id(upper_comp_scope.ast)),comp_scope_symbols=comp_scope_block.symbols
 var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
@@ -11742,6 +11815,7 @@ indent()
 if(prefix.length > plen+tab.length){console.warn('JS indentation issue')}
 var js=init_comprehension(comp,scopes)
 if(comp_iter_scope.found){js+=prefix+`var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`}
+for(var name of save_locals){js+=prefix+`var save_${name} = ${name_reference(name, scopes)}\n`}
 if(this instanceof $B.ast.ListComp){js+=prefix+`var result_${id} = $B.$list([])\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`var result_${id} = $B.empty_dict()\n`}
 var first=this.generators[0]
 js+=prefix+`try{\n`
@@ -11783,6 +11857,7 @@ prefix+`throw err\n`
 dedent()
 js+=prefix+`}\n`+
 (has_await ? prefix+`\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` :'')
+for(var name of save_locals){js+=prefix+`${name_reference(name, scopes)} = save_${name}\n`}
 if(comp_iter_scope.found){js+=prefix+`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}
 js+=prefix+`return result_${id}\n`
 dedent()
@@ -12602,9 +12677,10 @@ decs_declare+=prefix+`$B.set_lineno(frame, ${dec.lineno})\n`
 decs_declare+=prefix+`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
 var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),positional=parsed_args.positional,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
-var defaults=`[${this.args.defaults.map(x => x.to_js(scopes))}]`
+var defaults=this.args.defaults.length==0 ? '_b_.None' :
+`[${this.args.defaults.map(x => x.to_js(scopes))}]`
 kw_defaults=kw_default_names.length==0 ? '_b_.None' :
-`_b_.dict.$from_js({${kw_defaults.join(', ')}})`
+`{${kw_defaults.join(', ')}}`
 var id=make_id(),name2=this.name+id
 var has_type_params=this.type_params.length > 0,type_params=''
 if(has_type_params){
