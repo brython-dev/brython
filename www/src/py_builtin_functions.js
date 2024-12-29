@@ -572,6 +572,11 @@ var $$eval = _b_.eval = function(){
     }
 
     var __name__ = 'exec'
+    if(_globals === _b_.None){
+        if($B.frame_obj !== null){
+            __name__ = $B.frame_obj.frame[2]
+        }
+    }
     if(_globals !== _b_.None && _globals.__class__ == _b_.dict &&
             _b_.dict.$contains_string(_globals, '__name__')){
         __name__ = _b_.dict.$getitem_string(_globals, '__name__')
