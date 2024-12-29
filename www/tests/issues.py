@@ -3308,6 +3308,17 @@ def f():
 
 assert f() == ['B']
 
+# issue 2534
+def f(name, module):
+    source = sys.modules[module].__dict__
+    members = [
+            (name, value)
+            for name, value in source.items()
+            ]
+    assert name == 'abc'
+
+f('abc', __name__)
+
 
 # ==========================================
 # Finally, report that all tests have passed
