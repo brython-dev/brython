@@ -364,11 +364,14 @@ $B.lambda_magic = Math.random().toString(36).substr(2, 8)
 
 // Function attributes
 const func_attrs = ['__module__', '__name__', '__qualname__', '__file__',
-    '__defaults__', '__kwdefaults__', '__doc__', 'arg_names', 
-    'args_vararg', 'args_kwarg',
-    'positional_length', 'lineno', 'flags', 'free_vars',
-    'kwonlyargs_length', 'posonlyargs_length', 'varnames', 'method_class']
+    '__defaults__', '__kwdefaults__', '__doc__', 'arg_names',
+    'args_vararg', 'args_kwarg', 'positional_length', 'lineno', 'flags',
+    'free_vars', 'kwonlyargs_length', 'posonlyargs_length', 'varnames',
+    '__type_params__',
+    'method_class'
+    ]
 
+// Rank of function attributes in .$function_infos
 var i = 0
 $B.func_attrs = {}
 for(var func_attr of func_attrs){
@@ -384,7 +387,9 @@ $B.set_func_names = function(klass, module){
                     __doc__: klass[attr].__doc__ || '',
                     __module__: module,
                     __name__: attr,
-                    __qualname__ : klass.__qualname__ + '.' + attr
+                    __qualname__ : klass.__qualname__ + '.' + attr,
+                    __defaults__: [],
+                    __kwdefaults__: {}
                 }
             )
             if(klass[attr].$type == "classmethod"){

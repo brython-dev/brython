@@ -1086,7 +1086,7 @@ property.__init__ = function(){
     }
 }
 
-property.__get__ = function(self, kls) {
+property.__get__ = function(self, kls){
     if(self.fget === undefined){
         throw _b_.AttributeError.$factory("unreadable attribute")
     }
@@ -1251,6 +1251,10 @@ var method = $B.method = $B.make_class("method",
         f.__class__ = method
         if(typeof func !== 'function'){
             console.log('method from func w-o $infos', func, 'all', $B.$call(func))
+        }
+        if(! func.$infos && func.$function_infos){
+            $B.make_function_infos(func, ...func.$function_infos)
+            f.$function_infos = func.$function_infos
         }
         f.$infos = func.$infos || {}
         f.$infos.__func__ = func

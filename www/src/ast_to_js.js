@@ -2987,7 +2987,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `[${free_vars}], ` +
         `${this.args.kwonlyargs.length}, ` +
         `${this.args.posonlyargs.length}, ` +
-        `[${varnames}]]\n`;
+        `[${varnames}], ` +
+        `${has_type_params ? 'type_params' : '[]'}]\n`;
 
     js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 

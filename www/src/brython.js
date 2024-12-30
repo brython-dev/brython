@@ -130,11 +130,12 @@ $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=Math.floor(Math.random()*2**50)
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
-const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','lineno','flags','free_vars','kwonlyargs_length','posonlyargs_length','varnames','method_class']
+const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','lineno','flags','free_vars','kwonlyargs_length','posonlyargs_length','varnames','__type_params__','method_class'
+]
 var i=0
 $B.func_attrs={}
 for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
-$B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){$B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :klass.__qualname__+'.'+attr}
+$B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){$B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :klass.__qualname__+'.'+attr,__defaults__:[],__kwdefaults__:{}}
 )
 if(klass[attr].$type=="classmethod"){klass[attr].__class__=$B.method}}}
 klass.__module__=module}
@@ -219,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2024-12-29 17:50:32.483983"
-__BRYTHON__.timestamp=1735491032483
+__BRYTHON__.compiled_date="2024-12-30 11:11:17.871100"
+__BRYTHON__.timestamp=1735553477870
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2548,6 +2549,8 @@ $B.set_func_names(member_descriptor,"builtins")
 var method=$B.method=$B.make_class("method",function(func,cls){var f=function(){return $B.$call(func).bind(null,cls).apply(null,arguments)}
 f.__class__=method
 if(typeof func !=='function'){console.log('method from func w-o $infos',func,'all',$B.$call(func))}
+if(! func.$infos && func.$function_infos){$B.make_function_infos(func,...func.$function_infos)
+f.$function_infos=func.$function_infos}
 f.$infos=func.$infos ||{}
 f.$infos.__func__=func
 f.$infos.__self__=cls
@@ -3035,7 +3038,8 @@ dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__',function(){}
 return{
 __class__:$B.mappingproxy,
 $jsobj:dict,$version:0}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$function_infos ||obj.$infos){if(! obj.$infos){$B.make_function_infos(obj,...obj.$function_infos)}
-if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
+if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")&&
+obj.$infos.__func__.$infos){return obj.$infos.__func__.$infos.__dict__}}
 return $B.obj_dict(obj,function(attr){return['__class__'].indexOf(attr)>-1}
 )}
 break
@@ -3094,7 +3098,8 @@ if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,r
 return res}}}
 var getattr
 try{res=attr_func(obj,attr)
-if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr_func raised error',err.__class__,err.args,err.name)}
+if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr_func raised error',err.__class__,err.args,err.name)
+console.log(err)}
 if(klass===$B.module){
 getattr=obj.__getattr__
 if($test){console.log('use module getattr',getattr)
@@ -3460,6 +3465,7 @@ var $test=false
 switch(attr){case '__dict__':
 if(! $B.$isinstance(value,_b_.dict)){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, "+
 "not a '"+$B.class_name(value)+"'")}
+if(obj.$function_infos && ! obj.$infos){$B.make_function_infos(obj,...obj.$function_infos)}
 if(obj.$infos){obj.$infos.__dict__=value
 return None}
 obj.__dict__=value
@@ -3770,16 +3776,27 @@ $B.set_func_names(ellipsis)
 var FunctionCode=$B.make_class("function code")
 var FunctionGlobals=$B.make_class("function globals")
 $B.function={__class__:_b_.type,__code__:{__class__:FunctionCode,__name__:'function code'},__globals__:{__class__:FunctionGlobals,__name__:'function globals'},__mro__:[_b_.object],__name__:'function',__qualname__:'function',$is_class:true}
+$B.function.__defaults__=$B.getset_descriptor.$factory(
+$B.function,'__defaults__',function(kls,f){$B.check_infos(f)
+return f.$infos.__defaults__},function(kls,f,value){$B.check_infos(f)
+f.$infos.__defaults__=value
+$B.make_args_parser(f)}
+)
 $B.function.__delattr__=function(self,attr){if(attr=="__dict__"){throw _b_.TypeError.$factory("can't delete function __dict__")}}
-$B.function.__dir__=function(self){var infos=self.$infos ||{},attrs=self.$attrs ||{}
+$B.function.__dir__=function(self){if(self.$function_infos && ! self.$infos){$B.make_function_infos(self,...self.$function_infos)}
+var infos=self.$infos.__dict__ ||{},attrs=self.$attrs ||{}
 return $B.$list(Object.keys(infos).
 concat(Object.keys(attrs)).
-filter(x=> !x.startsWith('$')))}
+concat(Object.keys($B.function)).
+filter(x=> !x.startsWith('$'))).
+sort()}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
 $B.function.__getattribute__=function(self,attr){
 if(! self.$infos && self.$function_infos){$B.make_function_infos(self,...self.$function_infos)}
+var klass_attr=$B.function[attr]
+if(klass_attr !==undefined){if(klass_attr.__class__===$B.getset_descriptor){return klass_attr.__class__.__get__(klass_attr,self)}}
 if(self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var _attr in self.$infos.__code__){res[_attr]=self.$infos.__code__[_attr]}
 res.name=self.$infos.__name__
@@ -3792,13 +3809,20 @@ if(free_vars===undefined ||free_vars.length==0){return None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(None))}}
-return _b_.tuple.$factory(cells)}else if(attr=='__code__'){if(self.$f_code===undefined){$B.make_function_code(self,... self.$function_infos)}
-return self.$f_code}else if(attr=='__builtins__'){if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
+return _b_.tuple.$factory(cells)}else if(attr=='__code__'){return self.$f_code}else if(attr=='__builtins__'){if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
 return $B.obj_dict(_b_)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{if(attr=='abc'){console.log('function',attr,'use object.__ga__')}
 return _b_.object.__getattribute__(self,attr)}}
+$B.function.__kwdefaults__=$B.getset_descriptor.$factory(
+$B.function,'__kwdefaults__',function(kls,f){$B.check_infos(f)
+return f.$infos.__kwdefaults__},function(kls,f,value){$B.check_infos(f)
+f.$infos.__kwdefaults__=value
+$B.make_args_parser(f)}
+)
 $B.function.__repr__=function(self){if(self.$function_infos){return `<function ${self.$function_infos[$B.func_attrs.__qualname__]}>`}else if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.function.__mro__=[_b_.object]
 $B.function.__setattr__=function(self,attr,value){if(self.$infos===undefined){$B.make_function_infos(self,...self.$function_infos)}
+var klass_attr=$B.function[attr]
+if(klass_attr !==undefined){if(klass_attr.__class__===$B.getset_descriptor){return klass_attr.__class__.__set__(klass_attr,self,value)}}
 if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
@@ -3815,25 +3839,26 @@ if(self.$function_infos===undefined){console.log('no function infos',self)
 throw Error()}
 if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.$attrs ||{}
 self.$attrs[attr]=value}}
-$B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames
+$B.check_infos=function(f){if(! f.$infos){if(f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}else{console.log('no $infos, no $function_infos')}}}
+$B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames,type_params
 ){f.$is_func=true
 f.$args_parser=$B.make_args_parser_and_parse
 if(co_flags & $B.COMPILER_FLAGS.COROUTINE){f.$is_async=true}
 __defaults__=__defaults__===_b_.None ?[]:__defaults__
+__defaults__.__class__=_b_.tuple
 __kwdefaults__=__kwdefaults__===_b_.None ? _b_.None :
 _b_.dict.$from_js(__kwdefaults__)
 f.$infos={__module__,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg}
 f.$infos.__name__=co_name
 f.$infos.__qualname__=co_qualname
+type_params=type_params ??[]
+type_params.__class__=_b_.tuple
+f.$infos.__type_params__=type_params
 co_freevars=co_freevars ??[]
 co_freevars.__class__=_b_.tuple
 co_varnames=co_varnames ??[]
 co_varnames.__class__=_b_.tuple
 f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{}}}
-$B.make_function_code=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames
-){co_freevars.__class__=_b_.tuple
-co_varnames.__class__=_b_.tuple
-f.$f_code={__class__:_b_.code,co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_name,co_nlocals:co_varnames.length,co_posonlyargcount,co_qualname,co_varnames,co_positions:{},co_code:f+'' }}
 $B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
 $B.make_args_parser=function(f){if((! f.$infos)&& f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}
 if(f.$infos===undefined ||f.$infos.__code__===undefined){console.log('f',f)
@@ -12810,7 +12835,8 @@ prefix+tab+`${positional.length}, `+
 `[${free_vars}], `+
 `${this.args.kwonlyargs.length}, `+
 `${this.args.posonlyargs.length}, `+
-`[${varnames}]]\n`;
+`[${varnames}], `+
+`${has_type_params ? 'type_params' : '[]'}]\n`;
 js+=prefix+`${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 if(is_async && ! is_generator){js+=prefix+`${name2} = $B.make_async(${name2})\n`}
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
