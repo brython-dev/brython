@@ -2968,45 +2968,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += prefix + `${name2}.$is_method = true\n`
     }
 
-    // Set admin infos
-    js += prefix + `${name2}.$function_infos = [` +
-        `'${gname}', ` +
-        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
-        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
-        `__file__, ` +
-        `${defaults}, ` +
-        `${kw_defaults}, ` +
-        `${docstring}, ` +
-        `[${arg_names}], ` +
-        `${args_vararg}, ` +
-        `${args_kwarg},\n` +
-        // make f.__code__
-        prefix + tab + `${positional.length}, ` +
-        `${this.lineno}, ` +
-        `${flags}, ` +
-        `[${free_vars}], ` +
-        `${this.args.kwonlyargs.length}, ` +
-        `${this.args.posonlyargs.length}, ` +
-        `[${varnames}], ` +
-        `${has_type_params ? 'type_params' : '[]'}]\n`;
-
-    js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
-
-    if(is_async && ! is_generator){
-        js += prefix + `${name2} = $B.make_async(${name2})\n`
-    }
-
-    var mangled = mangle(scopes, func_name_scope, this.name),
-        func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
-
-    if(decorated){
-        func_ref = `decorated${make_id()}`
-        js += prefix + 'var '
-    }else{
-        js += prefix
-    }
-
-    js += `${func_ref} = ${name2}\n`
+    var anns
     if(this.returns || parsed_args.annotations){
         var features = scopes.symtable.table.future.features,
             postponed = features & $B.CO_FUTURE_ANNOTATIONS
@@ -3042,11 +3004,54 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
             }
         }
-        js += prefix + `${func_ref}.__annotations__ = _b_.dict.$from_array([${ann_items.join(', ')}])\n`
+        anns = `[${ann_items.join(', ')}]`
     }else{
-        js += prefix + `${func_ref}.__annotations__ = $B.empty_dict()\n`
+        anns = `[]`
     }
 
+    // Set admin infos
+    js += prefix + `${name2}.$function_infos = [` +
+        `'${gname}', ` +
+        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
+        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
+        `__file__, ` +
+        `${defaults}, ` +
+        `${kw_defaults}, ` +
+        `${docstring}, ` +
+        `[${arg_names}], ` +
+        `${args_vararg}, ` +
+        `${args_kwarg},\n` +
+        // make f.__code__
+        prefix + tab + `${positional.length}, ` +
+        `${this.lineno}, ` +
+        `${flags}, ` +
+        `[${free_vars}], ` +
+        `${this.args.kwonlyargs.length}, ` +
+        `${this.args.posonlyargs.length}, ` +
+        `[${varnames}], ` +
+        `${anns}, ` +
+        `${has_type_params ? 'type_params' : '[]'}]\n`;
+
+    js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
+
+    if(is_async && ! is_generator){
+        js += prefix + `${name2} = $B.make_async(${name2})\n`
+    }
+
+    var mangled = mangle(scopes, func_name_scope, this.name),
+        func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
+
+    if(decorated){
+        func_ref = `decorated${make_id()}`
+        js += prefix + 'var '
+    }else{
+        js += prefix
+    }
+
+    js += `${func_ref} = ${name2}\n`
+
+    // js += prefix + `${func_ref}.__annotations__ = _b_.dict.$from_array(${anns})\n`
+    
     if(has_type_params){
         scopes.pop()
     }

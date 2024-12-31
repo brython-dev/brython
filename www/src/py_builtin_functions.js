@@ -3488,7 +3488,8 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
         vararg, kwarg,
         co_argcount, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount,
-        co_posonlyargcount, co_varnames, type_params
+        co_posonlyargcount, co_varnames,
+        annotations, type_params
         ){
     f.$is_func = true
     f.$args_parser = $B.make_args_parser_and_parse
@@ -3509,6 +3510,8 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
     f.$infos.__type_params__ = type_params
     co_freevars = co_freevars ?? []
     co_freevars.__class__ = _b_.tuple
+    annotations = annotations ?? []
+    f.__annotations__ = _b_.dict.$from_array(annotations)
     co_varnames = co_varnames ?? []
     co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
