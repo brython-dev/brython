@@ -203,7 +203,10 @@ $B.addToImported = function(name, modobj){
     modobj.__class__ = Module
     modobj.__name__ = name
     for(var attr in modobj){
-        if(typeof modobj[attr] == "function"){
+        if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
+            if(modobj[attr] === _b_.iter){
+                console.log('set iter', modobj, name)
+            }
             modobj[attr].$infos = {
                 __module__: name,
                 __name__: attr,
@@ -230,7 +233,7 @@ function run_js(module_contents, path, _module){
     modobj.__class__ = Module
     modobj.__name__ = _module.__name__
     for(var attr in modobj){
-        if(typeof modobj[attr] == "function"){
+        if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
             modobj[attr].$infos = {
                 __module__: _module.__name__,
                 __name__: attr,
