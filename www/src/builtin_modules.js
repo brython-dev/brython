@@ -1333,7 +1333,8 @@
         }else if(typeof builtin == 'function'){
             builtin.$infos = {
                 __name__: name,
-                __qualname__: name
+                __qualname__: name,
+                __dict__: $B.empty_dict()
             }
             $B.set_function_infos(builtin,
                 {

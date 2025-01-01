@@ -3263,13 +3263,93 @@ var FunctionGlobals = $B.make_class("function globals")
 
 $B.function = {
     __class__: _b_.type,
-    __code__: {__class__: FunctionCode, __name__: 'function code'},
-    __globals__: {__class__: FunctionGlobals, __name__: 'function globals'},
     __mro__: [_b_.object],
     __name__: 'function',
     __qualname__: 'function',
     $is_class: true
 }
+
+$B.function.__annotations__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__annotations__',
+    function(kls, f){
+        $B.check_infos(f)
+        return f.__annotations__
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        if(! $B.$isinstance(value, _b_.dict)){
+            throw _b_.TypeError.$factory(
+                '__annotations__ must be set to a dict object')
+        }
+        f.__annotations__ = value
+    }
+)
+
+$B.function.__builtins__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__builtins__',
+    function(kls, f){
+        $B.check_infos(f)
+        if(f.$infos && f.$infos.__globals__){
+            return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
+        }
+        return $B.obj_dict(_b_)
+    }
+    ,
+    function(){
+        throw _b_.AttributeError.$factory('readonly attribute')
+    }
+)
+
+$B.function.__closure__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__closure__',
+    function(kls, f){
+        var free_vars = f.$function_infos[$B.func_attrs.free_vars]
+        if(free_vars === undefined || free_vars.length == 0){
+            return None
+        }
+        var cells = []
+        for(var i = 0; i < free_vars.length; i++){
+            try{
+                cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))
+            }catch(err){
+                // empty cell
+                cells.push($B.cell.$factory(None))
+            }
+        }
+        return $B.fast_tuple(cells)
+    }
+    ,
+    function(){
+        throw _b_.AttributeError.$factory('readonly attribute')
+    }
+)
+
+$B.function.__code__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__code__',
+    function(kls, f){
+        $B.check_infos(f)
+        var res = {__class__: code}
+        for(var _attr in f.$infos.__code__){
+            res[_attr] = f.$infos.__code__[_attr]
+        }
+        res.name = f.$infos.__name__
+        res.filename = f.$infos.__code__.co_filename
+        res.co_code = f + "" // Javascript source code
+        return res
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        if(! $B.$isinstance(value, _b_.code)){
+            throw _b_.TypeError.$factory(
+                '__code__ must be set to a code object')
+        }
+        f.$infos.__code__ = value
+    }
+)
 
 $B.function.__defaults__ = $B.getset_descriptor.$factory(
     $B.function,
@@ -3280,7 +3360,14 @@ $B.function.__defaults__ = $B.getset_descriptor.$factory(
     },
     function(kls, f, value){
         $B.check_infos(f)
+        if(value === _b_.None){
+            value = []
+        }else if(! $B.$isinstance(value, _b_.tuple)){
+            throw _b_.TypeError.$factory(
+                "__defaults__ must be set to a tuple object")
+        }
         f.$infos.__defaults__ = value
+        // Make a new version of arguments parser
         $B.make_args_parser(f)
     }
 )
@@ -3290,6 +3377,85 @@ $B.function.__delattr__ = function(self, attr){
         throw _b_.TypeError.$factory("can't delete function __dict__")
     }
 }
+
+$B.function.__dict__ = {}
+
+$B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__doc__',
+    function(kls, f){
+        $B.check_infos(f)
+        return f.$infos.__doc__
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        f.$infos.__doc__ = value
+    }
+)
+
+$B.function.__dict__.__module__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__module__',
+    function(kls, f){
+        $B.check_infos(f)
+        return f.$infos.__module__
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        f.$infos.__module__ = value
+    }
+)
+
+$B.function.__dict__.__name__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__name__',
+    function(kls, f){
+        $B.check_infos(f)
+        return f.$infos.__name__
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        if(! $B.$isinstance(value, _b_.str)){
+            throw _b_.TypeError.$factory(
+                '__name__ must be set to a string object')
+        }
+        f.$infos.__name__ = value
+    }
+)
+
+$B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__qualname__',
+    function(kls, f){
+        $B.check_infos(f)
+        return f.$infos.__qualname__
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        if(! $B.$isinstance(value, _b_.str)){
+            throw _b_.TypeError.$factory(
+                '__name__ must be set to a string object')
+        }
+        f.$infos.__qualname__ = value
+    }
+)
+
+$B.function.__dict__.__type_params__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__type_params__',
+    function(kls, f){
+        $B.check_infos(f)
+        return f.$infos.__type_params__
+    },
+    function(kls, f, value){
+        $B.check_infos(f)
+        if(! $B.$isinstance(value, _b_.tuple)){
+            throw _b_.TypeError.$factory(
+                'TypeError: __type_params__ must be set to a tuple')
+        }
+        f.$infos.__type_params__ = value
+    }
+)
 
 $B.function.__dir__ = function(self){
     if(self.$function_infos && ! self.$infos){
@@ -3325,66 +3491,40 @@ $B.function.__getattribute__ = function(self, attr){
     }
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
-    var klass_attr = $B.function[attr]
+    var klass_attr = $B.function.__dict__[attr]
+    if(klass_attr !== undefined && klass_attr.__class__.__get__){
+        return klass_attr.__class__.__get__(klass_attr, self)
+    }
+    klass_attr = $B.function[attr]
     if(klass_attr !== undefined){
-        if(klass_attr.__class__ === $B.getset_descriptor){
+        if(klass_attr.__class__ && klass_attr.__class__.__get__){
             return klass_attr.__class__.__get__(klass_attr, self)
         }
     }
-    if(self.$infos[attr] !== undefined){
-        if(attr == '__code__'){
-            var res = {__class__: code}
-            for(var _attr in self.$infos.__code__){
-                res[_attr] = self.$infos.__code__[_attr]
-            }
-            res.name = self.$infos.__name__
-            res.filename = self.$infos.__code__.co_filename
-            res.co_code = self + "" // Javascript source code
-            return res
-        }else if(attr == '__annotations__'){
-            // annotations is stored as a Javascript object
-            return $B.obj_dict(self.$infos[attr])
-        }else if(attr == '__defaults__'){
-            return $B.fast_tuple(self.$infos.__defaults__)
-        }else if(self.$infos.hasOwnProperty(attr)){
-            return self.$infos[attr]
-        }
-    }else if(self.$infos && self.$infos.__dict__ &&
-                _b_.dict.$contains_string(self.$infos.__dict__, attr)){
+    if(! self.$infos.__dict__){
+        console.log('no dict', self.$infos)
+    }
+    if(_b_.dict.$contains_string(self.$infos.__dict__, attr)){
             return _b_.dict.$getitem_string(self.$infos.__dict__, attr)
-    }else if(attr == "__closure__"){
-        var free_vars = self.$function_infos[$B.func_attrs.free_vars]
-        if(free_vars === undefined || free_vars.length == 0){
-            return None
-        }
-        var cells = []
-        for(var i = 0; i < free_vars.length; i++){
-            try{
-                cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))
-            }catch(err){
-                // empty cell
-                cells.push($B.cell.$factory(None))
-            }
-        }
-        return _b_.tuple.$factory(cells)
-    }else if(attr == '__code__'){
-        return self.$f_code
-    }else if(attr == '__builtins__'){
-        if(self.$infos && self.$infos.__globals__){
-            return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
-        }
-        return $B.obj_dict(_b_)
-    }else if(attr == "__globals__"){
-        return $B.obj_dict($B.imported[self.$infos.__module__])
     }else if(self.$attrs && self.$attrs[attr] !== undefined){
         return self.$attrs[attr]
     }else{
-        if(attr == 'abc'){
-            console.log('function', attr, 'use object.__ga__')
-        }
         return _b_.object.__getattribute__(self, attr)
     }
 }
+
+$B.function.__globals__ = $B.getset_descriptor.$factory(
+    $B.function,
+    '__globals__',
+    function(kls, f){
+        $B.check_infos(f)
+        return $B.obj_dict($B.imported[f.$infos.__module__])
+    }
+    ,
+    function(){
+        throw _b_.AttributeError.$factory('readonly attribute')
+    }
+)
 
 $B.function.__kwdefaults__ = $B.getset_descriptor.$factory(
     $B.function,
@@ -3395,7 +3535,14 @@ $B.function.__kwdefaults__ = $B.getset_descriptor.$factory(
     },
     function(kls, f, value){
         $B.check_infos(f)
+        if(value == _b_.None){
+            value = $B.empty_dict()
+        }else if(! $B.$isinstance(value, _b_.dict)){
+            throw _b_.TypeError.$factory(
+                '__kwdefaults__ must be set to a dict object')
+        }
         f.$infos.__kwdefaults__ = value
+        // Make a new version of arguments parser
         $B.make_args_parser(f)
     }
 )
@@ -3417,60 +3564,17 @@ $B.function.__setattr__ = function(self, attr, value){
         $B.make_function_infos(self, ...self.$function_infos)
     }
     var klass_attr = $B.function[attr]
-    if(klass_attr !== undefined){
-        if(klass_attr.__class__ === $B.getset_descriptor){
-            return klass_attr.__class__.__set__(klass_attr, self, value)
-        }
+    if(klass_attr !== undefined && klass_attr.__class_ &&
+            klass_attr.__class__.__get__ &&
+            klass_attr.__set__){
+        return klass_attr.__class__.__set__(klass_attr, self, value)
     }
-    if(attr == "__closure__"){
-        throw _b_.AttributeError.$factory("readonly attribute")
-    }else if(attr == "__defaults__"){
-        // Setting attribute __defaults__ requires making a new version of
-        // function attribute $defaults
-        if(value === _b_.None){
-            value = []
-        }else if(! $B.$isinstance(value, _b_.tuple)){
-            throw _b_.TypeError.$factory(
-                "__defaults__ must be set to a tuple object")
-        }
-        if(! self.$infos){
-            $B.make_function_infos(self, ...self.$function_infos)
-        }
-        if(self.$infos){
-            self.$infos.__defaults__ = value
-            $B.make_args_parser(self)
-        }else{
-            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
-                " of " + _b_.str.$factory(self))
-        }
-    }else if(attr == "__kwdefaults__"){
-        if(value === _b_.None){
-            value = $B.empty_dict
-        }else if(! $B.$isinstance(value, _b_.dict)){
-            throw _b_.TypeError.$factory(
-                "__kwdefaults__ must be set to a dict object")
-        }
-        if(! self.$infos){
-            $B.make_function_infos(self, ...self.$function_infos)
-        }
-        if(self.$infos){
-            self.$infos.__kwdefaults__ = value
-            $B.make_args_parser(self)
-        }else{
-            throw _b_.AttributeError.$factory("cannot set attribute " + attr +
-                " of " + _b_.str.$factory(self))
-        }
+    klass_attr = $B.function.__dict__[attr]
+    if(klass_attr && klass_attr.__class__.__get__ &&
+            klass_attr.__class__.__set__){
+        return klass_attr.__class__.__set__(klass_attr, self, value)
     }
-    if(self.$function_infos === undefined){
-        console.log('no function infos', self)
-        throw Error()
-    }
-    if(self.$infos[attr] !== undefined){
-        self.$infos[attr] = value
-    }else{
-        self.$attrs = self.$attrs || {}
-        self.$attrs[attr] = value
-    }
+    _b_.dict.$setitem(self.$infos.__dict__, attr, value)
 }
 
 $B.check_infos = function(f){
@@ -3519,6 +3623,7 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
         co_nlocals: co_varnames.length,
         co_posonlyargcount, co_qualname, co_varnames,
         co_positions: {}}
+    f.$infos.__dict__ = $B.empty_dict()
 }
 
 $B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
