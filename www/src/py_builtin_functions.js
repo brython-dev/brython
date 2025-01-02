@@ -943,7 +943,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "find_spec" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__type_params__" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1042,16 +1042,23 @@ $B.$getattr = function(obj, attr, _default){
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
+              }else if(obj.__dict__){
+                  return obj.__dict__
               }else if(obj.$function_infos || obj.$infos){
                   if(! obj.$infos){
                       $B.make_function_infos(obj, ...obj.$function_infos)
                   }
-                  if(obj.$infos.hasOwnProperty("__dict__")){
-                      return obj.$infos.__dict__
+                  if(obj.hasOwnProperty("__dict__")){
+                      return obj.__dict__
                   }else if(obj.$infos.hasOwnProperty("__func__") &&
-                          obj.$infos.__func__.$infos){
-                      return obj.$infos.__func__.$infos.__dict__
+                          obj.$infos.__func__){
+                      obj.$infos.__func__.__dict__ = obj.$infos.__func__.__dict__ ??
+                          $B.empty_dict()
                   }
+              }else if(obj.__class__ && obj.__class__.__dict__){
+                  // console.log('class has __dict__', obj.__class__.__dict__)
+              }else if(! obj.__class__){
+                  // console.log('no class', obj)
               }
               return $B.obj_dict(obj,
                   function(attr){
@@ -3269,7 +3276,10 @@ $B.function = {
     $is_class: true
 }
 
-$B.function.__annotations__ = $B.getset_descriptor.$factory(
+
+$B.function.__dict__ = {}
+
+$B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
     $B.function,
     '__annotations__',
     function(kls, f){
@@ -3286,7 +3296,7 @@ $B.function.__annotations__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__builtins__ = $B.getset_descriptor.$factory(
+$B.function.__dict__.__builtins__ = $B.getset_descriptor.$factory(
     $B.function,
     '__builtins__',
     function(kls, f){
@@ -3302,7 +3312,7 @@ $B.function.__builtins__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__closure__ = $B.getset_descriptor.$factory(
+$B.function.__dict__.__closure__ = $B.getset_descriptor.$factory(
     $B.function,
     '__closure__',
     function(kls, f){
@@ -3327,7 +3337,7 @@ $B.function.__closure__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__code__ = $B.getset_descriptor.$factory(
+$B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
     $B.function,
     '__code__',
     function(kls, f){
@@ -3351,7 +3361,7 @@ $B.function.__code__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__defaults__ = $B.getset_descriptor.$factory(
+$B.function.__dict__.__defaults__ = $B.getset_descriptor.$factory(
     $B.function,
     '__defaults__',
     function(kls, f){
@@ -3378,7 +3388,6 @@ $B.function.__delattr__ = function(self, attr){
     }
 }
 
-$B.function.__dict__ = {}
 
 $B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
     $B.function,
@@ -3480,40 +3489,7 @@ $B.function.__get__ = function(self, obj){
     return $B.method.$factory(self, obj)
 }
 
-$B.function.__getattribute__ = function(self, attr){
-    // Functions created from Python code have an attribute $function_infos, a
-    // list [name, defaults, kw_defaults, docstring, arg_names, args_vararg,
-    // args_kwarg, positional.length, __file__, lineno, flags, free_vars,
-    // args.kwonlyargs.length, '<lambda>' or name, args.posonlyargs.length,
-    // '<lambda>' or qualname, varnames]
-    if(! self.$infos && self.$function_infos){
-        $B.make_function_infos(self, ...self.$function_infos)
-    }
-    // Internal attributes __name__, __module__, __doc__ etc.
-    // are stored in self.$infos
-    var klass_attr = $B.function.__dict__[attr]
-    if(klass_attr !== undefined && klass_attr.__class__.__get__){
-        return klass_attr.__class__.__get__(klass_attr, self)
-    }
-    klass_attr = $B.function[attr]
-    if(klass_attr !== undefined){
-        if(klass_attr.__class__ && klass_attr.__class__.__get__){
-            return klass_attr.__class__.__get__(klass_attr, self)
-        }
-    }
-    if(! self.$infos.__dict__){
-        console.log('no dict', self.$infos)
-    }
-    if(_b_.dict.$contains_string(self.$infos.__dict__, attr)){
-            return _b_.dict.$getitem_string(self.$infos.__dict__, attr)
-    }else if(self.$attrs && self.$attrs[attr] !== undefined){
-        return self.$attrs[attr]
-    }else{
-        return _b_.object.__getattribute__(self, attr)
-    }
-}
-
-$B.function.__globals__ = $B.getset_descriptor.$factory(
+$B.function.__dict__.__globals__ = $B.getset_descriptor.$factory(
     $B.function,
     '__globals__',
     function(kls, f){
@@ -3526,7 +3502,7 @@ $B.function.__globals__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__kwdefaults__ = $B.getset_descriptor.$factory(
+$B.function.__dict__.__kwdefaults__ = $B.getset_descriptor.$factory(
     $B.function,
     '__kwdefaults__',
     function(kls, f){
@@ -3560,21 +3536,31 @@ $B.function.__repr__ = function(self){
 $B.function.__mro__ = [_b_.object]
 
 $B.function.__setattr__ = function(self, attr, value){
+    if(attr == 'abc'){
+        console.log('set', attr)
+    }
     if(self.$infos === undefined){
         $B.make_function_infos(self, ...self.$function_infos)
     }
     var klass_attr = $B.function[attr]
-    if(klass_attr !== undefined && klass_attr.__class_ &&
+    if(klass_attr !== undefined && klass_attr.__class__ &&
             klass_attr.__class__.__get__ &&
             klass_attr.__set__){
         return klass_attr.__class__.__set__(klass_attr, self, value)
     }
-    klass_attr = $B.function.__dict__[attr]
+    try{
+        klass_attr = _b_.dict.$getitem($B.function.__dict__, attr)
+    }catch(err){
+        klass_attr = null
+    }
     if(klass_attr && klass_attr.__class__.__get__ &&
             klass_attr.__class__.__set__){
         return klass_attr.__class__.__set__(klass_attr, self, value)
     }
-    _b_.dict.$setitem(self.$infos.__dict__, attr, value)
+    if(! self.__dict__){
+        self.__dict__ = $B.empty_dict()
+    }
+    _b_.dict.$setitem(self.__dict__, attr, value)
 }
 
 $B.check_infos = function(f){

@@ -327,6 +327,8 @@ var classmethod = _b_.classmethod = $B.make_class("classmethod",
     }
 )
 
+classmethod.__dict__ = {}
+
 classmethod.__get__ = function(){
     // adapted from
     // https://docs.python.org/3/howto/descriptor.html#class-methods
@@ -1299,7 +1301,7 @@ method.__getattribute__ = function(self, attr){
     }else if(method.hasOwnProperty(attr)){
         return _b_.object.__getattribute__(self, attr)
     }else{ // use attributes of underlying function __func__
-        return $B.function.__getattribute__(self.$infos.__func__, attr)
+        return _b_.object.__getattribute__(self.$infos.__func__, attr)
     }
 }
 

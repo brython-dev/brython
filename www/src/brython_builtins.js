@@ -411,7 +411,6 @@ $B.set_function_infos = function(f, attrs){
     }
 }
 
-
 var has_storage = typeof(Storage) !== "undefined"
 if(has_storage){
     $B.has_local_storage = false
