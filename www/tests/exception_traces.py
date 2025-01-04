@@ -55,7 +55,7 @@ except TypeError as exc:
         traceback.print_exc(file=out)
         assert expected in out.getvalue()
 
-    
+
 expected = """\
     abc[
     ~~~~
@@ -75,4 +75,3 @@ except TypeError as exc:
       out = io.StringIO()
       traceback.print_exc(file=out)
       assert expected in out.getvalue()
-    

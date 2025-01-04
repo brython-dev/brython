@@ -1145,7 +1145,6 @@ function handle_BinOp_error(trace, position, lines){
             start = i + 1
         }
     }
-
     trace.push(err_lines.join('\n'))
 }
 
@@ -1185,7 +1184,7 @@ function handle_Call_error(trace, position, lines){
         }
         call_end_pos += call_end
     }
-    
+
     var marks = ' '.repeat(call_start) +
         '~'.repeat(func_end_pos - call_start) +
         '^'.repeat(call_end_pos - func_end_pos)
