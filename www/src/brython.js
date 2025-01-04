@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-02 18:52:21.924410"
-__BRYTHON__.timestamp=1735840341923
+__BRYTHON__.compiled_date="2025-01-04 09:51:08.255604"
+__BRYTHON__.timestamp=1735980668255
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1651,7 +1651,8 @@ if($B.is_or_equals(key,item)){return true}}catch(err){if($B.$is_exc(err,[_b_.Sto
 throw err}}}}else{throw _b_.TypeError.$factory('argument of type '+
 `'${$B.class_name(obj)}' is not iterable`)}}}
 $B.$is_member=function(item,_set){return $B.member_func(_set)(item)}
-$B.$call=function(callable,position){callable=$B.$call1(callable)
+$B.$call=function(callable,position){try{callable=$B.$call1(callable)}catch(err){$B.set_exception_offsets(err,$B.decode_position(position))
+throw err}
 if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){position=$B.decode_position(position)
 $B.set_exception_offsets(exc,position)
 throw exc}}}
@@ -3865,14 +3866,6 @@ sort()}
 $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
-$B.function.__getattributeX__=function(self,attr){
-if(! self.$infos && self.$function_infos){$B.make_function_infos(self,...self.$function_infos)}
-var klass_attr=$B.function.__dict__[attr]
-if(klass_attr !==undefined && klass_attr.__class__.__get__){return klass_attr.__class__.__get__(klass_attr,self)}
-klass_attr=$B.function[attr]
-if(klass_attr !==undefined){if(klass_attr.__class__ && klass_attr.__class__.__get__){return klass_attr.__class__.__get__(klass_attr,self)}}
-if(! self.$infos.__dict__){console.log('no dict',self.$infos)}
-if(_b_.dict.$contains_string(self.$infos.__dict__,attr)){return _b_.dict.$getitem_string(self.$infos.__dict__,attr)}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.function.__dict__.__globals__=$B.getset_descriptor.$factory(
 $B.function,'__globals__',function(kls,f){$B.check_infos(f)
 return $B.obj_dict($B.imported[f.$infos.__module__])}
@@ -4676,6 +4669,88 @@ return err}
 _b_.ExceptionGroup.__bases__=[_b_.BaseExceptionGroup,_b_.Exception]
 _b_.ExceptionGroup.__mro__=_b_.type.$mro(_b_.ExceptionGroup)
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
+function make_trace_lines(text,marks,sep,lines,line_start,line_end){
+var min_indent=255
+for(var lnum=line_start;lnum < line_end+1;lnum++){var line=lines[lnum-1]
+var indent=line.length-line.trimLeft().length
+if(indent < min_indent){min_indent=indent}}
+var err_lines=[]
+var start=0
+for(var i=0,len=text.length;i <=len;i++){if(text[i]==sep ||i==len){var subline=text.substring(start,i)
+var left_ws=subline.length-subline.trimLeft().length
+err_lines.push('    '+text.substring(start,i).substring(min_indent))
+err_lines.push('    '+' '.repeat(left_ws-min_indent)+
+marks.substring(start+left_ws,i))
+start=i+1}}
+return err_lines.join('\n')}
+function handle_BinOp_error(trace,position,lines){
+var trace_lines=[]
+var[op_lineno,op_col_offset,op_end_lineno,op_end_col_offset,x_lineno,x_start,x_end_lineno,x_end,y_lineno,y_start,y_end_lineno,y_end]=position.slice(1)
+var sep='\n'
+var text=lines.slice(op_lineno-1,op_end_lineno).join(sep)
+var op_start_pos=op_col_offset
+if(x_end_lineno==op_lineno){var left_end_pos=x_end}else{var left_end_pos=lines[op_lineno-1].length+1
+var lnum=op_lineno+1
+while(lnum < x_end_lineno){left_end_pos+=lines[lnum-1].length+1
+lnum++}
+left_end_pos+=x_end}
+if(y_lineno==op_lineno){var right_start_pos=y_start}else{var right_start_pos=lines[op_lineno-1].length+1
+var lnum=op_lineno+1
+while(lnum < y_lineno){right_start_pos+=lines[lnum-1].length+1
+lnum++}
+right_start_pos+=y_start}
+var operator_start=left_end_pos
+while(' ()'.includes(text[operator_start])){operator_start++
+if(operator_start > 1000){throw Error('op start')}}
+var operator_end=operator_start+1
+while(operator_end < right_start_pos && !(' ()'+sep).includes(text[operator_end])){operator_end++
+if(operator_end > 1000){throw Error('op end')}}
+var operator_length=operator_end-operator_start
+if(op_end_lineno==op_lineno){var op_end_pos=op_end_col_offset}else{var op_end_pos=lines[op_lineno-1].length+1
+var lnum=op_lineno+1
+while(lnum < op_end_lineno){op_end_pos+=lines[lnum-1].length+1
+lnum++}
+op_end_pos+=op_end_col_offset}
+var marks=' '.repeat(op_start_pos)+
+'~'.repeat(left_end_pos-op_start_pos)+
+'~'.repeat(operator_start-left_end_pos)+
+'^'.repeat(operator_length)+
+'~'.repeat(right_start_pos-operator_end)+
+'~'.repeat(op_end_pos-right_start_pos)
+var min_indent=255
+for(var lnum=op_lineno;lnum < op_end_lineno+1;lnum++){var line=lines[lnum-1]
+var indent=line.length-line.trimLeft().length
+if(indent < min_indent){min_indent=indent}}
+var err_lines=[]
+var start=0
+for(var i=0,len=text.length;i <=len;i++){if(text[i]==sep ||i==len){var subline=text.substring(start,i)
+var left_ws=subline.length-subline.trimLeft().length
+err_lines.push('    '+text.substring(start,i).substring(min_indent))
+err_lines.push('    '+' '.repeat(left_ws-min_indent)+
+marks.substring(start+left_ws,i))
+start=i+1}}
+trace.push(err_lines.join('\n'))}
+function handle_Call_error(trace,position,lines){
+var trace_lines=[]
+var[call_lineno,call_start,call_end_lineno,call_end,func_end_lineno,func_end]=position.slice(1)
+var sep='&'
+var text=lines.slice(call_lineno-1,call_end_lineno).join(sep)
+if(func_end_lineno==call_lineno){var func_end_pos=func_end}else{var func_end_pos=lines[call_lineno-1].length+1
+var lnum=call_lineno+1
+while(lnum < func_end_lineno){func_end_pos+=lines[lnum-1].length+1
+lnum++}
+func_end_pos+=func_end}
+if(call_end_lineno==call_lineno){var call_end_pos=call_end}else{var call_end_pos=lines[call_lineno-1].length+1
+var lnum=call_lineno+1
+while(lnum < call_end_lineno){call_end_pos+=lines[lnum-1].length+1
+lnum++}
+call_end_pos+=call_end}
+var marks=' '.repeat(call_start)+
+'~'.repeat(func_end_pos-call_start)+
+'^'.repeat(call_end_pos-func_end_pos)
+var err_lines=make_trace_lines(
+text,marks,sep,lines,call_lineno,call_end_lineno)
+trace.push(err_lines)}
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}
@@ -4696,11 +4771,10 @@ count_repeats=0
 var src=$B.file_cache[filename]
 trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
-if(src){var lines=src.split('\n'),line=lines[lineno-1]
-if(line){trace.push('    '+line.trim())}else{console.log('no line',line)
-console.log('lineno',lineno)
-console.log('filename',filename)}
-if(err.$positions !==undefined && line){var position=err.$positions[frame_num],trace_line=''
+if(src){var lines=src.split('\n')
+if(err.$positions !==undefined){var position=err.$positions[frame_num],trace_line=''
+if(position && position[0]=='BinOp'){handle_BinOp_error(trace,position,lines)}else if(position && position[0]=='Call'){handle_Call_error(trace,position,lines)}else{var line=lines[lineno-1]
+if(line){trace.push('    '+line.trim())}
 if(position &&(
 (position[1]!=position[0]||
 (position[2]-position[1])!=line.trim().length ||
@@ -4712,7 +4786,7 @@ trace_line+='    '+' '.repeat(paddings[0])+
 '~'.repeat(paddings[1])+
 '^'.repeat(paddings[2])
 if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
-trace.push(trace_line)}}}else{console.log('no src for filename',filename)}}
+trace.push(trace_line)}}}}else{console.log('no src for filename',filename)}}
 if(count_repeats > 1){let len=trace.length
 for(let i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
@@ -11130,7 +11204,7 @@ var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data
 var modules={}
 var win=$B.jsobj2pyobj(globalThis)
 var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(new RegExp("/*$","g"),'')+
-'/Lib/browser/__init__.py',bind:function(){
+'/Lib/browser/__init__.py',__BRYTHON__,bind:function(){
 var $=$B.args("bind",3,{elt:null,evt:null,options:null},["elt","evt","options"],arguments,{options:_b_.None},null,null)
 var options=$.options
 if(typeof options=="boolean"){}else if(options.__class__===_b_.dict){var _options={}
@@ -11645,7 +11719,7 @@ function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
-function encode_position(a,b,c,d){if(d===undefined){return `[${[a, b, c]}]`}else{return `[${[a, b, c, d]}]`}}
+function encode_position(){return `[${Array.from(arguments).join(',')}]`}
 $B.decode_position=function(pos){return pos}
 function get_source_from_position(scopes,ast_obj){scopes.lines=scopes.lines ?? scopes.src.split('\n')
 var lines=scopes.lines,start_line=lines[ast_obj.lineno-1],res
@@ -12154,7 +12228,7 @@ ix--}
 if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){scopes[ix].has_await=true
 return prefix+`await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{compiler_error(this,"'await' outside function",this.value)}}
 $B.ast.BinOp.prototype.to_js=function(scopes){var res
-var position=encode_position(this.left.col_offset,this.col_offset,this.end_col_offset,this.right.end_col_offset)
+var position=encode_position("'BinOp'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.left.lineno,this.left.col_offset,this.left.end_lineno,this.left.end_col_offset,this.right.lineno,this.right.col_offset,this.right.end_lineno,this.right.end_col_offset)
 var name=this.op.constructor.$name
 var op=opclass2dunder[name]
 if(this.left instanceof $B.ast.Constant &&
@@ -12189,7 +12263,7 @@ return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
 var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`,end_col_offset=this.end_col_offset
 if(this.end_lineno > this.lineno){end_col_offset=this.col_offset+1}
-var position=encode_position(this.col_offset,this.col_offset,end_col_offset)
+var position=encode_position("'Call'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.func.end_lineno,this.func.end_col_offset)
 js+=`, ${position}`
 js+=')'
 var args=make_args.bind(this)(scopes),args_js=args.js.trim()
