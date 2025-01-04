@@ -87,23 +87,23 @@ def show(req):
 @bind("#get_test", "click")
 def get(ev):
     output.clear()
-    ajax.get("/cgi-bin/get_test.py",
+    ajax.get("/ajax_get",
              oncomplete=show,
              data={"foo": 34})
 
     req = ajax.Ajax()
-    req.open("GET", "/cgi-bin/get_test.py?bar=35")
+    req.open("GET", "/ajax_get?bar=35")
     req.bind("complete", show)
     req.send()
 
 @bind("#post_test", "click")
 def post(ev):
     output.clear()
-    ajax.post("/cgi-bin/post_test.py",
+    ajax.post("/ajax_post",
              oncomplete=show,
              data={"foo": 34})
     req = ajax.Ajax()
-    req.open("POST", "/cgi-bin/post_test.py")
+    req.open("POST", "/ajax_post")
     req.bind("complete", show)
     req.send({"bar": 45})
 
