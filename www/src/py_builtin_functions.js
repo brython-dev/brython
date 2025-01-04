@@ -3443,7 +3443,7 @@ $B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.str)){
             throw _b_.TypeError.$factory(
-                '__name__ must be set to a string object')
+                '__qualname__ must be set to a string object')
         }
         f.$infos.__qualname__ = value
     }
