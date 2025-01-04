@@ -130,12 +130,8 @@ function copy_position(target, origin){
     target.end_col_offset = origin.end_col_offset
 }
 
-function encode_position(a, b, c, d){
-    if(d === undefined){
-        return `[${[a, b, c]}]`
-    }else{
-        return `[${[a, b, c, d]}]`
-    }
+function encode_position(){
+    return `[${Array.from(arguments).join(',')}]`
 }
 
 $B.decode_position = function(pos){
@@ -1476,8 +1472,13 @@ $B.ast.Await.prototype.to_js = function(scopes){
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
     var res
-    var position = encode_position(this.left.col_offset, this.col_offset,
-                                    this.end_col_offset, this.right.end_col_offset)
+    var position = encode_position(
+        "'BinOp'", this.lineno, this.col_offset,
+        this.end_lineno, this.end_col_offset,
+        this.left.lineno, this.left.col_offset,
+        this.left.end_lineno, this.left.end_col_offset,
+        this.right.lineno, this.right.col_offset,
+        this.right.end_lineno, this.right.end_col_offset)
     var name = this.op.constructor.$name
     var op = opclass2dunder[name]
     if(this.left instanceof $B.ast.Constant &&
