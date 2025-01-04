@@ -1365,7 +1365,12 @@ $B.$is_member = function(item, _set){
 }
 
 $B.$call = function(callable, position){
-    callable = $B.$call1(callable)
+    try{
+        callable = $B.$call1(callable)
+    }catch(err){
+        $B.set_exception_offsets(err, $B.decode_position(position))
+        throw err
+    }
     if(position){
         return function(){
             try{
