@@ -1006,6 +1006,36 @@ _b_.ExceptionGroup.__mro__ = _b_.type.$mro(_b_.ExceptionGroup)
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
+function make_trace_lines(text, marks, sep, lines, line_start, line_end){
+    // Compute minimal indent in error lines
+    // The line with minimum indent will be printed with a 4 space
+    // indentation
+    var min_indent = 255
+    for(var lnum = line_start; lnum < line_end + 1; lnum++){
+        var line = lines[lnum - 1]
+        var indent = line.length - line.trimLeft().length
+        if(indent < min_indent){
+            min_indent = indent
+        }
+    }
+
+    var err_lines = []
+    var start = 0
+    for(var i = 0, len = text.length; i <= len; i++){
+        if(text[i] == sep || i == len){
+            var subline = text.substring(start, i)
+            // don't write '~' under leading whitespace
+            var left_ws = subline.length - subline.trimLeft().length
+            err_lines.push('    ' + text.substring(start, i).substring(min_indent))
+            err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
+                marks.substring(start + left_ws, i))
+            start = i + 1
+        }
+    }
+
+    return err_lines.join('\n')
+}
+
 function handle_BinOp_error(trace, position, lines){
     // Special case for operation "x / y" when "y" evaluates to zero
     // "position" is [x.col_offset, x.end_col_offset,
@@ -1019,8 +1049,9 @@ function handle_BinOp_error(trace, position, lines){
          x_lineno, x_start, x_end_lineno, x_end,
          y_lineno, y_start, y_end_lineno, y_end] = position.slice(1)
     // make a string with the lines from op_lineno to op_end_lineno
-    var sep = '&'
+    var sep = '\n'
     var text = lines.slice(op_lineno - 1, op_end_lineno).join(sep)
+
     // position of op start in text
     var op_start_pos = op_col_offset
 
@@ -1114,9 +1145,55 @@ function handle_BinOp_error(trace, position, lines){
             start = i + 1
         }
     }
-    //console.log(err_lines.join('\n'))
 
     trace.push(err_lines.join('\n'))
+}
+
+function handle_Call_error(trace, position, lines){
+    // "position" is
+    // [call.lineno, call.col_offset, call.end_lineno, call.end_col_offset,
+    //  func.end_lineno, func.end_call_offset]
+    var trace_lines = []
+    var [call_lineno, call_start, call_end_lineno, call_end,
+         func_end_lineno, func_end] = position.slice(1)
+    // make a string with the lines from call_lineno to call_end_lineno
+    var sep = '&'
+    var text = lines.slice(call_lineno - 1, call_end_lineno).join(sep)
+
+    // position of function end
+    if(func_end_lineno == call_lineno){
+        var func_end_pos = func_end
+    }else{
+        var func_end_pos = lines[call_lineno - 1].length + 1
+        var lnum = call_lineno + 1
+        while(lnum < func_end_lineno){
+            func_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        func_end_pos += func_end
+    }
+
+    // position of call end
+    if(call_end_lineno == call_lineno){
+        var call_end_pos = call_end
+    }else{
+        var call_end_pos = lines[call_lineno - 1].length + 1
+        var lnum = call_lineno + 1
+        while(lnum < call_end_lineno){
+            call_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        call_end_pos += call_end
+    }
+    
+    var marks = ' '.repeat(call_start) +
+        '~'.repeat(func_end_pos - call_start) +
+        '^'.repeat(call_end_pos - func_end_pos)
+
+    var err_lines = make_trace_lines(
+        text, marks, sep, lines, call_lineno, call_end_lineno)
+
+    trace.push(err_lines)
 }
 
 function trace_from_stack(err){
@@ -1180,6 +1257,8 @@ function trace_from_stack(err){
                     trace_line = ''
                 if(position && position[0] == 'BinOp'){
                     handle_BinOp_error(trace, position, lines)
+                }else if(position && position[0] == 'Call'){
+                    handle_Call_error(trace, position, lines)
                 }else{
                     var line = lines[lineno - 1]
                     if(line){

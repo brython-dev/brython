@@ -1472,8 +1472,8 @@ $B.ast.Await.prototype.to_js = function(scopes){
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
     var res
-    var position = encode_position(
-        "'BinOp'", this.lineno, this.col_offset,
+    var position = encode_position("'BinOp'",
+        this.lineno, this.col_offset,
         this.end_lineno, this.end_col_offset,
         this.left.lineno, this.left.col_offset,
         this.left.end_lineno, this.left.end_col_offset,
@@ -1567,8 +1567,10 @@ $B.ast.Call.prototype.to_js = function(scopes){
         end_col_offset = this.col_offset + 1
     }
 
-    var position = encode_position(this.col_offset, this.col_offset,
-                            end_col_offset)
+    var position = encode_position("'Call'",
+        this.lineno, this.col_offset,
+        this.end_lineno, this.end_col_offset,
+        this.func.end_lineno, this.func.end_col_offset)
     js += `, ${position}`
 
     js += ')'
