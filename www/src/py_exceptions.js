@@ -1006,6 +1006,196 @@ _b_.ExceptionGroup.__mro__ = _b_.type.$mro(_b_.ExceptionGroup)
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
+function make_trace_lines(text, marks, sep, lines, line_start, line_end){
+    // Compute minimal indent in error lines
+    // The line with minimum indent will be printed with a 4 space
+    // indentation
+    var min_indent = 255
+    for(var lnum = line_start; lnum < line_end + 1; lnum++){
+        var line = lines[lnum - 1]
+        var indent = line.length - line.trimLeft().length
+        if(indent < min_indent){
+            min_indent = indent
+        }
+    }
+
+    var err_lines = []
+    var start = 0
+    for(var i = 0, len = text.length; i <= len; i++){
+        if(text[i] == sep || i == len){
+            var subline = text.substring(start, i)
+            // don't write '~' under leading whitespace
+            var left_ws = subline.length - subline.trimLeft().length
+            err_lines.push('    ' + text.substring(start, i).substring(min_indent))
+            err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
+                marks.substring(start + left_ws, i))
+            start = i + 1
+        }
+    }
+
+    return err_lines.join('\n')
+}
+
+function handle_BinOp_error(trace, position, lines){
+    // Special case for operation "x / y" when "y" evaluates to zero
+    // "position" is [x.col_offset, x.end_col_offset,
+    //               [y.col_offset, y.end_col_offset]
+    // if "x" or "y" are surrounded by parenthesis, the offsets don't
+    // take them into account, but the traceback must start at the first
+    // opening parenthesis of "x" and end at the last closing parenthesis of
+    // "y"
+    var trace_lines = []
+    var [op_lineno, op_col_offset, op_end_lineno, op_end_col_offset,
+         x_lineno, x_start, x_end_lineno, x_end,
+         y_lineno, y_start, y_end_lineno, y_end] = position.slice(1)
+    // make a string with the lines from op_lineno to op_end_lineno
+    var sep = '\n'
+    var text = lines.slice(op_lineno - 1, op_end_lineno).join(sep)
+
+    // position of op start in text
+    var op_start_pos = op_col_offset
+
+    // position of left end
+    if(x_end_lineno == op_lineno){
+        var left_end_pos = x_end
+    }else{
+        var left_end_pos = lines[op_lineno - 1].length + 1
+        var lnum = op_lineno + 1
+        while(lnum < x_end_lineno){
+            left_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        left_end_pos += x_end
+    }
+    // position of right start
+    if(y_lineno == op_lineno){
+        var right_start_pos = y_start
+    }else{
+        var right_start_pos = lines[op_lineno - 1].length + 1
+        var lnum = op_lineno + 1
+        while(lnum < y_lineno){
+            right_start_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        right_start_pos += y_start
+    }
+
+    // position of operator: only cars between left end and right start
+    // different from ' ', '(' and ')'
+    var operator_start = left_end_pos
+    while(' ()'.includes(text[operator_start])){
+        operator_start++
+        if(operator_start > 1000){
+            throw Error('op start')
+        }
+    }
+    var operator_end = operator_start + 1
+
+    while(operator_end < right_start_pos && ! (' ()' + sep).includes(text[operator_end])){
+        operator_end++
+        if(operator_end > 1000){
+            throw Error('op end')
+        }
+    }
+
+    var operator_length = operator_end - operator_start
+
+    // position of op end
+    if(op_end_lineno == op_lineno){
+        var op_end_pos = op_end_col_offset
+    }else{
+        var op_end_pos = lines[op_lineno - 1].length + 1
+        var lnum = op_lineno + 1
+        while(lnum < op_end_lineno){
+            op_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        op_end_pos += op_end_col_offset
+    }
+
+    var marks = ' '.repeat(op_start_pos) +
+        '~'.repeat(left_end_pos - op_start_pos) +
+        '~'.repeat(operator_start - left_end_pos) +
+        '^'.repeat(operator_length) +
+        '~'.repeat(right_start_pos - operator_end) +
+        '~'.repeat(op_end_pos - right_start_pos)
+
+    // Compute minimal indent in error lines
+    // The line with minimum indent will be printed with a 4 space
+    // indentation
+    var min_indent = 255
+    for(var lnum = op_lineno; lnum < op_end_lineno + 1; lnum++){
+        var line = lines[lnum - 1]
+        var indent = line.length - line.trimLeft().length
+        if(indent < min_indent){
+            min_indent = indent
+        }
+    }
+
+    var err_lines = []
+    var start = 0
+    for(var i = 0, len = text.length; i <= len; i++){
+        if(text[i] == sep || i == len){
+            var subline = text.substring(start, i)
+            // don't write '~' under leading whitespace
+            var left_ws = subline.length - subline.trimLeft().length
+            err_lines.push('    ' + text.substring(start, i).substring(min_indent))
+            err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
+                marks.substring(start + left_ws, i))
+            start = i + 1
+        }
+    }
+
+    trace.push(err_lines.join('\n'))
+}
+
+function handle_Call_error(trace, position, lines){
+    // "position" is
+    // [call.lineno, call.col_offset, call.end_lineno, call.end_col_offset,
+    //  func.end_lineno, func.end_call_offset]
+    var trace_lines = []
+    var [call_lineno, call_start, call_end_lineno, call_end,
+         func_end_lineno, func_end] = position.slice(1)
+    // make a string with the lines from call_lineno to call_end_lineno
+    var sep = '&'
+    var text = lines.slice(call_lineno - 1, call_end_lineno).join(sep)
+
+    // position of function end
+    if(func_end_lineno == call_lineno){
+        var func_end_pos = func_end
+    }else{
+        var func_end_pos = lines[call_lineno - 1].length + 1
+        var lnum = call_lineno + 1
+        while(lnum < func_end_lineno){
+            func_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        func_end_pos += func_end
+    }
+
+    // position of call end
+    if(call_end_lineno == call_lineno){
+        var call_end_pos = call_end
+    }else{
+        var call_end_pos = lines[call_lineno - 1].length + 1
+        var lnum = call_lineno + 1
+        while(lnum < call_end_lineno){
+            call_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        call_end_pos += call_end
+    }
+    
+    var marks = ' '.repeat(call_start) +
+        '~'.repeat(func_end_pos - call_start) +
+        '^'.repeat(call_end_pos - func_end_pos)
+
+    var err_lines = make_trace_lines(
+        text, marks, sep, lines, call_lineno, call_end_lineno)
+
+    trace.push(err_lines)
+}
+
 function trace_from_stack(err){
 
     function handle_repeats(src, count_repeats){
@@ -1058,42 +1248,44 @@ function trace_from_stack(err){
         trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
         if(src){
-            var lines = src.split('\n'),
-                line = lines[lineno - 1]
-            if(line){
-                trace.push('    ' + line.trim())
-            }else{
-                console.log('no line', line)
-                console.log('lineno', lineno)
-                console.log('filename', filename)
-                //console.log('src', src)
-                //console.log('stack', stack)
-            }
-            // preliminary for PEP 657
-            if(err.$positions !== undefined && line){
+            var lines = src.split('\n')
+            // PEP 657
+            // If err.$positions is set, it is an object indexed by frame
+            // number
+            if(err.$positions !== undefined){
                 var position = err.$positions[frame_num],
                     trace_line = ''
-                if(position && (
-                            (position[1] != position[0] ||
-                            (position[2] - position[1]) != line.trim().length ||
-                            position[3]))){
-                    var indent = line.length - line.trimLeft().length
-                    var paddings = [position[0] - indent,
-                                    position[1] - position[0],
-                                    position[2] - position[1]]
-                    for(var padding of paddings){
-                        if(padding < 0){
-                            console.log('wrong values, position', position, 'indent', indent)
-                            paddings[paddings.indexOf(padding)] = 0
+                if(position && position[0] == 'BinOp'){
+                    handle_BinOp_error(trace, position, lines)
+                }else if(position && position[0] == 'Call'){
+                    handle_Call_error(trace, position, lines)
+                }else{
+                    var line = lines[lineno - 1]
+                    if(line){
+                        trace.push('    ' + line.trim())
+                    }
+                    if(position && (
+                                (position[1] != position[0] ||
+                                (position[2] - position[1]) != line.trim().length ||
+                                position[3]))){
+                        var indent = line.length - line.trimLeft().length
+                        var paddings = [position[0] - indent,
+                                        position[1] - position[0],
+                                        position[2] - position[1]]
+                        for(var padding of paddings){
+                            if(padding < 0){
+                                console.log('wrong values, position', position, 'indent', indent)
+                                paddings[paddings.indexOf(padding)] = 0
+                            }
                         }
+                        trace_line += '    ' + ' '.repeat(paddings[0]) +
+                            '~'.repeat(paddings[1]) +
+                            '^'.repeat(paddings[2])
+                        if(position[3] !== undefined){
+                            trace_line += '~'.repeat(position[3] - position[2])
+                        }
+                        trace.push(trace_line)
                     }
-                    trace_line += '    ' + ' '.repeat(paddings[0]) +
-                        '~'.repeat(paddings[1]) +
-                        '^'.repeat(paddings[2])
-                    if(position[3] !== undefined){
-                        trace_line += '~'.repeat(position[3] - position[2])
-                    }
-                    trace.push(trace_line)
                 }
             }
         }else{

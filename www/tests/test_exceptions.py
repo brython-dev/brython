@@ -215,4 +215,7 @@ assert EnvironmentError is OSError
 ioerror = IOError()
 assert type(ioerror) is OSError
 
+# issue 2540
+import exception_traces
+    
 print('all tests passed...')
