@@ -17,6 +17,7 @@
         __file__: $B.brython_path.replace(new RegExp("/*$", "g"),'') +
             '/Lib/browser/__init__.py',
 
+        __BRYTHON__,
         bind:function(){
             // bind(element, event) is a decorator for callback function
             var $ = $B.args("bind", 3, {elt: null, evt: null, options: null},
