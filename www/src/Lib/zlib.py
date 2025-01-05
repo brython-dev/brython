@@ -31,7 +31,7 @@ Z_RLE = 3
 Z_SYNC_FLUSH = 2
 Z_TREES = 6
 
-trace = 1
+trace = 0
 
 class Error(Exception):
     pass
