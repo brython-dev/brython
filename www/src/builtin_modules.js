@@ -89,6 +89,7 @@
                 null, null)
             $B.runPythonSource($.src, $.name)
         },
+        scope: globalThis,
         self: win,
         win: win,
         window: win
