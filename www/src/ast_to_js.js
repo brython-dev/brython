@@ -1108,12 +1108,20 @@ function maybe_add_static(attr, scopes){
     }
 }
 
+function add_to_positions(scopes, positions){
+    // add a positions table to the list of positions for current frame
+    var up_scope = last_scope(scopes)
+    up_scope.positions = up_scope.positions ?? []
+    up_scope.positions[up_scope.positions.length] = positions
+    return up_scope.positions.length - 1
+}
 
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : "''",
-        position = encode_position(this.test.col_offset,
-            this.test.col_offset, this.test.end_col_offset)
+        position = encode_position("'Assert'",
+                this.test.lineno, this.test.col_offset,
+                this.test.end_lineno, this.test.end_col_offset)
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     return js + prefix + `$B.assert(${test}, ${msg}, ${position})`
 }
@@ -1209,14 +1217,17 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             }
         }
         var iter_id = 'it_' + make_id()
+        var position = encode_position("'Unpack'",
+            target.lineno, target.col_offset,
+            target.end_lineno, target.end_col_offset)
+        var inum = add_to_positions(scopes, position)
         js += prefix + `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
         if(nb_after_starred !== undefined){
             js += `, ${nb_after_starred}`
         }
-        var position = encode_position(target.col_offset, target.col_offset,
-                       target.end_col_offset)
-        js += `, ${position})\n`
+
+        js += `, ${inum})\n`
         var assigns = []
         for(var elt of target.elts){
             if(elt instanceof $B.ast.Starred){
@@ -1390,11 +1401,11 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
-    var position = encode_position(this.value.col_offset,
-                                this.value.col_offset,
-                                this.end_col_offset)
+    var position = encode_position("'Attr'",
+            this.value.lineno, this.value.col_offset, this.end_col_offset)
+    var inum = add_to_positions(scopes, position)
     return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
-           `'${attr}', ${position})`
+           `'${attr}', ${inum})`
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
@@ -1485,7 +1496,7 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
             this.right instanceof $B.ast.Constant){
         // calculate result at translation time
         try{
-            res = $B.rich_op(op, this.left.value, this.right.value, position)
+            res = $B.rich_op(op, this.left.value, this.right.value)
             if(typeof res == 'string'){
                 res = res.replace(new RegExp("'", 'g'), "\\'")
             }
@@ -1495,8 +1506,10 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
             // error will be handled at runtime
         }
     }
-    return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
-        `${$B.js_from_ast(this.right, scopes)}, ${position})`
+    var inum = add_to_positions(scopes, position)
+    return `$B.rich_op('${op}', ` +
+        `${$B.js_from_ast(this.left, scopes)}, ` +
+        `${$B.js_from_ast(this.right, scopes)}, ${inum})`
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){
@@ -1560,20 +1573,14 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
-    var func =  $B.js_from_ast(this.func, scopes),
-        js = `$B.$call(${func}`,
-        end_col_offset = this.end_col_offset
-    if(this.end_lineno > this.lineno){
-        end_col_offset = this.col_offset + 1
-    }
-
     var position = encode_position("'Call'",
         this.lineno, this.col_offset,
         this.end_lineno, this.end_col_offset,
         this.func.end_lineno, this.func.end_col_offset)
-    js += `, ${position}`
+    var inum = add_to_positions(scopes, position)
+    var func =  $B.js_from_ast(this.func, scopes),
+        js = `$B.$call(${func}, ${inum})`
 
-    js += ')'
     var args = make_args.bind(this)(scopes),
         args_js = args.js.trim()
 
@@ -1697,7 +1704,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
               prefix + `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
-    js += prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    js += prefix + `$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
     var qualname = this.name
     var ix = scopes.length - 1
     while(ix >= 0){
@@ -1809,7 +1816,15 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.push(class_scope)
 
-    js += add_body(this.body, scopes)
+    var index_for_positions = js.length
+
+    js += add_body(this.body, scopes) + '\n'
+
+    if(class_scope.positions){
+        js = js.substr(0, index_for_positions) +
+             prefix + `frame.positions = [${class_scope.positions}]\n` +
+             js.substr(index_for_positions)
+    }
 
     scopes.pop()
 
@@ -1818,7 +1833,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
     }
 
-    js += '\n' + prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
+    js += prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
           prefix + `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}], ` +
               `[${static_attrs}], ${this.lineno})\n`
@@ -2844,6 +2859,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
           `locals, "${gname}", ${globals_name}, ${name2}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
 
+    if(func_scope.positions){
+        js += prefix + `frame.positions = [${func_scope.positions}]\n`
+    }
+
     if(func_scope.needs_stack_length){
         js += prefix + `var stack_length = $B.count_frames()\n`
     }
@@ -3053,8 +3072,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `${func_ref} = ${name2}\n`
 
-    // js += prefix + `${func_ref}.__annotations__ = _b_.dict.$from_array(${anns})\n`
-    
     if(has_type_params){
         scopes.pop()
     }
@@ -3704,6 +3721,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
+    var insert_positions = js.length
     if(! scopes.imported){
           js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
     }
@@ -3729,6 +3747,12 @@ $B.ast.Module.prototype.to_js = function(scopes){
               prefix + 'throw err\n'
     dedent()
     js += prefix + `}`
+    var positions = scopes[scopes.length - 1].positions
+    if(positions && positions.length > 0){
+        js = js.substr(0, insert_positions) +
+             `frame.positions = [${positions}]\n` +
+             js.substr(insert_positions)
+    }
     scopes.pop()
     if(prefix.length != 0){
         console.warn('wrong indent !', prefix.length)
@@ -3880,10 +3904,13 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     if(this.slice instanceof $B.ast.Slice){
         return `$B.getitem_slice(${value}, ${slice})`
     }else{
-        var position = encode_position(this.value.col_offset,
-                                    this.slice.col_offset,
-                                    this.slice.end_col_offset)
-        return `$B.$getitem(${value}, ${slice},${position})`
+        var position = encode_position("'Subscript'",
+            this.value.lineno, this.value.col_offset,
+            this.value.end_lineno, this.value.end_col_offset,
+            this.slice.lineno, this.slice.col_offset,
+            this.end_lineno, this.end_col_offset)
+        var inum = add_to_positions(scopes, position)
+        return `$B.$getitem(${value}, ${slice}, ${inum})`
     }
 }
 

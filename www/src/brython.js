@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-04 11:22:03.710122"
-__BRYTHON__.timestamp=1735986123709
+__BRYTHON__.compiled_date="2025-01-06 08:17:01.906092"
+__BRYTHON__.timestamp=1736147821905
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1487,10 +1487,12 @@ try{var value=next_func()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
 throw err}}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
-var position,position_rank=3
+var inum_rank=3
 if(has_starred){var nb_after_starred=arguments[3]
-position_rank++}
-position=$B.decode_position(arguments[position_rank])
+inum_rank++}
+var inum=arguments[inum_rank]
+var position
+if(inum !==undefined){position=$B.decode_position($B.get_position_from_inum(inum))}
 var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
 if((! has_starred &&(right_length < nb_targets))||
 (has_starred &&(right_length < nb_targets-1))){var exc=_b_.ValueError.$factory(`not enough values to unpack `+
@@ -1511,8 +1513,10 @@ var res=t.slice(t.index,t.length-nb_after_starred)
 t.index=t.length-nb_after_starred-1
 return $B.$list(res)}
 return t}
-$B.set_lineno=function(frame,lineno){frame.$lineno=lineno
+$B.set_lineno=function(frame,lineno,type){frame.$lineno=lineno
 if(frame.$f_trace !==_b_.None){$B.trace_line()}
+if(type){frame[type]=frame[type]||{}
+frame[type][lineno]=true}
 return true}
 $B.get_method_class=function(method,ns,qualname,refs){
 var klass=ns
@@ -1534,10 +1538,13 @@ position=$B.decode_position(position)
 $B.set_exception_offsets(exc,position)
 throw exc}}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
-throw _b_.IndexError.$factory(type+" index out of range")}
-$B.$getitem=function(obj,item,position){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
+return _b_.IndexError.$factory(type+" index out of range")}
+$B.$getitem=function(obj,item,inum){try{return $B.$getitem1(obj,item)}catch(err){if(inum !==undefined){var position=$B.get_position_from_inum(inum)
+$B.set_exception_offsets(err,$B.decode_position(position))}
+throw err}}
+$B.$getitem1=function(obj,item){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
 if(typeof item=="number"){if(is_list ||typeof obj=="string"){item=item >=0 ? item :obj.length+item
-if(obj[item]!==undefined){return obj[item]}else{index_error(obj)}}}else if(item.valueOf && typeof item.valueOf()=="string" && is_dict){return _b_.dict.$getitem(obj,item)}
+if(obj[item]!==undefined){return obj[item]}else{throw index_error(obj)}}}else if(item.valueOf && typeof item.valueOf()=="string" && is_dict){return _b_.dict.$getitem(obj,item)}
 if(obj.$is_class){if(! Array.isArray(item)){item=$B.fast_tuple([item])}
 if(obj===_b_.type){return $B.$class_getitem(obj,item)}
 var class_gi=$B.$getattr(obj,"__class_getitem__",_b_.None)
@@ -1563,7 +1570,8 @@ res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
 return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
-$B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,$B.decode_position(position))
+$B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){var position=$B.get_position_from_inum(inum)
+$B.set_exception_offsets(err,$B.decode_position(position))
 throw err}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
 ! obj.$is_js_array &&
@@ -1651,21 +1659,22 @@ if($B.is_or_equals(key,item)){return true}}catch(err){if($B.$is_exc(err,[_b_.Sto
 throw err}}}}else{throw _b_.TypeError.$factory('argument of type '+
 `'${$B.class_name(obj)}' is not iterable`)}}}
 $B.$is_member=function(item,_set){return $B.member_func(_set)(item)}
-$B.$call=function(callable,position){try{callable=$B.$call1(callable)}catch(err){$B.set_exception_offsets(err,$B.decode_position(position))
+$B.$call=function(callable,inum){try{callable=$B.$call1(callable)}catch(err){if(inum !==undefined){var position=$B.get_position_from_inum(inum)
+$B.set_exception_offsets(err,$B.decode_position(position))}
 throw err}
-if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){position=$B.decode_position(position)
-$B.set_exception_offsets(exc,position)
-throw exc}}}
+return function(){try{return callable.apply(null,arguments)}catch(exc){if(inum !==undefined){var position=$B.get_position_from_inum(inum)
+$B.set_exception_offsets(exc,$B.decode_position(position))}
+throw exc}}
 return callable}
 $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.__class__===_b_.staticmethod){return callable.__func__}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
 return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_class){
 return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$in_js_module){
 return function(){var res=callable(...arguments)
-return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$function_infos &&
-(callable.$function_infos[$B.func_attrs.flags]& 32)){
+return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$function_infos){var flags=callable.$function_infos[$B.func_attrs.flags]
+if(flags & $B.COMPILER_FLAGS.GENERATOR){
 $B.frame_obj.frame.$has_generators=true}
-if(callable.$is_async){if($B.frame_obj !==null){var frame=$B.frame_obj.frame
-frame.$async=callable}}
+if(flags & $B.COMPILER_FLAGS.COROUTINE){if($B.frame_obj !==null){var frame=$B.frame_obj.frame
+frame.$async=callable}}}
 return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
@@ -1814,7 +1823,10 @@ throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
 var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*",__and__:'&',__or__:'|'}
-$B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,$B.decode_position(position))}
+$B.get_position_from_inum=function(inum){
+if($B.frame_obj !==null){var frame=$B.frame_obj.frame
+if(frame.positions && frame.positions[inum]){return frame.positions[inum]}}}
+$B.rich_op=function(op,x,y,inum){try{return $B.rich_op1(op,x,y)}catch(exc){if(inum !==undefined){$B.set_exception_offsets(exc,$B.decode_position($B.get_position_from_inum(inum)))}
 throw exc}}
 $B.rich_op1=function(op,x,y){
 var res_is_int,res_is_float,x_num,y_num
@@ -3846,7 +3858,7 @@ $B.function.__dict__.__qualname__=$B.getset_descriptor.$factory(
 $B.function,'__qualname__',function(kls,f){$B.check_infos(f)
 return f.$infos.__qualname__},function(kls,f,value){$B.check_infos(f)
 if(! $B.$isinstance(value,_b_.str)){throw _b_.TypeError.$factory(
-'__name__ must be set to a string object')}
+'__qualname__ must be set to a string object')}
 f.$infos.__qualname__=value}
 )
 $B.function.__dict__.__type_params__=$B.getset_descriptor.$factory(
@@ -4677,15 +4689,43 @@ if(indent < min_indent){min_indent=indent}}
 var err_lines=[]
 var start=0
 for(var i=0,len=text.length;i <=len;i++){if(text[i]==sep ||i==len){var subline=text.substring(start,i)
-var left_ws=subline.length-subline.trimLeft().length
 err_lines.push('    '+text.substring(start,i).substring(min_indent))
+var left_ws=subline.length-subline.trimLeft().length
+var right_ws=subline.length-subline.trimRight().length
 err_lines.push('    '+' '.repeat(left_ws-min_indent)+
-marks.substring(start+left_ws,i))
+marks.substring(start+left_ws,i-right_ws))
 start=i+1}}
 return err_lines.join('\n')}
-function handle_BinOp_error(trace,position,lines){
+function handle_Assert_error(trace,positions,lines){
+console.log('assert error',positions)
 var trace_lines=[]
-var[op_lineno,op_col_offset,op_end_lineno,op_end_col_offset,x_lineno,x_start,x_end_lineno,x_end,y_lineno,y_start,y_end_lineno,y_end]=position.slice(1)
+var[test_lineno,test_start,test_end_lineno,test_end]=positions.slice(1)
+var sep='\n'
+var text=lines.slice(test_lineno-1,test_end_lineno).join(sep)
+if(test_end_lineno==test_lineno){var test_end_pos=test_end}else{var test_end_pos=lines[test_lineno-1].length+1
+var lnum=test_lineno+1
+while(lnum < test_end_lineno){test_end_pos+=lines[lnum-1].length+1
+lnum++}
+test_end_pos+=test_end}
+var marks=' '.repeat(test_start)+
+'~'.repeat(test_end_pos-test_start)
+var err_lines=make_trace_lines(
+text,marks,sep,lines,test_lineno,test_end_lineno)
+console.log('err lines',err_lines)
+trace.push(err_lines)}
+function handle_Attribute_error(trace,positions,lines){
+var trace_lines=[]
+var[attr_lineno,attr_start,attr_end]=positions.slice(1)
+var sep='&'
+var text=lines.slice(attr_lineno-1,attr_lineno).join(sep)
+var marks=' '.repeat(attr_start)+
+'~'.repeat(attr_end-attr_start)
+var err_lines=make_trace_lines(
+text,marks,sep,lines,attr_lineno,attr_lineno)
+trace.push(err_lines)}
+function handle_BinOp_error(trace,positions,lines){
+var trace_lines=[]
+var[op_lineno,op_col_offset,op_end_lineno,op_end_col_offset,x_lineno,x_start,x_end_lineno,x_end,y_lineno,y_start,y_end_lineno,y_end]=positions.slice(1)
 var sep='\n'
 var text=lines.slice(op_lineno-1,op_end_lineno).join(sep)
 var op_start_pos=op_col_offset
@@ -4730,10 +4770,10 @@ err_lines.push('    '+' '.repeat(left_ws-min_indent)+
 marks.substring(start+left_ws,i))
 start=i+1}}
 trace.push(err_lines.join('\n'))}
-function handle_Call_error(trace,position,lines){
+function handle_Call_error(trace,positions,lines){
 var trace_lines=[]
-var[call_lineno,call_start,call_end_lineno,call_end,func_end_lineno,func_end]=position.slice(1)
-var sep='&'
+var[call_lineno,call_start,call_end_lineno,call_end,func_end_lineno,func_end]=positions.slice(1)
+var sep='\n'
 var text=lines.slice(call_lineno-1,call_end_lineno).join(sep)
 if(func_end_lineno==call_lineno){var func_end_pos=func_end}else{var func_end_pos=lines[call_lineno-1].length+1
 var lnum=call_lineno+1
@@ -4750,6 +4790,50 @@ var marks=' '.repeat(call_start)+
 '^'.repeat(call_end_pos-func_end_pos)
 var err_lines=make_trace_lines(
 text,marks,sep,lines,call_lineno,call_end_lineno)
+trace.push(err_lines)}
+function handle_Subscript_error(trace,positions,lines){
+var trace_lines=[]
+var[value_lineno,value_start,value_end_lineno,value_end,slice_lineno,slice_start,slice_end_lineno,slice_end]=positions.slice(1)
+var sep='\n'
+var text=lines.slice(value_lineno-1,slice_end_lineno).join(sep)
+if(value_end_lineno==value_lineno){var value_end_pos=value_end}else{var value_end_pos=lines[value_lineno-1].length+1
+var lnum=value_lineno+1
+while(lnum < value_end_lineno){value_end_pos+=lines[lnum-1].length+1
+lnum++}
+value_end_pos+=value_end}
+if(slice_lineno==value_lineno){var slice_start_pos=slice_start}else{var slice_start_pos=lines[value_lineno-1].length+1
+var lnum=value_lineno+1
+while(lnum < slice_lineno){slice_start_pos+=lines[lnum-1].length+1
+lnum++}
+slice_start_pos+=slice_start}
+while(text[slice_start_pos]!='[' && slice_start_pos > value_end_pos){slice_start_pos--}
+if(slice_end_lineno==value_lineno){var slice_end_pos=slice_end}else{var slice_end_pos=lines[value_lineno-1].length+1
+var lnum=value_lineno+1
+while(lnum < slice_end_lineno){slice_end_pos+=lines[lnum-1].length+1
+lnum++}
+slice_end_pos+=slice_end}
+while(text[slice_end_pos]!=']' && slice_end_pos < text.length){slice_end_pos++}
+var marks=' '.repeat(value_start)+
+'~'.repeat(value_end_pos-value_start)+
+' '.repeat(slice_start_pos-value_end_pos)+
+'^'.repeat(slice_end_pos-slice_start_pos+1)
+var err_lines=make_trace_lines(
+text,marks,sep,lines,value_lineno,slice_end_lineno)
+trace.push(err_lines)}
+function handle_Unpack_error(trace,positions,lines){
+var trace_lines=[]
+var[test_lineno,test_start,test_end_lineno,test_end]=positions.slice(1)
+var sep='\n'
+var text=lines.slice(test_lineno-1,test_end_lineno).join(sep)
+if(test_end_lineno==test_lineno){var test_end_pos=test_end}else{var test_end_pos=lines[test_lineno-1].length+1
+var lnum=test_lineno+1
+while(lnum < test_end_lineno){test_end_pos+=lines[lnum-1].length+1
+lnum++}
+test_end_pos+=test_end}
+var marks=' '.repeat(test_start)+
+'^'.repeat(test_end_pos-test_start)
+var err_lines=make_trace_lines(
+text,marks,sep,lines,test_lineno,test_end_lineno)
 trace.push(err_lines)}
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
@@ -4772,30 +4856,41 @@ var src=$B.file_cache[filename]
 trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n')
-if(err.$positions !==undefined){var position=err.$positions[frame_num],trace_line=''
-if(position && position[0]=='BinOp'){handle_BinOp_error(trace,position,lines)}else if(position && position[0]=='Call'){handle_Call_error(trace,position,lines)}else{var line=lines[lineno-1]
+var positions
+if(err.$positions !==undefined && err.$positions[frame_num]){positions=err.$positions[frame_num]}
+if(positions){if(positions[0]=='Attr'){handle_Attribute_error(trace,positions,lines)}else if(positions[0]=='BinOp'){handle_BinOp_error(trace,positions,lines)}else if(positions[0]=='Call'){handle_Call_error(trace,positions,lines)}else if(positions[0]=='Assert'){handle_Assert_error(trace,positions,lines)}else if(positions[0]=='Subscript'){handle_Subscript_error(trace,positions,lines)}else if(positions[0]=='Unpack'){handle_Unpack_error(trace,positions,lines)}else{var line=lines[lineno-1]
 if(line){trace.push('    '+line.trim())}
-if(position &&(
-(position[1]!=position[0]||
-(position[2]-position[1])!=line.trim().length ||
-position[3]))){var indent=line.length-line.trimLeft().length
-var paddings=[position[0]-indent,position[1]-position[0],position[2]-position[1]]
+var trace_line=''
+if((positions[1]!=positions[0]||
+(positions[2]-positions[1])!=line.trim().length ||
+positions[3])){var indent=line.length-line.trimLeft().length
+var paddings=[positions[0]-indent,positions[1]-positions[0],positions[2]-positions[1]]
 for(var padding of paddings){if(padding < 0){console.log('wrong values, position',position,'indent',indent)
 paddings[paddings.indexOf(padding)]=0}}
 trace_line+='    '+' '.repeat(paddings[0])+
 '~'.repeat(paddings[1])+
 '^'.repeat(paddings[2])
-if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
-trace.push(trace_line)}}}}else{console.log('no src for filename',filename)}}
+if(positions[3]!==undefined){trace_line+='~'.repeat(positions[3]-positions[2])}
+trace.push(trace_line)}}}else if(frame.ClassDef && frame.ClassDef[lineno]){
+var last=stack[stack.length-1]
+for(var i=frame_num;i < stack.length;i++){if(stack[i].__file__ !==frame.__file__){last=stack[i-1]
+break}}
+var class_line=lines[lineno-1],indent=class_line.length-class_line.trimLeft().length
+trace.push('    '+lines[lineno-1].trimLeft())
+var nb_lines=last.$lineno-lineno-1
+if(nb_lines){trace.push(`    ...<${nb_lines} lines>...`)}
+var err_line=lines[last.$lineno-1]
+trace.push('    '+err_line.substr(indent))}else{trace.push('    '+lines[frame.$lineno-1].trim())}}else{console.log('no src for filename',filename)}}
 if(count_repeats > 1){let len=trace.length
 for(let i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
 $B.error_trace=function(err){var trace='',stack=err.$frame_obj===undefined ?[]:make_frames_stack(err.$frame_obj)
-if($B.get_option('debug',err)> 1){console.log("handle error",err.__class__,err.args)
-console.log('stack',stack)
-console.log(err.stack)}
+var debug=$B.get_option('debug',err)
+if(debug > 1){console.log("handle error",err.__class__,err.args)
+if(debug > 2){console.log('stack',stack)
+console.log(err.stack)}}
 if(stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
 err.__class__===_b_.IndentationError){err.$frame_obj=err.$frame_obj===null ? null :err.$frame_obj.prev
@@ -11197,7 +11292,7 @@ throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__)
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1073763586:['ReferenceError','BaseExceptionGroup','InterruptedError','ConnectionRefusedError','RecursionError','KeyError','ImportError','UserWarning','BufferError','AttributeError','OverflowError','Exception','ChildProcessError','SystemError','ConnectionError','FutureWarning','TypeError','FileNotFoundError','IsADirectoryError','NotImplementedError','IndentationError','PythonFinalizationError','FloatingPointError','EOFError','TabError','ValueError','ConnectionResetError','ImportWarning','ConnectionAbortedError','PermissionError','FileExistsError','EnvironmentError','NameError','_IncompleteInputError','NotADirectoryError','WindowsError','SyntaxError','ArithmeticError','RuntimeWarning','BaseException','MemoryError','StopIteration','ZeroDivisionError','UnboundLocalError','UnicodeWarning','UnicodeEncodeError','ModuleNotFoundError','StopAsyncIteration','UnicodeTranslateError','GeneratorExit','LookupError','BlockingIOError','IOError','AssertionError','IndexError','ProcessLookupError','UnicodeError','KeyboardInterrupt','BytesWarning','ResourceWarning','TimeoutError','PendingDeprecationWarning','Warning','BrokenPipeError','OSError','SyntaxWarning','RuntimeError','UnicodeDecodeError','SystemExit','EncodingWarning','DeprecationWarning'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['float','bytearray'],138417410:['bytes'],21762:['filter','zip','property','reversed','staticmethod','super','classmethod','map','enumerate'],5378:['complex','object'],541087042:['dict'],4216066:['frozenset','set'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['getset_descriptor','member_descriptor','classmethod_descriptor','generator','coroutine','method-wrapper','async_generator','frame'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['code','ellipsis','NoneType','NotImplementedType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1073763586:['SystemExit','ImportError','ChildProcessError','GeneratorExit','OverflowError','ArithmeticError','FutureWarning','AttributeError','RecursionError','SyntaxError','EncodingWarning','WindowsError','SyntaxWarning','ResourceWarning','KeyError','StopAsyncIteration','RuntimeError','ProcessLookupError','TabError','_IncompleteInputError','Exception','ConnectionAbortedError','AssertionError','BaseExceptionGroup','NotImplementedError','PermissionError','IndexError','TimeoutError','FileExistsError','UnicodeError','RuntimeWarning','IndentationError','TypeError','IsADirectoryError','BlockingIOError','ModuleNotFoundError','UserWarning','ZeroDivisionError','ReferenceError','BrokenPipeError','UnicodeEncodeError','UnicodeWarning','MemoryError','SystemError','BufferError','UnicodeDecodeError','NameError','KeyboardInterrupt','FileNotFoundError','EOFError','OSError','ConnectionError','EnvironmentError','ConnectionResetError','BytesWarning','PythonFinalizationError','UnboundLocalError','ImportWarning','UnicodeTranslateError','ConnectionRefusedError','Warning','LookupError','NotADirectoryError','ValueError','PendingDeprecationWarning','FloatingPointError','InterruptedError','StopIteration','DeprecationWarning','IOError','BaseException'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['property','reversed','super','classmethod','map','zip','staticmethod','filter','enumerate'],5378:['object','complex'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['coroutine','frame','generator','classmethod_descriptor','method-wrapper','member_descriptor','async_generator','getset_descriptor'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['ellipsis','NotImplementedType','code','NoneType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
@@ -12067,7 +12162,12 @@ if(last.type=="class"){last.static_attributes=last.static_attributes ??
 new Set()
 last.static_attributes.add(attr.attr)
 return}else if(last.type=="def"){ix=scopes.indexOf(last)-1}else{return}}}}
-$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''",position=encode_position(this.test.col_offset,this.test.col_offset,this.test.end_col_offset)
+function add_to_positions(scopes,positions){
+var up_scope=last_scope(scopes)
+up_scope.positions=up_scope.positions ??[]
+up_scope.positions[up_scope.positions.length]=positions
+return up_scope.positions.length-1}
+$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''",position=encode_position("'Assert'",this.test.lineno,this.test.col_offset,this.test.end_lineno,this.test.end_col_offset)
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 return js+prefix+`$B.assert(${test}, ${msg}, ${position})`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes,obj)}
@@ -12108,11 +12208,12 @@ for(var i=0,len=nb_targets;i < len;i++){if(target.elts[i]instanceof $B.ast.Starr
 nb_after_starred=len-i-1
 break}}
 var iter_id='it_'+make_id()
+var position=encode_position("'Unpack'",target.lineno,target.col_offset,target.end_lineno,target.end_col_offset)
+var inum=add_to_positions(scopes,position)
 js+=prefix+`var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, `+
 `${has_starred}`
 if(nb_after_starred !==undefined){js+=`, ${nb_after_starred}`}
-var position=encode_position(target.col_offset,target.col_offset,target.end_col_offset)
-js+=`, ${position})\n`
+js+=`, ${inum})\n`
 var assigns=[]
 for(var elt of target.elts){if(elt instanceof $B.ast.Starred){assigns.push(assign_one(elt,`${iter_id}.read_rest()`))}else if(elt instanceof $B.ast.List ||
 elt instanceof $B.ast.Tuple){assigns.push(assign_many(elt,`${iter_id}.read_one()`))}else{assigns.push(assign_one(elt,`${iter_id}.read_one()`))}}
@@ -12193,9 +12294,10 @@ var has_generator=scope.is_generator
 for(let item of this.items.slice().reverse()){js=add_item(item,js)}
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
-var position=encode_position(this.value.col_offset,this.value.col_offset,this.end_col_offset)
+var position=encode_position("'Attr'",this.value.lineno,this.value.col_offset,this.end_col_offset)
+var inum=add_to_positions(scopes,position)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
-`'${attr}', ${position})`}
+`'${attr}', ${inum})`}
 $B.ast.AugAssign.prototype.to_js=function(scopes){compiler_check(this)
 var js,op_class=this.op.$name ? this.op :this.op.constructor
 for(var op in $B.op2ast_class){if($B.op2ast_class[op][1]===op_class){var iop=op+'='
@@ -12233,12 +12335,14 @@ var name=this.op.constructor.$name
 var op=opclass2dunder[name]
 if(this.left instanceof $B.ast.Constant &&
 this.right instanceof $B.ast.Constant){
-try{res=$B.rich_op(op,this.left.value,this.right.value,position)
+try{res=$B.rich_op(op,this.left.value,this.right.value)
 if(typeof res=='string'){res=res.replace(new RegExp("'",'g'),"\\'")}
 var ast_obj=new $B.ast.Constant(res)
 return ast_obj.to_js(scopes)}catch(err){}}
-return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
-`${$B.js_from_ast(this.right, scopes)}, ${position})`}
+var inum=add_to_positions(scopes,position)
+return `$B.rich_op('${op}', `+
+`${$B.js_from_ast(this.left, scopes)}, `+
+`${$B.js_from_ast(this.right, scopes)}, ${inum})`}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
 var tests=[]
 if(this.$dont_evaluate){
@@ -12261,11 +12365,9 @@ break}}
 js+=prefix+`break`
 return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
-var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}`,end_col_offset=this.end_col_offset
-if(this.end_lineno > this.lineno){end_col_offset=this.col_offset+1}
 var position=encode_position("'Call'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.func.end_lineno,this.func.end_col_offset)
-js+=`, ${position}`
-js+=')'
+var inum=add_to_positions(scopes,position)
+var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}, ${inum})`
 var args=make_args.bind(this)(scopes),args_js=args.js.trim()
 return js+(args.has_starred ? `.apply(null, ${args_js})` :
 `(${args_js})`)}
@@ -12304,7 +12406,7 @@ var dec_id='decorator'+make_id()
 decorators.push(dec_id)
 js+=prefix+`$B.set_lineno(frame, ${dec.lineno})\n`+
 prefix+`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
-js+=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
+js+=prefix+`$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
 var qualname=this.name
 var ix=scopes.length-1
 while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.ast.ClassDef){qualname=scopes[ix].name+'.'+qualname
@@ -12363,11 +12465,15 @@ if(has_type_params){var tp_refs=[]
 for(var item of this.type_params){tp_refs.push(`${name_map.get(item)}`)}
 js+=prefix+`locals.__type_params__ = $B.fast_tuple([${tp_refs.join(', ')}])\n`}
 scopes.push(class_scope)
-js+=add_body(this.body,scopes)
+var index_for_positions=js.length
+js+=add_body(this.body,scopes)+'\n'
+if(class_scope.positions){js=js.substr(0,index_for_positions)+
+prefix+`frame.positions = [${class_scope.positions}]\n`+
+js.substr(index_for_positions)}
 scopes.pop()
 var static_attrs=[]
 if(class_scope.static_attributes){static_attrs=Array.from(class_scope.static_attributes).map(x=> `"${x}"`)}
-js+='\n'+prefix+'$B.trace_return_and_leave(frame, _b_.None)\n'+
+js+=prefix+'$B.trace_return_and_leave(frame, _b_.None)\n'+
 prefix+`return $B.$class_constructor('${this.name}', locals, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}], `+
 `[${static_attrs}], ${this.lineno})\n`
@@ -12899,6 +13005,7 @@ prefix+`}\n`}else{js+=prefix+`var ${locals_name} = locals = `+
 js+=prefix+`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]\n`+
 prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
+if(func_scope.positions){js+=prefix+`frame.positions = [${func_scope.positions}]\n`}
 if(func_scope.needs_stack_length){js+=prefix+`var stack_length = $B.count_frames()\n`}
 if(func_scope.needs_frames ||is_async){js+=prefix+`var _frame_obj = $B.frame_obj,\n`+
 prefix+tab+`_linenums = $B.make_linenums()\n`}
@@ -13289,6 +13396,7 @@ js+=`,\n    ${local_name} = locals`}}
 js+=`\nvar __file__ = '${scopes.filename ?? "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
+var insert_positions=js.length
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
 if(! namespaces){js+=`$B.enter_frame(frame, __file__, 1)\n`
 js+='\nvar _frame_obj = $B.frame_obj\n'}
@@ -13305,6 +13413,10 @@ prefix+`$B.leave_frame({locals, value: _b_.None})\n`+
 prefix+'throw err\n'
 dedent()
 js+=prefix+`}`
+var positions=scopes[scopes.length-1].positions
+if(positions && positions.length > 0){js=js.substr(0,insert_positions)+
+`frame.positions = [${positions}]\n`+
+js.substr(insert_positions)}
 scopes.pop()
 if(prefix.length !=0){console.warn('wrong indent !',prefix.length)
 prefix=''}
@@ -13363,8 +13475,9 @@ return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
 if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
-if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position(this.value.col_offset,this.slice.col_offset,this.slice.end_col_offset)
-return `$B.$getitem(${value}, ${slice},${position})`}}
+if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position("'Subscript'",this.value.lineno,this.value.col_offset,this.value.end_lineno,this.value.end_col_offset,this.slice.lineno,this.slice.col_offset,this.end_lineno,this.end_col_offset)
+var inum=add_to_positions(scopes,position)
+return `$B.$getitem(${value}, ${slice}, ${inum})`}}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
 var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+

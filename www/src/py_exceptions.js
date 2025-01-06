@@ -1024,11 +1024,12 @@ function make_trace_lines(text, marks, sep, lines, line_start, line_end){
     for(var i = 0, len = text.length; i <= len; i++){
         if(text[i] == sep || i == len){
             var subline = text.substring(start, i)
-            // don't write '~' under leading whitespace
-            var left_ws = subline.length - subline.trimLeft().length
             err_lines.push('    ' + text.substring(start, i).substring(min_indent))
+            // don't write '~' under leading or trailing whitespace
+            var left_ws = subline.length - subline.trimLeft().length
+            var right_ws = subline.length - subline.trimRight().length
             err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
-                marks.substring(start + left_ws, i))
+                marks.substring(start + left_ws, i - right_ws))
             start = i + 1
         }
     }
@@ -1036,7 +1037,57 @@ function make_trace_lines(text, marks, sep, lines, line_start, line_end){
     return err_lines.join('\n')
 }
 
-function handle_BinOp_error(trace, position, lines){
+function handle_Assert_error(trace, positions, lines){
+    // frame.$positions is
+    // [test.lineno, test.col_offset, test.end_lineno, test.end_col_offset]
+    console.log('assert error', positions)
+    var trace_lines = []
+    var [test_lineno, test_start, test_end_lineno, test_end] = positions.slice(1)
+    // make a string with the lines from test_lineno to test_end_lineno
+    var sep = '\n'
+    var text = lines.slice(test_lineno - 1, test_end_lineno).join(sep)
+
+    // position of test end
+    if(test_end_lineno == test_lineno){
+        var test_end_pos = test_end
+    }else{
+        var test_end_pos = lines[test_lineno - 1].length + 1
+        var lnum = test_lineno + 1
+        while(lnum < test_end_lineno){
+            test_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        test_end_pos += test_end
+    }
+
+    var marks = ' '.repeat(test_start) +
+        '~'.repeat(test_end_pos - test_start)
+
+    var err_lines = make_trace_lines(
+        text, marks, sep, lines, test_lineno, test_end_lineno)
+    console.log('err lines', err_lines)
+    trace.push(err_lines)
+}
+
+function handle_Attribute_error(trace, positions, lines){
+    // frame.$positions is
+    // [attr.lineno, attr.col_offset, attr.end_col_offset]
+    var trace_lines = []
+    var [attr_lineno, attr_start, attr_end] = positions.slice(1)
+    // make a string with the lines from test_lineno to test_end_lineno
+    var sep = '&'
+    var text = lines.slice(attr_lineno - 1, attr_lineno).join(sep)
+
+    var marks = ' '.repeat(attr_start) +
+        '~'.repeat(attr_end - attr_start)
+
+    var err_lines = make_trace_lines(
+        text, marks, sep, lines, attr_lineno, attr_lineno)
+
+    trace.push(err_lines)
+}
+
+function handle_BinOp_error(trace, positions, lines){
     // Special case for operation "x / y" when "y" evaluates to zero
     // "position" is [x.col_offset, x.end_col_offset,
     //               [y.col_offset, y.end_col_offset]
@@ -1047,7 +1098,7 @@ function handle_BinOp_error(trace, position, lines){
     var trace_lines = []
     var [op_lineno, op_col_offset, op_end_lineno, op_end_col_offset,
          x_lineno, x_start, x_end_lineno, x_end,
-         y_lineno, y_start, y_end_lineno, y_end] = position.slice(1)
+         y_lineno, y_start, y_end_lineno, y_end] = positions.slice(1)
     // make a string with the lines from op_lineno to op_end_lineno
     var sep = '\n'
     var text = lines.slice(op_lineno - 1, op_end_lineno).join(sep)
@@ -1148,15 +1199,15 @@ function handle_BinOp_error(trace, position, lines){
     trace.push(err_lines.join('\n'))
 }
 
-function handle_Call_error(trace, position, lines){
+function handle_Call_error(trace, positions, lines){
     // "position" is
     // [call.lineno, call.col_offset, call.end_lineno, call.end_col_offset,
     //  func.end_lineno, func.end_call_offset]
     var trace_lines = []
     var [call_lineno, call_start, call_end_lineno, call_end,
-         func_end_lineno, func_end] = position.slice(1)
+         func_end_lineno, func_end] = positions.slice(1)
     // make a string with the lines from call_lineno to call_end_lineno
-    var sep = '&'
+    var sep = '\n'
     var text = lines.slice(call_lineno - 1, call_end_lineno).join(sep)
 
     // position of function end
@@ -1195,6 +1246,111 @@ function handle_Call_error(trace, position, lines){
     trace.push(err_lines)
 }
 
+function handle_Subscript_error(trace, positions, lines){
+    // subscript is value[slice]
+    // frame.$positions is
+    // [value.lineno, value.col_offset, value.end_lineno, value.end_col_offset,
+    //  slice.lineno, slice.col_offset,
+    //  subscript.end_lineno, subscript.end_col_offset]
+    var trace_lines = []
+    var [value_lineno, value_start, value_end_lineno, value_end,
+         slice_lineno, slice_start, slice_end_lineno, slice_end] = positions.slice(1)
+    // make a string with the lines from test_lineno to test_end_lineno
+    var sep = '\n'
+    var text = lines.slice(value_lineno - 1, slice_end_lineno).join(sep)
+
+    // position of value end
+    if(value_end_lineno == value_lineno){
+        var value_end_pos = value_end
+    }else{
+        var value_end_pos = lines[value_lineno - 1].length + 1
+        var lnum = value_lineno + 1
+        while(lnum < value_end_lineno){
+            value_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        value_end_pos += value_end
+    }
+
+    // position of slice start
+    if(slice_lineno == value_lineno){
+        var slice_start_pos = slice_start
+    }else{
+        var slice_start_pos = lines[value_lineno - 1].length + 1
+        var lnum = value_lineno + 1
+        while(lnum < slice_lineno){
+            slice_start_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        slice_start_pos += slice_start
+    }
+
+    // get back to opening bracket
+    while(text[slice_start_pos] != '[' && slice_start_pos > value_end_pos){
+        slice_start_pos--
+    }
+
+    // position of slice end
+    if(slice_end_lineno == value_lineno){
+        var slice_end_pos = slice_end
+    }else{
+        var slice_end_pos = lines[value_lineno - 1].length + 1
+        var lnum = value_lineno + 1
+        while(lnum < slice_end_lineno){
+            slice_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        slice_end_pos += slice_end
+    }
+
+    // go forward until closing bracket
+    while(text[slice_end_pos] != ']' && slice_end_pos < text.length){
+        slice_end_pos++
+    }
+
+    var marks = ' '.repeat(value_start) +
+        '~'.repeat(value_end_pos - value_start) +
+        ' '.repeat(slice_start_pos - value_end_pos) +
+        '^'.repeat(slice_end_pos - slice_start_pos + 1)
+
+    var err_lines = make_trace_lines(
+        text, marks, sep, lines, value_lineno, slice_end_lineno)
+
+    trace.push(err_lines)
+}
+
+function handle_Unpack_error(trace, positions, lines){
+    // frame.$positions is
+    // [unpack.lineno, unpack.col_offset, unpack.end_lineno, unpack.end_col_offset]
+    var trace_lines = []
+    var [test_lineno, test_start, test_end_lineno, test_end] = positions.slice(1)
+    // make a string with the lines from test_lineno to test_end_lineno
+    var sep = '\n'
+    var text = lines.slice(test_lineno - 1, test_end_lineno).join(sep)
+
+    // position of test end
+    if(test_end_lineno == test_lineno){
+        var test_end_pos = test_end
+    }else{
+        var test_end_pos = lines[test_lineno - 1].length + 1
+        var lnum = test_lineno + 1
+        while(lnum < test_end_lineno){
+            test_end_pos += lines[lnum - 1].length + 1
+            lnum++
+        }
+        test_end_pos += test_end
+    }
+
+    var marks = ' '.repeat(test_start) +
+        '^'.repeat(test_end_pos - test_start)
+
+    var err_lines = make_trace_lines(
+        text, marks, sep, lines, test_lineno, test_end_lineno)
+
+    trace.push(err_lines)
+}
+
+
 function trace_from_stack(err){
 
     function handle_repeats(src, count_repeats){
@@ -1231,6 +1387,7 @@ function trace_from_stack(err){
             lineno = linenos[frame_num],
             filename = frame.__file__,
             scope = frame[0] == frame[2] ? '<module>' : frame[0]
+
         if(err.lineno){
             lineno = err.lineno
         }
@@ -1251,26 +1408,36 @@ function trace_from_stack(err){
             // PEP 657
             // If err.$positions is set, it is an object indexed by frame
             // number
-            if(err.$positions !== undefined){
-                var position = err.$positions[frame_num],
-                    trace_line = ''
-                if(position && position[0] == 'BinOp'){
-                    handle_BinOp_error(trace, position, lines)
-                }else if(position && position[0] == 'Call'){
-                    handle_Call_error(trace, position, lines)
+            var positions
+            if(err.$positions !== undefined && err.$positions[frame_num]){
+                positions = err.$positions[frame_num]
+            }
+            if(positions){
+                if(positions[0] == 'Attr'){
+                    handle_Attribute_error(trace, positions, lines)
+                }else if(positions[0] == 'BinOp'){
+                    handle_BinOp_error(trace, positions, lines)
+                }else if(positions[0] == 'Call'){
+                    handle_Call_error(trace, positions, lines)
+                }else if(positions[0] == 'Assert'){
+                    handle_Assert_error(trace, positions, lines)
+                }else if(positions[0] == 'Subscript'){
+                    handle_Subscript_error(trace, positions, lines)
+                }else if(positions[0] == 'Unpack'){
+                    handle_Unpack_error(trace, positions, lines)
                 }else{
                     var line = lines[lineno - 1]
                     if(line){
                         trace.push('    ' + line.trim())
                     }
-                    if(position && (
-                                (position[1] != position[0] ||
-                                (position[2] - position[1]) != line.trim().length ||
-                                position[3]))){
+                    var trace_line = ''
+                    if((positions[1] != positions[0] ||
+                                (positions[2] - positions[1]) != line.trim().length ||
+                                positions[3])){
                         var indent = line.length - line.trimLeft().length
-                        var paddings = [position[0] - indent,
-                                        position[1] - position[0],
-                                        position[2] - position[1]]
+                        var paddings = [positions[0] - indent,
+                                        positions[1] - positions[0],
+                                        positions[2] - positions[1]]
                         for(var padding of paddings){
                             if(padding < 0){
                                 console.log('wrong values, position', position, 'indent', indent)
@@ -1280,12 +1447,33 @@ function trace_from_stack(err){
                         trace_line += '    ' + ' '.repeat(paddings[0]) +
                             '~'.repeat(paddings[1]) +
                             '^'.repeat(paddings[2])
-                        if(position[3] !== undefined){
-                            trace_line += '~'.repeat(position[3] - position[2])
+                        if(positions[3] !== undefined){
+                            trace_line += '~'.repeat(positions[3] - positions[2])
                         }
                         trace.push(trace_line)
                     }
                 }
+            }else if(frame.ClassDef && frame.ClassDef[lineno]){
+                // format exception in class definition body
+                // find first error in the same module
+                var last = stack[stack.length - 1]
+                for(var i = frame_num; i < stack.length; i++){
+                    if(stack[i].__file__ !== frame.__file__){
+                        last = stack[i - 1]
+                        break
+                    }
+                }
+                var class_line = lines[lineno - 1],
+                    indent = class_line.length - class_line.trimLeft().length
+                trace.push('    ' + lines[lineno - 1].trimLeft())
+                var nb_lines = last.$lineno - lineno - 1
+                if(nb_lines){
+                    trace.push(`    ...<${nb_lines} lines>...`)
+                }
+                var err_line = lines[last.$lineno - 1]
+                trace.push('    ' + err_line.substr(indent))
+            }else{
+                trace.push('    ' + lines[frame.$lineno - 1].trim())
             }
         }else{
             console.log('no src for filename', filename)
@@ -1311,10 +1499,13 @@ $B.error_trace = function(err){
     var trace = '',
         stack = err.$frame_obj === undefined ? [] : make_frames_stack(err.$frame_obj)
 
-    if($B.get_option('debug', err) > 1){
+    var debug = $B.get_option('debug', err)
+    if(debug > 1){
         console.log("handle error", err.__class__, err.args)
-        console.log('stack', stack)
-        console.log(err.stack)
+        if(debug > 2){
+            console.log('stack', stack)
+            console.log(err.stack)
+        }
     }
 
     if(stack.length > 0){

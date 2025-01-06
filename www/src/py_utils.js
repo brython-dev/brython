@@ -906,13 +906,16 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     // For "[a, b] = t", nb_targets is 2, has_starred is false
     // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
     // nb_after_starred is 1 (c)
-    var position,
-        position_rank = 3
+    var inum_rank = 3
     if(has_starred){
         var nb_after_starred = arguments[3]
-        position_rank++
+        inum_rank++
     }
-    position = $B.decode_position(arguments[position_rank])
+    var inum = arguments[inum_rank]
+    var position
+    if(inum !== undefined){
+        position = $B.decode_position($B.get_position_from_inum(inum))
+    }
     var t = _b_.list.$factory(obj),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
@@ -951,10 +954,14 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     return t
 }
 
-$B.set_lineno = function(frame, lineno){
+$B.set_lineno = function(frame, lineno, type){
     frame.$lineno = lineno
     if(frame.$f_trace !== _b_.None){
         $B.trace_line()
+    }
+    if(type){
+        frame[type] = frame[type] || {}
+        frame[type][lineno] = true
     }
     return true
 }
@@ -1011,10 +1018,22 @@ $B.assert = function(test, msg, position){
 // get item
 function index_error(obj){
     var type = typeof obj == "string" ? "string" : "list"
-    throw _b_.IndexError.$factory(type + " index out of range")
+    return _b_.IndexError.$factory(type + " index out of range")
 }
 
-$B.$getitem = function(obj, item, position){
+$B.$getitem = function(obj, item, inum){
+    try{
+        return $B.$getitem1(obj, item)
+    }catch(err){
+        if(inum !== undefined){
+            var position = $B.get_position_from_inum(inum)
+            $B.set_exception_offsets(err, $B.decode_position(position))
+        }
+        throw err
+    }
+}
+
+$B.$getitem1 = function(obj, item){
     var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
@@ -1023,7 +1042,7 @@ $B.$getitem = function(obj, item, position){
             if(obj[item] !== undefined){
                 return obj[item]
             }else{
-                index_error(obj)
+                throw index_error(obj)
             }
         }
     }else if(item.valueOf && typeof item.valueOf() == "string" && is_dict){
@@ -1113,10 +1132,11 @@ $B.getitem_slice = function(obj, slice){
     return $B.$getattr($B.get_class(obj), "__getitem__")(obj, slice)
 }
 
-$B.$getattr_pep657 = function(obj, attr, position){
+$B.$getattr_pep657 = function(obj, attr, inum){
     try{
         return $B.$getattr(obj, attr)
     }catch(err){
+        var position = $B.get_position_from_inum(inum)
         $B.set_exception_offsets(err, $B.decode_position(position))
         throw err
     }
@@ -1364,24 +1384,29 @@ $B.$is_member = function(item, _set){
     return $B.member_func(_set)(item)
 }
 
-$B.$call = function(callable, position){
+$B.$call = function(callable, inum){
     try{
         callable = $B.$call1(callable)
     }catch(err){
-        $B.set_exception_offsets(err, $B.decode_position(position))
+        if(inum !== undefined){
+            var position = $B.get_position_from_inum(inum)
+            $B.set_exception_offsets(err, $B.decode_position(position))
+        }
         throw err
     }
-    if(position){
-        return function(){
-            try{
-                return callable.apply(null, arguments)
-            }catch(exc){
-                position = $B.decode_position(position)
-                $B.set_exception_offsets(exc, position)
-                throw exc
+
+    return function(){
+        try{
+            return callable.apply(null, arguments)
+        }catch(exc){
+            if(inum !== undefined){
+                var position = $B.get_position_from_inum(inum)
+                $B.set_exception_offsets(exc, $B.decode_position(position))
             }
+            throw exc
         }
     }
+
     return callable
 }
 
@@ -1408,16 +1433,18 @@ $B.$call1 = function(callable){
             return res === undefined ? _b_.None : res
         }
     }else if(callable.$is_func || typeof callable == "function"){
-        if(callable.$function_infos &&
-                (callable.$function_infos[$B.func_attrs.flags] & 32)){
-            // Mark frame as having generators. Used in leave_frame for
-            // generators inside context managers
-            $B.frame_obj.frame.$has_generators = true
-        }
-        if(callable.$is_async){
-            if($B.frame_obj !== null){
-                var frame = $B.frame_obj.frame
-                frame.$async = callable
+        if(callable.$function_infos){
+            var flags = callable.$function_infos[$B.func_attrs.flags]
+            if(flags & $B.COMPILER_FLAGS.GENERATOR){
+                // Mark frame as having generators. Used in leave_frame for
+                // generators inside context managers
+                $B.frame_obj.frame.$has_generators = true
+            }
+            if(flags & $B.COMPILER_FLAGS.COROUTINE){
+                if($B.frame_obj !== null){
+                    var frame = $B.frame_obj.frame
+                    frame.$async = callable
+                }
             }
         }
         return callable
@@ -1786,12 +1813,22 @@ $B.rich_comp = function(op, x, y){
 var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*",
     __and__: '&', __or__: '|'}
 
-$B.rich_op = function(op, x, y, position){
+$B.get_position_from_inum = function(inum){
+    // Get position from pseudo instruction number
+    if($B.frame_obj !== null){
+        var frame = $B.frame_obj.frame
+        if(frame.positions && frame.positions[inum]){
+            return frame.positions[inum]
+        }
+    }
+}
+
+$B.rich_op = function(op, x, y, inum){
     try{
         return $B.rich_op1(op, x, y)
     }catch(exc){
-        if(position){
-            $B.set_exception_offsets(exc, $B.decode_position(position))
+        if(inum !== undefined){
+            $B.set_exception_offsets(exc, $B.decode_position($B.get_position_from_inum(inum)))
         }
         throw exc
     }
