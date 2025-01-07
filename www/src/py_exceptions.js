@@ -464,7 +464,11 @@ function make_builtin_exception(exc_name, base, set_value){
             err.$frame_obj = $B.frame_obj
             err.$linenums = $B.make_linenums()
             if(set_value){
-                err[set_value] = arguments[0] || _b_.None
+                if(typeof set_value == 'string'){
+                    err[set_value] = arguments[0] || _b_.None
+                }else if(typeof set_value == 'function'){
+                    set_value(err, arguments)
+                }
             }
             err.__cause__ = _b_.None // XXX fix me
             err.__context__ = _b_.None // XXX fix me
@@ -555,7 +559,31 @@ make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
 make_builtin_exception("StopIteration", _b_.Exception, "value")
 make_builtin_exception("StopAsyncIteration", _b_.Exception, "value")
 make_builtin_exception("ImportError", _b_.Exception, "name")
-make_builtin_exception("SyntaxError", _b_.Exception, "msg")
+make_builtin_exception("SyntaxError", _b_.Exception,
+    function(err, args){
+        err.msg = args[0]
+        err.args = $B.fast_tuple(Array.from(args))
+        var details = args[1]
+        if(details){
+            details = _b_.tuple.$factory(details)
+            if(details.length < 4){
+                throw _b_.TypeError.$factory(
+                    `function takes at least 4 arguments (${args.length} given)`)
+            }
+            if(details.length > 6){
+                throw _b_.TypeError.$factory(
+                    `function takes at most 6 arguments (${args.length} given)`)
+            }
+        }else{
+            details = []
+        }
+        let attrs = ['filename', 'lineno', 'offset', 'text', 'end_lineno',
+            'end_offset']
+        for(var i = 0; i < attrs.length; i++){
+            err[attrs[i]] = details[i] ?? _b_.None
+        }
+    }
+)
 
 make_builtin_exception(["FloatingPointError", "OverflowError",
     "ZeroDivisionError"], _b_.ArithmeticError)
@@ -1040,7 +1068,6 @@ function make_trace_lines(text, marks, sep, lines, line_start, line_end){
 function handle_Assert_error(trace, positions, lines){
     // frame.$positions is
     // [test.lineno, test.col_offset, test.end_lineno, test.end_col_offset]
-    console.log('assert error', positions)
     var trace_lines = []
     var [test_lineno, test_start, test_end_lineno, test_end] = positions.slice(1)
     // make a string with the lines from test_lineno to test_end_lineno
@@ -1065,7 +1092,6 @@ function handle_Assert_error(trace, positions, lines){
 
     var err_lines = make_trace_lines(
         text, marks, sep, lines, test_lineno, test_end_lineno)
-    console.log('err lines', err_lines)
     trace.push(err_lines)
 }
 
@@ -1388,9 +1414,6 @@ function trace_from_stack(err){
             filename = frame.__file__,
             scope = frame[0] == frame[2] ? '<module>' : frame[0]
 
-        if(err.lineno){
-            lineno = err.lineno
-        }
         if(filename == save_filename && scope == save_scope && lineno == save_lineno){
             count_repeats++
             continue
@@ -1473,7 +1496,7 @@ function trace_from_stack(err){
                 var err_line = lines[last.$lineno - 1]
                 trace.push('    ' + err_line.substr(indent))
             }else{
-                trace.push('    ' + lines[frame.$lineno - 1].trim())
+                trace.push('    ' + lines[lineno - 1].trim())
             }
         }else{
             console.log('no src for filename', filename)
@@ -1513,38 +1536,40 @@ $B.error_trace = function(err){
     }
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
-        err.$frame_obj = err.$frame_obj === null ? null : err.$frame_obj.prev
         trace += trace_from_stack(err)
         if(err.args.length > 0){
             var filename = err.filename,
-                line = err.text,
-                indent = line.length - line.trimLeft().length
-            trace += `  File "${filename}", line ${err.args[1][1]}\n` +
-                         `    ${line.trim()}\n`
+                line = err.text
+            if(line !== _b_.None){
+                var indent = line.length - line.trimLeft().length
+                trace += `  File "${filename}", line ${err.args[1][1]}\n` +
+                             `    ${line.trim()}\n`
+            }
         }
         if(err.__class__ !== _b_.IndentationError &&
-                err.text){
+                err.text && err.text !== _b_.None){
             // add ^ under the line
-            if($B.get_option('debug', err) > 1){
+            if($B.get_option('debug') > 2){
+                console.log('debug from error', $B.get_option('debug', err))
                 console.log('error args', err.args[1])
                 console.log('err line', line)
                 console.log('indent', indent)
             }
+            var end_lineno = err.end_lineno === _b_.None ? err.lineno : err.end_lineno
+            var end_offset = err.end_offset === _b_.None ? err.offset : err.end_offset
             var start = err.offset - indent - 1,
-                end_offset = err.end_offset - 1 +
-                    (err.end_offset == err.offset ? 1 : 0),
+                end_offset = end_offset - 1 +
+                    (end_offset == err.offset ? 1 : 0),
                 marks = '    ' + ' '.repeat(Math.max(0, start)),
                 nb_marks = 1
-            if(err.end_lineno){
-                if(err.end_lineno > err.lineno){
-                    nb_marks = line.length - start - indent
-                }else{
-                    nb_marks = end_offset - start - indent
-                }
-                if(nb_marks == 0 &&
-                        err.end_offset == line.substr(indent).length){
-                    nb_marks = 1
-                }
+            if(end_lineno > err.lineno){
+                nb_marks = line.length - start - indent
+            }else{
+                nb_marks = end_offset - start - indent
+            }
+            if(nb_marks == 0 &&
+                    end_offset == line.substr(indent).length){
+                nb_marks = 1
             }
             marks += '^'.repeat(nb_marks) + '\n'
             trace += marks

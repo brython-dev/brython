@@ -158,3 +158,21 @@ except ZeroDivisionError as exc:
       traceback.print_exc(file=out)
       for exp in expected:
           assert exp in out.getvalue(), out.getvalue()
+
+# raise SyntaxError (issue #2529)
+expected = """    raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
+  File "test", line 3
+    coucou
+     ^
+"""
+
+try:
+    raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
+except SyntaxError as exc:
+    if __BRYTHON__:
+        trace = __BRYTHON__.error_trace(exc)
+        assert expected in trace
+    else:
+        out = io.StringIO()
+        traceback.print_exc(file=out)
+        assert expected in out.getvalue()

@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-06 08:32:01.723747"
-__BRYTHON__.timestamp=1736148721723
+__BRYTHON__.compiled_date="2025-01-07 08:55:56.489378"
+__BRYTHON__.timestamp=1736236556489
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4444,7 +4444,7 @@ err.__traceback__=_b_.None
 err.$py_error=true
 err.$frame_obj=$B.frame_obj
 err.$linenums=$B.make_linenums()
-if(set_value){err[set_value]=arguments[0]||_b_.None}
+if(set_value){if(typeof set_value=='string'){err[set_value]=arguments[0]||_b_.None}else if(typeof set_value=='function'){set_value(err,arguments)}}
 err.__cause__=_b_.None 
 err.__context__=_b_.None 
 err.__suppress_context__=false 
@@ -4482,7 +4482,17 @@ make_builtin_exception(["ArithmeticError","AssertionError","BufferError","EOFErr
 make_builtin_exception("StopIteration",_b_.Exception,"value")
 make_builtin_exception("StopAsyncIteration",_b_.Exception,"value")
 make_builtin_exception("ImportError",_b_.Exception,"name")
-make_builtin_exception("SyntaxError",_b_.Exception,"msg")
+make_builtin_exception("SyntaxError",_b_.Exception,function(err,args){err.msg=args[0]
+err.args=$B.fast_tuple(Array.from(args))
+var details=args[1]
+if(details){details=_b_.tuple.$factory(details)
+if(details.length < 4){throw _b_.TypeError.$factory(
+`function takes at least 4 arguments (${args.length} given)`)}
+if(details.length > 6){throw _b_.TypeError.$factory(
+`function takes at most 6 arguments (${args.length} given)`)}}else{details=[]}
+let attrs=['filename','lineno','offset','text','end_lineno','end_offset']
+for(var i=0;i < attrs.length;i++){err[attrs[i]]=details[i]?? _b_.None}}
+)
 make_builtin_exception(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 make_builtin_exception("ModuleNotFoundError",_b_.ImportError,"name")
 make_builtin_exception(["IndexError","KeyError"],_b_.LookupError)
@@ -4697,7 +4707,6 @@ marks.substring(start+left_ws,i-right_ws))
 start=i+1}}
 return err_lines.join('\n')}
 function handle_Assert_error(trace,positions,lines){
-console.log('assert error',positions)
 var trace_lines=[]
 var[test_lineno,test_start,test_end_lineno,test_end]=positions.slice(1)
 var sep='\n'
@@ -4711,7 +4720,6 @@ var marks=' '.repeat(test_start)+
 '~'.repeat(test_end_pos-test_start)
 var err_lines=make_trace_lines(
 text,marks,sep,lines,test_lineno,test_end_lineno)
-console.log('err lines',err_lines)
 trace.push(err_lines)}
 function handle_Attribute_error(trace,positions,lines){
 var trace_lines=[]
@@ -4844,7 +4852,6 @@ if(count_repeats > 0){trace.push(`[Previous line repeated ${count_repeats} more`
 ` time${count_repeats > 1 ? 's' : ''}]`)}}}
 var trace=[],save_filename,save_lineno,save_scope,count_repeats=0,stack=err.$frame_obj===undefined ?[]:make_frames_stack(err.$frame_obj),linenos=err.$linenums
 for(let frame_num=0,len=stack.length;frame_num < len;frame_num++){let frame=stack[frame_num],lineno=linenos[frame_num],filename=frame.__file__,scope=frame[0]==frame[2]? '<module>' :frame[0]
-if(err.lineno){lineno=err.lineno}
 if(filename==save_filename && scope==save_scope && lineno==save_lineno){count_repeats++
 continue}
 handle_repeats(src,count_repeats)
@@ -4880,7 +4887,7 @@ trace.push('    '+lines[lineno-1].trimLeft())
 var nb_lines=last.$lineno-lineno-1
 if(nb_lines){trace.push(`    ...<${nb_lines} lines>...`)}
 var err_line=lines[last.$lineno-1]
-trace.push('    '+err_line.substr(indent))}else{trace.push('    '+lines[frame.$lineno-1].trim())}}else{console.log('no src for filename',filename)}}
+trace.push('    '+err_line.substr(indent))}else{trace.push('    '+lines[lineno-1].trim())}}else{console.log('no src for filename',filename)}}
 if(count_repeats > 1){let len=trace.length
 for(let i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
@@ -4893,21 +4900,24 @@ if(debug > 2){console.log('stack',stack)
 console.log(err.stack)}}
 if(stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
-err.__class__===_b_.IndentationError){err.$frame_obj=err.$frame_obj===null ? null :err.$frame_obj.prev
-trace+=trace_from_stack(err)
-if(err.args.length > 0){var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
+err.__class__===_b_.IndentationError){trace+=trace_from_stack(err)
+if(err.args.length > 0){var filename=err.filename,line=err.text
+if(line !==_b_.None){var indent=line.length-line.trimLeft().length
 trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
-`    ${line.trim()}\n`}
+`    ${line.trim()}\n`}}
 if(err.__class__ !==_b_.IndentationError &&
-err.text){
-if($B.get_option('debug',err)> 1){console.log('error args',err.args[1])
+err.text && err.text !==_b_.None){
+if($B.get_option('debug')> 2){console.log('debug from error',$B.get_option('debug',err))
+console.log('error args',err.args[1])
 console.log('err line',line)
 console.log('indent',indent)}
-var start=err.offset-indent-1,end_offset=err.end_offset-1+
-(err.end_offset==err.offset ? 1 :0),marks='    '+' '.repeat(Math.max(0,start)),nb_marks=1
-if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=end_offset-start-indent}
+var end_lineno=err.end_lineno===_b_.None ? err.lineno :err.end_lineno
+var end_offset=err.end_offset===_b_.None ? err.offset :err.end_offset
+var start=err.offset-indent-1,end_offset=end_offset-1+
+(end_offset==err.offset ? 1 :0),marks='    '+' '.repeat(Math.max(0,start)),nb_marks=1
+if(end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=end_offset-start-indent}
 if(nb_marks==0 &&
-err.end_offset==line.substr(indent).length){nb_marks=1}}
+end_offset==line.substr(indent).length){nb_marks=1}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.__name__}: ${err.args[0] ?? '<no detail available>'}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
@@ -13484,7 +13494,7 @@ var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
 prefix+`try{\n`
 indent()
 js+=prefix+`var stack_length_${id} = $B.count_frames()\n`
-if(has_finally){js+=prefix+`var save_frame_obj_${id} = $B.frames_obj\n`}
+js+=prefix+`var save_frame_obj_${id} = $B.frame_obj\n`
 if(has_else){js+=prefix+`var failed${id} = false\n`}
 var try_scope=copy_scope($B.last(scopes))
 scopes.push(try_scope)
@@ -13510,7 +13520,8 @@ var mangled=mangle(scopes,try_scope,handler.name)
 js+=prefix+`locals.${mangled} = ${err}\n`}
 js+=add_body(handler.body,scopes)+'\n'
 if(!($B.last(handler.body)instanceof $B.ast.Return)){
-js+=prefix+'$B.del_exc(frame)\n'}
+js+=prefix+'$B.del_exc(frame)\n'
+js+=prefix+`$B.frame_obj = save_frame_obj_${id}\n`}
 dedent()}
 if(! has_untyped_except){
 js+=prefix+`}else{\n`+
