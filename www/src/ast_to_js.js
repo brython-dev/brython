@@ -1837,6 +1837,8 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           prefix + `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}], ` +
               `[${static_attrs}], ${this.lineno})\n`
+
+
     dedent()
     js += prefix + `})('${this.name}',${globals_name}.__name__ ?? '${glob}', ` +
           `$B.fast_tuple([${bases}])` +
@@ -3932,9 +3934,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
 
     // Save execution stack in case there are return statements and a finally
     // block
-    if(has_finally){
-        js += prefix + `var save_frame_obj_${id} = $B.frames_obj\n`
-    }
+    js += prefix + `var save_frame_obj_${id} = $B.frame_obj\n`
     if(has_else){
         js += prefix + `var failed${id} = false\n`
     }
@@ -3984,6 +3984,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                 // delete current exception
                 js += prefix + '$B.del_exc(frame)\n'
+                js += prefix + `$B.frame_obj = save_frame_obj_${id}\n`
             }
             dedent()
         }
