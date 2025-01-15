@@ -1118,12 +1118,11 @@ function add_to_positions(scopes, ast_obj){
 
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
-        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : "''",
-        position = encode_position("'Assert'",
-                this.test.lineno, this.test.col_offset,
-                this.test.end_lineno, this.test.end_col_offset)
+        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : "''"
+
+    var inum = add_to_positions(scopes, this.test)
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
-    return js + prefix + `$B.assert(${test}, ${msg}, ${position})`
+    return js + prefix + `$B.assert(${test}, ${msg}, ${inum})`
 }
 
 function annotation_to_str(obj, scopes){
