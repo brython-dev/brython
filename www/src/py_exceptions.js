@@ -8,6 +8,7 @@ $B.del_exc = function(frame){
 }
 
 $B.set_exc = function(exc, frame){
+    exc.__traceback__ = exc.__traceback__ === _b_.None ? make_tb() : exc.__traceback__
     if(frame === undefined){
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
         console.error(['Traceback (most recent call last):',
@@ -131,49 +132,38 @@ $B.get_frame_at = function(pos, frame_obj){
     return frame_obj.frame
 }
 
+function make_frames_list(){
+    var t = []
+    var frame_obj = $B.frame_obj
+    while(frame_obj){
+        t.push(frame_obj.frame)
+        frame_obj = frame_obj.prev
+    }
+    return t
+}
+
+var make_tb = $B.make_tb = function(frames_list){
+    frames_list = frames_list ?? make_frames_list()
+    if(frames_list.length == 0){
+        return _b_.None
+    }
+    var _frame = frames_list.pop()
+    var res = {
+        __class__: traceback,
+        tb_frame: frame.$factory(_frame),
+        tb_lineno: _frame.$lineno,
+        tb_lasti: _frame.inum ?? -1,
+        tb_next: make_tb(frames_list)
+    }
+    return res
+}
+
 // class of traceback objects
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){
-        var frame_obj = exc.$frame_obj
-        if(frame_obj === null){
-            return _b_.None
-        }
-        if($B.$isinstance(exc, _b_.SyntaxError)){
-            frame_obj = frame_obj.prev
-        }
-        // save line numbers when exception happened
-        var $linenums = $B.make_linenums(frame_obj)
-        return {
-            __class__ : traceback,
-            $stack: make_frames_stack(frame_obj), // frames stack as list
-            $linenums,
-            pos: 0,
-            tb_next: _b_.None
-        }
+        return make_tb()
     }
 )
-
-traceback.__getattribute__ = function(_self, attr){
-    switch(attr){
-        case "tb_frame":
-            return _self.$stack[_self.pos]
-        case "tb_lineno":
-            return _self.$linenums[_self.pos]
-        case "tb_lasti":
-            return -1 // not implemented (yet...)
-        case "tb_next":
-            if(_self.pos < _self.$stack.length - 1){
-                _self.pos++
-                return _self
-            }else{
-                return _b_.None
-            }
-        case "stack":
-            return $B.$list(_self.$stack)
-        default:
-            return _b_.object.__getattribute__(_self, attr)
-    }
-}
 
 $B.set_func_names(traceback, "builtins")
 
@@ -254,6 +244,7 @@ frame.f_code = {
         var res
         if(_self[4]){
             res = $B.$getattr(_self[4], '__code__')
+            res.co_positions = _self.positions ?? []
         }else if(_self.f_code){
             // set in comprehensions
             res = _self.f_code
@@ -261,7 +252,8 @@ frame.f_code = {
             res = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
                 co_filename: _self.__file__,
-                co_varnames: $B.fast_tuple([])
+                co_varnames: $B.fast_tuple([]),
+                co_positions: _self.positions
             }
             res.co_qualname = res.co_name // XXX
         }
@@ -346,16 +338,6 @@ $B.restore_frame_obj = function(frame_obj, locals){
     $B.frame_obj.frame[1] = locals
 }
 
-$B.make_linenums = function(frame_obj){
-    var res = []
-    frame_obj = frame_obj || $B.frame_obj
-    while(frame_obj !== null){
-        res.push(frame_obj.frame.$lineno)
-        frame_obj = frame_obj.prev
-    }
-    return res.reverse()
-}
-
 var make_frames_stack = $B.make_frames_stack = function(frame_obj){
     var stack = []
     while(frame_obj !== null){
@@ -367,11 +349,7 @@ var make_frames_stack = $B.make_frames_stack = function(frame_obj){
 }
 
 $B.freeze = function(err){
-    if(err.$frame_obj === undefined){
-        err.$frame_obj = $B.frame_obj
-        err.$linenums = $B.make_linenums()
-    }
-    err.__traceback__ = traceback.$factory(err)
+    err.__traceback__ = err.__traceback__ ?? traceback.$factory(err)
 }
 
 
@@ -408,6 +386,7 @@ $B.exception = function(js_exc){
         exc = js_exc
         $B.freeze(exc)
     }
+    exc.__traceback__ = exc.__traceback__ ?? traceback.$factory(exc)
     return exc
 }
 
@@ -445,6 +424,15 @@ $B.is_recursion_error = function(js_exc){
         (err_type == 'RangeError' && err_msg == 'Maximum call stack size exceeded')
 }
 
+function freeze_frame_obj(obj){
+    obj = obj ?? $B.frame_obj
+    return {
+        count: obj.count,
+        frame: obj.frame,
+        prev: obj.prev === null ? null : freeze_frame_obj(obj.prev)
+    }
+}
+
 // built-in exceptions
 
 function make_builtin_exception(exc_name, base, set_value){
@@ -461,8 +449,7 @@ function make_builtin_exception(exc_name, base, set_value){
             err.__class__ = exc_class
             err.__traceback__ = _b_.None
             err.$py_error = true
-            err.$frame_obj = $B.frame_obj
-            err.$linenums = $B.make_linenums()
+
             if(set_value){
                 if(typeof set_value == 'string'){
                     err[set_value] = arguments[0] || _b_.None
@@ -633,8 +620,6 @@ _b_.AttributeError = $B.make_class('AttributeError',
         err.__class__ = _b_.AttributeError
         err.__traceback__ = _b_.None
         err.$py_error = true
-        err.$frame_obj = $B.frame_obj
-        err.$linenums = $B.make_linenums()
         err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])
         err.name = $.name
         err.obj = $.obj
@@ -666,7 +651,9 @@ $B.attr_error = function(name, obj){
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return _b_.AttributeError.$factory({$kw:[{name, obj, msg}]})
+    var exc = _b_.AttributeError.$factory({$kw:[{name, obj, msg}]})
+    exc.__traceback__ = make_tb()
+    return exc
 }
 
 // NameError supports keyword-only "name" parameter
@@ -681,8 +668,7 @@ _b_.NameError = $B.make_class('NameError',
         err.__traceback__ = _b_.None
         err.$py_error = true
         err.$frame_obj = $B.frame_obj
-        err.$linenums = $B.make_linenums()
-
+        
         err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])
         err.name = $.name
 
@@ -714,7 +700,7 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 $B.name_error = function(name){
     var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
     exc.name = name
-    exc.$frame_obj = $B.frame_obj
+    exc.__traceback__ = make_tb()
     return exc
 }
 
@@ -901,8 +887,7 @@ _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup",
         err.__traceback__ = _b_.None
         err.$py_error = true
         err.$frame_obj = $B.frame_obj
-        err.$linenums = $B.make_linenums()
-
+        
         err.message = $.message
         err.exceptions = $.exceptions === missing ? [] : $.exceptions
         if(err.exceptions !== _b_.None){
@@ -1003,8 +988,7 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGroup",
         err.__traceback__ = _b_.None
         err.$py_error = true
         err.$frame_obj = $B.frame_obj
-        err.$linenums = $B.make_linenums()
-
+        
         err.message = $.message
         err.exceptions = $.exceptions === missing ? [] : $.exceptions
         /*
@@ -1049,15 +1033,25 @@ function make_trace_lines(text, marks, sep, lines, line_start, line_end){
 
     var err_lines = []
     var start = 0
+    if(! marks && line_end - line_start > 3){
+        console.log('trace', line_end, line_start)
+        err_lines.push('    ' + lines[line_start - 1].substring(min_indent))
+        err_lines.push(`    ...<${line_end - line_start - 1} lines>...`)
+        err_lines.push('    ' + lines[line_end - 1].substring(min_indent))
+        return err_lines.join('\n')
+    }
+
     for(var i = 0, len = text.length; i <= len; i++){
         if(text[i] == sep || i == len){
             var subline = text.substring(start, i)
             err_lines.push('    ' + text.substring(start, i).substring(min_indent))
-            // don't write '~' under leading or trailing whitespace
-            var left_ws = subline.length - subline.trimLeft().length
-            var right_ws = subline.length - subline.trimRight().length
-            err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
-                marks.substring(start + left_ws, i - right_ws))
+            if(marks){
+                // don't write '~' under leading or trailing whitespace
+                var left_ws = subline.length - subline.trimLeft().length
+                var right_ws = subline.length - subline.trimRight().length
+                err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
+                    marks.substring(start + left_ws, i - right_ws))
+            }
             start = i + 1
         }
     }
@@ -1113,236 +1107,339 @@ function handle_Attribute_error(trace, positions, lines){
     trace.push(err_lines)
 }
 
-function handle_BinOp_error(trace, positions, lines){
-    // Special case for operation "x / y" when "y" evaluates to zero
-    // "position" is [x.col_offset, x.end_col_offset,
-    //               [y.col_offset, y.end_col_offset]
-    // if "x" or "y" are surrounded by parenthesis, the offsets don't
-    // take them into account, but the traceback must start at the first
-    // opening parenthesis of "x" and end at the last closing parenthesis of
-    // "y"
+function get_text_pos(ast_obj, segment, elt){
+    // get position (start / end) in segment for ast_obj
+    // segment starts at ast_obj.lineno, ast_obj.col_offset
+    var start = 2 // start after initial `(\n`
+    // lines between segment start and line
+    for(var lnum = ast_obj.lineno; lnum < elt.lineno; lnum++){
+        while(start < segment.length && segment[start] != '\n'){
+            start++
+        }
+        start += 1
+    }
+    start += elt.col_offset
+    var end = start
+    if(elt.end_lineno == elt.lineno){
+        end += elt.end_col_offset - elt.col_offset
+    }else{
+        // lines between current lnum and end_line
+        for(;lnum < elt.end_lineno; lnum++){
+            while(end < segment.length && segment[end] != '\n'){
+                end++
+            }
+            end++
+        }
+        end += elt.end_col_offset
+    }
+    return {start, end}
+}
+
+function handle_BinOp_error(ast_obj, trace, text, head){
+    // 'positions' are the coords of the BinOp in the original source
+    // The text of the expression is determined by `positions`
+    // A segment is made of `(\n{text}\n)` and parsed; ast_obj is the BinOp
+    // instance inside the segment
+    // Positions of the BinOp are
+    //                in original source     in segment
+    // lineno         positions[0]           2
+    // end_lineno     positions[1]           2 + positions[1] - positions[0]
+    // col_offset     positions[2]           positions[2]
+    // end_col_offset positions[3]           positions[3]
     var trace_lines = []
-    var [op_lineno, op_col_offset, op_end_lineno, op_end_col_offset,
-         x_lineno, x_start, x_end_lineno, x_end,
-         y_lineno, y_start, y_end_lineno, y_end] = positions.slice(1)
-    // make a string with the lines from op_lineno to op_end_lineno
-    var sep = '\n'
-    var text = lines.slice(op_lineno - 1, op_end_lineno).join(sep)
-
-    // position of op start in text
-    var op_start_pos = op_col_offset
-
-    // position of left end
-    if(x_end_lineno == op_lineno){
-        var left_end_pos = x_end
-    }else{
-        var left_end_pos = lines[op_lineno - 1].length + 1
-        var lnum = op_lineno + 1
-        while(lnum < x_end_lineno){
-            left_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        left_end_pos += x_end
-    }
-    // position of right start
-    if(y_lineno == op_lineno){
-        var right_start_pos = y_start
-    }else{
-        var right_start_pos = lines[op_lineno - 1].length + 1
-        var lnum = op_lineno + 1
-        while(lnum < y_lineno){
-            right_start_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        right_start_pos += y_start
-    }
+    var segment = `(\n${text}\n)`
+    // Position (start;end) of left operand in text
+    var left_pos = get_text_pos(ast_obj, segment, ast_obj.left)
+    var right_pos = get_text_pos(ast_obj, segment, ast_obj.right)
 
     // position of operator: only cars between left end and right start
     // different from ' ', '(' and ')'
-    var operator_start = left_end_pos
-    while(' ()'.includes(text[operator_start])){
-        operator_start++
-        if(operator_start > 1000){
-            throw Error('op start')
-        }
-    }
-    var operator_end = operator_start + 1
+    var operator_start = find_char(segment, left_pos.end, ast_obj.left.end_lineno,
+        char => '()'.includes(char) || char.match(/\s/))
+    var operator_end = find_char(segment, operator_start.pos + 1,
+        operator_start.lineno,
+        char => ! char.match(/\s/))
 
-    while(operator_end < right_start_pos && ! (' ()' + sep).includes(text[operator_end])){
-        operator_end++
-        if(operator_end > 1000){
-            throw Error('op end')
-        }
-    }
+    var operator_length = operator_end.pos - operator_start.pos
 
-    var operator_length = operator_end - operator_start
-
-    // position of op end
-    if(op_end_lineno == op_lineno){
-        var op_end_pos = op_end_col_offset
-    }else{
-        var op_end_pos = lines[op_lineno - 1].length + 1
-        var lnum = op_lineno + 1
-        while(lnum < op_end_lineno){
-            op_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        op_end_pos += op_end_col_offset
-    }
-
-    var marks = ' '.repeat(op_start_pos) +
-        '~'.repeat(left_end_pos - op_start_pos) +
-        '~'.repeat(operator_start - left_end_pos) +
+    var marks = ' '.repeat(left_pos.start) +
+        '~'.repeat(operator_start.pos - left_pos.start) +
         '^'.repeat(operator_length) +
-        '~'.repeat(right_start_pos - operator_end) +
-        '~'.repeat(op_end_pos - right_start_pos)
+        '~'.repeat(segment.length - operator_end.pos)
 
     // Compute minimal indent in error lines
     // The line with minimum indent will be printed with a 4 space
     // indentation
     var min_indent = 255
-    for(var lnum = op_lineno; lnum < op_end_lineno + 1; lnum++){
-        var line = lines[lnum - 1]
+    for(var line of text.split('\n')){
         var indent = line.length - line.trimLeft().length
         if(indent < min_indent){
             min_indent = indent
         }
     }
 
-    var err_lines = []
-    var start = 0
-    for(var i = 0, len = text.length; i <= len; i++){
-        if(text[i] == sep || i == len){
-            var subline = text.substring(start, i)
-            // don't write '~' under leading whitespace
-            var left_ws = subline.length - subline.trimLeft().length
-            err_lines.push('    ' + text.substring(start, i).substring(min_indent))
-            err_lines.push('    ' + ' '.repeat(left_ws - min_indent) +
-                marks.substring(start + left_ws, i))
-            start = i + 1
+    var lines = segment.split('\n')
+
+    // remove leading (\n and trailing \n)
+    segment = segment.substring(2, segment.length - 2)
+    var orig_marks = marks.substring(2, marks.length - 2)
+    // restore part of first line before expression
+    var orig_text = head + segment.substr(head.length)
+    var elines = []
+    var i = 0,
+        lstart = 0
+    while(i < orig_text.length + 1){
+        if(orig_text[i] == '\n' || i == orig_text.length){
+            var text_line = orig_text.substring(lstart, i).substr(min_indent)
+            var text_indent = text_line.length - text_line.trimLeft().length
+            elines.push('    ' + text_line)
+            var marks_line = orig_marks.substring(lstart, i).substr(min_indent)
+            marks_line = ' '.repeat(text_indent) + marks_line.substr(text_indent)
+            elines.push('    ' + marks_line)
+            lstart = i + 1
         }
+        i++
     }
-    trace.push(err_lines.join('\n'))
+    trace.push(elines.join('\n'))
 }
 
-function handle_Call_error(trace, positions, lines){
-    // "position" is
-    // [call.lineno, call.col_offset, call.end_lineno, call.end_col_offset,
-    //  func.end_lineno, func.end_call_offset]
+function make_test_func(ast_obj){
+    if(ast_obj.end_lineno == ast_obj.lineno){
+        return function(line, col){
+            return line == ast_obj.lineno && ast_obj.col_offset <= col &&
+                col < ast_obj.end_col_offset
+        }
+    }else{
+        return function(line, col){
+            return (line == ast_obj.lineno && col >= ast_obj.col_offset) ||
+                   (line > ast_obj.lineno && line < ast_obj.end_lineno) ||
+                   (line == ast_obj.end_lineno && col < ast_obj.end_col_offset)
+       }
+   }
+}
+
+function handle_Call_error(lines, positions, ast_obj, trace, text){
+    // lines is the original source code lines
+    // positions is [lineno, end_lineno, col_offset, end_col_offset] of
+    // the Call instance in source code
+    // text is the source code of the call
+    // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
+    // Position of the call
+    //                  in source code   in segment
+    // lineno           positions[0]     2
+    // end_lineno       positions[1]     2 + positions[1] - positions[0]
+    // col_offset       positions[2]     positions[2]
+    // end_col_offset   positions[3]     positions[3]
+
+    // Mark '~' from function name start to last char before '('
+    // and '^' from the opening '(' to the closing ')'
+    // f (x)
+    // ~~^^^
     var trace_lines = []
-    var [call_lineno, call_start, call_end_lineno, call_end,
-         func_end_lineno, func_end] = positions.slice(1)
-    // make a string with the lines from call_lineno to call_end_lineno
-    var sep = '\n'
-    var text = lines.slice(call_lineno - 1, call_end_lineno).join(sep)
-
-    // position of function end
-    if(func_end_lineno == call_lineno){
-        var func_end_pos = func_end
-    }else{
-        var func_end_pos = lines[call_lineno - 1].length + 1
-        var lnum = call_lineno + 1
-        while(lnum < func_end_lineno){
-            func_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        func_end_pos += func_end
+    var [lineno, end_lineno, col_offset, end_col_offset] = positions
+    var min_indent = get_min_indent(lines.slice(lineno - 1, end_lineno))
+    var func = ast_obj.func
+    // convert positions in segment to positions in source code
+    var args_pos = {
+        lineno: ast_obj.func.end_lineno - 2 + lineno,
+        end_lineno: ast_obj.end_lineno - 2 + lineno,
+        col_offset: ast_obj.func.end_col_offset,
+        end_col_offset: ast_obj.end_col_offset
     }
-
-    // position of call end
-    if(call_end_lineno == call_lineno){
-        var call_end_pos = call_end
-    }else{
-        var call_end_pos = lines[call_lineno - 1].length + 1
-        var lnum = call_lineno + 1
-        while(lnum < call_end_lineno){
-            call_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        call_end_pos += call_end
+    var func_pos = {
+        lineno: func.lineno - 2 + lineno,
+        end_lineno: func.end_lineno - 2 + lineno,
+        col_offset: func.col_offset,
+        end_col_offset: func.end_col_offset
     }
+    var marks = ''
+    var in_func = make_test_func(func_pos)
+    var in_args = make_test_func(args_pos)
 
-    var marks = ' '.repeat(call_start) +
-        '~'.repeat(func_end_pos - call_start) +
-        '^'.repeat(call_end_pos - func_end_pos)
-
-    var err_lines = make_trace_lines(
-        text, marks, sep, lines, call_lineno, call_end_lineno)
-
-    trace.push(err_lines)
+    var mark_lines = []
+    var func_started = false
+    var parenth_found = false
+    for(var lnum = lineno; lnum <= end_lineno; lnum++){
+        var line = lines[lnum - 1].trimRight()
+        var indent = get_indent(line)
+        var marks = ' '.repeat(indent)
+        var col = indent
+        for(; col < line.length; col++){
+            if(in_func(lnum, col)){
+                func_started = true
+                marks += '~'
+            }else{
+                // '~' until the opening parenth. It is on the same line as
+                // function end
+                if(func_started && ! parenth_found){
+                    if(line[col] == '('){
+                        marks += '^'
+                        parenth_found = true
+                    }else{
+                        marks += '~'
+                    }
+                }else if(in_args(lnum, col)){
+                    marks += '^'
+                }
+            }
+        }
+        mark_lines.push(marks)
+    }
+    for(var i = 0; i < mark_lines.length; i++){
+        trace_lines.push('    ' + lines[lineno + i - 1].trimRight().substr(min_indent))
+        trace_lines.push('    ' + mark_lines[i].substr(min_indent))
+    }
+    trace.push(trace_lines.join('\n'))
 }
 
-function handle_Subscript_error(trace, positions, lines){
+function get_indent(line){
+    return line.length - line.trimLeft().length
+}
+
+function get_min_indent(lines){
+    var min_indent = 2 ** 16
+    for(var line of lines){
+        if(! line.trim()){
+            continue
+        }
+        var indent = get_indent(line)
+        if(indent < min_indent){
+            min_indent = indent
+        }
+    }
+    return min_indent
+}
+
+function handle_Expr_error(ast_obj, trace, lines){
+    var trace_lines = []
+    if(ast_obj.lineno == ast_obj.end_lineno){
+        var err_line = lines[ast_obj.lineno - 1]
+        var indent = err_line.length - err_line.trimLeft().length
+        trace_lines.push('    ' + err_line.substr(indent))
+        var marks_line = ' '.repeat(ast_obj.col_offset) +
+            '^'.repeat(ast_obj.end_col_offset - ast_obj.col_offset)
+        trace_lines.push('    ' + marks_line.substr(indent))
+    }else{
+        var min_indent = get_min_indent(lines)
+        var err_line = lines[ast_obj.lineno - 1].trimRight()
+        trace_lines.push('    ' + err_line.substr(min_indent))
+        var marks_line = ' '.repeat(ast_obj.col_offset) +
+            '^'.repeat(err_line.length - ast_obj.col_offset)
+        trace_lines.push('    ' + marks_line.substr(min_indent))
+        for(var lnum = ast_obj.lineno + 1; lnum <= ast_obj.end_lineno - 1; lnum++){
+            err_line = lines[lnum - 1].trimRight()
+            var indent = err_line.length - err_line.trimLeft().length
+            trace_lines.push('    ' + err_line.substr(min_indent))
+            marks_line = ' '.repeat(indent) + '^'.repeat(err_line.substr(indent).length)
+            trace_lines.push('    ' + marks_line.substr(min_indent))
+        }
+        var err_line = lines[ast_obj.end_lineno - 1].trimRight()
+        var indent = get_indent(err_line)
+        trace_lines.push('    ' + err_line.substr(min_indent))
+        var marks_line = ' '.repeat(indent) +
+            '^'.repeat(ast_obj.end_col_offset - indent)
+        trace_lines.push('    ' + marks_line.substr(min_indent))
+    }
+    trace.push(trace_lines.join('\n'))
+}
+
+function find_char(text, start_pos, line, test_func){
+    // Scan the characters in text starting at start pos
+    // position pos
+    // return {char_position, char_lineno}
+    var pos = start_pos
+    var char_line = line
+    while(pos < text.length){
+        if(text[pos] == '#'){
+            // skip comment
+            pos++
+            while(pos < text.length && text[pos] != '\n'){
+                pos++
+            }
+        }else if(test_func(text[pos])){
+            // skip if a test function is provided and succeeds for current
+            // character
+            pos++
+        }else{
+            return {pos, lineno: char_line}
+        }
+    }
+    return {pos, lineno: char_line}
+}
+
+function handle_Subscript_error(lines, positions, ast_obj, trace, text){
+    // lines is the original source code lines
+    // positions is [lineno, end_lineno, col_offset, end_col_offset] of
+    // the Call instance in source code
+    // text is the source code of the call
+    // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
+    // Position of the call
+    //                  in source code   in segment
+    // lineno           positions[0]     2
+    // end_lineno       positions[1]     2 + positions[1 - positions[0]
+    // col_offset       positions[2]     positions[2]
+    // end_col_offset   positions[3]     positions[3]
+
+    // Mark '~' from function name start to last char before '('
+    // and '^' from the opening '(' to the closing ')'
+    // f (x)
+    // ~~^^^
+    var trace_lines = []
+    var [lineno, end_lineno, col_offset, end_col_offset] = positions
+    var min_indent = get_min_indent(lines.slice(lineno - 1, end_lineno))
     // subscript is value[slice]
-    // frame.$positions is
-    // [value.lineno, value.col_offset, value.end_lineno, value.end_col_offset,
-    //  slice.lineno, slice.col_offset,
-    //  subscript.end_lineno, subscript.end_col_offset]
-    var trace_lines = []
-    var [value_lineno, value_start, value_end_lineno, value_end,
-         slice_lineno, slice_start, slice_end_lineno, slice_end] = positions.slice(1)
-    // make a string with the lines from test_lineno to test_end_lineno
-    var sep = '\n'
-    var text = lines.slice(value_lineno - 1, slice_end_lineno).join(sep)
+    var value = ast_obj.value
+    var value_pos = {
+        lineno: value.lineno - 2 + lineno,
+        end_lineno: value.end_lineno - 2 + lineno,
+        col_offset: value.col_offset,
+        end_col_offset: value.end_col_offset
+    }
+    var slice = ast_obj.slice
+    var slice_pos = {
+        lineno: slice.lineno - 2 + lineno,
+        end_lineno: ast_obj.end_lineno - 2 + lineno,
+        col_offset: ast_obj.slice.col_offset,
+        end_col_offset: ast_obj.end_col_offset
+    }
+    var marks = ''
+    var in_value = make_test_func(value_pos)
+    var in_slice = make_test_func(slice_pos)
 
-    // position of value end
-    if(value_end_lineno == value_lineno){
-        var value_end_pos = value_end
-    }else{
-        var value_end_pos = lines[value_lineno - 1].length + 1
-        var lnum = value_lineno + 1
-        while(lnum < value_end_lineno){
-            value_end_pos += lines[lnum - 1].length + 1
-            lnum++
+    var mark_lines = []
+    var value_started = false
+    var bracket_found = false
+    for(var lnum = lineno; lnum <= end_lineno; lnum++){
+        var line = lines[lnum - 1].trimRight()
+        var indent = get_indent(line)
+        var marks = ' '.repeat(indent)
+        var col = indent
+        for(; col < line.length; col++){
+            if(in_value(lnum, col)){
+                value_started = true
+                marks += '~'
+            }else{
+                // '~' until the opening bracket. It is on the same line as
+                // function end
+                if(value_started && ! bracket_found){
+                    if(line[col] == '['){
+                        marks += '^'
+                        bracket_found = true
+                    }else{
+                        marks += '~'
+                    }
+                }else if(in_slice(lnum, col)){
+                    marks += '^'
+                }
+            }
         }
-        value_end_pos += value_end
+        mark_lines.push(marks)
     }
-
-    // position of slice start
-    if(slice_lineno == value_lineno){
-        var slice_start_pos = slice_start
-    }else{
-        var slice_start_pos = lines[value_lineno - 1].length + 1
-        var lnum = value_lineno + 1
-        while(lnum < slice_lineno){
-            slice_start_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        slice_start_pos += slice_start
+    for(var i = 0; i < mark_lines.length; i++){
+        trace_lines.push('    ' + lines[lineno + i - 1].trimRight().substr(min_indent))
+        trace_lines.push('    ' + mark_lines[i].substr(min_indent))
     }
-
-    // get back to opening bracket
-    while(text[slice_start_pos] != '[' && slice_start_pos > value_end_pos){
-        slice_start_pos--
-    }
-
-    // position of slice end
-    if(slice_end_lineno == value_lineno){
-        var slice_end_pos = slice_end
-    }else{
-        var slice_end_pos = lines[value_lineno - 1].length + 1
-        var lnum = value_lineno + 1
-        while(lnum < slice_end_lineno){
-            slice_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        slice_end_pos += slice_end
-    }
-
-    // go forward until closing bracket
-    while(text[slice_end_pos] != ']' && slice_end_pos < text.length){
-        slice_end_pos++
-    }
-
-    var marks = ' '.repeat(value_start) +
-        '~'.repeat(value_end_pos - value_start) +
-        ' '.repeat(slice_start_pos - value_end_pos) +
-        '^'.repeat(slice_end_pos - slice_start_pos + 1)
-
-    var err_lines = make_trace_lines(
-        text, marks, sep, lines, value_lineno, slice_end_lineno)
-
-    trace.push(err_lines)
+    trace.push(trace_lines.join('\n'))
 }
 
 function handle_Unpack_error(trace, positions, lines){
@@ -1376,9 +1473,23 @@ function handle_Unpack_error(trace, positions, lines){
     trace.push(err_lines)
 }
 
+function make_report(lines, positions){
+    // positions is [lineno, end_lineno, col_offset, end_col_offset]
+    // Return a string with the lines between lineno and end_lineno,
+    // with a 4-whitespace indentation
+    // If end_lineno - lineno > 2 don't report intermediate lines
+    var [lineno, end_lineno, col_offset, end_col_offset] = positions
+    lines = lines.slice(lineno - 1, end_lineno)
+    var min_indent = get_min_indent(lines)
+    lines = lines.map(line => '    ' + line.substr(min_indent).trimRight())
+    if(lines.length > 3){
+        lines = [lines[0], `    ...<${lines.length - 2} lines>...`,
+            lines[lines.length - 1]]
+    }
+    return lines.join('\n')
+}
 
 function trace_from_stack(err){
-
     function handle_repeats(src, count_repeats){
         if(count_repeats > 0){
             var len = trace.length
@@ -1405,17 +1516,17 @@ function trace_from_stack(err){
         save_lineno,
         save_scope,
         count_repeats = 0,
-        stack = err.$frame_obj === undefined ? [] : make_frames_stack(err.$frame_obj),
-        linenos = err.$linenums
+        tb = err.__traceback__
 
-    for(let frame_num = 0, len = stack.length; frame_num < len; frame_num++){
-        let frame = stack[frame_num],
-            lineno = linenos[frame_num],
+    var is_syntax_error = $B.is_exc(err, [_b_.SyntaxError])
+    while(tb !== _b_.None){
+        let frame = tb.tb_frame,
+            lineno = tb.tb_lineno,
             filename = frame.__file__,
             scope = frame[0] == frame[2] ? '<module>' : frame[0]
-
         if(filename == save_filename && scope == save_scope && lineno == save_lineno){
             count_repeats++
+            tb = tb.tb_next
             continue
         }
         handle_repeats(src, count_repeats)
@@ -1429,72 +1540,64 @@ function trace_from_stack(err){
         if(src){
             var lines = src.split('\n')
             // PEP 657
-            // If err.$positions is set, it is an object indexed by frame
-            // number
             var positions
-            if(err.$positions !== undefined && err.$positions[frame_num]){
-                positions = err.$positions[frame_num]
+            if(! is_syntax_error && frame.inum && frame.positions){
+                positions = frame.positions[Math.floor(frame.inum / 2)]
             }
             if(positions){
-                if(positions[0] == 'Attr'){
-                    handle_Attribute_error(trace, positions, lines)
-                }else if(positions[0] == 'BinOp'){
-                    handle_BinOp_error(trace, positions, lines)
-                }else if(positions[0] == 'Call'){
-                    handle_Call_error(trace, positions, lines)
-                }else if(positions[0] == 'Assert'){
-                    handle_Assert_error(trace, positions, lines)
-                }else if(positions[0] == 'Subscript'){
-                    handle_Subscript_error(trace, positions, lines)
-                }else if(positions[0] == 'Unpack'){
-                    handle_Unpack_error(trace, positions, lines)
+                let [lineno, end_lineno, col_offset, end_col_offset] = positions
+                // part of first line before error
+                var head = lines[lineno - 1].substr(0, col_offset)
+                var segment = ' '.repeat(col_offset)
+                if(lineno == end_lineno){
+                    segment += lines[lineno - 1].substring(col_offset, end_col_offset)
                 }else{
-                    var line = lines[lineno - 1]
-                    if(line){
-                        trace.push('    ' + line.trim())
+                    segment += lines[lineno - 1].substr(col_offset) + '\n'
+                    for(var lnum = lineno + 1; lnum < end_lineno; lnum++){
+                        segment += lines[lnum - 1] + '\n'
                     }
-                    var trace_line = ''
-                    if((positions[1] != positions[0] ||
-                                (positions[2] - positions[1]) != line.trim().length ||
-                                positions[3])){
-                        var indent = line.length - line.trimLeft().length
-                        var paddings = [positions[0] - indent,
-                                        positions[1] - positions[0],
-                                        positions[2] - positions[1]]
-                        for(var padding of paddings){
-                            if(padding < 0){
-                                console.log('wrong values, position', position, 'indent', indent)
-                                paddings[paddings.indexOf(padding)] = 0
-                            }
-                        }
-                        trace_line += '    ' + ' '.repeat(paddings[0]) +
-                            '~'.repeat(paddings[1]) +
-                            '^'.repeat(paddings[2])
-                        if(positions[3] !== undefined){
-                            trace_line += '~'.repeat(positions[3] - positions[2])
-                        }
-                        trace.push(trace_line)
-                    }
+                    var last = lines[end_lineno - 1].substr(0, end_col_offset)
+                    segment += last
                 }
-            }else if(frame.ClassDef && frame.ClassDef[lineno]){
-                // format exception in class definition body
-                // find first error in the same module
-                var last = stack[stack.length - 1]
-                for(var i = frame_num; i < stack.length; i++){
-                    if(stack[i].__file__ !== frame.__file__){
-                        last = stack[i - 1]
+                try{
+                    var ast = $B.pythonToAST(`(\n${segment}\n)`, 'dummy', 'file')
+                }catch(err){
+                    // only show report
+                    trace.push(make_report(lines, positions))
+                    tb = tb.tb_next
+                    continue
+                }
+                if(! (ast instanceof $B.ast.Module)){
+                    console.log('not a module', ast)
+                    continue
+                }
+                var expr = ast.body[0]
+                var proto = Object.getPrototypeOf(expr)
+                var marks
+                switch(expr.constructor){
+                    case $B.ast.Expr:
+                        switch(expr.value.constructor){
+                            case $B.ast.BinOp:
+                                handle_BinOp_error(expr.value, trace, segment, head)
+                                break
+                            case $B.ast.Call:
+                                handle_Call_error(lines, positions, expr.value, trace)
+                                break
+                            case $B.ast.Subscript:
+                                handle_Subscript_error(lines, positions, expr.value, trace, segment)
+                                break
+                            default:
+                                var ast_obj = {lineno, end_lineno, col_offset,
+                                    end_col_offset}
+                                handle_Expr_error(ast_obj, trace, lines)
+                                break
+                        }
                         break
-                    }
+                    default:
+                        trace.push(make_trace_lines(segment, marks, '\n',
+                            segment.split('\n'), expr.lineno, expr.end_lineno))
+
                 }
-                var class_line = lines[lineno - 1],
-                    indent = class_line.length - class_line.trimLeft().length
-                trace.push('    ' + lines[lineno - 1].trimLeft())
-                var nb_lines = last.$lineno - lineno - 1
-                if(nb_lines){
-                    trace.push(`    ...<${nb_lines} lines>...`)
-                }
-                var err_line = lines[last.$lineno - 1]
-                trace.push('    ' + err_line.substr(indent))
             }else{
                 trace.push('    ' + lines[lineno - 1].trim())
             }
@@ -1502,6 +1605,8 @@ function trace_from_stack(err){
             console.log('no src for filename', filename)
             //console.log('in file_cache', Object.keys($B.file_cache).join('\n'))
         }
+
+        tb = tb.tb_next
     }
     if(count_repeats > 1){
         let len = trace.length
@@ -1520,18 +1625,14 @@ function trace_from_stack(err){
 
 $B.error_trace = function(err){
     var trace = '',
-        stack = err.$frame_obj === undefined ? [] : make_frames_stack(err.$frame_obj)
+        has_stack = err.__traceback__ !== _b_.None
 
     var debug = $B.get_option('debug', err)
     if(debug > 1){
-        console.log("handle error", err.__class__, err.args)
-        if(debug > 2){
-            console.log('stack', stack)
-            console.log(err.stack)
-        }
+        console.log("handle error", err.__class__, err.args, err.__traceback__)
     }
 
-    if(stack.length > 0){
+    if(has_stack){
         trace = 'Traceback (most recent call last):\n'
     }
     if(err.__class__ === _b_.SyntaxError ||

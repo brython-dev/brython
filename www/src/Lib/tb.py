@@ -103,18 +103,27 @@ def syntax_error(exc):
     if not args:
         trace.write(f"{name}:", '<no detail available>')
         return trace.format()
-    info, [filename, lineno, offset, line, *extra] = args
-    trace.write(f'  File "{filename}", line {lineno}')
-    indent = len(line) - len(line.lstrip())
-    trace.write("    " + line.strip())
+    info, *details = args
+    console.log('details', details)
+    head = ''
+    if exc.filename:
+        head += f'File "{exc.filename}'
+    if exc.lineno:
+        head += f', line {exc.lineno}'
+    if head:
+        trace.write(head)
+    if line := exc.text:
+        indent = len(line) - len(line.lstrip())
+        trace.write("    " + line.strip())
     nb_marks = 1
-    if extra:
+    if exc.end_lineno:
         end_lineno, end_offset = extra
         if end_lineno > lineno:
             nb_marks = len(line) - offset
         else:
             nb_marks = end_offset - offset
-    nb_marks = max(nb_marks, 1)
-    trace.write("    " + (offset - 1) * " " + "^" * nb_marks)
+        nb_marks = max(nb_marks, 1)
+        if exc.offset:
+            trace.write("    " + (offset - 1) * " " + "^" * nb_marks)
     trace.write(f"{name}:", info)
     return trace.format()

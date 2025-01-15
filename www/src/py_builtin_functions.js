@@ -251,7 +251,13 @@ code.__repr__ = code.__str__ = function(_self){
 code.__getattribute__ = function(self, attr){
     if(attr == 'co_positions'){
         // fake value
-        return () => $B.$list([$B.$list([0, 0, 0, 0])])
+        var positions = [[0, 0, 0, 0]]
+        if(self.co_positions){
+            positions = self.co_positions
+        }
+        var f = () => $B.$list(positions)
+        f.__class__ = $B.function
+        return f
     }
     return self[attr]
 }
@@ -744,6 +750,7 @@ var $$eval = _b_.eval = function(){
         $B.frame_obj = save_frame_obj
         throw err
     }
+
 
     if(mode == 'eval'){
         // must set locals, might be used if expression is like

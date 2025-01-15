@@ -634,7 +634,7 @@ $B.JSObj.__getattribute__ = function(_self, attr){
                 writable: true
             }
         )
-        
+
         return new_func
     }
     var js_attr = _self[attr]

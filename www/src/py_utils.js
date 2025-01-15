@@ -922,12 +922,12 @@ $B.unpacker = function(obj, nb_targets, has_starred){
 
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
+        if(position && $B.frame_obj){
+            $B.frame_obj.frame.inum = inum
+        }
         var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
             `(expected ${has_starred ? ' at least ' : ''} ` +
             `${left_length}, got ${right_length})`)
-        if(position){
-            $B.set_exception_offsets(exc, position)
-        }
         throw exc
     }
     if((! has_starred) && right_length > left_length){
@@ -1026,9 +1026,13 @@ $B.$getitem = function(obj, item, inum){
         return $B.$getitem1(obj, item)
     }catch(err){
         if(inum !== undefined){
+            if($B.frame_obj){
+                $B.frame_obj.frame.inum = inum
+            }
             var position = $B.get_position_from_inum(inum)
             $B.set_exception_offsets(err, $B.decode_position(position))
         }
+        err.__traceback__ = $B.make_tb()
         throw err
     }
 }
@@ -1087,9 +1091,6 @@ $B.$getitem1 = function(obj, item){
 
     var exc = _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
-    if(position){
-        $B.set_exception_offsets(exc, $B.decode_position(position))
-    }
     throw exc
 }
 
@@ -1389,9 +1390,13 @@ $B.$call = function(callable, inum){
         callable = $B.$call1(callable)
     }catch(err){
         if(inum !== undefined){
+            if($B.frame_obj !== null && inum !== undefined){
+                $B.frame_obj.frame.inum = inum
+            }
             var position = $B.get_position_from_inum(inum)
             $B.set_exception_offsets(err, $B.decode_position(position))
         }
+        err.__traceback__ = $B.make_tb()
         throw err
     }
 
@@ -1400,6 +1405,9 @@ $B.$call = function(callable, inum){
             return callable.apply(null, arguments)
         }catch(exc){
             if(inum !== undefined){
+                if($B.frame_obj !== null && inum !== undefined){
+                    $B.frame_obj.frame.inum = inum
+                }
                 var position = $B.get_position_from_inum(inum)
                 $B.set_exception_offsets(exc, $B.decode_position(position))
             }
@@ -1817,8 +1825,8 @@ $B.get_position_from_inum = function(inum){
     // Get position from pseudo instruction number
     if($B.frame_obj !== null){
         var frame = $B.frame_obj.frame
-        if(frame.positions && frame.positions[inum]){
-            return frame.positions[inum]
+        if(frame.positions){
+            return frame.positions[Math.floor(inum / 2)]
         }
     }
 }
@@ -1828,8 +1836,12 @@ $B.rich_op = function(op, x, y, inum){
         return $B.rich_op1(op, x, y)
     }catch(exc){
         if(inum !== undefined){
+            if($B.frame_obj){
+                $B.frame_obj.frame.inum = inum
+            }
             $B.set_exception_offsets(exc, $B.decode_position($B.get_position_from_inum(inum)))
         }
+        exc.__traceback__ = $B.make_tb()
         throw exc
     }
 }

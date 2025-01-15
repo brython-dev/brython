@@ -642,9 +642,6 @@ $B.resolve_in_scopes = function(name, namespaces, position, lineno){
         }
     }
     var exc = $B.name_error(name)
-    if(position){
-        $B.set_exception_offsets(exc, position)
-    }
     if(lineno){
         exc.lineno = lineno
     }
@@ -1108,12 +1105,15 @@ function maybe_add_static(attr, scopes){
     }
 }
 
-function add_to_positions(scopes, positions){
+function add_to_positions(scopes, ast_obj){
     // add a positions table to the list of positions for current frame
     var up_scope = last_scope(scopes)
     up_scope.positions = up_scope.positions ?? []
-    up_scope.positions[up_scope.positions.length] = positions
-    return up_scope.positions.length - 1
+    up_scope.positions[up_scope.positions.length] = encode_position([
+        ast_obj.lineno, ast_obj.end_lineno,
+        ast_obj.col_offset, ast_obj.end_col_offset
+    ])
+    return 1 + 2 * (up_scope.positions.length - 1)
 }
 
 $B.ast.Assert.prototype.to_js = function(scopes){
@@ -1220,7 +1220,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         var position = encode_position("'Unpack'",
             target.lineno, target.col_offset,
             target.end_lineno, target.end_col_offset)
-        var inum = add_to_positions(scopes, position)
+        var inum = add_to_positions(scopes, target)
         js += prefix + `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
         if(nb_after_starred !== undefined){
@@ -1403,7 +1403,7 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
     var position = encode_position("'Attr'",
             this.value.lineno, this.value.col_offset, this.end_col_offset)
-    var inum = add_to_positions(scopes, position)
+    var inum = add_to_positions(scopes, this)
     return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
            `'${attr}', ${inum})`
 }
@@ -1490,6 +1490,7 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
         this.left.end_lineno, this.left.end_col_offset,
         this.right.lineno, this.right.col_offset,
         this.right.end_lineno, this.right.end_col_offset)
+    var inum = add_to_positions(scopes, this)
     var name = this.op.constructor.$name
     var op = opclass2dunder[name]
     if(this.left instanceof $B.ast.Constant &&
@@ -1506,7 +1507,6 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
             // error will be handled at runtime
         }
     }
-    var inum = add_to_positions(scopes, position)
     return `$B.rich_op('${op}', ` +
         `${$B.js_from_ast(this.left, scopes)}, ` +
         `${$B.js_from_ast(this.right, scopes)}, ${inum})`
@@ -1577,7 +1577,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
         this.lineno, this.col_offset,
         this.end_lineno, this.end_col_offset,
         this.func.end_lineno, this.func.end_col_offset)
-    var inum = add_to_positions(scopes, position)
+    var inum = add_to_positions(scopes, this)
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}, ${inum})`
 
@@ -1776,10 +1776,13 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
+    var inum = add_to_positions(scopes, this)
+
     js += prefix + `var ${ref} = (function(name, module, bases`
               + (metaclass ? ', meta' : '') +
               `){\n`
     indent()
+    js += prefix + `$B.frame_obj.frame.inum = ${inum}\n`
     js += prefix + `var _frame_obj = $B.frame_obj,\n`
     indent(2)
     js += prefix + `resolved_bases = $B.resolve_mro_entries(bases),\n` +
@@ -2070,7 +2073,13 @@ $B.ast.Expr.prototype.to_js = function(scopes){
 
 $B.ast.Expression.prototype.to_js = function(scopes){
     init_scopes.bind(this)('expression', scopes)
-    return $B.js_from_ast(this.body, scopes)
+    var res = $B.js_from_ast(this.body, scopes)
+    var positions = scopes[scopes.length - 1].positions
+    if(positions){
+        res = prefix + `(frame.positions = [${positions}], ` +
+              res +')'
+    }
+    return res
 }
 
 $B.ast.For.prototype.to_js = function(scopes){
@@ -2870,8 +2879,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     if(func_scope.needs_frames || is_async){
-        js += prefix + `var _frame_obj = $B.frame_obj,\n` +
-              prefix + tab + `_linenums = $B.make_linenums()\n`
+        js += prefix + `var _frame_obj = $B.frame_obj\n`
     }
 
     if(is_async){
@@ -2918,8 +2926,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         // set exception $frame_obj and $linenums
         js += prefix + `$B.set_exc_and_trace(frame, err)\n` +
               `err.$frame_obj = _frame_obj\n` +
-              `_linenums[_linenums.length - 1] = frame.$lineno\n` +
-              `err.$linenums = _linenums\n` +
               `$B.leave_frame()\n` +
               `throw err\n`
     }else{
@@ -3279,6 +3285,9 @@ $B.ast.IfExp.prototype.to_js = function(scopes){
 
 $B.ast.Import.prototype.to_js = function(scopes){
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    var inum = add_to_positions(scopes, this)
+    js += prefix + 'try{\n'
+    indent()
     for(var alias of this.names){
         js += prefix + `$B.$import("${alias.name}", [], `
         if(alias.asname){
@@ -3295,6 +3304,14 @@ $B.ast.Import.prototype.to_js = function(scopes){
 
         js += `locals, true)\n`
     }
+    dedent()
+    js += prefix + '}catch(err){\n'
+    indent()
+    js += prefix + `frame.inum = ${inum}\n` +
+          prefix + 'throw err\n'
+    dedent()
+    js += prefix + '}\n'
+
     return js.trimRight()
 }
 
@@ -3751,9 +3768,10 @@ $B.ast.Module.prototype.to_js = function(scopes){
     js += prefix + `}`
     var positions = scopes[scopes.length - 1].positions
     if(positions && positions.length > 0){
+        var rest = js.substr(insert_positions)
         js = js.substr(0, insert_positions) +
-             `frame.positions = [${positions}]\n` +
-             js.substr(insert_positions)
+             `frame.positions = [${positions}]\n`
+        js += rest
     }
     scopes.pop()
     if(prefix.length != 0){
@@ -3911,7 +3929,7 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
             this.value.end_lineno, this.value.end_col_offset,
             this.slice.lineno, this.slice.col_offset,
             this.end_lineno, this.end_col_offset)
-        var inum = add_to_positions(scopes, position)
+        var inum = add_to_positions(scopes, this)
         return `$B.$getitem(${value}, ${slice}, ${inum})`
     }
 }
