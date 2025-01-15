@@ -1006,11 +1006,12 @@ $B.warn = function(klass, message, filename, token){
 }
 
 // assert
-$B.assert = function(test, msg, position){
+$B.assert = function(test, msg, inum){
     if(! $B.$bool(test)){
         var exc = _b_.AssertionError.$factory(msg)
-        position = $B.decode_position(position)
-        $B.set_exception_offsets(exc, position)
+        if(inum !== undefined && $B.frame_obj){
+            $B.frame_obj.frame.inum = inum
+        }
         throw exc
     }
 }
