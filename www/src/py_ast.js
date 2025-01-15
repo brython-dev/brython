@@ -149,6 +149,7 @@ $B.create_python_ast_classes = function(){
                     }
                 }
             }
+            cls.__match_args__ = $B.fast_tuple(Object.keys(slots))
 
             cls.$factory = function(){
                 var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
