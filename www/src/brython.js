@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-15 11:57:10.319747"
-__BRYTHON__.timestamp=1736938630319
+__BRYTHON__.compiled_date="2025-01-15 22:06:06.598871"
+__BRYTHON__.timestamp=1736975166598
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1534,9 +1534,8 @@ warning.end_offset=token.end_coloffset
 warning.text=token.line
 warning.args[1]=$B.fast_tuple([filename,warning.lineno,warning.offset,warning.text,warning.end_lineno,warning.end_offset])}
 $B.imported._warnings.warn(warning)}
-$B.assert=function(test,msg,position){if(! $B.$bool(test)){var exc=_b_.AssertionError.$factory(msg)
-position=$B.decode_position(position)
-$B.set_exception_offsets(exc,position)
+$B.assert=function(test,msg,inum){if(! $B.$bool(test)){var exc=_b_.AssertionError.$factory(msg)
+if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
 throw exc}}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 return _b_.IndexError.$factory(type+" index out of range")}
@@ -4489,8 +4488,12 @@ if(details.length < 4){throw _b_.TypeError.$factory(
 `function takes at least 4 arguments (${args.length} given)`)}
 if(details.length > 6){throw _b_.TypeError.$factory(
 `function takes at most 6 arguments (${args.length} given)`)}}else{details=[]}
-let attrs=['filename','lineno','offset','text','end_lineno','end_offset']
-for(var i=0;i < attrs.length;i++){err[attrs[i]]=details[i]?? _b_.None}}
+let attrs=['filename','lineno','offset','text','end_lineno','end_offset'],expected_types=[_b_.str,_b_.int,_b_.int,_b_.str,_b_.int,_b_.int]
+for(var i=0;i < attrs.length;i++){if(details[i]!==undefined){if(! $B.$isinstance(details[i],expected_types[i])){throw _b_.TypeError.$factory(`item #${i + 1} (${attrs[i]}) `+
+`of the second argument of SyntaxError should be `+
+`'${expected_types[i].__name__}', not `+
+`'${$B.class_name(details[i])}'`)}
+err[attrs[i]]=details[i]}else{err[attrs[i]]=_b_.None}}}
 )
 make_builtin_exception(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 make_builtin_exception("ModuleNotFoundError",_b_.ImportError,"name")
@@ -4708,31 +4711,6 @@ err_lines.push('    '+' '.repeat(left_ws-min_indent)+
 marks.substring(start+left_ws,i-right_ws))}
 start=i+1}}
 return err_lines.join('\n')}
-function handle_Assert_error(trace,positions,lines){
-var trace_lines=[]
-var[test_lineno,test_start,test_end_lineno,test_end]=positions.slice(1)
-var sep='\n'
-var text=lines.slice(test_lineno-1,test_end_lineno).join(sep)
-if(test_end_lineno==test_lineno){var test_end_pos=test_end}else{var test_end_pos=lines[test_lineno-1].length+1
-var lnum=test_lineno+1
-while(lnum < test_end_lineno){test_end_pos+=lines[lnum-1].length+1
-lnum++}
-test_end_pos+=test_end}
-var marks=' '.repeat(test_start)+
-'~'.repeat(test_end_pos-test_start)
-var err_lines=make_trace_lines(
-text,marks,sep,lines,test_lineno,test_end_lineno)
-trace.push(err_lines)}
-function handle_Attribute_error(trace,positions,lines){
-var trace_lines=[]
-var[attr_lineno,attr_start,attr_end]=positions.slice(1)
-var sep='&'
-var text=lines.slice(attr_lineno-1,attr_lineno).join(sep)
-var marks=' '.repeat(attr_start)+
-'~'.repeat(attr_end-attr_start)
-var err_lines=make_trace_lines(
-text,marks,sep,lines,attr_lineno,attr_lineno)
-trace.push(err_lines)}
 function get_text_pos(ast_obj,segment,elt){
 var start=2 
 for(var lnum=ast_obj.lineno;lnum < elt.lineno;lnum++){while(start < segment.length && segment[start]!='\n'){start++}
@@ -4867,21 +4845,6 @@ mark_lines.push(marks)}
 for(var i=0;i < mark_lines.length;i++){trace_lines.push('    '+lines[lineno+i-1].trimRight().substr(min_indent))
 trace_lines.push('    '+mark_lines[i].substr(min_indent))}
 trace.push(trace_lines.join('\n'))}
-function handle_Unpack_error(trace,positions,lines){
-var trace_lines=[]
-var[test_lineno,test_start,test_end_lineno,test_end]=positions.slice(1)
-var sep='\n'
-var text=lines.slice(test_lineno-1,test_end_lineno).join(sep)
-if(test_end_lineno==test_lineno){var test_end_pos=test_end}else{var test_end_pos=lines[test_lineno-1].length+1
-var lnum=test_lineno+1
-while(lnum < test_end_lineno){test_end_pos+=lines[lnum-1].length+1
-lnum++}
-test_end_pos+=test_end}
-var marks=' '.repeat(test_start)+
-'^'.repeat(test_end_pos-test_start)
-var err_lines=make_trace_lines(
-text,marks,sep,lines,test_lineno,test_end_lineno)
-trace.push(err_lines)}
 function make_report(lines,positions){
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
 lines=lines.slice(lineno-1,end_lineno)
@@ -12234,9 +12197,10 @@ up_scope.positions=up_scope.positions ??[]
 up_scope.positions[up_scope.positions.length]=encode_position([ast_obj.lineno,ast_obj.end_lineno,ast_obj.col_offset,ast_obj.end_col_offset
 ])
 return 1+2*(up_scope.positions.length-1)}
-$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''",position=encode_position("'Assert'",this.test.lineno,this.test.col_offset,this.test.end_lineno,this.test.end_col_offset)
+$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''"
+var inum=add_to_positions(scopes,this.test)
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
-return js+prefix+`$B.assert(${test}, ${msg}, ${position})`}
+return js+prefix+`$B.assert(${test}, ${msg}, ${inum})`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes,obj)}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){compiler_check(this)
 var postpone_annotation=scopes.symtable.table.future.features &

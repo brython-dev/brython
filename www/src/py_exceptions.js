@@ -565,9 +565,21 @@ make_builtin_exception("SyntaxError", _b_.Exception,
             details = []
         }
         let attrs = ['filename', 'lineno', 'offset', 'text', 'end_lineno',
-            'end_offset']
+                     'end_offset'],
+            expected_types = [_b_.str, _b_.int, _b_.int, _b_.str, _b_.int,
+                     _b_.int]
         for(var i = 0; i < attrs.length; i++){
-            err[attrs[i]] = details[i] ?? _b_.None
+            if(details[i] !== undefined){
+                if(! $B.$isinstance(details[i], expected_types[i])){
+                    throw _b_.TypeError.$factory(`item #${i + 1} (${attrs[i]}) ` +
+                        `of the second argument of SyntaxError should be ` +
+                        `'${expected_types[i].__name__}', not ` +
+                        `'${$B.class_name(details[i])}'`)
+                }
+                err[attrs[i]] = details[i]
+            }else{
+                err[attrs[i]] = _b_.None
+            }
         }
     }
 )
@@ -668,7 +680,7 @@ _b_.NameError = $B.make_class('NameError',
         err.__traceback__ = _b_.None
         err.$py_error = true
         err.$frame_obj = $B.frame_obj
-        
+
         err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])
         err.name = $.name
 
@@ -887,7 +899,7 @@ _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup",
         err.__traceback__ = _b_.None
         err.$py_error = true
         err.$frame_obj = $B.frame_obj
-        
+
         err.message = $.message
         err.exceptions = $.exceptions === missing ? [] : $.exceptions
         if(err.exceptions !== _b_.None){
@@ -988,7 +1000,7 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGroup",
         err.__traceback__ = _b_.None
         err.$py_error = true
         err.$frame_obj = $B.frame_obj
-        
+
         err.message = $.message
         err.exceptions = $.exceptions === missing ? [] : $.exceptions
         /*
@@ -1057,54 +1069,6 @@ function make_trace_lines(text, marks, sep, lines, line_start, line_end){
     }
 
     return err_lines.join('\n')
-}
-
-function handle_Assert_error(trace, positions, lines){
-    // frame.$positions is
-    // [test.lineno, test.col_offset, test.end_lineno, test.end_col_offset]
-    var trace_lines = []
-    var [test_lineno, test_start, test_end_lineno, test_end] = positions.slice(1)
-    // make a string with the lines from test_lineno to test_end_lineno
-    var sep = '\n'
-    var text = lines.slice(test_lineno - 1, test_end_lineno).join(sep)
-
-    // position of test end
-    if(test_end_lineno == test_lineno){
-        var test_end_pos = test_end
-    }else{
-        var test_end_pos = lines[test_lineno - 1].length + 1
-        var lnum = test_lineno + 1
-        while(lnum < test_end_lineno){
-            test_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        test_end_pos += test_end
-    }
-
-    var marks = ' '.repeat(test_start) +
-        '~'.repeat(test_end_pos - test_start)
-
-    var err_lines = make_trace_lines(
-        text, marks, sep, lines, test_lineno, test_end_lineno)
-    trace.push(err_lines)
-}
-
-function handle_Attribute_error(trace, positions, lines){
-    // frame.$positions is
-    // [attr.lineno, attr.col_offset, attr.end_col_offset]
-    var trace_lines = []
-    var [attr_lineno, attr_start, attr_end] = positions.slice(1)
-    // make a string with the lines from test_lineno to test_end_lineno
-    var sep = '&'
-    var text = lines.slice(attr_lineno - 1, attr_lineno).join(sep)
-
-    var marks = ' '.repeat(attr_start) +
-        '~'.repeat(attr_end - attr_start)
-
-    var err_lines = make_trace_lines(
-        text, marks, sep, lines, attr_lineno, attr_lineno)
-
-    trace.push(err_lines)
 }
 
 function get_text_pos(ast_obj, segment, elt){
@@ -1442,36 +1406,6 @@ function handle_Subscript_error(lines, positions, ast_obj, trace, text){
     trace.push(trace_lines.join('\n'))
 }
 
-function handle_Unpack_error(trace, positions, lines){
-    // frame.$positions is
-    // [unpack.lineno, unpack.col_offset, unpack.end_lineno, unpack.end_col_offset]
-    var trace_lines = []
-    var [test_lineno, test_start, test_end_lineno, test_end] = positions.slice(1)
-    // make a string with the lines from test_lineno to test_end_lineno
-    var sep = '\n'
-    var text = lines.slice(test_lineno - 1, test_end_lineno).join(sep)
-
-    // position of test end
-    if(test_end_lineno == test_lineno){
-        var test_end_pos = test_end
-    }else{
-        var test_end_pos = lines[test_lineno - 1].length + 1
-        var lnum = test_lineno + 1
-        while(lnum < test_end_lineno){
-            test_end_pos += lines[lnum - 1].length + 1
-            lnum++
-        }
-        test_end_pos += test_end
-    }
-
-    var marks = ' '.repeat(test_start) +
-        '^'.repeat(test_end_pos - test_start)
-
-    var err_lines = make_trace_lines(
-        text, marks, sep, lines, test_lineno, test_end_lineno)
-
-    trace.push(err_lines)
-}
 
 function make_report(lines, positions){
     // positions is [lineno, end_lineno, col_offset, end_col_offset]

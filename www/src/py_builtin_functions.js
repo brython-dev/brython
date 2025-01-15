@@ -561,7 +561,7 @@ var $$eval = _b_.eval = function(){
     }
 
     var filename = '<string>'
-
+    
     if(src.__class__ === code){
         filename = src.filename
         // result of compile()
