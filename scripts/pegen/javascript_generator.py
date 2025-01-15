@@ -79,7 +79,7 @@ $B._PyPegen.parse = function(p){
             return interactive_rule(p)
         default:
             console.log('unknown mode', p.mode)
-            alert()
+            throw Error(`unknown parse mode: ${p.mode}`)
     }
 }
 """
