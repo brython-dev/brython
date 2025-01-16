@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-15 22:06:06.598871"
-__BRYTHON__.timestamp=1736975166598
+__BRYTHON__.compiled_date="2025-01-16 08:43:37.398662"
+__BRYTHON__.timestamp=1737013417398
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4326,8 +4326,6 @@ var src=$B.file_cache[filename]
 if(src){var lines=src.split("\n"),line=lines[lineno-1]
 trace.push("    "+line.trim())}}}
 return trace.join("\n")}
-$B.last_frame=function(){var frame=$B.frame_obj.frame
-return `file ${frame.__file__} line ${frame.$lineno}`}
 $B.count_frames=function(frame_obj){frame_obj=frame_obj ||$B.frame_obj
 return frame_obj==null ? 0 :frame_obj.count}
 $B.get_frame_at=function(pos,frame_obj){frame_obj=frame_obj ||$B.frame_obj
@@ -4383,13 +4381,8 @@ if(_self.f_locals){return _self.f_locals}else if(_self.f_globals && _self[1]==_s
 frame.f_trace={__get__:function(_self){return _self.$f_trace}}
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
-$B.make_f_code=function(frame,varnames){frame.f_code={co_argcount:1,co_firstlineno:frame.$lineno,co_name:"<genexpr>",co_filename:frame.__file__,co_flags:115,co_freevars:$B.fast_tuple([]),co_kwonlyargcount:0,co_posonlyargount:0,co_qualname:"genexpr",co_varnames:$B.fast_tuple(['.0'].concat(varnames))}}
-$B.deep_copy=function(stack){var res=[]
-for(const s of stack){var item=[s[0],{},s[2],{}]
-if(s[4]!==undefined){item.push(s[4])}
-for(const i of[1,3]){for(var key in s[i]){item[i][key]=s[i][key]}}
-res.push(item)}
-return res}
+$B.make_f_code=function(frame,varnames){
+frame.f_code={co_argcount:1,co_firstlineno:frame.$lineno,co_name:"<genexpr>",co_filename:frame.__file__,co_flags:115,co_freevars:$B.fast_tuple([]),co_kwonlyargcount:0,co_posonlyargount:0,co_qualname:"genexpr",co_varnames:$B.fast_tuple(['.0'].concat(varnames))}}
 $B.restore_frame_obj=function(frame_obj,locals){$B.frame_obj=frame_obj
 $B.frame_obj.frame[1]=locals}
 var make_frames_stack=$B.make_frames_stack=function(frame_obj){var stack=[]
@@ -4397,7 +4390,6 @@ while(frame_obj !==null){stack[stack.length]=frame_obj.frame
 frame_obj=frame_obj.prev}
 stack.reverse()
 return stack}
-$B.freeze=function(err){err.__traceback__=err.__traceback__ ?? traceback.$factory(err)}
 $B.exception=function(js_exc){
 var exc
 if(! js_exc.__class__){if(js_exc.$py_exc){
@@ -4413,9 +4405,7 @@ exc.__context__=_b_.None
 exc.__suppress_context__=false
 exc.args=_b_.tuple.$factory([msg])
 exc.$py_error=true
-js_exc.$py_exc=exc
-$B.freeze(exc)}else{exc=js_exc
-$B.freeze(exc)}
+js_exc.$py_exc=exc}else{exc=js_exc}
 exc.__traceback__=exc.__traceback__ ?? traceback.$factory(exc)
 return exc}
 $B.is_exc=function(exc,exc_list){
@@ -4432,10 +4422,8 @@ var err_type=parts[0].trim(),err_msg=parts[1].trim()
 return(err_type=='InternalError' && err_msg=='too much recursion')||
 (err_type=='Error' && err_msg=='Out of stack space')||
 (err_type=='RangeError' && err_msg=='Maximum call stack size exceeded')}
-function freeze_frame_obj(obj){obj=obj ?? $B.frame_obj
-return{
-count:obj.count,frame:obj.frame,prev:obj.prev===null ? null :freeze_frame_obj(obj.prev)}}
-function make_builtin_exception(exc_name,base,set_value){if(Array.isArray(exc_name)){for(var name of exc_name){make_builtin_exception(name,base,set_value)}
+function make_builtin_exception(exc_name,base,set_value){
+if(Array.isArray(exc_name)){for(var name of exc_name){make_builtin_exception(name,base,set_value)}
 return}
 var exc_class=$B.make_class(exc_name,function(){var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
@@ -4559,7 +4547,6 @@ exc.__traceback__=make_tb()
 return exc}
 $B.recursion_error=function(frame){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
-$B.freeze(exc)
 return exc}
 var MAX_CANDIDATE_ITEMS=750,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
@@ -4634,7 +4621,6 @@ err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=_b_.BaseExceptionGroup
 err.__traceback__=_b_.None
 err.$py_error=true
-err.$frame_obj=$B.frame_obj
 err.message=$.message
 err.exceptions=$.exceptions===missing ?[]:$.exceptions
 if(err.exceptions !==_b_.None){var exc_list=_b_.list.$factory(err.exceptions)
@@ -4676,7 +4662,6 @@ err.args=$B.fast_tuple(Array.from(arguments))
 err.__class__=_b_.ExceptionGroup
 err.__traceback__=_b_.None
 err.$py_error=true
-err.$frame_obj=$B.frame_obj
 err.message=$.message
 err.exceptions=$.exceptions===missing ?[]:$.exceptions
 if(err.exceptions !==_b_.None){var exc_list=_b_.list.$factory(err.exceptions)
@@ -4722,6 +4707,25 @@ for(;lnum < elt.end_lineno;lnum++){while(end < segment.length && segment[end]!='
 end++}
 end+=elt.end_col_offset}
 return{start,end}}
+function find_char(text,start_pos,line,test_func){
+var pos=start_pos
+var char_line=line
+while(pos < text.length){if(text[pos]=='#'){
+pos++
+while(pos < text.length && text[pos]!='\n'){pos++}}else if(test_func(text[pos])){
+pos++}else{return{pos,lineno:char_line}}}
+return{pos,lineno:char_line}}
+function make_test_func(ast_obj){
+if(ast_obj.end_lineno==ast_obj.lineno){return function(line,col){return line==ast_obj.lineno && ast_obj.col_offset <=col &&
+col < ast_obj.end_col_offset}}else{return function(line,col){return(line==ast_obj.lineno && col >=ast_obj.col_offset)||
+(line > ast_obj.lineno && line < ast_obj.end_lineno)||
+(line==ast_obj.end_lineno && col < ast_obj.end_col_offset)}}}
+function get_indent(line){return line.length-line.trimLeft().length}
+function get_min_indent(lines){var min_indent=2**16
+for(var line of lines){if(! line.trim()){continue}
+var indent=get_indent(line)
+if(indent < min_indent){min_indent=indent}}
+return min_indent}
 function handle_BinOp_error(ast_obj,trace,text,head){
 var trace_lines=[]
 var segment=`(\n${text}\n)`
@@ -4734,9 +4738,7 @@ var marks=' '.repeat(left_pos.start)+
 '~'.repeat(operator_start.pos-left_pos.start)+
 '^'.repeat(operator_length)+
 '~'.repeat(segment.length-operator_end.pos)
-var min_indent=255
-for(var line of text.split('\n')){var indent=line.length-line.trimLeft().length
-if(indent < min_indent){min_indent=indent}}
+var min_indent=get_min_indent(text.split('\n'))
 var lines=segment.split('\n')
 segment=segment.substring(2,segment.length-2)
 var orig_marks=marks.substring(2,marks.length-2)
@@ -4752,11 +4754,7 @@ elines.push('    '+marks_line)
 lstart=i+1}
 i++}
 trace.push(elines.join('\n'))}
-function make_test_func(ast_obj){if(ast_obj.end_lineno==ast_obj.lineno){return function(line,col){return line==ast_obj.lineno && ast_obj.col_offset <=col &&
-col < ast_obj.end_col_offset}}else{return function(line,col){return(line==ast_obj.lineno && col >=ast_obj.col_offset)||
-(line > ast_obj.lineno && line < ast_obj.end_lineno)||
-(line==ast_obj.end_lineno && col < ast_obj.end_col_offset)}}}
-function handle_Call_error(lines,positions,ast_obj,trace,text){
+function handle_Call_error(lines,positions,ast_obj,trace){
 var trace_lines=[]
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
 var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
@@ -4781,12 +4779,6 @@ mark_lines.push(marks)}
 for(var i=0;i < mark_lines.length;i++){trace_lines.push('    '+lines[lineno+i-1].trimRight().substr(min_indent))
 trace_lines.push('    '+mark_lines[i].substr(min_indent))}
 trace.push(trace_lines.join('\n'))}
-function get_indent(line){return line.length-line.trimLeft().length}
-function get_min_indent(lines){var min_indent=2**16
-for(var line of lines){if(! line.trim()){continue}
-var indent=get_indent(line)
-if(indent < min_indent){min_indent=indent}}
-return min_indent}
 function handle_Expr_error(ast_obj,trace,lines){var trace_lines=[]
 if(ast_obj.lineno==ast_obj.end_lineno){var err_line=lines[ast_obj.lineno-1]
 var indent=err_line.length-err_line.trimLeft().length
@@ -4800,7 +4792,7 @@ var marks_line=' '.repeat(ast_obj.col_offset)+
 '^'.repeat(err_line.length-ast_obj.col_offset)
 trace_lines.push('    '+marks_line.substr(min_indent))
 for(var lnum=ast_obj.lineno+1;lnum <=ast_obj.end_lineno-1;lnum++){err_line=lines[lnum-1].trimRight()
-var indent=err_line.length-err_line.trimLeft().length
+var indent=get_indent(err_line)
 trace_lines.push('    '+err_line.substr(min_indent))
 marks_line=' '.repeat(indent)+'^'.repeat(err_line.substr(indent).length)
 trace_lines.push('    '+marks_line.substr(min_indent))}
@@ -4811,14 +4803,6 @@ var marks_line=' '.repeat(indent)+
 '^'.repeat(ast_obj.end_col_offset-indent)
 trace_lines.push('    '+marks_line.substr(min_indent))}
 trace.push(trace_lines.join('\n'))}
-function find_char(text,start_pos,line,test_func){
-var pos=start_pos
-var char_line=line
-while(pos < text.length){if(text[pos]=='#'){
-pos++
-while(pos < text.length && text[pos]!='\n'){pos++}}else if(test_func(text[pos])){
-pos++}else{return{pos,lineno:char_line}}}
-return{pos,lineno:char_line}}
 function handle_Subscript_error(lines,positions,ast_obj,trace,text){
 var trace_lines=[]
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
@@ -4881,8 +4865,7 @@ var head=lines[lineno-1].substr(0,col_offset)
 var segment=' '.repeat(col_offset)
 if(lineno==end_lineno){segment+=lines[lineno-1].substring(col_offset,end_col_offset)}else{segment+=lines[lineno-1].substr(col_offset)+'\n'
 for(var lnum=lineno+1;lnum < end_lineno;lnum++){segment+=lines[lnum-1]+'\n'}
-var last=lines[end_lineno-1].substr(0,end_col_offset)
-segment+=last}
+segment+=lines[end_lineno-1].substr(0,end_col_offset)}
 try{var ast=$B.pythonToAST(`(\n${segment}\n)`,'dummy','file')}catch(err){
 trace.push(make_report(lines,positions))
 tb=tb.tb_next

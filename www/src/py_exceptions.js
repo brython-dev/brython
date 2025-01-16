@@ -109,12 +109,6 @@ $B.print_stack = function(frame_obj){
     return trace.join("\n")
 }
 
-$B.last_frame = function(){
-    var frame = $B.frame_obj.frame
-    return `file ${frame.__file__} line ${frame.$lineno}`
-}
-
-
 $B.count_frames = function(frame_obj){
     frame_obj = frame_obj || $B.frame_obj
     return frame_obj == null ? 0 : frame_obj.count
@@ -304,6 +298,7 @@ $B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
 
 $B.make_f_code = function(frame, varnames){
+    // create attribute f_code of generator expressions frame
     frame.f_code = {
        co_argcount: 1,
        co_firstlineno: frame.$lineno,
@@ -316,21 +311,6 @@ $B.make_f_code = function(frame, varnames){
        co_qualname: "genexpr",
        co_varnames: $B.fast_tuple(['.0'].concat(varnames))
     }
-}
-
-$B.deep_copy = function(stack){
-    var res = []
-    for(const s of stack){
-        var item = [s[0], {}, s[2], {}]
-        if(s[4] !== undefined){item.push(s[4])}
-        for(const i of [1, 3]){
-            for(var key in s[i]){
-                item[i][key] = s[i][key]
-            }
-        }
-        res.push(item)
-    }
-    return res
 }
 
 $B.restore_frame_obj = function(frame_obj, locals){
@@ -347,11 +327,6 @@ var make_frames_stack = $B.make_frames_stack = function(frame_obj){
     stack.reverse()
     return stack
 }
-
-$B.freeze = function(err){
-    err.__traceback__ = err.__traceback__ ?? traceback.$factory(err)
-}
-
 
 $B.exception = function(js_exc){
     // thrown by eval(), exec() or by a function
@@ -381,10 +356,8 @@ $B.exception = function(js_exc){
         exc.args = _b_.tuple.$factory([msg])
         exc.$py_error = true
         js_exc.$py_exc = exc
-        $B.freeze(exc)
     }else{
         exc = js_exc
-        $B.freeze(exc)
     }
     exc.__traceback__ = exc.__traceback__ ?? traceback.$factory(exc)
     return exc
@@ -424,18 +397,15 @@ $B.is_recursion_error = function(js_exc){
         (err_type == 'RangeError' && err_msg == 'Maximum call stack size exceeded')
 }
 
-function freeze_frame_obj(obj){
-    obj = obj ?? $B.frame_obj
-    return {
-        count: obj.count,
-        frame: obj.frame,
-        prev: obj.prev === null ? null : freeze_frame_obj(obj.prev)
-    }
-}
-
 // built-in exceptions
 
 function make_builtin_exception(exc_name, base, set_value){
+    // Create a builtin exception class
+    // If set_value is provided:
+    // - if it is a string, set the attribute with this name to the value
+    //   passed to the constructor
+    // - if it is a function, call it with the exception instance as first
+    //   argument, then the arguments passed to the constructor
     if(Array.isArray(exc_name)){
         for(var name of exc_name){
             make_builtin_exception(name, base, set_value)
@@ -719,7 +689,6 @@ $B.name_error = function(name){
 $B.recursion_error = function(frame){
     var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
     $B.set_exc(exc, frame)
-    $B.freeze(exc)
     return exc
 }
 
@@ -898,7 +867,6 @@ _b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup",
         err.__class__ = _b_.BaseExceptionGroup
         err.__traceback__ = _b_.None
         err.$py_error = true
-        err.$frame_obj = $B.frame_obj
 
         err.message = $.message
         err.exceptions = $.exceptions === missing ? [] : $.exceptions
@@ -999,7 +967,6 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGroup",
         err.__class__ = _b_.ExceptionGroup
         err.__traceback__ = _b_.None
         err.$py_error = true
-        err.$frame_obj = $B.frame_obj
 
         err.message = $.message
         err.exceptions = $.exceptions === missing ? [] : $.exceptions
@@ -1099,24 +1066,78 @@ function get_text_pos(ast_obj, segment, elt){
     return {start, end}
 }
 
+function find_char(text, start_pos, line, test_func){
+    // Scan the characters in text starting at start pos
+    // position pos
+    // return {char_position, char_lineno}
+    var pos = start_pos
+    var char_line = line
+    while(pos < text.length){
+        if(text[pos] == '#'){
+            // skip comment
+            pos++
+            while(pos < text.length && text[pos] != '\n'){
+                pos++
+            }
+        }else if(test_func(text[pos])){
+            // skip if a test function is provided and succeeds for current
+            // character
+            pos++
+        }else{
+            return {pos, lineno: char_line}
+        }
+    }
+    return {pos, lineno: char_line}
+}
+
+function make_test_func(ast_obj){
+    // Returns a function f(line, col) that tests if (line, col) is inside the
+    // ast_obj coords, from (lineno, col_offset) to (end_lineno, end_col_offset)
+    if(ast_obj.end_lineno == ast_obj.lineno){
+        return function(line, col){
+            return line == ast_obj.lineno && ast_obj.col_offset <= col &&
+                col < ast_obj.end_col_offset
+        }
+    }else{
+        return function(line, col){
+            return (line == ast_obj.lineno && col >= ast_obj.col_offset) ||
+                   (line > ast_obj.lineno && line < ast_obj.end_lineno) ||
+                   (line == ast_obj.end_lineno && col < ast_obj.end_col_offset)
+       }
+   }
+}
+
+function get_indent(line){
+    return line.length - line.trimLeft().length
+}
+
+function get_min_indent(lines){
+    var min_indent = 2 ** 16
+    for(var line of lines){
+        if(! line.trim()){
+            continue
+        }
+        var indent = get_indent(line)
+        if(indent < min_indent){
+            min_indent = indent
+        }
+    }
+    return min_indent
+}
+
 function handle_BinOp_error(ast_obj, trace, text, head){
-    // 'positions' are the coords of the BinOp in the original source
-    // The text of the expression is determined by `positions`
-    // A segment is made of `(\n{text}\n)` and parsed; ast_obj is the BinOp
-    // instance inside the segment
-    // Positions of the BinOp are
-    //                in original source     in segment
-    // lineno         positions[0]           2
-    // end_lineno     positions[1]           2 + positions[1] - positions[0]
-    // col_offset     positions[2]           positions[2]
-    // end_col_offset positions[3]           positions[3]
+    // ast_obj is the BinOp instance inside the segment (\n{text}\n)
+    // It has attributes .left and .right; the position of the operator is not
+    // available, we have to calculate it
+    // head is the code on the first line in source code before the BinOp,
+    // for instance "x = " if the line is "x = 1 / 0"
     var trace_lines = []
     var segment = `(\n${text}\n)`
-    // Position (start;end) of left operand in text
+    // Position {start, end} of left and right operands in segment
     var left_pos = get_text_pos(ast_obj, segment, ast_obj.left)
     var right_pos = get_text_pos(ast_obj, segment, ast_obj.right)
 
-    // position of operator: only cars between left end and right start
+    // position of operator: only cars between left.end and right.start
     // different from ' ', '(' and ')'
     var operator_start = find_char(segment, left_pos.end, ast_obj.left.end_lineno,
         char => '()'.includes(char) || char.match(/\s/))
@@ -1134,14 +1155,7 @@ function handle_BinOp_error(ast_obj, trace, text, head){
     // Compute minimal indent in error lines
     // The line with minimum indent will be printed with a 4 space
     // indentation
-    var min_indent = 255
-    for(var line of text.split('\n')){
-        var indent = line.length - line.trimLeft().length
-        if(indent < min_indent){
-            min_indent = indent
-        }
-    }
-
+    var min_indent = get_min_indent(text.split('\n'))
     var lines = segment.split('\n')
 
     // remove leading (\n and trailing \n)
@@ -1167,26 +1181,10 @@ function handle_BinOp_error(ast_obj, trace, text, head){
     trace.push(elines.join('\n'))
 }
 
-function make_test_func(ast_obj){
-    if(ast_obj.end_lineno == ast_obj.lineno){
-        return function(line, col){
-            return line == ast_obj.lineno && ast_obj.col_offset <= col &&
-                col < ast_obj.end_col_offset
-        }
-    }else{
-        return function(line, col){
-            return (line == ast_obj.lineno && col >= ast_obj.col_offset) ||
-                   (line > ast_obj.lineno && line < ast_obj.end_lineno) ||
-                   (line == ast_obj.end_lineno && col < ast_obj.end_col_offset)
-       }
-   }
-}
-
-function handle_Call_error(lines, positions, ast_obj, trace, text){
+function handle_Call_error(lines, positions, ast_obj, trace){
     // lines is the original source code lines
     // positions is [lineno, end_lineno, col_offset, end_col_offset] of
     // the Call instance in source code
-    // text is the source code of the call
     // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
     // Position of the call
     //                  in source code   in segment
@@ -1249,29 +1247,12 @@ function handle_Call_error(lines, positions, ast_obj, trace, text){
         }
         mark_lines.push(marks)
     }
+    // remove minimal indent, then indent with 4 whitespaces
     for(var i = 0; i < mark_lines.length; i++){
         trace_lines.push('    ' + lines[lineno + i - 1].trimRight().substr(min_indent))
         trace_lines.push('    ' + mark_lines[i].substr(min_indent))
     }
     trace.push(trace_lines.join('\n'))
-}
-
-function get_indent(line){
-    return line.length - line.trimLeft().length
-}
-
-function get_min_indent(lines){
-    var min_indent = 2 ** 16
-    for(var line of lines){
-        if(! line.trim()){
-            continue
-        }
-        var indent = get_indent(line)
-        if(indent < min_indent){
-            min_indent = indent
-        }
-    }
-    return min_indent
 }
 
 function handle_Expr_error(ast_obj, trace, lines){
@@ -1292,7 +1273,7 @@ function handle_Expr_error(ast_obj, trace, lines){
         trace_lines.push('    ' + marks_line.substr(min_indent))
         for(var lnum = ast_obj.lineno + 1; lnum <= ast_obj.end_lineno - 1; lnum++){
             err_line = lines[lnum - 1].trimRight()
-            var indent = err_line.length - err_line.trimLeft().length
+            var indent = get_indent(err_line)
             trace_lines.push('    ' + err_line.substr(min_indent))
             marks_line = ' '.repeat(indent) + '^'.repeat(err_line.substr(indent).length)
             trace_lines.push('    ' + marks_line.substr(min_indent))
@@ -1305,30 +1286,6 @@ function handle_Expr_error(ast_obj, trace, lines){
         trace_lines.push('    ' + marks_line.substr(min_indent))
     }
     trace.push(trace_lines.join('\n'))
-}
-
-function find_char(text, start_pos, line, test_func){
-    // Scan the characters in text starting at start pos
-    // position pos
-    // return {char_position, char_lineno}
-    var pos = start_pos
-    var char_line = line
-    while(pos < text.length){
-        if(text[pos] == '#'){
-            // skip comment
-            pos++
-            while(pos < text.length && text[pos] != '\n'){
-                pos++
-            }
-        }else if(test_func(text[pos])){
-            // skip if a test function is provided and succeeds for current
-            // character
-            pos++
-        }else{
-            return {pos, lineno: char_line}
-        }
-    }
-    return {pos, lineno: char_line}
 }
 
 function handle_Subscript_error(lines, positions, ast_obj, trace, text){
@@ -1406,7 +1363,6 @@ function handle_Subscript_error(lines, positions, ast_obj, trace, text){
     trace.push(trace_lines.join('\n'))
 }
 
-
 function make_report(lines, positions){
     // positions is [lineno, end_lineno, col_offset, end_col_offset]
     // Return a string with the lines between lineno and end_lineno,
@@ -1482,6 +1438,7 @@ function trace_from_stack(err){
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions
                 // part of first line before error
                 var head = lines[lineno - 1].substr(0, col_offset)
+                // start with whitespaces to preserve col_offset in the ast
                 var segment = ' '.repeat(col_offset)
                 if(lineno == end_lineno){
                     segment += lines[lineno - 1].substring(col_offset, end_col_offset)
@@ -1490,9 +1447,11 @@ function trace_from_stack(err){
                     for(var lnum = lineno + 1; lnum < end_lineno; lnum++){
                         segment += lines[lnum - 1] + '\n'
                     }
-                    var last = lines[end_lineno - 1].substr(0, end_col_offset)
-                    segment += last
+                    segment += lines[end_lineno - 1].substr(0, end_col_offset)
                 }
+                // parse the source code again; wrap it inside parenthesis to
+                // to avoid syntax errors if it is an expression on several
+                // lines
                 try{
                     var ast = $B.pythonToAST(`(\n${segment}\n)`, 'dummy', 'file')
                 }catch(err){
@@ -1530,14 +1489,12 @@ function trace_from_stack(err){
                     default:
                         trace.push(make_trace_lines(segment, marks, '\n',
                             segment.split('\n'), expr.lineno, expr.end_lineno))
-
                 }
             }else{
                 trace.push('    ' + lines[lineno - 1].trim())
             }
         }else{
             console.log('no src for filename', filename)
-            //console.log('in file_cache', Object.keys($B.file_cache).join('\n'))
         }
 
         tb = tb.tb_next
