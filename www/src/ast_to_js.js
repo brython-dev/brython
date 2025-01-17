@@ -105,7 +105,7 @@ function compiler_error(ast_obj, message, end){
     exc.end_offset = end.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
-    exc.$frame_obj = $B.frame_obj
+    exc.__traceback__ = $B.make_tb()
     throw exc
 }
 
@@ -2922,9 +2922,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     indent()
 
     if(func_scope.needs_frames){
-        // set exception $frame_obj and $linenums
         js += prefix + `$B.set_exc_and_trace(frame, err)\n` +
-              `err.$frame_obj = _frame_obj\n` +
               `$B.leave_frame()\n` +
               `throw err\n`
     }else{

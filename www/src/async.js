@@ -88,10 +88,10 @@ $B.promise = function(obj){
         // promise resolves
         obj.frame_obj = $B.frame_obj
         return obj.then(function(x){
-            $B.frame_obj=obj.frame_obj
+            $B.frame_obj = obj.frame_obj
             return $B.jsobj2pyobj(x)
         }).catch(function(err){
-            $B.frame_obj=obj.frame_obj
+            $B.frame_obj = obj.frame_obj
             throw $B.exception(err)
         })
     }
