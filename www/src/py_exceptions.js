@@ -1125,134 +1125,183 @@ function get_min_indent(lines){
     return min_indent
 }
 
-function handle_BinOp_error(ast_obj, trace, text, head){
-    // ast_obj is the BinOp instance inside the segment (\n{text}\n)
-    // It has attributes .left and .right; the position of the operator is not
-    // available, we have to calculate it
-    // head is the code on the first line in source code before the BinOp,
-    // for instance "x = " if the line is "x = 1 / 0"
-    var trace_lines = []
-    var segment = `(\n${text}\n)`
-    // Position {start, end} of left and right operands in segment
-    var left_pos = get_text_pos(ast_obj, segment, ast_obj.left)
-    var right_pos = get_text_pos(ast_obj, segment, ast_obj.right)
-
-    // position of operator: only cars between left.end and right.start
-    // different from ' ', '(' and ')'
-    var operator_start = find_char(segment, left_pos.end, ast_obj.left.end_lineno,
-        char => '()'.includes(char) || char.match(/\s/))
-    var operator_end = find_char(segment, operator_start.pos + 1,
-        operator_start.lineno,
-        char => ! char.match(/\s/))
-
-    var operator_length = operator_end.pos - operator_start.pos
-
-    var marks = ' '.repeat(left_pos.start) +
-        '~'.repeat(operator_start.pos - left_pos.start) +
-        '^'.repeat(operator_length) +
-        '~'.repeat(segment.length - operator_end.pos)
-
-    // Compute minimal indent in error lines
-    // The line with minimum indent will be printed with a 4 space
-    // indentation
-    var min_indent = get_min_indent(text.split('\n'))
-    var lines = segment.split('\n')
-
-    // remove leading (\n and trailing \n)
-    segment = segment.substring(2, segment.length - 2)
-    var orig_marks = marks.substring(2, marks.length - 2)
-    // restore part of first line before expression
-    var orig_text = head + segment.substr(head.length)
-    var elines = []
-    var i = 0,
-        lstart = 0
-    while(i < orig_text.length + 1){
-        if(orig_text[i] == '\n' || i == orig_text.length){
-            var text_line = orig_text.substring(lstart, i).substr(min_indent)
-            var text_indent = text_line.length - text_line.trimLeft().length
-            elines.push('    ' + text_line)
-            var marks_line = orig_marks.substring(lstart, i).substr(min_indent)
-            marks_line = ' '.repeat(text_indent) + marks_line.substr(text_indent)
-            elines.push('    ' + marks_line)
-            lstart = i + 1
-        }
-        i++
-    }
-    trace.push(elines.join('\n'))
-}
-
-function handle_Call_error(lines, positions, ast_obj, trace){
+function handle_BinOp_error(lines, positions, ast_obj, trace, tokens){
     // lines is the original source code lines
     // positions is [lineno, end_lineno, col_offset, end_col_offset] of
-    // the Call instance in source code
-    // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
-    // Position of the call
-    //                  in source code   in segment
-    // lineno           positions[0]     2
-    // end_lineno       positions[1]     2 + positions[1] - positions[0]
-    // col_offset       positions[2]     positions[2]
-    // end_col_offset   positions[3]     positions[3]
-
-    // Mark '~' from function name start to last char before '('
-    // and '^' from the opening '(' to the closing ')'
-    // f (x)
-    // ~~^^^
-    var trace_lines = []
+    // the BinOp instance in original source code
+    // ast_obj is the ast.BinOp instance found in the segment '(\n{text}\n)
+    // tokens is the list of tokens found in the segment
+    // line 2 in segment matches line lineno in source code
     var [lineno, end_lineno, col_offset, end_col_offset] = positions
     var min_indent = get_min_indent(lines.slice(lineno - 1, end_lineno))
-    var func = ast_obj.func
-    // convert positions in segment to positions in source code
-    var args_pos = {
-        lineno: ast_obj.func.end_lineno - 2 + lineno,
-        end_lineno: ast_obj.end_lineno - 2 + lineno,
-        col_offset: ast_obj.func.end_col_offset,
-        end_col_offset: ast_obj.end_col_offset
-    }
-    var func_pos = {
-        lineno: func.lineno - 2 + lineno,
-        end_lineno: func.end_lineno - 2 + lineno,
-        col_offset: func.col_offset,
-        end_col_offset: func.end_col_offset
-    }
-    var marks = ''
-    var in_func = make_test_func(func_pos)
-    var in_args = make_test_func(args_pos)
 
-    var mark_lines = []
-    var func_started = false
-    var parenth_found = false
-    for(var lnum = lineno; lnum <= end_lineno; lnum++){
-        var line = lines[lnum - 1].trimRight()
-        var indent = get_indent(line)
-        var marks = ' '.repeat(indent)
-        var col = indent
-        for(; col < line.length; col++){
-            if(in_func(lnum, col)){
-                func_started = true
-                marks += '~'
-            }else{
-                // '~' until the opening parenth. It is on the same line as
-                // function end
-                if(func_started && ! parenth_found){
-                    if(line[col] == '('){
-                        marks += '^'
-                        parenth_found = true
-                    }else{
-                        marks += '~'
-                    }
-                }else if(in_args(lnum, col)){
-                    marks += '^'
-                }
+    // transform linenos in segment to linenos in original source code
+    function reset_lineno(coords){
+        return {
+            lineno: coords.lineno + lineno - 2,
+            end_lineno: coords.lineno + lineno - 2,
+            col_offset: coords.col_offset,
+            end_col_offset: coords.end_col_offset
+        }
+    }
+
+    function format_indent(line){
+        return '    ' + line.substr(min_indent)
+    }
+
+    // get position of operator = the last OP token different from '(' before
+    // right operand
+    var operator_pos
+    for(var token of tokens){
+        if(token.type == 'OP'){
+            if(is_before(ast_obj.right, token.end_lineno, token.end_col_offset)
+                    && token.string != '('){
+                operator_pos = reset_lineno(token)
             }
         }
-        mark_lines.push(marks)
     }
-    // remove minimal indent, then indent with 4 whitespaces
-    for(var i = 0; i < mark_lines.length; i++){
-        trace_lines.push('    ' + lines[lineno + i - 1].trimRight().substr(min_indent))
-        trace_lines.push('    ' + mark_lines[i].substr(min_indent))
+
+    // The BinOp can include trailing parenthesis. Get its last token,
+    // ignoring the last final tokens OP ')', NEWLINE and ENDMARKER
+    var end_binop = reset_lineno(tokens[tokens.length - 4])
+
+    var left = reset_lineno(ast_obj.left)
+    var right = reset_lineno(ast_obj.right)
+    // marks are '~' from left start to operator excluded, '^' for operator,
+    // and '~' from operator end to right end
+    var lnum = lineno - 1,
+        col = 0,
+        err_lines = [],
+        state = 'before_op'
+    for(var lnum = lineno; lnum <= end_lineno; lnum++){
+        var line = lines[lnum - 1]
+        err_lines.push(format_indent(line))
+        var indent = get_indent(line)
+        var marks = ' '.repeat(indent)
+        for(var col = indent; col < line.length; col++){
+            switch(state){
+                case 'before_op':
+                    if(is_before(left, lnum, col)){
+                        marks += ' '
+                    }else{
+                        state = 'in_left'
+                        marks += '~'
+                    }
+                    break
+                case 'in_left':
+                    if(is_before(operator_pos, lnum, col)){
+                        marks += '~'
+                    }else{
+                        state = 'in_operator'
+                        marks += '^'
+                    }
+                    break
+                case 'in_operator':
+                   if(is_inside(operator_pos, lnum, col)){
+                       marks += '^'
+                   }else{
+                       marks += '~'
+                       state = 'in_right'
+                   }
+                   break
+               case 'in_right':
+                   if(is_before_or_eq(end_binop, lnum, col)){
+                       marks += '~'
+                   }else{
+                       state = 'end'
+                   }
+                   break
+               case 'end':
+                  break
+            }
+        }
+        err_lines.push(format_indent(marks))
     }
-    trace.push(trace_lines.join('\n'))
+    trace.push(err_lines.join('\n'))
+}
+
+
+function handle_Call_error(lines, positions, ast_obj, trace, tokens){
+    // lines is the original source code lines
+    // positions is [lineno, end_lineno, col_offset, end_col_offset] of
+    // the Call instance in original source code
+    // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
+    // tokens is the list of tokens found in the segment
+    // line 2 in segment matches line lineno in source code
+    var [lineno, end_lineno, col_offset, end_col_offset] = positions
+    var min_indent = get_min_indent(lines.slice(lineno - 1, end_lineno))
+
+    // transform linenos in segment to linenos in original source code
+    function reset_lineno(coords){
+        coords.lineno += lineno - 2
+        coords.end_lineno += lineno - 2
+        return coords
+    }
+
+    function format_indent(line){
+        return '    ' + line.substr(min_indent)
+    }
+
+    // get position of
+    // - opening parenthesis = the first OP token '(' after ast_obj.func end
+    // - closing parenthesist = the last OP token ')'
+    var opening_parenth
+    var closing_parenth
+    for(var token of tokens){
+        if(token.type == 'OP'){
+            if(token.string == '(' &&
+                    token.lineno == ast_obj.func.end_lineno &&
+                    token.col_offset >= ast_obj.func.end_col_offset){
+                opening_parenth = reset_lineno(token)
+            }else if(token.string == ')'){
+                closing_parenth = reset_lineno(token)
+            }
+        }
+    }
+    var func = reset_lineno(ast_obj.func)
+    // marks are '~' from func start to opening parenthesis excluded
+    // and '^' from opening to closing parenthesis included
+    var lnum = lineno - 1,
+        col = 0,
+        err_lines = [],
+        state = 'before_func'
+    for(var lnum = lineno; lnum <= end_lineno; lnum++){
+        var line = lines[lnum - 1]
+        err_lines.push(format_indent(line))
+        var indent = get_indent(line)
+        var marks = ' '.repeat(indent)
+        for(var col = indent; col < line.length; col++){
+            switch(state){
+                case 'before_func':
+                    if(is_before(func, lnum, col)){
+                        marks += ' '
+                    }else{
+                        state = 'in_func'
+                        marks += '~'
+                    }
+                    break
+                case 'in_func':
+                    if(is_before(opening_parenth, lnum, col)){
+                        marks += '~'
+                    }else{
+                        state = 'in_args'
+                        marks += '^'
+                    }
+                    break
+                case 'in_args':
+                   if(is_before(closing_parenth, lnum, col)){
+                       marks += '^'
+                   }else{
+                       state = 'end'
+                   }
+                   break
+               case 'end':
+                  break
+            }
+        }
+        err_lines.push(format_indent(marks))
+    }
+    trace.push(err_lines.join('\n'))
 }
 
 function handle_Expr_error(ast_obj, trace, lines){
@@ -1288,79 +1337,99 @@ function handle_Expr_error(ast_obj, trace, lines){
     trace.push(trace_lines.join('\n'))
 }
 
-function handle_Subscript_error(lines, positions, ast_obj, trace, text){
+function is_before(obj, lnum, col){
+    return lnum < obj.lineno || (lnum == obj.lineno && col < obj.col_offset)
+}
+
+function is_before_or_eq(obj, lnum, col){
+    return lnum < obj.lineno || (lnum == obj.lineno && col < obj.end_col_offset)
+}
+
+function is_inside(obj, lnum, col){
+    return lnum < obj.end_lineno || (lnum == obj.end_lineno && col < obj.end_col_offset)
+}
+
+function handle_Subscript_error(lines, positions, ast_obj, trace, tokens){
     // lines is the original source code lines
     // positions is [lineno, end_lineno, col_offset, end_col_offset] of
-    // the Call instance in source code
-    // text is the source code of the call
-    // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
-    // Position of the call
-    //                  in source code   in segment
-    // lineno           positions[0]     2
-    // end_lineno       positions[1]     2 + positions[1 - positions[0]
-    // col_offset       positions[2]     positions[2]
-    // end_col_offset   positions[3]     positions[3]
-
-    // Mark '~' from function name start to last char before '('
-    // and '^' from the opening '(' to the closing ')'
-    // f (x)
-    // ~~^^^
-    var trace_lines = []
+    // the Subscript instance in original source code
+    // ast_obj is the ast.Subscript instance found in the segment '(\n{text}\n)
+    // tokens is the list of tokens found in the segment
+    // line 2 in segment matches line lineno in source code
     var [lineno, end_lineno, col_offset, end_col_offset] = positions
     var min_indent = get_min_indent(lines.slice(lineno - 1, end_lineno))
-    // subscript is value[slice]
-    var value = ast_obj.value
-    var value_pos = {
-        lineno: value.lineno - 2 + lineno,
-        end_lineno: value.end_lineno - 2 + lineno,
-        col_offset: value.col_offset,
-        end_col_offset: value.end_col_offset
-    }
-    var slice = ast_obj.slice
-    var slice_pos = {
-        lineno: slice.lineno - 2 + lineno,
-        end_lineno: ast_obj.end_lineno - 2 + lineno,
-        col_offset: ast_obj.slice.col_offset,
-        end_col_offset: ast_obj.end_col_offset
-    }
-    var marks = ''
-    var in_value = make_test_func(value_pos)
-    var in_slice = make_test_func(slice_pos)
 
-    var mark_lines = []
-    var value_started = false
-    var bracket_found = false
-    for(var lnum = lineno; lnum <= end_lineno; lnum++){
-        var line = lines[lnum - 1].trimRight()
-        var indent = get_indent(line)
-        var marks = ' '.repeat(indent)
-        var col = indent
-        for(; col < line.length; col++){
-            if(in_value(lnum, col)){
-                value_started = true
-                marks += '~'
-            }else{
-                // '~' until the opening bracket. It is on the same line as
-                // function end
-                if(value_started && ! bracket_found){
-                    if(line[col] == '['){
-                        marks += '^'
-                        bracket_found = true
-                    }else{
-                        marks += '~'
-                    }
-                }else if(in_slice(lnum, col)){
-                    marks += '^'
-                }
+    // transform linenos in segment to linenos in original source code
+    function reset_lineno(coords){
+        coords.lineno += lineno - 2
+        coords.end_lineno += lineno - 2
+        return coords
+    }
+
+    function format_indent(line){
+        return '    ' + line.substr(min_indent)
+    }
+
+    // get position of
+    // - opening bracket = the last OP token '[' before ast_obj.slice start
+    // - closing bracket = the last OP token ']'
+    var opening_bracket
+    var closing_bracket
+    for(var token of tokens){
+        if(token.type == 'OP'){
+            if(token.string == '[' &&
+                    is_before(ast_obj.slice, token.lineno, token.col_offset)){
+                opening_bracket = reset_lineno(token)
+            }else if(token.string == ']'){
+                closing_bracket = reset_lineno(token)
             }
         }
-        mark_lines.push(marks)
     }
-    for(var i = 0; i < mark_lines.length; i++){
-        trace_lines.push('    ' + lines[lineno + i - 1].trimRight().substr(min_indent))
-        trace_lines.push('    ' + mark_lines[i].substr(min_indent))
+
+    var value = reset_lineno(ast_obj.value)
+    // marks are '~' from value start to opening bracket excluded
+    // and '^' from opening bracket to closing bracket included
+    var lnum = lineno - 1,
+        col = 0,
+        err_lines = [],
+        state = 'before_value'
+    for(var lnum = lineno; lnum <= end_lineno; lnum++){
+        var line = lines[lnum - 1]
+        err_lines.push(format_indent(line))
+        var indent = get_indent(line)
+        var marks = ' '.repeat(indent)
+        for(var col = indent; col < line.length; col++){
+            switch(state){
+                case 'before_value':
+                    if(is_before(value, lnum, col)){
+                        marks += ' '
+                    }else{
+                        state = 'in_value'
+                        marks += '~'
+                    }
+                    break
+                case 'in_value':
+                    if(is_before(opening_bracket, lnum, col)){
+                        marks += '~'
+                    }else{
+                        state = 'in_slice'
+                        marks += '^'
+                    }
+                    break
+                case 'in_slice':
+                   if(is_before_or_eq(closing_bracket, lnum, col)){
+                       marks += '^'
+                   }else{
+                       state = 'end'
+                   }
+                   break
+               case 'end':
+                  break
+            }
+        }
+        err_lines.push(format_indent(marks))
     }
-    trace.push(trace_lines.join('\n'))
+    trace.push(err_lines.join('\n'))
 }
 
 function make_report(lines, positions){
@@ -1453,7 +1522,10 @@ function trace_from_stack(err){
                 // to avoid syntax errors if it is an expression on several
                 // lines
                 try{
-                    var ast = $B.pythonToAST(`(\n${segment}\n)`, 'dummy', 'file')
+                    let parser = new $B.Parser(`(\n${segment}\n)`,
+                        'test', 'file')
+                    var ast = $B._PyPegen.run_parser(parser)
+                    var tokens = parser.tokens
                 }catch(err){
                     // only show report
                     trace.push(make_report(lines, positions))
@@ -1469,21 +1541,27 @@ function trace_from_stack(err){
                 var marks
                 switch(expr.constructor){
                     case $B.ast.Expr:
-                        switch(expr.value.constructor){
-                            case $B.ast.BinOp:
-                                handle_BinOp_error(expr.value, trace, segment, head)
-                                break
-                            case $B.ast.Call:
-                                handle_Call_error(lines, positions, expr.value, trace)
-                                break
-                            case $B.ast.Subscript:
-                                handle_Subscript_error(lines, positions, expr.value, trace, segment)
-                                break
-                            default:
-                                var ast_obj = {lineno, end_lineno, col_offset,
-                                    end_col_offset}
-                                handle_Expr_error(ast_obj, trace, lines)
-                                break
+                        try{
+                            switch(expr.value.constructor){
+                                case $B.ast.BinOp:
+                                    handle_BinOp_error(lines, positions, expr.value, trace, tokens)
+                                    break
+                                case $B.ast.Call:
+                                    handle_Call_error(lines, positions, expr.value, trace, tokens)
+                                    break
+                                case $B.ast.Subscript:
+                                    handle_Subscript_error(lines, positions, expr.value, trace, tokens)
+                                    break
+                                default:
+                                    var ast_obj = {lineno, end_lineno, col_offset,
+                                        end_col_offset}
+                                    handle_Expr_error(ast_obj, trace, lines)
+                                    break
+                            }
+                        }catch(err){
+                            // Fallback in case of internal error
+                            trace.push(make_trace_lines(segment, marks, '\n',
+                                segment.split('\n'), expr.lineno, expr.end_lineno))
                         }
                         break
                     default:

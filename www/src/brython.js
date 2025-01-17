@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-16 08:43:37.398662"
-__BRYTHON__.timestamp=1737013417398
+__BRYTHON__.compiled_date="2025-01-17 19:17:42.416845"
+__BRYTHON__.timestamp=1737137862416
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4726,59 +4726,75 @@ for(var line of lines){if(! line.trim()){continue}
 var indent=get_indent(line)
 if(indent < min_indent){min_indent=indent}}
 return min_indent}
-function handle_BinOp_error(ast_obj,trace,text,head){
-var trace_lines=[]
-var segment=`(\n${text}\n)`
-var left_pos=get_text_pos(ast_obj,segment,ast_obj.left)
-var right_pos=get_text_pos(ast_obj,segment,ast_obj.right)
-var operator_start=find_char(segment,left_pos.end,ast_obj.left.end_lineno,char=> '()'.includes(char)||char.match(/\s/))
-var operator_end=find_char(segment,operator_start.pos+1,operator_start.lineno,char=> ! char.match(/\s/))
-var operator_length=operator_end.pos-operator_start.pos
-var marks=' '.repeat(left_pos.start)+
-'~'.repeat(operator_start.pos-left_pos.start)+
-'^'.repeat(operator_length)+
-'~'.repeat(segment.length-operator_end.pos)
-var min_indent=get_min_indent(text.split('\n'))
-var lines=segment.split('\n')
-segment=segment.substring(2,segment.length-2)
-var orig_marks=marks.substring(2,marks.length-2)
-var orig_text=head+segment.substr(head.length)
-var elines=[]
-var i=0,lstart=0
-while(i < orig_text.length+1){if(orig_text[i]=='\n' ||i==orig_text.length){var text_line=orig_text.substring(lstart,i).substr(min_indent)
-var text_indent=text_line.length-text_line.trimLeft().length
-elines.push('    '+text_line)
-var marks_line=orig_marks.substring(lstart,i).substr(min_indent)
-marks_line=' '.repeat(text_indent)+marks_line.substr(text_indent)
-elines.push('    '+marks_line)
-lstart=i+1}
-i++}
-trace.push(elines.join('\n'))}
-function handle_Call_error(lines,positions,ast_obj,trace){
-var trace_lines=[]
+function handle_BinOp_error(lines,positions,ast_obj,trace,tokens){
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
 var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
-var func=ast_obj.func
-var args_pos={lineno:ast_obj.func.end_lineno-2+lineno,end_lineno:ast_obj.end_lineno-2+lineno,col_offset:ast_obj.func.end_col_offset,end_col_offset:ast_obj.end_col_offset}
-var func_pos={lineno:func.lineno-2+lineno,end_lineno:func.end_lineno-2+lineno,col_offset:func.col_offset,end_col_offset:func.end_col_offset}
-var marks=''
-var in_func=make_test_func(func_pos)
-var in_args=make_test_func(args_pos)
-var mark_lines=[]
-var func_started=false
-var parenth_found=false
-for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1].trimRight()
+function reset_lineno(coords){return{
+lineno:coords.lineno+lineno-2,end_lineno:coords.lineno+lineno-2,col_offset:coords.col_offset,end_col_offset:coords.end_col_offset}}
+function format_indent(line){return '    '+line.substr(min_indent)}
+var operator_pos
+for(var token of tokens){if(token.type=='OP'){if(is_before(ast_obj.right,token.end_lineno,token.end_col_offset)
+&& token.string !='('){operator_pos=reset_lineno(token)}}}
+var end_binop=reset_lineno(tokens[tokens.length-4])
+var left=reset_lineno(ast_obj.left)
+var right=reset_lineno(ast_obj.right)
+var lnum=lineno-1,col=0,err_lines=[],state='before_op'
+for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1]
+err_lines.push(format_indent(line))
 var indent=get_indent(line)
 var marks=' '.repeat(indent)
-var col=indent
-for(;col < line.length;col++){if(in_func(lnum,col)){func_started=true
-marks+='~'}else{
-if(func_started && ! parenth_found){if(line[col]=='('){marks+='^'
-parenth_found=true}else{marks+='~'}}else if(in_args(lnum,col)){marks+='^'}}}
-mark_lines.push(marks)}
-for(var i=0;i < mark_lines.length;i++){trace_lines.push('    '+lines[lineno+i-1].trimRight().substr(min_indent))
-trace_lines.push('    '+mark_lines[i].substr(min_indent))}
-trace.push(trace_lines.join('\n'))}
+for(var col=indent;col < line.length;col++){switch(state){case 'before_op':
+if(is_before(left,lnum,col)){marks+=' '}else{state='in_left'
+marks+='~'}
+break
+case 'in_left':
+if(is_before(operator_pos,lnum,col)){marks+='~'}else{state='in_operator'
+marks+='^'}
+break
+case 'in_operator':
+if(is_inside(operator_pos,lnum,col)){marks+='^'}else{marks+='~'
+state='in_right'}
+break
+case 'in_right':
+if(is_before_or_eq(end_binop,lnum,col)){marks+='~'}else{state='end'}
+break
+case 'end':
+break}}
+err_lines.push(format_indent(marks))}
+trace.push(err_lines.join('\n'))}
+function handle_Call_error(lines,positions,ast_obj,trace,tokens){
+var[lineno,end_lineno,col_offset,end_col_offset]=positions
+var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
+function reset_lineno(coords){coords.lineno+=lineno-2
+coords.end_lineno+=lineno-2
+return coords}
+function format_indent(line){return '    '+line.substr(min_indent)}
+var opening_parenth
+var closing_parenth
+for(var token of tokens){if(token.type=='OP'){if(token.string=='(' &&
+token.lineno==ast_obj.func.end_lineno &&
+token.col_offset >=ast_obj.func.end_col_offset){opening_parenth=reset_lineno(token)}else if(token.string==')'){closing_parenth=reset_lineno(token)}}}
+var func=reset_lineno(ast_obj.func)
+var lnum=lineno-1,col=0,err_lines=[],state='before_func'
+for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1]
+err_lines.push(format_indent(line))
+var indent=get_indent(line)
+var marks=' '.repeat(indent)
+for(var col=indent;col < line.length;col++){switch(state){case 'before_func':
+if(is_before(func,lnum,col)){marks+=' '}else{state='in_func'
+marks+='~'}
+break
+case 'in_func':
+if(is_before(opening_parenth,lnum,col)){marks+='~'}else{state='in_args'
+marks+='^'}
+break
+case 'in_args':
+if(is_before(closing_parenth,lnum,col)){marks+='^'}else{state='end'}
+break
+case 'end':
+break}}
+err_lines.push(format_indent(marks))}
+trace.push(err_lines.join('\n'))}
 function handle_Expr_error(ast_obj,trace,lines){var trace_lines=[]
 if(ast_obj.lineno==ast_obj.end_lineno){var err_line=lines[ast_obj.lineno-1]
 var indent=err_line.length-err_line.trimLeft().length
@@ -4803,32 +4819,41 @@ var marks_line=' '.repeat(indent)+
 '^'.repeat(ast_obj.end_col_offset-indent)
 trace_lines.push('    '+marks_line.substr(min_indent))}
 trace.push(trace_lines.join('\n'))}
-function handle_Subscript_error(lines,positions,ast_obj,trace,text){
-var trace_lines=[]
+function is_before(obj,lnum,col){return lnum < obj.lineno ||(lnum==obj.lineno && col < obj.col_offset)}
+function is_before_or_eq(obj,lnum,col){return lnum < obj.lineno ||(lnum==obj.lineno && col < obj.end_col_offset)}
+function is_inside(obj,lnum,col){return lnum < obj.end_lineno ||(lnum==obj.end_lineno && col < obj.end_col_offset)}
+function handle_Subscript_error(lines,positions,ast_obj,trace,tokens){
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
 var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
-var value=ast_obj.value
-var value_pos={lineno:value.lineno-2+lineno,end_lineno:value.end_lineno-2+lineno,col_offset:value.col_offset,end_col_offset:value.end_col_offset}
-var slice=ast_obj.slice
-var slice_pos={lineno:slice.lineno-2+lineno,end_lineno:ast_obj.end_lineno-2+lineno,col_offset:ast_obj.slice.col_offset,end_col_offset:ast_obj.end_col_offset}
-var marks=''
-var in_value=make_test_func(value_pos)
-var in_slice=make_test_func(slice_pos)
-var mark_lines=[]
-var value_started=false
-var bracket_found=false
-for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1].trimRight()
+function reset_lineno(coords){coords.lineno+=lineno-2
+coords.end_lineno+=lineno-2
+return coords}
+function format_indent(line){return '    '+line.substr(min_indent)}
+var opening_bracket
+var closing_bracket
+for(var token of tokens){if(token.type=='OP'){if(token.string=='[' &&
+is_before(ast_obj.slice,token.lineno,token.col_offset)){opening_bracket=reset_lineno(token)}else if(token.string==']'){closing_bracket=reset_lineno(token)}}}
+var value=reset_lineno(ast_obj.value)
+var lnum=lineno-1,col=0,err_lines=[],state='before_value'
+for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1]
+err_lines.push(format_indent(line))
 var indent=get_indent(line)
 var marks=' '.repeat(indent)
-var col=indent
-for(;col < line.length;col++){if(in_value(lnum,col)){value_started=true
-marks+='~'}else{
-if(value_started && ! bracket_found){if(line[col]=='['){marks+='^'
-bracket_found=true}else{marks+='~'}}else if(in_slice(lnum,col)){marks+='^'}}}
-mark_lines.push(marks)}
-for(var i=0;i < mark_lines.length;i++){trace_lines.push('    '+lines[lineno+i-1].trimRight().substr(min_indent))
-trace_lines.push('    '+mark_lines[i].substr(min_indent))}
-trace.push(trace_lines.join('\n'))}
+for(var col=indent;col < line.length;col++){switch(state){case 'before_value':
+if(is_before(value,lnum,col)){marks+=' '}else{state='in_value'
+marks+='~'}
+break
+case 'in_value':
+if(is_before(opening_bracket,lnum,col)){marks+='~'}else{state='in_slice'
+marks+='^'}
+break
+case 'in_slice':
+if(is_before_or_eq(closing_bracket,lnum,col)){marks+='^'}else{state='end'}
+break
+case 'end':
+break}}
+err_lines.push(format_indent(marks))}
+trace.push(err_lines.join('\n'))}
 function make_report(lines,positions){
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
 lines=lines.slice(lineno-1,end_lineno)
@@ -4866,7 +4891,9 @@ var segment=' '.repeat(col_offset)
 if(lineno==end_lineno){segment+=lines[lineno-1].substring(col_offset,end_col_offset)}else{segment+=lines[lineno-1].substr(col_offset)+'\n'
 for(var lnum=lineno+1;lnum < end_lineno;lnum++){segment+=lines[lnum-1]+'\n'}
 segment+=lines[end_lineno-1].substr(0,end_col_offset)}
-try{var ast=$B.pythonToAST(`(\n${segment}\n)`,'dummy','file')}catch(err){
+try{let parser=new $B.Parser(`(\n${segment}\n)`,'test','file')
+var ast=$B._PyPegen.run_parser(parser)
+var tokens=parser.tokens}catch(err){
 trace.push(make_report(lines,positions))
 tb=tb.tb_next
 continue}
@@ -4876,19 +4903,20 @@ var expr=ast.body[0]
 var proto=Object.getPrototypeOf(expr)
 var marks
 switch(expr.constructor){case $B.ast.Expr:
-switch(expr.value.constructor){case $B.ast.BinOp:
-handle_BinOp_error(expr.value,trace,segment,head)
+try{switch(expr.value.constructor){case $B.ast.BinOp:
+handle_BinOp_error(lines,positions,expr.value,trace,tokens)
 break
 case $B.ast.Call:
-handle_Call_error(lines,positions,expr.value,trace)
+handle_Call_error(lines,positions,expr.value,trace,tokens)
 break
 case $B.ast.Subscript:
-handle_Subscript_error(lines,positions,expr.value,trace,segment)
+handle_Subscript_error(lines,positions,expr.value,trace,tokens)
 break
 default:
 var ast_obj={lineno,end_lineno,col_offset,end_col_offset}
 handle_Expr_error(ast_obj,trace,lines)
-break}
+break}}catch(err){
+trace.push(make_trace_lines(segment,marks,'\n',segment.split('\n'),expr.lineno,expr.end_lineno))}
 break
 default:
 trace.push(make_trace_lines(segment,marks,'\n',segment.split('\n'),expr.lineno,expr.end_lineno))}}else{trace.push('    '+lines[lineno-1].trim())}}else{console.log('no src for filename',filename)}
@@ -11815,7 +11843,7 @@ end=end ||ast_obj
 exc.end_lineno=end.end_lineno
 exc.end_offset=end.end_col_offset+1
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
-exc.$frame_obj=$B.frame_obj
+exc.__traceback__=$B.make_tb()
 throw exc}
 var uuid=Math.floor(Math.random()*1000000)
 function make_id(){uuid+=1
@@ -13048,9 +13076,7 @@ js+=prefix+'return $B.trace_return_and_leave(frame, _b_.None)\n'}
 dedent()
 js+=prefix+`}catch(err){\n`
 indent()
-if(func_scope.needs_frames){
-js+=prefix+`$B.set_exc_and_trace(frame, err)\n`+
-`err.$frame_obj = _frame_obj\n`+
+if(func_scope.needs_frames){js+=prefix+`$B.set_exc_and_trace(frame, err)\n`+
 `$B.leave_frame()\n`+
 `throw err\n`}else{js+=prefix+`$B.set_exc_and_leave(frame, err)\n`}
 dedent()
