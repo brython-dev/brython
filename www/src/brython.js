@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-18 15:15:59.759433"
-__BRYTHON__.timestamp=1737209759758
+__BRYTHON__.compiled_date="2025-01-18 22:31:33.723783"
+__BRYTHON__.timestamp=1737235893723
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1168,8 +1168,7 @@ $B.imported[script_id]=module
 try{var modobj=new Function(script.js+`\nreturn locals`)()
 for(var key in modobj){if(! key.startsWith('$')){module[key]=modobj[key]}}
 $B.dispatch_load_event(script.script_element)}catch(err){
-if(err.__class__===undefined){if(err.$py_exc){err=err.$py_exc}else{$B.freeze(err)
-if($B.get_option('debug')> 2){console.log('JS error stack',err.stack)}
+if(err.__class__===undefined){if(err.$py_exc){err=err.$py_exc}else{if($B.get_option('debug')> 2){console.log('JS error stack',err.stack)}
 var stack=err.$stack,frame_obj=err.$frame_obj,linenums=err.$linenums
 var lineNumber=err.lineNumber
 if(lineNumber !==undefined){console.log('around line',lineNumber)
@@ -1664,9 +1663,7 @@ var position=$B.get_position_from_inum(inum)
 $B.set_exception_offsets(err,$B.decode_position(position))}
 err.__traceback__=$B.make_tb()
 throw err}
-return function(){try{return callable.apply(null,arguments)}catch(exc){if(inum !==undefined){if($B.frame_obj !==null && inum !==undefined){$B.frame_obj.frame.inum=inum}
-var position=$B.get_position_from_inum(inum)
-$B.set_exception_offsets(exc,$B.decode_position(position))}
+return function(){try{return callable.apply(null,arguments)}catch(exc){if(inum !==undefined){if($B.frame_obj !==null && inum !==undefined){$B.frame_obj.frame.inum=inum}}
 throw exc}}
 return callable}
 $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.__class__===_b_.staticmethod){return callable.__func__}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
@@ -11846,14 +11843,15 @@ if(up_scope.type=='class'){up_scope.maybe_locals=up_scope.maybe_locals ?? new Se
 up_scope.maybe_locals.add(name)}
 return scope}
 var SF=$B.SYMBOL_FLAGS 
-function name_reference(name,scopes,position,lineno){var scope=name_scope(name,scopes)
-return make_ref(name,scopes,scope,position,lineno)}
-function make_ref(name,scopes,scope,position,lineno){var test=false 
+function name_reference(name,scopes,ast_obj){var scope=name_scope(name,scopes)
+return make_ref(name,scopes,scope,ast_obj)}
+function make_ref(name,scopes,scope,ast_obj){var test=false 
 if(test){console.log('make ref',name,scopes.slice(),scope)}
 if(scope.found){var res=reference(scopes,scope.found,name)
 if(test){console.log('res',res)}
-return res}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
-return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}', _frame_obj)`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}], ${lineno})`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
+return res}else{var inum=add_to_positions(scopes,ast_obj)
+if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
+return `$B.resolve_in_scopes('${name}', [${scope_names}], ${inum})`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', ${inum})`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}', _frame_obj, ${inum})`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], ${inum})`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}', ${inum})`}}}
 function local_scope(name,scope){
 var s=scope
 while(true){if(s.locals.has(name)){return{found:true,scope:s}}
@@ -11934,15 +11932,15 @@ if(! checked.has(frame[3])){var v=resolve_in_namespace(name,frame[3])
 if(v.found){return v.value}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
 throw $B.name_error(name)}
-$B.resolve_local=function(name,position){
+$B.resolve_local=function(name,inum){
 if($B.frame_obj !==null){var frame=$B.frame_obj.frame
 if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][name]}}else{var value=frame[1][name]
 if(value !==undefined){return value}}}
 var exc=_b_.UnboundLocalError.$factory(`cannot access local variable `+
 `'${name}' where it is not associated with a value`)
-if(position && $B.frame_obj){$B.set_exception_offsets(exc,position)}
+if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
 throw exc}
-$B.resolve_in_scopes=function(name,namespaces,position,lineno){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
+$B.resolve_in_scopes=function(name,namespaces,inum){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
 while(frame_obj !==null){frame=frame_obj.frame
 if(frame.is_exec_top){exec_top=frame
 break}
@@ -11950,17 +11948,20 @@ frame_obj=frame_obj.prev}
 if(exec_top){for(var ns1 of[exec_top[1],exec_top[3]]){let v=resolve_in_namespace(name,ns1)
 if(v.found){return v.value}}}}else{let v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}
+if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
 var exc=$B.name_error(name)
-if(lineno){exc.lineno=lineno}
+exc.__traceback__=$B.make_tb()
 throw exc}
-$B.resolve_global=function(name,frame_obj){
+$B.resolve_global=function(name,frame_obj,inum){
 while(frame_obj !==null){var frame=frame_obj.frame,v=resolve_in_namespace(name,frame[3])
 if(v.found){return v.value}
 if(frame.is_exec_top){break}
 frame_obj=frame_obj.prev}
 if(builtins_scope.locals.has(name)){return _b_[name]}
+if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
 throw $B.name_error(name)}
-$B.own_class_name=function(name){throw $B.name_error(name)}
+$B.own_class_name=function(name,inum){if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+throw $B.name_error(name)}
 var $operators=$B.op2method.subset("all")
 var opname2opsign={}
 for(var key in $operators){opname2opsign[$operators[key]]=key}
@@ -12274,7 +12275,7 @@ if(! scope.found){
 let left_scope=scope.resolve=='global' ?
 make_scope_name(scopes,scopes[0]):'locals'
 js=prefix+`${left_scope}.${this.target.id} = $B.augm_assign(`+
-make_ref(this.target.id,scopes,scope)+`, '${iop}', ${value})`}else{let ref=`${make_scope_name(scopes, scope.found)}.${this.target.id}`
+make_ref(this.target.id,scopes,scope,this.target)+`, '${iop}', ${value})`}else{let ref=`${make_scope_name(scopes, scope.found)}.${this.target.id}`
 js=prefix+`${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`}}else if(this.target instanceof $B.ast.Subscript){js=prefix+`$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), `+
 `(locals.$key = ${this.target.slice.to_js(scopes)}), `+
 `$B.augm_assign($B.$getitem(locals.$tg, locals.$key), '${iop}', ${value}))`}else if(this.target instanceof $B.ast.Attribute){let mangled=mangle(scopes,last_scope(scopes),this.target.attr)
@@ -13405,7 +13406,7 @@ if(scope===$B.last(scopes)&& scope.freevars.has(this.id)){
 scope.freevars.delete(this.id)}
 return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var scope=name_scope(this.id,scopes)
 if(scope.found===$B.last(scopes)){return 'locals.'+mangle(scopes,scope.found,this.id)}
-var res=name_reference(this.id,scopes,[this.col_offset,this.col_offset,this.end_col_offset],this.lineno)
+var res=name_reference(this.id,scopes,this)
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 return res}}

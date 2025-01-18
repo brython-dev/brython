@@ -1410,8 +1410,6 @@ $B.$call = function(callable, inum){
                 if($B.frame_obj !== null && inum !== undefined){
                     $B.frame_obj.frame.inum = inum
                 }
-                var position = $B.get_position_from_inum(inum)
-                $B.set_exception_offsets(exc, $B.decode_position(position))
             }
             throw exc
         }
