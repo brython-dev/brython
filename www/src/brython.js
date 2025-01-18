@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-17 19:17:42.416845"
-__BRYTHON__.timestamp=1737137862416
+__BRYTHON__.compiled_date="2025-01-18 15:15:59.759433"
+__BRYTHON__.timestamp=1737209759758
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1462,7 +1462,7 @@ for(var key of $B.make_js_iterator(keys)){if(! _b_.isinstance(key,_b_.str)){thro
 yield{key,value:getitem(obj,key)}}}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
-if(frame===undefined){if($B.frame_obj===null){set_lineno=function(){}}else{frame=$B.frame_obj.frame
+if(frame===undefined){if(! $B.frame_obj){set_lineno=function(){}}else{frame=$B.frame_obj.frame
 lineno=frame.$lineno}}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
 if(iterator.step > 0){return{
@@ -1571,8 +1571,7 @@ res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
 return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
-$B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){var position=$B.get_position_from_inum(inum)
-$B.set_exception_offsets(err,$B.decode_position(position))
+$B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
 throw err}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
 ! obj.$is_js_array &&
@@ -4675,26 +4674,17 @@ return err}
 _b_.ExceptionGroup.__bases__=[_b_.BaseExceptionGroup,_b_.Exception]
 _b_.ExceptionGroup.__mro__=_b_.type.$mro(_b_.ExceptionGroup)
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
-function make_trace_lines(text,marks,sep,lines,line_start,line_end){
-var min_indent=255
-for(var lnum=line_start;lnum < line_end+1;lnum++){var line=lines[lnum-1]
-var indent=line.length-line.trimLeft().length
-if(indent < min_indent){min_indent=indent}}
+function make_trace_lines(lines,lineno,expr){var line_start=expr.lineno+lineno-2
+var line_end=expr.end_lineno+lineno-2
+var min_indent=get_min_indent(lines.slice(line_start-1,line_end))
 var err_lines=[]
 var start=0
-if(! marks && line_end-line_start > 3){console.log('trace',line_end,line_start)
-err_lines.push('    '+lines[line_start-1].substring(min_indent))
+if(line_end-line_start > 3){err_lines.push('    '+lines[line_start-1].substring(min_indent))
 err_lines.push(`    ...<${line_end - line_start - 1} lines>...`)
 err_lines.push('    '+lines[line_end-1].substring(min_indent))
 return err_lines.join('\n')}
-for(var i=0,len=text.length;i <=len;i++){if(text[i]==sep ||i==len){var subline=text.substring(start,i)
-err_lines.push('    '+text.substring(start,i).substring(min_indent))
-if(marks){
-var left_ws=subline.length-subline.trimLeft().length
-var right_ws=subline.length-subline.trimRight().length
-err_lines.push('    '+' '.repeat(left_ws-min_indent)+
-marks.substring(start+left_ws,i-right_ws))}
-start=i+1}}
+for(var lnum=line_start;lnum < line_end;lnum++){var line=lines[lnum-1].trimRight()
+err_lines.push('    '+line.substring(min_indent))}
 return err_lines.join('\n')}
 function get_text_pos(ast_obj,segment,elt){
 var start=2 
@@ -4726,134 +4716,61 @@ for(var line of lines){if(! line.trim()){continue}
 var indent=get_indent(line)
 if(indent < min_indent){min_indent=indent}}
 return min_indent}
-function handle_BinOp_error(lines,positions,ast_obj,trace,tokens){
-var[lineno,end_lineno,col_offset,end_col_offset]=positions
-var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
-function reset_lineno(coords){return{
-lineno:coords.lineno+lineno-2,end_lineno:coords.lineno+lineno-2,col_offset:coords.col_offset,end_col_offset:coords.end_col_offset}}
-function format_indent(line){return '    '+line.substr(min_indent)}
-var operator_pos
-for(var token of tokens){if(token.type=='OP'){if(is_before(ast_obj.right,token.end_lineno,token.end_col_offset)
-&& token.string !='('){operator_pos=reset_lineno(token)}}}
-var end_binop=reset_lineno(tokens[tokens.length-4])
+function fill_marks(lines,first_lineno,first_col_offset){var args=Array.from(arguments).slice(3)
+var start_lineno=first_lineno
+var start_col_offset=first_col_offset
+var marks=' '.repeat(first_col_offset)
+var line
+var indent
+var min_indent=get_indent(lines[start_lineno-1])
+for(var i=0;i < args.length;i+=3){var[mark,lineno,col_offset]=args.slice(i,i+3)
+if(lineno==start_lineno){marks+=mark.repeat(col_offset-start_col_offset)}else{line=lines[start_lineno-1]
+marks+=mark.repeat(line.length-start_col_offset)+'\n'
+for(var lnum=start_lineno+1;lnum < lineno;lnum++){line=lines[lnum-1].trimRight()
+indent=get_indent(line)
+marks+=' '.repeat(indent)+mark.repeat(line.length-indent)+'\n'}
+line=lines[lineno-1].trimRight()
+indent=get_indent(line)
+marks+=' '.repeat(indent)+mark.repeat(col_offset-indent)}
+start_lineno=lineno
+start_col_offset=col_offset}
+var min_indent=get_min_indent(lines.slice(first_lineno-1,lineno))
+var marks_lines=marks.split('\n')
+var err_lines=[]
+for(var lnum=0;lnum < marks_lines.length;lnum++){err_lines.push('    '+
+lines[first_lineno+lnum-1].trimRight().substr(min_indent))
+err_lines.push('    '+marks_lines[lnum].substr(min_indent))}
+return err_lines.join('\n')}
+function make_line_setter(lineno){return function(coords){return{
+lineno:coords.lineno+lineno-2,end_lineno:coords.end_lineno+lineno-2,col_offset:coords.col_offset,end_col_offset:coords.end_col_offset}}}
+function handle_BinOp_error(lines,lineno,ast_obj,tokens){
+var reset_lineno=make_line_setter(lineno)
+var operator
+for(var token of tokens){if(token.type=='OP'){if(is_before(ast_obj.right,token.lineno,token.col_offset)
+&& token.string !='('){operator=reset_lineno(token)}}}
+var end_binop=reset_lineno(tokens[tokens.length-1])
 var left=reset_lineno(ast_obj.left)
 var right=reset_lineno(ast_obj.right)
-var lnum=lineno-1,col=0,err_lines=[],state='before_op'
-for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1]
-err_lines.push(format_indent(line))
-var indent=get_indent(line)
-var marks=' '.repeat(indent)
-for(var col=indent;col < line.length;col++){switch(state){case 'before_op':
-if(is_before(left,lnum,col)){marks+=' '}else{state='in_left'
-marks+='~'}
-break
-case 'in_left':
-if(is_before(operator_pos,lnum,col)){marks+='~'}else{state='in_operator'
-marks+='^'}
-break
-case 'in_operator':
-if(is_inside(operator_pos,lnum,col)){marks+='^'}else{marks+='~'
-state='in_right'}
-break
-case 'in_right':
-if(is_before_or_eq(end_binop,lnum,col)){marks+='~'}else{state='end'}
-break
-case 'end':
-break}}
-err_lines.push(format_indent(marks))}
-trace.push(err_lines.join('\n'))}
-function handle_Call_error(lines,positions,ast_obj,trace,tokens){
-var[lineno,end_lineno,col_offset,end_col_offset]=positions
-var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
-function reset_lineno(coords){coords.lineno+=lineno-2
-coords.end_lineno+=lineno-2
-return coords}
-function format_indent(line){return '    '+line.substr(min_indent)}
+return fill_marks(lines,lineno,left.col_offset,'~',operator.lineno,operator.col_offset,'^',operator.end_lineno,operator.end_col_offset,'~',end_binop.end_lineno,end_binop.end_col_offset)}
+function handle_Call_error(lines,lineno,ast_obj,tokens){
+var reset_lineno=make_line_setter(lineno)
 var opening_parenth
 var closing_parenth
 for(var token of tokens){if(token.type=='OP'){if(token.string=='(' &&
 token.lineno==ast_obj.func.end_lineno &&
 token.col_offset >=ast_obj.func.end_col_offset){opening_parenth=reset_lineno(token)}else if(token.string==')'){closing_parenth=reset_lineno(token)}}}
 var func=reset_lineno(ast_obj.func)
-var lnum=lineno-1,col=0,err_lines=[],state='before_func'
-for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1]
-err_lines.push(format_indent(line))
-var indent=get_indent(line)
-var marks=' '.repeat(indent)
-for(var col=indent;col < line.length;col++){switch(state){case 'before_func':
-if(is_before(func,lnum,col)){marks+=' '}else{state='in_func'
-marks+='~'}
-break
-case 'in_func':
-if(is_before(opening_parenth,lnum,col)){marks+='~'}else{state='in_args'
-marks+='^'}
-break
-case 'in_args':
-if(is_before(closing_parenth,lnum,col)){marks+='^'}else{state='end'}
-break
-case 'end':
-break}}
-err_lines.push(format_indent(marks))}
-trace.push(err_lines.join('\n'))}
-function handle_Expr_error(ast_obj,trace,lines){var trace_lines=[]
-if(ast_obj.lineno==ast_obj.end_lineno){var err_line=lines[ast_obj.lineno-1]
-var indent=err_line.length-err_line.trimLeft().length
-trace_lines.push('    '+err_line.substr(indent))
-var marks_line=' '.repeat(ast_obj.col_offset)+
-'^'.repeat(ast_obj.end_col_offset-ast_obj.col_offset)
-trace_lines.push('    '+marks_line.substr(indent))}else{var min_indent=get_min_indent(lines)
-var err_line=lines[ast_obj.lineno-1].trimRight()
-trace_lines.push('    '+err_line.substr(min_indent))
-var marks_line=' '.repeat(ast_obj.col_offset)+
-'^'.repeat(err_line.length-ast_obj.col_offset)
-trace_lines.push('    '+marks_line.substr(min_indent))
-for(var lnum=ast_obj.lineno+1;lnum <=ast_obj.end_lineno-1;lnum++){err_line=lines[lnum-1].trimRight()
-var indent=get_indent(err_line)
-trace_lines.push('    '+err_line.substr(min_indent))
-marks_line=' '.repeat(indent)+'^'.repeat(err_line.substr(indent).length)
-trace_lines.push('    '+marks_line.substr(min_indent))}
-var err_line=lines[ast_obj.end_lineno-1].trimRight()
-var indent=get_indent(err_line)
-trace_lines.push('    '+err_line.substr(min_indent))
-var marks_line=' '.repeat(indent)+
-'^'.repeat(ast_obj.end_col_offset-indent)
-trace_lines.push('    '+marks_line.substr(min_indent))}
-trace.push(trace_lines.join('\n'))}
+return fill_marks(lines,lineno,func.col_offset,'~',opening_parenth.lineno,opening_parenth.col_offset,'^',closing_parenth.end_lineno,closing_parenth.end_col_offset)}
+function handle_Expr_error(lines,lineno,ast_obj,tokens){var reset_lineno=make_line_setter(lineno)
+var expr=reset_lineno(ast_obj)
+return fill_marks(lines,lineno,expr.col_offset,'^',expr.end_lineno,expr.end_col_offset)}
 function is_before(obj,lnum,col){return lnum < obj.lineno ||(lnum==obj.lineno && col < obj.col_offset)}
-function is_before_or_eq(obj,lnum,col){return lnum < obj.lineno ||(lnum==obj.lineno && col < obj.end_col_offset)}
-function is_inside(obj,lnum,col){return lnum < obj.end_lineno ||(lnum==obj.end_lineno && col < obj.end_col_offset)}
-function handle_Subscript_error(lines,positions,ast_obj,trace,tokens){
-var[lineno,end_lineno,col_offset,end_col_offset]=positions
-var min_indent=get_min_indent(lines.slice(lineno-1,end_lineno))
-function reset_lineno(coords){coords.lineno+=lineno-2
-coords.end_lineno+=lineno-2
-return coords}
-function format_indent(line){return '    '+line.substr(min_indent)}
-var opening_bracket
-var closing_bracket
+function handle_Subscript_error(lines,lineno,ast_obj,tokens){
+var reset_lineno=make_line_setter(lineno)
 for(var token of tokens){if(token.type=='OP'){if(token.string=='[' &&
-is_before(ast_obj.slice,token.lineno,token.col_offset)){opening_bracket=reset_lineno(token)}else if(token.string==']'){closing_bracket=reset_lineno(token)}}}
+is_before(ast_obj.slice,token.lineno,token.col_offset)){var opening_bracket=reset_lineno(token)}else if(token.string==']'){var closing_bracket=reset_lineno(token)}}}
 var value=reset_lineno(ast_obj.value)
-var lnum=lineno-1,col=0,err_lines=[],state='before_value'
-for(var lnum=lineno;lnum <=end_lineno;lnum++){var line=lines[lnum-1]
-err_lines.push(format_indent(line))
-var indent=get_indent(line)
-var marks=' '.repeat(indent)
-for(var col=indent;col < line.length;col++){switch(state){case 'before_value':
-if(is_before(value,lnum,col)){marks+=' '}else{state='in_value'
-marks+='~'}
-break
-case 'in_value':
-if(is_before(opening_bracket,lnum,col)){marks+='~'}else{state='in_slice'
-marks+='^'}
-break
-case 'in_slice':
-if(is_before_or_eq(closing_bracket,lnum,col)){marks+='^'}else{state='end'}
-break
-case 'end':
-break}}
-err_lines.push(format_indent(marks))}
-trace.push(err_lines.join('\n'))}
+return fill_marks(lines,lineno,value.col_offset,'~',opening_bracket.lineno,opening_bracket.col_offset,'^',closing_bracket.end_lineno,closing_bracket.end_col_offset)}
 function make_report(lines,positions){
 var[lineno,end_lineno,col_offset,end_col_offset]=positions
 lines=lines.slice(lineno-1,end_lineno)
@@ -4893,33 +4810,37 @@ for(var lnum=lineno+1;lnum < end_lineno;lnum++){segment+=lines[lnum-1]+'\n'}
 segment+=lines[end_lineno-1].substr(0,end_col_offset)}
 try{let parser=new $B.Parser(`(\n${segment}\n)`,'test','file')
 var ast=$B._PyPegen.run_parser(parser)
-var tokens=parser.tokens}catch(err){
+var tokens=parser.tokens
+tokens=tokens.slice(1,tokens.length-3)}catch(err){
 trace.push(make_report(lines,positions))
 tb=tb.tb_next
 continue}
 if(!(ast instanceof $B.ast.Module)){console.log('not a module',ast)
 continue}
 var expr=ast.body[0]
-var proto=Object.getPrototypeOf(expr)
-var marks
+var marks=''
 switch(expr.constructor){case $B.ast.Expr:
 try{switch(expr.value.constructor){case $B.ast.BinOp:
-handle_BinOp_error(lines,positions,expr.value,trace,tokens)
+trace.push(handle_BinOp_error(
+lines,lineno,expr.value,tokens))
 break
 case $B.ast.Call:
-handle_Call_error(lines,positions,expr.value,trace,tokens)
+trace.push(handle_Call_error(
+lines,lineno,expr.value,tokens))
 break
 case $B.ast.Subscript:
-handle_Subscript_error(lines,positions,expr.value,trace,tokens)
+trace.push(handle_Subscript_error(
+lines,lineno,expr.value,tokens))
 break
 default:
 var ast_obj={lineno,end_lineno,col_offset,end_col_offset}
-handle_Expr_error(ast_obj,trace,lines)
+trace.push(handle_Expr_error(
+lines,lineno,expr.value,tokens))
 break}}catch(err){
-trace.push(make_trace_lines(segment,marks,'\n',segment.split('\n'),expr.lineno,expr.end_lineno))}
+trace.push(make_trace_lines(lines,lineno,expr))}
 break
 default:
-trace.push(make_trace_lines(segment,marks,'\n',segment.split('\n'),expr.lineno,expr.end_lineno))}}else{trace.push('    '+lines[lineno-1].trim())}}else{console.log('no src for filename',filename)}
+trace.push(make_trace_lines(lines,lineno,expr))}}else{trace.push('    '+lines[lineno-1].trim())}}else{if($B.get_option('debug')> 1){console.log('no src for filename',filename)}}
 tb=tb.tb_next}
 if(count_repeats > 1){let len=trace.length
 for(let i=0;i < 2;i++){if(src){trace.push(trace[len-2])
@@ -4960,7 +4881,8 @@ $B.frame_obj=err.$frame_obj
 if(err.__class__===_b_.NameError){let suggestion=$B.offer_suggestions_for_name_error(err)
 if(suggestion !==_b_.None && suggestion !==err.name){trace+=`. Did you mean: '${suggestion}'?`}
 if($B.stdlib_module_names.indexOf(err.name)>-1){
-trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){let suggestion=$B.offer_suggestions_for_attribute_error(err)
+trace+=`. Did you forget to import '${err.name}'?`}}else if(err.__class__===_b_.AttributeError){var tb=err.__traceback__
+let suggestion=$B.offer_suggestions_for_attribute_error(err)
 if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if(err.__class__===_b_.ImportError){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}
 $B.frame_obj=save_frame_obj}else{trace=err+""}
 if(err.$js_exc){trace+='\n'
@@ -7466,7 +7388,9 @@ name=""}}
 pos++
 if(pos > _self.length-1){if(name){res.push(name)}
 break}}
-return $B.$list(res.map($B.String))}else{sep=to_string(sep)
+return $B.$list(res.map($B.String))}else{if(! $B.$isinstance(sep,_b_.str)){throw _b_.TypeError.$factory('must be str or None, not '+
+$B.class_name(sep))}
+sep=to_string(sep)
 let res=[],s="",seplen=sep.length
 if(maxsplit==0){return $B.$list([$.self])}
 while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
