@@ -2422,6 +2422,10 @@ str.split = function(){
         }
         return $B.$list(res.map($B.String))
     }else{
+        if(! $B.$isinstance(sep, _b_.str)){
+            throw _b_.TypeError.$factory('must be str or None, not ' +
+                $B.class_name(sep))
+        }
         sep = to_string(sep)
         let res = [],
             s = "",
