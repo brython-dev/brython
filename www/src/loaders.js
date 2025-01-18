@@ -429,7 +429,6 @@ var loop = $B.loop = function(){
                 if(err.$py_exc){
                     err = err.$py_exc
                 }else{
-                    $B.freeze(err)
                     if($B.get_option('debug') > 2){
                         console.log('JS error stack', err.stack)
                     }
