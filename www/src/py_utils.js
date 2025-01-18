@@ -819,7 +819,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     // "for(item of $B.make_js_iterator(...)){"
     var set_lineno = $B.set_lineno
     if(frame === undefined){
-        if($B.frame_obj === null){
+        if(! $B.frame_obj){
             set_lineno = function(){
                 // does nothing
             }
@@ -1138,8 +1138,9 @@ $B.$getattr_pep657 = function(obj, attr, inum){
     try{
         return $B.$getattr(obj, attr)
     }catch(err){
-        var position = $B.get_position_from_inum(inum)
-        $B.set_exception_offsets(err, $B.decode_position(position))
+        if(inum !== undefined && $B.frame_obj){
+            $B.frame_obj.frame.inum = inum
+        }
         throw err
     }
 }
