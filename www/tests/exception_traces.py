@@ -5,6 +5,16 @@ except:
     import traceback
     import io
 
+def check(exc, expected):
+    if __BRYTHON__:
+        trace = __BRYTHON__.error_trace(exc)
+        assert expected in trace
+    else:
+        out = io.StringIO()
+        traceback.print_exc(file=out)
+        assert expected in out.getvalue()
+
+# ZeroDiv error on single line
 expected = """\
     1 / 0
     ~~^~~"""
@@ -12,14 +22,9 @@ expected = """\
 try:
     1 / 0
 except ZeroDivisionError as exc:
-    if __BRYTHON__:
-        trace = __BRYTHON__.error_trace(exc)
-        assert expected in trace, trace
-    else:
-        out = io.StringIO()
-        traceback.print_exc(file=out)
-        assert expected in out.getvalue()
+    check(exc, expected)
 
+# ZeroDiv error on multiline expression
 expected = """\
       (1 /
        ~~^
@@ -32,15 +37,9 @@ try:
 2)
 )
 except ZeroDivisionError as exc:
-    if __BRYTHON__:
-        trace = __BRYTHON__.error_trace(exc)
-        assert expected in trace, trace
-    else:
-        out = io.StringIO()
-        traceback.print_exc(file=out)
-        assert expected in out.getvalue()
+    check(exc, expected)
 
-# not callable
+# not callable error
 expected = """\
     x()
     ~^^"""
@@ -48,15 +47,9 @@ try:
     x = 1
     x()
 except TypeError as exc:
-    if __BRYTHON__:
-        trace = __BRYTHON__.error_trace(exc)
-        assert expected in trace, trace
-    else:
-        out = io.StringIO()
-        traceback.print_exc(file=out)
-        assert expected in out.getvalue()
+    check(exc, expected)
 
-
+# "not callable" error
 expected = """
     abc[
     ~~~~
@@ -71,13 +64,7 @@ try:
       'cde'
       ]()
 except TypeError as exc:
-    if __BRYTHON__:
-      trace = __BRYTHON__.error_trace(exc)
-      assert expected in trace, trace
-    else:
-      out = io.StringIO()
-      traceback.print_exc(file=out)
-      assert expected in out.getvalue()
+    check(exc, expected)
 
 expected = """
     t[
@@ -92,6 +79,7 @@ expected = """
          ^
 """
 
+# index error
 try:
     t = [[]]
     t[
@@ -100,13 +88,7 @@ try:
      3
          ]
 except IndexError as exc:
-    if __BRYTHON__:
-      trace = __BRYTHON__.error_trace(exc)
-      assert expected in trace, trace
-    else:
-      out = io.StringIO()
-      traceback.print_exc(file=out)
-      assert expected in out.getvalue(), out.getvalue()
+    check(exc, expected)
 
 expected = """
     a, [b, c], [d, e] = [1, [2, 3], [5]]
@@ -116,13 +98,7 @@ expected = """
 try:
     a, [b, c], [d, e] = [1, [2, 3], [5]]
 except ValueError as exc:
-    if __BRYTHON__:
-      trace = __BRYTHON__.error_trace(exc)
-      assert expected in trace, trace
-    else:
-      out = io.StringIO()
-      traceback.print_exc(file=out)
-      assert expected in out.getvalue(), out.getvalue()
+    check(exc, expected)
 
 # inside class body
 expected = [
@@ -149,15 +125,8 @@ try:
           pass
         import zerodiverror
 except ZeroDivisionError as exc:
-    if __BRYTHON__:
-      trace = __BRYTHON__.error_trace(exc)
-      for exp in expected:
-          assert exp in trace, trace
-    else:
-      out = io.StringIO()
-      traceback.print_exc(file=out)
-      for exp in expected:
-          assert exp in out.getvalue(), out.getvalue()
+    for exp in expected:
+        check(exc, exp)
 
 # raise SyntaxError (issue #2529)
 expected = """    raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
@@ -169,10 +138,40 @@ expected = """    raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
 try:
     raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
 except SyntaxError as exc:
-    if __BRYTHON__:
-        trace = __BRYTHON__.error_trace(exc)
-        assert expected in trace
-    else:
-        out = io.StringIO()
-        traceback.print_exc(file=out)
-        assert expected in out.getvalue()
+    check(exc, expected)
+
+# delete key in dict
+expected = """
+    del t[4]
+        ~^^^
+"""
+
+try:
+    t = {}
+    del t[4]
+except KeyError as exc:
+    check(exc, expected)
+
+expected = """
+    del t[4]
+        ~^^^
+"""
+
+# delete key in list
+try:
+    t = []
+    del t[4]
+except IndexError as exc:
+    check(exc, expected)
+
+# delete attribute
+expected = """
+    del t.foo
+        ^^^^^
+"""
+
+try:
+    t = []
+    del t.foo
+except AttributeError as exc:
+    check(exc, expected)
