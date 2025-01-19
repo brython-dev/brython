@@ -1246,7 +1246,7 @@ function handle_Subscript_error(lines, lineno, ast_obj, tokens){
     // tokens: list of tokens found in the segment
 
     var reset_lineno = make_line_setter(lineno)
-    
+
     // get position of
     // - opening bracket = the last OP token '[' before ast_obj.slice start
     // - closing bracket = the last OP token ']'
@@ -1356,8 +1356,7 @@ function trace_from_stack(err){
                     segment += lines[end_lineno - 1].substr(0, end_col_offset)
                 }
                 // parse the source code again; wrap it inside parenthesis to
-                // to avoid syntax errors if it is an expression on several
-                // lines
+                // avoid syntax errors if it is an expression on several lines
                 try{
                     let parser = new $B.Parser(`(\n${segment}\n)`,
                         'test', 'file')
@@ -1401,6 +1400,9 @@ function trace_from_stack(err){
                                     break
                             }
                         }catch(err){
+                            if($B.get_option('debug') > 1){
+                                console.log('error in error handlers', err)
+                            }
                             // Fallback in case of internal error
                             trace.push(make_trace_lines(lines, lineno, expr))
                         }

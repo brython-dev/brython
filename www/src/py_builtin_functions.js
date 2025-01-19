@@ -435,7 +435,16 @@ _b_.delattr = function(obj, attr) {
     return $B.$getattr(obj, '__delattr__')(attr)
 }
 
-$B.$delete = function(name, is_global){
+$B.$delattr = function(obj, attr, inum){
+    try{
+        _b_.delattr(obj, attr)
+    }catch(err){
+        $B.set_inum(inum)
+        throw err
+    }
+}
+
+$B.$delete = function(name, inum){
     // remove name from namespace
     function del(obj){
         if(obj.__class__ === $B.generator){
@@ -445,20 +454,13 @@ $B.$delete = function(name, is_global){
     }
     var found = false,
         frame = $B.frame_obj.frame
-    if(! is_global){
-        if(frame[1][name] !== undefined){
-            found = true
-            del(frame[1][name])
-            delete frame[1][name]
-        }
-    }else{
-        if(frame[2] != frame[0] && frame[3][name] !== undefined){
-            found = true
-            del(frame[3][name])
-            delete frame[3][name]
-        }
+    if(frame[1][name] !== undefined){
+        found = true
+        del(frame[1][name])
+        delete frame[1][name]
     }
-    if(!found){
+    if(! found){
+        $B.set_inum(inum)
         throw $B.name_error(name)
     }
 }
@@ -561,7 +563,7 @@ var $$eval = _b_.eval = function(){
     }
 
     var filename = '<string>'
-    
+
     if(src.__class__ === code){
         filename = src.filename
         // result of compile()

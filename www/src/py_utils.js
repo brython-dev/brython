@@ -912,19 +912,13 @@ $B.unpacker = function(obj, nb_targets, has_starred){
         inum_rank++
     }
     var inum = arguments[inum_rank]
-    var position
-    if(inum !== undefined){
-        position = $B.decode_position($B.get_position_from_inum(inum))
-    }
     var t = _b_.list.$factory(obj),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
 
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
-        if(position && $B.frame_obj){
-            $B.frame_obj.frame.inum = inum
-        }
+        $B.set_inum(inum)
         var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
             `(expected ${has_starred ? ' at least ' : ''} ` +
             `${left_length}, got ${right_length})`)
@@ -933,9 +927,6 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     if((! has_starred) && right_length > left_length){
         var exc = _b_.ValueError.$factory("too many values to unpack " +
             `(expected ${left_length})`)
-        if(position){
-            $B.set_exception_offsets(exc, position)
-        }
         throw exc
     }
     t.index = -1
@@ -1173,13 +1164,22 @@ $B.$setitem = function(obj, item, value){
     return si(obj, item, value)
 }
 
+$B.set_inum = function(inum){
+    if(inum !== undefined && $B.frame_obj){
+        $B.frame_obj.frame.inum = inum
+    }
+}
+
 // item deletion
-$B.$delitem = function(obj, item){
+$B.$delitem = function(obj, item, inum){
     if(Array.isArray(obj) && obj.__class__ === _b_.list &&
             typeof item == "number" &&
             !$B.$isinstance(obj, _b_.tuple)){
-        if(item < 0){item += obj.length}
+        if(item < 0){
+            item += obj.length
+        }
         if(obj[item] === undefined){
+            $B.set_inum(inum)
             throw _b_.IndexError.$factory("list deletion index out of range")
         }
         obj.splice(item, 1)
@@ -1202,13 +1202,27 @@ $B.$delitem = function(obj, item){
                 }
             )
         }else{
-            _b_.dict.__delitem__(obj, item)
+            try{
+                _b_.dict.__delitem__(obj, item)
+            }catch(err){
+                if(err.__class__ === _b_.KeyError){
+                    $B.set_inum(inum)
+                }
+                throw err
+            }
         }
         return
     }else if(obj.__class__ === _b_.list){
-        return _b_.list.__delitem__(obj, item)
+        try{
+            return _b_.list.__delitem__(obj, item)
+        }catch(err){
+            if(err.__class__ === _b_.IndexError){
+                $B.set_inum(inum)
+            }
+            throw err
+        }
     }
-    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
+    var di = $B.$getattr($B.get_class(obj), "__delitem__",
         null)
     if(di === null){
         throw _b_.TypeError.$factory("'" + $B.class_name(obj) +

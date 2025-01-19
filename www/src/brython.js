@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-18 22:31:33.723783"
-__BRYTHON__.timestamp=1737235893723
+__BRYTHON__.compiled_date="2025-01-19 14:11:43.755548"
+__BRYTHON__.timestamp=1737292303755
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1491,18 +1491,15 @@ var inum_rank=3
 if(has_starred){var nb_after_starred=arguments[3]
 inum_rank++}
 var inum=arguments[inum_rank]
-var position
-if(inum !==undefined){position=$B.decode_position($B.get_position_from_inum(inum))}
 var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
 if((! has_starred &&(right_length < nb_targets))||
-(has_starred &&(right_length < nb_targets-1))){if(position && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+(has_starred &&(right_length < nb_targets-1))){$B.set_inum(inum)
 var exc=_b_.ValueError.$factory(`not enough values to unpack `+
 `(expected ${has_starred ? ' at least ' : ''} `+
 `${left_length}, got ${right_length})`)
 throw exc}
 if((! has_starred)&& right_length > left_length){var exc=_b_.ValueError.$factory("too many values to unpack "+
 `(expected ${left_length})`)
-if(position){$B.set_exception_offsets(exc,position)}
 throw exc}
 t.index=-1
 t.read_one=function(){t.index++
@@ -1584,18 +1581,22 @@ var si=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__setitem__",null)
 if(si===null ||typeof si !='function'){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object does not support item assignment")}
 return si(obj,item,value)}
-$B.$delitem=function(obj,item){if(Array.isArray(obj)&& obj.__class__===_b_.list &&
+$B.set_inum=function(inum){if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}}
+$B.$delitem=function(obj,item,inum){if(Array.isArray(obj)&& obj.__class__===_b_.list &&
 typeof item=="number" &&
 !$B.$isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
-if(obj[item]===undefined){throw _b_.IndexError.$factory("list deletion index out of range")}
+if(obj[item]===undefined){$B.set_inum(inum)
+throw _b_.IndexError.$factory("list deletion index out of range")}
 obj.splice(item,1)
 return}else if(obj.__class__===_b_.dict){if(obj.$is_namespace){
 Object.defineProperty(obj.$jsobj,item,{get(){throw $B.name_error(item)},set(value){
 Object.defineProperty(obj.$jsobj,item,{value})
 return _b_.None}}
-)}else{_b_.dict.__delitem__(obj,item)}
-return}else if(obj.__class__===_b_.list){return _b_.list.__delitem__(obj,item)}
-var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
+)}else{try{_b_.dict.__delitem__(obj,item)}catch(err){if(err.__class__===_b_.KeyError){$B.set_inum(inum)}
+throw err}}
+return}else if(obj.__class__===_b_.list){try{return _b_.list.__delitem__(obj,item)}catch(err){if(err.__class__===_b_.IndexError){$B.set_inum(inum)}
+throw err}}
+var di=$B.$getattr($B.get_class(obj),"__delitem__",null)
 if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
 return di(obj,item)}
@@ -2851,16 +2852,17 @@ check_nb_args_no_kw('delattr',2,arguments)
 if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be string, not '"+
 $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
-$B.$delete=function(name,is_global){
+$B.$delattr=function(obj,attr,inum){try{_b_.delattr(obj,attr)}catch(err){$B.set_inum(inum)
+throw err}}
+$B.$delete=function(name,inum){
 function del(obj){if(obj.__class__===$B.generator){
 obj.js_gen.return()}}
 var found=false,frame=$B.frame_obj.frame
-if(! is_global){if(frame[1][name]!==undefined){found=true
+if(frame[1][name]!==undefined){found=true
 del(frame[1][name])
-delete frame[1][name]}}else{if(frame[2]!=frame[0]&& frame[3][name]!==undefined){found=true
-del(frame[3][name])
-delete frame[3][name]}}
-if(!found){throw $B.name_error(name)}}
+delete frame[1][name]}
+if(! found){$B.set_inum(inum)
+throw $B.name_error(name)}}
 _b_.dir=function(obj){if(obj===undefined){
 var locals=_b_.locals()
 return _b_.sorted(locals)}
@@ -4833,7 +4835,7 @@ default:
 var ast_obj={lineno,end_lineno,col_offset,end_col_offset}
 trace.push(handle_Expr_error(
 lines,lineno,expr.value,tokens))
-break}}catch(err){
+break}}catch(err){if($B.get_option('debug')> 1){console.log('error in error handlers',err)}
 trace.push(make_trace_lines(lines,lineno,expr))}
 break
 default:
@@ -12503,11 +12505,12 @@ $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_
 return prefix+'continue'}
 $B.ast.Delete.prototype.to_js=function(scopes){compiler_check(this)
 var js=''
-for(var target of this.targets){if(target instanceof $B.ast.Name){var scope=name_scope(target.id,scopes)
+for(var target of this.targets){var inum=add_to_positions(scopes,target)
+if(target instanceof $B.ast.Name){var scope=name_scope(target.id,scopes)
 if(scope.found){scope.found.locals.delete(target.id)}
-js+=`$B.$delete("${target.id}")\n`}else if(target instanceof $B.ast.Subscript){js+=`$B.$delitem(${$B.js_from_ast(target.value, scopes)}, `+
-`${$B.js_from_ast(target.slice, scopes)})\n`}else if(target instanceof $B.ast.Attribute){js+=`_b_.delattr(${$B.js_from_ast(target.value, scopes)}, `+
-`'${target.attr}')\n`}}
+js+=`$B.$delete("${target.id}", ${inum})\n`}else if(target instanceof $B.ast.Subscript){js+=`$B.$delitem(${$B.js_from_ast(target.value, scopes)}, `+
+`${$B.js_from_ast(target.slice, scopes)}, ${inum})\n`}else if(target instanceof $B.ast.Attribute){js+=`$B.$delattr(${$B.js_from_ast(target.value, scopes)}, `+
+`'${target.attr}', ${inum})\n`}}
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
 prefix+js}
 $B.ast.Delete.prototype._check=function(){for(var target of this.targets){check_assign_or_delete(this,target,'delete')}}

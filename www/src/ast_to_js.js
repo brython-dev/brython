@@ -1999,18 +1999,19 @@ $B.ast.Delete.prototype.to_js = function(scopes){
     compiler_check(this)
     var js = ''
     for(var target of this.targets){
+        var inum = add_to_positions(scopes, target)
         if(target instanceof $B.ast.Name){
             var scope = name_scope(target.id, scopes)
             if(scope.found){
                 scope.found.locals.delete(target.id)
             }
-            js += `$B.$delete("${target.id}")\n`
+            js += `$B.$delete("${target.id}", ${inum})\n`
         }else if(target instanceof $B.ast.Subscript){
             js += `$B.$delitem(${$B.js_from_ast(target.value, scopes)}, ` +
-                  `${$B.js_from_ast(target.slice, scopes)})\n`
+                  `${$B.js_from_ast(target.slice, scopes)}, ${inum})\n`
         }else if(target instanceof $B.ast.Attribute){
-            js += `_b_.delattr(${$B.js_from_ast(target.value, scopes)}, ` +
-                  `'${target.attr}')\n`
+            js += `$B.$delattr(${$B.js_from_ast(target.value, scopes)}, ` +
+                  `'${target.attr}', ${inum})\n`
         }
     }
     return prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
