@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-20 09:16:23.949964"
-__BRYTHON__.timestamp=1737360983949
+__BRYTHON__.compiled_date="2025-01-20 19:25:21.089944"
+__BRYTHON__.timestamp=1737397521089
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -4585,9 +4585,11 @@ if(name===_b_.None){return _b_.None}
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name
-if(exc.$frame_obj===null){return _b_.None}
-frame=frame ||exc.$frame_obj.frame
 if(typeof name !='string'){return _b_.None}
+var tb=exc.__traceback__
+if(tb===undefined ||tb===_b_.None){return _b_.None}
+while(tb.tb_next !==_b_.None){tb=tb.tb_next}
+var frame=tb.tb_frame
 var locals=Object.keys(frame[1]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(locals,name)
 if(suggestion){return suggestion}
@@ -6365,6 +6367,7 @@ $B.module){return $B.imported[_mod_name][parsed_name[len]]}
 if(has_from){
 import_error(mod_name)}else{
 var exc=_b_.ModuleNotFoundError.$factory()
+exc.__traceback__=$B.make_tb()
 exc.msg="No module named '"+mod_name+"'; '"+
 _mod_name+"' is not a package"
 exc.args=$B.fast_tuple([exc.msg])
@@ -6383,7 +6386,7 @@ $B.$import(package_name,[],{},locals)
 $B.imported[package_name][module]=$B.imported[mod_name]
 mod_name=module}}
 return $B.imported[package_name]}}
-$B.$import=function(mod_name,fromlist,aliases,locals){
+$B.$import=function(mod_name,fromlist,aliases,locals,inum){
 var test=false 
 if(test){console.log('import',mod_name,fromlist,aliases)}
 if(mod_name=='_frozen_importlib_external'){
@@ -6428,7 +6431,9 @@ var importer=typeof __import__=="function" ?
 __import__ :
 $B.$getattr(__import__,"__call__")
 if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)}
-var modobj=importer(mod_name,globals,undefined,fromlist,0)
+try{var modobj=importer(mod_name,globals,undefined,fromlist,0)}catch(err){if(test){console.log('set error',err.__class__)}
+$B.set_inum(inum)
+throw err}
 if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
 console.log('modobj',modobj)}
 if(! fromlist ||fromlist.length==0){
@@ -6444,14 +6449,15 @@ for(let name of __all__){var alias=aliases[name]||name
 try{
 locals[alias]=$B.$getattr(modobj,name)
 if(locals[alias]&& locals[alias].$js_func){
-locals[alias]=locals[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){throw $err1}
+locals[alias]=locals[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){$B.set_inum(inum)
+throw $err1}
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
-locals[alias]=$B.$getattr(modobj,name)}catch($err3){
+locals[alias]=$B.$getattr(modobj,name)}catch($err3){$B.set_inum(inum)
 if(mod_name==="__future__"){
 var exc=_b_.SyntaxError.$factory(
 "future feature "+name+" is not defined")
 throw exc}
-var $frame=[mod_name,modobj,mod_name,modobj],suggestion=$B.offer_suggestions_for_name_error({name},$frame)
+var $frame=[mod_name,modobj,mod_name,modobj],suggestion=$B.offer_suggestions_for_name_error($err3,$frame)
 if($err3.$py_error){$err3.__class__=_b_.ImportError
 $err3.args[0]=`cannot import name '${name}' `+
 `from '${mod_name}'`
@@ -6463,23 +6469,26 @@ console.log($B.frame_obj.frame)}
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
 return locals}}
-$B.$import_from=function(module,names,aliases,level,locals){
+$B.$import_from=function(module,names,aliases,level,locals,inum){
 var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0,current_module
 if(relative){
 current_module=$B.imported[parts.join('.')]
-if(current_module===undefined){throw _b_.ImportError.$factory(
+if(current_module===undefined){$B.set_inum(inum)
+throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
-if(! current_module.$is_package){if(parts.length==1){throw _b_.ImportError.$factory(
+if(! current_module.$is_package){if(parts.length==1){$B.set_inum(inum)
+throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}else{parts.pop()
 current_module=$B.imported[parts.join('.')]}}
 while(level > 0){current_module=$B.imported[parts.join('.')]
-if(! current_module.$is_package){throw _b_.ImportError.$factory(
+if(! current_module.$is_package){$B.set_inum(inum)
+throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
 level--
 parts.pop()}
 if(module){
 var submodule=current_module.__name__+'.'+module
-$B.$import(submodule,[],{},{})
+$B.$import(submodule,[],{},{},inum)
 current_module=$B.imported[submodule]}
 if(names.length > 0 && names[0]=='*'){
 for(var key in current_module){if(key.startsWith('$')||key.startsWith('_')){continue}
@@ -6489,7 +6498,7 @@ locals[alias]=current_module[name]}else{
 var sub_module=current_module.__name__+'.'+name
 $B.$import(sub_module,[],{},{})
 locals[alias]=$B.imported[sub_module]}}}}else{
-$B.$import(module,names,aliases,locals)}}
+$B.$import(module,names,aliases,locals,inum)}}
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
@@ -13138,29 +13147,21 @@ $B.js_from_ast(this.body,scopes)+': '+
 $B.js_from_ast(this.orelse,scopes)+')'}
 $B.ast.Import.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 var inum=add_to_positions(scopes,this)
-js+=prefix+'try{\n'
-indent()
 for(var alias of this.names){js+=prefix+`$B.$import("${alias.name}", [], `
 if(alias.asname){js+=`{'${alias.name}' : '${alias.asname}'}, `
 bind(alias.asname,scopes)}else{js+='{}, '
 bind(alias.name,scopes)}
 var parts=alias.name.split('.')
 for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=true}
-js+=`locals, true)\n`}
-dedent()
-js+=prefix+'}catch(err){\n'
-indent()
-js+=prefix+`frame.inum = ${inum}\n`+
-prefix+'throw err\n'
-dedent()
-js+=prefix+'}\n'
+js+=`locals, ${inum})\n`}
 return js.trimRight()}
 $B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
 prefix+`$B.$import_from("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
 for(var name of this.names){if(name.asname){aliases.push(`${name.name}: '${name.asname}'`)}}
-js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
+var inum=add_to_positions(scopes,this)
+js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
 for(var alias of this.names){if(alias.asname){bind(alias.asname,scopes)}else if(alias.name=='*'){
 last_scope(scopes).blurred=true}else{bind(alias.name,scopes)}}
 return js}

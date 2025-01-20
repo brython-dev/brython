@@ -3285,8 +3285,6 @@ $B.ast.IfExp.prototype.to_js = function(scopes){
 $B.ast.Import.prototype.to_js = function(scopes){
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     var inum = add_to_positions(scopes, this)
-    js += prefix + 'try{\n'
-    indent()
     for(var alias of this.names){
         js += prefix + `$B.$import("${alias.name}", [], `
         if(alias.asname){
@@ -3301,15 +3299,8 @@ $B.ast.Import.prototype.to_js = function(scopes){
             scopes.imports[parts.slice(0, i + 1).join(".")] = true
         }
 
-        js += `locals, true)\n`
+        js += `locals, ${inum})\n`
     }
-    dedent()
-    js += prefix + '}catch(err){\n'
-    indent()
-    js += prefix + `frame.inum = ${inum}\n` +
-          prefix + 'throw err\n'
-    dedent()
-    js += prefix + '}\n'
 
     return js.trimRight()
 }
@@ -3332,7 +3323,8 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
             aliases.push(`${name.name}: '${name.asname}'`)
         }
     }
-    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
+    var inum = add_to_positions(scopes, this)
+    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
 
     for(var alias of this.names){
         if(alias.asname){

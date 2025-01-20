@@ -1102,6 +1102,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
                     }else{
                         // "import a.b" if a is not a package : ModuleNotFoundError
                         var exc = _b_.ModuleNotFoundError.$factory()
+                        exc.__traceback__ = $B.make_tb()
                         exc.msg = "No module named '" + mod_name +"'; '" +
                             _mod_name + "' is not a package"
                         exc.args = $B.fast_tuple([exc.msg])
@@ -1159,16 +1160,16 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
 
  * @return None
  */
-$B.$import = function(mod_name, fromlist, aliases, locals){
+$B.$import = function(mod_name, fromlist, aliases, locals, inum){
     /*
     mod_name: module name specified in the import statement
     fromlist: names specified in "from" statement
     aliases: aliases used to override local variable name bindings
              (eg "import traceback as tb")
     locals: local namespace import bindings will be applied upon
-    level: number of leading '.' in "from . import a" or "from .mod import a"
+    inum: instruction number
     */
-    var test = false // mod_name == 'some_module' // fromlist.length == 1 && fromlist[0] == "aliases"
+    var test = false // mod_name == '_path_normpath' // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
@@ -1266,8 +1267,15 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
         //alert()
     }
-    var modobj = importer(mod_name, globals, undefined, fromlist, 0)
-
+    try{
+        var modobj = importer(mod_name, globals, undefined, fromlist, 0)
+    }catch(err){
+        if(test){
+            console.log('set error', err.__class__)
+        }
+        $B.set_inum(inum)
+        throw err
+    }
     if(test){
         console.log('step 3, mod_name', mod_name, 'fromlist', fromlist)
         console.log('modobj', modobj)
@@ -1320,6 +1328,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     }
                 }catch($err1){
                     if(! $B.is_exc($err1, [_b_.AttributeError])){
+                        $B.set_inum(inum)
                         throw $err1
                     }
                     // [Import spec] attempt to import a submodule with that name ...
@@ -1330,6 +1339,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         // [Import spec] ... then check imported module again for name
                         locals[alias] = $B.$getattr(modobj, name)
                     }catch($err3){
+                        $B.set_inum(inum)
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
@@ -1340,7 +1350,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         // calculate suggestion based on module namespace
                         // (new in Python 3.12)
                         var $frame = [mod_name, modobj, mod_name, modobj],
-                            suggestion = $B.offer_suggestions_for_name_error({name}, $frame)
+                            suggestion = $B.offer_suggestions_for_name_error($err3, $frame)
                         if($err3.$py_error){
                             $err3.__class__ = _b_.ImportError
                             $err3.args[0] = `cannot import name '${name}' ` +
@@ -1365,7 +1375,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
 }
 
-$B.$import_from = function(module, names, aliases, level, locals){
+$B.$import_from = function(module, names, aliases, level, locals, inum){
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
     var current_module_name = $B.frame_obj.frame[2],
@@ -1378,11 +1388,13 @@ $B.$import_from = function(module, names, aliases, level, locals){
         // it is the module's package
         current_module = $B.imported[parts.join('.')]
         if(current_module === undefined){
+            $B.set_inum(inum)
             throw _b_.ImportError.$factory(
                 'attempted relative import with no known parent package')
         }
         if(! current_module.$is_package){
             if(parts.length == 1){
+                $B.set_inum(inum)
                 throw _b_.ImportError.$factory(
                     'attempted relative import with no known parent package')
             }else{
@@ -1393,6 +1405,7 @@ $B.$import_from = function(module, names, aliases, level, locals){
         while(level > 0){
             current_module = $B.imported[parts.join('.')]
             if(! current_module.$is_package){
+                $B.set_inum(inum)
                 throw _b_.ImportError.$factory(
                     'attempted relative import with no known parent package')
             }
@@ -1402,7 +1415,7 @@ $B.$import_from = function(module, names, aliases, level, locals){
         if(module){
             // form "from .foo import bar"
             var submodule = current_module.__name__ + '.' + module
-            $B.$import(submodule, [], {}, {})
+            $B.$import(submodule, [], {}, {}, inum)
             current_module = $B.imported[submodule]
         }
         // get names from a package
@@ -1430,7 +1443,7 @@ $B.$import_from = function(module, names, aliases, level, locals){
         }
     }else{
         // import module
-        $B.$import(module, names, aliases, locals)
+        $B.$import(module, names, aliases, locals, inum)
     }
 }
 

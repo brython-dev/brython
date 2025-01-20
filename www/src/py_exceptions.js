@@ -812,13 +812,17 @@ $B.offer_suggestions_for_attribute_error = function(exc){
 
 $B.offer_suggestions_for_name_error = function(exc, frame){
     var name = exc.name
-    if(exc.$frame_obj === null){
-        return _b_.None
-    }
-    frame = frame || exc.$frame_obj.frame
     if(typeof name != 'string'){
         return _b_.None
     }
+    var tb = exc.__traceback__
+    if(tb === undefined || tb === _b_.None){
+        return _b_.None
+    }
+    while(tb.tb_next !== _b_.None){
+        tb = tb.tb_next
+    }
+    var frame = tb.tb_frame
     var locals = Object.keys(frame[1]).filter(x => ! (x.startsWith('$')))
     var suggestion = calculate_suggestions(locals, name)
     if(suggestion){
