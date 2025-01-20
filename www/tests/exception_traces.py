@@ -1,18 +1,21 @@
+import traceback
+import io
+
 try:
     from browser import __BRYTHON__, console
 except:
     __BRYTHON__ = None
-    import traceback
-    import io
 
-def check(exc, expected):
+def check_brython(exc, expected):
     if __BRYTHON__:
         trace = __BRYTHON__.error_trace(exc)
         assert expected in trace
-    else:
-        out = io.StringIO()
-        traceback.print_exc(file=out)
-        assert expected in out.getvalue()
+
+def check(exc, expected):
+    check_brython(exc, expected)
+    out = io.StringIO()
+    traceback.print_exc(file=out)
+    assert expected in out.getvalue(), out.getvalue()
 
 # ZeroDiv error on single line
 expected = """\
@@ -138,7 +141,7 @@ expected = """    raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
 try:
     raise SyntaxError('rien', ('test', 3, 2, 'coucou'))
 except SyntaxError as exc:
-    check(exc, expected)
+    check_brython(exc, expected) # traceback crashes on this one
 
 # delete key in dict
 expected = """
