@@ -82,7 +82,10 @@ def log(*args):
     output.html += ', '.join(str(arg) for arg in args)
 
 def show(req):
-    log(req.text)
+    if req.status == 404:
+        log('File not found')
+    else:
+        log(req.text)
 
 @bind("#get_test", "click")
 def get(ev):
