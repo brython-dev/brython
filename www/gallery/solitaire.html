@@ -35,7 +35,7 @@ def grab(evt):
         # turn off all pointer events to the dragged element, this does 2 things:
         #    1) allows us to drag text elements without selecting the text
         #    2) allows us to find out where the dragged element is dropped (see Drop)
-        DragTarget.setAttributeNS(None, "pointer-events", "none")
+        DragTarget.style.pointerEvents = 'none'
 
         # we need to find the current position and translation of the grabbed element,
         # so that we only apply the differential between the current location
@@ -72,14 +72,13 @@ def drag(evt):
 
     # apply a new tranform translation to the dragged element, to display
     # it in its new location
-    DragTarget.setAttributeNS(None, "transform",
-        f"translate({newX},{newY})")
+    DragTarget.style.transform = f"translate({newX}px,{newY}px)"
 
 SVGRoot.bind('mousemove', drag)
 
 def drop(evt):
     global DragTarget, border_pos
-
+    
     # if we aren't currently dragging an element, don't do anything
     if not DragTarget:
         return
@@ -87,22 +86,20 @@ def drop(evt):
     # since the element currently being dragged has its pointer-events turned off,
     # we are afforded the opportunity to find out the element it's being dropped on
     targetElement = evt.target
-
+    
     # turn the pointer-events back on, so we can grab this item later
-    DragTarget.setAttributeNS(None, "pointer-events", "all")
-    if targetElement.id == "BackDrop":
+    DragTarget.style.pointerEvents = "all"
+    if targetElement in [BackDrop, big_plate, plate]:
         # invalid move : not dropped on a ball
         newX = DragStart.x - GrabPoint.x
         newY = DragStart.y - GrabPoint.y
-        DragTarget.setAttributeNS(None, "transform",
-            f"translate({newX},{newY})")
+        DragTarget.style.transform = f"translate({newX},{newY})"
 
     elif targetElement.style.fill == ball_color:
         # invalid move : dropped on a non empty cell
         newX = DragStart.x - GrabPoint.x
         newY = DragStart.y - GrabPoint.y
-        DragTarget.setAttributeNS(None, "transform",
-            f"translate({newX},{newY})")
+        DragTarget.style.transform = f"translate({newX},{newY})"
 
     else:
         # drop and replace
@@ -126,17 +123,16 @@ def drop(evt):
             removed = document[filled[col][row].id]
             old_x = removed.cx.baseVal.value
             old_y = removed.cy.baseVal.value
-            cx = center_x + store_ray * math.cos(border_pos)
-            cy = center_y + store_ray * math.sin(border_pos)
-            document[filled[col][row].id].setAttributeNS(None, "transform",
-                f"translate({cx - old_x},{cy - old_y})")
+            cx = int(center_x + store_ray * math.cos(border_pos))
+            cy = int(center_y + store_ray * math.sin(border_pos))
+            removed.style.transform = f"translate({cx - old_x}px,{cy - old_y}px)"
             border_pos += math.pi / 18
 
             # position dragged ball
             draggedBall = document[DragTarget.id]
             draggedBall.attrs['cx'] = left + target_pos[0] * dx
             draggedBall.attrs['cy'] = top + dy * target_pos[1]
-            draggedBall.setAttributeNS(None, "transform", "translate(0,0)")
+            draggedBall.style.transform = "translate(0,0)"
 
             # reset dictionary
             filled[dragged_pos[0]][dragged_pos[1]] = None
@@ -147,8 +143,7 @@ def drop(evt):
             # invalid move : jump over an empty cell
             newX = DragStart.x - GrabPoint.x
             newY = DragStart.y - GrabPoint.y
-            DragTarget.setAttributeNS(None, "transform",
-                f"translate({newX},{newY})")
+            DragTarget.style.transform = f"translate({newX},{newY})"
 
     # set the global variable to None, so nothing will be dragged until we
     # grab the next element
