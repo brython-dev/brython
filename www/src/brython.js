@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-19 14:11:43.755548"
-__BRYTHON__.timestamp=1737292303755
+__BRYTHON__.compiled_date="2025-01-20 09:16:23.949964"
+__BRYTHON__.timestamp=1737360983949
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -1531,14 +1531,11 @@ warning.text=token.line
 warning.args[1]=$B.fast_tuple([filename,warning.lineno,warning.offset,warning.text,warning.end_lineno,warning.end_offset])}
 $B.imported._warnings.warn(warning)}
 $B.assert=function(test,msg,inum){if(! $B.$bool(test)){var exc=_b_.AssertionError.$factory(msg)
-if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+$B.set_inum(inum)
 throw exc}}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 return _b_.IndexError.$factory(type+" index out of range")}
-$B.$getitem=function(obj,item,inum){try{return $B.$getitem1(obj,item)}catch(err){if(inum !==undefined){if($B.frame_obj){$B.frame_obj.frame.inum=inum}
-var position=$B.get_position_from_inum(inum)
-$B.set_exception_offsets(err,$B.decode_position(position))}
-err.__traceback__=$B.make_tb()
+$B.$getitem=function(obj,item,inum){try{return $B.$getitem1(obj,item)}catch(err){$B.set_inum(inum)
 throw err}}
 $B.$getitem1=function(obj,item){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
 if(typeof item=="number"){if(is_list ||typeof obj=="string"){item=item >=0 ? item :obj.length+item
@@ -1567,7 +1564,7 @@ res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
 return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
-$B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+$B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){$B.set_inum(inum)
 throw err}}
 $B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
 ! obj.$is_js_array &&
@@ -1659,12 +1656,9 @@ if($B.is_or_equals(key,item)){return true}}catch(err){if($B.$is_exc(err,[_b_.Sto
 throw err}}}}else{throw _b_.TypeError.$factory('argument of type '+
 `'${$B.class_name(obj)}' is not iterable`)}}}
 $B.$is_member=function(item,_set){return $B.member_func(_set)(item)}
-$B.$call=function(callable,inum){try{callable=$B.$call1(callable)}catch(err){if(inum !==undefined){if($B.frame_obj !==null && inum !==undefined){$B.frame_obj.frame.inum=inum}
-var position=$B.get_position_from_inum(inum)
-$B.set_exception_offsets(err,$B.decode_position(position))}
-err.__traceback__=$B.make_tb()
+$B.$call=function(callable,inum){try{callable=$B.$call1(callable)}catch(err){$B.set_inum(inum)
 throw err}
-return function(){try{return callable.apply(null,arguments)}catch(exc){if(inum !==undefined){if($B.frame_obj !==null && inum !==undefined){$B.frame_obj.frame.inum=inum}}
+return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_inum(inum)
 throw exc}}
 return callable}
 $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.__class__===_b_.staticmethod){return callable.__func__}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
@@ -1827,9 +1821,7 @@ var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*",__and__:'&',__or__:'|'}
 $B.get_position_from_inum=function(inum){
 if($B.frame_obj !==null){var frame=$B.frame_obj.frame
 if(frame.positions){return frame.positions[Math.floor(inum/2)]}}}
-$B.rich_op=function(op,x,y,inum){try{return $B.rich_op1(op,x,y)}catch(exc){if(inum !==undefined){if($B.frame_obj){$B.frame_obj.frame.inum=inum}
-$B.set_exception_offsets(exc,$B.decode_position($B.get_position_from_inum(inum)))}
-exc.__traceback__=$B.make_tb()
+$B.rich_op=function(op,x,y,inum){try{return $B.rich_op1(op,x,y)}catch(exc){$B.set_inum(inum)
 throw exc}}
 $B.rich_op1=function(op,x,y){
 var res_is_int,res_is_float,x_num,y_num
@@ -4516,15 +4508,12 @@ $B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){var msg
 if(obj.$is_class){msg=`type object '${obj.__name__}'`}else{msg=`'${$B.class_name(obj)}' object`}
 msg+=` has no attribute '${name}'`
-var exc=_b_.AttributeError.$factory({$kw:[{name,obj,msg}]})
-exc.__traceback__=make_tb()
-return exc}
+return _b_.AttributeError.$factory({$kw:[{name,obj,msg}]})}
 _b_.NameError=$B.make_class('NameError',function(){var $=$B.args("NameError",2,{"message":null,"name":null},["message","name"],arguments,{message:_b_.None,name:_b_.None},"*",null,1)
 var err=Error()
 err.__class__=_b_.NameError
 err.__traceback__=_b_.None
 err.$py_error=true
-err.$frame_obj=$B.frame_obj
 err.args=$B.fast_tuple($.message===_b_.None ?[]:[$.message])
 err.name=$.name
 err.__cause__=_b_.None 
@@ -4541,7 +4530,6 @@ _b_.UnboundLocalError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
 $B.name_error=function(name){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
 exc.name=name
-exc.__traceback__=make_tb()
 return exc}
 $B.recursion_error=function(frame){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
@@ -4673,55 +4661,30 @@ return err}
 _b_.ExceptionGroup.__bases__=[_b_.BaseExceptionGroup,_b_.Exception]
 _b_.ExceptionGroup.__mro__=_b_.type.$mro(_b_.ExceptionGroup)
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
-function make_trace_lines(lines,lineno,expr){var line_start=expr.lineno+lineno-2
+function make_report(lines,positions){
+var[lineno,end_lineno,col_offset,end_col_offset]=positions
+lines=lines.slice(lineno-1,end_lineno)
+var min_indent=get_min_indent(lines)
+lines=lines.map(line=> '    '+line.substr(min_indent).trimRight())
+if(lines.length > 3){lines=[lines[0],`    ...<${lines.length - 2} lines>...`,lines[lines.length-1]]}
+return lines.join('\n')}
+function make_trace_lines(lines,lineno,expr){
+var line_start=expr.lineno+lineno-2
 var line_end=expr.end_lineno+lineno-2
-var min_indent=get_min_indent(lines.slice(line_start-1,line_end))
-var err_lines=[]
-var start=0
-if(line_end-line_start > 3){err_lines.push('    '+lines[line_start-1].substring(min_indent))
-err_lines.push(`    ...<${line_end - line_start - 1} lines>...`)
-err_lines.push('    '+lines[line_end-1].substring(min_indent))
-return err_lines.join('\n')}
-for(var lnum=line_start;lnum < line_end;lnum++){var line=lines[lnum-1].trimRight()
-err_lines.push('    '+line.substring(min_indent))}
-return err_lines.join('\n')}
-function get_text_pos(ast_obj,segment,elt){
-var start=2 
-for(var lnum=ast_obj.lineno;lnum < elt.lineno;lnum++){while(start < segment.length && segment[start]!='\n'){start++}
-start+=1}
-start+=elt.col_offset
-var end=start
-if(elt.end_lineno==elt.lineno){end+=elt.end_col_offset-elt.col_offset}else{
-for(;lnum < elt.end_lineno;lnum++){while(end < segment.length && segment[end]!='\n'){end++}
-end++}
-end+=elt.end_col_offset}
-return{start,end}}
-function find_char(text,start_pos,line,test_func){
-var pos=start_pos
-var char_line=line
-while(pos < text.length){if(text[pos]=='#'){
-pos++
-while(pos < text.length && text[pos]!='\n'){pos++}}else if(test_func(text[pos])){
-pos++}else{return{pos,lineno:char_line}}}
-return{pos,lineno:char_line}}
-function make_test_func(ast_obj){
-if(ast_obj.end_lineno==ast_obj.lineno){return function(line,col){return line==ast_obj.lineno && ast_obj.col_offset <=col &&
-col < ast_obj.end_col_offset}}else{return function(line,col){return(line==ast_obj.lineno && col >=ast_obj.col_offset)||
-(line > ast_obj.lineno && line < ast_obj.end_lineno)||
-(line==ast_obj.end_lineno && col < ast_obj.end_col_offset)}}}
+return make_report(lines,[line_start,line_end,expr.col_offset,expr.end_col_offset])}
 function get_indent(line){return line.length-line.trimLeft().length}
 function get_min_indent(lines){var min_indent=2**16
 for(var line of lines){if(! line.trim()){continue}
 var indent=get_indent(line)
 if(indent < min_indent){min_indent=indent}}
 return min_indent}
-function fill_marks(lines,first_lineno,first_col_offset){var args=Array.from(arguments).slice(3)
+function fill_marks(lines,first_lineno,first_col_offset){
+var args=Array.from(arguments).slice(3)
 var start_lineno=first_lineno
 var start_col_offset=first_col_offset
 var marks=' '.repeat(first_col_offset)
 var line
 var indent
-var min_indent=get_indent(lines[start_lineno-1])
 for(var i=0;i < args.length;i+=3){var[mark,lineno,col_offset]=args.slice(i,i+3)
 if(lineno==start_lineno){marks+=mark.repeat(col_offset-start_col_offset)}else{line=lines[start_lineno-1]
 marks+=mark.repeat(line.length-start_col_offset)+'\n'
@@ -4733,14 +4696,15 @@ indent=get_indent(line)
 marks+=' '.repeat(indent)+mark.repeat(col_offset-indent)}
 start_lineno=lineno
 start_col_offset=col_offset}
-var min_indent=get_min_indent(lines.slice(first_lineno-1,lineno))
 var marks_lines=marks.split('\n')
+var min_indent=get_min_indent(lines.slice(first_lineno-1,lineno))
 var err_lines=[]
 for(var lnum=0;lnum < marks_lines.length;lnum++){err_lines.push('    '+
 lines[first_lineno+lnum-1].trimRight().substr(min_indent))
 err_lines.push('    '+marks_lines[lnum].substr(min_indent))}
 return err_lines.join('\n')}
-function make_line_setter(lineno){return function(coords){return{
+function make_line_setter(lineno){
+return function(coords){return{
 lineno:coords.lineno+lineno-2,end_lineno:coords.end_lineno+lineno-2,col_offset:coords.col_offset,end_col_offset:coords.end_col_offset}}}
 function handle_BinOp_error(lines,lineno,ast_obj,tokens){
 var reset_lineno=make_line_setter(lineno)
@@ -4749,7 +4713,6 @@ for(var token of tokens){if(token.type=='OP'){if(is_before(ast_obj.right,token.l
 && token.string !='('){operator=reset_lineno(token)}}}
 var end_binop=reset_lineno(tokens[tokens.length-1])
 var left=reset_lineno(ast_obj.left)
-var right=reset_lineno(ast_obj.right)
 return fill_marks(lines,lineno,left.col_offset,'~',operator.lineno,operator.col_offset,'^',operator.end_lineno,operator.end_col_offset,'~',end_binop.end_lineno,end_binop.end_col_offset)}
 function handle_Call_error(lines,lineno,ast_obj,tokens){
 var reset_lineno=make_line_setter(lineno)
@@ -4760,23 +4723,18 @@ token.lineno==ast_obj.func.end_lineno &&
 token.col_offset >=ast_obj.func.end_col_offset){opening_parenth=reset_lineno(token)}else if(token.string==')'){closing_parenth=reset_lineno(token)}}}
 var func=reset_lineno(ast_obj.func)
 return fill_marks(lines,lineno,func.col_offset,'~',opening_parenth.lineno,opening_parenth.col_offset,'^',closing_parenth.end_lineno,closing_parenth.end_col_offset)}
-function handle_Expr_error(lines,lineno,ast_obj,tokens){var reset_lineno=make_line_setter(lineno)
+function handle_Expr_error(lines,lineno,ast_obj){var reset_lineno=make_line_setter(lineno)
 var expr=reset_lineno(ast_obj)
 return fill_marks(lines,lineno,expr.col_offset,'^',expr.end_lineno,expr.end_col_offset)}
-function is_before(obj,lnum,col){return lnum < obj.lineno ||(lnum==obj.lineno && col < obj.col_offset)}
+function is_before(obj,lineno,col){
+return lineno < obj.lineno ||
+(lineno==obj.lineno && col < obj.col_offset)}
 function handle_Subscript_error(lines,lineno,ast_obj,tokens){
 var reset_lineno=make_line_setter(lineno)
 for(var token of tokens){if(token.type=='OP'){if(token.string=='[' &&
 is_before(ast_obj.slice,token.lineno,token.col_offset)){var opening_bracket=reset_lineno(token)}else if(token.string==']'){var closing_bracket=reset_lineno(token)}}}
 var value=reset_lineno(ast_obj.value)
 return fill_marks(lines,lineno,value.col_offset,'~',opening_bracket.lineno,opening_bracket.col_offset,'^',closing_bracket.end_lineno,closing_bracket.end_col_offset)}
-function make_report(lines,positions){
-var[lineno,end_lineno,col_offset,end_col_offset]=positions
-lines=lines.slice(lineno-1,end_lineno)
-var min_indent=get_min_indent(lines)
-lines=lines.map(line=> '    '+line.substr(min_indent).trimRight())
-if(lines.length > 3){lines=[lines[0],`    ...<${lines.length - 2} lines>...`,lines[lines.length-1]]}
-return lines.join('\n')}
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}
@@ -4834,7 +4792,7 @@ break
 default:
 var ast_obj={lineno,end_lineno,col_offset,end_col_offset}
 trace.push(handle_Expr_error(
-lines,lineno,expr.value,tokens))
+lines,lineno,expr.value))
 break}}catch(err){if($B.get_option('debug')> 1){console.log('error in error handlers',err)}
 trace.push(make_trace_lines(lines,lineno,expr))}
 break
@@ -11940,7 +11898,7 @@ if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][na
 if(value !==undefined){return value}}}
 var exc=_b_.UnboundLocalError.$factory(`cannot access local variable `+
 `'${name}' where it is not associated with a value`)
-if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+$B.set_inum(inum)
 throw exc}
 $B.resolve_in_scopes=function(name,namespaces,inum){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
 while(frame_obj !==null){frame=frame_obj.frame
@@ -11950,9 +11908,8 @@ frame_obj=frame_obj.prev}
 if(exec_top){for(var ns1 of[exec_top[1],exec_top[3]]){let v=resolve_in_namespace(name,ns1)
 if(v.found){return v.value}}}}else{let v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}
-if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
 var exc=$B.name_error(name)
-exc.__traceback__=$B.make_tb()
+$B.set_inum(inum)
 throw exc}
 $B.resolve_global=function(name,frame_obj,inum){
 while(frame_obj !==null){var frame=frame_obj.frame,v=resolve_in_namespace(name,frame[3])
@@ -11960,9 +11917,9 @@ if(v.found){return v.value}
 if(frame.is_exec_top){break}
 frame_obj=frame_obj.prev}
 if(builtins_scope.locals.has(name)){return _b_[name]}
-if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+$B.set_inum(inum)
 throw $B.name_error(name)}
-$B.own_class_name=function(name,inum){if(inum !==undefined && $B.frame_obj){$B.frame_obj.frame.inum=inum}
+$B.own_class_name=function(name,inum){$B.set_inum(inum)
 throw $B.name_error(name)}
 var $operators=$B.op2method.subset("all")
 var opname2opsign={}

@@ -1000,9 +1000,7 @@ $B.warn = function(klass, message, filename, token){
 $B.assert = function(test, msg, inum){
     if(! $B.$bool(test)){
         var exc = _b_.AssertionError.$factory(msg)
-        if(inum !== undefined && $B.frame_obj){
-            $B.frame_obj.frame.inum = inum
-        }
+        $B.set_inum(inum)
         throw exc
     }
 }
@@ -1017,14 +1015,7 @@ $B.$getitem = function(obj, item, inum){
     try{
         return $B.$getitem1(obj, item)
     }catch(err){
-        if(inum !== undefined){
-            if($B.frame_obj){
-                $B.frame_obj.frame.inum = inum
-            }
-            var position = $B.get_position_from_inum(inum)
-            $B.set_exception_offsets(err, $B.decode_position(position))
-        }
-        err.__traceback__ = $B.make_tb()
+        $B.set_inum(inum)
         throw err
     }
 }
@@ -1129,9 +1120,7 @@ $B.$getattr_pep657 = function(obj, attr, inum){
     try{
         return $B.$getattr(obj, attr)
     }catch(err){
-        if(inum !== undefined && $B.frame_obj){
-            $B.frame_obj.frame.inum = inum
-        }
+        $B.set_inum(inum)
         throw err
     }
 }
@@ -1405,14 +1394,7 @@ $B.$call = function(callable, inum){
     try{
         callable = $B.$call1(callable)
     }catch(err){
-        if(inum !== undefined){
-            if($B.frame_obj !== null && inum !== undefined){
-                $B.frame_obj.frame.inum = inum
-            }
-            var position = $B.get_position_from_inum(inum)
-            $B.set_exception_offsets(err, $B.decode_position(position))
-        }
-        err.__traceback__ = $B.make_tb()
+        $B.set_inum(inum)
         throw err
     }
 
@@ -1420,11 +1402,7 @@ $B.$call = function(callable, inum){
         try{
             return callable.apply(null, arguments)
         }catch(exc){
-            if(inum !== undefined){
-                if($B.frame_obj !== null && inum !== undefined){
-                    $B.frame_obj.frame.inum = inum
-                }
-            }
+            $B.set_inum(inum)
             throw exc
         }
     }
@@ -1849,13 +1827,7 @@ $B.rich_op = function(op, x, y, inum){
     try{
         return $B.rich_op1(op, x, y)
     }catch(exc){
-        if(inum !== undefined){
-            if($B.frame_obj){
-                $B.frame_obj.frame.inum = inum
-            }
-            $B.set_exception_offsets(exc, $B.decode_position($B.get_position_from_inum(inum)))
-        }
-        exc.__traceback__ = $B.make_tb()
+        $B.set_inum(inum)
         throw exc
     }
 }

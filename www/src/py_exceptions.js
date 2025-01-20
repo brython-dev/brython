@@ -633,9 +633,7 @@ $B.attr_error = function(name, obj){
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    var exc = _b_.AttributeError.$factory({$kw:[{name, obj, msg}]})
-    exc.__traceback__ = make_tb()
-    return exc
+    return _b_.AttributeError.$factory({$kw:[{name, obj, msg}]})
 }
 
 // NameError supports keyword-only "name" parameter
@@ -649,7 +647,6 @@ _b_.NameError = $B.make_class('NameError',
         err.__class__ = _b_.NameError
         err.__traceback__ = _b_.None
         err.$py_error = true
-        err.$frame_obj = $B.frame_obj
 
         err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])
         err.name = $.name
@@ -682,7 +679,6 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 $B.name_error = function(name){
     var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
     exc.name = name
-    exc.__traceback__ = make_tb()
     return exc
 }
 
@@ -997,95 +993,29 @@ _b_.ExceptionGroup.__mro__ = _b_.type.$mro(_b_.ExceptionGroup)
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
+function make_report(lines, positions){
+    // positions is [lineno, end_lineno, col_offset, end_col_offset]
+    // Return a string with the lines between lineno and end_lineno,
+    // with a 4-whitespace indentation
+    // If end_lineno - lineno > 2 don't report intermediate lines
+    var [lineno, end_lineno, col_offset, end_col_offset] = positions
+    lines = lines.slice(lineno - 1, end_lineno)
+    var min_indent = get_min_indent(lines)
+    lines = lines.map(line => '    ' + line.substr(min_indent).trimRight())
+    if(lines.length > 3){
+        lines = [lines[0], `    ...<${lines.length - 2} lines>...`,
+            lines[lines.length - 1]]
+    }
+    return lines.join('\n')
+}
+
 function make_trace_lines(lines, lineno, expr){
+    // expr is an expression inside a code segment
+    // Returns the lines of the segment, 4-space indented
     var line_start = expr.lineno + lineno - 2
     var line_end = expr.end_lineno + lineno - 2
-    var min_indent = get_min_indent(lines.slice(line_start - 1, line_end))
-
-    var err_lines = []
-    var start = 0
-    if(line_end - line_start > 3){
-        err_lines.push('    ' + lines[line_start - 1].substring(min_indent))
-        err_lines.push(`    ...<${line_end - line_start - 1} lines>...`)
-        err_lines.push('    ' + lines[line_end - 1].substring(min_indent))
-        return err_lines.join('\n')
-    }
-
-    for(var lnum = line_start; lnum < line_end; lnum++){
-        var line = lines[lnum - 1].trimRight()
-        err_lines.push('    ' + line.substring(min_indent))
-    }
-
-    return err_lines.join('\n')
-}
-
-function get_text_pos(ast_obj, segment, elt){
-    // get position (start / end) in segment for ast_obj
-    // segment starts at ast_obj.lineno, ast_obj.col_offset
-    var start = 2 // start after initial `(\n`
-    // lines between segment start and line
-    for(var lnum = ast_obj.lineno; lnum < elt.lineno; lnum++){
-        while(start < segment.length && segment[start] != '\n'){
-            start++
-        }
-        start += 1
-    }
-    start += elt.col_offset
-    var end = start
-    if(elt.end_lineno == elt.lineno){
-        end += elt.end_col_offset - elt.col_offset
-    }else{
-        // lines between current lnum and end_line
-        for(;lnum < elt.end_lineno; lnum++){
-            while(end < segment.length && segment[end] != '\n'){
-                end++
-            }
-            end++
-        }
-        end += elt.end_col_offset
-    }
-    return {start, end}
-}
-
-function find_char(text, start_pos, line, test_func){
-    // Scan the characters in text starting at start pos
-    // position pos
-    // return {char_position, char_lineno}
-    var pos = start_pos
-    var char_line = line
-    while(pos < text.length){
-        if(text[pos] == '#'){
-            // skip comment
-            pos++
-            while(pos < text.length && text[pos] != '\n'){
-                pos++
-            }
-        }else if(test_func(text[pos])){
-            // skip if a test function is provided and succeeds for current
-            // character
-            pos++
-        }else{
-            return {pos, lineno: char_line}
-        }
-    }
-    return {pos, lineno: char_line}
-}
-
-function make_test_func(ast_obj){
-    // Returns a function f(line, col) that tests if (line, col) is inside the
-    // ast_obj coords, from (lineno, col_offset) to (end_lineno, end_col_offset)
-    if(ast_obj.end_lineno == ast_obj.lineno){
-        return function(line, col){
-            return line == ast_obj.lineno && ast_obj.col_offset <= col &&
-                col < ast_obj.end_col_offset
-        }
-    }else{
-        return function(line, col){
-            return (line == ast_obj.lineno && col >= ast_obj.col_offset) ||
-                   (line > ast_obj.lineno && line < ast_obj.end_lineno) ||
-                   (line == ast_obj.end_lineno && col < ast_obj.end_col_offset)
-       }
-   }
+    return make_report(lines,
+        [line_start, line_end, expr.col_offset, expr.end_col_offset])
 }
 
 function get_indent(line){
@@ -1107,16 +1037,26 @@ function get_min_indent(lines){
 }
 
 function fill_marks(lines, first_lineno, first_col_offset){
+    // Create the marks (~ and ^) to be insered under source code lines in
+    // traceback
+    // lines: list of lines in original source
+    // first_lineno, first_col_offset: first line number and column offset
+    //     of the code where the exception was raised
+    // The next arguments are of the form mark, lineno, col_offset where
+    //   mark: the sign (' ', '~' or '^') to show in traceback
+    //   lineno, col_offset: the position where the mark should stop
+
     var args = Array.from(arguments).slice(3)
     var start_lineno = first_lineno
     var start_col_offset = first_col_offset
-    // spaces from line start to first col offset
+    // first line: write spaces from line start to first col offset
     var marks = ' '.repeat(first_col_offset)
     var line
     var indent
-    var min_indent = get_indent(lines[start_lineno - 1])
     for(var i = 0; i < args.length; i += 3){
         var [mark, lineno, col_offset] = args.slice(i, i + 3)
+        // write mark from (start_lineno, start_col_offset) to
+        // (lineno, col_offset)
         if(lineno == start_lineno){
             marks += mark.repeat(col_offset - start_col_offset)
         }else{
@@ -1134,9 +1074,9 @@ function fill_marks(lines, first_lineno, first_col_offset){
         start_lineno = lineno
         start_col_offset = col_offset
     }
+    var marks_lines = marks.split('\n')
     // adapt indentation
     var min_indent = get_min_indent(lines.slice(first_lineno - 1, lineno))
-    var marks_lines = marks.split('\n')
     var err_lines = []
     for(var lnum = 0; lnum < marks_lines.length; lnum++){
         err_lines.push('    ' +
@@ -1147,6 +1087,11 @@ function fill_marks(lines, first_lineno, first_col_offset){
 }
 
 function make_line_setter(lineno){
+    // Return the function that returns coordinates in code segment to
+    // coordinates in original source code
+    // lineno is the line number of the problematic code
+    // The segment is `(\n{text}\n)`. The line feed explains why the lineno
+    // offset is lineno - 2
     return function(coords){
         return {
             lineno: coords.lineno + lineno - 2,
@@ -1159,7 +1104,7 @@ function make_line_setter(lineno){
 
 function handle_BinOp_error(lines, lineno, ast_obj, tokens){
     // lines: original source code lines
-    // lineno: line number of the first line in BinOp
+    // lineno: line number of the first line in BinOp in original source
     // ast_obj: the ast.BinOp instance found in the segment
     // tokens: list of tokens found in the segment
 
@@ -1181,7 +1126,6 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
     var end_binop = reset_lineno(tokens[tokens.length - 1])
 
     var left = reset_lineno(ast_obj.left)
-    var right = reset_lineno(ast_obj.right)
 
     // marks are '~' from left start to operator excluded, '^' for operator,
     // and '~' from operator end to right end
@@ -1193,17 +1137,13 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
 
 
 function handle_Call_error(lines, lineno, ast_obj, tokens){
-    // lines is the original source code lines
-    // positions is [lineno, end_lineno, col_offset, end_col_offset] of
-    // the Call instance in original source code
-    // ast_obj is the ast.Call instance found in the segment '(\n{text}\n)
-    // tokens is the list of tokens found in the segment
+    // same argments as in handle_BinOP_error
 
     var reset_lineno = make_line_setter(lineno)
 
     // get position of
     // - opening parenthesis = the first OP token '(' after ast_obj.func end
-    // - closing parenthesist = the last OP token ')'
+    // - closing parenthesis = the last OP token ')'
     var opening_parenth
     var closing_parenth
 
@@ -1227,7 +1167,7 @@ function handle_Call_error(lines, lineno, ast_obj, tokens){
 }
 
 
-function handle_Expr_error(lines, lineno, ast_obj, tokens){
+function handle_Expr_error(lines, lineno, ast_obj){
     var reset_lineno = make_line_setter(lineno)
     var expr = reset_lineno(ast_obj)
     // marks are '^' under the expression
@@ -1235,15 +1175,14 @@ function handle_Expr_error(lines, lineno, ast_obj, tokens){
                       '^', expr.end_lineno, expr.end_col_offset)
 }
 
-function is_before(obj, lnum, col){
-    return lnum < obj.lineno || (lnum == obj.lineno && col < obj.col_offset)
+function is_before(obj, lineno, col){
+    // Determines if position (lineno, col) is before the ast object ast_obj
+    return lineno < obj.lineno ||
+           (lineno == obj.lineno && col < obj.col_offset)
 }
 
 function handle_Subscript_error(lines, lineno, ast_obj, tokens){
-    // lines: original source code lines
-    // lineno: first line of the Subscript instance
-    // ast_obj: the ast.Subscript instance found in the segment '(\n{text}\n)
-    // tokens: list of tokens found in the segment
+    // same arguments as handle_BinOp_error
 
     var reset_lineno = make_line_setter(lineno)
 
@@ -1269,21 +1208,6 @@ function handle_Subscript_error(lines, lineno, ast_obj, tokens){
         '^', closing_bracket.end_lineno, closing_bracket.end_col_offset)
 }
 
-function make_report(lines, positions){
-    // positions is [lineno, end_lineno, col_offset, end_col_offset]
-    // Return a string with the lines between lineno and end_lineno,
-    // with a 4-whitespace indentation
-    // If end_lineno - lineno > 2 don't report intermediate lines
-    var [lineno, end_lineno, col_offset, end_col_offset] = positions
-    lines = lines.slice(lineno - 1, end_lineno)
-    var min_indent = get_min_indent(lines)
-    lines = lines.map(line => '    ' + line.substr(min_indent).trimRight())
-    if(lines.length > 3){
-        lines = [lines[0], `    ...<${lines.length - 2} lines>...`,
-            lines[lines.length - 1]]
-    }
-    return lines.join('\n')
-}
 
 function trace_from_stack(err){
     function handle_repeats(src, count_repeats){
@@ -1396,7 +1320,7 @@ function trace_from_stack(err){
                                     var ast_obj = {lineno, end_lineno, col_offset,
                                         end_col_offset}
                                     trace.push(handle_Expr_error(
-                                        lines, lineno, expr.value, tokens))
+                                        lines, lineno, expr.value))
                                     break
                             }
                         }catch(err){

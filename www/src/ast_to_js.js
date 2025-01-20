@@ -609,9 +609,7 @@ $B.resolve_local = function(name, inum){
     }
     var exc = _b_.UnboundLocalError.$factory(`cannot access local variable ` +
               `'${name}' where it is not associated with a value`)
-    if(inum !== undefined && $B.frame_obj){
-        $B.frame_obj.frame.inum = inum
-    }
+    $B.set_inum(inum)
     throw exc
 }
 
@@ -644,11 +642,8 @@ $B.resolve_in_scopes = function(name, namespaces, inum){
             }
         }
     }
-    if(inum !== undefined && $B.frame_obj){
-        $B.frame_obj.frame.inum = inum
-    }
     var exc = $B.name_error(name)
-    exc.__traceback__ = $B.make_tb()
+    $B.set_inum(inum)
     throw exc
 }
 
@@ -668,16 +663,12 @@ $B.resolve_global = function(name, frame_obj, inum){
     if(builtins_scope.locals.has(name)){
         return _b_[name]
     }
-    if(inum !== undefined && $B.frame_obj){
-        $B.frame_obj.frame.inum = inum
-    }
+    $B.set_inum(inum)
     throw $B.name_error(name)
 }
 
 $B.own_class_name = function(name, inum){
-    if(inum !== undefined && $B.frame_obj){
-        $B.frame_obj.frame.inum = inum
-    }
+    $B.set_inum(inum)
     throw $B.name_error(name)
 }
 
