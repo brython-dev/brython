@@ -178,3 +178,26 @@ try:
     del t.foo
 except AttributeError as exc:
     check(exc, expected)
+
+# suggestion for NameError
+expected = "NameError: name 'abce' is not defined. Did you mean: 'abcd'?"
+
+try:
+    def f():
+        abcd = 0
+        abce
+    f()
+except NameError as exc:
+    check(exc, expected)
+
+# suggestion for AttributeError
+expected = "AttributeError: 'str' object has no attribute 'strio'. Did you mean: 'strip'?"
+
+try:
+    def f():
+        x = ''
+        x.strio()
+
+    f()
+except AttributeError as exc:
+    check(exc, expected)
