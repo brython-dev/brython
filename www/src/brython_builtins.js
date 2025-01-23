@@ -150,17 +150,6 @@ $B.builtin_funcs = {}
 // Builtin classes
 $B.builtin_classes = []
 
-$B.__getattr__ = function(attr){return this[attr]}
-$B.__setattr__ = function(attr, value){
-    // limited to some attributes
-    if(['debug', 'stdout', 'stderr'].indexOf(attr) > -1){
-        $B[attr] = value
-    }else{
-        throw $B.builtins.AttributeError.$factory(
-            '__BRYTHON__ object has no attribute ' + attr)
-    }
-}
-
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
 $B.language = _window.navigator.userLanguage || _window.navigator.language
@@ -263,19 +252,9 @@ $B.SYMBOL_FLAGS = {
     TYPE_MODULE
 }
 
-if($B.isWebWorker){
-    $B.charset = "utf-8"
-}else{
-    // document charset ; defaults to "utf-8"
-    $B.charset = document.characterSet || document.inputEncoding || "utf-8"
-}
-
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1
 $B.min_int = -$B.max_int
-
-$B.max_float = new Number(Number.MAX_VALUE)
-$B.min_float = new Number(Number.MIN_VALUE)
 
 $B.int_max_str_digits = 4300
 $B.str_digits_check_threshold = 640
@@ -437,8 +416,6 @@ $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
     return $B.frame_obj.frame[3]
 }
-
-$B.scripts = {} // for Python scripts embedded in a JS file
 
 $B.$options = {}
 

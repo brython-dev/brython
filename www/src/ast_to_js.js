@@ -672,7 +672,7 @@ $B.own_class_name = function(name, inum){
     throw $B.name_error(name)
 }
 
-var $operators = $B.op2method.subset("all") // in py2js.js
+var $operators = $B.op2method.subset("all") // in brython_builtins.js
 
 var opname2opsign = {}
 for(var key in $operators){
