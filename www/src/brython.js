@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-24 18:21:56.075990"
-__BRYTHON__.timestamp=1737739316075
+__BRYTHON__.compiled_date="2025-01-24 19:08:33.701244"
+__BRYTHON__.timestamp=1737742113700
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -11756,7 +11756,7 @@ $B.$getattr($.category,"__name__"):_b_.None}}
 )
 modules._warnings={_defaultaction:"default",_filters_mutated:function(){},_onceregistry:$B.empty_dict(),filters:$B.$list([$B.fast_tuple(['default',_b_.None,_b_.DeprecationWarning,'__main__',0]),$B.fast_tuple(['ignore',_b_.None,_b_.DeprecationWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.PendingDeprecationWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.ImportWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.ResourceWarning,_b_.None,0])
 ]),warn:function(){
-var $=$B.args('warn',4,{message:null,category:null,stacklevel:null,source:null},['message','category','stacklevel','source'],arguments,{category:_b_.None,stacklevel:1,source:_b_.None},null,null),message=$.message,category=$.category,stacklevel=$.stacklevel
+var $=$B.args('warn',4,{message:null,category:null,stacklevel:null,source:null},['message','category','stacklevel','source'],arguments,{category:_b_.UserWarning,stacklevel:1,source:_b_.None},null,null),message=$.message,category=$.category,stacklevel=$.stacklevel
 if($B.$isinstance(message,_b_.Warning)){category=$B.get_class(message)}
 var filters
 if($B.imported.warnings){filters=$B.imported.warnings.filters}else{filters=modules._warnings.filters}
@@ -11785,7 +11785,8 @@ if(line){trace+='\n    '+line.trim()}
 var stderr=$B.get_stderr()
 $B.$getattr(stderr,'write')(trace+'\n')
 var flush=$B.$getattr(stderr,'flush',_b_.None)
-if(flush !==_b_.None){flush()}}},warn_explicit:function(){
+if(flush !==_b_.None){flush()}}
+return _b_.None},warn_explicit:function(){
 console.log("warn_explicit",arguments)}}
 var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
 function handle_kwargs(kw,method){var result={cache:false,format:'text',mode:'text',headers:{}}

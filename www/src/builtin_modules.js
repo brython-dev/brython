@@ -878,7 +878,7 @@
             var $ = $B.args('warn', 4,
                             {message: null, category: null, stacklevel: null, source: null},
                             ['message', 'category', 'stacklevel', 'source'],
-                            arguments, {category: _b_.None, stacklevel: 1, source: _b_.None},
+                            arguments, {category: _b_.UserWarning, stacklevel: 1, source: _b_.None},
                             null, null),
                     message = $.message,
                     category = $.category,
@@ -965,6 +965,7 @@
                     flush()
                 }
             }
+            return _b_.None
         },
         warn_explicit: function(){
             // Low-level interface to warnings functionality.
