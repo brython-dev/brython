@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-23 10:16:38.903553"
-__BRYTHON__.timestamp=1737623798903
+__BRYTHON__.compiled_date="2025-01-24 15:52:34.869979"
+__BRYTHON__.timestamp=1737730354869
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -2948,6 +2948,7 @@ $B.frame_obj=save_frame_obj
 throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frame_obj)}catch(err){if($B.get_option('debug')> 2){console.log(
 'Python code\n',src,'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js,'\n    err',err.__class__,err.args,err.$frame_obj)}
+$B.set_exc(err,frame)
 $B.frame_obj=save_frame_obj
 throw err}
 if(_globals !==_b_.None && ! _globals.$jsobj){for(var _key in exec_globals){if(! _key.startsWith('$')){_b_.dict.$setitem(_globals,_key,exec_globals[_key])}}}
@@ -3544,8 +3545,6 @@ iterable=iter(iterable)
 while(true){try{var _item=next(iterable)
 res=$B.rich_op('__add__',res,_item)}catch(err){if(err.__class__===_b_.StopIteration){break}else{throw err}}}
 return res}
-$B.missing_super2=function(obj){obj.$missing=true
-return obj}
 var $$super=_b_.super=$B.make_class("super",function(_type,object_or_type){var no_object_or_type=object_or_type===undefined
 if(_type===undefined && object_or_type===undefined){var frame=$B.frame_obj.frame,pyframe=$B.imported["_sys"]._getframe(),code=$B.frame.f_code.__get__(pyframe),co_varnames=code.co_varnames
 if(co_varnames.length > 0){_type=frame[1].__class__

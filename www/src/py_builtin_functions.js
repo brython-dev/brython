@@ -799,6 +799,7 @@ var $$eval = _b_.eval = function(){
                 '\n    js', js,
                 '\n    err', err.__class__, err.args, err.$frame_obj)
         }
+        $B.set_exc(err, frame)
         $B.frame_obj = save_frame_obj
         throw err
     }
