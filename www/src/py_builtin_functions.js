@@ -445,7 +445,7 @@ $B.$delattr = function(obj, attr, inum){
 }
 
 $B.$delete = function(name, inum){
-    // remove name from namespace
+    // Code for "del x" (remove name from namespace)
     function del(obj){
         if(obj.__class__ === $B.generator){
             // Force generator return (useful if yield was in a context manager)
@@ -2542,12 +2542,6 @@ _b_.sum = function(){
         }
     }
     return res
-}
-
-// super() built in function
-$B.missing_super2 = function(obj){
-    obj.$missing = true
-    return obj
 }
 
 var $$super = _b_.super = $B.make_class("super",

@@ -127,7 +127,6 @@ $B.function.__delattr__ = function(self, attr){
     }
 }
 
-
 $B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
     $B.function,
     '__doc__',
@@ -275,9 +274,6 @@ $B.function.__repr__ = function(self){
 $B.function.__mro__ = [_b_.object]
 
 $B.function.__setattr__ = function(self, attr, value){
-    if(attr == 'abc'){
-        console.log('set', attr)
-    }
     if(self.$infos === undefined){
         $B.make_function_infos(self, ...self.$function_infos)
     }
@@ -426,8 +422,6 @@ $B.make_args_parser = function(f){
 
     return f.$args_parser
 }
-
-
 
 $B.function.$factory = function(){}
 
