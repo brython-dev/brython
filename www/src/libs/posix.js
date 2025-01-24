@@ -114,7 +114,7 @@ var module = {
         return stat_result.$factory(filename)
     },
     open: function(path, flags){
-        return _b_.open(path, flags)
+        throw _b_.NotImplementedError.$factory('os.open is not implemented')
     },
     remove: function(path) {
         var $ = $B.args("remove", 1, { path: null }, ["path"], arguments, {}, null, null)

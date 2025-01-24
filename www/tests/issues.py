@@ -3319,6 +3319,8 @@ def f(name, module):
 
 f('abc', __name__)
 
+# issue 2539
+assert_raises(NotImplementedError, os.open)
 
 # ==========================================
 # Finally, report that all tests have passed
