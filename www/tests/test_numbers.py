@@ -845,4 +845,9 @@ False.bit_count
 False.bit_length
 False.to_bytes()
 
+# issue 2543
+x = 10
+x /= 2
+assert isinstance(x, float)
+
 print('passed all tests...')

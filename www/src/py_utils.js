@@ -1262,8 +1262,7 @@ $B.augm_assign = function(left, op, right){
                 z = res_type.x * res_type.y
                 break
             case '/=':
-                z = res_type.x / res_type.y
-                break
+                return $B.fast_float(res_type.x / res_type.y)
         }
         if(z){
             if(res_type.is_int && Number.isSafeInteger(z)){
