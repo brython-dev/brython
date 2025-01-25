@@ -51,6 +51,12 @@ The package **browser** groups the built-in Brython-specific names and modules
 > that the indexedDB cache is used for importing modules from the standard
 > library.
 
+**browser**.`scope`
+> reference to the namespace available in the browser, regardless of the
+> execution context (script or web worker). Same as
+> [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis)
+> in Javascript
+
 
 **browser**.`window`
 > an object that represents the browser window (see the
