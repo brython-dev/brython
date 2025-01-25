@@ -211,8 +211,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-25 08:41:32.731651"
-__BRYTHON__.timestamp=1737790892731
+__BRYTHON__.compiled_date="2025-01-25 09:02:43.772394"
+__BRYTHON__.timestamp=1737792163772
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -9110,7 +9110,7 @@ complex.__mul__=function(self,other){if($B.$isinstance(other,complex)){return ma
 self.$imag.value*other.$imag.value,self.$imag.value*other.$real.value+
 self.$real.value*other.$imag.value)}else if($B.$isinstance(other,_b_.int)){return make_complex(self.$real.value*other.valueOf(),self.$imag.value*other.valueOf())}else if($B.$isinstance(other,_b_.float)){return make_complex(self.$real.value*other.value,self.$imag.value*other.value)}else if($B.$isinstance(other,_b_.bool)){if(other.valueOf()){return self}
 return make_complex(0,0)}
-$UnsupportedOpType("*",complex,other)}
+return _b_.NotImplemented}
 complex.__ne__=function(self,other){var res=complex.__eq__(self,other)
 return res===_b_.NotImplemented ? res :! res}
 complex.__neg__=function(self){return make_complex(-self.$real.value,-self.$imag.value)}
@@ -9238,12 +9238,12 @@ self.$imag.value*other.$imag.value,_div=other.$real.value*other.$real.value+
 other.$imag.value*other.$imag.value
 var _num2=self.$imag.value*other.$real.value-
 self.$real.value*other.$imag.value
-return make_complex(_num/_div,_num2/_div)}
+return make_complex($B.fast_float(_num/_div),$B.fast_float(_num2/_div))}
 if($B.$isinstance(other,_b_.int)){if(! other.valueOf()){throw _b_.ZeroDivisionError.$factory('division by zero')}
 return complex.__truediv__(self,complex.$factory(other.valueOf()))}
 if($B.$isinstance(other,_b_.float)){if(! other.value){throw _b_.ZeroDivisionError.$factory("division by zero")}
-return complex.__truediv__(self,complex.$factory(other.value))}
-$UnsupportedOpType("//","complex",other.__class__)}
+return complex.$factory(_b_.float.__truediv__(self.$real,other),_b_.float.__truediv__(self.$imag,other))}
+return _b_.NotImplemented}
 complex.conjugate=function(self){return make_complex(self.$real.value,-self.$imag.value)}
 complex.__ior__=complex.__or__
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]

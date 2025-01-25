@@ -200,7 +200,7 @@ complex.__mul__ = function(self, other){
         if(other.valueOf()){return self}
         return make_complex(0, 0)
     }
-    $UnsupportedOpType("*", complex, other)
+   return _b_.NotImplemented
 }
 
 complex.__ne__ = function(self, other){
@@ -568,8 +568,8 @@ complex.__truediv__ = function(self, other){
 
         var _num2 = self.$imag.value * other.$real.value -
                         self.$real.value * other.$imag.value
-
-        return make_complex(_num / _div, _num2 / _div)
+        return make_complex($B.fast_float(_num / _div),
+            $B.fast_float(_num2 / _div))
     }
     if($B.$isinstance(other, _b_.int)){
         if(! other.valueOf()){
@@ -581,9 +581,10 @@ complex.__truediv__ = function(self, other){
         if(! other.value){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
-        return complex.__truediv__(self, complex.$factory(other.value))
+        return complex.$factory(_b_.float.__truediv__(self.$real, other),
+            _b_.float.__truediv__(self.$imag, other))
     }
-    $UnsupportedOpType("//", "complex", other.__class__)
+    return _b_.NotImplemented
 }
 
 complex.conjugate = function(self) {

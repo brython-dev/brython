@@ -850,4 +850,19 @@ x = 10
 x /= 2
 assert isinstance(x, float)
 
+# issue 2544
+2 + 1j
+x = (2+1j) / 3.2
+assert x == (0.625+0.3125j)
+
+z = 2 + 3j
+z /= 2 ** 64
+assert z == (1.0842021724855044e-19+1.6263032587282567e-19j)
+
+assert complex.__truediv__(2+3j, 'a') is NotImplemented
+assert complex.__mul__(2+3j, 'a') is NotImplemented
+
+assert_raises(TypeError, eval, "2 + 3j / 'a'",
+  msg="unsupported operand type(s) for /: 'complex' and 'str'")
+
 print('passed all tests...')
