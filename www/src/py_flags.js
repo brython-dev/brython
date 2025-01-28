@@ -2,15 +2,15 @@
 (function($B){
 $B.builtin_class_flags = {
     builtins: {
-        1073763586: ['SystemExit', 'ImportError', 'ChildProcessError', 'GeneratorExit', 'OverflowError', 'ArithmeticError', 'FutureWarning', 'AttributeError', 'RecursionError', 'SyntaxError', 'EncodingWarning', 'WindowsError', 'SyntaxWarning', 'ResourceWarning', 'KeyError', 'StopAsyncIteration', 'RuntimeError', 'ProcessLookupError', 'TabError', '_IncompleteInputError', 'Exception', 'ConnectionAbortedError', 'AssertionError', 'BaseExceptionGroup', 'NotImplementedError', 'PermissionError', 'IndexError', 'TimeoutError', 'FileExistsError', 'UnicodeError', 'RuntimeWarning', 'IndentationError', 'TypeError', 'IsADirectoryError', 'BlockingIOError', 'ModuleNotFoundError', 'UserWarning', 'ZeroDivisionError', 'ReferenceError', 'BrokenPipeError', 'UnicodeEncodeError', 'UnicodeWarning', 'MemoryError', 'SystemError', 'BufferError', 'UnicodeDecodeError', 'NameError', 'KeyboardInterrupt', 'FileNotFoundError', 'EOFError', 'OSError', 'ConnectionError', 'EnvironmentError', 'ConnectionResetError', 'BytesWarning', 'PythonFinalizationError', 'UnboundLocalError', 'ImportWarning', 'UnicodeTranslateError', 'ConnectionRefusedError', 'Warning', 'LookupError', 'NotADirectoryError', 'ValueError', 'PendingDeprecationWarning', 'FloatingPointError', 'InterruptedError', 'StopIteration', 'DeprecationWarning', 'IOError', 'BaseException'],
+        1073763586: ['AttributeError', 'ConnectionResetError', 'AssertionError', 'PythonFinalizationError', 'InterruptedError', 'PendingDeprecationWarning', 'ValueError', 'UnicodeDecodeError', 'BytesWarning', 'DeprecationWarning', 'UnboundLocalError', 'PermissionError', 'FloatingPointError', 'BaseException', 'BrokenPipeError', 'KeyboardInterrupt', 'FileExistsError', 'KeyError', 'EnvironmentError', 'TimeoutError', 'MemoryError', 'StopAsyncIteration', 'WindowsError', 'BufferError', 'IndexError', 'SyntaxWarning', 'GeneratorExit', 'TabError', 'RuntimeError', 'OverflowError', 'IOError', 'ProcessLookupError', 'Exception', 'EOFError', 'NameError', 'ConnectionAbortedError', 'Warning', 'LookupError', 'FileNotFoundError', 'ModuleNotFoundError', 'UnicodeTranslateError', '_IncompleteInputError', 'ResourceWarning', 'UnicodeError', 'UnicodeEncodeError', 'ConnectionError', 'ImportError', 'NotADirectoryError', 'OSError', 'SystemExit', 'IndentationError', 'FutureWarning', 'EncodingWarning', 'UserWarning', 'RecursionError', 'StopIteration', 'RuntimeWarning', 'UnicodeWarning', 'ZeroDivisionError', 'NotImplementedError', 'SyntaxError', 'BaseExceptionGroup', 'ImportWarning', 'ConnectionRefusedError', 'SystemError', 'TypeError', 'IsADirectoryError', 'ReferenceError', 'ChildProcessError', 'BlockingIOError', 'ArithmeticError'],
         1073763848: ['ExceptionGroup'],
         20975874: ['bool'],
         4199682: ['bytearray', 'float'],
         138417410: ['bytes'],
-        21762: ['property', 'reversed', 'super', 'classmethod', 'map', 'zip', 'staticmethod', 'filter', 'enumerate'],
-        5378: ['object', 'complex'],
+        21762: ['reversed', 'staticmethod', 'property', 'zip', 'map', 'enumerate', 'classmethod', 'filter', 'super'],
+        5378: ['complex', 'object'],
         541087042: ['dict'],
-        4216066: ['set', 'frozenset'],
+        4216066: ['frozenset', 'set'],
         20976898: ['int'],
         37770530: ['list'],
         20770: ['memoryview'],
@@ -21,10 +21,10 @@ $B.builtin_class_flags = {
         2155896066: ['type'],
     },
     types: {
-        20866: ['coroutine', 'frame', 'generator', 'classmethod_descriptor', 'method-wrapper', 'member_descriptor', 'async_generator', 'getset_descriptor'],
+        20866: ['getset_descriptor', 'frame', 'async_generator', 'method-wrapper', 'generator', 'member_descriptor', 'classmethod_descriptor', 'coroutine'],
         22914: ['builtin_function_or_method'],
         20738: ['traceback', 'cell'],
-        4354: ['ellipsis', 'NotImplementedType', 'code', 'NoneType'],
+        4354: ['NotImplementedType', 'NoneType', 'code', 'ellipsis'],
         153858: ['function'],
         20802: ['mappingproxy'],
         153986: ['method_descriptor'],

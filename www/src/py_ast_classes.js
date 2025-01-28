@@ -1,3 +1,4 @@
+// generate file - don't edit manually
 "use strict";
 __BRYTHON__.ast_classes = {
 Add:'',
