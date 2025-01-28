@@ -7,7 +7,7 @@ import shutil
 import argparse
 import pathlib
 
-implementation = "3.13.0"
+implementation = "3.13.1"
 
 
 def main():
@@ -263,29 +263,17 @@ def main():
 
         case 'start_server':
             # start development server
-            import http.server
-            import sysconfig
-            cpython_site_packages = sysconfig.get_path("purelib")
-
-            class Handler(http.server.CGIHTTPRequestHandler):
-
-                def guess_type(self, path):
-                    ctype = super().guess_type(path)
-                    # in case the mimetype associated with .js in the Windows
-                    # registry is not correctly set
-                    if os.path.splitext(path)[1] == ".js":
-                        ctype = "application/javascript"
-                    return ctype
-
-                def translate_path(self, path):
-                    """Map /cpython_site_packages to local CPython site-packages
-                    directory."""
-                    elts = path.split('/')
-                    if len(elts) > 1 and elts[0] == '':
-                        if elts[1] == 'cpython_site_packages':
-                            elts[-1] = elts[-1].split("?")[0]
-                            return os.path.join(cpython_site_packages, *elts[2:])
-                    return super().translate_path(path)
+            from aiohttp import web
+            
+            app = web.Application()
+            
+            async def root_handler(request):
+                return web.HTTPFound('/index.html')
+            
+            app.router.add_route('*', '/', root_handler)
+            app.add_routes([web.static('/', os.getcwd())])
+            
+            web.run_app(app, port=args.port, host=args.bind)
 
             print("Brython development server. "
                   "Not meant to be used in production.")
@@ -294,7 +282,6 @@ def main():
             print("For a different listening address provide command-line option "
                   "'--bind ADDRESS' (ex 'localhost', '0.0.0.0').")
             print("Press CTRL+C to Quit.\n")
-            http.server.test(HandlerClass=Handler, port=args.port, bind=args.bind)
 
         case None:
             # # Note: This may be uncommented when compat mode is removed
