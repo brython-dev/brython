@@ -258,7 +258,7 @@ class Template:
         except Exception as exc:
             msg = traceback.format_exc()
             if isinstance(exc, SyntaxError):
-                line_no = exc.args[2]
+                line_no = exc.lineno
             else:
                 tb = exc.__traceback__
                 while tb is not None:

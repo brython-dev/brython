@@ -117,13 +117,12 @@ def syntax_error(exc):
         trace.write("    " + line.strip())
     nb_marks = 1
     if exc.end_lineno:
-        end_lineno, end_offset = extra
-        if end_lineno > lineno:
-            nb_marks = len(line) - offset
+        if exc.end_lineno > exc.lineno:
+            nb_marks = len(line) - exc.offset
         else:
-            nb_marks = end_offset - offset
+            nb_marks = exc.end_offset - exc.offset
         nb_marks = max(nb_marks, 1)
         if exc.offset:
-            trace.write("    " + (offset - 1) * " " + "^" * nb_marks)
+            trace.write("    " + (exc.offset - 1) * " " + "^" * nb_marks)
     trace.write(f"{name}:", info)
     return trace.format()
