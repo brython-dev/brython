@@ -3322,6 +3322,11 @@ f('abc', __name__)
 # issue 2539
 assert_raises(NotImplementedError, os.open)
 
+# issue 2551
+import configparser
+p = configparser.ConfigParser()
+p.read("test_config.ini")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -2520,10 +2520,11 @@ str.startswith = function(){
 str.strip = function(){
     var $ = $B.args("strip", 2, {self: null, chars: null}, ["self", "chars"],
             arguments, {chars: _b_.None}, null, null)
+    var _self = to_string($.self)
     if($.chars === _b_.None){
-        return $.self.trim()
+        return _self.trim()
     }
-    return str.rstrip(str.lstrip($.self, $.chars), $.chars)
+    return str.rstrip(str.lstrip(_self, $.chars), $.chars)
 }
 
 str.swapcase = function(self){

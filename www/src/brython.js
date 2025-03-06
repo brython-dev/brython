@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,1,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-01-28 10:45:31.502100"
-__BRYTHON__.timestamp=1738057531501
+__BRYTHON__.compiled_date="2025-03-06 18:47:35.158084"
+__BRYTHON__.timestamp=1741283255157
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
 ;
 
@@ -7655,8 +7655,9 @@ for(var prefix of prefixes){if(! $B.$isinstance(prefix,str)){throw _b_.TypeError
 if(s.substr(0,prefix.length)==prefix){return true}}
 return false}
 str.strip=function(){var $=$B.args("strip",2,{self:null,chars:null},["self","chars"],arguments,{chars:_b_.None},null,null)
-if($.chars===_b_.None){return $.self.trim()}
-return str.rstrip(str.lstrip($.self,$.chars),$.chars)}
+var _self=to_string($.self)
+if($.chars===_b_.None){return _self.trim()}
+return str.rstrip(str.lstrip(_self,$.chars),$.chars)}
 str.swapcase=function(self){$B.check_nb_args_no_kw('str.swapcase',1,arguments)
 var res="",cp,_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
