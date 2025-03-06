@@ -53,7 +53,6 @@ functions as the second argument of Template():
 After a handler function is run, if element.data has changed, the element is
 rendered again, with the new value of element.data.
 """
-import tb as traceback
 from browser import document, html, console
 
 # HTML elements that don't need a closing tag
@@ -256,9 +255,10 @@ class Template:
         try:
             exec(self.python, ns)
         except Exception as exc:
+            import tb as traceback
             msg = traceback.format_exc()
             if isinstance(exc, SyntaxError):
-                line_no = exc.args[2]
+                line_no = exc.lineno
             else:
                 tb = exc.__traceback__
                 while tb is not None:
@@ -274,7 +274,7 @@ class Template:
                 except AttributeError:
                     print('no outerHTML for', elt)
                     print(elt.html)
-            print(f"{exc.__class__.__name__}:  {exc}")
+            print(msg)
             return
 
         # Replace element content by generated html.

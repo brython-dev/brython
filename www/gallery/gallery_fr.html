@@ -26,7 +26,7 @@
 </head>
 
 
-<body onload="brython(1)">
+<body>
 
     <div id="banner_row">
     <span class="logo"><a href="/index.html">brython</a></span>
@@ -43,7 +43,7 @@
         <br><a target="_blank" href="ajax.html">ajax</a>
         <br><a target="_blank" href="sort_table.html">tri de table</a>
         <br><a target="_blank" href="sort_table_template.html">tri de table
-            </a>(utilise <a href="../static_doc/fr/template.html" target="_blank">template</a>)
+            </a>(utilise <a id="template_doc" target="_blank">template</a>)
         <br><a target="_blank" href="calculator.html">calculatrice</a>
         <br><a target="_blank" href="markdown_exec.html">code Python exécutable dans une page markdown</a>
         <br><a target="_blank" href="inject_scripts.html">insertion dynamique de scripts dans la page</a>
@@ -73,7 +73,7 @@
         <br><a target="_blank" href="library.html">IndexedDB: exemple basique</a>
         <br><a target="_blank" href="indexedDB_cache.html">IndexedDB: cache des modules Brython</a>
         <br>
-        
+
         <br><a target="_blank" href="turtle.html">Turtle Graphics</a>
         <br><a target="_blank" href="clock.html">horloge analogique</a>
         <br><a target="_blank" href="europe.html">glisser-déposer</a>
@@ -111,6 +111,9 @@
     </div>
     <br>
 
+<script type="text/python">
+import set_template_doc_location
+</script>
 
 </body>
 
