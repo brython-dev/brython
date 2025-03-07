@@ -341,5 +341,5 @@ $B.pattern_match = function(subject, pattern){
     return false
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

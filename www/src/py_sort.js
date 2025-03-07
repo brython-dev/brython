@@ -991,4 +991,4 @@ function tim_sort_safe(array, compare) {
 $B.$TimSort = tim_sort_safe
 $B.$AlphabeticalCompare = alphabeticalCompare
 
-})(__BRYTHON__)
+})(__BRYTHON__);

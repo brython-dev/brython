@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 /*
@@ -263,7 +264,7 @@ function initialize_token(p, parser_token, new_token, token_type) {
                                                                  : new_token.end_col_offset;
 
     p.arena.lineno = parser_token.lineno
-    
+
     p.fill += 1;
 
     if (token_type == ERRORTOKEN && p.tok.done == E_DECODE) {
@@ -1031,4 +1032,4 @@ $B.PyPegen = {
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

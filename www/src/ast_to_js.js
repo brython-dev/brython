@@ -4229,4 +4229,4 @@ $B.js_from_ast = function(ast, scopes){
     return '// unhandled class ast.' + ast.constructor.$name
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

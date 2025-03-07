@@ -30,7 +30,9 @@ from pegen.parser_generator import ParserGenerator
 
 from adapt_grammar_actions import transform_action
 
-EXTENSION_PREFIX = r"""function fprintf(dest, format){
+EXTENSION_PREFIX = r"""
+"use strict";
+function fprintf(dest, format){
     var args = Array.from(arguments).slice(2)
     for(var arg of args){
       format = format.replace(/%\*?[a-z]/, arg)
@@ -81,7 +83,7 @@ $B._PyPegen.parse = function(p){
             console.log('unknown mode', p.mode)
             throw Error(`unknown parse mode: ${p.mode}`)
     }
-}
+};
 """
 
 

@@ -1562,4 +1562,4 @@ $B.UnionType.__repr__ = function(self){
 
 $B.set_func_names($B.UnionType, "types")
 
-})(__BRYTHON__)
+})(__BRYTHON__);

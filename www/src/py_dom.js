@@ -1676,4 +1676,4 @@ $B.TagSum = TagSum // used in _html.js and _svg.js
 $B.DOMNode = DOMNode
 
 
-})(__BRYTHON__)
+})(__BRYTHON__);

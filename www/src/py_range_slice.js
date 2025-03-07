@@ -493,4 +493,4 @@ $B.set_func_names(slice, "builtins")
 _b_.range = range
 _b_.slice = slice
 
-})(__BRYTHON__)
+})(__BRYTHON__);

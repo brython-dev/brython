@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 function test_num(num_lit){
@@ -188,4 +189,4 @@ $B.prepare_number = function(n){
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

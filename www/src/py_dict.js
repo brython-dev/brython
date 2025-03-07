@@ -1613,6 +1613,5 @@ $B.obj_dict = function(obj, exclude){
     return res
 }
 
-})(__BRYTHON__)
-
+})(__BRYTHON__);
 

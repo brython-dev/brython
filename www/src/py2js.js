@@ -842,7 +842,7 @@ $B.run_script = function(script, src, name, url, run_loop){
 // we can use $B.brython
 $B.brython = brython
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 
 globalThis.brython = __BRYTHON__.brython
 

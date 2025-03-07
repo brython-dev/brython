@@ -1504,4 +1504,4 @@ $B.tracefunc = _b_.None
 // function dict
 $B.function.__dict__ = $B.obj_dict($B.function.__dict__)
 
-})(__BRYTHON__)
+})(__BRYTHON__);

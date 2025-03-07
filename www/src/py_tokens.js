@@ -1,5 +1,5 @@
 // Token constants
-
+"use strict";
 (function($B){
 
 const tokens = [
@@ -146,4 +146,4 @@ function ISEOF(x){
     return x == ENDMARKER
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

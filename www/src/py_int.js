@@ -1081,4 +1081,4 @@ _b_.bool = bool
 
 $B.set_func_names(bool, "builtins")
 
-})(__BRYTHON__)
+})(__BRYTHON__);

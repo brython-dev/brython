@@ -353,4 +353,4 @@ Parser.prototype.read_token = function(){
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

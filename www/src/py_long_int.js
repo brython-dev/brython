@@ -555,4 +555,4 @@ $B.fast_long_int = function(value){
         value: value
     }
 }
-})(__BRYTHON__)
+})(__BRYTHON__);

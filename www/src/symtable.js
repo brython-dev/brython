@@ -2088,4 +2088,4 @@ function symtable_raise_if_comprehension_block(st, e) {
     throw exc
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

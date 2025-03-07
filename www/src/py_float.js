@@ -1445,4 +1445,4 @@ const NINF = fast_float(Number.NEGATIVE_INFINITY),
       NAN = fast_float(Number.NaN),
       ZERO = fast_float(0)
 
-})(__BRYTHON__)
+})(__BRYTHON__);

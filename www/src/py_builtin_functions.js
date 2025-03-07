@@ -3345,4 +3345,4 @@ _b_.object.__init__.__class__ = $B.wrapper_descriptor // in py_type.js
 _b_.object.__new__.__class__ = builtin_function
 
 
-})(__BRYTHON__)
+})(__BRYTHON__);

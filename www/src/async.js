@@ -109,4 +109,4 @@ $B.promise = function(obj){
         `can't be used in 'await' expression`)
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

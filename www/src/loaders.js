@@ -466,5 +466,5 @@ $B.tasks = []
 $B.has_indexedDB = self.indexedDB !== undefined
 
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

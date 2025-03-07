@@ -626,5 +626,5 @@ $B.set_func_names(object, "builtins")
 
 _b_.object = object
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

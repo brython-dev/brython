@@ -1116,4 +1116,4 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

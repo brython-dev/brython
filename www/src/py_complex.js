@@ -707,4 +707,4 @@ $B.set_func_names(complex, "builtins")
 
 _b_.complex = complex
 
-})(__BRYTHON__)
+})(__BRYTHON__);

@@ -2014,5 +2014,5 @@ $B.repr = {
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

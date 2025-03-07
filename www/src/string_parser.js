@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 var _b_ = $B.builtins
@@ -53,7 +54,7 @@ function test_escape(p, token, context, text, string_start, antislash_pos){
     if(mo){
         if(mo[0].length == 3 && mo[0][0] >= '4'){
             $B.warn(_b_.SyntaxWarning,
-                `invalid octal escape sequence '\\${mo[0]}'`, 
+                `invalid octal escape sequence '\\${mo[0]}'`,
                 p.filename, token)
         }
         return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
@@ -113,6 +114,7 @@ $B.prepare_string = function(p, token){
         string_modifier,
         _type = "string",
         quote,
+        inner,
         context = {type: 'str'} // XXX
 
     while(pos < len){
@@ -335,4 +337,4 @@ $B.prepare_string = function(p, token){
     return result
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

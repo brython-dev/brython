@@ -1952,4 +1952,4 @@ bytearray.fromhex = bytes.fromhex
 _b_.bytes = bytes
 _b_.bytearray = bytearray
 
-})(__BRYTHON__)
+})(__BRYTHON__);

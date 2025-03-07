@@ -559,4 +559,4 @@ $B.runPythonSource = function(src, options){
     return $B.imported[script_id]
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

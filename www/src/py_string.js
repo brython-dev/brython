@@ -3107,5 +3107,5 @@ $B.jsstring2codepoint = function(c){
     return code
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

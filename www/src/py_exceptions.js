@@ -1492,5 +1492,5 @@ $B.handle_error = function(err){
     throw err
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

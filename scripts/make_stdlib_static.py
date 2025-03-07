@@ -6,7 +6,7 @@ import os
 import git
 
 libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
-simple_javascript_template_string = """;(function($B){\n
+simple_javascript_template_string = """;"use strict";\n(function($B){\n
 $B.stdlib = {}
 """
 with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
@@ -76,7 +76,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     out.write("for(var i = 0; i < pkglist.length; i++)" +
         "{$B.stdlib[pkglist[i]] = ['py', true]}\n")
     out.write('$B.stdlib_module_names = Object.keys($B.stdlib)\n')
-    out.write('})(__BRYTHON__)')
+    out.write('})(__BRYTHON__);')
 
 
 print('static stdlib mapping ok')

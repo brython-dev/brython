@@ -1107,4 +1107,4 @@ $B.tokenizer = function(src, filename, mode, parser){
     return t
 
 }
-})(__BRYTHON__)
+})(__BRYTHON__);

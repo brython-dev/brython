@@ -1,5 +1,6 @@
+"use strict";
 (function($B){
     $B.whenReady = new Promise(function(resolve, reject){
         resolve()
     })
-})(__BRYTHON__)
+})(__BRYTHON__);

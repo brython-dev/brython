@@ -255,4 +255,4 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
 
 $B.set_func_names($B.async_generator, "builtins")
 
-})(__BRYTHON__)
+})(__BRYTHON__);

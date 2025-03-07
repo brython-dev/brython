@@ -1485,4 +1485,4 @@ return "<module '_importlib' (built-in)>"
 }
 $B.imported["_importlib"] = _importlib_module
 
-})(__BRYTHON__)
+})(__BRYTHON__);

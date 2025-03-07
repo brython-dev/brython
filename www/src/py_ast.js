@@ -205,4 +205,4 @@ for(var i = 0; i < 4; i++){
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

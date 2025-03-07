@@ -960,6 +960,6 @@ $B.set_func_names(frozenset, "builtins")
 _b_.set = set
 _b_.frozenset = frozenset
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 
 
