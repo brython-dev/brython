@@ -686,6 +686,9 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         // The second argument is the value passed as "this" when the JS
         // function is executed. If _self is a wrapper around a JS function,
         // pass the JS function, not the wrapper
+        if(! js_attr.$infos && ! js_attr.$function_infos){
+            js_attr.$js_func = js_attr
+        }
         return jsobj2pyobj(js_attr, _self.$js_func || _self)
     }else{
         if(test){
@@ -1209,6 +1212,6 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
 $B.set_func_names($B.JSMeta, "builtins")
 
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 
 

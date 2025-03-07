@@ -189,7 +189,7 @@ var script=new fakeScript(),url=$B.script_path=globalThis.location.href.split('#
 if(options){for(var[key,value]of Object.entries(options)){script.options[key]=value}}
 script_id=script_id ?? 'python_script_'+$B.UUID()
 $B.run_script(script,src,script_id,url,true)
-return $B.imported[script_id]}})(__BRYTHON__)
+return $B.imported[script_id]}})(__BRYTHON__);
 ;
 
 __BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'name,default_value?',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeAlias:'name,type_params*,value',TypeIgnore:'lineno,tag',TypeVar:'name,bound?,default_value?',TypeVarTuple:'name,default_value?',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
@@ -201,7 +201,7 @@ var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_loc
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
-$B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
+$B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__);
 ;
 
 var $B=__BRYTHON__
@@ -212,9 +212,9 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-03-06 18:50:32.510034"
-__BRYTHON__.timestamp=1741283432509
-__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"]
+__BRYTHON__.compiled_date="2025-03-07 10:02:26.154968"
+__BRYTHON__.timestamp=1741338146154
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
 (function($B){const tokens=['ENDMARKER','NAME','NUMBER','STRING','NEWLINE','INDENT','DEDENT','LPAR','RPAR','LSQB','RSQB','COLON','COMMA','SEMI','PLUS','MINUS','STAR','SLASH','VBAR','AMPER','LESS','GREATER','EQUAL','DOT','PERCENT','LBRACE','RBRACE','EQEQUAL','NOTEQUAL','LESSEQUAL','GREATEREQUAL','TILDE','CIRCUMFLEX','LEFTSHIFT','RIGHTSHIFT','DOUBLESTAR','PLUSEQUAL','MINEQUAL','STAREQUAL','SLASHEQUAL','PERCENTEQUAL','AMPEREQUAL','VBAREQUAL','CIRCUMFLEXEQUAL','LEFTSHIFTEQUAL','RIGHTSHIFTEQUAL','DOUBLESTAREQUAL','DOUBLESLASH','DOUBLESLASHEQUAL','AT','ATEQUAL','RARROW','ELLIPSIS','COLONEQUAL','EXCLAMATION','OP','TYPE_IGNORE','TYPE_COMMENT','SOFT_KEYWORD','FSTRING_START','FSTRING_MIDDLE','FSTRING_END','COMMENT','NL',
@@ -227,7 +227,7 @@ $B.py_tokens['NT_OFFSET']=256
 $B.EXACT_TOKEN_TYPES={'!':'EXCLAMATION','!=':'NOTEQUAL','%':'PERCENT','%=':'PERCENTEQUAL','&':'AMPER','&=':'AMPEREQUAL','(':'LPAR',')':'RPAR','*':'STAR','**':'DOUBLESTAR','**=':'DOUBLESTAREQUAL','*=':'STAREQUAL','+':'PLUS','+=':'PLUSEQUAL',',':'COMMA','-':'MINUS','-=':'MINEQUAL','->':'RARROW','.':'DOT','...':'ELLIPSIS','/':'SLASH','//':'DOUBLESLASH','//=':'DOUBLESLASHEQUAL','/=':'SLASHEQUAL',':':'COLON',':=':'COLONEQUAL',';':'SEMI','<':'LESS','<<':'LEFTSHIFT','<<=':'LEFTSHIFTEQUAL','<=':'LESSEQUAL','=':'EQUAL','==':'EQEQUAL','>':'GREATER','>=':'GREATEREQUAL','>>':'RIGHTSHIFT','>>=':'RIGHTSHIFTEQUAL','@':'AT','@=':'ATEQUAL','[':'LSQB',']':'RSQB','^':'CIRCUMFLEX','^=':'CIRCUMFLEXEQUAL','{':'LBRACE','|':'VBAR','|=':'VBAREQUAL','}':'RBRACE','~':'TILDE'}
 function ISTERMINAL(x){return x < NT_OFFSET}
 function ISNONTERMINAL(x){return x >=NT_OFFSET}
-function ISEOF(x){return x==ENDMARKER}})(__BRYTHON__)
+function ISEOF(x){return x==ENDMARKER}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function is_whitespace(char){return ' \n\r\t\f'.includes(char)}
@@ -684,7 +684,7 @@ line_num++}
 while(indents.length > 0){indents.pop()
 t.push(Token('DEDENT','',line_num,0,line_num,0,''))}
 t.push(Token('ENDMARKER','',line_num,0,line_num,0,''))
-return t}})(__BRYTHON__)
+return t}})(__BRYTHON__);
 ;
 (function($B){
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
@@ -743,7 +743,7 @@ if(raw_fields){for(let i=0,len=raw_fields.length;i < len;i++){var raw_field=raw_
 if(raw_field.endsWith('?')){_b_.dict.$setitem(cls.__dict__,_fields[i],_b_.None)}}}
 return cls})(klass)}}
 var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
-for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__)
+for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins
@@ -1021,7 +1021,7 @@ if($B.get_option_from_filename('debug',filename)> 1){console.log(js)}}catch(err)
 var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script}
 $B.tasks.push(["execute",_script])
 if(run_loop){$B.loop()}}
-$B.brython=brython})(__BRYTHON__)
+$B.brython=brython})(__BRYTHON__);
 globalThis.brython=__BRYTHON__.brython
 if(__BRYTHON__.isNode){global.__BRYTHON__=__BRYTHON__
 module.exports={__BRYTHON__ }}
@@ -1175,7 +1175,7 @@ $B.handle_error(err)}
 loop()}else{
 try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
-$B.has_indexedDB=self.indexedDB !==undefined})(__BRYTHON__)
+$B.has_indexedDB=self.indexedDB !==undefined})(__BRYTHON__);
 ;
 ;(function($B){var _b_=$B.builtins,_window=globalThis,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
@@ -1885,7 +1885,7 @@ $B.repr={enter:function(obj){var obj_id=_b_.id(obj)
 if(repr_stack.has(obj_id)){return true}else{repr_stack.add(obj_id)
 if(repr_stack.size > $B.recursion_limit){repr_stack.clear()
 throw _b_.RecursionError.$factory("maximum recursion depth "+
-"exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(_b_.id(obj))}}})(__BRYTHON__)
+"exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(_b_.id(obj))}}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var object={
@@ -2119,7 +2119,7 @@ var res={__class__:object},args=[res]
 object.__init__.apply(null,args)
 return res}
 $B.set_func_names(object,"builtins")
-_b_.object=object})(__BRYTHON__)
+_b_.object=object})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 const TPFLAGS={STATIC_BUILTIN:1 << 1,MANAGED_WEAKREF:1 << 3,MANAGED_DICT:1 << 4,SEQUENCE:1 << 5,MAPPING:1 << 6,DISALLOW_INSTANTIATION:1 << 7,IMMUTABLETYPE:1 << 8,HEAPTYPE:1 << 9,BASETYPE:1 << 10,HAVE_VECTORCALL:1 << 11,READY:1 << 12,READYING:1 << 13,HAVE_GC:1 << 14,METHOD_DESCRIPTOR:1 << 17,VALID_VERSION_TAG:1 << 19,IS_ABSTRACT:1 << 20,MATCH_SELF:1 << 22,LONG_SUBCLASS:1 << 24,LIST_SUBCLASS:1 << 25,TUPLE_SUBCLASS:1 << 26,BYTES_SUBCLASS:1 << 27,UNICODE_SUBCLASS:1 << 28,DICT_SUBCLASS:1 << 29,BASE_EXC_SUBCLASS:1 << 30,TYPE_SUBCLASS:1 << 31,HAVE_FINALIZE:1 << 0,HAVE_VERSION_TAG:1 << 18}
@@ -2661,7 +2661,7 @@ for(var item of self.items){if(item.$is_class){var s=item.__name__
 if(item.__module__ !=="builtins"){s=item.__module__+'.'+s}
 t.push(s)}else{t.push(_b_.repr(item))}}
 return t.join(' | ')}
-$B.set_func_names($B.UnionType,"types")})(__BRYTHON__)
+$B.set_func_names($B.UnionType,"types")})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var FunctionCode=$B.make_class("function code")
@@ -3108,7 +3108,7 @@ if(hasKWargs ){fct+=`
 fct+=`
     return result
     `;
-return fct;}})(__BRYTHON__)
+return fct;}})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins
@@ -4252,7 +4252,7 @@ _b_[name].$infos={__module__:'builtins',__name__:name,__qualname__:name}
 $B.set_function_infos(_b_[name],{__module__:'builtins',__name__:name,__qualname__:name}
 )}}catch(err){}}
 _b_.object.__init__.__class__=$B.wrapper_descriptor 
-_b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
+_b_.object.__new__.__class__=builtin_function})(__BRYTHON__);
 ;
 ;(function($B){var _b_=$B.builtins
 var DEFAULT_MIN_MERGE=32
@@ -4534,7 +4534,7 @@ try{
 tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
 throw e;}}}
 $B.$TimSort=tim_sort_safe
-$B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
+$B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 $B.del_exc=function(frame){delete frame[1].$current_exception}
@@ -5123,7 +5123,7 @@ $B.handle_error=function(err){
 if(err.$handled){return}
 err.$handled=true
 $B.show_error(err)
-throw err}})(__BRYTHON__)
+throw err}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins,None=_b_.None,range={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'range',$is_class:true,$native:true,$match_sequence_pattern:true,
 $is_sequence:true,$not_basetype:true,
@@ -5281,7 +5281,7 @@ conv_slice(res)
 return res}
 $B.set_func_names(slice,"builtins")
 _b_.range=range
-_b_.slice=slice})(__BRYTHON__)
+_b_.slice=slice})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var from_unicode={},to_unicode={}
@@ -5917,7 +5917,7 @@ for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="fu
 $B.set_func_names(bytearray,"builtins")
 bytearray.fromhex=bytes.fromhex
 _b_.bytes=bytes
-_b_.bytearray=bytearray})(__BRYTHON__)
+_b_.bytearray=bytearray})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins,$N=_b_.None
 function make_new_set(type){var res={__class__:type,$store:Object.create(null),$version:0,$used:0}
@@ -6240,7 +6240,7 @@ frozenset.__init__(self,...arguments)
 return self}
 $B.set_func_names(frozenset,"builtins")
 _b_.set=set
-_b_.frozenset=frozenset})(__BRYTHON__)
+_b_.frozenset=frozenset})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins,_window=globalThis
@@ -6773,7 +6773,7 @@ $B.path_importer_cache[path]=value}
 var Loader={__class__:$B.$type,__mro__:[_b_.object],__name__ :"Loader"}
 var _importlib_module={__class__ :Module,__name__ :"_importlib",Loader:Loader,VFSFinder:VFSFinder,StdlibStatic:StdlibStaticFinder,ImporterPath:PathFinder,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
-$B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
+$B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var escape2cp=$B.escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
@@ -7899,7 +7899,7 @@ $B.jsstring2codepoint=function(c){if(c.length==1){return c.charCodeAt(0)}
 var code=0x10000
 code+=(c.charCodeAt(0)& 0x03FF)<< 10
 code+=(c.charCodeAt(1)& 0x03FF)
-return code}})(__BRYTHON__)
+return code}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function $err(op,other){var msg="unsupported operand type(s) for "+op+
@@ -8293,7 +8293,7 @@ bool.imag=int.imag
 for(var attr of['real']){bool[attr].setter=(function(x){return function(self){throw _b_.AttributeError.$factory(`attribute '${x}' of `+
 `'${$B.class_name(self)}' objects is not writable`)}})(attr)}
 _b_.bool=bool
-$B.set_func_names(bool,"builtins")})(__BRYTHON__)
+$B.set_func_names(bool,"builtins")})(__BRYTHON__);
 ;
 (function($B){
 var _b_=$B.builtins
@@ -8481,7 +8481,7 @@ $B.long_int=long_int
 $B.fast_long_int=function(value){if(typeof value !=='bigint'){console.log('expected bigint, got',value)
 throw Error('not a big int')}
 return{
-__class__:$B.long_int,value:value}}})(__BRYTHON__)
+__class__:$B.long_int,value:value}}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function float_value(obj){return obj.__class__===float ? obj :fast_float(obj.value)}
@@ -9038,7 +9038,7 @@ float.fromhex=_b_.classmethod.$factory(float.fromhex)
 _b_.float=float
 $B.MAX_VALUE=fast_float(Number.MAX_VALUE)
 $B.MIN_VALUE=fast_float(2.2250738585072014e-308)
-const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0)})(__BRYTHON__)
+const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0)})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
@@ -9289,7 +9289,7 @@ __class__:complex,$real:_b_.float.$factory(real),$imag:_b_.float.$factory(imag)}
 var c_1=make_complex(1,0)
 complex.$factory=function(){return complex.__new__(complex,...arguments)}
 $B.set_func_names(complex,"builtins")
-_b_.complex=complex})(__BRYTHON__)
+_b_.complex=complex})(__BRYTHON__);
 ;
 (function($B){
 var _b_=$B.builtins
@@ -9805,7 +9805,7 @@ return d}
 $B.obj_dict=function(obj,exclude){var klass=obj.__class__ ||$B.get_class(obj)
 if(!(obj instanceof $B.str_dict)&& klass !==undefined && klass.$native){throw $B.attr_error("__dict__",obj)}
 var res={__class__:dict,$jsobj:obj,$exclude:exclude ||function(){return false}}
-return res}})(__BRYTHON__)
+return res}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins,isinstance=$B.$isinstance
 function check_not_tuple(self,attr){if(self.__class__===tuple){throw $B.attr_error(attr,self)}}
@@ -10154,7 +10154,7 @@ $B.set_func_names(tuple,"builtins")
 _b_.list=list
 _b_.tuple=tuple
 _b_.object.__bases__=tuple.$factory()
-_b_.type.__bases__=$B.fast_tuple([_b_.object])})(__BRYTHON__)
+_b_.type.__bases__=$B.fast_tuple([_b_.object])})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function to_simple(value){switch(typeof value){case 'string':
@@ -10404,6 +10404,7 @@ js_attr.toString &&
 typeof js_attr=='function' &&
 js_attr.toString().startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
+if(! js_attr.$infos && ! js_attr.$function_infos){js_attr.$js_func=js_attr}
 return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{if(test){console.log('jsobj2pyobj on',js_attr)}
 var res=jsobj2pyobj(js_attr)
 if(test){console.log('    res',res)}
@@ -10601,7 +10602,7 @@ new_js_class.__qualname__=new_js_class.__name__=class_name
 new_js_class.$is_js_class=true
 for(var item of _b_.dict.$iter_items(cl_dict)){new_js_class[item.key]=item.value}
 return new_js_class}
-$B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
+$B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__);
 ;
 (function($B){
 var _b_=$B.builtins
@@ -10694,7 +10695,7 @@ var save_frame_obj=$B.frame_obj
 if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
 await gen.throw(value)
 $B.frame_obj=save_frame_obj}
-$B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__)
+$B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins,object=_b_.object,_window=globalThis
 function convertDomValue(v){if(v===null ||v===undefined){return _b_.None}
@@ -11317,7 +11318,7 @@ for(var i=0;i < self.children.length;i++){res.children.push(self.children[i].clo
 return res}
 $B.set_func_names(TagSum,"<dom>")
 $B.TagSum=TagSum 
-$B.DOMNode=DOMNode})(__BRYTHON__)
+$B.DOMNode=DOMNode})(__BRYTHON__);
 ;
 (function($B){$B.pattern_match=function(subject,pattern){var _b_=$B.builtins,frame=$B.frame_obj.frame,locals=frame[1]
 function bind(pattern,subject){if(pattern.alias){locals[pattern.alias]=subject}}
@@ -11441,7 +11442,7 @@ if($B.rich_comp('__eq__',subject,literal)){bind(pattern,subject)
 return true}
 return false}else if(pattern.hasOwnProperty('value')){if($B.rich_comp('__eq__',subject,pattern.value)){bind(pattern,subject)
 return true}}else if(subject==pattern){return true}
-return false}})(__BRYTHON__)
+return false}})(__BRYTHON__);
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")
@@ -11486,10 +11487,10 @@ if($B.$getattr(awaitable,'__next__',null)===null){throw _b_.TypeError.$factory('
 ` of type '${$B.class_name(awaitable)}'`)}
 return awaitable}
 throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} `+
-`can't be used in 'await' expression`)}})(__BRYTHON__)
+`can't be used in 'await' expression`)}})(__BRYTHON__);
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1073763586:['AttributeError','ConnectionResetError','AssertionError','PythonFinalizationError','InterruptedError','PendingDeprecationWarning','ValueError','UnicodeDecodeError','BytesWarning','DeprecationWarning','UnboundLocalError','PermissionError','FloatingPointError','BaseException','BrokenPipeError','KeyboardInterrupt','FileExistsError','KeyError','EnvironmentError','TimeoutError','MemoryError','StopAsyncIteration','WindowsError','BufferError','IndexError','SyntaxWarning','GeneratorExit','TabError','RuntimeError','OverflowError','IOError','ProcessLookupError','Exception','EOFError','NameError','ConnectionAbortedError','Warning','LookupError','FileNotFoundError','ModuleNotFoundError','UnicodeTranslateError','_IncompleteInputError','ResourceWarning','UnicodeError','UnicodeEncodeError','ConnectionError','ImportError','NotADirectoryError','OSError','SystemExit','IndentationError','FutureWarning','EncodingWarning','UserWarning','RecursionError','StopIteration','RuntimeWarning','UnicodeWarning','ZeroDivisionError','NotImplementedError','SyntaxError','BaseExceptionGroup','ImportWarning','ConnectionRefusedError','SystemError','TypeError','IsADirectoryError','ReferenceError','ChildProcessError','BlockingIOError','ArithmeticError'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['reversed','staticmethod','property','zip','map','enumerate','classmethod','filter','super'],5378:['complex','object'],541087042:['dict'],4216066:['frozenset','set'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['getset_descriptor','frame','async_generator','method-wrapper','generator','member_descriptor','classmethod_descriptor','coroutine'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['NotImplementedType','NoneType','code','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1073763586:['AttributeError','ConnectionResetError','AssertionError','PythonFinalizationError','InterruptedError','PendingDeprecationWarning','ValueError','UnicodeDecodeError','BytesWarning','DeprecationWarning','UnboundLocalError','PermissionError','FloatingPointError','BaseException','BrokenPipeError','KeyboardInterrupt','FileExistsError','KeyError','EnvironmentError','TimeoutError','MemoryError','StopAsyncIteration','WindowsError','BufferError','IndexError','SyntaxWarning','GeneratorExit','TabError','RuntimeError','OverflowError','IOError','ProcessLookupError','Exception','EOFError','NameError','ConnectionAbortedError','Warning','LookupError','FileNotFoundError','ModuleNotFoundError','UnicodeTranslateError','_IncompleteInputError','ResourceWarning','UnicodeError','UnicodeEncodeError','ConnectionError','ImportError','NotADirectoryError','OSError','SystemExit','IndentationError','FutureWarning','EncodingWarning','UserWarning','RecursionError','StopIteration','RuntimeWarning','UnicodeWarning','ZeroDivisionError','NotImplementedError','SyntaxError','BaseExceptionGroup','ImportWarning','ConnectionRefusedError','SystemError','TypeError','IsADirectoryError','ReferenceError','ChildProcessError','BlockingIOError','ArithmeticError'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['reversed','staticmethod','property','zip','map','enumerate','classmethod','filter','super'],5378:['complex','object'],541087042:['dict'],4216066:['frozenset','set'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['getset_descriptor','frame','async_generator','method-wrapper','generator','member_descriptor','classmethod_descriptor','coroutine'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['NotImplementedType','NoneType','code','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
@@ -11955,7 +11956,7 @@ return js_node}}}
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
 $B.__ARGV=$B.$list([])
 $B.tracefunc=_b_.None
-$B.function.__dict__=$B.obj_dict($B.function.__dict__)})(__BRYTHON__)
+$B.function.__dict__=$B.obj_dict($B.function.__dict__)})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function ast_dump(tree,indent){var attr,value
@@ -13845,7 +13846,7 @@ console.log(ast)
 throw Error('no col offset')}}
 return ast.to_js(scopes)}
 console.log("unhandled",ast.constructor.$name,ast,typeof ast)
-return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__)
+return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' is parameter and nonlocal",GLOBAL_AFTER_ASSIGN="name '%s' is assigned to before global declaration",NONLOCAL_AFTER_ASSIGN="name '%s' is assigned to before nonlocal declaration",GLOBAL_AFTER_USE="name '%s' is used prior to global declaration",NONLOCAL_AFTER_USE="name '%s' is used prior to nonlocal declaration",GLOBAL_ANNOT="annotated name '%s' can't be global",NONLOCAL_ANNOT="annotated name '%s' can't be nonlocal",IMPORT_STAR_WARNING="import * only allowed at module level",NAMED_EXPR_COMP_IN_CLASS=
@@ -14756,7 +14757,7 @@ var exc=PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' in
 "'yield' inside generator expression");
 exc.$frame_obj=$B.frame_obj
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
-throw exc}})(__BRYTHON__)
+throw exc}})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins,NULL=undefined,DOT='.',ELLIPSIS='...'
@@ -15201,7 +15202,7 @@ case $B.ast.Subscript:
 case $B.ast.Attribute:
 return NULL;
 default:
-return e;}}})(__BRYTHON__)
+return e;}}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
@@ -15240,7 +15241,7 @@ string_error(p,token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\UXXXXXXXX escape"])}else{var value=parseInt(mo[0],16)
 if(value > 0x10FFFF){string_error(p,token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
-$B.prepare_string=function(p,token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,C={type:'str'}
+$B.prepare_string=function(p,token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,inner,C={type:'str'}
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
 if(s.substr(pos,3)==quote.repeat(3)){_type="triple_string"
@@ -15329,7 +15330,7 @@ var elts=$B.parse_fstring(string_no_bs)}catch(err){string_error(p,token,err.mess
 if(bytes){result.value='b'+quote+string+quote
 result.bytes=to_bytes(string)}else if(fstring){result.value=elts}else{result.value=quote+string+quote}
 C.raw=raw;
-return result}})(__BRYTHON__)
+return result}})(__BRYTHON__);
 ;
 (function($B){function test_num(num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
 function error(message){throw SyntaxError(message)}
@@ -15380,7 +15381,7 @@ if(num.subtype=="float"){if(num.imaginary){return{
 type:'imaginary',value:$B.prepare_number(num.value)}}else{return{
 type:'float',value:num.value+''}}}else{if(num.imaginary){return{
 type:'imaginary',value:$B.prepare_number(num.value)}}else{return{
-type:'int',value:[10,num.value]}}}}}})(__BRYTHON__)
+type:'int',value:[10,num.value]}}}}}})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins,debug=0
@@ -15488,7 +15489,7 @@ if(next){var value=next
 if(! value.parser_ignored){
 if(value.$error_token){$B.raise_error_known_location(...value)}else if(value.$error_token_known_token){$B.raise_error_known_token(...value)}
 this.tokens[this.tokens.length]=value
-return value}}else{throw Error('tokenizer exhausted')}}}})(__BRYTHON__)
+return value}}else{throw Error('tokenizer exhausted')}}}})(__BRYTHON__);
 ;
 (function($B){
 var _b_=__BRYTHON__.builtins
@@ -15853,7 +15854,7 @@ result=_PyPegen_run_parser(p);
 _PyPegen_Parser_Free(p);
 function error(){
 return result;}}
-$B.PyPegen={first_item:function(a,type){return a[0]},last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__)
+$B.PyPegen={first_item:function(a,type){return a[0]},last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__);
 ;
 
 function fprintf(dest,format){var args=Array.from(arguments).slice(2)
@@ -33465,7 +33466,7 @@ case 'single':
 return interactive_rule(p)
 default:
 console.log('unknown mode',p.mode)
-alert()}}
+alert()}};
 ;
-(function($B){$B.whenReady=new Promise(function(resolve,reject){resolve()})})(__BRYTHON__)
+(function($B){$B.whenReady=new Promise(function(resolve,reject){resolve()})})(__BRYTHON__);
 ;
