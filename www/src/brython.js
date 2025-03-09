@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-03-07 10:02:26.154968"
-__BRYTHON__.timestamp=1741338146154
+__BRYTHON__.compiled_date="2025-03-09 21:16:23.560151"
+__BRYTHON__.timestamp=1741551383559
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -3916,6 +3916,8 @@ return $B.$call(klass)(res)}}
 _b_.setattr=function(){var $=$B.args('setattr',3,{obj:null,attr:null,value:null},['obj','attr','value'],arguments,{},null,null),obj=$.obj,attr=$.attr,value=$.value
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
 return $B.$setattr(obj,attr,value)}
+$B.$setattr1=function(obj,attr,value,inum){try{$B.$setattr(obj,attr,value)}catch(err){$B.set_inum(inum)
+throw err}}
 $B.$setattr=function(obj,attr,value){if(obj===undefined){console.log('obj undef',attr,value)}
 var $test=false 
 switch(attr){case '__dict__':
@@ -10359,8 +10361,11 @@ klass.new=function(){var args=pyargs2jsargs(arguments)
 return jsobj2pyobj(new proto.constructor(...args))}
 var key,value
 for([key,value]of Object.entries(Object.getOwnPropertyDescriptors(proto))){if(key=='constructor'){continue}
-if(value.get){var getter=(function(v){return function(self){return v.get.call(self.__dict__.$jsobj)}})(value),setter=(function(v){return function(self,x){v.set.call(self.__dict__.$jsobj,x)}})(value)
-klass[key]=_b_.property.$factory(getter,setter)}else{klass[key]=(function(m){return function(self){var args=Array.from(arguments).slice(1)
+if(value.get){var getter=(function(v){return function(self){return v.get.call(self.__dict__.$jsobj)}})(value)
+getter.$infos={__name__:key}
+var setter
+if(value.set){setter=(function(v){return function(self,x){v.set.call(self.__dict__.$jsobj,x)}})(value)
+klass[key]=_b_.property.$factory(getter,setter)}else{klass[key]=_b_.property.$factory(getter)}}else{klass[key]=(function(m){return function(self){var args=Array.from(arguments).slice(1)
 return proto[m].apply(self.__dict__.$jsobj,args)}})(key)}}
 for(var name of Object.getOwnPropertyNames(js_class)){klass[name]=(function(k){return function(self){var args=Array.from(arguments).map(pyobj2jsobj)
 return js_class[k].apply(self,args)}})(name)}
@@ -10557,6 +10562,7 @@ if(proto[Symbol.iterator]!==undefined){return $B.IterableJSObj}else if(Object.ge
 return $B.JSObj}
 $B.JSMeta=$B.make_class("JSMeta")
 $B.JSMeta.__call__=function(cls){
+console.log('create',cls)
 var extra_args=new Array(arguments.length-1),klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args[i-1]=arguments[i]}
 var new_func=_b_.type.__getattribute__(klass,"__new__")
@@ -11533,8 +11539,8 @@ function(){throw _b_.ValueError.$factory(
 update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.jsobj2pyobj(window.confirm),"document":$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
-var content=$B.$getattr(file_obj,'read')()
-eval(content)},load1:function(script_url,callback){
+var content=$B.$getattr(file_obj,'read')();
+eval(content);},load1:function(script_url,callback){
 var script=document.createElement('SCRIPT')
 script.src=script_url
 if(callback){script.addEventListener('load',function(){callback()})}
@@ -12399,11 +12405,12 @@ return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.AnnAssign.prototype._check=function(){check_assign_or_delete(this,this.target)}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
 var js=this.lineno ? prefix+`$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
+var inum=add_to_positions(scopes,this)
 function assign_one(target,value){if(target instanceof $B.ast.Name){return prefix+$B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return prefix+`$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
 `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`}else if(target instanceof $B.ast.Attribute){if(target.value.id=='self'){maybe_add_static(target,scopes)}
 var attr=mangle(scopes,last_scope(scopes),target.attr)
-return prefix+`$B.$setattr(${$B.js_from_ast(target.value, scopes)}`+
-`, "${attr}", ${value})`}}
+return prefix+`$B.$setattr1(${$B.js_from_ast(target.value, scopes)}`+
+`, "${attr}", ${value}, ${inum})`}}
 function assign_many(target,value){var js=''
 var nb_targets=target.elts.length,has_starred=false,nb_after_starred
 for(var i=0,len=nb_targets;i < len;i++){if(target.elts[i]instanceof $B.ast.Starred){has_starred=true

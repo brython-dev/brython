@@ -561,13 +561,20 @@ function jsclass2pyclass(js_class){
                     return function(self){
                         return v.get.call(self.__dict__.$jsobj)
                     }
-                })(value),
-                setter = (function(v){
-                    return function(self, x){
-                        v.set.call(self.__dict__.$jsobj, x)
-                    }
                 })(value)
-            klass[key] = _b_.property.$factory(getter, setter)
+            getter.$infos = {__name__: key}
+            var setter
+            if(value.set){
+                setter = (function(v){
+                        return function(self, x){
+                            v.set.call(self.__dict__.$jsobj, x)
+                        }
+                    })(value)
+                klass[key] = _b_.property.$factory(getter, setter)
+            }else{
+                klass[key] = _b_.property.$factory(getter)
+            }
+
         }else{
             klass[key] = (function(m){
                 return function(self){
@@ -1127,6 +1134,7 @@ $B.JSMeta = $B.make_class("JSMeta")
 
 $B.JSMeta.__call__ = function(cls){
     // Create an instance of a class that inherits a Javascript contructor
+    console.log('create', cls)
     var extra_args = new Array(arguments.length-1),
         klass = arguments[0]
     for(var i = 1, len = arguments.length; i < len; i++){
