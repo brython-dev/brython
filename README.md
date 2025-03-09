@@ -78,9 +78,9 @@ jsDelivr supports version ranges, so if you want the latest of the
 3.13.x versions:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/brython@3.12/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13/brython.min.js">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/brython@3.12/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13/brython_stdlib.js">
 </script>
 ```
 
