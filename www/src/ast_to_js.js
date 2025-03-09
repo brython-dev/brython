@@ -1186,6 +1186,8 @@ $B.ast.Assign.prototype.to_js = function(scopes){
     var js = this.lineno ? prefix + `$B.set_lineno(frame, ${this.lineno})\n` : '',
         value = $B.js_from_ast(this.value, scopes)
 
+    var inum = add_to_positions(scopes, this)
+            
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
             return prefix + $B.js_from_ast(target, scopes) + ' = ' + value
@@ -1199,8 +1201,8 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                 maybe_add_static(target, scopes)
             }
             var attr = mangle(scopes, last_scope(scopes), target.attr)
-            return prefix + `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
-                `, "${attr}", ${value})`
+            return prefix + `$B.$setattr1(${$B.js_from_ast(target.value, scopes)}` +
+                `, "${attr}", ${value}, ${inum})`
         }
     }
 

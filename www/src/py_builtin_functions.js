@@ -2317,6 +2317,15 @@ _b_.setattr = function(){
     return $B.$setattr(obj, attr, value)
 }
 
+$B.$setattr1 = function(obj, attr, value, inum){
+    try{
+        $B.$setattr(obj, attr, value)
+    }catch(err){
+        $B.set_inum(inum)
+        throw err
+    }
+}
+
 $B.$setattr = function(obj, attr, value){
     if(obj === undefined){
         console.log('obj undef', attr, value)
