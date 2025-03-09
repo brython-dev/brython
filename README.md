@@ -10,18 +10,17 @@ Here is a simple example of an HTML page running Python:
 <html>
 
     <head>
-        <script type="text/javascript" src="/path/to/brython.js"></script>
+        <script src="/path/to/brython.js"></script>
     </head>
 
     <body>
 
         <script type="text/python">
-        from browser import document, alert
+        from browser import bind, document, alert
 
+        @bind('#mybutton', 'click')
         def echo(event):
             alert(document["zone"].value)
-
-        document["mybutton"].bind("click", echo)
         </script>
 
         <input id="zone"><button id="mybutton">click !</button>
@@ -40,8 +39,9 @@ To use Brython, all there is to do is:
 Main features
 =============
 Brython supports the syntax of [Python 3](https://www.python.org "Python Homepage"),
-including comprehensions, generators, metaclasses, imports, etc.
-and many modules of the CPython distribution.
+and the modules of the CPython distribution written in Python, except for the
+features that are not relevant in the browser context (writing on disk for
+instance).
 
 Since version 3.8.0, Brython implements the Python version of the same major /
 minor version number.
@@ -61,8 +61,7 @@ distribution available online through [jsDelivr](https://www.jsdelivr.com/).
 You can choose the latest stable release :
 
 ```html
-<script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.13.1/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13.1/brython.min.js">
 </script>
 ```
 
@@ -71,8 +70,7 @@ modules from the standard library you have to load a single javascript file
 with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
 ```html
-<script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.13.1/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13.1/brython_stdlib.js">
 </script>
 ```
 
@@ -80,22 +78,18 @@ jsDelivr supports version ranges, so if you want the latest of the
 3.13.x versions:
 
 ```html
-<script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.12/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.12/brython.min.js">
 </script>
-<script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.12/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.12/brython_stdlib.js">
 </script>
 ```
 
 or the latest of the 3.x.y versions:
 
 ```html
-<script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
 </script>
-<script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js">
 </script>
 ```
 

@@ -135,8 +135,8 @@
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
-                var content = $B.$getattr(file_obj, 'read')()
-                eval(content)
+                var content = $B.$getattr(file_obj, 'read')();
+                eval(content);
             },
             load1:function(script_url, callback){
                 // Load and eval() the Javascript file at script_url
