@@ -18,7 +18,7 @@ Here is a simple example of an HTML page running Python:
         <script type="text/python">
         from browser import bind, document, alert
 
-        @bind('#mybutton', 'click')
+        @bind(document['mybutton'], 'click')
         def echo(event):
             alert(document["zone"].value)
         </script>
