@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-03-09 21:16:23.560151"
-__BRYTHON__.timestamp=1741551383559
+__BRYTHON__.compiled_date="2025-03-13 09:01:31.819794"
+__BRYTHON__.timestamp=1741852891819
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1764,7 +1764,7 @@ if(gen.$frame===undefined){continue}
 var ctx_managers=gen.$frame[1].$context_managers
 if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__'))(
 _b_.None,_b_.None,_b_.None)}}}}}
-delete frame[1].$current_exception
+if(frame[1].$current_exception){delete frame[1].$current_exception}
 return _b_.None}
 $B.trace_return_and_leave=function(frame,return_value){if(frame.$f_trace !==_b_.None){$B.trace_return(return_value)}
 $B.leave_frame()
@@ -16020,9 +16020,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -16114,9 +16112,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var assignment_var;
@@ -16380,9 +16376,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -16638,9 +16632,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16666,9 +16658,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16710,9 +16700,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16738,9 +16726,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16766,9 +16752,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16805,9 +16789,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var y;
@@ -16830,9 +16812,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16895,9 +16875,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16923,9 +16901,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -16982,9 +16958,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -17062,9 +17036,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -17106,9 +17078,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -17273,9 +17243,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_class_def_raw_var;
@@ -17350,9 +17318,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_def_raw_var;
@@ -17896,9 +17862,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -17924,9 +17888,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -18018,9 +17980,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_if_stmt_var;
@@ -18089,9 +18049,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_elif_stmt_var;
@@ -18191,9 +18149,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_while_stmt_var;
@@ -18237,9 +18193,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_for_stmt_var;
@@ -18346,9 +18300,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_with_stmt_indent_var;
@@ -18541,9 +18493,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_try_stmt_var;
@@ -18640,9 +18590,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_except_stmt_indent_var;
@@ -18714,9 +18662,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_except_star_stmt_indent_var;
@@ -18803,9 +18749,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -18855,9 +18799,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -18951,9 +18893,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var patterns;
@@ -19010,9 +18950,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -19050,9 +18988,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var patterns;
@@ -19157,9 +19093,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var value;
@@ -19249,9 +19183,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var signed_number_var;
@@ -19329,9 +19261,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -19379,9 +19309,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var number_var;
@@ -19416,9 +19344,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var real_number_var;
@@ -19485,9 +19411,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var target;
@@ -19530,9 +19454,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -19555,9 +19477,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var attr;
@@ -19600,9 +19520,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -19678,9 +19596,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -19797,9 +19713,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -19842,9 +19756,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -20002,9 +19914,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -20180,9 +20090,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -20270,9 +20178,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -20433,9 +20339,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _opt_var;
@@ -20492,9 +20396,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_expression_var;
@@ -20566,9 +20468,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -20613,9 +20513,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _opt_var;
@@ -20672,9 +20570,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -20730,9 +20626,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -20767,9 +20661,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _cut_var=0;
@@ -20840,9 +20732,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -20880,9 +20770,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -20920,9 +20808,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -20958,9 +20844,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -21306,9 +21190,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21364,9 +21246,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21422,9 +21302,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21480,9 +21358,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21566,9 +21442,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21643,9 +21517,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21770,9 +21642,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21840,9 +21710,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -21882,9 +21750,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -21938,9 +21804,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -22038,9 +21902,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -22078,9 +21940,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -22121,9 +21981,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var name_var;
@@ -22278,9 +22136,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _keyword;
@@ -22682,9 +22538,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -22732,9 +22586,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -22800,9 +22652,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var colon;
@@ -22893,9 +22743,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -22919,9 +22767,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -22950,9 +22796,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -22981,9 +22825,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23012,9 +22854,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23231,9 +23071,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23274,9 +23112,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23317,9 +23153,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23360,9 +23194,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23437,9 +23269,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -23518,9 +23348,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_starred_expression_var;
@@ -23564,9 +23392,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_kwarg_var;
@@ -23613,9 +23439,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 if(p.call_invalid_rules){
 if(p.error_indicator){return NULL;}
 var invalid_kwarg_var;
@@ -23669,9 +23493,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -23769,9 +23591,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23809,9 +23629,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -23876,9 +23694,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -23990,9 +23806,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -24065,9 +23879,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -24231,9 +24043,7 @@ _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var _literal;
@@ -24298,9 +24108,7 @@ while(1){var _res=NULL;
 var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){return NULL;}
 var a;
@@ -24730,9 +24538,7 @@ var _mark=p.mark;
 if(p.mark==p.fill && $B._PyPegen.fill_token(p)< 0){p.error_indicator=1;
 p.call_invalid_rules=_prev_call_invalid;
 return NULL;}
-var EXTRA={}
-EXTRA.lineno=p.tokens[_mark].lineno;
-EXTRA.col_offset=p.tokens[_mark].col_offset;
+var EXTRA={lineno:p.tokens[_mark].lineno,col_offset:p.tokens[_mark].col_offset}
 {
 if(p.error_indicator){p.call_invalid_rules=_prev_call_invalid;
 return NULL;}
@@ -33473,7 +33279,7 @@ case 'single':
 return interactive_rule(p)
 default:
 console.log('unknown mode',p.mode)
-alert()}};
+throw Error(`unknown parse mode: ${p.mode}`)}};
 ;
 (function($B){$B.whenReady=new Promise(function(resolve,reject){resolve()})})(__BRYTHON__);
 ;
