@@ -1701,7 +1701,9 @@ $B.leave_frame = function(arg){
             }
         }
     }
-    delete frame[1].$current_exception
+    if(frame[1].$current_exception){
+        delete frame[1].$current_exception
+    }
     return _b_.None
 }
 
