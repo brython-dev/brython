@@ -542,9 +542,11 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             self.print("p.error_indicator = 1;")
             self.add_return("NULL")
         self.print("}")
-        self.print("var EXTRA = {}")
-        self.print("EXTRA.lineno = p.tokens[_mark].lineno;")
-        self.print("EXTRA.col_offset = p.tokens[_mark].col_offset;")
+        self.print("var EXTRA = {")
+        with self.indent():
+            self.print("lineno: p.tokens[_mark].lineno,")
+            self.print("col_offset: p.tokens[_mark].col_offset")
+        self.print('}')
 
     def _set_up_token_end_metadata_extraction(self) -> None:
         self.print("var _token = $B._PyPegen.get_last_nonnwhitespace_token(p);")
