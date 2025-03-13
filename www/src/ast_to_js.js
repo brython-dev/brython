@@ -1187,7 +1187,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         value = $B.js_from_ast(this.value, scopes)
 
     var inum = add_to_positions(scopes, this)
-            
+
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
             return prefix + $B.js_from_ast(target, scopes) + ' = ' + value

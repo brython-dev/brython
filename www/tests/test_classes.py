@@ -1176,5 +1176,19 @@ class A:
   if True:
     x = 9
   assert x == 9
-  
+
+# issue 2555
+class MyClass:
+
+    def another_method(self):
+        return "another_method"
+
+    def method(self):
+        self.method = self.another_method
+        return 'method'
+
+a = MyClass()
+assert a.method() == 'method'
+assert a.method() == 'another_method'
+
 print('passed all tests..')
