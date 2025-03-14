@@ -479,7 +479,7 @@ function options(){
 }
 
 function patch(){
-    _request_with_body.call(null, "put", ...arguments)
+    _request_with_body.call(null, "patch", ...arguments)
 }
 
 function post(){
