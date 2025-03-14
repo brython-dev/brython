@@ -51,14 +51,16 @@ body,td,th{
 <script type="text/javascript" src="/src/builtin_modules.js"></script>
 <script type="text/javascript" src="/src/ast_to_js.js"></script>
 <script type="text/javascript" src="/src/symtable.js"></script>
-<script type="text/javascript" src="/src/brython_ready.js"></script>
 
 <!-- scripts for PEG parser -->
-<script type="text/javascript" src="/src/action_helpers.js"></script>
+<script type="text/javascript" src="/src/action_helpers_generated_version.js"></script>
 <script type="text/javascript" src="/src/string_parser.js"></script>
+<script type="text/javascript" src="/src/number_parser.js"></script>
 <script type="text/javascript" src="/src/python_parser_peg_version.js"></script>
 <script type="text/javascript" src="/src/pegen.js"></script>
 <script type="text/javascript" src="/src/gen_parse.js"></script>
+
+<script type="text/javascript" src="/src/brython_ready.js"></script>
 
 </head>
 <body>
@@ -75,10 +77,27 @@ fetch(filename).then(function(ev){
 })
 
 function parse(filename, src){
-    var t0 = window.performance.now()
-    var parser = new $B.Parser(src, filename, 'file')
-    var _ast = $B._PyPegen_parse(parser)
-    console.log(filename, 'parsed in', window.performance.now() - t0)
+    var timer = globalThis.performance
+    var t = timer.now()
+    $B.tokenizer(src, filename, 'file')
+    var t0 = timer.now()
+    console.log('tokenizer', t0 - t)
+    var parser = new $B.Parser(src, filename, 'file'),
+        _ast = $B._PyPegen.run_parser(parser)
+
+    var t1 = timer.now()
+    console.log('parser, including tokenizer', t1 - t0)
+    var future = $B.future_features(_ast, filename)
+    var symtable = $B._PySymtable_Build(_ast, filename, future)
+    var t2 = timer.now()
+    console.log('symtable', t2 - t1)
+    var js_obj = $B.js_from_root({ast: _ast,
+                                  symtable,
+                                  filename,
+                                  src})
+    var t3 = timer.now()
+    console.log('to js', t3 - t2)
+    var js_from_ast = js_obj.js
 }
 
 </script>
