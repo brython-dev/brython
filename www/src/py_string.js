@@ -1213,7 +1213,8 @@ str.__setattr__ = function(_self, attr, value){
                 attr + "' is read-only")
         }else{
             throw _b_.AttributeError.$factory(
-                "'str' object has no attribute '" + attr + "'")
+                `'str' object has no attribute '${attr}' and no __dict__ ` +
+                'for setting new attributes')
         }
     }
     // str subclass : use __dict__
