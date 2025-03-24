@@ -548,7 +548,7 @@ list.$setitem = function(self, arg, value){
         if(pos >= 0 && pos < self.length){
             self[pos] = value
         }else{
-            throw _b_.IndexError.$factory("list index out of range")
+            throw _b_.IndexError.$factory("list assignment index out of range")
         }
         return _b_.None
     }
