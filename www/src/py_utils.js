@@ -1125,7 +1125,7 @@ $B.$getattr_pep657 = function(obj, attr, inum){
     }
 }
 
-$B.$setitem = function(obj, item, value){
+$B.$setitem = function(obj, item, value, inum){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             ! obj.$is_js_array &&
             typeof item == "number" &&
@@ -1134,6 +1134,7 @@ $B.$setitem = function(obj, item, value){
             item += obj.length
         }
         if(obj[item] === undefined){
+            $B.set_inum(inum)
             throw _b_.IndexError.$factory("list assignment index out of range")
         }
         obj[item] = value
@@ -1142,7 +1143,14 @@ $B.$setitem = function(obj, item, value){
         _b_.dict.$setitem(obj, item, value)
         return
     }else if(obj.__class__ === _b_.list){
-        return _b_.list.$setitem(obj, item, value)
+        try{
+            return _b_.list.$setitem(obj, item, value)
+        }catch(err){
+            if($B.is_exc(err, [_b_.IndexError])){
+                $B.set_inum(inum)
+            }
+            throw err
+        }
     }
     var si = $B.$getattr(obj.__class__ || $B.get_class(obj), "__setitem__",
         null)

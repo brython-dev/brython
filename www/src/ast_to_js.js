@@ -1183,10 +1183,16 @@ $B.ast.AnnAssign.prototype._check = function(){
 
 $B.ast.Assign.prototype.to_js = function(scopes){
     compiler_check(this)
-    var js = this.lineno ? prefix + `$B.set_lineno(frame, ${this.lineno})\n` : '',
-        value = $B.js_from_ast(this.value, scopes)
-
-    var inum = add_to_positions(scopes, this)
+    var js
+    if(! this.lineno || this.$loopvar){
+        // this.$loopvar is set for the assignement of a "for" target
+        // In this case set_lineno is called by method .next() of the
+        // iterator (see code in py_utils / make_js_iterator)
+        js = ''
+    }else{
+        js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    }
+    var value = $B.js_from_ast(this.value, scopes)
 
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
@@ -1194,12 +1200,14 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         }else if(target instanceof $B.ast.Starred){
             return assign_one(target.value, value)
         }else if(target instanceof $B.ast.Subscript){
+            var inum = add_to_positions(scopes, target)
             return prefix + `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
-                `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`
+                `, ${$B.js_from_ast(target.slice, scopes)}, ${value}, ${inum})`
         }else if(target instanceof $B.ast.Attribute){
             if(target.value.id == 'self'){
                 maybe_add_static(target, scopes)
             }
+            var inum = add_to_positions(scopes, target)
             var attr = mangle(scopes, last_scope(scopes), target.attr)
             return prefix + `$B.$setattr1(${$B.js_from_ast(target.value, scopes)}` +
                 `, "${attr}", ${value}, ${inum})`
@@ -1500,8 +1508,8 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
         // calculate result at translation time
         try{
             res = $B.rich_op(op, this.left.value, this.right.value)
-            if(typeof res == 'string'){
-                res = res.replace(new RegExp("'", 'g'), "\\'")
+            if(typeof res == 'string' && op !== '__add__'){
+                throw Error()
             }
             var ast_obj = new $B.ast.Constant(res)
             return ast_obj.to_js(scopes)
@@ -2129,6 +2137,8 @@ $B.ast.For.prototype.to_js = function(scopes){
     copy_position(name, this.iter)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
+    assign.$loopvar = true
+    copy_position(assign, this.target)
 
     indent()
 

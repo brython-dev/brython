@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-03-14 08:05:41.845170"
-__BRYTHON__.timestamp=1741935941844
+__BRYTHON__.compiled_date="2025-03-24 17:55:38.141692"
+__BRYTHON__.timestamp=1742835338141
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1558,14 +1558,16 @@ return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
 $B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){$B.set_inum(inum)
 throw err}}
-$B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& obj.__class__===undefined &&
+$B.$setitem=function(obj,item,value,inum){if(Array.isArray(obj)&& obj.__class__===undefined &&
 ! obj.$is_js_array &&
 typeof item=="number" &&
 ! $B.$isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
-if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index out of range")}
+if(obj[item]===undefined){$B.set_inum(inum)
+throw _b_.IndexError.$factory("list assignment index out of range")}
 obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
-return}else if(obj.__class__===_b_.list){return _b_.list.$setitem(obj,item,value)}
+return}else if(obj.__class__===_b_.list){try{return _b_.list.$setitem(obj,item,value)}catch(err){if($B.is_exc(err,[_b_.IndexError])){$B.set_inum(inum)}
+throw err}}
 var si=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__setitem__",null)
 if(si===null ||typeof si !='function'){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object does not support item assignment")}
@@ -7194,7 +7196,8 @@ return res}
 return _b_.NotImplemented}
 str.__setattr__=function(_self,attr,value){if(typeof _self==="string"){if(str.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'str' object attribute '"+
 attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
-"'str' object has no attribute '"+attr+"'")}}
+`'str' object has no attribute '${attr}' and no __dict__ `+
+'for setting new attributes')}}
 _b_.dict.$setitem(_self.__dict__,attr,value)
 return _b_.None}
 str.__setitem__=function(){throw _b_.TypeError.$factory(
@@ -9995,7 +9998,7 @@ j++}}
 list.$setitem=function(self,arg,value){
 if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=$B.PyNumber_Index(arg)
 if(arg < 0){pos=self.length+pos}
-if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list index out of range")}
+if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list assignment index out of range")}
 return _b_.None}
 if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
 if(arg.step===null){set_list_slice(self,s.start,s.stop,value)}else{set_list_slice_step(self,s.start,s.stop,s.step,value)}
@@ -12405,10 +12408,14 @@ js+=prefix+`$B.$setitem(locals.__annotations__, `+
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.AnnAssign.prototype._check=function(){check_assign_or_delete(this,this.target)}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
-var js=this.lineno ? prefix+`$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
-var inum=add_to_positions(scopes,this)
-function assign_one(target,value){if(target instanceof $B.ast.Name){return prefix+$B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return prefix+`$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
-`, ${$B.js_from_ast(target.slice, scopes)}, ${value})`}else if(target instanceof $B.ast.Attribute){if(target.value.id=='self'){maybe_add_static(target,scopes)}
+var js
+if(! this.lineno ||this.$loopvar){
+js=''}else{js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`}
+var value=$B.js_from_ast(this.value,scopes)
+function assign_one(target,value){if(target instanceof $B.ast.Name){return prefix+$B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){var inum=add_to_positions(scopes,target)
+return prefix+`$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
+`, ${$B.js_from_ast(target.slice, scopes)}, ${value}, ${inum})`}else if(target instanceof $B.ast.Attribute){if(target.value.id=='self'){maybe_add_static(target,scopes)}
+var inum=add_to_positions(scopes,target)
 var attr=mangle(scopes,last_scope(scopes),target.attr)
 return prefix+`$B.$setattr1(${$B.js_from_ast(target.value, scopes)}`+
 `, "${attr}", ${value}, ${inum})`}}
@@ -12547,7 +12554,7 @@ var op=opclass2dunder[name]
 if(this.left instanceof $B.ast.Constant &&
 this.right instanceof $B.ast.Constant){
 try{res=$B.rich_op(op,this.left.value,this.right.value)
-if(typeof res=='string'){res=res.replace(new RegExp("'",'g'),"\\'")}
+if(typeof res=='string' && op !=='__add__'){throw Error()}
 var ast_obj=new $B.ast.Constant(res)
 return ast_obj.to_js(scopes)}catch(err){}}
 return `$B.rich_op('${op}', `+
@@ -12811,6 +12818,8 @@ var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
 name.to_js=function(){return `next_${id}`}
 var assign=new $B.ast.Assign([this.target],name)
+assign.$loopvar=true
+copy_position(assign,this.target)
 indent()
 js+=assign.to_js(scopes)+'\n'
 js+=add_body(this.body,scopes)

@@ -1128,7 +1128,7 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
 
     // Get last token in BinOp
     var end_binop = reset_lineno(tokens[tokens.length - 1])
-
+    
     var left = reset_lineno(ast_obj.left)
 
     // marks are '~' from left start to operator excluded, '^' for operator,

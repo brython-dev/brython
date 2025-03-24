@@ -380,7 +380,8 @@ try:
     ''.x = 0
     raise AssertionError('should have raised AttributeError')
 except AttributeError as exc:
-    assert exc.args[0] == "'str' object has no attribute 'x'"
+    assert exc.args[0] == ("'str' object has no attribute 'x' " + 
+        "and no __dict__ for setting new attributes")
 
 try:
     ''.x

@@ -9,7 +9,12 @@ except:
 def check_brython(exc, expected):
     if __BRYTHON__:
         trace = __BRYTHON__.error_trace(exc)
-        assert expected in trace
+        if expected not in trace:
+            print('expected')
+            print(expected)
+            print('trace')
+            print(trace)
+            raise AssertionError
 
 def check(exc, expected):
     check_brython(exc, expected)
@@ -199,5 +204,54 @@ try:
         x.strio()
 
     f()
+except AttributeError as exc:
+    check(exc, expected)
+
+# list assignement index out of range
+expected = """
+    t[2] = 8
+    ~^^^
+IndexError: list assignment index out of range"""
+
+try:
+    t = [0]
+    t[2] = 8
+except IndexError as exc:
+    check(exc, expected)
+
+# same inside a "for" loop
+expected = """
+    for t[2] in 'abcd':
+        ~^^^
+IndexError: list assignment index out of range"""
+
+try:
+    t = [0]
+    for t[2] in 'abcd':
+        pass
+except IndexError as exc:
+    check(exc, expected)
+
+# assigning to a non-settable attribute
+expected = """
+    s.x = 'ert'
+    ^^^
+AttributeError: 'str' object has no attribute 'x' and no __dict__ for setting new attributes"""
+try:
+    s = 'a'
+    s.x = 'ert'
+except AttributeError as exc:
+    check(exc, expected)
+
+# same inside a "for" loop
+expected = """
+    for s.x in 'ert':
+        ^^^
+AttributeError: 'str' object has no attribute 'x' and no __dict__ for setting new attributes"""
+
+try:
+    s = 'a'
+    for s.x in 'ert':
+        pass
 except AttributeError as exc:
     check(exc, expected)
