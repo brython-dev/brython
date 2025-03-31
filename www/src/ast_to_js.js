@@ -3346,6 +3346,10 @@ $B.ast.Name.prototype.to_js = function(scopes){
         }
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
+        // special case for name '__debug__' (cf. issue #2541)
+        if(this.id == '__debug__'){
+            return '_b_.__debug__'
+        }
         var scope = name_scope(this.id, scopes)
         if(scope.found === $B.last(scopes)){
             return 'locals.' + mangle(scopes, scope.found, this.id)
