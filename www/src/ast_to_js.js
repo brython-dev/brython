@@ -3341,10 +3341,6 @@ $B.ast.Name.prototype.to_js = function(scopes){
     if(this.ctx instanceof $B.ast.Store){
         // In which namespace should it be stored ?
         var scope = bind(this.id, scopes)
-        if(this.id == 'a' && this.lineno == 8){
-            console.log('store name', this.id, this.lineno)
-            console.log('bind in scope', scope)
-        }
         if(scope === $B.last(scopes) && scope.freevars.has(this.id)){
             // name was referenced but is declared local afterwards
             scope.freevars.delete(this.id)
