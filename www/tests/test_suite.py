@@ -1147,9 +1147,23 @@ assert_raises(TypeError, exec, "2.4 * [2]",
   msg="can't multiply sequence by non-int of type 'float'")
 assert_raises(TypeError, exec, "[2] * 2.4",
   msg="can't multiply sequence by non-int of type 'float'")
-  
+
 assert float.__mul__(2.4, [2]) is NotImplemented
 assert_raises(TypeError, list.__mul__, [2], 2.4,
   msg="'float' object cannot be interpreted as an integer")
+
+# issue 2561
+def f(arg = 1):
+  if arg:
+    a = 1
+  else:
+    a = 0
+  def g():
+    nonlocal a
+    a = 2
+  g()
+  return a
+
+assert f() == 2
 
 print('passed all tests...')

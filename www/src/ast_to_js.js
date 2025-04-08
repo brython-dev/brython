@@ -298,13 +298,14 @@ function bind(name, scopes){
         scope = scopes[0]
     }else if(up_scope.nonlocals.has(name)){
         for(var i = scopes.indexOf(up_scope) - 1; i >= 0; i--){
-            if(scopes[i].locals.has(name)){
+            if(scopes[i].locals.has(name) || 
+                    (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){
                 return scopes[i]
             }
         }
     }
     scope.locals.add(name)
-    if(up_scope.type == 'class'){
+    if(up_scope.type == 'class' || up_scope !== scope){
         up_scope.maybe_locals = up_scope.maybe_locals ?? new Set()
         up_scope.maybe_locals.add(name)
     }
@@ -363,7 +364,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'xw' // && scopes[scopes.length - 1].name == "g"
+    var test = false // name == 'a' // && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -3340,6 +3341,10 @@ $B.ast.Name.prototype.to_js = function(scopes){
     if(this.ctx instanceof $B.ast.Store){
         // In which namespace should it be stored ?
         var scope = bind(this.id, scopes)
+        if(this.id == 'a' && this.lineno == 8){
+            console.log('store name', this.id, this.lineno)
+            console.log('bind in scope', scope)
+        }
         if(scope === $B.last(scopes) && scope.freevars.has(this.id)){
             // name was referenced but is declared local afterwards
             scope.freevars.delete(this.id)
