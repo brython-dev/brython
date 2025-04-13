@@ -1,4 +1,5 @@
 """
+Brython-specific implementation
 Reference: https://www.rfc-editor.org/rfc/rfc1951.pdf
 """
 
@@ -335,7 +336,7 @@ def compress_dynamic(writer, store, lit_len_count, distance_count):
     # BTYPE for dynamic coding = 10
     writer.writeBit(0)
     writer.writeBit(1)
-    
+
     writer.writeInt(HLIT, 5) # number of literal / length codes - 257
     writer.writeInt(HDIST, 5) # number of distance codes - 1
     writer.writeInt(HCLEN, 4) # number of code length codes - 4
@@ -418,7 +419,7 @@ class _Compressor:
         elif -15 <= wbits <= -9:
             self.window_size = 1 << abs(wbits)
             self.header_trailer = None
-        elif 25 <= wibts <= 31:
+        elif 25 <= wbits <= 31:
             self.window_size = 1 << (wbits - 16)
             self.header_trailer = 'gzip'
         else:
