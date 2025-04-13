@@ -48,7 +48,10 @@ Dans les deux cas vous disposez des fichiers suivants :
 - __brython.js__ : le moteur Brython, à inclure dans la page HTML
 - __brython_stdlib.js__ : regroupe tous les fichiers de la distribution Python
   standard supportés par Brython
-- __demo.html__ : une page qui donne quelques exemples d'utilisation de Brython
+- __index.html__ : une page d'accueil
+- __demo.html__ : une page qui donne quelques exemples d'utilisation de
+  Brython. Cette page n'est pas installée si l'option `--no-demo` a été passée 
+  à `brython-cli install`
 
 __brython.js__ contient quelques modules très utilisés : `browser, browser.html, `
 `javascript`.

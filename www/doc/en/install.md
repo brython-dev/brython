@@ -47,8 +47,10 @@ In both cases the directory has the following files :
 - __brython.js__ : the Brython engine, to include in the HTML page
 - __brython_stdlib.js__ : groups all the modules and packages of the part of
   the Python standard library supported by Brython
+- __index.html__ : a home page
 - __demo.html__ : a page with a few examples of how to use Brython for
-  client-side development
+  client-side development. This page is not installed if option `--no-demo`
+  was passed to `brython-cli install`
 
 __brython.js__ includes very often used modules : `browser, browser.html, javascript`.
 
@@ -93,7 +95,7 @@ science packages that use it will not work.
 
 Additionnaly, the ability of browsers to send HTTP request is limited for
 security reasons. Packages such as __`requests`__, or __`urllib.request`__ in
-the standard distribution, will not be able to send arbitrary requests to any 
+the standard distribution, will not be able to send arbitrary requests to any
 url. This is common to all the implementations of Python in the browser.
 
 Other commands

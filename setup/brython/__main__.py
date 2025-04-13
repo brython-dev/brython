@@ -19,9 +19,11 @@ def main():
     init_parser = subparsers.add_parser('install', aliases=['init'],
         help='Install Brython in an empty directory',
         description='Initialize an empty directory with basic Brython files '
-                    '(brython.js, brython_stdlib.js, index.html etc)')
+                    '(brython.js, brython_stdlib.js etc)')
     init_parser.add_argument('--install-dir', default=os.getcwd(),
         help='Install Brython to this directory (default to current dir)')
+    init_parser.add_argument('--no-demo', action='store_true',
+        help="Do not install demo file demo.html")
 
     # Update
     update_parser = subparsers.add_parser('update',
@@ -187,6 +189,8 @@ def main():
 
             for path in os.listdir(data_path):
                 # note: here '/' is pathlib.Path join operator
+                if path == 'demo.html' and args.no_demo:
+                    continue
                 dest_path = pathlib.Path(install_dir) / pathlib.Path(path)
                 try:
                     shutil.copyfile(os.path.join(data_path, path), dest_path)
@@ -264,15 +268,15 @@ def main():
         case 'start_server':
             # start development server
             from aiohttp import web
-            
+
             app = web.Application()
-            
+
             async def root_handler(request):
                 return web.HTTPFound('/index.html')
-            
+
             app.router.add_route('*', '/', root_handler)
             app.add_routes([web.static('/', os.getcwd())])
-            
+
             web.run_app(app, port=args.port, host=args.bind)
 
             print("Brython development server. "
