@@ -50,8 +50,10 @@ Dans les deux cas vous disposez des fichiers suivants :
   standard supportés par Brython
 - __index.html__ : une page d'accueil
 - __demo.html__ : une page qui donne quelques exemples d'utilisation de
-  Brython. Cette page n'est pas installée si l'option `--no-demo` a été passée 
-  à `brython-cli install`
+  Brython
+  
+Les deux pages html ne sont installées si l'option `--no-demo` a été passée
+à `brython-cli install`
 
 __brython.js__ contient quelques modules très utilisés : `browser, browser.html, `
 `javascript`.

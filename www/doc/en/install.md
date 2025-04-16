@@ -49,8 +49,10 @@ In both cases the directory has the following files :
   the Python standard library supported by Brython
 - __index.html__ : a home page
 - __demo.html__ : a page with a few examples of how to use Brython for
-  client-side development. This page is not installed if option `--no-demo`
-  was passed to `brython-cli install`
+  client-side development
+
+The html pages are not installed if option `--no-demo` was passed to 
+`brython-cli install`
 
 __brython.js__ includes very often used modules : `browser, browser.html, javascript`.
 

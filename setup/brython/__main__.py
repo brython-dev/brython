@@ -189,7 +189,8 @@ def main():
 
             for path in os.listdir(data_path):
                 # note: here '/' is pathlib.Path join operator
-                if path == 'demo.html' and args.no_demo:
+                if path.endswith('.html') or path == 'README.txt' \
+                        and args.no_demo:
                     continue
                 dest_path = pathlib.Path(install_dir) / pathlib.Path(path)
                 try:
