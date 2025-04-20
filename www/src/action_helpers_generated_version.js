@@ -45,16 +45,39 @@ function make_string_for_ast_value(value){
     return value.substr(1, value.length - 2)
 }
 
+var escapeseq = {
+    a: '\a',
+    b: '\b',
+    f: '\f',
+    n: '\n',
+    r: '\r',
+    t: '\t',
+    v: '\v',
+    '"': '"',
+    "'": "'"
+}
+
 function encode_bytestring(s){
-    s = s.replace(/\\t/g, '\t')
-         .replace(/\\n/g, '\n')
-         .replace(/\\r/g, '\r')
-         .replace(/\\f/g, '\f')
-         .replace(/\\v/g, '\v')
-         .replace(/\\\\/g, '\\')
+    var s1 = ''
+    var escape = false
+    for(var char of s){
+        if(char == '\\'){
+            if(escape){
+                s1 += char
+            }
+            escape = ! escape
+        }else if(escape){
+            var repl = escapeseq[char]
+            s1 += repl ?? char
+            escape = false
+        }else{
+            s1 += char
+        }
+    }
+    s = s1
     var t = []
-    for(var i = 0, len = s.length; i < len; i++){
-        var cp = s.codePointAt(i)
+    for(var i = 0, len = s1.length; i < len; i++){
+        var cp = s1.codePointAt(i)
         if(cp > 255){
             throw Error()
         }
@@ -229,7 +252,7 @@ $B._PyPegen.constant_from_string = function(p, token){
     if(! is_bytes){
         var value = make_string_for_ast_value(prepared.value)
     }else{
-        value = prepared.value.substr(2, prepared.value.length - 3)
+        var value = prepared.value.substr(2, prepared.value.length - 3)
         try{
             value = _b_.bytes.$factory(encode_bytestring(value))
         }catch(err){

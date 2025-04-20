@@ -298,7 +298,7 @@ function bind(name, scopes){
         scope = scopes[0]
     }else if(up_scope.nonlocals.has(name)){
         for(var i = scopes.indexOf(up_scope) - 1; i >= 0; i--){
-            if(scopes[i].locals.has(name) || 
+            if(scopes[i].locals.has(name) ||
                     (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){
                 return scopes[i]
             }

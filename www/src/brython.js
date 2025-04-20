@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-04-13 08:09:03.950312"
-__BRYTHON__.timestamp=1744524543944
+__BRYTHON__.compiled_date="2025-04-20 18:48:27.237910"
+__BRYTHON__.timestamp=1745167707237
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -14794,14 +14794,16 @@ s+=char
 escaped=false}}
 value=s}
 return value.substr(1,value.length-2)}
-function encode_bytestring(s){s=s.replace(/\\t/g,'\t')
-.replace(/\\n/g,'\n')
-.replace(/\\r/g,'\r')
-.replace(/\\f/g,'\f')
-.replace(/\\v/g,'\v')
-.replace(/\\\\/g,'\\')
+var escapeseq={a:'\a',b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v','"':'"',"'":"'"}
+function encode_bytestring(s){var s1=''
+var escape=false
+for(var char of s){if(char=='\\'){if(escape){s1+=char}
+escape=! escape}else if(escape){var repl=escapeseq[char]
+s1+=repl ?? char
+escape=false}else{s1+=char}}
+s=s1
 var t=[]
-for(var i=0,len=s.length;i < len;i++){var cp=s.codePointAt(i)
+for(var i=0,len=s1.length;i < len;i++){var cp=s1.codePointAt(i)
 if(cp > 255){throw Error()}
 t.push(cp)}
 return t}
@@ -14857,7 +14859,7 @@ return n}
 $B._PyPegen={}
 $B._PyPegen.constant_from_string=function(p,token){var prepared=$B.prepare_string(p,token)
 var is_bytes=prepared.value.startsWith('b')
-if(! is_bytes){var value=make_string_for_ast_value(prepared.value)}else{value=prepared.value.substr(2,prepared.value.length-3)
+if(! is_bytes){var value=make_string_for_ast_value(prepared.value)}else{var value=prepared.value.substr(2,prepared.value.length-3)
 try{value=_b_.bytes.$factory(encode_bytestring(value))}catch(err){$B._PyPegen.raise_error_known_location(p,_b_.SyntaxError,token.lineno,token.col_offset,token.end_lineno,token.end_col_offset,'bytes can only contain ASCII literal characters')}}
 var ast_obj=new $B.ast.Constant(value)
 set_position_from_token(ast_obj,token)
