@@ -54,7 +54,7 @@ def main():
 
     make_package_parser.add_argument('package_name',
         help="name used to import this package. as in (`import {package_name}`)")
-    make_package_parser.add_argument('--src-dir', metavar='SOURCE_DIR',
+    make_package_parser.add_argument('--src-dir', metavar='SOURCE_DIR', default=os.getcwd(),
         help="package source dir (defaults to current dir)")
     make_package_parser.add_argument('--exclude-dirs', nargs='+', metavar='EXCLUDE_DIR',
         help="directories under src-dir to exclude")
@@ -259,7 +259,7 @@ def main():
 
         case 'make_package':
             package_name = args.package_name
-            package_path = os.getcwd()
+            package_path = args.src_dir
             exclude_dirs = args.exclude_dirs
             output_path = args.output_path
             from . import make_package
