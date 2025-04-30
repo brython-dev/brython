@@ -230,7 +230,7 @@ def time():
 
 def time_ns():
     try:
-        return float(window.Temporal.instant().epochNanoseconds)
+        return window.Temporal.Now.instant().fromEpochNanoseconds()
     except:
         return date().getTime() * 1_000_000
         
