@@ -228,6 +228,12 @@ def process_time():
 def time():
     return float(date().getTime() / 1000)
 
+def time_ns():
+    try:
+        return float(window.Temporal.instant().epochNanoseconds)
+    except:
+        return date().getTime() * 1_000_000
+        
 def sleep(secs):
     """Javascript can't block execution for a given time, expect by an
     infinite loop that freezes the browser. It's better to raise an
