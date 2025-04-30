@@ -356,6 +356,7 @@ $B.run_js = run_js
 var ModuleSpec = $B.make_class("ModuleSpec",
     function(fields) {
         fields.__class__ = ModuleSpec
+        fields.__dict__ = $B.empty_dict()
         return fields
     }
 )
