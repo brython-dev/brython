@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-04-30 07:53:56.536466"
-__BRYTHON__.timestamp=1745992436535
+__BRYTHON__.compiled_date="2025-04-30 11:01:32.550363"
+__BRYTHON__.timestamp=1746003692550
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -3449,7 +3449,8 @@ var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}}}
 $B.$getattr=function(obj,attr,_default){
 var res
-if(obj===undefined){console.log('attr',attr,'of obj undef')}
+if(obj===undefined ||obj===null){throw _b_.AttributeError.$factory("Javascript object '"+obj+
+"' has no attribute")}
 if(obj.$method_cache &&
 obj.$method_cache[attr]&&
 obj.__class__ &&
@@ -4663,6 +4664,7 @@ exc=_b_.RecursionError.$factory(msg)}
 exc.__cause__=_b_.None
 exc.__context__=_b_.None
 exc.__suppress_context__=false
+exc.__traceback__=traceback.$factory(js_exc)
 exc.args=_b_.tuple.$factory([msg])
 exc.$py_error=true
 js_exc.$py_exc=exc}else{exc=js_exc}

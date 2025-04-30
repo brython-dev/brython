@@ -353,6 +353,7 @@ $B.exception = function(js_exc){
         exc.__cause__ = _b_.None
         exc.__context__ = _b_.None
         exc.__suppress_context__ = false
+        exc.__traceback__ = traceback.$factory(js_exc)
         exc.args = _b_.tuple.$factory([msg])
         exc.$py_error = true
         js_exc.$py_exc = exc
@@ -1128,7 +1129,7 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
 
     // Get last token in BinOp
     var end_binop = reset_lineno(tokens[tokens.length - 1])
-    
+
     var left = reset_lineno(ast_obj.left)
 
     // marks are '~' from left start to operator excluded, '^' for operator,

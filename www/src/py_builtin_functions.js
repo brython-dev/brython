@@ -927,8 +927,9 @@ $B.search_in_mro = function(klass, attr){
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var res
-    if(obj === undefined){
-        console.log('attr', attr, 'of obj undef')
+    if(obj === undefined || obj === null){
+        throw _b_.AttributeError.$factory("Javascript object '" + obj +
+            "' has no attribute")
     }
     if(obj.$method_cache &&
             obj.$method_cache[attr] &&
