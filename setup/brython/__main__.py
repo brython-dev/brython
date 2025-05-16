@@ -73,6 +73,9 @@ def main():
     make_modules_parser.add_argument('--reset', help='Reset brython_modules.js to stdlib',
         action="store_true")
 
+    make_modules_parser.add_argument('--modules_paths',
+        help='Location of file with linefeed-separated list of paths')
+
     # Server
     start_server_parser = subparsers.add_parser('start_server',
         help="Start development server",
@@ -197,7 +200,11 @@ def main():
                 stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
 
                 print('finding packages...')
-                user_modules = list_modules.load_user_modules()
+                if args.modules_paths is not None:
+                    if not os.path.exists(args.modules_paths):
+                        raise FileNotFoundError(
+                            f'Modules path "{args.modules_paths}" not found')
+                user_modules = list_modules.load_user_modules(args.modules_paths)
                 finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
                 finder.inspect()
                 path = os.path.join(stdlib_dir, "brython_modules.js")
@@ -283,4 +290,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
