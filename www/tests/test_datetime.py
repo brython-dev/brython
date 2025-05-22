@@ -190,4 +190,10 @@ for date_str in [
         ]:
     assert_raises(ValueError, dt.strptime, date_str, "%B %d, %Y %I:%M %p")
 
+# issue 2577
+format_string = '%Y-%m-%d %H:%M:%S %z'
+timestamp_string = "2025-05-16 07:15:11 -0400"
+d = datetime.strptime(timestamp_string, format_string)
+assert repr(d) == 'datetime.datetime(2025, 5, 16, 7, 15, 11, ' \
+  'tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=72000)))'
 print('passed all tests')
