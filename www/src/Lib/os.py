@@ -5,6 +5,8 @@ browser context
 import abc
 import sys
 
+GenericAlias = type(list[int])
+
 error = OSError
 name = 'posix'
 linesep = '\n'
@@ -101,6 +103,8 @@ class PathLike(abc.ABC):
     @classmethod
     def __subclasshook__(cls, subclass):
         return hasattr(subclass, '__fspath__')
+    
+    __class_getitem__ = classmethod(GenericAlias)
 
 
 if name == 'nt':
