@@ -2004,10 +2004,15 @@ $B.ast.Delete.prototype.to_js = function(scopes){
         var inum = add_to_positions(scopes, target)
         if(target instanceof $B.ast.Name){
             var scope = name_scope(target.id, scopes)
+            var locals_id = 'null'
             if(scope.found){
                 scope.found.locals.delete(target.id)
+                locals_id = 'locals_' +
+                    qualified_scope_name(scopes, scope.found)
+                js += `$B.$delete("${target.id}", ${locals_id}, ${inum})\n`
+            }else{
+                js += `$B.$delete('${target.id}', '${scope.resolve}', ${inum})\n`
             }
-            js += `$B.$delete("${target.id}", ${inum})\n`
         }else if(target instanceof $B.ast.Subscript){
             js += `$B.$delitem(${$B.js_from_ast(target.value, scopes)}, ` +
                   `${$B.js_from_ast(target.slice, scopes)}, ${inum})\n`

@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-05-22 13:45:27.354504"
-__BRYTHON__.timestamp=1747914327354
+__BRYTHON__.compiled_date="2025-05-28 09:15:27.188090"
+__BRYTHON__.timestamp=1748416527187
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -3286,13 +3286,19 @@ $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
 $B.$delattr=function(obj,attr,inum){try{_b_.delattr(obj,attr)}catch(err){$B.set_inum(inum)
 throw err}}
-$B.$delete=function(name,inum){
+$B.$delete=function(name,locals_id,inum){
 function del(obj){if(obj.__class__===$B.generator){
 obj.js_gen.return()}}
-var found=false,frame=$B.frame_obj.frame
-if(frame[1][name]!==undefined){found=true
+var found=false
+if(locals_id=='local'){var frame=$B.frame_obj.frame
+if(frame[1].hasOwnProperty(name)){found=true
 del(frame[1][name])
-delete frame[1][name]}
+delete frame[1][name]}}else if(locals_id=='global'){var frame=$B.frame_obj.frame
+if(frame[3].hasOwnProperty(name)){found=true
+del(frame[3][name])
+delete frame[3][name]}}else if(locals_id !==null && locals_id[name]!==undefined){found=true
+del(locals_id[name])
+delete locals_id[name]}
 if(! found){$B.set_inum(inum)
 throw $B.name_error(name)}}
 _b_.dir=function(obj){if(obj===undefined){
@@ -5121,7 +5127,8 @@ if($B.get_option('debug',err)> 1){trace+=err.$js_exc.stack}}
 return trace}
 $B.get_stderr=function(){return $B.imported.sys ? $B.imported.sys.stderr :$B.imported._sys.stderr}
 $B.get_stdout=function(){return $B.imported.sys ? $B.imported.sys.stdout :$B.imported._sys.stdout}
-$B.show_error=function(err){var trace=$B.error_trace($B.exception(err))
+$B.show_error=function(err){if($B.get_option('debug',err)> 2){console.debug(err.stack)}
+var trace=$B.error_trace($B.exception(err))
 try{var stderr=$B.get_stderr()
 $B.$getattr(stderr,'write')(trace)
 var flush=$B.$getattr(stderr,'flush',_b_.None)
@@ -12759,8 +12766,11 @@ $B.ast.Delete.prototype.to_js=function(scopes){compiler_check(this)
 var js=''
 for(var target of this.targets){var inum=add_to_positions(scopes,target)
 if(target instanceof $B.ast.Name){var scope=name_scope(target.id,scopes)
-if(scope.found){scope.found.locals.delete(target.id)}
-js+=`$B.$delete("${target.id}", ${inum})\n`}else if(target instanceof $B.ast.Subscript){js+=`$B.$delitem(${$B.js_from_ast(target.value, scopes)}, `+
+var locals_id='null'
+if(scope.found){scope.found.locals.delete(target.id)
+locals_id='locals_'+
+qualified_scope_name(scopes,scope.found)
+js+=`$B.$delete("${target.id}", ${locals_id}, ${inum})\n`}else{js+=`$B.$delete('${target.id}', '${scope.resolve}', ${inum})\n`}}else if(target instanceof $B.ast.Subscript){js+=`$B.$delitem(${$B.js_from_ast(target.value, scopes)}, `+
 `${$B.js_from_ast(target.slice, scopes)}, ${inum})\n`}else if(target instanceof $B.ast.Attribute){js+=`$B.$delattr(${$B.js_from_ast(target.value, scopes)}, `+
 `'${target.attr}', ${inum})\n`}}
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+

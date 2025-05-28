@@ -1468,6 +1468,9 @@ $B.get_stdout = function(){
 }
 
 $B.show_error = function(err){
+    if($B.get_option('debug', err) > 2){
+        console.debug(err.stack)
+    }
     var trace = $B.error_trace($B.exception(err))
     try{
         var stderr = $B.get_stderr()

@@ -444,7 +444,7 @@ $B.$delattr = function(obj, attr, inum){
     }
 }
 
-$B.$delete = function(name, inum){
+$B.$delete = function(name, locals_id, inum){
     // Code for "del x" (remove name from namespace)
     function del(obj){
         if(obj.__class__ === $B.generator){
@@ -452,12 +452,25 @@ $B.$delete = function(name, inum){
             obj.js_gen.return()
         }
     }
-    var found = false,
-        frame = $B.frame_obj.frame
-    if(frame[1][name] !== undefined){
+    var found = false
+    if(locals_id == 'local'){
+        var frame = $B.frame_obj.frame
+        if(frame[1].hasOwnProperty(name)){
+            found = true
+            del(frame[1][name])
+            delete frame[1][name]
+        }
+    }else if(locals_id == 'global'){
+        var frame = $B.frame_obj.frame
+        if(frame[3].hasOwnProperty(name)){
+            found = true
+            del(frame[3][name])
+            delete frame[3][name]
+        }
+    }else if(locals_id !== null && locals_id[name] !== undefined){
         found = true
-        del(frame[1][name])
-        delete frame[1][name]
+        del(locals_id[name])
+        delete locals_id[name]
     }
     if(! found){
         $B.set_inum(inum)

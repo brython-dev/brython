@@ -1166,4 +1166,43 @@ def f(arg = 1):
 
 assert f() == 2
 
+# issue 2578
+x = 1
+
+def f():
+  global x
+  del x
+
+f()
+
+try:
+  x
+  raise AssertionError('should have raised NameError')
+except NameError:
+  pass
+
+def f():
+  x = 9
+  def g():
+      nonlocal x
+      del x
+  g()
+  x
+
+assert_raises(UnboundLocalError, f)
+
+def h():
+  del foo
+
+assert_raises(NameError, h)
+
+from bisect import *
+insort
+del insort
+try:
+  insort
+  raise AssertionError('should have raised NameError')
+except NameError:
+  pass
+  
 print('passed all tests...')
