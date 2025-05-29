@@ -364,10 +364,10 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'a' // && scopes[scopes.length - 1].name == "g"
+    var test = false // name == 'xzs' // && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('name scope', name, scopes.slice())
-        alert()
+        //alert()
     }
     var flags,
         block
@@ -483,6 +483,9 @@ function name_scope(name, scopes){
             return {found: false, resolve: 'global'}
         }
         if(scopes[i].locals.has(name) && scopes[i].type != 'class'){
+            if(test){
+                console.log('found in locals of', scopes[i])
+            }
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
         }else if(block && _b_.dict.$contains_string(block.symbols, name)){
             flags = _b_.dict.$getitem_string(block.symbols, name)
@@ -3357,6 +3360,9 @@ $B.ast.Name.prototype.to_js = function(scopes){
             return '_b_.__debug__'
         }
         var scope = name_scope(this.id, scopes)
+        if(this.id == 'xzs'){
+            console.log('Name.to_js, scope', scope)
+        }
         if(scope.found === $B.last(scopes)){
             return 'locals.' + mangle(scopes, scope.found, this.id)
         }

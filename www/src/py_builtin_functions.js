@@ -474,7 +474,13 @@ $B.$delete = function(name, locals_id, inum){
     }
     if(! found){
         $B.set_inum(inum)
-        throw $B.name_error(name)
+        if(locals_id == 'local'){
+            throw _b_.UnboundLocalError.$factory(
+                `cannot access local variable '${name}' ` +
+                'where it is not associated with a value')
+        }else{
+            throw $B.name_error(name)
+        }
     }
 }
 

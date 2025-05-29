@@ -1191,6 +1191,12 @@ def f():
 
 assert_raises(UnboundLocalError, f)
 
+def f():
+    def g():
+        del abc
+    assert_raises(UnboundLocalError, g)
+f()
+
 def h():
   del foo
 
@@ -1204,5 +1210,5 @@ try:
   raise AssertionError('should have raised NameError')
 except NameError:
   pass
-  
+
 print('passed all tests...')
