@@ -3942,6 +3942,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += prefix + `}catch(err){\n`
         indent()
         s += prefix + `var klass_name = $B.class_name(mgr_${id})\n` +
+             prefix + `frame.inum = ${inum}\n` +
              prefix + `throw _b_.TypeError.$factory("'" + klass_name + ` +
                       `"' object does not support the con` +
                       // split word 'context', replaced by "C" in brython.js...
@@ -4016,6 +4017,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     scope.needs_stack_length = true
 
     indent(2)
+    var inum = add_to_positions(scopes, this)
     var js = add_body(this.body, scopes) + '\n'
     dedent(2)
     var in_generator = scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator

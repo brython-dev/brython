@@ -1265,7 +1265,7 @@ function trace_from_stack(err){
         if(src){
             var lines = src.split('\n')
             // PEP 657
-            var positions
+            var positions = false
             if(! is_syntax_error && frame.inum && frame.positions){
                 positions = frame.positions[Math.floor(frame.inum / 2)]
             }
@@ -1322,8 +1322,6 @@ function trace_from_stack(err){
                                         lines, lineno, expr.value, tokens))
                                     break
                                 default:
-                                    var ast_obj = {lineno, end_lineno, col_offset,
-                                        end_col_offset}
                                     trace.push(handle_Expr_error(
                                         lines, lineno, expr.value))
                                     break
