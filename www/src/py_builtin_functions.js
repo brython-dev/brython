@@ -2009,7 +2009,50 @@ memoryview.__setitem__ = function(self, key, value){
     }
 }
 
-memoryview.cast = function(self, format){
+var struct_format = {
+    'x': {'size': 1},
+    'b': {'size': 1},
+    'B': {'size': 1},
+    'c': {'size': 1},
+    's': {'size': 1},
+    'p': {'size': 1},
+    'h': {'size': 2},
+    'H': {'size': 2},
+    'i': {'size': 4},
+    'I': {'size': 4},
+    'l': {'size': 4},
+    'L': {'size': 4},
+    'q': {'size': 8},
+    'Q': {'size': 8},
+    'f': {'size': 4},
+    'd': {'size': 8},
+    'P': {'size': 8}
+    }
+
+memoryview.cast = function(self, format, shape){
+    if(! struct_format.hasOwnProperty(format)){
+        throw _b_.ValueError.$factory(`unknown format: '${format}'`)
+    }
+    var new_itemsize = struct_format[format].size
+    if(shape === undefined){
+        shape = _b_.len(self) // new_itemsize
+    }else{
+        if(! $B.$isinstance(shape, [_b_.list, _b_.tuple])){
+            throw _b_.TypeError.$factory('shape must be a list or a tuple')
+        }
+        var nb = 1
+        for(var item of shape){
+            if(! $B.$isinstance(item, _b_.int)){
+                throw _b_.TypeError.$factory(
+                    'memoryview.cast(): elements of shape must be integers')
+            }
+            nb *= item
+        }
+        if(nb * new_itemsize != _b_.len(self)){
+            throw _b_.TypeError.$factory(
+                'memoryview: product(shape) * itemsize != buffer size')
+        }
+    }
     switch(format){
         case "B":
             return memoryview.$factory(self.obj)
@@ -3379,3 +3422,5 @@ _b_.object.__new__.__class__ = builtin_function
 
 
 })(__BRYTHON__);
+
+

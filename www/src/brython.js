@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-05-29 12:20:08.294349"
-__BRYTHON__.timestamp=1748514008294
+__BRYTHON__.compiled_date="2025-05-29 14:27:33.241720"
+__BRYTHON__.timestamp=1748521653240
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -3812,7 +3812,17 @@ res=self.obj.__class__.__getitem__(self.obj,key)
 if(key.__class__===_b_.slice){return memoryview.$factory(res)}}
 memoryview.__len__=function(self){return len(self.obj)/self.itemsize}
 memoryview.__setitem__=function(self,key,value){try{$B.$setitem(self.obj,key,value)}catch(err){throw _b_.TypeError.$factory("cannot modify read-only memory")}}
-memoryview.cast=function(self,format){switch(format){case "B":
+var struct_format={'x':{'size':1},'b':{'size':1},'B':{'size':1},'c':{'size':1},'s':{'size':1},'p':{'size':1},'h':{'size':2},'H':{'size':2},'i':{'size':4},'I':{'size':4},'l':{'size':4},'L':{'size':4},'q':{'size':8},'Q':{'size':8},'f':{'size':4},'d':{'size':8},'P':{'size':8}}
+memoryview.cast=function(self,format,shape){if(! struct_format.hasOwnProperty(format)){throw _b_.ValueError.$factory(`unknown format: '${format}'`)}
+var new_itemsize=struct_format[format].size
+if(shape===undefined){shape=_b_.len(self)}else{if(! $B.$isinstance(shape,[_b_.list,_b_.tuple])){throw _b_.TypeError.$factory('shape must be a list or a tuple')}
+var nb=1
+for(var item of shape){if(! $B.$isinstance(item,_b_.int)){throw _b_.TypeError.$factory(
+'memoryview.cast(): elements of shape must be integers')}
+nb*=item}
+if(nb*new_itemsize !=_b_.len(self)){throw _b_.TypeError.$factory(
+'memoryview: product(shape) * itemsize != buffer size')}}
+switch(format){case "B":
 return memoryview.$factory(self.obj)
 case "I":
 var res=memoryview.$factory(self.obj),objlen=len(self.obj)

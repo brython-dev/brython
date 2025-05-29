@@ -130,8 +130,17 @@ var module = {
                 arguments, {}, null, "kw")
         var newline = _b_.dict.$get_string($.kw, 'newline', false)
 
-        var string = $B.to_bytes($.data),
-            res = btoa(String.fromCharCode.apply(null, string))
+        var bytes_list = $B.to_bytes($.data)
+        var i = 0
+        var size = 100000
+        var s = ''
+        while(i < bytes_list.length){
+            s += String.fromCharCode.apply(null, bytes_list.slice(i, i + size))
+            i += size
+        }
+
+        var res = btoa(s)
+
         if(newline){
             res += "\n"
         }

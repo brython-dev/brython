@@ -569,7 +569,7 @@ def encodebytes(s):
     pieces = []
     for i in range(0, len(s), MAXBINSIZE):
         chunk = s[i : i + MAXBINSIZE]
-        pieces.append(binascii.b2a_base64(chunk))
+        pieces.append(binascii.b2a_base64(chunk, newline=True))
     return b"".join(pieces)
 
 

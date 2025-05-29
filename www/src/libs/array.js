@@ -57,8 +57,17 @@ array.$buffer_protocol = true
 array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 
 array.__getitem__ = function(self, key){
-    if(self.obj && self.obj[key] !== undefined){
-        return self.obj[key]
+    if(self.obj){
+        if(self.obj[key] !== undefined){
+            return self.obj[key]
+        }else if($B.$isinstance(key, _b_.slice)){
+            var t = self.obj.slice(key.start, key.stop)
+            return {
+                __class__: array,
+                typecode: self.typecode,
+                obj: t
+            }
+        }
     }
     throw _b_.IndexError.$factory("array index out of range")
 }
