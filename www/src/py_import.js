@@ -53,9 +53,11 @@ Module.__repr__ = Module.__str__ = function(self){
 }
 
 Module.__setattr__ = function(self, attr, value){
-    if(self.__name__ == "__builtins__"){
+    if(self.__name__ == '__builtins__'){
         // set a Python builtin
         $B.builtins[attr] = value
+    }else if(self.__name__ == 'builtins'){
+        _b_[attr] = value
     }else{
         self[attr] = value
     }
@@ -196,6 +198,13 @@ function $download_module(mod, url){
 $B.$download_module = $download_module
 
 $B.addToImported = function(name, modobj){
+    if($B.imported[name]){
+        for(var attr in $B.imported[name]){
+            if(! modobj.hasOwnProperty(attr)){
+                modobj[attr] = $B.imported[name][attr]
+            }
+        }
+    }
     $B.imported[name] = modobj
     if(modobj === undefined){
         throw _b_.ImportError.$factory('imported not set by module')
@@ -1170,7 +1179,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == '_path_normpath' // fromlist.length == 1 && fromlist[0] == "aliases"
+    var test = false // mod_name == 'builtins' // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
