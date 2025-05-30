@@ -1376,7 +1376,7 @@ float.$factory = function(value){
                if(isFinite(value)){
                    return fast_float(parseFloat(value))
                }else{
-                   throw _b_.TypeError.$factory(
+                   throw _b_.ValueError.$factory(
                        "could not convert string to float: " +
                        _b_.repr(original_value))
                }
