@@ -3901,7 +3901,7 @@ $B.ast.While.prototype.to_js = function(scopes){
 }
 
 $B.ast.With.prototype.to_js = function(scopes){
-    /* PEP 243 says that
+    /* PEP 343 says that
 
     with EXPR as VAR:
         BLOCK
@@ -3936,7 +3936,7 @@ $B.ast.With.prototype.to_js = function(scopes){
               prefix + `klass = $B.get_class(mgr_${id})\n` +
               prefix + `try{\n`
         indent()
-        s += prefix + `var exit_${id} = $B.$getattr(klass, '__exit__'),\n` +
+        s += prefix + `var exit_${id} = $B.$getattr(mgr_${id}, '__exit__'),\n` +
              prefix + tab + `enter_${id} = $B.$getattr(klass, '__enter__')\n`
         dedent()
         s += prefix + `}catch(err){\n`
@@ -3975,7 +3975,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += prefix + `frame.$lineno = ${lineno}\n` +
              prefix + `exc_${id} = false\n` +
              prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
-             prefix + `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
+             prefix + `var $b = $B.$call(exit_${id})(err_${id}.__class__, ` +
                   `err_${id}, \n` +
              prefix + tab.repeat(4) + `$B.$getattr(err_${id}, '__traceback__'))\n` +
              prefix + `if(! $B.$bool($b)){\n` +
@@ -3991,7 +3991,7 @@ $B.ast.With.prototype.to_js = function(scopes){
              prefix + `if(exc_${id}){\n`
         indent()
         s += prefix + `try{\n` +
-             prefix + tab + `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n` +
+             prefix + tab + `$B.$call(exit_${id})(_b_.None, _b_.None, _b_.None)\n` +
              prefix + `}catch(err){\n`
              // If an error occurs in __exit__, make sure the
              // stack frame is preserved (it may have been
