@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-05-29 14:27:33.241720"
-__BRYTHON__.timestamp=1748521653240
+__BRYTHON__.compiled_date="2025-05-30 21:17:15.836666"
+__BRYTHON__.timestamp=1748632635836
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -3577,7 +3577,7 @@ throw err}}}
 getattr=$B.search_in_mro(klass,'__getattr__')
 if($test){console.log('try getattr',getattr)}
 if(getattr){if($test){console.log('try with getattr',getattr)}
-try{return getattr(obj,attr)}catch(err){if(_default !==undefined){return _default}
+try{return getattr(obj,attr)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){if(_default !==undefined){return _default}}
 throw err}}
 if(_default !==undefined){return _default}
 throw err}
@@ -4080,9 +4080,14 @@ $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){$Reader.close(self)}
 $Reader.__init__=function(_self,initial_value=''){_self.$content=initial_value
 _self.$counter=0}
-$Reader.__iter__=function(self){
-return iter($Reader.readlines(self))}
+$Reader.__iter__=function(self){self.$lc=-1
+delete self.$lines
+make_lines(self)
+return self}
 $Reader.__len__=function(self){return self.lines.length}
+$Reader.__next__=function(self){self.$lc++
+if(self.$lc >=self.$lines.length){throw _b_.StopIteration.$factory()}
+return self.$lines[self.$lc]}
 $Reader.__new__=function(cls){return{
 __class__:cls}}
 $Reader.close=function(self){self.closed=true}
@@ -4168,6 +4173,7 @@ var $TextIOWrapper=$B.make_class('_io.TextIOWrapper',function(){var $=$B.args("T
 return{
 __class__:$TextIOWrapper,__dict__:$B.empty_dict(),$content:_b_.bytes.decode($.buffer.$content,$.encoding),encoding:$.encoding,errors:$.errors,newline:$.newline}}
 )
+$TextIOWrapper.__bases__=[$Reader]
 $TextIOWrapper.__mro__=[$Reader,_b_.object]
 $B.set_func_names($TextIOWrapper,"builtins")
 $B.Reader=$Reader
@@ -5049,7 +5055,7 @@ var src=$B.file_cache[filename]
 trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n')
-var positions
+var positions=false
 if(! is_syntax_error && frame.inum && frame.positions){positions=frame.positions[Math.floor(frame.inum/2)]}
 if(positions){let[lineno,end_lineno,col_offset,end_col_offset]=positions
 var head=lines[lineno-1].substr(0,col_offset)
@@ -5082,7 +5088,6 @@ trace.push(handle_Subscript_error(
 lines,lineno,expr.value,tokens))
 break
 default:
-var ast_obj={lineno,end_lineno,col_offset,end_col_offset}
 trace.push(handle_Expr_error(
 lines,lineno,expr.value))
 break}}catch(err){if($B.get_option('debug')> 1){console.log('error in error handlers',err)}
@@ -6284,8 +6289,8 @@ Module.__repr__=Module.__str__=function(self){var res="<module "+self.__name__
 res+=self.__file__===undefined ? " (built-in)" :
 ' at '+self.__file__
 return res+">"}
-Module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
-$B.builtins[attr]=value}else{self[attr]=value}}
+Module.__setattr__=function(self,attr,value){if(self.__name__=='__builtins__'){
+$B.builtins[attr]=value}else if(self.__name__=='builtins'){_b_[attr]=value}else{self[attr]=value}}
 $B.set_func_names(Module,"builtins")
 $B.make_import_paths=function(filename){
 var filepath=$B.script_domain ? $B.script_domain+'/'+filename :filename
@@ -6328,7 +6333,8 @@ mod_name+"' (res is null)")}
 if(res.constructor===Error){throw res}
 return res}
 $B.$download_module=$download_module
-$B.addToImported=function(name,modobj){$B.imported[name]=modobj
+$B.addToImported=function(name,modobj){if($B.imported[name]){for(var attr in $B.imported[name]){if(! modobj.hasOwnProperty(attr)){modobj[attr]=$B.imported[name][attr]}}}
+$B.imported[name]=modobj
 if(modobj===undefined){throw _b_.ImportError.$factory('imported not set by module')}
 modobj.__class__=Module
 modobj.__name__=name
@@ -13685,12 +13691,13 @@ $B.js_from_ast(item.context_expr,scopes)+',\n'+
 prefix+`klass = $B.get_class(mgr_${id})\n`+
 prefix+`try{\n`
 indent()
-s+=prefix+`var exit_${id} = $B.$getattr(klass, '__exit__'),\n`+
+s+=prefix+`var exit_${id} = $B.$getattr(mgr_${id}, '__exit__'),\n`+
 prefix+tab+`enter_${id} = $B.$getattr(klass, '__enter__')\n`
 dedent()
 s+=prefix+`}catch(err){\n`
 indent()
 s+=prefix+`var klass_name = $B.class_name(mgr_${id})\n`+
+prefix+`frame.inum = ${inum}\n`+
 prefix+`throw _b_.TypeError.$factory("'" + klass_name + `+
 `"' object does not support the con`+
 `text manager protocol")\n`
@@ -13717,7 +13724,7 @@ indent()
 s+=prefix+`frame.$lineno = ${lineno}\n`+
 prefix+`exc_${id} = false\n`+
 prefix+`err_${id} = $B.exception(err_${id}, frame)\n`+
-prefix+`var $b = exit_${id}(mgr_${id}, err_${id}.__class__, `+
+prefix+`var $b = $B.$call(exit_${id})(err_${id}.__class__, `+
 `err_${id}, \n`+
 prefix+tab.repeat(4)+`$B.$getattr(err_${id}, '__traceback__'))\n`+
 prefix+`if(! $B.$bool($b)){\n`+
@@ -13733,7 +13740,7 @@ s+=prefix+`frame.$lineno = ${lineno}\n`+
 prefix+`if(exc_${id}){\n`
 indent()
 s+=prefix+`try{\n`+
-prefix+tab+`exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n`+
+prefix+tab+`$B.$call(exit_${id})(_b_.None, _b_.None, _b_.None)\n`+
 prefix+`}catch(err){\n`
 indent()
 s+=prefix+`if($B.count_frames() < stack_length){\n`+
@@ -13750,6 +13757,7 @@ return s}
 var _with=this,scope=last_scope(scopes),lineno=this.lineno
 scope.needs_stack_length=true
 indent(2)
+var inum=add_to_positions(scopes,this)
 var js=add_body(this.body,scopes)+'\n'
 dedent(2)
 var in_generator=scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator

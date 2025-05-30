@@ -973,7 +973,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__type_params__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__exit__" && obj.__name__ === "MagicMock"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1311,8 +1311,10 @@ $B.$getattr = function(obj, attr, _default){
             try{
                 return getattr(obj, attr)
             }catch(err){
-                if(_default !== undefined){
-                    return _default
+                if($B.is_exc(err, [_b_.AttributeError])){
+                    if(_default !== undefined){
+                        return _default
+                    }
                 }
                 throw err
             }
@@ -2829,12 +2831,22 @@ $Reader.__init__ = function(_self, initial_value=''){
 }
 
 $Reader.__iter__ = function(self){
-    // Iteration ignores last empty lines (issue #1059)
-    return iter($Reader.readlines(self))
+    self.$lc = -1
+    delete self.$lines
+    make_lines(self)
+    return self
 }
 
 $Reader.__len__ = function(self){
     return self.lines.length
+}
+
+$Reader.__next__ = function(self){
+    self.$lc++
+    if(self.$lc >= self.$lines.length){
+        throw _b_.StopIteration.$factory()
+    }
+    return self.$lines[self.$lc]
 }
 
 $Reader.__new__ = function(cls){
@@ -3108,6 +3120,7 @@ var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
     }
 )
 
+$TextIOWrapper.__bases__ = [$Reader]
 $TextIOWrapper.__mro__ = [$Reader, _b_.object]
 
 $B.set_func_names($TextIOWrapper, "builtins")
