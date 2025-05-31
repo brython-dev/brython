@@ -274,7 +274,7 @@ function validate_num_or_name(so, pos, is_bytes){
 
 var character_classes = {
     in_charset: to_codepoint_list('dDsSwW'),
-    in_re: to_codepoint_list('AbBdDsSwWZ')
+    in_re: to_codepoint_list('AbBdDsSwWZz')
 }
 
 function escaped_char(args){
@@ -2147,6 +2147,7 @@ function CharacterClass(pos, cp, length, groups){
             }
             break
         case 'Z':
+        case 'z':
             this.test_func = function(string, pos){
                 if(string.cp_at(pos) === undefined){
                     return {nb_min: 0, nb_max: 0}
