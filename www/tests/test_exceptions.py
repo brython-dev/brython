@@ -217,5 +217,12 @@ assert type(ioerror) is OSError
 
 # issue 2540
 import exception_traces
-    
+
+# issue 2582
+a = {'key': 1}
+try:
+  a['missing']
+except KeyError as e:
+  assert str(e) == "'missing'"
+  
 print('all tests passed...')

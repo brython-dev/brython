@@ -592,6 +592,16 @@ _b_.EnvironmentError = _b_.OSError
 _b_.WindowsError = _b_.OSError
 _b_.IOError = _b_.OSError
 
+// special case for KeyError.__str__ (cf. issue #2582)
+_b_.KeyError.__str__ = function(self){
+    if(self.args.length == 1){
+        return _b_.repr(self.args[0])
+    }
+    return _b_.BaseException.__str__(self)
+}
+
+$B.set_func_names(_b_.KeyError, 'builtins')
+
 // AttributeError supports keyword-only "name" and "obj" parameters
 _b_.AttributeError = $B.make_class('AttributeError',
     function(){
