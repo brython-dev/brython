@@ -95,7 +95,8 @@ flags = make_dataclass('flags')(
       isolated = 0,
       dev_mode = False,
       utf8_mode = 0,
-      warn_default_encoding = 0
+      warn_default_encoding = 0,
+      context_aware_warnings = 0
       )
 
 def getfilesystemencoding(*args, **kw):
