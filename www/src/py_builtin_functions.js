@@ -233,7 +233,7 @@ _b_.chr = function(i){
         var code = (i - 0x10000),
             s =  String.fromCodePoint(0xD800 | (code >> 10)) +
                  String.fromCodePoint(0xDC00 | (code & 0x3FF))
-            return $B.make_String(s, [0])
+        return $B.make_String(s, [0])
     }else{
         return String.fromCodePoint(i)
     }
@@ -2160,11 +2160,7 @@ _b_.ord = function(c){
             return c.charCodeAt(0)
         }else if(c.length == 2){
             var code = c.codePointAt(0)
-            if((code >= 0x10000 && code <= 0x1FFFF) ||
-                    (code >= 0x20000 && code <= 0x2FFFF) ||
-                    (code >= 0x30000 && code <= 0x3FFFF) ||
-                    (code >= 0xD0000 && code <= 0xDFFFF) ||
-                    (code >= 0xE0000 && code <= 0xFFFFF)){
+            if(code >= 0x10000 && code <= 0x10FFFF){
                 return code
             }
         }

@@ -980,6 +980,36 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     return ast_obj
 }
 
+$B._PyPegen.checked_future_import = function(p, module,
+        names, level, lineno, col_offset, end_lineno, end_col_offset,
+        arena){
+    if(level == 0 && module == "__future__"){
+        for(var i = 0; i < names.length; i++){
+            var alias = names[i]
+            if(alias.name == "barry_as_FLUFL"){
+                p.flags |= PyPARSE_BARRY_AS_BDFL;
+            }
+        }
+    }
+    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset, end_lineno, end_col_offset, arena);
+}
+
+$B._PyPegen.register_stmts = function(p, stmts){
+    if(! p.call_invalid_rules){
+        return stmts
+    }
+    var len = stmts.length
+    if (len == 0) {
+        return stmts
+    }
+    var last_stmt = stmts[len - 1]
+    p.last_stmt_location.lineno = last_stmt.lineno
+    p.last_stmt_location.col_offset = last_stmt.col_offset
+    p.last_stmt_location.end_lineno = last_stmt.end_lineno
+    p.last_stmt_location.end_col_offset = last_stmt.end_col_offset
+    return stmts
+}
+
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) ||
             exp.value.__class__ != _b_.complex) {

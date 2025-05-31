@@ -317,9 +317,9 @@ var Parser = $B.Parser = function(src, filename, mode){
     this.fill = 0
     this.level = 0
     this.size = 1
-    this.starting_lineno = 0;
-    this.starting_col_offset = 0;
-
+    this.starting_lineno = 0
+    this.starting_col_offset = 0
+    this.last_stmt_location = {}
     this.tokens = []
     this.src = src
     this.filename = filename
