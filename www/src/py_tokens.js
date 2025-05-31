@@ -65,6 +65,9 @@ const tokens = [
     'FSTRING_START',
     'FSTRING_MIDDLE',
     'FSTRING_END',
+    'TSTRING_START',
+    'TSTRING_MIDDLE',
+    'TSTRING_END',
     'COMMENT',
     'NL',
     // These aren't used by the C tokenizer but are needed for tokenize.py

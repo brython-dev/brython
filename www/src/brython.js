@@ -192,10 +192,10 @@ $B.run_script(script,src,script_id,url,true)
 return $B.imported[script_id]}})(__BRYTHON__);
 ;
 
-__BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'name,default_value?',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeAlias:'name,type_params*,value',TypeIgnore:'lineno,tag',TypeVar:'name,bound?,default_value?',TypeVarTuple:'name,default_value?',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
+__BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Interpolation:'value,str,conversion,format_spec?',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'name,default_value?',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',TemplateStr:'values*',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeAlias:'name,type_params*,value',TypeIgnore:'lineno,tag',TypeVar:'name,bound?,default_value?',TypeVarTuple:'name,default_value?',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','Interpolation','JoinedStr','TemplateStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_colorize','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_py_warnings','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pyclbr','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_colorize','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_py_warnings','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','annotationlib','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pyclbr','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
@@ -212,12 +212,12 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-05-31 09:16:07.374908"
-__BRYTHON__.timestamp=1748675767374
+__BRYTHON__.compiled_date="2025-05-31 22:09:55.408605"
+__BRYTHON__.timestamp=1748722195407
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
-(function($B){const tokens=['ENDMARKER','NAME','NUMBER','STRING','NEWLINE','INDENT','DEDENT','LPAR','RPAR','LSQB','RSQB','COLON','COMMA','SEMI','PLUS','MINUS','STAR','SLASH','VBAR','AMPER','LESS','GREATER','EQUAL','DOT','PERCENT','LBRACE','RBRACE','EQEQUAL','NOTEQUAL','LESSEQUAL','GREATEREQUAL','TILDE','CIRCUMFLEX','LEFTSHIFT','RIGHTSHIFT','DOUBLESTAR','PLUSEQUAL','MINEQUAL','STAREQUAL','SLASHEQUAL','PERCENTEQUAL','AMPEREQUAL','VBAREQUAL','CIRCUMFLEXEQUAL','LEFTSHIFTEQUAL','RIGHTSHIFTEQUAL','DOUBLESTAREQUAL','DOUBLESLASH','DOUBLESLASHEQUAL','AT','ATEQUAL','RARROW','ELLIPSIS','COLONEQUAL','EXCLAMATION','OP','TYPE_IGNORE','TYPE_COMMENT','SOFT_KEYWORD','FSTRING_START','FSTRING_MIDDLE','FSTRING_END','COMMENT','NL',
+(function($B){const tokens=['ENDMARKER','NAME','NUMBER','STRING','NEWLINE','INDENT','DEDENT','LPAR','RPAR','LSQB','RSQB','COLON','COMMA','SEMI','PLUS','MINUS','STAR','SLASH','VBAR','AMPER','LESS','GREATER','EQUAL','DOT','PERCENT','LBRACE','RBRACE','EQEQUAL','NOTEQUAL','LESSEQUAL','GREATEREQUAL','TILDE','CIRCUMFLEX','LEFTSHIFT','RIGHTSHIFT','DOUBLESTAR','PLUSEQUAL','MINEQUAL','STAREQUAL','SLASHEQUAL','PERCENTEQUAL','AMPEREQUAL','VBAREQUAL','CIRCUMFLEXEQUAL','LEFTSHIFTEQUAL','RIGHTSHIFTEQUAL','DOUBLESTAREQUAL','DOUBLESLASH','DOUBLESLASHEQUAL','AT','ATEQUAL','RARROW','ELLIPSIS','COLONEQUAL','EXCLAMATION','OP','TYPE_IGNORE','TYPE_COMMENT','SOFT_KEYWORD','FSTRING_START','FSTRING_MIDDLE','FSTRING_END','TSTRING_START','TSTRING_MIDDLE','TSTRING_END','COMMENT','NL',
 'ERRORTOKEN','ENCODING','N_TOKENS'
 ]
 $B.py_tokens={}
@@ -278,6 +278,7 @@ if(step===undefined){return table[start][0]+table[start][1]> cp}
 return(table[start][0]+step*table[start][1]> cp)&&
 ((cp-table[start][0])% step)==0}
 const FSTRING_START='FSTRING_START',FSTRING_MIDDLE='FSTRING_MIDDLE',FSTRING_END='FSTRING_END'
+const TSTRING_START='TSTRING_START',TSTRING_MIDDLE='TSTRING_MIDDLE',TSTRING_END='TSTRING_END'
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
 code+=(char.charCodeAt(0)& 0x03FF)<< 10
@@ -329,13 +330,13 @@ function nesting_level(token_modes){var ix=token_modes.length-1
 while(ix >=0){var mode=token_modes[ix]
 if(mode.nesting !==undefined){return mode.nesting}
 ix--}}
-$B.tokenizer=function(src,filename,mode,parser){var string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,t=[]
+$B.tokenizer=function(src,filename,mode,parser){var string_prefix=/^(r|u|R|U|f|F|t|T||fr|Fr|fR|FR|rf|rF|Rf|RF||tr|Tr|tR|TR|rt|rT|Rt|RT)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,t=[]
 if(mode !='eval' && ! src.endsWith('\n')){src+='\n'}
 var lines=src.split('\n'),linenum=0,line_at={}
 for(let i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
-var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,format_specifier
+var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,fstring_buffer,fstring_start,fstring_expr_start,fstring_escape,tstring_start,tstring_buffer,tstring_escape,tstring_expr_start,format_specifier
 if(parser){parser.braces=braces}
 t.push(Token('ENCODING','utf-8',0,0,0,0,''))
 while(pos < src.length){char=src[pos]
@@ -346,7 +347,8 @@ char=src.substr(pos,2)
 pos++}
 pos++
 if(token_mode !=save_mode){if(token_mode=='fstring'){fstring_buffer=''
-fstring_escape=false}else if(token_mode=='format_specifier'){format_specifier=''}}
+fstring_escape=false}else if(token_mode=='tstring'){tstring_buffer=''
+tstring_escape=false}else if(token_mode=='format_specifier'){format_specifier=''}}
 save_mode=token_mode
 if(token_mode=='fstring'){if(char==token_mode.quote){if(fstring_escape){fstring_buffer+='\\'+char
 fstring_escape=false
@@ -379,6 +381,38 @@ fstring_escape=! fstring_escape}
 continue}else{if(fstring_escape){fstring_buffer+='\\'}
 fstring_buffer+=char
 fstring_escape=false
+if(char=='\n'){line_num++}
+continue}}else if(token_mode=='tstring'){if(char==token_mode.quote){if(tstring_escape){tstring_buffer+='\\'+char
+tstring_escape=false
+continue}
+if(token_mode.triple_quote){if(src.substr(pos,2)!=token_mode.quote.repeat(2)){tstring_buffer+=char
+continue}
+char=token_mode.quote.repeat(3)
+pos+=2}
+if(tstring_buffer.length > 0){
+t.push(Token(TSTRING_MIDDLE,tstring_buffer,line_num,tstring_start,line_num,tstring_start+tstring_buffer.length,line))}
+t.push(Token(TSTRING_END,char,line_num,pos-line_start,line_num,pos-line_start+1,line))
+token_modes.pop()
+token_mode=$B.last(token_modes)
+state=null
+continue}else if(char=='{'){if(src.charAt(pos)=='{'){
+tstring_buffer+=char
+pos++
+continue}else{
+if(tstring_buffer.length > 0){t.push(Token(TSTRING_MIDDLE,tstring_buffer,line_num,tstring_start,line_num,tstring_start+tstring_buffer.length,line))}
+token_mode='regular_within_tstring'
+tstring_expr_start=pos-line_start
+state=null
+token_modes.push(token_mode)}}else if(char=='}'){if(src.charAt(pos)=='}'){
+tstring_buffer+=char
+pos++
+continue}else{
+t.push(Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line))
+continue}}else if(char=='\\'){if(token_mode.raw){tstring_buffer+=char+char}else{if(tstring_escape){tstring_buffer+='\\'+char}
+tstring_escape=! tstring_escape}
+continue}else{if(tstring_escape){tstring_buffer+='\\'}
+tstring_buffer+=char
+tstring_escape=false
 if(char=='\n'){line_num++}
 continue}}else if(token_mode=='format_specifier'){if(char==quote){if(format_specifier.length > 0){
 t.push(Token(FSTRING_MIDDLE,format_specifier,line_num,fstring_start,line_num,fstring_start+format_specifier.length,line))
@@ -531,7 +565,8 @@ if($B.is_XID_Start(ord(char))){
 state='NAME'
 name=char}else if($B.in_unicode_category('Nd',ord(char))){state='NUMBER'
 num_type=''
-number=char}else if(ops.includes(char)){if(token_mode=='regular_within_fstring' &&
+number=char}else if(ops.includes(char)){if((token_mode=='regular_within_fstring' ||
+token_mode=='regular_within_tstring')&&
 (char==':' ||char=='}')){if(char==':'){
 if(nesting_level(token_modes)==braces.length-1){let colon=Token('OP',char,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line)
 colon.metadata=src.substr(
@@ -593,6 +628,17 @@ token_modes.push(token_mode)
 var s=triple_quote ? quote.repeat(3):quote
 var end_col=fstring_start+name.length+s.length
 t.push(Token(FSTRING_START,prefix+s,line_num,fstring_start,line_num,end_col,line))
+continue}
+if(prefix.toLowerCase().includes('t')){tstring_start=pos-line_start-name.length
+token_mode=new String('tstring')
+token_mode.nesting=braces.length
+token_mode.quote=quote
+token_mode.triple_quote=triple_quote
+token_mode.raw=prefix.toLowerCase().includes('r')
+token_modes.push(token_mode)
+var s=triple_quote ? quote.repeat(3):quote
+var end_col=tstring_start+name.length+s.length
+t.push(Token(TSTRING_START,prefix+s,line_num,tstring_start,line_num,end_col,line))
 continue}
 escaped=false
 string_start=[line_num,pos-line_start-name.length,line_start]
@@ -13461,6 +13507,8 @@ $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.
 if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position("'Subscript'",this.value.lineno,this.value.col_offset,this.value.end_lineno,this.value.end_col_offset,this.slice.lineno,this.slice.col_offset,this.end_lineno,this.end_col_offset)
 var inum=add_to_positions(scopes,this)
 return `$B.$getitem(${value}, ${slice}, ${inum})`}}
+$B.ast.TemplateStr.prototype.to_js=function(scopes){console.log('TemplateStr',this)
+return '"template str"'}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
 var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
@@ -14902,6 +14950,40 @@ return ast_obj}
 $B._PyPegen.decoded_constant_from_token=function(p,t){var ast_obj=new $B.ast.Constant(t.string)
 set_position_from_token(ast_obj,t)
 return ast_obj}
+function is_whitespace(char){return ' \n\r\t\f'.includes(char)}
+function _get_interpolation_conversion(p,debug,conversion,format){if(conversion !=NULL){var conversion_expr=conversion.result
+var first=PyUnicode_READ_CHAR(conversion_expr.id,0);
+return Py_SAFE_DOWNCAST(first,Py_UCS4,int);}else if(debug && !format){
+return 'r';}
+return-1;}
+function _strip_interpolation_expr(exprstr){var len=exprstr.length
+for(var c of exprstr){if(is_whitespace(c)||c=='='){len--}else{break}}
+return exprstr.substr(0,len)}
+$B._PyPegen.interpolation=function(p,expression,debug,conversion,format,closing_brace,position,arena){var lineno=position.lineno,col_offset=position.col_offset,end_lineno=position.end_lineno,end_col_offset=position.end_col_offset
+var conversion_val=_get_interpolation_conversion(p,debug,conversion,format);
+var debug_end_line,debug_end_offset;
+var debug_metadata;
+var exprstr;
+if(conversion){debug_end_line=conversion.result.lineno
+debug_end_offset=conversion.result.col_offset;
+debug_metadata=exprstr=conversion.metadata;}else if(format){debug_end_line=format.result.lineno;
+debug_end_offset=format.result.col_offset+1;
+debug_metadata=exprstr=format.metadata;}else{debug_end_line=end_lineno;
+debug_end_offset=end_col_offset;
+debug_metadata=exprstr=closing_brace.metadata;}
+var final_exprstr=_strip_interpolation_expr(exprstr);
+if(final_exprstr){p.arena.a_objects.push(final_exprstr)}
+var interpolation=$B._PyAST.Interpolation(
+expression,final_exprstr,conversion_val,format ? format.result :NULL)
+set_position_from_obj(interpolation,position)
+if(!debug){return interpolation;}
+var debug_text=$B._PyAST.Constant(debug_metadata)
+set_position_from_list(debug_text,[lineno,col_offset+1,debug_end_line,debug_end_offset-1])
+var values=[debug_text,interpolation]
+var ast_obj=$B._PyAST.JoinedStr(values)
+set_position_from_list(ast_obj,[lineno,col_offset,debug_end_line,debug_end_offset])
+console.log('JoinedStr',ast_obj)
+return ast_obj}
 $B._PyPegen.formatted_value=function(p,expression,debug,conversion,format,closing_brace,arena){var conversion_val=-1
 if(conversion){var conversion_expr=conversion.result,first=conversion_expr.id
 if(first.length > 1 ||! 'sra'.includes(first)){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion_expr,`f-string: invalid conversion character {first}: `+
@@ -14926,6 +15008,51 @@ var joined_str=new $B.ast.JoinedStr([debug,formatted_value])
 set_position_from_obj(joined_str,arena)
 return joined_str}
 return formatted_value}
+$B._PyPegen.decode_fstring_part=function(p,is_raw,constant,token){var bstr=constant.value
+var len;
+if(bstr=="{{" ||bstr=="}}"){len=1}else{len=bstr.length}
+is_raw=is_raw ||! bstr.includes('\\')
+var str=bstr 
+if(str==NULL){_Pypegen_raise_decode_error(p);
+return NULL;}
+p.arena.a_objects.push(str)
+return $B._PyAST.Constant(str,NULL,constant.lineno,constant.col_offset,constant.end_lineno,constant.end_col_offset,p.arena);}
+function _get_resized_exprs(p,a,raw_expressions,b,string_kind){var n_items=raw_expressions.length
+var total_items=n_items
+for(var item of raw_expressions){if(item instanceof $B.ast.JoinedStr){total_items+=item.values.length-1;}}
+console.log('total items',total_items)
+var quote_str=a.bytes
+if(quote_str==NULL){return NULL;}
+var is_raw=quote_str.includes('r')||quote_str.includes('R')
+var seq=[]
+var index=0;
+for(var i=0;i < n_items;i++){var item=raw_expressions[i]
+if(item instanceof $B.ast.JoinedStr){var values=item.values
+if(values.length !=2){PyErr_Format(PyExc_SystemError,string_kind==TSTRING
+? "unexpected TemplateStr node without debug data in t-string at line %d"
+:"unexpected JoinedStr node without debug data in f-string at line %d",item.lineno);
+return NULL;}
+var first=values[0]
+seq[index++]=first
+var second=values[1]
+seq[index++]=second
+continue;}
+if(item instanceof $B.ast.Constant){item=$B._PyPegen.decode_fstring_part(p,is_raw,item,b);
+if(item==NULL){return NULL;}
+if(item.value.length==0){continue;}}
+seq[index++]=item}
+console.log('seq',seq)
+var resized_exprs
+if(index !=total_items){resized_exprs=_Py_asdl_expr_seq_new(index,p.arena);
+if(resized_exprs==NULL){return NULL;}
+for(var i=0;i < index;i++){resized_exprs[i]=seq[i]}}else{resized_exprs=seq;}
+console.log('resturn resized_exprs',resized_exprs)
+return resized_exprs;}
+$B._PyPegen.template_str=function(p,a,raw_expressions,b){var resized_exprs=_get_resized_exprs(p,a,raw_expressions,b,'TSTRING')
+var ast_obj=new $B.ast.TemplateStr(resized_exprs)
+set_position_from_list(ast_obj,[a.lineno,a.col_offset,b.end_lineno,b.end_col_offset])
+console.log('template str',ast_obj)
+return ast_obj}
 $B._PyPegen.joined_str=function(p,a,items,c){var ast_obj=new $B.ast.JoinedStr(items)
 ast_obj.lineno=a.lineno
 ast_obj.col_offset=a.col_offset
@@ -15153,8 +15280,52 @@ seq.push(fmt_ast)}
 var ast_obj=new $B.ast.JoinedStr(seq)
 set_position_from_obj(ast_obj,p.arena)
 return ast_obj}
-$B._PyPegen.concatenate_strings=function(p,strings){
-var res='',first=strings[0],last=$B.last(strings),type
+function _build_concatenated_str(p,strings){var len=strings.length
+var n_flattened_elements=0;
+for(var elem of strings){if(elem instanceof $B.ast.JoinedStr ||
+elem instanceof $B.ast.TemplateStr){n_flattened_elements+=elem.values.length}else{n_flattened_elements++}}
+var flattened=[]
+var current_pos=0;
+for(var elem of strings){if(elem instanceof $B.ast.JoinedStr ||
+elem instanceof $B.ast.TemplateStr){for(var subvalue of elem.values){flattened[current_pos++]=subvalue}}else{flattened[current_pos++]=elem}}
+var n_elements=0
+var prev_is_constant=0
+for(var elem of flattened){
+if(elem instanceof $B.ast.Constant &&
+typeof elem.value=='string' &&
+elem.value.length==0){continue}
+if(!prev_is_constant ||!(elem instanceof $B.ast.Constant)){n_elements++;}
+prev_is_constant=elem instanceof $B.ast.Constant}
+var values=[]
+current_pos=0;
+for(var i=0,len=flattened.length;i < len;i++){var elem=flattened[i]
+if(elem instanceof $B.ast.Constant){if(i+1 < n_flattened_elements &&
+flattened[i+1]instanceof $B.ast.Constant){var first_elem=elem;
+var kind=elem.__class__
+var concat_str=''
+var last_elem=elem;
+var j
+for(j=i;j < n_flattened_elements;j++){var current_elem=flattened[j]
+if(current_elem instanceof $B.ast.Constant){concat_str+=current_elem.value
+last_elem=current_elem;}else{break;}}
+i=j-1
+p.arena.a_objects.push(concat_str)
+elem=$B._PyAST.Constant(concat_str,kind)
+set_position_from_list(elem,[first_elem.lineno,first_elem.col_offset,last_elem.end_lineno,last_elem.end_col_offset]);}
+if(elem.value.length==0){continue}}
+values[current_pos++]=elem}
+return values}
+function _build_concatenated_template_str(p,strings){var values=_build_concatenated_str(p,strings)
+var ast_obj=new $B.ast.TemplateStr(values)
+var last=strings[strings.length-1]
+set_position_from_list(ast_obj,[strings[0].lineno,strings[0].col_offset,last.end_lineno,last.end_col_offset])
+return ast_obj}
+function _build_concatenated_joined_str(p,strings){var values=_build_concatenated_str(p,strings)
+var ast_obj=new $B.ast.JoinedStr(values)
+var last=strings[strings.length-1]
+set_position_from_list(ast_obj,[strings[0].lineno,strings[0].col_offset,last.end_lineno,last.end_col_offset])
+return ast_obj}
+$B._PyPegen.concatenate_strings=function(p,strings){var res='',first=strings[0],last=$B.last(strings),type
 var state=NULL,value,values=[]
 function error(message){var a={lineno:first.start[0],col_offset:first.start[1],end_lineno :last.end[0],end_col_offset:last.end[1]}
 $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a,message)}
@@ -15163,19 +15334,23 @@ ast_obj.lineno=first.lineno
 ast_obj.col_offset=first.col_offset
 ast_obj.end_lineno=last.end_lineno
 ast_obj.end_col_offset=last.end_col_offset}
-var items=[],has_fstring=false,state
-for(var token of strings){if(token instanceof $B.ast.JoinedStr){
-has_fstring=true
-if(state=='bytestring'){error('cannot mix bytes and nonbytes literals')}
-for(var fs_item of token.values){if(fs_item instanceof $B.ast.Constant){
+function escape_single_quotes(token){for(var fs_item of token.values){if(fs_item instanceof $B.ast.Constant){
 var parts=fs_item.value.split('\\\'')
 parts=parts.map(x=> x.replace(new RegExp("'","g"),"\\'"))
 fs_item.value=parts.join('\\\'')
 fs_item.value=fs_item.value.replace(/\n/g,'\\n')
-.replace(/\r/g,'\\r')}
-items.push(fs_item)}
-state='string'}else{items.push(token)
-var is_bytes=token.value.__class__===_b_.bytes
+.replace(/\r/g,'\\r')}}}
+var items=[],has_fstring=false,has_tstring=false,state
+for(var string of strings){if(string instanceof $B.ast.JoinedStr){
+has_fstring=true
+if(state=='bytestring'){error('cannot mix bytes and nonbytes literals')}
+escape_single_quotes(string)
+state='string'}else if(string instanceof $B.ast.TemplateStr){
+has_tstring=true
+if(state=='bytestring'){error('cannot mix bytes and nonbytes literals')}
+escape_single_quotes(string)
+state='string'}else{items.push(string)
+var is_bytes=string.value.__class__===_b_.bytes
 if((is_bytes && state=='string')||
 (state=='bytestring' && ! is_bytes)){error('cannot mix bytes and nonbytes literals')}
 state=is_bytes ? 'bytestring' :'string'}}
@@ -15198,11 +15373,9 @@ if(item instanceof $B.ast.Constant){consec_strs.push(item)}else{if(consec_strs.l
 consec_strs=[]
 items1.push(item)}}
 if(consec_strs.length > 0){items1.push(group_consec_strings(consec_strs))}
-if(! has_fstring){return items1[0]}
-var jstr_values=items1
-var ast_obj=new $B.ast.JoinedStr(jstr_values)
-set_position_from_list(ast_obj,strings)
-return ast_obj}
+if(! has_fstring && ! has_tstring){return items1[0]}
+if(has_tstring){return _build_concatenated_template_str(p,strings)}
+return _build_concatenated_joined_str(p,strings)}
 $B._PyPegen.checked_future_import=function(p,module,names,level,lineno,col_offset,end_lineno,end_col_offset,arena){if(level==0 && module=="__future__"){for(var i=0;i < names.length;i++){var alias=names[i]
 if(alias.name=="barry_as_FLUFL"){p.flags |=PyPARSE_BARRY_AS_BDFL;}}}
 return $B._PyAST.ImportFrom(module,names,level,lineno,col_offset,end_lineno,end_col_offset,arena);}

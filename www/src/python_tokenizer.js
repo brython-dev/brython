@@ -132,6 +132,10 @@ const FSTRING_START = 'FSTRING_START',
       FSTRING_MIDDLE = 'FSTRING_MIDDLE',
       FSTRING_END = 'FSTRING_END'
 
+const TSTRING_START = 'TSTRING_START',
+      TSTRING_MIDDLE = 'TSTRING_MIDDLE',
+      TSTRING_END = 'TSTRING_END'
+
 function ord(char){
     if(char.length == 1){
         return char.charCodeAt(0)
@@ -271,8 +275,9 @@ function nesting_level(token_modes){
     }
 }
 
+
 $B.tokenizer = function(src, filename, mode, parser){
-    var string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
+    var string_prefix = /^(r|u|R|U|f|F|t|T||fr|Fr|fR|FR|rf|rF|Rf|RF||tr|Tr|tR|TR|rt|rT|Rt|RT)$/,
         bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,
         t = []
 
@@ -323,6 +328,10 @@ $B.tokenizer = function(src, filename, mode, parser){
         fstring_start,
         fstring_expr_start,
         fstring_escape,
+        tstring_start,
+        tstring_buffer,
+        tstring_escape,
+        tstring_expr_start,
         format_specifier
 
     if(parser){
@@ -347,6 +356,9 @@ $B.tokenizer = function(src, filename, mode, parser){
             if(token_mode == 'fstring'){
                 fstring_buffer = ''
                 fstring_escape = false
+            }else if(token_mode == 'tstring'){
+                tstring_buffer = ''
+                tstring_escape = false
             }else if(token_mode == 'format_specifier'){
                 format_specifier = ''
             }
@@ -431,6 +443,89 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }
                 fstring_buffer += char
                 fstring_escape = false
+                if(char == '\n'){
+                    line_num++
+                }
+                continue
+            }
+        }else if(token_mode == 'tstring'){
+            if(char == token_mode.quote){
+                if(tstring_escape){
+                    tstring_buffer += '\\' + char
+                    tstring_escape = false
+                    continue
+                }
+                if(token_mode.triple_quote){
+                    if(src.substr(pos, 2) != token_mode.quote.repeat(2)){
+                        tstring_buffer += char
+                        continue
+                    }
+                    char = token_mode.quote.repeat(3)
+                    pos += 2
+                }
+                if(tstring_buffer.length > 0){
+                    // emit TSTRING_MIDDLE token
+                    t.push(Token(TSTRING_MIDDLE, tstring_buffer,
+                        line_num, tstring_start,
+                        line_num, tstring_start + tstring_buffer.length,
+                        line))
+                }
+                t.push(Token(TSTRING_END, char, line_num, pos - line_start,
+                            line_num, pos - line_start + 1, line))
+                // pop from token modes
+                token_modes.pop()
+                token_mode = $B.last(token_modes)
+                state = null
+                continue
+            }else if(char == '{'){
+                if(src.charAt(pos) == '{'){
+                    // consecutive opening brackets = the "{" character
+                    tstring_buffer += char
+                    pos++
+                    continue
+                }else{
+                    // emit TSTRING_MIDDLE if not empty
+                    if(tstring_buffer.length > 0){
+                        t.push(Token(TSTRING_MIDDLE, tstring_buffer,
+                            line_num, tstring_start,
+                            line_num, tstring_start + tstring_buffer.length,
+                            line))
+                    }
+                    token_mode = 'regular_within_tstring'
+                    tstring_expr_start = pos - line_start
+                    state = null
+                    token_modes.push(token_mode)
+                }
+            }else if(char == '}'){
+                if(src.charAt(pos) == '}'){
+                    // consecutive closing brackets = the "}" character
+                    tstring_buffer += char
+                    pos++
+                    continue
+                }else{
+                    // emit closing bracket token
+                    t.push(Token('OP', char,
+                        line_num, pos - line_start,
+                        line_num, pos - line_start + 1,
+                        line))
+                    continue
+                }
+            }else if(char == '\\'){
+                if(token_mode.raw){
+                    tstring_buffer += char + char
+                }else{
+                    if(tstring_escape){
+                        tstring_buffer += '\\' + char
+                    }
+                    tstring_escape = ! tstring_escape
+                }
+                continue
+            }else{
+                if(tstring_escape){
+                    tstring_buffer += '\\'
+                }
+                tstring_buffer += char
+                tstring_escape = false
                 if(char == '\n'){
                     line_num++
                 }
@@ -755,7 +850,8 @@ $B.tokenizer = function(src, filename, mode, parser){
                             num_type = ''
                             number = char
                         }else if(ops.includes(char)){
-                            if(token_mode == 'regular_within_fstring' &&
+                            if((token_mode == 'regular_within_fstring' ||
+                                token_mode == 'regular_within_tstring') &&
                                     (char == ':' || char == '}')){
                                 if(char == ':'){
                                     // Nesting_level(token_modes) is the number of
@@ -898,6 +994,23 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 line))
                             continue
                         }
+                        if(prefix.toLowerCase().includes('t')){
+                            tstring_start = pos - line_start - name.length
+                            token_mode = new String('tstring')
+                            token_mode.nesting = braces.length
+                            token_mode.quote = quote
+                            token_mode.triple_quote = triple_quote
+                            token_mode.raw = prefix.toLowerCase().includes('r')
+                            token_modes.push(token_mode)
+                            var s = triple_quote ? quote.repeat(3) : quote
+                            var end_col = tstring_start + name.length + s.length
+                            t.push(Token(TSTRING_START, prefix + s,
+                                line_num, tstring_start,
+                                line_num, end_col,
+                                line))
+                            continue
+                        }
+
                         escaped = false
                         string_start = [line_num,
                             pos - line_start - name.length, line_start]

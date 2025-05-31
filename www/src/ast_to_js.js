@@ -3501,6 +3501,11 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     }
 }
 
+$B.ast.TemplateStr.prototype.to_js = function(scopes){
+    console.log('TemplateStr', this)
+    return '"template str"'
+}
+
 $B.ast.Try.prototype.to_js = function(scopes){
     compiler_check(this)
     var id = make_id(),
