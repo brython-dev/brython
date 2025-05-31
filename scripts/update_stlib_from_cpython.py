@@ -7,7 +7,7 @@ bdir = os.path.join(os.path.dirname(os.getcwd()),
     "www", "src", "Lib")
 
 old = "3.13"
-new = "3.13"
+new = "3.14"
 p_old_dir = rf'c:\Python{old.replace(".", "")}\Lib'
 p_new_dir = rf'c:\Python{new.replace(".", "")}\Lib'
 
