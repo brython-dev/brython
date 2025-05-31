@@ -1773,7 +1773,6 @@ str.isascii = function(self){
 
 var unicode_categories_contain_character = function (categories, cp) {
     for (var cat of categories) {
-        console.log(cat, cp);
         if ($B.in_unicode_category(cat, cp)) {
             return true
         }
