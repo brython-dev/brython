@@ -128,13 +128,9 @@ function in_unicode_category(category, cp){
         ((cp - table[start][0]) % step) == 0
 }
 
-const FSTRING_START = 'FSTRING_START',
-      FSTRING_MIDDLE = 'FSTRING_MIDDLE',
-      FSTRING_END = 'FSTRING_END'
-
-const TSTRING_START = 'TSTRING_START',
-      TSTRING_MIDDLE = 'TSTRING_MIDDLE',
-      TSTRING_END = 'TSTRING_END'
+const FT_START = {f: 'FSTRING_START', t: 'TSTRING_START'},
+      FT_MIDDLE = {f: 'FSTRING_MIDDLE', t: 'TSTRING_MIDDLE'},
+      FT_END = {f: 'FSTRING_END', t: 'TSTRING_END'}
 
 function ord(char){
     if(char.length == 1){
@@ -324,15 +320,13 @@ $B.tokenizer = function(src, filename, mode, parser){
         token_modes = ['regular'],
         token_mode = 'regular',
         save_mode = token_mode,
-        fstring_buffer,
-        fstring_start,
-        fstring_expr_start,
-        fstring_escape,
-        tstring_start,
-        tstring_buffer,
-        tstring_escape,
-        tstring_expr_start,
-        format_specifier
+        format_specifier,
+        ft_type,
+        ft_buffer,
+        ft_start,
+        ft_expr_start,
+        ft_escape,
+        ft_format_spec
 
     if(parser){
         parser.braces = braces
@@ -353,41 +347,38 @@ $B.tokenizer = function(src, filename, mode, parser){
 
         // console.log('state', state, 'token mode', token_mode, 'char', char)
         if(token_mode != save_mode){
-            if(token_mode == 'fstring'){
-                fstring_buffer = ''
-                fstring_escape = false
-            }else if(token_mode == 'tstring'){
-                tstring_buffer = ''
-                tstring_escape = false
+            if(token_mode == 'ft'){
+                ft_buffer = ''
+                ft_escape = false
             }else if(token_mode == 'format_specifier'){
                 format_specifier = ''
             }
         }
         save_mode = token_mode
 
-        if(token_mode == 'fstring'){
+        if(token_mode == 'ft'){ // f-string or t-string
             if(char == token_mode.quote){
-                if(fstring_escape){
-                    fstring_buffer += '\\' + char
-                    fstring_escape = false
+                if(ft_escape){
+                    ft_buffer += '\\' + char
+                    ft_escape = false
                     continue
                 }
                 if(token_mode.triple_quote){
                     if(src.substr(pos, 2) != token_mode.quote.repeat(2)){
-                        fstring_buffer += char
+                        ft_buffer += char
                         continue
                     }
                     char = token_mode.quote.repeat(3)
                     pos += 2
                 }
-                if(fstring_buffer.length > 0){
+                if(ft_buffer.length > 0){
                     // emit FSTRING_MIDDLE token
-                    t.push(Token(FSTRING_MIDDLE, fstring_buffer,
-                        line_num, fstring_start,
-                        line_num, fstring_start + fstring_buffer.length,
+                    t.push(Token(FT_MIDDLE[ft_type], ft_buffer,
+                        line_num, ft_start,
+                        line_num, ft_start + ft_buffer.length,
                         line))
                 }
-                t.push(Token(FSTRING_END, char, line_num, pos - line_start,
+                t.push(Token(FT_END[ft_type], char, line_num, pos - line_start,
                             line_num, pos - line_start + 1, line))
                 // pop from token modes
                 token_modes.pop()
@@ -397,26 +388,26 @@ $B.tokenizer = function(src, filename, mode, parser){
             }else if(char == '{'){
                 if(src.charAt(pos) == '{'){
                     // consecutive opening brackets = the "{" character
-                    fstring_buffer += char
+                    ft_buffer += char
                     pos++
                     continue
                 }else{
                     // emit FSTRING_MIDDLE if not empty
-                    if(fstring_buffer.length > 0){
-                        t.push(Token(FSTRING_MIDDLE, fstring_buffer,
-                            line_num, fstring_start,
-                            line_num, fstring_start + fstring_buffer.length,
+                    if(ft_buffer.length > 0){
+                        t.push(Token(FT_MIDDLE[ft_type], ft_buffer,
+                            line_num, ft_start,
+                            line_num, ft_start + ft_buffer.length,
                             line))
                     }
-                    token_mode = 'regular_within_fstring'
-                    fstring_expr_start = pos - line_start
+                    token_mode = 'regular_within_ft'
+                    ft_expr_start = pos - line_start
                     state = null
                     token_modes.push(token_mode)
                 }
             }else if(char == '}'){
                 if(src.charAt(pos) == '}'){
                     // consecutive closing brackets = the "}" character
-                    fstring_buffer += char
+                    ft_buffer += char
                     pos++
                     continue
                 }else{
@@ -429,103 +420,20 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }
             }else if(char == '\\'){
                 if(token_mode.raw){
-                    fstring_buffer += char + char
+                    ft_buffer += char + char
                 }else{
-                    if(fstring_escape){
-                        fstring_buffer += '\\' + char
+                    if(ft_escape){
+                        ft_buffer += '\\' + char
                     }
-                    fstring_escape = ! fstring_escape
+                    ft_escape = ! ft_escape
                 }
                 continue
             }else{
-                if(fstring_escape){
-                    fstring_buffer += '\\'
+                if(ft_escape){
+                    ft_buffer += '\\'
                 }
-                fstring_buffer += char
-                fstring_escape = false
-                if(char == '\n'){
-                    line_num++
-                }
-                continue
-            }
-        }else if(token_mode == 'tstring'){
-            if(char == token_mode.quote){
-                if(tstring_escape){
-                    tstring_buffer += '\\' + char
-                    tstring_escape = false
-                    continue
-                }
-                if(token_mode.triple_quote){
-                    if(src.substr(pos, 2) != token_mode.quote.repeat(2)){
-                        tstring_buffer += char
-                        continue
-                    }
-                    char = token_mode.quote.repeat(3)
-                    pos += 2
-                }
-                if(tstring_buffer.length > 0){
-                    // emit TSTRING_MIDDLE token
-                    t.push(Token(TSTRING_MIDDLE, tstring_buffer,
-                        line_num, tstring_start,
-                        line_num, tstring_start + tstring_buffer.length,
-                        line))
-                }
-                t.push(Token(TSTRING_END, char, line_num, pos - line_start,
-                            line_num, pos - line_start + 1, line))
-                // pop from token modes
-                token_modes.pop()
-                token_mode = $B.last(token_modes)
-                state = null
-                continue
-            }else if(char == '{'){
-                if(src.charAt(pos) == '{'){
-                    // consecutive opening brackets = the "{" character
-                    tstring_buffer += char
-                    pos++
-                    continue
-                }else{
-                    // emit TSTRING_MIDDLE if not empty
-                    if(tstring_buffer.length > 0){
-                        t.push(Token(TSTRING_MIDDLE, tstring_buffer,
-                            line_num, tstring_start,
-                            line_num, tstring_start + tstring_buffer.length,
-                            line))
-                    }
-                    token_mode = 'regular_within_tstring'
-                    tstring_expr_start = pos - line_start
-                    state = null
-                    token_modes.push(token_mode)
-                }
-            }else if(char == '}'){
-                if(src.charAt(pos) == '}'){
-                    // consecutive closing brackets = the "}" character
-                    tstring_buffer += char
-                    pos++
-                    continue
-                }else{
-                    // emit closing bracket token
-                    t.push(Token('OP', char,
-                        line_num, pos - line_start,
-                        line_num, pos - line_start + 1,
-                        line))
-                    continue
-                }
-            }else if(char == '\\'){
-                if(token_mode.raw){
-                    tstring_buffer += char + char
-                }else{
-                    if(tstring_escape){
-                        tstring_buffer += '\\' + char
-                    }
-                    tstring_escape = ! tstring_escape
-                }
-                continue
-            }else{
-                if(tstring_escape){
-                    tstring_buffer += '\\'
-                }
-                tstring_buffer += char
-                tstring_escape = false
+                ft_buffer += char
+                ft_escape = false
                 if(char == '\n'){
                     line_num++
                 }
@@ -535,9 +443,9 @@ $B.tokenizer = function(src, filename, mode, parser){
             if(char == quote){
                 if(format_specifier.length > 0){
                     // emit FSTRING_MIDDLE token
-                    t.push(Token(FSTRING_MIDDLE, format_specifier,
-                        line_num, fstring_start,
-                        line_num, fstring_start + format_specifier.length,
+                    t.push(Token(FT_MIDDLE[ft_type], format_specifier,
+                        line_num, ft_start,
+                        line_num, ft_start + format_specifier.length,
                         line))
                     // pop from token modes
                     token_modes.pop()
@@ -546,19 +454,19 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }
             }else if(char == '{'){
                 // emit FSTRING_MIDDLE
-                t.push(Token(FSTRING_MIDDLE, format_specifier,
-                    line_num, fstring_start,
-                    line_num, fstring_start + format_specifier.length,
+                t.push(Token(FT_MIDDLE[ft_type], format_specifier,
+                    line_num, ft_start,
+                    line_num, ft_start + format_specifier.length,
                     line))
-                token_mode = 'regular_within_fstring'
-                fstring_expr_start = pos - line_start
+                token_mode = 'regular_within_ft'
+                ft_expr_start = pos - line_start
                 state = null
                 token_modes.push(token_mode)
             }else if(char == '}'){
                 // emit FSTRING_MIDDLE
-                t.push(Token(FSTRING_MIDDLE, format_specifier,
-                    line_num, fstring_start,
-                    line_num, fstring_start + format_specifier.length,
+                t.push(Token(FT_MIDDLE[ft_type], format_specifier,
+                    line_num, ft_start,
+                    line_num, ft_start + format_specifier.length,
                     line))
                 // emit closing bracket token
                 t.push(Token('OP', char,
@@ -850,8 +758,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                             num_type = ''
                             number = char
                         }else if(ops.includes(char)){
-                            if((token_mode == 'regular_within_fstring' ||
-                                token_mode == 'regular_within_tstring') &&
+                            if(token_mode == 'regular_within_ft' &&
                                     (char == ':' || char == '}')){
                                 if(char == ':'){
                                     // Nesting_level(token_modes) is the number of
@@ -865,8 +772,8 @@ $B.tokenizer = function(src, filename, mode, parser){
                                             line)
                                         // used on fstring debug mode
                                         colon.metadata = src.substr(
-                                            line_start + fstring_expr_start,
-                                            pos - line_start - fstring_expr_start - 1)
+                                            line_start + ft_expr_start,
+                                            pos - line_start - ft_expr_start - 1)
                                         t.push(colon)
                                         token_modes.pop()
                                         token_mode = 'format_specifier'
@@ -880,7 +787,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                                         line_num, pos - line_start + 1,
                                         line)
                                     closing_brace.metadata = src.substring(
-                                        line_start + fstring_expr_start, pos - 1)
+                                        line_start + ft_expr_start, pos - 1)
                                     t.push(closing_brace)
                                     token_modes.pop()
                                     token_mode = token_modes[token_modes.length - 1]
@@ -934,7 +841,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                                     line)
                                 // used on fstring debug mode
                                 token.metadata = src.substring(
-                                    line_start + fstring_start + 2, pos - 1)
+                                    line_start + ft_start + 2, pos - 1)
                                 t.push(token)
                             }
                         }else if(char == ' ' || char == '\t'){
@@ -978,34 +885,26 @@ $B.tokenizer = function(src, filename, mode, parser){
                         if(triple_quote){
                           pos += 2
                         }
+                        var is_ft = false
                         if(prefix.toLowerCase().includes('f')){
-                            fstring_start = pos - line_start - name.length
-                            token_mode = new String('fstring')
-                            token_mode.nesting = braces.length
-                            token_mode.quote = quote
-                            token_mode.triple_quote = triple_quote
-                            token_mode.raw = prefix.toLowerCase().includes('r')
-                            token_modes.push(token_mode)
-                            var s = triple_quote ? quote.repeat(3) : quote
-                            var end_col = fstring_start + name.length + s.length
-                            t.push(Token(FSTRING_START, prefix + s,
-                                line_num, fstring_start,
-                                line_num, end_col,
-                                line))
-                            continue
+                            is_ft = true
+                            ft_type = 'f'
+                        }else if(prefix.toLowerCase().includes('t')){
+                            is_ft = true
+                            ft_type = 't'
                         }
-                        if(prefix.toLowerCase().includes('t')){
-                            tstring_start = pos - line_start - name.length
-                            token_mode = new String('tstring')
+                        if(is_ft){
+                            token_mode = new String('ft')
+                            ft_start = pos - line_start - name.length
                             token_mode.nesting = braces.length
                             token_mode.quote = quote
                             token_mode.triple_quote = triple_quote
                             token_mode.raw = prefix.toLowerCase().includes('r')
                             token_modes.push(token_mode)
                             var s = triple_quote ? quote.repeat(3) : quote
-                            var end_col = tstring_start + name.length + s.length
-                            t.push(Token(TSTRING_START, prefix + s,
-                                line_num, tstring_start,
+                            var end_col = ft_start + name.length + s.length
+                            t.push(Token(FT_START[ft_type], prefix + s,
+                                line_num, ft_start,
                                 line_num, end_col,
                                 line))
                             continue

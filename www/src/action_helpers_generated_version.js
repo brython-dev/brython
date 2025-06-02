@@ -246,6 +246,12 @@ function _seq_number_of_starred_exprs(seq){
 
 $B._PyPegen = {}
 
+$B._PyPegen.PyErr_Occurred = function(){
+    // called in gen_parse.js
+    // errors should be raised in this JS code so return false
+    return false
+}
+
 $B._PyPegen.constant_from_string = function(p, token){
     var prepared = $B.prepare_string(p, token) // in string_parser.js
     var is_bytes = prepared.value.startsWith('b')
@@ -287,12 +293,10 @@ function is_whitespace(char){
 function _get_interpolation_conversion(p, debug, conversion, format){
     if(conversion != NULL){
         var conversion_expr = conversion.result
-        //assert(conversion_expr->kind == Name_kind);
-        var  first = PyUnicode_READ_CHAR(conversion_expr.id, 0);
-        return Py_SAFE_DOWNCAST(first, Py_UCS4, int);
+        return conversion_expr.id
     }else if(debug && !format){
         /* If no conversion is specified, use !r for debug expressions */
-        return 'r';
+        return 'r'
     }
     return -1;
 }
@@ -444,7 +448,6 @@ function _get_resized_exprs(p, a, raw_expressions, b, string_kind){
             total_items += item.values.length - 1;
         }
     }
-    console.log('total items', total_items)
 
     var quote_str = a.bytes
     if (quote_str == NULL) {
@@ -499,7 +502,6 @@ function _get_resized_exprs(p, a, raw_expressions, b, string_kind){
         }
         seq[index++] = item
     }
-    console.log('seq', seq)
     var resized_exprs
     if (index != total_items) {
         resized_exprs = _Py_asdl_expr_seq_new(index, p.arena);
@@ -512,7 +514,6 @@ function _get_resized_exprs(p, a, raw_expressions, b, string_kind){
     }else{
         resized_exprs = seq;
     }
-    console.log('resturn resized_exprs', resized_exprs)
     return resized_exprs;
 }
 
@@ -521,7 +522,6 @@ $B._PyPegen.template_str = function(p, a, raw_expressions, b){
     var ast_obj = new $B.ast.TemplateStr(resized_exprs)
     set_position_from_list(ast_obj,
         [a.lineno, a.col_offset, b.end_lineno, b.end_col_offset])
-    console.log('template str', ast_obj)
     return ast_obj
 }
 
@@ -631,7 +631,6 @@ function _set_list_context(p, e, ctx){
 }
 
 function _set_subscript_context(p, e, ctx){
-    console.log('set subscritp cntext', p, e)
     return $B._PyAST.Subscript(e.value, e.slice,
                             ctx, EXTRA_EXPR(e, e));
 }
@@ -1139,7 +1138,7 @@ function _build_concatenated_str(p, strings){
                 }
                 i = j - 1
                 p.arena.a_objects.push(concat_str)
-                elem = $B._PyAST.Constant(concat_str, kind)
+                elem = new $B.ast.Constant(concat_str, kind)
                 set_position_from_list(elem,
                     [first_elem.lineno, first_elem.col_offset,
                      last_elem.end_lineno, last_elem.end_col_offset]);

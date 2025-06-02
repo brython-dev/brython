@@ -1960,6 +1960,9 @@ $B.ast.comprehension.prototype.to_js = function(scopes){
 }
 
 $B.ast.Constant.prototype.to_js = function(){
+    if(this.kind){
+        console.log('constant kind', this.kind)
+    }
     if(this.value === true || this.value === false){
         return this.value + ''
     }else if(this.value === _b_.None){
@@ -2956,6 +2959,13 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.Interpolation.prototype.to_js = function(scopes){
+    console.log('interpolation', this)
+    var conversion = this.conversion == - 1 ? "_b_.None" : `'${this.conversion}'`
+    return `[${this.value.to_js(scopes)}, '${this.value.id}', ` +
+        `${conversion}, ${this.format_spec ?? "''"}]`
+}
+
 $B.ast.JoinedStr.prototype.to_js = function(scopes){
     var items = this.values.map(s => $B.js_from_ast(s, scopes))
     if(items.length == 0){
@@ -3502,8 +3512,19 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 }
 
 $B.ast.TemplateStr.prototype.to_js = function(scopes){
-    console.log('TemplateStr', this)
-    return '"template str"'
+    console.log('template', this)
+    var js = prefix + '$B.Template('
+    var items = []
+    for(var value of this.values){
+        if(value instanceof $B.ast.Constant){
+            items.push(value.to_js(scopes))
+        }else if(value instanceof $B.ast.Interpolation){
+            items.push(value.to_js(scopes))
+        }else{
+            throw Error('unexpected type inf temmplate')
+        }
+    }
+    return js + `${items.join(', ')})\n`
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){

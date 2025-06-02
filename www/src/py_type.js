@@ -409,6 +409,12 @@ $B.getset_descriptor.__repr__ = function(self){
 
 $B.set_func_names($B.getset_descriptor, "builtins")
 
+type.__annotations__ = {
+    __get__: function(klass){
+        return 'annotaions'
+    }
+}
+
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
     return function(){

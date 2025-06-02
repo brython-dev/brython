@@ -3107,5 +3107,73 @@ $B.jsstring2codepoint = function(c){
     return code
 }
 
+var Interpolation = $B.make_class('Interpolation',
+    function(value, expression, conversion, format_spec){
+        return {
+            __class__: Interpolation,
+            value,
+            expression,
+            conversion,
+            format_spec
+        }
+    }
+)
+
+$B.set_func_names(Interpolation, 'builtins')
+
+var Template = $B.make_class('Template', function(){
+    // create a Template string (PEP 750)
+    // arguments are strings or arrays
+    var strings = [],
+        interpolations = [],
+        order = ''
+    for(var item of arguments){
+        if(Array.isArray(item)){
+            // interpolation
+            interpolations.push(Interpolation.$factory(...item))
+            order += 'i'
+        }else{
+            strings.push(item)
+            order += 's'
+        }
+    }
+    return {
+        __class__: Template,
+        $order: order,
+        strings,
+        interpolations
+    }
+})
+
+Template.__iter__ = function(self){
+    self.$counter = -1
+    self.$string_counter = -1
+    self.$interp_counter = -1
+    return self
+}
+
+Template.__next__ = function(self){
+    self.$counter++
+    if(self.$counter >= self.$order.length){
+        throw _b_.StopIteration.$factory('')
+    }
+    var type = self.$order[self.$counter]
+    switch(type){
+        case 's':
+            self.$string_counter++
+            return self.strings[self.$string_counter]
+        case 'i':
+            self.$interp_counter++
+            return self.interpolations[self.$interp_counter]
+    }
+}
+
+$B.set_func_names(Template, 'builtins')
+
+$B.Template = function(){
+    return Template.$factory(...arguments)
+}
+
+
 })(__BRYTHON__);
 
