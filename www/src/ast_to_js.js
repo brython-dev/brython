@@ -2960,7 +2960,6 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
 }
 
 $B.ast.Interpolation.prototype.to_js = function(scopes){
-    console.log('interpolation', this)
     var conversion = this.conversion == - 1 ? "_b_.None" : `'${this.conversion}'`
     return `[${this.value.to_js(scopes)}, '${this.value.id}', ` +
         `${conversion}, ${this.format_spec ?? "''"}]`
@@ -3512,9 +3511,11 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 }
 
 $B.ast.TemplateStr.prototype.to_js = function(scopes){
-    console.log('template', this)
     var js = prefix + '$B.Template('
     var items = []
+    var expect_str = true
+    // a template must start and end with a string (possibly empty)
+    // 2 consecutive interpolations are separated by an empty string
     for(var value of this.values){
         if(value instanceof $B.ast.Constant){
             items.push(value.to_js(scopes))

@@ -3119,27 +3119,40 @@ var Interpolation = $B.make_class('Interpolation',
     }
 )
 
+Interpolation.__repr__ = function(self){
+    var res = 'Interpolation(',
+        items = []
+    for(var attr of ['value', 'expression', 'conversion', 'format_spec']){
+        items.push(`${_b_.repr(self[attr])}`)
+    }
+    return res + items.join(', ') + ')'
+}
+
 $B.set_func_names(Interpolation, 'builtins')
 
 var Template = $B.make_class('Template', function(){
     // create a Template string (PEP 750)
     // arguments are strings or arrays
-    var strings = [],
-        interpolations = [],
-        order = ''
+    var strings = $B.fast_tuple([]),
+        interpolations = $B.fast_tuple([])
+    var expect_str = true
     for(var item of arguments){
         if(Array.isArray(item)){
             // interpolation
+            if(expect_str){
+                strings.push('')
+            }
             interpolations.push(Interpolation.$factory(...item))
-            order += 'i'
         }else{
             strings.push(item)
-            order += 's'
+            expect_str = false
         }
+    }
+    if(expect_str){
+        strings.push('')
     }
     return {
         __class__: Template,
-        $order: order,
         strings,
         interpolations
     }
@@ -3147,26 +3160,38 @@ var Template = $B.make_class('Template', function(){
 
 Template.__iter__ = function(self){
     self.$counter = -1
-    self.$string_counter = -1
-    self.$interp_counter = -1
+    self.$len = self.strings.length + self.interpolations.length
     return self
 }
 
 Template.__next__ = function(self){
     self.$counter++
-    if(self.$counter >= self.$order.length){
+    if(self.$counter >= self.$len){
         throw _b_.StopIteration.$factory('')
     }
-    var type = self.$order[self.$counter]
+    var type = 'si'[self.$counter % 2]
+    var rank = Math.floor(self.$counter / 2)
     switch(type){
         case 's':
-            self.$string_counter++
-            return self.strings[self.$string_counter]
+            var s = self.strings[rank]
+            if(s.length > 0){
+                return s
+            }
+            return Template.__next__(self)
         case 'i':
-            self.$interp_counter++
-            return self.interpolations[self.$interp_counter]
+            return self.interpolations[rank]
     }
 }
+
+Template.values = _b_.property.$factory(
+    function(self){
+        var values = []
+        for(var itp of self.interpolations){
+            values.push(itp.value)
+        }
+        return $B.fast_tuple(values)
+    }
+)
 
 $B.set_func_names(Template, 'builtins')
 

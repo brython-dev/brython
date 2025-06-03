@@ -1544,44 +1544,44 @@ visitor.expr = function(st, e){
             VISIT_QUIT(st, 0);
         break;
     case $B.ast.BoolOp:
-        VISIT_SEQ(st, 'expr', e.values);
+        VISIT_SEQ(st, expr, e.values);
         break;
     case $B.ast.BinOp:
-        VISIT(st, 'expr', e.left);
-        VISIT(st, 'expr', e.right);
+        VISIT(st, expr, e.left);
+        VISIT(st, expr, e.right);
         break;
     case $B.ast.UnaryOp:
-        VISIT(st, 'expr', e.operand);
+        VISIT(st, expr, e.operand);
         break;
     case $B.ast.Lambda: {
         if (!GET_IDENTIFIER('lambda'))
             VISIT_QUIT(st, 0);
         if (e.args.defaults)
-            VISIT_SEQ(st, 'expr', e.args.defaults);
+            VISIT_SEQ(st, expr, e.args.defaults);
         if (e.args.kw_defaults)
-            VISIT_SEQ_WITH_NULL(st, 'expr', e.args.kw_defaults);
+            VISIT_SEQ_WITH_NULL(st, expr, e.args.kw_defaults);
         if (!symtable_enter_block(st, lambda,
                                   FunctionBlock, e,
                                   e.lineno, e.col_offset,
                                   e.end_lineno, e.end_col_offset))
             VISIT_QUIT(st, 0);
         VISIT(st, 'arguments', e.args);
-        VISIT(st, 'expr', e.body);
+        VISIT(st, expr, e.body);
         if (!symtable_exit_block(st))
             VISIT_QUIT(st, 0);
         break;
     }
     case $B.ast.IfExp:
-        VISIT(st, 'expr', e.test);
-        VISIT(st, 'expr', e.body);
-        VISIT(st, 'expr', e.orelse);
+        VISIT(st, expr, e.test);
+        VISIT(st, expr, e.body);
+        VISIT(st, expr, e.orelse);
         break;
     case $B.ast.Dict:
-        VISIT_SEQ_WITH_NULL(st, 'expr', e.keys);
-        VISIT_SEQ(st, 'expr', e.values);
+        VISIT_SEQ_WITH_NULL(st, expr, e.keys);
+        VISIT_SEQ(st, expr, e.values);
         break;
     case $B.ast.Set:
-        VISIT_SEQ(st, 'expr', e.elts);
+        VISIT_SEQ(st, expr, e.elts);
         break;
     case $B.ast.GeneratorExp:
         if (!visitor.genexp(st, e))
@@ -1603,60 +1603,71 @@ visitor.expr = function(st, e){
         if (!symtable_raise_if_annotation_block(st, "yield expression", e)) {
             VISIT_QUIT(st, 0);
         }
-        if (e.value)
-            VISIT(st, 'expr', e.value);
+        if(e.value){
+            VISIT(st, expr, e.value)
+        }
         st.cur.generator = 1;
         if (st.cur.comprehension) {
-            return symtable_raise_if_comprehension_block(st, e);
+            return symtable_raise_if_comprehension_block(st, e)
         }
         break;
     case $B.ast.YieldFrom:
         if (!symtable_raise_if_annotation_block(st, "yield expression", e)) {
-            VISIT_QUIT(st, 0);
+            VISIT_QUIT(st, 0)
         }
-        VISIT(st, 'expr', e.value);
-        st.cur.generator = 1;
+        VISIT(st, expr, e.value)
+        st.cur.generator = 1
         if (st.cur.comprehension) {
-            return symtable_raise_if_comprehension_block(st, e);
+            return symtable_raise_if_comprehension_block(st, e)
         }
         break;
     case $B.ast.Await:
-        if (!symtable_raise_if_annotation_block(st, "await expression", e)) {
-            VISIT_QUIT(st, 0);
+        if(!symtable_raise_if_annotation_block(st, "await expression", e)){
+            VISIT_QUIT(st, 0)
         }
-        VISIT(st, 'expr', e.value);
-        st.cur.coroutine = 1;
+        VISIT(st, expr, e.value)
+        st.cur.coroutine = 1
         break;
     case $B.ast.Compare:
-        VISIT(st, 'expr', e.left);
-        VISIT_SEQ(st, 'expr', e.comparators);
+        VISIT(st, expr, e.left);
+        VISIT_SEQ(st, expr, e.comparators);
         break;
     case $B.ast.Call:
-        VISIT(st, 'expr', e.func);
-        VISIT_SEQ(st, 'expr', e.args);
-        VISIT_SEQ_WITH_NULL(st, 'keyword', e.keywords);
+        VISIT(st, expr, e.func);
+        VISIT_SEQ(st, expr, e.args);
+        VISIT_SEQ_WITH_NULL(st, keyword, e.keywords);
         break;
     case $B.ast.FormattedValue:
-        VISIT(st, 'expr', e.value);
-        if (e.format_spec)
-            VISIT(st, 'expr', e.format_spec);
+        VISIT(st, expr, e.value);
+        if(e.format_spec){
+            VISIT(st, expr, e.format_spec);
+        }
+        break;
+    case $B.ast.Interpolation:
+        VISIT(st, expr, e.value);
+        if(e.format_spec){
+            VISIT(st, expr, e.format_spec);
+        }
         break;
     case $B.ast.JoinedStr:
-        VISIT_SEQ(st, 'expr', e.values);
+        VISIT_SEQ(st, expr, e.values);
+        break;
+    case $B.ast.TemplateStr:
+        VISIT_SEQ(st, expr, e.values);
         break;
     case $B.ast.Constant:
         /* Nothing to do here. */
         break;
     /* The following exprs can be assignment targets. */
     case $B.ast.Attribute:
-        VISIT(st, 'expr', e.value);
+        VISIT(st, expr, e.value);
         break;
     case $B.ast.Subscript:
-        VISIT(st, 'expr', e.value);
-        VISIT(st, 'expr', e.slice);
+        VISIT(st, expr, e.value);
+        VISIT(st, expr, e.slice);
         break;
     case $B.ast.Starred:
-        VISIT(st, 'expr', e.value);
+        VISIT(st, expr, e.value);
         break;
     case $B.ast.Slice:
         if (e.lower)
@@ -1899,9 +1910,9 @@ visitor.excepthandler = function(st, eh){
 }
 
 visitor.withitem = function(st, item){
-    VISIT(st, 'expr', item.context_expr);
+    VISIT(st, expr, item.context_expr);
     if (item.optional_vars) {
-        VISIT(st, 'expr', item.optional_vars);
+        VISIT(st, expr, item.optional_vars);
     }
     return 1;
 }
