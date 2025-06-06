@@ -24,7 +24,11 @@ $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
     '__annotations__',
     function(kls, f){
         $B.check_infos(f)
-        return f.__annotations__
+        if(f.__annotations__ !== undefined){
+            return f.__annotations__
+        }else{
+            return f.__annotations__ = f.__annotate__(1)
+        }
     },
     function(kls, f, value){
         $B.check_infos(f)
@@ -336,8 +340,6 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
     f.$infos.__type_params__ = type_params
     co_freevars = co_freevars ?? []
     co_freevars.__class__ = _b_.tuple
-    annotations = annotations ?? []
-    f.__annotations__ = _b_.dict.$from_array(annotations)
     co_varnames = co_varnames ?? []
     co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,

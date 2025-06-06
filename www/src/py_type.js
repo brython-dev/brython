@@ -451,7 +451,7 @@ type.__call__ = function(){
         extra_args.push(arguments[i])
     }
     var new_func = _b_.type.__getattribute__(klass, "__new__")
-
+    
     // create an instance with __new__
     var instance = new_func.apply(null, arguments),
         instance_class = instance.__class__ || $B.get_class(instance)

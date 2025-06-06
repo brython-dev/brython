@@ -2571,7 +2571,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += prefix + `${name2}.$is_method = true\n`
     }
 
-    var anns
+    var anns,
+        anns_values,
+        anns_strings
     if(this.returns || parsed_args.annotations){
         var features = scopes.symtable.table.future.features,
             postponed = features & $B.CO_FUTURE_ANNOTATIONS
@@ -2582,35 +2584,33 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 console.log('no src, filename', scopes)
             }
         }
-        var ann_items = []
+        var ann_items_values = []
+        var ann_items_strings = []
         if(parsed_args.annotations){
             for(var arg_ann in parsed_args.annotations){
                 var ann_ast = parsed_args.annotations[arg_ann]
                 if(in_class){
                     arg_ann = mangle(scopes, class_scope, arg_ann)
                 }
-                if(postponed){
-                    // PEP 563
-                    var ann_str = annotation_to_str(ann_ast, scopes)
-                    ann_items.push(`['${arg_ann}', '${ann_str}']`)
-                }else{
-                    var value = ann_ast.to_js(scopes)
-                    ann_items.push(`['${arg_ann}', ${value}]`)
-                }
+                var ann_str = annotation_to_str(ann_ast, scopes)
+                ann_items_strings.push(`['${arg_ann}', '${ann_str}']`)
+                var value = ann_ast.to_js(scopes)
+                ann_items_values.push(`['${arg_ann}', ${value}]`)
             }
         }
         if(this.returns){
-            if(postponed){
-                var ann_str = annotation_to_str(this.returns, scopes)
-                ann_items.push(`['return', '${ann_str}']`)
-            }else{
-                ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
-            }
+            var ann_str = annotation_to_str(this.returns, scopes)
+            ann_items_strings.push(`['return', '${ann_str}']`)
+            ann_items_values.push(`['return', ${this.returns.to_js(scopes)}]`)
         }
-        anns = `[${ann_items.join(', ')}]`
+        anns_values = `[${ann_items_values.join(', ')}]`
+        anns_strings = `[${ann_items_strings.join(', ')}]`
+        anns = ann_items_values.length > 0
     }else{
-        anns = `[]`
+        anns = false
     }
+
+    var annotations = 'null' //anns ? anns_strings : '[]'
 
     // Set admin infos
     js += prefix + `${name2}.$function_infos = [` +
@@ -2632,11 +2632,43 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${this.args.kwonlyargs.length}, ` +
         `${this.args.posonlyargs.length}, ` +
         `[${varnames}], ` +
-        `${anns}, ` +
+        `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}]\n`;
 
     js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 
+    if(anns){
+        var annotate_scope = new Scope('__annotate__', 'def', this)
+        scopes.push(func_scope)
+        var inum = add_to_positions(scopes, this)
+        js += prefix + `${name2}.__annotate__ = function(format){\n`
+        indent()
+        js += prefix + `var locals = {format}\n` +
+              prefix + `var frame = ['__annotate__', locals, '${gname}', ${globals_name}]\n` +
+              prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
+              prefix + `frame.$lineno = ${this.lineno}\n` +
+              prefix + `frame.positions = [[${this.lineno}, ${this.end_lineno}, ${this.col_offset}, ${this.end_col_offset}]]\n` +
+              prefix + 'try{\n'
+        indent()
+        js += prefix + `if(format == 1){\n` +
+              prefix + tab + `$B.leave_frame()\n` +
+              prefix + tab + `return _b_.dict.$literal(${anns_values})\n` +
+              prefix + '}\n' +
+              prefix + `frame.inum = 1\n` +
+              prefix + `throw _b_.NotImplementedError.$factory('')\n`
+        dedent()
+        js += prefix + `}catch(err){\n`
+        indent()
+        js += prefix + `$B.set_exc_and_leave(frame, err)\n`
+        dedent()
+        js += prefix + '}\n'
+        dedent()
+        js += prefix + `}\n`
+        scopes.pop()
+    }else{
+        js += prefix + `${name2}.__annotate__ = _b_.None\n`
+    }
+    
     if(is_async && ! is_generator){
         js += prefix + `${name2} = $B.make_async(${name2})\n`
     }

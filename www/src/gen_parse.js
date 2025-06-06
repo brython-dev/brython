@@ -29238,7 +29238,6 @@ function _tmp_265_rule(p)
             )
             {
                 _res = tstring_var;
-                console.log('tstring_var', tstring_var)
                 break;
             }
             p.mark = _mark;

@@ -973,7 +973,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__exit__" && obj.__name__ === "MagicMock"
+    var $test = false // attr == "__annotations__" // && obj.__name__ === "MagicMock"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1092,7 +1092,7 @@ $B.$getattr = function(obj, attr, _default){
               }
               return $B.obj_dict(obj,
                   function(attr){
-                      return ['__class__'].indexOf(attr) > -1
+                      return attr.startsWith('$') || ['__class__'].indexOf(attr) > -1
                   }
               )
           }
