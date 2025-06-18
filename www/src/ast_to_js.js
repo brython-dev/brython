@@ -342,6 +342,9 @@ function make_ref(name, scopes, scope, ast_obj){
         }else if(Array.isArray(scope.resolve)){
             return `$B.resolve_in_scopes('${name}', [${scope.resolve}], ${inum})`
         }else if(scope.resolve == 'own_class_name'){
+            if(scopes.eval_annotation){
+                return `$B.resolve_global('${name}', _frame_obj, ${inum})`
+            }
             return `$B.own_class_name('${name}', ${inum})`
         }
     }
@@ -1175,9 +1178,15 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         }
     }
     if(this.target instanceof $B.ast.Name){
-        var ann_value = scopes.postpone_annotation ?
-                `'${annotation_to_str(this.annotation, scopes)}'` :
-                $B.js_from_ast(this.annotation, scopes)
+        var ann_value
+        if(scopes.postpone_annotations){
+            ann_value = `'${annotation_to_str(this.annotation, scopes)}'`
+        }else{
+            // set specific attribute for name resolution
+            scopes.eval_annotation = true
+            ann_value = $B.js_from_ast(this.annotation, scopes)
+            delete scopes.eval_annotation
+        }
     }
     if(this.value){
         js += prefix + `var ann = ${$B.js_from_ast(this.value, scopes)}\n`

@@ -247,7 +247,8 @@ frame.f_code = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
                 co_filename: _self.__file__,
                 co_varnames: $B.fast_tuple([]),
-                co_positions: _self.positions
+                co_positions: _self.positions,
+                co_firstlineno: 1
             }
             res.co_qualname = res.co_name // XXX
         }

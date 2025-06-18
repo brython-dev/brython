@@ -362,12 +362,12 @@ $B.set_func_names = function(klass, module){
     klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
-            $B.add_func_infos(klass, attr)
+            $B.add_function_infos(klass, attr)
         }
     }
 }
 
-$B.add_func_infos = function(klass, attr){
+$B.add_function_infos = function(klass, attr){
     var module = klass.__module__
     $B.set_function_infos(klass[attr],
         {
@@ -393,6 +393,13 @@ $B.set_function_infos = function(f, attrs){
         }
         f.$function_infos[$B.func_attrs[key]] = attrs[key]
     }
+}
+
+$B.set_function_attr = function(func, attr, value){
+    if($B.func_attrs[attr] === undefined){
+        throw Error('no function attribute ' + attr)
+    }
+    func.$function_infos[$B.func_attrs[attr]] = value
 }
 
 var has_storage = typeof(Storage) !== "undefined"

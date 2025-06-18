@@ -117,7 +117,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     }
 
     $B.make_annotate_class(kls, annotate)
-
+    
     return kls
 }
 
@@ -411,6 +411,36 @@ $B.getset_descriptor.__repr__ = function(self){
 
 $B.set_func_names($B.getset_descriptor, "builtins")
 
+type.__dict__ = {}
+
+type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
+    '__annotations__',
+    function(cls, klass){
+        if(klass.__annotations__ !== undefined){
+            // attribute explicitely set
+            return klass.__annotations__
+        }
+        if(klass.__annotations_cache__ !== undefined){
+            return klass.__annotations_cache__
+        }
+        var annotate = $B.$getitem(type.__dict__, '__annotate__').getter(klass)
+        if(annotate === _b_.None){
+            return $B.empty_dict()
+        }
+        return klass.__annotations_cache__ = annotate(1)
+    }
+)
+
+type.__dict__.__annotate__ = $B.getset_descriptor.$factory(type, '__annotate__',
+    function(cls, klass){
+        if(klass.__annotate__ !== undefined){
+            // attribute explicitely set
+            return klass.__annotate__
+        }
+        return klass.__annotate_func__ ?? _b_.None
+    }
+)
+
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
     return function(){
@@ -502,32 +532,6 @@ type.__format__ = function(klass){
 
 type.__getattribute__ = function(klass, attr){
     switch(attr) {
-        case '__annotate__':
-            if(klass.__annotate__ !== undefined){
-                // attribute explicitely set
-                return klass.__annotate__
-            }
-            if(klass.__annotate_func__ === _b_.None){
-                for(var kls of klass.__mro__){
-                    if(kls.__annotate_func__ && kls.__annotate_func__ !== _b_.None){
-                        return kls.__annotate_func__
-                    }
-                }
-                return _b_.None
-            }
-            return klass.__annotate_func__
-        case "__annotations__":
-            if(klass.__annotations__ !== undefined){
-                return klass.__annotations__
-            }
-            if(klass.__annotations_cache__ !== undefined){
-                return klass.__annotations_cache__
-            }
-            var ann_func = klass.__annotate__ ?? klass.__annotate_func__ ?? _b_.None
-            if(ann_func !== _b_.None){
-                return ann_func(1)
-            }
-            return $B.empty_dict()
         case "__bases__":
             if(klass.__bases__ !== undefined){
                 return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__))
@@ -1638,6 +1642,10 @@ $B.make_annotate_class = function(kls, annotations){
             $B.set_exc_and_leave(frame, err)
         }
     }
+    $B.add_function_infos(kls, '__annotate_func__')
+    $B.set_function_attr(kls.__annotate_func__, '__name__', '__annotate__')
+    $B.set_function_attr(kls.__annotate_func__, '__qualname__',
+        kls.__qualname__ + '.' + '__annotate__')
 }
 
 $B.make_annotate_module = function(obj, file){
@@ -1679,7 +1687,7 @@ $B.make_annotate_module = function(obj, file){
             $B.set_exc_and_leave(frame, err)
         }
     }
-    $B.add_func_infos(obj, '__annotate__')
+    $B.add_function_infos(obj, '__annotate__')
 }
 
 })(__BRYTHON__);
