@@ -21,6 +21,12 @@ var Module = $B.module = $B.make_class("module",
     }
 )
 
+Module.__annotations__ = _b_.property.$factory(
+    function(){
+        return 'coucou'
+    }
+)
+
 Module.__dir__ = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)()

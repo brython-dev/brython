@@ -342,6 +342,10 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
     co_freevars.__class__ = _b_.tuple
     co_varnames = co_varnames ?? []
     co_varnames.__class__ = _b_.tuple
+    if(annotations){
+        // passed with 'from __future__ import annotations'
+        f.__annotations__ = _b_.dict.$literal(annotations)
+    }
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount, co_name,
         co_nlocals: co_varnames.length,

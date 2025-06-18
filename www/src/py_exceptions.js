@@ -1153,7 +1153,6 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
 
 function handle_Call_error(lines, lineno, ast_obj, tokens){
     // same argments as in handle_BinOP_error
-
     var reset_lineno = make_line_setter(lineno)
 
     // get position of
@@ -1164,7 +1163,7 @@ function handle_Call_error(lines, lineno, ast_obj, tokens){
 
     for(var token of tokens){
         if(token.type == 'OP'){
-            if(token.string == '(' &&
+            if(token.string == '(' && ! opening_parenth &&
                     token.lineno == ast_obj.func.end_lineno &&
                     token.col_offset >= ast_obj.func.end_col_offset){
                 opening_parenth = reset_lineno(token)

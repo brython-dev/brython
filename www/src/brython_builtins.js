@@ -359,24 +359,29 @@ for(var func_attr of func_attrs){
 
 // Set attributes of klass methods
 $B.set_func_names = function(klass, module){
+    klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
-            $B.set_function_infos(klass[attr],
-                {
-                    __doc__: klass[attr].__doc__ || '',
-                    __module__: module,
-                    __name__: attr,
-                    __qualname__ : klass.__qualname__ + '.' + attr,
-                    __defaults__: [],
-                    __kwdefaults__: {}
-                }
-            )
-            if(klass[attr].$type == "classmethod"){
-                klass[attr].__class__ = $B.method
-            }
+            $B.add_func_infos(klass, attr)
         }
     }
-    klass.__module__ = module
+}
+
+$B.add_func_infos = function(klass, attr){
+    var module = klass.__module__
+    $B.set_function_infos(klass[attr],
+        {
+            __doc__: klass[attr].__doc__ || '',
+            __module__: module,
+            __name__: attr,
+            __qualname__ : klass.__qualname__ + '.' + attr,
+            __defaults__: [],
+            __kwdefaults__: {}
+       }
+    )
+    if(klass[attr].$type == "classmethod"){
+        klass[attr].__class__ = $B.method
+    }
 }
 
 // Set function attributes
