@@ -235,6 +235,10 @@ function set_lookkey(so, key, hash){
             if($B.$isinstance(key, set)){
                 hash = $B.$hash(frozenset.$factory(key))
             }else{
+                if(err.args && err.args[0]){
+                    err.args[0] = `cannot use '${$B.class_name(key)}' as ` +
+                        `a set element (${err.args[0]})`
+                }
                 throw err
             }
         }
