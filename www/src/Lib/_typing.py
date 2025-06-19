@@ -529,3 +529,5 @@ class TypeAliasType:
     @property
     def __value__(self):
         return self._value()
+
+Union = type(int | str)

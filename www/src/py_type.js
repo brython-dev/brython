@@ -117,7 +117,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     }
 
     $B.make_annotate_class(kls, annotate)
-    
+
     return kls
 }
 
@@ -423,7 +423,7 @@ type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
         if(klass.__annotations_cache__ !== undefined){
             return klass.__annotations_cache__
         }
-        var annotate = $B.$getitem(type.__dict__, '__annotate__').getter(klass)
+        var annotate = $B.$getitem(type.__dict__, '__annotate__').getter(cls, klass)
         if(annotate === _b_.None){
             return $B.empty_dict()
         }
@@ -1564,6 +1564,14 @@ $B.UnionType = $B.make_class("UnionType",
 $B.UnionType.__args__ = _b_.property.$factory(
     self => $B.fast_tuple(self.items)
 )
+
+$B.UnionType.__class_getitem__ = function(cls, items){
+    if($B.$isinstance(items, _b_.tuple)){
+        return $B.UnionType.$factory(items)
+    }else{
+        return items
+    }
+}
 
 $B.UnionType.__eq__ = function(self, other){
     if(! $B.$isinstance(other, $B.UnionType)){
