@@ -569,7 +569,7 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = false // attr == "extendModule" // && klass.__name__ == 'Pattern'
+    var $test = false // attr == "__annotations__" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -620,7 +620,11 @@ type.__getattribute__ = function(klass, attr){
         // search in metaclass
         if(res === undefined){
             var meta = klass.__class__ || $B.get_class(klass)
-            res = meta.hasOwnProperty(attr) ? meta[attr] : undefined
+            res = meta.hasOwnProperty(attr)
+                ? meta[attr]
+                : meta.__dict__ && _b_.dict.$contains(meta.__dict__, attr)
+                    ? _b_.dict.$getitem(meta.__dict__, attr)
+                    : undefined
             if($test){console.log("search in meta", meta, res)}
             if(res === undefined){
                 var meta_mro = meta.__mro__
@@ -636,6 +640,8 @@ type.__getattribute__ = function(klass, attr){
                 if($test){console.log("found in meta", res, typeof res)}
                 if(res.__class__ === _b_.property){
                     return res.fget(klass)
+                }else if(res.__class__ === $B.getset_descriptor){
+                    return res.getter(res.__class__, klass)
                 }
                 if(typeof res == "function"){
                     // insert klass as first argument
