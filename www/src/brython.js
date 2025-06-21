@@ -200,7 +200,7 @@ return $B.imported[script_id]}})(__BRYTHON__);
 __BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Interpolation:'value,str,conversion,format_spec?',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'name,default_value?',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',TemplateStr:'values*',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeAlias:'name,type_params*,value',TypeIgnore:'lineno,tag',TypeVar:'name,bound?,default_value?',TypeVarTuple:'name,default_value?',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','Interpolation','JoinedStr','TemplateStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_aio','_codecs','_codecs_jp','_collections','_collections_abc','_colorize','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_py_warnings','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','annotationlib','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pyclbr','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_aio','_ast_unparse','_codecs','_codecs_jp','_collections','_collections_abc','_colorize','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_py_warnings','_pydatetime','_pydecimal','_queue','_signal','_socket','_sre','_strptime','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','annotationlib','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pyclbr','pydoc','queue','quopri','random','re','re1','reprlib','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
@@ -217,8 +217,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-06-20 18:10:37.977875"
-__BRYTHON__.timestamp=1750435837976
+__BRYTHON__.compiled_date="2025-06-21 12:01:51.529507"
+__BRYTHON__.timestamp=1750500111529
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -6820,21 +6820,23 @@ if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
 console.log('modobj',modobj)}
 if(! fromlist ||fromlist.length==0){
 let alias=aliases[mod_name]
-if(alias){locals[alias]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj}}else{var __all__=fromlist,thunk={}
+if(alias){var[ns,name]=alias
+ns[name]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj}}else{var __all__=fromlist,thunk={}
 if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)}
 __all__=$B.$getattr(modobj,"__all__",thunk);
 if(__all__ !==thunk){
 aliases={}}}
 if(__all__===thunk){
 for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
-for(let name of __all__){var alias=aliases[name]||name
+for(let name of __all__){var[ns,alias]=[locals,name]
+if(aliases[name]){[ns,alias]=aliases[name]}
 try{
-locals[alias]=$B.$getattr(modobj,name)
-if(locals[alias]&& locals[alias].$js_func){
-locals[alias]=locals[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){$B.set_inum(inum)
+ns[alias]=$B.$getattr(modobj,name)
+if(ns[alias]&& ns[alias].$js_func){
+ns[alias]=ns[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){$B.set_inum(inum)
 throw $err1}
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
-locals[alias]=$B.$getattr(modobj,name)}catch($err3){$B.set_inum(inum)
+ns[alias]=$B.$getattr(modobj,name)}catch($err3){$B.set_inum(inum)
 if(mod_name==="__future__"){
 var exc=_b_.SyntaxError.$factory(
 "future feature "+name+" is not defined")
@@ -6874,12 +6876,13 @@ $B.$import(submodule,[],{},{},inum)
 current_module=$B.imported[submodule]}
 if(names.length > 0 && names[0]=='*'){
 for(var key in current_module){if(key.startsWith('$')||key.startsWith('_')){continue}
-locals[key]=current_module[key]}}else{for(var name of names){var alias=aliases[name]||name
+locals[key]=current_module[key]}}else{for(var name of names){var ns,alias
+if(aliases[name]){[ns,alias]=aliases[name]}else{[ns,alias]=[locals,name]}
 if(current_module[name]!==undefined){
-locals[alias]=current_module[name]}else{
+ns[alias]=current_module[name]}else{
 var sub_module=current_module.__name__+'.'+name
 $B.$import(sub_module,[],{},{})
-locals[alias]=$B.imported[sub_module]}}}}else{
+ns[alias]=$B.imported[sub_module]}}}}else{
 $B.$import(module,names,aliases,locals,inum)}}
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
@@ -13362,8 +13365,9 @@ $B.js_from_ast(this.orelse,scopes)+')'}
 $B.ast.Import.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 var inum=add_to_positions(scopes,this)
 for(var alias of this.names){js+=prefix+`$B.$import("${alias.name}", [], `
-if(alias.asname){js+=`{'${alias.name}' : '${alias.asname}'}, `
-bind(alias.asname,scopes)}else{js+='{}, '
+if(alias.asname){var binding_scope=bind(alias.asname,scopes)
+var scope_name=make_scope_name(scopes,binding_scope)
+js+=`{'${alias.name}': [${scope_name}, '${alias.asname}']}, `}else{js+='{}, '
 bind(alias.name,scopes)}
 var parts=alias.name.split('.')
 for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=true}
@@ -13373,10 +13377,13 @@ $B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
 prefix+`$B.$import_from("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
-for(var name of this.names){if(name.asname){aliases.push(`${name.name}: '${name.asname}'`)}}
+for(var name of this.names){if(name.asname){
+var binding_scope=bind(name.asname,scopes)
+var scope_name=make_scope_name(scopes,binding_scope)
+aliases.push(`${name.name}: [${scope_name}, '${name.asname}']`)}}
 var inum=add_to_positions(scopes,this)
 js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
-for(var alias of this.names){if(alias.asname){bind(alias.asname,scopes)}else if(alias.name=='*'){
+for(var alias of this.names){if(alias.asname){}else if(alias.name=='*'){
 last_scope(scopes).blurred=true}else{bind(alias.name,scopes)}}
 return js}
 $B.ast.Interactive.prototype.to_js=function(scopes){mark_parents(this)

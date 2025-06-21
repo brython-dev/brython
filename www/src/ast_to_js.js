@@ -2956,8 +2956,9 @@ $B.ast.Import.prototype.to_js = function(scopes){
     for(var alias of this.names){
         js += prefix + `$B.$import("${alias.name}", [], `
         if(alias.asname){
-            js += `{'${alias.name}' : '${alias.asname}'}, `
-            bind(alias.asname, scopes)
+            var binding_scope = bind(alias.asname, scopes)
+            var scope_name = make_scope_name(scopes, binding_scope)
+            js += `{'${alias.name}': [${scope_name}, '${alias.asname}']}, `
         }else{
             js += '{}, '
             bind(alias.name, scopes)
@@ -2988,15 +2989,19 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         aliases = []
     for(var name of this.names){
         if(name.asname){
-            aliases.push(`${name.name}: '${name.asname}'`)
+            // the alias might have been declared global...
+            var binding_scope = bind(name.asname, scopes)
+            var scope_name = make_scope_name(scopes, binding_scope)
+            aliases.push(`${name.name}: [${scope_name}, '${name.asname}']`)
         }
     }
     var inum = add_to_positions(scopes, this)
+
     js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
 
     for(var alias of this.names){
         if(alias.asname){
-            bind(alias.asname, scopes)
+            // already bound above
         }else if(alias.name == '*'){
             // mark scope as "blurred" by the presence of "from X import *"
             last_scope(scopes).blurred = true

@@ -1304,7 +1304,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
         // FIXME : Ensure this will work for relative imports
         let alias = aliases[mod_name]
         if(alias){
-            locals[alias] = $B.imported[mod_name]
+            var [ns, name] = alias
+            ns[name] = $B.imported[mod_name]
         }else{
             locals[norm_parts[0]] = modobj
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
@@ -1335,12 +1336,16 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
             // from mod_name import N1 [as V1], ... Nn [as Vn]
             // from modname import * ... when __all__ is defined
             for(let name of __all__){
-                var alias = aliases[name] || name
+                var [ns, alias] = [locals, name]
+                if(aliases[name]){
+                    [ns, alias] = aliases[name]
+                }
+                // var alias = aliases[name] || name
                 try{
                     // [Import spec] Check if module has an attribute by that name
-                    locals[alias] = $B.$getattr(modobj, name)
-                    if(locals[alias] && locals[alias].$js_func){ // issue 2395
-                        locals[alias] = locals[alias].$js_func
+                    ns[alias] = $B.$getattr(modobj, name)
+                    if(ns[alias] && ns[alias].$js_func){ // issue 2395
+                        ns[alias] = ns[alias].$js_func
                     }
                 }catch($err1){
                     if(! $B.is_exc($err1, [_b_.AttributeError])){
@@ -1353,7 +1358,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                         $B.$getattr(__import__, '__call__')(mod_name + '.' + name,
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
-                        locals[alias] = $B.$getattr(modobj, name)
+                        ns[alias] = $B.$getattr(modobj, name)
                     }catch($err3){
                         $B.set_inum(inum)
                         // [Import spec] Attribute not found
@@ -1445,15 +1450,20 @@ $B.$import_from = function(module, names, aliases, level, locals, inum){
             }
         }else{
             for(var name of names){
-                var alias = aliases[name] || name
+                var ns, alias
+                if(aliases[name]){
+                    [ns, alias] = aliases[name]
+                }else{
+                    [ns, alias] = [locals, name]
+                }
                 if(current_module[name] !== undefined){
                     // name is defined in the package module (__init__.py)
-                    locals[alias] = current_module[name]
+                    ns[alias] = current_module[name]
                 }else{
                     // try to import module in the package
                     var sub_module = current_module.__name__ + '.' + name
                     $B.$import(sub_module, [], {}, {})
-                    locals[alias] = $B.imported[sub_module]
+                    ns[alias] = $B.imported[sub_module]
                 }
             }
         }
