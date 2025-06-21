@@ -109,4 +109,12 @@ def load_plugin(module_path, add_to_sys_modules=True):
 
 load_plugin("/plugins/plugin.py")
 
+# global alias
+def g():
+  global yui
+  import bisect as yui
+
+g()
+assert 'insort' in dir(yui)
+
 print('passed all tests')
