@@ -233,7 +233,7 @@ def time_ns():
         return window.Temporal.Now.instant().fromEpochNanoseconds()
     except:
         return date().getTime() * 1_000_000
-        
+
 def sleep(secs):
     """Javascript can't block execution for a given time, expect by an
     infinite loop that freezes the browser. It's better to raise an
@@ -420,7 +420,8 @@ def wait(secs):
 
 def strptime(string, _format):
     import _strptime
-    return _strptime._strptime_datetime(to_struct_time, string, _format)
+    tt, fraction, gmtoff_fraction = _strptime._strptime(string, _format)
+    return struct_time(tt[:9])
 
 # All the clock_xx machinery shouldn't work in the browser so some
 # NotImplementedErrors or messages are shown
