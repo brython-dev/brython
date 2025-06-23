@@ -5,7 +5,7 @@ class accumulate:
         self.it = iter(iterable)
         self._total = None
         self.func = func
-        
+
     def __iter__(self):
         return self
 
@@ -20,7 +20,17 @@ class accumulate:
             except:
                 raise TypeError("unsupported operand type")
             return self._total
-                
+
+def batched(iterable, n, *, strict=False):
+    # batched('ABCDEFG', 3) → ABC DEF G
+    if n < 1:
+        raise ValueError('n must be at least one')
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        if strict and len(batch) != n:
+            raise ValueError('batched(): incomplete batch')
+        yield batch
+        
 ## Adapted from:
 ## https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-34
 class chain:
@@ -31,20 +41,20 @@ class chain:
 
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         while True:
             try:
                 return next(self._cur_iterable_iter)
             except StopIteration:
                 self._cur_iterable_iter = next(self._iterables_iter)
-    
+
     @classmethod
     def from_iterable(cls, iterable):
         for it in iterable:
             for element in it:
                 yield element
-                
+
 class combinations:
     def __init__(self, iterable, r):
         self.pool = tuple(iterable)
@@ -73,7 +83,7 @@ class combinations:
                 return tuple(self.pool[i] for i in self.indices)
             except:
                 raise StopIteration
-                
+
 class combinations_with_replacement:
     def __init__(self, iterable, r):
         self.pool = tuple(iterable)
@@ -81,10 +91,10 @@ class combinations_with_replacement:
         self.r = r
         self.indices = [0] * self.r
         self.zero = False
-        
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         if not self.n and self.r:
             raise StopIteration
@@ -100,9 +110,9 @@ class combinations_with_replacement:
                 return tuple(self.pool[i] for i in self.indices)
             except:
                 raise StopIteration
-                
+
 ## Literally copied from
-##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-63 
+##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-63
 class compress:
     def __init__(self, data, selectors):
         self.data = iter(data)
@@ -117,14 +127,14 @@ class compress:
             next_selector = next(self.selectors)
             if bool(next_selector):
                 return next_item
-                
+
 ## Adapted from
 ##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-79
 ## I mimicked the > python3.1 behavior
 class count:
     """
     Input is an int or a float. The original Python 3 implementation
-    includes also complex numbers... but it still is not implemented 
+    includes also complex numbers... but it still is not implemented
     in Brython as complex type is NotImplemented
     """
     def __init__(self, start = 0, step = 1):
@@ -144,13 +154,13 @@ class count:
         return 'count(%d)' % (self.times + self.step)
 
 ## Literally copied from
-##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-112        
+##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-112
 class cycle:
     def __init__(self, iterable):
         self._cur_iter = iter(iterable)
         self._saved = []
         self._must_save = True
-        
+
     def __iter__(self):
         return self
 
@@ -164,7 +174,7 @@ class cycle:
             next_elt = next(self._cur_iter)
             self._must_save = False
         return next_elt
-        
+
 ## Literally copied from
 ##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-149
 class dropwhile:
@@ -184,7 +194,7 @@ class dropwhile:
             value = next(self._iter)
         self._dropped = True
         return value
-        
+
 ## Adapted from
 ##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-261
 class filterfalse:
@@ -227,7 +237,7 @@ class groupby:
             yield self.currvalue
             self.currvalue = next(self.it)    # Exit on StopIteration
             self.currkey = self.keyfunc(self.currvalue)
-          
+
 ## adapted from
 ##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-323
 class islice:
@@ -257,9 +267,9 @@ class islice:
         while self.cnt <= nextindex:
             nextitem = next(self.it)
             self.cnt += 1
-        self.start += self.step 
+        self.start += self.step
         return nextitem
-        
+
 class permutations:
     def __init__(self, iterable, r = None):
         self.pool = tuple(iterable)
@@ -280,7 +290,7 @@ class permutations:
         if not self.zero:
             self.zero = True
             return tuple(self.pool[i] for i in indices[:self.r])
-        
+
         i = self.r - 1
         while i >= 0:
             j = self.cycles[i] - 1
@@ -311,9 +321,9 @@ def product(*args, repeat=1):
 
 
 ## adapted from
-##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-392        
+##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-392
 
-## (Brython) 
+## (Brython)
 ## renamed to _product : the implementation fails for product('abc', [])
 ## with CPython 3.x
 class _product:
@@ -350,7 +360,7 @@ class _product:
                     count = 0
                 else:
                     should_carry = False
-                self.indicies[nth_gear] = (count, lim)  
+                self.indicies[nth_gear] = (count, lim)
             else:
                 break
 
@@ -375,7 +385,7 @@ class _product:
             return ()
         else:
             raise ValueError("repeat argument cannot be negative")
-            
+
 ## Literally copied from
 ##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-441
 class repeat:
@@ -386,14 +396,14 @@ class repeat:
             if times < 0:
                 times = 0
         self._times = times
-        
+
     def __iter__(self):
         return self
 
     def __next__(self):
         # __next__() *need* to decrement self._times when consumed
         if self._times is not None:
-            if self._times <= 0: 
+            if self._times <= 0:
                 raise StopIteration()
             self._times -= 1
         return self._obj
@@ -422,7 +432,7 @@ class starmap(object):
     def __next__(self):
         t = next(self._iter)
         return self._func(*t)
-        
+
 ## Literally copied from
 ##https://bitbucket.org/pypy/pypy/src/c1aa74c06e86/lib_pypy/itertools.py#cl-520
 class takewhile(object):
@@ -465,12 +475,12 @@ class TeeObject(object):
         else:
             self.tee_data = TeeData(iter(iterable))
             self.pos = 0
-            
+
     def __next__(self):
         data = self.tee_data[self.pos]
         self.pos += 1
         return data
-    
+
     def __iter__(self):
         return self
 
@@ -487,10 +497,10 @@ class zip_longest:
         self.args = [iter(arg) for arg in args]
         self.fillvalue = fillvalue
         self.units = len(args)
-    
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         temp = []
         nb = 0
