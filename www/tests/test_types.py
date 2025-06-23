@@ -111,7 +111,7 @@ assert A(a=1) == {'a': 1}
 # issue 2128
 from typing import ForwardRef
 
-assert str(ForwardRef("test", is_class=True)) == "ForwardRef('test')"
+assert str(ForwardRef("test", is_class=True)) == "ForwardRef('test', is_class=True)"
 
 # issue 2142
 ga = int | set[int]
