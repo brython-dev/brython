@@ -339,10 +339,6 @@ function run_py(module_contents, path, module, compiled) {
             module[attr] = mod[attr]
         }
         module.__initializing__ = false
-        // $B.imported[mod.__name__] must be the module object, so that
-        // setting attributes in a program affects the module namespace
-        // See issue #7
-        $B.imported[module.__name__] = module
         return {
             content: src,
             name: mod_name,
@@ -1193,9 +1189,14 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     if(mod_name == '_frozen_importlib_external'){
         // "import _frozen_importlib_external [as A]" is translated to
         // "from importlib import _bootstrap_external [as A]"
-        let alias = aliases[mod_name] || mod_name
+        var ns, alias
+        if(aliases[mod_name]){
+            [ns, alias] = aliases[mod_name]
+        }else{
+            [ns, alias] = [locals, mod_name]
+        }
         $B.$import_from("importlib", ["_bootstrap_external"],
-                       {_bootstrap_external: alias}, 0, locals)
+                       {_bootstrap_external: [ns, alias]}, locals, 0)
         // set attribute _bootstrap_external of importlib._bootstrap
         // and _frozen_importlib
         let _bootstrap = $B.imported.importlib._bootstrap,
@@ -1340,7 +1341,6 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                 if(aliases[name]){
                     [ns, alias] = aliases[name]
                 }
-                // var alias = aliases[name] || name
                 try{
                     // [Import spec] Check if module has an attribute by that name
                     ns[alias] = $B.$getattr(modobj, name)

@@ -217,8 +217,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-06-22 17:38:34.923762"
-__BRYTHON__.timestamp=1750606714923
+__BRYTHON__.compiled_date="2025-06-23 11:14:33.379453"
+__BRYTHON__.timestamp=1750670073379
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -6472,7 +6472,6 @@ var imports=Object.keys(root.imports).join(",")
 try{
 for(let attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
-$B.imported[module.__name__]=module
 return{
 content:src,name:mod_name,imports,is_package:module.$is_package,path,timestamp:$B.timestamp,source_ts:module.__spec__.loader_state.timestamp}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
 for(let attr in err){console.log(attr+" "+err[attr])}
@@ -6772,8 +6771,9 @@ $B.$import=function(mod_name,fromlist,aliases,locals,inum){
 var test=false 
 if(test){console.log('import',mod_name,fromlist,aliases)}
 if(mod_name=='_frozen_importlib_external'){
-let alias=aliases[mod_name]||mod_name
-$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals)
+var ns,alias
+if(aliases[mod_name]){[ns,alias]=aliases[mod_name]}else{[ns,alias]=[locals,mod_name]}
+$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:[ns,alias]},locals,0)
 let _bootstrap=$B.imported.importlib._bootstrap,_bootstrap_external=$B.imported.importlib['_bootstrap_external']
 _bootstrap_external._set_bootstrap_module(_bootstrap)
 _bootstrap._bootstap_external=_bootstrap_external
