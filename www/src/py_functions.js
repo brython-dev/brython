@@ -22,7 +22,7 @@ $B.function.__dict__ = {}
 $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
     $B.function,
     '__annotations__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         if(f.__annotations__ !== undefined){
             return f.__annotations__
@@ -30,7 +30,7 @@ $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
             return f.__annotations__ = f.__annotate__(1)
         }
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.dict)){
             throw _b_.TypeError.$factory(
@@ -43,7 +43,7 @@ $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__builtins__ = $B.getset_descriptor.$factory(
     $B.function,
     '__builtins__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         if(f.$infos && f.$infos.__globals__){
             return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
@@ -59,7 +59,7 @@ $B.function.__dict__.__builtins__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__closure__ = $B.getset_descriptor.$factory(
     $B.function,
     '__closure__',
-    function(kls, f){
+    function(f){
         var free_vars = f.$function_infos[$B.func_attrs.free_vars]
         if(free_vars === undefined || free_vars.length == 0){
             return _b_.None
@@ -84,7 +84,7 @@ $B.function.__dict__.__closure__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
     $B.function,
     '__code__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         var res = {__class__: _b_.code}
         for(var _attr in f.$infos.__code__){
@@ -95,7 +95,7 @@ $B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
         res.co_code = f + "" // Javascript source code
         return res
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.code)){
             throw _b_.TypeError.$factory(
@@ -108,11 +108,11 @@ $B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__defaults__ = $B.getset_descriptor.$factory(
     $B.function,
     '__defaults__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__defaults__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(value === _b_.None){
             value = []
@@ -135,11 +135,11 @@ $B.function.__delattr__ = function(self, attr){
 $B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
     $B.function,
     '__doc__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__doc__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         f.$infos.__doc__ = value
     }
@@ -148,11 +148,11 @@ $B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__module__ = $B.getset_descriptor.$factory(
     $B.function,
     '__module__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__module__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         f.$infos.__module__ = value
     }
@@ -161,11 +161,11 @@ $B.function.__dict__.__module__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__name__ = $B.getset_descriptor.$factory(
     $B.function,
     '__name__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__name__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.str)){
             throw _b_.TypeError.$factory(
@@ -178,11 +178,11 @@ $B.function.__dict__.__name__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
     $B.function,
     '__qualname__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__qualname__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.str)){
             throw _b_.TypeError.$factory(
@@ -195,11 +195,11 @@ $B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__type_params__ = $B.getset_descriptor.$factory(
     $B.function,
     '__type_params__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__type_params__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.tuple)){
             throw _b_.TypeError.$factory(
@@ -235,7 +235,7 @@ $B.function.__get__ = function(self, obj){
 $B.function.__dict__.__globals__ = $B.getset_descriptor.$factory(
     $B.function,
     '__globals__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return $B.obj_dict($B.imported[f.$infos.__module__])
     }
@@ -248,11 +248,11 @@ $B.function.__dict__.__globals__ = $B.getset_descriptor.$factory(
 $B.function.__dict__.__kwdefaults__ = $B.getset_descriptor.$factory(
     $B.function,
     '__kwdefaults__',
-    function(kls, f){
+    function(f){
         $B.check_infos(f)
         return f.$infos.__kwdefaults__
     },
-    function(kls, f, value){
+    function(f, value){
         $B.check_infos(f)
         if(value == _b_.None){
             value = $B.empty_dict()

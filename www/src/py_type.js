@@ -381,28 +381,29 @@ staticmethod.__get__ = function(self){
 $B.set_func_names(staticmethod, "builtins")
 
 $B.getset_descriptor = $B.make_class("getset_descriptor",
-    function(klass, attr, getter, setter){
+    function(klass, attr, getter, setter, deleter){
         var res = {
             __class__: $B.getset_descriptor,
             __doc__: _b_.None,
             cls: klass,
             attr,
             getter,
-            setter
+            setter,
+            deleter
         }
         return res
     }
 )
 
-$B.getset_descriptor.__get__ = function(self, obj, klass){
+$B.getset_descriptor.__get__ = function(self, obj){
     if(obj === _b_.None){
         return self
     }
-    return self.getter(self, obj, klass)
+    return self.getter(obj)
 }
 
 $B.getset_descriptor.__set__ = function(self, klass, value){
-    return self.setter(self, klass, value)
+    return self.setter(klass, value)
 }
 
 $B.getset_descriptor.__repr__ = function(self){
@@ -415,7 +416,7 @@ type.__dict__ = {}
 
 type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
     '__annotations__',
-    function(cls, klass){
+    function(klass){
         if(klass.__annotations__ !== undefined){
             // attribute explicitely set
             return klass.__annotations__
@@ -423,7 +424,7 @@ type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
         if(klass.__annotations_cache__ !== undefined){
             return klass.__annotations_cache__
         }
-        var annotate = $B.$getitem(type.__dict__, '__annotate__').getter(cls, klass)
+        var annotate = $B.$getitem(type.__dict__, '__annotate__').getter(klass)
         if(annotate === _b_.None){
             return $B.empty_dict()
         }
@@ -432,14 +433,31 @@ type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
 )
 
 type.__dict__.__annotate__ = $B.getset_descriptor.$factory(type, '__annotate__',
-    function(cls, klass){
+    function(klass){
         if(klass.__annotate__ !== undefined){
             // attribute explicitely set
             return klass.__annotate__
         }
         return klass.__annotate_func__ ?? _b_.None
+    },
+    function(klass, value){
+        try{
+            $B.$call(value)
+        }catch(err){
+            if(value !== _b_.None){
+                throw _b_.TypeError.$factory(
+                    '__annotate__ must be callable or None')
+            }
+            klass.__annotate__ = value
+        }
     }
 )
+
+type.__dict__.__mro__ = {
+    __get__: function(cls){
+        return $B.fast_tuple([cls].concat(cls.__mro__))
+    }
+}
 
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
@@ -569,7 +587,7 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = false // attr == "__annotations__" // && klass.__name__ == 'Pattern'
+    var $test = attr == "__annotate__" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -582,6 +600,7 @@ type.__getattribute__ = function(klass, attr){
             klass.__class__[attr].__set__){
         // data descriptor
         if($test){console.log("data descriptor")}
+        console.log('data descriptor', attr)
         return klass.__class__[attr].__get__(klass)
     }
 
@@ -641,7 +660,7 @@ type.__getattribute__ = function(klass, attr){
                 if(res.__class__ === _b_.property){
                     return res.fget(klass)
                 }else if(res.__class__ === $B.getset_descriptor){
-                    return res.getter(res.__class__, klass)
+                    return res.getter(klass)
                 }
                 if(typeof res == "function"){
                     // insert klass as first argument
@@ -933,10 +952,12 @@ function update_subclasses(kls, name, alias, value){
 type.__setattr__ = function(kls, attr, value){
     var $test = false
     if($test){console.log("kls is class", type)}
-    if(type[attr] && type[attr].__get__ &&
-            type[attr].__set__){
-        type[attr].__set__(kls, value)
-        return _b_.None
+    if($B.mappingproxy.$contains(type.__dict__, attr)){
+        var v = $B.mappingproxy.$getitem(type.__dict__, attr)
+        var vtype = $B.get_class(v)
+        if(vtype.__set__){
+            return vtype.__set__(v, kls, value)
+        }
     }
     if(kls.__module__ == "builtins"){
         throw _b_.TypeError.$factory(

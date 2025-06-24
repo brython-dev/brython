@@ -217,8 +217,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-06-23 11:14:33.379453"
-__BRYTHON__.timestamp=1750670073379
+__BRYTHON__.compiled_date="2025-06-24 15:29:32.069104"
+__BRYTHON__.timestamp=1750771772068
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2240,26 +2240,29 @@ __class__:staticmethod,__func__:func}}
 staticmethod.__call__=function(self){return $B.$call(self.__func__)}
 staticmethod.__get__=function(self){return self.__func__}
 $B.set_func_names(staticmethod,"builtins")
-$B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr,getter,setter){var res={__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr,getter,setter}
+$B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr,getter,setter,deleter){var res={__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr,getter,setter,deleter}
 return res}
 )
-$B.getset_descriptor.__get__=function(self,obj,klass){if(obj===_b_.None){return self}
-return self.getter(self,obj,klass)}
-$B.getset_descriptor.__set__=function(self,klass,value){return self.setter(self,klass,value)}
+$B.getset_descriptor.__get__=function(self,obj){if(obj===_b_.None){return self}
+return self.getter(obj)}
+$B.getset_descriptor.__set__=function(self,klass,value){return self.setter(klass,value)}
 $B.getset_descriptor.__repr__=function(self){return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`}
 $B.set_func_names($B.getset_descriptor,"builtins")
 type.__dict__={}
-type.__dict__.__annotations__=$B.getset_descriptor.$factory(type,'__annotations__',function(cls,klass){if(klass.__annotations__ !==undefined){
+type.__dict__.__annotations__=$B.getset_descriptor.$factory(type,'__annotations__',function(klass){if(klass.__annotations__ !==undefined){
 return klass.__annotations__}
 if(klass.__annotations_cache__ !==undefined){return klass.__annotations_cache__}
-var annotate=$B.$getitem(type.__dict__,'__annotate__').getter(cls,klass)
+var annotate=$B.$getitem(type.__dict__,'__annotate__').getter(klass)
 if(annotate===_b_.None){return $B.empty_dict()}
 return klass.__annotations_cache__=annotate(1)}
 )
-type.__dict__.__annotate__=$B.getset_descriptor.$factory(type,'__annotate__',function(cls,klass){if(klass.__annotate__ !==undefined){
+type.__dict__.__annotate__=$B.getset_descriptor.$factory(type,'__annotate__',function(klass){if(klass.__annotate__ !==undefined){
 return klass.__annotate__}
-return klass.__annotate_func__ ?? _b_.None}
+return klass.__annotate_func__ ?? _b_.None},function(klass,value){try{$B.$call(value)}catch(err){if(value !==_b_.None){throw _b_.TypeError.$factory(
+'__annotate__ must be callable or None')}
+klass.__annotate__=value}}
 )
+type.__dict__.__mro__={__get__:function(cls){return $B.fast_tuple([cls].concat(cls.__mro__))}}
 type.$call=function(klass,new_func,init_func){
 return function(){
 var instance=new_func.bind(null,klass).apply(null,arguments)
@@ -2316,13 +2319,14 @@ return}
 if(klass.__dict__){_b_.dict.__delitem__(klass.__dict__,key)}
 delete klass[key]})}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
-var $test=false 
+var $test=attr=="__annotate__" 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
 if(klass.__class__ &&
 klass.__class__[attr]&&
 klass.__class__[attr].__get__ &&
 klass.__class__[attr].__set__){
 if($test){console.log("data descriptor")}
+console.log('data descriptor',attr)
 return klass.__class__[attr].__get__(klass)}
 if(res===undefined){
 var v=klass.hasOwnProperty(attr)? klass[attr]:undefined
@@ -2345,7 +2349,7 @@ if(res===undefined){var meta_mro=meta.__mro__
 for(let i=0;i < meta_mro.length;i++){if(meta_mro[i].hasOwnProperty(attr)){res=meta_mro[i][attr]
 break}}}
 if(res !==undefined){if($test){console.log("found in meta",res,typeof res)}
-if(res.__class__===_b_.property){return res.fget(klass)}else if(res.__class__===$B.getset_descriptor){return res.getter(res.__class__,klass)}
+if(res.__class__===_b_.property){return res.fget(klass)}else if(res.__class__===$B.getset_descriptor){return res.getter(klass)}
 if(typeof res=="function"){
 if(attr=='__new__'){
 return res}
@@ -2444,9 +2448,9 @@ for(var subclass of kls.$subclasses){if(! subclass.hasOwnProperty(name)){subclas
 update_subclasses(subclass,name,alias,value)}}}
 type.__setattr__=function(kls,attr,value){var $test=false
 if($test){console.log("kls is class",type)}
-if(type[attr]&& type[attr].__get__ &&
-type[attr].__set__){type[attr].__set__(kls,value)
-return _b_.None}
+if($B.mappingproxy.$contains(type.__dict__,attr)){var v=$B.mappingproxy.$getitem(type.__dict__,attr)
+var vtype=$B.get_class(v)
+if(vtype.__set__){return vtype.__set__(v,kls,value)}}
 if(kls.__module__=="builtins"){throw _b_.TypeError.$factory(
 `cannot set '${attr}' attribute of immutable type '`+
 kls.__qualname__+"'")}
@@ -2751,20 +2755,20 @@ var FunctionGlobals=$B.make_class("function globals")
 $B.function={__class__:_b_.type,__mro__:[_b_.object],__name__:'function',__qualname__:'function',$is_class:true}
 $B.function.__dict__={}
 $B.function.__dict__.__annotations__=$B.getset_descriptor.$factory(
-$B.function,'__annotations__',function(kls,f){$B.check_infos(f)
-if(f.__annotations__ !==undefined){return f.__annotations__}else{return f.__annotations__=f.__annotate__(1)}},function(kls,f,value){$B.check_infos(f)
+$B.function,'__annotations__',function(f){$B.check_infos(f)
+if(f.__annotations__ !==undefined){return f.__annotations__}else{return f.__annotations__=f.__annotate__(1)}},function(f,value){$B.check_infos(f)
 if(! $B.$isinstance(value,_b_.dict)){throw _b_.TypeError.$factory(
 '__annotations__ must be set to a dict object')}
 f.__annotations__=value}
 )
 $B.function.__dict__.__builtins__=$B.getset_descriptor.$factory(
-$B.function,'__builtins__',function(kls,f){$B.check_infos(f)
+$B.function,'__builtins__',function(f){$B.check_infos(f)
 if(f.$infos && f.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
 return $B.obj_dict(_b_)}
 ,function(){throw _b_.AttributeError.$factory('readonly attribute')}
 )
 $B.function.__dict__.__closure__=$B.getset_descriptor.$factory(
-$B.function,'__closure__',function(kls,f){var free_vars=f.$function_infos[$B.func_attrs.free_vars]
+$B.function,'__closure__',function(f){var free_vars=f.$function_infos[$B.func_attrs.free_vars]
 if(free_vars===undefined ||free_vars.length==0){return _b_.None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
@@ -2773,20 +2777,20 @@ return $B.fast_tuple(cells)}
 ,function(){throw _b_.AttributeError.$factory('readonly attribute')}
 )
 $B.function.__dict__.__code__=$B.getset_descriptor.$factory(
-$B.function,'__code__',function(kls,f){$B.check_infos(f)
+$B.function,'__code__',function(f){$B.check_infos(f)
 var res={__class__:_b_.code}
 for(var _attr in f.$infos.__code__){res[_attr]=f.$infos.__code__[_attr]}
 res.name=f.$infos.__name__
 res.filename=f.$infos.__code__.co_filename
 res.co_code=f+"" 
-return res},function(kls,f,value){$B.check_infos(f)
+return res},function(f,value){$B.check_infos(f)
 if(! $B.$isinstance(value,_b_.code)){throw _b_.TypeError.$factory(
 '__code__ must be set to a code object')}
 f.$infos.__code__=value}
 )
 $B.function.__dict__.__defaults__=$B.getset_descriptor.$factory(
-$B.function,'__defaults__',function(kls,f){$B.check_infos(f)
-return f.$infos.__defaults__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__defaults__',function(f){$B.check_infos(f)
+return f.$infos.__defaults__},function(f,value){$B.check_infos(f)
 if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
 f.$infos.__defaults__=value
@@ -2794,32 +2798,32 @@ $B.make_args_parser(f)}
 )
 $B.function.__delattr__=function(self,attr){if(attr=="__dict__"){throw _b_.TypeError.$factory("can't delete function __dict__")}}
 $B.function.__dict__.__doc__=$B.getset_descriptor.$factory(
-$B.function,'__doc__',function(kls,f){$B.check_infos(f)
-return f.$infos.__doc__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__doc__',function(f){$B.check_infos(f)
+return f.$infos.__doc__},function(f,value){$B.check_infos(f)
 f.$infos.__doc__=value}
 )
 $B.function.__dict__.__module__=$B.getset_descriptor.$factory(
-$B.function,'__module__',function(kls,f){$B.check_infos(f)
-return f.$infos.__module__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__module__',function(f){$B.check_infos(f)
+return f.$infos.__module__},function(f,value){$B.check_infos(f)
 f.$infos.__module__=value}
 )
 $B.function.__dict__.__name__=$B.getset_descriptor.$factory(
-$B.function,'__name__',function(kls,f){$B.check_infos(f)
-return f.$infos.__name__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__name__',function(f){$B.check_infos(f)
+return f.$infos.__name__},function(f,value){$B.check_infos(f)
 if(! $B.$isinstance(value,_b_.str)){throw _b_.TypeError.$factory(
 '__name__ must be set to a string object')}
 f.$infos.__name__=value}
 )
 $B.function.__dict__.__qualname__=$B.getset_descriptor.$factory(
-$B.function,'__qualname__',function(kls,f){$B.check_infos(f)
-return f.$infos.__qualname__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__qualname__',function(f){$B.check_infos(f)
+return f.$infos.__qualname__},function(f,value){$B.check_infos(f)
 if(! $B.$isinstance(value,_b_.str)){throw _b_.TypeError.$factory(
 '__qualname__ must be set to a string object')}
 f.$infos.__qualname__=value}
 )
 $B.function.__dict__.__type_params__=$B.getset_descriptor.$factory(
-$B.function,'__type_params__',function(kls,f){$B.check_infos(f)
-return f.$infos.__type_params__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__type_params__',function(f){$B.check_infos(f)
+return f.$infos.__type_params__},function(f,value){$B.check_infos(f)
 if(! $B.$isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 'TypeError: __type_params__ must be set to a tuple')}
 f.$infos.__type_params__=value}
@@ -2835,13 +2839,13 @@ $B.function.__get__=function(self,obj){
 if(obj===_b_.None){return self}
 return $B.method.$factory(self,obj)}
 $B.function.__dict__.__globals__=$B.getset_descriptor.$factory(
-$B.function,'__globals__',function(kls,f){$B.check_infos(f)
+$B.function,'__globals__',function(f){$B.check_infos(f)
 return $B.obj_dict($B.imported[f.$infos.__module__])}
 ,function(){throw _b_.AttributeError.$factory('readonly attribute')}
 )
 $B.function.__dict__.__kwdefaults__=$B.getset_descriptor.$factory(
-$B.function,'__kwdefaults__',function(kls,f){$B.check_infos(f)
-return f.$infos.__kwdefaults__},function(kls,f,value){$B.check_infos(f)
+$B.function,'__kwdefaults__',function(f){$B.check_infos(f)
+return f.$infos.__kwdefaults__},function(f,value){$B.check_infos(f)
 if(value==_b_.None){value=$B.empty_dict()}else if(! $B.$isinstance(value,_b_.dict)){throw _b_.TypeError.$factory(
 '__kwdefaults__ must be set to a dict object')}
 f.$infos.__kwdefaults__=value
@@ -12060,11 +12064,7 @@ if(_b_[attr].$is_class){if(_b_[attr].__bases__){_b_[attr].__bases__.__class__=_b
 _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
 $B.method_descriptor.__getattribute__=$B.function.__getattribute__
 $B.wrapper_descriptor.__getattribute__=$B.function.__getattribute__
-var type_dict=_b_.type.__dict__
-var tp_dict=_b_.type.__dict__=$B.empty_dict(),setitem=_b_.dict.$setitem
-for(let method in _b_.type){if(method.startsWith('__')&& method.endsWith('__')){setitem(tp_dict,method,_b_.type[method])}}
-for(let method in type_dict){if(method.startsWith('__')&& method.endsWith('__')){setitem(tp_dict,method,type_dict[method])}}
-setitem(tp_dict,'__mro__',{__get__:function(cls){return $B.fast_tuple([cls].concat(cls.__mro__))}})
+_b_.type.__dict__=$B.mappingproxy.$factory(_b_.type.__dict__)
 for(var name in _b_){var builtin=_b_[name]
 if(_b_[name].__class__===_b_.type){_b_[name].__qualname__=_b_[name].__qualname__ ?? name
 _b_[name].__module__='builtins'
