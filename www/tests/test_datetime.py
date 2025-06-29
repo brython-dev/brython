@@ -196,4 +196,9 @@ timestamp_string = "2025-05-16 07:15:11 -0400"
 d = datetime.strptime(timestamp_string, format_string)
 assert repr(d) == 'datetime.datetime(2025, 5, 16, 7, 15, 11, ' \
   'tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=72000)))'
+
+# issue 2585
+date_str = None
+assert_raises(TypeError, datetime.strptime, date_str, '%Y-%m-%d')
+  
 print('passed all tests')
