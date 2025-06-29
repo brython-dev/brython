@@ -11,6 +11,11 @@
                     `time data '${time_data}' does not match format '${format}'`)
             }
 
+            if(! $B.$isinstance(s, _b_.str)){
+                throw _b_.TypeError.$factory(
+                    `strptime() argument 1 must be str, not ${$B.class_name(s)}`)
+            }
+
             var locale = __BRYTHON__.locale,
                 shortdays = [],
                 longdays = [],
@@ -86,7 +91,7 @@
                                 var dt_module = $B.imported[cls.__module__]
                                 dt.tzinfo = dt_module.timezone[res[0].toLowerCase()]
                             }else if(attr == "tzinfo"){
-                                var seconds = 0, 
+                                var seconds = 0,
                                     microseconds = 0
 
                                 if(res[0] != 'Z'){
