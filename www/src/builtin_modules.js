@@ -1294,7 +1294,7 @@
 
     $B.method_descriptor.__getattribute__ = $B.function.__getattribute__
     $B.wrapper_descriptor.__getattribute__ = $B.function.__getattribute__
-    
+
     _b_.type.__dict__ = $B.mappingproxy.$factory(_b_.type.__dict__)
 
     // Set type of methods of builtin classes

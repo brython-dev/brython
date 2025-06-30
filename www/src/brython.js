@@ -217,8 +217,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-06-29 19:28:53.862906"
-__BRYTHON__.timestamp=1751218133862
+__BRYTHON__.compiled_date="2025-06-30 07:49:41.224252"
+__BRYTHON__.timestamp=1751262581224
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1906,10 +1906,9 @@ object.__delattr__=function(self,attr){if(self.__dict__ && $B.$isinstance(self._
 _b_.dict.$contains_string(self.__dict__,attr)){_b_.dict.$delete_string(self.__dict__,attr)
 return _b_.None}else if(self.__dict__===undefined && self[attr]!==undefined){delete self[attr]
 return _b_.None}else{
-var klass=self.__class__
-if(klass){var prop=$B.$getattr(klass,attr)
-if(prop.__class__===_b_.property){if(prop.__delete__ !==undefined){prop.__delete__(self)
-return _b_.None}}}}
+var klass=$B.get_class(self)
+var kl_attr=$B.search_in_mro(klass,attr)
+if(_b_.hasattr(kl_attr,'__get__')&& _b_.hasattr(kl_attr,'__delete__')){return $B.$getattr(kl_attr,'__delete__')(self)}}
 throw $B.attr_error(attr,self)}
 object.__dir__=function(self){var objects
 if(self.$is_class){objects=[self].concat(self.__mro__)}else{var klass=self.__class__ ||$B.get_class(self)
@@ -2243,6 +2242,7 @@ $B.set_func_names(staticmethod,"builtins")
 $B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr,getter,setter,deleter){var res={__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr,getter,setter,deleter}
 return res}
 )
+$B.getset_descriptor.__delete__=function(self,obj){return self.deleter(obj)}
 $B.getset_descriptor.__get__=function(self,obj){if(obj===_b_.None){return self}
 return self.getter(obj)}
 $B.getset_descriptor.__set__=function(self,klass,value){return self.setter(klass,value)}
@@ -2254,7 +2254,9 @@ return klass.__annotations__}
 if(klass.__annotations_cache__ !==undefined){return klass.__annotations_cache__}
 var annotate=$B.$getitem(type.__dict__,'__annotate__').getter(klass)
 if(annotate===_b_.None){return $B.empty_dict()}
-return klass.__annotations_cache__=annotate(1)}
+return klass.__annotations_cache__=annotate(1)},function(klass,value){klass.__annotations__=value},function(klass){if(klass.__annotations_cache__===undefined){throw _b_.AttributeError.$factory('__annotations__')}
+klass.__annotations_cache__=$B.empty_dict()
+klass.__annotate__=_b_.None}
 )
 type.__dict__.__annotate__=$B.getset_descriptor.$factory(type,'__annotate__',function(klass){if(klass.__annotate__ !==undefined){
 return klass.__annotate__}
@@ -2309,17 +2311,9 @@ return klass.__name__ ||klass.__qualname__
 case "__setattr__":
 var func=klass["__setattr__"]??
 function(kls,key,value){kls[key]=value}
-return method_wrapper.$factory(attr,klass,func)
-case "__delattr__":
-if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
-return method_wrapper.$factory(attr,klass,function(key){if(key=='__annotations__'){klass.$annotations={}
-klass.__annotations__=$B.empty_dict()
-klass.__annotate__=_b_.None
-return}
-if(klass.__dict__){_b_.dict.__delitem__(klass.__dict__,key)}
-delete klass[key]})}
+return method_wrapper.$factory(attr,klass,func)}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
-var $test=attr=="__annotate__" 
+var $test=false 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
 if(klass.__class__ &&
 klass.__class__[attr]&&
@@ -2460,9 +2454,6 @@ _b_.dict.$setitem(mp,attr,value)
 switch(attr){case '__init__':
 case '__new__':
 kls.$factory=$B.$instance_creator(kls)
-break
-case '__annotations__':
-kls.__annotate__=_b_.None
 break
 case "__bases__":
 kls.__mro__=_b_.type.mro(kls)
@@ -2703,7 +2694,9 @@ $B.set_func_names($B.UnionType,"types")
 $B.make_annotate_class=function(kls,annotations){if(annotations===undefined){kls.__annotate__=_b_.None
 return}
 kls.$annotations=annotations
-kls.__annotate_func__=function(format){var class_frame=$B.frame_obj.frame
+kls.__annotate_func__=function(format){if(! $B.$isinstance(format,_b_.int)){throw _b_.TypeError.$factory('__annotate__ argument should be '+
+`int, not ${$B.class_name(format)}`)}
+var class_frame=$B.frame_obj.frame
 var file=class_frame.__file__
 var locals={format}
 var frame=['__annotate__',locals,class_frame[2],class_frame[3]]
@@ -3367,7 +3360,9 @@ _b_.delattr=function(obj,attr){
 check_nb_args_no_kw('delattr',2,arguments)
 if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be string, not '"+
 $B.class_name(attr)+"'")}
-return $B.$getattr(obj,'__delattr__')(attr)}
+var deleter=$B.search_in_mro($B.get_class(obj),'__delattr__')
+if(deleter){return deleter(obj,attr)}
+return _b_.object.__delattr__(obj,attr)}
 $B.$delattr=function(obj,attr,inum){try{_b_.delattr(obj,attr)}catch(err){$B.set_inum(inum)
 throw err}}
 $B.$delete=function(name,locals_id,inum){
@@ -3536,9 +3531,14 @@ var $=$B.args("getattr",3,{obj:null,attr:null,_default:null},["obj","attr","_def
 if(! $B.$isinstance($.attr,_b_.str)){throw _b_.TypeError.$factory("attribute name must be string, "+
 `not '${$B.class_name($.attr)}'`)}
 return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
-$B.search_in_mro=function(klass,attr){if(klass.hasOwnProperty(attr)){return klass[attr]}
+$B.search_in_mro=function(klass,attr){var test=false 
+if(klass.hasOwnProperty(attr)){return klass[attr]}else if(klass.__dict__){var v=_b_.dict.$get_string(klass.__dict__,attr,false)
+if(v !==false){if(test){console.log('found in klass dict',klass.__dict__,v)}
+return v}}
 var mro=klass.__mro__
-for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}}}
+for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}else if(mro[i].__dict__){var v=_b_.dict.$get_string(mro[i].__dict__,attr,false)
+if(v !==false){if(test){console.log('found in dict of mro',i,v)}
+return v}}}}
 $B.$getattr=function(obj,attr,_default){
 var res
 if(obj===undefined ||obj===null){throw _b_.AttributeError.$factory("Javascript object '"+obj+
@@ -4041,7 +4041,7 @@ return None
 case '__doc__':
 if(obj.__class__===_b_.property){obj[attr]=value}
 break}
-if($test){console.log("set attr",attr,"to",obj)}
+if($test){console.log("set attr",attr,"of",obj,"to",value)}
 if(obj.$factory ||obj.$is_class){var metaclass=obj.__class__
 if(metaclass===_b_.type){return _b_.type.__setattr__(obj,attr,value)}
 return $B.$call($B.$getattr(metaclass,'__setattr__'))(obj,attr,value)}
@@ -4082,6 +4082,8 @@ if(!_setattr){if(obj[attr]!==undefined){obj[attr]=value}else if(obj.__dict__===u
 `setting new attributes`)}else{_b_.dict.$setitem(obj.__dict__,attr,value)
 if(obj.$method_cache && obj.$method_cache[attr]){delete obj.$method_cache[attr]}}
 if($test){console.log("no setattr, obj",obj)}}else{if($test){console.log('apply _setattr',obj,attr)}
+if(typeof _setattr !=='function'){console.log('not a function',_setattr)
+console.log('attr',attr,'of',obj)}
 _setattr(obj,attr,value)}
 return None}
 _b_.sorted=function(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')

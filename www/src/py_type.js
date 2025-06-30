@@ -395,6 +395,10 @@ $B.getset_descriptor = $B.make_class("getset_descriptor",
     }
 )
 
+$B.getset_descriptor.__delete__ = function(self, obj){
+    return self.deleter(obj)
+}
+
 $B.getset_descriptor.__get__ = function(self, obj){
     if(obj === _b_.None){
         return self
@@ -429,6 +433,16 @@ type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
             return $B.empty_dict()
         }
         return klass.__annotations_cache__ = annotate(1)
+    },
+    function(klass, value){
+        klass.__annotations__ = value
+    },
+    function(klass){
+        if(klass.__annotations_cache__ === undefined){
+            throw _b_.AttributeError.$factory('__annotations__')
+        }
+        klass.__annotations_cache__ = $B.empty_dict()
+        klass.__annotate__ = _b_.None
     }
 )
 
@@ -567,27 +581,10 @@ type.__getattribute__ = function(klass, attr){
                                kls[key] = value
                            }
             return method_wrapper.$factory(attr, klass, func)
-        case "__delattr__":
-            if(klass["__delattr__"] !== undefined){
-                return klass["__delattr__"]
-            }
-            return method_wrapper.$factory(attr, klass,
-                function(key){
-                    if(key == '__annotations__'){
-                        klass.$annotations = {}
-                        klass.__annotations__ = $B.empty_dict()
-                        klass.__annotate__ = _b_.None
-                        return
-                    }
-                    if(klass.__dict__){
-                        _b_.dict.__delitem__(klass.__dict__, key)
-                    }
-                    delete klass[key]
-                })
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = attr == "__annotate__" // && klass.__name__ == 'Pattern'
+    var $test = false // attr == "__annotate__" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -975,11 +972,6 @@ type.__setattr__ = function(kls, attr, value){
         case '__new__':
             // redefine the function that creates instances of the class
             kls.$factory = $B.$instance_creator(kls)
-            break
-        case '__annotations__':
-            // PEP 649: setting __annotations__ to a legal value automatically
-            // sets o.__annotate__ to None
-            kls.__annotate__ = _b_.None
             break
         case "__bases__":
             // redefine mro
@@ -1644,6 +1636,10 @@ $B.make_annotate_class = function(kls, annotations){
     }
     kls.$annotations = annotations
     kls.__annotate_func__ = function(format){
+        if(! $B.$isinstance(format, _b_.int)){
+            throw _b_.TypeError.$factory('__annotate__ argument should be ' +
+                `int, not ${$B.class_name(format)}`)
+        }
         var class_frame = $B.frame_obj.frame
         var file = class_frame.__file__
         var locals = {format}
