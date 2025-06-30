@@ -115,5 +115,96 @@ assert_raises(SyntaxError, exec,
 assert_raises(SyntaxError, exec,
     "class GenericClass[DefaultT = int, T]: ...",
     msg="non-default type parameter 'T' follows default type parameter")
-    
+
+# PEP 649
+s: int
+assert __annotate__(1) == {'s': int}
+
+t: float
+assert_raises(NotImplementedError, __annotate__, 3)
+
+u: ClassVar
+assert_raises(NameError, __annotate__, 1)
+
+
+def f(x:int) -> float:
+  pass
+  pass
+  return x / 2
+
+assert f.__annotations__ == {'x': int, 'return': float}
+
+print('module annotate', __annotate__)
+
+class A:
+  x: ClassVar
+  y: int
+
+  def f(self):
+    pass
+
+
+assert_raises(NameError, getattr, A, '__annotations__')
+assert_raises(NotImplementedError, A.__annotate__, 3)
+
+class A:
+  x: int
+  def f(self):
+    pass
+
+assert A.__annotate__(1) == {'x': int}
+assert_raises(TypeError, A.__annotate__, 'a')
+
+assert A.__annotations__ == {'x': int}
+del A.__annotations__
+assert A.__annotations__ == {}
+assert_raises(TypeError, A.__annotate__, 1,
+  msg="'NoneType' object is not callable")
+
+s: MyVar
+print(__annotate__)
+#print(__annotations__)
+
+class A:
+    prop: str
+
+
+class B(A):
+    pass
+
+
+assert B.__annotations__ == {}
+
+class A:
+  x: int
+
+assert A.__annotate__(1) == {'x': int}
+assert A.__annotate__(2) == {'x': int}
+assert A.__annotations__ == {'x': int}
+del A.__annotations__
+assert A.__annotations__ == {}
+
+def f(x: int):
+  pass
+
+assert f.__annotate__(1) == {'x': int}
+assert f.__annotate__(2) == {'x': int}
+
+assert_raises(NotImplementedError, f.__annotate__, 3)
+
+A.__annotations__ = None
+assert A.__annotations__ is None
+assert A.__annotate__ is None
+
+
+class A:
+    prop: str
+
+
+class B(A):
+    pass
+
+assert B.__annotate__ is None
+assert B.__annotations__ == {}
+
 print('all tests pass...')
