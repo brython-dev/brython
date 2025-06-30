@@ -526,6 +526,11 @@ type.__getattribute__ = function(klass, attr){
             }
             return method_wrapper.$factory(attr, klass,
                 function(key){
+                    if(klass.__flags__ && TPFLAGS.IMMUTABLETYPE){
+                        throw _b_.TypeError.$factory(
+                            `cannot delete '${key}' attribute ` +
+                            `of immutable type '${klass.__name__}'`)
+                    }
                     if(klass.__dict__){
                         _b_.dict.__delitem__(klass.__dict__, key)
                     }
@@ -897,7 +902,7 @@ type.__setattr__ = function(kls, attr, value){
         type[attr].__set__(kls, value)
         return _b_.None
     }
-    if(kls.__module__ == "builtins"){
+    if(kls.__flags__ && TPFLAGS.IMMUTABLETYPE){
         throw _b_.TypeError.$factory(
             `cannot set '${attr}' attribute of immutable type '` +
                 kls.__qualname__ + "'")
