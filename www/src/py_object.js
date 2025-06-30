@@ -23,15 +23,10 @@ object.__delattr__ = function(self, attr){
         return _b_.None
     }else{
         // If attr is a descriptor and has a __delete__ method, use it
-        var klass = self.__class__
-        if(klass){
-            var prop = $B.$getattr(klass, attr)
-            if(prop.__class__ === _b_.property){
-                if(prop.__delete__ !== undefined){
-                    prop.__delete__(self)
-                    return _b_.None
-                }
-            }
+        var klass = $B.get_class(self)
+        var kl_attr = $B.search_in_mro(klass, attr)
+        if(_b_.hasattr(kl_attr, '__get__') && _b_.hasattr(kl_attr, '__delete__')){
+            return $B.$getattr(kl_attr, '__delete__')(self)
         }
     }
     throw $B.attr_error(attr, self)
