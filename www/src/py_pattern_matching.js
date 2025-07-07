@@ -102,7 +102,8 @@ $B.pattern_match = function(subject, pattern){
                     store_starred.push(nxt())
                 }
                 // bind capture name
-                locals[pattern.sequence[i].capture_starred] = store_starred
+                locals[pattern.sequence[i].capture_starred] = 
+                    $B.$list(store_starred)
                 nb_matched_in_subject += starred_match_length
             }else{
                 let subject_item = nxt()
@@ -340,5 +341,5 @@ $B.pattern_match = function(subject, pattern){
     return false
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

@@ -19,6 +19,9 @@ _s = document['container']
 _s.style.height = '%spx' % int(_height * 0.85)
 
 has_ace = True
+tab_size = 4
+sample_code = f'for i in range(10):\n{' ' * tab_size}print(i)'
+
 try:
     def handle_editor_change(*args):
         if storage is None:
@@ -28,6 +31,7 @@ try:
     editor.setTheme("ace/theme/solarized_light")
     editor.session.setMode("ace/mode/python")
     editor.session.on('change', handle_editor_change)
+    editor.session.setTabSize(tab_size)
     editor.focus()
 
     editor.setOptions({
@@ -56,7 +60,7 @@ def reset_src():
         if storage is not None and "py_src" in storage:
             editor.setValue(storage["py_src"])
         else:
-            editor.setValue('for i in range(10):\n\tprint(i)')
+            editor.setValue(sample_code)
         if "py_test" in storage and 'files' in document:
             document['files'].selectedIndex = int(storage["py_test"])
     editor.scrollToRow(0)
@@ -66,7 +70,7 @@ def reset_src_area():
     if storage and "py_src" in storage:
         editor.value = storage["py_src"]
     else:
-        editor.value = 'for i in range(10):\n\tprint(i)'
+        editor.value = sample_code
 
 
 class cOutput:
@@ -186,7 +190,7 @@ def trace_exc(run_frame, src, ns):
 
     handle_repeats(save_filename, save_lineno, count_repeats)
 
-    if isinstance(exc_value, SyntaxError):
+    if isinstance(exc_value, SyntaxError) and exc_value.args:
         filename = exc_value.args[1][0]
         lineno = exc_value.args[1][1]
         result_lines.append(f'  File {filename}, line {lineno}')
@@ -198,6 +202,8 @@ def trace_exc(run_frame, src, ns):
             result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
 
     message = str(exc_value) + suggestion(exc_value)
+    if isinstance(exc_value, SyntaxError) and not exc_value.args:
+        message = '<no detail available>'
     result_lines.append(f'{exc_type.__name__}: {message}')
     return '\n'.join(result_lines)
 

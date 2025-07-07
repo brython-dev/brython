@@ -30,7 +30,9 @@ from pegen.parser_generator import ParserGenerator
 
 from adapt_grammar_actions import transform_action
 
-EXTENSION_PREFIX = r"""function fprintf(dest, format){
+EXTENSION_PREFIX = r"""
+"use strict";
+function fprintf(dest, format){
     var args = Array.from(arguments).slice(2)
     for(var arg of args){
       format = format.replace(/%\*?[a-z]/, arg)
@@ -54,76 +56,6 @@ function strcmp(x, y){
 
 const MAXSTACK = 6000,
       NULL = undefined
-
-const ENDMARKER = 0,
-      NAME = 1,
-      NUMBER = 2,
-      STRING = 3,
-      NEWLINE = 4,
-      INDENT = 5,
-      DEDENT = 6,
-      LPAR = 7,
-      RPAR = 8,
-      LSQB = 9,
-      RSQB = 10,
-      COLON = 11,
-      COMMA = 12,
-      SEMI = 13,
-      PLUS = 14,
-      MINUS = 15,
-      STAR = 16,
-      SLASH = 17,
-      VBAR = 18,
-      AMPER = 19,
-      LESS = 20,
-      GREATER = 21,
-      EQUAL = 22,
-      DOT = 23,
-      PERCENT = 24,
-      LBRACE = 25,
-      RBRACE = 26,
-      EQEQUAL = 27,
-      NOTEQUAL = 28,
-      LESSEQUAL = 29,
-      GREATEREQUAL = 30,
-      TILDE = 31,
-      CIRCUMFLEX = 32,
-      LEFTSHIFT = 33,
-      RIGHTSHIFT = 34,
-      DOUBLESTAR = 35,
-      PLUSEQUAL = 36,
-      MINEQUAL = 37,
-      STAREQUAL = 38,
-      SLASHEQUAL = 39,
-      PERCENTEQUAL = 40,
-      AMPEREQUAL = 41,
-      VBAREQUAL = 42,
-      CIRCUMFLEXEQUAL = 43,
-      LEFTSHIFTEQUAL = 44,
-      RIGHTSHIFTEQUAL = 45,
-      DOUBLESTAREQUAL = 46,
-      DOUBLESLASH = 47,
-      DOUBLESLASHEQUAL = 48,
-      AT = 49,
-      ATEQUAL = 50,
-      RARROW = 51,
-      ELLIPSIS = 52,
-      COLONEQUAL = 53,
-      EXCLAMATION = 54,
-      OP = 55,
-      AWAIT = 56,
-      ASYNC = 57,
-      TYPE_IGNORE = 58,
-      TYPE_COMMENT = 59,
-      SOFT_KEYWORD = 60,
-      FSTRING_START = 61,
-      FSTRING_MIDDLE = 62,
-      FSTRING_END = 63,
-      COMMENT = 64,
-      NL = 65,
-      ERRORTOKEN = 66,
-      N_TOKENS = 68
-
 
 function NEW_TYPE_COMMENT(){}
 
@@ -149,9 +81,9 @@ $B._PyPegen.parse = function(p){
             return interactive_rule(p)
         default:
             console.log('unknown mode', p.mode)
-            alert()
+            throw Error(`unknown parse mode: ${p.mode}`)
     }
-}
+};
 """
 
 
@@ -459,6 +391,7 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         skip_actions: bool = False,
     ):
         super().__init__(grammar, set(tokens.values()), file)
+        self.tokens = tokens
         self.callmakervisitor: CCallMakerVisitor = CCallMakerVisitor(
             self, exact_tokens, non_exact_tokens
         )
@@ -528,6 +461,15 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         header = self.grammar.metas.get("header", EXTENSION_PREFIX)
         if header:
             self.print(header.rstrip("\n"))
+        flag = False
+        toks = []
+        for key, value in self.tokens.items():
+            s = 'const' if not flag else '     '
+            flag = True
+            toks.append(f"{s} {value} = {key}")
+
+        self.print(', \n'.join(toks))
+
         subheader = self.grammar.metas.get("subheader", "")
         if subheader:
             self.print(subheader)
@@ -540,17 +482,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         types = 'const ' + ', \n'.join(types)
         self.print(types)
         self.print()
-        """
-        for rulename, rule in self.all_rules.items():
-            if rule.is_loop() or rule.is_gather():
-                type = "asdl_seq *"
-            elif rule.type:
-                type = rule.type + " "
-            else:
-                type = "void *"
-            self.print(f"static {type}{rulename}_rule(p);")
-        self.print()
-        """
         for rulename, rule in list(self.all_rules.items()):
             self.print()
             if rule.left_recursive:
@@ -611,9 +542,11 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             self.print("p.error_indicator = 1;")
             self.add_return("NULL")
         self.print("}")
-        self.print("var EXTRA = {}")
-        self.print("EXTRA.lineno = p.tokens[_mark].lineno;")
-        self.print("EXTRA.col_offset = p.tokens[_mark].col_offset;")
+        self.print("var EXTRA = {")
+        with self.indent():
+            self.print("lineno: p.tokens[_mark].lineno,")
+            self.print("col_offset: p.tokens[_mark].col_offset")
+        self.print('}')
 
     def _set_up_token_end_metadata_extraction(self) -> None:
         self.print("var _token = $B._PyPegen.get_last_nonnwhitespace_token(p);")
@@ -662,7 +595,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
             self.print(f"p.mark = _resmark;")
             self.add_return("_res")
         self.print("}")
-        # self.print(f"static {result_type}")
         self.print(f"function {node.name}_raw(p)")
 
     def _should_memoize(self, node: Rule) -> bool:
@@ -737,10 +669,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
                     # self.print("// PyMem_Free(_children);")
                     self.add_return("NULL")
                 self.print("}")
-            #self.print("var _seq = [];")
-            # self.out_of_memory_return(f"!_seq", cleanup_code="PyMem_Free(_children);")
-            #self.print("for (let i = 0; i < _n; i++){_seq[i] = _children[i]};")
-            #self.print("// PyMem_Free(_children);")
             if memoize and node.name:
                 self.print(f"$B._PyPegen.insert_memo(p, _start_mark, {node.name}_type, _seq);")
             self.add_return("_children")
@@ -761,7 +689,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
         if node.left_recursive and node.leader:
             self.print(f"function {node.name}_raw(){{}};")
 
-        # self.print(f"static {result_type}")
         self.print(f"function {node.name}_rule(p)")
 
         if node.left_recursive and node.leader:
@@ -814,16 +741,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
     def emit_action(self, node: Alt, cleanup_code: Optional[str] = None) -> None:
         _action = transform_action(node.action)
         self.print(f"_res = {_action};")
-
-        """
-        self.print("if (_res == NULL && XXXPyErr_Occurred()) {")
-        with self.indent():
-            self.print("p.error_indicator = 1;")
-            if cleanup_code:
-                self.print(cleanup_code)
-            self.add_return("NULL")
-        self.print("}")
-        """
 
         if self.debug:
             node = str(node).replace('"', '\\"')
@@ -900,17 +817,6 @@ class JavascriptParserGenerator(ParserGenerator, GrammarVisitor):
 
             # Add the result of rule to the temporary buffer of children. This buffer
             # will populate later an asdl_seq with all elements to return.
-            """
-            self.print("if (_n == _children_capacity) {")
-            with self.indent():
-                self.print("_children_capacity *= 2;")
-                self.print(
-                    "var _new_children = PyMem_Realloc(_children, _children_capacity * sizeof(void *));"
-                )
-                self.out_of_memory_return(f"!_new_children", cleanup_code="PyMem_Free(_children);")
-                self.print("_children = _new_children;")
-            self.print("}")
-            """
             self.print("_children[_n++] = _res;")
             self.print("_mark = p.mark;")
         self.print("}")

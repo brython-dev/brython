@@ -66,6 +66,7 @@ var bytearray = {
     __mro__: [_b_.object],
     __qualname__: 'bytearray',
     $buffer_protocol: true,
+    $is_sequence: true,
     $is_class: true
 }
 
@@ -206,6 +207,7 @@ var bytes = {
     __mro__: [_b_.object],
     __qualname__: 'bytes',
     $buffer_protocol: true,
+    $is_sequence: true,
     $is_class: true
 }
 
@@ -262,7 +264,15 @@ bytes.__eq__ = function(self, other){
     if(invalid(other)){
         return false
     }
-    return $B.$getattr(self.source, '__eq__')(other.source)
+    if(self.source.length !== other.source.length){
+        return false
+    }
+    for(var i = 0, len = self.source.length; i < len; i++){
+        if(self.source[i] !== other.source[i]){
+            return false
+        }
+    }
+    return true
 }
 
 bytes.__ge__ = function(self, other){
@@ -1260,7 +1270,7 @@ bytes.split = function(){
     if(match || (stop > start)){
         res.push(bytes.$factory(src.slice(start, stop)))
     }
-    return res
+    return $B.$list(res)
 }
 
 bytes.splitlines = function() {
@@ -1272,7 +1282,7 @@ bytes.splitlines = function() {
             $B.get_class($.keepends).__name)
     }
     var keepends = _b_.int.$factory($.keepends),
-        res = [],
+        res = $B.$list([]),
         source = $.self.source,
         start = 0,
         pos = 0
@@ -1294,8 +1304,9 @@ bytes.splitlines = function() {
     if(start < source.length){
         res.push(bytes.$factory(source.slice(start)))
     }
-    return res
+    return $B.$list(res)
 }
+
 bytes.startswith = function(){
     var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
         ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
@@ -1941,4 +1952,4 @@ bytearray.fromhex = bytes.fromhex
 _b_.bytes = bytes
 _b_.bytearray = bytearray
 
-})(__BRYTHON__)
+})(__BRYTHON__);

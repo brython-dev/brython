@@ -348,7 +348,7 @@ Random.getrandbits = function(){
     var $ = $B.args("getrandbits", 2, {self: null, k:null}, ["self", "k"],
         arguments, {}, null, null),
         self = $.self,
-        k = $B.$GetInt($.k)
+        k = $B.PyNumber_Index($.k)
 
     if(k < 0)
         throw _b_.ValueError.$factory('number of bits must be non-negative')
@@ -392,10 +392,11 @@ Random.seed = function(){
         self = $.self,
         n = $.n
 
-    if (self._random === undefined)
+    if (self._random === undefined){
         self._random = RandomStream(n)
-    else
+    }else{
         self._random.seed(n)
+    }
 }
 
 Random.setstate = function(){

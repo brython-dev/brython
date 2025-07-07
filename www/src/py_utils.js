@@ -760,12 +760,7 @@ $B.get_class = function(obj){
                 }
             case "object":
                 if(Array.isArray(obj)){
-                    if(obj.$is_js_array){
-                        return $B.js_array
-                    }else if(Object.getPrototypeOf(obj) === Array.prototype){
-                        obj.__class__ = _b_.list
-                        return _b_.list
-                    }
+                    return $B.js_array
                 }else if(obj instanceof $B.str_dict){
                     return _b_.dict
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
@@ -824,8 +819,8 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     // "for(item of $B.make_js_iterator(...)){"
     var set_lineno = $B.set_lineno
     if(frame === undefined){
-        if($B.frame_obj === null){
-            function set_lineno(){
+        if(! $B.frame_obj){
+            set_lineno = function(){
                 // does nothing
             }
         }else{
@@ -911,33 +906,27 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     // For "[a, b] = t", nb_targets is 2, has_starred is false
     // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
     // nb_after_starred is 1 (c)
-    var position,
-        position_rank = 3
+    var inum_rank = 3
     if(has_starred){
         var nb_after_starred = arguments[3]
-        position_rank++
+        inum_rank++
     }
-    position = $B.decode_position(arguments[position_rank])
+    var inum = arguments[inum_rank]
     var t = _b_.list.$factory(obj),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
 
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
+        $B.set_inum(inum)
         var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
             `(expected ${has_starred ? ' at least ' : ''} ` +
             `${left_length}, got ${right_length})`)
-        if(position){
-            $B.set_exception_offsets(exc, position)
-        }
         throw exc
     }
     if((! has_starred) && right_length > left_length){
         var exc = _b_.ValueError.$factory("too many values to unpack " +
             `(expected ${left_length})`)
-        if(position){
-            $B.set_exception_offsets(exc, position)
-        }
         throw exc
     }
     t.index = -1
@@ -951,15 +940,19 @@ $B.unpacker = function(obj, nb_targets, has_starred){
         t.index++
         var res = t.slice(t.index, t.length - nb_after_starred)
         t.index = t.length - nb_after_starred - 1
-        return res
+        return $B.$list(res)
     }
     return t
 }
 
-$B.set_lineno = function(frame, lineno){
+$B.set_lineno = function(frame, lineno, type){
     frame.$lineno = lineno
     if(frame.$f_trace !== _b_.None){
         $B.trace_line()
+    }
+    if(type){
+        frame[type] = frame[type] || {}
+        frame[type][lineno] = true
     }
     return true
 }
@@ -971,8 +964,8 @@ $B.get_method_class = function(method, ns, qualname, refs){
     // In some cases, ns.A might not yet be defined (cf. issue #1740).
     // In this case, a fake class is returned with the same qualname.
     var klass = ns
-    if(method.$infos && method.$infos.$class){
-        return method.$infos.$class
+    if(method.$function_infos && method.$function_infos[$B.func_attrs.method_class]){
+        return method.$function_infos[$B.func_attrs.method_class]
     }
     for(var ref of refs){
         if(klass[ref] === undefined){
@@ -989,10 +982,10 @@ $B.warn = function(klass, message, filename, token){
     var warning = klass.$factory(message)
     warning.filename = filename
     if(klass === _b_.SyntaxWarning){
-        warning.lineno = token.start[0]
-        warning.offset = token.start[1]
-        warning.end_lineno = token.end[0]
-        warning.end_offset = token.end[1]
+        warning.lineno = token.lineno
+        warning.offset = token.col_offset
+        warning.end_lineno = token.end_lineno
+        warning.end_offset = token.end_coloffset
         warning.text = token.line
         warning.args[1] = $B.fast_tuple([filename,
                                          warning.lineno, warning.offset,
@@ -1003,13 +996,31 @@ $B.warn = function(klass, message, filename, token){
     $B.imported._warnings.warn(warning)
 }
 
+// assert
+$B.assert = function(test, msg, inum){
+    if(! $B.$bool(test)){
+        var exc = _b_.AssertionError.$factory(msg)
+        $B.set_inum(inum)
+        throw exc
+    }
+}
+
 // get item
 function index_error(obj){
     var type = typeof obj == "string" ? "string" : "list"
-    throw _b_.IndexError.$factory(type + " index out of range")
+    return _b_.IndexError.$factory(type + " index out of range")
 }
 
-$B.$getitem = function(obj, item, position){
+$B.$getitem = function(obj, item, inum){
+    try{
+        return $B.$getitem1(obj, item)
+    }catch(err){
+        $B.set_inum(inum)
+        throw err
+    }
+}
+
+$B.$getitem1 = function(obj, item){
     var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
@@ -1018,7 +1029,7 @@ $B.$getitem = function(obj, item, position){
             if(obj[item] !== undefined){
                 return obj[item]
             }else{
-                index_error(obj)
+                throw index_error(obj)
             }
         }
     }else if(item.valueOf && typeof item.valueOf() == "string" && is_dict){
@@ -1027,6 +1038,12 @@ $B.$getitem = function(obj, item, position){
 
     // PEP 560
     if(obj.$is_class){
+        if(! Array.isArray(item)){
+            item = $B.fast_tuple([item])
+        }
+        if(obj === _b_.type){
+            return $B.$class_getitem(obj, item)
+        }
         var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
             return $B.$call(class_gi)(item)
@@ -1035,9 +1052,9 @@ $B.$getitem = function(obj, item, position){
             if(class_gi !== _b_.None){
                 return class_gi(obj, item)
             }else{
-                throw _b_.TypeError.$factory("'" +
-                    $B.class_name(obj.__class__) +
-                    "' object is not subscriptable")
+                throw _b_.TypeError.$factory("type '" +
+                    $B.$getattr(obj, '__qualname__') +
+                    "' is not subscriptable")
             }
         }
     }
@@ -1057,9 +1074,6 @@ $B.$getitem = function(obj, item, position){
 
     var exc = _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
-    if(position){
-        $B.set_exception_offsets(exc, $B.decode_position(position))
-    }
     throw exc
 }
 
@@ -1102,77 +1116,16 @@ $B.getitem_slice = function(obj, slice){
     return $B.$getattr($B.get_class(obj), "__getitem__")(obj, slice)
 }
 
-$B.$getattr_pep657 = function(obj, attr, position){
+$B.$getattr_pep657 = function(obj, attr, inum){
     try{
         return $B.$getattr(obj, attr)
     }catch(err){
-        $B.set_exception_offsets(err, $B.decode_position(position))
+        $B.set_inum(inum)
         throw err
     }
 }
 
-// Set list key or slice
-$B.set_list_slice = function(obj, start, stop, value){
-    if(start === null){
-        start = 0
-    }else{
-        start = $B.$GetInt(start)
-        if(start < 0){start = Math.max(0, start + obj.length)}
-    }
-    if(stop === null){
-        stop = obj.length
-    }
-    stop = $B.$GetInt(stop)
-    if(stop < 0){
-        stop = Math.max(0, stop + obj.length)
-    }
-    var res = _b_.list.$factory(value)
-    obj.splice.apply(obj,[start, stop - start].concat(res))
-}
-
-$B.set_list_slice_step = function(obj, start, stop, step, value){
-    if(step === null || step == 1){
-        return $B.set_list_slice(obj, start, stop, value)
-    }
-
-    if(step == 0){throw _b_.ValueError.$factory("slice step cannot be zero")}
-    step = $B.$GetInt(step)
-
-    if(start === null){
-        start = step > 0 ? 0 : obj.length - 1
-    }else{
-        start = $B.$GetInt(start)
-    }
-
-    if(stop === null){
-        stop = step > 0 ? obj.length : -1
-    }else{
-        stop = $B.$GetInt(stop)
-    }
-
-    var repl = _b_.list.$factory(value),
-        j = 0,
-        test,
-        nb = 0
-    if(step > 0){test = function(i){return i < stop}}
-    else{test = function(i){return i > stop}}
-
-    // Test if number of values in the specified slice is equal to the
-    // length of the replacement sequence
-    for(var i = start; test(i); i += step){nb++}
-    if(nb != repl.length){
-        throw _b_.ValueError.$factory(
-            "attempt to assign sequence of size " + repl.length +
-            " to extended slice of size " + nb)
-    }
-
-    for(var i = start; test(i); i += step){
-        obj[i] = repl[j]
-        j++
-    }
-}
-
-$B.$setitem = function(obj, item, value){
+$B.$setitem = function(obj, item, value, inum){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             ! obj.$is_js_array &&
             typeof item == "number" &&
@@ -1181,6 +1134,7 @@ $B.$setitem = function(obj, item, value){
             item += obj.length
         }
         if(obj[item] === undefined){
+            $B.set_inum(inum)
             throw _b_.IndexError.$factory("list assignment index out of range")
         }
         obj[item] = value
@@ -1189,7 +1143,14 @@ $B.$setitem = function(obj, item, value){
         _b_.dict.$setitem(obj, item, value)
         return
     }else if(obj.__class__ === _b_.list){
-        return _b_.list.$setitem(obj, item, value)
+        try{
+            return _b_.list.$setitem(obj, item, value)
+        }catch(err){
+            if($B.is_exc(err, [_b_.IndexError])){
+                $B.set_inum(inum)
+            }
+            throw err
+        }
     }
     var si = $B.$getattr(obj.__class__ || $B.get_class(obj), "__setitem__",
         null)
@@ -1200,13 +1161,22 @@ $B.$setitem = function(obj, item, value){
     return si(obj, item, value)
 }
 
+$B.set_inum = function(inum){
+    if(inum !== undefined && $B.frame_obj){
+        $B.frame_obj.frame.inum = inum
+    }
+}
+
 // item deletion
-$B.$delitem = function(obj, item){
+$B.$delitem = function(obj, item, inum){
     if(Array.isArray(obj) && obj.__class__ === _b_.list &&
             typeof item == "number" &&
             !$B.$isinstance(obj, _b_.tuple)){
-        if(item < 0){item += obj.length}
+        if(item < 0){
+            item += obj.length
+        }
         if(obj[item] === undefined){
+            $B.set_inum(inum)
             throw _b_.IndexError.$factory("list deletion index out of range")
         }
         obj.splice(item, 1)
@@ -1229,13 +1199,27 @@ $B.$delitem = function(obj, item){
                 }
             )
         }else{
-            _b_.dict.__delitem__(obj, item)
+            try{
+                _b_.dict.__delitem__(obj, item)
+            }catch(err){
+                if(err.__class__ === _b_.KeyError){
+                    $B.set_inum(inum)
+                }
+                throw err
+            }
         }
         return
     }else if(obj.__class__ === _b_.list){
-        return _b_.list.__delitem__(obj, item)
+        try{
+            return _b_.list.__delitem__(obj, item)
+        }catch(err){
+            if(err.__class__ === _b_.IndexError){
+                $B.set_inum(inum)
+            }
+            throw err
+        }
     }
-    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
+    var di = $B.$getattr($B.get_class(obj), "__delitem__",
         null)
     if(di === null){
         throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
@@ -1286,8 +1270,7 @@ $B.augm_assign = function(left, op, right){
                 z = res_type.x * res_type.y
                 break
             case '/=':
-                z = res_type.x / res_type.y
-                break
+                return $B.fast_float(res_type.x / res_type.y)
         }
         if(z){
             if(res_type.is_int && Number.isSafeInteger(z)){
@@ -1414,19 +1397,23 @@ $B.$is_member = function(item, _set){
     return $B.member_func(_set)(item)
 }
 
-$B.$call = function(callable, position){
-    callable = $B.$call1(callable)
-    if(position){
-        return function(){
-            try{
-                return callable.apply(null, arguments)
-            }catch(exc){
-                position = $B.decode_position(position)
-                $B.set_exception_offsets(exc, position)
-                throw exc
-            }
+$B.$call = function(callable, inum){
+    try{
+        callable = $B.$call1(callable)
+    }catch(err){
+        $B.set_inum(inum)
+        throw err
+    }
+
+    return function(){
+        try{
+            return callable.apply(null, arguments)
+        }catch(exc){
+            $B.set_inum(inum)
+            throw exc
         }
     }
+
     return callable
 }
 
@@ -1453,9 +1440,19 @@ $B.$call1 = function(callable){
             return res === undefined ? _b_.None : res
         }
     }else if(callable.$is_func || typeof callable == "function"){
-        if(callable.$infos && callable.$infos.__code__ &&
-                (callable.$infos.__code__.co_flags & 32)){
-            $B.frame_obj.frame.$has_generators = true
+        if(callable.$function_infos){
+            var flags = callable.$function_infos[$B.func_attrs.flags]
+            if(flags & $B.COMPILER_FLAGS.GENERATOR){
+                // Mark frame as having generators. Used in leave_frame for
+                // generators inside context managers
+                $B.frame_obj.frame.$has_generators = true
+            }
+            if(flags & $B.COMPILER_FLAGS.COROUTINE){
+                if($B.frame_obj !== null){
+                    var frame = $B.frame_obj.frame
+                    frame.$async = callable
+                }
+            }
         }
         return callable
     }
@@ -1489,23 +1486,11 @@ $B.make_rmethods = function(klass){
 }
 
 // UUID is a function to produce a unique id.
-// the variable $B.py_UUID is defined in py2js.js (in the brython function)
-$B.UUID = function(){return $B.$py_UUID++}
-
-$B.$GetInt = function(value) {
-  // convert value to an integer
-  if(typeof value == "number" || value.constructor === Number){return value}
-  else if(typeof value === "boolean"){return value ? 1 : 0}
-  else if($B.$isinstance(value, _b_.int)){return value}
-  else if($B.$isinstance(value, _b_.float)){return value.valueOf()}
-  if(! value.$is_class){
-      try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
-      try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
-  }
-  throw _b_.TypeError.$factory("'" + $B.class_name(value) +
-      "' object cannot be interpreted as an integer")
+// the variable $B.py_UUID is defined in brython_builtins.js
+// It is a random number, reset at each Brython run
+$B.UUID = function(){
+    return $B.$py_UUID++
 }
-
 
 $B.to_num = function(obj, methods){
     // If object's class defines one of the methods, return the result
@@ -1570,8 +1555,9 @@ $B.int_or_bool = function(v){
         case "number":
             return v
         case "object":
-            if(v.__class__ === $B.long_int){return v}
-            else{
+            if(v.__class__ === $B.long_int){
+                return v
+            }else{
                 throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
             }
@@ -1581,7 +1567,7 @@ $B.int_or_bool = function(v){
     }
 }
 
-$B.enter_frame = function(frame){
+$B.enter_frame = function(frame, __file__, lineno){
     // Enter execution frame
     var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
     if(count > $B.recursion_limit){
@@ -1590,6 +1576,10 @@ $B.enter_frame = function(frame){
         throw exc
     }
     frame.__class__ = $B.frame
+    frame.__file__ = __file__
+    frame.$lineno = lineno
+    frame.$f_trace = _b_.None
+    frame.$has_generators = !! frame[1].$has_generators
     $B.frame_obj = {
         prev: $B.frame_obj,
         frame,
@@ -1601,7 +1591,8 @@ $B.enter_frame = function(frame){
                  frame[4] === $B.tracefunc.$infos.__func__)){
             // to avoid recursion, don't run the trace function inside itself
             $B.tracefunc.$frame_id = frame[0]
-            return _b_.None
+            frame.$f_trace = _b_.None
+            return
         }else{
             // also to avoid recursion, don't run the trace function in the
             // frame "below" it (ie in functions that the trace function
@@ -1609,7 +1600,8 @@ $B.enter_frame = function(frame){
             var frame_obj = $B.frame_obj
             while(frame_obj !== null){
                 if(frame_obj.frame[0] == $B.tracefunc.$frame_id){
-                    return _b_.None
+                    frame.$f_trace = _b_.None
+                    return
                 }
                 frame_obj = frame_obj.prev
             }
@@ -1622,7 +1614,8 @@ $B.enter_frame = function(frame){
                     }
                     frame_obj = frame_obj.prev
                 }
-                return res
+                frame.$f_trace = res
+                return
             }catch(err){
                 $B.set_exc(err, frame)
                 $B.frame_obj = $B.frame_obj.prev
@@ -1631,7 +1624,6 @@ $B.enter_frame = function(frame){
             }
         }
     }
-    return _b_.None
 }
 
 $B.trace_exception = function(){
@@ -1685,6 +1677,15 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frame_obj.frame
+    if(frame.$coroutine){
+        if(! frame.$coroutine.$sent){
+            var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.name]
+            var message = _b_.RuntimeWarning.$factory(
+                `coroutine '${cname}' was never awaited`)
+            message.lineno = frame.$coroutine.$lineno
+            $B.imported._warnings.warn(message)
+        }
+    }
     $B.frame_obj = $B.frame_obj.prev
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
@@ -1708,7 +1709,9 @@ $B.leave_frame = function(arg){
             }
         }
     }
-    delete frame[1].$current_exception
+    if(frame[1].$current_exception){
+        delete frame[1].$current_exception
+    }
     return _b_.None
 }
 
@@ -1716,7 +1719,8 @@ $B.trace_return_and_leave = function(frame, return_value){
     if(frame.$f_trace !== _b_.None){
         $B.trace_return(return_value)
     }
-    return $B.leave_frame()
+    $B.leave_frame()
+    return return_value
 }
 
 $B.push_frame = function(frame){
@@ -1815,15 +1819,24 @@ $B.rich_comp = function(op, x, y){
         "' and '" + $B.class_name(y) + "'")
 }
 
-var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*"}
+var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*",
+    __and__: '&', __or__: '|'}
 
-$B.rich_op = function(op, x, y, position){
+$B.get_position_from_inum = function(inum){
+    // Get position from pseudo instruction number
+    if($B.frame_obj !== null){
+        var frame = $B.frame_obj.frame
+        if(frame.positions){
+            return frame.positions[Math.floor(inum / 2)]
+        }
+    }
+}
+
+$B.rich_op = function(op, x, y, inum){
     try{
         return $B.rich_op1(op, x, y)
     }catch(exc){
-        if(position){
-            $B.set_exception_offsets(exc, $B.decode_position(position))
-        }
+        $B.set_inum(inum)
         throw exc
     }
 }
@@ -1924,6 +1937,16 @@ $B.rich_op1 = function(op, x, y){
             return reflected_right(y, x)
         }
     }
+    if(op == '__mul__'){
+        if(x_class.$is_sequence && $B.$isinstance(y, [_b_.float, _b_.complex])){
+            throw _b_.TypeError.$factory("can't multiply sequence by " +
+                `non-int of type '${$B.class_name(y)}'`)
+        }
+        if(y_class.$is_sequence && $B.$isinstance(x, [_b_.float, _b_.complex])){
+            throw _b_.TypeError.$factory("can't multiply sequence by " +
+                `non-int of type '${$B.class_name(x)}'`)
+        }
+    }
     var res
     try{
         // Test if object has attribute op. If so, it is not used in the
@@ -1940,29 +1963,18 @@ $B.rich_op1 = function(op, x, y){
         if(err.__class__ !== _b_.AttributeError){
             throw err
         }
-        res = $B.$call($B.$getattr(y, rop))(x)
-        if(res !== _b_.NotImplemented){
-            return res
+        var rmethod = $B.$getattr(y_class, rop, null)
+        if(rmethod !== null){
+            res = $B.$call(rmethod)(y, x)
+            if(res !== _b_.NotImplemented){
+                return res
+            }
         }
         throw _b_.TypeError.$factory(
             `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
             ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
     }
-    if((op == '__add__' || op == '__mul__') &&
-            (Array.isArray(x) || typeof x == 'string' ||
-            $B.$isinstance(x, [_b_.str, _b_.bytes,
-                          _b_.bytearray, _b_.memoryview]))){
-        // Special case for addition and repetition of sequences:
-        // if type(x).__add__(y) raises an exception, use type(y).__radd__(x),
-        // as if it had returned NotImplemented
-        try{
-            res = method(x, y)
-        }catch(err){
-            res = _b_.NotImplemented
-        }
-    }else{
-        res = method(x, y)
-    }
+    res = method(x, y)
     if(res === _b_.NotImplemented){
         try{
             method = $B.$getattr(y_class, rop)
@@ -2012,5 +2024,5 @@ $B.repr = {
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

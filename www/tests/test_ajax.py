@@ -150,7 +150,8 @@ def oncomplete(req):
     data = json.loads(req.read())
     async_tester.assertEqual(data['form'], form_data)
 
-url = "http://httpbin.org/post"
+protocol = window.location.href.split('://')[0]
+url = f"{protocol}://httpbin.org/post"
 
 ajax.post(url,
           data=form_data,

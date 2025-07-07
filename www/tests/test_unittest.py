@@ -37,3 +37,15 @@ unittest.TextTestRunner(verbosity=1).run(suite)
 
 # issue 2129
 from unittest import mock
+
+# issue 2580
+from unittest.mock import patch, mock_open
+
+@patch('builtins.open', new_callable=mock_open, read_data="mocked file content")
+def test_mock_open(mock_file):
+  with open("dummy.txt", "r") as f:
+    content = f.read()
+    print("Mocked content:", content)
+    assert content == "mocked file content"
+
+test_mock_open()

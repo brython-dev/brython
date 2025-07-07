@@ -14,6 +14,7 @@ timestamp = int(1000 * time.time())
 
 # update version number
 with open(abs_path('version_info.js'), 'w') as out:
+    out.write('"use strict";\n')
     out.write(f'__BRYTHON__.implementation = {implementation}\n')
     out.write(f'__BRYTHON__.version_info = {version}\n')
     out.write(f'__BRYTHON__.compiled_date = "{datetime.datetime.now()}"\n')
@@ -27,4 +28,4 @@ with open(abs_path('version_info.js'), 'w') as out:
     # Sort modules so that git diff's don't change between runs
     _modules.sort()
     out.write(',\n    '.join(_modules))
-    out.write(']\n')
+    out.write('];\n')

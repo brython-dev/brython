@@ -1,3 +1,5 @@
+from tester import assert_raises
+
 class Foo(object):
 
   def __init__(self): self.value = 10
@@ -94,3 +96,25 @@ curry = Infix(curry)
 add5 = operator.add |curry| 5
 assert add5(6) == 11
 
+# __rmul__ is not used if it's an instance attribute
+class A:
+  pass
+
+class B:
+  pass
+
+def rmul(other):
+  return 50
+
+b = B()
+b.__rmul__ = rmul
+
+assert_raises(TypeError, exec, "A() * b", globals())
+
+# but it is used if it's defined in the class
+class C:
+
+  def __rmul__(self, other):
+      return 50
+
+assert A() * C() == 50

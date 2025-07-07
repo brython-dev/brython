@@ -856,12 +856,12 @@ __BRYTHON__.imported._locale = (function($B){
         },
 
         localeconv: function(){
-            var conv = {'grouping': [127],
+            var conv = {'grouping': $B.$list([127]),
                     'currency_symbol': '',
                     'n_sign_posn': 127,
                     'p_cs_precedes': 127,
                     'n_cs_precedes': 127,
-                    'mon_grouping': [],
+                    'mon_grouping': $B.$list([]),
                     'n_sep_by_space': 127,
                     'decimal_point': '.',
                     'negative_sign': '',

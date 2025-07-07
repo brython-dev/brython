@@ -96,20 +96,26 @@ var module = {
     TMP_MAX: 32767,
     W_OK: 2,
     X_OK: 1,
-    _have_functions: ['MS_WINDOWS'],
-    environ: _b_.dict.$factory(
+    _have_functions: $B.$list(['MS_WINDOWS']),
+    environ: _b_.dict.$from_array(
         [['PYTHONPATH', $B.brython_path],
          ['PYTHONUSERBASE', ' ']]),
     error: _b_.OSError,
     fspath: function(path){
         return path
     },
-    getcwd: function(){return $B.brython_path},
-    getpid: function(){return 0},
+    getcwd: function(){
+        return $B.brython_path
+    },
+    getpid: function(){
+        return 0
+    },
     lstat: function(filename){
         return stat_result.$factory(filename)
     },
-    open: function(path, flags){return _b_.open(path, flags)},
+    open: function(path, flags){
+        throw _b_.NotImplementedError.$factory('os.open is not implemented')
+    },
     remove: function(path) {
         var $ = $B.args("remove", 1, { path: null }, ["path"], arguments, {}, null, null)
         console.log($)
@@ -132,15 +138,23 @@ var module = {
 
         return _b_.None
     },
-    stat: function(filename){return stat_result.$factory(filename)},
-    stat_result: function(filename){return stat_result.$factory(filename)},
+    stat: function(filename){
+        return stat_result.$factory(filename)
+    },
+    stat_result: function(filename){
+        return stat_result.$factory(filename)
+    },
     urandom: function(n){
         const randbytes = new Uint8Array(n);
         crypto.getRandomValues(randbytes);
         return _b_.bytes.$factory(Array.from(randbytes));
     },
-    WTERMSIG: function(){return 0},
-    WNOHANG: function(){return _b_.tuple.$factory([0, 0])}
+    WTERMSIG: function(){
+        return 0
+    },
+    WNOHANG: function(){
+        return _b_.tuple.$factory([0, 0])
+    }
 };
 
 ["WCOREDUMP", "WIFCONTINUED", "WIFSTOPPED", "WIFSIGNALED", "WIFEXITED"].forEach(function(funcname){

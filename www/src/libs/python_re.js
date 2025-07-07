@@ -1383,7 +1383,7 @@ Pattern.findall = function(self){
     while(true){
         var next = iter.next()
         if(next.done){
-            return res
+            return $B.$list(res)
         }
         var bmo = next.value,
             mo = bmo.mo,
@@ -2242,9 +2242,6 @@ CharacterSet.prototype.match = function(string, pos, endpos){
 
         for(var cp1 of cps){
             for(var item of this.set.items){
-                if(typeof item == 'string'){
-
-                }
                 if(Array.isArray(item.ord)){
                     if(cp1 >= item.ord[0] &&
                             cp1 <= item.ord[1]){
@@ -2266,6 +2263,9 @@ CharacterSet.prototype.match = function(string, pos, endpos){
                     }
                 }else if(item instanceof CharacterClass){
                     test = !! item.match(string, pos + i, endpos) // boolean
+                    if(test){
+                        break
+                    }
                 }else{
                     if(item.ord == cp1){
                         test = true
@@ -3333,10 +3333,15 @@ function GroupMO(node, start, matches, string, groups, endpos){
     // Match Object for Groups
     this.node = node
     this.start = start
-    this.matches = matches
+    this._matches = matches
+    this.matches = this.node.non_greedy ? matches.slice(0, this.node.repeat.min) : matches.slice()
     this.string = string
-    this.end = matches.length > 0 ? $last(matches).end : start
-    this.endpos = endpos === undefined ? this.end : endpos
+    this.end = this.matches.length > 0 ? $last(matches).end : start
+    this.endpos = endpos === undefined
+        ? matches.length > 0
+            ? $last(matches).end
+            : start
+        : endpos
     this.$groups = groups
 }
 
@@ -3383,17 +3388,29 @@ GroupMO.prototype.backtrack = function(string, groups){
         }
     }
     // Else, remove last match if possible
-    if(this.matches.length > this.node.repeat.min &&
-            this.matches.length >= 1){
-        this.matches.pop()
-        if(this.matches.length > 0){
+    if(this.node.non_greedy){
+        if(this.matches.length < this._matches.length){
+            this.matches.push(this._matches[this.matches.length])
             this.end = $last(this.matches).end
+            return true
         }else{
             // remove this group and its children from groups
             del_groups(groups, this.node)
             this.end = this.start
         }
-        return true
+    }else{
+        if(this.matches.length > this.node.repeat.min &&
+                this.matches.length >= 1){
+            this.matches.pop()
+            if(this.matches.length > 0){
+                this.end = $last(this.matches).end
+            }else{
+                // remove this group and its children from groups
+                del_groups(groups, this.node)
+                this.end = this.start
+            }
+            return true
+        }
     }
     // Group fails; if some of its subgroups succeded, remove them from
     // groups
@@ -3703,6 +3720,9 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
     // Follow the pattern tree structure
     if(_debug.value){
         console.log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
+        if(pattern.text == "\\."){
+            console.log('  ', pattern)
+        }
         alert()
     }
     if(endpos !== undefined){
@@ -3798,10 +3818,6 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                             mos.push(mo)
                             pos = mo.end
                         }
-                        i++
-                    }else if(false && item instanceof Group &&
-                            item.type == "negative_lookahead_assertion"){
-                        log("negative lookahead assertion", item, "fails : ok !")
                         i++
                     }else{
                         if(_debug.value){
@@ -4000,7 +4016,7 @@ var module = {
         while(true){
             var next = iter.next()
             if(next.done){
-                return res
+                return $B.$list(res)
             }
             var bmo = next.value,
                 mo = bmo.mo,
@@ -4232,7 +4248,7 @@ var module = {
                 }
             )
         }
-        return res
+        return $B.$list(res)
     },
     sub: function(){
         var $ = $B.args("sub", 5,
@@ -4302,6 +4318,7 @@ var VERBOSE = module.X = module.VERBOSE = Flag.$factory(64)
 module.cache = cache
 module._compile = module.compile
 
+$B.set_func_names(module, 're')
 
 var inline_flags = {
     i: IGNORECASE,

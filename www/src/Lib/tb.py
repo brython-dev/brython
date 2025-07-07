@@ -74,7 +74,7 @@ def format_exc():
     handle_repeats(filename, lineno, count_repeats)
 
     if isinstance(exc, SyntaxError):
-        trace.write(syntax_error(exc.args))
+        trace.write(syntax_error(exc))
     else:
         message = exc_msg
         if isinstance(exc, AttributeError):
@@ -96,20 +96,32 @@ def print_exc(file=None):
         file = sys.stderr
     file.write(format_exc())
 
-def syntax_error(args):
+def syntax_error(exc):
     trace = Trace()
-    info, [filename, lineno, offset, line, *extra] = args
-    trace.write(f'  File "{filename}", line {lineno}')
-    indent = len(line) - len(line.lstrip())
-    trace.write("    " + line.strip())
+    args = exc.args
+    name = exc.__class__.__name__
+    if not args:
+        trace.write(f"{name}:", '<no detail available>')
+        return trace.format()
+    info, *details = args
+    head = ''
+    if exc.filename:
+        head += f'File "{exc.filename}'
+    if exc.lineno:
+        head += f', line {exc.lineno}'
+    if head:
+        trace.write(head)
+    if line := exc.text:
+        indent = len(line) - len(line.lstrip())
+        trace.write("    " + line.strip())
     nb_marks = 1
-    if extra:
-        end_lineno, end_offset = extra
-        if end_lineno > lineno:
-            nb_marks = len(line) - offset
+    if exc.end_lineno:
+        if exc.end_lineno > exc.lineno:
+            nb_marks = len(line) - exc.offset
         else:
-            nb_marks = end_offset - offset
-    nb_marks = max(nb_marks, 1)
-    trace.write("    " + (offset - 1) * " " + "^" * nb_marks)
-    trace.write("SyntaxError:", info)
+            nb_marks = exc.end_offset - exc.offset
+        nb_marks = max(nb_marks, 1)
+        if exc.offset:
+            trace.write("    " + (exc.offset - 1) * " " + "^" * nb_marks)
+    trace.write(f"{name}:", info)
     return trace.format()

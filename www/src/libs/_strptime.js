@@ -11,6 +11,11 @@
                     `time data '${time_data}' does not match format '${format}'`)
             }
 
+            if(! $B.$isinstance(s, _b_.str)){
+                throw _b_.TypeError.$factory(
+                    `strptime() argument 1 must be str, not ${$B.class_name(s)}`)
+            }
+
             var locale = __BRYTHON__.locale,
                 shortdays = [],
                 longdays = [],
@@ -52,7 +57,8 @@
                 S: ["second", new RegExp("^[1-5]\\d|0?\\d")],
                 y: ["year", new RegExp("^0{0,2}\\d{2}")],
                 Y: ["year", new RegExp("^\\d{4}")],
-                z: ["tzinfo", new RegExp("Z")]
+                z: ["tzinfo", new RegExp("^Z|([+-]\\d{2}[0-5]\\d)([0-5]\\d(\.\\d{1,6})?)?")],
+                Z: ["timezone", new RegExp("UTC|GMT")]
             }
 
             for(var key in regexps){
@@ -78,14 +84,45 @@
                         }else{
                             dt[attr] = parseInt(res[0])
                             if(attr == "microsecond"){
-                                while(dt[attr] < 100000){
-                                    dt[attr] *= 10
-                                }
-                            }else if(attr == "tzinfo"){
-                                // Only value supported for the moment : Z
-                                // (UTC)
+                                var ms = res[0]
+                                ms += '0'.repeat(6 - ms.length)
+                                dt[attr] = parseInt(ms)
+                            }else if(attr == "timezone"){
                                 var dt_module = $B.imported[cls.__module__]
-                                dt.tzinfo = dt_module.timezone.utc
+                                dt.tzinfo = dt_module.timezone[res[0].toLowerCase()]
+                            }else if(attr == "tzinfo"){
+                                var seconds = 0,
+                                    microseconds = 0
+
+                                if(res[0] != 'Z'){
+                                    let HHMM = res[1]
+                                    let sign = HHMM[0] == '+' ? 1 : -1
+                                    let hh = parseInt(HHMM.substr(1, 2))
+                                    let mm = parseInt(HHMM.substr(3))
+                                    seconds = 3600 * hh + 60 * mm
+                                    if(res[2]){
+                                        seconds += parseInt(res[2])
+                                    }
+                                    seconds = sign * seconds
+                                    if(res[3]){
+                                        let ms = res[3].substr(1)
+                                        ms += '0'.repeat(6 - ms.length)
+                                        microseconds = sign * parseInt(ms)
+                                    }
+                                }
+                                var dt_module = $B.imported[cls.__module__]
+                                let timedelta = dt_module.timedelta.$factory(0,
+                                    seconds, microseconds)
+                                let days = $B.$getattr(timedelta, 'days')
+                                if(Math.abs(days) > 1){
+                                    throw _b_.ValueError.$factory("offset " +
+                                        "must be a timedelta strictly between" +
+                                        " -timedelta(hours=24) and timedelta" +
+                                        "(hours=24), not " +
+                                        _b_.repr(timedelta))
+                                }
+                                let tz = dt_module.timezone
+                                dt.tzinfo = tz.__new__(tz, timedelta)
                             }
                             pos_fmt += 2
                             pos_s += res[0].length
@@ -133,6 +170,38 @@
                         }else{
                             error(s, fmt)
                         }
+                    }else if(spec == 'p'){
+                        // AM or PM
+                        var next2 = s.substr(pos_s, 2)
+                        if(next2.toUpperCase() == 'AM'){
+                            if(dt.hasOwnProperty('hour')){
+                                if(dt.hour > 0 && dt.hour < 12){
+                                    // ok
+                                }else if(dt.hour == 12){
+                                    dt.hour = 0
+                                }else{
+                                    error(s, fmt)
+                                }
+                            }else{
+                                error(s, fmt)
+                            }
+                        }else if(next2.toUpperCase() == 'PM'){
+                            if(dt.hasOwnProperty('hour')){
+                                if(dt.hour > 0 && dt.hour < 12){
+                                    dt.hour += 12
+                                }else if(dt.hour == 12){
+                                    dt.hour = 12
+                                }else{
+                                    error(s, fmt)
+                                }
+                            }else{
+                                error(s, fmt)
+                            }
+                        }else{
+                            error(s, fmt)
+                        }
+                        pos_fmt += 2
+                        pos_s += 2
                     }else{
                         pos_fmt++
                     }
@@ -151,7 +220,8 @@
                     s.substr(pos_s))
             }
 
-            return $B.$call(cls)(dt.year, dt.month, dt.day,
+            return $B.$call(cls)(dt.year ?? 1900, dt.month ?? 1,
+                dt.day ?? 1,
                 dt.hour || 0, dt.minute || 0, dt.second || 0,
                 dt.microsecond || 0, dt.tzinfo || _b_.None)
         }

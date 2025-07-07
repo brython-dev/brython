@@ -128,7 +128,7 @@ function to_json(obj, level){
         return '"' + res.replace(new RegExp('"', "g"), '\\"') + '"'
     }
 
-    if($B.$isinstance(obj, _b_.list)){
+    if($B.$isinstance(obj, [_b_.list, _b_.tuple])){
         var res = []
         var sep = item_separator,
             first = '[',
@@ -212,7 +212,7 @@ function to_py(obj, kw){
     // kw are the keyword arguments to loads()
     var res
     if(obj instanceof List){
-        return obj.items.map(x => to_py(x, kw))
+        return $B.$list(obj.items.map(x => to_py(x, kw)))
     }else if(obj instanceof Dict){
         if(kw.object_pairs_hook !== _b_.None){
             var pairs = []

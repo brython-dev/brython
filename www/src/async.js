@@ -6,12 +6,16 @@ var _b_ = $B.builtins
 
 var coroutine = $B.coroutine = $B.make_class("coroutine")
 
-coroutine.close = function(self){}
+coroutine.close = function(self){
+    self.$sent = true // avoids RuntimeWarning
+}
+
 coroutine.send = function(self){
+    self.$sent = true
     if(! $B.$isinstance(self, coroutine)){
         var msg = "object is not a coroutine"
-        if(typeof self == "function" && self.$infos && self.$infos.__code__ &&
-                self.$infos.__code__.co_flags & 128){
+        if(typeof self == "function" && self.$function_infos &&
+                self.$function_infos[$B.func_attrs.flags] & 128){
             msg += '. Maybe you forgot to call the async function ?'
         }
         throw _b_.TypeError.$factory(msg)
@@ -32,8 +36,8 @@ coroutine.send = function(self){
 }
 
 coroutine.__repr__ = coroutine.__str__ = function(self){
-    if(self.$func.$infos){
-        return "<coroutine " + self.$func.$infos.__name__ + ">"
+    if(self.$func.$function_infos){
+        return "<coroutine " + self.$func.$function_infos[$B.func_attrs.name] + ">"
     }else{
         return "<coroutine object>"
     }
@@ -47,15 +51,22 @@ $B.make_async = func => {
     }
     var f = function(){
         var args = arguments
-        return {
+        var res = {
             __class__: coroutine,
             $args: args,
             $func: func
         }
+        if($B.frame_obj !== null){
+            var frame = $B.frame_obj.frame
+            frame.$coroutine = res
+            res.$lineno = frame.$lineno
+        }
+        return res
     }
-    f.$infos = func.$infos
+    f.$function_infos = func.$function_infos
     f.$is_func = true
     f.$is_async = true
+    f.$args_parser = func.$args_parser
     return f
 }
 
@@ -77,10 +88,10 @@ $B.promise = function(obj){
         // promise resolves
         obj.frame_obj = $B.frame_obj
         return obj.then(function(x){
-            $B.frame_obj=obj.frame_obj
+            $B.frame_obj = obj.frame_obj
             return $B.jsobj2pyobj(x)
         }).catch(function(err){
-            $B.frame_obj=obj.frame_obj
+            $B.frame_obj = obj.frame_obj
             throw $B.exception(err)
         })
     }
@@ -98,4 +109,4 @@ $B.promise = function(obj){
         `can't be used in 'await' expression`)
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

@@ -66,12 +66,11 @@ Process. $factory = function(){
     var worker = new Worker('/src/web_workers/multiprocessing.js')
 
     var res = {
-        __class__:Process,
+        __class__: Process,
         $worker: worker,
         name: $ns['name'] || _b_.None,
-        $target: target+'',
+        $target: target + '',
         $args: args,
-        //$kwargs: $ns['kw'],
         $alive: false
     }
     return res
@@ -101,34 +100,39 @@ Pool.map = function(){
    fargs = _b_.iter(fargs)
 
    var _pos = 0
-   console.log(self.$processes)
-   _workers =[]
+   var _workers =[]
    for(var i=0; i < self.$processes; i++) {
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{arg = $B.$getattr(fargs, '__next__')()}
-       catch(err) {
-          if (err.__class__ !== _b_.StopIteration) throw err
+       try{
+           arg = $B.$getattr(fargs, '__next__')()
+       }catch(err) {
+          if(err.__class__ !== _b_.StopIteration){
+              throw err
+          }
        }
        console.log(arg)
-       _workers[i].finished=false
+       _workers[i].finished = false
        _workers[i].postMessage({target: func+'', pos: _pos,
                              args: $convert_args([arg])})
        _pos++
 
        _workers[i].addEventListener('message', function(e) {
            _results[e.data.pos]=e.data.result
-           if (_results.length == args.length) return _results
-
-           try {
+           if (_results.length == args.length){
+               return _results
+           }
+           try{
                arg = $B.$getattr(fargs, '__next__')()
                e.currentTarget.postMessage({target: func+'', pos: _pos,
                                             args: $convert_args([arg])})
                _pos++
-           } catch(err) {
-               if (err.__class__ !== _b_.StopIteration) throw err
-               this.finished=true
+           }catch(err){
+               if (err.__class__ !== _b_.StopIteration){
+                   throw err
+               }
+               this.finished = true
            }
        }, false);
    }
@@ -136,7 +140,7 @@ Pool.map = function(){
 
 Pool.apply_async = function(){
 
-   var $ns=$B.$MakeArgs('apply_async', 3,
+   var $ns = $B.$args('apply_async', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
        arguments,{},'args','kw')
    var func = $ns['func']
@@ -158,12 +162,13 @@ Pool.apply_async = function(){
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{arg = $B.$getattr(fargs, '__next__')()}
-       catch(err) {
-          if (err.__class__ !== _b_.StopIteration) throw err
+       try{
+           arg = $B.$getattr(fargs, '__next__')()
+       }catch(err) {
+          if (err.__class__ !== _b_.StopIteration){
+              throw err
+          }
        }
-       //console.log(arg)
-       //_workers[i].finished=false
        _workers[i].postMessage({target: func+'', pos: _pos,
                              args: $convert_args([arg])})
        _pos++
@@ -178,20 +183,19 @@ Pool.apply_async = function(){
                                             args: $convert_args([arg])})
                _pos++
            } catch(err) {
-               if (err.__class__ !== _b_.StopIteration) throw err
+               if (err.__class__ !== _b_.StopIteration){
+                   throw err
+               }
                this.finished=true
            }
        }, false);
    }
 
-   console.log("return", async_result)
    return async_result
 }
 
 Pool.$factory = function(){
-    console.log("pool")
-    console.log(arguments)
-    var $ns=$B.args('Pool',1,
+    var $ns = $B.args('Pool',1,
         {processes:null},['processes'],arguments,{},'args','kw')
 
     var processes = $ns['processes']
@@ -204,16 +208,15 @@ Pool.$factory = function(){
        // http://eligrey.com/blog/post/cpu-core-estimation-with-javascript
     }
 
-    console.log(processes)
     var res = {
-        __class__:Pool,
-        $processes:processes
+        __class__: Pool,
+        $processes: processes
     }
     return res
 }
 
 $B.set_func_names(Pool, "multiprocessing")
 
-$B.imported._multiprocessing = {Process:Process, Pool:Pool}
+$B.imported._multiprocessing = {Process, Pool}
 
 })(__BRYTHON__)

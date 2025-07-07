@@ -153,6 +153,9 @@ setup(
     # What does your project relate to?
     keywords='Python browser',
 
+    # requires aiohttp for the built-in server
+    install_requires = ['aiohttp'],
+
     package_data={
         'brython': ['data/*.*']
     },

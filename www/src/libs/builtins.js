@@ -41,9 +41,10 @@
         }
     }
     obj.__doc__ = 'builtins module'
+    obj.__build_class__ = ''
     obj.copyright = 'CPython copyright'
     obj.credits = 'CPython builtins credits'
     obj.license = 'CPython license'
-    
+
     $B.addToImported('builtins', obj)
 })()

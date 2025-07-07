@@ -40,4 +40,4 @@ with open(os.path.join(dest_dir, 'py_flags.js'), 'w', encoding='utf-8') as out:
 
     for flag in flags:
         out.write(f"        {flag}: {list(flags[flag])}," + '\n')
-    out.write('    }\n}\n})(__BRYTHON__)')
+    out.write('    }\n}\n})(__BRYTHON__);')

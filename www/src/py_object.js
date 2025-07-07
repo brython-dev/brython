@@ -82,8 +82,7 @@ object.__dir__ = function(self) {
 object.__eq__ = function(self, other){
     // equality test defaults to identity of objects
     //test_issue_1393
-    if(self === other){return true}
-    return _b_.NotImplemented
+    return self === other ?  true : _b_.NotImplemented
 }
 
 object.__format__ = function(){
@@ -95,7 +94,9 @@ object.__format__ = function(){
     return _b_.getattr($.self, "__str__")()
 }
 
-object.__ge__ = function(){return _b_.NotImplemented}
+object.__ge__ = function(){
+    return _b_.NotImplemented
+}
 
 $B.nb_from_dict = 0
 
@@ -104,9 +105,10 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'x' // false // attr == "__args__"
+    var $test = false // attr == 'abc' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
+        console.log('obj.__dict__', obj.__dict__)
     }
     if(attr === "__class__"){
         return klass
@@ -128,6 +130,9 @@ object.__getattribute__ = function(obj, attr){
 
     if(res === undefined && obj.__dict__){
         var dict = obj.__dict__
+        if($test){
+            console.log('obj.__dict__', obj.__dict__)
+        }
         if(dict.__class__ === $B.getset_descriptor){
             return dict.cls[attr]
         }
@@ -327,16 +332,6 @@ object.__getattribute__ = function(obj, attr){
                     if($test){console.log("return method", method)}
                     if(is_own_class_instance_method){
                         obj.$method_cache = obj.$method_cache || {}
-                        /*
-                        if(! obj.$method_cache){
-                            Object.defineProperty(obj, '$method_cache',
-                                {
-                                    value: {},
-                                    writable: true
-                                }
-                            )
-                        }
-                        */
                         obj.$method_cache[attr] = [method, res]
                     }
                     return method
@@ -381,7 +376,8 @@ object.__mro__ = []
 
 object.$new = function(cls){
     return function(){
-        if(arguments.length > 0){
+        var $ = $B.args('__new__', 0, [], [], arguments, {}, 'args', 'kwargs')
+        if($.args.length > 0 || _b_.dict.__len__($.kwargs) > 0){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
         var res = Object.create(null)
@@ -447,7 +443,7 @@ object.__reduce__ = function(self){
             break
         }
     }
-    var args = [D, B]
+    var args = $B.$list([D, B])
     if(B === object){
         args.push(_b_.None)
     }else{
@@ -559,11 +555,11 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    var module = self.__class__.__module__
+    var klass = $B.get_class(self),
+        module = klass.__module__
     if(module !== undefined && !module.startsWith("$") &&
             module !== "builtins"){
-        return "<" + self.__class__.__module__ + "." +
-            $B.class_name(self) + " object>"
+        return `<${module}.${$B.class_name(self)} object>`
     }else{
         return "<" + $B.class_name(self) + " object>"
     }
@@ -630,5 +626,5 @@ $B.set_func_names(object, "builtins")
 
 _b_.object = object
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

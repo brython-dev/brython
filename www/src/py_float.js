@@ -7,6 +7,14 @@ function float_value(obj){
     return obj.__class__ === float ? obj : fast_float(obj.value)
 }
 
+function copysign(x, y){
+    var x1 = Math.abs(x)
+    var y1 = y
+    var sign = Math.sign(y1)
+    sign = (sign == 1 || Object.is(sign, +0)) ? 1 : - 1
+    return x1 * sign
+}
+
 // dictionary for built-in class 'float'
 var float = {
     __class__: _b_.type,
@@ -115,13 +123,48 @@ float.__ceil__ = function(self){
     return Math.ceil(self.value)
 }
 
+function _float_div_mod(vx, wx){
+    // copied from CPython floatobject.c
+    var mod = vx % wx
+    var div = (vx - mod) / wx
+    if(mod){
+        /* ensure the remainder has the same sign as the denominator */
+        if((wx < 0) != (mod < 0)) {
+            mod += wx;
+            div -= 1.0;
+        }
+    }else{
+        /* the remainder is zero, and in the presence of signed zeroes
+           fmod returns different results across platforms; ensure
+           it has the same sign as the denominator. */
+        mod = copysign(0.0, wx)
+    }
+    /* snap quotient to nearest integral value */
+    var floordiv
+    if(div){
+        floordiv = Math.floor(div);
+        if(div - floordiv > 0.5){
+            floordiv += 1.0;
+        }
+    }else{
+        /* div is zero - get the same sign as the true quotient */
+        floordiv = copysign(0.0, vx / wx); /* zero w/ sign of vx/wx */
+    }
+
+    return {floordiv, mod}
+}
+
 float.__divmod__ = function(self, other){
     check_self_is_float(self, '__divmod__')
     if(! $B.$isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
-    return $B.fast_tuple([float.__floordiv__(self, other),
-        float.__mod__(self, other)])
+
+    var vx = self.value,
+        wx = float.$factory(other).value
+    var divmod = _float_div_mod(vx, wx)
+    return $B.fast_tuple([$B.fast_float(divmod.floordiv),
+                          $B.fast_float(divmod.mod)])
 }
 
 float.__eq__ = function(self, other){
@@ -157,19 +200,13 @@ float.__floor__ = function(self){
 
 float.__floordiv__ = function(self, other){
     check_self_is_float(self, '__floordiv__')
-    if($B.$isinstance(other, float)){
-        if(other.value == 0){
-            throw _b_.ZeroDivisionError.$factory('division by zero')
-        }
-        return fast_float(Math.floor(self.value / other.value))
+    if(! $B.$isinstance(other, [_b_.int, float])){
+        return _b_.NotImplemented
     }
-    if($B.$isinstance(other, _b_.int)){
-        if(other.valueOf() == 0){
-            throw _b_.ZeroDivisionError.$factory('division by zero')
-        }
-        return fast_float(Math.floor(self.value / other))
-    }
-    return _b_.NotImplemented
+    var vx = self.value,
+        wx = float.$factory(other).value
+    var divmod = _float_div_mod(vx, wx)
+    return $B.fast_float(divmod.floordiv)
 }
 
 const DBL_MANT_DIG = 53,
@@ -639,6 +676,10 @@ float.$hash_func = function(self){
     var x = hipart + parseInt(r[0]) + (r[1] << 15)
     x &= 0xFFFFFFFF
     $B.float_hash_cache.set(_v, x)
+    if($B.float_hash_cache.size > 10000){
+        // avoid memory issues
+        $B.float_hash_cache.clear()
+    }
     return self.__hashvalue__ = x
 }
 
@@ -1186,8 +1227,16 @@ if($B.$isinstance(other, _b_.float)){
 if($B.$isinstance(other, _b_.bool)) {
     return self.value > _b_.bool.__hash__(other)
 }
-if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
-   return _b_.int.__gt__(self.value, $B.$GetInt(other))
+
+var int_method = $B.$getattr(other, "__int__", null)
+if(int_method !== null){
+    var v = int_method()
+    return _b_.int.__gt__(self.value, v)
+}
+var index_method = $B.$getattr(other, "__index__", null)
+if(index_method !== null){
+    var v = index_method()
+    return _b_.int.__gt__(self.value, v)
 }
 
 // See if other has the opposite operator, eg <= for >
@@ -1227,10 +1276,6 @@ for(var r_opname of r_opnames){
     }
 }
 
-function $FloatClass(value){
-    return new Number(value)
-}
-
 function to_digits(s){
     // Transform a string to another string where all arabic-indic digits
     // are converted to latin digits
@@ -1238,8 +1283,11 @@ function to_digits(s){
         res = ""
     for(var i = 0; i < s.length; i++){
         var x = arabic_digits.indexOf(s[i])
-        if(x > -1){res += x}
-        else{res += s[i]}
+        if(x > -1){
+            res += x
+        }else{
+            res += s[i]
+        }
     }
     return res
 }
@@ -1328,7 +1376,7 @@ float.$factory = function(value){
                if(isFinite(value)){
                    return fast_float(parseFloat(value))
                }else{
-                   throw _b_.TypeError.$factory(
+                   throw _b_.ValueError.$factory(
                        "could not convert string to float: " +
                        _b_.repr(original_value))
                }
@@ -1384,8 +1432,6 @@ float.$factory = function(value){
     return res
 }
 
-$B.$FloatClass = $FloatClass
-
 $B.set_func_names(float, "builtins")
 
 float.fromhex = _b_.classmethod.$factory(float.fromhex)
@@ -1399,4 +1445,4 @@ const NINF = fast_float(Number.NEGATIVE_INFINITY),
       NAN = fast_float(Number.NaN),
       ZERO = fast_float(0)
 
-})(__BRYTHON__)
+})(__BRYTHON__);

@@ -94,4 +94,6 @@ assert len2 > len1
 x = json.loads("1e-06")
 assert x == 1e-06
 
+# issue 2510
+assert json.dumps((1, 2, 3)) == '[1, 2, 3]'
 print('all tests ok..')

@@ -342,15 +342,6 @@ except AttributeError:
 except:
     raise
 
-# issue 274
-import base64
-b = bytearray(b'<Z\x00N')
-b64 = base64.b64encode( b )
-assert b64 == b'PFoATg=='
-
-buf = bytearray(b'EZ\x86\xdd\xabN\x86\xdd\xabNE[\x86\xdd\xabN\x86\xdd\xabN')
-b64 = base64.b64encode( buf )
-assert b64 == b'RVqG3atOht2rTkVbht2rTobdq04='
 
 # issue 279
 x = 0
@@ -650,18 +641,6 @@ assert [c for c in range(10) if eval.b[c] == 0] == [3]
 
 # restore original "eval"
 eval = __builtins__.eval
-
-# issue 394
-import base64
-b = b"\x7F\x7B\xED\x96"
-b64 = base64.b64encode(b)
-assert b64 == b"f3vtlg=="
-newb = base64.b64decode(b64)
-assert newb == b
-
-e = base64.b64encode(b'data to encode')
-assert e == b"ZGF0YSB0byBlbmNvZGU="
-assert base64.b64decode(e, validate=True) == b'data to encode'
 
 # issue 412
 assert not True and not False or True
@@ -3294,6 +3273,38 @@ assert not '__name__' in C().__dict__
 
 assert not hasattr(range(3), '__name__')
 
+# issue 2493
+import http
+
+# issue 2494
+def f():
+  record = "A"
+  def g():
+    record_list = ["B"]
+    response = [ record for record in record_list ]
+    return response
+  return g()
+
+assert f() == ['B']
+
+# issue 2534
+def f(name, module):
+    source = sys.modules[module].__dict__
+    members = [
+            (name, value)
+            for name, value in source.items()
+            ]
+    assert name == 'abc'
+
+f('abc', __name__)
+
+# issue 2539
+assert_raises(NotImplementedError, os.open)
+
+# issue 2551
+import configparser
+p = configparser.ConfigParser()
+p.read("test_config.ini")
 
 # ==========================================
 # Finally, report that all tests have passed

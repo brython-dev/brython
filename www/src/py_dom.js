@@ -291,9 +291,9 @@ Attributes.items = function(){
         attrs = $.self.elt.attributes,
         values = []
     for(var i = 0; i < attrs.length; i++){
-        values.push([attrs[i].name, attrs[i].value])
+        values.push($B.$list([attrs[i].name, attrs[i].value]))
     }
-    return _b_.list.__iter__(values)
+    return _b_.list.__iter__($B.$list(values))
 }
 
 Attributes.values = function(){
@@ -304,8 +304,9 @@ Attributes.values = function(){
     for(var i = 0; i < attrs.length; i++){
         values.push(attrs[i].value)
     }
-    return _b_.list.__iter__(values)
+    return _b_.list.__iter__($B.$list(values))
 }
+
 $B.set_func_names(Attributes, "<dom>")
 
 // Class for DOM events
@@ -441,18 +442,8 @@ Clipboard.__setitem__ = function(self, name, value){
 
 $B.set_func_names(Clipboard, "<dom>")
 
-var dom = {
-    File : function(){},
-    FileReader : function(){}
-    }
-dom.File.__class__ = _b_.type
-dom.File.__str__ = function(){return "<class 'File'>"}
-dom.FileReader.__class__ = _b_.type
-dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
-
 
 // Class for DOM nodes
-
 var DOMNode = $B.make_class('DOMNode',
     function(elt){
         return elt
@@ -474,8 +465,9 @@ DOMNode.__add__ = function(self, other){
         res.children[pos++] = other
     }else{
         // If other is iterable, add all items
-        try{res.children = res.children.concat(_b_.list.$factory(other))}
-        catch(err){throw _b_.TypeError.$factory("can't add '" +
+        try{
+            res.children = res.children.concat(_b_.list.$factory(other))
+        }catch(err){throw _b_.TypeError.$factory("can't add '" +
             $B.class_name(other) + "' object to DOMNode instance")
         }
     }
@@ -489,7 +481,7 @@ DOMNode.__bool__ = function(){
 DOMNode.__contains__ = function(self, key){
     // For document, if key is a string, "key in document" tells if an element
     // with id "key" is in the document
-    if(self.nodeType == 9 && typeof key == "string"){
+    if(self.nodeType == Node.DOCUMENT_NODE && typeof key == "string"){
         return document.getElementById(key) !== null
     }
     if(self.length !== undefined && typeof self.item == "function"){
@@ -519,7 +511,7 @@ DOMNode.__delattr__ = function(self, attr){
 }
 
 DOMNode.__delitem__ = function(self, key){
-    if(self.nodeType == 9){ // document : remove by id
+    if(self.nodeType == Node.DOCUMENT_NODE){ // document : remove by id
         var res = self.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
         else{throw _b_.KeyError.$factory(key)}
@@ -540,7 +532,7 @@ DOMNode.__dir__ = function(self){
         }
     }
     res.sort()
-    return res
+    return $B.$list(res)
 }
 
 DOMNode.__eq__ = function(self, other){
@@ -597,13 +589,15 @@ DOMNode.__getattribute__ = function(self, attr){
                 return attr == "x" ? pos.left : pos.top
             }
             break
-        case "clear":
         case "closest":
+            if(! self[attr]){
+                throw $B.attr_error(self, attr)
+            }
             return function(){
                 return DOMNode[attr].call(null, self, ...arguments)
             }
         case "headers":
-          if(self.nodeType == 9){
+          if(self.nodeType == Node.DOCUMENT_NODE){
               // HTTP headers
               let req = new XMLHttpRequest();
               req.open("GET", document.location, false)
@@ -642,12 +636,12 @@ DOMNode.__getattribute__ = function(self, attr){
             return DOMNode.select(self, selector)
         }
     }
-    if(attr == "query" && self.nodeType == 9){
+    if(attr == "query" && self.nodeType == Node.DOCUMENT_NODE){
         // document.query is a instance of class Query, representing the
         // Query String
         let res = {
             __class__: Query,
-            _keys : [],
+            _keys : $B.$list([]),
             _values : {}
         }
         let qs = location.search.substr(1).split('&')
@@ -749,7 +743,7 @@ DOMNode.__getattribute__ = function(self, attr){
                     return res.bind(self)
                 }
             }
-            if(res.$is_func){
+            if(res.$function_infos){
                 // If the attribute was set in __setattr__ (elt.foo = func),
                 // then getattr(elt, "foo") must be "func"
                 return res
@@ -812,7 +806,7 @@ DOMNode.__getattribute__ = function(self, attr){
 }
 
 DOMNode.__getitem__ = function(self, key){
-    if(self.nodeType == 9){ // Document
+    if(self.nodeType == Node.DOCUMENT_NODE){ // Document
         if(typeof key.valueOf() == "string"){
             let res = self.getElementById(key)
             if(res){
@@ -878,7 +872,7 @@ DOMNode.__iter__ = function(self){
 
 DOMNode.__le__ = function(self, other){
     // for document, append child to document.body
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     if($B.$isinstance(other, TagSum)){
@@ -1128,25 +1122,25 @@ DOMNode.bind = function(){
 
 DOMNode.children = function(self){
     var res = []
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     for(var child of self.children){
         res.push(DOMNode.$factory(child))
     }
-    return res
+    return $B.$list(res)
 }
 
 
 DOMNode.child_nodes = function(self){
     var res = []
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     for(var child of self.childNodes){
         res.push(DOMNode.$factory(child))
     }
-    return res
+    return $B.$list(res)
 }
 
 DOMNode.clear = function(){
@@ -1154,7 +1148,7 @@ DOMNode.clear = function(){
     var $ = $B.args("clear", 1, {self: null}, ["self"], arguments, {},
                 null, null),
         self = $.self
-    if(self.nodeType == 9){
+    if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
     while(self.firstChild){
@@ -1163,7 +1157,9 @@ DOMNode.clear = function(){
 }
 
 DOMNode.Class = function(self){
-    if(self.className !== undefined){return self.className}
+    if(self.className !== undefined){
+        return self.className
+    }
     return _b_.None
 }
 
@@ -1191,6 +1187,10 @@ DOMNode.closest = function(){
                 ["self", "selector"], arguments, {}, null, null),
         self = $.self,
         selector = $.selector
+    if(self.closest === undefined){
+        throw _b_.AttributeError.$factory(_b_.str.$factory(self) +
+            " has no attribute 'closest'")
+    }
     var res = self.closest(selector)
     if(res === null){
         throw _b_.KeyError.$factory("no parent with selector " + selector)
@@ -1211,11 +1211,8 @@ DOMNode.bindings = function(self){
 DOMNode.events = function(self, event){
     self.$events = self.$events || {}
     var evt_list = self.$events[event] = self.$events[event] || [],
-        callbacks = []
-    evt_list.forEach(function(evt){
-        callbacks.push(evt[1])
-    })
-    return callbacks
+        funcs = evt_list.map(x => x[0])
+    return $B.$list(funcs)
 }
 
 function make_list(node_list){
@@ -1223,7 +1220,7 @@ function make_list(node_list){
     for(var i = 0; i < node_list.length; i++){
         res.push(DOMNode.$factory(node_list[i]))
     }
-    return res
+    return $B.$list(res)
 }
 
 DOMNode.get = function(self){
@@ -1231,7 +1228,9 @@ DOMNode.get = function(self){
     // with specified keys/values
     // key can be 'id','name' or 'selector'
     var args = []
-    for(var i = 1; i < arguments.length; i++){args.push(arguments[i])}
+    for(var i = 1; i < arguments.length; i++){
+        args.push(arguments[i])
+    }
     var $ns = $B.args("get", 0, {}, [], args, {}, null, "kw"),
         $dict = _b_.dict.$to_obj($ns.kw)
 
@@ -1263,7 +1262,7 @@ DOMNode.get = function(self){
         }
         var id_res = document.getElementById($dict['id'])
         if(! id_res){return []}
-        return [DOMNode.$factory(id_res)]
+        return $B.$list([DOMNode.$factory(id_res)])
     }
     if($dict["selector"] !== undefined){
         if(self.querySelectorAll === undefined){
@@ -1272,7 +1271,7 @@ DOMNode.get = function(self){
         }
         return make_list(self.querySelectorAll($dict['selector']))
     }
-    return []
+    return $B.$list([])
 }
 
 DOMNode.getContext = function(self){ // for CANVAS tag
@@ -1293,7 +1292,7 @@ DOMNode.getSelectionRange = function(self){ // for TEXTAREA
 DOMNode.html = function(self){
     var res = self.innerHTML
     if(res === undefined){
-        if(self.nodeType == 9 && self.body){
+        if(self.nodeType == Node.DOCUMENT_NODE && self.body){
             res = self.body.innerHTML
         }else{
             res = _b_.None
@@ -1406,7 +1405,9 @@ DOMNode.set_class_name = function(self, arg){
 }
 
 DOMNode.set_html = function(self, value){
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == Node.DOCUMENT_NODE){
+        self = self.body
+    }
     self.innerHTML = _b_.str.$factory(value)
 }
 
@@ -1440,7 +1441,9 @@ DOMNode.set_style = function(self, style){ // style is a dict
 }
 
 DOMNode.set_text = function(self,value){
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == Node.DOCUMENT_NODE){
+        self = self.body
+    }
     self.innerText = _b_.str.$factory(value)
     self.textContent = _b_.str.$factory(value)
 }
@@ -1454,7 +1457,9 @@ DOMNode.submit = function(self){ // for FORM
 }
 
 DOMNode.text = function(self){
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == Node.DOCUMENT_NODE){
+        self = self.body
+    }
     var res = self.innerText || self.textContent
     if(res === null){
         res = _b_.None
@@ -1482,8 +1487,7 @@ DOMNode.unbind = function(self, event){
     // unbind functions from the event (event = "click", "mouseover" etc.)
     // if no function is specified, remove all callback functions
     // If no event is specified, remove all callbacks for all events
-    self.$events = self.$events || {}
-    if(self.$events === {}){
+    if(! self.$events){
         return _b_.None
     }
 
@@ -1511,26 +1515,10 @@ DOMNode.unbind = function(self, event){
     }
 
     for(let i = 2; i < arguments.length; i++){
-        let callback = arguments[i],
-            flag = false,
-            func = callback.$func
-        if(func === undefined){
-            // If a callback is created by an assignment to an existing
-            // function
-            let found = false
-            for(let evt of events){
-                if($B.is_or_equals(evt[0], callback)){
-                    func = callback
-                    found = true
-                    break
-                }
-            }
-            if(! found){
-                throw _b_.TypeError.$factory("function is not an event callback")
-            }
-        }
-        for(let j = 0; j < events.length; j++){
-            if($B.$getattr(func, '__eq__')(events[j][0])){
+        let func = arguments[i],
+            flag = false
+        for(let j = 0, len = events.length; j < len; j++){
+            if($B.is_or_equals(func, events[j][0])){
                 let _callback = events[j][1]
                 self.removeEventListener(event, _callback, false)
                 events.splice(j, 1)
@@ -1539,7 +1527,7 @@ DOMNode.unbind = function(self, event){
             }
         }
         // The indicated func was not found, error is thrown
-        if(!flag){
+        if(! flag){
             throw _b_.KeyError.$factory('missing callback for event ' + event)
         }
     }
@@ -1604,15 +1592,16 @@ Query.getfirst = function(self, key, _default){
 
 Query.getlist = function(self, key){
     // always return a list
-    var result = self._values[key]
-    if(result === undefined){return []}
-    return result
+    return $B.$list(self._values[key] ?? [])
 }
 
 Query.getvalue = function(self, key, _default){
-    try{return Query.__getitem__(self, key)}
-    catch(err){
-        if(_default === undefined){return _b_.None}
+    try{
+        return Query.__getitem__(self, key)
+    }catch(err){
+        if(_default === undefined){
+            return _b_.None
+        }
         return _default
     }
 }
@@ -1645,7 +1634,9 @@ TagSum.__add__ = function(self, other){
                                _b_.dict, _b_.set, _b_.list])){
         self.children = self.children.concat(
             DOMNode.$factory(document.createTextNode(other)))
-    }else{self.children.push(other)}
+    }else{
+        self.children.push(other)
+    }
     return self
 }
 
@@ -1685,4 +1676,4 @@ $B.TagSum = TagSum // used in _html.js and _svg.js
 $B.DOMNode = DOMNode
 
 
-})(__BRYTHON__)
+})(__BRYTHON__);

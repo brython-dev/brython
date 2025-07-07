@@ -80,7 +80,7 @@ const dict_view_op = {
                 }
             }
         }
-        return items
+        return $B.$list(items)
     },
     __or__: function(t1, t2){
         var items = t1
@@ -261,14 +261,7 @@ dict.__bool__ = function () {
     return dict.__len__($.self) > 0
 }
 
-dict.__class_getitem__ = function(cls, item){
-    // PEP 585
-    // Set as a classmethod at the end of this script, after $B.set_func_names()
-    if(! Array.isArray(item)){
-        item = [item]
-    }
-    return $B.GenericAlias.$factory(cls, item)
-}
+dict.__class_getitem__ = $B.$class_getitem
 
 dict.$lookup_by_key = function(d, key, hash){
     hash = hash === undefined ? _b_.hash(key) : hash
@@ -921,7 +914,7 @@ function make_reverse_iterator(name, iter_func){
 
     klass.__reduce_ex__ = function(self){
         return $B.fast_tuple([_b_.iter,
-            $B.fast_tuple([Array.from(self.make_iter())])])
+            $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
     }
 
     $B.set_func_names(klass, 'builtins')
@@ -965,7 +958,8 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
     // Set a dictionary item mapping key and value.
     if(self[$B.JSOBJ]){
         // Python dictionary is used in a Javascript object
-        self[$B.JSOBJ][key] = $B.pyobj2jsobj(value)
+        value = $B.pyobj2jsobj(value)
+        self[$B.JSOBJ][key] = value
     }
     if(self.$all_str){
         if(typeof key == 'string'){
@@ -1144,7 +1138,7 @@ dict_items.__len__ = function(self){
 }
 
 dict_items.__reduce__ = function(self){
-    var items = Array.from(self.make_iter())
+    var items = $B.$list(Array.from(self.make_iter()))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
@@ -1191,7 +1185,7 @@ dict_itemiterator.__next__ = function(self){
 
 dict_itemiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([Array.from(self.make_iter())])])
+        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
 }
 
 $B.set_func_names(dict_itemiterator, 'builtins')
@@ -1220,7 +1214,7 @@ dict_keys.__len__ = function(self){
 }
 
 dict_keys.__reduce__ = function(self){
-    var items = Array.from(self.make_iter())
+    var items = $B.$list(Array.from(self.make_iter()))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
@@ -1262,7 +1256,7 @@ dict_keyiterator.__next__ = function(self){
 
 dict_keyiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([Array.from(self.make_iter())])])
+        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
 }
 
 $B.set_func_names(dict_keyiterator, 'builtins')
@@ -1421,7 +1415,7 @@ dict_values.__len__ = function(self){
 }
 
 dict_values.__reduce__ = function(self){
-    var items = Array.from(self.make_iter())
+    var items = $B.$list(Array.from(self.make_iter()))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
@@ -1467,7 +1461,7 @@ dict_valueiterator.__next__ = function(self){
 
 dict_valueiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([Array.from(self.make_iter())])])
+        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
 }
 
 $B.set_func_names(dict_valueiterator, 'builtins')
@@ -1493,6 +1487,15 @@ dict.$factory = function(){
         args.push(arg)
     }
     dict.__init__.apply(null, args)
+    return res
+}
+
+dict.$from_array = function(arrays){
+    // used internally for annotations
+    var res = $B.empty_dict()
+    for(var item of arrays){
+        dict.$setitem(res, item[0], item[1])
+    }
     return res
 }
 
@@ -1599,7 +1602,7 @@ function jsobj2dict(x, exclude){
 
 $B.obj_dict = function(obj, exclude){
     var klass = obj.__class__ || $B.get_class(obj)
-    if(klass !== undefined && klass.$native){
+    if(! (obj instanceof $B.str_dict) && klass !== undefined && klass.$native){
         throw $B.attr_error("__dict__", obj)
     }
     var res = {
@@ -1610,6 +1613,5 @@ $B.obj_dict = function(obj, exclude){
     return res
 }
 
-})(__BRYTHON__)
-
+})(__BRYTHON__);
 

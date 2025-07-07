@@ -12,9 +12,6 @@ __A__ : all modern browsers, including on smartphones. The generated
 Javascript purposely avoids using new syntax until it is supported by most
 browsers.
 
-Note that performance is usually better (sometimes _much_ better) with
-Firefox than with Chrome.
-
 __Q__ : _what is the performance of Brython compared to CPython ?_
 
 __R__ : [this page](/speed_results.html) compares the execution time of a

@@ -142,61 +142,11 @@
         return search.name
     }
 
-    function _norm(form, chr){
-        var search = _info(chr)
-        if(search === null){
-            throw _b_.KeyError.$factory(chr)
-        }
-        switch(form){
-            case "NFC":
-                return chr
-            case "NFD":
-                var decomp = decomposition(chr),
-                    parts = decomp.split(" "),
-                    res = ""
-                if(parts[0].startsWith("<")){
-                    return chr
-                }
-                parts.forEach(function(part){
-                    if(! part.startsWith("<")){
-                        res += _b_.chr(parseInt(part, 16))
-                    }
-                })
-                return res
-            case "NFKC":
-                var decomp = decomposition(chr),
-                    parts = decomp.split(" ")
-                if(parts[0] == "<compat>"){
-                    var res = ""
-                    parts.slice(1).forEach(function(part){
-                        res += _b_.chr(parseInt(part, 16))
-                    })
-                    return res
-                }
-                return chr
-            case "NFKD":
-                var decomp = decomposition(chr),
-                    parts = decomp.split(" ")
-                if(parts[0] == "<compat>"){
-                    var res = ""
-                    parts.slice(1).forEach(function(part){
-                        res += _b_.chr(parseInt(part, 16))
-                    })
-                    return res
-                }
-                return chr
-
-            default:
-                throw _b_.ValueError.$factory("invalid normalization form")
-        }
-    }
-
     function normalize(form, unistr){
-        var res = ""
-        for(var i = 0, len = unistr.length; i < len; i++){
-            res += _norm(form, unistr.charAt(i))
+        if(! ["NFC", "NFD", "NFKC", "NFKD"].includes(form)){
+            throw _b_.ValueError.$factory('invalid normalization form')
         }
-        return res
+        return unistr.normalize(form)
     }
 
     function numeric(chr, _default){

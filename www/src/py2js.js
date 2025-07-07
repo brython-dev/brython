@@ -328,6 +328,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         imported = src.imported
         src = src.src
     }
+
+    // normalize line ends to \n
+    src = src.replace(/\r\n/g, '\n').
+              replace(/\r/g, '\n')
     var locals_is_module = Array.isArray(locals_id)
     if(locals_is_module){
         locals_id = locals_id[0]
@@ -475,11 +479,11 @@ var defined_ids = {},
 function addPythonScript(addedNode){
     // callback function for the MutationObserver used once this script is
     // loaded (startup_observer)
-   if(addedNode.tagName == 'SCRIPT' &&
+    if(addedNode.tagName == 'SCRIPT' &&
            (addedNode.type == "text/python" ||
             addedNode.type == "text/python3")){
-       python_scripts.push(addedNode)
-   }
+        python_scripts.push(addedNode)
+    }
 }
 
 var status = {
@@ -496,10 +500,10 @@ $B.dispatch_load_event = function(script){
 function injectPythonScript(addedNode){
     // callback function for the MutationObserver used after brython() has
     // been called
-   if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
-       set_script_id(addedNode)
-       run_scripts([addedNode])
-   }
+    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
+        set_script_id(addedNode)
+        run_scripts([addedNode])
+    }
 }
 
 function set_script_id(script){
@@ -644,6 +648,17 @@ function convert_option(option, value){
             }
             return value.trim().split(/\s+/)
         }
+    }else if(option == 'js_tab'){
+        if(/\d+/.test(value)){
+            var res = parseInt(value)
+            if(res < 1 || res > 4){
+                console.log('Warning: option "js_tab" must be between ' +
+                    `1 and 4, got ${res}`)
+                res = 2
+            }
+            return res
+        }
+        console.warn('illegal value for js_tab', value)
     }
     return value
 }
@@ -654,7 +669,8 @@ const default_option = {
     debug: 1,
     indexeddb: true,
     python_extension: '.py',
-    static_stdlib_import: true
+    static_stdlib_import: true,
+    js_tab: 2
 }
 
 $B.get_filename = function(){
@@ -689,10 +705,12 @@ $B.get_page_option = function(option){
 
 $B.get_option = function(option, err){
     var filename = $B.script_filename
-    if(err && err.$frame_obj){
+    if(err && err.filename){
+        filename = err.filename
+    }else if(err && err.$frame_obj){
         filename = $B.get_frame_at(0, err.$frame_obj).__file__
     }else{
-        filename = $B.get_filename()
+        filename = $B.get_filename() ?? filename
     }
     return $B.get_option_from_filename(option, filename)
 }
@@ -801,10 +819,9 @@ $B.run_script = function(script, src, name, url, run_loop){
         root = $B.py2js({src: src, filename}, name, name)
         js = root.to_js()
         if($B.get_option_from_filename('debug', filename) > 1){
-            console.log($B.format_indent(js, 0))
+            console.log(js) //$B.format_indent(js, 0))
         }
     }catch(err){
-        console.log('err', err)
         return $B.handle_error($B.exception(err)) // in loaders.js
     }
     var _script = {
@@ -825,7 +842,7 @@ $B.run_script = function(script, src, name, url, run_loop){
 // we can use $B.brython
 $B.brython = brython
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 
 globalThis.brython = __BRYTHON__.brython
 

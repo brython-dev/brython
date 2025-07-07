@@ -566,42 +566,48 @@ def is_package(folder):
             return True
 
 
-def load_user_modules(module_dir=os.getcwd()):
+def load_user_modules(modules_paths):
+    if modules_paths is None:
+        modules_dirs = [os.getcwd()]
+    else:
+        with open(modules_paths, encoding='utf-8') as f:
+            modules_dirs = [line.strip() for line in f if line.strip()]
     user_modules = {}
-    for dirname, dirnames, filenames in os.walk(module_dir):
-        for filename in filenames:
-            name, ext = os.path.splitext(filename)
-            if not ext == ".py" or filename == "list_modules.py":
-                continue
-            if dirname == os.getcwd():
-                # modules in the same directory
-                path = os.path.join(dirname, filename)
-                with open(path, encoding="utf-8") as fobj:
-                    try:
+    for module_dir in modules_dirs:
+        for dirname, dirnames, filenames in os.walk(module_dir):
+            for filename in filenames:
+                name, ext = os.path.splitext(filename)
+                if not ext == ".py" or filename == "list_modules.py":
+                    continue
+                if dirname == os.getcwd():
+                    # modules in the same directory
+                    path = os.path.join(dirname, filename)
+                    with open(path, encoding="utf-8") as fobj:
+                        try:
+                            src = fobj.read()
+                        except:
+                            logger.error("Unable to read %s", path)
+                    mf = ModulesFinder(dirname)
+                    imports = sorted(list(mf.get_imports(src)))
+                    user_modules[name] = [ext, src, imports]
+                elif is_package(dirname):
+                    # modules in packages below current directory
+                    path = os.path.join(dirname, filename)
+                    package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
+                    if package.startswith('Lib.site-packages.'):
+                        package = package[len('Lib.site-packages.'):]
+                    if filename == "__init__.py":
+                        module_name = package
+                    else:
+                        module_name = "{}.{}".format(package, name)
+                    with open(path, encoding="utf-8") as fobj:
                         src = fobj.read()
-                    except:
-                        logger.error("Unable to read %s", path)
-                mf = ModulesFinder(dirname)
-                imports = sorted(list(mf.get_imports(src)))
-                user_modules[name] = [ext, src, imports]
-            elif is_package(dirname):
-                # modules in packages below current directory
-                path = os.path.join(dirname, filename)
-                package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
-                if package.startswith('Lib.site-packages.'):
-                    package = package[len('Lib.site-packages.'):]
-                if filename == "__init__.py":
-                    module_name = package
-                else:
-                    module_name = "{}.{}".format(package, name)
-                with open(path, encoding="utf-8") as fobj:
-                    src = fobj.read()
-                #mf = ModulesFinder(dirname)
-                #imports = mf.get_imports(src, package or None)
-                #imports = sorted(list(imports))
-                user_modules[module_name] = [ext, src, None]
-                if module_name == package:
-                    user_modules[module_name].append(1)
+                    #mf = ModulesFinder(dirname)
+                    #imports = mf.get_imports(src, package or None)
+                    #imports = sorted(list(imports))
+                    user_modules[module_name] = [ext, src, None]
+                    if module_name == package:
+                        user_modules[module_name].append(1)
 
     return user_modules
 
@@ -708,6 +714,3 @@ class VFSReplacementParser(html.parser.HTMLParser):
 if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
-    # print(sorted(list(finder.modules)))
-
-

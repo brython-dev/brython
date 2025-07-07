@@ -57,8 +57,17 @@ array.$buffer_protocol = true
 array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 
 array.__getitem__ = function(self, key){
-    if(self.obj && self.obj[key] !== undefined){
-        return self.obj[key]
+    if(self.obj){
+        if(self.obj[key] !== undefined){
+            return self.obj[key]
+        }else if($B.$isinstance(key, _b_.slice)){
+            var t = self.obj.slice(key.start, key.stop)
+            return {
+                __class__: array,
+                typecode: self.typecode,
+                obj: t
+            }
+        }
     }
     throw _b_.IndexError.$factory("array index out of range")
 }
@@ -128,7 +137,9 @@ array.append = function(self, value){
 array.count = function(self, x){
     $B.args("count", 2, {self: null, x: null},
         ["self", "x"], arguments, {}, null, null)
-    if(self.obj === null){return 0}
+    if(self.obj === null){
+        return 0
+    }
     return self.obj.filter(function(item){return item == x}).length
 }
 
@@ -292,7 +303,7 @@ array.tolist = function(self){
     if(self.obj === null){
         return $B.$list([])
     }
-    return Array.prototype.slice.call(self.obj)
+    return $B.$list(Array.prototype.slice.call(self.obj))
 }
 
 array.tostring = array.tobytes

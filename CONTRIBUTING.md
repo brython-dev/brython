@@ -61,6 +61,7 @@ remains up-to-date, they should be developed in a fork of the project.
     $ git checkout -b fix/master/my_contribution master
 ```
 * Make commits of logical units.
+* Only commit files you directly edited, NOT auto-generated files produced by `make_dist.py`, such as `www/src/brython.js`.
 * For Javascript code, there is a
   [Javascript coding style](https://github.com/brython-dev/brython/wiki/Javascript-coding-style-for-Brython-scripts).
   It is not mandatory and pull requests won't be rejected for this reason, but

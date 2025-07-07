@@ -16,7 +16,8 @@ var list = {
     __mro__: [_b_.object],
     $is_class: true,
     $native: true,
-    $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
+    $match_sequence_pattern: true, // for Pattern Matching (PEP 634),
+    $is_sequence: true,
     __dir__: _b_.object.__dir__
 }
 
@@ -31,28 +32,22 @@ list.__add__ = function(self, other){
         }
         return _b_.NotImplemented
     }
-    var res = self.slice(),
-        is_js = other.$is_js_array // list of JS objects
+    var res = self.slice()
     for(const item of other){
-        res.push(is_js ? $B.$pyobj2jsobj(item) : item)
+        res.push(item)
     }
     if(isinstance(self, tuple)){
-        res = tuple.$factory(res)
+        return tuple.$factory(res)
+    }else{
+        return $B.$list(res)
     }
-    return res
 }
 
 list.__bool__ = function(self){
     return list.__len__(self) > 0
 }
 
-list.__class_getitem__ = function(cls, item){
-    // PEP 585
-    if(! Array.isArray(item)){
-        item = [item]
-    }
-    return $B.GenericAlias.$factory(cls, item)
-}
+list.__class_getitem__ = $B.$class_getitem
 
 list.__contains__ = function(){
     var $ = $B.args("__contains__", 2, {self: null, item: null},
@@ -259,7 +254,7 @@ list.__hash__ = _b_.None
 list.__iadd__ = function() {
     var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
-    var x = list.$factory($B.$iter($.x))
+    var x = list.$factory($.x)
     for(var i = 0; i < x.length; i++){
         $.self.push(x[i])
     }
@@ -269,9 +264,14 @@ list.__iadd__ = function() {
 list.__imul__ = function() {
     var $ = $B.args("__imul__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null),
-        x = $B.$GetInt($.x),
         len = $.self.length,
         pos = len
+    try{
+        var x = $B.PyNumber_Index($.x)
+    }catch(err){
+        throw _b_.TypeError.$factory(`can't multiply sequence by non-int` +
+            ` of type '${$B.class_name($.x)}'`)
+    }
     if(x == 0){
         list.clear($.self)
         return $.self
@@ -373,14 +373,17 @@ list.__lt__ = function(self, other){
 }
 
 list.__mul__ = function(self, other){
-    try{
-        other = $B.PyNumber_Index(other)
-    }catch(err){
-        throw _b_.TypeError.$factory("can't multiply sequence by non-int " +
-            `of type '${$B.class_name(other)}'`)
+    if($B.$isinstance(other, [_b_.float, _b_.complex])){
+        throw _b_.TypeError.$factory("'" + $B.class_name(other) +
+                "' object cannot be interpreted as an integer")
     }
     if(self.length == 0){
         return list.__new__(list)
+    }
+    try{
+        other = $B.PyNumber_Index(other)
+    }catch(err){
+        return _b_.NotImplemented
     }
     if(typeof other == 'number'){
         if(other < 0){
@@ -403,6 +406,8 @@ list.__mul__ = function(self, other){
     }else if(isinstance(other, $B.long_int)){
         throw _b_.OverflowError.$factory(`cannot fit ` +
         `'${$B.class_name(other)}' into an index-sized integer`)
+    }else{
+        return _b_.NotImplemented
     }
 }
 
@@ -447,6 +452,16 @@ function list_repr(self){
     return res
 }
 
+var list_reverseiterator = $B.make_iterator_class("list_reverseiterator", true)
+
+list_reverseiterator.__reduce__ = list_reverseiterator.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
+}
+
+list.__reversed__ = function(self){
+    return list_reverseiterator.$factory(self)
+}
+
 list.__rmul__ = function(self, other){
     return list.__mul__(self, other)
 }
@@ -476,26 +491,73 @@ list.__setitem__ = function(){
     list.$setitem(self, arg, value)
 }
 
+
+// Set list key or slice
+function set_list_slice(obj, start, stop, value){
+    var res = _b_.list.$factory(value)
+    obj.splice.apply(obj,[start, stop - start].concat(res))
+}
+
+function set_list_slice_step(obj, start, stop, step, value){
+    if(step == 1){
+        return set_list_slice(obj, start, stop, value)
+    }
+
+    if(step == 0){
+        throw _b_.ValueError.$factory("slice step cannot be zero")
+    }
+
+    var repl = _b_.list.$factory(value),
+        j = 0,
+        test,
+        nb = 0
+    if(step > 0){
+        test = function(i){
+            return i < stop
+        }
+    }else{
+        test = function(i){
+            return i > stop
+        }
+    }
+
+    // Test if number of values in the specified slice is equal to the
+    // length of the replacement sequence
+    for(var i = start; test(i); i += step){
+        nb++
+    }
+    if(nb != repl.length){
+        throw _b_.ValueError.$factory(
+            "attempt to assign sequence of size " + repl.length +
+            " to extended slice of size " + nb)
+    }
+
+    for(var i = start; test(i); i += step){
+        obj[i] = repl[j]
+        j++
+    }
+}
+
 list.$setitem = function(self, arg, value){
     // Used internally to avoid using $B.args
     if(typeof arg == "number" || isinstance(arg, _b_.int)){
-        var pos = arg
+        var pos = $B.PyNumber_Index(arg)
         if(arg < 0){
             pos = self.length + pos
         }
         if(pos >= 0 && pos < self.length){
             self[pos] = value
         }else{
-            throw _b_.IndexError.$factory("list index out of range")
+            throw _b_.IndexError.$factory("list assignment index out of range")
         }
         return _b_.None
     }
     if(isinstance(arg, _b_.slice)){
         var s = _b_.slice.$conv_for_seq(arg, self.length)
         if(arg.step === null){
-            $B.set_list_slice(self, s.start, s.stop, value)
+            set_list_slice(self, s.start, s.stop, value)
         }else{
-            $B.set_list_slice_step(self, s.start, s.stop, s.step, value)
+            set_list_slice_step(self, s.start, s.stop, s.step, value)
         }
         return _b_.None
     }
@@ -511,7 +573,10 @@ list.$setitem = function(self, arg, value){
 
 list.append = function(self, x){
     $B.check_nb_args_no_kw("append", 2, arguments)
-    if(self.$is_js_array){
+    if(self[$B.PYOBJ]){
+        self[$B.PYOBJ].push(x)
+        self.push($B.pyobj2jsobj(x))
+    }else if(self.$is_js_array){
         self.push($B.pyobj2jsobj(x))
     }else{
         self[self.length] = x
@@ -532,7 +597,7 @@ list.copy = function(){
     var $ = $B.args("copy", 1, {self: null}, ["self"],
         arguments, {}, null, null)
     var res = $.self.slice()
-    res.__class__ = self.__class__
+    res.__class__ = $.self.__class__
     return res
 }
 
@@ -618,7 +683,7 @@ list.pop = function(){
     if(pos === missing){
         pos = self.length - 1
     }
-    pos = $B.$GetInt(pos)
+    pos = $B.PyNumber_Index(pos)
     if(pos < 0){
         pos += self.length
     }
@@ -762,16 +827,13 @@ var factory = function(){
     var $ = $B.args(klass.__name__, 1, {obj: null}, ["obj"],
         arguments, {}, null, null),
         obj = $.obj
-    if(Array.isArray(obj)){ // most simple case
+    if(Array.isArray(obj) && obj.__class__){ // most simple case
         obj = obj.slice() // list(t) is not t
-        if(obj.__class__ == tuple){
-            let res = obj.slice()
-            res.__class__ = list
-            return res
-        }
+        obj.__class__ = klass
         return obj
     }
     let res = Array.from($B.make_js_iterator(obj))
+    res.__class__ = klass
     return res
 }
 
@@ -809,6 +871,7 @@ var tuple = {
     $is_class: true,
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
+    $is_sequence: true
 }
 
 var tuple_iterator = $B.make_iterator_class("tuple_iterator")
@@ -943,4 +1006,4 @@ _b_.tuple = tuple
 _b_.object.__bases__ = tuple.$factory()
 _b_.type.__bases__ = $B.fast_tuple([_b_.object])
 
-})(__BRYTHON__)
+})(__BRYTHON__);

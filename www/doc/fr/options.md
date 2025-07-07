@@ -69,14 +69,18 @@ de la page.
 
 *debug* : le mode de débogage
 
-- 0 (valeur par défaut) : aucun débogage. A utiliser quand l'application est
-  au point, cela accélère légèrement l'exécution
-- 1 : les messages d'erreur sont imprimés dans la console du navigateur (ou
-  vers la sortie spécifiée par `sys.stderr`)
+- 1 (valeur par défaut) : les messages d'erreur sont imprimés dans la console
+  du navigateur (ou vers la sortie spécifiée par `sys.stderr`). A utiliser 
+  quand l'application est au point
 - 2 : la traduction du code Python en code Javascript est affichée dans la
   console
 - 10 : la traduction du code Python et des modules importés est affichée dans
   la console
+
+*js_tab* : indentation du code Javascript
+
+> un entier compris entre 1 et 4 qui indique le nombre d'espaces utilisés pour
+> indenter le code Javascript généré par Brython. Vaut 2 par défaut.
 
 *pythonpath*
 

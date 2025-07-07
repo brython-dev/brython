@@ -23,6 +23,7 @@ a.sort_link{margin-left:10px;text-decoration:none}
 <script type="text/javascript" src="/src/py_utils.js"></script>
 <script type="text/javascript" src="/src/py_object.js"></script>
 <script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_functions.js"></script>
 <script type="text/javascript" src="/src/py_builtin_functions.js"></script>
 <script type="text/javascript" src="/src/py_sort.js"></script>
 <script type="text/javascript" src="/src/py_exceptions.js"></script>
@@ -82,28 +83,31 @@ def log(*args):
     output.html += ', '.join(str(arg) for arg in args)
 
 def show(req):
-    log(req.text)
+    if req.status == 404:
+        log('File not found')
+    else:
+        log(req.text)
 
 @bind("#get_test", "click")
 def get(ev):
     output.clear()
-    ajax.get("/cgi-bin/get_test.py",
+    ajax.get("/ajax_get",
              oncomplete=show,
              data={"foo": 34})
 
     req = ajax.Ajax()
-    req.open("GET", "/cgi-bin/get_test.py?bar=35")
+    req.open("GET", "/ajax_get?bar=35")
     req.bind("complete", show)
     req.send()
 
 @bind("#post_test", "click")
 def post(ev):
     output.clear()
-    ajax.post("/cgi-bin/post_test.py",
+    ajax.post("/ajax_post",
              oncomplete=show,
              data={"foo": 34})
     req = ajax.Ajax()
-    req.open("POST", "/cgi-bin/post_test.py")
+    req.open("POST", "/ajax_post")
     req.bind("complete", show)
     req.send({"bar": 45})
 

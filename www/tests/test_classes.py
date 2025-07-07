@@ -1143,4 +1143,52 @@ class MyClass(object):
 
 assert MyClass.__call__(42) == 42
 
+# __static_attributes__, new in Python 3.13
+class C:
+    def f(self):
+        self.x = 1
+        self.y = 2
+        self.x = 3   # check deduplication
+
+    def g(self, obj):
+        self.y = 4
+        self.z = 5
+
+        def h(self, a):
+            self.u = 6
+            self.v = 7
+
+        obj.self = 8
+
+assert sorted(C.__static_attributes__) == ["u", "v", "x", "y", "z"]
+
+class A:
+
+  def f(self):
+    self.x = 8
+    self.y[3] = 7
+    self.z()
+
+assert sorted(A.__static_attributes__) == ['x']
+
+# issue 2533
+class A:
+  if True:
+    x = 9
+  assert x == 9
+
+# issue 2555
+class MyClass:
+
+    def another_method(self):
+        return "another_method"
+
+    def method(self):
+        self.method = self.another_method
+        return 'method'
+
+a = MyClass()
+assert a.method() == 'method'
+assert a.method() == 'another_method'
+
 print('passed all tests..')

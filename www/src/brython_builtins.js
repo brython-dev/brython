@@ -101,17 +101,15 @@ if(mo){
 }
 
 $B.strip_host = function(url){
-    var parts_re = new RegExp('(.*?)://([^/]*)?[/#]?(.*)'),
-        mo = parts_re.exec(url)
-    if(mo){
-        return mo[3]
+    try{
+        var parsed_url = new URL(url)
+        return parsed_url.pathname.substr(1) + parsed_url.search +
+            parsed_url.hash
+    }catch{
+        console.log(Error().stack)
+        throw Error("not a url: " + url)
     }
-    console.log(Error().stack)
-    throw Error('not a url: ' + url)
 }
-
-// Populated in py2js.brython(), used for sys.argv
-$B.__ARGV = []
 
 // For all the scripts defined in the page as webworkers, mapping between
 // script name and its source code
@@ -152,17 +150,6 @@ $B.builtin_funcs = {}
 // Builtin classes
 $B.builtin_classes = []
 
-$B.__getattr__ = function(attr){return this[attr]}
-$B.__setattr__ = function(attr, value){
-    // limited to some attributes
-    if(['debug', 'stdout', 'stderr'].indexOf(attr) > -1){
-        $B[attr] = value
-    }else{
-        throw $B.builtins.AttributeError.$factory(
-            '__BRYTHON__ object has no attribute ' + attr)
-    }
-}
-
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
 $B.language = _window.navigator.userLanguage || _window.navigator.language
@@ -189,19 +176,85 @@ $B.PyCF_TYPE_COMMENTS = 0x1000
 $B.CO_FUTURE_ANNOTATIONS = 0x1000000
 $B.PyCF_ALLOW_INCOMPLETE_INPUT = 0x4000
 
-if($B.isWebWorker){
-    $B.charset = "utf-8"
-}else{
-    // document charset ; defaults to "utf-8"
-    $B.charset = document.characterSet || document.inputEncoding || "utf-8"
+$B.COMPILER_FLAGS = {
+    OPTIMIZED: 1,
+    NEWLOCALS: 2,
+    VARARGS: 4,
+    VARKEYWORDS: 8,
+    NESTED: 16,
+    GENERATOR: 32,
+    NOFREE: 64,
+    COROUTINE: 128,
+    ITERABLE_COROUTINE: 256,
+    ASYNC_GENERATOR: 512
+}
+var DEF_GLOBAL = 1,           /* global stmt */
+    DEF_LOCAL = 2 ,           /* assignment in code block */
+    DEF_PARAM = 2 << 1,         /* formal parameter */
+    DEF_NONLOCAL = 2 << 2,      /* nonlocal stmt */
+    USE = 2 << 3 ,              /* name is used */
+    DEF_FREE = 2 << 4 ,         /* name used but not defined in nested block */
+    DEF_FREE_CLASS = 2 << 5,    /* free variable from class's method */
+    DEF_IMPORT = 2 << 6,        /* assignment occurred via import */
+    DEF_ANNOT = 2 << 7,         /* this name is annotated */
+    DEF_COMP_ITER = 2 << 8,     /* this name is a comprehension iteration variable */
+    DEF_TYPE_PARAM = 2 << 9,    /* this name is a type parameter */
+    DEF_COMP_CELL = 2 << 10       /* this name is a cell in an inlined comprehension */
+
+var DEF_BOUND = DEF_LOCAL | DEF_PARAM | DEF_IMPORT
+
+/* GLOBAL_EXPLICIT and GLOBAL_IMPLICIT are used internally by the symbol
+   table.  GLOBAL is returned from PyST_GetScope() for either of them.
+   It is stored in ste_symbols at bits 12-15.
+*/
+var SCOPE_OFFSET = 12,
+    SCOPE_OFF = SCOPE_OFFSET,
+    SCOPE_MASK = (DEF_GLOBAL | DEF_LOCAL | DEF_PARAM | DEF_NONLOCAL)
+
+var LOCAL = 1,
+    GLOBAL_EXPLICIT = 2,
+    GLOBAL_IMPLICIT = 3,
+    FREE = 4,
+    CELL = 5
+
+var TYPE_CLASS = 1,
+    TYPE_FUNCTION = 0,
+    TYPE_MODULE = 2
+
+$B.SYMBOL_FLAGS = {
+    DEF_GLOBAL,       /* global stmt */
+    DEF_LOCAL,        /* assignment in code block */
+    DEF_PARAM,        /* formal parameter */
+    DEF_NONLOCAL,     /* nonlocal stmt */
+    USE,              /* name is used */
+    DEF_FREE,         /* name used but not defined in nested block */
+    DEF_FREE_CLASS,   /* free variable from class's method */
+    DEF_IMPORT,       /* assignment occurred via import */
+    DEF_ANNOT,        /* this name is annotated */
+    DEF_COMP_ITER,    /* this name is a comprehension iteration variable */
+    DEF_TYPE_PARAM,   /* this name is a type parameter */
+    DEF_COMP_CELL,    /* this name is a cell in an inlined comprehension */
+
+    DEF_BOUND,
+
+    SCOPE_OFFSET,
+    SCOPE_OFF,
+    SCOPE_MASK,
+
+    LOCAL,
+    GLOBAL_EXPLICIT,
+    GLOBAL_IMPLICIT,
+    FREE,
+    CELL,
+
+    TYPE_CLASS,
+    TYPE_FUNCTION,
+    TYPE_MODULE
 }
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1
 $B.min_int = -$B.max_int
-
-$B.max_float = new Number(Number.MAX_VALUE)
-$B.min_float = new Number(Number.MIN_VALUE)
 
 $B.int_max_str_digits = 4300
 $B.str_digits_check_threshold = 640
@@ -288,22 +341,53 @@ $B.$py_UUID = Math.floor(Math.random() * 2 ** 50)
 // Magic name used in lambdas
 $B.lambda_magic = Math.random().toString(36).substr(2, 8)
 
-// Set __name__ attribute of klass methods
+// Function attributes
+const func_attrs = ['__module__', '__name__', '__qualname__', '__file__',
+    '__defaults__', '__kwdefaults__', '__doc__', 'arg_names',
+    'args_vararg', 'args_kwarg', 'positional_length', 'lineno', 'flags',
+    'free_vars', 'kwonlyargs_length', 'posonlyargs_length', 'varnames',
+    '__annotations__', '__type_params__',
+    'method_class'
+    ]
+
+// Rank of function attributes in .$function_infos
+var i = 0
+$B.func_attrs = {}
+for(var func_attr of func_attrs){
+    $B.func_attrs[func_attr] = i++
+}
+
+// Set attributes of klass methods
 $B.set_func_names = function(klass, module){
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
-            klass[attr].$infos = {
-                __doc__: klass[attr].__doc__ || "",
-                __module__: module,
-                __qualname__ : klass.__qualname__ + '.' + attr,
-                __name__: attr
-            }
+            $B.set_function_infos(klass[attr],
+                {
+                    __doc__: klass[attr].__doc__ || '',
+                    __module__: module,
+                    __name__: attr,
+                    __qualname__ : klass.__qualname__ + '.' + attr,
+                    __defaults__: [],
+                    __kwdefaults__: {}
+                }
+            )
             if(klass[attr].$type == "classmethod"){
                 klass[attr].__class__ = $B.method
             }
         }
     }
     klass.__module__ = module
+}
+
+// Set function attributes
+$B.set_function_infos = function(f, attrs){
+    f.$function_infos = f.$function_infos ?? []
+    for(var key in attrs){
+        if($B.func_attrs[key] === undefined){
+            throw Error('no function attribute ' + key)
+        }
+        f.$function_infos[$B.func_attrs[key]] = attrs[key]
+    }
 }
 
 var has_storage = typeof(Storage) !== "undefined"
@@ -332,8 +416,6 @@ $B.globals = function(){
     // Can be used in Javascript console to inspect global namespace
     return $B.frame_obj.frame[3]
 }
-
-$B.scripts = {} // for Python scripts embedded in a JS file
 
 $B.$options = {}
 
@@ -411,6 +493,11 @@ $B.getPythonModule = function(name){
     return $B.imported[name]
 }
 
+$B.pythonToAST = function(python_code, filename, mode){
+    let parser = new $B.Parser(python_code, filename ?? 'test', mode ?? 'file')
+    return $B._PyPegen.run_parser(parser)
+}
+
 $B.python_to_js = function(src, script_id){
     /*
 
@@ -472,4 +559,4 @@ $B.runPythonSource = function(src, options){
     return $B.imported[script_id]
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

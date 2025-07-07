@@ -1,3 +1,4 @@
+"use strict";
 (function($B){
 
 /*
@@ -262,6 +263,8 @@ function initialize_token(p, parser_token, new_token, token_type) {
     parser_token.end_col_offset = p.tok.lineno == p.starting_lineno ? p.starting_col_offset + new_token.end_col_offset
                                                                  : new_token.end_col_offset;
 
+    p.arena.lineno = parser_token.lineno
+
     p.fill += 1;
 
     if (token_type == ERRORTOKEN && p.tok.done == E_DECODE) {
@@ -322,14 +325,12 @@ $B._PyPegen.fill_token = function(p){
             p.tok.pendin = -p.tok.indent;
             p.tok.indent = 0;
         }
-    }
-    else {
+    }else{
         p.parsing_started = 1;
     }
 
-    var t = p.tokens[p.fill];
+    var t = p.tokens[p.fill]
     return initialize_token(p, t, new_token, type);
-
 }
 
 /*
@@ -435,7 +436,7 @@ $B._PyPegen.expect_token = function(p, type){
         }
     }
     var t = p.tokens[p.mark];
-    if (t.num_type != type) {
+    if(t.num_type != type){
        return NULL;
     }
     p.mark += 1;
@@ -600,7 +601,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
 function prepared_number_value(prepared){
     switch(prepared.type){
         case 'float':
-            return $B.fast_float(prepared.value)
+            return $B.fast_float(parseFloat(prepared.value))
         case 'imaginary':
             return $B.make_complex(0, prepared_number_value(prepared.value))
         case 'int':
@@ -624,46 +625,6 @@ function prepared_number_value(prepared){
 function parsenumber_raw(s){
     var prepared = $B.prepare_number(s) // in number_parser.js
     return prepared_number_value(prepared)
-    /*
-    var nd,
-        x,
-        dx,
-        compl,
-        imflag;
-
-    // assert(s != NULL);
-    errno = 0;
-    end = strlen(s) - 1;
-    console.log('end', end, 'last', s[end])
-    imflag = s[end] == 'j' || s[end] == 'J';
-    if (s[0] == '0') {
-        x = PyOS_strtoul(s, end, 0);
-        if (x < 0 && errno == 0) {
-            return PyLong_FromString(s, 0, 0);
-        }
-    } else {
-        x = PyOS_strtol(s, end, 0);
-    }
-    if (end == '\0') {
-        if (errno != 0) {
-            return PyLong_FromString(s, 0, 0);
-        }
-        return PyLong_FromLong(x);
-    }
-    if (imflag) {
-        compl.real = 0.;
-        compl.imag = PyOS_string_to_double(s, end, NULL);
-        if (compl.imag == -1.0 && PyErr_Occurred()) {
-            return NULL;
-        }
-        return PyComplex_FromCComplex(compl);
-    }
-    dx = PyOS_string_to_double(s, NULL, NULL);
-    if (dx == -1.0 && PyErr_Occurred()) {
-        return NULL;
-    }
-    return PyFloat_FromDouble(dx);
-    */
 }
 
 function parsenumber(s){
@@ -863,14 +824,13 @@ function reset_parser_state_for_error_pass(p){
 
 function _is_end_of_source(p) {
     var err = p.tok.done;
-    return err == E_EOF || err == E_EOFS || err == E_EOLS;
+    return p.tokens[p.tokens.length - 1].type == 'ENDMARKER'
 }
 
 $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
     var last_token = p.tokens[p.fill - 1]
-    var tokenizer = $B.tokenizer(p.src, p.filename, p.mode, p)
-    for(var token of tokenizer){
-    }
+    $B.tokenizer(p.src, p.filename, p.mode, p)
+    p.tokens = p._tokens
     if(p.braces.length > 0){
         var brace = $B.last(p.braces),
             err_lineno,
@@ -943,9 +903,9 @@ $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
     // assert(p->level == 0);
     if (res == NULL) {
-        if ((p.flags & PyPARSE_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
-            PyErr_Clear();
-            return RAISE_SYNTAX_ERROR("incomplete input");
+        if ((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
+            return $B.helper_functions.RAISE_ERROR(p,
+                _b_._IncompleteInputError, "incomplete input");
         }
         // Make a second parser pass. In this pass we activate heavier and slower checks
         // to produce better error messages and more complete diagnostics. Extra "invalid_*"
@@ -1072,4 +1032,4 @@ $B.PyPegen = {
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

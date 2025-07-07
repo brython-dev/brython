@@ -298,4 +298,8 @@ assert_raises(TypeError, bytes, WrongBytes())
 b = b'abc'
 assert b.__bytes__() is b
 
+# issue 2562
+data = b'"\''
+assert len(data) == 2
+
 print('passed all tests...')

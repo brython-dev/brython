@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_typing'
+stdlib_name = '_socket'
 
 include_doc = False
 include_base_classes = False

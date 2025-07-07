@@ -12,9 +12,6 @@ __R__ : sur tous les navigateurs modernes, y compris les smartphones. Le code
 Javascript généré évite intentionnellement de nouvelles syntaxes tant qu'elles
 ne sont pas supportées par la plupart des navigateurs.
 
-Noter tout de même que la performance est généralement meilleure (et parfois
-_nettement_ meilleure) sur Firefox que sur Chrome.
-
 __Q__ : _quelle est la performance de Brython par rapport à CPython ?_
 
 __R__ : [cette page](/speed_results.html) compare le temps d'exécution d'un

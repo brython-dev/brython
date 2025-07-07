@@ -35,9 +35,9 @@ function ast_dump(tree, indent){
         return res + ']'
     }else if(tree.$name){
         return tree.$name + '()'
-    }else if(tree instanceof ast.MatchSingleton){
+    }else if(tree instanceof $B.ast.MatchSingleton){
         return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
-    }else if(tree instanceof ast.Constant){
+    }else if(tree instanceof $B.ast.Constant){
         value = tree.value
         // For imaginary numbers, value is an object with
         // attribute "imaginary" set
@@ -47,7 +47,7 @@ function ast_dump(tree, indent){
         return `Constant(value=${$B.AST.$convert(value)})`
     }
     var proto = Object.getPrototypeOf(tree).constructor
-    var res = '  ' .repeat(indent) + proto.$name + '('
+    var res = '  '.repeat(indent) + proto.$name + '('
     if($B.ast_classes[proto.$name] === undefined){
         console.log('no ast class', proto)
     }
@@ -56,7 +56,7 @@ function ast_dump(tree, indent){
     // remove trailing * in attribute names
     attr_names = attr_names.map(x => (x.endsWith('*') || x.endsWith('?')) ?
                                      x.substr(0, x.length - 1) : x)
-    if([ast.Name].indexOf(proto) > -1){
+    if([$B.ast.Name].indexOf(proto) > -1){
         for(attr of attr_names){
             if(tree[attr] !== undefined){
                 attrs.push(`${attr}=${ast_dump(tree[attr])}`)
@@ -87,6 +87,7 @@ function string_from_ast_value(value){
 
 
 function compiler_error(ast_obj, message, end){
+    prefix = ''
     var exc = _b_.SyntaxError.$factory(message)
     exc.filename = state.filename
     if(exc.filename != '<string>'){
@@ -104,11 +105,14 @@ function compiler_error(ast_obj, message, end){
     exc.end_offset = end.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
-    exc.$frame_obj = $B.frame_obj
-    if($B.frame_obj === null){
-        // console.log('frame obj is null')
-    }
+    exc.__traceback__ = $B.make_tb()
     throw exc
+}
+
+var uuid = Math.floor(Math.random() * 1000000)
+function make_id(){
+    uuid += 1
+    return uuid
 }
 
 function fast_id(obj){
@@ -116,7 +120,7 @@ function fast_id(obj){
     if(obj.$id !== undefined){
         return obj.$id
     }
-    return obj.$id = $B.UUID()
+    return obj.$id = make_id()
 }
 
 function copy_position(target, origin){
@@ -126,32 +130,31 @@ function copy_position(target, origin){
     target.end_col_offset = origin.end_col_offset
 }
 
-function encode_position(a, b, c, d){
-    if(d === undefined){
-        return `[${[a, b, c]}]`
-    }else{
-        return `[${[a, b, c, d]}]`
-    }
+function encode_position(){
+    return `[${Array.from(arguments).join(',')}]`
 }
 
 $B.decode_position = function(pos){
     return pos
 }
 
-function get_source_from_position(src, ast_obj){
-    var lines = src.split('\n'),
-        start_line = lines[ast_obj.lineno - 1]
+function get_source_from_position(scopes, ast_obj){
+    scopes.lines = scopes.lines ?? scopes.src.split('\n')
+    var lines = scopes.lines,
+        start_line = lines[ast_obj.lineno - 1],
+        res
     if(ast_obj.end_lineno == ast_obj.lineno){
-        return start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
+        res = start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
     }else{
         var res = start_line.substr(ast_obj.col_offset),
             line_num = ast_obj.lineno + 1
         while(line_num < ast_obj.end_lineno){
-            res += lines[line_num - 1]
+            res += lines[line_num - 1].trimLeft()
+            line_num++
         }
-        res += lines[ast_obj.end_lineno - 1].substr(0, ast_obj.end_col_offset)
-        return res
+        res += lines[ast_obj.end_lineno - 1].substr(0, ast_obj.end_col_offset).trimLeft()
     }
+    return res.replace(new RegExp("'", 'g'), "\\'")
 }
 
 function get_names(ast_obj){
@@ -295,47 +298,52 @@ function bind(name, scopes){
         scope = scopes[0]
     }else if(up_scope.nonlocals.has(name)){
         for(var i = scopes.indexOf(up_scope) - 1; i >= 0; i--){
-            if(scopes[i].locals.has(name)){
+            if(scopes[i].locals.has(name) ||
+                    (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){
                 return scopes[i]
             }
         }
     }
     scope.locals.add(name)
+    if(up_scope.type == 'class' || up_scope !== scope){
+        up_scope.maybe_locals = up_scope.maybe_locals ?? new Set()
+        up_scope.maybe_locals.add(name)
+    }
     return scope
 }
 
-var CELL = 5,
-    FREE = 4,
-    LOCAL = 1,
-    SCOPE_MASK = 15,
-    SCOPE_OFF = 12
+var SF = $B.SYMBOL_FLAGS // in brython_builtins.js
 
-var TYPE_CLASS = 1,
-    TYPE_MODULE = 2
-
-var DEF_LOCAL = 2 ,           /* assignment in code block */
-    DEF_PARAM = 2 << 1,       /* formal parameter */
-    DEF_COMP_ITER = 2 << 8    /* this name is a comprehension iteration variable */
-
-function name_reference(name, scopes, position){
+function name_reference(name, scopes, ast_obj){
     var scope = name_scope(name, scopes)
-    return make_ref(name, scopes, scope, position)
+    return make_ref(name, scopes, scope, ast_obj)
 }
 
-function make_ref(name, scopes, scope, position){
+function make_ref(name, scopes, scope, ast_obj){
+    var test = false // name == 'record' && scopes[scopes.length - 1].name == "g"
+    if(test){
+        console.log('make ref', name, scopes.slice(), scope)
+    }
     if(scope.found){
-        return reference(scopes, scope.found, name)
-    }else if(scope.resolve == 'all'){
-        var scope_names = make_search_namespaces(scopes)
-        return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`
-    }else if(scope.resolve == 'local'){
-        return `$B.resolve_local('${name}', [${position}])`
-    }else if(scope.resolve == 'global'){
-        return `$B.resolve_global('${name}', _frame_obj)`
-    }else if(Array.isArray(scope.resolve)){
-        return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`
-    }else if(scope.resolve == 'own_class_name'){
-        return `$B.own_class_name('${name}')`
+        var res = reference(scopes, scope.found, name)
+        if(test){
+            console.log('res', res)
+        }
+        return res
+    }else{
+        var inum = add_to_positions(scopes, ast_obj)
+        if(scope.resolve == 'all'){
+            var scope_names = make_search_namespaces(scopes)
+            return `$B.resolve_in_scopes('${name}', [${scope_names}], ${inum})`
+        }else if(scope.resolve == 'local'){
+            return `$B.resolve_local('${name}', ${inum})`
+        }else if(scope.resolve == 'global'){
+            return `$B.resolve_global('${name}', _frame_obj, ${inum})`
+        }else if(Array.isArray(scope.resolve)){
+            return `$B.resolve_in_scopes('${name}', [${scope.resolve}], ${inum})`
+        }else if(scope.resolve == 'own_class_name'){
+            return `$B.own_class_name('${name}', ${inum})`
+        }
     }
 }
 
@@ -356,10 +364,10 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'x'
+    var test = false // name == 'xzs' // && scopes[scopes.length - 1].name == "g"
     if(test){
         console.log('name scope', name, scopes.slice())
-        alert()
+        //alert()
     }
     var flags,
         block
@@ -381,6 +389,9 @@ function name_scope(name, scopes){
         console.log('scopes', scopes.slice())
         console.log('symtable', scopes.symtable)
     }
+    if(test){
+        console.log('block symbols', block.symbols)
+    }
     try{
         flags = _b_.dict.$getitem_string(block.symbols, name)
     }catch(err){
@@ -389,33 +400,43 @@ function name_scope(name, scopes){
         console.log('scopes', scopes.slice())
         return {found: false, resolve: 'all'}
     }
-    let __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
-        is_local = [LOCAL, CELL].indexOf(__scope) > -1
+    let __scope = (flags >> SF.SCOPE_OFF) & SF.SCOPE_MASK,
+        is_local = [SF.LOCAL, SF.CELL].indexOf(__scope) > -1
     if(test){
         console.log('block', block, 'is local', is_local, '__scope', __scope)
+        console.log('flags', flags, 'scopeoff', SF.SCOPE_OFF, 'scope mask', SF.SCOPE_MASK)
     }
     if(up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name){
         return {found: false, resolve: 'own_class_name'}
     }
     // special case
     if(name == '__annotations__'){
-        if(block.type == TYPE_CLASS && up_scope.has_annotation){
+        if(block.type == SF.TYPE_CLASS && up_scope.has_annotation){
             is_local = true
-        }else if(block.type == TYPE_MODULE){
+        }else if(block.type == SF.TYPE_MODULE){
             is_local = true
         }
+    }
+    if(test){
+        console.log('is local ???', is_local, 'scope', scope)
     }
     if(is_local){
         // name is local (symtable) but may not have yet been bound in scope
         // If scope is a "subscope", look in its parents
         var l_scope = local_scope(name, scope)
+        if(test){
+            console.log('l_scope', l_scope)
+        }
         if(! l_scope.found){
-            if(block.type == TYPE_CLASS){
+            if(block.type == SF.TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
                 scope.needs_frames = true
+                if(scope.maybe_locals && scope.maybe_locals.has(name)){
+                    return {found: false, resolve: 'local'}
+                }
                 return {found: false, resolve: 'global'}
-            }else if(block.type == TYPE_MODULE){
+            }else if(block.type == SF.TYPE_MODULE){
                 scope.needs_frames = true
                 return {found: false, resolve: 'global'}
             }
@@ -437,7 +458,7 @@ function name_scope(name, scopes){
             if(block && _b_.dict.$contains_string(block.symbols, name)){
                 var fl = _b_.dict.$getitem_string(block.symbols, name),
                     local_to_block =
-                        [LOCAL, CELL].indexOf((fl >> SCOPE_OFF) & SCOPE_MASK) > -1
+                        [SF.LOCAL, SF.CELL].indexOf((fl >> SF.SCOPE_OFF) & SF.SCOPE_MASK) > -1
                 if(! local_to_block){
                     continue
                 }
@@ -462,11 +483,14 @@ function name_scope(name, scopes){
             return {found: false, resolve: 'global'}
         }
         if(scopes[i].locals.has(name) && scopes[i].type != 'class'){
+            if(test){
+                console.log('found in locals of', scopes[i])
+            }
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
         }else if(block && _b_.dict.$contains_string(block.symbols, name)){
             flags = _b_.dict.$getitem_string(block.symbols, name)
-            let __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
-            if([LOCAL, CELL].indexOf(__scope) > -1){
+            let __scope = (flags >> SF.SCOPE_OFF) & SF.SCOPE_MASK
+            if([SF.LOCAL, SF.CELL].indexOf(__scope) > -1){
                 /* name is local to a surrounding scope but not yet bound
                 Example :
                     i = 5
@@ -570,7 +594,7 @@ $B.resolve = function(name){
     throw $B.name_error(name)
 }
 
-$B.resolve_local = function(name, position){
+$B.resolve_local = function(name, inum){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
     if($B.frame_obj !== null){
@@ -589,13 +613,11 @@ $B.resolve_local = function(name, position){
     }
     var exc = _b_.UnboundLocalError.$factory(`cannot access local variable ` +
               `'${name}' where it is not associated with a value`)
-    if(position && $B.frame_obj){
-        $B.set_exception_offsets(exc, position)
-    }
+    $B.set_inum(inum)
     throw exc
 }
 
-$B.resolve_in_scopes = function(name, namespaces, position){
+$B.resolve_in_scopes = function(name, namespaces, inum){
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top,
@@ -625,13 +647,11 @@ $B.resolve_in_scopes = function(name, namespaces, position){
         }
     }
     var exc = $B.name_error(name)
-    if(position){
-        $B.set_exception_offsets(exc, position)
-    }
+    $B.set_inum(inum)
     throw exc
 }
 
-$B.resolve_global = function(name, frame_obj){
+$B.resolve_global = function(name, frame_obj, inum){
     // Resolve in globals or builtins
     while(frame_obj !== null){
         var frame = frame_obj.frame,
@@ -647,14 +667,16 @@ $B.resolve_global = function(name, frame_obj){
     if(builtins_scope.locals.has(name)){
         return _b_[name]
     }
+    $B.set_inum(inum)
     throw $B.name_error(name)
 }
 
-$B.own_class_name = function(name){
+$B.own_class_name = function(name, inum){
+    $B.set_inum(inum)
     throw $B.name_error(name)
 }
 
-var $operators = $B.op2method.subset("all") // in py2js.js
+var $operators = $B.op2method.subset("all") // in brython_builtins.js
 
 var opname2opsign = {}
 for(var key in $operators){
@@ -695,6 +717,18 @@ function mark_parents(node){
     }
 }
 
+var prefix = '',
+    tab = '  '
+
+function indent(n){
+    n = n ?? 1
+    prefix += tab.repeat(n)
+}
+function dedent(n){
+    n = n ?? 1
+    prefix = prefix.substr(n * tab.length)
+}
+
 function add_body(body, scopes){
     var res = '';
     let js;
@@ -733,55 +767,78 @@ function init_comprehension(comp, scopes){
         return init_genexpr(comp, scopes)
     }
     // Code common to comprehensions
-    return `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`
+    return prefix + `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`
 }
 
 function init_genexpr(comp, scopes){
     var varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
-    return `var ${comp.locals_name} = {},\n` +
-               `locals = ${comp.locals_name}\n` +
-           `locals['.0'] = expr\n` +
-           `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
-           `"${comp.module_name}", ${comp.globals_name}]\n` +
-           `frame.$has_generators = true\n` +
-           `frame.__file__ = '${scopes.filename}'\n` +
-           `frame.$lineno = ${comp.ast.lineno}\n` +
-           `frame.f_code = {\n` +
-               `co_argcount: 1,\n` +
-               `co_firstlineno:${comp.ast.lineno},\n` +
-               `co_name: "<${comp.type.toLowerCase()}>",\n` +
-               `co_filename: "${scopes.filename}",\n` +
-               `co_flags: ${comp.type == 'genexpr' ? 115 : 83},\n` +
-               `co_freevars: $B.fast_tuple([]),\n` +
-               `co_kwonlyargcount: 0,\n` +
-               `co_posonlyargount: 0,\n` +
-               `co_qualname: "<${comp.type.toLowerCase()}>",\n` +
-               `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
-           `}\n` +
-           `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
-           `frame.$f_trace = _b_.None\n` +
-           `var _frame_obj = $B.frame_obj\n`
+    return prefix + `var ${comp.locals_name} = {},\n` +
+           prefix + tab + tab + `locals = ${comp.locals_name}\n` +
+           prefix + `locals['.0'] = expr\n` +
+           prefix + `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
+               `"${comp.module_name}", ${comp.globals_name}]\n` +
+           prefix + `frame.$has_generators = true\n` +
+           prefix + `frame.__file__ = '${scopes.filename}'\n` +
+           prefix + `frame.$lineno = ${comp.ast.lineno}\n` +
+           prefix + `$B.make_f_code(frame, [${varnames}])\n` +
+           prefix + `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
+           prefix + `frame.$f_trace = _b_.None\n` +
+           prefix + `var _frame_obj = $B.frame_obj\n`
 }
 
+function comp_bindings(comp, bindings){
+    if(comp.target instanceof $B.ast.Name){
+        bindings.add(comp.target.id)
+    }else if(comp.target.elts){
+        for(var elt of comp.target.elts){
+            comp_bindings({target: elt}, bindings)
+        }
+    }
+    return bindings
+}
 
 function make_comp(scopes){
     // Code common to list / set / dict comprehensions
-    var id = $B.UUID(),
+    // List all names bound inside the comprehension generators
+    var bindings = new Set()
+    for(var gen of this.generators){
+        comp_bindings(gen, bindings)
+    }
+    var save_locals = new Set()
+    var plen = prefix.length
+    var comp_prefix = prefix
+    var id = make_id(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
-        varnames = symtable_block.varnames.map(x => `"${x}"`),
+        varnames = Object.keys(symtable_block.symbols.$strings).map(x => `"${x}"`),
         comp_iter,
         comp_scope = $B.last(scopes),
         upper_comp_scope = comp_scope
+
+    // Check the names bound in the comprehension that would shadow names
+    // in the comprehension scope
+    for(var name of comp_scope.locals){
+        if(bindings.has(name)){
+            save_locals.add(name)
+        }
+    }
     while(upper_comp_scope.parent){
         upper_comp_scope = upper_comp_scope.parent
+        for(var name of upper_comp_scope.locals){
+            if(bindings.has(name)){
+                save_locals.add(name)
+            }
+        }
     }
+    var comp_scope_block = scopes.symtable.table.blocks.get(
+                                 fast_id(upper_comp_scope.ast)),
+        comp_scope_symbols = comp_scope_block.symbols
 
     var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                             upper_comp_scope.nb_await
 
     for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){
-        if(symbol.value & DEF_COMP_ITER){
+        if(symbol.value & SF.DEF_COMP_ITER){
             comp_iter = symbol.key
         }
     }
@@ -796,34 +853,53 @@ function make_comp(scopes){
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
 
+    indent()
+    if(prefix.length > plen + tab.length){
+        console.warn('JS indentation issue')
+    }
     var js = init_comprehension(comp, scopes)
 
     if(comp_iter_scope.found){
-        js += `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
+        js += prefix + `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
+    }
+    for(var name of save_locals){
+        js += prefix + `var save_${name} = ${name_reference(name, scopes)}\n`
     }
     if(this instanceof $B.ast.ListComp){
-        js += `var result_${id} = []\n`
+        js += prefix + `var result_${id} = $B.$list([])\n`
     }else if(this instanceof $B.ast.SetComp){
-        js += `var result_${id} = _b_.set.$factory()\n`
+        js += prefix + `var result_${id} = _b_.set.$factory()\n`
     }else if(this instanceof $B.ast.DictComp){
-        js += `var result_${id} = $B.empty_dict()\n`
+        js += prefix + `var result_${id} = $B.empty_dict()\n`
     }
 
     // special case for first generator
     var first = this.generators[0]
-    js += `try{\n` +
-              `for(var next_${id} of next_func_${id}){\n`
+    js += prefix + `try{\n`
+    indent()
+    js += prefix + `for(var next_${id} of next_func_${id}){\n`
+    indent()
+    var save_target_flags
+    if(first.target instanceof $B.ast.Name){
+        var target_name = first.target.id
+        if(comp_scope_symbols.$strings.hasOwnProperty(target_name)){
+            save_target_flags = comp_scope_symbols.$strings[target_name]
+            comp_scope_symbols.$strings[target_name] = SF.LOCAL << SF.SCOPE_OFF
+        }
+    }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
     name.to_js = function(){return `next_${id}`}
+
     var assign = new $B.ast.Assign([first.target], name)
     assign.lineno = this.lineno
     js += assign.to_js(scopes) + '\n'
 
     for(let _if of first.ifs){
         nb_paren++
-        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+        js += prefix + `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+        indent()
     }
 
     for(var comprehension of this.generators.slice(1)){
@@ -843,6 +919,9 @@ function make_comp(scopes){
         var elt = $B.js_from_ast(this.elt, scopes)
     }
 
+    if(save_target_flags){
+        comp_scope_symbols.$strings[target_name] = save_target_flags
+    }
     // count if nb_await was incremented
     var final_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                                   upper_comp_scope.nb_await
@@ -853,31 +932,45 @@ function make_comp(scopes){
     js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
 
     js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
+
     if(this instanceof $B.ast.ListComp){
-        js += `result_${id}.push(${elt})\n`
+        js += prefix + `result_${id}.push(${elt})\n`
     }else if(this instanceof $B.ast.SetComp){
-        js += `_b_.set.add(result_${id}, ${elt})\n`
+        js += prefix + `_b_.set.add(result_${id}, ${elt})\n`
     }else if(this instanceof $B.ast.DictComp){
-        js += `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
+        js += prefix + `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
     }
 
+    dedent()
     for(var i = 0; i < nb_paren; i++){
-        js += '}\n'
+        js += prefix + '}\n'
+        dedent()
     }
-    js += `}catch(err){\n` +
-          (has_await ? `$B.restore_frame_obj(save_frame_obj, ${comp.locals_name})\n` : '') +
-          `$B.set_exc(err, frame)\n` +
-          `throw err\n}\n` +
-          (has_await ? `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
+    js += prefix + `}catch(err){\n`
+    indent()
+    js += (has_await ? prefix + `$B.restore_frame_obj(save_frame_obj, ${comp.locals_name})\n` : '') +
+          prefix + `$B.set_exc(err, frame)\n` +
+          prefix + `throw err\n`
+    dedent()
+    js += prefix + `}\n` +
+          (has_await ? prefix + `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
 
-    if(comp_iter_scope.found){
-        js += `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
-    }else{
-        js += `delete ${comp.locals_name}.${comp_iter}\n`
+    for(var name of save_locals){
+        js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
     }
-    js += `return result_${id}\n` +
-          `}\n` +
-          `)(${outmost_expr})\n`
+    if(comp_iter_scope.found){
+        js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
+    }
+    js += prefix + `return result_${id}\n`
+    dedent()
+    js += prefix + `}` + `)(${outmost_expr})\n`
+    if(prefix.length != plen){
+        console.log('comprehension, prefix length start', plen,
+            'end', prefix.length)
+        console.log('file', scopes.filename)
+        console.log(this)
+        console.log('>>>\n', js, '\n<<<')
+    }
 
     return js
 }
@@ -914,9 +1007,16 @@ function init_scopes(type, scopes){
             }
         }
         if(namespaces.exec_locals !== namespaces.exec_globals){
-            for(let key in namespaces.exec_locals){
-                if(! key.startsWith('$')){
-                    top_scope.locals.add(key)
+            if(namespaces.exec_locals[$B.LOCALS_PROXY]){
+                // used for locals in exec / eval
+                for(let item of $B.make_js_iterator(namespaces.exec_locals.$target)){
+                    top_scope.locals.add(item)
+                }
+            }else{
+                for(let key in namespaces.exec_locals){
+                    if(! key.startsWith('$')){
+                        top_scope.locals.add(key)
+                    }
                 }
             }
         }
@@ -950,15 +1050,88 @@ function check_assign_or_delete(obj, target, action){
     }
 }
 
+function check_is_arg(e){
+    if (! (e instanceof $B.ast.Constant)){
+        return true
+    }
+    var value = e.value
+    return (value === _b_.None
+         || value === false
+         || value === true
+         || value === _b_.Ellipsis)
+}
+
+function check_compare(op_name, left, right, scopes){
+    var test_left = check_is_arg(left),
+        test_right = check_is_arg(right)
+    if(! test_left || ! test_right){
+        var item = test_left ? right : left,
+            name = $B.class_name(item.value)
+        $B.warn(_b_.SyntaxWarning, `"${op_name}" with '${name}' literal. ` +
+                        `Did you mean "=="?`,
+                        scopes.filename, item)
+    }
+}
+
+function check_type_params(ast_obj){
+    var type_params = ast_obj.type_params
+    if(Array.isArray(type_params)){
+        var has_defaults = false
+        for(var type_param of type_params){
+            if(type_param.default_value === undefined && has_defaults){
+                throw compiler_error(type_param, `non-default type ` +
+                    `parameter '${type_param.name}' follows default type parameter`)
+            }else if(type_param.default_value){
+                has_defaults = true
+            }
+        }
+    }
+}
+
+function maybe_add_static(attr, scopes){
+    // If last scope is a function inside a class and the value of attr is
+    // "self", add attr to the class static_attributes set
+    var last = last_scope(scopes)
+    if(last.type == "def"){
+        var ix = scopes.indexOf(last) - 1
+        while(scopes[ix]){
+            last = last_scope(scopes.slice(0, ix + 1))
+            if(last.type == "class"){
+                last.static_attributes = last.static_attributes ??
+                    new Set()
+                last.static_attributes.add(attr.attr)
+                return
+            }else if(last.type == "def"){
+                ix = scopes.indexOf(last) - 1
+            }else{
+                return
+            }
+        }
+    }
+}
+
+function add_to_positions(scopes, ast_obj){
+    // add a positions table to the list of positions for current frame
+    var up_scope = last_scope(scopes)
+    up_scope.positions = up_scope.positions ?? []
+    up_scope.positions[up_scope.positions.length] = encode_position([
+        ast_obj.lineno, ast_obj.end_lineno,
+        ast_obj.col_offset, ast_obj.end_col_offset
+    ])
+    return 1 + 2 * (up_scope.positions.length - 1)
+}
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
-        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
-    return `if($B.set_lineno(frame, ${this.lineno}) && !$B.$bool(${test})){\n` +
-           `throw _b_.AssertionError.$factory(${msg})}\n`
+        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : "''"
+
+    var inum = add_to_positions(scopes, this.test)
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    return js + prefix + `$B.assert(${test}, ${msg}, ${inum})`
 }
 
 function annotation_to_str(obj, scopes){
-    return get_source_from_position(scopes.src, obj)
+    return get_source_from_position(scopes, obj)
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
@@ -968,7 +1141,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     var scope = last_scope(scopes)
     var js = ''
     if(! scope.has_annotation){
-        js += 'locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n'
+        js += prefix + 'locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n'
         scope.has_annotation = true
         scope.locals.add('__annotations__')
     }
@@ -978,34 +1151,34 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
                 $B.js_from_ast(this.annotation, scopes)
     }
     if(this.value){
-        js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
+        js += prefix + `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
         if(this.target instanceof $B.ast.Name && this.simple){
             let scope = bind(this.target.id, scopes),
                 mangled = mangle(scopes, scope, this.target.id)
             if(scope.type != "def"){
                 // Update __annotations__ only for classes and modules
-                js += `$B.$setitem(locals.__annotations__, ` +
+                js += prefix + `$B.$setitem(locals.__annotations__, ` +
                       `'${mangled}', ${ann_value})\n`
             }
             let target_ref = name_reference(this.target.id, scopes)
-            js += `${target_ref} = ann`
+            js += prefix + `${target_ref} = ann`
         }else if(this.target instanceof $B.ast.Attribute){
-            js += `$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}` +
+            js += prefix + `$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}` +
                 `, "${this.target.attr}", ann)`
         }else if(this.target instanceof $B.ast.Subscript){
-            js += `$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}` +
+            js += prefix + `$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}` +
                 `, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`
         }
     }else{
         if(this.target instanceof $B.ast.Name){
             if(this.simple && scope.type != 'def'){
                 let mangled = mangle(scopes, scope, this.target.id)
-                js += `$B.$setitem(locals.__annotations__, ` +
+                js += prefix + `$B.$setitem(locals.__annotations__, ` +
                     `'${mangled}', ${ann_value})`
             }
         }
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n` + js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` + js
 }
 
 $B.ast.AnnAssign.prototype._check = function(){
@@ -1014,21 +1187,34 @@ $B.ast.AnnAssign.prototype._check = function(){
 
 $B.ast.Assign.prototype.to_js = function(scopes){
     compiler_check(this)
-    var js = this.lineno ? `$B.set_lineno(frame, ${this.lineno})\n` : '',
-        value = $B.js_from_ast(this.value, scopes)
+    var js
+    if(! this.lineno || this.$loopvar){
+        // this.$loopvar is set for the assignement of a "for" target
+        // In this case set_lineno is called by method .next() of the
+        // iterator (see code in py_utils / make_js_iterator)
+        js = ''
+    }else{
+        js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    }
+    var value = $B.js_from_ast(this.value, scopes)
 
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
-            return $B.js_from_ast(target, scopes) + ' = ' + value
+            return prefix + $B.js_from_ast(target, scopes) + ' = ' + value
         }else if(target instanceof $B.ast.Starred){
             return assign_one(target.value, value)
         }else if(target instanceof $B.ast.Subscript){
-            return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
-                `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`
+            var inum = add_to_positions(scopes, target)
+            return prefix + `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
+                `, ${$B.js_from_ast(target.slice, scopes)}, ${value}, ${inum})`
         }else if(target instanceof $B.ast.Attribute){
+            if(target.value.id == 'self'){
+                maybe_add_static(target, scopes)
+            }
+            var inum = add_to_positions(scopes, target)
             var attr = mangle(scopes, last_scope(scopes), target.attr)
-            return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
-                `, "${attr}", ${value})`
+            return prefix + `$B.$setattr1(${$B.js_from_ast(target.value, scopes)}` +
+                `, "${attr}", ${value}, ${inum})`
         }
     }
 
@@ -1044,15 +1230,18 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                 break
             }
         }
-        var iter_id = 'it_' + $B.UUID()
-        js += `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
+        var iter_id = 'it_' + make_id()
+        var position = encode_position("'Unpack'",
+            target.lineno, target.col_offset,
+            target.end_lineno, target.end_col_offset)
+        var inum = add_to_positions(scopes, target)
+        js += prefix + `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
         if(nb_after_starred !== undefined){
             js += `, ${nb_after_starred}`
         }
-        var position = encode_position(target.col_offset, target.col_offset,
-                       target.end_col_offset)
-        js += `, ${position})\n`
+
+        js += `, ${inum})\n`
         var assigns = []
         for(var elt of target.elts){
             if(elt instanceof $B.ast.Starred){
@@ -1077,8 +1266,8 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             return js
         }
     }
-    var value_id = 'v' + $B.UUID()
-    js += `var ${value_id} = ${value}\n`
+    var value_id = 'v' + make_id()
+    js += prefix + `var ${value_id} = ${value}\n`
 
     var assigns = []
     for(let target of this.targets){
@@ -1148,21 +1337,26 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
     }
 
     function add_item(item, js){
-        var id = $B.UUID()
-        var s = `var mgr_${id} = ` +
-              $B.js_from_ast(item.context_expr, scopes) + ',\n' +
-              `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n` +
-              `aexit_${id} = $B.$getattr(mgr_type_${id}, '__aexit__'),\n` +
-              `aenter_${id} = $B.$getattr(mgr_type_${id}, '__aenter__'),\n` +
-              `value_${id} = await $B.promise($B.$call(aenter_${id})(mgr_${id})),\n` +
-              `exc_${id} = true\n`
+        var id = make_id()
+        var s = prefix + `var mgr_${id} = ` +
+              $B.js_from_ast(item.context_expr, scopes) + ',\n'
+        indent(2)
+        s += prefix + `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n` +
+             prefix + `aexit_${id} = $B.$getattr(mgr_type_${id}, '__aexit__'),\n` +
+             prefix + `aenter_${id} = $B.$getattr(mgr_type_${id}, '__aenter__'),\n` +
+             prefix + `value_${id} = await $B.promise($B.$call(aenter_${id})(mgr_${id})),\n` +
+             prefix + `exc_${id} = true\n`
         if(has_generator){
             // add/update attribute used to close context managers in
             // leave_frame()
-            s += `locals.$context_managers = locals.$context_managers || []\n` +
+            s += prefix + `locals.$context_managers = locals.$context_managers || []\n` +
                  `locals.$context_managers.push(mgr_${id})\n`
         }
-        s += 'try{\ntry{\n'
+        dedent(2)
+        s += prefix + 'try{\n'
+        indent()
+        s += prefix + 'try{\n'
+        indent()
         if(item.optional_vars){
             //bind_vars(item.optional_vars, scopes)
             var value = {to_js: function(){return `value_${id}`}}
@@ -1172,17 +1366,28 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
             s += assign.to_js(scopes) + '\n'
         }
         s += js
-        s += `}catch(err_${id}){\n` +
-              `frame.$lineno = ${lineno}\n` +
-              `exc_${id} = false\n` +
-              `err_${id} = $B.exception(err_${id}, frame)\n` +
-              `var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, ` +
-              `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n` +
-              `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
-        s += `}\nfinally{\n` +
-              `frame.$lineno = ${lineno}\n` +
-              `if(exc_${id}){\n` +
-              `await $B.promise(aexit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None))\n}\n}\n`
+        dedent()
+        s += prefix + `}catch(err_${id}){\n`
+        indent()
+        s += prefix + `frame.$lineno = ${lineno}\n` +
+             prefix + `exc_${id} = false\n` +
+             prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
+             prefix + `var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, \n` +
+             prefix + tab.repeat(4) + `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n` +
+             prefix + `if(! $B.$bool($b)){\n` +
+             prefix + tab + `throw err_${id}\n` +
+             prefix + `}\n`
+        dedent()
+        s += prefix + `}\n`
+        dedent()
+        s += prefix + `}finally{\n`
+        indent()
+        s += prefix + `frame.$lineno = ${lineno}\n` +
+             prefix + `if(exc_${id}){\n` +
+             prefix + tab + `await $B.promise(aexit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None))\n` +
+             prefix + `}\n`
+        dedent()
+        s += prefix + `}\n`
         return s
     }
 
@@ -1198,21 +1403,23 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         }
     }
 
+    indent(2)
     var js = add_body(this.body, scopes) + '\n'
+    dedent(2)
     var has_generator = scope.is_generator
     for(let item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n` + js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` + js
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
-    var position = encode_position(this.value.col_offset,
-                                this.value.col_offset,
-                                this.end_col_offset)
+    var position = encode_position("'Attr'",
+            this.value.lineno, this.value.col_offset, this.end_col_offset)
+    var inum = add_to_positions(scopes, this)
     return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
-           `'${attr}', ${position})`
+           `'${attr}', ${inum})`
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
@@ -1235,27 +1442,27 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
             // namespace (global or local), not a call to $B.resolve
             let left_scope = scope.resolve == 'global' ?
                 make_scope_name(scopes, scopes[0]) : 'locals'
-            return `${left_scope}.${this.target.id} = $B.augm_assign(` +
-                make_ref(this.target.id, scopes, scope) + `, '${iop}', ${value})`
+            js = prefix + `${left_scope}.${this.target.id} = $B.augm_assign(` +
+                make_ref(this.target.id, scopes, scope, this.target) + `, '${iop}', ${value})`
         }else{
             let ref = `${make_scope_name(scopes, scope.found)}.${this.target.id}`
-            js = `${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`
+            js = prefix + `${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`
         }
     }else if(this.target instanceof $B.ast.Subscript){
-        js = `$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
+        js = prefix + `$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
             `(locals.$key = ${this.target.slice.to_js(scopes)}), ` +
             `$B.augm_assign($B.$getitem(locals.$tg, locals.$key), '${iop}', ${value}))`
     }else if(this.target instanceof $B.ast.Attribute){
         let mangled = mangle(scopes, last_scope(scopes), this.target.attr)
-        js = `$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
+        js = prefix + `$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
             `'${mangled}', $B.augm_assign(` +
             `$B.$getattr(locals.$tg, '${mangled}'), '${iop}', ${value}))`
     }else{
         let target = $B.js_from_ast(this.target, scopes),
             value = $B.js_from_ast(this.value, scopes)
-        js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
+        js = prefix + `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n` + js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` + js
 }
 
 $B.ast.AugAssign.prototype._check = function(){
@@ -1280,7 +1487,7 @@ $B.ast.Await.prototype.to_js = function(scopes){
     }
     if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){
         scopes[ix].has_await = true
-        return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`
+        return prefix + `await $B.promise(${$B.js_from_ast(this.value, scopes)})`
     }else if(scopes[ix].ast instanceof $B.ast.FunctionDef){
         compiler_error(this, "'await' outside async function", this.value)
     }else{
@@ -1289,14 +1496,34 @@ $B.ast.Await.prototype.to_js = function(scopes){
 }
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
-    // temporarily support old (py2js.js) and new (python_parser.js) versions
-    var name = this.op.$name ? this.op.$name : this.op.constructor.$name
+    var res
+    var position = encode_position("'BinOp'",
+        this.lineno, this.col_offset,
+        this.end_lineno, this.end_col_offset,
+        this.left.lineno, this.left.col_offset,
+        this.left.end_lineno, this.left.end_col_offset,
+        this.right.lineno, this.right.col_offset,
+        this.right.end_lineno, this.right.end_col_offset)
+    var inum = add_to_positions(scopes, this)
+    var name = this.op.constructor.$name
     var op = opclass2dunder[name]
-    var res = `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
-        `${$B.js_from_ast(this.right, scopes)}`
-    var position = encode_position(this.left.col_offset, this.col_offset,
-                                    this.end_col_offset, this.right.end_col_offset)
-    return res + `, ${position})`
+    if(this.left instanceof $B.ast.Constant &&
+            this.right instanceof $B.ast.Constant){
+        // calculate result at translation time
+        try{
+            res = $B.rich_op(op, this.left.value, this.right.value)
+            if(typeof res == 'string' && op !== '__add__'){
+                throw Error()
+            }
+            var ast_obj = new $B.ast.Constant(res)
+            return ast_obj.to_js(scopes)
+        }catch(err){
+            // error will be handled at runtime
+        }
+    }
+    return `$B.rich_op('${op}', ` +
+        `${$B.js_from_ast(this.left, scopes)}, ` +
+        `${$B.js_from_ast(this.right, scopes)}, ${inum})`
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){
@@ -1350,32 +1577,29 @@ $B.ast.Break.prototype.to_js = function(scopes){
     for(var scope of scopes.slice().reverse()){
         if(scope.ast instanceof $B.ast.For ||
                 scope.ast instanceof $B.ast.While){
-            js += `no_break_${scope.id} = false\n`
+            js += prefix + `no_break_${scope.id} = false\n`
             break
         }
     }
-    js += `break`
+    js += prefix + `break`
     return js
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
+    var position = encode_position("'Call'",
+        this.lineno, this.col_offset,
+        this.end_lineno, this.end_col_offset,
+        this.func.end_lineno, this.func.end_col_offset)
+    var inum = add_to_positions(scopes, this)
     var func =  $B.js_from_ast(this.func, scopes),
-        js = `$B.$call(${func}`,
-        end_col_offset = this.end_col_offset
-    if(this.end_lineno > this.lineno){
-        end_col_offset = this.col_offset + 1
-    }
+        js = `$B.$call(${func}, ${inum})`
 
-    var position = encode_position(this.col_offset, this.col_offset,
-                            end_col_offset)
-    js += `, ${position}`
+    var args = make_args.bind(this)(scopes),
+        args_js = args.js.trim()
 
-    js += ')'
-    var args = make_args.bind(this)(scopes)
-
-    return js + (args.has_starred ? `.apply(null, ${args.js})` :
-                                    `(${args.js})`)
+    return js + (args.has_starred ? `.apply(null, ${args_js})` :
+                                    `(${args_js})`)
 }
 
 $B.ast.Call.prototype._check = function(){
@@ -1481,20 +1705,20 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     var js = '',
         locals_name = make_scope_name(scopes, class_scope),
-        ref = this.name + $B.UUID(),
+        ref = this.name + make_id(),
         glob = scopes[0].name,
         globals_name = make_scope_name(scopes, scopes[0]),
         decorators = [],
         decorated = false
     for(let dec of this.decorator_list){
         decorated = true
-        var dec_id = 'decorator' + $B.UUID()
+        var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
-        js += `$B.set_lineno(frame, ${dec.lineno})\n` +
-              `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
+        js += prefix + `$B.set_lineno(frame, ${dec.lineno})\n` +
+              prefix + `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
-    js += `$B.set_lineno(frame, ${this.lineno})\n`
+    js += prefix + `$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
     var qualname = this.name
     var ix = scopes.length - 1
     while(ix >= 0){
@@ -1511,90 +1735,155 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
     if(has_type_params){
-        js += `$B.$import('_typing')\n` +
-              `var _typing = $B.imported._typing\n`
-        var params = []
+        check_type_params(this)
+        js += prefix + `function TYPE_PARAMS_OF_${this.name}(){\n`
+        indent()
+        js += prefix + `$B.$import('_typing')\n` +
+              prefix + `var _typing = $B.imported._typing\n`
+        var params = [],
+            need_typing_module
         for(let item of this.type_params){
             if(item instanceof $B.ast.TypeVar){
-                params.push(`$B.$call(_typing.TypeVar)('${item.name}')`)
+                params.push(`${item.name}`)
             }else if(item instanceof $B.ast.TypeVarTuple){
-                params.push(`$B.$call($B.$getattr(_typing.Unpack, '__getitem__'))($B.$call(_typing.TypeVarTuple)('${item.name.id}'))`)
+                params.push(`unpack(${item.name})`)
+                need_typing_module = true
             }else if(item instanceof $B.ast.ParamSpec){
-                params.push(`$B.$call(_typing.ParamSpec)('${item.name.id}')`)
+                params.push(`${item.name}`)
             }
         }
-        bases.push(`_typing.Generic.__class_getitem__(_typing.Generic,` +
-                ` $B.fast_tuple([${params}]))`)
+        bases.push(`generic_base`)
+        if(need_typing_module){
+            js += prefix + `$B.$import('typing')\n` +
+                  prefix + 'var typing = $B.imported.typing\n' +
+                  prefix + `var unpack = $B.$call($B.$getattr(typing.Unpack, '__getitem__'))\n`
+        }
+        var name_map = new Map()
         for(let item of this.type_params){
             var name,
                 param_type = item.constructor.$name
-            if(param_type == 'TypeVar'){
+            if(['TypeVar', 'TypeVarTuple', 'ParamSpec'].includes(param_type)){
                 name = item.name
             }else{
                 name = item.name.id
             }
-            js += `locals.${name} = $B.$call(_typing.${param_type})('${name}')\n`
+            name_map.set(item, name)
+            js += prefix + `var ${name} = $B.$call(_typing.${param_type})('${name}')\n`
         }
+        js += prefix + `var generic_base = _typing.Generic.__class_getitem__(_typing.Generic,` +
+                ` $B.fast_tuple([${params.join(', ')}]))\n`
     }
 
     var keywords = [],
-        metaclass
+        metaclass,
+        meta = ''
     for(var keyword of this.keywords){
         if(keyword.arg == 'metaclass'){
             metaclass = keyword.value
+            meta = metaclass.to_js(scopes)
+        }else{
+            keywords.push(`["${keyword.arg}", ` +
+                $B.js_from_ast(keyword.value, scopes) + ']')
         }
-        keywords.push(`["${keyword.arg}", ` +
-            $B.js_from_ast(keyword.value, scopes) + ']')
     }
 
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
-    js += `var ${ref} = (function(name, module, bases){\n` +
-              `var _frame_obj = $B.frame_obj,\n` +
-                  `resolved_bases = $B.resolve_mro_entries(bases),\n` +
-                  `metaclass = $B.get_metaclass(name, module, ` +
-                  `resolved_bases`
+    var inum = add_to_positions(scopes, this)
+
+    js += prefix + `var ${ref} = (function(name, module, bases`
+              + (metaclass ? ', meta' : '') +
+              `){\n`
+    indent()
+    js += prefix + `$B.frame_obj.frame.inum = ${inum}\n`
+    js += prefix + `var _frame_obj = $B.frame_obj,\n`
+    indent(2)
+    js += prefix + `resolved_bases = $B.resolve_mro_entries(bases),\n` +
+          prefix + `metaclass = $B.get_metaclass(name, module, ` +
+          `resolved_bases`
+
     if(metaclass){
-        js += `, ${metaclass.to_js(scopes)}`
+        js += `, meta`
     }
     js += ')\n'
+    dedent(2)
 
-    js += `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
-              `name, module ,"${qualname}", resolved_bases),\n`
+    js += prefix + `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
+              `name, module, "${qualname}", bases, resolved_bases),\n`
 
-    js += `locals = ${locals_name}\n` +
-          `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
-          `locals.__doc__ = ${docstring}\n` +
-          `var frame = [name, locals, module, ${globals_name}]\n` +
-          `frame.__file__ = __file__\n` +
-          `frame.$lineno = ${this.lineno}\n` +
-          `frame.$f_trace = $B.enter_frame(frame)\n` +
-          `var _frame_obj = $B.frame_obj\n` +
-          `if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
+    indent(2)
+    js += prefix + `locals = ${locals_name}\n` +
+          prefix + `locals.__doc__ = ${docstring}\n`
+    dedent(2)
+    js += prefix + `var frame = [name, locals, module, ${globals_name}]\n` +
+          prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
+          prefix + `var _frame_obj = $B.frame_obj\n` +
+          prefix + `if(frame.$f_trace !== _b_.None){\n` +
+          prefix + tab + `$B.trace_line()\n` +
+          prefix + `}\n`
+
+    if(has_type_params){
+        var tp_refs = []
+        for(var item of this.type_params){
+            tp_refs.push(`${name_map.get(item)}`)
+        }
+        js += prefix + `locals.__type_params__ = $B.fast_tuple([${tp_refs.join(', ')}])\n`
+    }
 
     scopes.push(class_scope)
 
-    js += add_body(this.body, scopes)
+    var index_for_positions = js.length
+
+    js += add_body(this.body, scopes) + '\n'
+
+    if(class_scope.positions){
+        js = js.substr(0, index_for_positions) +
+             prefix + `frame.positions = [${class_scope.positions}]\n` +
+             js.substr(index_for_positions)
+    }
 
     scopes.pop()
 
-    js += '\n$B.trace_return_and_leave(frame, _b_.None)\n' +
-          `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
-              `resolved_bases, bases, [${keywords.join(', ')}])\n` +
-          `})('${this.name}',${globals_name}.__name__ ?? '${glob}', $B.fast_tuple([${bases}]))\n`
+    var static_attrs = []
+    if(class_scope.static_attributes){
+        static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
+    }
+
+    js += prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
+          prefix + `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
+              `resolved_bases, bases, [${keywords.join(', ')}], ` +
+              `[${static_attrs}], ${this.lineno})\n`
+
+
+    dedent()
+    js += prefix + `})('${this.name}',${globals_name}.__name__ ?? '${glob}', ` +
+          `$B.fast_tuple([${bases}])` +
+          (metaclass ? ', ' + meta : '') +
+          `)\n`
+
+    if(has_type_params){
+        js += prefix + `return ${ref}\n`
+        dedent()
+        js += prefix + '}\n'
+    }
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
+    js += prefix
     if(decorated){
-        class_ref = `decorated${$B.UUID()}`
+        class_ref = `decorated${make_id()}`
         js += 'var '
     }
 
-    js += `${class_ref} = ${ref}\n`
-
+    js += `${class_ref} = `
+    if(has_type_params){
+        js += `TYPE_PARAMS_OF_${this.name}()\n`
+    }else{
+        js += `${ref}\n`
+    }
     if(decorated){
-        js += reference(scopes, enclosing_scope, this.name) + ' = '
+        js += prefix + reference(scopes, enclosing_scope, this.name) + ' = '
         var decorate = class_ref
         for(let dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
@@ -1606,11 +1895,11 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 }
 
 $B.ast.Compare.prototype.to_js = function(scopes){
+    var test_left = check_is_arg(this.left)
     var left = $B.js_from_ast(this.left, scopes),
         comps = []
-    // For chained comparison, store each intermediate result in locals.$op
     var len = this.ops.length,
-        prefix = len > 1 ? 'locals.$op = ' : ''
+        prefix
 
     for(var i = 0; i < len; i++){
         var name = this.ops[i].$name ? this.ops[i].$name : this.ops[i].constructor.$name,
@@ -1620,6 +1909,8 @@ $B.ast.Compare.prototype.to_js = function(scopes){
             console.log('op undefined', this.ops[i])
             alert()
         }
+        // For chained comparison, store each intermediate result in locals.$op
+        prefix = i < len - 1 ? 'locals.$op = ' : ''
         if(this.ops[i] instanceof $B.ast.In){
             comps.push(`$B.$is_member(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
@@ -1627,9 +1918,11 @@ $B.ast.Compare.prototype.to_js = function(scopes){
             comps.push(`! $B.$is_member(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.Is){
+            check_compare('is', this.left, right, scopes)
             comps.push(`$B.$is(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.IsNot){
+            check_compare('is not', this.left, right, scopes)
             comps.push(`! $B.$is(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else{
@@ -1644,21 +1937,23 @@ $B.ast.Compare.prototype.to_js = function(scopes){
 }
 
 $B.ast.comprehension.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
+    var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes)
 
-    var js = `var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n` +
-             `for(var next_${id} of next_func_${id}){\n`
+    var js = prefix + `var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n` +
+             prefix + `for(var next_${id} of next_func_${id}){\n`
+    indent()
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, this.target)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
     copy_position(assign, this.target)
-    js += assign.to_js(scopes) + ' // assign to target\n'
+    js += assign.to_js(scopes) + '\n'
 
     for(var _if of this.ifs){
-        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+        js += prefix + `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+        indent()
     }
 
     return js
@@ -1702,28 +1997,35 @@ $B.ast.Continue.prototype.to_js = function(scopes){
     if(! in_loop(scopes)){
         compiler_error(this, "'continue' not properly in loop")
     }
-    return 'continue'
+    return prefix + 'continue'
 }
 
 $B.ast.Delete.prototype.to_js = function(scopes){
     compiler_check(this)
     var js = ''
     for(var target of this.targets){
+        var inum = add_to_positions(scopes, target)
         if(target instanceof $B.ast.Name){
             var scope = name_scope(target.id, scopes)
+            var locals_id = 'null'
             if(scope.found){
                 scope.found.locals.delete(target.id)
+                locals_id = 'locals_' +
+                    qualified_scope_name(scopes, scope.found)
+                js += `$B.$delete("${target.id}", ${locals_id}, ${inum})\n`
+            }else{
+                js += `$B.$delete('${target.id}', '${scope.resolve}', ${inum})\n`
             }
-            js += `$B.$delete("${target.id}")\n`
         }else if(target instanceof $B.ast.Subscript){
             js += `$B.$delitem(${$B.js_from_ast(target.value, scopes)}, ` +
-                  `${$B.js_from_ast(target.slice, scopes)})\n`
+                  `${$B.js_from_ast(target.slice, scopes)}, ${inum})\n`
         }else if(target instanceof $B.ast.Attribute){
-            js += `_b_.delattr(${$B.js_from_ast(target.value, scopes)}, ` +
-                  `'${target.attr}')\n`
+            js += `$B.$delattr(${$B.js_from_ast(target.value, scopes)}, ` +
+                  `'${target.attr}', ${inum})\n`
         }
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n` + js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+           prefix + js
 }
 
 $B.ast.Delete.prototype._check = function(){
@@ -1785,22 +2087,28 @@ $B.ast.DictComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
-    return `$B.set_lineno(frame, ${this.lineno});\n`+
-        $B.js_from_ast(this.value, scopes)
+    return prefix + `$B.set_lineno(frame, ${this.lineno});\n` +
+           prefix + $B.js_from_ast(this.value, scopes)
 }
 
 $B.ast.Expression.prototype.to_js = function(scopes){
     init_scopes.bind(this)('expression', scopes)
-    return $B.js_from_ast(this.body, scopes)
+    var res = $B.js_from_ast(this.body, scopes)
+    var positions = scopes[scopes.length - 1].positions
+    if(positions){
+        res = prefix + `(frame.positions = [${positions}], ` +
+              res +')'
+    }
+    return res
 }
 
 $B.ast.For.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     compiler_check(this)
-    var id = $B.UUID(),
+    var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes),
-        js = `frame.$lineno = ${this.lineno}\n`
+        js = prefix + `frame.$lineno = ${this.lineno}\n`
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     var scope = $B.last(scopes),
@@ -1808,42 +2116,56 @@ $B.ast.For.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     if(this instanceof $B.ast.AsyncFor){
-        js += `var no_break_${id} = true,\n` +
-                 `iter_${id} = ${iter},\n` +
-                 `type_${id} = _b_.type.$factory(iter_${id})\n` +
-            `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
-            `type_${id} = _b_.type.$factory(iter_${id})\n` +
-            `var next_func_${id} = $B.$call(` +
-            `$B.$getattr(type_${id}, '__anext__'))\n` +
-            `while(true){\n`+
-            `  try{\n`+
-            `    var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n` +
-            `  }catch(err){\n`+
-            `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n` +
-            `    else{\nthrow err}\n`+
-            `  }\n`
+        js += prefix + `var no_break_${id} = true,\n` +
+              prefix + tab + tab + `iter_${id} = ${iter},\n` +
+              prefix + tab + tab + `type_${id} = _b_.type.$factory(iter_${id})\n` +
+              prefix + `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
+              prefix + `type_${id} = _b_.type.$factory(iter_${id})\n` +
+              prefix + `var next_func_${id} = $B.$call(` +
+                  `$B.$getattr(type_${id}, '__anext__'))\n` +
+              prefix + `while(true){\n`
+        indent()
+        js += prefix + `try{\n`+
+              prefix + tab + `var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n` +
+              prefix + `}catch(err){\n`+
+              prefix + tab + `if($B.is_exc(err, [_b_.StopAsyncIteration])){\n` +
+              prefix + tab + tab + `break\n` +
+              prefix + tab + `}else{\n` +
+              prefix + tab + tab + `throw err\n` +
+              prefix + tab + '}\n' +
+              prefix + `}\n`
+        dedent()
     }else{
-        js += `var no_break_${id} = true,\n` +
-                 `iterator_${id} = ${iter}\n` +
-             `for(var next_${id} of $B.make_js_iterator(iterator_${id}, frame, ${this.lineno})){\n`
+        js += prefix + `var no_break_${id} = true,\n` +
+              prefix + tab + tab + `iterator_${id} = ${iter}\n` +
+              prefix + `for(var next_${id} of $B.make_js_iterator(` +
+                  `iterator_${id}, frame, ${this.lineno})){\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, this.iter)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
-    //assign.lineno = this.lineno
+    assign.$loopvar = true
+    copy_position(assign, this.target)
+
+    indent()
+
     js += assign.to_js(scopes) + '\n'
 
     js += add_body(this.body, scopes)
 
-    js += '\n}' // close 'while' loop
+    dedent()
+    js += '\n' + prefix + '}\n' // close 'while' loop
 
     scopes.pop()
 
     if(this.orelse.length > 0){
-        js += `\nif(no_break_${id}){\n` +
-              add_body(this.orelse, scopes) + '}\n'
+        js += prefix + `if(no_break_${id}){\n`
+        indent()
+        js += add_body(this.orelse, scopes) + '\n'
+        dedent()
+        js += prefix + '}\n'
     }
 
     return js
@@ -1916,455 +2238,6 @@ function transform_args(scopes){
 
 
 
-const args0_fcts = $B.args_parsers = [];
-
-function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
-
-    const IDX =      hasPosOnly
-            | posOnlyDefaults    << 1
-            | hasPos        << 3
-            | posDefaults        << 4
-            | hasVargars        << 6
-            | hasNamedOnly        << 7
-            | namedOnlyDefaults    << 8
-            | hasKWargs        << 10;
-
-    const args0 = args0_fcts[IDX];
-
-    if(args0 !== undefined)
-        return args0;
-
-    const fct = args0_fcts[IDX] = generate_args0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs);
-
-    fct.id = IDX;
-
-    return fct;
-}
-$B.getArgs0 = getArgs0;
-
-const DEFAULTS = getArgs0.DEFAULTS = {
-    NONE: 0,
-    SOME: 1,
-    ALL : 3
-}
-
-
-// deno run generator.js
-// hasPos / posDefaults are pos parameters excluding posOnly parameters.
-function generate_args0(...args) {
-    return new Function('fct', 'args',  generate_args0_str(...args) );
-}
-
-
-function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
-
-    let fct =
-//`function args0_NEW(fct, args) {
-`
-    const LAST_ARGS = args[args.length-1];
-    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
-
-    let ARGS_POS_COUNT        = args.length;
-    let ARGS_NAMED            = null;
-
-    if( HAS_KW ) {
-        --ARGS_POS_COUNT;
-        ARGS_NAMED = LAST_ARGS.$kw;
-    }
-
-
-    const result = {};
-
-    // using const should enable the browser to perform some optimisation.
-    const $INFOS = fct.$infos;
-    const $CODE  = $INFOS.__code__;
-`;
-
-    if( hasPos || hasPosOnly || hasNamedOnly )
-        fct += `
-    const PARAMS_NAMES        = $INFOS.arg_names;
-`;
-
-    let PARAMS_POS_COUNT = "0";
-    if( hasPos || hasPosOnly ) {
-        PARAMS_POS_COUNT = "PARAMS_POS_COUNT";
-        fct += `
-    const PARAMS_POS_COUNT    = $CODE.co_argcount;
-`;
-    }
-
-    let PARAMS_POS_DEFAULTS_OFFSET = PARAMS_POS_COUNT;
-    let PARAMS_POS_DEFAULTS_COUNT = "0";
-
-    if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE ) {
-
-        PARAMS_POS_DEFAULTS_OFFSET = "PARAMS_POS_DEFAULTS_OFFSET";
-        PARAMS_POS_DEFAULTS_COUNT  = "PARAMS_POS_DEFAULTS_COUNT";
-
-        fct += `
-    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
-    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
-
-    const PARAMS_POS_DEFAULTS_OFFSET= ${PARAMS_POS_COUNT} - PARAMS_POS_DEFAULTS_COUNT;
-
-`;
-    }
-
-    fct += `
-    let offset = 0;
-`;
-
-    if( hasVargars ) {
-        fct +=
-`
-    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, ${PARAMS_POS_COUNT}, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
-`
-
-        if( hasPosOnly || hasPos ) {
-
-            fct +=
-`
-    const min = Math.min( ARGS_POS_COUNT, ${PARAMS_POS_COUNT} );
-    for( ; offset < min ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`
-        }
-    } else {
-        fct +=
-`
-    if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
-        $B.args0_old(fct, args);
-        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
-    }
-`
-        if( hasPosOnly || hasPos ) {
-
-            fct +=
-`
-    for( ; offset < ARGS_POS_COUNT ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`
-        }
-    }
-
-
-    // verify if it truly has no kw arguments.
-    if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
-        fct += `
-    if( HAS_KW === true ) {
-
-        for(let argname in ARGS_NAMED[0] ) {
-            $B.args0_old(fct, args);
-            throw new Error('No named arguments expected !!!');
-        }
-
-        for(let id = 1; id < ARGS_NAMED.length; ++id ) {
-
-            const kargs = ARGS_NAMED[id];
-            for(let argname of $B.unpack_mapping( fct, kargs) ) { //TODO: not optimal
-                $B.args0_old(fct, args);
-                throw new Error('No named arguments expected !!!');
-            }
-        }
-    }
-`;
-    } else {
-        fct += `
-    if( HAS_KW === false ) {
-    `;
-    }
-
-    if( hasPos || hasPosOnly ) {
-
-        if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
-
-            fct += `
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
-            $B.args0_old(fct, args);
-            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
-        }
-`
-        }
-
-        if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE) {
-            fct += `
-        for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
-            i < PARAMS_POS_DEFAULTS_COUNT;
-            ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`
-        }
-    }
-
-    if( hasKWargs ) {
-        fct += `
-        result[$INFOS.kwarg] = __BRYTHON__.empty_dict();`
-    }
-
-    if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
-        fct += `
-        $B.args0_old(fct, args);
-        throw new Error('Named argument expected (args0 should have raised an error) !');
-`
-    } else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
-        fct += `
-        const kwargs_defaults_values = fct.$kwdefaults_values;
-
-        for(let i = 0; i < kwargs_defaults_values.length; ++i )
-                result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
-`
-    }
-
-    fct += `
-        return result;
-`
-
-    // verify if it truly has no kw arguments.
-    if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
-        return fct;
-    } else {
-        fct += `
-    }
-`;
-    }
-
-    if( namedOnlyDefaults !== DEFAULTS.NONE) {
-        fct += `
-    const kwargs_defaults = fct.$kwdefaults;
-`
-    }
-
-    if( hasPosOnly ) {
-
-        fct += `
-    const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-
-    if( offset < PARAMS_POSONLY_COUNT ) {
-
-        `;
-        if( posOnlyDefaults !== DEFAULTS.SOME) {
-            fct += `
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
-            $B.args0_old(fct, args);
-            throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
-        }
-`
-        }
-        if( posOnlyDefaults === DEFAULTS.NONE) {
-            fct += `
-        $B.args0_old(fct, args);
-        throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
-`;
-        }
-
-        fct += `
-        const max = ${PARAMS_POS_DEFAULTS_COUNT} - (${PARAMS_POS_COUNT} - PARAMS_POSONLY_COUNT);
-
-        // default parameters
-        for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
-                i < max;
-                ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
-    }
-`
-    }
-
-    if( hasKWargs) {
-
-        fct += `
-    const extra = {};
-
-    let nb_extra_args = 0;
-`
-
-        if(hasPos || hasNamedOnly ) {
-            fct += `
-    const HAS_PARAMS = fct.$hasParams;
-`;
-        }
-    }
-
-    fct += `
-
-    let nb_named_args = 0;
-
-
-    const kargs = ARGS_NAMED[0];
-
-    for(let argname in kargs) {
-        `;
-
-        if( ! hasKWargs ) {
-            fct += `
-        result[ argname ] = kargs[argname];
-        ++nb_named_args;
-`;
-        }
-
-        if( hasKWargs ) {
-            if( ! hasNamedOnly && ! hasPos ) {
-                fct += `
-        extra[ argname ] = kargs[argname];
-        ++nb_extra_args;
-`
-            } else {
-                fct += `
-        if( HAS_PARAMS.has(argname) ) {
-            result[ argname ] = kargs[argname];
-            ++nb_named_args;
-        } else {
-            extra[ argname ] = kargs[argname];
-            ++nb_extra_args;
-        }
-`
-            }
-        }
-
-        fct += `
-    }
-
-    for(let id = 1; id < ARGS_NAMED.length; ++id ) {
-
-        const kargs = ARGS_NAMED[id];
-
-        for(let item of $B.unpack_mapping(fct, kargs) ) {
-            let argname = item.key
-            if( typeof argname !== "string") {
-                $B.args0_old(fct, args);
-                throw new Error('Non string key passed in **kargs');
-            }
-            `;
-
-            if( ! hasKWargs ) {
-                fct += `
-            result[ argname ] = item.value;
-            ++nb_named_args;
-`;
-            }
-
-            if( hasKWargs ) {
-                if( ! hasNamedOnly && ! hasPos ) {
-
-                    fct += `
-            extra[ argname ] = $B.$getitem(kargs, argname);
-            ++nb_extra_args;
-`
-                } else {
-                    fct += `
-            if( HAS_PARAMS.has(argname) ) {
-                result[ argname ] = $B.$getitem(kargs, argname);
-                ++nb_named_args;
-            } else {
-                extra[ argname ] = $B.$getitem(kargs, argname);
-                ++nb_extra_args;
-            }
-`
-                }
-            }
-
-            fct += `
-        }
-    }
-`
-
-    fct += `
-    let found = 0;
-    let ioffset = offset;
-`;
-
-    if(    (hasPosOnly || hasPos)
-        && (! hasPosOnly || posOnlyDefaults !== DEFAULTS.ALL)
-        && (! hasPos     || posDefaults !== DEFAULTS.ALL) ) {
-        fct += `
-    for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result ) // maybe could be speed up using "!(key in result)"
-            continue;
-
-        $B.args0_old(fct, args);
-        throw new Error('Missing a named arguments (args0 should have raised an error) !');
-    }
-`
-    }
-    if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.NONE) || (hasPos && posDefaults !== DEFAULTS.NONE) ) {
-        fct += `
-    for( ; ioffset < PARAMS_POS_COUNT; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result )
-            continue;
-
-        result[key] = PARAMS_POS_DEFAULTS[ioffset - ${PARAMS_POS_DEFAULTS_OFFSET}];
-    ++found;
-    }
-`
-    }
-
-    if( hasNamedOnly ) {
-
-        fct += `
-        for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
-
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result )
-                continue;
-`
-        if( namedOnlyDefaults === DEFAULTS.SOME) {
-            fct += `
-            if( ! kwargs_defaults.has(key) ) {
-                $B.args0_old(fct, args);
-
-                throw new Error('Missing a named arguments (args0 should have raised an error) !');
-            }
-`
-        }
-        if( namedOnlyDefaults === DEFAULTS.NONE ) {
-            fct += `
-            $B.args0_old(fct, args);
-
-            throw new Error('Missing a named arguments (args0 should have raised an error) !');
-`
-        }
-
-        if( namedOnlyDefaults !== DEFAULTS.NONE) {
-            fct += `
-
-            result[key] = kwargs_defaults.get(key);
-            ++found;
-`;
-        }
-
-        fct += `
-        }
-`;
-    }
-
-    if( hasNamedOnly || hasPos )
-        fct += `
-        if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-            $B.args0_old(fct, args);
-            throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
-        }
-`;
-
-    if( hasKWargs ) {
-        fct += `
-    if( Object.keys(extra).length !== nb_extra_args ) {
-        $B.args0_old(fct, args);
-        throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
-    }
-    result[$INFOS.kwarg] = __BRYTHON__.builtins.dict.$from_js(extra);
-`
-    }
-
-    fct += `
-    return result
-    `;
-
-    //fct += `}`;
-    return fct;
-}
-
 
 function type_param_in_def(tp, ref, scopes){
     var gname = scopes[0].name,
@@ -2372,7 +2245,7 @@ function type_param_in_def(tp, ref, scopes){
     var js = ''
     var name,
         param_type = tp.constructor.$name
-    if(param_type == 'TypeVar'){
+    if(['TypeVar', 'TypeVarTuple', 'ParamSpec'].includes(param_type) ){
         name = tp.name
     }else{
         name = tp.name.id
@@ -2386,9 +2259,7 @@ function type_param_in_def(tp, ref, scopes){
         js += `function BOUND_OF_${name}(){\n` +
               `var current_frame = $B.frame_obj.frame,\n` +
               `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `frame.__file__ = '${scopes.filename}'\n` +
-              `frame.$lineno = ${tp.bound.lineno}\n` +
+              `$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n` +
               `try{\n` +
               `var res = ${tp.bound.to_js(scopes)}\n` +
               `$B.leave_frame()\nreturn res\n` +
@@ -2397,9 +2268,9 @@ function type_param_in_def(tp, ref, scopes){
               `throw err\n}\n}\n`
         scopes.pop()
     }
-    js += `locals_${ref}.${name} = ` +
-        `$B.$call(_typing.${param_type})('${name}')\n` +
-        `type_params.push(locals_${ref}.${name})\n`
+    js += prefix + `locals_${ref}.${name} = ` +
+        `$B.$call(_typing.${param_type})('${name}', {$kw: [{infer_variance: true}]})\n` +
+        prefix + `type_params.push(locals_${ref}.${name})\n`
     if(tp.bound){
         if(! tp.bound.elts){
             js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
@@ -2410,10 +2281,6 @@ function type_param_in_def(tp, ref, scopes){
         }
     }
     return js
-}
-
-$B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args) {
-    return $B.make_args_parser(fct)(fct, args);
 }
 
 
@@ -2437,15 +2304,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var decorators = [],
         decorated = false,
         decs_declare = this.decorator_list.length > 0 ?
-                           '// declare decorators\n' : ''
+                           prefix + '// declare decorators\n' : ''
 
     // evaluate decorator in enclosing scope
     for(let dec of this.decorator_list){
         decorated = true
-        var dec_id = 'decorator' + $B.UUID()
+        var dec_id = 'decorator' + make_id()
         decorators.push(dec_id)
-        decs_declare += `$B.set_lineno(frame, ${dec.lineno})\n`
-        decs_declare += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
+        decs_declare += prefix + `$B.set_lineno(frame, ${dec.lineno})\n`
+        decs_declare += prefix + `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
     // Detect doc string
@@ -2457,11 +2324,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         kw_defaults = parsed_args.kw_defaults,
         kw_default_names = parsed_args.kw_default_names
 
-    var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`
+    var defaults = this.args.defaults.length == 0 ? '_b_.None' :
+            `[${this.args.defaults.map(x => x.to_js(scopes))}]`
     kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
-            `_b_.dict.$from_js({${kw_defaults.join(', ')}})`
+            `{${kw_defaults.join(', ')}}`
 
-    var id = $B.UUID(),
+    var id = make_id(),
         name2 = this.name + id
 
     // Type params (PEP 695)
@@ -2470,6 +2338,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(has_type_params){
         // create a scope for type params
+        check_type_params(this)
         var tp_name = `type_params_${name2}`
         var type_params_scope = new Scope(tp_name, 'type_params',
             this.type_params)
@@ -2479,14 +2348,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         var type_params_func = `function TYPE_PARAMS_OF_${name2}(){\n`
 
         // generate code to store type params in the scope namespace
-        type_params = `$B.$import('_typing')\n` +
-              `var _typing = $B.imported._typing\n` +
-              `var locals_${type_params_ref} = {\n},\n` +
-              `locals = locals_${type_params_ref},\n` +
-              `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
-              `type_params = []\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n` +
-              `frame.__file__ = '${scopes.filename}'\n`
+        type_params = prefix + `$B.$import('_typing')\n` +
+              prefix + `var _typing = $B.imported._typing\n` +
+              prefix + `var locals_${type_params_ref} = {},\n` +
+              prefix + tab + tab + `locals = locals_${type_params_ref},\n` +
+              prefix + tab + tab + `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
+              prefix + tab + tab + `type_params = []\n` +
+              prefix + `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
         for(var item of this.type_params){
             type_params += type_param_in_def(item, type_params_ref, scopes)
         }
@@ -2519,8 +2387,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         bind(mangle_arg(this.args.kwarg.arg), scopes)
     }
 
+    var is_generator = symtable_block.generator
+
     // process body first to detect possible "yield"s
     var function_body
+    indent(is_generator ? 3 : 2)
+
     if(this.$is_lambda){
         var _return = new $B.ast.Return(this.body)
         copy_position(_return, this.body)
@@ -2529,12 +2401,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         function_body = add_body(this.body, scopes)
     }
-
-    var is_generator = symtable_block.generator
+    dedent(is_generator ? 3 : 2)
 
     var parse_args = [name2]
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\n`
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` + prefix
 
     if(is_async && ! is_generator){
         js += 'async '
@@ -2542,9 +2413,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `function ${name2}(){\n`
 
+    indent()
+
     var locals_name = make_scope_name(scopes, func_scope)
-    js += `var ${locals_name},
-               locals\n`
+    js += prefix + `var locals\n`
 
     parse_args.push('arguments')
 
@@ -2556,44 +2428,48 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(positional.length == 0 && slots.length == 0 &&
             this.args.vararg === undefined &&
             this.args.kwarg === undefined){
-        js += `${locals_name} = locals = {};\n`
+        js += prefix + `var ${locals_name} = locals = {};\n`
         // generate error message
-        js += `if(arguments.length !== 0) ${name2}.$args_parser(${parse_args.join(', ')})\n;`
+        js += prefix + `if(arguments.length !== 0){\n` +
+              prefix + tab + `${name2}.$args_parser(${parse_args.join(', ')})\n` +
+              prefix + `}\n`
     }else{
-        js += `${locals_name} = locals = ${name2}.$args_parser(${parse_args.join(', ')})\n`
+        js += prefix + `var ${locals_name} = locals = ` +
+              `${name2}.$args_parser(${parse_args.join(', ')})\n`
     }
 
-    js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
-          `locals, "${gname}", ${globals_name}, ${name2}]
-    if(locals.$has_generators){
-        frame.$has_generators = true
+    js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
+          `locals, "${gname}", ${globals_name}, ${name2}]\n` +
+          prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
+
+    if(func_scope.positions){
+        js += prefix + `frame.positions = [${func_scope.positions}]\n`
     }
-    frame.__file__ = __file__
-    frame.$lineno = ${this.lineno}
-    frame.$f_trace = $B.enter_frame(frame)\n`
 
     if(func_scope.needs_stack_length){
-        js += `var stack_length = $B.count_frames()\n`
+        js += prefix + `var stack_length = $B.count_frames()\n`
     }
 
     if(func_scope.needs_frames || is_async){
-        js += `var _frame_obj = $B.frame_obj\n` +
-                  `_linenums = $B.make_linenums()\n`
+        js += prefix + `var _frame_obj = $B.frame_obj\n`
     }
 
     if(is_async){
-        js += 'frame.$async = true\n'
+        js += prefix + 'frame.$async = true\n'
     }
 
     if(is_generator){
-        js += `locals.$is_generator = true\n`
+        js += prefix + `locals.$is_generator = true\n`
         if(is_async){
-            js += `var gen_${id} = $B.async_generator.$factory(async function*(){\n`
+            js += prefix + `var gen_${id} = async function*(){\n`
         }else{
-            js += `var gen_${id} = $B.generator.$factory(function*(){\n`
+            js += prefix + `var gen_${id} = function*(){\n`
         }
+        indent()
     }
-    js += `try{\n$B.js_this = this\n`
+    js += prefix + `try{\n`
+    indent()
+    js += prefix + `$B.js_this = this\n`
     if(in_class){
         // Set local name "__class__"
         var ix = scopes.indexOf(class_scope),
@@ -2603,7 +2479,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
         bind("__class__", scopes)
-        js += `locals.__class__ =  ` +
+        js += prefix + `locals.__class__ =  ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
 
@@ -2611,48 +2487,62 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if((! this.$is_lambda) && ! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
-        js += 'var result = _b_.None\n' +
-              '$B.trace_return_and_leave(frame, result)\n' +
-              'return result\n'
+        js += prefix + 'return $B.trace_return_and_leave(frame, _b_.None)\n'
     }
 
-    js += `}catch(err){\n`
+    dedent()
+    js += prefix + `}catch(err){\n`
+    indent()
 
     if(func_scope.needs_frames){
-        // set exception $frame_obj and $linenums
-        js += `$B.set_exc_and_trace(frame, err)\n` +
-              `err.$frame_obj = _frame_obj\n` +
-              `_linenums[_linenums.length - 1] = frame.$lineno\n` +
-              `err.$linenums = _linenums\n` +
-              `$B.leave_frame()\n`
+        js += prefix + `$B.set_exc_and_trace(frame, err)\n` +
+              `$B.leave_frame()\n` +
+              `throw err\n`
     }else{
-        js += `$B.set_exc_and_leave(frame, err)\n`
+        js += prefix + `$B.set_exc_and_leave(frame, err)\n`
     }
-    js += `throw err
-    }
-    }\n`
+    dedent()
+    js += prefix + `}\n`
+    dedent()
+    js += prefix + `}`
 
     if(is_generator){
-        js += `, '${this.name}')\n` +
-              `var _gen_${id} = gen_${id}()\n` +
-              `_gen_${id}.$frame = frame\n` +
-              `$B.leave_frame()\n` +
-              `return _gen_${id}}\n` // close gen
+        js += '\n' + prefix + `gen_${id} = `
+        if(is_async){
+            js += `$B.async_generator.$factory(`
+        }else{
+            js += `$B.generator.$factory(`
+        }
+        js += `gen_${id}, '${this.name}')\n`
+        js += prefix + `var _gen_${id} = gen_${id}()\n` +
+              prefix + `_gen_${id}.$frame = frame\n` +
+              prefix + `$B.leave_frame()\n` +
+              prefix + `return _gen_${id}\n` // close gen
+        dedent()
+        js += prefix + '}\n'
+    }else{
+        js += '\n'
     }
 
     scopes.pop()
-
-    //var in_class = func_name_scope.ast instanceof $B.ast.ClassDef
 
     var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
                               this.name
 
     // Flags
-    var flags = 3
-    if(this.args.vararg){flags |= 4}
-    if(this.args.kwarg){flags |= 8}
-    if(is_generator){flags |= 32}
-    if(is_async){flags |= 128}
+    var flags = $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
+    if(this.args.vararg){
+        flags |= $B.COMPILER_FLAGS.VARARGS
+    }
+    if(this.args.kwarg){
+        flags |= $B.COMPILER_FLAGS.VARKEYWORDS
+    }
+    if(is_generator){
+        flags |= $B.COMPILER_FLAGS.GENERATOR
+    }
+    if(is_async){
+        flags |= $B.COMPILER_FLAGS.COROUTINE
+    }
 
     var parameters = [],
         locals = [],
@@ -2661,13 +2551,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var free_vars = []
     for(var ident of identifiers){
         var flag = _b_.dict.$getitem_string(symtable_block.symbols, ident),
-            _scope = (flag >> SCOPE_OFF) & SCOPE_MASK
-        if(_scope == FREE){
+            _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
+        if(_scope == SF.FREE){
             free_vars.push(`'${ident}'`)
         }
-        if(flag & DEF_PARAM){
+        if(flag & SF.DEF_PARAM){
             parameters.push(`'${ident}'`)
-        }else if(flag & DEF_LOCAL){
+        }else if(flag & SF.DEF_LOCAL){
             locals.push(`'${ident}'`)
         }
     }
@@ -2675,49 +2565,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
     if(in_class){
-        js += `${name2}.$is_method = true\n`
-    }
-    if(is_async){
-        js += `${name2}.$is_async = true\n`
-    }
-    // Set admin infos
-    js += `$B.make_function_infos(${name2}, ` +
-        `'${gname}', ` +
-        `${defaults}, ` +
-        `${kw_defaults}, ` +
-        `${docstring}, ` +
-        `[${arg_names}], ` +
-        `${args_vararg}, ` +
-        `${args_kwarg},\n` +
-        // make f.__code__
-        `${positional.length}, ` +
-        `__file__, ` +
-        `${this.lineno}, ` +
-        `${flags}, ` +
-        `[${free_vars}], ` +
-        `${this.args.kwonlyargs.length}, ` +
-        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
-        `${varnames.length}, ` +
-        `${this.args.posonlyargs.length}, ` +
-        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
-        `[${varnames}])\n`;
-
-    if(is_async && ! is_generator){
-        js += `${name2} = $B.make_async(${name2})\n`
+        js += prefix + `${name2}.$is_method = true\n`
     }
 
-    js += `${name2}.$args_parser = $B.make_args_parser_and_parse\n`;
-
-
-    var mangled = mangle(scopes, func_name_scope, this.name),
-        func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
-
-    if(decorated){
-        func_ref = `decorated${$B.UUID()}`
-        js += 'var '
-    }
-
-    js += `${func_ref} = ${name2}\n`
+    var anns
     if(this.returns || parsed_args.annotations){
         var features = scopes.symtable.table.future.features,
             postponed = features & $B.CO_FUTURE_ANNOTATIONS
@@ -2753,17 +2604,58 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
             }
         }
-        js += `${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`
+        anns = `[${ann_items.join(', ')}]`
     }else{
-        js += `${func_ref}.__annotations__ = $B.empty_dict()\n`
+        anns = `[]`
     }
+
+    // Set admin infos
+    js += prefix + `${name2}.$function_infos = [` +
+        `'${gname}', ` +
+        `'${this.$is_lambda ? '<lambda>': this.name}', ` +
+        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
+        `__file__, ` +
+        `${defaults}, ` +
+        `${kw_defaults}, ` +
+        `${docstring}, ` +
+        `[${arg_names}], ` +
+        `${args_vararg}, ` +
+        `${args_kwarg},\n` +
+        // make f.__code__
+        prefix + tab + `${positional.length}, ` +
+        `${this.lineno}, ` +
+        `${flags}, ` +
+        `[${free_vars}], ` +
+        `${this.args.kwonlyargs.length}, ` +
+        `${this.args.posonlyargs.length}, ` +
+        `[${varnames}], ` +
+        `${anns}, ` +
+        `${has_type_params ? 'type_params' : '[]'}]\n`;
+
+    js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
+
+    if(is_async && ! is_generator){
+        js += prefix + `${name2} = $B.make_async(${name2})\n`
+    }
+
+    var mangled = mangle(scopes, func_name_scope, this.name),
+        func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
+
+    if(decorated){
+        func_ref = `decorated${make_id()}`
+        js += prefix + 'var '
+    }else{
+        js += prefix
+    }
+
+    js += `${func_ref} = ${name2}\n`
 
     if(has_type_params){
         scopes.pop()
     }
 
     if(decorated && ! has_type_params){
-        js += `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
+        js += prefix + `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
         let decorate = func_ref
         for(let dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
@@ -2817,7 +2709,7 @@ $B.ast.FunctionDef.prototype._check = function(){
 }
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
+    var id = make_id(),
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
@@ -2834,14 +2726,19 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
 
+    indent()
     var head = init_comprehension(comp, scopes)
+
+    var js = prefix + `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`
 
     // special case for first generator
     var first = this.generators[0]
-    var js = `$B.enter_frame(frame)\n` +
-          `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
-          `for(var next_${id} of next_func_${id}){\n` +
-              `frame.$f_trace = $B.enter_frame(frame)\n`
+    indent()
+    js += prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
+          prefix + `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
+          prefix + `for(var next_${id} of next_func_${id}){\n`
+    indent()
+    js += prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -2852,7 +2749,8 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     for(let _if of first.ifs){
         nb_paren++
-        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+        js += prefix + `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+        indent()
     }
 
     for(var comprehension of this.generators.slice(1)){
@@ -2863,6 +2761,8 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
         }
     }
 
+    dedent(2)
+
     // Translate element. This must be done after translating comprehensions
     // so that target names are bound
     var elt = $B.js_from_ast(this.elt, scopes),
@@ -2870,25 +2770,36 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
-    js = `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n` + js
+    dedent()
 
-    js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
-    js += `try{\n` +
-          ` yield ${elt}\n` +
-          `}catch(err){\n` +
-          (has_await ? '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
-          `$B.leave_frame()\nthrow err\n}\n` +
-          (has_await ? '\n$B.restore_frame_obj(save_frame_obj, locals);' : '')
+    indent(3)
+
+    js += has_await ? prefix + 'var save_frame_obj = $B.frame_obj;\n' : ''
+    js += prefix + `try{\n` +
+          prefix + tab + `yield ${elt}\n` +
+          prefix + `}catch(err){\n` +
+          (has_await ? prefix + tab + '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
+          prefix + tab + `$B.leave_frame()\n` +
+          prefix + tab + `throw err\n` +
+          prefix + `}\n`
+    dedent()
+    js += (has_await ? prefix +'\n$B.restore_frame_obj(save_frame_obj, locals);' : '')
 
     for(var i = 0; i < nb_paren - 1; i++){
-        js += '}\n'
+        js += prefix + '}\n'
+        dedent()
     }
-    js += '$B.leave_frame()\n}\n' +
-          '$B.leave_frame()\n}, "<genexpr>")(expr)\n'
+    js += prefix + '$B.leave_frame()\n'
+    dedent()
+    js += prefix + '}\n'
+    js += prefix + '$B.leave_frame()\n'
+    js += prefix + '}, "<genexpr>")(expr)\n'
 
     scopes.pop()
-    var func = `${head}\n${js}\nreturn gen${id}`
-    return `(function(expr){\n${func}\n})(${outmost_expr})\n`
+    var func = `${head}\n${js}\n` + prefix + `return gen${id}`
+    dedent()
+    return prefix + `(function(expr){\n${func}\n` +
+           prefix + `})(${outmost_expr})\n`
 }
 
 $B.ast.Global.prototype.to_js = function(scopes){
@@ -2904,7 +2815,7 @@ $B.ast.If.prototype.to_js = function(scopes){
         new_scope = copy_scope(scope, this)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    var js = `if($B.set_lineno(frame, ${this.lineno}) && `
+    var js = prefix + `if($B.set_lineno(frame, ${this.lineno}) && `
     if(this.test instanceof $B.ast.BoolOp){
         this.test.$dont_evaluate = true
         js += `${$B.js_from_ast(this.test, scopes)}){\n`
@@ -2912,14 +2823,25 @@ $B.ast.If.prototype.to_js = function(scopes){
         js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     }
     scopes.push(new_scope)
-    js += add_body(this.body, scopes) + '\n}'
+    indent()
+    js += add_body(this.body, scopes) + '\n'
+    dedent()
+    js += prefix +'}'
     scopes.pop()
     if(this.orelse.length > 0){
         if(this.orelse[0] instanceof $B.ast.If && this.orelse.length == 1){
-            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes) +
-                  add_body(this.orelse.slice(1), scopes)
+            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes).trimLeft()
+            indent()
+            js += add_body(this.orelse.slice(1), scopes)
+            dedent()
         }else{
-            js += '\nelse{\n' + add_body(this.orelse, scopes) + '\n}'
+            js += 'else{\n'
+            scopes.push(copy_scope(scope, this))
+            indent()
+            js += add_body(this.orelse, scopes)
+            dedent()
+            scopes.pop()
+            js += '\n' + prefix + '}'
         }
     }
     return js
@@ -2932,9 +2854,10 @@ $B.ast.IfExp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Import.prototype.to_js = function(scopes){
-    var js = `$B.set_lineno(frame, ${this.lineno})\n`
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    var inum = add_to_positions(scopes, this)
     for(var alias of this.names){
-        js += `$B.$import("${alias.name}", [], `
+        js += prefix + `$B.$import("${alias.name}", [], `
         if(alias.asname){
             js += `{'${alias.name}' : '${alias.asname}'}, `
             bind(alias.asname, scopes)
@@ -2947,8 +2870,9 @@ $B.ast.Import.prototype.to_js = function(scopes){
             scopes.imports[parts.slice(0, i + 1).join(".")] = true
         }
 
-        js += `locals, true)\n`
+        js += `locals, ${inum})\n`
     }
+
     return js.trimRight()
 }
 
@@ -2961,8 +2885,8 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         }
     }
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             `var module = $B.$import_from("${this.module || ''}", `
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `$B.$import_from("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),
         aliases = []
     for(var name of this.names){
@@ -2970,7 +2894,8 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
             aliases.push(`${name.name}: '${name.asname}'`)
         }
     }
-    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
+    var inum = add_to_positions(scopes, this)
+    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
 
     for(var alias of this.names){
         if(alias.asname){
@@ -2978,7 +2903,6 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         }else if(alias.name == '*'){
             // mark scope as "blurred" by the presence of "from X import *"
             last_scope(scopes).blurred = true
-            js += `\n$B.import_all(locals, module)`
         }else{
             bind(alias.name, scopes)
         }
@@ -3002,7 +2926,7 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
           `locals = ${global_name},\n` +
           `frame = ["${module_id}", locals, "${module_id}", locals]`
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -3014,9 +2938,8 @@ $B.ast.Interactive.prototype.to_js = function(scopes){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
 
-    js += `frame.$f_trace = $B.enter_frame(frame)\n`
-    js += `$B.set_lineno(frame, 1)\n` +
-        '\nvar _frame_obj = $B.frame_obj\n'
+    js += `$B.enter_frame(frame, __file__, 1)\n`
+    js += '\nvar _frame_obj = $B.frame_obj\n'
     js += 'var stack_length = $B.count_frames()\n'
 
     js += `try{\n` +
@@ -3043,16 +2966,19 @@ $B.ast.JoinedStr.prototype.to_js = function(scopes){
 
 $B.ast.Lambda.prototype.to_js = function(scopes){
     // Reuse FunctionDef, with a specific name
-    var id = $B.UUID(),
+    var id = make_id(),
         name = 'lambda_' + $B.lambda_magic + '_' + id
     var f = new $B.ast.FunctionDef(name, this.args, this.body, [])
     f.lineno = this.lineno
     f.$id = fast_id(this) // FunctionDef accesses symtable through id
     f.$is_lambda = true
+    indent()
     var js = f.to_js(scopes),
         lambda_ref = reference(scopes, last_scope(scopes), name)
-    return `(function(){ ${js}\n` +
-        `return ${lambda_ref}\n})()`
+    js = `(function(){\n${js}\n` +
+        prefix + `return ${lambda_ref}\n`
+    dedent()
+    return js + prefix + `})()`
 }
 
 function list_or_tuple_to_js(func, scopes){
@@ -3100,8 +3026,10 @@ $B.ast.match_case.prototype.to_js = function(scopes){
         js += ` && $B.$bool(${$B.js_from_ast(this.guard, scopes)})`
     }
     js += `){\n`
-
-    js += add_body(this.body, scopes) + '\n}'
+    indent()
+    js += add_body(this.body, scopes) + '\n'
+    dedent()
+    js += prefix + '}'
 
     return js
 }
@@ -3170,7 +3098,7 @@ function pattern_bindings(pattern){
 
 $B.ast.Match.prototype.to_js = function(scopes){
     var irrefutable
-    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,
+    var js = prefix + `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,
         first = true
     for(var _case of this.cases){
         if(! _case.guard){
@@ -3180,15 +3108,15 @@ $B.ast.Match.prototype.to_js = function(scopes){
             irrefutable = is_irrefutable(_case.pattern)
         }
 
-        var case_js = $B.js_from_ast(_case, scopes)
         if(first){
-            js += 'if' + case_js
+            js += prefix + 'if'
             first = false
         }else{
-            js += 'else if' + case_js
+            js += 'else if'
         }
+        js += $B.js_from_ast(_case, scopes)
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n`+ js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n`+ js
 }
 
 $B.ast.MatchAs.prototype.to_js = function(scopes){
@@ -3343,6 +3271,9 @@ $B.ast.MatchValue.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
+    if(prefix.length != 0){
+        console.log('prefix length at start', prefix.length)
+    }
     mark_parents(this)
     // create top scope; namespaces can be passed by exec()
     var name = init_scopes.bind(this)('module', scopes),
@@ -3352,49 +3283,65 @@ $B.ast.Module.prototype.to_js = function(scopes){
         global_name = make_scope_name(scopes),
         mod_name = module_name(scopes)
 
-    var js = `// Javascript code generated from ast\n` +
-             `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+    var js = `var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `${global_name} = $B.imported["${mod_name}"],\n` +
-              `locals = ${global_name},\n` +
-              `frame = ["${module_id}", locals, "${module_id}", locals]`
+        js += `    ${global_name} = $B.imported["${mod_name}"],\n` +
+              `    locals = ${global_name},\n` +
+              `    frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         // If module is run in an exec(), name "frame" is defined
-        js += `locals = ${namespaces.local_name},\n` +
-              `globals = ${namespaces.global_name}`
+        js += `    locals = ${namespaces.local_name},\n` +
+              `    globals = ${namespaces.global_name}`
         if(name){
             let local_name = ('locals_' + name).replace(/\./g, '_')
-            js += `,\n${local_name} = locals`
+            js += `,\n    ${local_name} = locals`
         }
     }
 
-    js += `\nvar __file__ = frame.__file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
+    var insert_positions = js.length
     if(! scopes.imported){
           js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
     }
 
 
-        // for exec(), frame is put on top of the stack inside
-        // py_builtin_functions.js / $$eval()
+    // for exec(), frame is put on top of the stack inside
+    // py_builtin_functions.js / $eval()
     if(! namespaces){
-          js += `frame.$f_trace = $B.enter_frame(frame)\n`
-          js += `$B.set_lineno(frame, 1)\n` +
-                '\nvar _frame_obj = $B.frame_obj\n'
+          js += `$B.enter_frame(frame, __file__, 1)\n`
+          js += '\nvar _frame_obj = $B.frame_obj\n'
     }
     js += 'var stack_length = $B.count_frames()\n'
 
-    js += `try{\n` +
-              add_body(this.body, scopes) + '\n' +
-              `$B.leave_frame({locals, value: _b_.None})\n` +
-          `}catch(err){\n` +
-              `$B.set_exc_and_trace(frame, err)\n` +
-              `$B.leave_frame({locals, value: _b_.None})\n` +
-              'throw err\n' +
-          `}`
+    js += `try{\n`
+    indent()
+    js += add_body(this.body, scopes) + '\n' +
+          prefix + `$B.leave_frame({locals, value: _b_.None})\n`
+    dedent()
+    js += prefix + `}catch(err){\n`
+    indent()
+    js += prefix + `$B.set_exc_and_trace(frame, err)\n` +
+              prefix + `$B.leave_frame({locals, value: _b_.None})\n` +
+              prefix + 'throw err\n'
+    dedent()
+    js += prefix + `}`
+    var positions = scopes[scopes.length - 1].positions
+    if(positions && positions.length > 0){
+        var rest = js.substr(insert_positions)
+        js = js.substr(0, insert_positions) +
+             `frame.positions = [${positions}]\n`
+        js += rest
+    }
     scopes.pop()
+    if(prefix.length != 0){
+        console.warn('wrong indent !', prefix.length)
+        // console.warn(scopes.src)
+        // throw Error()
+        prefix = ''
+    }
     return js
 }
 
@@ -3408,8 +3355,18 @@ $B.ast.Name.prototype.to_js = function(scopes){
         }
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
-        var res = name_reference(this.id, scopes,
-             [this.col_offset, this.col_offset, this.end_col_offset])
+        // special case for name '__debug__' (cf. issue #2541)
+        if(this.id == '__debug__'){
+            return '_b_.__debug__'
+        }
+        var scope = name_scope(this.id, scopes)
+        if(this.id == 'xzs'){
+            console.log('Name.to_js, scope', scope)
+        }
+        if(scope.found === $B.last(scopes)){
+            return 'locals.' + mangle(scopes, scope.found, this.id)
+        }
+        var res = name_reference(this.id, scopes, this)
         if(this.id == '__debugger__' && res.startsWith('$B.resolve_in_scopes')){
             // Special case : name __debugger__ is translated to Javascript
             // "debugger" if not bound in Brython code
@@ -3446,13 +3403,13 @@ $B.ast.Nonlocal.prototype.to_js = function(scopes){
 }
 
 $B.ast.Pass.prototype.to_js = function(){
-    return `$B.set_lineno(frame, ${this.lineno})\n` +
-           'void(0)'
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+           prefix + 'void(0)'
 }
 
 $B.ast.Raise.prototype.to_js = function(scopes){
-    var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             '$B.$raise('
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + '$B.$raise('
     if(this.exc){
         js += $B.js_from_ast(this.exc, scopes)
     }
@@ -3469,11 +3426,10 @@ $B.ast.Return.prototype.to_js = function(scopes){
     }
 
     compiler_check(this)
-    var js = `$B.set_lineno(frame, ${this.lineno})\n` +
-             'var result = ' +
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `return $B.trace_return_and_leave(frame, ` +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None') +
-             '\n' +
-             `$B.trace_return_and_leave(frame, result)\nreturn result\n`
+             ')\n'
     return js
 }
 
@@ -3535,55 +3491,60 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     if(this.slice instanceof $B.ast.Slice){
         return `$B.getitem_slice(${value}, ${slice})`
     }else{
-        var position = encode_position(this.value.col_offset,
-                                    this.slice.col_offset,
-                                    this.slice.end_col_offset)
-        return `$B.$getitem(${value}, ${slice},${position})`
+        var position = encode_position("'Subscript'",
+            this.value.lineno, this.value.col_offset,
+            this.value.end_lineno, this.value.end_col_offset,
+            this.slice.lineno, this.slice.col_offset,
+            this.end_lineno, this.end_col_offset)
+        var inum = add_to_positions(scopes, this)
+        return `$B.$getitem(${value}, ${slice}, ${inum})`
     }
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
     compiler_check(this)
-    var id = $B.UUID(),
+    var id = make_id(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\ntry{\n`
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `try{\n`
+    indent()
 
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
     // don't execute the 'else' clause
-    js += `var stack_length_${id} = $B.count_frames()\n`
+    js += prefix + `var stack_length_${id} = $B.count_frames()\n`
 
     // Save execution stack in case there are return statements and a finally
     // block
-    if(has_finally){
-        js += `var save_frame_obj_${id} = $B.frames_obj\n`
-    }
+    js += prefix + `var save_frame_obj_${id} = $B.frame_obj\n`
     if(has_else){
-        js += `var failed${id} = false\n`
+        js += prefix + `var failed${id} = false\n`
     }
 
     var try_scope = copy_scope($B.last(scopes))
     scopes.push(try_scope)
     js += add_body(this.body, scopes) + '\n'
+    dedent()
     if(has_except_handlers){
         var err = 'err' + id
-        js += '}\n' // close try
-        js += `catch(${err}){\n` +
-              `$B.set_exc_and_trace(frame, ${err})\n`
+        js += prefix + '}' // close try
+        js += `catch(${err}){\n`
+        indent()
+        js += prefix + `$B.set_exc_and_trace(frame, ${err})\n`
         if(has_else){
-            js += `failed${id} = true\n`
+            js += prefix + `failed${id} = true\n`
         }
         var first = true,
             has_untyped_except = false
         for(var handler of this.handlers){
             if(first){
-                js += 'if'
+                js += prefix + 'if'
                 first = false
             }else{
-                js += '}else if'
+                js += prefix + '}else if'
             }
             js += `($B.set_lineno(frame, ${handler.lineno})`
             if(handler.type){
@@ -3598,57 +3559,74 @@ $B.ast.Try.prototype.to_js = function(scopes){
                 has_untyped_except = true
                 js += '){\n'
             }
+            indent()
             if(handler.name){
                 bind(handler.name, scopes)
                 var mangled = mangle(scopes, try_scope, handler.name)
-                js += `locals.${mangled} = ${err}\n`
+                js += prefix + `locals.${mangled} = ${err}\n`
             }
             js += add_body(handler.body, scopes) + '\n'
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                 // delete current exception
-                js += '$B.del_exc(frame)\n'
+                js += prefix + '$B.del_exc(frame)\n'
+                js += prefix + `$B.frame_obj = save_frame_obj_${id}\n`
             }
+            dedent()
         }
         if(! has_untyped_except){
             // handle other exceptions
-            js += `}else{\nthrow ${err}\n`
+            js += prefix + `}else{\n` +
+                  prefix + tab + `throw ${err}\n`
         }
         // close last if
-        js += '}\n'
+        js += prefix + '}\n'
+        dedent()
     }
     if(has_else || has_finally){
-        js += '}\n' // close try
+        js += prefix + '}' // close try
         js += 'finally{\n'
-        var finalbody = `var exit = false\n` +
-                        `if($B.count_frames() < stack_length_${id}){\n` +
-                            `exit = true\n` +
-                            `$B.frame_obj = $B.push_frame(frame)\n` +
-                        `}\n` +
+        indent()
+        if(has_else && has_finally){
+            // "else" will be wrapped in a 'try' and
+            // "finally" in a 'finally'
+            indent()
+        }
+        var finalbody = prefix + `var exit = false\n` +
+                        prefix + `if($B.count_frames() < stack_length_${id}){\n` +
+                        prefix + tab + `exit = true\n` +
+                        prefix + tab +`$B.frame_obj = $B.push_frame(frame)\n` +
+                        prefix + `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
                 ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
-            finalbody += `\nif(exit){\n` +
-                           `$B.leave_frame()\n` +
-                        `}`
+            finalbody += '\n' + prefix + `if(exit){\n` +
+                         prefix + tab + `$B.leave_frame()\n` +
+                         prefix + `}`
         }
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
-        var elsebody = `if($B.count_frames() == stack_length_${id} ` +
-                       `&& ! failed${id}){\n` +
-                       add_body(this.orelse, scopes) +
-                       '\n}' // close "if"
+        var elsebody = prefix + `if($B.count_frames() == stack_length_${id} ` +
+                       `&& ! failed${id}){\n`
+        indent()
+        elsebody += add_body(this.orelse, scopes)
+        dedent()
+        elsebody += '\n' + prefix + '}' // close "if"
+
         if(has_else && has_finally){
-            js += `try{\n` +
+            dedent()
+            js += prefix + `try{\n` +
                   elsebody +
-                  '\n}\n' + // close "try"
-                  `finally{\n` + finalbody + '}\n'
+                  '\n' + prefix + '}' + // close "try"
+                  `finally{\n` + finalbody + '\n' +
+                  prefix + '}\n'
         }else if(has_else && ! has_finally){
-            js += elsebody
+            js += elsebody + '\n'
         }else{
-            js += finalbody
+            js += finalbody + '\n'
         }
-        js += '\n}\n' // close "finally"
+        dedent()
+        js += prefix + '}\n' // close "finally"
     }else{
         js += '}\n' // close catch
     }
@@ -3658,25 +3636,26 @@ $B.ast.Try.prototype.to_js = function(scopes){
 
 $B.ast.TryStar.prototype.to_js = function(scopes){
     // PEP 654 try...except*...
-    var id = $B.UUID(),
+    var id = make_id(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
 
-    var js = `$B.set_lineno(frame, ${this.lineno})\ntry{\n`
-
+    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
+             prefix + `try{\n`
+    indent()
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
     // don't execute the 'else' clause
-    js += `var stack_length_${id} = $B.count_frames()\n`
+    js += prefix + `var stack_length_${id} = $B.count_frames()\n`
 
     // Save execution stack in case there are return statements and a finally
     // block
     if(has_finally){
-        js += `var save_frame_obj_${id} = $B.frame_obj\n`
+        js += prefix + `var save_frame_obj_${id} = $B.frame_obj\n`
     }
     if(has_else){
-        js += `var failed${id} = false\n`
+        js += prefix + `var failed${id} = false\n`
     }
 
     var try_scope = copy_scope($B.last(scopes))
@@ -3684,89 +3663,105 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
     js += add_body(this.body, scopes) + '\n'
     if(has_except_handlers){
         var err = 'err' + id
-        js += '}\n' // close try
-        js += `catch(${err}){\n` +
-              `$B.set_exc_and_trace(frame, ${err})\n` +
-              `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
-                  `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
-              '}\n' +
-              `function fake_split(exc, condition){\n` +
-              `return condition(exc) ? ` +
-              `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n` +
-              '}\n'
+        dedent()
+        js += prefix + '}' // close try
+        js += `catch(${err}){\n`
+        indent()
+        js += prefix + `$B.set_exc_and_trace(frame, ${err})\n` +
+              prefix + `if(! $B.$isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
+              prefix + tab + `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
+              prefix + '}\n' +
+              prefix + `function fake_split(exc, condition){\n` +
+              prefix + tab + `return condition(exc) ? ` +
+                  `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n` +
+              prefix + '}\n'
         if(has_else){
-            js += `failed${id} = true\n`
+            js += prefix + `failed${id} = true\n`
         }
         for(var handler of this.handlers){
-            js += `$B.set_lineno(frame, ${handler.lineno})\n`
+            js += prefix + `$B.set_lineno(frame, ${handler.lineno})\n`
             if(handler.type){
-                js += "var condition = function(exc){\n" +
-                      "    return $B.$isinstance(exc, " +
+                js += prefix + "var condition = function(exc){\n" +
+                      prefix + tab + "return $B.$isinstance(exc, " +
                       `${$B.js_from_ast(handler.type, scopes)})\n` +
-                      "}\n" +
-                      `var klass = $B.get_class(${err}),\n` +
-                          `split_method = $B.$getattr(klass, 'split'),\n` +
-                          `split = $B.$call(split_method)(${err}, condition),\n` +
-                      '    matching = split[0],\n' +
-                      '    rest = split[1]\n' +
-                      'if(matching.exceptions !== _b_.None){\n' +
-                      '    for(var err of matching.exceptions){\n'
-
+                      prefix + "}\n" +
+                      prefix + `var klass = $B.get_class(${err}),\n`
+                indent()
+                js += prefix + `split_method = $B.$getattr(klass, 'split'),\n` +
+                      prefix + `split = $B.$call(split_method)(${err}, condition),\n` +
+                      prefix + 'matching = split[0],\n' +
+                      prefix + 'rest = split[1]\n'
+                dedent()
+                js += prefix + 'if(matching.exceptions !== _b_.None){\n'
+                indent()
+                js += prefix + 'for(var err of matching.exceptions){\n'
+                indent()
                 if(handler.name){
                     bind(handler.name, scopes)
                     var mangled = mangle(scopes, try_scope, handler.name)
-                    js += `locals.${mangled} = ${err}\n`
+                    js += prefix + `locals.${mangled} = ${err}\n`
                 }
                 js += add_body(handler.body, scopes) + '\n'
                 if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                     // delete current exception
-                    js += '$B.del_exc(frame)\n'
+                    js += prefix + '$B.del_exc(frame)\n'
                 }
-                js += '}\n'
-                js += '}\n'
-                js += `${err} = rest\n`
+                dedent()
+                js += prefix + '}\n'
+                dedent()
+                js += prefix + '}\n'
+                js += prefix + `${err} = rest\n`
             }
         }
-        js += `if(${err}.exceptions !== _b_.None){\n` +
-                  `throw ${err}\n` +
-              '}\n'
-
+        js += prefix + `if(${err}.exceptions !== _b_.None){\n` +
+              prefix + tab + `throw ${err}\n` +
+              prefix + '}\n'
+        dedent()
     }
     if(has_else || has_finally){
-        js += '}\n' // close try
+        js += prefix + '}' // close try
         js += 'finally{\n'
-        var finalbody = `var exit = false\n` +
-                        `if($B.count_frames() < stack_length_${id}){\n` +
-                            `exit = true\n` +
-                            `$B.frame_obj = $B.push_frame(frame)\n` +
-                        `}\n` +
+        indent()
+        if(has_else && has_finally){
+            indent()
+        }
+        var finalbody = prefix + `var exit = false\n` +
+                        prefix + `if($B.count_frames() < stack_length_${id}){\n` +
+                        prefix + tab + `exit = true\n` +
+                        prefix + tab + `$B.frame_obj = $B.push_frame(frame)\n` +
+                        prefix + `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
                 ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
-            finalbody += `\nif(exit){\n` +
-                           `$B.leave_frame(locals)\n` +
-                        `}`
+            finalbody += '\n' + prefix + `if(exit){\n` +
+                         prefix + tab + `$B.leave_frame(locals)\n` +
+                         prefix + `}`
         }
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
-        var elsebody = `if($B.count_frames() == stack_length_${id} ` +
-                       `&& ! failed${id}){\n` +
-                       add_body(this.orelse, scopes) +
-                       '\n}' // close "if"
+        var elsebody = prefix + `if($B.count_frames() == stack_length_${id} ` +
+                       `&& ! failed${id}){\n`
+        indent()
+        elsebody += add_body(this.orelse, scopes)
+        dedent()
+        elsebody += '\n' + prefix + '}' // close "if"
         if(has_else && has_finally){
-            js += `try{\n` +
-                  elsebody +
-                  '\n}\n' + // close "try"
-                  `finally{\n` + finalbody + '}\n'
+            dedent()
+            js += prefix + `try{\n` +
+                  elsebody + '\n' +
+                  prefix + '}' + // close "try"
+                  `finally{\n` + finalbody + '\n' +
+                  prefix + '}'
         }else if(has_else && ! has_finally){
             js += elsebody
         }else{
             js += finalbody
         }
-        js += '\n}\n' // close "finally"
+        dedent()
+        js += '\n' + prefix + '}\n' // close "finally"
     }else{
-        js += '}\n' // close catch
+        js += prefix + '}\n' // close catch
     }
     scopes.pop()
     return js
@@ -3786,6 +3781,8 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
 
     var type_params_names = []
 
+    check_type_params(this)
+
     for(var type_param of this.type_params){
         if(type_param instanceof $B.ast.TypeVar){
             type_params_names.push(type_param.name)
@@ -3803,36 +3800,42 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
     var value = this.value.to_js(scopes)
     scopes.pop()
     scopes.pop()
-    var js = `$B.$import('_typing')\n`
+    var js = prefix + `$B.$import('_typing')\n`
     // create locals for the type param scope
-    js += `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+    js += prefix + `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
     // emulate the function that creates the instance of TypeAliasType
     // as explained in Python Reference
     // https://docs.python.org/3/reference/compound_stmts.html#generic-type-aliases
-    js += `function TYPE_PARAMS_OF_${this.name.id}(){\n` +
-               `var locals_${qualified_name} = {},\n` +
-               `    locals = locals_${qualified_name}, \n` +
-               `    type_params = $B.fast_tuple([])\n`
+    js += prefix + `function TYPE_PARAMS_OF_${this.name.id}(){\n`
+    indent()
+    js += prefix + `var locals_${qualified_name} = {},\n` +
+          prefix + tab + tab + `locals = locals_${qualified_name}, \n` +
+          prefix + tab + tab + `type_params = $B.fast_tuple([])\n`
     for(var i = 0, len = this.type_params.length; i < len; i++){
-        js += `type_params.push(locals.${type_params_names[i]} = ` +
+        js += prefix + `type_params.push(locals.${type_params_names[i]} = ` +
                   `${this.type_params[i].to_js()})\n`
     }
     // create the function called when the attribute __value__ of the
     // TypeAliasType instance is resolved ("lazy evaluation")
-    js += `function get_value(){\nreturn ${value}\n}\n`
+    js += prefix + `function get_value(){\n` +
+          prefix + tab + `return ${value}\n` +
+          prefix + `}\n`
     // The function returns an instance of _typing.TypeAliasType
-    js += `var res = $B.$call($B.imported._typing.TypeAliasType)` +
+    js += prefix + `var res = $B.$call($B.imported._typing.TypeAliasType)` +
           `('${this.name.id}', get_value)\n` +
-          `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
-          `$B.$setattr(res, '__type_params__', type_params)\n` +
-          `return res\n` +
-          `}\n` +
-          `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
+          prefix + `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
+          prefix + `$B.$setattr(res, '__type_params__', type_params)\n` +
+          prefix + `return res\n`
+    dedent()
+    js += prefix + `}\n` +
+          prefix + `locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
     return js
 }
 
 $B.ast.TypeVar.prototype.to_js = function(){
-    return `$B.$call($B.imported._typing.TypeVar)('${this.name}')`
+    check_type_params(this)
+    return `$B.$call($B.imported._typing.TypeVar)('${this.name}', ` +
+        `{$kw: [{infer_variance: true}]})`
 }
 
 $B.ast.TypeVarTuple.prototype.to_js = function(){
@@ -3860,7 +3863,7 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.While.prototype.to_js = function(scopes){
-    var id = $B.UUID()
+    var id = make_id()
 
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
@@ -3870,30 +3873,35 @@ $B.ast.While.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     // Set a variable to detect a "break"
-    var js = `var no_break_${id} = true\n`
+    var js = prefix + `var no_break_${id} = true\n`
 
-    js += `while($B.set_lineno(frame, ${this.lineno}) && `
+    js += prefix + `while($B.set_lineno(frame, ${this.lineno}) && `
     if(this.test instanceof $B.ast.BoolOp){
         this.test.$dont_evaluate = true
         js += `${$B.js_from_ast(this.test, scopes)}){\n`
     }else{
         js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     }
-    js += add_body(this.body, scopes) + '\n}'
+    indent()
+    js += add_body(this.body, scopes)
+    dedent()
+    js += '\n' + prefix + '}\n'
 
     scopes.pop()
 
     if(this.orelse.length > 0){
-        js += `\nif(no_break_${id}){\n` +
-              add_body(this.orelse, scopes) + '}\n'
+        js += prefix + `if(no_break_${id}){\n`
+        indent()
+        js += add_body(this.orelse, scopes)
+        dedent()
+        js += '\n' + prefix + '}\n'
     }
-
 
     return js
 }
 
 $B.ast.With.prototype.to_js = function(scopes){
-    /* PEP 243 says that
+    /* PEP 343 says that
 
     with EXPR as VAR:
         BLOCK
@@ -3922,29 +3930,37 @@ $B.ast.With.prototype.to_js = function(scopes){
     */
 
     function add_item(item, js){
-        var id = $B.UUID()
-        var s = `var mgr_${id} = ` +
+        var id = make_id()
+        var s = prefix + `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
-              `klass = $B.get_class(mgr_${id})\n` +
-              `try{\n` +
-                  `var exit_${id} = $B.$getattr(klass, '__exit__'),\n` +
-                      `enter_${id} = $B.$getattr(klass, '__enter__')\n` +
-              `}catch(err){\n` +
-                  `var klass_name = $B.class_name(mgr_${id})\n` +
-                  `throw _b_.TypeError.$factory("'" + klass_name + ` +
+              prefix + `klass = $B.get_class(mgr_${id})\n` +
+              prefix + `try{\n`
+        indent()
+        s += prefix + `var exit_${id} = $B.$getattr(mgr_${id}, '__exit__'),\n` +
+             prefix + tab + `enter_${id} = $B.$getattr(klass, '__enter__')\n`
+        dedent()
+        s += prefix + `}catch(err){\n`
+        indent()
+        s += prefix + `var klass_name = $B.class_name(mgr_${id})\n` +
+             prefix + `frame.inum = ${inum}\n` +
+             prefix + `throw _b_.TypeError.$factory("'" + klass_name + ` +
                       `"' object does not support the con` +
                       // split word 'context', replaced by "C" in brython.js...
-                      `text manager protocol")\n` +
-              `}\n` +
-              `var value_${id} = $B.$call(enter_${id})(mgr_${id}),\n` +
-              `exc_${id} = true\n`
+                      `text manager protocol")\n`
+        dedent()
+        s += prefix + `}\n` +
+             prefix + `var value_${id} = $B.$call(enter_${id})(mgr_${id}),\n` +
+             prefix + tab +  `exc_${id} = true\n`
         if(in_generator){
             // add/update attribute used to close context managers in
             // leave_frame()
-            s += `locals.$context_managers = locals.$context_managers || []\n` +
-                 `locals.$context_managers.push(mgr_${id})\n`
+            s += prefix + `locals.$context_managers = locals.$context_managers || []\n` +
+                 prefix + `locals.$context_managers.push(mgr_${id})\n`
         }
-        s += 'try{\ntry{\n'
+        s += prefix + 'try{\n'
+        indent()
+        s += prefix + 'try{\n'
+        indent()
         if(item.optional_vars){
             var value = {to_js: function(){return `value_${id}`}}
             copy_position(value, _with)
@@ -3953,34 +3969,44 @@ $B.ast.With.prototype.to_js = function(scopes){
             s += assign.to_js(scopes) + '\n'
         }
         s += js
-        s += `}catch(err_${id}){\n` +
-                  `frame.$lineno = ${lineno}\n` +
-                  `exc_${id} = false\n` +
-                  `err_${id} = $B.exception(err_${id}, frame)\n` +
-                  `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
-                  `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n` +
-                  `if(! $B.$bool($b)){\n` +
-                      `throw err_${id}\n` +
-                  `}\n` +
-              `}\n`
-
-        s += `}\nfinally{\n` +
-                  `frame.$lineno = ${lineno}\n` +
-                  (in_generator ? `locals.$context_managers.pop()\n` : '') +
-                  `if(exc_${id}){\n` +
-                      `try{\n` +
-                          `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n` +
-                      `}catch(err){\n` +
-                          // If an error occurs in __exit__, make sure the
-                          // stack frame is preserved (it may have been
-                          // modified by a "return" in the "with" block)
-                          `if($B.count_frames() < stack_length){\n` +
-                              `$B.frame_obj = $B.push_frame(frame)\n` +
-                          `}\n` +
-                          `throw err\n` +
-                      `}\n` +
-                  `}\n` +
-              `}\n`
+        dedent()
+        s += prefix + `}catch(err_${id}){\n`
+        indent()
+        s += prefix + `frame.$lineno = ${lineno}\n` +
+             prefix + `exc_${id} = false\n` +
+             prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
+             prefix + `var $b = $B.$call(exit_${id})(err_${id}.__class__, ` +
+                  `err_${id}, \n` +
+             prefix + tab.repeat(4) + `$B.$getattr(err_${id}, '__traceback__'))\n` +
+             prefix + `if(! $B.$bool($b)){\n` +
+             prefix + tab + `throw err_${id}\n` +
+             prefix + `}\n`
+        dedent()
+        s += prefix + `}\n`
+        dedent()
+        s += prefix + `}finally{\n`
+        indent()
+        s += prefix + `frame.$lineno = ${lineno}\n` +
+             (in_generator ? prefix + `locals.$context_managers.pop()\n` : '') +
+             prefix + `if(exc_${id}){\n`
+        indent()
+        s += prefix + `try{\n` +
+             prefix + tab + `$B.$call(exit_${id})(_b_.None, _b_.None, _b_.None)\n` +
+             prefix + `}catch(err){\n`
+             // If an error occurs in __exit__, make sure the
+             // stack frame is preserved (it may have been
+             // modified by a "return" in the "with" block)
+        indent()
+        s += prefix + `if($B.count_frames() < stack_length){\n` +
+             prefix + tab + `$B.frame_obj = $B.push_frame(frame)\n` +
+             prefix + `}\n` +
+             prefix + `throw err\n`
+        dedent()
+        s += prefix + `}\n`
+        dedent()
+        s += prefix + `}\n`
+        dedent()
+        s += prefix + `}\n`
         return s
     }
 
@@ -3990,12 +4016,15 @@ $B.ast.With.prototype.to_js = function(scopes){
 
     scope.needs_stack_length = true
 
+    indent(2)
+    var inum = add_to_positions(scopes, this)
     var js = add_body(this.body, scopes) + '\n'
+    dedent(2)
     var in_generator = scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
-    return `$B.set_lineno(frame, ${this.lineno})\n` + js
+    return prefix + `$B.set_lineno(frame, ${this.lineno})\n` + js
 }
 
 $B.ast.Yield.prototype.to_js = function(scopes){
@@ -4062,93 +4091,123 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
     }
     scope.is_generator = true
     var value = $B.js_from_ast(this.value, scopes)
-    var n = $B.UUID()
-    return `yield* (function* f(){
-        var _i${n} = _b_.iter(${value}),
-                _r${n}
-            var failed${n} = false
-            try{
-                var _y${n} = _b_.next(_i${n})
-            }catch(_e){
-                $B.set_exc(_e, frame)
-                failed${n} = true
-                $B.pmframe = $B.frame_obj.frame
-                _e = $B.exception(_e)
-                if(_e.__class__ === _b_.StopIteration){
-                    var _r${n} = $B.$getattr(_e, "value")
-                }else{
-                    throw _e
-                }
+    var n = make_id()
+    var res = `yield* (function* f(){\n`
+    indent()
+    var js = `
+        var _i${n} = _b_.iter(${value.trimRight()}),
+            _r${n}
+        var failed${n} = false
+        try{
+            var _y${n} = _b_.next(_i${n})
+        }catch(_e){
+            $B.set_exc(_e, frame)
+            failed${n} = true
+            $B.pmframe = $B.frame_obj.frame
+            _e = $B.exception(_e)
+            if(_e.__class__ === _b_.StopIteration){
+                var _r${n} = $B.$getattr(_e, "value")
+            }else{
+                throw _e
             }
-            if(! failed${n}){
-                while(true){
-                    var failed1${n} = false
-                    try{
-                        $B.leave_frame()
-                        var _s${n} = yield _y${n}
-                        $B.frame_obj = $B.push_frame(frame)
-                    }catch(_e){
-                        $B.set_exc(_e, frame)
-                        if(_e.__class__ === _b_.GeneratorExit){
-                            var failed2${n} = false
-                            try{
-                                var _m${n} = $B.$getattr(_i${n}, "close")
-                            }catch(_e1){
-                                failed2${n} = true
-                                if(_e1.__class__ !== _b_.AttributeError){
-                                    throw _e1
-                                }
-                            }
-                            if(! failed2${n}){
-                                $B.$call(_m${n})()
-                            }
-                            throw _e
-                        }else if($B.is_exc(_e, [_b_.BaseException])){
-                            var sys_module = $B.imported._sys,
-                                _x${n} = sys_module.exc_info()
-                            var failed3${n} = false
-                            try{
-                                var _m${n} = $B.$getattr(_i${n}, "throw")
-                            }catch(err){
-                                failed3${n} = true
-                                if($B.is_exc(err, [_b_.AttributeError])){
-                                    throw err
-                                }
-                            }
-                            if(! failed3${n}){
-                                try{
-                                    _y${n} = $B.$call(_m${n}).apply(null,
-                                        _b_.list.$factory(_x${n}))
-                                }catch(err){
-                                    if($B.is_exc(err, [_b_.StopIteration])){
-                                        _r${n} = $B.$getattr(err, "value")
-                                        break
-                                    }
-                                    throw err
-                                }
-                            }
-                        }
-                    }
-                    if(! failed1${n}){
+        }
+        if(! failed${n}){
+            while(true){
+                var failed1${n} = false
+                try{
+                    $B.leave_frame()
+                    var _s${n} = yield _y${n}
+                    $B.frame_obj = $B.push_frame(frame)
+                }catch(_e){
+                    $B.set_exc(_e, frame)
+                    if(_e.__class__ === _b_.GeneratorExit){
+                        var failed2${n} = false
                         try{
-                            if(_s${n} === _b_.None){
-                                _y${n} = _b_.next(_i${n})
-                            }else{
-                                _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            var _m${n} = $B.$getattr(_i${n}, "close")
+                        }catch(_e1){
+                            failed2${n} = true
+                            if(_e1.__class__ !== _b_.AttributeError){
+                                throw _e1
                             }
+                        }
+                        if(! failed2${n}){
+                            $B.$call(_m${n})()
+                        }
+                        throw _e
+                    }else if($B.is_exc(_e, [_b_.BaseException])){
+                        var sys_module = $B.imported._sys,
+                            _x${n} = sys_module.exc_info()
+                        var failed3${n} = false
+                        try{
+                            var _m${n} = $B.$getattr(_i${n}, "throw")
                         }catch(err){
-                            if($B.is_exc(err, [_b_.StopIteration])){
-                                _r${n} = $B.$getattr(err, "value")
-                                break
+                            failed3${n} = true
+                            if($B.is_exc(err, [_b_.AttributeError])){
+                                throw err
                             }
-                            throw err
+                        }
+                        if(! failed3${n}){
+                            try{
+                                _y${n} = $B.$call(_m${n}).apply(null,
+                                    _b_.list.$factory(_x${n}))
+                            }catch(err){
+                                if($B.is_exc(err, [_b_.StopIteration])){
+                                    _r${n} = $B.$getattr(err, "value")
+                                    break
+                                }
+                                throw err
+                            }
                         }
                     }
                 }
+                if(! failed1${n}){
+                    try{
+                        if(_s${n} === _b_.None){
+                            _y${n} = _b_.next(_i${n})
+                        }else{
+                            _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                        }
+                    }catch(err){
+                        if($B.is_exc(err, [_b_.StopIteration])){
+                            _r${n} = $B.$getattr(err, "value")
+                            break
+                        }
+                        throw err
+                    }
+                }
             }
-            return _r${n}
-        })()`
+        }
+        return _r${n}`
+    var lines = js.split('\n').slice(1)
+    var head = lines[0].length - lines[0].trimLeft().length
+    for(var line of lines){
+        var trimmed = line.trimLeft(),
+            tlen = trimmed.length
+        if(tlen == 0){
+            res += '\n'
+            continue
+        }
+        var line_head = line.length - tlen
+        var line_indent = (line_head - head) / 4
+        if(line_indent < 0){
+            /*
+            console.log(js)
+            console.log('bug for line', line)
+            console.log(scopes.filename)
+            console.log('code for value\n', value)
+            console.log('value ends with LN ?', value.endsWith('\n'))
+            */
+            console.warn('wrong indentation')
+            line_indent = 0
+        }
+        res += prefix + tab.repeat(line_indent) + trimmed + '\n'
+    }
+    dedent()
+    res += prefix + '})()'
+
+    return res
 }
+
 var state = {}
 
 $B.js_from_root = function(arg){
@@ -4173,6 +4232,9 @@ $B.js_from_root = function(arg){
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}
+    scopes.indent = 0
+    var js_tab = $B.get_option('js_tab')
+    tab = ' '.repeat(js_tab)
     var js = ast_root.to_js(scopes)
     return {js, imports: scopes.imports}
 }
@@ -4197,4 +4259,4 @@ $B.js_from_ast = function(ast, scopes){
     return '// unhandled class ast.' + ast.constructor.$name
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

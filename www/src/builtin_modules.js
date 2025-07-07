@@ -17,6 +17,7 @@
         __file__: $B.brython_path.replace(new RegExp("/*$", "g"),'') +
             '/Lib/browser/__init__.py',
 
+        __BRYTHON__,
         bind:function(){
             // bind(element, event) is a decorator for callback function
             var $ = $B.args("bind", 3, {elt: null, evt: null, options: null},
@@ -88,6 +89,7 @@
                 null, null)
             $B.runPythonSource($.src, $.name)
         },
+        scope: globalThis,
         self: win,
         win: win,
         window: win
@@ -133,9 +135,8 @@
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
-                var content = $B.$getattr(file_obj, 'read')()
-                console.log('content', content.length)
-                eval(content)
+                var content = $B.$getattr(file_obj, 'read')();
+                eval(content);
             },
             load1:function(script_url, callback){
                 // Load and eval() the Javascript file at script_url
@@ -410,9 +411,7 @@
             var js_constr = res.__thisclass__.__bases__[0]
             return function(){
                 var obj = new js_constr.$js_func(...arguments)
-                console.log('obj from js constr', obj)
                 for(var attr in obj){
-                    console.log('attr', attr)
                     res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
                 }
                 return obj
@@ -551,7 +550,6 @@
                 )
                 document.body.appendChild(script)
             }else{
-                console.log('appel callback', loaded)
                 return $B.$call(callback).apply(null, loaded)
             }
         },
@@ -762,7 +760,7 @@
         path: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename_for_import()
-                return $B.import_info[filename].path
+                return $B.$list($B.import_info[filename].path)
             },
             function(self, value){
                 var filename = $B.get_filename_for_import()
@@ -772,7 +770,7 @@
         meta_path: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename()
-                return $B.import_info[filename].meta_path
+                return $B.$list($B.import_info[filename].meta_path)
             },
             function(self, value){
                 var filename = $B.get_filename()
@@ -782,7 +780,7 @@
         path_hooks: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename()
-                return $B.import_info[filename].path_hooks
+                return $B.$list($B.import_info[filename].path_hooks)
             },
             function(self, value){
                 var filename = $B.get_filename()
@@ -868,19 +866,19 @@
         _filters_mutated: function(){
         },
         _onceregistry: $B.empty_dict(),
-        filters: [
+        filters: $B.$list([
             $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.PendingDeprecationWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ResourceWarning, _b_.None, 0])
-        ],
+        ]),
         warn: function(){
             // Issue a warning, or maybe ignore it or raise an exception.
             var $ = $B.args('warn', 4,
                             {message: null, category: null, stacklevel: null, source: null},
                             ['message', 'category', 'stacklevel', 'source'],
-                            arguments, {category: _b_.None, stacklevel: 1, source: _b_.None},
+                            arguments, {category: _b_.UserWarning, stacklevel: 1, source: _b_.None},
                             null, null),
                     message = $.message,
                     category = $.category,
@@ -905,40 +903,46 @@
                 throw syntax_error
             }
             var warning_message,
+                filename,
                 file,
                 lineno,
                 line
             if(category === _b_.SyntaxWarning){
-                file = message.filename,
+                filename = message.filename,
                 lineno = message.lineno,
                 line = message.text
+                var src = $B.file_cache[file]
+                if(src){
+                    var lines = src.split('\n'),
+                        line = lines[lineno - 1]
+                }
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
                     category,
-                    filename: message.filename,
-                    lineno: message.lineno,
+                    filename,
+                    lineno,
                     file: _b_.None,
-                    line: _b_.None,
+                    line,
                     source: _b_.None,
                     _category_name: category.__name__
                 }
             }else{
-                let frame_rank = Math.max(0, $B.count_frames() - stacklevel),
-                    frame = $B.get_frame_at(frame_rank)
+                let frame_rank = Math.max(0, $B.count_frames() - stacklevel)
+                var frame = $B.get_frame_at(frame_rank)
                 file = frame.__file__
                 let f_code = $B._frame.f_code.__get__(frame),
                     src = $B.file_cache[file]
-                lineno = frame.$lineno
+                lineno = message.lineno || frame.$lineno
                 line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
                     category,
                     filename: message.filename || f_code.co_filename,
-                    lineno: message.lineno || lineno,
+                    lineno,
                     file: _b_.None,
-                    line: _b_.None,
+                    line: line || _b_.None,
                     source: _b_.None,
                     _category_name: category.__name__
                 }
@@ -961,6 +965,7 @@
                     flush()
                 }
             }
+            return _b_.None
         },
         warn_explicit: function(){
             // Low-level interface to warnings functionality.
@@ -1142,6 +1147,8 @@
             func.$infos = {
                 __name__: "ajax_" + method
             }
+            func.$function_infos = []
+            func.$function_infos[$B.func_attrs.name] = `ajax_${method}`
             return {
                 __class__: $B.coroutine,
                 $args: [url, args],
@@ -1179,7 +1186,7 @@
             return f.__class__ === $B.coroutine
         },
         iscoroutinefunction: function(f){
-            return (f.$infos.__code__.co_flags & 128) != 0
+            return (f.$function_infos[$B.func_attrs.flags] & 128) != 0
         },
         post: function(){
             return $B.imported['browser.aio'].ajax.bind(null, "POST").apply(null, arguments)
@@ -1217,6 +1224,8 @@
             func.$infos = {
                 __name__: "sleep"
             }
+            func.$function_infos = []
+            func.$function_infos[$B.func_attrs.name] = 'sleep'
             return {
                 __class__: $B.coroutine,
                 $args: [seconds],
@@ -1245,6 +1254,13 @@
                     __name__: attr,
                     __qualname__: name + '.' + attr
                 }
+                $B.set_function_infos(module_obj[attr],
+                    {
+                        __module__: name,
+                        __name__: attr,
+                        __qualname__: name + '.' + attr
+                    }
+                )
             }
         }
     }
@@ -1297,9 +1313,9 @@
     for(var name in _b_){
         var builtin = _b_[name]
         if(_b_[name].__class__ === _b_.type){
-            _b_[name].__qualname__ = name
+            _b_[name].__qualname__ = _b_[name].__qualname__ ?? name
             _b_[name].__module__ = 'builtins'
-            _b_[name].__name__ = name
+            _b_[name].__name__ = _b_[name].__name__ ?? name
             _b_[name].$is_builtin_class = true
             $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
             for(var key in _b_[name]){
@@ -1319,8 +1335,15 @@
         }else if(typeof builtin == 'function'){
             builtin.$infos = {
                 __name__: name,
-                __qualname__: name
+                __qualname__: name,
+                __dict__: $B.empty_dict()
             }
+            $B.set_function_infos(builtin,
+                {
+                    __name__: name,
+                    __qualname__: name
+                }
+            )
         }
     }
 
@@ -1472,7 +1495,13 @@ $B.stdin = {
     }
 }
 
+// Populated in py2js.brython(), used for sys.argv
+$B.__ARGV = $B.$list([])
+
 // set default trace function (cf. sys.settrace)
 $B.tracefunc = _b_.None
 
-})(__BRYTHON__)
+// function dict
+$B.function.__dict__ = $B.obj_dict($B.function.__dict__)
+
+})(__BRYTHON__);

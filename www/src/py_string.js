@@ -99,6 +99,7 @@ var str = {
     __dir__: _b_.object.__dir__,
     __qualname__: 'str',
     $is_class: true,
+    $is_sequence: true,
     $native: true
 }
 
@@ -286,14 +287,37 @@ str.__getnewargs__ = function(){
     return str.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
 }
 
+function cyrb53(str){
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for(let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+};
+
 str.__hash__ = function(_self){
     // copied from
     // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
     var s = to_string(_self)
-    for(var i = 0, h = 0, len = s.length; i < len; i++){
-        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for(let i = 0, ch; i < s.length; i++) {
+        ch = s.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
     }
-    return h;
+    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 }
 
 str.__init__ = function(){
@@ -1089,16 +1113,15 @@ str.__mod__ = function(_self, args){
 
 str.__mro__ = [_b_.object]
 
-str.__mul__ = function(){
-    var $ = $B.args("__mul__", 2, {self: null, other: null},
-            ["self", "other"], arguments, {}, null, null),
-        _self = to_string($.self)
-    if(! $B.$isinstance($.other, _b_.int)){
+str.__mul__ = function(self, other){
+    $B.check_nb_args_no_kw('str.__mul__', 2, arguments)
+    var _self = to_string(self)
+    if(! $B.$isinstance(other, _b_.int)){
         throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
-            $B.class_name($.other) + "'")
+            $B.class_name(other) + "'")
     }
-    return _self.repeat($.other < 0 ? 0 : $.other)
+    return _self.repeat(other < 0 ? 0 : other)
 }
 
 str.__ne__ = function(_self, other){
@@ -1161,13 +1184,12 @@ str.__repr__ = function(_self){
     return res
 }
 
-str.__rmod__ = function(){
-    var $ = $B.args('__rmod__', 2, {self: null, other: null},
-                    ['self', 'other'], arguments, {}, null, null)
-    if(! $B.$isinstance($.other, str)){
+str.__rmod__ = function(self, other){
+    $B.check_nb_args_no_kw('str.__rmod__', 2, arguments)
+    if(! $B.$isinstance(other, str)){
         return _b_.NotImplemented
     }
-    return str.__mod__($.other, $.self)
+    return str.__mod__(other, self)
 }
 
 str.__rmul__ = function(_self, other){
@@ -1191,7 +1213,8 @@ str.__setattr__ = function(_self, attr, value){
                 attr + "' is read-only")
         }else{
             throw _b_.AttributeError.$factory(
-                "'str' object has no attribute '" + attr + "'")
+                `'str' object has no attribute '${attr}' and no __dict__ ` +
+                'for setting new attributes')
         }
     }
     // str subclass : use __dict__
@@ -1243,23 +1266,22 @@ for(var op in comps){
         body.replace(/>/gm, op))
 }
 
-str.capitalize = function(){
-    var $ = $B.args("capitalize", 1, {self}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+str.capitalize = function(self){
+    $B.check_nb_args_no_kw('str.capitalize', 1, arguments)
+
+    var _self = to_string(self)
     if(_self.length == 0){
         return ""
     }
     return _self.charAt(0).toUpperCase() + _self.substr(1).toLowerCase()
 }
 
-str.casefold = function(){
-    var $ = $B.args("casefold", 1, {self}, ["self"],
-            arguments, {}, null, null),
-        res = "",
+str.casefold = function(self){
+    $B.check_nb_args_no_kw('set.remove', 1, arguments)
+    var res = "",
         char,
         cf,
-        _self = to_string($.self),
+        _self = to_string(self),
         chars = to_chars(_self)
     for(var i = 0, len = chars.length; i < len; i++){
         char = chars[i]
@@ -1405,7 +1427,7 @@ str.expandtabs = function() {
     var $ = $B.args("expandtabs", 2, {self: null, tabsize: null},
             ["self", "tabsize"], arguments, {tabsize: 8}, null, null),
         _self = to_string($.self)
-    var s = $B.$GetInt($.tabsize),
+    var s = $B.PyNumber_Index($.tabsize),
         col = 0,
         pos = 0,
         res = "",
@@ -1701,9 +1723,13 @@ str.format = function(){
 
         // If the conversion flag is set, first call a function to convert
         // the value
-        if(fmt.conv == "a"){value = _b_.ascii(value)}
-        else if(fmt.conv == "r"){value = _b_.repr(value)}
-        else if(fmt.conv == "s"){value = _b_.str.$factory(value)}
+        if(fmt.conv == "a"){
+            value = _b_.ascii(value)
+        }else if(fmt.conv == "r"){
+            value = _b_.repr(value)
+        }else if(fmt.conv == "s"){
+            value = _b_.str.$factory(value)
+        }
 
         // Call attribute __format__ to perform the actual formatting
         if(value.$is_class || value.$factory){
@@ -1716,11 +1742,10 @@ str.format = function(){
     return res
 }
 
-str.format_map = function(){
-    var $ = $B.args("format_map", 2, {self: null, mapping: null},
-            ['self', 'mapping'], arguments, {}, null, null),
-        _self = to_string($.self)
-    return str.format(_self, {$nat: 'mapping', mapping: $.mapping})
+str.format_map = function(self, mapping){
+    $B.check_nb_args_no_kw('str.format_map', 2, arguments)
+    var _self = to_string(self)
+    return str.format(_self, {$nat: 'mapping', mapping})
 }
 
 str.index = function(){
@@ -1732,13 +1757,12 @@ str.index = function(){
     return res
 }
 
-str.isascii = function(){
+str.isascii = function(self){
     /* Return true if the string is empty or all characters in the string are
     ASCII, false otherwise. ASCII characters have code points in the range
     U+0000-U+007F. */
-    var $ = $B.args("isascii", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isascii', 1, arguments)
+    var _self = to_string(self)
     for(var i = 0, len = _self.length; i < len; i++){
         if(_self.charCodeAt(i) > 127){
             return false
@@ -1749,7 +1773,6 @@ str.isascii = function(){
 
 var unicode_categories_contain_character = function (categories, cp) {
     for (var cat of categories) {
-        console.log(cat, cp);
         if ($B.in_unicode_category(cat, cp)) {
             return true
         }
@@ -1760,14 +1783,13 @@ var unicode_categories_contain_character = function (categories, cp) {
 var alpha_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']
 var alnum_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd']
 
-str.isalnum = function(){
+str.isalnum = function(self){
     /* Return true if all characters in the string are alphanumeric and there
     is at least one character, false otherwise. A character c is alphanumeric
     if one of the following returns True: c.isalpha(), c.isdecimal(),
     c.isdigit(), or c.isnumeric(). */
-    var $ = $B.args("isalnum", 1, {self: null}, ["self"],
-            arguments, {}, null, null)
-    var _self = to_string($.self);
+    $B.check_nb_args_no_kw('str.isalnum', 1, arguments)
+    var _self = to_string(self);
     if (_self.length == 0) {
         return false
     }
@@ -1779,15 +1801,14 @@ str.isalnum = function(){
     return true
 }
 
-str.isalpha = function(){
+str.isalpha = function(self){
     /* Return true if all characters in the string are alphabetic and there is
     at least one character, false otherwise. Alphabetic characters are those
     characters defined in the Unicode character database as "Letter", i.e.,
     those with general category property being one of "Lm", "Lt", "Lu", "Ll",
     or "Lo". */
-    var $ = $B.args("isalpha", 1, {self: null}, ["self"],
-            arguments, {}, null, null)
-    var _self = to_string($.self);
+    $B.check_nb_args_no_kw('str.isalpha', 1, arguments)
+    var _self = to_string(self);
     if (_self.length == 0) {
         return false
     }
@@ -1799,16 +1820,15 @@ str.isalpha = function(){
     return true
 }
 
-str.isdecimal = function(){
+str.isdecimal = function(self){
     /* Return true if all characters in the string are decimal characters and
     there is at least one character, false otherwise. Decimal characters are
     those that can be used to form numbers in base 10, e.g. U+0660,
     ARABIC-INDIC DIGIT ZERO. Formally a decimal character is a character in
     the Unicode General Category "Nd". */
-    var $ = $B.args("isdecimal", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isdecimal', 1, arguments)
+    var cp,
+        _self = to_string(self)
     for(var char of _self){
         cp = _b_.ord(char)
         if(! $B.in_unicode_category('Nd', cp)){
@@ -1818,13 +1838,12 @@ str.isdecimal = function(){
     return _self.length > 0
 }
 
-str.isdigit = function(){
+str.isdigit = function(self){
     /* Return true if all characters in the string are digits and there is at
     least one character, false otherwise. */
-    var $ = $B.args("isdigit", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isdigit', 1, arguments)
+    var cp,
+        _self = to_string(self)
     for(var char of _self){
         if(/\p{Nd}/u.test(char)){
             continue
@@ -1838,12 +1857,11 @@ str.isdigit = function(){
     return _self.length > 0
 }
 
-str.isidentifier = function(){
+str.isidentifier = function(self){
     /* Return true if the string is a valid identifier according to the
     language definition. */
-    var $ = $B.args("isidentifier", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isidentifier', 1, arguments)
+    var _self = to_string(self)
     if(_self.length == 0){
         return false
     }
@@ -1861,14 +1879,13 @@ str.isidentifier = function(){
     return true
 }
 
-str.islower = function(){
+str.islower = function(self){
     /* Return true if all cased characters 4 in the string are lowercase and
     there is at least one cased character, false otherwise. */
-    var $ = $B.args("islower", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        has_cased = false,
+    $B.check_nb_args_no_kw('str.islower', 1, arguments)
+    var has_cased = false,
         cp,
-        _self = to_string($.self)
+        _self = to_string(self)
 
     for(var char of _self){
         cp = _b_.ord(char)
@@ -1885,16 +1902,15 @@ str.islower = function(){
 
 const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 
-str.isnumeric = function(){
+str.isnumeric = function(self){
     /* Return true if all characters in the string are numeric characters, and
     there is at least one character, false otherwise. Numeric characters
     include digit characters, and all characters that have the Unicode numeric
     value property, e.g. U+2155, VULGAR FRACTION ONE FIFTH. Formally, numeric
     characters are those with the property value Numeric_Type=Digit,
     Numeric_Type=Decimal or Numeric_Type=Numeric.*/
-    var $ = $B.args("isnumeric", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isnumeric', 1, arguments)
+    var _self = to_string(self)
     for(var char of _self){
         if((! numeric_re.test(char)) &&
                ! $B.in_unicode_category('Lo_numeric', _b_.ord(char))){
@@ -1907,15 +1923,13 @@ str.isnumeric = function(){
 // This regex should match the one in py2js.js
 var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
-str.isprintable = function(){
+str.isprintable = function(self){
     /* Return true if all characters in the string are printable or the string
     is empty, false otherwise. Nonprintable characters are those characters
     defined in the Unicode character database as "Other" or "Separator",
     excepting the ASCII space (0x20) which is considered printable. */
-
-    var $ = $B.args("isprintable", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isprintable', 1, arguments)
+    var _self = to_string(self)
     for(var char of _self){
         if(char == ' '){
             continue
@@ -1927,17 +1941,16 @@ str.isprintable = function(){
     return true
 }
 
-str.isspace = function(){
+str.isspace = function(self){
     /* Return true if there are only whitespace characters in the string and
     there is at least one character, false otherwise.
 
     A character is whitespace if in the Unicode character database, either its
     general category is Zs ("Separator, space"), or its bidirectional class is
     one of WS, B, or S.*/
-    var $ = $B.args("isspace", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        cp,
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.isspace', 1, arguments)
+    var cp,
+        _self = to_string(self)
     for(var char of _self){
         cp = _b_.ord(char)
         if(! $B.in_unicode_category('Zs', cp) &&
@@ -1948,25 +1961,23 @@ str.isspace = function(){
     return _self.length > 0
 }
 
-str.istitle = function(){
+str.istitle = function(self){
     /* Return true if the string is a titlecased string and there is at least
     one character, for example uppercase characters may only follow uncased
     characters and lowercase characters only cased ones. Return false
     otherwise. */
-    var $ = $B.args("istitle", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+    $B.check_nb_args_no_kw('str.istitle', 1, arguments)
+    var _self = to_string(self)
     return _self.length > 0 && str.title(_self) == _self
 }
 
-str.isupper = function(){
+str.isupper = function(self){
     /* Return true if all cased characters 4 in the string are lowercase and
     there is at least one cased character, false otherwise. */
-    var $ = $B.args("islower", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        is_upper = false,
+    $B.check_nb_args_no_kw('str.isupper', 1, arguments)
+    var is_upper = false,
         cp,
-        _self = to_string($.self)
+        _self = to_string(self)
 
     for(var char of _self){
         cp = _b_.ord(char)
@@ -1982,13 +1993,12 @@ str.isupper = function(){
 }
 
 
-str.join = function(){
-    var $ = $B.args("join", 2, {self: null, iterable: null},
-            ["self", "iterable"], arguments, {}, null, null),
-        _self = to_string($.self)
+str.join = function(self, iterable){
+    $B.check_nb_args_no_kw('str.join', 2, arguments)
+    var _self = to_string(self)
 
-    var iterable = _b_.iter($.iterable),
-        res = [],
+    iterable = _b_.iter(iterable)
+    var res = [],
         count = 0
     while(1){
         try{
@@ -2002,8 +2012,9 @@ str.join = function(){
         }catch(err){
             if($B.$isinstance(err, _b_.StopIteration)){
                 break
+            }else{
+                throw err
             }
-            else{throw err}
         }
     }
     return res.join(_self)
@@ -2022,16 +2033,15 @@ str.ljust = function(){
     return _self + $.fillchar.repeat($.width - len)
 }
 
-str.lower = function(){
-    var $ = $B.args("lower", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+str.lower = function(self){
+    $B.check_nb_args_no_kw('str.lower', 1, arguments)
+    var _self = to_string(self)
     return _self.toLowerCase()
 }
 
 str.lstrip = function(){
     var $ = $B.args("lstrip", 2, {self: null, chars: null}, ["self", "chars"],
-            arguments, {chars:_b_.None}, null, null),
+            arguments, {chars: _b_.None}, null, null),
         _self = $.self,
         chars = $.chars
     if(chars === _b_.None){
@@ -2124,16 +2134,14 @@ str.maketrans = function() {
 
 str.maketrans.$type = "staticmethod"
 
-str.partition = function() {
-    var $ = $B.args("partition", 2, {self: null, sep: null}, ["self", "sep"],
-            arguments, {}, null, null),
-        _self,
-        sep
-    if($.sep == ""){
+str.partition = function(self, sep) {
+    $B.check_nb_args_no_kw('str.partition', 2, arguments)
+    var _self
+    if(sep == ""){
         throw _b_.ValueError.$factory("empty separator")
     }
-    check_str($.sep);
-    [_self, sep] = to_string([$.self, $.sep])
+    check_str(sep);
+    [_self, sep] = to_string([self, sep])
     var chars = to_chars(_self),
         i = _self.indexOf(sep)
     if(i == -1){
@@ -2143,30 +2151,28 @@ str.partition = function() {
         chars.slice(i + sep.length).join('')])
 }
 
-str.removeprefix = function(){
-    var $ = $B.args("removeprefix", 2, {self: null, prefix: null},
-            ["self", "prefix"], arguments, {}, null, null),
-        _self
-    if(!$B.$isinstance($.prefix, str)){
+str.removeprefix = function(self, prefix){
+    $B.check_nb_args_no_kw('str.removeprefix', 2, arguments)
+    var _self
+    if(!$B.$isinstance(prefix, str)){
         throw _b_.ValueError.$factory("prefix should be str, not " +
-            `'${$B.class_name($.prefix)}'`)
+            `'${$B.class_name(prefix)}'`)
     }
-    [_self, prefix] = to_string([$.self, $.prefix])
+    [_self, prefix] = to_string([self, prefix])
     if(str.startswith(_self, prefix)){
         return _self.substr(prefix.length)
     }
     return _self.substr(0)
 }
 
-str.removesuffix = function(){
-    var $ = $B.args("removesuffix", 2, {self: null, suffix: null},
-                ["self", "suffix"], arguments, {}, null, null),
-        _self
-    if(!$B.$isinstance($.suffix, str)){
+str.removesuffix = function(self, suffix){
+    $B.check_nb_args_no_kw('str.removesuffix', 2, arguments)
+    var _self
+    if(!$B.$isinstance(suffix, str)){
         throw _b_.ValueError.$factory("suffix should be str, not " +
-            `'${$B.class_name($.prefix)}'`)
+            `'${$B.class_name(suffix)}'`)
     }
-    [_self, suffix] = to_string([$.self, $.suffix])
+    [_self, suffix] = to_string([self, suffix])
     if(suffix.length > 0 && str.endswith(_self, suffix)){
         return _self.substr(0, _self.length - suffix.length)
     }
@@ -2305,13 +2311,10 @@ str.rjust = function() {
     return $B.String($.fillchar.repeat($.width - len) + _self)
 }
 
-str.rpartition = function(self,sep) {
-    var $ = $B.args("rpartition", 2, {self: null, sep: null}, ["self", "sep"],
-            arguments, {}, null, null),
-        _self
-    check_str($.sep);
-    [_self, sep] = [$.self, $.sep]
-    _self = reverse(_self),
+str.rpartition = function(self, sep) {
+    $B.check_nb_args_no_kw('str.rpartition', 2, arguments)
+    check_str(sep)
+    var _self = reverse(self),
     sep = reverse(sep)
     var items = str.partition(_self, sep).reverse()
     for(var i = 0; i < items.length; i++){
@@ -2339,7 +2342,7 @@ str.rsplit = function() {
     for(var i = 0; i < rev_res.length; i++){
         rev_res[i] = reverse(rev_res[i])
     }
-    return rev_res
+    return $B.$list(rev_res)
 }
 
 str.rstrip = function(){
@@ -2388,7 +2391,7 @@ str.split = function(){
             pos++
         }
         if(pos === _self.length - 1){
-            return [_self]
+            return $B.$list([_self])
         }
         let name = ""
         while(1){
@@ -2417,14 +2420,18 @@ str.split = function(){
                 break
             }
         }
-        return res.map($B.String)
+        return $B.$list(res.map($B.String))
     }else{
+        if(! $B.$isinstance(sep, _b_.str)){
+            throw _b_.TypeError.$factory('must be str or None, not ' +
+                $B.class_name(sep))
+        }
         sep = to_string(sep)
         let res = [],
             s = "",
             seplen = sep.length
         if(maxsplit == 0){
-            return [$.self]
+            return $B.$list([$.self])
         }
         while(pos < _self.length){
             if(_self.substr(pos, seplen) == sep){
@@ -2441,7 +2448,7 @@ str.split = function(){
             }
         }
         res.push(s)
-        return res.map($B.String)
+        return $B.$list(res.map($B.String))
     }
 }
 
@@ -2454,7 +2461,7 @@ str.splitlines = function() {
             $B.get_class($.keepends).__name)
     }
     var keepends = _b_.int.$factory($.keepends),
-        res = [],
+        res = $B.$list([]),
         start = 0,
         pos = 0,
         _self = to_string($.self)
@@ -2475,7 +2482,7 @@ str.splitlines = function() {
     if(start < _self.length){
         res.push(_self.slice(start))
     }
-    return res.map($B.String)
+    return $B.$list(res.map($B.String))
 }
 
 str.startswith = function(){
@@ -2513,18 +2520,18 @@ str.startswith = function(){
 str.strip = function(){
     var $ = $B.args("strip", 2, {self: null, chars: null}, ["self", "chars"],
             arguments, {chars: _b_.None}, null, null)
+    var _self = to_string($.self)
     if($.chars === _b_.None){
-        return $.self.trim()
+        return _self.trim()
     }
-    return str.rstrip(str.lstrip($.self, $.chars), $.chars)
+    return str.rstrip(str.lstrip(_self, $.chars), $.chars)
 }
 
 str.swapcase = function(self){
-    var $ = $B.args("swapcase", 1, {self}, ["self"],
-            arguments, {}, null, null),
-        res = "",
+    $B.check_nb_args_no_kw('str.swapcase', 1, arguments)
+    var res = "",
         cp,
-        _self = to_string($.self)
+        _self = to_string(self)
     for(var char of _self){
         cp = _b_.ord(char)
         if($B.in_unicode_category('Ll', cp)){
@@ -2539,12 +2546,11 @@ str.swapcase = function(self){
 }
 
 str.title = function(self){
-    var $ = $B.args("title", 1, {self}, ["self"],
-            arguments, {}, null, null),
-        state,
+    $B.check_nb_args_no_kw('str.title', 1, arguments)
+    var state,
         cp,
         res = "",
-        _self = to_string($.self)
+        _self = to_string(self)
     for(var char of _self){
         cp = _b_.ord(char)
         if($B.in_unicode_category('Ll', cp)){
@@ -2566,14 +2572,12 @@ str.title = function(self){
     return res
 }
 
-str.translate = function(){
-    var $ = $B.args('translate', 2, {self: null, table: null},
-                ['self', 'table'], arguments, {}, null, null),
-        table = $.table,
-        res = [],
+str.translate = function(self, table){
+    $B.check_nb_args_no_kw('str.translate', 2, arguments)
+    var res = [],
         getitem = $B.$getattr(table, "__getitem__"),
         cp,
-        _self = to_string($.self)
+        _self = to_string(self)
     for(var char of _self){
         cp = _b_.ord(char)
         try{
@@ -2592,28 +2596,26 @@ str.translate = function(){
     return res.join("")
 }
 
-str.upper = function(){
-    var $ = $B.args("upper", 1, {self: null}, ["self"],
-            arguments, {}, null, null),
-        _self = to_string($.self)
+str.upper = function(self){
+    $B.check_nb_args_no_kw('str.upper', 1, arguments)
+    var _self = to_string(self)
     return _self.toUpperCase()
 }
 
-str.zfill = function(){
-    var $ = $B.args("zfill", 2, {self: null, width: null},
-            ["self", "width"], arguments, {}, null, null),
-        _self = to_string($.self)
+str.zfill = function(self, width){
+    $B.check_nb_args_no_kw('str.zfill', 2, arguments)
+    var _self = to_string(self)
     var len = str.__len__(_self)
-    if($.width <= len){
+    if(width <= len){
         return _self
     }
     switch(_self.charAt(0)){
         case "+":
         case "-":
             return _self.charAt(0) +
-                "0".repeat($.width - len) + _self.substr(1)
+                "0".repeat(width - len) + _self.substr(1)
         default:
-            return "0".repeat($.width - len) + _self
+            return "0".repeat(width - len) + _self
     }
 }
 
@@ -3105,5 +3107,5 @@ $B.jsstring2codepoint = function(c){
     return code
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 

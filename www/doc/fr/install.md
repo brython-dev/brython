@@ -10,15 +10,15 @@ d'inclure les scripts Brython dans la page HTML depuis un CDN.
 </script>
 ```
 
-On peut aussi préciser la version mineure avec `brython@3.12` et la version
-micro avec `brython@3.12.4`.
+On peut aussi préciser la version mineure avec `brython@3.13` et la version
+micro avec `brython@3.13.1`.
 
 Brython est également disponible sur cdnjs:
 
 ```xml
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.4/brython.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.13.1/brython.min.js">
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.4/brython_stdlib.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.13.1/brython_stdlib.min.js">
 </script>
 ```
 
@@ -48,7 +48,12 @@ Dans les deux cas vous disposez des fichiers suivants :
 - __brython.js__ : le moteur Brython, à inclure dans la page HTML
 - __brython_stdlib.js__ : regroupe tous les fichiers de la distribution Python
   standard supportés par Brython
-- __demo.html__ : une page qui donne quelques exemples d'utilisation de Brython
+- __index.html__ : une page d'accueil
+- __demo.html__ : une page qui donne quelques exemples d'utilisation de
+  Brython
+  
+Les deux pages html ne sont installées si l'option `--no-demo` a été passée
+à `brython-cli install`
 
 __brython.js__ contient quelques modules très utilisés : `browser, browser.html, `
 `javascript`.

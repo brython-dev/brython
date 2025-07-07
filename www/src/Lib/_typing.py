@@ -1,5 +1,7 @@
 # Brython-only
 
+GenericAlias = type(list[str])
+
 class Typing:
 
     def __getattr__(self, attr):
@@ -7,6 +9,8 @@ class Typing:
         return getattr(typing, attr)
 
 typing = Typing()
+
+NoDefault = "typing.NoDefault"
 
 def _idfunc(_, x):
     return x
@@ -169,7 +173,7 @@ class TypeVar:
 
     def __init__(self, name, *constraints, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True):
+                 infer_variance=False, default=NoDefault):
         self.__name__ = name
         if constraints and bound is not None:
             raise TypeError("Constraints cannot be combined with bound=...")
@@ -181,9 +185,25 @@ class TypeVar:
         self.__module__ = 'typing'
         self.__covariant__ = covariant
         self.__contravariant__ = contravariant
+        self.__default__ = default
         self.__infer_variance__ = infer_variance
+        self._has_default = default != NoDefault
         self._lazy_eval = {}
 
+    def __typing_prepare_subst__(self, alias, args):
+        params = alias.__parameters__
+        if self not in params:
+            return
+        i = params.index(self)
+        if i < len(args):
+            return args
+        elif i == len(args):
+            default = self.__default__
+            if default != NoDefault:
+                return (default,) + args
+        raise TypeError(
+             "Too few arguments for %S; actual %d, expected at least %d".format(
+             alias, len(args), i + 1))
 
     def __typing_subst__(self, arg):
         msg = "Parameters to generic types must be types."
@@ -217,6 +237,9 @@ class TypeVar:
                 exc.__traceback__ = exc.__traceback__.tb_next
                 raise
         return super().__getattribute__(attr)
+
+    def has_default(self):
+        return self._has_default
 
 class TypeVarTuple:
     """Type variable tuple.
@@ -403,7 +426,8 @@ class ParamSpec:
 
     def __init__(self, name, *, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True):
+                 infer_variance=True,
+                 default=None):
         self.__name__ = name
         super().__init__(bound, covariant, contravariant)
         def_mod = _caller()
@@ -413,6 +437,7 @@ class ParamSpec:
         self.__covariant__ = covariant
         self.__contravariant__ = contravariant
         self.__infer_variance__ = infer_variance
+        self.default = default
 
     def __repr__(self):
         if self.__infer_variance__:
@@ -444,27 +469,32 @@ class ParamSpec:
             args = (*args[:i], tuple(args[i]), *args[i+1:])
         return args
 
+    def has_default(self):
+        return self.default is not None
+
+
 class Generic:
-    """Abstract base class for generic types.
+    """    Abstract base class for generic types.
 
-    A generic type is typically declared by inheriting from
-    this class parameterized with one or more type variables.
-    For example, a generic mapping type might be defined as::
+    On Python 3.12 and newer, generic classes implicitly inherit from
+    Generic when they declare a parameter list after the class's name::
 
-      class Mapping(Generic[KT, VT]):
-          def __getitem__(self, key: KT) -> VT:
-              ...
-          # Etc.
+        class Mapping[KT, VT]:
+            def __getitem__(self, key: KT) -> VT:
+                ...
+            # Etc.
 
-    This class can then be used as follows::
+    On older versions of Python, however, generic classes have to
+    explicitly inherit from Generic.
 
-      def lookup_name(mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
-          try:
-              return mapping[key]
-          except KeyError:
-              return default
-    """
-    __module__ = 'typing'
+    After a class has been declared to be generic, it can then be used as
+    follows::
+
+        def lookup_name[KT, VT](mapping: Mapping[KT, VT], key: KT, default: VT) -> VT:
+            try:
+                return mapping[key]
+            except KeyError:
+                return default"""
     __slots__ = ()
     _is_protocol = False
 
@@ -485,10 +515,16 @@ class Generic:
 
 class TypeAliasType:
 
-    def __init__(self, name, value):
+    def __init__(self, name, value, type_params=None):
         self.__name__ = name
-        self.__type_params__ = ()
+        self.__qualname__ = name
+        self.__type_params__ = () if type_params is None else type_params
         self._value = value
+
+    def __getitem__(self, params):
+        if not hasattr(self, '__type_params__'):
+            raise TypeError("Only generic type aliases are subscriptable")
+        return GenericAlias(self, params)
 
     @property
     def __value__(self):

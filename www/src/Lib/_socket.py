@@ -250,10 +250,10 @@ def dup(*args,**kw):
     sockets; on some platforms os.dup() won't work for socket file descriptors."""
     pass
 
-class error:
+class error(BaseException):
     pass
 
-class gaierror:
+class gaierror(BaseException):
     pass
 
 def getaddrinfo(*args,**kw):
@@ -360,12 +360,33 @@ def setdefaulttimeout(*args,**kw):
     pass
 
 class socket:
-    def __init__(self,*args,**kw):
-        pass
+    def __init__(self, family=AF_INET, type=SOCK_STREAM, proto=0, fileno=None):
+        self._family = family
+        self._type = type
+        self.proto = proto
+        self._fileno = fileno
+
+    @property
+    def family(self):
+        return self._family
+
+    @property
+    def type(self):
+        return self._type
+
+    def fileno(self):
+        return self._fileno or -1
+
     def bind(self,*args,**kw):
         pass
     def close(self):
         pass
+
+    def getsockname(self):
+        raise error()
+
+    def getpeername(self):
+        raise error()
 
 class timeout:
     pass

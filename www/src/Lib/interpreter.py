@@ -2,7 +2,7 @@ import sys
 import builtins
 import re
 
-import tb as traceback
+import traceback
 
 from browser import console, document, window, html, DOMNode
 from browser.widgets.dialog import Dialog
@@ -27,32 +27,17 @@ All Rights Reserved."""
 
 _help = "Type help() for interactive help, or help(object) for help about object."
 
-_license = """Copyright (c) 2012, Pierre Quentel pierre.quentel@gmail.com
-All rights reserved.
+_license = """Copyright 2012-2024 Pierre Quentel pierre.quentel@gmail.com
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer. Redistributions in binary
-form must reproduce the above copyright notice, this list of conditions and
-the following disclaimer in the documentation and/or other materials provided
-with the distribution.
-Neither the name of the <ORGANIZATION> nor the names of its contributors may
-be used to endorse or promote products derived from this software without
-specific prior written permission.
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 class Info:
@@ -63,12 +48,19 @@ class Info:
     def __repr__(self):
         return self.msg
 
+class License:
+
+    def __repr__(self):
+        return 'Type license() to see the full license text'
+
+    def __call__(self):
+        print(_license)
 
 # execution namespace
 editor_ns = {
     'credits': Info(_credits),
     'copyright': Info(_copyright),
-    'license': Info(_license),
+    'license': License(),
     '__annotations__': {},
     '__builtins__': builtins,
     '__doc__': None,
@@ -158,13 +150,7 @@ class Trace:
 
     def format(self):
         """Remove calls to function in this script from the traceback."""
-        lines = self.buf.strip().split("\n")
-        stripped = [lines[0]] if not self.is_syntax_error else ['']
-        for i in range(1, len(lines), 2):
-            if __file__ in lines[i]:
-                continue
-            stripped += lines[i: i+2]
-        return "\n".join(stripped)
+        return self.buf.rstrip()
 
 
 class Interpreter:
@@ -240,6 +226,7 @@ class Interpreter:
                                 'or "license" for more information.' + '\n')
         self.insert_prompt()
 
+        self.input_num = 0
         self._status = "main"
         self.history = history or []
         self.current = len(self.history)
@@ -350,6 +337,17 @@ class Interpreter:
     def add_to_history(self, line):
         self.history.append(line)
 
+    def set_filename(self, src):
+        filename = f'<python-input-{self.input_num}>'
+        __BRYTHON__.file_cache[filename] = src
+        traceback.linecache.cache[filename] = (
+            len(src),
+            None,
+            [line + '\n' for line in src.splitlines()],
+            filename)
+        self.input_num += 1
+        return filename
+
     def handle_line(self, event=None):
         src = self.get_content().strip()
         if self._status == "main":
@@ -379,8 +377,9 @@ class Interpreter:
                 if event is not None:
                     event.preventDefault()
                 return
+            filename = self.set_filename(currentLine)
             try:
-                code = compile(currentLine, '<stdin>', 'eval')
+                code = compile(currentLine, filename, 'eval')
             except IndentationError:
                 self.insert_continuation()
                 self._status = "block"
@@ -396,21 +395,20 @@ class Interpreter:
                     self._status = "parenth_expr"
                 else:
                     try:
-                        code = compile(currentLine, '<stdin>', 'exec')
+                        code = compile(currentLine, filename, 'exec')
                         exec(code, self.globals, self.locals)
                     except SyntaxError as exc:
-                        if exc.args[0].startswith('expected an indented block'):
+                        if exc.args and \
+                                exc.args[0].startswith('expected an indented block'):
                             self.insert_continuation()
                             self._status = "block"
                         else:
                             self.insert_cr()
-                            self.print_tb(exc)
-                            self.insert_prompt()
+                            return self.print_tb(exc)
                     except Exception as exc:
                         self.insert_cr()
-                        self.print_tb(msg)
-                        self.insert_prompt()
                         self._status = "main"
+                        return self.print_tb(exc)
                     else:
                         self.insert_cr()
                         self.insert_prompt()
@@ -419,9 +417,8 @@ class Interpreter:
                 # the full traceback includes the call to eval(); to
                 # remove it, it is stored in a buffer and the 2nd and 3rd
                 # lines are removed
-                self.print_tb(exc)
-                self.insert_prompt()
                 self._status = "main"
+                return self.print_tb(exc)
             else:
                 self.insert_cr()
                 try:
@@ -433,34 +430,43 @@ class Interpreter:
                     self.insert_prompt()
                     self._status = "main"
                 except Exception as exc:
-                    self.print_tb(exc)
-                    self.insert_prompt()
                     self._status = "main"
+                    return self.print_tb(exc)
 
         elif currentLine == "":  # end of block
             block = src[src.rfind('\n>>>') + 5:].splitlines()
             block = [block[0]] + [b[4:] for b in block[1:]]
             block_src = '\n'.join(block)
             self.insert_cr()
+            filename = self.set_filename(block_src)
             mode = eval if self._status == "parenth_expr" else exec
             # status must be set before executing code in globals()
             self._status = "main"
+            try:
+                code = compile(block_src, filename, 'eval')
+            except SyntaxError as exc:
+                try:
+                    code = compile(block_src, filename, 'file')
+                except Exception as exc:
+                    return self.print_tb(exc)
+            except Exception as exc:
+                return self.print_tb(exc)
             if mode is eval:
                 try:
-                    self.globals['_'] = eval(block_src,
+                    self.globals['_'] = eval(code,
                                               self.globals,
                                               self.locals)
                     if self.globals['_'] is not None:
                         self.write(repr(self.globals['_']) + '\n')
                     self._status = "main"
                 except Exception as exc:
-                    self.print_tb(exc)
                     self._status = "main"
+                    return self.print_tb(exc)
             else:
                 try:
-                    mode(block_src, self.globals, self.locals)
+                    mode(code, self.globals, self.locals)
                 except Exception as exc:
-                    self.print_tb(exc)
+                    return self.print_tb(exc)
             self.insert_prompt()
 
         else:
@@ -486,19 +492,23 @@ class Interpreter:
             event.preventDefault()
             event.stopPropagation()
         elif event.key == "ArrowUp":
-            if self.current > 0:
-                last_child = self.zone.lastChild
-                last_child.text = last_child.text[:4] + self.history[self.current - 1]
-                self.current -= 1
-                self.cursor_to_end()
-            event.preventDefault()
+            line = sel.anchorNode.data
+            if not line.startswith('\n...'):
+                if self.current > 0:
+                    last_child = self.zone.lastChild
+                    last_child.text = last_child.text[:4] + self.history[self.current - 1]
+                    self.current -= 1
+                    self.cursor_to_end()
+                event.preventDefault()
         elif event.key == "ArrowDown":
-            if self.current < len(self.history) - 1:
-                self.current += 1
-                last_child = self.zone.lastChild
-                last_child.text = last_child.text[:4] + self.history[self.current]
-                self.cursor_to_end()
-            event.preventDefault()
+            node = sel.anchorNode.parentNode
+            if not node.nextSibling:
+                if self.current < len(self.history) - 1:
+                    self.current += 1
+                    last_child = self.zone.lastChild
+                    last_child.text = last_child.text[:4] + self.history[self.current]
+                    self.cursor_to_end()
+                event.preventDefault()
         elif event.key in ["PageUp", "PageDown"]:
             event.preventDefault()
 
@@ -537,9 +547,19 @@ class Interpreter:
 
     def print_tb(self, exc):
         trace = Trace(exc)
+        tb = exc.__traceback__
+        # remove internal calls before exec / eval
+        while tb:
+            if not tb.tb_frame.f_code.co_filename.startswith('<python-input'):
+                tb = tb.tb_next
+            else:
+                break
+        exc.__traceback__ = tb
         traceback.print_exc(file=trace)
         self.write(trace.format().lstrip())
         self.insert_cr()
+        self.insert_prompt()
+        self.cursor_to_end()
 
 
 class Inspector(Interpreter):

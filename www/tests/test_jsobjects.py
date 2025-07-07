@@ -1,12 +1,12 @@
 """Javascript objects used in this script are in jsobj_tests.js."""
 
 # issue 744: Javascript objects should allow integer attribute names.
-from browser import window
+from browser import window, scope
 import javascript
 from tester import assert_raises
 
 
-a = window.Uint8ClampedArray.new(10)
+a = scope.Uint8ClampedArray.new(10)
 
 for i in range(10):
     a[i] = i
@@ -435,5 +435,42 @@ def is_bomb(point):
     assert point in bombs
 
 window.setTimeout(is_bomb, 100, (1, 2))
+
+# issue 2474
+window['my_dict2474'] = {}
+window['my_dict2474']['my_array_d'] = [7, 8]
+
+def func_py2474():
+    d = window['my_dict2474']['my_array_d']
+    d.append(77)
+
+func_py2474()
+window.func_js2474()
+func_py2474()
+window.func_js2474()
+window.test_2474()
+
+window['dict_2474'] = {}
+
+window['dict_2474']['arr3'] = [{ "C": "String C" }]
+window['dict_2474']['arr4'] = []
+window['dict_2474']['arr4'].append({ "D": "String D" })
+
+window.func_js2474_2()
+
+window['dictA'] = {}
+window['dictA']['arrA'] = [1.25]
+assert type(window['dictA']['arrA'][0]) is float
+window['dictA']['arrA'].append('A')
+
+window['dictB'] = { "arrB": [2.35] }
+window['dictB']['arrB'].append('B')
+
+assert window['dictA']['arrA'] == [1.25, "A"]
+assert window['dictB']['arrB'] == [2.35, "B"]
+window.func_js2474_3()
+
+# test functions to use Python code from Javascript
+window.test_use_python()
 
 print("all tests ok...")

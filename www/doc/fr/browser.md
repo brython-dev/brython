@@ -54,6 +54,16 @@ Le paquetage **browser** définit les noms et les modules intégrés spécifique
 > l'avantage de bénéficier du cache indexedDB pour l'import de modules de la
 > bibliothèque standard.
 
+**browser**.`scope`
+> référence à l'espace de noms disponible dans le navigateur, indépendamment
+> du contexte d'exécution (script ou web worker). Equivalent à 
+> [`globalThis`](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/globalThis)
+> en Javascript
+
 **browser**.`window`
 > un objet représentant la fenêtre du navigateur (voir la
 > [documentation MDN](https://developer.mozilla.org/fr/docs/Web/API/Window))
+
+En outre, l'objet `__BRYTHON__` qui référence toutes les propriétés et les
+fonctions qui permettent à Brython de fonctionner est disponible par
+**browser**.`__BRYTHON__`

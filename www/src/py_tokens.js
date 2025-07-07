@@ -1,5 +1,5 @@
 // Token constants
-
+"use strict";
 (function($B){
 
 const tokens = [
@@ -59,8 +59,6 @@ const tokens = [
     'COLONEQUAL',
     'EXCLAMATION',
     'OP',
-    'AWAIT',
-    'ASYNC',
     'TYPE_IGNORE',
     'TYPE_COMMENT',
     'SOFT_KEYWORD',
@@ -148,4 +146,4 @@ function ISEOF(x){
     return x == ENDMARKER
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);

@@ -1,8 +1,13 @@
 """
+Brython-specific implementation
 Reference: https://www.rfc-editor.org/rfc/rfc1951.pdf
 """
 
-from _zlib_utils import lz_generator, crc32
+from _zlib_utils import (lz_generator, crc32, BitWriter, BitReader, adler32,
+                         _write_items, _decompresser,
+                         _decomp_dynamic, _decomp_fixed)
+
+from time import perf_counter as timer
 
 DEFLATED = 8
 DEF_BUF_SIZE = 16384
@@ -27,103 +32,7 @@ Z_RLE = 3
 Z_SYNC_FLUSH = 2
 Z_TREES = 6
 
-class BitIO:
-
-    def __init__(self, bytestream=None):
-        self.bytestream = bytearray(bytestream or [])
-        self.bytenum = 0
-        self.bitnum = 0
-        self.revbits = 0
-        self.position = 0
-        self.bitcoef = 1
-
-    @property
-    def pos(self):
-        return self.bytenum * 8 + self.bitnum
-
-    def read(self, nb, order="lsf", trace=False):
-        result = 0
-        coef = 1 if order == "lsf" else 2 ** (nb - 1)
-        for _ in range(nb):
-            if self.bitnum == 8:
-                if self.bytenum == len(self.bytestream) - 1:
-                    return None
-                self.bytenum += 1
-                self.bitnum = 0
-            mask = 2 ** self.bitnum
-            if trace:
-                print("byte", self.bytenum, "bitnum", self.bitnum,
-                    "bit", int(bool(mask & self.bytestream[self.bytenum])))
-            result += coef * bool(mask & self.bytestream[self.bytenum])
-            self.bitnum += 1
-            if order == "lsf":
-                coef *= 2
-            else:
-                coef //= 2
-        return result
-
-    def move(self, nb):
-        if nb == 0:
-            return
-        elif nb > 0:
-            bitpos = self.bitnum + nb
-            while bitpos > 7:
-                self.bytenum += 1
-                if self.bytenum == len(self.bytestream):
-                    raise Exception("can't move {} bits".format(nb))
-                bitpos -= 8
-            self.bitnum = bitpos
-        else:
-            bitpos = self.bitnum + nb
-            while bitpos < 0:
-                self.bytenum -= 1
-                if self.bytenum == -1:
-                    raise Exception("can't move {} bits".format(nb))
-                bitpos += 8
-            self.bitnum = bitpos
-
-    def show(self):
-        res = ""
-        for x in self.bytestream:
-            s = str(bin(x))[2:]
-            s = "0" * (8 - len(s)) + s
-            res += s + " "
-        return res
-
-    def write(self, *bits):
-        for bit in bits:
-            self.write_bit(bit)
-
-    def write_int(self, value, nb, order="lsf"):
-        """Write integer on nb bits."""
-        v = value
-        if value >= 2 ** nb:
-            raise ValueError("can't write value on {} bits".format(nb))
-        bits = []
-        while value:
-            bits.append(value & 1)
-            value >>= 1
-        # pad with 0's
-        bits = bits + [0] * (nb - len(bits))
-        if order != "lsf":
-            bits.reverse()
-        assert len(bits) == nb
-        self.write(*bits)
-
-    def write_bit(self, v):
-        self.revbits += self.bitcoef * v
-        self.bitcoef *= 2
-        if self.bitcoef == 256:
-            self.flush()
-
-    def pad_last(self):
-        if self.bitcoef != 1:
-            self.flush()
-
-    def flush(self):
-        self.bytestream.append(self.revbits)
-        self.bitcoef = 1
-        self.revbits = 0
+trace = 0
 
 class Error(Exception):
     pass
@@ -241,7 +150,7 @@ class Tree:
         return self.dic
 
 
-def codelengths_from_frequencies(freqs):
+def codelengths_from_frequencies(freqs, maxlength):
     """Applies the Huffman algorithm to a dictionary of frequencies. Returns
     a list of (character, codelength), sorted by increasing codelength and
     increasing value of character.
@@ -264,7 +173,7 @@ def codelengths_from_frequencies(freqs):
 
     top = nodes[0]
     tree = Tree(top)
-    tree.reduce(15)
+    tree.reduce(maxlength)
 
     codes = tree.codes()
 
@@ -274,19 +183,15 @@ def codelengths_from_frequencies(freqs):
 
 def normalized(codelengths):
     car, codelength = codelengths[0]
-    value = 0
-    codes = {car: "0" * codelength}
+    v = 0
+    codes = {car: (0, codelength)}
 
     for (newcar, nbits) in codelengths[1:]:
-        value += 1
-        bvalue = str(bin(value))[2:]
-        bvalue = "0" * (codelength - len(bvalue)) + bvalue
+        v += 1
         if nbits > codelength:
+            v <<= nbits - codelength
             codelength = nbits
-            bvalue += "0" * (codelength - len(bvalue))
-            value = int(bvalue, 2)
-        assert len(bvalue) == nbits, (len(bvalue), '!=', nbits, 'for', newcar, nbits)
-        codes[newcar] = bvalue
+        codes[newcar] = (v, codelength)
 
     return codes
 
@@ -307,23 +212,6 @@ def make_tree(node, codes):
         if not child.is_leaf:
             make_tree(child, codes)
 
-def decompresser(codelengths):
-    lengths = list(codelengths.items())
-    # remove items with value = 0
-    lengths = [x for x in lengths if x[1] > 0]
-    lengths.sort(key=lambda item:(item[1], item[0]))
-    codes = normalized(lengths)
-    codes = {value : key for key, value in codes.items()}
-    root = Node()
-    make_tree(root, codes)
-    return {"root": root, "codes": codes}
-
-def tree_from_codelengths(codelengths):
-    return decompresser(codelengths)["root"]
-
-class error(Exception):
-    pass
-
 
 fixed_codelengths = {}
 for car in range(144):
@@ -335,10 +223,11 @@ for car in range(256, 280):
 for car in range(280, 288):
     fixed_codelengths[car] = 8
 
-fixed_decomp = decompresser(fixed_codelengths)
+fixed_decomp = _decompresser(fixed_codelengths)
 fixed_lit_len_tree = fixed_decomp["root"]
-fixed_lit_len_codes = {value: key
-    for (key, value) in fixed_decomp["codes"].items()}
+codes = fixed_decomp["codes"]
+
+fixed_lit_len_codes = {codes[key]: key for key in codes}
 
 def decomp_repeat(n):
     if n <= 6:
@@ -355,9 +244,9 @@ def decomp_repeat(n):
     return t
 
 def cl_encode(lengths):
-    """lengths is a list of (char, code) tuples. Return a list of lengths
-    encoded as specified in section 3.2.7"""
-    dic = {char: len(code) for (char, code) in lengths.items()}
+    """lengths is a dictionary lengths[char] = (value, length).
+    Return a list of lengths encoded as specified in section 3.2.7"""
+    dic = {char: code[1] for (char, code) in lengths.items()}
     items = [dic.get(i, 0) for i in range(max(dic) + 1)]
     pos = 0
     while pos < len(items):
@@ -392,164 +281,9 @@ def cl_encode(lengths):
                     yield (16, n - 3)
             pos += repeat + 1
 
-def read_codelengths(reader, root, num):
-    """Read the num codelengths from the bits in reader, using the Huffman
-    tree specified by root.
-    """
-    node = root
-    lengths = []
-    nb = 0
-    t = []
-    pr = lambda *args: t.append(args)
-    while len(lengths) < num:
-        code = reader.read(1)
-        child = node.children[code]
-        if child.is_leaf:
-            if child.char < 16:
-                lengths.append(child.char)
-            elif child.char == 16:
-                repeat = 3 + reader.read(2)
-                lengths += [lengths[-1]] * repeat
-            elif child.char == 17:
-                repeat = 3 + reader.read(3)
-                lengths += [0] * repeat
-            elif child.char == 18:
-                repeat = 11 + reader.read(7)
-                lengths += [0] * repeat
-            node = root
-        else:
-            node = child
 
-    return lengths
-
-def dynamic_trees(reader):
-    """Reader is at the beginning of the dynamic Huffman tree.
-    We have to get the code length for values from 0 to 287 included."""
-    HLIT = reader.read(5)
-    HDIST = reader.read(5)
-    HCLEN = reader.read(4)
-    # read codes for lengths
-    alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
-        15)
-    clen = {}
-    c = []
-    for i, length in zip(range(HCLEN + 4), alphabet):
-        c.append(reader.read(3))
-        clen[length] = c[-1]
-
-    # tree used to decode code lengths
-    clen_root = tree_from_codelengths(clen)
-
-    # code lengths for the literal / length alphabet
-    lit_len = read_codelengths(reader, clen_root, HLIT + 257)
-    lit_len_tree = tree_from_codelengths(dict(enumerate(lit_len)))
-
-    # code lengths for the distances alphabet
-    distances = read_codelengths(reader, clen_root, HDIST + 1)
-    distances_tree = tree_from_codelengths(dict(enumerate(distances)))
-
-    return lit_len_tree, distances_tree
-
-def read_distance(reader, root):
-    """Read distance value."""
-    node = root
-
-    while True:
-        code = reader.read(1)
-        child = node.children[code]
-        if child.is_leaf:
-            dist_code = child.char
-            if dist_code < 3:
-                distance = dist_code + 1
-            else:
-                nb = (dist_code // 2) - 1
-                extra = reader.read(nb)
-                half, delta = divmod(dist_code, 2)
-                distance = 1 + (2 ** half) + delta * (2 ** (half - 1)) + extra
-            return distance
-        else:
-            node = child
-
-def distance_to_code(distance):
-    if distance < 5:
-        return (distance - 1, 0, 0)
-    else:
-        d = distance
-        coef = 2
-        p = 2
-        while 2 ** (p + 1) < d:
-            p += 1
-        d0 = 2 ** p + 1
-        a, b = divmod(d - d0, 2 ** (p - 1))
-        return 2 * p + a, b, p - 1
-
-def length_to_code(length):
-    if length < 11:
-        return (254 + length, 0, 0)
-    elif length < 19:
-        a, b = divmod(length - 11, 2)
-        return (265 + a, b, 1)
-    elif length < 35:
-        a, b = divmod(length - 19, 4)
-        return (269 + a, b, 2)
-    elif length < 67:
-        a, b = divmod(length - 35, 8)
-        return (273 + a, b, 3)
-    elif length < 131:
-        a, b = divmod(length - 67, 16)
-        return (277 + a, b, 4)
-    elif length < 258:
-        a, b = divmod(length - 131, 32)
-        return (281 + a, b, 5)
-    elif length == 258:
-        return (285, 0, 0)
-
-
-def read_literal_or_length(reader, root):
-    node = root
-
-    while True:
-        code = reader.read(1)
-        child = node.children[code]
-        if child.is_leaf:
-            if child.char < 256:
-                # literal
-                return ("literal", child.char)
-            elif child.char == 256:
-                return ("eob", None)
-            elif child.char > 256:
-                # length (number of bytes to copy from a previous location)
-                if child.char < 265:
-                    length = child.char - 254
-                elif child.char < 269:
-                    length = 11 + 2 * (child.char - 265) + reader.read(1)
-                elif child.char < 273:
-                    length = 19 + 4 * (child.char - 269) + reader.read(2)
-                elif child.char < 277:
-                    length = 35 + 8 * (child.char - 273) + reader.read(3)
-                elif child.char < 281:
-                    length = 67 + 16 * (child.char - 277) + reader.read(4)
-                elif child.char < 285:
-                    length = 131 + 32 * (child.char - 281) + reader.read(5)
-                elif child.char == 285:
-                    length = 258
-                return ("length", length)
-        else:
-            node = child
-
-def adler32(source):
-    a = 1
-    b = 0
-    for byte in source:
-        a += byte
-        a %= 65521
-        b += a
-        b %= 65521
-    return a, b
-
-
-def compress_dynamic(out, source, store, lit_len_count, distance_count):
-    write_int = out.write_int
+def compress_dynamic(writer, store, lit_len_count, distance_count):
+    t0 = timer()
 
     # Add 1 occurrence of the End Of Block character
     lit_len_count[256] = 1
@@ -559,7 +293,7 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
     # Build a representation of the Huffman tree as a dictionary mapping
     # characters in the literals / length alphabet to their binary code
     # as a string of 0's and 1's (eg. mapping character 112 to '10011')
-    lengths = codelengths_from_frequencies(lit_len_count)
+    lengths = codelengths_from_frequencies(lit_len_count, 15)
     lit_len_codes = normalized(lengths)
 
     HLIT = 1 + max(lit_len_codes) - 257
@@ -572,7 +306,7 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
     coded_lit_len = list(cl_encode(lit_len_codes))
 
     # Same tranformations for distance values
-    distance_codes = normalized(codelengths_from_frequencies(distance_count))
+    distance_codes = normalized(codelengths_from_frequencies(distance_count, 15))
     HDIST = max(distance_codes)
     coded_distance = list(cl_encode(distance_codes))
 
@@ -585,8 +319,8 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
 
     # Create a Huffman tree for the codelengths
     codelengths_codes = normalized(
-        codelengths_from_frequencies(codelengths_count))
-    codelengths_dict = {char: len(value)
+        codelengths_from_frequencies(codelengths_count, 7))
+    codelengths_dict = {char: value[1]
         for (char, value) in codelengths_codes.items()}
 
     alphabet = (16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1,
@@ -599,65 +333,49 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
         codelengths_list.pop()
     HCLEN = len(codelengths_list) - 4
 
-    out.write(0, 1) # BTYPE = dynamic Huffman codes
+    # BTYPE for dynamic coding = 10
+    writer.writeBit(0)
+    writer.writeBit(1)
 
-    write_int(HLIT, 5)
-    write_int(HDIST, 5)
-    write_int(HCLEN, 4)
+    writer.writeInt(HLIT, 5) # number of literal / length codes - 257
+    writer.writeInt(HDIST, 5) # number of distance codes - 1
+    writer.writeInt(HCLEN, 4) # number of code length codes - 4
 
     # Write codelengths for codelengths tree
     for length, car in zip(codelengths_list, alphabet):
-        write_int(length, 3)
+        writer.writeInt(length, 3)
 
     # Write lit_len and distance tables
-    t = []
-    pr = lambda *args: t.append(args)
     for item in coded_lit_len + coded_distance:
         if isinstance(item, tuple):
             length, extra = item
-            code = codelengths_codes[length]
-            value, nbits = int(code, 2), len(code)
-            write_int(value, nbits, order="msf")
+            value, nbits = codelengths_codes[length]
+            writer.writeInt(value, nbits, 'msf')
             if length == 16:
-                write_int(extra, 2)
+                writer.writeInt(extra, 2)
             elif length == 17:
-                write_int(extra, 3)
+                writer.writeInt(extra, 3)
             elif length == 18:
-                write_int(extra, 7)
+                writer.writeInt(extra, 7)
         else:
-            code = codelengths_codes[item]
-            value, nbits = int(code, 2), len(code)
-            write_int(value, nbits, order="msf")
+            value, nbits  = codelengths_codes[item]
+            writer.writeInt(value, nbits, 'msf')
+
+    if trace:
+        print('write lit-len and distance tables', timer() - t0)
+        t0 = timer()
 
     # Write items produced by the LZ algorithm, Huffman-encoded
-    for item in store:
-        if isinstance(item, tuple):
-            length, extra_length, distance, extra_distance = item
-            # Length code
-            code = lit_len_codes[length]
-            value, nb = int(code, 2), len(code)
-            write_int(value, nb, order="msf")
-            # Extra bits for length
-            value, nb = extra_length
-            if nb:
-                write_int(value, nb)
-            # Distance code
-            code = distance_codes[distance]
-            value, nb = int(code, 2), len(code)
-            write_int(value, nb, order="msf")
-            # Extra bits for distance
-            value, nb = extra_distance
-            if nb:
-                write_int(value, nb)
-        else:
-            literal = item
-            code = lit_len_codes[item]
-            value, nb = int(code, 2), len(code)
-            write_int(value, nb, order="msf")
+    _write_items(writer, store, lit_len_codes, distance_codes)
 
-def compress_fixed(out, source, items):
+    if trace:
+        print('write items produced by LZ', timer() - t0)
+
+
+def compress_fixed(writer, items):
     """Use fixed Huffman code."""
-    out.write(1, 0) # BTYPE = fixed Huffman codes
+    writer.writeBit(1)
+    writer.writeBit(0)
 
     for item in items:
         if isinstance(item, tuple):
@@ -665,52 +383,27 @@ def compress_fixed(out, source, items):
             # length code
             code = fixed_lit_len_codes[length]
             value, nb = int(code, 2), len(code)
-            out.write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
             # extra bits for length
             value, nb = extra_length
             if nb:
-                out.write_int(value, nb)
+                writer.writeInt(value, nb)
             # distance
-            out.write_int(distance, 5, order="msf")
+            writer.writeInt(distance, 5, 'msf')
             # extra bits for distance
             value, nb = extra_distance
             if nb:
-                out.write_int(value, nb)
+                writer.writeInt(value, nb)
         else:
             literal = item
             code = fixed_lit_len_codes[item]
             value, nb = int(code, 2), len(code)
-            out.write_int(value, nb, order="msf")
+            writer.writeInt(value, nb, 'msf')
 
 def compress(data, /, level=-1, wbits=MAX_WBITS):
+    compressor = _Compressor(level, wbits=wbits)
+    return bytes(compressor.compress(data) + compressor.flush())
 
-    window_size = 32 * 1024
-
-    # Create the output bit stream
-    out = BitIO()
-    
-    # Write zlib headers (RFC 1950)
-    out.write_int(8, 4) # compression method = 8
-    size = window_size >> 8
-    nb = 0
-    while size > 1:
-        size >>= 1
-        nb += 1
-    out.write_int(nb, 4) # window size = 2 ** (8 + 7)
-    out.write_int(0x9c, 8) # FLG
-    header = out.bytestream
-    compressor = _Compressor(level)
-    payload = compressor.compress(data) + compressor.flush()
-    a, b = adler32(data)
-    checksum = divmod(b, 256) + divmod(a, 256)
-    return header + payload + bytes(checksum)
-
-def convert32bits(n):
-    result = []
-    for _ in range(4):
-        n, rest = divmod(n, 256)
-        result.append(rest)
-    return result
 
 class _Compressor:
 
@@ -720,71 +413,97 @@ class _Compressor:
         self.level = level
         self.method = method
         self.wbits = wbits
-        self.window_size = 32 * 1024 # XXX compute from wbits
+        if 9 <= wbits <= 15:
+            self.window_size = 1 << wbits
+            self.header_trailer = 'zlib'
+        elif -15 <= wbits <= -9:
+            self.window_size = 1 << abs(wbits)
+            self.header_trailer = None
+        elif 25 <= wbits <= 31:
+            self.window_size = 1 << (wbits - 16)
+            self.header_trailer = 'gzip'
+        else:
+            raise ValueError(f'invalid value for wbits: {wbits}')
         self.memLevel = memLevel
         self.strategy = strategy
         self.zdict = zdict
         self._flushed = False
+        self.started = False
+        self.adler_a = 1
+        self.adler_b = 0
+
+    def header(self):
+        if self.header_trailer == 'zlib':
+            out = BitWriter()
+            # Write zlib headers (RFC 1950)
+            out.writeInt(8, 4) # compression method = 8
+            size = self.window_size >> 8
+            nb = 0
+            while size > 1:
+                size >>= 1
+                nb += 1
+            out.writeInt(nb, 4) # window size = 2 ** (8 + 7)
+            out.writeInt(0x9c, 8) # FLG
+            return out.current
+        elif self.header_trailer == 'gzip':
+            pass # todo
+        else:
+            return []
+
+    def checksum(self):
+        if self.header_trailer == 'zlib':
+            return divmod(self.adler_b, 256) + divmod(self.adler_a, 256)
+        elif self.header_trailer == 'gzip':
+            return divmod(self.adler_b, 256) + divmod(self.adler_a, 256)
+        return []
 
     def compress(self, source):
-        # Counter for frequency of literals and lengths, encoded in the range
-        # [0, 285] (cf. 3.2.5)
-        lit_len_count = {}
-        # Counter for frequency of distances, encoded in the range [0, 29]
-        # (cf. 3.2.5)
-        distance_count = {}
-
-        store = [] # Store of items produced by the LZ algorithm
-        replaced = 0 # Count length of replaced sequences
-        nb_tuples = 0 # Count number of tuples produced by the LZ algorithm
-
-        for item in lz_generator(source, self.window_size):
-            if isinstance(item, tuple):
-                nb_tuples += 1
-                length, distance = item # Raw values as integers
-                replaced += length
-                # Transform raw length in range [3...258] into a code in the range
-                # [257, 285] and a number of extra bits. Cf. 3.2.5
-                length_code, *extra_length = length_to_code(length)
-                # Increment literals / lengths counter
-                lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
-
-                # Transform raw distance in range [1...window_size] into a code in
-                # the range [0...29] and a number of extra bits
-                distance_code, *extra_dist = distance_to_code(distance)
-                # Increment distances counter
-                distance_count[distance_code] = \
-                    distance_count.get(distance_code, 0) + 1
-
-                # Add to store for use in next steps
-                store.append((length_code, extra_length, distance_code,
-                              extra_dist))
-            else:
-                literal = item
-                lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
-                store.append(literal)
-
-        store.append(256) # end of block
-
-        # Estimate how many bytes would be saved with dynamic Huffman tables
-        # From different tests, the tables take about 100 bytes, and each
-        # (length, distance) tuple is encoded in about 20 bits
-        score = replaced - 100 - (nb_tuples * 20 // 8)
-
-        # output bit stream
-        out = BitIO()
-
-        out.write(1) # BFINAL = 1
-
-        if score < 0:
-            compress_fixed(out, source, store)
+        if not self.started:
+            self._compressed = bytes(self.header())
+            self.started = True
         else:
-            compress_dynamic(out, source, store, lit_len_count, distance_count)
+            self._compressed = bytes()
 
+        t0 = timer()
+
+        is_final = False
+        nb_chunks = 0
+        # output bit stream
+        writer = BitWriter()
+
+        for chunk in lz_generator(source, self.window_size):
+            nb_chunks += 1
+            is_final, store, lit_len_count, distance_count, replaced, \
+                nb_tuples = chunk
+
+            # Estimate how many bytes would be saved with dynamic Huffman tables
+            # From different tests, the tables take about 100 bytes, and each
+            # (length, distance) tuple is encoded in about 20 bits
+            score = replaced - 100 - (nb_tuples * 20 // 8)
+
+
+            writer.writeBit(is_final) # BFINAL = 1
+
+            if score < 0:
+                compress_fixed(writer, store)
+            else:
+                compress_dynamic(writer, store, lit_len_count, distance_count)
+
+        t0 = timer()
         # Pad last byte with 0's
-        out.pad_last()
+        writer.padLast()
 
-        self._compressed = bytes(out.bytestream)
+        self._compressed += bytes(writer.current)
+        if trace:
+            print('transform to bytes', timer() - t0)
+            t0 = timer()
+
+        adler = adler32(source, self.adler_a, self.adler_b)
+        self.adler_a = adler.a
+        self.adler_b = adler.b
+
+        if trace:
+            print('compute adler32', timer() - t0)
 
         return b''
 
@@ -792,7 +511,7 @@ class _Compressor:
         if self._flushed:
             raise Error('inconsistent flush state')
         self._flushed = True
-        return self._compressed
+        return self._compressed + bytes(self.checksum())
 
 
 def compressobj(level=-1, method=DEFLATED, wbits=MAX_WBITS,
@@ -803,8 +522,10 @@ def compressobj(level=-1, method=DEFLATED, wbits=MAX_WBITS,
 
 def decompress(data, /, wbits=MAX_WBITS, bufsize=DEF_BUF_SIZE):
     if wbits > 0:
+        if trace:
+            t0 = timer()
         decompressor = _Decompressor(wbits, bufsize)
-        source = BitIO(data)
+        source = BitReader(data)
         assert source.read(4) == 8
         nb = source.read(4)
         window_size = 2 ** (nb + 8)
@@ -812,11 +533,15 @@ def decompress(data, /, wbits=MAX_WBITS, bufsize=DEF_BUF_SIZE):
         checksum = data[-4:]
         a = 256 * checksum[2] + checksum[3]
         b = 256 * checksum[0] + checksum[1]
-        assert a, b == adler32(data)
+        adler = adler32(data)
+        assert a, b == (adler.a, adler.b)
+        if trace:
+            print('decompress, end of checks', timer() - t0)
         return decompressor.decompress(data[2:-4])
     else:
         decompressor = _Decompressor(-wbits, bufsize)
         return decompressor.decompress(data)
+
 
 class _Decompressor:
 
@@ -833,73 +558,34 @@ class _Decompressor:
         if data == b'':
             return data
 
-        reader = self._reader = BitIO(data)
-        
-        result = bytearray()
+        reader = self._reader = BitReader(data)
+
+        result = []
 
         while True:
             BFINAL = reader.read(1)
-
             BTYPE = reader.read(2)
 
             if BTYPE == 0b01:
                 # Decompression with fixed Huffman codes for literals/lengths
                 # and distances
-                root = fixed_lit_len_tree
+                result = _decomp_fixed(reader)
 
-                while True:
-                    # read a literal or length
-                    _type, value = read_literal_or_length(reader, root)
-                    if _type == 'eob':
-                        break
-                    elif _type == 'literal':
-                        result.append(value)
-                    elif _type == 'length':
-                        length = value
-                        # next five bits are the distance code
-                        dist_code = reader.read(5, "msf")
-                        if dist_code < 3:
-                            distance = dist_code + 1
-                        else:
-                            nb = (dist_code // 2) - 1
-                            extra = reader.read(nb)
-                            half, delta = divmod(dist_code, 2)
-                            distance = (1 + (2 ** half) +
-                                delta * (2 ** (half - 1)) + extra)
-                        for _ in range(length):
-                            result.append(result[-distance])
-
-                        node = root
-                    else:
-                        node = child
             elif BTYPE == 0b10:
                 # Decompression with dynamic Huffman codes
-                
-                # Read Huffman code trees
-                lit_len_tree, distance_tree = dynamic_trees(reader)
-
-                t = []
-                while True:
-                    # read a literal or length
-                    _type, value = read_literal_or_length(reader, lit_len_tree)
-                    if _type == 'eob':
-                        break
-                    elif _type == 'literal':
-                        result.append(value)
-                        t.append(value)
-                    elif _type == 'length':
-                        # read a distance
-                        length = value
-                        distance = read_distance(reader, distance_tree)
-                        t.append([length, distance])
-                        for _ in range(length):
-                            result.append(result[-distance])
+                if trace:
+                    t0 = timer()
+                _decomp_dynamic(reader, result)
+                if trace:
+                    print('decompress, read data', timer() - t0)
 
             if BFINAL:
-                rank = reader.bytenum
+                rank = reader.index
                 self.unused_data = bytes(data[rank + 1:])
                 self.eof = True
-            return bytes(result)
+                break
+
+        return bytes(result)
 
 def decompressobj(wbits=MAX_WBITS, zdict=None):
     return _Decompressor(wbits, zdict)

@@ -51,6 +51,7 @@ def run():
         'py_utils',
         'py_object',
         'py_type',
+        'py_functions',
         'py_builtin_functions',
         'py_sort',
         'py_exceptions',
@@ -113,7 +114,7 @@ def run():
     # get weird errors at runtime
     res = re.sub('"use strict";\n', "", res)
     res_no_static = re.sub('"use strict";\n', "", res_no_static)
-    
+
     res = re.sub(r'\bcontext\b', 'C', res)
     res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)
 

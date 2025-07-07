@@ -1,3 +1,5 @@
+from tester import assert_raises
+
 x = set(['a', 'r', 'bg', 'Z'])
 assert x == set(['bg', 'Z', 'a', 'r'])
 
@@ -312,4 +314,6 @@ assert "\t" in {"\t"}
 assert '\123' in {"\123"}
 assert '\xf5' in {'\xf5'}
 
+# issue 2477
+assert_raises(TypeError, {1}.pop, 1)
 print("passed all tests..")

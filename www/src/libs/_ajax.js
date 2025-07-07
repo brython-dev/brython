@@ -12,7 +12,9 @@ var add_to_res = function(res, key, val) {
         }
     }else if (val instanceof File || val instanceof Blob){
         res.append(key, val)
-    }else{res.append(key, _b_.str.$factory(val))}
+    }else{
+        res.append(key, _b_.str.$factory(val))
+    }
 }
 
 function set_timeout(self, timeout){
@@ -77,10 +79,9 @@ function stringify(d){
 }
 
 function handle_kwargs(self, kw, method){
-    // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
     var data,
         encoding,
-        headers={},
+        headers = {},
         cache,
         mode = "text",
         timeout = {},
@@ -478,7 +479,7 @@ function options(){
 }
 
 function patch(){
-    _request_with_body.call(null, "put", ...arguments)
+    _request_with_body.call(null, "patch", ...arguments)
 }
 
 function post(){

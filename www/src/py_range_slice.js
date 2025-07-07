@@ -10,6 +10,7 @@ var _b_ = $B.builtins,
         $is_class: true,
         $native: true,
         $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
+        $is_sequence: true,
         $not_basetype: true, // range cannot be a base class
         $descriptors:{
             start: true,
@@ -95,8 +96,11 @@ range.__getitem__ = function(self, rank){
             substop = compute_item(self, norm.stop)
         return range.$factory(substart, substop, substep)
     }
-    if(typeof rank != "number"){
-      rank = $B.$GetInt(rank)
+    try{
+        rank = $B.PyNumber_Index(rank)
+    }catch(err){
+        throw _b_.TypeError.$factory("range indices must be integers " +
+            `or slices, not ${$B.class_name(rank)}`)
     }
     if($B.rich_comp('__gt__', 0, rank)){
         rank = $B.rich_op('__add__', rank, range.__len__(self))
@@ -396,14 +400,20 @@ slice.$conv_for_seq = function(self, len){
                 start = 0
             }
         }
-        if($B.rich_comp('__ge__', start, len)){start = step < 0 ? len_1 : len}
+        if($B.rich_comp('__ge__', start, len)){
+            start = step < 0 ? len_1 : len
+        }
     }
     if(self.stop === None){
         stop = step_is_neg ? -1 : len
     }else{
         stop = $B.PyNumber_Index(self.stop)
-        if($B.rich_comp('__gt__', 0, stop)){stop = $B.rich_op('__add__', stop, len)}
-        if($B.rich_comp('__ge__', stop, len)){stop = step_is_neg ? len_1 : len}
+        if($B.rich_comp('__gt__', 0, stop)){
+            stop = $B.rich_op('__add__', stop, len)
+        }
+        if($B.rich_comp('__ge__', stop, len)){
+            stop = step_is_neg ? len_1 : len
+        }
     }
     return {start: start, stop: stop, step: step}
 }
@@ -421,7 +431,7 @@ slice.indices = function(self){
     // are handled in a manner consistent with regular slices.
     var $ = $B.args("indices", 2, {self: null, length: null},
             ["self", "length"], arguments, {}, null, null)
-    var len = $B.$GetInt($.length)
+    var len = $B.PyNumber_Index($.length)
     if(len < 0){
         throw _b_.ValueError.$factory("length should not be negative")
     }
@@ -483,4 +493,4 @@ $B.set_func_names(slice, "builtins")
 _b_.range = range
 _b_.slice = slice
 
-})(__BRYTHON__)
+})(__BRYTHON__);

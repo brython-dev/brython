@@ -1131,5 +1131,84 @@ def f(x, y):
 m = map(f, range(42), range(9))
 assert [x for x in m] == ['0', '2', '4', '6', '8', '10', '12', '14', '16']
 
+# issue 2501
+def f():
+    if True:
+        if False:
+            xjq = 0
+    else:
+        xjq = None
+    print(xjq)
+
+assert_raises(UnboundLocalError, f)
+
+# sequence multiplication
+assert_raises(TypeError, exec, "2.4 * [2]",
+  msg="can't multiply sequence by non-int of type 'float'")
+assert_raises(TypeError, exec, "[2] * 2.4",
+  msg="can't multiply sequence by non-int of type 'float'")
+
+assert float.__mul__(2.4, [2]) is NotImplemented
+assert_raises(TypeError, list.__mul__, [2], 2.4,
+  msg="'float' object cannot be interpreted as an integer")
+
+# issue 2561
+def f(arg = 1):
+  if arg:
+    a = 1
+  else:
+    a = 0
+  def g():
+    nonlocal a
+    a = 2
+  g()
+  return a
+
+assert f() == 2
+
+# issue 2578
+x = 1
+
+def f():
+  global x
+  del x
+
+f()
+
+try:
+  x
+  raise AssertionError('should have raised NameError')
+except NameError:
+  pass
+
+def f():
+  x = 9
+  def g():
+      nonlocal x
+      del x
+  g()
+  x
+
+assert_raises(UnboundLocalError, f)
+
+def f():
+    def g():
+        del abc
+    assert_raises(UnboundLocalError, g)
+f()
+
+def h():
+  del foo
+
+assert_raises(NameError, h)
+
+from bisect import *
+insort
+del insort
+try:
+  insort
+  raise AssertionError('should have raised NameError')
+except NameError:
+  pass
 
 print('passed all tests...')

@@ -279,3 +279,58 @@ window.testDeletedAttr2420 = function(expected) {
     throw Error('expected deleted ' + expected + ', got ' + value)
   }
 }
+
+// issue 2474
+function func_js2474() {
+    var d = window['my_dict2474']['my_array_d'];
+    d.push(40);
+};
+
+function test_2474(){
+    var d = window['my_dict2474']['my_array_d'];
+    if(d.length !== 6){
+      alert('d.length is not 6')
+    }else{
+      var i = 0,
+          expected = [7, 8, 77, 40, 77, 40]
+      while(i < 6){
+        if(d[i] !== expected[i]){
+          alert('difference at index ' + i)
+          break
+        }
+        i++
+     }
+   }
+}
+
+function func_js2474_2() {
+    if(window['dict_2474']['arr3'][0]["C"] !== "String C"){
+        throw _b_.AssertionError.$factory('not equal to String C')
+    }
+    if(window['dict_2474']['arr4'][0]["D"] !== "String D"){
+        throw _b_.AssertionError.$factory('not equal to String C')
+    }
+}
+
+function func_js2474_3() {
+    if(window['dictA']['arrA'].length != 2){
+        throw Error('length is not 2')
+    }
+    if(window['dictB']['arrB'].length != 2){
+        throw Error('length is not 2')
+    }
+    if(window.dictA.arrA[1] != "A"){
+        throw Error('should be "A", got ' + window.dictA.arrA[1])
+    }
+    if(window.dictB.arrB[1] != "B"){
+        throw Error('should be "B", got ' + window.dictB.arrB[1])
+    }
+}
+
+window.test_use_python = function(){
+    let code = "for i in range(10):\n  print(i)"
+    $B.pythonToAST(code)
+    $B.pythonToAST(code, 'test')
+    $B.pythonToJS(code)
+    $B.pythonToJS(code, 'test')
+}

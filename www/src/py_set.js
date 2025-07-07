@@ -24,6 +24,7 @@ function make_new_set(type){
 
     return res
 }
+
 function make_new_set_base_type(so){
     return $B.$isinstance(so, set) ?
                set.$factory() :
@@ -31,12 +32,13 @@ function make_new_set_base_type(so){
 }
 
 function set_add(so, item, hash){
-    hash = hash === undefined ? $B.$hash(item) : hash
-    if(set_contains(so, item, hash)){
+    hash = hash ?? $B.$hash(item)
+    var stored = so.$store[hash]
+    if(stored && set_contains(so, item, hash)){
         return
     }else{
-        so.$store[hash] = so.$store[hash] || []
-        so.$store[hash].push(item)
+        stored = so.$store[hash] = []
+        stored[stored.length] = item
         so.$used++
         so.$version++
     }
@@ -289,14 +291,7 @@ set.__and__ = function(self, other){
     return set_intersection(self, other)
 }
 
-set.__class_getitem__ = function(cls, item){
-    // PEP 585
-    // Set as a classmethod at the end of this script, after $B.set_func_names()
-    if(! Array.isArray(item)){
-        item = [item]
-    }
-    return $B.GenericAlias.$factory(cls, item)
-}
+set.__class_getitem__ = $B.$class_getitem
 
 set.__contains__ = function(self, item){
     return set_contains(self, item)
@@ -426,7 +421,7 @@ function set_make_items(so){
     for(var hash in so.$store){
         items = items.concat(so.$store[hash])
     }
-    return items
+    return $B.$list(items)
 }
 
 set.__le__ = function(self, other){
@@ -562,21 +557,17 @@ set.__xor__ = function(self, other){
 // add "reflected" methods
 $B.make_rmethods(set)
 
-set.add = function(){
-    var $ = $B.args("add", 2, {self: null, item: null}, ["self", "item"],
-        arguments, {}, null, null),
-        self = $.self,
-        item = $.item
+set.add = function(self, item){
+    $B.check_nb_args_no_kw('set.add', 2, arguments)
     set_add(self, item)
     return _b_.None
 }
 
-set.clear = function(){
-    var $ = $B.args("clear", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
-    $.self.$used = 0
-    $.self.$store = Object.create(null)
-    $.self.$version++
+set.clear = function(self){
+    $B.check_nb_args_no_kw('set.clear', 1, arguments)
+    self.$used = 0
+    self.$store = Object.create(null)
+    self.$version++
     return $N
 }
 
@@ -595,10 +586,9 @@ set.difference_update = function(self){
     return _b_.None
 }
 
-set.discard = function(){
-    var $ = $B.args("discard", 2, {self: null, item: null}, ["self", "item"],
-        arguments, {}, null, null)
-    var result = set_discard_entry($.self, $.item)
+set.discard = function(self, item){
+    $B.check_nb_args_no_kw('set.discard', 2, arguments)
+    var result = set_discard_entry(self, item)
     if(result != DISCARD_NOTFOUND){
         self.$version++
     }
@@ -617,19 +607,19 @@ set.intersection_update = function(){
     return _b_.None
 }
 
-set.isdisjoint = function(){
+set.isdisjoint = function(self, other){
     /* Return True if the set has no elements in common with other. Sets are
     disjoint if and only if their intersection is the empty set. */
-    var $ = $B.args("isdisjoint", 2,
-            {self: null, other: null}, ["self", "other"],
-            arguments, {}, null, null),
-        self = $.self,
-        other = $.other
+    $B.check_nb_args_no_kw('set.isdisjoint', 2, arguments)
     var intersection = set_intersection(self, other)
     return intersection.$used == 0
 }
 
 set.pop = function(self){
+    if(arguments.length > 1){
+        throw _b_.TypeError.$factory(`set.pop() takes no arguments` +
+            ` (${arguments.length - 1} given)`)
+    }
     for(var hash in self.$store){
         break
     }
@@ -646,12 +636,9 @@ set.pop = function(self){
     return item
 }
 
-set.remove = function(){
+set.remove = function(self, item){
     // If item is a set, search if a frozenset in self compares equal to item
-    var $ = $B.args("remove", 2, {self: null, item: null}, ["self", "item"],
-        arguments, {}, null, null),
-        self = $.self,
-        item = $.item
+    $B.check_nb_args_no_kw('set.remove', 2, arguments)
     var result = set_discard_entry(self, item)
     if(result == DISCARD_NOTFOUND){
         throw _b_.KeyError.$factory(item)
@@ -660,12 +647,9 @@ set.remove = function(){
     return _b_.None
 }
 
-set.symmetric_difference_update = function(){
+set.symmetric_difference_update = function(self, s){
     // Update the set, keeping only elements found in either set, but not in both.
-    var $ = $B.args("symmetric_difference_update", 2,
-        {self: null, s: null}, ["self", "s"], arguments, {}, null, null),
-        self = $.self,
-        s = $.s
+    $B.check_nb_args_no_kw('set.symmetric_difference_update', 2, arguments)
     return set_symmetric_difference_update(self, s)
 }
 
@@ -738,8 +722,7 @@ set.intersection = function(){
 
 set.symmetric_difference = function(self, other){
     // Return a new set with elements in either the set or other but not both
-    $B.args("symmetric_difference", 2, {self: null, other: null},
-            ["self", "other"], arguments, {}, null, null)
+    $B.check_nb_args_no_kw('set.symmetric_difference', 2, arguments)
     var res = set_copy(self)
     set_symmetric_difference_update(res, other)
     return res
@@ -772,12 +755,9 @@ set.union = function(){
     return res
 }
 
-set.issubset = function(){
+set.issubset = function(self, other){
     // Test whether every element in the set is in other.
-    var $ = $B.args("issubset", 2, {self: null, other: null},
-            ["self", "other"], arguments, {}, "args", null),
-        self = $.self,
-        other = $.other
+    $B.check_nb_args_no_kw('set.issubset', 2, arguments)
     if($B.$isinstance(other, [set, frozenset])){
         if(set.__len__(self) > set.__len__(other)){
             return false
@@ -806,12 +786,9 @@ set.issubset = function(){
     }
 }
 
-set.issuperset = function(){
+set.issuperset = function(self, other){
     // Test whether every element in other is in the set.
-    var $ = $B.args("issuperset", 2, {self: null, other: null},
-            ["self", "other"], arguments, {}, "args", null),
-        self = $.self,
-        other = $.other
+    $B.check_nb_args_no_kw('set.issuperset', 2, arguments)
     if($B.$isinstance(other, [set, frozenset])){
         return set.issubset(other, self)
     }else{
@@ -894,7 +871,9 @@ for(var attr in set){
           if(frozenset[attr] == undefined){
               if(typeof set[attr] == "function"){
                   frozenset[attr] = (function(x){
-                      return function(){return set[x].apply(null, arguments)}
+                      return function(){
+                          return set[x].apply(null, arguments)
+                      }
                   })(attr)
               }else{
                   frozenset[attr] = set[attr]
@@ -981,6 +960,6 @@ $B.set_func_names(frozenset, "builtins")
 _b_.set = set
 _b_.frozenset = frozenset
 
-})(__BRYTHON__)
+})(__BRYTHON__);
 
 
