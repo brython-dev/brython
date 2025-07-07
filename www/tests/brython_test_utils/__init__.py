@@ -79,6 +79,10 @@ def discover_brython_test_modules():
           ("test_urllib.py", "urllib"),
           #("test_indexedDB.py", "indexedDB"),
           #("test_time.py", "time"),
+        ]),
+        ("CPython Tests", [
+          ("cpython_test_syntax.py", "syntax"),
+          ("cpython_test_bool.py", "bool"),
         ])
     ]
 
