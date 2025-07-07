@@ -2,6 +2,15 @@
 
 var _b_ = $B.builtins
 
+var block_size = {
+    md5: 64,
+    sha1: 64,
+    sha224: 64,
+    sha256: 64,
+    sha384: 128,
+    sha512: 128
+}
+
 var $mod = {
 
     __getattr__ : function(attr){
@@ -119,7 +128,8 @@ hash.$factory = function(alg, obj) {
       default:
         throw $B.builtins.AttributeError.$factory('Invalid hash algorithm: ' + alg)
     }
-
+    res.digest_size = res.hash._hash.sigBytes
+    res.block_size = block_size[alg]
     return res
 }
 

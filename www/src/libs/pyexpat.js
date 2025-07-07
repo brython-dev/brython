@@ -2,6 +2,9 @@
 
 $B.$import('xml_parser')
 
+var model = $B.imported.xml_parser.models
+console.log('model', model)
+
 var _b_ = $B.builtins
 
 const XML_PARAM_ENTITY_PARSING_NEVER = 0,
@@ -22,6 +25,7 @@ var xmlparser = $B.make_class('xmlparser',
     function(encoding, namespace_separator, intern){
         return {
             __class__: xmlparser,
+            __dict__: $B.empty_dict(),
             encoding,
             namespace_separator,
             intern,
@@ -118,7 +122,8 @@ const handler_names = [
     'CharacterDataHandler',
     'CommentHandler',
     'StartElementHandler',
-    'EndElementHandler'
+    'EndElementHandler',
+    'XmlDeclHandler'
     ]
 
 xmlparser.Parse = function(){
@@ -213,7 +218,8 @@ xmlparser.ParseFile = function(){
     var reader = $B.$call($B.$getattr(file, 'read'))
     while(true){
         var data = reader(self._chunk_size)
-        if(data.length == 0){
+        console.log('ParseFile, data', data)
+        if(_b_.len(data) == 0){
             return xmlparser.Parse(self, data, true)
         }else{
             xmlparser.Parse(self, data, false)
@@ -244,7 +250,9 @@ xmlparser.xml_tokenizer = function*(self){
         }
         self._pos++
     }
+    console.log('element', self._element)
     console.log('fini')
+    alert()
 }
 
 $B.set_func_names(xmlparser, 'expat')
@@ -1572,8 +1580,7 @@ function is_char(char){
             (0x10000 <= cp && cp <= 0x10ffff)
 }
 
-var model = 'model',
-    errors = 'errors'
+var errors = 'errors'
 
 $B.addToImported('pyexpat',
     {

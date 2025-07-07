@@ -249,6 +249,10 @@ code.__repr__ = code.__str__ = function(_self){
 }
 
 code.__getattribute__ = function(self, attr){
+    if(attr == 'co_positions'){
+        // fake value
+        return () => [[0, 0, 0, 0]]
+    }
     return self[attr]
 }
 
@@ -927,7 +931,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "className" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__call__" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1494,7 +1498,9 @@ $B.$isinstance = function(obj, cls){
         }
     }
 
-    if(cls === _b_.int && (obj === True || obj === False)){return True}
+    if(cls === _b_.int && (obj === True || obj === False)){
+        return true
+    }
 
     if(cls === _b_.bool){
         switch(typeof obj){
@@ -1510,16 +1516,21 @@ $B.$isinstance = function(obj, cls){
 
     if(klass == undefined){
         if(typeof obj == 'string'){
-            if(cls == _b_.str){return true}
-            else if($B.builtin_classes.indexOf(cls) > -1){
+            if(cls == _b_.str){
+                return true
+            }else if($B.builtin_classes.includes(cls)){
                 return false
             }
         }else if(typeof obj == 'number' && Number.isFinite(obj)){
-            if(Number.isFinite(obj) && cls == _b_.int){return true}
+            if(Number.isFinite(obj) && cls == _b_.int){
+                return true
+            }
         }
         klass = $B.get_class(obj)
     }
-    if(klass === undefined){return false}
+    if(klass === undefined){
+        return false
+    }
 
     if(klass ===  cls){
         return true
@@ -3311,7 +3322,8 @@ $B.make_function_infos = function(f, __module__, __defaults__,
     co_varnames.__class__ = _b_.tuple
     f.$infos.__code__ = {co_argcount, co_filename, co_firstlineno,
         co_flags, co_freevars, co_kwonlyargcount, co_name, co_nlocals,
-        co_posonlyargcount, co_qualname, co_varnames}
+        co_posonlyargcount, co_qualname, co_varnames,
+        co_positions: {}}
 }
 
 $B.make_args_parser = function(f){

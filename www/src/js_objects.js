@@ -109,7 +109,7 @@ $B.structuredclone2pyobj = function(obj){
 }
 
 const JSOBJ = $B.JSOBJ = Symbol('JSOBJ')
-const PYOBJ = Symbol('PYOBJ')
+const PYOBJ = $B.PYOBJ = Symbol('PYOBJ')
 const PYOBJFCT = Symbol('PYOBJFCT')
 const PYOBJFCTS = Symbol('PYOBJFCTS')
 
@@ -144,11 +144,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             return $B.String(jsobj)
     }
 
-    let pyobj = jsobj[PYOBJ]
-    if(pyobj !== undefined) {
-        return pyobj
-    }
-
     if(Array.isArray(jsobj)){
         // set it as non-enumerable, prevents issues when looping on it in JS.
         try{
@@ -159,6 +154,10 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return jsobj
     }
 
+    let pyobj = jsobj[PYOBJ]
+    if(pyobj !== undefined) {
+        return pyobj
+    }
 
     // check if obj is an instance of Promise
     // cf. issue #2321
@@ -556,7 +555,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "get"
+    var test = false // attr == "todos"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -638,7 +637,11 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         if(test){
             console.log('jsobj2pyobj on', js_attr)
         }
-        return jsobj2pyobj(js_attr)
+        var res = jsobj2pyobj(js_attr)
+        if(test){
+            console.log('    res', res)
+        }
+        return res
     }
 }
 

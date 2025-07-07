@@ -329,6 +329,10 @@ DOMEvent.__new__ = function(cls, evt_name){
     return ev
 }
 
+DOMEvent.__setattr__ = function(self, attr, value){
+    self[attr] = value
+}
+
 function dom2svg(svg_elt, coords){
     // Used to compute the mouse position relatively to the upper left corner
     // of an SVG element, based on the coordinates coords.x, coords.y that are
