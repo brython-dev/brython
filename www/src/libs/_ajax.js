@@ -151,6 +151,9 @@ ajax.__getattribute__ = function(self, attr){
             return ajax[attr].call(null, self, ...arguments)
         }
     }else if(attr == "text"){
+        if(self.mode == "binary"){
+            return _read(self)
+        }
         return self.js.responseText
     }else if(attr == "json"){
         if(self.js.responseType == "json"){
