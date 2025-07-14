@@ -1595,11 +1595,9 @@ $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}, ${inum})`
 
-    var args = make_args.bind(this)(scopes),
-        args_js = args.js.trim()
+    var args = make_args.bind(this)(scopes)
 
-    return js + (args.has_starred ? `.apply(null, ${args_js})` :
-                                    `(${args_js})`)
+    return js + `(${args})`
 }
 
 $B.ast.Call.prototype._check = function(){
@@ -1614,16 +1612,8 @@ function make_args(scopes){
     var js = '',
         named_args = [],
         named_kwargs = [],
-        starred_kwargs = [],
-        has_starred = false
-    for(let arg of this.args){
-        if(arg instanceof $B.ast.Starred){
-            arg.$handled = true
-            has_starred = true
-        }else{
-            named_args.push($B.js_from_ast(arg, scopes))
-        }
-    }
+        starred_kwargs = []
+
     var kwds = new Set()
     for(var keyword of this.keywords){
         if(keyword.arg){
@@ -1639,64 +1629,25 @@ function make_args(scopes){
         }
     }
 
-    var args = ''
-    named_args = named_args.join(', ')
-    if(! has_starred){
-        args += `${named_args}`
-    }else{
-        var start = true,
-            not_starred = []
-        for(let arg of this.args){
-            if(arg instanceof $B.ast.Starred){
-                if(not_starred.length > 0){
-                    let arg_list = not_starred.map(x => $B.js_from_ast(x, scopes))
-                    if(start){
-                        args += `[${arg_list.join(', ')}]`
-                    }else{
-                        args += `.concat([${arg_list.join(', ')}])`
-                    }
-                    not_starred = []
-                }else if(args == ''){
-                    args = '[]'
-                }
-                var starred_arg = $B.js_from_ast(arg.value, scopes)
-                args += `.concat(_b_.list.$factory(${starred_arg}))`
-                start = false
-            }else{
-                not_starred.push(arg)
-            }
-        }
-        if(not_starred.length > 0){
-            let arg_list = not_starred.map(x => $B.js_from_ast(x, scopes))
-            if(start){
-                args += `[${arg_list.join(', ')}]`
-                start = false
-            }else{
-                args += `.concat([${arg_list.join(', ')}])`
-            }
-        }
-        if(args[0] == '.'){
-            console.log('bizarre', args)
+    var args_list = []
+    for(let arg of this.args){
+        if(arg instanceof $B.ast.Starred){
+            var starred_arg = $B.js_from_ast(arg.value, scopes)
+            args_list.push(`...$B.make_js_iterator(${starred_arg})`)
+        }else{
+            args_list.push($B.js_from_ast(arg, scopes))
         }
     }
-
-    if(named_kwargs.length + starred_kwargs.length == 0){
-        return {has_starred, js: js + `${args}`}
-    }else{
+    
+    if(named_kwargs.length + starred_kwargs.length > 0){
         var kw = `{${named_kwargs.join(', ')}}`
         for(var starred_kwarg of starred_kwargs){
             kw += `, ${starred_kwarg}`
         }
         kw = `{$kw:[${kw}]}`
-        if(args.length > 0){
-            if(has_starred){
-                kw = `.concat([${kw}])`
-            }else{
-                kw = ', ' + kw
-            }
-        }
-        return {has_starred, js: js + `${args}${kw}`}
+        args_list.push(kw)
     }
+    return js + `${args_list.join(', ')}`
 }
 
 $B.ast.ClassDef.prototype.to_js = function(scopes){

@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-06-30 15:30:06.943710"
-__BRYTHON__.timestamp=1751290206943
+__BRYTHON__.compiled_date="2025-07-14 21:10:46.462827"
+__BRYTHON__.timestamp=1752520246462
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1439,7 +1439,11 @@ if(klass===undefined){return $B.get_jsobj_class(obj)}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
-$B.unpack_mapping=function*(func,obj){var klass=$B.get_class(obj)
+$B.unpack_mapping=function(func,obj){var items=[]
+if($B.$isinstance(obj,_b_.dict)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.$isinstance(item.key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
+items.push(item)}
+return items}
+var klass=$B.get_class(obj)
 var getitem=$B.$getattr(klass,'__getitem__',null)
 if(getitem===null){throw _b_.TypeError.$factory(`'${$B.class_name(obj)}' object `+
 'is not subscriptable')}
@@ -1449,8 +1453,9 @@ if(key_func===null){var f=`${func.$infos.__module__}.${func.$infos.__name__}`
 throw _b_.TypeError.$factory(`${f}() argument after **`+
 ` must be a mapping, not ${$B.class_name(obj)}`)}
 var keys=$B.$call($B.$getattr(klass,'keys'))(obj)
-for(var key of $B.make_js_iterator(keys)){if(! _b_.isinstance(key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
-yield{key,value:getitem(obj,key)}}}
+for(var key of $B.make_js_iterator(keys)){if(! $B.$isinstance(key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
+items.push({key,value:getitem(obj,key)})}
+return items}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
 if(frame===undefined){if(! $B.frame_obj){set_lineno=function(){}}else{frame=$B.frame_obj.frame
@@ -4572,6 +4577,8 @@ $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__);
 (function($B){var _b_=$B.builtins
 $B.del_exc=function(frame){delete frame[1].$current_exception}
 $B.set_exc=function(exc,frame){exc.__traceback__=exc.__traceback__===_b_.None ? make_tb():exc.__traceback__
+exc.__class__=exc.__class__ ?? _b_.JavascriptError
+exc.args=exc.args ??[exc.message]
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$frame_obj),msg].join('\n'))
 if($B.get_option('debug',exc)> 1){console.log(exc.args)
@@ -4742,8 +4749,14 @@ _b_.BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=$B.empty_dict()
 return err}
-_b_.BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
-return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
+_b_.BaseException.__getattr__=function(self,attr){switch(attr){case '__context__':
+var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
+return ctx ||_b_.None
+case '__cause__':
+case '__suppress_context__':
+return self[attr]?? _b_.None
+default:
+throw $B.attr_error(attr,self)}}
 _b_.BaseException.add_note=function(self,note){
 if(! $B.$isinstance(note,_b_.str)){throw _b_.TypeError.$factory('note must be a str, not '+
 `'${$B.class_name(note)}'`)}
@@ -12619,36 +12632,23 @@ $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
 var position=encode_position("'Call'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.func.end_lineno,this.func.end_col_offset)
 var inum=add_to_positions(scopes,this)
 var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}, ${inum})`
-var args=make_args.bind(this)(scopes),args_js=args.js.trim()
-return js+(args.has_starred ? `.apply(null, ${args_js})` :
-`(${args_js})`)}
+var args=make_args.bind(this)(scopes)
+return js+`(${args})`}
 $B.ast.Call.prototype._check=function(){for(var kw of this.keywords){if(kw.arg=='__debug__'){compiler_error(this,"cannot assign to __debug__",kw)}}}
-function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
-for(let arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
-has_starred=true}else{named_args.push($B.js_from_ast(arg,scopes))}}
+function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[]
 var kwds=new Set()
 for(var keyword of this.keywords){if(keyword.arg){if(kwds.has(keyword.arg)){compiler_error(keyword,`keyword argument repeated: ${keyword.arg}`)}
 kwds.add(keyword.arg)
 named_kwargs.push(
 `${keyword.arg}: ${$B.js_from_ast(keyword.value, scopes)}`)}else{starred_kwargs.push($B.js_from_ast(keyword.value,scopes))}}
-var args=''
-named_args=named_args.join(', ')
-if(! has_starred){args+=`${named_args}`}else{var start=true,not_starred=[]
-for(let arg of this.args){if(arg instanceof $B.ast.Starred){if(not_starred.length > 0){let arg_list=not_starred.map(x=> $B.js_from_ast(x,scopes))
-if(start){args+=`[${arg_list.join(', ')}]`}else{args+=`.concat([${arg_list.join(', ')}])`}
-not_starred=[]}else if(args==''){args='[]'}
-var starred_arg=$B.js_from_ast(arg.value,scopes)
-args+=`.concat(_b_.list.$factory(${starred_arg}))`
-start=false}else{not_starred.push(arg)}}
-if(not_starred.length > 0){let arg_list=not_starred.map(x=> $B.js_from_ast(x,scopes))
-if(start){args+=`[${arg_list.join(', ')}]`
-start=false}else{args+=`.concat([${arg_list.join(', ')}])`}}
-if(args[0]=='.'){console.log('bizarre',args)}}
-if(named_kwargs.length+starred_kwargs.length==0){return{has_starred,js:js+`${args}`}}else{var kw=`{${named_kwargs.join(', ')}}`
+var args_list=[]
+for(let arg of this.args){if(arg instanceof $B.ast.Starred){var starred_arg=$B.js_from_ast(arg.value,scopes)
+args_list.push(`...$B.make_js_iterator(${starred_arg})`)}else{args_list.push($B.js_from_ast(arg,scopes))}}
+if(named_kwargs.length+starred_kwargs.length > 0){var kw=`{${named_kwargs.join(', ')}}`
 for(var starred_kwarg of starred_kwargs){kw+=`, ${starred_kwarg}`}
 kw=`{$kw:[${kw}]}`
-if(args.length > 0){if(has_starred){kw=`.concat([${kw}])`}else{kw=', '+kw}}
-return{has_starred,js:js+`${args}${kw}`}}}
+args_list.push(kw)}
+return js+`${args_list.join(', ')}`}
 $B.ast.ClassDef.prototype.to_js=function(scopes){var enclosing_scope=bind(this.name,scopes)
 var class_scope=new Scope(this.name,'class',this)
 var js='',locals_name=make_scope_name(scopes,class_scope),ref=this.name+make_id(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
