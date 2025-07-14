@@ -9,6 +9,8 @@ $B.del_exc = function(frame){
 
 $B.set_exc = function(exc, frame){
     exc.__traceback__ = exc.__traceback__ === _b_.None ? make_tb() : exc.__traceback__
+    exc.__class__ = exc.__class__ ?? _b_.JavascriptError
+    exc.args = exc.args ?? [exc.message]
     if(frame === undefined){
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
         console.error(['Traceback (most recent call last):',
@@ -473,12 +475,16 @@ _b_.BaseException.__new__ = function(cls){
 }
 
 _b_.BaseException.__getattr__ = function(self, attr){
-    if(attr == '__context__'){
-        var frame = $B.frame_obj.frame,
-            ctx = frame[1].$current_exception
-        return ctx || _b_.None
-    }else{
-        throw $B.attr_error(attr, self)
+    switch(attr){
+        case '__context__':
+            var frame = $B.frame_obj.frame,
+                ctx = frame[1].$current_exception
+            return ctx || _b_.None
+        case '__cause__':
+        case '__suppress_context__':
+            return self[attr] ?? _b_.None
+        default:
+            throw $B.attr_error(attr, self)
     }
 }
 
@@ -507,7 +513,6 @@ make_builtin_exception(["SystemExit", "KeyboardInterrupt", "GeneratorExit",
 
 // Brython-specific
 make_builtin_exception("JavascriptError", _b_.Exception)
-
 
 make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
     "EOFError", "LookupError", "MemoryError", "OSError", "ReferenceError",
