@@ -1231,9 +1231,6 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             }
         }
         var iter_id = 'it_' + make_id()
-        var position = encode_position("'Unpack'",
-            target.lineno, target.col_offset,
-            target.end_lineno, target.end_col_offset)
         var inum = add_to_positions(scopes, target)
         js += prefix + `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
@@ -1415,8 +1412,6 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
-    var position = encode_position("'Attr'",
-            this.value.lineno, this.value.col_offset, this.end_col_offset)
     var inum = add_to_positions(scopes, this)
     return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
            `'${attr}', ${inum})`
@@ -1497,13 +1492,6 @@ $B.ast.Await.prototype.to_js = function(scopes){
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
     var res
-    var position = encode_position("'BinOp'",
-        this.lineno, this.col_offset,
-        this.end_lineno, this.end_col_offset,
-        this.left.lineno, this.left.col_offset,
-        this.left.end_lineno, this.left.end_col_offset,
-        this.right.lineno, this.right.col_offset,
-        this.right.end_lineno, this.right.end_col_offset)
     var inum = add_to_positions(scopes, this)
     var name = this.op.constructor.$name
     var op = opclass2dunder[name]
@@ -1587,10 +1575,6 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
-    var position = encode_position("'Call'",
-        this.lineno, this.col_offset,
-        this.end_lineno, this.end_col_offset,
-        this.func.end_lineno, this.func.end_col_offset)
     var inum = add_to_positions(scopes, this)
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}, ${inum})`
@@ -3442,11 +3426,6 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     if(this.slice instanceof $B.ast.Slice){
         return `$B.getitem_slice(${value}, ${slice})`
     }else{
-        var position = encode_position("'Subscript'",
-            this.value.lineno, this.value.col_offset,
-            this.value.end_lineno, this.value.end_col_offset,
-            this.slice.lineno, this.slice.col_offset,
-            this.end_lineno, this.end_col_offset)
         var inum = add_to_positions(scopes, this)
         return `$B.$getitem(${value}, ${slice}, ${inum})`
     }

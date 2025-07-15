@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-07-14 21:10:46.462827"
-__BRYTHON__.timestamp=1752520246462
+__BRYTHON__.compiled_date="2025-07-15 09:07:36.090821"
+__BRYTHON__.timestamp=1752563256090
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -12472,7 +12472,6 @@ for(var i=0,len=nb_targets;i < len;i++){if(target.elts[i]instanceof $B.ast.Starr
 nb_after_starred=len-i-1
 break}}
 var iter_id='it_'+make_id()
-var position=encode_position("'Unpack'",target.lineno,target.col_offset,target.end_lineno,target.end_col_offset)
 var inum=add_to_positions(scopes,target)
 js+=prefix+`var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, `+
 `${has_starred}`
@@ -12558,7 +12557,6 @@ var has_generator=scope.is_generator
 for(let item of this.items.slice().reverse()){js=add_item(item,js)}
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
-var position=encode_position("'Attr'",this.value.lineno,this.value.col_offset,this.end_col_offset)
 var inum=add_to_positions(scopes,this)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', ${inum})`}
@@ -12594,7 +12592,6 @@ ix--}
 if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){scopes[ix].has_await=true
 return prefix+`await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{compiler_error(this,"'await' outside function",this.value)}}
 $B.ast.BinOp.prototype.to_js=function(scopes){var res
-var position=encode_position("'BinOp'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.left.lineno,this.left.col_offset,this.left.end_lineno,this.left.end_col_offset,this.right.lineno,this.right.col_offset,this.right.end_lineno,this.right.end_col_offset)
 var inum=add_to_positions(scopes,this)
 var name=this.op.constructor.$name
 var op=opclass2dunder[name]
@@ -12629,7 +12626,6 @@ break}}
 js+=prefix+`break`
 return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
-var position=encode_position("'Call'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.func.end_lineno,this.func.end_col_offset)
 var inum=add_to_positions(scopes,this)
 var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}, ${inum})`
 var args=make_args.bind(this)(scopes)
@@ -13465,8 +13461,7 @@ return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
 if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
-if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position("'Subscript'",this.value.lineno,this.value.col_offset,this.value.end_lineno,this.value.end_col_offset,this.slice.lineno,this.slice.col_offset,this.end_lineno,this.end_col_offset)
-var inum=add_to_positions(scopes,this)
+if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var inum=add_to_positions(scopes,this)
 return `$B.$getitem(${value}, ${slice}, ${inum})`}}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
 var id=make_id(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
