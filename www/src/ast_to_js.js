@@ -130,12 +130,22 @@ function copy_position(target, origin){
     target.end_col_offset = origin.end_col_offset
 }
 
-function encode_position(){
-    return `[${Array.from(arguments).join(',')}]`
+function encode_position(lineno, end_lineno, col_offset, end_col_offset){
+    var res
+    if(end_lineno == lineno){
+        res = `[${lineno},${col_offset},${end_col_offset - col_offset}]`
+    }else{
+        res = `[${lineno},${end_lineno},${col_offset},${end_col_offset}]`
+    }
+    return res
 }
 
 $B.decode_position = function(pos){
-    return pos
+    if(pos.length == 3){
+        return [pos[0], pos[0], pos[1], pos[1] + pos[2]]
+    }else{
+        return pos
+    }
 }
 
 function get_source_from_position(scopes, ast_obj){
@@ -1114,10 +1124,10 @@ function add_to_positions(scopes, ast_obj){
     // add a positions table to the list of positions for current frame
     var up_scope = last_scope(scopes)
     up_scope.positions = up_scope.positions ?? []
-    up_scope.positions[up_scope.positions.length] = encode_position([
+    up_scope.positions[up_scope.positions.length] = encode_position(
         ast_obj.lineno, ast_obj.end_lineno,
         ast_obj.col_offset, ast_obj.end_col_offset
-    ])
+    )
     return 1 + 2 * (up_scope.positions.length - 1)
 }
 
@@ -1622,7 +1632,7 @@ function make_args(scopes){
             args_list.push($B.js_from_ast(arg, scopes))
         }
     }
-    
+
     if(named_kwargs.length + starred_kwargs.length > 0){
         var kw = `{${named_kwargs.join(', ')}}`
         for(var starred_kwarg of starred_kwargs){

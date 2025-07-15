@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-07-15 09:07:36.090821"
-__BRYTHON__.timestamp=1752563256090
+__BRYTHON__.compiled_date="2025-07-15 11:29:03.889375"
+__BRYTHON__.timestamp=1752571743889
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4663,11 +4663,14 @@ frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self
 frame.f_code.__get__(_self).co_name+'>'}
 frame.f_builtins={__get__:function(_self){return $B.$getattr(_self[3].__builtins__,'__dict__')}}
 frame.f_code={__get__:function(_self){var res
+var positions
 if(_self[4]){res=$B.$getattr(_self[4],'__code__')
-res.co_positions=_self.positions ??[]}else if(_self.f_code){
-res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([]),co_positions:_self.positions}
-res.co_qualname=res.co_name }
+positions=_self.positions ??[]}else if(_self.f_code){
+res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}
+res.co_qualname=res.co_name 
+positions=_self.positions}
 res.__class__=_b_.code
+if(positions){res.co_positions=positions.map($B.decode_position)}
 return res}}
 frame.f_globals={__get__:function(_self){if(_self.f_globals){return _self.f_globals}else if(_self.f_locals && _self[1]==_self[3]){return _self.f_globals=_self.f_locals}else{return _self.f_globals=$B.obj_dict(_self[3])}}}
 frame.f_lineno={__get__:function(_self){return _self.$lineno}}
@@ -5075,7 +5078,8 @@ trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n')
 var positions=false
-if(! is_syntax_error && frame.inum && frame.positions){positions=frame.positions[Math.floor(frame.inum/2)]}
+if(! is_syntax_error && frame.inum && frame.positions){positions=$B.decode_position(
+frame.positions[Math.floor(frame.inum/2)])}
 if(positions){let[lineno,end_lineno,col_offset,end_col_offset]=positions
 var head=lines[lineno-1].substr(0,col_offset)
 var segment=' '.repeat(col_offset)
@@ -12068,8 +12072,10 @@ function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
-function encode_position(){return `[${Array.from(arguments).join(',')}]`}
-$B.decode_position=function(pos){return pos}
+function encode_position(lineno,end_lineno,col_offset,end_col_offset){var res
+if(end_lineno==lineno){res=`[${lineno},${col_offset},${end_col_offset - col_offset}]`}else{res=`[${lineno},${end_lineno},${col_offset},${end_col_offset}]`}
+return res}
+$B.decode_position=function(pos){if(pos.length==3){return[pos[0],pos[0],pos[1],pos[1]+pos[2]]}else{return pos}}
 function get_source_from_position(scopes,ast_obj){scopes.lines=scopes.lines ?? scopes.src.split('\n')
 var lines=scopes.lines,start_line=lines[ast_obj.lineno-1],res
 if(ast_obj.end_lineno==ast_obj.lineno){res=start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
@@ -12422,8 +12428,9 @@ return}else if(last.type=="def"){ix=scopes.indexOf(last)-1}else{return}}}}
 function add_to_positions(scopes,ast_obj){
 var up_scope=last_scope(scopes)
 up_scope.positions=up_scope.positions ??[]
-up_scope.positions[up_scope.positions.length]=encode_position([ast_obj.lineno,ast_obj.end_lineno,ast_obj.col_offset,ast_obj.end_col_offset
-])
+up_scope.positions[up_scope.positions.length]=encode_position(
+ast_obj.lineno,ast_obj.end_lineno,ast_obj.col_offset,ast_obj.end_col_offset
+)
 return 1+2*(up_scope.positions.length-1)}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''"
 var inum=add_to_positions(scopes,this.test)

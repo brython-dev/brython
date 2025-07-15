@@ -238,9 +238,10 @@ frame.f_builtins = {
 frame.f_code = {
     __get__: function(_self){
         var res
+        var positions
         if(_self[4]){
             res = $B.$getattr(_self[4], '__code__')
-            res.co_positions = _self.positions ?? []
+            positions = _self.positions ?? []
         }else if(_self.f_code){
             // set in comprehensions
             res = _self.f_code
@@ -248,12 +249,15 @@ frame.f_code = {
             res = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
                 co_filename: _self.__file__,
-                co_varnames: $B.fast_tuple([]),
-                co_positions: _self.positions
+                co_varnames: $B.fast_tuple([])
             }
             res.co_qualname = res.co_name // XXX
+            positions = _self.positions
         }
         res.__class__ = _b_.code
+        if(positions){
+            res.co_positions = positions.map($B.decode_position)
+        }
         return res
     }
 }
@@ -1282,7 +1286,8 @@ function trace_from_stack(err){
             // PEP 657
             var positions = false
             if(! is_syntax_error && frame.inum && frame.positions){
-                positions = frame.positions[Math.floor(frame.inum / 2)]
+                positions = $B.decode_position(
+                    frame.positions[Math.floor(frame.inum / 2)])
             }
             if(positions){
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions
