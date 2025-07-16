@@ -930,16 +930,14 @@ $B.$bool = function(obj, bool_class){ // return true or false
             }
             var klass = $B.get_class(obj),
                 missing = {},
-                bool_method = bool_class ?
-                              $B.$getattr(klass, "__bool__", missing):
-                              $B.$getattr(obj, "__bool__", missing)
+                bool_method = $B.search_in_mro(klass, '__bool__')
             var test = false // klass.$infos.__name__ == 'FlagBoundary'
             if(test){
                 console.log('bool(obj)', obj, 'bool_class', bool_class,
                             'klass', klass, 'apply bool method', bool_method)
                 console.log('$B.$call(bool_method)', bool_method + '')
             }
-            if(bool_method === missing){
+            if(bool_method === undefined){
                 var len_method = $B.$getattr(klass, '__len__', missing)
                 if(len_method === missing){
                     return true
@@ -948,9 +946,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 // len's handling of non-integer and negative values
                 return _b_.len(obj) > 0
             }else{
-                var res = bool_class ?
-                          $B.$call(bool_method)(obj) :
-                          $B.$call(bool_method)()
+                var res = $B.$call(bool_method)(obj)
                 if(res !== true && res !== false){
                     throw _b_.TypeError.$factory("__bool__ should return " +
                         "bool, returned " + $B.class_name(res))

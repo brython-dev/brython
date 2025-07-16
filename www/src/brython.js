@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-07-15 11:29:03.889375"
-__BRYTHON__.timestamp=1752571743889
+__BRYTHON__.compiled_date="2025-07-16 11:40:37.956483"
+__BRYTHON__.timestamp=1752658837956
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -8300,17 +8300,13 @@ if(obj){return true}
 return false
 default:
 if(obj.$is_class){return true}
-var klass=$B.get_class(obj),missing={},bool_method=bool_class ?
-$B.$getattr(klass,"__bool__",missing):
-$B.$getattr(obj,"__bool__",missing)
+var klass=$B.get_class(obj),missing={},bool_method=$B.search_in_mro(klass,'__bool__')
 var test=false 
 if(test){console.log('bool(obj)',obj,'bool_class',bool_class,'klass',klass,'apply bool method',bool_method)
 console.log('$B.$call(bool_method)',bool_method+'')}
-if(bool_method===missing){var len_method=$B.$getattr(klass,'__len__',missing)
+if(bool_method===undefined){var len_method=$B.$getattr(klass,'__len__',missing)
 if(len_method===missing){return true}
-return _b_.len(obj)> 0}else{var res=bool_class ?
-$B.$call(bool_method)(obj):
-$B.$call(bool_method)()
+return _b_.len(obj)> 0}else{var res=$B.$call(bool_method)(obj)
 if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
 "bool, returned "+$B.class_name(res))}
 if(test){console.log('bool method returns',res)}
