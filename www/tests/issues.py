@@ -3300,6 +3300,20 @@ import configparser
 p = configparser.ConfigParser()
 p.read("test_config.ini")
 
+# issue 2590
+t = []
+
+class Test:
+
+  def __getattr__(self, methodName):
+    t.append(f"'{methodName}' called !")
+    return lambda: True
+
+if Test():
+    pass
+
+assert not t
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -9,6 +9,8 @@ $B.del_exc = function(frame){
 
 $B.set_exc = function(exc, frame){
     exc.__traceback__ = exc.__traceback__ === _b_.None ? make_tb() : exc.__traceback__
+    exc.__class__ = exc.__class__ ?? _b_.JavascriptError
+    exc.args = exc.args ?? [exc.message]
     if(frame === undefined){
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
         console.error(['Traceback (most recent call last):',
@@ -236,9 +238,10 @@ frame.f_builtins = {
 frame.f_code = {
     __get__: function(_self){
         var res
+        var positions
         if(_self[4]){
             res = $B.$getattr(_self[4], '__code__')
-            res.co_positions = _self.positions ?? []
+            positions = _self.positions ?? []
         }else if(_self.f_code){
             // set in comprehensions
             res = _self.f_code
@@ -246,13 +249,15 @@ frame.f_code = {
             res = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
                 co_filename: _self.__file__,
-                co_varnames: $B.fast_tuple([]),
-                co_positions: _self.positions,
-                co_firstlineno: 1
+                co_varnames: $B.fast_tuple([])
             }
             res.co_qualname = res.co_name // XXX
+            positions = _self.positions
         }
         res.__class__ = _b_.code
+        if(positions){
+            res.co_positions = positions.map($B.decode_position)
+        }
         return res
     }
 }
@@ -474,12 +479,16 @@ _b_.BaseException.__new__ = function(cls){
 }
 
 _b_.BaseException.__getattr__ = function(self, attr){
-    if(attr == '__context__'){
-        var frame = $B.frame_obj.frame,
-            ctx = frame[1].$current_exception
-        return ctx || _b_.None
-    }else{
-        throw $B.attr_error(attr, self)
+    switch(attr){
+        case '__context__':
+            var frame = $B.frame_obj.frame,
+                ctx = frame[1].$current_exception
+            return ctx || _b_.None
+        case '__cause__':
+        case '__suppress_context__':
+            return self[attr] ?? _b_.None
+        default:
+            throw $B.attr_error(attr, self)
     }
 }
 
@@ -508,7 +517,6 @@ make_builtin_exception(["SystemExit", "KeyboardInterrupt", "GeneratorExit",
 
 // Brython-specific
 make_builtin_exception("JavascriptError", _b_.Exception)
-
 
 make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
     "EOFError", "LookupError", "MemoryError", "OSError", "ReferenceError",
@@ -1277,7 +1285,8 @@ function trace_from_stack(err){
             // PEP 657
             var positions = false
             if(! is_syntax_error && frame.inum && frame.positions){
-                positions = frame.positions[Math.floor(frame.inum / 2)]
+                positions = $B.decode_position(
+                    frame.positions[Math.floor(frame.inum / 2)])
             }
             if(positions){
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions

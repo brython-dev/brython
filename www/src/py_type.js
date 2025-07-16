@@ -581,6 +581,22 @@ type.__getattribute__ = function(klass, attr){
                                kls[key] = value
                            }
             return method_wrapper.$factory(attr, klass, func)
+        case "__delattr__":
+            if(klass["__delattr__"] !== undefined){
+                return klass["__delattr__"]
+            }
+            return method_wrapper.$factory(attr, klass,
+                function(key){
+                    if(klass.__flags__ && TPFLAGS.IMMUTABLETYPE){
+                        throw _b_.TypeError.$factory(
+                            `cannot delete '${key}' attribute ` +
+                            `of immutable type '${klass.__name__}'`)
+                    }
+                    if(klass.__dict__){
+                        _b_.dict.__delitem__(klass.__dict__, key)
+                    }
+                    delete klass[key]
+                })
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
@@ -597,7 +613,6 @@ type.__getattribute__ = function(klass, attr){
             klass.__class__[attr].__set__){
         // data descriptor
         if($test){console.log("data descriptor")}
-        console.log('data descriptor', attr)
         return klass.__class__[attr].__get__(klass)
     }
 
@@ -956,7 +971,7 @@ type.__setattr__ = function(kls, attr, value){
             return vtype.__set__(v, kls, value)
         }
     }
-    if(kls.__module__ == "builtins"){
+    if(kls.__flags__ && TPFLAGS.IMMUTABLETYPE){
         throw _b_.TypeError.$factory(
             `cannot set '${attr}' attribute of immutable type '` +
                 kls.__qualname__ + "'")

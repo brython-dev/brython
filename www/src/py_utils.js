@@ -791,7 +791,17 @@ $B.class_name = function(obj){
     }
 }
 
-$B.unpack_mapping = function*(func, obj){
+$B.unpack_mapping = function(func, obj){
+    var items = []
+    if($B.$isinstance(obj, _b_.dict)){
+        for(var item of _b_.dict.$iter_items(obj)){
+            if(! $B.$isinstance(item.key, _b_.str)){
+                throw _b_.TypeError.$factory('keywords must be strings')
+            }
+            items.push(item)
+        }
+        return items
+    }
     var klass = $B.get_class(obj)
     var getitem = $B.$getattr(klass, '__getitem__', null)
     if(getitem === null){
@@ -807,11 +817,12 @@ $B.unpack_mapping = function*(func, obj){
     }
     var keys = $B.$call($B.$getattr(klass, 'keys'))(obj)
     for(var key of $B.make_js_iterator(keys)){
-        if(! _b_.isinstance(key, _b_.str)){
+        if(! $B.$isinstance(key, _b_.str)){
             throw _b_.TypeError.$factory('keywords must be strings')
         }
-        yield {key, value: getitem(obj, key)}
+        items.push({key, value: getitem(obj, key)})
     }
+    return items
 }
 
 $B.make_js_iterator = function(iterator, frame, lineno){
@@ -898,7 +909,6 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
-
 }
 
 $B.unpacker = function(obj, nb_targets, has_starred){

@@ -130,12 +130,22 @@ function copy_position(target, origin){
     target.end_col_offset = origin.end_col_offset
 }
 
-function encode_position(){
-    return `[${Array.from(arguments).join(',')}]`
+function encode_position(lineno, end_lineno, col_offset, end_col_offset){
+    var res
+    if(end_lineno == lineno){
+        res = `[${lineno},${col_offset},${end_col_offset - col_offset}]`
+    }else{
+        res = `[${lineno},${end_lineno},${col_offset},${end_col_offset}]`
+    }
+    return res
 }
 
 $B.decode_position = function(pos){
-    return pos
+    if(pos.length == 3){
+        return [pos[0], pos[0], pos[1], pos[1] + pos[2]]
+    }else{
+        return pos
+    }
 }
 
 function get_source_from_position(scopes, ast_obj){
@@ -1117,10 +1127,10 @@ function add_to_positions(scopes, ast_obj){
     // add a positions table to the list of positions for current frame
     var up_scope = last_scope(scopes)
     up_scope.positions = up_scope.positions ?? []
-    up_scope.positions[up_scope.positions.length] = encode_position([
+    up_scope.positions[up_scope.positions.length] = encode_position(
         ast_obj.lineno, ast_obj.end_lineno,
         ast_obj.col_offset, ast_obj.end_col_offset
-    ])
+    )
     return 1 + 2 * (up_scope.positions.length - 1)
 }
 
@@ -1291,9 +1301,6 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             }
         }
         var iter_id = 'it_' + make_id()
-        var position = encode_position("'Unpack'",
-            target.lineno, target.col_offset,
-            target.end_lineno, target.end_col_offset)
         var inum = add_to_positions(scopes, target)
         js += prefix + `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
@@ -1475,8 +1482,6 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
-    var position = encode_position("'Attr'",
-            this.value.lineno, this.value.col_offset, this.end_col_offset)
     var inum = add_to_positions(scopes, this)
     return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
            `'${attr}', ${inum})`
@@ -1557,13 +1562,6 @@ $B.ast.Await.prototype.to_js = function(scopes){
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
     var res
-    var position = encode_position("'BinOp'",
-        this.lineno, this.col_offset,
-        this.end_lineno, this.end_col_offset,
-        this.left.lineno, this.left.col_offset,
-        this.left.end_lineno, this.left.end_col_offset,
-        this.right.lineno, this.right.col_offset,
-        this.right.end_lineno, this.right.end_col_offset)
     var inum = add_to_positions(scopes, this)
     var name = this.op.constructor.$name
     var op = opclass2dunder[name]
@@ -1647,19 +1645,13 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
-    var position = encode_position("'Call'",
-        this.lineno, this.col_offset,
-        this.end_lineno, this.end_col_offset,
-        this.func.end_lineno, this.func.end_col_offset)
     var inum = add_to_positions(scopes, this)
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}, ${inum})`
 
-    var args = make_args.bind(this)(scopes),
-        args_js = args.js.trim()
+    var args = make_args.bind(this)(scopes)
 
-    return js + (args.has_starred ? `.apply(null, ${args_js})` :
-                                    `(${args_js})`)
+    return js + `(${args})`
 }
 
 $B.ast.Call.prototype._check = function(){
@@ -1674,16 +1666,8 @@ function make_args(scopes){
     var js = '',
         named_args = [],
         named_kwargs = [],
-        starred_kwargs = [],
-        has_starred = false
-    for(let arg of this.args){
-        if(arg instanceof $B.ast.Starred){
-            arg.$handled = true
-            has_starred = true
-        }else{
-            named_args.push($B.js_from_ast(arg, scopes))
-        }
-    }
+        starred_kwargs = []
+
     var kwds = new Set()
     for(var keyword of this.keywords){
         if(keyword.arg){
@@ -1699,64 +1683,25 @@ function make_args(scopes){
         }
     }
 
-    var args = ''
-    named_args = named_args.join(', ')
-    if(! has_starred){
-        args += `${named_args}`
-    }else{
-        var start = true,
-            not_starred = []
-        for(let arg of this.args){
-            if(arg instanceof $B.ast.Starred){
-                if(not_starred.length > 0){
-                    let arg_list = not_starred.map(x => $B.js_from_ast(x, scopes))
-                    if(start){
-                        args += `[${arg_list.join(', ')}]`
-                    }else{
-                        args += `.concat([${arg_list.join(', ')}])`
-                    }
-                    not_starred = []
-                }else if(args == ''){
-                    args = '[]'
-                }
-                var starred_arg = $B.js_from_ast(arg.value, scopes)
-                args += `.concat(_b_.list.$factory(${starred_arg}))`
-                start = false
-            }else{
-                not_starred.push(arg)
-            }
-        }
-        if(not_starred.length > 0){
-            let arg_list = not_starred.map(x => $B.js_from_ast(x, scopes))
-            if(start){
-                args += `[${arg_list.join(', ')}]`
-                start = false
-            }else{
-                args += `.concat([${arg_list.join(', ')}])`
-            }
-        }
-        if(args[0] == '.'){
-            console.log('bizarre', args)
+    var args_list = []
+    for(let arg of this.args){
+        if(arg instanceof $B.ast.Starred){
+            var starred_arg = $B.js_from_ast(arg.value, scopes)
+            args_list.push(`...$B.make_js_iterator(${starred_arg})`)
+        }else{
+            args_list.push($B.js_from_ast(arg, scopes))
         }
     }
 
-    if(named_kwargs.length + starred_kwargs.length == 0){
-        return {has_starred, js: js + `${args}`}
-    }else{
+    if(named_kwargs.length + starred_kwargs.length > 0){
         var kw = `{${named_kwargs.join(', ')}}`
         for(var starred_kwarg of starred_kwargs){
             kw += `, ${starred_kwarg}`
         }
         kw = `{$kw:[${kw}]}`
-        if(args.length > 0){
-            if(has_starred){
-                kw = `.concat([${kw}])`
-            }else{
-                kw = ', ' + kw
-            }
-        }
-        return {has_starred, js: js + `${args}${kw}`}
+        args_list.push(kw)
     }
+    return js + `${args_list.join(', ')}`
 }
 
 $B.ast.ClassDef.prototype.to_js = function(scopes){
@@ -3607,11 +3552,6 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     if(this.slice instanceof $B.ast.Slice){
         return `$B.getitem_slice(${value}, ${slice})`
     }else{
-        var position = encode_position("'Subscript'",
-            this.value.lineno, this.value.col_offset,
-            this.value.end_lineno, this.value.end_col_offset,
-            this.slice.lineno, this.slice.col_offset,
-            this.end_lineno, this.end_col_offset)
         var inum = add_to_positions(scopes, this)
         return `$B.$getitem(${value}, ${slice}, ${inum})`
     }

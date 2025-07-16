@@ -217,8 +217,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-06-30 07:49:41.224252"
-__BRYTHON__.timestamp=1751262581224
+__BRYTHON__.compiled_date="2025-07-16 11:50:38.317850"
+__BRYTHON__.timestamp=1752659438317
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1449,7 +1449,11 @@ if(klass===undefined){return $B.get_jsobj_class(obj)}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
-$B.unpack_mapping=function*(func,obj){var klass=$B.get_class(obj)
+$B.unpack_mapping=function(func,obj){var items=[]
+if($B.$isinstance(obj,_b_.dict)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.$isinstance(item.key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
+items.push(item)}
+return items}
+var klass=$B.get_class(obj)
 var getitem=$B.$getattr(klass,'__getitem__',null)
 if(getitem===null){throw _b_.TypeError.$factory(`'${$B.class_name(obj)}' object `+
 'is not subscriptable')}
@@ -1459,8 +1463,9 @@ if(key_func===null){var f=`${func.$infos.__module__}.${func.$infos.__name__}`
 throw _b_.TypeError.$factory(`${f}() argument after **`+
 ` must be a mapping, not ${$B.class_name(obj)}`)}
 var keys=$B.$call($B.$getattr(klass,'keys'))(obj)
-for(var key of $B.make_js_iterator(keys)){if(! _b_.isinstance(key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
-yield{key,value:getitem(obj,key)}}}
+for(var key of $B.make_js_iterator(keys)){if(! $B.$isinstance(key,_b_.str)){throw _b_.TypeError.$factory('keywords must be strings')}
+items.push({key,value:getitem(obj,key)})}
+return items}
 $B.make_js_iterator=function(iterator,frame,lineno){
 var set_lineno=$B.set_lineno
 if(frame===undefined){if(! $B.frame_obj){set_lineno=function(){}}else{frame=$B.frame_obj.frame
@@ -2311,7 +2316,14 @@ return klass.__name__ ||klass.__qualname__
 case "__setattr__":
 var func=klass["__setattr__"]??
 function(kls,key,value){kls[key]=value}
-return method_wrapper.$factory(attr,klass,func)}
+return method_wrapper.$factory(attr,klass,func)
+case "__delattr__":
+if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
+return method_wrapper.$factory(attr,klass,function(key){if(klass.__flags__ && TPFLAGS.IMMUTABLETYPE){throw _b_.TypeError.$factory(
+`cannot delete '${key}' attribute `+
+`of immutable type '${klass.__name__}'`)}
+if(klass.__dict__){_b_.dict.__delitem__(klass.__dict__,key)}
+delete klass[key]})}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
 var $test=false 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
@@ -2320,7 +2332,6 @@ klass.__class__[attr]&&
 klass.__class__[attr].__get__ &&
 klass.__class__[attr].__set__){
 if($test){console.log("data descriptor")}
-console.log('data descriptor',attr)
 return klass.__class__[attr].__get__(klass)}
 if(res===undefined){
 var v=klass.hasOwnProperty(attr)? klass[attr]:undefined
@@ -2445,7 +2456,7 @@ if($test){console.log("kls is class",type)}
 if($B.mappingproxy.$contains(type.__dict__,attr)){var v=$B.mappingproxy.$getitem(type.__dict__,attr)
 var vtype=$B.get_class(v)
 if(vtype.__set__){return vtype.__set__(v,kls,value)}}
-if(kls.__module__=="builtins"){throw _b_.TypeError.$factory(
+if(kls.__flags__ && TPFLAGS.IMMUTABLETYPE){throw _b_.TypeError.$factory(
 `cannot set '${attr}' attribute of immutable type '`+
 kls.__qualname__+"'")}
 kls[attr]=value
@@ -4651,6 +4662,8 @@ $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__);
 (function($B){var _b_=$B.builtins
 $B.del_exc=function(frame){delete frame[1].$current_exception}
 $B.set_exc=function(exc,frame){exc.__traceback__=exc.__traceback__===_b_.None ? make_tb():exc.__traceback__
+exc.__class__=exc.__class__ ?? _b_.JavascriptError
+exc.args=exc.args ??[exc.message]
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$frame_obj),msg].join('\n'))
 if($B.get_option('debug',exc)> 1){console.log(exc.args)
@@ -4735,11 +4748,14 @@ frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self
 frame.f_code.__get__(_self).co_name+'>'}
 frame.f_builtins={__get__:function(_self){return $B.$getattr(_self[3].__builtins__,'__dict__')}}
 frame.f_code={__get__:function(_self){var res
+var positions
 if(_self[4]){res=$B.$getattr(_self[4],'__code__')
-res.co_positions=_self.positions ??[]}else if(_self.f_code){
-res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([]),co_positions:_self.positions,co_firstlineno:1}
-res.co_qualname=res.co_name }
+positions=_self.positions ??[]}else if(_self.f_code){
+res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}
+res.co_qualname=res.co_name 
+positions=_self.positions}
 res.__class__=_b_.code
+if(positions){res.co_positions=positions.map($B.decode_position)}
 return res}}
 frame.f_globals={__get__:function(_self){if(_self.f_globals){return _self.f_globals}else if(_self.f_locals && _self[1]==_self[3]){return _self.f_globals=_self.f_locals}else{return _self.f_globals=$B.obj_dict(_self[3])}}}
 frame.f_lineno={__get__:function(_self){return _self.$lineno}}
@@ -4821,8 +4837,14 @@ _b_.BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=$B.empty_dict()
 return err}
-_b_.BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
-return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
+_b_.BaseException.__getattr__=function(self,attr){switch(attr){case '__context__':
+var frame=$B.frame_obj.frame,ctx=frame[1].$current_exception
+return ctx ||_b_.None
+case '__cause__':
+case '__suppress_context__':
+return self[attr]?? _b_.None
+default:
+throw $B.attr_error(attr,self)}}
 _b_.BaseException.add_note=function(self,note){
 if(! $B.$isinstance(note,_b_.str)){throw _b_.TypeError.$factory('note must be a str, not '+
 `'${$B.class_name(note)}'`)}
@@ -5141,7 +5163,8 @@ trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n')
 var positions=false
-if(! is_syntax_error && frame.inum && frame.positions){positions=frame.positions[Math.floor(frame.inum/2)]}
+if(! is_syntax_error && frame.inum && frame.positions){positions=$B.decode_position(
+frame.positions[Math.floor(frame.inum/2)])}
 if(positions){let[lineno,end_lineno,col_offset,end_col_offset]=positions
 var head=lines[lineno-1].substr(0,col_offset)
 var segment=' '.repeat(col_offset)
@@ -8407,17 +8430,13 @@ if(obj){return true}
 return false
 default:
 if(obj.$is_class){return true}
-var klass=$B.get_class(obj),missing={},bool_method=bool_class ?
-$B.$getattr(klass,"__bool__",missing):
-$B.$getattr(obj,"__bool__",missing)
+var klass=$B.get_class(obj),missing={},bool_method=$B.search_in_mro(klass,'__bool__')
 var test=false 
 if(test){console.log('bool(obj)',obj,'bool_class',bool_class,'klass',klass,'apply bool method',bool_method)
 console.log('$B.$call(bool_method)',bool_method+'')}
-if(bool_method===missing){var len_method=$B.$getattr(klass,'__len__',missing)
+if(bool_method===undefined){var len_method=$B.$getattr(klass,'__len__',missing)
 if(len_method===missing){return true}
-return _b_.len(obj)> 0}else{var res=bool_class ?
-$B.$call(bool_method)(obj):
-$B.$call(bool_method)()
+return _b_.len(obj)> 0}else{var res=$B.$call(bool_method)(obj)
 if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
 "bool, returned "+$B.class_name(res))}
 if(test){console.log('bool method returns',res)}
@@ -12177,8 +12196,10 @@ function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
-function encode_position(){return `[${Array.from(arguments).join(',')}]`}
-$B.decode_position=function(pos){return pos}
+function encode_position(lineno,end_lineno,col_offset,end_col_offset){var res
+if(end_lineno==lineno){res=`[${lineno},${col_offset},${end_col_offset - col_offset}]`}else{res=`[${lineno},${end_lineno},${col_offset},${end_col_offset}]`}
+return res}
+$B.decode_position=function(pos){if(pos.length==3){return[pos[0],pos[0],pos[1],pos[1]+pos[2]]}else{return pos}}
 function get_source_from_position(scopes,ast_obj){scopes.lines=scopes.lines ?? scopes.src.split('\n')
 var lines=scopes.lines,start_line=lines[ast_obj.lineno-1],res
 if(ast_obj.end_lineno==ast_obj.lineno){res=start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
@@ -12532,8 +12553,9 @@ return}else if(last.type=="def"){ix=scopes.indexOf(last)-1}else{return}}}}
 function add_to_positions(scopes,ast_obj){
 var up_scope=last_scope(scopes)
 up_scope.positions=up_scope.positions ??[]
-up_scope.positions[up_scope.positions.length]=encode_position([ast_obj.lineno,ast_obj.end_lineno,ast_obj.col_offset,ast_obj.end_col_offset
-])
+up_scope.positions[up_scope.positions.length]=encode_position(
+ast_obj.lineno,ast_obj.end_lineno,ast_obj.col_offset,ast_obj.end_col_offset
+)
 return 1+2*(up_scope.positions.length-1)}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''"
 var inum=add_to_positions(scopes,this.test)
@@ -12599,7 +12621,6 @@ for(var i=0,len=nb_targets;i < len;i++){if(target.elts[i]instanceof $B.ast.Starr
 nb_after_starred=len-i-1
 break}}
 var iter_id='it_'+make_id()
-var position=encode_position("'Unpack'",target.lineno,target.col_offset,target.end_lineno,target.end_col_offset)
 var inum=add_to_positions(scopes,target)
 js+=prefix+`var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, `+
 `${has_starred}`
@@ -12685,7 +12706,6 @@ var has_generator=scope.is_generator
 for(let item of this.items.slice().reverse()){js=add_item(item,js)}
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
-var position=encode_position("'Attr'",this.value.lineno,this.value.col_offset,this.end_col_offset)
 var inum=add_to_positions(scopes,this)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', ${inum})`}
@@ -12721,7 +12741,6 @@ ix--}
 if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){scopes[ix].has_await=true
 return prefix+`await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{compiler_error(this,"'await' outside function",this.value)}}
 $B.ast.BinOp.prototype.to_js=function(scopes){var res
-var position=encode_position("'BinOp'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.left.lineno,this.left.col_offset,this.left.end_lineno,this.left.end_col_offset,this.right.lineno,this.right.col_offset,this.right.end_lineno,this.right.end_col_offset)
 var inum=add_to_positions(scopes,this)
 var name=this.op.constructor.$name
 var op=opclass2dunder[name]
@@ -12756,39 +12775,25 @@ break}}
 js+=prefix+`break`
 return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
-var position=encode_position("'Call'",this.lineno,this.col_offset,this.end_lineno,this.end_col_offset,this.func.end_lineno,this.func.end_col_offset)
 var inum=add_to_positions(scopes,this)
 var func=$B.js_from_ast(this.func,scopes),js=`$B.$call(${func}, ${inum})`
-var args=make_args.bind(this)(scopes),args_js=args.js.trim()
-return js+(args.has_starred ? `.apply(null, ${args_js})` :
-`(${args_js})`)}
+var args=make_args.bind(this)(scopes)
+return js+`(${args})`}
 $B.ast.Call.prototype._check=function(){for(var kw of this.keywords){if(kw.arg=='__debug__'){compiler_error(this,"cannot assign to __debug__",kw)}}}
-function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
-for(let arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
-has_starred=true}else{named_args.push($B.js_from_ast(arg,scopes))}}
+function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[]
 var kwds=new Set()
 for(var keyword of this.keywords){if(keyword.arg){if(kwds.has(keyword.arg)){compiler_error(keyword,`keyword argument repeated: ${keyword.arg}`)}
 kwds.add(keyword.arg)
 named_kwargs.push(
 `${keyword.arg}: ${$B.js_from_ast(keyword.value, scopes)}`)}else{starred_kwargs.push($B.js_from_ast(keyword.value,scopes))}}
-var args=''
-named_args=named_args.join(', ')
-if(! has_starred){args+=`${named_args}`}else{var start=true,not_starred=[]
-for(let arg of this.args){if(arg instanceof $B.ast.Starred){if(not_starred.length > 0){let arg_list=not_starred.map(x=> $B.js_from_ast(x,scopes))
-if(start){args+=`[${arg_list.join(', ')}]`}else{args+=`.concat([${arg_list.join(', ')}])`}
-not_starred=[]}else if(args==''){args='[]'}
-var starred_arg=$B.js_from_ast(arg.value,scopes)
-args+=`.concat(_b_.list.$factory(${starred_arg}))`
-start=false}else{not_starred.push(arg)}}
-if(not_starred.length > 0){let arg_list=not_starred.map(x=> $B.js_from_ast(x,scopes))
-if(start){args+=`[${arg_list.join(', ')}]`
-start=false}else{args+=`.concat([${arg_list.join(', ')}])`}}
-if(args[0]=='.'){console.log('bizarre',args)}}
-if(named_kwargs.length+starred_kwargs.length==0){return{has_starred,js:js+`${args}`}}else{var kw=`{${named_kwargs.join(', ')}}`
+var args_list=[]
+for(let arg of this.args){if(arg instanceof $B.ast.Starred){var starred_arg=$B.js_from_ast(arg.value,scopes)
+args_list.push(`...$B.make_js_iterator(${starred_arg})`)}else{args_list.push($B.js_from_ast(arg,scopes))}}
+if(named_kwargs.length+starred_kwargs.length > 0){var kw=`{${named_kwargs.join(', ')}}`
 for(var starred_kwarg of starred_kwargs){kw+=`, ${starred_kwarg}`}
 kw=`{$kw:[${kw}]}`
-if(args.length > 0){if(has_starred){kw=`.concat([${kw}])`}else{kw=', '+kw}}
-return{has_starred,js:js+`${args}${kw}`}}}
+args_list.push(kw)}
+return js+`${args_list.join(', ')}`}
 $B.ast.ClassDef.prototype.to_js=function(scopes){var enclosing_scope=bind(this.name,scopes)
 var class_scope=new Scope(this.name,'class',this)
 var js='',locals_name=make_scope_name(scopes,class_scope),ref=this.name+make_id(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
@@ -13647,8 +13652,7 @@ return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
 if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
-if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var position=encode_position("'Subscript'",this.value.lineno,this.value.col_offset,this.value.end_lineno,this.value.end_col_offset,this.slice.lineno,this.slice.col_offset,this.end_lineno,this.end_col_offset)
-var inum=add_to_positions(scopes,this)
+if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{var inum=add_to_positions(scopes,this)
 return `$B.$getitem(${value}, ${slice}, ${inum})`}}
 $B.ast.TemplateStr.prototype.to_js=function(scopes){var js=prefix+'$B.Template('
 var items=[]
