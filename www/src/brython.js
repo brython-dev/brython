@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-07-16 11:40:37.956483"
-__BRYTHON__.timestamp=1752658837956
+__BRYTHON__.compiled_date="2025-07-17 14:56:28.281305"
+__BRYTHON__.timestamp=1752756988280
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -284,18 +284,28 @@ code+=(char.charCodeAt(0)& 0x03FF)<< 10
 code+=(char.charCodeAt(1)& 0x03FF)
 return code}
 function $last(array){return array[array.length-1]}
+function raise_error(err_type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=err_type.$factory(message)
+exc.filename=filename
+exc.lineno=lineno
+exc.offset=col_offset
+exc.end_lineno=end_lineno
+exc.end_offset=end_col_offset
+exc.text=line
+var args1=[filename,lineno,col_offset,line.trimRight(),end_lineno,end_col_offset]
+exc.args=$B.fast_tuple([message,$B.fast_tuple(args1)])
+throw exc}
 var ops='.,:;+-*/%~^|&=<>[](){}@',
 op2=['**','//','>>','<<'],augm_op='+-*/%^|&=<>@',closing={'}':'{',']':'[',')':'('}
-function ErrorToken(){var args=Array.from(arguments)
-args.$error_token=true
-return args}
+function ErrorToken(err_type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var token=Token('ERRORTOKEN','',lineno,col_offset,end_lineno,end_col_offset,line)
+token.message=message
+return token}
 function ErrorTokenKnownToken(){var args=Array.from(arguments)
 args.$error_token_known_token=true
 return args}
-function Token(type,string,lineno,col_offset,end_lineno,end_col_offset,line){var res={type,string,line,lineno,col_offset,end_lineno,end_col_offset}
-res.num_type=$B.py_tokens[type]
-if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='ENCODING'){
-res.parser_ignored=true}else if(type=='NL' ||type=='COMMENT'){res.parser_ignored=true}
+function Token(type,string,lineno,col_offset,end_lineno,end_col_offset,line){
+var res={type,string,line,lineno,col_offset,end_lineno,end_col_offset}
+res.type=res.num_type=$B.py_tokens[type]
+if(type=='OP'){res.num_type=$B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]}else if(type=='ENCODING'){res.parser_ignored=true}else if(type=='NL' ||type=='COMMENT'){res.parser_ignored=true}
 res.bytes=res.string 
 return res}
 function get_comment(parser,src,pos,line_num,line_start,token_name,line){var start=pos,ix
@@ -505,16 +515,14 @@ break
 case '\\':
 var mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
 if(mo){if(pos==src.length-1){var msg='unexpected EOF while parsing'
-t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg))
-return t}
+raise_error(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg)}
 line_num++
 pos+=mo[0].length
 line_start=pos+1
 line=get_line_at(pos)}else{pos++;
 var msg='unexpected character after line '+
 'continuation character'
-t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg))
-return t}
+raise_error(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start+1,line,msg)}
 break
 case '\n':
 case '\r':
@@ -623,8 +631,9 @@ break
 case '\r':
 case '\n':
 if(! escaped && ! triple_quote){
-var msg=`unterminated string literal `+
-`(detected at line ${line_num})`,line_num=string_start[0],col_offset=string_start[1]
+var msg
+if(token_mode=='regular_within_fstring'){msg="f-string: missing '}'"}else{var msg=`unterminated string literal `+
+`(detected at line ${line_num})`,line_num=string_start[0],col_offset=string_start[1]}
 t.push(ErrorToken(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg))
 return t}
 string+=char
@@ -658,7 +667,7 @@ pos--}}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){
 number+=char
 t.push(Token('NUMBER',number,line_num,pos-line_start-number.length+1,line_num,pos-line_start+1,line))
-state=null}else if(char.match(/\p{Letter}/u)){t.push(ErrorToken(_b_.SyntaxError,filename,line_num,pos-line_start-number.length,line_num,pos-line_start,line,'invalid decimal literal'))
+state=null}else if(char.match(/\p{Letter}/u)){raise_error(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start,line,'invalid decimal literal')
 return t}else{t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
 state=null
 pos--}
@@ -5029,7 +5038,7 @@ lineno:coords.lineno+lineno-2,end_lineno:coords.end_lineno+lineno-2,col_offset:c
 function handle_BinOp_error(lines,lineno,ast_obj,tokens){
 var reset_lineno=make_line_setter(lineno)
 var operator
-for(var token of tokens){if(token.type=='OP'){if(is_before(ast_obj.right,token.lineno,token.col_offset)
+for(var token of tokens){if(token.type==$B.py_tokens.OP){if(is_before(ast_obj.right,token.lineno,token.col_offset)
 && token.string !='('){operator=reset_lineno(token)}}}
 var end_binop=reset_lineno(tokens[tokens.length-1])
 var left=reset_lineno(ast_obj.left)
@@ -5038,7 +5047,7 @@ function handle_Call_error(lines,lineno,ast_obj,tokens){
 var reset_lineno=make_line_setter(lineno)
 var opening_parenth
 var closing_parenth
-for(var token of tokens){if(token.type=='OP'){if(token.string=='(' &&
+for(var token of tokens){if(token.type==$B.py_tokens.OP){if(token.string=='(' &&
 token.lineno==ast_obj.func.end_lineno &&
 token.col_offset >=ast_obj.func.end_col_offset){opening_parenth=reset_lineno(token)}else if(token.string==')'){closing_parenth=reset_lineno(token)}}}
 var func=reset_lineno(ast_obj.func)
@@ -5051,7 +5060,7 @@ return lineno < obj.lineno ||
 (lineno==obj.lineno && col < obj.col_offset)}
 function handle_Subscript_error(lines,lineno,ast_obj,tokens){
 var reset_lineno=make_line_setter(lineno)
-for(var token of tokens){if(token.type=='OP'){if(token.string=='[' &&
+for(var token of tokens){if(token.type==$B.py_tokens.OP){if(token.string=='[' &&
 is_before(ast_obj.slice,token.lineno,token.col_offset)){var opening_bracket=reset_lineno(token)}else if(token.string==']'){var closing_bracket=reset_lineno(token)}}}
 var value=reset_lineno(ast_obj.value)
 return fill_marks(lines,lineno,value.col_offset,'~',opening_bracket.lineno,opening_bracket.col_offset,'^',closing_bracket.end_lineno,closing_bracket.end_col_offset)}
@@ -15476,7 +15485,7 @@ return obj},INVALID_VERSION_CHECK:function(p,version,msg,node){if(node==NULL){p.
 return NULL;}
 if(p.feature_version < version){p.error_indicator=1;
 return helper_functions.RAISE_SYNTAX_ERROR("%s only supported in Python 3.%i and greater",msg,version);}
-return node;},NEW_TYPE_COMMENT:function(p,x){return x},RAISE_ERROR_KNOWN_LOCATION:function(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg){var va=[errmsg]
+return node;},NEW_TYPE_COMMENT:function(p,x){return x},PyErr_Occurred:function(){return false},RAISE_ERROR_KNOWN_LOCATION:function(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg){var va=[errmsg]
 $B._PyPegen.raise_error_known_location(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg,va);
 return NULL;},RAISE_ERROR:function(p,errtype,msg){var extra_args=[]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
@@ -15850,15 +15859,18 @@ function reset_parser_state_for_error_pass(p){for(let i=0;i < p.fill;i++){p.toke
 p.mark=0;
 p.call_invalid_rules=1;}
 function _is_end_of_source(p){var err=p.tok.done;
-return p.tokens[p.tokens.length-1].type=='ENDMARKER'}
+return p.tokens[p.tokens.length-1].type==$B.py_tokens.ENDMARKER}
+function inside_fstring(p){var res=false
+for(var token of p.tokens){if(token.type==$B.py_tokens.FSTRING_START){res=true}else if(token.type==$B.py_tokens.FSTRING_END){res=false}}
+return res}
 $B._PyPegen.tokenize_full_source_to_check_for_errors=function(p){var last_token=p.tokens[p.fill-1]
 $B.tokenizer(p.src,p.filename,p.mode,p)
 p.tokens=p._tokens
 if(p.braces.length > 0){var brace=$B.last(p.braces),err_lineno,msg
 if('([{'.includes(brace.char)){err_lineno=brace.line_num}else{if(p.braces.length > 1){err_lineno=p.braces[p.braces.length-2].line_num}else{err_lineno=brace.line_num}}
 if(p.tokens.length==0 ||$B.last(p.tokens).lineno >=err_lineno){if('([{'.includes(brace.char)){msg=`'${brace.char}' was never closed`}else if(p.braces.length > 1){var closing=brace.char,opening=p.braces[p.braces.length-2].char
-msg=`closing parenthesis '${closing}' does not match `+
-`opening parenthesis '${opening}'`}else{msg=`unmatched '${brace.char}'`}
+if(inside_fstring(p)){msg=`f-string: unmatched '${closing}'`}else{msg=`closing parenthesis '${closing}' does not match `+
+`opening parenthesis '${opening}'`}}else{msg=`unmatched '${brace.char}'`}
 $B.raise_error_known_location(_b_.SyntaxError,p.filename,brace.line_num,brace.pos-brace.line_start,brace.line_num,brace.pos-brace.line_start+1,brace.line,msg)}}}
 $B._PyPegen.set_syntax_error=function(p,last_token){
 if(p.fill==0){$B.helper_functions.RAISE_SYNTAX_ERROR(p,"error at start before reading any input");}
@@ -26931,7 +26943,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_235_rule,p)
 )
-{_res=PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '=', or '!', or ':', or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '=', or '!', or ':', or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -26948,7 +26960,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_236_rule,p)
 )
-{_res=PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '!', or ':', or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '!', or ':', or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -26989,7 +27001,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_238_rule,p)
 )
-{_res=PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting ':' or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting ':' or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -27017,7 +27029,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,26)
 )
-{_res=PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}', or format specs");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}', or format specs");
 break;}
 p.mark=_mark;}
 {
@@ -27039,7 +27051,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,26)
 )
-{_res=PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}'");
 break;}
 p.mark=_mark;}
 _res=NULL;

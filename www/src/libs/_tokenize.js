@@ -39,11 +39,13 @@ TokenizerIter.__iter__ = function(self){
                 }else if(token.num_type == $B.py_tokens.ENDMARKER){
                     var endmarker = token
                     continue
+                }else if(token.num_type == $B.py_tokens.ERRORTOKEN){
+                    throw _b_.SyntaxError.$factory(token.message)
                 }
-                token.type = token.num_type
+                //token.type = token.num_type
                 token.lineno = line_num
                 token.end_lineno = line_num
-                yield $B.fast_tuple([token.num_type, token.string,
+                yield $B.fast_tuple([token.type, token.string,
                                      $B.fast_tuple([token.lineno, token.col_offset]),
                                      $B.fast_tuple([token.end_lineno, token.end_col_offset]),
                                      token.line])

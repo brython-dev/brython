@@ -17870,7 +17870,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_235_rule, p)
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '=', or '!', or ':', or '}'");
+                _res = $B.helper_functions.PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '=', or '!', or ':', or '}'");
                 break;
             }
             p.mark = _mark;
@@ -17892,7 +17892,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_236_rule, p)
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '!', or ':', or '}'");
+                _res = $B.helper_functions.PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '!', or ':', or '}'");
                 break;
             }
             p.mark = _mark;
@@ -17943,7 +17943,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead(0, _tmp_238_rule, p)
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting ':' or '}'");
+                _res = $B.helper_functions.PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting ':' or '}'");
                 break;
             }
             p.mark = _mark;
@@ -17976,7 +17976,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, 26)  // token='}'
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}', or format specs");
+                _res = $B.helper_functions.PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}', or format specs");
                 break;
             }
             p.mark = _mark;
@@ -18003,7 +18003,7 @@ function invalid_replacement_field_rule(p)
                 $B._PyPegen.lookahead_with_int(0, $B._PyPegen.expect_token, p, 26)  // token='}'
             )
             {
-                _res = PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}'");
+                _res = $B.helper_functions.PyErr_Occurred () ? $B.parser_constants.NULL : $B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,  "f-string: expecting '}'");
                 break;
             }
             p.mark = _mark;

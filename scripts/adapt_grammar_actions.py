@@ -111,7 +111,8 @@ helper_functions = [
     "RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN",
     "RAISE_SYNTAX_ERROR_STARTING_FROM",
     "asdl_seq_LEN",
-    "asdl_seq_GET"]
+    "asdl_seq_GET",
+    "PyErr_Occurred"]
 
 if __name__ == '__main__':
     src = """_PyAST_alias(a->v.Name.id,
