@@ -58,6 +58,7 @@ def discover_brython_test_modules():
           ("test_dataclasses.py", "dataclasses"),
           ("test_datetime.py", "datetime"),
           ("test_decimals.py", "decimals"),
+          ("test_doctest.py", "doctest"),
           ("test_functools.py", "functools"),
           ("test_compression.py", "gzip / zlib"),
           ("test_hashlib.py", "hashlib"),
@@ -72,6 +73,7 @@ def discover_brython_test_modules():
           ("test_storage.py", "storage"),
           ("test_struct.py", "struct"),
           ("test_sys.py", "sys"),
+          ("test_traceback.py", "traceback"),
           ("test_types.py", "types"),
           ("test_typing.py", "typing"),
           ("test_unicodedata.py", "unicodedata"),
@@ -79,6 +81,10 @@ def discover_brython_test_modules():
           ("test_urllib.py", "urllib"),
           #("test_indexedDB.py", "indexedDB"),
           #("test_time.py", "time"),
+        ]),
+        ("CPython Tests", [
+          ("cpython_test_syntax.py", "syntax"),
+          ("cpython_test_bool.py", "bool"),
         ])
     ]
 
