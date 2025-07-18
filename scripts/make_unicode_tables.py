@@ -26,7 +26,7 @@ def to_int(codepoint):
     return int("0x" + codepoint, 16)
 
 with open(os.path.join("ucd", "UnicodeData.txt")) as f:
-    for line in f:
+    for i, line in enumerate(f):
         parts = line.split(";")
         gc = parts[2]
         count[gc] = count.get(gc, 0) + 1
@@ -34,7 +34,6 @@ with open(os.path.join("ucd", "UnicodeData.txt")) as f:
         bidi_class = parts[4]
         if gc == 'Nd':
             digits_mapping[char] = int(parts[6])
-            int(chr(char))
         elif gc == 'No':
             try:
                 print('to int', int(chr(char)))

@@ -61,7 +61,7 @@ distribution available online through [jsDelivr](https://www.jsdelivr.com/).
 You can choose the latest stable release :
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/brython@3.13.1/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13.2/brython.min.js">
 </script>
 ```
 
@@ -70,7 +70,7 @@ modules from the standard library you have to load a single javascript file
 with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/brython@3.13.1/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3.13.2/brython_stdlib.js">
 </script>
 ```
 
