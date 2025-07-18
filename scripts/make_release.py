@@ -164,9 +164,6 @@ for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
 
     arc.close()
 
-# update travis configuration file
-import make_travis_config
-
 # changelog file
 print('Write changelog file...')
 try:
