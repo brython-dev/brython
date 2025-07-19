@@ -824,7 +824,19 @@ function reset_parser_state_for_error_pass(p){
 
 function _is_end_of_source(p) {
     var err = p.tok.done;
-    return p.tokens[p.tokens.length - 1].type == 'ENDMARKER'
+    return p.tokens[p.tokens.length - 1].type == $B.py_tokens.ENDMARKER
+}
+
+function inside_fstring(p){
+    var res = false
+    for(var token of p.tokens){
+        if(token.type == $B.py_tokens.FSTRING_START){
+            res = true
+        }else if(token.type == $B.py_tokens.FSTRING_END){
+            res = false
+        }
+    }
+    return res
 }
 
 $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
@@ -850,8 +862,12 @@ $B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
             }else if(p.braces.length > 1){
                 var closing = brace.char,
                     opening = p.braces[p.braces.length - 2].char
-                msg = `closing parenthesis '${closing}' does not match ` +
+                if(inside_fstring(p)){
+                    msg = `f-string: unmatched '${closing}'`
+                }else{
+                    msg = `closing parenthesis '${closing}' does not match ` +
                       `opening parenthesis '${opening}'`
+                }
             }else{
                 msg = `unmatched '${brace.char}'`
             }

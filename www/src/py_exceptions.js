@@ -1139,7 +1139,7 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
     // right operand
     var operator
     for(var token of tokens){
-        if(token.type == 'OP'){
+        if(token.type == $B.py_tokens.OP){
             if(is_before(ast_obj.right, token.lineno, token.col_offset)
                     && token.string != '('){
                 operator = reset_lineno(token)
@@ -1172,7 +1172,7 @@ function handle_Call_error(lines, lineno, ast_obj, tokens){
     var closing_parenth
 
     for(var token of tokens){
-        if(token.type == 'OP'){
+        if(token.type == $B.py_tokens.OP){
             if(token.string == '(' && ! opening_parenth &&
                     token.lineno == ast_obj.func.end_lineno &&
                     token.col_offset >= ast_obj.func.end_col_offset){
@@ -1214,7 +1214,7 @@ function handle_Subscript_error(lines, lineno, ast_obj, tokens){
     // - opening bracket = the last OP token '[' before ast_obj.slice start
     // - closing bracket = the last OP token ']'
     for(var token of tokens){
-        if(token.type == 'OP'){
+        if(token.type == $B.py_tokens.OP){
             if(token.string == '[' &&
                     is_before(ast_obj.slice, token.lineno, token.col_offset)){
                 var opening_bracket = reset_lineno(token)

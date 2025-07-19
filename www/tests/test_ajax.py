@@ -1,7 +1,16 @@
-from browser import ajax, window
+from browser import ajax, window, console
 from tester import async_tester
 
+def check_status(req):
+    if req.status == 200:
+        return True
+    print(f'warning - status {req.status} for '
+        f'request to {req.url}, no check')
+    return False
+
 def show(req, *expects):
+    if not check_status(req):
+        return
     text = req.text
     for expected in expects:
         async_tester.assertIn(expected, text, f'{expected} not in {text}')
@@ -43,6 +52,11 @@ ajax.get("files/text-latin1.txt", mode='binary',
     oncomplete=lambda req: show(req, 0xe9),
     blocking=True)
 
+# no attribute "text" for JSON requests (cf. PR #2589)
+ajax.get("https://jsonplaceholder.typicode.com/posts/1", mode="json",
+    oncomplete=lambda req: async_tester.assertFalse(hasattr(req, 'text')))
+
+
 def read_image(req):
     print('image', len(req.read()))
 
@@ -74,6 +88,8 @@ req.bind("complete", lambda req: show(req, "bébé"))
 req.send()
 
 def assert_type(f, _type):
+    if not check_status(req):
+        return
     data = f.read()
     async_tester.assertTrue(isinstance(data, _type))
 
@@ -103,6 +119,8 @@ ajax.get("files/glossary.json", mode="json",
 # use httpbin.org for testing
 
 def check(num, req, expected):
+    if not check_status(req):
+        return
     data = req.json
     for key in expected:
         async_tester.assertEqual(data[key], expected[key],
@@ -147,6 +165,8 @@ import json
 form_data = {"ident": "a + b"}
 
 def oncomplete(req):
+    if not check_status(req):
+        return
     data = json.loads(req.read())
     async_tester.assertEqual(data['form'], form_data)
 

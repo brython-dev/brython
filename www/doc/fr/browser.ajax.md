@@ -81,7 +81,8 @@ fonction on peut utiliser les attributs et méthodes suivants de cet objet:
 `text`
 
 > le contenu de la réponse : instance de `str` si le mode de la requête est
-> "text", "json" ou "xml", instance de `bytes` si le mode est "binary"
+> "text" ou "xml", instance de `bytes` si le mode est "binary". Déclenche un
+> `AttributeError` si le mode est "json"
 
 `json`
 

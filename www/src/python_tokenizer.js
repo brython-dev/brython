@@ -147,15 +147,33 @@ function $last(array){
   return array[array.length - 1]
 }
 
+function raise_error(err_type, filename,
+        lineno, col_offset, end_lineno, end_col_offset,
+        line, message){
+    var exc = err_type.$factory(message)
+    exc.filename = filename
+    exc.lineno = lineno
+    exc.offset = col_offset
+    exc.end_lineno = end_lineno
+    exc.end_offset = end_col_offset
+    exc.text = line
+    var args1 = [filename, lineno, col_offset, line.trimRight(),
+                 end_lineno, end_col_offset]
+    exc.args = $B.fast_tuple([message, $B.fast_tuple(args1)])
+    throw exc
+}
+
 var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
     op2 = ['**', '//', '>>', '<<'],
     augm_op = '+-*/%^|&=<>@',
     closing = {'}': '{', ']': '[', ')': '('}
 
-function ErrorToken(){
-    var args = Array.from(arguments)
-    args.$error_token = true
-    return args
+function ErrorToken(err_type, filename, lineno, col_offset,
+        end_lineno, end_col_offset, line, message){
+    var token = Token('ERRORTOKEN', '', lineno, col_offset,
+        end_lineno, end_col_offset, line)
+    token.message = message
+    return token
 }
 
 function ErrorTokenKnownToken(){
@@ -166,12 +184,12 @@ function ErrorTokenKnownToken(){
 
 function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
         line){
+    // type is a string; token.type is a number
     var res = {type, string, line, lineno, col_offset, end_lineno, end_col_offset}
-    res.num_type = $B.py_tokens[type]
+    res.type = res.num_type = $B.py_tokens[type]
     if(type == 'OP'){
         res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
     }else if(type == 'ENCODING'){
-        //res.num_type = $B.py_tokens.ENCODING
         res.parser_ignored = true
     }else if(type == 'NL' || type == 'COMMENT'){
         res.parser_ignored = true
@@ -713,10 +731,9 @@ $B.tokenizer = function(src, filename, mode, parser){
                         if(mo){
                             if(pos == src.length - 1){
                                 var msg = 'unexpected EOF while parsing'
-                                t.push(ErrorToken(_b_.SyntaxError,
+                                raise_error(_b_.SyntaxError,
                                     filename, line_num, pos - line_start, line_num, pos - line_start + 1,
-                                    line, msg))
-                                return t
+                                    line, msg)
                             }
                             line_num++
                             pos += mo[0].length
@@ -726,10 +743,9 @@ $B.tokenizer = function(src, filename, mode, parser){
                             pos++;
                             var msg = 'unexpected character after line ' +
                                 'continuation character'
-                            t.push(ErrorToken(_b_.SyntaxError,
+                            raise_error(_b_.SyntaxError,
                                 filename, line_num, pos - line_start, line_num, pos - line_start + 1,
-                                line, msg))
-                            return t
+                                line, msg)
                         }
                         break
                     case '\n':
@@ -978,10 +994,15 @@ $B.tokenizer = function(src, filename, mode, parser){
                     case '\n':
                         if(! escaped && ! triple_quote){
                             // unterminated string
-                            var msg = `unterminated string literal ` +
-                                      `(detected at line ${line_num})`,
-                                line_num = string_start[0],
-                                col_offset = string_start[1]
+                            var msg
+                            if(token_mode == 'regular_within_fstring'){
+                                msg = "f-string: missing '}'"
+                            }else{
+                                var msg = `unterminated string literal ` +
+                                          `(detected at line ${line_num})`,
+                                    line_num = string_start[0],
+                                    col_offset = string_start[1]
+                            }
                             t.push(ErrorToken(_b_.SyntaxError,
                                 filename, line_num, col_offset,
                                 line_num, col_offset,
@@ -1055,11 +1076,11 @@ $B.tokenizer = function(src, filename, mode, parser){
                         line))
                     state = null
                 }else if(char.match(/\p{Letter}/u)){
-                    t.push(ErrorToken(_b_.SyntaxError,
+                    raise_error(_b_.SyntaxError,
                         filename,
-                        line_num, pos - line_start - number.length,
                         line_num, pos - line_start,
-                        line, 'invalid decimal literal'))
+                        line_num, pos - line_start,
+                        line, 'invalid decimal literal')
                     return t
                 }else{
                     t.push(Token('NUMBER', number,

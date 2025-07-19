@@ -130,6 +130,8 @@ function copy_position(target, origin){
     target.end_col_offset = origin.end_col_offset
 }
 
+$B.copy_position = copy_position
+
 function encode_position(lineno, end_lineno, col_offset, end_col_offset){
     var res
     if(end_lineno == lineno){

@@ -739,11 +739,24 @@ var $$eval = _b_.eval = function(){
     var _frame_obj = $B.frame_obj
 
     if(src.__class__ === code){
+        if(src.mode == 'exec' && mode == 'eval'){
+            return _b_.None
+        }
         _ast = src._ast
         if(_ast.$js_ast){
             _ast = _ast.$js_ast
         }else{
             _ast = $B.ast_py_to_js(_ast)
+        }
+        if(_ast instanceof $B.ast.Expression){
+            // transform `expr` into `varname = expr` so that the exec_func
+            // can return varname
+            var expr_name = '_' + $B.UUID()
+            var name = new $B.ast.Name(expr_name, new $B.ast.Store())
+            $B.copy_position(name, _ast.body)
+            var assign = new $B.ast.Assign([name], _ast.body)
+            $B.copy_position(assign, _ast.body)
+            _ast = new $B.ast.Module([assign])
         }
     }
 
@@ -781,18 +794,31 @@ var $$eval = _b_.eval = function(){
     if(mode == 'eval'){
         // must set locals, might be used if expression is like
         // "True and True"
-        js = `var __file__ = '${filename}'\n` +
-             `var locals = ${local_name}\nreturn ${js}`
+        if(src.__class__ === _b_.code){
+            js += `\nreturn locals.${expr_name}`
+        }else{
+            js = `var __file__ = '${filename}'\n` +
+                 `var locals = ${local_name};\n` +
+                 'return ' + js
+        }
     }else if(src.single_expression){
-        js = `var __file__ = '${filename}'\n` +
-             `var result = ${js}\n` +
-             `if(result !== _b_.None){\n` +
-                 `_b_.print(result)\n` +
-             `}`
+        if(src.__class__ === _b_.code){
+            js += `var result = locals.${expr_name}\n` +
+                 `if(result !== _b_.None){\n` +
+                     `_b_.print(result)\n` +
+                 `}`
+
+        }else{
+            js = `var __file__ = '${filename}'\n` +
+                 `var result = ${js}\n` +
+                 `if(result !== _b_.None){\n` +
+                     `_b_.print(result)\n` +
+                 `}`
+        }
     }
 
     try{
-        var exec_func = new Function('$B', '_b_',
+        var exec_func = new Function('$B', '_b_', 'locals',
                                      local_name, global_name,
                                      'frame', '_frame_obj', js)
     }catch(err){
@@ -805,7 +831,7 @@ var $$eval = _b_.eval = function(){
     }
 
     try{
-        var res = exec_func($B, _b_,
+        var res = exec_func($B, _b_, exec_locals,
                             exec_locals, exec_globals, frame, _frame_obj)
     }catch(err){
         if($B.get_option('debug') > 2){
