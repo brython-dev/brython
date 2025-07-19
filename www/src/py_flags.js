@@ -2,15 +2,15 @@
 (function($B){
 $B.builtin_class_flags = {
     builtins: {
-        1073763586: ['SystemExit', 'SystemError', 'NotADirectoryError', 'BlockingIOError', 'IndexError', 'ConnectionRefusedError', 'BytesWarning', 'ModuleNotFoundError', 'TabError', 'ImportError', 'UnboundLocalError', '_IncompleteInputError', 'BaseExceptionGroup', 'ValueError', 'UnicodeDecodeError', 'EnvironmentError', 'FutureWarning', 'DeprecationWarning', 'SyntaxWarning', 'EncodingWarning', 'FloatingPointError', 'EOFError', 'NotImplementedError', 'OverflowError', 'TypeError', 'PermissionError', 'Warning', 'SyntaxError', 'ArithmeticError', 'StopAsyncIteration', 'InterruptedError', 'RuntimeWarning', 'UnicodeTranslateError', 'Exception', 'ReferenceError', 'ProcessLookupError', 'UnicodeWarning', 'ConnectionResetError', 'KeyboardInterrupt', 'RuntimeError', 'AssertionError', 'ImportWarning', 'PendingDeprecationWarning', 'UnicodeEncodeError', 'IndentationError', 'OSError', 'UserWarning', 'MemoryError', 'RecursionError', 'GeneratorExit', 'BrokenPipeError', 'BaseException', 'KeyError', 'AttributeError', 'FileNotFoundError', 'ConnectionError', 'PythonFinalizationError', 'StopIteration', 'NameError', 'FileExistsError', 'ZeroDivisionError', 'ChildProcessError', 'IOError', 'IsADirectoryError', 'LookupError', 'UnicodeError', 'WindowsError', 'TimeoutError', 'ResourceWarning', 'ConnectionAbortedError', 'BufferError'],
+        1073763586: ['TimeoutError', 'FutureWarning', 'PermissionError', '_IncompleteInputError', 'StopAsyncIteration', 'ChildProcessError', 'BaseException', 'StopIteration', 'ConnectionAbortedError', 'ConnectionResetError', 'TypeError', 'ReferenceError', 'AssertionError', 'KeyboardInterrupt', 'ArithmeticError', 'RuntimeError', 'RuntimeWarning', 'FileNotFoundError', 'NotADirectoryError', 'UserWarning', 'DeprecationWarning', 'EncodingWarning', 'BaseExceptionGroup', 'ModuleNotFoundError', 'NameError', 'OverflowError', 'UnicodeTranslateError', 'ConnectionError', 'EOFError', 'SyntaxError', 'AttributeError', 'UnboundLocalError', 'GeneratorExit', 'Warning', 'PythonFinalizationError', 'ResourceWarning', 'BytesWarning', 'UnicodeError', 'NotImplementedError', 'RecursionError', 'BufferError', 'PendingDeprecationWarning', 'IndexError', 'InterruptedError', 'LookupError', 'ProcessLookupError', 'ValueError', 'SystemError', 'IndentationError', 'UnicodeEncodeError', 'Exception', 'WindowsError', 'OSError', 'IsADirectoryError', 'EnvironmentError', 'UnicodeDecodeError', 'ImportError', 'TabError', 'FileExistsError', 'SystemExit', 'BrokenPipeError', 'ImportWarning', 'UnicodeWarning', 'FloatingPointError', 'KeyError', 'SyntaxWarning', 'MemoryError', 'ConnectionRefusedError', 'BlockingIOError', 'ZeroDivisionError', 'IOError'],
         1073763848: ['ExceptionGroup'],
         20975874: ['bool'],
         4199682: ['float', 'bytearray'],
         138417410: ['bytes'],
-        21762: ['classmethod', 'staticmethod', 'filter', 'reversed', 'super', 'zip', 'map', 'enumerate', 'property'],
+        21762: ['super', 'zip', 'map', 'classmethod', 'property', 'staticmethod', 'enumerate', 'filter', 'reversed'],
         5378: ['object', 'complex'],
         541087042: ['dict'],
-        4216066: ['frozenset', 'set'],
+        4216066: ['set', 'frozenset'],
         20976898: ['int'],
         37770530: ['list'],
         20770: ['memoryview'],
@@ -21,10 +21,10 @@ $B.builtin_class_flags = {
         2155896066: ['type'],
     },
     types: {
-        20866: ['async_generator', 'member_descriptor', 'classmethod_descriptor', 'coroutine', 'frame', 'method-wrapper', 'getset_descriptor', 'generator'],
+        20866: ['coroutine', 'async_generator', 'frame', 'member_descriptor', 'classmethod_descriptor', 'generator', 'method-wrapper', 'getset_descriptor'],
         22914: ['builtin_function_or_method'],
         20738: ['traceback', 'cell'],
-        4354: ['NotImplementedType', 'NoneType', 'code', 'ellipsis'],
+        4354: ['NotImplementedType', 'code', 'NoneType', 'ellipsis'],
         153858: ['function'],
         20802: ['mappingproxy'],
         153986: ['method_descriptor'],
