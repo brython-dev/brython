@@ -151,10 +151,11 @@ ajax.__getattribute__ = function(self, attr){
             return ajax[attr].call(null, self, ...arguments)
         }
     }else if(attr == "text"){
-        if(self.mode == "binary"){
-            return _read(self)
+        if(self.js.responseType == "json"){
+            throw _b_.AttributeError.$factory("no attribute 'text'" +
+                "for JSON requests")
         }
-        return self.js.responseText
+        return _read(self)
     }else if(attr == "json"){
         if(self.js.responseType == "json"){
             return _read(self)
@@ -222,6 +223,7 @@ ajax.open = function(){
     }
     self.$method = method
     self.blocking = ! self.async
+    self.url = url
     self.js.open(method, url, async)
 }
 
@@ -381,6 +383,7 @@ function _request_without_body(method){
         qs = items.data
     $B.$setattr(self, 'mode', mode)
     $B.$setattr(self, 'encoding', encoding)
+    $B.$setattr(self, 'url', url)
     if(qs){
         url += "?" + qs
     }
@@ -423,6 +426,7 @@ function _request_with_body(method){
         kw = $.kw,
         content_type
     var self = ajax.$factory()
+    $B.$setattr(self, 'url', url)
     self.js.open(method.toUpperCase(), url, async)
     var items = handle_kwargs(self, kw, method), // common with browser.aio
         data = items.data
@@ -506,6 +510,7 @@ function file_upload(){
         kw = $.kw
 
     var self = ajax.$factory()
+    self.url = url
 
     var items = handle_kwargs(self, kw, method),
         rawdata = items.rawdata,

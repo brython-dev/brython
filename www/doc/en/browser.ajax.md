@@ -80,8 +80,9 @@ body, the following attributes and methods of this object can be used:
 
 `text`
 
-> the response text : instance of `str` if request mode is "text", "json" or
-> "xml", instance of `bytes` if mode is "binary"
+> the response text : instance of `str` if request mode is "text" or "xml",
+> instance of `bytes` if mode is "binary". Raises `AttributeError` if mode is 
+> "json"
 
 `json`
 
