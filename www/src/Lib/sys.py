@@ -277,6 +277,43 @@ warnoptions = []
 def getfilesystemencoding():
     return 'utf-8'
 
+_events = SimpleNamespace(
+    NO_EVENTS=0,
+    PY_START=1,
+    PY_RESUME=2,
+    PY_RETURN=4,
+    PY_YIELD=8,
+    CALL=16,
+    LINE=32,
+    INSTRUCTION=64,
+    JUMP=128,
+    BRANCH_LEFT=256,
+    BRANCH_RIGHT=512,
+    STOP_ITERATION=1024,
+    RAISE=2048,
+    EXCEPTION_HANDLED=4096,
+    PY_UNWIND=8192,
+    PY_THROW=16384,
+    RERAISE=32768,
+    C_RETURN=65536,
+    C_RAISE=131072,
+    BRANCH=262144
+    )
+
+class _monitoring:
+
+    events = _events
+
+_ModuleType = type(_sys)
+monitoring = _ModuleType('monitoring', None)
+monitoring.events = _events
+monitoring.DEBUGGER_ID = 0
+monitoring.COVERAGE_ID = 1
+monitoring.PROFILER_ID = 2
+monitoring.DISABLE = None #<object object at 0x00007FFC95225080>
+monitoring.MISSING = None #<object object at 0x00007FFC95225090>
+monitoring.OPTIMIZER_ID = 5
+
 ## __stdxxx__ contains the original values of sys.stdxxx
 __stdout__ = stdout
 __stderr__ = stderr
