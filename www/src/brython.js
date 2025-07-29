@@ -212,8 +212,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,2,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-07-19 08:03:57.640442"
-__BRYTHON__.timestamp=1752905037640
+__BRYTHON__.compiled_date="2025-07-29 14:32:29.736910"
+__BRYTHON__.timestamp=1753792349736
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1561,14 +1561,9 @@ var exc=_b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")
 throw exc}
 $B.getitem_slice=function(obj,slice){var res
-if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
-if(slice.stop===_b_.None){slice.stop=obj.length}
-if(typeof slice.start=="number" &&
-typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
-if(slice.stop < 0){slice.stop+=obj.length}
-res=obj.slice(slice.start,slice.stop)}}
-if(res){res.__class__=obj.__class__ 
-return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
+if(Array.isArray(obj)&& obj.__class__===_b_.list){var res=_b_.list.$getitem(obj,slice)
+res.__class__=obj.__class__
+return res}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr($B.get_class(obj),"__getitem__")(obj,slice)}
 $B.$getattr_pep657=function(obj,attr,inum){try{return $B.$getattr(obj,attr)}catch(err){$B.set_inum(inum)
 throw err}}

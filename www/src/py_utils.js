@@ -1090,36 +1090,9 @@ $B.$getitem1 = function(obj, item){
 $B.getitem_slice = function(obj, slice){
     var res
     if(Array.isArray(obj) && obj.__class__ === _b_.list){
-        if(slice.start === _b_.None && slice.stop === _b_.None){
-            if(slice.step === _b_.None || slice.step == 1){
-                res = obj.slice()
-            }else if(slice.step == -1){
-                res = obj.slice().reverse()
-            }
-        }else if(slice.step === _b_.None){
-            if(slice.start === _b_.None){
-                slice.start = 0
-            }
-            if(slice.stop === _b_.None){
-                slice.stop = obj.length
-            }
-            if(typeof slice.start == "number" &&
-                    typeof slice.stop == "number"){
-                if(slice.start < 0){
-                    slice.start += obj.length
-                }
-                if(slice.stop < 0){
-                    slice.stop += obj.length
-                }
-                res = obj.slice(slice.start, slice.stop)
-            }
-        }
-        if(res){
-            res.__class__ = obj.__class__ // can be tuple
-            return res
-        }else{
-            return _b_.list.$getitem(obj, slice)
-        }
+        var res = _b_.list.$getitem(obj, slice)
+        res.__class__ = obj.__class__
+        return res
     }else if(typeof obj == "string"){
         return _b_.str.__getitem__(obj, slice)
     }
