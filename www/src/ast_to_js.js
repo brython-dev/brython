@@ -1164,8 +1164,6 @@ function annotation_code(scope, ref){
         var annotate = prefix + `var annotate = {\n`
         indent()
         var anns = scope.annotate.map(x => prefix + x)
-        var lineno = scope.ast.lineno
-        anns.push(prefix + '$lineno: ' + lineno)
         annotate += anns.join(',\n') + '\n'
         dedent()
         annotate += prefix + '}\n'
@@ -1179,14 +1177,20 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     compiler_check(this)
     var scope = last_scope(scopes)
     var js = ''
+    if(scopes.postpone_annotations){
+        var inum = add_to_positions(scopes, this)
+    }
     if(! scope.has_annotation){
         scope.has_annotation = true
-        scope.locals.add('__annotations__')
         if(scopes.postpone_annotations){
-            js += prefix + 'locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n'
+            scope.locals.add('__annotations__')
+            js += prefix + 'locals.__annotations__ = $B.empty_dict()\n'
         }else{
             scope.locals.add('__annotate__')
             scope.annotate = []
+            if(scope.type == 'module'){
+                js += prefix + `$B.make_module_annotate(locals)\n`
+            }
         }
     }
     if(this.target instanceof $B.ast.Name){
@@ -1207,7 +1211,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
                 mangled = mangle(scopes, scope, this.target.id)
             if(scope.type != "def"){
                 // Update __annotations__ only for classes and modules
-                if(! scopes.postpone_annotation){
+                if(! scopes.postpone_annotations){
                     if(scope.type == 'class'){
                         scope.annotate.push(`${mangled}: [${this.lineno}, ` +
                             `() => ${ann_value}]`)
@@ -1218,7 +1222,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
                     }
                 }else{
                     js += prefix + `$B.$setitem(locals.__annotations__, ` +
-                      `'${mangled}', ${ann_value})\n`
+                      `'${mangled}', ${ann_value}, ${inum})\n`
                 }
             }
             let target_ref = name_reference(this.target.id, scopes)
@@ -1245,7 +1249,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
                     }
                 }else{
                     js += prefix + `$B.$setitem(locals.__annotations__, ` +
-                    `'${mangled}', ${ann_value})\n`
+                    `'${mangled}', ${ann_value}, ${inum})\n`
                 }
             }
         }
@@ -1857,11 +1861,13 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
     }
 
-    js += prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
-          annotation_code(class_scope, class_ref) +
-          prefix + `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
+    js += annotation_code(class_scope, class_ref)
+
+    js += prefix + `var kls = $B.$class_constructor('${this.name}', frame, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}], ` +
-              `[${static_attrs}], annotate, ${this.lineno})\n`
+              `[${static_attrs}], annotate, ${this.lineno})\n` +
+          prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
+          prefix + 'return kls\n'
 
 
     dedent()
@@ -2610,7 +2616,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         if(this.returns){
             var ann_str = annotation_to_str(this.returns, scopes)
             ann_items_strings.push(`['return', '${ann_str}']`)
-            ann_items_values.push(`['return', ${this.returns.to_js(scopes)}]`)
+            var ann_value
+            if(scopes.postpone_annotations){
+                ann_value = `'${annotation_to_str(this.returns, scopes)}'`
+            }else{
+                ann_value = this.returns.to_js(scopes)
+            }
+            ann_items_values.push(`['return', ${ann_value}]`)
         }
         anns_values = `[${ann_items_values.join(', ')}]`
         anns_strings = `[${ann_items_strings.join(', ')}]`
@@ -3358,10 +3370,6 @@ $B.ast.Module.prototype.to_js = function(scopes){
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
     var insert_positions = js.length
-    if(! scopes.imported){
-          js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
-    }
-
 
     // for exec(), frame is put on top of the stack inside
     // py_builtin_functions.js / $eval()
@@ -3369,11 +3377,12 @@ $B.ast.Module.prototype.to_js = function(scopes){
           js += `$B.enter_frame(frame, __file__, 1)\n`
           js += '\nvar _frame_obj = $B.frame_obj\n'
     }
-    if(! scopes.postpone_annotations){
-        js += `$B.make_annotate_module(locals, __file__)\n`
+    if(scopes.postpone_annotations){
+        js += `locals.__annotations__ = $B.empty_dict()\n`
+    }else{
+        js += `locals.$annotations = {}\n`
         bind('__annotate__', scopes)
     }
-
     js += 'var stack_length = $B.count_frames()\n'
 
     js += `try{\n`
@@ -3396,13 +3405,9 @@ $B.ast.Module.prototype.to_js = function(scopes){
         js += rest
     }
 
-    js += annotation_code(scopes[scopes.length - 1], 'locals')
-
     scopes.pop()
     if(prefix.length != 0){
         console.warn('wrong indent !', prefix.length)
-        // console.warn(scopes.src)
-        // throw Error()
         prefix = ''
     }
     return js

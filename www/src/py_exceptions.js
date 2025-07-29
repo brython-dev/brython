@@ -9,6 +9,9 @@ $B.del_exc = function(frame){
 
 $B.set_exc = function(exc, frame){
     exc.__traceback__ = exc.__traceback__ === _b_.None ? make_tb() : exc.__traceback__
+    if(! exc.__class__){
+        console.log('no class', exc)
+    }
     exc.__class__ = exc.__class__ ?? _b_.JavascriptError
     exc.args = exc.args ?? [exc.message]
     if(frame === undefined){
@@ -1278,9 +1281,12 @@ function trace_from_stack(err){
         save_lineno = lineno
         save_scope = scope
         count_repeats = 0
-        var src = $B.file_cache[filename]
         trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
+        var src
+        if(! filename.startsWith('<')){
+            src = $B.file_cache[filename]
+        }
         if(src){
             var lines = src.split('\n')
             // PEP 657
@@ -1292,6 +1298,11 @@ function trace_from_stack(err){
             if(positions){
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions
                 // part of first line before error
+                if(lines[lineno - 1] === undefined){
+                    console.log('no line, lines\n', lines, 'lineno', lineno)
+                    console.log('filename', filename, 'src', src)
+                    continue
+                }
                 var head = lines[lineno - 1].substr(0, col_offset)
                 // start with whitespaces to preserve col_offset in the ast
                 var segment = ' '.repeat(col_offset)

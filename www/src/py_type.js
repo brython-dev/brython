@@ -34,11 +34,12 @@ const TPFLAGS = {
 }
 
 // generic code for class constructor
-$B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
+$B.$class_constructor = function(class_name, frame, metaclass,
                                  resolved_bases, bases,
                                  kwargs, static_attributes, annotate,
                                  firstlineno){
     var dict
+    var class_obj_proxy = frame[1] // locals
     if(class_obj_proxy instanceof $B.str_dict){
         dict = $B.empty_dict()
         dict.$strings = class_obj_proxy
@@ -103,11 +104,22 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     kls.__static_attributes__ = $B.fast_tuple(static_attributes)
     kls.__firstlineno__ = firstlineno
 
+    $B.make_annotate_class(kls, annotate, frame)
+
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
-        meta_init(kls, class_name, resolved_bases, dict,
-                  {$kw: [extra_kwargs]})
+        try{
+            meta_init(kls, class_name, resolved_bases, dict,
+                      {$kw: [extra_kwargs]})
+        }catch(err){
+            if(class_name == 'SupportsInt'){
+                console.log('err for', class_name)
+                console.log(err)
+                console.log(err.stack)
+            }
+            throw err
+        }
     }
 
     // Set new class as subclass of its parents
@@ -115,8 +127,6 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
     }
-
-    $B.make_annotate_class(kls, annotate)
 
     return kls
 }
@@ -428,11 +438,15 @@ type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
         if(klass.__annotations_cache__ !== undefined){
             return klass.__annotations_cache__
         }
-        var annotate = $B.$getitem(type.__dict__, '__annotate__').getter(klass)
-        if(annotate === _b_.None){
+        var annotate = $B.search_in_mro(klass, '__annotate__')
+        var annotate_func = klass.__annotate_func__
+        if(annotate_func === undefined){
+            console.log('no __annotate_func__ for klass', klass)
+        }
+        if(annotate_func === _b_.None){
             return $B.empty_dict()
         }
-        return klass.__annotations_cache__ = annotate(1)
+        return klass.__annotations_cache__ = $B.$call(annotate_func)(1)
     },
     function(klass, value){
         klass.__annotations__ = value
@@ -600,7 +614,7 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = false // attr == "__annotate__" // && klass.__name__ == 'Pattern'
+    var $test = false // attr == "__annotations__" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -628,7 +642,7 @@ type.__getattribute__ = function(klass, attr){
                     _b_.dict.$contains_string(klass.__dict__, attr)){
                 res = klass[attr] = _b_.dict.$getitem_string(klass.__dict__, attr)
                 if($test){
-                    console.log('found in __dict__', v)
+                    console.log('found in __dict__', res)
                 }
             }else{
                 var mro = klass.__mro__
@@ -1644,9 +1658,9 @@ $B.UnionType.__repr__ = function(self){
 
 $B.set_func_names($B.UnionType, "types")
 
-$B.make_annotate_class = function(kls, annotations){
+$B.make_annotate_class = function(kls, annotations, class_frame){
     if(annotations === undefined){
-        kls.__annotate__ = _b_.None
+        kls.__annotate_func__ = _b_.None
         return
     }
     kls.$annotations = annotations
@@ -1655,7 +1669,6 @@ $B.make_annotate_class = function(kls, annotations){
             throw _b_.TypeError.$factory('__annotate__ argument should be ' +
                 `int, not ${$B.class_name(format)}`)
         }
-        var class_frame = $B.frame_obj.frame
         var file = class_frame.__file__
         var locals = {format}
         var frame = ['__annotate__', locals, class_frame[2], class_frame[3]]
@@ -1666,6 +1679,9 @@ $B.make_annotate_class = function(kls, annotations){
                 case 1:
                 case 2:
                     var ann_dict = $B.empty_dict()
+                    if(kls.$annotations === undefined){
+                        return $B.trace_return_and_leave(frame, ann_dict)
+                    }
                     for(var key in kls.$annotations){
                         if(key == '$lineno'){
                             continue
@@ -1675,8 +1691,13 @@ $B.make_annotate_class = function(kls, annotations){
                         }catch(err){
                             throw err
                         }
-                        frame.$lineno = lineno
-                        $B.$setitem(ann_dict, key, func())
+                        try{
+                            $B.$setitem(ann_dict, key, func())
+                        }catch(err){
+                            frame.$lineno = lineno
+                            console.log('error', frame.inum, frame.positions)
+                            throw err
+                        }
                     }
                     return $B.trace_return_and_leave(frame, ann_dict)
                 default:
@@ -1694,46 +1715,80 @@ $B.make_annotate_class = function(kls, annotations){
         kls.__qualname__ + '.' + '__annotate__')
 }
 
-$B.make_annotate_module = function(obj, file){
-    // create function __annotate__ for a module
+$B.postpone_annotations = function(obj, file){
+    // create property __annotations__ for a module with
+    // "from __future__ import annotations
     var module_frame = $B.frame_obj.frame
     obj.$annotations = {}
-    obj.__annotate__ = function(format){
-        var locals = {format}
-        var frame = ['__annotate__', locals, module_frame[2], module_frame[3]]
-        $B.enter_frame(frame, file)
-        frame.positions = module_frame.positions
-        try{
-            switch(format){
-                case 1:
-                    var ann_dict = $B.empty_dict()
-                    for(var key in obj.$annotations){
-                        var item = obj.$annotations[key]
-                        frame.$lineno = item[0]
-                        $B.$setitem(ann_dict, key, item[1]())
-                    }
-                    return $B.trace_return_and_leave(frame, ann_dict)
-                case 2:
-                    var ann_dict = $B.empty_dict()
-                    for(var key in obj.$annotations){
-                        var item = obj.$annotations[key]
-                        frame.$lineno = item[0]
-                        $B.$setitem(ann_dict, key, item[1]())
-                    }
-                    return $B.trace_return_and_leave(frame, ann_dict)
-                default:
-                    for(var key in obj.$annotations){
-                        var item = obj.$annotations[key]
-                        frame.$lineno = item[0]
-                        throw _b_.NotImplementedError.$factory('')
-                    }
-                    break
+    Object.defineProperty(obj, '__annotations__',
+        {
+            configurable: true,
+            get(){
+                if(obj.$set_annotations){
+                    return obj.$set_annotations
+                }
+                var res = $B.empty_dict()
+                for(var key in obj.$annotations){
+                    _b_.dict.$setitem(res, key, obj.$annotations[key][1]())
+                }
+                return res
+            },
+            set(value){
+                obj.$set_annotations = value
             }
-        }catch(err){
-            $B.set_exc_and_leave(frame, err)
+        }
+    )
+}
+
+$B.make_module_annotate = function(locals){
+    Object.defineProperty(locals, '__annotations__',
+        {
+            get() {
+                if(locals.$set_annotations){
+                    return locals.$set_annotations
+                }
+                if(locals.__annotate__){
+                    return locals.__annotate__(1)
+                }
+                return locals.__annotate_func__(1)
+            },
+            set(value){
+                locals.$set_annotations = value
+            }
+        }
+    )
+    Object.defineProperty(locals, '__annotate__',
+        {
+            get() {
+                if(locals.$annotate){
+                    return locals.$annotate
+                }
+                return locals.__annotate_func__
+            },
+            set(value){
+                locals.$annotate = value
+            }
+        }
+    )
+    locals.__annotate_func__ = function(format){
+        switch(format){
+            case 1:
+                var ann_dict = $B.empty_dict()
+                for(var key in locals.$annotations){
+                    var item = locals.$annotations[key]
+                    //frame.$lineno = item[0]
+                    $B.$setitem(ann_dict, key, item[1]())
+                }
+                return ann_dict
+            default:
+                throw _b_.NotImplementedError.$factory()
         }
     }
-    $B.add_function_infos(obj, '__annotate__')
+    $B.add_function_infos(locals, '__annotate_func__')
+
+    $B.set_function_attr(locals.__annotate_func__, '__name__', '__annotate__')
+    $B.set_function_attr(locals.__annotate_func__, '__qualname__', '__annotate__')
 }
+
 
 })(__BRYTHON__);
