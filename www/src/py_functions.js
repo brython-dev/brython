@@ -882,6 +882,214 @@ function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, ha
     return fct;
 }
 
+function add_to_kwargs(kw_dict, key, value){
+    kw_dict.$strings[key] = value
+}
 
+$B.args_parser = function(f, args){
+    var parse_debug = 0
+    if(parse_debug){
+        for(var attr in $B.func_attrs){
+            console.log(attr, f.$function_infos[$B.func_attrs[attr]])
+        }
+    }
+
+    function add_key(key, value){
+        var index = arg_names.indexOf(key)
+        if(index == -1){
+            if(kwarg){
+                add_to_kwargs(locals[kwarg], key, value)
+                return
+            }else{
+                throw _b_.TypeError.$factory(name +
+                    `() got an unexpected keyword argument '${key}'`)
+            }
+        }
+        if(locals.hasOwnProperty(key)){
+            if(kwarg && index < posonly_length){
+                _b_.dict.$setitem_string(locals[kwarg], key, value)
+                return
+            }
+            throw _b_.TypeError.$factory(name +
+                `() got multiple values for argument '${key}'`)
+        }
+        if(index < posonly_length){
+            if(defaults === _b_.None ||
+                    index <= positional_length - defaults.length){
+                // no default value for key as positional
+                if(kwarg){
+                    _b_.dict.$setitem_string(locals[kwarg], key, value)
+                }else{
+                    posonly_as_keywords.push(key)
+                }
+            }
+        }else{
+            locals[key] = value
+            filled_pos++
+        }
+    }
+
+    var name = f.$function_infos[$B.func_attrs.__name__]
+    var arg_names = f.$function_infos[$B.func_attrs.arg_names]
+    var positional_length = f.$function_infos[$B.func_attrs.positional_length]
+    var kwonly_length = f.$function_infos[$B.func_attrs.kwonlyargs_length]
+    var vararg = f.$function_infos[$B.func_attrs.args_vararg]
+    var kwarg = f.$function_infos[$B.func_attrs.args_kwarg]
+
+    var too_many_pos = 0
+    var posonly_as_keywords = []
+
+    var locals = {}
+    var filled_pos = 0
+    var vargs
+
+    if(vararg){
+        locals[vararg] = vargs = $B.fast_tuple([])
+    }
+    if(kwarg){
+        locals[kwarg] = $B.empty_dict()
+    }
+
+    var args_length = args.length
+    var last_arg = args[args_length - 1]
+    var has_kw = last_arg.$kw
+    var nb_pos = has_kw ? args_length - 1 : args_length
+
+    if(nb_pos <= positional_length){
+        for(var iarg = 0; iarg < nb_pos; iarg++){
+            locals[arg_names[iarg]] = args[iarg]
+        }
+        filled_pos = nb_pos
+    }else{
+        if(positional_length){
+            for(var iarg = 0; iarg < positional_length; iarg++){
+                locals[arg_names[iarg]] = args[iarg]
+            }
+        }
+        filled_pos = positional_length
+        if(vararg){
+            for(var j = positional_length; j < nb_pos; j++){
+                vargs[vargs.length] = args[j]
+            }
+        }else{
+            too_many_pos = nb_pos - positional_length
+        }
+    }
+
+    if(has_kw){
+        var defaults = f.$function_infos[$B.func_attrs.__defaults__]
+        var posonly_length = f.$function_infos[$B.func_attrs.posonlyargs_length]
+        var elt = last_arg
+        for(var key in elt.$kw[0]){
+            add_key(key, elt.$kw[0][key])
+        }
+        for(var i = 1; i< elt.$kw.length; i++){
+            if(elt.$kw[i].__class__ === _b_.dict){
+                for(var item of _b_.dict.$iter_items(elt.$kw[i])){
+                    add_key(item.key, item.value)
+                }
+            }else{
+                var klass = $B.get_class(elt.$kw[i])
+                var keys_method = $B.$getattr(klass, 'keys', null)
+                var getitem = $B.$getattr(klass, '__getitem__', null)
+                if(keys_method === null || getitem === null){
+                    throw _b_.TypeError.$factory(
+                        `${name} argument after ** must be a mapping, ` +
+                        `not ${$B.class_name(elt.$kw[i])}`)
+                }
+                for(var key of $B.make_js_iterator(keys_method(elt.$kw[i]))){
+                    add_key(key, getitem(elt.$kw[i], key))
+                }
+            }
+        }
+    }
+
+    if(too_many_pos){
+        var plural = positional_length == 1 ? '' : 's'
+        var nb = positional_length + too_many_pos
+        var defaults = f.$function_infos[$B.func_attrs.__defaults__]
+        var report = positional_length
+        if(defaults.length){
+            var nb_min = positional_length - defaults.length
+            report = `from ${nb_min} to ${positional_length}`
+            plural = 's'
+        }
+        throw _b_.TypeError.$factory(
+            `${name}() takes ${report} positional argument` +
+            `${plural} but ${nb} were given`)
+    }
+
+    if(posonly_as_keywords.length > 0){
+        throw _b_.TypeError.$factory(
+            `${name}() got some positional-only arguments passed as keyword ` +
+            `arguments: '${posonly_as_keywords.join(', ')}'`)
+    }
+
+    // use default values
+    var nb_formal = positional_length + kwonly_length
+    if(nb_formal == 0){
+        // form f(*args, **kw): ...
+        return locals
+    }
+    if(filled_pos < nb_formal){
+        // use defaults for non-kwonly args
+        var defaults = f.$function_infos[$B.func_attrs.__defaults__]
+        if(defaults !== _b_.None){
+            var defaults_start = positional_length - defaults.length
+            for(var i = defaults_start; i < positional_length; i++){
+                if(! locals.hasOwnProperty(arg_names[i])){
+                    locals[arg_names[i]] = defaults[i - defaults_start]
+                    filled_pos++
+                }
+            }
+        }
+        if(filled_pos < nb_formal){
+            // use defaults for kwonly args
+            var kwonly_defs = f.$function_infos[$B.func_attrs.__kwdefaults__]
+            if(kwonly_defs !== _b_.None){
+                for(var key in kwonly_defs){
+                    if(! locals.hasOwnProperty(key)){
+                        locals[key] = kwonly_defs[key]
+                        filled_pos++
+                    }
+                }
+            }
+        }
+
+        if(filled_pos < nb_formal){
+            // Report error
+            var missing_positional = []
+            var missing_kwonly = []
+            for(var i = 0; i < nb_formal; i++){
+                let arg_name = arg_names[i]
+                if(! locals.hasOwnProperty(arg_name)){
+                    if(i < positional_length){
+                        missing_positional.push(`'${arg_name}'`)
+                    }else{
+                        missing_kwonly.push(`'${arg_name}'`)
+                    }
+                }
+            }
+            var missing
+            var missing_type
+            var report
+            if(missing_positional.length){
+                missing = missing_positional
+                missing_type = 'positional'
+            }else{
+                missing = missing_kwonly
+                missing_type = 'keyword-only'
+            }
+            var report = missing_names(missing)
+            var nb_missing = missing.length
+            var plural = nb_missing == 1 ? '' : 's'
+            throw _b_.TypeError.$factory(name +
+                `() missing ${nb_missing} required ${missing_type} ` +
+                `argument${plural}: ${report}`)
+        }
+    }
+
+    return locals
+}
 
 })(__BRYTHON__);

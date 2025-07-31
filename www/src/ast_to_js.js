@@ -2380,6 +2380,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += prefix + `if(arguments.length !== 0){\n` +
               prefix + tab + `${name2}.$args_parser(${parse_args.join(', ')})\n` +
               prefix + `}\n`
+    }else if(this.name == 'fxd51jy'){
+        js += prefix + `var ${locals_name} = locals = ` +
+              `$B.args_parser(${name2}, arguments)\n`
     }else{
         js += prefix + `var ${locals_name} = locals = ` +
               `${name2}.$args_parser(${parse_args.join(', ')})\n`
