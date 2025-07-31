@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 13, 0, 'final', 0]
-// implementation [3, 13, 2, 'dev', 0]
+// implementation [3, 13, 3, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=globalThis.__BRYTHON__ ||{}
@@ -210,10 +210,10 @@ $B.digits_starts=[48,1632,1776,1984,2406,2534,2662,2790,2918,3046,3174,3302,3430
 $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912:[953,776,769],944:[965,776,769],1415:[1381,1410],7830:[104,817],7831:[116,776],7832:[119,778],7833:[121,778],7834:[97,702],7838:[223],8016:[965,787],8018:[965,787,768],8020:[965,787,769],8022:[965,787,834],8064:[7936,953],8065:[7937,953],8066:[7938,953],8067:[7939,953],8068:[7940,953],8069:[7941,953],8070:[7942,953],8071:[7943,953],8072:[8064],8073:[8065],8074:[8066],8075:[8067],8076:[8068],8077:[8069],8078:[8070],8079:[8071],8080:[7968,953],8081:[7969,953],8082:[7970,953],8083:[7971,953],8084:[7972,953],8085:[7973,953],8086:[7974,953],8087:[7975,953],8088:[8080],8089:[8081],8090:[8082],8091:[8083],8092:[8084],8093:[8085],8094:[8086],8095:[8087],8096:[8032,953],8097:[8033,953],8098:[8034,953],8099:[8035,953],8100:[8036,953],8101:[8037,953],8102:[8038,953],8103:[8039,953],8104:[8096],8105:[8097],8106:[8098],8107:[8099],8108:[8100],8109:[8101],8110:[8102],8111:[8103],8114:[8048,953],8115:[945,953],8116:[940,953],8118:[945,834],8119:[945,834,953],8124:[8115],8130:[8052,953],8131:[951,953],8132:[942,953],8134:[951,834],8135:[951,834,953],8140:[8131],8146:[953,776,768],8147:[912],8150:[953,834],8151:[953,776,834],8162:[965,776,768],8163:[944],8164:[961,787],8166:[965,834],8167:[965,776,834],8178:[8060,953],8179:[969,953],8180:[974,953],8182:[969,834],8183:[969,834,953],8188:[8179],64256:[102,102],64257:[102,105],64258:[102,108],64259:[102,102,105],64260:[102,102,108],64261:[64262],64262:[115,116],64275:[1396,1398],64276:[1396,1381],64277:[1396,1387],64278:[1406,1398],64279:[1396,1389]}
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 ;
-__BRYTHON__.implementation=[3,13,2,'dev',0]
+__BRYTHON__.implementation=[3,13,3,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-07-29 14:32:29.736910"
-__BRYTHON__.timestamp=1753792349736
+__BRYTHON__.compiled_date="2025-07-31 17:20:16.482274"
+__BRYTHON__.timestamp=1753975216482
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2410,7 +2410,7 @@ var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
 init_subclass(extra_kwargs)
 return class_dict}
 type.__or__=function(){var $=$B.args('__or__',2,{cls:null,other:null},['cls','other'],arguments,{},null,null),cls=$.cls,other=$.other
-if(other !==_b_.None && ! $B.$isinstance(other,[type,$B.GenericAlias])){return _b_.NotImplemented}
+if(other !==_b_.None && ! $B.$isinstance(other,[type,$B.GenericAlias,$B.UnionType])){return _b_.NotImplemented}
 return $B.UnionType.$factory([cls,other])}
 type.__prepare__=function(){return $B.empty_dict()}
 type.__qualname__='type'
@@ -3122,7 +3122,97 @@ if(hasKWargs ){fct+=`
 fct+=`
     return result
     `;
-return fct;}})(__BRYTHON__);
+return fct;}
+function add_to_kwargs(kw_dict,key,value){kw_dict.$strings[key]=value}
+$B.args_parser=function(f,args){var parse_debug=0
+if(parse_debug){for(var attr in $B.func_attrs){console.log(attr,f.$function_infos[$B.func_attrs[attr]])}}
+function add_key(key,value){var index=arg_names.indexOf(key)
+if(index==-1){if(kwarg){add_to_kwargs(locals[kwarg],key,value)
+return}else{throw _b_.TypeError.$factory(name+
+`() got an unexpected keyword argument '${key}'`)}}
+if(locals.hasOwnProperty(key)){if(kwarg && index < posonly_length){_b_.dict.$setitem_string(locals[kwarg],key,value)
+return}
+throw _b_.TypeError.$factory(name+
+`() got multiple values for argument '${key}'`)}
+if(index < posonly_length){if(defaults===_b_.None ||
+index <=positional_length-defaults.length){
+if(kwarg){_b_.dict.$setitem_string(locals[kwarg],key,value)}else{posonly_as_keywords.push(key)}}}else{locals[key]=value
+filled_pos++}}
+var name=f.$function_infos[$B.func_attrs.__name__]
+var arg_names=f.$function_infos[$B.func_attrs.arg_names]
+var positional_length=f.$function_infos[$B.func_attrs.positional_length]
+var kwonly_length=f.$function_infos[$B.func_attrs.kwonlyargs_length]
+var vararg=f.$function_infos[$B.func_attrs.args_vararg]
+var kwarg=f.$function_infos[$B.func_attrs.args_kwarg]
+var too_many_pos=0
+var posonly_as_keywords=[]
+var locals={}
+var filled_pos=0
+var vargs
+if(vararg){locals[vararg]=vargs=$B.fast_tuple([])}
+if(kwarg){locals[kwarg]=$B.empty_dict()}
+var args_length=args.length
+var last_arg=args[args_length-1]
+var has_kw=last_arg.$kw
+var nb_pos=has_kw ? args_length-1 :args_length
+if(nb_pos <=positional_length){for(var iarg=0;iarg < nb_pos;iarg++){locals[arg_names[iarg]]=args[iarg]}
+filled_pos=nb_pos}else{if(positional_length){for(var iarg=0;iarg < positional_length;iarg++){locals[arg_names[iarg]]=args[iarg]}}
+filled_pos=positional_length
+if(vararg){for(var j=positional_length;j < nb_pos;j++){vargs[vargs.length]=args[j]}}else{too_many_pos=nb_pos-positional_length}}
+if(has_kw){var defaults=f.$function_infos[$B.func_attrs.__defaults__]
+var posonly_length=f.$function_infos[$B.func_attrs.posonlyargs_length]
+var elt=last_arg
+for(var key in elt.$kw[0]){add_key(key,elt.$kw[0][key])}
+for(var i=1;i< elt.$kw.length;i++){if(elt.$kw[i].__class__===_b_.dict){for(var item of _b_.dict.$iter_items(elt.$kw[i])){add_key(item.key,item.value)}}else{var klass=$B.get_class(elt.$kw[i])
+var keys_method=$B.$getattr(klass,'keys',null)
+var getitem=$B.$getattr(klass,'__getitem__',null)
+if(keys_method===null ||getitem===null){throw _b_.TypeError.$factory(
+`${name} argument after ** must be a mapping, `+
+`not ${$B.class_name(elt.$kw[i])}`)}
+for(var key of $B.make_js_iterator(keys_method(elt.$kw[i]))){add_key(key,getitem(elt.$kw[i],key))}}}}
+if(too_many_pos){var plural=positional_length==1 ? '' :'s'
+var nb=positional_length+too_many_pos
+var defaults=f.$function_infos[$B.func_attrs.__defaults__]
+var report=positional_length
+if(defaults.length){var nb_min=positional_length-defaults.length
+report=`from ${nb_min} to ${positional_length}`
+plural='s'}
+throw _b_.TypeError.$factory(
+`${name}() takes ${report} positional argument`+
+`${plural} but ${nb} were given`)}
+if(posonly_as_keywords.length > 0){throw _b_.TypeError.$factory(
+`${name}() got some positional-only arguments passed as keyword `+
+`arguments: '${posonly_as_keywords.join(', ')}'`)}
+var nb_formal=positional_length+kwonly_length
+if(nb_formal==0){
+return locals}
+if(filled_pos < nb_formal){
+var defaults=f.$function_infos[$B.func_attrs.__defaults__]
+if(defaults !==_b_.None){var defaults_start=positional_length-defaults.length
+for(var i=defaults_start;i < positional_length;i++){if(! locals.hasOwnProperty(arg_names[i])){locals[arg_names[i]]=defaults[i-defaults_start]
+filled_pos++}}}
+if(filled_pos < nb_formal){
+var kwonly_defs=f.$function_infos[$B.func_attrs.__kwdefaults__]
+if(kwonly_defs !==_b_.None){for(var key in kwonly_defs){if(! locals.hasOwnProperty(key)){locals[key]=kwonly_defs[key]
+filled_pos++}}}}
+if(filled_pos < nb_formal){
+var missing_positional=[]
+var missing_kwonly=[]
+for(var i=0;i < nb_formal;i++){let arg_name=arg_names[i]
+if(! locals.hasOwnProperty(arg_name)){if(i < positional_length){missing_positional.push(`'${arg_name}'`)}else{missing_kwonly.push(`'${arg_name}'`)}}}
+var missing
+var missing_type
+var report
+if(missing_positional.length){missing=missing_positional
+missing_type='positional'}else{missing=missing_kwonly
+missing_type='keyword-only'}
+var report=missing_names(missing)
+var nb_missing=missing.length
+var plural=nb_missing==1 ? '' :'s'
+throw _b_.TypeError.$factory(name+
+`() missing ${nb_missing} required ${missing_type} `+
+`argument${plural}: ${report}`)}}
+return locals}})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins
@@ -13005,7 +13095,8 @@ this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=prefix+`var ${locals_name} = locals = {};\n`
 js+=prefix+`if(arguments.length !== 0){\n`+
 prefix+tab+`${name2}.$args_parser(${parse_args.join(', ')})\n`+
-prefix+`}\n`}else{js+=prefix+`var ${locals_name} = locals = `+
+prefix+`}\n`}else if(this.name=='fxd51jy'){js+=prefix+`var ${locals_name} = locals = `+
+`$B.args_parser(${name2}, arguments)\n`}else{js+=prefix+`var ${locals_name} = locals = `+
 `${name2}.$args_parser(${parse_args.join(', ')})\n`}
 js+=prefix+`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]\n`+

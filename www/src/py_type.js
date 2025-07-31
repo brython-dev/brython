@@ -850,7 +850,8 @@ type.__or__ = function(){
                 arguments, {}, null, null),
         cls = $.cls,
         other = $.other
-    if(other !== _b_.None && ! $B.$isinstance(other, [type, $B.GenericAlias])){
+    if(other !== _b_.None && ! $B.$isinstance(other, 
+            [type, $B.GenericAlias, $B.UnionType])){
         return _b_.NotImplemented
     }
     return $B.UnionType.$factory([cls, other])

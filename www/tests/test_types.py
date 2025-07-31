@@ -120,4 +120,10 @@ assert ga.__args__ == (int, set[int])
 assert isinstance(4, ga)
 assert_raises(TypeError, isinstance, {4}, ga)
 
+# issue 2593
+Number = int | float
+x: Number | str = "succes"
+y: str | Number = "fail"
+
+
 print("Passed all tests...")
