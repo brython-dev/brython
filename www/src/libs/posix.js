@@ -52,20 +52,8 @@ var stat_result = $B.make_class("stat_result",
             return res
 
         }else{
-            var res = {
-                __class__: stat_result,
-                st_atime: __BRYTHON__.timestamp,
-                st_uid: -1,
-                st_gid: -1,
-                st_ino: -1,
-                st_mode: filename.endsWith('/') ? 16895 : 33206,
-                st_size: 1 // fake
-            };
-            ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
-                forEach(function(item){
-                    res["st_" + item] = res.st_atime
-                });
-            return res
+            throw _b_.OSError.$factory('no information available for file ' +
+                filename)
         }
     }
 )
