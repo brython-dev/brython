@@ -887,12 +887,14 @@ function add_to_kwargs(kw_dict, key, value){
 }
 
 $B.args_parser = function(f, args){
+    /*
     var parse_debug = 0
     if(parse_debug){
         for(var attr in $B.func_attrs){
             console.log(attr, f.$function_infos[$B.func_attrs[attr]])
         }
     }
+    */
 
     function add_key(key, value){
         var index = arg_names.indexOf(key)
@@ -946,13 +948,19 @@ $B.args_parser = function(f, args){
     if(vararg){
         locals[vararg] = vargs = $B.fast_tuple([])
     }
+
     if(kwarg){
         locals[kwarg] = $B.empty_dict()
     }
 
+    var has_kw
     var args_length = args.length
-    var last_arg = args[args_length - 1]
-    var has_kw = last_arg.$kw
+    if(args_length == 0){
+        has_kw = false
+    }else{
+        var last_arg = args[args_length - 1]
+        has_kw = last_arg.$kw
+    }
     var nb_pos = has_kw ? args_length - 1 : args_length
 
     if(nb_pos <= positional_length){
@@ -961,7 +969,7 @@ $B.args_parser = function(f, args){
         }
         filled_pos = nb_pos
     }else{
-        if(positional_length){
+        if(positional_length > 0){
             for(var iarg = 0; iarg < positional_length; iarg++){
                 locals[arg_names[iarg]] = args[iarg]
             }
@@ -1004,7 +1012,7 @@ $B.args_parser = function(f, args){
         }
     }
 
-    if(too_many_pos){
+    if(too_many_pos > 0){
         var plural = positional_length == 1 ? '' : 's'
         var nb = positional_length + too_many_pos
         var defaults = f.$function_infos[$B.func_attrs.__defaults__]
