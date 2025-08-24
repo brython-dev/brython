@@ -887,7 +887,6 @@ tuple.$factory = function(){
 
 $B.fast_tuple = function(array){
     array.__class__ = tuple
-    array.__dict__ = $B.empty_dict()
     return array
 }
 
