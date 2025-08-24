@@ -1591,6 +1591,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
         js = `$B.$call(${func}, ${inum})`
 
+
     var args = make_args.bind(this)(scopes)
 
     return js + `(${args})`
@@ -2178,13 +2179,9 @@ function transform_args(scopes){
     for(var kw of this.args.kwonlyargs){
         kw_default_names.push(`'${kw.arg}'`)
     }
-
     return {default_names, _defaults, positional, has_posonlyargs,
             kw_defaults, kw_default_names, annotations}
 }
-
-
-
 
 function type_param_in_def(tp, ref, scopes){
     var gname = scopes[0].name,

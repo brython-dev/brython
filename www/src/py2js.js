@@ -567,15 +567,6 @@ var brython = $B.parser.brython = function(options){
 
     var scripts = []
 
-    // URL of the script where function brython() is called
-    // Remove part after # (cf. issue #2035)
-    $B.script_path = _window.location.href.split('#')[0]
-    var $href = $B.script_path = _window.location.href.split('#')[0],
-        $href_elts = $href.split('/')
-    $href_elts.pop()
-    if($B.isWebWorker || $B.isNode){$href_elts.pop()}
-    $B.curdir = $href_elts.join('/')
-
     // Save initial Javascript namespace
     var kk = Object.keys(_window)
 

@@ -1109,7 +1109,7 @@ property.__new__ = function(cls){
 
 property.__set__ = function(self, obj, value){
     if(self.fset === undefined){
-        var name = self.fget.$infos.__name__
+        var name = self.fget.$function_infos[$B.func_attrs.__name__]
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
         throw _b_.AttributeError.$factory(msg)
