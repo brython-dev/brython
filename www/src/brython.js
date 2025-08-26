@@ -214,8 +214,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,13,3,'dev',0]
 __BRYTHON__.version_info=[3,13,0,'final',0]
-__BRYTHON__.compiled_date="2025-08-24 17:54:59.797942"
-__BRYTHON__.timestamp=1756050899797
+__BRYTHON__.compiled_date="2025-08-26 10:17:06.468286"
+__BRYTHON__.timestamp=1756196226467
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -15402,7 +15402,7 @@ pos++}}
 return bytes}
 function string_error(p,token,msg){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,token,msg)}
 function SurrogatePair(value){this.value=value}
-function test_escape(p,token,C,text,string_start,antislash_pos){
+function test_escape(p,token,context,text,string_start,antislash_pos){
 var seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
 if(mo){if(mo[0].length==3 && mo[0][0]>='4'){$B.warn(_b_.SyntaxWarning,`invalid octal escape sequence '\\${mo[0]}'`,p.filename,token)}
@@ -15426,7 +15426,7 @@ string_error(p,token,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\UXXXXXXXX escape"])}else{var value=parseInt(mo[0],16)
 if(value > 0x10FFFF){string_error(p,token,'invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
-$B.prepare_string=function(p,token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,inner,C={type:'str'}
+$B.prepare_string=function(p,token){var s=token.string,len=s.length,pos=0,string_modifier,_type="string",quote,inner,context={type:'str'}
 while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
 string_modifier=s.substr(0,pos)
 if(s.substr(pos,3)==quote.repeat(3)){_type="triple_string"
@@ -15436,7 +15436,7 @@ pos++}
 var result={quote}
 var mods={r:'raw',f:'fstring',b:'bytes'}
 for(var mod of string_modifier){result[mods[mod]]=true}
-var raw=C.type=='str' && C.raw,string_start=pos+1,bytes=false,fstring=false,sm_length,
+var raw=context.type=='str' && context.raw,string_start=pos+1,bytes=false,fstring=false,sm_length,
 end=null;
 if(string_modifier){switch(string_modifier){case 'r':
 raw=true
@@ -15492,7 +15492,7 @@ if(search===null){string_error(p,token,"(unicode error) "+
 "unknown Unicode character name")}
 var cp=parseInt(search[1],16)
 zone+=String.fromCodePoint(cp)
-end=end_lit+1}else{end++}}else{var esc=test_escape(p,token,C,src,string_start,end)
+end=end_lit+1}else{end++}}else{var esc=test_escape(p,token,context,src,string_start,end)
 if(esc){if(esc[0]=='\\'){zone+='\\\\'}else if(esc[0]instanceof SurrogatePair){zone+=String.fromCodePoint(esc[0].value)}else{zone+=esc[0]}
 end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
@@ -15514,7 +15514,7 @@ if(fstring){try{var re=new RegExp("\\\\"+quote,"g"),string_no_bs=string.replace(
 var elts=$B.parse_fstring(string_no_bs)}catch(err){string_error(p,token,err.message)}}
 if(bytes){result.value='b'+quote+string+quote
 result.bytes=to_bytes(string)}else if(fstring){result.value=elts}else{result.value=quote+string+quote}
-C.raw=raw;
+context.raw=raw;
 return result}})(__BRYTHON__);
 ;
 (function($B){function test_num(num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/

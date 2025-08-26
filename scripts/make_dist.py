@@ -115,9 +115,6 @@ def run():
     res = re.sub('"use strict";\n', "", res)
     res_no_static = re.sub('"use strict";\n', "", res_no_static)
 
-    res = re.sub(r'\bcontext\b', 'C', res)
-    res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)
-
     with open(abs_path('brython.js'), 'w', newline="\n") as out:
         out.write(res)
 
