@@ -424,7 +424,7 @@ document.getElementById('btn').addEventListener('click',
 
 *`__BRYTHON__`.importPythonModule(_module_name_[, _attributes_])*
 
-> imports the Python Python using the _attributes_ as defined above. Returns
+> imports the Python module using the _attributes_ as defined above. Returns
 > the Javascript object that represents the module.
 
 *`__BRYTHON__`.pyobj2jsobj(pyobj)*
