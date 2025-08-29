@@ -421,6 +421,12 @@ document.getElementById('btn').addEventListener('click',
 ```
 </blockquote>
 
+
+*`__BRYTHON__`.importPythonModule(_module_name_[, _attributes_])*
+
+> imports the Python Python using the _attributes_ as defined above. Returns
+> the Javascript object that represents the module.
+
 *`__BRYTHON__`.pyobj2jsobj(pyobj)*
 
 > converts a Python object into the matching Javascript object, following the
