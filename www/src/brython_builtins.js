@@ -563,4 +563,8 @@ $B.runPythonSource = function(src, options){
     return $B.imported[script_id]
 }
 
+$B.importPythonModule = function(name, options){
+    return $B.runPythonSource('import ' + name, options)
+}
+
 })(__BRYTHON__);
