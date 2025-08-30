@@ -76,10 +76,10 @@ def run():
         'ast_to_js',
         'symtable',
 
-        'action_helpers_generated_version',
+        'action_helpers',
         'string_parser',
         'number_parser',
-        'python_parser_peg_version',
+        'python_parser',
         'pegen',
         'gen_parse',
         'brython_ready'
