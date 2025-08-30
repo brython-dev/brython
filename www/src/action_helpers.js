@@ -5,8 +5,86 @@
 var _b_ = $B.builtins,
     NULL = undefined,
     DOT = '.',
-    ELLIPSIS = '...',
-    DEL_TARGETS = 'del_targets'
+    ELLIPSIS = '...'
+
+// TARGETS_TYPE
+const STAR_TARGETS = 1,
+      DEL_TARGETS = 2,
+      FOR_TARGETS = 3
+
+function make_string_for_ast_value(value){
+    value = value.replace(/\n/g,'\\n\\\n')
+    value = value.replace(/\r/g,'\\r\\\r')
+    if(value[0] == "'"){
+        var unquoted = value.substr(1, value.length - 2)
+        return unquoted
+    }
+    // prepare value so that "'" + value + "'" is the correct string
+    if(value.indexOf("'") > -1){
+        var s = '',
+            escaped = false
+        for(var char of value){
+            if(char == '\\'){
+                if(escaped){
+                    s += '\\\\'
+                }
+                escaped = !escaped
+            }else{
+                if(char == "'" && ! escaped){
+                    // escape unescaped single quotes
+                    s += '\\'
+                }else if(escaped){
+                    s += '\\'
+                }
+                s += char
+                escaped = false
+            }
+        }
+        value = s
+    }
+    return value.substr(1, value.length - 2)
+}
+
+var escapeseq = {
+    a: '\a',
+    b: '\b',
+    f: '\f',
+    n: '\n',
+    r: '\r',
+    t: '\t',
+    v: '\v',
+    '"': '"',
+    "'": "'"
+}
+
+function encode_bytestring(s){
+    var s1 = ''
+    var escape = false
+    for(var char of s){
+        if(char == '\\'){
+            if(escape){
+                s1 += char
+            }
+            escape = ! escape
+        }else if(escape){
+            var repl = escapeseq[char]
+            s1 += repl ?? char
+            escape = false
+        }else{
+            s1 += char
+        }
+    }
+    s = s1
+    var t = []
+    for(var i = 0, len = s1.length; i < len; i++){
+        var cp = s1.codePointAt(i)
+        if(cp > 255){
+            throw Error()
+        }
+        t.push(cp)
+    }
+    return t
+}
 
 function EXTRA_EXPR(head, tail){
     return {
@@ -32,10 +110,10 @@ function set_position_from_list(ast_obj, EXTRA){
 }
 
 function set_position_from_token(ast_obj, token){
-    ast_obj.lineno = token.start[0]
-    ast_obj.col_offset = token.start[1]
-    ast_obj.end_lineno = token.end[0]
-    ast_obj.end_col_offset = token.end[1]
+    ast_obj.lineno = token.lineno
+    ast_obj.col_offset = token.col_offset
+    ast_obj.end_lineno = token.end_lineno
+    ast_obj.end_col_offset = token.end_col_offset
 }
 
 function set_position_from_obj(ast_obj, obj){
@@ -169,18 +247,19 @@ function _seq_number_of_starred_exprs(seq){
 $B._PyPegen = {}
 
 $B._PyPegen.constant_from_string = function(p, token){
-    var prepared = $B.prepare_string(token)
+    var prepared = $B.prepare_string(p, token) // in string_parser.js
     var is_bytes = prepared.value.startsWith('b')
     if(! is_bytes){
-        var value = $B.make_string_for_ast_value(prepared.value)
+        var value = make_string_for_ast_value(prepared.value)
     }else{
-        value = prepared.value.substr(2, prepared.value.length - 3)
+        var value = prepared.value.substr(2, prepared.value.length - 3)
         try{
-            value = _b_.bytes.$factory($B.encode_bytestring(value))
+            value = _b_.bytes.$factory(encode_bytestring(value))
         }catch(err){
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
-                token.start[0], token.start[1], token.end[0], token.end[1],
+                token.lineno, token.col_offset,
+                token.end_lineno, token.end_col_offset,
                 'bytes can only contain ASCII literal characters')
         }
     }
@@ -218,7 +297,7 @@ $B._PyPegen.formatted_value = function(p,
     var formatted_value = new $B.ast.FormattedValue(expression,
         conversion_val,
         format === undefined ? format : format.result)
-    set_position_from_obj(formatted_value, p.arena)
+    set_position_from_obj(formatted_value, arena)
     if(debug){
         var debug_end_line,
             debug_end_offset,
@@ -242,7 +321,7 @@ $B._PyPegen.formatted_value = function(p,
         debug.end_lineno = debug_end_line
         debug.end_col_offset = debug_end_offset
         var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
-        set_position_from_obj(joined_str, p.arena)
+        set_position_from_obj(joined_str, arena)
         return joined_str
     }
     return formatted_value
@@ -250,10 +329,10 @@ $B._PyPegen.formatted_value = function(p,
 
 $B._PyPegen.joined_str = function(p, a, items, c){
     var ast_obj = new $B.ast.JoinedStr(items)
-    ast_obj.lineno = a.start[0]
-    ast_obj.col_offset = a.start[1]
-    ast_obj.end_lineno = c.end[0]
-    ast_obj.end_col_offset = c.end[1]
+    ast_obj.lineno = a.lineno
+    ast_obj.col_offset = a.col_offset
+    ast_obj.end_lineno = c.end_lineno
+    ast_obj.end_col_offset = c.end_col_offset
     return ast_obj
 }
 
@@ -268,8 +347,8 @@ function result_token_with_metadata(p, result, metadata){
 }
 
 $B._PyPegen.check_fstring_conversion = function(p, conv_token, conv){
-    if(conv_token.start[0] != conv.lineno ||
-            conv_token.end[1] != conv.col_offset){
+    if(conv_token.lineno != conv.lineno ||
+            conv_token.end_col_offset != conv.col_offset){
         $B._PyPegen.raise_error_known_location(p, _b_.SyntaxError,
             conv.lineno, conv.col_offset, conv.end_lineno, conv.end_col_offset,
             "f-string: conversion type must come right after the exclamanation mark"
@@ -284,8 +363,10 @@ $B._PyPegen.seq_count_dots = function(seq){
     }
     var number_of_dots = 0;
     for(var token of seq){
-        if(token.type == 'OP'){
+        if(token.num_type == $B.py_tokens.DOT){
             number_of_dots += token.string.length
+        }else if(token.num_type == $B.py_tokens.ELLIPSIS){
+            number_of_dots += 3
         }
     }
 
@@ -447,7 +528,7 @@ $B._PyPegen.get_expr_name = function(e){
             if (value === true) {
                 return "True";
             }
-            if (value.type == 'ellipsis') {
+            if (value === _b_.Ellipsis) {
                 return "ellipsis";
             }
             return "literal";
@@ -458,9 +539,11 @@ $B._PyPegen.get_expr_name = function(e){
         case 'NamedExpr':
             return "named expression";
         default:
+            /*
             PyErr_Format(PyExc_SystemError,
                          "unexpected expression in assignment %d (line %d)",
                          e.kind, e.lineno);
+            */
             return NULL;
     }
 }
@@ -501,10 +584,10 @@ $B._PyPegen.dummy_name = function(p){
         return cache;
     }
 
-    var id = "",
+    var id = "dummy" + Math.random().toString(36).substr(2),
         ast_obj = new $B.ast.Name(id, new $B.ast.Load())
     set_position_from_list(ast_obj, [1, 0, 1, 0])
-    return cache;
+    return ast_obj
 }
 
 $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
@@ -542,7 +625,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
     var ast_obj = new constr(
         function_def.name, function_def.args,
         function_def.body, decorators, function_def.returns,
-        function_def.type_comment)
+        function_def.type_comment,
+        function_def.type_params)
     for(var position of positions){
         ast_obj[position] = function_def[position]
     }
@@ -553,7 +637,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
 $B._PyPegen.class_def_decorators = function(p, decorators, class_def){
     var ast_obj = $B._PyAST.ClassDef(
         class_def.name, class_def.bases,
-        class_def.keywords, class_def.body, decorators)
+        class_def.keywords, class_def.body, decorators,
+        class_def.type_params)
     set_position_from_obj(ast_obj, class_def)
     return ast_obj
 }
@@ -627,7 +712,7 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
     var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1];
     var va = errmsg
     $B._PyPegen.raise_error_known_location(p, errtype,
-        t.start[0], t.start[1], t.end[0], t.end[1], errmsg, va);
+        t.lineno, t.col_offset, t.end_lineno, t.end_col_offset, errmsg, va);
 }
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
@@ -636,10 +721,10 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
     exc.filename = p.filename
     if(p.known_err_token){
         var token = p.known_err_token
-        exc.lineno = token.start[0]
-        exc.offset = token.start[1] + 1
-        exc.end_lineno = token.end[0]
-        exc.end_offset = token.end[1]
+        exc.lineno = token.lineno
+        exc.offset = token.col_offset + 1
+        exc.end_lineno = token.end_lineno
+        exc.end_offset = token.end_col_offset
         exc.text = token.line
     }else{
         exc.lineno = lineno
@@ -964,6 +1049,24 @@ $B._PyPegen.get_last_comprehension_item = function(comprehension) {
     return $B.last(comprehension.ifs);
 }
 
+$B._PyPegen.arguments_parsing_error = function(p, e){
+    var kwarg_unpacking = 0;
+    for (let keyword of e.keywords){
+        if (! keyword.arg) {
+            kwarg_unpacking = 1;
+        }
+    }
+
+    var msg = NULL;
+    if (kwarg_unpacking) {
+        msg = "positional argument follows keyword argument unpacking";
+    } else {
+        msg = "positional argument follows keyword argument";
+    }
+
+    return $B.helper_functions.RAISE_SYNTAX_ERROR(p, msg);
+}
+
 $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
     /* The rule that calls this function is 'args for_if_clauses'.
        For the input f(L, x for x in y), L and x are in args and
@@ -979,7 +1082,7 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
 
     var last_comprehension = $B.last(comprehensions);
 
-    return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
+    return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,
         args.args[len - 1],
         $B._PyPegen.get_last_comprehension_item(last_comprehension),
         "Generator expression must be parenthesized"
@@ -987,7 +1090,6 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
 }
 
 $B._PyPegen.get_invalid_target = function(e, targets_type){
-
     if (e == NULL) {
         return NULL;
     }
@@ -1010,21 +1112,20 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
     switch (e.constructor) {
         case $B.ast.List:
         case $B.ast.Tuple:
-            VISIT_CONTAINER(e, e.constructor);
-            return NULL;
+            return VISIT_CONTAINER(e, e.constructor);
         case $B.ast.Starred:
             if (targets_type == DEL_TARGETS) {
                 return e;
             }
-            return _PyPegen_get_invalid_target(e.value, targets_type);
+            return $B._PyPegen.get_invalid_target(e.value, targets_type);
         case $B.ast.Compare:
             // This is needed, because the `a in b` in `for a in b` gets parsed
             // as a comparison, and so we need to search the left side of the comparison
             // for invalid targets.
             if (targets_type == FOR_TARGETS) {
                 var cmpop = e.ops[0]
-                if (cmpop == $B.ast.In) {
-                    return _PyPegen_get_invalid_target(e.left, targets_type);
+                if (cmpop instanceof $B.ast.In) {
+                    return $B._PyPegen.get_invalid_target(e.left, targets_type);
                 }
                 return NULL;
             }
@@ -1038,4 +1139,4 @@ $B._PyPegen.get_invalid_target = function(e, targets_type){
     }
 }
 
-})(__BRYTHON__)
+})(__BRYTHON__);
