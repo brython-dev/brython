@@ -22,10 +22,7 @@ if implementation[3] == 'rc':
 vname2 = '.'.join(str(x) for x in implementation[:2])
 vname1 = str(implementation[0])
 
-# path of parent directory
-pdir = os.path.dirname(os.getcwd())
-
-script_dir = os.path.dirname(os.getcwd())
+script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def abs_path(path):
     return os.path.join(script_dir, 'www', 'src', path)
@@ -133,7 +130,7 @@ def run():
         make_VFS = None
         sys.exit()
 
-    make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
+    make_VFS.process(abs_path('brython_stdlib.js'))
 
 
 if __name__ == "__main__":

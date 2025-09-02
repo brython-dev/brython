@@ -5,7 +5,7 @@ import os
 
 import git
 
-libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
+libfolder = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'www', 'src')
 simple_javascript_template_string = """;"use strict";\n(function($B){\n
 $B.stdlib = {}
 """

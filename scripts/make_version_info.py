@@ -4,7 +4,7 @@ import time
 
 from version import version, implementation
 
-script_dir = os.path.dirname(os.getcwd())
+script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 abs_path = lambda _pth: os.path.join(script_dir, 'www',
     'src', _pth)
 
