@@ -935,15 +935,16 @@ function make_arguments_parser(f){
     }
     */
 
-    var name = f.$function_infos[$B.func_attrs.__name__]
-    var arg_names = f.$function_infos[$B.func_attrs.arg_names]
-    var positional_length = f.$function_infos[$B.func_attrs.positional_length]
-    var kwonly_length = f.$function_infos[$B.func_attrs.kwonlyargs_length]
-    var vararg = f.$function_infos[$B.func_attrs.args_vararg]
-    var kwarg = f.$function_infos[$B.func_attrs.args_kwarg]
-    var defaults = f.$function_infos[$B.func_attrs.__defaults__]
-    var posonly_length = f.$function_infos[$B.func_attrs.posonlyargs_length]
-    var kwonly_defs = f.$function_infos[$B.func_attrs.__kwdefaults__]
+    var infos = f.$function_infos
+    var name = infos[$B.func_attrs.__name__]
+    var arg_names = infos[$B.func_attrs.arg_names]
+    var positional_length = infos[$B.func_attrs.positional_length]
+    var kwonly_length = infos[$B.func_attrs.kwonlyargs_length]
+    var vararg = infos[$B.func_attrs.args_vararg]
+    var kwarg = infos[$B.func_attrs.args_kwarg]
+    var defaults = infos[$B.func_attrs.__defaults__]
+    var posonly_length = infos[$B.func_attrs.posonlyargs_length]
+    var kwonly_defs = [$B.func_attrs.__kwdefaults__]
 
     var nb_formal = positional_length + kwonly_length
 
@@ -1095,29 +1096,6 @@ function make_arguments_parser(f){
 
         // use default values
         if(filled_pos < nb_formal){
-            /*
-            // use defaults for non-kwonly args
-            if(defaults !== _b_.None){
-                var defaults_start = positional_length - defaults.length
-                for(var i = defaults_start; i < positional_length; i++){
-                    if(! locals.hasOwnProperty(arg_names[i])){
-                        locals[arg_names[i]] = defaults[i - defaults_start]
-                        filled_pos++
-                    }
-                }
-            }
-            if(filled_pos < nb_formal){
-                // use defaults for kwonly args
-                if(kwonly_defs !== _b_.None){
-                    for(var key in kwonly_defs){
-                        if(! locals.hasOwnProperty(key)){
-                            locals[key] = kwonly_defs[key]
-                            filled_pos++
-                        }
-                    }
-                }
-            }
-            */
             for(let key in def_obj){
                 if(! locals.hasOwnProperty(key)){
                     locals[key] = def_obj[key]
