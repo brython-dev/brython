@@ -455,6 +455,11 @@ $B.update_VFS = function(scripts){
     $B.stdlib_module_names = Object.keys($B.VFS)
 }
 
+$B.loadBrythonPackage = function(brythonPackage){
+    $B.use_VFS = true
+    $B.update_VFS(brythonPackage)
+}
+
 $B.add_files = function(files){
     // Used to add files that programs can open with open()
     $B.files = $B.files || {}
