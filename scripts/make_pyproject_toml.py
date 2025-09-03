@@ -1,11 +1,11 @@
 import os
 import re
 
-from make_dist import run, pdir, vname, vname1, vname2, abs_path
+from directories import root_dir
 import version
 
 brython_version = '.'.join(str(x) for x in version.version[:2])
-pyproject = os.path.join(pdir, 'setup', 'pyproject.toml')
+pyproject = os.path.join(root_dir, 'setup', 'pyproject.toml')
 
 with open(pyproject, encoding="utf-8") as f:
     content = f.read()

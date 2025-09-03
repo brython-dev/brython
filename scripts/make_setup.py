@@ -4,8 +4,8 @@ import os
 import shutil
 import sys
 
-this_dir = os.getcwd()
-root_dir = os.path.dirname(this_dir)
+from directories import root_dir, src_dir
+
 setup_dir = os.path.join(root_dir, "setup")
 release_dir = os.path.join(root_dir, "releases")
 
@@ -30,7 +30,6 @@ document <= "Hello"
 </html>"""
 
 print("copying files...")
-src_dir = os.path.join(root_dir, "www", "src")
 if not os.path.exists(os.path.join(src_dir, "brython_no_static.js")):
     # reported in issue #1452
     print("File brython_no_static.js doesn't exist. Please run "
