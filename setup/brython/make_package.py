@@ -111,9 +111,7 @@ def make(package_name, package_path, exclude_dirs=None, output_path=None):
 
         output_path = output_path or os.path.join(package_path, package_name + ".brython.js")
         with open(output_path, "w", encoding="utf-8") as out:
-            out.write('__BRYTHON__.use_VFS = true;\n')
-            out.write('var scripts = {}\n'.format(json.dumps(VFS)))
-            out.write('__BRYTHON__.update_VFS(scripts)\n')
+            out.write(f'__BRYTHON__.loadBrythonPackage({json.dumps(VFS)})\n')
 
 if __name__ == "__main__":
     import sys
