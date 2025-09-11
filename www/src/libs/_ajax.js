@@ -95,6 +95,8 @@ function handle_kwargs(self, kw, method){
                 data = rawdata
             }else if(rawdata.__class__ === _b_.dict){
                 data = stringify(rawdata)
+            }else if($B.$isinstance(rawdata, [_b_.bytes, _b_.bytearray])){
+                data = new Uint8Array(Array.from($B.make_js_iterator(rawdata)))
             }else{
                 throw _b_.TypeError.$factory("wrong type for data: " +
                     $B.class_name(rawdata))
