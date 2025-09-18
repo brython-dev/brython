@@ -1093,8 +1093,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
                 _b_.setattr($B.imported[_parent_name], parsed_name[i],
                     $B.imported[_mod_name])
             }
-            // Note: Brython doesn't follow Python convention and every module should have __file__
-            //       __path__ should be redundant but kept in as precaution
             // [Import spec] Module check
             if(i < len){
                 try{
