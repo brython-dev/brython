@@ -1097,9 +1097,9 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
             //       __path__ should be redundant but kept in as precaution
             // [Import spec] Module check
             if(i < len){
-                try {
+                try{
                     __path__ = $B.$getattr($B.imported[_mod_name], "__path__")
-                } catch(e) {
+                }catch(e){
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance
