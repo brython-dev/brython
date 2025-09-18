@@ -509,7 +509,7 @@ VFSLoader.exec_module = function(self, modobj){
                 elts.pop()
                 mod.__package__ = elts.join(".")
             }
-            mod.__file__ = mod.__path__ = path
+            mod.__file__ = path
             try{
                 var parent_id = parent.replace(/\./g, "_"),
                     prefix = 'locals_'
