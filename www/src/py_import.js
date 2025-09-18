@@ -1093,11 +1093,15 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
                 _b_.setattr($B.imported[_parent_name], parsed_name[i],
                     $B.imported[_mod_name])
             }
-            // [Import spec] If __path__ can not be accessed an ImportError is raised
+            // Note: Brython doesn't follow Python convention and every module should have __file__
+            //       __path__ should be redundant but kept in as precaution
+            // [Import spec] Module check
             if(i < len){
-                try{
-                    __path__ = $B.$getattr($B.imported[_mod_name], "__path__")
-                }catch(e){
+                if (
+                    $B.$getattr($B.imported[_mod_name], "__file__", 
+                    $B.$getattr($B.imported[_mod_name], "__path__", $B.None))
+                    === $B.None
+                ) {
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance
