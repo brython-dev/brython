@@ -22,7 +22,8 @@ import make_unicode_file      # generates /src/unicode.txt
 # generate html files that compare Brython and CPython distributions
 import make_stdlib_list
 
-from make_dist import run, pdir, vname, vname1, vname2, abs_path
+from make_dist import run, vname, vname1, vname2
+from directories import root_dir, src_dir
 
 # make minified version with terser
 import make_minified
@@ -32,11 +33,11 @@ import make_builtins_docstrings
 
 run()
 
-release_dir = os.path.join(pdir, "releases")
+release_dir = os.path.join(root_dir, "releases")
 
 # update package.json
 print("Update package.json...")
-package_file = os.path.join(pdir, 'npm', 'package.json')
+package_file = os.path.join(root_dir, 'npm', 'package.json')
 with open(package_file, encoding="utf-8") as fobj:
     package_info = fobj.read()
     package_info = re.sub('"version": "(.*)"',
@@ -48,7 +49,7 @@ with open(package_file, "w", encoding="utf-8") as fobj:
 
 # update implementation in README.md
 print("Update readme and install doc pages...", vname)
-README_page = os.path.join(pdir, "README.md")
+README_page = os.path.join(root_dir, "README.md")
 with open(README_page, encoding="utf-8") as f:
     content = f.read()
     content = re.sub(r"npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
@@ -67,7 +68,7 @@ with open(README_page, "w", encoding="utf-8") as out:
     out.write(content)
 
 for lang in ["en", "fr"]:
-    install_page = os.path.join(pdir, "www", "doc", lang, "install.md")
+    install_page = os.path.join(root_dir, "www", "doc", lang, "install.md")
     with open(install_page, encoding="utf-8") as f:
         content = f.read()
     content = re.sub(r"npm/brython@\d\.\d+\.\d+", "npm/brython@" + vname,
@@ -89,11 +90,11 @@ import make_doc
 # update implementation in brython/__init__.py
 print("Update CPython brython package...")
 
-init_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
+init_script = os.path.join(root_dir, 'setup', 'brython', '__init__.py')
 with open(init_script, 'w', encoding='utf-8') as out:
     out.write(f"__version__ = '{vname}'")
 
-br_script = os.path.join(pdir, 'setup', 'brython', '__main__.py')
+br_script = os.path.join(root_dir, 'setup', 'brython', '__main__.py')
 with open(br_script, encoding="utf-8") as f:
     content = f.read()
 
@@ -111,14 +112,13 @@ import make_setup
 
 # copy files in folder /npm
 print("Udpate npm folder...")
-npmdir = os.path.join(pdir, 'npm')
-src_dir = os.path.join(pdir, 'www', 'src')
+npmdir = os.path.join(root_dir, 'npm')
 for f in ['brython.js', 'brython.min.js', 'brython_stdlib.js', 'unicode.txt']:
     shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
 # copy demo.html
 print("Copy demo.html...")
-with open(os.path.join(pdir, 'www', 'demo.html'), encoding="utf-8") as f:
+with open(os.path.join(root_dir, 'www', 'demo.html'), encoding="utf-8") as f:
     demo = f.read()
 start_tag = "<!-- start copy -->"
 end_tag = "<!-- end copy -->"
@@ -159,7 +159,7 @@ for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
         wfunc(os.path.join(release_dir, path),
             arcname=os.path.join(name, path))
     for path in paths2:
-        wfunc(abs_path(path),
+        wfunc(os.path.join(src_dir, path),
             arcname=os.path.join(name, path))
 
     arc.close()
@@ -168,7 +168,7 @@ for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
 print('Write changelog file...')
 try:
     first = 'Changes in Brython version {}'.format(vname)
-    with open(os.path.join(pdir, 'setup', 'changelog.txt'), encoding="utf-8") as f:
+    with open(os.path.join(root_dir, 'setup', 'changelog.txt'), encoding="utf-8") as f:
         input_changelog_data_string = f.read()
     with open(os.path.join(release_dir,
             'changelog_{}.txt'.format(vname)), 'w', encoding="utf-8") as out:

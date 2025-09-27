@@ -1,7 +1,12 @@
 import re
-
+import os
 
 import make_dist
+from directories import src_dir, scripts_dir
+
+save_dir = os.getcwd()
+os.chdir(scripts_dir)
+
 from generate_xml_parser import make_rules, generate_parser
 
 with open("custom_xml.gram", encoding="utf-8") as f:
@@ -30,12 +35,12 @@ for line in lines:
         filtered.append(line)
 
 norm_grammar = '\n'.join(filtered)
- 
+
 rules = make_rules(norm_grammar)
-dest = make_dist.abs_path('libs/xml_parser.js')
+dest = os.path.join(src_dir, 'libs', 'xml_parser.js')
 generate_parser(rules, dest)
 
-with open(make_dist.abs_path('libs/xml_helpers.js'), encoding='utf-8') as f:
+with open(os.path.join(src_dir, 'libs', 'xml_helpers.js'), encoding='utf-8') as f:
     helpers = f.read()
 
 with open(dest, encoding='utf-8') as f:
@@ -45,3 +50,5 @@ with open(dest, 'w', encoding='utf-8') as out:
     out.write("(function($B){\n")
     out.write(helpers + '\n' + content)
     out.write("\n})(__BRYTHON__)")
+
+os.chdir(save_dir)

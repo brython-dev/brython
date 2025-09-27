@@ -3,31 +3,27 @@ import shutil
 import sys
 
 from version import implementation
+from directories import src_dir, root_dir
 
 impl_name = '.'.join(str(x) for x in implementation[:3])
 major = '.'.join(str(x) for x in implementation[:2])
 
 # hack sys.path to be able to import markdown
-sys.path.insert(0, os.path.join(os.path.dirname(os.getcwd()),
-    'www','src','Lib','browser'))
+sys.path.insert(0, os.path.join(src_dir, 'Lib', 'browser'))
 import markdown
 # restore original sys.path
 del sys.path[0]
 
 # path of markdown files
-md_doc_path = os.path.join(os.path.dirname(os.getcwd()), 'www', 'doc')
+md_doc_path = os.path.join(root_dir, 'www', 'doc')
 
 # static doc is in static_doc/en/... and in static_doc/3.x/en/...
-static_doc_paths = [os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_doc'),
-    os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_doc', major)]
+static_doc_paths = [os.path.join(root_dir, 'www', 'static_doc'),
+    os.path.join(root_dir, 'www', 'static_doc', major)]
 
-md_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'tutorial')
+md_tutorial_path = os.path.join(root_dir, 'www', 'tutorial')
 
-static_tutorial_path = os.path.join(os.path.dirname(os.getcwd()), 'www',
-    'static_tutorial')
+static_tutorial_path = os.path.join(root_dir, 'www', 'static_tutorial')
 
 src_paths = (static_doc_paths +
     [os.path.join(p,'cookbook') for p in static_doc_paths] +

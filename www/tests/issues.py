@@ -3314,6 +3314,10 @@ if Test():
 
 assert not t
 
+# issue 2594
+assert_raises(OSError, os.stat, 'coucou')
+assert not os.path.exists('coucou')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

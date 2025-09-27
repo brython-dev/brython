@@ -1,8 +1,8 @@
 import os
 import builtins
 
-script_dir = os.path.dirname(os.getcwd())
-path = os.path.join(script_dir, 'www', 'src', 'builtins_docstrings.js')
+from directories import src_dir
+path = os.path.join(src_dir, 'builtins_docstrings.js')
 
 tail = """
 for(var key in docs){

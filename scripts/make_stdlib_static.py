@@ -4,17 +4,17 @@
 import os
 
 import git
+from directories import src_dir
 
-libfolder = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
 simple_javascript_template_string = """;"use strict";\n(function($B){\n
 $B.stdlib = {}
 """
-with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
+with open(os.path.join(src_dir, 'stdlib_paths.js'), 'w') as out:
     out.write(simple_javascript_template_string)
 
     pylist = []
     pkglist = ['browser']
-    pypath = os.path.join(libfolder, 'Lib')
+    pypath = os.path.join(src_dir, 'Lib')
     for dirpath, dirnames, filenames in os.walk(pypath):
         if os.path.exists(os.path.join(dirpath,'__init__.py')):
             # package
@@ -48,7 +48,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
         "for(var i = 0; i < pylist.length; i++)" +
             "{$B.stdlib[pylist[i]] = ['py']}\n\n")
 
-    jspath = os.path.join(libfolder, 'libs')
+    jspath = os.path.join(src_dir, 'libs')
     jslist = []
     for dirpath, dirnames, filenames in os.walk(jspath):
         for filename in filenames:

@@ -8,6 +8,7 @@ import sys
 
 import javascript_minifier
 from version import version, implementation
+from directories import src_dir
 
 cpython_version = sys.version_info
 if cpython_version[0] != version[0] or \
@@ -22,13 +23,6 @@ if implementation[3] == 'rc':
 vname2 = '.'.join(str(x) for x in implementation[:2])
 vname1 = str(implementation[0])
 
-# path of parent directory
-pdir = os.path.dirname(os.getcwd())
-
-script_dir = os.path.dirname(os.getcwd())
-
-def abs_path(path):
-    return os.path.join(script_dir, 'www', 'src', path)
 
 def run():
     import make_stdlib_static     # generates /src/stdlib_paths.js
@@ -76,10 +70,10 @@ def run():
         'ast_to_js',
         'symtable',
 
-        'action_helpers_generated_version',
+        'action_helpers',
         'string_parser',
         'number_parser',
-        'python_parser_peg_version',
+        'python_parser',
         'pegen',
         'gen_parse',
         'brython_ready'
@@ -97,7 +91,7 @@ def run():
     src_size = 0
 
     for fname in sources:
-        src = open(abs_path(fname)+'.js').read() + '\n'
+        src = open(os.path.join(src_dir, fname) + '.js').read() + '\n'
         src_size += len(src)
         try:
             mini = javascript_minifier.minify(src) + ";\n"
@@ -115,13 +109,10 @@ def run():
     res = re.sub('"use strict";\n', "", res)
     res_no_static = re.sub('"use strict";\n', "", res_no_static)
 
-    res = re.sub(r'\bcontext\b', 'C', res)
-    res_no_static = re.sub(r'\bcontext\b', 'C', res_no_static)
-
-    with open(abs_path('brython.js'), 'w', newline="\n") as out:
+    with open(os.path.join(src_dir, 'brython.js'), 'w', newline="\n") as out:
         out.write(res)
 
-    with open(abs_path('brython_no_static.js'), 'w', newline="\n") as out:
+    with open(os.path.join(src_dir, 'brython_no_static.js'), 'w', newline="\n") as out:
         out.write(res_no_static)
 
     print(('size : originals %s compact %s gain %.2f' %
@@ -136,7 +127,7 @@ def run():
         make_VFS = None
         sys.exit()
 
-    make_VFS.process(os.path.join(pdir, 'www', 'src', 'brython_stdlib.js'))
+    make_VFS.process(os.path.join(src_dir, 'brython_stdlib.js'))
 
 
 if __name__ == "__main__":

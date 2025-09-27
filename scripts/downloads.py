@@ -4,6 +4,11 @@ import urllib.request
 import version
 vnum = '.'.join(str(num) for num in version.version[:2])
 
+from directories import scripts_dir
+
+save_dir = os.getcwd()
+os.chdir(scripts_dir)
+
 print('Python.asdl and python.gram from CPython Github repository')
 
 ast_url = f"https://raw.githubusercontent.com/python/cpython/{vnum}/Parser/Python.asdl"
@@ -61,3 +66,5 @@ for path in ["UnicodeData.txt",
         if not buf:
             break
         out.write(buf)
+
+os.chdir(save_dir)

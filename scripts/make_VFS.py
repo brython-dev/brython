@@ -201,5 +201,5 @@ def process(filename, exclude_dirs=['test','site-packages']):
             json.dump(last_modifs, out)
 
 if __name__ == '__main__':
-    main_root = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
-    process(os.path.join(main_root, "py_VFS.js"))
+    from directories import src_dir
+    process(os.path.join(src_dir, "py_VFS.js"))

@@ -111,6 +111,16 @@ $B.strip_host = function(url){
     }
 }
 
+// URL of the script where function brython() is called
+// Remove part after # (cf. issue #2035)
+var href = $B.script_path = _window.location.href.split('#')[0],
+    href_elts = href.split('/')
+href_elts.pop()
+if($B.isWebWorker || $B.isNode){
+    href_elts.pop()
+}
+$B.curdir = href_elts.join('/')
+
 // For all the scripts defined in the page as webworkers, mapping between
 // script name and its source code
 $B.webworkers = {}
@@ -143,12 +153,6 @@ $B.frame_obj = null
 $B.builtins = Object.create(null)
 
 $B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
-
-// Builtin functions : used in py2js to simplify the code produced by a call
-$B.builtin_funcs = {}
-
-// Builtin classes
-$B.builtin_classes = []
 
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
@@ -572,6 +576,10 @@ $B.runPythonSource = function(src, options){
     script_id = script_id ?? 'python_script_' + $B.UUID()
     $B.run_script(script, src, script_id, url, true)
     return $B.imported[script_id]
+}
+
+$B.importPythonModule = function(name, options){
+    return $B.runPythonSource('import ' + name, options)
 }
 
 })(__BRYTHON__);

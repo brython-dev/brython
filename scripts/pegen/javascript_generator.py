@@ -59,6 +59,8 @@ const MAXSTACK = 6000,
 
 function NEW_TYPE_COMMENT(){}
 
+var $B = __BRYTHON__
+
 const Store = new $B.ast.Store(),
       Load = new $B.ast.Load
 

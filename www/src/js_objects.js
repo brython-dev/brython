@@ -828,6 +828,7 @@ $B.JSObj.unbind = function(_self, evt, func){
     }else{
         for(var i = 0, len = events.length; i < len; i++){
             if(events[i][0] === func){
+                _self.removeEventListener(evt, events[i][1])
                 events.splice(i, 1)
             }
         }
