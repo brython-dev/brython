@@ -2979,7 +2979,7 @@ $Reader.readline = function(){
             result,
             rest,
             ix
-
+    
     if(size === _b_.None){
         size = -1
     }else if(! _b_.isinstance(size, _b_.int)){

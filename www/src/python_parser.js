@@ -289,7 +289,7 @@ function raise_error_known_location(type, filename, lineno, col_offset,
 
 $B.raise_error_known_location = raise_error_known_location
 
-function raise_error_known_token(type, filename, token, message){
+function make_error_known_token(type, filename, token, message){
     var exc = type.$factory(message)
     exc.filename = filename
     exc.lineno = token.lineno
@@ -300,10 +300,10 @@ function raise_error_known_token(type, filename, token, message){
     exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset])
     exc.$frame_obj = $B.frame_obj
-    throw exc
+    return exc
 }
 
-$B.raise_error_known_token = raise_error_known_token
+$B.make_error_known_token = make_error_known_token
 
 
 function set_position_from_EXTRA(ast_obj, EXTRA){
@@ -346,7 +346,7 @@ Parser.prototype.read_token = function(){
                 if(value.$error_token){
                     $B.raise_error_known_location(...value)
                 }else if(value.$error_token_known_token){
-                    $B.raise_error_known_token(...value)
+                    throw make_error_known_token(...value)
                 }
                 this.tokens[this.tokens.length] = value
                 return value

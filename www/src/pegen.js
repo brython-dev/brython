@@ -748,7 +748,7 @@ function compute_parser_flags(flags){
 // Parser API
 
 $B._PyPegen.Parser_New = function(tok, start_rule, flags,
-                    feature_version, errcode, arena){
+                    feature_version, errcode, source, arena){
     var p = {} // PyMem_Malloc(sizeof(Parser));
     if (p == NULL) {
         return PyErr_NoMemory();
@@ -896,13 +896,13 @@ $B._PyPegen.set_syntax_error = function(p, last_token) {
         } else {
             $B.helper_functions.RAISE_SYNTAX_ERROR(p, "unexpected EOF while parsing");
         }
-        return;
+        return
     }
     // Indentation error in the tokenizer
     if (last_token.num_type == INDENT || last_token.num_type == DEDENT) {
         $B.helper_functions.RAISE_INDENTATION_ERROR(p,
             last_token.num_type == INDENT ? "unexpected indent" : "unexpected unindent");
-        return;
+        return
     }
     // Unknown error (generic case)
     $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
@@ -910,10 +910,38 @@ $B._PyPegen.set_syntax_error = function(p, last_token) {
     // incorrect locations for generic syntax errors just because we reached
     // further away when trying to find specific syntax errors in the second
     // pass.
-    $B.raise_error_known_token(_b_.SyntaxError, p.filename, last_token,
+    return $B.make_error_known_token(_b_.SyntaxError, p.filename, last_token,
         "invalid syntax");
 }
 
+$B._PyPegen.set_syntax_error_metadata = function(p, exc) {
+    if(! exc || ! $B.is_exc(exc, [_b_.SyntaxError])){
+        return
+    }
+    var source = NULL;
+    if (p.src != NULL) {
+        source = p.src;
+    }
+    if (!source && p.tok.fp_interactive && p.tok.interactive_src_start) {
+        source = p.tok.interactive_src_start;
+    }
+    var the_source = NULL;
+    if (source) {
+        the_source = source
+    }
+    if (!the_source) {
+        the_source = _b_.None;
+    }
+    var metadata = [
+        exc.lineno,
+        exc.offset,
+        the_source // N gives ownership to metadata
+    ]
+    if (!metadata) {
+        return;
+    }
+    exc._metadata = metadata;
+}
 
 $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
@@ -938,7 +966,13 @@ $B._PyPegen.run_parser = function(p){
         }
         // Set SyntaxErrors accordingly depending on the parser/tokenizer status at the failure
         // point.
-        $B._PyPegen.set_syntax_error(p, last_token);
+        var exc = $B._PyPegen.set_syntax_error(p, last_token);
+
+        // Set the metadata in the exception from p->last_stmt_location
+        if ($B.is_exc(exc, [_b_.SyntaxError])) {
+            $B._PyPegen.set_syntax_error_metadata(p, exc);
+        }
+        throw exc
     }
 
     if (p.start_rule == Py_single_input && bad_single_statement(p)) {
@@ -946,19 +980,6 @@ $B._PyPegen.run_parser = function(p){
         return RAISE_SYNTAX_ERROR("multiple statements found while compiling a single statement");
     }
 
-    // test_peg_generator defines _Py_TEST_PEGEN to not call PyAST_Validate()
-// #if defined(Py_DEBUG) && !defined(_Py_TEST_PEGEN)
-    /*
-    if (p.mode == 'single' ||
-        p.mode == 'file' ||
-        p.mode == 'eval')
-    {
-        if (!_PyAST_Validate(res)) {
-            return NULL;
-        }
-    }
-    */
-// #endif
     return res;
 }
 
@@ -985,7 +1006,7 @@ $B._PyPegen.run_parser_from_file_pointer = function(fp, start_rule, filename_ob,
 
     var parser_flags = compute_parser_flags(flags);
     var p = $B._PyPegen.Parser_New(tok, start_rule, parser_flags, PY_MINOR_VERSION,
-                                    errcode, arena);
+                                    errcode, NULL, arena);
     if (p == NULL) {
         return error()
     }
@@ -1025,7 +1046,7 @@ $B._PyPegen.run_parser_from_string = function(str, start_rule, filename_ob,
     var feature_version = flags && (flags.cf_flags & PyCF_ONLY_AST) ?
         flags.cf_feature_version : PY_MINOR_VERSION;
     var p = $B._PyPegen.Parser_New(tok, start_rule, parser_flags, feature_version,
-                                    NULL, arena);
+                                    NULL, str, arena);
     if (p == NULL) {
         return error()
     }
