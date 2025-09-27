@@ -534,7 +534,7 @@ class StackSummary(list):
         colorize = kwargs.get("colorize", False)
         row = []
         filename = frame_summary.filename
-        if frame_summary.filename.startswith("<stdin>-"):
+        if frame_summary.filename.startswith("<stdin-") and frame_summary.filename.endswith('>'):
             filename = "<stdin>"
         if colorize:
             theme = _colorize.get_theme(force_color=True).traceback
@@ -1310,7 +1310,6 @@ class TracebackException:
             lines = source.splitlines()
 
         error_code = lines[line -1 if line > 0 else 0:end_line]
-        error_code[0] = error_code[0][offset:]
         error_code = textwrap.dedent('\n'.join(error_code))
 
         # Do not continue if the source is too large
@@ -1326,7 +1325,8 @@ class TracebackException:
             if token.type != tokenize.NAME:
                 continue
             # Only consider NAME tokens on the same line as the error
-            if from_filename and token.start[0]+line != end_line+1:
+            the_end = end_line if line == 0 else end_line + 1
+            if from_filename and token.start[0]+line != the_end:
                 continue
             wrong_name = token.string
             if wrong_name in keyword.kwlist:
@@ -1595,7 +1595,11 @@ def _compute_suggestion_error(exc_value, tb, wrong_name):
     if isinstance(exc_value, AttributeError):
         obj = exc_value.obj
         try:
-            d = dir(obj)
+            try:
+                d = dir(obj)
+            except TypeError:  # Attributes are unsortable, e.g. int and str
+                d = list(obj.__class__.__dict__.keys()) + list(obj.__dict__.keys())
+            d = sorted([x for x in d if isinstance(x, str)])
             hide_underscored = (wrong_name[:1] != '_')
             if hide_underscored and tb is not None:
                 while tb.tb_next is not None:
@@ -1610,7 +1614,11 @@ def _compute_suggestion_error(exc_value, tb, wrong_name):
     elif isinstance(exc_value, ImportError):
         try:
             mod = __import__(exc_value.name)
-            d = dir(mod)
+            try:
+                d = dir(mod)
+            except TypeError:  # Attributes are unsortable, e.g. int and str
+                d = list(mod.__dict__.keys())
+            d = sorted([x for x in d if isinstance(x, str)])
             if wrong_name[:1] != '_':
                 d = [x for x in d if x[:1] != '_']
         except Exception:
@@ -1628,6 +1636,7 @@ def _compute_suggestion_error(exc_value, tb, wrong_name):
             + list(frame.f_globals)
             + list(frame.f_builtins)
         )
+        d = [x for x in d if isinstance(x, str)]
 
         # Check first if we are in a method and the instance
         # has the wrong name as attribute
