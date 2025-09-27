@@ -8,7 +8,7 @@ var TokenizerIter = $B.make_class('TokenizerIter',
     function(it){
         return {
             __class__: TokenizerIter,
-            it
+            it: $B.$call(it)
         }
     }
 )
@@ -16,23 +16,34 @@ var TokenizerIter = $B.make_class('TokenizerIter',
 TokenizerIter.__iter__ = function(self){
     var js_iter = function*(){
         var line_num = 0
+        var err
         while(true){
             try{
-                var bytes = self.it()
+                var line = self.it()
             }catch(err){
-                if($B.is_exc(err, [_b_.StopIteration])){
-                    token = endmarker
-                    token.lineno++
-                    token.end_lineno++
-                    yield $B.fast_tuple([token.num_type, token.string,
-                                         $B.fast_tuple([token.lineno, token.col_offset]),
-                                         $B.fast_tuple([token.end_lineno, token.end_col_offset]),
-                                         token.line])
+                // handled below
+            }
+            if(line.length == 0 || err){
+                token = endmarker
+                token.lineno++
+                token.end_lineno++
+                yield $B.fast_tuple([token.num_type, token.string,
+                                     $B.fast_tuple([token.lineno, token.col_offset]),
+                                     $B.fast_tuple([token.end_lineno, token.end_col_offset]),
+                                     token.line])
+                if(err){
+                    throw err
+                }else{
+                    break
                 }
-                throw err
             }
             line_num++
-            var line = _b_.bytes.decode(bytes, 'utf-8')
+            //var line = _b_.bytes.decode(bytes, 'utf-8')
+            console.log('line', line)
+            if(line_num > 10){
+                console.log('fini')
+                break
+            }
             for(var token of $B.tokenizer(line, 'test')){
                 if(token.num_type == $B.py_tokens.ENCODING){ // skip encoding token
                     continue
