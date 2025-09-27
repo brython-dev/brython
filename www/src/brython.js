@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-09-27 09:09:40.796697"
-__BRYTHON__.timestamp=1758956980796
+__BRYTHON__.compiled_date="2025-09-27 10:53:48.510260"
+__BRYTHON__.timestamp=1758963228509
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -15236,6 +15236,8 @@ function _seq_number_of_starred_exprs(seq){var n=0
 for(var k of seq){if(! k.is_keyword){n++;}}
 return n}
 $B._PyPegen={}
+$B._PyPegen.PyErr_Occurred=function(){
+return false}
 $B._PyPegen.constant_from_string=function(p,token){var prepared=$B.prepare_string(p,token)
 var is_bytes=prepared.value.startsWith('b')
 if(! is_bytes){var value=make_string_for_ast_value(prepared.value)}else{var value=prepared.value.substr(2,prepared.value.length-3)
@@ -15248,6 +15250,39 @@ set_position_from_token(ast_obj,t)
 return ast_obj}
 $B._PyPegen.decoded_constant_from_token=function(p,t){var ast_obj=new $B.ast.Constant(t.string)
 set_position_from_token(ast_obj,t)
+return ast_obj}
+function is_whitespace(char){return ' \n\r\t\f'.includes(char)}
+function _get_interpolation_conversion(p,debug,conversion,format){if(conversion !=NULL){var conversion_expr=conversion.result
+return conversion_expr.id}else if(debug && !format){
+return 'r'}
+return-1;}
+function _strip_interpolation_expr(exprstr){var len=exprstr.length
+for(var c of exprstr){if(is_whitespace(c)||c=='='){len--}else{break}}
+return exprstr.substr(0,len)}
+$B._PyPegen.interpolation=function(p,expression,debug,conversion,format,closing_brace,position,arena){var lineno=position.lineno,col_offset=position.col_offset,end_lineno=position.end_lineno,end_col_offset=position.end_col_offset
+var conversion_val=_get_interpolation_conversion(p,debug,conversion,format);
+var debug_end_line,debug_end_offset;
+var debug_metadata;
+var exprstr;
+if(conversion){debug_end_line=conversion.result.lineno
+debug_end_offset=conversion.result.col_offset;
+debug_metadata=exprstr=conversion.metadata;}else if(format){debug_end_line=format.result.lineno;
+debug_end_offset=format.result.col_offset+1;
+debug_metadata=exprstr=format.metadata;}else{debug_end_line=end_lineno;
+debug_end_offset=end_col_offset;
+debug_metadata=exprstr=closing_brace.metadata;}
+var final_exprstr=_strip_interpolation_expr(exprstr);
+if(final_exprstr){p.arena.a_objects.push(final_exprstr)}
+var interpolation=$B._PyAST.Interpolation(
+expression,final_exprstr,conversion_val,format ? format.result :NULL)
+set_position_from_obj(interpolation,position)
+if(!debug){return interpolation;}
+var debug_text=$B._PyAST.Constant(debug_metadata)
+set_position_from_list(debug_text,[lineno,col_offset+1,debug_end_line,debug_end_offset-1])
+var values=[debug_text,interpolation]
+var ast_obj=$B._PyAST.JoinedStr(values)
+set_position_from_list(ast_obj,[lineno,col_offset,debug_end_line,debug_end_offset])
+console.log('JoinedStr',ast_obj)
 return ast_obj}
 $B._PyPegen.formatted_value=function(p,expression,debug,conversion,format,closing_brace,arena){var conversion_val=-1
 if(conversion){var conversion_expr=conversion.result,first=conversion_expr.id
@@ -15273,6 +15308,47 @@ var joined_str=new $B.ast.JoinedStr([debug,formatted_value])
 set_position_from_obj(joined_str,arena)
 return joined_str}
 return formatted_value}
+$B._PyPegen.decode_fstring_part=function(p,is_raw,constant,token){var bstr=constant.value
+var len;
+if(bstr=="{{" ||bstr=="}}"){len=1}else{len=bstr.length}
+is_raw=is_raw ||! bstr.includes('\\')
+var str=bstr 
+if(str==NULL){_Pypegen_raise_decode_error(p);
+return NULL;}
+p.arena.a_objects.push(str)
+return $B._PyAST.Constant(str,NULL,constant.lineno,constant.col_offset,constant.end_lineno,constant.end_col_offset,p.arena);}
+function _get_resized_exprs(p,a,raw_expressions,b,string_kind){var n_items=raw_expressions.length
+var total_items=n_items
+for(var item of raw_expressions){if(item instanceof $B.ast.JoinedStr){total_items+=item.values.length-1;}}
+var quote_str=a.bytes
+if(quote_str==NULL){return NULL;}
+var is_raw=quote_str.includes('r')||quote_str.includes('R')
+var seq=[]
+var index=0;
+for(var i=0;i < n_items;i++){var item=raw_expressions[i]
+if(item instanceof $B.ast.JoinedStr){var values=item.values
+if(values.length !=2){PyErr_Format(PyExc_SystemError,string_kind==TSTRING
+? "unexpected TemplateStr node without debug data in t-string at line %d"
+:"unexpected JoinedStr node without debug data in f-string at line %d",item.lineno);
+return NULL;}
+var first=values[0]
+seq[index++]=first
+var second=values[1]
+seq[index++]=second
+continue;}
+if(item instanceof $B.ast.Constant){item=$B._PyPegen.decode_fstring_part(p,is_raw,item,b);
+if(item==NULL){return NULL;}
+if(item.value.length==0){continue;}}
+seq[index++]=item}
+var resized_exprs
+if(index !=total_items){resized_exprs=_Py_asdl_expr_seq_new(index,p.arena);
+if(resized_exprs==NULL){return NULL;}
+for(var i=0;i < index;i++){resized_exprs[i]=seq[i]}}else{resized_exprs=seq;}
+return resized_exprs;}
+$B._PyPegen.template_str=function(p,a,raw_expressions,b){var resized_exprs=_get_resized_exprs(p,a,raw_expressions,b,'TSTRING')
+var ast_obj=new $B.ast.TemplateStr(resized_exprs)
+set_position_from_list(ast_obj,[a.lineno,a.col_offset,b.end_lineno,b.end_col_offset])
+return ast_obj}
 $B._PyPegen.joined_str=function(p,a,items,c){var ast_obj=new $B.ast.JoinedStr(items)
 ast_obj.lineno=a.lineno
 ast_obj.col_offset=a.col_offset
@@ -15309,8 +15385,7 @@ function _set_tuple_context(p,e,ctx){return $B._PyAST.Tuple(
 _set_seq_context(p,e.elts,ctx),ctx,EXTRA_EXPR(e,e));}
 function _set_list_context(p,e,ctx){return $B._PyAST.List(
 _set_seq_context(p,e.elts,ctx),ctx,EXTRA_EXPR(e,e));}
-function _set_subscript_context(p,e,ctx){console.log('set subscritp cntext',p,e)
-return $B._PyAST.Subscript(e.value,e.slice,ctx,EXTRA_EXPR(e,e));}
+function _set_subscript_context(p,e,ctx){return $B._PyAST.Subscript(e.value,e.slice,ctx,EXTRA_EXPR(e,e));}
 function _set_attribute_context(p,e,ctx){return $B._PyAST.Attribute(e.value,e.attr,ctx,EXTRA_EXPR(e,e));}
 function _set_starred_context(p,e,ctx){return $B._PyAST.Starred($B._PyPegen.set_expr_context(p,e.value,ctx),ctx,EXTRA_EXPR(e,e));}
 $B._PyPegen.set_expr_context=function(p,expr,ctx){var _new=NULL;
@@ -15500,8 +15575,52 @@ seq.push(fmt_ast)}
 var ast_obj=new $B.ast.JoinedStr(seq)
 set_position_from_obj(ast_obj,p.arena)
 return ast_obj}
-$B._PyPegen.concatenate_strings=function(p,strings){
-var res='',first=strings[0],last=$B.last(strings),type
+function _build_concatenated_str(p,strings){var len=strings.length
+var n_flattened_elements=0;
+for(var elem of strings){if(elem instanceof $B.ast.JoinedStr ||
+elem instanceof $B.ast.TemplateStr){n_flattened_elements+=elem.values.length}else{n_flattened_elements++}}
+var flattened=[]
+var current_pos=0;
+for(var elem of strings){if(elem instanceof $B.ast.JoinedStr ||
+elem instanceof $B.ast.TemplateStr){for(var subvalue of elem.values){flattened[current_pos++]=subvalue}}else{flattened[current_pos++]=elem}}
+var n_elements=0
+var prev_is_constant=0
+for(var elem of flattened){
+if(elem instanceof $B.ast.Constant &&
+typeof elem.value=='string' &&
+elem.value.length==0){continue}
+if(!prev_is_constant ||!(elem instanceof $B.ast.Constant)){n_elements++;}
+prev_is_constant=elem instanceof $B.ast.Constant}
+var values=[]
+current_pos=0;
+for(var i=0,len=flattened.length;i < len;i++){var elem=flattened[i]
+if(elem instanceof $B.ast.Constant){if(i+1 < n_flattened_elements &&
+flattened[i+1]instanceof $B.ast.Constant){var first_elem=elem;
+var kind=elem.__class__
+var concat_str=''
+var last_elem=elem;
+var j
+for(j=i;j < n_flattened_elements;j++){var current_elem=flattened[j]
+if(current_elem instanceof $B.ast.Constant){concat_str+=current_elem.value
+last_elem=current_elem;}else{break;}}
+i=j-1
+p.arena.a_objects.push(concat_str)
+elem=new $B.ast.Constant(concat_str,kind)
+set_position_from_list(elem,[first_elem.lineno,first_elem.col_offset,last_elem.end_lineno,last_elem.end_col_offset]);}
+if(elem.value.length==0){continue}}
+values[current_pos++]=elem}
+return values}
+function _build_concatenated_template_str(p,strings){var values=_build_concatenated_str(p,strings)
+var ast_obj=new $B.ast.TemplateStr(values)
+var last=strings[strings.length-1]
+set_position_from_list(ast_obj,[strings[0].lineno,strings[0].col_offset,last.end_lineno,last.end_col_offset])
+return ast_obj}
+function _build_concatenated_joined_str(p,strings){var values=_build_concatenated_str(p,strings)
+var ast_obj=new $B.ast.JoinedStr(values)
+var last=strings[strings.length-1]
+set_position_from_list(ast_obj,[strings[0].lineno,strings[0].col_offset,last.end_lineno,last.end_col_offset])
+return ast_obj}
+$B._PyPegen.concatenate_strings=function(p,strings){var res='',first=strings[0],last=$B.last(strings),type
 var state=NULL,value,values=[]
 function error(message){var a={lineno:first.start[0],col_offset:first.start[1],end_lineno :last.end[0],end_col_offset:last.end[1]}
 $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a,message)}
@@ -15510,19 +15629,23 @@ ast_obj.lineno=first.lineno
 ast_obj.col_offset=first.col_offset
 ast_obj.end_lineno=last.end_lineno
 ast_obj.end_col_offset=last.end_col_offset}
-var items=[],has_fstring=false,state
-for(var token of strings){if(token instanceof $B.ast.JoinedStr){
-has_fstring=true
-if(state=='bytestring'){error('cannot mix bytes and nonbytes literals')}
-for(var fs_item of token.values){if(fs_item instanceof $B.ast.Constant){
+function escape_single_quotes(token){for(var fs_item of token.values){if(fs_item instanceof $B.ast.Constant){
 var parts=fs_item.value.split('\\\'')
 parts=parts.map(x=> x.replace(new RegExp("'","g"),"\\'"))
 fs_item.value=parts.join('\\\'')
 fs_item.value=fs_item.value.replace(/\n/g,'\\n')
-.replace(/\r/g,'\\r')}
-items.push(fs_item)}
-state='string'}else{items.push(token)
-var is_bytes=token.value.__class__===_b_.bytes
+.replace(/\r/g,'\\r')}}}
+var items=[],has_fstring=false,has_tstring=false,state
+for(var string of strings){if(string instanceof $B.ast.JoinedStr){
+has_fstring=true
+if(state=='bytestring'){error('cannot mix bytes and nonbytes literals')}
+escape_single_quotes(string)
+state='string'}else if(string instanceof $B.ast.TemplateStr){
+has_tstring=true
+if(state=='bytestring'){error('cannot mix bytes and nonbytes literals')}
+escape_single_quotes(string)
+state='string'}else{items.push(string)
+var is_bytes=string.value.__class__===_b_.bytes
 if((is_bytes && state=='string')||
 (state=='bytestring' && ! is_bytes)){error('cannot mix bytes and nonbytes literals')}
 state=is_bytes ? 'bytestring' :'string'}}
@@ -15545,11 +15668,21 @@ if(item instanceof $B.ast.Constant){consec_strs.push(item)}else{if(consec_strs.l
 consec_strs=[]
 items1.push(item)}}
 if(consec_strs.length > 0){items1.push(group_consec_strings(consec_strs))}
-if(! has_fstring){return items1[0]}
-var jstr_values=items1
-var ast_obj=new $B.ast.JoinedStr(jstr_values)
-set_position_from_list(ast_obj,strings)
-return ast_obj}
+if(! has_fstring && ! has_tstring){return items1[0]}
+if(has_tstring){return _build_concatenated_template_str(p,strings)}
+return _build_concatenated_joined_str(p,strings)}
+$B._PyPegen.checked_future_import=function(p,module,names,level,lineno,col_offset,end_lineno,end_col_offset,arena){if(level==0 && module=="__future__"){for(var i=0;i < names.length;i++){var alias=names[i]
+if(alias.name=="barry_as_FLUFL"){p.flags |=PyPARSE_BARRY_AS_BDFL;}}}
+return $B._PyAST.ImportFrom(module,names,level,lineno,col_offset,end_lineno,end_col_offset,arena);}
+$B._PyPegen.register_stmts=function(p,stmts){if(! p.call_invalid_rules){return stmts}
+var len=stmts.length
+if(len==0){return stmts}
+var last_stmt=stmts[len-1]
+p.last_stmt_location.lineno=last_stmt.lineno
+p.last_stmt_location.col_offset=last_stmt.col_offset
+p.last_stmt_location.end_lineno=last_stmt.end_lineno
+p.last_stmt_location.end_col_offset=last_stmt.end_col_offset
+return stmts}
 $B._PyPegen.ensure_imaginary=function(p,exp){if(!(exp instanceof $B.ast.Constant)||
 exp.value.__class__ !=_b_.complex){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,"imaginary number required in complex literal");
 return NULL}
@@ -15876,8 +16009,9 @@ this.mark=0
 this.fill=0
 this.level=0
 this.size=1
-this.starting_lineno=0;
-this.starting_col_offset=0;
+this.starting_lineno=0
+this.starting_col_offset=0
+this.last_stmt_location={}
 this.tokens=[]
 this.src=src
 this.filename=filename
