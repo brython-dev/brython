@@ -6,9 +6,15 @@ $B.$import('token')
 
 var TokenizerIter = $B.make_class('TokenizerIter',
     function(it){
+        var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
+                    ['it', 'encoding', 'extra_tokens'], arguments,
+                    {encoding: _b_.None}, null, null)
+
         return {
             __class__: TokenizerIter,
-            it: $B.$call(it)
+            it: $B.$call($.it),
+            encoding: $.encoding,
+            extra_tokens: $.extra_tokens
         }
     }
 )
@@ -21,9 +27,12 @@ TokenizerIter.__iter__ = function(self){
             try{
                 var line = self.it()
             }catch(err){
-                // handled below
+                if(! $B.$isinstance(err, _b_.StopIteration)){
+                    throw err
+                }
+                line = ''
             }
-            if(line.length == 0 || err){
+            if(line.length == 0){
                 token = endmarker
                 token.lineno++
                 token.end_lineno++
@@ -31,19 +40,15 @@ TokenizerIter.__iter__ = function(self){
                                      $B.fast_tuple([token.lineno, token.col_offset]),
                                      $B.fast_tuple([token.end_lineno, token.end_col_offset]),
                                      token.line])
-                if(err){
-                    throw err
-                }else{
-                    break
+                break
+            }else if(self.encoding !== _b_.None){
+                if(! $B.$isinstance(line, [_b_.bytes, _b_.bytearray])){
+                    throw _b_.TypeError.$factory(
+                        'readline() returned a non-bytes object')
                 }
+                line = _b_.bytes.decode(line, self.encoding)
             }
             line_num++
-            //var line = _b_.bytes.decode(bytes, 'utf-8')
-            console.log('line', line)
-            if(line_num > 10){
-                console.log('fini')
-                break
-            }
             for(var token of $B.tokenizer(line, 'test')){
                 if(token.num_type == $B.py_tokens.ENCODING){ // skip encoding token
                     continue

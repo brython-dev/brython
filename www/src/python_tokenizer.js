@@ -294,7 +294,6 @@ $B.tokenizer = function(src, filename, mode, parser){
     var string_prefix = /^(r|u|R|U|f|F|t|T||fr|Fr|fR|FR|rf|rF|Rf|RF||tr|Tr|tR|TR|rt|rT|Rt|RT)$/,
         bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,
         t = []
-
     if(mode != 'eval' && ! src.endsWith('\n')){
         src += '\n'
     }

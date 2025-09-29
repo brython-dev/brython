@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-09-27 11:27:07.945066"
-__BRYTHON__.timestamp=1758965227944
+__BRYTHON__.compiled_date="2025-09-29 08:51:04.581189"
+__BRYTHON__.timestamp=1759128664580
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1499,6 +1499,7 @@ return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 try{var value=next_func()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
+if(iterator.$inum){$B.set_inum(iterator.$inum)}
 throw err}}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
 var inum_rank=3
@@ -12696,7 +12697,9 @@ up_scope.positions=up_scope.positions ??[]
 up_scope.positions[up_scope.positions.length]=encode_position(
 ast_obj.lineno,ast_obj.end_lineno,ast_obj.col_offset,ast_obj.end_col_offset
 )
-return 1+2*(up_scope.positions.length-1)}
+var inum=1+2*(up_scope.positions.length-1)
+ast_obj.inum=inum
+return inum}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):"''"
 var inum=add_to_positions(scopes,this.test)
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
@@ -13136,8 +13139,9 @@ prefix+tab+tab+`throw err\n`+
 prefix+tab+'}\n'+
 prefix+`}\n`
 dedent()}else{js+=prefix+`var no_break_${id} = true,\n`+
-prefix+tab+tab+`iterator_${id} = ${iter}\n`+
-prefix+`for(var next_${id} of $B.make_js_iterator(`+
+prefix+tab+tab+`iterator_${id} = ${iter}\n`
+if(this.iter.inum){js+=prefix+tab+tab+`iterator_${id}.$inum = ${this.iter.inum}\n`}
+js+=prefix+`for(var next_${id} of $B.make_js_iterator(`+
 `iterator_${id}, frame, ${this.lineno})){\n`}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
@@ -15989,7 +15993,7 @@ exc.args[1]=$B.fast_tuple([filename,exc.lineno,exc.offset,exc.text,exc.end_linen
 exc.$frame_obj=$B.frame_obj
 throw exc}
 $B.raise_error_known_location=raise_error_known_location
-function raise_error_known_token(type,filename,token,message){var exc=type.$factory(message)
+function make_error_known_token(type,filename,token,message){var exc=type.$factory(message)
 exc.filename=filename
 exc.lineno=token.lineno
 exc.offset=token.col_offset+1
@@ -15998,8 +16002,8 @@ exc.end_offset=token.end_col_offset+1
 exc.text=token.line
 exc.args[1]=$B.fast_tuple([filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset])
 exc.$frame_obj=$B.frame_obj
-throw exc}
-$B.raise_error_known_token=raise_error_known_token
+return exc}
+$B.make_error_known_token=make_error_known_token
 function set_position_from_EXTRA(ast_obj,EXTRA){for(var key in EXTRA){ast_obj[key]=EXTRA[key]}}
 var Parser=$B.Parser=function(src,filename,mode){
 this._tokens=$B.tokenizer(src,filename,mode,this)
@@ -16022,7 +16026,7 @@ if(filename){p.filename=filename}}
 Parser.prototype.read_token=function(){while(true){var next=this._tokens[this.pos++]
 if(next){var value=next
 if(! value.parser_ignored){
-if(value.$error_token){$B.raise_error_known_location(...value)}else if(value.$error_token_known_token){$B.raise_error_known_token(...value)}
+if(value.$error_token){$B.raise_error_known_location(...value)}else if(value.$error_token_known_token){throw make_error_known_token(...value)}
 this.tokens[this.tokens.length]=value
 return value}}else{throw Error('tokenizer exhausted')}}}})(__BRYTHON__);
 ;
@@ -16291,7 +16295,7 @@ if(flags.cf_flags & PyCF_TYPE_COMMENTS){parser_flags |=PyPARSE_TYPE_COMMENTS;}
 if((flags.cf_flags & PyCF_ONLY_AST)&& flags.cf_feature_version < 7){parser_flags |=PyPARSE_ASYNC_HACKS;}
 if(flags.cf_flags & PyCF_ALLOW_INCOMPLETE_INPUT){parser_flags |=PyPARSE_ALLOW_INCOMPLETE_INPUT;}
 return parser_flags;}
-$B._PyPegen.Parser_New=function(tok,start_rule,flags,feature_version,errcode,arena){var p={}
+$B._PyPegen.Parser_New=function(tok,start_rule,flags,feature_version,errcode,source,arena){var p={}
 if(p==NULL){return PyErr_NoMemory();}
 tok.type_comments=(flags & PyPARSE_TYPE_COMMENTS)> 0;
 tok.async_hacks=(flags & PyPARSE_ASYNC_HACKS)> 0;
@@ -16344,11 +16348,22 @@ if(p.fill==0){$B.helper_functions.RAISE_SYNTAX_ERROR(p,"error at start before re
 $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
 if(last_token.num_type==ERRORTOKEN && p.tok.done==E_EOF){if(p.tok.level){raise_unclosed_parentheses_error(p);}else{
 $B.helper_functions.RAISE_SYNTAX_ERROR(p,"unexpected EOF while parsing");}
-return;}
+return}
 if(last_token.num_type==INDENT ||last_token.num_type==DEDENT){$B.helper_functions.RAISE_INDENTATION_ERROR(p,last_token.num_type==INDENT ? "unexpected indent" :"unexpected unindent");
-return;}
+return}
 $B._PyPegen.tokenize_full_source_to_check_for_errors(p);
-$B.raise_error_known_token(_b_.SyntaxError,p.filename,last_token,"invalid syntax");}
+return $B.make_error_known_token(_b_.SyntaxError,p.filename,last_token,"invalid syntax");}
+$B._PyPegen.set_syntax_error_metadata=function(p,exc){if(! exc ||! $B.is_exc(exc,[_b_.SyntaxError])){return}
+var source=NULL;
+if(p.src !=NULL){source=p.src;}
+if(!source && p.tok.fp_interactive && p.tok.interactive_src_start){source=p.tok.interactive_src_start;}
+var the_source=NULL;
+if(source){the_source=source}
+if(!the_source){the_source=_b_.None;}
+var metadata=[exc.lineno,exc.offset,the_source 
+]
+if(!metadata){return;}
+exc._metadata=metadata;}
 $B._PyPegen.run_parser=function(p){var res=$B._PyPegen.parse(p);
 if(res==NULL){if((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(p)){return $B.helper_functions.RAISE_ERROR(p,_b_._IncompleteInputError,"incomplete input");}
 var last_token=p.tokens[p.fill-1];
@@ -16356,7 +16371,9 @@ reset_parser_state_for_error_pass(p);
 try{$B._PyPegen.parse(p);}catch(err){last_token=p.tokens[p.fill-1]
 $B._PyPegen.tokenize_full_source_to_check_for_errors(p)
 throw err}
-$B._PyPegen.set_syntax_error(p,last_token);}
+var exc=$B._PyPegen.set_syntax_error(p,last_token);
+if($B.is_exc(exc,[_b_.SyntaxError])){$B._PyPegen.set_syntax_error_metadata(p,exc);}
+throw exc}
 if(p.start_rule==Py_single_input && bad_single_statement(p)){p.tok.done=E_BADSINGLE;
 return RAISE_SYNTAX_ERROR("multiple statements found while compiling a single statement");}
 return res;}
@@ -16369,7 +16386,7 @@ PyUnicode_CompareWithASCIIString(filename_ob,"<stdin>")==0){tok.fp_interactive=1
 tok.filename=Py_NewRef(filename_ob);
 var result=NULL;
 var parser_flags=compute_parser_flags(flags);
-var p=$B._PyPegen.Parser_New(tok,start_rule,parser_flags,PY_MINOR_VERSION,errcode,arena);
+var p=$B._PyPegen.Parser_New(tok,start_rule,parser_flags,PY_MINOR_VERSION,errcode,NULL,arena);
 if(p==NULL){return error()}
 result=_PyPegen_run_parser(p);
 _PyPegen_Parser_Free(p);
@@ -16386,7 +16403,7 @@ var result=NULL;
 var parser_flags=compute_parser_flags(flags);
 var feature_version=flags &&(flags.cf_flags & PyCF_ONLY_AST)?
 flags.cf_feature_version :PY_MINOR_VERSION;
-var p=$B._PyPegen.Parser_New(tok,start_rule,parser_flags,feature_version,NULL,arena);
+var p=$B._PyPegen.Parser_New(tok,start_rule,parser_flags,feature_version,NULL,str,arena);
 if(p==NULL){return error()}
 result=_PyPegen_run_parser(p);
 _PyPegen_Parser_Free(p);
