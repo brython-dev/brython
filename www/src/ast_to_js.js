@@ -1133,7 +1133,9 @@ function add_to_positions(scopes, ast_obj){
         ast_obj.lineno, ast_obj.end_lineno,
         ast_obj.col_offset, ast_obj.end_col_offset
     )
-    return 1 + 2 * (up_scope.positions.length - 1)
+    var inum = 1 + 2 * (up_scope.positions.length - 1)
+    ast_obj.inum = inum
+    return inum
 }
 
 $B.ast.Assert.prototype.to_js = function(scopes){
@@ -2155,8 +2157,11 @@ $B.ast.For.prototype.to_js = function(scopes){
         dedent()
     }else{
         js += prefix + `var no_break_${id} = true,\n` +
-              prefix + tab + tab + `iterator_${id} = ${iter}\n` +
-              prefix + `for(var next_${id} of $B.make_js_iterator(` +
+              prefix + tab + tab + `iterator_${id} = ${iter}\n`
+        if(this.iter.inum){
+            js += prefix + tab + tab + `iterator_${id}.$inum = ${this.iter.inum}\n`
+        }
+        js += prefix + `for(var next_${id} of $B.make_js_iterator(` +
                   `iterator_${id}, frame, ${this.lineno})){\n`
     }
     // assign result of iteration to target
