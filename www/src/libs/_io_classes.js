@@ -77,7 +77,14 @@ var StringIO = $B.make_class("StringIO",
     function(){
         var $ = $B.args("StringIO", 2, {value: null, newline: null},
                 ["value", "newline"], arguments, {value: '', newline: "\n"},
-                null, null)
+                null, null),
+            value = $.value
+        if(value === _b_.None){
+            value = ''
+        }else if(! $B.$isinstance(value, _b_.str)){
+            throw _b_.TypeError.$factory(
+                `initial_value must be str or None, not ${$B.class_name(value)}`)
+        }
         return {
             __class__: StringIO,
             $counter: 0,
