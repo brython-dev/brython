@@ -1420,6 +1420,7 @@ $B.error_trace = function(err){
         }
         if(err.__class__ !== _b_.IndentationError &&
                 err.text && err.text !== _b_.None){
+            console.log('syntax error, metadata', err._metadata)
             // add ^ under the line
             if($B.get_option('debug') > 2){
                 console.log('debug from error', $B.get_option('debug', err))
