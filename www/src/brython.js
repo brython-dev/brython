@@ -207,7 +207,7 @@ var pylist=['VFS_import','__future__','_aio','_ast_unparse','_codecs','_codecs_j
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['_pyrepl','browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__);
 ;
@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-09-29 08:51:04.581189"
-__BRYTHON__.timestamp=1759128664580
+__BRYTHON__.compiled_date="2025-10-03 08:55:48.289129"
+__BRYTHON__.timestamp=1759474548288
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5349,6 +5349,35 @@ for(let i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
+var python_keywords
+function _find_keyword_typos(err){
+if(err.msg !="invalid syntax" && ! err.msg.includes("Perhaps you forgot a comma")){return}
+let[line,offset,source]=err._metadata
+let end_line=self.lineno===_b_.None ? 0 :self.lineno
+let lines=source.split('\n')
+var error_code
+if(line > 0){error_code=[lines[line-1]]}else{error_code=lines.slice(0,end_line)}
+var indent=Math.min(...error_code.map(x=> x.length-x.trimLeft().length))
+var error_code_lines=error_code.map(x=> x.substr(indent))
+error_code=error_code_lines.join('\n')
+if(error_code.length > 1024){return}
+if(python_keywords===undefined){python_keywords=Object.keys($B.python_keywords)}
+for(let token of $B.tokenizer(error_code,'<debug>','exec')){if(token.type==$B.py_tokens['NAME']){var suggestions=calculate_suggestions(python_keywords,token.string)
+if(suggestions){console.log(token.lineno)
+var new_line=token.line.substr(0,token.col_offset)+
+suggestions+token.line.substr(token.end_col_offset)
+var new_lines=error_code_lines.slice()
+new_lines.splice(token.lineno-1,1,new_line)
+var candidate=new_lines.join('\n')
+var found=false
+try{var parser=new $B.Parser(candidate,'<debug>','file')
+parser.flags=$B.PyCF_ALLOW_INCOMPLETE_INPUT
+var _ast=$B._PyPegen.run_parser(parser)
+found=true}catch(err){if($B.is_exc(err,[_b_._IncompleteInputError])){found=true}}
+if(found){err.args[1][2]=err.offset=token.col_offset
+err.args[1][5]=err.end_offset=token.end_col_offset
+err.args[0]=err.msg=`invalid syntax. Did you mean '${suggestions}'?`
+return}}}}}
 $B.error_trace=function(err){var trace='',has_stack=err.__traceback__ !==_b_.None
 var debug=$B.get_option('debug',err)
 if(debug > 1){console.log("handle error",err.__class__,err.args,err.__traceback__)}
@@ -5360,7 +5389,7 @@ if(line !==_b_.None){var indent=line.length-line.trimLeft().length
 trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`}}
 if(err.__class__ !==_b_.IndentationError &&
-err.text && err.text !==_b_.None){
+err.text && err.text !==_b_.None){if(err._metadata){_find_keyword_typos(err)}
 if($B.get_option('debug')> 2){console.log('debug from error',$B.get_option('debug',err))
 console.log('error args',err.args[1])
 console.log('err line',line)
@@ -16365,6 +16394,7 @@ var metadata=[exc.lineno,exc.offset,the_source
 if(!metadata){return;}
 exc._metadata=metadata;}
 $B._PyPegen.run_parser=function(p){var res=$B._PyPegen.parse(p);
+$B.python_keywords=p.keywords
 if(res==NULL){if((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT)&& _is_end_of_source(p)){return $B.helper_functions.RAISE_ERROR(p,_b_._IncompleteInputError,"incomplete input");}
 var last_token=p.tokens[p.fill-1];
 reset_parser_state_for_error_pass(p);

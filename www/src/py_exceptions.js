@@ -1394,6 +1394,66 @@ function trace_from_stack(err){
     return trace.join('\n') + '\n'
 }
 
+var python_keywords
+
+function _find_keyword_typos(err){
+    // copied from the traceback module
+    if(err.msg != "invalid syntax" && ! err.msg.includes("Perhaps you forgot a comma")){
+        return
+    }
+    let [line, offset, source] = err._metadata
+    let end_line = self.lineno === _b_.None ? 0 : self.lineno
+    let lines = source.split('\n')
+    var error_code
+    if(line > 0){
+        error_code = [lines[line - 1]]
+    }else{
+        error_code = lines.slice(0, end_line)
+    }
+    var indent = Math.min(...error_code.map(x => x.length - x.trimLeft().length))
+    var error_code_lines = error_code.map(x => x.substr(indent))
+    error_code = error_code_lines.join('\n')
+    // Do not continue if the source is too large
+    if(error_code.length > 1024){
+        return
+    }
+    if(python_keywords === undefined){
+        python_keywords = Object.keys($B.python_keywords)
+    }
+    for(let token of $B.tokenizer(error_code, '<debug>', 'exec')){
+        if(token.type == $B.py_tokens['NAME']){
+            var suggestions = calculate_suggestions(python_keywords, token.string)
+            if(suggestions){
+                console.log(token.lineno)
+                var new_line = token.line.substr(0, token.col_offset) +
+                               suggestions + token.line.substr(token.end_col_offset)
+                var new_lines = error_code_lines.slice()
+                new_lines.splice(token.lineno - 1,
+                                    1, new_line)
+                var candidate = new_lines.join('\n')
+                var found = false
+                try{
+                    var parser = new $B.Parser(candidate, '<debug>', 'file')
+                    parser.flags = $B.PyCF_ALLOW_INCOMPLETE_INPUT
+                    var _ast = $B._PyPegen.run_parser(parser)
+                    found = true
+                }catch(err){
+                    if($B.is_exc(err, [_b_._IncompleteInputError])){
+                        found = true
+                    }
+                }
+                if(found){
+                    err.args[1][2] = err.offset = token.col_offset
+                    err.args[1][5] = err.end_offset = token.end_col_offset
+                    err.args[0] = err.msg = `invalid syntax. Did you mean '${suggestions}'?`
+                    return
+                }
+            }
+
+        }
+    }
+}
+
 $B.error_trace = function(err){
     var trace = '',
         has_stack = err.__traceback__ !== _b_.None
@@ -1420,7 +1480,9 @@ $B.error_trace = function(err){
         }
         if(err.__class__ !== _b_.IndentationError &&
                 err.text && err.text !== _b_.None){
-            console.log('syntax error, metadata', err._metadata)
+            if(err._metadata){
+                _find_keyword_typos(err)
+            }
             // add ^ under the line
             if($B.get_option('debug') > 2){
                 console.log('debug from error', $B.get_option('debug', err))

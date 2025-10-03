@@ -945,6 +945,7 @@ $B._PyPegen.set_syntax_error_metadata = function(p, exc) {
 
 $B._PyPegen.run_parser = function(p){
     var res = $B._PyPegen.parse(p);
+    $B.python_keywords = p.keywords
     // assert(p->level == 0);
     if (res == NULL) {
         if ((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
