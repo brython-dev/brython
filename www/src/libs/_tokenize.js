@@ -8,8 +8,7 @@ var TokenizerIter = $B.make_class('TokenizerIter',
     function(it){
         var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
                     ['it', 'encoding', 'extra_tokens'], arguments,
-                    {encoding: _b_.None}, null, null)
-
+                    {encoding: _b_.None, extra_tokens: false}, null, null)
         return {
             __class__: TokenizerIter,
             it: $B.$call($.it),
