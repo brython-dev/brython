@@ -713,114 +713,9 @@ $B.recursion_error = function(frame){
 }
 
 // Suggestions in case of NameError or AttributeError
-var MAX_CANDIDATE_ITEMS = 750,
-    MOVE_COST = 2,
-    CASE_COST = 1,
-    SIZE_MAX = 65535
 
-function LEAST_FIVE_BITS(n){
-    return ((n) & 31)
-}
-
-function levenshtein_distance(a, b, max_cost){
-    // Compute Leveshtein distance between strings a and b
-    if(a == b){
-        return 0
-    }
-    if(a.length < b.length){
-        [a, b] = [b, a]
-    }
-
-    while(a.length && a[0] == b[0]){
-        a = a.substr(1)
-        b = b.substr(1)
-    }
-    while(a.length && a[a.length - 1] == b[b.length - 1]){
-        a = a.substr(0, a.length - 1)
-        b = b.substr(0, b.length - 1)
-    }
-    if(b.length == 0){
-        return a.length * MOVE_COST
-    }
-    if ((b.length - a.length) * MOVE_COST > max_cost){
-        return max_cost + 1
-    }
-    var buffer = []
-    for(var i = 0; i < a.length; i++) {
-        // cost from b[:0] to a[:i+1]
-        buffer[i] = (i + 1) * MOVE_COST
-    }
-    var result = 0
-    for(var b_index = 0; b_index < b.length; b_index++) {
-        var code = b[b_index]
-        // cost(b[:b_index], a[:0]) == b_index * MOVE_COST
-        var distance = result = b_index * MOVE_COST;
-        var minimum = SIZE_MAX;
-        for(var index = 0; index < a.length; index++) {
-            // 1) Previous distance in this row is cost(b[:b_index], a[:index])
-            var substitute = distance + substitution_cost(code, a[index])
-            // 2) cost(b[:b_index], a[:index+1]) from previous row
-            distance = buffer[index]
-            // 3) existing result is cost(b[:b_index+1], a[index])
-            var insert_delete = Math.min(result, distance) + MOVE_COST
-            result = Math.min(insert_delete, substitute)
-
-            buffer[index] = result
-            if (result < minimum) {
-                minimum = result
-            }
-        }
-        if (minimum > max_cost) {
-            // Everything in this row is too big, so bail early.
-            return max_cost + 1
-        }
-    }
-    return result
-}
-
-function substitution_cost(a, b){
-    if(LEAST_FIVE_BITS(a) != LEAST_FIVE_BITS(b)){
-        // Not the same, not a case flip.
-        return MOVE_COST
-    }
-    if(a == b){
-        return 0
-    }
-    if(a.toLowerCase() == b.toLowerCase()){
-        return CASE_COST
-    }
-    return MOVE_COST
-}
-
-function calculate_suggestions(dir, name){
-    if(dir.length >= MAX_CANDIDATE_ITEMS) {
-        return null
-    }
-
-    var suggestion_distance = 2 ** 52,
-        suggestion = null
-
-    for(var item of dir){
-        // No more than 1/3 of the involved characters should need changed.
-        var max_distance = (name.length + item.length + 3) * MOVE_COST / 6
-        // Don't take matches we've already beaten.
-        max_distance = Math.min(max_distance, suggestion_distance - 1)
-        var current_distance =
-            levenshtein_distance(name, item, max_distance)
-        if(current_distance > max_distance){
-            continue
-        }
-        if(!suggestion || current_distance < suggestion_distance){
-            suggestion = item
-            suggestion_distance = current_distance
-        }
-    }
-    if(suggestion == name){
-        // avoid messages such as
-        // "object has no attribute 'foo'. Did you mean: 'foo'?"
-        return null
-    }
-    return suggestion
+function calculate_suggestions(list, name){
+    return $B.imported._suggestions._generate_suggestions(list, name)
 }
 
 $B.offer_suggestions_for_attribute_error = function(exc){
@@ -1422,6 +1317,9 @@ function _find_keyword_typos(err){
     }
     for(let token of $B.tokenizer(error_code, '<debug>', 'exec')){
         if(token.type == $B.py_tokens['NAME']){
+            if(python_keywords.includes(token.string)){
+                continue
+            }
             var suggestions = calculate_suggestions(python_keywords, token.string)
             if(suggestions){
                 console.log(token.lineno)

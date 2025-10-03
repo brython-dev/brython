@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-10-03 08:55:48.289129"
-__BRYTHON__.timestamp=1759474548288
+__BRYTHON__.compiled_date="2025-10-03 10:40:22.555365"
+__BRYTHON__.timestamp=1759480822555
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5073,52 +5073,7 @@ return exc}
 $B.recursion_error=function(frame){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
 return exc}
-var MAX_CANDIDATE_ITEMS=750,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
-function LEAST_FIVE_BITS(n){return((n)& 31)}
-function levenshtein_distance(a,b,max_cost){
-if(a==b){return 0}
-if(a.length < b.length){[a,b]=[b,a]}
-while(a.length && a[0]==b[0]){a=a.substr(1)
-b=b.substr(1)}
-while(a.length && a[a.length-1]==b[b.length-1]){a=a.substr(0,a.length-1)
-b=b.substr(0,b.length-1)}
-if(b.length==0){return a.length*MOVE_COST}
-if((b.length-a.length)*MOVE_COST > max_cost){return max_cost+1}
-var buffer=[]
-for(var i=0;i < a.length;i++){
-buffer[i]=(i+1)*MOVE_COST}
-var result=0
-for(var b_index=0;b_index < b.length;b_index++){var code=b[b_index]
-var distance=result=b_index*MOVE_COST;
-var minimum=SIZE_MAX;
-for(var index=0;index < a.length;index++){
-var substitute=distance+substitution_cost(code,a[index])
-distance=buffer[index]
-var insert_delete=Math.min(result,distance)+MOVE_COST
-result=Math.min(insert_delete,substitute)
-buffer[index]=result
-if(result < minimum){minimum=result}}
-if(minimum > max_cost){
-return max_cost+1}}
-return result}
-function substitution_cost(a,b){if(LEAST_FIVE_BITS(a)!=LEAST_FIVE_BITS(b)){
-return MOVE_COST}
-if(a==b){return 0}
-if(a.toLowerCase()==b.toLowerCase()){return CASE_COST}
-return MOVE_COST}
-function calculate_suggestions(dir,name){if(dir.length >=MAX_CANDIDATE_ITEMS){return null}
-var suggestion_distance=2**52,suggestion=null
-for(var item of dir){
-var max_distance=(name.length+item.length+3)*MOVE_COST/6
-max_distance=Math.min(max_distance,suggestion_distance-1)
-var current_distance=
-levenshtein_distance(name,item,max_distance)
-if(current_distance > max_distance){continue}
-if(!suggestion ||current_distance < suggestion_distance){suggestion=item
-suggestion_distance=current_distance}}
-if(suggestion==name){
-return null}
-return suggestion}
+function calculate_suggestions(list,name){return $B.imported._suggestions._generate_suggestions(list,name)}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 if(name===_b_.None){return _b_.None}
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
@@ -5362,7 +5317,8 @@ var error_code_lines=error_code.map(x=> x.substr(indent))
 error_code=error_code_lines.join('\n')
 if(error_code.length > 1024){return}
 if(python_keywords===undefined){python_keywords=Object.keys($B.python_keywords)}
-for(let token of $B.tokenizer(error_code,'<debug>','exec')){if(token.type==$B.py_tokens['NAME']){var suggestions=calculate_suggestions(python_keywords,token.string)
+for(let token of $B.tokenizer(error_code,'<debug>','exec')){if(token.type==$B.py_tokens['NAME']){if(python_keywords.includes(token.string)){continue}
+var suggestions=calculate_suggestions(python_keywords,token.string)
 if(suggestions){console.log(token.lineno)
 var new_line=token.line.substr(0,token.col_offset)+
 suggestions+token.line.substr(token.end_col_offset)
@@ -12145,6 +12101,52 @@ var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}
 return _b_.None},warn_explicit:function(){
 console.log("warn_explicit",arguments)}}
+var MAX_CANDIDATE_ITEMS=750,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
+function LEAST_FIVE_BITS(n){return((n)& 31)}
+function levenshtein_distance(a,b,max_cost){
+if(a==b){return 0}
+if(a.length < b.length){[a,b]=[b,a]}
+while(a.length && a[0]==b[0]){a=a.substr(1)
+b=b.substr(1)}
+while(a.length && a[a.length-1]==b[b.length-1]){a=a.substr(0,a.length-1)
+b=b.substr(0,b.length-1)}
+if(b.length==0){return a.length*MOVE_COST}
+if((b.length-a.length)*MOVE_COST > max_cost){return max_cost+1}
+var buffer=[]
+for(var i=0;i < a.length;i++){
+buffer[i]=(i+1)*MOVE_COST}
+var result=0
+for(var b_index=0;b_index < b.length;b_index++){var code=b[b_index]
+var distance=result=b_index*MOVE_COST;
+var minimum=SIZE_MAX;
+for(var index=0;index < a.length;index++){
+var substitute=distance+substitution_cost(code,a[index])
+distance=buffer[index]
+var insert_delete=Math.min(result,distance)+MOVE_COST
+result=Math.min(insert_delete,substitute)
+buffer[index]=result
+if(result < minimum){minimum=result}}
+if(minimum > max_cost){
+return max_cost+1}}
+return result}
+function substitution_cost(a,b){if(LEAST_FIVE_BITS(a)!=LEAST_FIVE_BITS(b)){
+return MOVE_COST}
+if(a==b){return 0}
+if(a.toLowerCase()==b.toLowerCase()){return CASE_COST}
+return MOVE_COST}
+modules['_suggestions']={_generate_suggestions:function(dir,name){if(dir.length >=MAX_CANDIDATE_ITEMS){return null}
+var suggestion_distance=2**52,suggestion=null
+for(var item of dir){
+var max_distance=(name.length+item.length+3)*MOVE_COST/6
+max_distance=Math.min(max_distance,suggestion_distance-1)
+var current_distance=
+levenshtein_distance(name,item,max_distance)
+if(current_distance > max_distance){continue}
+if(!suggestion ||current_distance < suggestion_distance){suggestion=item
+suggestion_distance=current_distance}}
+if(suggestion==name){
+return null}
+return suggestion}}
 var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
 function handle_kwargs(kw,method){var result={cache:false,format:'text',mode:'text',headers:{}}
 for(let item of _b_.dict.$iter_items(kw)){let key=item.key,value=item.value
