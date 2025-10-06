@@ -494,6 +494,15 @@ def parse_stdlib(stdlib_dir, js_name='brython_stdlib.js'):
 
     return stdlib
 
+# Get the absolute path of brython_stdlib.js from the current directory
+# or below.
+def find_stdlib(top_path):
+    stdlib_file = os.path.normcase("brython_stdlib.js")
+    for dirname, _, filenames in os.walk(top_path):
+        for filename in filenames:
+            if os.path.normcase(filename) == stdlib_file:
+                return dirname
+    return None
 
 def load_stdlib_sitepackages():
     """
@@ -502,17 +511,13 @@ def load_stdlib_sitepackages():
     :return:
 
     """
-    stdlib_dir = None
-    for dirname, dirnames, filenames in os.walk(os.getcwd()):
-        for filename in filenames:
-            if filename == "brython_stdlib.js":
-                stdlib_dir = dirname
-                stdlib = parse_stdlib(stdlib_dir)
-                break
+    stdlib_dir = find_stdlib(os.getcwd())
 
-    if not stdlib_dir:
+    if stdlib_dir is None:
         raise FileNotFoundError("Could not find brython_stdlib.js in this"
                                 " directory or below")
+
+    stdlib = parse_stdlib(stdlib_dir)
 
     # search in site-packages
     sp_dir = os.path.join(stdlib_dir, "Lib", "site-packages")
@@ -571,15 +576,20 @@ def load_user_modules(modules_paths):
         modules_dirs = [os.getcwd()]
     else:
         with open(modules_paths, encoding='utf-8') as f:
-            modules_dirs = [line.strip() for line in f if line.strip()]
+            modules_dirs = [os.path.abspath(line.strip()) for line in f if line.strip()]
+    
+    # All module directories should be considered valid package paths,
+    # as that's how the user likely used them.
+    packages.update(modules_dirs)
+
     user_modules = {}
     for module_dir in modules_dirs:
-        for dirname, dirnames, filenames in os.walk(module_dir):
+        for dirname, _, filenames in os.walk(module_dir):
             for filename in filenames:
                 name, ext = os.path.splitext(filename)
                 if not ext == ".py" or filename == "list_modules.py":
                     continue
-                if dirname == os.getcwd():
+                if dirname == module_dir:
                     # modules in the same directory
                     path = os.path.join(dirname, filename)
                     with open(path, encoding="utf-8") as fobj:
@@ -593,7 +603,7 @@ def load_user_modules(modules_paths):
                 elif is_package(dirname):
                     # modules in packages below current directory
                     path = os.path.join(dirname, filename)
-                    package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
+                    package = dirname[len(module_dir) + 1:].replace(os.sep, '.')
                     if package.startswith('Lib.site-packages.'):
                         package = package[len('Lib.site-packages.'):]
                     if filename == "__init__.py":
@@ -602,10 +612,9 @@ def load_user_modules(modules_paths):
                         module_name = "{}.{}".format(package, name)
                     with open(path, encoding="utf-8") as fobj:
                         src = fobj.read()
-                    #mf = ModulesFinder(dirname)
-                    #imports = mf.get_imports(src, package or None)
-                    #imports = sorted(list(imports))
-                    user_modules[module_name] = [ext, src, None]
+                    mf = ModulesFinder(dirname)
+                    imports = sorted(list(mf.get_imports(src, package or None)))
+                    user_modules[module_name] = [ext, src, imports]
                     if module_name == package:
                         user_modules[module_name].append(1)
 
