@@ -939,7 +939,7 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     }
     if((! has_starred) && right_length > left_length){
         var exc = _b_.ValueError.$factory("too many values to unpack " +
-            `(expected ${left_length})`)
+            `(expected ${left_length}, got ${right_length})`)
         throw exc
     }
     t.index = -1

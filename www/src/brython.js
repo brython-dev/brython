@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-10-03 10:40:22.555365"
-__BRYTHON__.timestamp=1759480822555
+__BRYTHON__.compiled_date="2025-10-06 09:44:36.417352"
+__BRYTHON__.timestamp=1759736676417
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1514,7 +1514,7 @@ var exc=_b_.ValueError.$factory(`not enough values to unpack `+
 `${left_length}, got ${right_length})`)
 throw exc}
 if((! has_starred)&& right_length > left_length){var exc=_b_.ValueError.$factory("too many values to unpack "+
-`(expected ${left_length})`)
+`(expected ${left_length}, got ${right_length})`)
 throw exc}
 t.index=-1
 t.read_one=function(){t.index++
