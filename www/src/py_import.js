@@ -332,7 +332,7 @@ function run_py(module_contents, path, module, compiled) {
         for(let attr in mod){
             module[attr] = mod[attr]
         }
-        module.__initializing__ = false
+        module.__initialized__ = true
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
         // See issue #7
@@ -1093,7 +1093,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
                 _b_.setattr($B.imported[_parent_name], parsed_name[i],
                     $B.imported[_mod_name])
             }
-            // [Import spec] If __path__ can not be accessed an ImportError is raised
+            // [Import spec] Module check
             if(i < len){
                 try{
                     __path__ = $B.$getattr($B.imported[_mod_name], "__path__")

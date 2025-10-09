@@ -22,8 +22,8 @@ def cleanout(root):
 def fixdir(lst):
     if "__builtins__" in lst:
         lst.remove("__builtins__")
-    if "__initializing__" in lst:
-        lst.remove("__initializing__")
+    if "__initialized__" in lst:
+        lst.remove("__initialized__")
     return lst
 
 

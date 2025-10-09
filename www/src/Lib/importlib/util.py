@@ -127,7 +127,7 @@ def _module_to_load(name):
         module = type(sys)(name)
         # This must be done before putting the module in sys.modules
         # (otherwise an optimization shortcut in import.c becomes wrong)
-        module.__initializing__ = True
+        module.__initialized__ = False
         sys.modules[name] = module
     try:
         yield module
@@ -138,7 +138,7 @@ def _module_to_load(name):
             except KeyError:
                 pass
     finally:
-        module.__initializing__ = False
+        module.__initialized__ = True
 
 
 def set_package(fxn):
