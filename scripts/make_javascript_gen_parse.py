@@ -2,7 +2,7 @@ import os
 import version
 import sys
 
-from directories import src_dir
+from directories import root_dir, src_dir
 import version
 vnum = '.'.join(str(num) for num in version.version[:2])
 
