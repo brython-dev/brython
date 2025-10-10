@@ -1,8 +1,58 @@
 """Adapt CPython's python.gram "grammar actions" to Javascript
 """
 import re
+import shlex
+
+def mute_strings(action):
+    result = ''
+
+    strings = []
+    ix = 0
+    while ix < len(action):
+        char = action[ix]
+        if char == '"':
+            lexer = shlex.shlex(action[ix:])
+            j = ix + 1
+            while True:
+                char = action[j]
+                if char == '"' and action[j - 1] != '\\':
+                    end = j
+                    break
+                j += 1
+            if end == -1:
+                print(result)
+                raise SyntaxError('unfinished string')
+            string = action[ix + 1: end]
+            strings.append(string)
+            result += f'"{' ' * len(string)}"'
+            ix = end + 1
+        else:
+            result += char
+            ix += 1
+
+    return result, strings
+
+def restore_strings(action, strings):
+    result = ''
+
+    ix = 0
+    while ix < len(action):
+        char = action[ix]
+        if char == '"':
+            end = action.find(char, ix + 1)
+            if end == -1:
+                print(result)
+                raise SyntaxError('unfinished string')
+            result += f'"{strings.pop()}"'
+            ix = end + 1
+        else:
+            result += char
+            ix += 1
+
+    return result
 
 def transform_action(action):
+    action, strings = mute_strings(action)
     action0 = re.sub(r'\(\s*[a-z][a-z_]*\*?\s*\)\s*([a-z_]+)', r'\1', action)
     action1 = re.sub(r'\s*->\s*v\s*\..*?\*?\.', '.', action0)
     action2 = re.sub(r'\(\(.*_ty\) (.*?)\)', r'\1', action1)
@@ -68,7 +118,9 @@ def transform_action(action):
 
     action10 = re.sub('PyErr_Occurred', '$B._PyPegen.PyErr_Occurred', action10)
 
-    return action10
+    #return action10
+    action11 = restore_strings(action10, strings)
+    return action11
 
 operators = [
     # binary operators
@@ -117,7 +169,15 @@ helper_functions = [
     "PyErr_Occurred"]
 
 if __name__ == '__main__':
-    src = """_PyAST_alias(a->v.Name.id,
-                                               (b) ? ((expr_ty) b)->v.Name.id : NULL,
-                                               EXTRA)"""
+    src = """CHECK_VERSION(
+            stmt_ty,
+            6,
+            "Variable annotation syntax is",
+            _PyAST_AnnAssign(CHECK(expr_ty, _PyPegen_set_expr_context(p, a, Store)), b, c, 1, EXTRA)
+        )"""
+    action, strings = mute_strings(src)
+    print(src)
+    print(action)
+    print(strings)
+
     print(transform_action(src))
