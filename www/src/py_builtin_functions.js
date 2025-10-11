@@ -432,9 +432,6 @@ _b_.delattr = function(obj, attr) {
         throw _b_.TypeError.$factory("attribute name must be string, not '" +
             $B.class_name(attr) + "'")
     }
-    if(obj.__class__ === _b_.type){
-        return _b_.type.__getattribute__(obj, '__delattr__')(attr)
-    }
     // If the object's class has a __delattr__ method, use it
     var deleter = $B.search_in_mro($B.get_class(obj), '__delattr__')
     if(deleter){
