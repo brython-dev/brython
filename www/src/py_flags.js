@@ -2,15 +2,15 @@
 (function($B){
 $B.builtin_class_flags = {
     builtins: {
-        1073763586: ['NotADirectoryError', 'ConnectionResetError', 'TypeError', 'KeyboardInterrupt', 'SyntaxError', 'ProcessLookupError', 'AssertionError', 'FloatingPointError', 'ChildProcessError', 'PendingDeprecationWarning', 'UnicodeEncodeError', 'BufferError', 'ZeroDivisionError', 'DeprecationWarning', 'RecursionError', 'IsADirectoryError', 'StopAsyncIteration', 'UnicodeDecodeError', 'BytesWarning', 'UnicodeError', 'OSError', 'PermissionError', 'BaseException', 'ResourceWarning', 'Exception', 'RuntimeError', 'UnicodeWarning', 'ConnectionError', 'EnvironmentError', 'TabError', 'UnboundLocalError', 'WindowsError', 'ReferenceError', 'KeyError', 'IOError', 'NotImplementedError', 'OverflowError', 'RuntimeWarning', 'SyntaxWarning', 'LookupError', 'FileExistsError', 'ArithmeticError', 'FileNotFoundError', 'IndentationError', 'ImportError', 'BrokenPipeError', 'GeneratorExit', 'AttributeError', 'ConnectionAbortedError', 'StopIteration', 'ConnectionRefusedError', 'EOFError', 'IndexError', 'InterruptedError', 'UserWarning', 'SystemExit', 'TimeoutError', 'MemoryError', 'UnicodeTranslateError', '_IncompleteInputError', 'FutureWarning', 'BaseExceptionGroup', 'ImportWarning', 'NameError', 'PythonFinalizationError', 'Warning', 'BlockingIOError', 'ModuleNotFoundError', 'SystemError', 'ValueError', 'EncodingWarning'],
+        1073763586: ['AttributeError', 'BaseExceptionGroup', 'GeneratorExit', 'IndexError', 'BaseException', 'ConnectionAbortedError', 'WindowsError', 'LookupError', 'SystemExit', 'Warning', 'UnicodeError', 'DeprecationWarning', 'SyntaxError', '_IncompleteInputError', 'FileExistsError', 'BytesWarning', 'FileNotFoundError', 'NameError', 'UnicodeTranslateError', 'ConnectionResetError', 'TabError', 'UnicodeEncodeError', 'PythonFinalizationError', 'StopAsyncIteration', 'UnicodeDecodeError', 'AssertionError', 'KeyError', 'ValueError', 'NotADirectoryError', 'FloatingPointError', 'OSError', 'OverflowError', 'NotImplementedError', 'BlockingIOError', 'UnboundLocalError', 'BrokenPipeError', 'ChildProcessError', 'EncodingWarning', 'IOError', 'EnvironmentError', 'InterruptedError', 'ReferenceError', 'Exception', 'KeyboardInterrupt', 'ArithmeticError', 'IndentationError', 'RuntimeWarning', 'ModuleNotFoundError', 'ProcessLookupError', 'IsADirectoryError', 'ResourceWarning', 'UserWarning', 'TypeError', 'ImportWarning', 'EOFError', 'RecursionError', 'UnicodeWarning', 'TimeoutError', 'SystemError', 'MemoryError', 'FutureWarning', 'RuntimeError', 'PermissionError', 'ImportError', 'StopIteration', 'ZeroDivisionError', 'ConnectionError', 'PendingDeprecationWarning', 'SyntaxWarning', 'ConnectionRefusedError', 'BufferError'],
         1073763848: ['ExceptionGroup'],
         20975874: ['bool'],
-        4199682: ['bytearray', 'float'],
+        4199682: ['float', 'bytearray'],
         138417410: ['bytes'],
-        21762: ['staticmethod', 'filter', 'map', 'property', 'enumerate', 'super', 'reversed', 'zip', 'classmethod'],
+        21762: ['enumerate', 'staticmethod', 'reversed', 'map', 'zip', 'property', 'classmethod', 'super', 'filter'],
         5378: ['complex', 'object'],
         541087042: ['dict'],
-        4216066: ['frozenset', 'set'],
+        4216066: ['set', 'frozenset'],
         20976898: ['int'],
         37770530: ['list'],
         20770: ['memoryview'],
@@ -21,10 +21,10 @@ $B.builtin_class_flags = {
         2155896066: ['type'],
     },
     types: {
-        20866: ['async_generator', 'frame', 'coroutine', 'method-wrapper', 'classmethod_descriptor', 'getset_descriptor', 'PyCapsule', 'member_descriptor', 'generator'],
+        20866: ['generator', 'classmethod_descriptor', 'member_descriptor', 'method-wrapper', 'async_generator', 'PyCapsule', 'coroutine', 'getset_descriptor', 'frame'],
         22914: ['builtin_function_or_method'],
         20738: ['traceback', 'cell'],
-        4354: ['NotImplementedType', 'code', 'ellipsis', 'NoneType'],
+        4354: ['ellipsis', 'code', 'NoneType', 'NotImplementedType'],
         153858: ['function'],
         20802: ['mappingproxy'],
         153986: ['method_descriptor'],
