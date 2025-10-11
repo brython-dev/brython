@@ -1093,9 +1093,7 @@ $B.$getitem1 = function(obj, item){
 $B.getitem_slice = function(obj, slice){
     var res
     if(Array.isArray(obj) && obj.__class__ === _b_.list){
-        var res = _b_.list.$getitem(obj, slice)
-        res.__class__ = obj.__class__
-        return res
+        return _b_.list.$getitem(obj, slice)
     }else if(typeof obj == "string"){
         return _b_.str.__getitem__(obj, slice)
     }
