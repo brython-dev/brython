@@ -3318,6 +3318,11 @@ assert not t
 assert_raises(OSError, os.stat, 'coucou')
 assert not os.path.exists('coucou')
 
+
+# issue 2615
+import datetime
+assert datetime.time(0).strftime('%I') == '12'
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

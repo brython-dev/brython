@@ -4,6 +4,7 @@ name = "pypi"
 url = "https://pypi.python.org/simple"
 
 [dev-packages]
+aiohttp = "*"
 
 [packages]
 

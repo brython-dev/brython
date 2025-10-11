@@ -262,8 +262,8 @@ def strftime(_format,t = None):
     HH = t[3]
     HH24 = ns(HH, 2)
     HH12 = ns(HH % 12, 2)
-    if HH12 == 0:
-            HH12 = 12
+    if HH12 == '00':
+            HH12 = '12'
     AMPM = 'AM' if 0 <= HH < 12 else 'PM'
     MM = ns(t[4], 2)
     SS = ns(t[5], 2)
