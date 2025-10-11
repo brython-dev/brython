@@ -1305,6 +1305,8 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     return _build_concatenated_joined_str(p, strings)
 }
 
+$B._PyPegen.concatenate_tstrings = $B._PyPegen.concatenate_strings
+
 $B._PyPegen.checked_future_import = function(p, module,
         names, level, lineno, col_offset, end_lineno, end_col_offset,
         arena){

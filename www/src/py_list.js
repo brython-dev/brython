@@ -189,40 +189,48 @@ list.$getitem = function(self, key){
             " index out of range")
     }
     if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
-        // Find integer values for start, stop and step
-        if(key.start === _b_.None && key.stop === _b_.None &&
-                key.step === _b_.None){
-            return self.slice()
-        }
-        let s = _b_.slice.$conv_for_seq(key, self.length)
-        // Return the sliced list
-        let res = [],
-            items = self.valueOf(),
-            pos = 0,
-            start = s.start,
-            stop = s.stop,
-            step = s.step
-        if(step > 0){
-            if(stop <= start){
-                return factory(res)
-            }
-            for(let i = start; i < stop; i += step){
-               res[pos++] = items[i]
-            }
-            return factory(res)
-        }else{
-            if(stop > start){
-                return factory(res)
-            }
-            for(let i = start; i > stop; i += step){
-               res[pos++] = items[i]
-            }
-            return factory(res)
-        }
+        return _b_.list.$getitem_slice(self, key)
     }
 
     throw _b_.TypeError.$factory($B.class_name(self) +
         " indices must be integer, not " + $B.class_name(key))
+}
+
+list.$getitem_slice = function(self, key){
+    var klass = self.__class__ ?? $B.get_class(self)
+    // Find integer values for start, stop and step
+    if(key.start === _b_.None && key.stop === _b_.None &&
+            key.step === _b_.None){
+        let res = self.slice()
+        res.__class__ = klass
+        return res
+    }
+    let s = _b_.slice.$conv_for_seq(key, self.length)
+    // Return the sliced list
+    let res = [],
+        items = self.valueOf(),
+        pos = 0,
+        start = s.start,
+        stop = s.stop,
+        step = s.step
+    res.__class__ = klass
+    if(step > 0){
+        if(stop <= start){
+            return res
+        }
+        for(let i = start; i < stop; i += step){
+           res[pos++] = items[i]
+        }
+        return res
+    }else{
+        if(stop > start){
+            return res
+        }
+        for(let i = start; i > stop; i += step){
+           res[pos++] = items[i]
+        }
+        return res
+    }
 }
 
 list.__ge__ = function(self, other){
