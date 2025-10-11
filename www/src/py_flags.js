@@ -2,12 +2,12 @@
 (function($B){
 $B.builtin_class_flags = {
     builtins: {
-        1073763586: ['AttributeError', 'BaseExceptionGroup', 'GeneratorExit', 'IndexError', 'BaseException', 'ConnectionAbortedError', 'WindowsError', 'LookupError', 'SystemExit', 'Warning', 'UnicodeError', 'DeprecationWarning', 'SyntaxError', '_IncompleteInputError', 'FileExistsError', 'BytesWarning', 'FileNotFoundError', 'NameError', 'UnicodeTranslateError', 'ConnectionResetError', 'TabError', 'UnicodeEncodeError', 'PythonFinalizationError', 'StopAsyncIteration', 'UnicodeDecodeError', 'AssertionError', 'KeyError', 'ValueError', 'NotADirectoryError', 'FloatingPointError', 'OSError', 'OverflowError', 'NotImplementedError', 'BlockingIOError', 'UnboundLocalError', 'BrokenPipeError', 'ChildProcessError', 'EncodingWarning', 'IOError', 'EnvironmentError', 'InterruptedError', 'ReferenceError', 'Exception', 'KeyboardInterrupt', 'ArithmeticError', 'IndentationError', 'RuntimeWarning', 'ModuleNotFoundError', 'ProcessLookupError', 'IsADirectoryError', 'ResourceWarning', 'UserWarning', 'TypeError', 'ImportWarning', 'EOFError', 'RecursionError', 'UnicodeWarning', 'TimeoutError', 'SystemError', 'MemoryError', 'FutureWarning', 'RuntimeError', 'PermissionError', 'ImportError', 'StopIteration', 'ZeroDivisionError', 'ConnectionError', 'PendingDeprecationWarning', 'SyntaxWarning', 'ConnectionRefusedError', 'BufferError'],
+        1073763586: ['MemoryError', 'UnicodeWarning', 'UnicodeError', 'UserWarning', 'ZeroDivisionError', 'BlockingIOError', 'BaseException', 'StopIteration', 'GeneratorExit', 'ImportWarning', 'SyntaxError', 'IndexError', 'ChildProcessError', 'InterruptedError', 'RecursionError', 'OverflowError', 'PermissionError', 'TypeError', 'StopAsyncIteration', 'SyntaxWarning', 'ConnectionRefusedError', 'UnicodeDecodeError', 'ArithmeticError', 'Exception', 'UnicodeEncodeError', 'KeyboardInterrupt', 'NotADirectoryError', 'ImportError', 'UnicodeTranslateError', 'WindowsError', 'LookupError', 'AssertionError', 'ReferenceError', '_IncompleteInputError', 'EncodingWarning', 'NotImplementedError', 'ConnectionAbortedError', 'AttributeError', 'DeprecationWarning', 'PythonFinalizationError', 'TabError', 'KeyError', 'IndentationError', 'ModuleNotFoundError', 'SystemExit', 'ResourceWarning', 'ConnectionError', 'RuntimeError', 'SystemError', 'EnvironmentError', 'ValueError', 'IsADirectoryError', 'ConnectionResetError', 'FloatingPointError', 'BufferError', 'BaseExceptionGroup', 'PendingDeprecationWarning', 'UnboundLocalError', 'BrokenPipeError', 'RuntimeWarning', 'FutureWarning', 'TimeoutError', 'BytesWarning', 'EOFError', 'FileNotFoundError', 'OSError', 'IOError', 'ProcessLookupError', 'NameError', 'FileExistsError', 'Warning'],
         1073763848: ['ExceptionGroup'],
         20975874: ['bool'],
         4199682: ['float', 'bytearray'],
         138417410: ['bytes'],
-        21762: ['enumerate', 'staticmethod', 'reversed', 'map', 'zip', 'property', 'classmethod', 'super', 'filter'],
+        21762: ['zip', 'map', 'classmethod', 'filter', 'enumerate', 'reversed', 'staticmethod', 'super', 'property'],
         5378: ['complex', 'object'],
         541087042: ['dict'],
         4216066: ['set', 'frozenset'],
@@ -21,10 +21,10 @@ $B.builtin_class_flags = {
         2155896066: ['type'],
     },
     types: {
-        20866: ['generator', 'classmethod_descriptor', 'member_descriptor', 'method-wrapper', 'async_generator', 'PyCapsule', 'coroutine', 'getset_descriptor', 'frame'],
+        20866: ['classmethod_descriptor', 'getset_descriptor', 'frame', 'async_generator', 'coroutine', 'member_descriptor', 'PyCapsule', 'generator', 'method-wrapper'],
         22914: ['builtin_function_or_method'],
         20738: ['traceback', 'cell'],
-        4354: ['ellipsis', 'code', 'NoneType', 'NotImplementedType'],
+        4354: ['ellipsis', 'NotImplementedType', 'NoneType', 'code'],
         153858: ['function'],
         20802: ['mappingproxy'],
         153986: ['method_descriptor'],
