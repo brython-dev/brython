@@ -154,7 +154,7 @@ out your changes to Brython.
 
 ### Running the test suite before committing
 
-Navigating to [localhost:8000/tests](http://localhost:8000/tests/)
+Navigating to [localhost:8000/tests](http://localhost:8000/tests/index.html)
 you can run the full Brython test suite manually by clicking on "Run all
 tests".
 
