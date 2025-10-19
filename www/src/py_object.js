@@ -360,7 +360,23 @@ object.__init__ = function(){
         throw _b_.TypeError.$factory("descriptor '__init__' of 'object' " +
             "object needs an argument")
     }
-    // object.__init__ does nothing else
+    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
+            'args', 'kw'),
+        self = $.self
+    if($.args.length > 0 || _b_.dict.__len__($.kw) > 0){
+        var type = $B.get_class(self)
+        var tp_init = $B.search_in_mro(type, '__init__')
+        if(tp_init !== object.__init__){
+            throw _b_.TypeError.$factory(
+                "object.__init__() takes exactly one argument (the instance to initialize)")
+        }
+        var tp_new = $B.search_in_mro(type, '__new__')
+        if(tp_new == object.__new__){
+            throw _b_.TypeError.$factory(
+                `${$B.class_name(self)}.__init__() takes exactly` +
+                ` one argument (the instance to initialize)`)
+        }
+    }
     return _b_.None
 }
 

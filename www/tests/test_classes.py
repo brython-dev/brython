@@ -1183,4 +1183,26 @@ a = MyClass()
 assert a.method() == 'method'
 assert a.method() == 'another_method'
 
+# issue 2614
+class A:
+  pass
+
+assert_raises(TypeError, object.__init__, A(), 1)
+
+class Foo:
+  def __init__(self, foo_id, **kwargs):
+    super().__init__(**kwargs)
+    self.foo_id = foo_id
+
+expected = "object.__init__() takes exactly one argument (the instance to initialize)"
+assert_raises(TypeError, Foo, foo_id=1, bar_id=2,
+  msg=expected)
+
+t = {'x': 1}
+assert_raises(TypeError, Foo, foo_id=1, bar_id=2,
+  msg=expected)
+
+Foo(foo_id=1)
+Foo(foo_id=1, **{})
+  
 print('passed all tests..')

@@ -220,8 +220,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-10-18 08:44:09.005897"
-__BRYTHON__.timestamp=1760769849005
+__BRYTHON__.compiled_date="2025-10-19 19:09:13.792250"
+__BRYTHON__.timestamp=1760893753791
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2026,6 +2026,15 @@ if(hash !==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--}
 object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
 "object needs an argument")}
+var $=$B.args('__init__',1,{self:null},['self'],arguments,{},'args','kw'),self=$.self
+if($.args.length > 0 ||_b_.dict.__len__($.kw)> 0){var type=$B.get_class(self)
+var tp_init=$B.search_in_mro(type,'__init__')
+if(tp_init !==object.__init__){throw _b_.TypeError.$factory(
+"object.__init__() takes exactly one argument (the instance to initialize)")}
+var tp_new=$B.search_in_mro(type,'__new__')
+if(tp_new==object.__new__){throw _b_.TypeError.$factory(
+`${$B.class_name(self)}.__init__() takes exactly`+
+` one argument (the instance to initialize)`)}}
 return _b_.None}
 object.__le__=function(){return _b_.NotImplemented}
 object.__lt__=function(){return _b_.NotImplemented}
