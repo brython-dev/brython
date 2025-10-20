@@ -179,4 +179,8 @@ except Exception as error:
     print(error)
     print("Warning - no changelog file")
 
+# raise exception if version is not in variable doc_versions of
+# script assets/header.py
+import check_doc_versions
+
 import make_pyproject_toml
