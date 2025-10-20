@@ -4,6 +4,7 @@ from directories import root_dir
 import version
 
 current = '.'.join(map(str, version.implementation[:2]))
+current = f'"{current}"'
 
 header_file = os.path.join(root_dir, 'www', 'assets', 'header.py')
 with open(header_file, encoding='utf-8') as f:
