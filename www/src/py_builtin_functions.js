@@ -4007,6 +4007,7 @@ _b_.open = function(){
             // Try to load file by synchronous Ajax call
             var req = new XMLHttpRequest()
             // Set mimetype so that bytes are not modified
+            // Cannot set responseType on a synchronous request
             req.overrideMimeType('text/plain;charset=x-user-defined')
             req.onreadystatechange = function(){
                 if(this.readyState != 4){
@@ -4024,7 +4025,6 @@ _b_.open = function(){
                         var cp = codePoint.codePointAt(0)
                         if(cp > 0xf700){
                             cp -= 0xf700
-
                         }
                         bytes[bytes.length] = cp
                     }
