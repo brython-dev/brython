@@ -2654,9 +2654,12 @@ str.$factory = function(arg, encoding){
         if(klass === undefined){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
-        var method = $B.$getattr(klass, "__str__", null)
-        if(method === null){
-            method = $B.$getattr(klass, '__repr__')
+        var method = $B.search_in_mro(klass, "__str__")
+        if(method === undefined){
+            method = $B.search_in_mro(klass, '__repr__')
+        }
+        if(method === undefined){
+            throw _b_.AttributeError.$factory('no str', klass)
         }
     }catch(err){
         console.log("no __str__ for", arg)
