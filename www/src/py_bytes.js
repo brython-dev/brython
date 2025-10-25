@@ -1915,7 +1915,7 @@ var encode = $B.encode = function(){
 function fast_bytes(t){
     return {
         __class__: _b_.bytes,
-        source: t
+        source: t ?? []
     }
 }
 
