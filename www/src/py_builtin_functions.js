@@ -2861,6 +2861,8 @@ _b_.vars = function(){
 
 var IOUnsupported
 
+const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
+
 function _io_unsupported(value){
     if(IOUnsupported === undefined){
         IOUnsupported = $B.make_class('UnsupportedOperation')
@@ -2881,13 +2883,21 @@ _IOBase.__exit__ = function(self){
     _IOBase.close(self)
 }
 
-_IOBase.__iter__ = function(self){
-    self.$lc = -1
-    delete self.$lines
-    make_lines(self)
-    return self
+_IOBase.__iter__ = function(_self){
+    if(_self.closed){
+        throw _b_.ValueError.$factory('closed')
+    }
+    return _self
 }
 
+_IOBase.__next__ = function(_self){
+    var line = _IOBase.readline(_self)
+
+    if(line == undefined || _b_.len(line) === 0){
+        throw _b_.StopIteration('')
+    }
+    return line;
+}
 /*
 _IOBase.__bool__ = function(){
     return true
@@ -3007,6 +3017,7 @@ function make_lines(self){
     }
 }
 
+/*
 _IOBase.readline = function(){
     var $ = $B.args("readline", 2, {self: null, size: null},
             ["self", "size"], arguments, {size: -1}, null, null),
@@ -3077,6 +3088,79 @@ _IOBase.readline = function(){
         }
     }
 }
+*/
+
+_IOBase.readline = function(_self, limit=-1){
+
+    var $ = $B.args('readline', 2, {self: null, limit: null},
+                ['self', 'limit'], arguments, {limit: -1}, null, null),
+        _self = $.self,
+        limit = $.limit
+
+    var old_size = -1
+
+    var peek = $B.$getattr(_self, "peek", null)
+    console.log('peek', peek)
+
+    var buffer = []
+
+    while (limit < 0 || buffer.length < limit) {
+        var nreadahead = 1
+        var b
+
+        if(peek != null){
+            var readahead = peek(1)
+            if (! $B.$isinstance(readahead, _b_.bytes)) {
+                throw _b_.OSError.$factory(
+                     "peek() should have returned a bytes object, " +
+                     `not '${$B.class_name(readahead)}'`)
+            }
+            if(readahead.length > 0){
+                var n = 0
+                var buf = _b_.bytes.$decode(readahead, 'latin-1')
+                if(limit >= 0){
+                    while(true) {
+                        if(n >= readahead.length || n >= limit){
+                            break
+                        }
+                        if(buf[n++] == '\n'){
+                            break
+                        }
+                    }
+                }else{
+                    while(true){
+                        if(n >= readahead.length){
+                            break
+                        }
+                        if(buf[n++] == '\n'){
+                            break
+                        }
+                    }
+                }
+                nreadahead = n
+            }
+        }
+
+        var read = $B.search_in_mro($B.get_class(_self), "read")
+        console.log('read', read)
+        b = $B.$call(read)(_self, nreadahead)
+        if(! $B.$isinstance(b, _b_.bytes)) {
+            throw _b_.OSError.$factory(
+                "read() should have returned a bytes object, " +
+                `not '${$B.class_name(b)}'`)
+        }
+        if(_b_.len(b) == 0){
+            break;
+        }
+
+        buffer = _b_.bytes.add(buffer, b)
+
+        if($B.last(_b_.list.$factory(buffer)) == 10){ // ends with '\n')
+            break
+        }
+    }
+    return buffer
+}
 
 /*
 _IOBase.readlines = function(){
@@ -3105,6 +3189,34 @@ _IOBase.readlines = function(){
     return $B.$list(lines)
 }
 */
+
+_IOBase.readlines = function(_self, hint){
+    var length = 0;
+    var result, it
+
+    result = []
+
+    if(hint <= 0){
+        return _b_.list.$factory(_self)
+    }
+
+    it = $B.make_js_iterator(_self)
+
+    while(true){
+        var line_length
+        var line = it.next();
+        if(line.done){
+            break; /* StopIteration raised */
+        }
+        result[result.length] = line
+        line_length = line.length
+        if(line_length > hint - length){
+            break
+        }
+        length += line_length;
+    }
+    return result
+}
 
 /*
 _IOBase.seek = function(self, offset, whence){
@@ -3191,6 +3303,19 @@ _IOBase.writelines = function(_self, lines){
     return _b_.None
 }
 
+_IOBase.writelines = function(_self, lines){
+    var iter, res;
+
+    if(_self.closed){
+        throw _b_.OSError.$factory('closed')
+    }
+    var writer = $B.$call($B.$getattr(_self, 'write'))
+    for(var line of $B.make_js_iterator(lines)){
+        writer(line)
+    }
+    return _b_.None
+}
+
 $B.set_func_names(_IOBase, "builtins")
 
 $B._RawIOBase = $B.make_class('_io._RawIOBase') // Base class for raw binary streams.
@@ -3198,11 +3323,374 @@ $B._RawIOBase = $B.make_class('_io._RawIOBase') // Base class for raw binary str
 $B._RawIOBase.__bases__ = [_IOBase]
 $B._RawIOBase.__mro__ = [_IOBase, _b_.object]
 
-$B._RawIOBase.read = function(){
-    throw _b_.NotImplementedError.$factory('read')
+$B._RawIOBase.read = function(_self, n){
+    var b, res
+
+    if(n < 0){
+        return $B.$call($B.$getattr(_self, "readall"))
+    }
+
+    b = _b_.bytearray.$factory()
+
+    $B.$call($B.$getattr(_self, "readinto"))(b)
+
+    return b
+}
+
+$B._RawIOBase.readall = function(_self){
+    var r
+    var chunks = []
+    var result
+
+    while (1) {
+        var data = $B.$call($B.$getattr(_self, "read"))(DEFAULT_BUFFER_SIZE)
+        if(data === _b_.None){
+            if (chunks.length == 0) {
+                return data
+            }
+            break
+        }
+        if(! $B.$isinstance(data, _b_.bytes)){
+            throw _b_.TypeError.$factory("read() should return bytes")
+        }
+        if(_b_.len(data) == 0){
+            break
+        }
+        chunks.push(data)
+    }
+    result = _b_.bytes.join(_b_.bytes.$fast_bytes([]), chunks)
+    return result
+}
+
+$B._RawIOBase.readinto = function(_self, b){
+    throw _b_.NotImplementedError('readinto')
+}
+
+$B._RawIOBase.write = function(){
+    throw _b_.NotImplementedError('readinto')
 }
 
 $B.set_func_names($B._RawIOBase, "_io")
+
+$B._BufferedIOBase = $B.make_class('_BufferedIOBase')
+$B._BufferedIOBase.__bases__ = [_IOBase]
+$B._BufferedIOBase.__mro__ = [_IOBase, _b_.object]
+
+function _bufferediobase_readinto_generic(_self, buffer, readinto1){
+    var len, data
+
+    var attr = readinto1 ? "read1" : "read"
+    data = $B.$call($B.$getattr(_self, attr))(buffer.length)
+
+    if(! $B.$isinstance(data, _b_.bytes)) {
+        throw _b_.TypeError.$factory("read() should return bytes")
+    }
+
+    len = _b_.bytes.__len__(data)
+    if(len > buffer.length) {
+        throw _b_.ValueError.$factory(
+            "read() returned too much data: "
+            `${buffer.length} bytes requested, ${len} returned`)
+    }
+    memcpy(buffer.buf, PyBytes_AS_STRING(data), len)
+
+    return len
+}
+
+$B._BufferedIOBase.readinto = function(_self, buffer){
+    return _bufferediobase_readinto_generic(_self, buffer, 0);
+}
+
+$B._BufferedIOBase.readinto1 = function(_self, buffer){
+    return _bufferediobase_readinto_generic(_self, buffer, 1);
+}
+
+$B._BufferedIOBase.detach = function(){
+    _io_unsupported("detach")
+}
+
+$B._BufferedIOBase.read = function(){
+    _io_unsupported("read")
+}
+
+$B._BufferedIOBase.read1 = function(){
+    _io_unsupported("read1")
+}
+
+$B._BufferedIOBase.write = function(){
+    _io_unsupported("write")
+}
+
+$B.set_func_names($B._BufferedIOBase, '_io')
+
+function _bufferedreader_read_fast(_self, n){
+    console.log('read fast', _self, n)
+    var current_size;
+
+    current_size = Py_SAFE_DOWNCAST(READAHEAD(self), Py_off_t, Py_ssize_t);
+    if (n <= current_size) {
+        /* Fast path: the data to read is fully buffered. */
+        var res = PyBytes_FromStringAndSize(self.buffer + self.pos, n)
+        self.pos += n
+        return res;
+    }
+    Py_RETURN_NONE;
+}
+
+$B._BufferedReader = $B.make_class('_BufferedReader')
+$B._BufferedReader.__bases__ = [$B._BufferedIOBase]
+$B._BufferedReader.__mro__ = _b_.type.$mro($B._BufferedReader)
+
+$B._BufferedReader.__init__ = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZE){
+    _self.raw = raw
+    _self.buffer_size = buffer_size
+}
+
+$B._BufferedReader.peek = function(_self, size){
+    var $ = $B.args('peek', 2, {self: null, size: null}, ['self', 'size'],
+                arguments, {size: 0}, null, null),
+        _self = $.self,
+        size = $.size
+    console.log('peek', _self, size)
+    return _b_.bytes.__getitem__(_self.raw.fd.result.content, _b_.slice.$factory(_self.raw.fd.result.byte_pos,
+        _self.raw.fd.result.byte_pos + size))
+}
+
+function CHECK_CLOSED(fileobj, msg){
+    if(fileobj.closed){
+        throw _b_.ValueError.$factory(msg)
+    }
+}
+
+$B._BufferedReader.read = function(_self, n){
+    console.log('read', _self)
+    var res;
+
+    if(n < -1){
+        throw _b_.ValueError.$factory("read length must be non-negative or -1")
+    }
+
+    CHECK_CLOSED(self, "read of closed file")
+
+    if(n == -1){
+        /* The number of bytes is unspecified, read until the end of stream */
+        res = _bufferedreader_read_all(_self)
+    }else{
+        res = _bufferedreader_read_fast(_self, n)
+        if (res != _b_.None){
+            return res;
+        }
+        if (!ENTER_BUFFERED(_self))
+            return NULL;
+        res = _bufferedreader_read_generic(_self, n);
+    }
+    return res
+}
+
+$B.set_func_names($B._BufferedReader, '_io')
+
+$B._FileIO = $B.make_class('_FileIO')
+$B._FileIO.__bases__ = [$B._RawIOBase]
+$B._FileIO.__mro__ = _b_.type.$mro($B._FileIO)
+
+function bad_mode(){
+    throw _b_.ValueError.$factory(
+        "Must have exactly one of create/read/write/append " +
+        "mode and at most one plus")
+}
+
+function err_closed(){
+    throw _b_.ValueError.$factory("I/O operation on closed file")
+}
+
+const O_RDONLY = 0,
+      O_WRONLY = 1,
+      O_RDWR = 2,
+      O_EXCL = 1024,
+      O_CREAT = 256,
+      O_TRUNC = 512,
+      O_APPEND = 8
+
+$B._FileIO.__new__ = function(cls){
+    return {
+        __class__: cls,
+        fd: -1,
+        created: 0,
+        readable: 0,
+        writable: 0,
+        appending: 0,
+        seekable: -1,
+        closefd: 1
+    }
+}
+
+$B._FileIO.__init__ = function(){
+    var $ = $B.args('__init__', 5,
+                {self: null, name: null, mode: null, closefd: null, opener: null},
+                ['self', 'name', 'mode', 'closefd', 'opener'],
+                arguments,
+                {mode: 'r', closefd: true, opener: _b_.None},
+                null, null),
+        _self = $.self,
+        name = $.name,
+        mode = $.mode,
+        closefd = $.closefd,
+        opener = $.opener
+
+    console.log('fileio obj', $)
+    var flags = 0
+    var ret = 0
+    var rwa = 0, plus = 0
+    var s = mode
+    var pos = 0
+    while(pos < s.length){
+        switch(s[pos]){
+            case 'x':
+                if(rwa){
+                    bad_mode()
+                }
+                rwa = 1
+                _self.created = 1
+                _self.writable = 1
+                flags |= O_EXCL | O_CREAT
+                break
+            case 'r':
+                if(rwa){
+                    bad_mode()
+                }
+                rwa = 1
+                _self.readable = 1
+                break
+            case 'w':
+                if(rwa){
+                    bad_mode()
+                }
+                rwa = 1
+                _self.writable = 1
+                flags |= O_CREAT | O_TRUNC
+                break
+            case 'a':
+                if(rwa){
+                    bad_mode()
+                }
+                rwa = 1;
+                _self.writable = 1
+                _self.appending = 1
+                flags |= O_APPEND | O_CREAT
+                break
+            case 'b':
+                break
+            case '+':
+                if(plus){
+                    bad_mode()
+                }
+                _self.readable = _self.writable = 1
+                plus = 1
+                break
+            default:
+                throw _b_.ValueError.$factory(`invalid mode: ${mode}`);
+        }
+        pos++
+    }
+    if(!rwa){
+        bad_mode()
+    }
+    if(_self.readable && _self.writable){
+        flags |= O_RDWR;
+    }else if(_self.readable){
+        flags |= O_RDONLY
+    }else{
+        flags |= O_WRONLY
+    }
+
+    _self.fd = new XMLHttpRequest()
+    // Set mimetype so that bytes are not modified
+    _self.fd.overrideMimeType('text/plain;charset=x-user-defined')
+    _self.fd.onreadystatechange = function(){
+        if(this.readyState != 4){
+            return
+        }
+        this.result = {
+            byte_pos: 0,
+            line_pos: 0
+        }
+        var status = this.status
+        if(status == 404){
+            this.result.error = _b_.FileNotFoundError.$factory(name)
+        }else if(status != 200){
+            this.result.error = _b_.IOError.$factory('Could not open file ' +
+                name + ' : status ' + status)
+        }else{
+            var bytes = []
+            for(var codePoint of this.response){
+                var cp = codePoint.codePointAt(0)
+                if(cp > 0xf700){
+                    cp -= 0xf700
+
+                }
+                bytes[bytes.length] = cp
+            }
+            this.result.content = _b_.bytes.$factory(bytes)
+            this.result.len = bytes.length
+            _self.$bytes = bytes
+        }
+    }
+    // add fake query string to avoid caching
+    var cache = $B.get_option('cache'),
+        fake_qs = cache ? '' : '?foo=' + (new Date().getTime())
+    _self.fd.open('GET', encodeURI(name + fake_qs), false)
+    _self.fd.send()
+    if(_self.fd.result.error){
+        throw _self.fd.result.error
+    }
+}
+
+$B._FileIO.readable = function(_self){
+    if(_self.fd < 0){
+        err_closed()
+    }
+    return $B.$bool(_self.readable)
+}
+
+$B._FileIO.readall = function(_self){
+    var buffer = _b_.bytearray.$factory()
+    $B._FileIO.readinto(_self, buffer)
+    return buffer
+}
+
+$B._FileIO.readinto = function(_self, buffer){
+    if(_self.fd < 0){
+        err_closed()
+    }
+    if(! _self.readable) {
+        return err_mode(state, "reading");
+    }
+    console.log('readinto', _self)
+
+    var result = _self.fd.result
+    _b_.bytearray.extend(buffer, result.content)
+    var n = _b_.len(buffer)
+
+    return n
+}
+
+$B._FileIO.readinto1 = $B._FileIO.readinto
+
+$B._FileIO.seekable = function(_self){
+    if(_self.fd < 0){
+        err_closed()
+    }
+    return $B.$bool(_self.seekable)
+}
+
+$B._FileIO.writable = function(_self){
+    if(_self.fd < 0){
+        err_closed()
+    }
+    return $B.$bool(_self.writable)
+}
+
+$B.set_func_names($B._FileIO, '_io')
 
 $B._TextIOBase = $B.make_class('_io._TextIOBase')
 
@@ -3264,7 +3752,7 @@ $BufferedReader.read = function(self, size){
     return self.$read_func(size || -1)
 }
 
-var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
+$B._TextIOWrapper = $B.make_class('_io._TextIOWrapper',
     function(){
         var $ = $B.args("TextIOWrapper", 6,
             {buffer: null, encoding: null, errors: null,
@@ -3275,8 +3763,9 @@ var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
              {encoding: "utf-8", errors: _b_.None, newline: _b_.None,
               line_buffering: _b_.False, write_through: _b_.False},
               null, null)
+        console.log('TextIOWrapper, buffer', $.buffer)
         var res = {
-            __class__: $TextIOWrapper,
+            __class__: $B._TextIOWrapper,
             __dict__: _b_.dict.$from_array(
                 [['$content', _b_.bytes.decode($.buffer.$content, $.encoding)],
                  ['_encoding', $.encoding],
@@ -3286,14 +3775,175 @@ var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
     }
 )
 
-$TextIOWrapper.__bases__ = [$B._TextIOBase]
-$TextIOWrapper.__mro__ = [$B._TextIOBase, _IOBase, _b_.object]
+$B._TextIOWrapper.__bases__ = [$B._TextIOBase]
+$B._TextIOWrapper.__mro__ = [$B._TextIOBase, _IOBase, _b_.object]
 
-$B.set_func_names($TextIOWrapper, "builtins")
+$B.set_func_names($B._TextIOWrapper, "builtins")
 
 $B._IOBase = _IOBase
-$B.TextIOWrapper = $TextIOWrapper
-$B.BufferedReader = $BufferedReader
+//$B.BufferedReader = $BufferedReader
+
+function invalid_mode(mode){
+    throw _b_.ValueError.$factory(`invalid mode: '${mode}'`)
+}
+
+function _io_open_impl(file, mode, buffering, encoding, errors, newline,
+                       closefd, opener){
+    var i;
+
+    var creating = 0, reading = 0, writing = 0, appending = 0, updating = 0;
+    var text = 0, binary = 0;
+
+    var rawmode = '', m;
+    var line_buffering, is_number, isatty = 0;
+
+    var raw, modeobj, buffer, wrapper, result, path_or_fd = NULL;
+
+    path_or_fd = file
+
+    if (! $B.$isinstance(path_or_fd, _b_.str)){
+        throw _b_.TypeError.$factory(`invalid file: ${file}`)
+    }
+
+    /* Decode mode */
+    for(var i = 0, len = mode.length; i < len; i++){
+        var c = mode[i]
+        switch (c) {
+        case 'x':
+            creating = 1
+            break
+        case 'r':
+            reading = 1
+            break
+        case 'w':
+            writing = 1
+            break
+        case 'a':
+            appending = 1
+            break
+        case '+':
+            updating = 1
+            break
+        case 't':
+            text = 1
+            break
+        case 'b':
+            binary = 1
+            break
+        default:
+            invalid_mode(mode)
+        }
+
+        /* c must not be duplicated */
+        if(mode[i + 1] == c){
+            invalid_mode(mode)
+        }
+    }
+
+
+    m = ''
+    if (creating)  m += 'x';
+    if (reading)   m += 'r';
+    if (writing)   m += 'w';
+    if (appending) m += 'a';
+    if (updating)  m += '+';
+    rawmode = m
+
+    /* Parameters validation */
+    if(text && binary){
+        throw _b_.ValueError.$factory(
+            "can't have text and binary mode at once")
+    }
+
+    if(creating + reading + writing + appending > 1){
+        throw _b_.ValueError.$factory(
+            "must have exactly one of create/read/write/append mode")
+    }
+
+    if(binary && encoding !== _b_.None){
+        throw _b_.ValueError.$factory(
+            "binary mode doesn't take an encoding argument")
+    }
+
+    if(binary && errors != _b_.None) {
+        throw _b_.ValueError.$factory(
+            "binary mode doesn't take an errors argument");
+    }
+
+    if(binary && newline !== _b_.None){
+        throw _b_.ValueError.$factory(
+            "binary mode doesn't take a newline argument");
+    }
+
+    if(binary && buffering == 1){
+        throw _b_.RuntimeWarning.$factory(
+            "line buffering (buffering=1) isn't supported in " +
+            "binary mode, the default buffer size will be used")
+    }
+
+    /* Create the Raw file stream */
+    var RawIO_class = $B._FileIO
+    raw = $B.$call(RawIO_class)(path_or_fd, rawmode,
+                                closefd ? true : false,
+                                opener)
+    result = raw
+
+    modeobj = mode
+
+    /* buffering */
+    if (buffering < 0) {
+        isatty = false
+    }
+
+    if(buffering == 1 || isatty){
+        buffering = -1
+        line_buffering = 1
+    }else{
+        line_buffering = 0
+    }
+    if(buffering < 0){
+        buffering = DEFAULT_BUFFER_SIZE
+    }
+
+    /* if not buffering, returns the raw file object */
+    if(buffering == 0){
+        if(! binary){
+            throw _b_.ValueError.$factory(
+                "can't have unbuffered text I/O")
+        }
+        return result
+    }
+
+    /* wraps into a buffered file */
+    var Buffered_class
+
+    if(updating){
+        Buffered_class = $B._BufferedRandom
+    }else if(creating || writing || appending){
+        Buffered_class = $B._BufferedWriter
+    }else if(reading){
+        Buffered_class = $B._BufferedReader
+    }else{
+        throw _b_.ValueError.$factory(`unknown mode: '${mode}'`)
+    }
+
+    result = $B.$call(Buffered_class)(raw, buffering)
+
+    /* if binary, returns the buffered file */
+    if(binary){
+        return result
+    }
+
+    /* wraps into a TextIOWrapper */
+    wrapper = $B.$call($B._TextIOWrapper)(result, encoding, errors, newline,
+        line_buffering ? true : false);
+    result = wrapper
+
+    if (PyObject_SetAttr(wrapper, "mode", modeobj) < 0){
+        error()
+    }
+    return result
+}
 
 _b_.open = function(){
     // first argument is file : can be a string, or an instance of a DOM File object
@@ -3425,6 +4075,24 @@ _b_.open = function(){
         throw _b_.TypeError.$factory("invalid argument for open(): " +
             _b_.str.$factory(file))
     }
+}
+
+_b_.open = function(){
+    var $ = $B.args('open', 3,
+        {file: null, mode: null, buffering: null, encoding: null,
+         errors: null, newline: null, closefd: null, opener: null},
+        ['file', 'mode', 'buffering', 'encoding','errors', 'newline',
+        'closefd', 'opener'], arguments,
+        {mode: 'r', buffering: -1, encoding: _b_.None, errors: _b_.None,
+        newline: _b_.None, closefd: true, opener: _b_.None}),
+        file = $.file,
+        mode = $.mode,
+        encoding = $.encoding,
+        result = {}
+    var res = _io_open_impl($.file, $.mode, $.buffering, $.encoding,
+        $.errors, $.newline, $.closefd, $.opener)
+    console.log('open returns', res)
+    return res
 }
 
 var zip = _b_.zip = $B.make_class("zip",

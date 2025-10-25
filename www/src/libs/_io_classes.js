@@ -226,13 +226,9 @@ var $module = (function($B){
         ),
         BlockingIOError,
         BytesIO: BytesIO,
-        FileIO: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
+        FileIO: $B._FileIO,
         StringIO: StringIO,
-        BufferedReader: $B.BufferedReader,
+        BufferedReader: $B._BufferedReader,
         BufferedWriter: $B.make_class("_TextIOBase",
             function(){
                 return "fileio"
