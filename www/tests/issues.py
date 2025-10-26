@@ -3323,6 +3323,11 @@ assert not os.path.exists('coucou')
 import datetime
 assert datetime.time(0).strftime('%I') == '12'
 
+# issue 2620
+from collections import Counter
+counts = Counter(["a", "b", "a", "c", "b", "a"])
+counts.most_common(1) == [("a", 3)]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
