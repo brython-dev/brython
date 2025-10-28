@@ -249,7 +249,7 @@ var $module = (function($B){
                 return "fileio"
             }
         ),
-        TextIOWrapper: $B.TextIOWrapper
+        TextIOWrapper: $B._TextIOWrapper
     }
 })(__BRYTHON__)
 $module._IOBase.__doc__ = "_IOBase"

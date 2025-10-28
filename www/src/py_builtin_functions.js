@@ -3100,9 +3100,8 @@ _IOBase.readline = function(_self, limit=-1){
     var old_size = -1
 
     var peek = $B.$getattr(_self, "peek", null)
-    console.log('peek', peek)
 
-    var buffer = []
+    var buffer = _b_.bytearray.$factory()
 
     while (limit < 0 || buffer.length < limit) {
         var nreadahead = 1
@@ -3142,7 +3141,6 @@ _IOBase.readline = function(_self, limit=-1){
         }
 
         var read = $B.search_in_mro($B.get_class(_self), "read")
-        console.log('read', read)
         b = $B.$call(read)(_self, nreadahead)
         if(! $B.$isinstance(b, _b_.bytes)) {
             throw _b_.OSError.$factory(
@@ -3153,7 +3151,7 @@ _IOBase.readline = function(_self, limit=-1){
             break;
         }
 
-        buffer = _b_.bytes.add(buffer, b)
+        _b_.bytearray.extend(buffer, b)
 
         if($B.last(_b_.list.$factory(buffer)) == 10){ // ends with '\n')
             break
@@ -3161,34 +3159,6 @@ _IOBase.readline = function(_self, limit=-1){
     }
     return buffer
 }
-
-/*
-_IOBase.readlines = function(){
-    var $ = $B.args("readlines", 2, {self: null, hint: null},
-            ["self", "hint"], arguments, {hint: -1}, null, null),
-            self = $.self,
-            hint = $B.PyNumber_Index($.hint)
-    var nb_read = 0
-    if(self.closed === true){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
-    }
-    self.$lc = self.$lc === undefined ? -1 : self.$lc
-    make_lines(self)
-
-    var lines
-    if(hint < 0){
-        lines = self.$lines.slice(self.$lc + 1)
-    }else{
-        lines = []
-        while(self.$lc < self.$lines.length &&
-                nb_read < hint){
-            self.$lc++
-            lines.push(self.$lines[self.$lc])
-        }
-    }
-    return $B.$list(lines)
-}
-*/
 
 _IOBase.readlines = function(_self, hint){
     var length = 0;
@@ -3200,16 +3170,24 @@ _IOBase.readlines = function(_self, hint){
         return _b_.list.$factory(_self)
     }
 
-    it = $B.make_js_iterator(_self)
+    var readline = $B.search_in_mro($B.get_class(_self), 'readline')
+    
+    var nb = 0
 
     while(true){
-        var line_length
-        var line = it.next();
-        if(line.done){
-            break; /* StopIteration raised */
+        nb++
+        if(nb > 5000){
+            console.log('overflow', result)
+            break
         }
-        result[result.length] = line
-        line_length = line.length
+        var line = readline(_self)
+        var line_length = _b_.len(line)
+
+        if(line_length == 0){
+            break;
+        }else{
+            result[result.length] = line
+        }
         if(line_length > hint - length){
             break
         }
@@ -3423,18 +3401,43 @@ $B._BufferedIOBase.write = function(){
 
 $B.set_func_names($B._BufferedIOBase, '_io')
 
-function _bufferedreader_read_fast(_self, n){
-    console.log('read fast', _self, n)
-    var current_size;
-
-    current_size = Py_SAFE_DOWNCAST(READAHEAD(self), Py_off_t, Py_ssize_t);
-    if (n <= current_size) {
-        /* Fast path: the data to read is fully buffered. */
-        var res = PyBytes_FromStringAndSize(self.buffer + self.pos, n)
-        self.pos += n
-        return res;
+function _bufferedreader_read_all(_self){
+    var raw = _self.raw
+    if(raw.$byte_pos >= raw.$bytes.length){
+        return _b_.None
     }
-    Py_RETURN_NONE;
+    var b = raw.$bytes.slice(raw.$byte_pos, raw.$bytes.length)
+    raw.$byte_pos = raw.$bytes.length
+    return $B.fast_bytes(b)
+}
+
+function _bufferedreader_read_fast(_self, n){
+    var raw = _self.raw
+    if(raw.$byte_pos >= raw.$bytes.length){
+        return _b_.None
+    }
+    var b = raw.$bytes.slice(raw.$byte_pos, raw.$byte_pos + n)
+    raw.$byte_pos += n
+    raw.$byte_pos = Math.min(raw.$byte_pos, raw.$bytes.length)
+    return $B.fast_bytes(b)
+}
+
+function _bufferedreader_readline(_self){
+    var raw = _self.raw
+    if(raw.$byte_pos >= raw.$bytes.length){
+        return $B.fast_bytes()
+    }
+    var eof = raw.$byte_pos
+    while(eof < raw.$bytes.length){
+        if(raw.$bytes[eof] == 10){
+            break
+        }
+        eof++
+    }
+    var b = raw.$bytes.slice(raw.$byte_pos, eof + 1)
+    raw.$byte_pos = eof + 1
+    raw.$byte_pos = Math.min(raw.$byte_pos, raw.$bytes.length)
+    return $B.fast_bytes(b)
 }
 
 $B._BufferedReader = $B.make_class('_BufferedReader')
@@ -3451,10 +3454,9 @@ $B._BufferedReader.peek = function(_self, size){
                 arguments, {size: 0}, null, null),
         _self = $.self,
         size = $.size
-    console.log('peek', _self, size)
-    return _b_.bytes.__getitem__(_self.raw.fd.result.content, _b_.slice.$factory(_self.raw.fd.result.byte_pos,
-        _self.raw.fd.result.byte_pos + size))
-}
+    var raw = _self.raw
+    return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos, raw.$byte_pos + size))
+ }
 
 function CHECK_CLOSED(fileobj, msg){
     if(fileobj.closed){
@@ -3462,8 +3464,7 @@ function CHECK_CLOSED(fileobj, msg){
     }
 }
 
-$B._BufferedReader.read = function(_self, n){
-    console.log('read', _self)
+$B._BufferedReader.read = function(_self, n=-1){
     var res;
 
     if(n < -1){
@@ -3480,11 +3481,13 @@ $B._BufferedReader.read = function(_self, n){
         if (res != _b_.None){
             return res;
         }
-        if (!ENTER_BUFFERED(_self))
-            return NULL;
-        res = _bufferedreader_read_generic(_self, n);
+        return $B.fast_bytes()
     }
     return res
+}
+
+$B._BufferedReader.readline = function(_self, size=-1){
+    return _bufferedreader_readline(_self)
 }
 
 $B.set_func_names($B._BufferedReader, '_io')
@@ -3537,7 +3540,6 @@ $B._FileIO.__init__ = function(){
         closefd = $.closefd,
         opener = $.opener
 
-    console.log('fileio obj', $)
     var flags = 0
     var ret = 0
     var rwa = 0, plus = 0
@@ -3605,20 +3607,17 @@ $B._FileIO.__init__ = function(){
 
     _self.fd = new XMLHttpRequest()
     // Set mimetype so that bytes are not modified
+    // Cannot set responseType on a synchronous request
     _self.fd.overrideMimeType('text/plain;charset=x-user-defined')
     _self.fd.onreadystatechange = function(){
         if(this.readyState != 4){
             return
         }
-        this.result = {
-            byte_pos: 0,
-            line_pos: 0
-        }
         var status = this.status
         if(status == 404){
-            this.result.error = _b_.FileNotFoundError.$factory(name)
+            this.error = _b_.FileNotFoundError.$factory(name)
         }else if(status != 200){
-            this.result.error = _b_.IOError.$factory('Could not open file ' +
+            this.error = _b_.IOError.$factory('Could not open file ' +
                 name + ' : status ' + status)
         }else{
             var bytes = []
@@ -3626,13 +3625,12 @@ $B._FileIO.__init__ = function(){
                 var cp = codePoint.codePointAt(0)
                 if(cp > 0xf700){
                     cp -= 0xf700
-
                 }
                 bytes[bytes.length] = cp
             }
-            this.result.content = _b_.bytes.$factory(bytes)
-            this.result.len = bytes.length
             _self.$bytes = bytes
+            _self.$byte_pos = 0
+            _self.$line_pos = 0
         }
     }
     // add fake query string to avoid caching
@@ -3640,8 +3638,8 @@ $B._FileIO.__init__ = function(){
         fake_qs = cache ? '' : '?foo=' + (new Date().getTime())
     _self.fd.open('GET', encodeURI(name + fake_qs), false)
     _self.fd.send()
-    if(_self.fd.result.error){
-        throw _self.fd.result.error
+    if(_self.fd.error){
+        throw _self.fd.error
     }
 }
 
@@ -3665,10 +3663,8 @@ $B._FileIO.readinto = function(_self, buffer){
     if(! _self.readable) {
         return err_mode(state, "reading");
     }
-    console.log('readinto', _self)
 
-    var result = _self.fd.result
-    _b_.bytearray.extend(buffer, result.content)
+    _b_.bytearray.extend(buffer, $B.fast_bytes(_self.fd.$bytes))
     var n = _b_.len(buffer)
 
     return n
@@ -3710,26 +3706,7 @@ $B._TextIOBase.encoding = $B.getset_descriptor.$factory(
 )
 
 $B._TextIOBase.read = function(){
-    var $ = $B.args("read", 2, {self: null, size: null},
-            ["self", "size"], arguments, {size: -1}, null, null),
-            self = $.self,
-            size = $B.PyNumber_Index($.size)
-    if(self.closed === true){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
-    }
-    var len = _b_.len(self.$content)
-    if(size < 0){
-        size = len - self.$counter
-    }
-    var res
-    if(self.$binary){
-        res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
-            self.$counter + size))
-    }else{
-        res = self.$content.substr(self.$counter, size)
-    }
-    self.$counter += size
-    return res
+    _io_unsupported('read')
 }
 
 var $BufferedReader = $B.make_class('_io.BufferedReader',
@@ -3763,20 +3740,111 @@ $B._TextIOWrapper = $B.make_class('_io._TextIOWrapper',
              {encoding: "utf-8", errors: _b_.None, newline: _b_.None,
               line_buffering: _b_.False, write_through: _b_.False},
               null, null)
-        console.log('TextIOWrapper, buffer', $.buffer)
+        if($.encoding === _b_.None){
+            $.encoding = 'utf-8'
+        }
+        var bytes = $B.fast_bytes($.buffer.raw.$bytes)
         var res = {
             __class__: $B._TextIOWrapper,
-            __dict__: _b_.dict.$from_array(
-                [['$content', _b_.bytes.decode($.buffer.$content, $.encoding)],
-                 ['_encoding', $.encoding],
-                 ['_errors', $.errors],
-                 ['_newline', $.newline]])
+            $buffer: $.buffer,
+            $bytes: bytes,
+            $encoding: $.encoding,
+            $errors: $.errors,
+            $newline: $.newline
         }
+        return res
     }
 )
 
+$B._TextIOWrapper.$tp_dict = {}
 $B._TextIOWrapper.__bases__ = [$B._TextIOBase]
 $B._TextIOWrapper.__mro__ = [$B._TextIOBase, _IOBase, _b_.object]
+
+$B._TextIOWrapper.$tp_dict.buffer = $B.getset_descriptor.$factory(
+    $B._TextIOWrapper,
+    'buffer',
+    function(_self){
+        return _self.$buffer
+    }
+)
+
+$B._TextIOWrapper.read = function(){
+    var $ = $B.args("read", 2, {self: null, size: null},
+            ["self", "size"], arguments, {size: -1}, null, null),
+            _self = $.self,
+            size = $B.PyNumber_Index($.size)
+    if(_self.closed === true){
+        throw _b_.ValueError.$factory('I/O operation on closed file')
+    }
+    if(_self.$text === undefined){
+        _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
+        _self.$text_pos = 0
+    }
+    var len = _b_.len(_self.$text)
+    if(size < 0){
+        size = len - _self.$text_pos
+    }
+    var res = _b_.str.__getitem__(_self.$text,
+        _b_.slice.$fast_slice(_self.$text_pos, _self.$text_pos + size, 1))
+
+    _self.$text_pos += size
+    _self.$text_pos = Math.min(_self.$text_pos, _self.$text.length)
+    return res
+}
+
+$B._TextIOWrapper.readline = function(){
+    var $ = $B.args("read", 2, {self: null, size: null},
+            ["self", "size"], arguments, {size: -1}, null, null),
+            _self = $.self,
+            size = $B.PyNumber_Index($.size)
+    if(_self.closed === true){
+        throw _b_.ValueError.$factory('I/O operation on closed file')
+    }
+    if(_self.$text === undefined){
+        _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
+        _self.$text_iterator = _self.$text[Symbol.iterator]()
+        _self.$text_pos = 0
+        _self.$text_length = _b_.len(_self.$text)
+    }
+
+    var res = ''
+    var nb = 0
+    if(size < 0){
+        size = _self.$text_length
+    }
+    while(1){
+        var char = _self.$text_iterator.next()
+        if(char.done){
+            break
+        }else if(char.value == '\n'){
+            break
+        }else{
+            res += char.value
+            nb++
+            if(nb > size){
+                break
+            }
+        }
+    }
+    return $B.String(res)
+    /*
+    var end = size < 0 ? _self.$text_length : _self.$text_pos + size
+    var pos = _self.$text_pos
+    var line = ''
+    if(typeof _self.$text
+
+    var len = _b_.len(_self.$text)
+    if(size < 0){
+        size = len - _self.$text_pos
+    }
+    var res = _b_.str.__getitem__(_self.$text,
+        _b_.slice.$fast_slice(_self.$text_pos, _self.$text_pos + size, 1))
+
+    _self.$text_pos += size
+    _self.$text_pos = Math.min(_self.$text_pos, _self.$text.length)
+    return res
+    */
+}
 
 $B.set_func_names($B._TextIOWrapper, "builtins")
 
@@ -3935,14 +4003,8 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }
 
     /* wraps into a TextIOWrapper */
-    wrapper = $B.$call($B._TextIOWrapper)(result, encoding, errors, newline,
-        line_buffering ? true : false);
-    result = wrapper
-
-    if (PyObject_SetAttr(wrapper, "mode", modeobj) < 0){
-        error()
-    }
-    return result
+    return $B.$call($B._TextIOWrapper)(result, encoding, errors, newline,
+        line_buffering ? true : false)
 }
 
 _b_.open = function(){
@@ -4089,10 +4151,8 @@ _b_.open = function(){
         mode = $.mode,
         encoding = $.encoding,
         result = {}
-    var res = _io_open_impl($.file, $.mode, $.buffering, $.encoding,
+    return _io_open_impl($.file, $.mode, $.buffering, $.encoding,
         $.errors, $.newline, $.closefd, $.opener)
-    console.log('open returns', res)
-    return res
 }
 
 var zip = _b_.zip = $B.make_class("zip",

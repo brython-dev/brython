@@ -614,7 +614,7 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = false // attr == "__annotations__" // && klass.__name__ == 'Pattern'
+    var $test = attr == "__globals__" // && klass.__name__ == 'Pattern'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -637,6 +637,9 @@ type.__getattribute__ = function(klass, attr){
             if($test){
                 console.log(attr, 'not in klass[attr], search in __dict__',
                     klass.__dict__)
+            }
+            if(klass.$tp_dict && ! klass.__dict__){
+                klass.__dict__ = $B.obj_dict(klass.$tp_dict)
             }
             if(klass.__dict__ && klass.__dict__.__class__ === _b_.dict &&
                     _b_.dict.$contains_string(klass.__dict__, attr)){
