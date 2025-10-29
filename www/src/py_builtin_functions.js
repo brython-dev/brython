@@ -3216,7 +3216,7 @@ _IOBase.seek = function(self, offset, whence){
 }
 */
 
-_IOBase.seek = function(){
+_IOBase.seek = function(_self){
     _io_unsupported('seek')
 }
 
@@ -3457,7 +3457,30 @@ $B._BufferedReader.peek = function(_self, size){
         size = $.size
     var raw = _self.raw
     return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos, raw.$byte_pos + size))
- }
+}
+
+$B._BufferedReader.seek = function(_self, offset, whence){
+    var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
+                ['self', 'offset', 'whence'],
+                arguments, {whence: 0}, null, null),
+        _self = $.self,
+        offset = $.offset,
+        whence = $.whence
+    if(_self.closed){
+        throw _b_.ValueError.$factory('I/O operation on closed file')
+    }
+    if(whence === undefined){
+        whence = 0
+    }
+    if(whence === 0){
+        _self.$byte_pos = offset
+    }else if(whence === 1){
+        _self.$byte_pos += offset
+    }else if(whence === 2){
+        _self.$byte_pos = self.$bytes.length + offset
+    }
+    return _b_.None
+}
 
 function CHECK_CLOSED(fileobj, msg){
     if(fileobj.closed){
@@ -3606,6 +3629,12 @@ $B._FileIO.__init__ = function(){
         flags |= O_WRONLY
     }
 
+    if($B.file_cache.hasOwnProperty(name)){
+        _self.$bytes = $B.to_bytes($B.encode($B.file_cache[name], 'utf-8'))
+        _self.$byte_pos = 0
+        _self.$line_pos = 0
+        return
+    }
     _self.fd = new XMLHttpRequest()
     // Set mimetype so that bytes are not modified
     // Cannot set responseType on a synchronous request
@@ -3752,7 +3781,8 @@ $B._TextIOWrapper = $B.make_class('_io._TextIOWrapper',
             $bytes: bytes,
             $encoding: $.encoding,
             $errors: $.errors,
-            $newline: $.newline
+            $newline: $.newline,
+            __dict__: $B.empty_dict()
         }
         return res
     }
@@ -3808,7 +3838,6 @@ $B._TextIOWrapper.readline = function(){
         _self.$text_pos = 0
         _self.$text_length = _b_.len(_self.$text)
     }
-
     var res = ''
     var nb = 0
     if(size < 0){
@@ -3819,6 +3848,7 @@ $B._TextIOWrapper.readline = function(){
         if(char.done){
             break
         }else if(char.value == '\n'){
+            res += char.value
             break
         }else{
             res += char.value
@@ -3829,23 +3859,23 @@ $B._TextIOWrapper.readline = function(){
         }
     }
     return $B.String(res)
-    /*
-    var end = size < 0 ? _self.$text_length : _self.$text_pos + size
-    var pos = _self.$text_pos
-    var line = ''
-    if(typeof _self.$text
+}
 
-    var len = _b_.len(_self.$text)
-    if(size < 0){
-        size = len - _self.$text_pos
+$B._TextIOWrapper.seek = function(_self, offset, whence){
+    if(_self.closed){
+        throw _b_.ValueError.$factory('I/O operation on closed file')
     }
-    var res = _b_.str.__getitem__(_self.$text,
-        _b_.slice.$fast_slice(_self.$text_pos, _self.$text_pos + size, 1))
-
-    _self.$text_pos += size
-    _self.$text_pos = Math.min(_self.$text_pos, _self.$text.length)
-    return res
-    */
+    if(whence === undefined){
+        whence = 0
+    }
+    if(whence === 0){
+        self.$text_pos = offset
+    }else if(whence === 1){
+        self.$text_pos += offset
+    }else if(whence === 2){
+        self.$text_pos = self.$text_length + offset
+    }
+    return _b_.None
 }
 
 $B.set_func_names($B._TextIOWrapper, "builtins")
@@ -3860,7 +3890,6 @@ function invalid_mode(mode){
 function _io_open_impl(file, mode, buffering, encoding, errors, newline,
                        closefd, opener){
     var i;
-
     var creating = 0, reading = 0, writing = 0, appending = 0, updating = 0;
     var text = 0, binary = 0;
 
@@ -3998,15 +4027,17 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }
 
     result = $B.$call(Buffered_class)(raw, buffering)
-
+    
     /* if binary, returns the buffered file */
     if(binary){
         return result
     }
 
     /* wraps into a TextIOWrapper */
-    return $B.$call($B._TextIOWrapper)(result, encoding, errors, newline,
+    var wrapper = $B.$call($B._TextIOWrapper)(result, encoding, errors, newline,
         line_buffering ? true : false)
+    $B.$setattr(wrapper, 'mode', modeobj)
+    return wrapper
 }
 
 _b_.open = function(){
