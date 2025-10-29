@@ -2891,10 +2891,11 @@ _IOBase.__iter__ = function(_self){
 }
 
 _IOBase.__next__ = function(_self){
-    var line = _IOBase.readline(_self)
+    var readline = $B.search_in_mro($B.get_class(_self), 'readline')
+    var line = readline(_self)
 
     if(line == undefined || _b_.len(line) === 0){
-        throw _b_.StopIteration('')
+        throw _b_.StopIteration.$factory('')
     }
     return line;
 }
@@ -3171,7 +3172,7 @@ _IOBase.readlines = function(_self, hint){
     }
 
     var readline = $B.search_in_mro($B.get_class(_self), 'readline')
-    
+
     var nb = 0
 
     while(true){
@@ -3636,6 +3637,7 @@ $B._FileIO.__init__ = function(){
     // add fake query string to avoid caching
     var cache = $B.get_option('cache'),
         fake_qs = cache ? '' : '?foo=' + (new Date().getTime())
+    console.log('open', encodeURI(name + fake_qs))
     _self.fd.open('GET', encodeURI(name + fake_qs), false)
     _self.fd.send()
     if(_self.fd.error){

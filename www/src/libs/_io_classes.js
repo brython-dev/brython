@@ -96,7 +96,7 @@ var StringIO = $B.make_class("StringIO",
     }
 )
 
-StringIO.__mro__ = [$B._IOBase, _b_.object]
+StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
 
 StringIO.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
