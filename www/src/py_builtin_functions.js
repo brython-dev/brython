@@ -3633,7 +3633,31 @@ $B._FileIO.__init__ = function(){
         _self.$bytes = $B.to_bytes($B.encode($B.file_cache[name], 'utf-8'))
         _self.$byte_pos = 0
         _self.$line_pos = 0
+        _self.$text = $B.file_cache[name]
+        _self.$text_iterator = _self.$text[Symbol.iterator]()
+        _self.$text_length = _b_.len(_self.$text)
         return
+    }else if($B.files && $B.files.hasOwnProperty(name)){
+        // Virtual file system created by
+        // python -m brython --make_file_system
+        var $res = atob($B.files[name].content)
+        var bytes = []
+        for(const char of $res){
+            bytes.push(char.charCodeAt(0))
+        }
+        _self.$bytes = bytes
+        _self.$byte_pos = _self.$line_pos = 0
+        return
+        /*
+        if(! binary){
+            // use encoding to restore text
+            try{
+                _self.$text = _b_.bytes.decode(result.content, encoding)
+            } catch(error) {
+                result.error = error
+            }
+        }
+        */
     }
     _self.fd = new XMLHttpRequest()
     // Set mimetype so that bytes are not modified
@@ -4027,7 +4051,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }
 
     result = $B.$call(Buffered_class)(raw, buffering)
-    
+
     /* if binary, returns the buffered file */
     if(binary){
         return result
