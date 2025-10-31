@@ -757,7 +757,7 @@ $B.JSObj.__getitem__ = function(_self, key){
 
 $B.JSObj.__setitem__ = $B.JSObj.__setattr__
 
-$B.JSObj.__repr__ = $B.JSObj.__str__ = function(_self){
+$B.JSObj.__repr__ = function(_self){
     if(typeof _self == 'number'){
         return _self + ''
     }
