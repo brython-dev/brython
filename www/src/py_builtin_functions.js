@@ -3690,7 +3690,6 @@ $B._FileIO.__init__ = function(){
     // add fake query string to avoid caching
     var cache = $B.get_option('cache'),
         fake_qs = cache ? '' : '?foo=' + (new Date().getTime())
-    console.log('open', encodeURI(name + fake_qs))
     _self.fd.open('GET', encodeURI(name + fake_qs), false)
     _self.fd.send()
     if(_self.fd.error){
@@ -3928,6 +3927,11 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
         throw _b_.TypeError.$factory(`invalid file: ${file}`)
     }
 
+    if(encoding == 'locale'){
+        // cf. PEP 597
+        encoding = 'utf-8'
+    }
+    
     /* Decode mode */
     for(var i = 0, len = mode.length; i < len; i++){
         var c = mode[i]
