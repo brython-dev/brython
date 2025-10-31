@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>JavaScript/Python bridge demo</title>
+    <script type="text/javascript" src="/src/brython.js"></script>
+    <script type="text/javascript" src="print.brython.js"></script>
+  </head>
+  <body>
+
+    <script type="text/python" id="pythonscript">
+from browser import console, window, document
+from print_py import print_python_from_module
+
+def print_python_from_script(message):
+    print(message)
+
+# Python code
+print("pythonscript 1: print")
+print_python_from_module("pythonscript 2: print_python_from_module")
+print_python_from_script("pythonscript 3: print_python_from_script")
+
+# JavaScript code
+console.log("pythonscript 4: console.log")
+window.printJavaScriptFromModule("pythonscript 5: printJavaScriptFromModule")
+window.printJavaScriptFromScript("pythonscript 6: printJavaScriptFromScript")
+
+document <= "Look at the 16 print in the JavaScript console"
+    </script>
+
+    <script type="text/javascript" id="javascriptscript">
+printJavaScriptFromScript = function(message){
+    console.log(message)
+}
+
+// JavaScript code
+console.log("javascriptscript 1: console.log")
+printJavaScriptFromModule("javascriptscript 2: printJavaScriptFromModule")
+printJavaScriptFromScript("javascriptscript 3: printJavaScriptFromScript")
+
+// Python code
+__BRYTHON__.runPythonSource("print('javascriptscript 4: print')")
+__BRYTHON__.getPythonModule("print_py").print_python_from_module("javascriptscript 5: print_python_from_module")
+document.getElementById("pythonscript").addEventListener('load', function(script){
+    __BRYTHON__.getPythonModule("pythonscript").print_python_from_script("javascriptscipt 6: print_python_from_script")
+})
+    </script>
+
+  </body>
+</html>
