@@ -76,32 +76,29 @@ _RawIOBase = $B._RawIOBase
 _TextIOBase = $B.make_class("_TextIOBase")
 _TextIOBase.__mro__ = [_IOBase, _b_.object]
 
-var StringIO = $B.make_class("StringIO",
-    function(){
-        var $ = $B.args("StringIO", 2, {value: null, newline: null},
-                ["value", "newline"], arguments, {value: '', newline: "\n"},
-                null, null),
-            value = $.value
-        if(value === _b_.None){
-            value = ''
-        }else if(! $B.$isinstance(value, _b_.str)){
-            throw _b_.TypeError.$factory(
-                `initial_value must be str or None, not ${$B.class_name(value)}`)
-        }
-        return {
-            __class__: StringIO,
-            $counter: 0,
-            $content: $.value
-        }
+var StringIO = $B.make_class("StringIO")
+
+StringIO.__init__ = function(){
+    var $ = $B.args("StringIO", 3, {self: null, value: null, newline: null},
+            ["self", "value", "newline"], arguments, {value: '', newline: "\n"},
+            null, null),
+        value = $.value
+    if(value === _b_.None){
+        value = ''
+    }else if(! $B.$isinstance(value, _b_.str)){
+        throw _b_.TypeError.$factory(
+            `initial_value must be str or None, not ${$B.class_name(value)}`)
     }
-)
+    $.self.$text = value
+    $.self.$text_pos = 0
+}
 
 StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
 
 StringIO.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
             ["self"], arguments, {}, null, null)
-    return $.self.$content.substr(0) // copy
+    return $.self.$text.substr(0) // copy
 }
 
 StringIO.truncate = function(self, size){
@@ -112,9 +109,38 @@ StringIO.truncate = function(self, size){
     if(size === _b_.None){
         size = self.$counter
     }
-    self.$content = self.$content.substr(0, size)
-    self.$counter = self.$content.length
-    return self.$counter
+    self.$text = self.$text.substr(0, size)
+    self.$text_pos = self.$text.length
+    return self.$text_pos
+}
+
+StringIO.seek = function(self, pos, whence){
+    var $ = $B.args('seek', 3, {self: null, pos: null, whence: null},
+                ['self', 'pos', 'whence'], arguments, {whence: 0}, null, null),
+        _self = $.self,
+        pos = $.posn
+        whence = $.whence
+
+    if(whence != 0 && whence != 1 && whence != 2){
+        throw _b_.ValueError.$factory(
+            `Invalid whence (${whence}, should be 0, 1 or 2)`)
+    }else if(pos < 0 && whence == 0){
+        throw _b_.ValueError.$factory(`Negative seek position ${pos}`)
+    }else if(whence != 0 && pos != 0){
+        throw _b_.OSError.$factory("Can't do nonzero cur-relative seeks")
+    }
+
+    /* whence = 0: offset relative to beginning of the string.
+       whence = 1: no change to current position.
+       whence = 2: change position to end of file. */
+    if(whence == 1){
+        pos = self.$text.pos
+    }else if(whence == 2){
+        pos = self.$text_length
+    }
+
+    self.$text_pos = pos
+    return self.$text_pos
 }
 
 StringIO.write = function(){
@@ -124,15 +150,15 @@ StringIO.write = function(){
         throw _b_.TypeError.$factory('string argument expected, got ' +
             `'${$B.class_name($.data)}'`)
     }
-    var text = $.self.$content,
-        position = $.self.$counter
+    var text = $.self.$text,
+        position = $.self.$text_pos
     if(position > text.length){
         text += String.fromCodePoint(0).repeat(position - text.length)
     }
     text = text.substr(0, position) + $.data +
         text.substr(position + $.data.length)
-    $.self.$content = text
-    $.self.$counter = position + $.data.length
+    $.self.$text = text
+    $.self.$text_pos = position + $.data.length
     return $.data.length
 }
 
@@ -214,16 +240,15 @@ BlockingIOError.__bases__ = [_b_.OSError]
 
 $B.set_func_names(BlockingIOError, '_io')
 
+// generate $B._IOUnsupported if not defined yet
+$B.make_IOUnsupported()
+
 var $module = (function($B){
     return {
         _BufferedIOBase,
         _IOBase,
         _RawIOBase,
-        _TextIOBase: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
+        _TextIOBase: $B._TextIOBase,
         BlockingIOError,
         BytesIO: BytesIO,
         FileIO: $B._FileIO,
@@ -249,6 +274,7 @@ var $module = (function($B){
                 return "fileio"
             }
         ),
+        UnsupportedOperation: $B._IOUnsupported,
         TextIOWrapper: $B._TextIOWrapper
     }
 })(__BRYTHON__)

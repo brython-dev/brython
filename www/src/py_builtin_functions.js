@@ -2863,14 +2863,18 @@ var IOUnsupported
 
 const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
 
-function _io_unsupported(value){
-    if(IOUnsupported === undefined){
-        IOUnsupported = $B.make_class('UnsupportedOperation')
-        IOUnsupported.__bases__ = [_b_.OSError, _b_.ValueError]
-        IOUnsupported.__mro__ = _b_.type.$mro(IOUnsupported)
-        IOUnsupported.__module__ = '_io'
+$B.make_IOUnsupported = function(){
+    if($B._IOUnsupported === undefined){
+        $B._IOUnsupported = $B.make_class('UnsupportedOperation')
+        $B._IOUnsupported.__bases__ = [_b_.OSError, _b_.ValueError]
+        $B._IOUnsupported.__mro__ = _b_.type.$mro($B._IOUnsupported)
+        $B._IOUnsupported.__module__ = '_io'
     }
-    throw $B.$call(IOUnsupported)(value)
+}
+
+function _io_unsupported(value){
+    $B.make_IOUnsupported()
+    throw $B.$call($B._IOUnsupported)(value)
 }
 
 var _IOBase = $B.make_class("_IOBase")
@@ -3823,6 +3827,10 @@ $B._TextIOWrapper.$tp_dict.buffer = $B.getset_descriptor.$factory(
     }
 )
 
+$B._TextIOWrapper.fileno = function(_self){
+    return -1
+}
+
 $B._TextIOWrapper.read = function(){
     var $ = $B.args("read", 2, {self: null, size: null},
             ["self", "size"], arguments, {size: -1}, null, null),
@@ -3931,7 +3939,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
         // cf. PEP 597
         encoding = 'utf-8'
     }
-    
+
     /* Decode mode */
     for(var i = 0, len = mode.length; i < len; i++){
         var c = mode[i]
