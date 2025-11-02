@@ -236,17 +236,23 @@ $B.addToImported = function(name, modobj){
 }
 
 function run_js(module_contents, path, _module){
+    var keys_before = new Set(Object.keys(window))
     try{
         new Function(module_contents)()
     }catch(err){
         throw $B.exception(err)
     }
+    var new_keys = (new Set(Object.keys(window))).difference(keys_before)
     var modobj = $B.imported[_module.__name__]
     if(modobj === undefined){
         throw _b_.ImportError.$factory('imported not set by module')
     }
     modobj.__class__ = Module
     modobj.__name__ = _module.__name__
+    for(var new_key of new_keys){
+        modobj[new_key] = window[new_key]
+        delete window[new_key]
+    }
     for(var attr in modobj){
         if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
             modobj[attr].$infos = {
@@ -409,9 +415,13 @@ VFSFinder.find_spec = function(cls, fullname){
         is_package,
         timestamp
 
-    if(!$B.use_VFS){return _b_.None}
+    if(!$B.use_VFS){
+        return _b_.None
+    }
     stored = $B.VFS[fullname]
-    if(stored === undefined){return _b_.None}
+    if(stored === undefined){
+        return _b_.None
+    }
     is_package = stored[3] || false
     timestamp = stored.timestamp
 
@@ -1512,3 +1522,4 @@ return "<module '_importlib' (built-in)>"
 $B.imported["_importlib"] = _importlib_module
 
 })(__BRYTHON__);
+
