@@ -2632,8 +2632,17 @@ str.$factory = function(arg, encoding){
         // Arguments may be passed as keywords (cf. issue #1060)
         var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
                 ["arg", "encoding", "errors"], arguments,
-                {encoding: "utf-8", errors: "strict"}, null, null)
-        encoding = $.encoding
+                {encoding: "utf-8", errors: "strict"}, null, null),
+        encoding = $.encoding,
+        errors = $.errors
+        if(! $B.$isinstance(encoding, str)){
+            throw _b_.TypeError.$factory(
+                `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
+        }
+        if(! $B.$isinstance(errors, str)){
+            throw _b_.TypeError.$factory(
+                `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
+        }
     }
     if(typeof arg == "string" || arg instanceof String){
         return arg.toString()
@@ -2646,7 +2655,7 @@ str.$factory = function(arg, encoding){
                 encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
             // bytes.decode(encoding, errors)
-            return _b_.bytes.decode(arg, $.encoding, $.errors)
+            return _b_.bytes.decode(arg, encoding, errors)
         }
         // Implicit invocation of __str__ uses method __str__ on the class,
         // even if arg has an attribute __str__

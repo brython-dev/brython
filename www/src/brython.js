@@ -222,8 +222,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-03 14:42:43.187760"
-__BRYTHON__.timestamp=1762177363187
+__BRYTHON__.compiled_date="2025-11-03 16:02:58.026314"
+__BRYTHON__.timestamp=1762182178025
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -6590,15 +6590,15 @@ for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$in
 modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=name}}}
-function run_js(module_contents,path,_module){var keys_before=new Set(Object.keys(window))
+function run_js(module_contents,path,_module){var keys_before=new Set(Object.keys(globalThis))
 try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
-var new_keys=(new Set(Object.keys(window))).difference(keys_before)
+var new_keys=(new Set(Object.keys(globalThis))).difference(keys_before)
 var modobj=$B.imported[_module.__name__]
 if(modobj===undefined){throw _b_.ImportError.$factory('imported not set by module')}
 modobj.__class__=Module
 modobj.__name__=_module.__name__
-for(var new_key of new_keys){modobj[new_key]=window[new_key]
-delete window[new_key]}
+for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
+delete globalThis[new_key]}
 for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=_module.__name__}}
@@ -7982,12 +7982,15 @@ return "0".repeat(width-len)+_self}}
 str.$factory=function(arg,encoding){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
-var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null)
-encoding=$.encoding}
+var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors
+if(! $B.$isinstance(encoding,str)){throw _b_.TypeError.$factory(
+`str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)}
+if(! $B.$isinstance(errors,str)){throw _b_.TypeError.$factory(
+`str() argument 'errors' must be str, not ${$B.class_name(errors)}`)}}
 if(typeof arg=="string" ||arg instanceof String){return arg.toString()}else if(typeof arg=="number" && Number.isInteger(arg)){return arg.toString()}
 try{if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
-return _b_.bytes.decode(arg,$.encoding,$.errors)}
+return _b_.bytes.decode(arg,encoding,errors)}
 var klass=arg.__class__ ||$B.get_class(arg)
 if(klass===undefined){return $B.JSObj.__str__($B.jsobj2pyobj(arg))}
 var method=$B.$getattr(klass,"__str__",null)
