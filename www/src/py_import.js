@@ -236,13 +236,13 @@ $B.addToImported = function(name, modobj){
 }
 
 function run_js(module_contents, path, _module){
-    var keys_before = new Set(Object.keys(window))
+    var keys_before = new Set(Object.keys(globalThis))
     try{
         new Function(module_contents)()
     }catch(err){
         throw $B.exception(err)
     }
-    var new_keys = (new Set(Object.keys(window))).difference(keys_before)
+    var new_keys = (new Set(Object.keys(globalThis))).difference(keys_before)
     var modobj = $B.imported[_module.__name__]
     if(modobj === undefined){
         throw _b_.ImportError.$factory('imported not set by module')
@@ -250,8 +250,8 @@ function run_js(module_contents, path, _module){
     modobj.__class__ = Module
     modobj.__name__ = _module.__name__
     for(var new_key of new_keys){
-        modobj[new_key] = window[new_key]
-        delete window[new_key]
+        modobj[new_key] = globalThis[new_key]
+        delete globalThis[new_key]
     }
     for(var attr in modobj){
         if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
