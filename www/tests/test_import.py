@@ -117,4 +117,24 @@ def g():
 g()
 assert 'insort' in dir(yui)
 
+# issue 2621
+heapq = None
+
+def import_in_globals():
+    global heapq
+    import heapq
+
+
+import_in_globals()
+assert heapq is not None
+
+heapq1 = None
+
+def import_alias_in_globals():
+    global heapq1
+    import heapq as heapq1
+
+import_alias_in_globals()
+assert heapq1 is not None
+
 print('passed all tests')

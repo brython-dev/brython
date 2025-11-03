@@ -2925,14 +2925,15 @@ $B.ast.Import.prototype.to_js = function(scopes){
             js += `{'${alias.name}': [${scope_name}, '${alias.asname}']}, `
         }else{
             js += '{}, '
-            bind(alias.name, scopes)
+            var binding_scope = bind(alias.name, scopes)
+            var scope_name = make_scope_name(scopes, binding_scope)
         }
         var parts = alias.name.split('.')
         for(var i = 0; i < parts.length; i++){
             scopes.imports[parts.slice(0, i + 1).join(".")] = true
         }
 
-        js += `locals, ${inum})\n`
+        js += `${scope_name}, ${inum})\n`
     }
 
     return js.trimRight()
