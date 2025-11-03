@@ -2,7 +2,7 @@
 from _sys import *
 import _sys
 
-from browser import window
+from browser import scope
 
 _getframe = _sys._getframe
 
@@ -137,7 +137,7 @@ maxsize = __BRYTHON__.max_array_size
 
 maxunicode = 1114111
 
-platform = window.navigator.platform
+platform = scope.navigator.platform
 
 platlibdir = __BRYTHON__.brython_path + 'Lib'
 
