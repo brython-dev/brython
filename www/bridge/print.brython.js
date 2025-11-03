@@ -4,7 +4,7 @@ __BRYTHON__.importPythonModule("print_py")
 
 // JavaScript code
 console.log("Brython package 1: console.log")
-printJavaScriptFromModule("Brython package 2: printJavaScriptFromModule")
+__BRYTHON__.getPythonModule("printJS").printJavaScriptFromModule("Brython package 2: printJavaScriptFromModule")
 
 // Python code
 __BRYTHON__.runPythonSource("print('Brython package 3: print')")
