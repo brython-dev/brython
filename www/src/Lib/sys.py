@@ -2,6 +2,8 @@
 from _sys import *
 import _sys
 
+from browser import scope
+
 _getframe = _sys._getframe
 
 class _dataclass(tuple):
@@ -135,7 +137,7 @@ maxsize = __BRYTHON__.max_array_size
 
 maxunicode = 1114111
 
-platform = "brython"
+platform = scope.navigator.platform
 
 platlibdir = __BRYTHON__.brython_path + 'Lib'
 

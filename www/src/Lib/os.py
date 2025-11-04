@@ -148,6 +148,10 @@ if name == 'nt':
 def scandir(*args, **kw):
     raise NotImplementedError('browsers cannot read a directory content')
 
+def uname():
+    import platform
+    return platform.uname()
+
 def waitstatus_to_exitcode(status):
     return status >> 8
 
