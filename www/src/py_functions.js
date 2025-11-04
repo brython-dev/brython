@@ -436,7 +436,34 @@ $B.make_args_parser = function(f){
     return f.$args_parser
 }
 
-$B.function.$factory = function(){}
+$B.function.$factory = function(){
+    var $ = $B.args('FunctionType', 2,
+                {code: null, globals: null},
+                ['code', 'globals'],
+                arguments, {},
+                null, 'kw')
+    var code = $.code
+    var __name__ = $.name === _b_.None ? code.co_name : $.name
+    var frame = $B.frame_obj.frame
+    var globals_name = 'locals_' + frame[2]
+    var __file__ = frame.__file__
+    var func = new Function('_b_', '__file__', globals_name, 'return ' + code.co_code)
+    var f = func(_b_, __file__, $.globals)
+    $B.set_function_infos(f,
+        {
+            __name__,
+            __qualname__: frame[2] + '.' + __name__
+        }
+    )
+    var kwargs = $.kw
+    if(kwargs.hasOwnProperty('argdefs')){
+        $B.set_function_attr(f, '__defaults__', kwargs.argdefs)
+    }
+    if(kwargs.hasOwnProperty('kwdefaults')){
+        $B.set_function_attr(f, '__kwdefaults__', kwargs.kwdefaults)
+    }
+    return f
+}
 
 $B.set_func_names($B.function, "builtins")
 
