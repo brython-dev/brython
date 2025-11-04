@@ -207,4 +207,12 @@ class B(A):
 assert B.__annotate__ is None
 assert B.__annotations__ == {}
 
+# issue 2624
+from typing import NamedTuple
+
+class SomeNamedTuple(NamedTuple):
+     some_field: str
+
+assert SomeNamedTuple._fields == ("some_field",), SomeNamedTuple._fields
+
 print('all tests pass...')

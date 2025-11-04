@@ -1152,21 +1152,36 @@ function annotation_to_str(obj, scopes){
 }
 
 function annotation_code(scope, ref){
-    // Create object `annotate` inside the class defition JS code
-    // keys are the annotation names
-    // value is a 2-element array [lineno, func] where lineno is the line
-    // number of the annotation and func is the function called to get the
-    // annotation value for the key
-    // `annotate` has a special key $lineno set to the start of class
-    // definition
-    //
+    // Create function `annotate` inside the class defition JS code
     // Object is passed to py_type.js/$B.class_constructor and handled in
-    // py_type.js / make_annotate_class()
+    // py_type.js / make_annotate_func()
     if(scope.annotate){
-        var annotate = prefix + `var annotate = {\n`
+        var annotate = prefix + `var annotate = function(format){\n`
+        indent()
+        annotate += prefix + `$B.check_annotate_format(format)\n`
+        annotate += prefix + `var res = $B.empty_dict()\n`
+        annotate += prefix + `var anns = {\n`
         indent()
         var anns = scope.annotate.map(x => prefix + x)
         annotate += anns.join(',\n') + '\n'
+        dedent()
+        annotate += prefix + '}\n'
+        annotate += prefix + `for(var key in anns){\n`
+        indent()
+        annotate += prefix + `var [lineno, func] = anns[key]\n`
+        annotate += prefix + `try{\n`
+        indent()
+        annotate += prefix + `$B.$setitem(res, key, func())\n`
+        dedent()
+        annotate += prefix + `}catch(err){\n`
+        indent()
+        annotate += prefix + `frame.$lineno = lineno\n`
+        annotate += prefix + `throw err\n`
+        dedent()
+        annotate += prefix + `}\n`
+        dedent()
+        annotate += prefix + `}\n`
+        annotate += prefix + `return res\n`
         dedent()
         annotate += prefix + '}\n'
         return annotate

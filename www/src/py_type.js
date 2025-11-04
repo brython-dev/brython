@@ -93,6 +93,8 @@ $B.$class_constructor = function(class_name, frame, metaclass,
         $B.$setitem(dict, '__slots__', slots)
     }
 
+    $B.make_annotate_func(dict, annotate, frame)
+
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, resolved_bases, dict,
@@ -104,7 +106,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
     kls.__static_attributes__ = $B.fast_tuple(static_attributes)
     kls.__firstlineno__ = firstlineno
 
-    $B.make_annotate_class(kls, annotate, frame)
+    //$B.make_annotate_class(kls, annotate, frame)
 
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
@@ -1659,61 +1661,22 @@ $B.UnionType.__repr__ = function(self){
 
 $B.set_func_names($B.UnionType, "types")
 
-$B.make_annotate_class = function(kls, annotations, class_frame){
+$B.make_annotate_func = function(dict, annotations, class_frame){
     if(annotations === undefined){
-        kls.__annotate_func__ = _b_.None
+        $B.$setitem(dict, '__annotate_func__', _b_.None)
         return
     }
-    kls.$annotations = annotations
-    kls.__annotate_func__ = function(format){
-        if(! $B.$isinstance(format, _b_.int)){
-            throw _b_.TypeError.$factory('__annotate__ argument should be ' +
-                `int, not ${$B.class_name(format)}`)
+    var __annotate_func__ = annotations
+    $B.$setitem(dict, '__annotate_func__', __annotate_func__)
+    $B.set_function_infos(__annotate_func__,
+        {
+            __defaults__: _b_.None,
+            __kwdefaults__: _b_.None,
+            __name__: '__annotate__',
+            __module__: class_frame[2],
+            __qualname__: class_frame[0] + '.__annotate__'
         }
-        var file = class_frame.__file__
-        var locals = {format}
-        var frame = ['__annotate__', locals, class_frame[2], class_frame[3]]
-        $B.enter_frame(frame, file)
-        frame.positions = class_frame.positions
-        try{
-            switch(format){
-                case 1:
-                case 2:
-                    var ann_dict = $B.empty_dict()
-                    if(kls.$annotations === undefined){
-                        return $B.trace_return_and_leave(frame, ann_dict)
-                    }
-                    for(var key in kls.$annotations){
-                        if(key == '$lineno'){
-                            continue
-                        }
-                        try{
-                            var [lineno, func] = kls.$annotations[key]
-                        }catch(err){
-                            throw err
-                        }
-                        try{
-                            $B.$setitem(ann_dict, key, func())
-                        }catch(err){
-                            frame.$lineno = lineno
-                            console.log('error', frame.inum, frame.positions)
-                            throw err
-                        }
-                    }
-                    return $B.trace_return_and_leave(frame, ann_dict)
-                default:
-                    // set error lineno to start of class definition
-                    frame.$lineno = kls.$annotations.$lineno
-                    throw _b_.NotImplementedError.$factory('')
-            }
-        }catch(err){
-            $B.set_exc_and_leave(frame, err)
-        }
-    }
-    $B.add_function_infos(kls, '__annotate_func__')
-    $B.set_function_attr(kls.__annotate_func__, '__name__', '__annotate__')
-    $B.set_function_attr(kls.__annotate_func__, '__qualname__',
-        kls.__qualname__ + '.' + '__annotate__')
+    )
 }
 
 $B.postpone_annotations = function(obj, file){

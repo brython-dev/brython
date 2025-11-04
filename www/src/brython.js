@@ -222,8 +222,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-03 21:06:58.444820"
-__BRYTHON__.timestamp=1762200418444
+__BRYTHON__.compiled_date="2025-11-04 21:39:38.487951"
+__BRYTHON__.timestamp=1762288778487
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -809,8 +809,7 @@ add_spaces=false}
 last_is_closing_brace=line.endsWith('}')
 if(line.startsWith('}')){level--}else if(line.endsWith('}')){line=line.substr(0,line.length-1)
 add_closing_brace=true}
-if(level < 0){if($B.get_option('debug')> 2){console.log('wrong js indent')
-console.log(res)}
+if(level < 0){if($B.get_option('debug')> 2){console.log('wrong js indent')}
 level=0}
 try{res+=(add_spaces ? indentation.repeat(level):'')+line+'\n'}catch(err){console.log(res)
 throw err}
@@ -1434,6 +1433,9 @@ if(len !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes n
 " ("+len+" given)")}else{throw _b_.TypeError.$factory(name+"() takes exactly "+
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
+$B.check_annotate_format=function(format){if(! $B.$isinstance(format,_b_.int)){throw _b_.TypeError.$factory('__annotate__ argument should be '+
+`int, not ${$B.class_name(format)}`)}
+if(format !=1 && format !=2){throw _b_.NotImplementedError.$factory('')}}
 $B.get_class=function(obj){
 if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
@@ -2171,6 +2173,7 @@ var slots=class_obj_proxy.__slots__
 if(slots !==undefined){if(typeof slots=="string"){slots=[slots]}else{for(let item of $B.make_js_iterator(slots)){if(typeof item !='string'){throw _b_.TypeError.$factory('__slots__ items must be '+
 `strings, not '${$B.class_name(item)}'`)}}}
 $B.$setitem(dict,'__slots__',slots)}
+$B.make_annotate_func(dict,annotate,frame)
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})
 kls.__module__=module
@@ -2178,7 +2181,6 @@ kls.$subclasses=[]
 kls.$is_class=true
 kls.__static_attributes__=$B.fast_tuple(static_attributes)
 kls.__firstlineno__=firstlineno
-$B.make_annotate_class(kls,annotate,frame)
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 try{meta_init(kls,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}catch(err){if(class_name=='SupportsInt'){console.log('err for',class_name)
@@ -2722,32 +2724,12 @@ if(item.__module__ !=="builtins"){s=item.__module__+'.'+s}
 t.push(s)}else{t.push(_b_.repr(item))}}
 return t.join(' | ')}
 $B.set_func_names($B.UnionType,"types")
-$B.make_annotate_class=function(kls,annotations,class_frame){if(annotations===undefined){kls.__annotate_func__=_b_.None
+$B.make_annotate_func=function(dict,annotations,class_frame){if(annotations===undefined){$B.$setitem(dict,'__annotate_func__',_b_.None)
 return}
-kls.$annotations=annotations
-kls.__annotate_func__=function(format){if(! $B.$isinstance(format,_b_.int)){throw _b_.TypeError.$factory('__annotate__ argument should be '+
-`int, not ${$B.class_name(format)}`)}
-var file=class_frame.__file__
-var locals={format}
-var frame=['__annotate__',locals,class_frame[2],class_frame[3]]
-$B.enter_frame(frame,file)
-frame.positions=class_frame.positions
-try{switch(format){case 1:
-case 2:
-var ann_dict=$B.empty_dict()
-if(kls.$annotations===undefined){return $B.trace_return_and_leave(frame,ann_dict)}
-for(var key in kls.$annotations){if(key=='$lineno'){continue}
-try{var[lineno,func]=kls.$annotations[key]}catch(err){throw err}
-try{$B.$setitem(ann_dict,key,func())}catch(err){frame.$lineno=lineno
-console.log('error',frame.inum,frame.positions)
-throw err}}
-return $B.trace_return_and_leave(frame,ann_dict)
-default:
-frame.$lineno=kls.$annotations.$lineno
-throw _b_.NotImplementedError.$factory('')}}catch(err){$B.set_exc_and_leave(frame,err)}}
-$B.add_function_infos(kls,'__annotate_func__')
-$B.set_function_attr(kls.__annotate_func__,'__name__','__annotate__')
-$B.set_function_attr(kls.__annotate_func__,'__qualname__',kls.__qualname__+'.'+'__annotate__')}
+var __annotate_func__=annotations
+$B.$setitem(dict,'__annotate_func__',__annotate_func__)
+$B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__'}
+)}
 $B.postpone_annotations=function(obj,file){
 var module_frame=$B.frame_obj.frame
 obj.$annotations={}
@@ -2948,7 +2930,20 @@ f.$args_parser=f.$infos.args_parser=$B.getArgs0(
 PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
 )
 return f.$args_parser}
-$B.function.$factory=function(){}
+$B.function.$factory=function(){var $=$B.args('FunctionType',2,{code:null,globals:null},['code','globals'],arguments,{},null,'kw')
+var code=$.code
+var __name__=$.name===_b_.None ? code.co_name :$.name
+var frame=$B.frame_obj.frame
+var globals_name='locals_'+frame[2]
+var __file__=frame.__file__
+var func=new Function('_b_','__file__',globals_name,'return '+code.co_code)
+var f=func(_b_,__file__,$.globals)
+$B.set_function_infos(f,{__name__,__qualname__:frame[2]+'.'+__name__}
+)
+var kwargs=$.kw
+if(kwargs.hasOwnProperty('argdefs')){$B.set_function_attr(f,'__defaults__',kwargs.argdefs)}
+if(kwargs.hasOwnProperty('kwdefaults')){$B.set_function_attr(f,'__kwdefaults__',kwargs.kwdefaults)}
+return f}
 $B.set_func_names($B.function,"builtins")
 const args0_fcts=$B.args_parsers=[];
 function getArgs0(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs){const IDX=hasPosOnly
@@ -12758,10 +12753,32 @@ var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 return js+prefix+`$B.assert(${test}, ${msg}, ${inum})`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes,obj)}
 function annotation_code(scope,ref){
-if(scope.annotate){var annotate=prefix+`var annotate = {\n`
+if(scope.annotate){var annotate=prefix+`var annotate = function(format){\n`
+indent()
+annotate+=prefix+`$B.check_annotate_format(format)\n`
+annotate+=prefix+`var res = $B.empty_dict()\n`
+annotate+=prefix+`var anns = {\n`
 indent()
 var anns=scope.annotate.map(x=> prefix+x)
 annotate+=anns.join(',\n')+'\n'
+dedent()
+annotate+=prefix+'}\n'
+annotate+=prefix+`for(var key in anns){\n`
+indent()
+annotate+=prefix+`var [lineno, func] = anns[key]\n`
+annotate+=prefix+`try{\n`
+indent()
+annotate+=prefix+`$B.$setitem(res, key, func())\n`
+dedent()
+annotate+=prefix+`}catch(err){\n`
+indent()
+annotate+=prefix+`frame.$lineno = lineno\n`
+annotate+=prefix+`throw err\n`
+dedent()
+annotate+=prefix+`}\n`
+dedent()
+annotate+=prefix+`}\n`
+annotate+=prefix+`return res\n`
 dedent()
 annotate+=prefix+'}\n'
 return annotate}else{return prefix+`var annotate\n`}}

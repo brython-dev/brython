@@ -143,7 +143,7 @@ $B.format_indent = function(js, indent){
         if(level < 0){
             if($B.get_option('debug') > 2){
                 console.log('wrong js indent')
-                console.log(res)
+                //console.log(res)
             }
             level = 0
         }

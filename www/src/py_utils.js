@@ -731,6 +731,16 @@ $B.check_nb_args_no_kw = function(name, expected, args){
     }
 }
 
+$B.check_annotate_format = function(format){
+    if(! $B.$isinstance(format, _b_.int)){
+        throw _b_.TypeError.$factory('__annotate__ argument should be ' +
+            `int, not ${$B.class_name(format)}`)
+    }
+    if(format != 1 && format != 2){
+        throw _b_.NotImplementedError.$factory('')
+    }
+}
+
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
