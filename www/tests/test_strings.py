@@ -380,7 +380,7 @@ try:
     ''.x = 0
     raise AssertionError('should have raised AttributeError')
 except AttributeError as exc:
-    assert exc.args[0] == ("'str' object has no attribute 'x' " + 
+    assert exc.args[0] == ("'str' object has no attribute 'x' " +
         "and no __dict__ for setting new attributes")
 
 try:
@@ -509,5 +509,9 @@ assert b.decode('utf_32_le') == "a🐑 :"
 b = "a🐑 :".encode("utf_16")
 assert list(b) == [254, 255, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0]
 assert b.decode('utf_16') == "a🐑 :"
+
+# issue 2619
+assert_raises(TypeError, str, b'a', 5)
+assert_raises(TypeError, str, b'a', 'utf-8', 5)
 
 print("passed all tests...")
