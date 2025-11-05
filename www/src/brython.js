@@ -222,8 +222,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-04 21:39:38.487951"
-__BRYTHON__.timestamp=1762288778487
+__BRYTHON__.compiled_date="2025-11-05 20:57:29.075499"
+__BRYTHON__.timestamp=1762372649075
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -12752,12 +12752,17 @@ var inum=add_to_positions(scopes,this.test)
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 return js+prefix+`$B.assert(${test}, ${msg}, ${inum})`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes,obj)}
-function annotation_code(scope,ref){
-if(scope.annotate){var annotate=prefix+`var annotate = function(format){\n`
+function annotation_code(scopes,scope,ref){
+if(scope.annotate){console.log('scopes',scopes)
+var annotate=prefix+`var annotate = function(format){\n`
 indent()
-annotate+=prefix+`$B.check_annotate_format(format)\n`
-annotate+=prefix+`var res = $B.empty_dict()\n`
-annotate+=prefix+`var anns = {\n`
+annotate+=prefix+`$B.check_annotate_format(format)\n`+
+prefix+`var current_frame = $B.frame_obj.frame\n`+
+prefix+`var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n`+
+prefix+`$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n`+
+prefix+`frame.positions = [${scope.positions}]\n`+
+prefix+`var res = $B.empty_dict()\n`+
+prefix+`var anns = {\n`
 indent()
 var anns=scope.annotate.map(x=> prefix+x)
 annotate+=anns.join(',\n')+'\n'
@@ -12772,13 +12777,13 @@ annotate+=prefix+`$B.$setitem(res, key, func())\n`
 dedent()
 annotate+=prefix+`}catch(err){\n`
 indent()
-annotate+=prefix+`frame.$lineno = lineno\n`
-annotate+=prefix+`throw err\n`
+annotate+=prefix+`$B.set_exc_and_leave(frame, err)\n`
 dedent()
 annotate+=prefix+`}\n`
 dedent()
-annotate+=prefix+`}\n`
-annotate+=prefix+`return res\n`
+annotate+=prefix+`}\n`+
+prefix+`$B.leave_frame()\n`+
+prefix+`return res\n`
 dedent()
 annotate+=prefix+'}\n'
 return annotate}else{return prefix+`var annotate\n`}}
@@ -13083,7 +13088,7 @@ js.substr(index_for_positions)}
 scopes.pop()
 var static_attrs=[]
 if(class_scope.static_attributes){static_attrs=Array.from(class_scope.static_attributes).map(x=> `"${x}"`)}
-js+=annotation_code(class_scope,class_ref)
+js+=annotation_code(scopes,class_scope,class_ref)
 js+=prefix+`var kls = $B.$class_constructor('${this.name}', frame, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}], `+
 `[${static_attrs}], annotate, ${this.lineno})\n`+

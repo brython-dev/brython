@@ -1151,16 +1151,21 @@ function annotation_to_str(obj, scopes){
     return get_source_from_position(scopes, obj)
 }
 
-function annotation_code(scope, ref){
+function annotation_code(scopes, scope, ref){
     // Create function `annotate` inside the class defition JS code
     // Object is passed to py_type.js/$B.class_constructor and handled in
     // py_type.js / make_annotate_func()
     if(scope.annotate){
+        console.log('scopes', scopes)
         var annotate = prefix + `var annotate = function(format){\n`
         indent()
-        annotate += prefix + `$B.check_annotate_format(format)\n`
-        annotate += prefix + `var res = $B.empty_dict()\n`
-        annotate += prefix + `var anns = {\n`
+        annotate += prefix + `$B.check_annotate_format(format)\n` +
+            prefix + `var current_frame = $B.frame_obj.frame\n` +
+            prefix + `var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n` +
+            prefix + `$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n` +
+            prefix + `frame.positions = [${scope.positions}]\n` +
+            prefix + `var res = $B.empty_dict()\n` +
+            prefix + `var anns = {\n`
         indent()
         var anns = scope.annotate.map(x => prefix + x)
         annotate += anns.join(',\n') + '\n'
@@ -1175,13 +1180,13 @@ function annotation_code(scope, ref){
         dedent()
         annotate += prefix + `}catch(err){\n`
         indent()
-        annotate += prefix + `frame.$lineno = lineno\n`
-        annotate += prefix + `throw err\n`
+        annotate += prefix + `$B.set_exc_and_leave(frame, err)\n`
         dedent()
         annotate += prefix + `}\n`
         dedent()
-        annotate += prefix + `}\n`
-        annotate += prefix + `return res\n`
+        annotate += prefix + `}\n` +
+            prefix + `$B.leave_frame()\n` +
+            prefix + `return res\n`
         dedent()
         annotate += prefix + '}\n'
         return annotate
@@ -1879,7 +1884,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
     }
 
-    js += annotation_code(class_scope, class_ref)
+    js += annotation_code(scopes, class_scope, class_ref)
 
     js += prefix + `var kls = $B.$class_constructor('${this.name}', frame, metaclass, ` +
               `resolved_bases, bases, [${keywords.join(', ')}], ` +
@@ -4364,3 +4369,5 @@ $B.js_from_ast = function(ast, scopes){
 }
 
 })(__BRYTHON__);
+
+
