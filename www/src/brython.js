@@ -182,7 +182,6 @@ $B.url2name[filename]=script_id
 $B.imported[script_id]={}
 var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope)
 return root.to_js()}
-$B.getPythonModule=function(name){return $B.imported[name]}
 $B.pythonToAST=function(python_code,filename,mode){let parser=new $B.Parser(python_code,filename ?? 'test',mode ?? 'file')
 return $B._PyPegen.run_parser(parser)}
 $B.python_to_js=function(src,script_id){
@@ -199,7 +198,10 @@ if(options){for(var[key,value]of Object.entries(options)){script.options[key]=va
 script_id=script_id ?? 'python_script_'+$B.UUID()
 $B.run_script(script,src,script_id,url,true)
 return $B.imported[script_id]}
-$B.importPythonModule=function(name,options){return $B.runPythonSource('import '+name,options)}})(__BRYTHON__);
+$B.getPythonModule=function(name){return $B.imported[name]}
+$B.importPythonModule=function(name,options){return $B.runPythonSource('import '+name,options)}
+$B.importModule=function(name,options){if(! $B.imported.hasOwnProperty(name)){$B.runPythonSource('import '+name,options)}
+return $B.imported[name]}})(__BRYTHON__);
 ;
 
 __BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Interpolation:'value,str,conversion,format_spec?',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'name,default_value?',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',TemplateStr:'values*',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeAlias:'name,type_params*,value',TypeIgnore:'lineno,tag',TypeVar:'name,bound?,default_value?',TypeVarTuple:'name,default_value?',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','Interpolation','JoinedStr','TemplateStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
@@ -222,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-04 21:39:38.487951"
-__BRYTHON__.timestamp=1762288778487
+__BRYTHON__.compiled_date="2025-11-05 22:34:37.851849"
+__BRYTHON__.timestamp=1762378477851
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -12752,12 +12754,16 @@ var inum=add_to_positions(scopes,this.test)
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 return js+prefix+`$B.assert(${test}, ${msg}, ${inum})`}
 function annotation_to_str(obj,scopes){return get_source_from_position(scopes,obj)}
-function annotation_code(scope,ref){
+function annotation_code(scopes,scope,ref){
 if(scope.annotate){var annotate=prefix+`var annotate = function(format){\n`
 indent()
-annotate+=prefix+`$B.check_annotate_format(format)\n`
-annotate+=prefix+`var res = $B.empty_dict()\n`
-annotate+=prefix+`var anns = {\n`
+annotate+=prefix+`$B.check_annotate_format(format)\n`+
+prefix+`var current_frame = $B.frame_obj.frame\n`+
+prefix+`var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n`+
+prefix+`$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n`+
+prefix+`frame.positions = [${scope.positions}]\n`+
+prefix+`var res = $B.empty_dict()\n`+
+prefix+`var anns = {\n`
 indent()
 var anns=scope.annotate.map(x=> prefix+x)
 annotate+=anns.join(',\n')+'\n'
@@ -12772,13 +12778,13 @@ annotate+=prefix+`$B.$setitem(res, key, func())\n`
 dedent()
 annotate+=prefix+`}catch(err){\n`
 indent()
-annotate+=prefix+`frame.$lineno = lineno\n`
-annotate+=prefix+`throw err\n`
+annotate+=prefix+`$B.set_exc_and_leave(frame, err)\n`
 dedent()
 annotate+=prefix+`}\n`
 dedent()
-annotate+=prefix+`}\n`
-annotate+=prefix+`return res\n`
+annotate+=prefix+`}\n`+
+prefix+`$B.leave_frame()\n`+
+prefix+`return res\n`
 dedent()
 annotate+=prefix+'}\n'
 return annotate}else{return prefix+`var annotate\n`}}
@@ -13083,7 +13089,7 @@ js.substr(index_for_positions)}
 scopes.pop()
 var static_attrs=[]
 if(class_scope.static_attributes){static_attrs=Array.from(class_scope.static_attributes).map(x=> `"${x}"`)}
-js+=annotation_code(class_scope,class_ref)
+js+=annotation_code(scopes,class_scope,class_ref)
 js+=prefix+`var kls = $B.$class_constructor('${this.name}', frame, metaclass, `+
 `resolved_bases, bases, [${keywords.join(', ')}], `+
 `[${static_attrs}], annotate, ${this.lineno})\n`+

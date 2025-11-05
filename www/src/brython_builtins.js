@@ -513,10 +513,6 @@ function from_py(src, script_id){
     return root.to_js()
 }
 
-$B.getPythonModule = function(name){
-    return $B.imported[name]
-}
-
 $B.pythonToAST = function(python_code, filename, mode){
     let parser = new $B.Parser(python_code, filename ?? 'test', mode ?? 'file')
     return $B._PyPegen.run_parser(parser)
@@ -583,8 +579,21 @@ $B.runPythonSource = function(src, options){
     return $B.imported[script_id]
 }
 
+// return a reference to an already imported module
+$B.getPythonModule = function(name){
+    return $B.imported[name]
+}
+
 $B.importPythonModule = function(name, options){
     return $B.runPythonSource('import ' + name, options)
+}
+
+// return the module with specified name
+$B.importModule = function(name, options){
+    if(! $B.imported.hasOwnProperty(name)){
+        $B.runPythonSource('import ' + name, options)
+    }
+    return $B.imported[name]
 }
 
 })(__BRYTHON__);

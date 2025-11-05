@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>JavaScript/Python bridge demo</title>
+    <script type="text/javascript" src="/src/brython.js"></script>
+    <script type="text/javascript" src="print.brython.js"></script>
+  </head>
+  <body>
+
+    <script type="text/python" id="pythonscript">
+from browser import console, window, document
+import print_py, printJS
+
+def print_python_from_script(message):
+    print(message)
+
+# Python code
+print("pythonscript 1: print")
+print_python_from_script("pythonscript 2: print_python_from_script")
+print_py.print_python_from_module("pythonscript 3: print_python_from_module")
+
+# JavaScript code
+console.log("pythonscript 4: console.log")
+window.printJavaScriptFromScript("pythonscript 5: printJavaScriptFromScript")
+printJS.printJavaScriptFromModule("pythonscript 6: printJavaScriptFromModule")
+
+document <= "Look at the 16 print in the JavaScript console"
+    </script>
+
+    <script type="text/javascript" id="javascriptscript">
+printJavaScriptFromScript = function(message){
+    console.log(message)
+}
+
+// JavaScript code
+console.log("javascriptscript 1: console.log")
+printJavaScriptFromScript("javascriptscript 2: printJavaScriptFromScript")
+__BRYTHON__.getPythonModule("printJS").printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
+
+// Python code
+__BRYTHON__.runPythonSource("print('javascriptscript 4: print')")
+document.getElementById("pythonscript").addEventListener('load', function(script){
+    __BRYTHON__.getPythonModule("pythonscript").print_python_from_script("javascriptscript 5: print_python_from_script")
+})
+__BRYTHON__.getPythonModule("print_py").print_python_from_module("javascriptscript 6: print_python_from_module")
+    </script>
+
+  </body>
+</html>
