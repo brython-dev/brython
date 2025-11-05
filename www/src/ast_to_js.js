@@ -1156,7 +1156,6 @@ function annotation_code(scopes, scope, ref){
     // Object is passed to py_type.js/$B.class_constructor and handled in
     // py_type.js / make_annotate_func()
     if(scope.annotate){
-        console.log('scopes', scopes)
         var annotate = prefix + `var annotate = function(format){\n`
         indent()
         annotate += prefix + `$B.check_annotate_format(format)\n` +
