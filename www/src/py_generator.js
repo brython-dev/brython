@@ -55,11 +55,11 @@ $B.generator.close = function(self){
         $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
-        $B.generator.throw(self, _b_.GeneratorExit.$factory())
+        $B.generator.throw(self, $B.EXC(_b_.GeneratorExit))
     }catch(err){
         if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
             $B.frame_obj = save_frame_obj
-            throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")
+            $B.RAISE(_b_.RuntimeError, "generator ignored GeneratorExit")
         }
     }
     $B.frame_obj = save_frame_obj
@@ -72,10 +72,10 @@ $B.generator.send = function(self, value){
     var gen = self.js_gen
     gen.$has_run = true
     if(gen.$finished){
-        throw _b_.StopIteration.$factory(value)
+        $B.RAISE(_b_.StopIteration, value)
     }
     if(gen.gi_running === true){
-        throw _b_.ValueError.$factory("generator already executing")
+        $B.RAISE(_b_.ValueError, "generator already executing")
     }
     gen.gi_running = true
     // save frames before resuming the generator
@@ -100,11 +100,11 @@ $B.generator.send = function(self, value){
     $B.frame_obj = save_frame_obj
     if(res.value && res.value.__class__ === $GeneratorReturn){
         gen.$finished = true
-        throw _b_.StopIteration.$factory(res.value.value)
+        $B.RAISE(_b_.StopIteration, res.value.value)
     }
     gen.gi_running = false
     if(res.done){
-        throw _b_.StopIteration.$factory(res.value)
+        $B.RAISE(_b_.StopIteration, res.value)
     }
     return res.value
 }
@@ -125,7 +125,7 @@ $B.generator.throw = function(){
 
     if(exc.$is_class){
         if(! _b_.issubclass(type, _b_.BaseException)){
-            throw _b_.TypeError.$factory("exception value must be an " +
+            $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")
         }else if(value === undefined || value === _b_.None){
             exc = $B.$call(exc)()
@@ -149,7 +149,7 @@ $B.generator.throw = function(){
     var res = gen.throw(exc)
     $B.frame_obj = save_frame_obj
     if(res.done){
-        throw _b_.StopIteration.$factory(res.value)
+        $B.RAISE(_b_.StopIteration, res.value)
     }
     return res.value
 }
@@ -188,10 +188,10 @@ $B.async_generator.aclose = function(self){
 $B.async_generator.asend = async function(self, value){
     var gen = self.js_gen
     if(gen.$finished){
-        throw _b_.StopAsyncIteration.$factory(value)
+        $B.RAISE(_b_.StopAsyncIteration, value)
     }
     if(gen.ag_running === true){
-        throw _b_.ValueError.$factory("generator already executing")
+        $B.RAISE(_b_.ValueError, "generator already executing")
     }
     gen.ag_running = true
     // save frames before resuming the generator
@@ -215,11 +215,11 @@ $B.async_generator.asend = async function(self, value){
     // restore stack
     $B.frame_obj = save_frame_obj
     if(res.done){
-        throw _b_.StopAsyncIteration.$factory(value)
+        $B.RAISE(_b_.StopAsyncIteration, value)
     }
     if(res.value.__class__ === $GeneratorReturn){
         gen.$finished = true
-        throw _b_.StopAsyncIteration.$factory(res.value.value)
+        $B.RAISE(_b_.StopAsyncIteration, res.value.value)
     }
     gen.ag_running = false
     return res.value
@@ -231,7 +231,7 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
 
     if(exc.$is_class){
         if(! _b_.issubclass(type, _b_.BaseException)){
-            throw _b_.TypeError.$factory("exception value must be an " +
+            $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")
         }else if(value === undefined){
             value = $B.$call(exc)()

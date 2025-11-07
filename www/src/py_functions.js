@@ -33,7 +33,7 @@ $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
     function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.dict)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 '__annotations__ must be set to a dict object')
         }
         f.__annotations__ = value
@@ -51,8 +51,8 @@ $B.function.__dict__.__builtins__ = $B.getset_descriptor.$factory(
         return $B.obj_dict(_b_)
     }
     ,
-    function(){
-        throw _b_.AttributeError.$factory('readonly attribute')
+    function(f){
+        $B.RAISE_ATTRIBUTE_ERROR('readonly attribute', f, '__builtins__')
     }
 )
 
@@ -76,8 +76,8 @@ $B.function.__dict__.__closure__ = $B.getset_descriptor.$factory(
         return $B.fast_tuple(cells)
     }
     ,
-    function(){
-        throw _b_.AttributeError.$factory('readonly attribute')
+    function(f){
+        $B.RAISE_ATTRIBUTE_ERROR('readonly attribute', f, '__closure__')
     }
 )
 
@@ -98,7 +98,7 @@ $B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
     function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.code)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 '__code__ must be set to a code object')
         }
         f.$infos.__code__ = value
@@ -117,7 +117,7 @@ $B.function.__dict__.__defaults__ = $B.getset_descriptor.$factory(
         if(value === _b_.None){
             value = []
         }else if(! $B.$isinstance(value, _b_.tuple)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 "__defaults__ must be set to a tuple object")
         }
         f.$infos.__defaults__ = value
@@ -129,7 +129,7 @@ $B.function.__dict__.__defaults__ = $B.getset_descriptor.$factory(
 
 $B.function.__delattr__ = function(self, attr){
     if(attr == "__dict__"){
-        throw _b_.TypeError.$factory("can't delete function __dict__")
+        $B.RAISE(_b_.TypeError, "can't delete function __dict__")
     }
 }
 
@@ -169,7 +169,7 @@ $B.function.__dict__.__name__ = $B.getset_descriptor.$factory(
     function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.str)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 '__name__ must be set to a string object')
         }
         f.$infos.__name__ = value
@@ -186,7 +186,7 @@ $B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
     function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.str)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 '__qualname__ must be set to a string object')
         }
         f.$infos.__qualname__ = value
@@ -203,7 +203,7 @@ $B.function.__dict__.__type_params__ = $B.getset_descriptor.$factory(
     function(f, value){
         $B.check_infos(f)
         if(! $B.$isinstance(value, _b_.tuple)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 'TypeError: __type_params__ must be set to a tuple')
         }
         f.$infos.__type_params__ = value
@@ -241,8 +241,8 @@ $B.function.__dict__.__globals__ = $B.getset_descriptor.$factory(
         return $B.obj_dict($B.imported[f.$infos.__module__])
     }
     ,
-    function(){
-        throw _b_.AttributeError.$factory('readonly attribute')
+    function(f){
+        $B.RAISE_ATTRIBUTE_ERROR('readonly attribute', f, '__globals__')
     }
 )
 
@@ -258,7 +258,7 @@ $B.function.__dict__.__kwdefaults__ = $B.getset_descriptor.$factory(
         if(value == _b_.None){
             value = $B.empty_dict()
         }else if(! $B.$isinstance(value, _b_.dict)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 '__kwdefaults__ must be set to a dict object')
         }
         f.$infos.__kwdefaults__ = value
@@ -370,7 +370,8 @@ $B.make_args_parser = function(f){
     }
     if(f.$infos === undefined || f.$infos.__code__ === undefined){
         console.log('f', f)
-        throw _b_.AttributeError.$factory(`cannot set defauts to ${_b_.str.$factory(f)}`);
+        $B.RAISE_ATTRIBUTE_ERROR(`cannot set defauts to ${_b_.str.$factory(f)}`,
+            f, 'defaults')
     }
     const varnames = f.$infos.__code__.co_varnames,
           value = f.$infos.__defaults__,
@@ -1003,7 +1004,7 @@ function make_arguments_parser(f){
                     add_to_kwargs(locals[kwarg], key, value)
                     return
                 }else{
-                    throw _b_.TypeError.$factory(name +
+                    $B.RAISE(_b_.TypeError, name +
                         `() got an unexpected keyword argument '${key}'`)
                 }
             }
@@ -1012,7 +1013,7 @@ function make_arguments_parser(f){
                     _b_.dict.$setitem_string(locals[kwarg], key, value)
                     return
                 }
-                throw _b_.TypeError.$factory(name +
+                $B.RAISE(_b_.TypeError, name +
                     `() got multiple values for argument '${key}'`)
             }
             if(index < posonly_length){
@@ -1087,7 +1088,7 @@ function make_arguments_parser(f){
                     let keys_method = $B.$getattr(klass, 'keys', null)
                     let getitem = $B.$getattr(klass, '__getitem__', null)
                     if(keys_method === null || getitem === null){
-                        throw _b_.TypeError.$factory(
+                        $B.RAISE(_b_.TypeError,
                             `${name} argument after ** must be a mapping, ` +
                             `not ${$B.class_name(elt.$kw[i])}`)
                     }
@@ -1116,13 +1117,13 @@ function make_arguments_parser(f){
                 report = `from ${nb_min} to ${positional_length}`
                 plural = 's'
             }
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 `${name}() takes ${report} positional argument` +
                 `${plural} but ${nb} were given`)
         }
 
         if(posonly_as_keywords.length > 0){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 `${name}() got some positional-only arguments passed as keyword ` +
                 `arguments: '${posonly_as_keywords.join(', ')}'`)
         }
@@ -1163,7 +1164,7 @@ function make_arguments_parser(f){
                 var report = missing_names(missing)
                 var nb_missing = missing.length
                 var plural = nb_missing == 1 ? '' : 's'
-                throw _b_.TypeError.$factory(name +
+                $B.RAISE(_b_.TypeError, name +
                     `() missing ${nb_missing} required ${missing_type} ` +
                     `argument${plural}: ${report}`)
             }

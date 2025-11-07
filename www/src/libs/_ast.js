@@ -98,11 +98,11 @@ function validate_arguments(args){
         validate_expr(args.kwarg.annotation, Load)
     }
     if(args.defaults.length > args.posonlyargs.length + args.args.length){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "more positional defaults than args on arguments")
     }
     if(args.kw_defaults.length != args.kwonlyargs.length){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "length of kwonlyargs is not the same as " +
             "kw_defaults on arguments")
     }
@@ -127,7 +127,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchMapping:
             if(p.keys.length != p.patterns.length){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "MatchMapping doesn't have the same number of keys as patterns");
             }
             if(p.rest){
@@ -152,7 +152,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchClass:
             if(p.kwd_attrs.length != p.kwd_patterns.length){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "MatchClass doesn't have the same number of " +
                     "keyword attributes as patterns")
             }
@@ -165,7 +165,7 @@ function validate_pattern(p, star_ok){
                     cls = cls.value;
                     continue;
                 }else {
-                    throw _b_.ValueError.$factory(
+                    $B.RAISE(_b_.ValueError, 
                         "MatchClass cls field can only contain Name " +
                         "or Attribute nodes.")
                 }
@@ -180,7 +180,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchStar:
             if (!star_ok) {
-                throw _b_.ValueError.$factory("can't use MatchStar here")
+                $B.RAISE(_b_.ValueError, "can't use MatchStar here")
             }
             if(p.name === undefined){
                 validate_capture(p.name)
@@ -193,7 +193,7 @@ function validate_pattern(p, star_ok){
             if(p.pattern == undefined){
                 ret = 1;
             }else if(p.name == undefined){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "MatchAs must specify a target name if a pattern is given")
             }else{
                 validate_pattern(p.pattern, 0);
@@ -201,7 +201,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchOr:
             if(p.patterns.length < 2){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "MatchOr requires at least 2 patterns")
             }
             validate_patterns(p.patterns, 0)
@@ -210,7 +210,7 @@ function validate_pattern(p, star_ok){
     // kinds are added without being handled here
     }
     if(ret < 0){
-        throw _b_.SystemError.$factory("unexpected pattern")
+        $B.RAISE(_b_.SystemError, "unexpected pattern")
     }
     return true
 }
@@ -235,7 +235,7 @@ function validate_pattern_match_value(exp){
                     _b_.complex, _b_.str])){
                 return true
             }
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "unexpected constant inside of a literal pattern")
         case mod.Attribute:
             // Constants and attribute lookups are always permitted
@@ -260,13 +260,13 @@ function validate_pattern_match_value(exp){
         default:
             break;
     }
-    throw _b_.ValueError.$factory(
+    $B.RAISE(_b_.ValueError, 
         "patterns may only match literals and attribute lookups")
 }
 
 function validate_capture(name){
     if(name == "_"){
-        throw _b_.ValueError.$factory("can't capture name '_' in patterns")
+        $B.RAISE(_b_.ValueError, "can't capture name '_' in patterns")
     }
     validate_name(name)
 }
@@ -274,7 +274,7 @@ function validate_capture(name){
 function validate_name(name){
     var forbidden = ["None", "True", "False"]
     if(forbidden.indexOf(name) > -1){
-        throw _b_.ValueError.$factory(`identifier field can't represent` +
+        $B.RAISE(_b_.ValueError, `identifier field can't represent` +
             ` '${name}' constant", forbidden[i]`)
     }
     return true
@@ -282,7 +282,7 @@ function validate_name(name){
 
 function validate_comprehension(gens){
     if(gens.length == 0) {
-        throw _b_.ValueError.$factory("comprehension with no generators")
+        $B.RAISE(_b_.ValueError, "comprehension with no generators")
     }
     for(var comp of gens){
         validate_expr(comp.target, Store)
@@ -312,7 +312,7 @@ function validate_nonempty_seq(seq, what, owner){
     if(seq.length > 0){
         return true
     }
-    throw _b_.ValueError.$factory(`empty ${what} on ${owner}`)
+    $B.RAISE(_b_.ValueError, `empty ${what} on ${owner}`)
 }
 
 function validate_assignlist(targets, ctx){
@@ -330,7 +330,7 @@ function validate_exprs(exprs, ctx, null_ok){
         if(expr !== _b_.None){
             validate_expr(expr, ctx)
         }else if(!null_ok){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                             "None disallowed in expression list")
         }
 
@@ -357,7 +357,7 @@ function validate_expr(exp, ctx){
         break
     default:
         if(ctx != Load){
-            throw _b_.ValueError.$factory("expression which can't be " +
+            $B.RAISE(_b_.ValueError, "expression which can't be " +
                 `assigned to in ${ctx} context`)
         }
         check_ctx = 0;
@@ -367,7 +367,7 @@ function validate_expr(exp, ctx){
     actual_ctx = actual_ctx === 0 ? actual_ctx :
                  actual_ctx.__class__.__name__
     if(check_ctx && actual_ctx != ctx){
-        throw _b_.ValueError.$factory(`expression must have ` +
+        $B.RAISE(_b_.ValueError, `expression must have ` +
             `${ctx} context but has ${actual_ctx} instead`)
     }
 
@@ -375,7 +375,7 @@ function validate_expr(exp, ctx){
     switch (exp.__class__) {
     case mod.BoolOp:
         if(exp.values.length < 2){
-            throw _b_.ValueError.$factory("BoolOp with less than 2 values")
+            $B.RAISE(_b_.ValueError, "BoolOp with less than 2 values")
         }
         validate_exprs(exp.values, Load, 0);
         break;
@@ -397,7 +397,7 @@ function validate_expr(exp, ctx){
         break;
     case mod.Dict:
         if(exp.keys.length != exp.values.length){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "Dict doesn't have the same number of keys as values");
         }
         /* null_ok=1 for keys expressions to allow dict unpacking to work in
@@ -432,10 +432,10 @@ function validate_expr(exp, ctx){
         break;
     case mod.Compare:
         if(exp.comparators.length == 0){
-            throw _b_.ValueError.$factory("Compare with no comparators")
+            $B.RAISE(_b_.ValueError, "Compare with no comparators")
         }
         if(exp.comparators.length != exp.ops){
-            throw _b_.ValueError.$factory("Compare has a different number " +
+            $B.RAISE(_b_.ValueError, "Compare has a different number " +
                             "of comparators and operands")
         }
         validate_exprs(exp.comparators, Load, 0)
@@ -528,7 +528,7 @@ function validate_stmts(seq){
         if(stmt !== _b_.None){
             validate_stmt(stmt)
         }else{
-            throw _b_.ValueError.$factory("None disallowed in statement list");
+            $B.RAISE(_b_.ValueError, "None disallowed in statement list");
         }
     }
 }
@@ -567,7 +567,7 @@ function validate_stmt(stmt){
         break;
     case mod.AnnAssign:
         if(stmt.target.__class__ != mod.Name && stmt.simple){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "AnnAssign with simple non-Name target")
         }
         validate_expr(stmt.target, Store)
@@ -636,7 +636,7 @@ function validate_stmt(stmt){
             break;
         }
         if(stmt.cause) {
-            throw _b_.ValueError.$factory("Raise with cause but no exception");
+            $B.RAISE(_b_.ValueError, "Raise with cause but no exception");
         }
         break;
     case mod.Try:
@@ -646,7 +646,7 @@ function validate_stmt(stmt){
                 "Try has neither except handlers nor finalbody");
         }
         if(stmt.handlers.length == 0 && stmt.orelse.length > 0){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "Try has orelse but no except handlers");
         }
         for(var handler of stmt.handlers){
@@ -665,11 +665,11 @@ function validate_stmt(stmt){
     case mod.TryStar:
         validate_body(stmt.body, "TryStar")
         if(stmt.handlers.length + stmt.finalbody.length == 0){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "TryStar has neither except handlers nor finalbody");
         }
         if(stmt.handlers.length == 0 && stmt.orelse.length > 0){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "TryStar has orelse but no except handlers");
         }
         for(var handler of stm.handlers){
@@ -696,7 +696,7 @@ function validate_stmt(stmt){
         break;
     case mod.ImportFrom:
         if(stmt.level < 0) {
-            throw _b_.ValueError.$factory("Negative ImportFrom level")
+            $B.RAISE(_b_.ValueError, "Negative ImportFrom level")
         }
         validate_nonempty_seq(stmt.names, "names", "ImportFrom");
         break;

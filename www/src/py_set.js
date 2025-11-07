@@ -16,7 +16,7 @@ function make_new_set(type){
         for(var item of set_iter(res)){
             yield item
             if(res.$version != version){
-                throw _b_.RuntimeError.$factory(
+                $B.RAISE(_b_.RuntimeError, 
                     'Set changed size during iteration')
             }
         }
@@ -400,10 +400,10 @@ set_iterator.__length_hint__ = function(self){
 set_iterator.__next__ = function(self){
     var res = self.it.next()
     if(res.done){
-        throw _b_.StopIteration.$factory()
+        $B.RAISE(_b_.StopIteration, )
     }
     if(self.so.$version != self.version){
-        throw _b_.RuntimeError.$factory("Set changed size during iteration")
+        $B.RAISE(_b_.RuntimeError, "Set changed size during iteration")
     }
     return res.value
 }
@@ -453,7 +453,7 @@ set.__mro__ = [_b_.object]
 
 set.__new__ = function(cls, iterable){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("set.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "set.__new__(): not enough arguments")
     }
     var self = make_new_set(cls)
     if(iterable === undefined){
@@ -621,14 +621,14 @@ set.isdisjoint = function(self, other){
 
 set.pop = function(self){
     if(arguments.length > 1){
-        throw _b_.TypeError.$factory(`set.pop() takes no arguments` +
+        $B.RAISE(_b_.TypeError, `set.pop() takes no arguments` +
             ` (${arguments.length - 1} given)`)
     }
     for(var hash in self.$store){
         break
     }
     if(hash === undefined){
-        throw _b_.KeyError.$factory('pop from an empty set')
+        $B.RAISE(_b_.KeyError, 'pop from an empty set')
     }
     var item
     item = self.$store[hash].pop()
@@ -645,7 +645,7 @@ set.remove = function(self, item){
     $B.check_nb_args_no_kw('set.remove', 2, arguments)
     var result = set_discard_entry(self, item)
     if(result == DISCARD_NOTFOUND){
-        throw _b_.KeyError.$factory(item)
+        $B.RAISE(_b_.KeyError, item)
     }
     self.$version++
     return _b_.None
@@ -921,7 +921,7 @@ frozenset.__init__ = function(){
 
 frozenset.__new__ = function(cls, iterable){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("frozenset.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "frozenset.__new__(): not enough arguments")
     }
     var self = make_new_set(cls)
 

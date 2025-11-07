@@ -200,12 +200,12 @@ dict.$iter_items = function*(d){
             if(d._keys[i] !== undefined){
                 yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
                 if(d.$version !== version){
-                    throw _b_.RuntimeError.$factory('changed in iteration')
+                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
                 }
             }
         }
         if(d.$version !== version){
-            throw _b_.RuntimeError.$factory('changed in iteration')
+            $B.RAISE(_b_.RuntimeError, 'changed in iteration')
         }
     }
 }
@@ -221,12 +221,12 @@ dict.$iter_items_check = function*(d){
             if(d._keys[i] !== undefined){
                 yield [d._keys[i], d._values[i]]
                 if(d.$version !== version){
-                    throw _b_.RuntimeError.$factory('changed in iteration')
+                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
                 }
             }
         }
         if(d.$version !== version){
-            throw _b_.RuntimeError.$factory('changed in iteration')
+            $B.RAISE(_b_.RuntimeError, 'changed in iteration')
         }
     }
 }
@@ -249,7 +249,7 @@ var $copy_dict = function(left, right){
         for(var entry of dict.$iter_items(right)){
             dict.$setitem(left, entry.key, entry.value, entry.hash)
             if(right.$version != right_version){
-                throw _b_.RuntimeError.$factory("dict mutated during update")
+                $B.RAISE(_b_.RuntimeError, "dict mutated during update")
             }
         }
     }
@@ -329,16 +329,16 @@ dict.__delitem__ = function(){
                 dict.$delete_string(self, key)
                 return _b_.None
             }else{
-                throw _b_.KeyError.$factory(key)
+                $B.RAISE(_b_.KeyError, key)
             }
         }
         if(! dict.__contains__(self, key)){
-            throw _b_.KeyError.$factory(_b_.str.$factory(key))
+            $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
     }
     if(self.$jsobj){
         if(self.$jsobj[key] === undefined){
-            throw _b_.KeyError.$factory(key)
+            $B.RAISE(_b_.KeyError, key)
         }
         delete self.$jsobj[key]
         return _b_.None
@@ -356,7 +356,7 @@ dict.__delitem__ = function(){
         self.$version++
         return _b_.None
     }
-    throw _b_.KeyError.$factory(_b_.str.$factory(key))
+    $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
 }
 
 dict.__eq__ = function(){
@@ -527,7 +527,7 @@ dict.$getitem_string = function(self, key){
             return self._values[indices[0]]
         }
     }
-    throw _b_.KeyError.$factory(key)
+    $B.RAISE(_b_.KeyError, key)
 }
 
 dict.$keys_string = function(self){
@@ -585,13 +585,13 @@ dict.$getitem = function(self, key, ignore_missing){
         }
     }else if(self.$jsobj){
         if(self.$exclude && self.$exclude(key)){
-            throw _b_.KeyError.$factory(key)
+            $B.RAISE(_b_.KeyError, key)
         }
         if(self.$jsobj.hasOwnProperty(key)){
             return self.$jsobj[key]
         }
         if(! self.table){
-            throw _b_.KeyError.$factory(key)
+            $B.RAISE(_b_.KeyError, key)
         }
     }else{
         let lookup = dict.$lookup_by_key(self, key)
@@ -613,7 +613,7 @@ dict.$getitem = function(self, key, ignore_missing){
             }
         }
     }
-    throw _b_.KeyError.$factory(key)
+    $B.RAISE(_b_.KeyError, key)
 }
 
 dict.__hash__ = _b_.None
@@ -622,7 +622,7 @@ function init_from_list(self, args){
     var i = 0
     for(var item of args){
         if(item.length != 2){
-            throw _b_.ValueError.$factory("dictionary " +
+            $B.RAISE(_b_.ValueError, "dictionary " +
                 `update sequence element #${i} has length ${item.length}; 2 is required`)
         }
         dict.$setitem(self, item[0], item[1])
@@ -632,11 +632,11 @@ function init_from_list(self, args){
 
 dict.$set_string_no_duplicate = function(d, keys, string, value){
     if(typeof string !== 'string'){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             'keywords must be strings')
     }
     if(keys.has(string)){
-        throw _b_.TypeError.$factory('dict() got multiple values for keyword ' +
+        $B.RAISE(_b_.TypeError, 'dict() got multiple values for keyword ' +
             `argument '${string}'`)
     }
     d.$strings[string] = value
@@ -654,7 +654,7 @@ function add_iterable(d, js_iterable){
     for(var entry of js_iterable){
         var items = Array.from($B.make_js_iterator(entry))
         if(items.length !== 2){
-            throw _b_.ValueError.$factory("dictionary " +
+            $B.RAISE(_b_.ValueError, "dictionary " +
                 `update sequence element #${i} has length ${items.length}; 2 is required`)
         }
         dict.$setitem(d, items[0], items[1])
@@ -713,14 +713,14 @@ dict.__init__ = function(self, first, second){
                     }catch(err){
                         console.log(arg)
                         console.log(err)
-                        throw _b_.TypeError.$factory('expected mapping or ' +
+                        $B.RAISE(_b_.TypeError, 'expected mapping or ' +
                             `iterable, got ${$B.class_name(arg)}`)
                     }
                     add_iterable(self, js_iterable)
                 }
             }
         }else{
-            throw _b_.TypeError.$factory("dict expected at most 1 argument" +
+            $B.RAISE(_b_.TypeError, "dict expected at most 1 argument" +
                 `, got ${args.length}`)
         }
     }else if(args.length == 1){
@@ -808,7 +808,7 @@ dict.__ne__ = function(self, other){
 
 dict.__new__ = function(cls){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("int.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
     }
     var instance = $B.empty_dict()
     instance.__class__ = cls
@@ -850,7 +850,7 @@ dict.$iter_items_reversed = function*(d){
         for(var item of Object.entries(d.$strings).reverse()){
             yield $B.fast_tuple(item)
             if(d.$version !== version){
-                throw _b_.RuntimeError.$factory('changed in iteration')
+                $B.RAISE(_b_.RuntimeError, 'changed in iteration')
             }
         }
     }else{
@@ -859,13 +859,13 @@ dict.$iter_items_reversed = function*(d){
             if(key !== undefined){
                 yield $B.fast_tuple([key, d._values[i]])
                 if(d.$version !== version){
-                    throw _b_.RuntimeError.$factory('changed in iteration')
+                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
                 }
             }
         }
     }
     if(d.$version !== version){
-        throw _b_.RuntimeError.$factory('changed in iteration')
+        $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
 
@@ -907,7 +907,7 @@ function make_reverse_iterator(name, iter_func){
     klass.__next__ = function(self){
         var res = self.iter.next()
         if(res.done){
-            throw _b_.StopIteration.$factory('')
+            $B.RAISE(_b_.StopIteration, '')
         }
         return res.value
     }
@@ -1178,7 +1178,7 @@ dict_itemiterator.__iter__ = function(self){
 dict_itemiterator.__next__ = function(self){
     var res = self.iter.next()
     if(res.done){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return $B.fast_tuple(res.value)
 }
@@ -1249,7 +1249,7 @@ dict_keyiterator.__iter__ = function(self){
 dict_keyiterator.__next__ = function(self){
     var res = self.iter.next()
     if(res.done){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return res.value
 }
@@ -1291,7 +1291,7 @@ dict.pop = function(){
 dict.popitem = function(self){
     $B.check_nb_args_no_kw('popitem', 1, arguments)
     if(dict.__len__(self) == 0){
-        throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
+        $B.RAISE(_b_.KeyError, "'popitem(): dictionary is empty'")
     }
     if(self.$all_str){
         for(var key in self.$strings){
@@ -1379,11 +1379,11 @@ dict.update = function(){
                 try{
                     key_value = _b_.list.$factory(item)
                 }catch(err){
-                    throw _b_.TypeError.$factory("cannot convert dictionary" +
+                    $B.RAISE(_b_.TypeError, "cannot convert dictionary" +
                         " update sequence element #" + i + " to a sequence")
                 }
                 if(key_value.length !== 2){
-                    throw _b_.ValueError.$factory("dictionary update " +
+                    $B.RAISE(_b_.ValueError, "dictionary update " +
                         "sequence element #" + i + " has length " +
                         key_value.length + "; 2 is required")
                 }
@@ -1454,7 +1454,7 @@ dict_valueiterator.__iter__ = function(self){
 dict_valueiterator.__next__ = function(self){
     var res = self.iter.next()
     if(res.done){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return res.value
 }
@@ -1557,7 +1557,7 @@ mappingproxy.__repr__ = function(self){
 }
 
 mappingproxy.__setitem__ = function(){
-    throw _b_.TypeError.$factory("'mappingproxy' object does not support " +
+    $B.RAISE(_b_.TypeError, "'mappingproxy' object does not support " +
         "item assignment")
 }
 

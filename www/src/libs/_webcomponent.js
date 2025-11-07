@@ -14,7 +14,7 @@ function define(tag_name, cls, options){
         extend_dom_name = 'HTMLElement'
     if(options !== _b_.None){
         if(! $B.$isinstance(options, _b_.dict)){
-            throw _b_.TypeError.$factory('options can only be None or a ' +
+            $B.RAISE(_b_.TypeError, 'options can only be None or a ' +
                 `dict, not '${$B.class_name(options)}'`)
         }
         try{
@@ -37,26 +37,26 @@ function define(tag_name, cls, options){
 
     if(_extends){
         if(typeof _extends != 'string'){
-            throw _b_.TypeError.$factory('value for extends must be a ' +
+            $B.RAISE(_b_.TypeError, 'value for extends must be a ' +
                 `string, not '${$B.class_name(_extends)}'`)
         }
         var elt = document.createElement(_extends)
         if(elt instanceof HTMLUnknownElement){
-            throw _b_.ValueError.$factory(`'${_extends}' is not a valid ` +
+            $B.RAISE(_b_.ValueError, `'${_extends}' is not a valid ` +
                 'tag name')
         }
         var extend_tag = _extends.toLowerCase()
         extend_dom_name = Object.getPrototypeOf(elt).constructor.name
     }
     if(typeof tag_name != "string"){
-        throw _b_.TypeError.$factory("first argument of define() " +
+        $B.RAISE(_b_.TypeError, "first argument of define() " +
             "must be a string, not '" + $B.class_name(tag_name) + "'")
     }else if(tag_name.indexOf("-") == -1){
-        throw _b_.ValueError.$factory("custom tag name must " +
+        $B.RAISE(_b_.ValueError, "custom tag name must " +
             "contain a hyphen (-)")
     }
     if(!$B.$isinstance(cls, _b_.type)){
-        throw _b_.TypeError.$factory("second argument of define() " +
+        $B.RAISE(_b_.TypeError, "second argument of define() " +
             "must be a class, not '" + $B.class_name(tag_name) + "'")
     }
     cls.$webcomponent = true
@@ -90,7 +90,7 @@ function define(tag_name, cls, options){
                     for(var i = 0, len = _self.attributes.length; i < len; i++){
                         var item = _self.attributes.item(i)
                         if(attrs_before_init.indexOf(item) == -1){
-                            throw _b_.TypeError.$factory("Custom element " +
+                            $B.RAISE(_b_.TypeError, "Custom element " +
                                 "must not create attributes, found: " +
                                 item.name + '="' + item.value + '"')
                         }
@@ -112,7 +112,7 @@ function define(tag_name, cls, options){
             if(obs_attr === null){
                 return []
             }else if(typeof obs_attr == "function"){
-                var warning = _b_.DeprecationWarning.$factory(
+                var warning = $B.EXC(_b_.DeprecationWarning,
                     "Setting observedAttributes as a method " +
                     "is deprecated. Set it as a class attribute.")
                 // module _warning is in builtin_modules.js
@@ -121,7 +121,7 @@ function define(tag_name, cls, options){
             }else if(Array.isArray(obs_attr)){
                 return obs_attr
             }else{
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError, 
                     "wrong type for observedAttributes: " +
                     $B.class_name(obs_attr))
             }

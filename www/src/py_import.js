@@ -169,7 +169,7 @@ function $download_module(mod, url){
         if(xhr.status == 200 || xhr.status == 0){
            res = xhr.responseText
         }else{
-           res = _b_.ModuleNotFoundError.$factory("No module named '" +
+           res = $B.EXC(_b_.ModuleNotFoundError, "No module named '" +
                mod_name + "'")
         }
     }else{
@@ -183,7 +183,7 @@ function $download_module(mod, url){
                 // (issue #30)
                 console.info("Trying to import " + mod_name +
                     ", not found at url " + url)
-                res = _b_.ModuleNotFoundError.$factory("No module named '" +
+                res = $B.EXC(_b_.ModuleNotFoundError, "No module named '" +
                     mod_name + "'")
             }
         }
@@ -193,11 +193,13 @@ function $download_module(mod, url){
     // sometimes chrome doesn't set res correctly, so if res == null,
     // assume no module found
     if(res == null){
-        throw _b_.ModuleNotFoundError.$factory("No module named '" +
+        $B.RAISE(_b_.ModuleNotFoundError, "No module named '" +
             mod_name + "' (res is null)")
     }
 
-    if(res.constructor === Error){throw res} // module not found
+    if($B.$isinstance(res, _b_.BaseException)){
+        throw res
+    } // module not found
     return res
 }
 
@@ -213,7 +215,7 @@ $B.addToImported = function(name, modobj){
     }
     $B.imported[name] = modobj
     if(modobj === undefined){
-        throw _b_.ImportError.$factory('imported not set by module')
+        $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
     modobj.__class__ = Module
     modobj.__name__ = name
@@ -245,7 +247,7 @@ function run_js(module_contents, path, _module){
     var new_keys = (new Set(Object.keys(globalThis))).difference(keys_before)
     var modobj = $B.imported[_module.__name__]
     if(modobj === undefined){
-        throw _b_.ImportError.$factory('imported not set by module')
+        $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
     modobj.__class__ = Module
     modobj.__name__ = _module.__name__
@@ -284,7 +286,6 @@ function run_py(module_contents, path, module, compiled) {
             filename,
             imported: true
         }
-
         try{
             root = $B.py2js(src, module,
                             module.__name__, $B.builtins_scope)
@@ -943,7 +944,7 @@ function import_engine(mod_name, _path, from_stdlib){
         if($B.protocol == "file"){
             message += " (warning: cannot import local files with protocol 'file')"
         }
-        var exc = _b_.ModuleNotFoundError.$factory(message)
+        var exc = $B.EXC(_b_.ModuleNotFoundError, message)
         exc.name = mod_name
         throw exc
     }
@@ -951,7 +952,7 @@ function import_engine(mod_name, _path, from_stdlib){
     // Import spec represents a match
     if($B.is_none(module)){
         if(spec === _b_.None){
-            throw _b_.ModuleNotFoundError.$factory(mod_name)
+            $B.RAISE(_b_.ModuleNotFoundError, mod_name)
         }
         var _spec_name = $B.$getattr(spec, "name")
 
@@ -962,7 +963,7 @@ function import_engine(mod_name, _path, from_stdlib){
                 module = $B.$call(create_module)(spec)
             }
         }
-        if(module === undefined){throw _b_.ImportError.$factory(mod_name)}
+        if(module === undefined){$B.RAISE(_b_.ImportError, mod_name)}
         if($B.is_none(module)){
             // FIXME : Initialize __doc__ and __package__
             module = $B.module.$factory(mod_name)
@@ -990,7 +991,7 @@ function import_engine(mod_name, _path, from_stdlib){
         if(!$B.is_none(locs)){
             _sys_modules[_spec_name] = module
         }else{
-            throw _b_.ImportError.$factory(mod_name)
+            $B.RAISE(_b_.ImportError, mod_name)
         }
     }else{
         var exec_module = $B.$getattr(_loader, "exec_module", _b_.None)
@@ -1013,7 +1014,7 @@ function import_engine(mod_name, _path, from_stdlib){
 $B.path_importer_cache = {}
 
 function import_error(mod_name){
-    var exc = _b_.ImportError.$factory(mod_name)
+    var exc = $B.EXC(_b_.ImportError, mod_name)
     exc.name = mod_name
     throw exc
 }
@@ -1123,7 +1124,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
                         import_error(mod_name)
                     }else{
                         // "import a.b" if a is not a package : ModuleNotFoundError
-                        var exc = _b_.ModuleNotFoundError.$factory()
+                        var exc = $B.EXC(_b_.ModuleNotFoundError)
                         exc.__traceback__ = $B.make_tb()
                         exc.msg = "No module named '" + mod_name +"'; '" +
                             _mod_name + "' is not a package"
@@ -1228,7 +1229,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
         level++
         mod_name = mod_name.substr(1)
         if(parts.length == 0){
-            throw _b_.ImportError.$factory("Parent module '' not loaded, "+
+            $B.RAISE(_b_.ImportError, "Parent module '' not loaded, "+
                 "cannot perform relative import")
         }
         current_module = parts.join('.')
@@ -1252,7 +1253,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
             // Move up in package hierarchy
             var elt = norm_parts.pop()
             if(elt === undefined){
-                throw _b_.ImportError.$factory("Parent module '' not loaded, "+
+                $B.RAISE(_b_.ImportError, "Parent module '' not loaded, "+
                     "cannot perform relative import")
             }
         }else{
@@ -1374,7 +1375,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
-                            var exc = _b_.SyntaxError.$factory(
+                            var exc = $B.EXC(_b_.SyntaxError,
                                 "future feature " + name + " is not defined")
                             throw exc
                         }
@@ -1396,7 +1397,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                             console.log($err3)
                             console.log($B.frame_obj.frame)
                         }
-                        throw _b_.ImportError.$factory(
+                        $B.RAISE(_b_.ImportError,
                             "cannot import name '" + name + "'")
                     }
                 }
@@ -1420,13 +1421,13 @@ $B.$import_from = function(module, names, aliases, level, locals, inum){
         current_module = $B.imported[parts.join('.')]
         if(current_module === undefined){
             $B.set_inum(inum)
-            throw _b_.ImportError.$factory(
+            $B.RAISE(_b_.ImportError,
                 'attempted relative import with no known parent package')
         }
         if(! current_module.$is_package){
             if(parts.length == 1){
                 $B.set_inum(inum)
-                throw _b_.ImportError.$factory(
+                $B.RAISE(_b_.ImportError,
                     'attempted relative import with no known parent package')
             }else{
                 parts.pop()
@@ -1437,7 +1438,7 @@ $B.$import_from = function(module, names, aliases, level, locals, inum){
             current_module = $B.imported[parts.join('.')]
             if(! current_module.$is_package){
                 $B.set_inum(inum)
-                throw _b_.ImportError.$factory(
+                $B.RAISE(_b_.ImportError,
                     'attempted relative import with no known parent package')
             }
             level--

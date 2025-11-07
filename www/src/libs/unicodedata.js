@@ -48,7 +48,7 @@
         var search = _info(chr)
         if(search === null){
             console.log("error", chr, hex)
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         return search.bidirectional
     }
@@ -62,7 +62,7 @@
         var search = _info(chr)
         if(search === null){
             console.log("error", chr)
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         return search.category
     }
@@ -73,7 +73,7 @@
         var search = _info(chr)
         if(search === null){
             console.log("error", chr)
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         return parseInt(search.combining)
     }
@@ -85,7 +85,7 @@
         var search = _info(chr)
         if(search === null){
             console.log("error", chr)
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         return parseInt(search.decimal)
     }
@@ -97,7 +97,7 @@
         var search = _info(chr)
         if(search === null){
             console.log("error", chr)
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         return search.decomposition
     }
@@ -109,7 +109,7 @@
         var search = _info(chr)
         if(search === null){
             console.log("error", chr)
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         return parseInt(search.digit)
     }
@@ -122,7 +122,7 @@
             name + ";(.*)$", "m")
         search = re.exec($B.unicodedb)
         if(search === null){
-            throw _b_.KeyError.$factory("undefined character name '" +
+            $B.RAISE(_b_.KeyError, "undefined character name '" +
                 name + "'")
         }
         var res = parseInt(search[1], 16)
@@ -136,7 +136,7 @@
         var search = _info(chr)
         if(search === null){
             if(_default){return _default}
-            throw _b_.KeyError.$factory("undefined character name '" +
+            $B.RAISE(_b_.KeyError, "undefined character name '" +
                 chr + "'")
         }
         return search.name
@@ -144,7 +144,7 @@
 
     function normalize(form, unistr){
         if(! ["NFC", "NFD", "NFKC", "NFKD"].includes(form)){
-            throw _b_.ValueError.$factory('invalid normalization form')
+            $B.RAISE(_b_.ValueError, 'invalid normalization form')
         }
         return unistr.normalize(form)
     }
@@ -156,7 +156,7 @@
         var search = _info(chr)
         if(search === null){
             if(_default){return _default}
-            throw _b_.KeyError.$factory(chr)
+            $B.RAISE(_b_.KeyError, chr)
         }
         var parts = search.numeric.split('/'),
             value

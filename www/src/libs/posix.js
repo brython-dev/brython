@@ -52,7 +52,7 @@ var stat_result = $B.make_class("stat_result",
             return res
 
         }else{
-            throw _b_.OSError.$factory('no information available for file ' +
+            $B.RAISE(_b_.OSError, 'no information available for file ' +
                 filename)
         }
     }
@@ -102,7 +102,7 @@ var module = {
         return stat_result.$factory(filename)
     },
     open: function(path, flags){
-        throw _b_.NotImplementedError.$factory('os.open is not implemented')
+        $B.RAISE(_b_.NotImplementedError, 'os.open is not implemented')
     },
     remove: function(path) {
         var $ = $B.args("remove", 1, { path: null }, ["path"], arguments, {}, null, null)
@@ -121,7 +121,7 @@ var module = {
         }
 
         if(!found_file) {
-            throw _b_.FileNotFoundError.$factory(`No such file or directory: '${path}'`)
+            $B.RAISE(_b_.FileNotFoundError, `No such file or directory: '${path}'`)
         }
 
         return _b_.None
@@ -165,7 +165,7 @@ var module = {
     "times", "times_result", "umask", "uname_result", "unlink", "utime",
     "waitpid", "write"].forEach(function(funcname){
         module[funcname] = function(){
-            throw _b_.NotImplementedError.$factory("posix." + funcname +
+            $B.RAISE(_b_.NotImplementedError, "posix." + funcname +
                 " is not implemented")
         }
     });

@@ -54,11 +54,11 @@ $B.shift1_cache = {}
 
 float.as_integer_ratio = function(self){
     if(isinf(self)){
-        throw _b_.OverflowError.$factory("Cannot pass infinity to " +
+        $B.RAISE(_b_.OverflowError, "Cannot pass infinity to " +
             "float.as_integer_ratio.")
     }
     if(isnan(self)){
-        throw _b_.ValueError.$factory("Cannot pass NaN to " +
+        $B.RAISE(_b_.ValueError, "Cannot pass NaN to " +
             "float.as_integer_ratio.")
     }
 
@@ -99,7 +99,7 @@ function check_self_is_float(x, method){
     if(x.__class__ === _b_.float || $B.$isinstance(x, _b_.float)){
         return true
     }
-    throw _b_.TypeError.$factory(`descriptor '${method}' requires a ` +
+    $B.RAISE(_b_.TypeError, `descriptor '${method}' requires a ` +
         `'float' object but received a '${$B.class_name(x)}'`)
 }
 
@@ -116,9 +116,9 @@ float.__bool__ = function(self){
 float.__ceil__ = function(self){
     check_self_is_float(self, '__ceil__')
     if(isnan(self)){
-        throw _b_.ValueError.$factory('cannot convert float NaN to integer')
+        $B.RAISE(_b_.ValueError, 'cannot convert float NaN to integer')
     }else if(isinf(self)){
-        throw _b_.OverflowError.$factory('cannot convert float infinity to integer')
+        $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
     return Math.ceil(self.value)
 }
@@ -191,9 +191,9 @@ float.__eq__ = function(self, other){
 float.__floor__ = function(self){
     check_self_is_float(self, '__floor__')
     if(isnan(self)){
-        throw _b_.ValueError.$factory('cannot convert float NaN to integer')
+        $B.RAISE(_b_.ValueError, 'cannot convert float NaN to integer')
     }else if(isinf(self)){
-        throw _b_.OverflowError.$factory('cannot convert float infinity to integer')
+        $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
     return Math.floor(self.value)
 }
@@ -233,16 +233,16 @@ float.fromhex = function(klass, s){
       return klass === _b_.float ? x : $B.$call(klass)(x)
     }
     function overflow_error(){
-        throw _b_.OverflowError.$factory(
+        $B.RAISE(_b_.OverflowError, 
                       "hexadecimal value too large to represent as a float");
     }
     function parse_error(){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
                       "invalid hexadecimal floating-point string");
     }
 
     function insane_length_error(){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
                       "hexadecimal string too long to convert");
     }
 
@@ -420,11 +420,11 @@ float.__getformat__ = function(arg){
         return "IEEE, little-endian"
     }
     if(typeof arg !== 'string'){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             " __getformat__() argument must be str, not " +
             $B.class_name(arg))
     }
-    throw _b_.ValueError.$factory("__getformat__() argument 1 must be " +
+    $B.RAISE(_b_.ValueError, "__getformat__() argument 1 must be " +
         "'double' or 'float'")
 }
 
@@ -458,7 +458,7 @@ function preformat(self, fmt){
         return _b_.str.$factory(self)
     }
     if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type) == -1){
-        throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
+        $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'float'")
     }
     var special
@@ -767,10 +767,10 @@ function ldexp(mantissa, exponent) {
         if(exponent.value < 0){
             return ZERO
         }else{
-            throw _b_.OverflowError.$factory('overflow')
+            $B.RAISE(_b_.OverflowError, 'overflow')
         }
     }else if(! isFinite(mantissa * Math.pow(2, exponent))){
-        throw _b_.OverflowError.$factory('overflow')
+        $B.RAISE(_b_.OverflowError, 'overflow')
     }
     var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
     var result = mantissa;
@@ -848,7 +848,7 @@ float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
     check_self_is_float(self, '__mod__')
     if(other == 0){
-        throw _b_.ZeroDivisionError.$factory("float modulo")
+        $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
     if($B.$isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
@@ -895,9 +895,9 @@ float.__neg__ = function(self){
 
 float.__new__ = function(cls, value){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("float.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "float.__new__(): not enough arguments")
     }else if(! $B.$isinstance(cls, _b_.type)){
-        throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")
+        $B.RAISE(_b_.TypeError, "float.__new__(X): X is not a type object")
     }
     return {
         __class__: cls,
@@ -932,7 +932,7 @@ float.__pow__ = function(self, other){
             // (-1)**+-inf is 1
             return fast_float(1)
         }else if(self.value == 0 && isFinite(other) && other < 0){
-            throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised " +
+            $B.RAISE(_b_.ZeroDivisionError, "0.0 cannot be raised " +
                 "to a negative power")
         }else if(self.value == 0 && isFinite(other) && other >= 0){
             /* # (+-0)**y is +-0 for y a positive odd integer */
@@ -1070,14 +1070,14 @@ float.__round__ = function(){
 
 float.$round = function(x, ndigits){
     function overflow(){
-        throw _b_.OverflowError.$factory(
+        $B.RAISE(_b_.OverflowError, 
             "cannot convert float infinity to integer")
     }
 
     var no_digits = ndigits === _b_.None
     if(isnan(x)){
         if(ndigits === _b_.None){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "cannot convert float NaN to integer")
         }
         return NAN
@@ -1147,7 +1147,7 @@ float.$round = function(x, ndigits){
     }
     /* if computation resulted in overflow, raise OverflowError */
     if (! isFinite(z)) {
-        throw _b_.OverflowError.$factory(
+        $B.RAISE(_b_.OverflowError, 
                         "overflow occurred during round");
     }
 
@@ -1157,11 +1157,11 @@ float.$round = function(x, ndigits){
 float.__setattr__ = function(self, attr, value){
     if(self.__class__ === float){
         if(float[attr] === undefined){
-            throw _b_.AttributeError.$factory("'float' object has no attribute '" +
-                attr + "'")
+            $B.RAISE_ATTRIBUTE_ERROR("'float' object has no attribute '" +
+                attr + "'", self, attr)
         }else{
-            throw _b_.AttributeError.$factory("'float' object attribute '" +
-                attr + "' is read-only")
+            $B.RAISE_ATTRIBUTE_ERROR("'float' object attribute '" +
+                attr + "' is read-only", self, attr)
         }
     }
     // subclasses of float can have attributes set
@@ -1172,14 +1172,14 @@ float.__setattr__ = function(self, attr, value){
 float.__truediv__ = function(self, other){
     if($B.$isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
+            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }else if($B.$isinstance(other, $B.long_int)){
             return float.$factory(self.value / Number(other.value))
         }
         return float.$factory(self.value / other)
     }else if($B.$isinstance(other, float)){
         if(other.value == 0){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
+            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         return float.$factory(self.value / other.value)
     }
@@ -1245,7 +1245,7 @@ if(inv_op !== _b_.None){
     return inv_op(self)
 }
 
-throw _b_.TypeError.$factory(
+$B.RAISE(_b_.TypeError, 
     "unorderable types: float() > " + $B.class_name(other) + "()")
 `
 
@@ -1327,7 +1327,7 @@ float.$factory = function(value){
         try{
             value = $B.$getattr(value, "decode")("utf-8")
         }catch(err){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "could not convert string to float: " +
                 _b_.repr(original_value))
         }
@@ -1335,7 +1335,7 @@ float.$factory = function(value){
 
     if(typeof value == "string"){
        if(value.trim().length == 0){
-           throw _b_.ValueError.$factory(
+           $B.RAISE(_b_.ValueError, 
                    `could not convert string to float: ${_b_.repr(value)}`)
        }
        value = value.trim()   // remove leading and trailing whitespace
@@ -1363,12 +1363,12 @@ float.$factory = function(value){
                parts = parts[0].split('.').concat(parts.splice(1))
                for(var part of parts){
                    if(part.startsWith('_') || part.endsWith('_')){
-                       throw _b_.ValueError.$factory('invalid float literal ' +
+                       $B.RAISE(_b_.ValueError, 'invalid float literal ' +
                            value)
                    }
                }
                if(value.indexOf('__') > -1){
-                       throw _b_.ValueError.$factory('invalid float literal ' +
+                       $B.RAISE(_b_.ValueError, 'invalid float literal ' +
                            value)
                }
                value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
@@ -1376,7 +1376,7 @@ float.$factory = function(value){
                if(isFinite(value)){
                    return fast_float(parseFloat(value))
                }else{
-                   throw _b_.ValueError.$factory(
+                   $B.RAISE(_b_.ValueError, 
                        "could not convert string to float: " +
                        _b_.repr(original_value))
                }
@@ -1390,7 +1390,7 @@ float.$factory = function(value){
         var index_method = $B.$getattr(klass, '__index__', null)
 
         if(index_method === null){
-            throw _b_.TypeError.$factory("float() argument must be a string or a " +
+            $B.RAISE(_b_.TypeError, "float() argument must be a string or a " +
                 "real number, not '" + $B.class_name(value) + "'")
         }
         let index = $B.$call(index_method)(value),
@@ -1409,7 +1409,7 @@ float.$factory = function(value){
             $B.warn(_b_.DeprecationWarning, msg)
             return fast_float(index)
         }
-        throw _b_.TypeError.$factory('__index__ returned non-int' +
+        $B.RAISE(_b_.TypeError, '__index__ returned non-int' +
             ` (type ${$B.class_name(index)})`)
     }
     let res = $B.$call(float_method)(value)
@@ -1425,7 +1425,7 @@ float.$factory = function(value){
             $B.warn(_b_.DeprecationWarning, msg)
             return float.$factory(res.value)
         }
-        throw _b_.TypeError.$factory('__float__ returned non-float' +
+        $B.RAISE(_b_.TypeError, '__float__ returned non-float' +
             ` (type ${$B.class_name(res)})`)
     }
 

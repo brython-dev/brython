@@ -147,7 +147,7 @@ function warn(klass, message, pos, text){
 
 function chr(i){
     if(i < 0 || i > 1114111){
-        throw _b_.ValueError.$factory('Outside valid range')
+        $B.RAISE(_b_.ValueError, 'Outside valid range')
     }else if(i >= 0x10000 && i <= 0x10FFFF){
         var code = (i - 0x10000)
         return String.fromCodePoint(0xD800 | (code >> 10)) +
@@ -1138,7 +1138,7 @@ var GroupIndex = $B.make_class("GroupIndex",
 )
 GroupIndex.__mro__ = [_b_.dict, _b_.object]
 GroupIndex.__setitem__ = function(){
-    throw _b_.TypeError.$factory("read only")
+    $B.RAISE(_b_.TypeError, "read only")
 }
 
 $B.set_func_names(GroupIndex, "re")
@@ -1283,7 +1283,7 @@ Pattern.fullmatch = function(self, string){
     }
     var data = prepare({string: $.string})
     if(self.$pattern.type != data.string.type){
-        throw _b_.TypeError.$factory("not the same type for pattern " +
+        $B.RAISE(_b_.TypeError, "not the same type for pattern " +
             "and string")
     }
     var fullmatch_pattern = create_fullmatch_pattern($.self.$pattern)
@@ -1311,7 +1311,7 @@ Pattern.match = function(self, string){
     }
     var data = prepare({string: $.string})
     if(self.$pattern.type != data.string.type){
-        throw _b_.TypeError.$factory("not the same type for pattern " +
+        $B.RAISE(_b_.TypeError, "not the same type for pattern " +
             "and string")
     }
     var mo = match($.self.$pattern, data.string, $.pos,
@@ -1330,7 +1330,7 @@ Pattern.search = function(self, string){
                     {pos: 0, endpos: _b_.None}, null, null)
     var data = prepare({string: $.string})
     if(self.$pattern.type != data.string.type){
-        throw _b_.TypeError.$factory("not the same type for pattern " +
+        $B.RAISE(_b_.TypeError, "not the same type for pattern " +
             "and string")
     }
     if($.endpos === _b_.None){
@@ -1359,7 +1359,7 @@ Pattern.sub = function(){
                     {count: 0}, null, null)
     var data = prepare({string: $.string})
     if($.self.$pattern.type != data.string.type){
-        throw _b_.TypeError.$factory("not the same type for pattern " +
+        $B.RAISE(_b_.TypeError, "not the same type for pattern " +
             "and string")
     }
 
@@ -2092,7 +2092,7 @@ CharacterSet.prototype.match = function(string, pos, endpos){
             console.log(err.message)
             console.log('cp', cp, '\nstring', string, 'pos', pos)
             console.log($B.print_stack())
-            throw _b_.Exception.$factory('bad codepoint')
+            $B.RAISE(_b_.Exception, 'bad codepoint')
         }
         var char = $B.codepoint2jsstring(cp),
             cps = cased_cps(cp, ignore_case, this.flags.value & ASCII.value),
@@ -2367,7 +2367,7 @@ var cache = new Map()
 function compile(pattern, flags){
     if(pattern.__class__ === Pattern){
         if(flags !== no_flag){
-            throw _b_.ValueError.$factory("no flags")
+            $B.RAISE(_b_.ValueError, "no flags")
         }
         return pattern
     }
@@ -2384,12 +2384,12 @@ function compile(pattern, flags){
     pattern = pattern.codepoints
     var is_bytes = type !== "str"
     if(is_bytes && flags && (flags.value & U.value)){
-        throw _b_.ValueError.$factory("cannot use UNICODE flag with " +
+        $B.RAISE(_b_.ValueError, "cannot use UNICODE flag with " +
             "a bytes pattern")
     }
     if(flags && (flags.value & U.value) &&
             (flags.value & ASCII.value)){
-        throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+        $B.RAISE(_b_.ValueError, "ASCII and UNICODE flags " +
             "are incompatible")
     }
     if(is_bytes){
@@ -2633,12 +2633,12 @@ function compile(pattern, flags){
                     if(Array.isArray(item.op)){
                         min = item.op[0]
                         if(min >= MAXREPEAT){
-                            throw _b_.OverflowError.$factory(
+                            $B.RAISE(_b_.OverflowError, 
                                 "the repetition number is too large")
                         }
                         max = item.op[1] === undefined ? min : item.op[1]
                         if(isFinite(max) && max >= MAXREPEAT){
-                            throw _b_.OverflowError.$factory(
+                            $B.RAISE(_b_.OverflowError, 
                                 "the repetition number is too large")
                         }
                         if(max < min){
@@ -2743,18 +2743,18 @@ function compile(pattern, flags){
                 }
                 if(group_stack.length == 0 &&
                         original_flags && original_flags.value & ASCII.value){
-                    throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+                    $B.RAISE(_b_.ValueError, "ASCII and UNICODE flags " +
                         "are incompatible")
                 }
                 if(item.on_flags.indexOf('a') > -1){
-                    throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+                    $B.RAISE(_b_.ValueError, "ASCII and UNICODE flags " +
                         "are incompatible")
                 }
             }
             if(item.on_flags.indexOf('a') > -1){
                 if(group_stack.length == 0 &&
                         original_flags && original_flags.value & U.value){
-                    throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+                    $B.RAISE(_b_.ValueError, "ASCII and UNICODE flags " +
                         "are incompatible")
                 }
                 if(flags && flags.value & U.value){
@@ -2762,7 +2762,7 @@ function compile(pattern, flags){
                     flags.value ^= U.value
                 }
                 if(item.on_flags.indexOf('u') > -1){
-                    throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+                    $B.RAISE(_b_.ValueError, "ASCII and UNICODE flags " +
                         "are incompatible")
                 }
             }
@@ -2893,7 +2893,7 @@ function string2bytes(s){
 function check_pattern_flags(pattern, flags){
     if(pattern.__class__ === Pattern){
         if(flags !== no_flag){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 "cannot process flags argument with a compiled pattern")
         }
     }
@@ -2957,7 +2957,7 @@ function StringObj(obj){
         // list of codepoints
         this.codepoints = obj
     }else{
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             `expected string or bytes-like object, got '${$B.class_name(obj)}'`)
     }
     if(this.length === undefined){
@@ -3031,7 +3031,7 @@ function prepare(args){
     for(var key of keys.slice(1)){
         res[key] = new StringObj(args[key])
         if(res[key].type != res.type){
-            throw _b_.TypeError.$factory(`not the same type for ${first} and ${key}`)
+            $B.RAISE(_b_.TypeError, `not the same type for ${first} and ${key}`)
         }
     }
     return res
@@ -3323,7 +3323,7 @@ MatchObject.__getitem__ = function(){
         self = $.self,
         key = $.key
     if(Array.isArray(key)){
-        throw _b_.IndexError.$factory("no such group")
+        $B.RAISE(_b_.IndexError, "no such group")
     }
     if(key == 0){
         return self.mo.string.substring(self.mo.start, self.mo.end)
@@ -3334,7 +3334,7 @@ MatchObject.__getitem__ = function(){
     }else if(self.mo.node.$groups[key] !== undefined){
         return _b_.None
     }
-    throw _b_.IndexError.$factory("no such group")
+    $B.RAISE(_b_.IndexError, "no such group")
 }
 
 MatchObject.__repr__ = MatchObject.__str__ =  function(self){
@@ -3396,7 +3396,7 @@ MatchObject.group = function(self){
             // group_id can be an identifier
         }
         if(self.mo.node.$groups[group_id] === undefined){
-            throw _b_.IndexError.$factory("no such group")
+            $B.RAISE(_b_.IndexError, "no such group")
         }
         var group = groupobj[group_id] // found in match
         result.push(group === undefined ?
@@ -3804,7 +3804,7 @@ var module = {
                     null, null)
         if($.pattern && $.pattern.__class__ === Pattern){
             if($.flags !== no_flag){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "cannot process flags argument with a compiled pattern")
             }
             return $.pattern

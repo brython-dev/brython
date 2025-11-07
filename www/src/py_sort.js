@@ -912,7 +912,7 @@ var TimSort = function(array, compare){
  */
 function tim_sort(array, compare, lo, hi){
     if(!Array.isArray(array)){
-        throw _b_.TypeError.$factory("Can only sort arrays")
+        $B.RAISE(_b_.TypeError, "Can only sort arrays")
     }
 
     /*

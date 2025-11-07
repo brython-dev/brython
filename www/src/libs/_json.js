@@ -52,7 +52,7 @@ function to_json(obj, level){
         }else if(typeof indent == "number" && indent >= 1){
             indent_str = " ".repeat(indent)
         }else{
-            throw _b_.ValueError.$factory("invalid indent: " +
+            $B.RAISE(_b_.ValueError, "invalid indent: " +
                 _b_.str.$factory(indent))
         }
     }
@@ -87,7 +87,7 @@ function to_json(obj, level){
             if([Infinity, -Infinity].indexOf(obj) > -1 ||
                     isNaN(obj)){
                 if(! allow_nan){
-                    throw _b_.ValueError.$factory(
+                    $B.RAISE(_b_.ValueError, 
                         'Out of range float values are not JSON compliant')
                 }
             }
@@ -169,7 +169,7 @@ function to_json(obj, level){
             var item = items[i]
             if(! simple(item[0])){
                 if(! skipkeys){
-                    throw _b_.TypeError.$factory("keys must be str, int, " +
+                    $B.RAISE(_b_.TypeError, "keys must be str, int, " +
                         "float, bool or None, not " + $B.class_name(obj))
                 }
             }else{
@@ -177,7 +177,7 @@ function to_json(obj, level){
                 var key = _b_.str.$factory(item[0])
                 // Check circular reference
                 if(check_circular && $B.repr.enter(item[1])){
-                    throw _b_.ValueError.$factory("Circular reference detected")
+                    $B.RAISE(_b_.ValueError, "Circular reference detected")
                 }
                 res.push(
                     [to_json(key, level, kwarg), to_json(item[1], level, kwarg)].
@@ -191,7 +191,7 @@ function to_json(obj, level){
     }
     // For other types, use function default if provided
     if(_default == _b_.None){
-        throw _b_.TypeError.$factory("Object of type " + $B.class_name(obj) +
+        $B.RAISE(_b_.TypeError, "Object of type " + $B.class_name(obj) +
             " is not JSON serializable")
     }else{
         return to_json($B.$call(_default)(obj), level, kwarg)

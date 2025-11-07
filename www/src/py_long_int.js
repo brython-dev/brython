@@ -29,7 +29,7 @@ var int_or_long = _b_.int.$int_or_long
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type) == -1){
-        throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
+        $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'int'")
     }
     var res
@@ -135,7 +135,7 @@ long_int.__eq__ = function(self, other){
 
 long_int.__float__ = function(self){
     if(! isFinite(Number(self.value))){
-        throw _b_.OverflowError.$factory("int too large to convert to float")
+        $B.RAISE(_b_.OverflowError, "int too large to convert to float")
     }
     return $B.fast_float(Number(self.value))
 }
@@ -294,7 +294,7 @@ long_int.__repr__ = function(self){
     $B.builtins_repr_check($B.long_int, arguments) // in brython_builtins.js
     if($B.int_max_str_digits != 0 &&
             self.value >= 10n ** BigInt($B.int_max_str_digits)){
-        throw _b_.ValueError.$factory(`Exceeds the limit ` +
+        $B.RAISE(_b_.ValueError, `Exceeds the limit ` +
             `(${$B.int_max_str_digits}) for integer string conversion`)
     }
     return self.value.toString()
@@ -355,7 +355,7 @@ function _infos(self){
 
 long_int.$log2 = function(x){
     if(x.value < 0){
-        throw _b_.ValueError.$factory('math domain error')
+        $B.RAISE(_b_.ValueError, 'math domain error')
     }
     // x = 2 ** (infos.nbits - 1) * ( 1 + infos.relative_rest)
     var infos = _infos(x)
@@ -365,7 +365,7 @@ long_int.$log2 = function(x){
 
 long_int.$log10 = function(x){
     if(x.value < 0){
-        throw _b_.ValueError.$factory('math domain error')
+        $B.RAISE(_b_.ValueError, 'math domain error')
     }
     // x = mant * 10 ** exp
     var x_string = x.value.toString(),
@@ -409,7 +409,7 @@ long_int.to_bytes = function(self, len, byteorder, signed){
     var res = [],
         v = self.value
     if(! $B.$bool(signed) && v < 0){
-        throw _b_.OverflowError.$factory("can't convert negative int to unsigned")
+        $B.RAISE(_b_.OverflowError, "can't convert negative int to unsigned")
     }
     while(v > 0){
         var quot = v / 256n,
@@ -417,7 +417,7 @@ long_int.to_bytes = function(self, len, byteorder, signed){
         v = quot
         res.push(Number(rest))
         if(res.length > len){
-            throw _b_.OverflowError.$factory("int too big to convert")
+            $B.RAISE(_b_.OverflowError, "int too big to convert")
         }
     }
     while(res.length < len){
@@ -460,7 +460,7 @@ long_int.$factory = function(value, base){
     var is_digits = digits(base)
     for(let i = 0; i < value.length; i++){
         if(is_digits[value.charAt(i)] === undefined){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 'int argument is not a valid number: "' + value + '"')
         }
     }

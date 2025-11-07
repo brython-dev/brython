@@ -54,8 +54,8 @@ range.__contains__ = function(self, other){
     }
 }
 
-range.__delattr__ = function(){
-    throw _b_.AttributeError.$factory("readonly attribute")
+range.__delattr__ = function(self, attr){
+    $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, attr)
 }
 
 range.__eq__ = function(self, other){
@@ -99,7 +99,7 @@ range.__getitem__ = function(self, rank){
     try{
         rank = $B.PyNumber_Index(rank)
     }catch(err){
-        throw _b_.TypeError.$factory("range indices must be integers " +
+        $B.RAISE(_b_.TypeError, "range indices must be integers " +
             `or slices, not ${$B.class_name(rank)}`)
     }
     if($B.rich_comp('__gt__', 0, rank)){
@@ -112,7 +112,7 @@ range.__getitem__ = function(self, rank){
             ($B.rich_comp('__gt__', 0, self.step) &&
                 ($B.rich_comp('__ge__', self.stop, res) ||
                 $B.rich_comp('__gt__', res, self.start)))){
-            throw _b_.IndexError.$factory("range object index out of range")
+            $B.RAISE(_b_.IndexError, "range object index out of range")
     }
     return res
 }
@@ -184,13 +184,13 @@ range.__next__ = function(self){
         self.$counter += self.step
         if((self.step > 0 && self.$counter >= self.stop)
             || (self.step < 0 && self.$counter <= self.stop)){
-                throw _b_.StopIteration.$factory("")
+                $B.RAISE(_b_.StopIteration, "")
         }
     }else{
         self.$counter = $B.rich_op('__add__', self.$counter, self.step)
         if(($B.rich_comp('__gt__', self.step, 0) && $B.rich_comp('__ge__', self.$counter, self.stop))
                 || ($B.rich_comp('__gt__', 0, self.step) && $B.rich_comp('__ge__', self.stop, self.$counter))){
-            throw _b_.StopIteration.$factory("")
+            $B.RAISE(_b_.StopIteration, "")
         }
     }
     return self.$counter
@@ -211,8 +211,8 @@ range.__repr__ = function(self){
     return res + ")"
 }
 
-range.__setattr__ = function(){
-    throw _b_.AttributeError.$factory("readonly attribute")
+range.__setattr__ = function(self, attr){
+    $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, attr)
 }
 
 // range descriptors
@@ -259,7 +259,7 @@ range.index = function(){
                 nb++
             }catch(err){
                 if($B.$isinstance(err, _b_.StopIteration)){
-                    throw _b_.ValueError.$factory(_b_.str.$factory(other) +
+                    $B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
                         " not in range")
                 }
                 throw err
@@ -277,10 +277,10 @@ range.index = function(){
                 $B.rich_comp('__ge__', self.start, other)
                 && $B.rich_comp('__gt__', other, self.stop))){
             return fl
-        }else{throw _b_.ValueError.$factory(_b_.str.$factory(other) +
+        }else{$B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
             ' not in range')}
     }else{
-        throw _b_.ValueError.$factory(_b_.str.$factory(other) +
+        $B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
             " not in range")
     }
 }
@@ -295,7 +295,7 @@ range.$factory = function(){
         safe
     if(stop === null && step === null){
         if(start == null){
-            throw _b_.TypeError.$factory("range expected 1 arguments, got 0")
+            $B.RAISE(_b_.TypeError, "range expected 1 arguments, got 0")
         }
         stop = $B.PyNumber_Index(start)
         safe = typeof stop === "number"
@@ -312,7 +312,7 @@ range.$factory = function(){
     stop = $B.PyNumber_Index(stop)
     step = $B.PyNumber_Index(step)
     if(step == 0){
-        throw _b_.ValueError.$factory("range arg 3 must not be zero")
+        $B.RAISE(_b_.ValueError, "range arg 3 must not be zero")
     }
     safe = (typeof start == "number" && typeof stop == "number" &&
         typeof step == "number")
@@ -356,8 +356,8 @@ slice.__repr__ = function(self){
         _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }
 
-slice.__setattr__ = function(){
-    throw _b_.AttributeError.$factory("readonly attribute")
+slice.__setattr__ = function(self, attr){
+    $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, attr)
 }
 
 function conv_slice(self){
@@ -371,7 +371,7 @@ function conv_slice(self){
             try{
                 res.push($B.PyNumber_Index(val))
             }catch(err){
-                throw _b_.TypeError.$factory("slice indices must be " +
+                $B.RAISE(_b_.TypeError, "slice indices must be " +
                     "integers or None or have an __index__ method")
             }
         }
@@ -386,7 +386,7 @@ slice.$conv_for_seq = function(self, len){
         step_is_neg = $B.rich_comp('__gt__', 0, step),
         len_1 = $B.rich_op('__sub__', len, 1)
     if(step == 0){
-        throw _b_.ValueError.$factory('slice step cannot be zero')
+        $B.RAISE(_b_.ValueError, 'slice step cannot be zero')
     }
     var start,
         stop
@@ -433,7 +433,7 @@ slice.indices = function(self){
             ["self", "length"], arguments, {}, null, null)
     var len = $B.PyNumber_Index($.length)
     if(len < 0){
-        throw _b_.ValueError.$factory("length should not be negative")
+        $B.RAISE(_b_.ValueError, "length should not be negative")
     }
     var _step = (self.step == _b_.None)? 1 : self.step,
         _start,

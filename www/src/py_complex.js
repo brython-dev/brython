@@ -4,7 +4,7 @@
 var _b_ = $B.builtins
 
 function $UnsupportedOpType(op, class1, class2){
-    throw _b_.TypeError.$factory("unsupported operand type(s) for " +
+    $B.RAISE(_b_.TypeError, "unsupported operand type(s) for " +
         op + ": '" + class1 + "' and '" + class2 + "'")
 }
 
@@ -33,7 +33,7 @@ complex.__abs__ = function(self){
         // In these circumstances Math.hypot quietly returns inf, but Python
         // should raise.
         // See https://hg.python.org/jython/rev/69826acfb4a9
-        throw _b_.OverflowError.$factory("absolute value too large")
+        $B.RAISE(_b_.OverflowError, "absolute value too large")
     }
     return $B.fast_float(mag)
 }
@@ -100,14 +100,14 @@ complex.__format__ = function(self, format_spec){
 
     if(type === undefined || 'eEfFgGn'.indexOf(type) > -1){
         if(fmt.precision > max_precision){
-            throw _b_.ValueError.$factory('precision too big')
+            $B.RAISE(_b_.ValueError, 'precision too big')
         }
         if(fmt.fill_char == '0'){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError,
                 "Zero padding is not allowed in complex format specifier")
         }
         if(fmt.align == '='){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError,
                  "'=' alignment flag is not allowed in complex format " +
                  "specifier")
         }
@@ -159,7 +159,7 @@ complex.__format__ = function(self, format_spec){
 
         return res
     }
-    throw _b_.ValueError.$factory(`invalid type for complex: ${type}`)
+    $B.RAISE(_b_.ValueError, `invalid type for complex: ${type}`)
 }
 
 complex.$getnewargs = function(self){
@@ -214,7 +214,7 @@ complex.__neg__ = function(self){
 
 complex.__new__ = function(cls){
     if(cls === undefined){
-        throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')
+        $B.RAISE(_b_.TypeError, 'complex.__new__(): not enough arguments')
     }
     var res,
         missing = {},
@@ -227,7 +227,7 @@ complex.__new__ = function(cls){
 
     if(typeof first == "string"){
         if(second !== missing){
-            throw _b_.TypeError.$factory("complex() can't take second arg " +
+            $B.RAISE(_b_.TypeError, "complex() can't take second arg " +
                 "if first is a string")
         }else{
             var arg = first
@@ -245,21 +245,21 @@ complex.__new__ = function(cls){
             function to_num(s){
                 var res = parseFloat(s.charAt(0) + s.substr(1).replace(/_/g, ""))
                 if(isNaN(res)){
-                    throw _b_.ValueError.$factory("could not convert string " +
+                    $B.RAISE(_b_.ValueError, "could not convert string " +
                         "to complex: '" + arg +"'")
                 }
                 return res
             }
             if(parts === null){
-                throw _b_.ValueError.$factory("complex() arg is a malformed string")
+                $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
             }
             if(parts[_real] && parts[_imag].startsWith('.') &&
                     parts[_sign] == ''){
-                throw _b_.ValueError.$factory('complex() arg is a malformed string')
+                $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
             }else if(parts[_real] == "." || parts[_imag] == "." ||
                     parts[_real] == ".e" || parts[_imag] == ".e" ||
                     parts[_real] == "e" || parts[_imag] == "e"){
-                throw _b_.ValueError.$factory("complex() arg is a malformed string")
+                $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
             }else if(parts[_j] != ""){
                 if(parts[_sign] == ""){
                     first = 0
@@ -275,7 +275,7 @@ complex.__new__ = function(cls){
                 }
             }else{
                 if(parts[_sign] && parts[_imag] == ''){
-                    throw _b_.ValueError.$factory('complex() arg is a malformed string')
+                    $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
                 }
                 first = to_num(parts[_real])
                 second = 0
@@ -294,18 +294,18 @@ complex.__new__ = function(cls){
         r,
         i
     if(arg1 === null){
-        throw _b_.TypeError.$factory("complex() first argument must be a " +
+        $B.RAISE(_b_.TypeError, "complex() first argument must be a " +
             `string or a number, not '${$B.class_name(first)}'`)
     }
 
     if(typeof second == "string"){
-        throw _b_.TypeError.$factory("complex() second arg can't be a string")
+        $B.RAISE(_b_.TypeError, "complex() second arg can't be a string")
     }
 
     var arg2 = _convert(second === missing ? 0 : second)
 
     if(arg2 === null){
-        throw _b_.TypeError.$factory("complex() second argument must be a " +
+        $B.RAISE(_b_.TypeError, "complex() second argument must be a " +
             `number, not '${$B.class_name(second)}'`)
     }
 
@@ -387,7 +387,7 @@ function c_quot(a, b){
     if ($B.rich_comp('__ge__', abs_breal, abs_bimag)){
         /* divide tops and bottom by b.real */
         if (abs_breal == 0.0) {
-            throw _b_.ZeroDivisionError.$factory()
+            $B.RAISE(_b_.ZeroDivisionError, )
         }else{
             let ratio = b.$imag.value / b.$real.value,
                 denom = b.$real.value + b.$imag.value * ratio
@@ -399,7 +399,7 @@ function c_quot(a, b){
         let ratio = b.$real.value / b.$imag.value,
             denom = b.$real.value * ratio + b.$imag.value;
         if(b.$imag.value == 0.0){
-            throw _b_.ZeroDivisionError.$factory()
+            $B.RAISE(_b_.ZeroDivisionError, )
         }
         return make_complex(
             (a.$real.value * ratio + a.$imag.value) / denom,
@@ -415,13 +415,13 @@ complex.__pow__ = function(self, other, mod){
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
 
     if(mod !== undefined && mod !== _b_.None){
-        throw _b_.ValueError.$factory('complex modulo')
+        $B.RAISE(_b_.ValueError, 'complex modulo')
     }
     if($B.rich_comp('__eq__', other, 1)){
         var funcs = _b_.float.$funcs
         if(funcs.isinf(self.$real) || funcs.isninf(self.$real) ||
                 funcs.isinf(self.$imag) || funcs.isninf(self.$imag)){
-            throw _b_.OverflowError.$factory('complex exponentiation')
+            $B.RAISE(_b_.OverflowError, 'complex exponentiation')
         }
         return self
     }
@@ -448,7 +448,7 @@ complex.__pow__ = function(self, other, mod){
     if(self.$real.value == 0 && self.$imag.value == 0){
         if($B.$isinstance(other, complex) &&
                 (other.$imag.value != 0 || other.$real.value < 0)){
-            throw _b_.ZeroDivisionError.$factory(
+            $B.RAISE(_b_.ZeroDivisionError,
                 '0.0 to a negative or complex power')
         }
         return $B.make_complex(0, 0)
@@ -470,11 +470,11 @@ complex.__pow__ = function(self, other, mod){
         var pw = Math.pow(exp.norm, x) * Math.pow(Math.E, -y * angle),
             theta = y * Math.log(exp.norm) - x * angle
         if(pw == Number.POSITIVE_INFINITY || pw === Number.NEGATIVE_INFINITY){
-            throw _b_.OverflowError.$factory('complex exponentiation')
+            $B.RAISE(_b_.OverflowError, 'complex exponentiation')
         }
         return make_complex(pw * Math.cos(theta), pw * Math.sin(theta))
     }else{
-        throw _b_.TypeError.$factory("unsupported operand type(s) " +
+        $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
             "for ** or pow(): 'complex' and '" +
             $B.class_name(other) + "'")
     }
@@ -559,7 +559,7 @@ complex.__sub__ = function(self, other){
 complex.__truediv__ = function(self, other){
     if($B.$isinstance(other, complex)){
         if(other.$real.value == 0 && other.$imag.value == 0){
-           throw _b_.ZeroDivisionError.$factory("division by zero")
+           $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         var _num = self.$real.value * other.$real.value +
                        self.$imag.value * other.$imag.value,
@@ -573,13 +573,13 @@ complex.__truediv__ = function(self, other){
     }
     if($B.$isinstance(other, _b_.int)){
         if(! other.valueOf()){
-            throw _b_.ZeroDivisionError.$factory('division by zero')
+            $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
         }
         return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
     if($B.$isinstance(other, _b_.float)){
         if(! other.value){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
+            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         return complex.$factory(_b_.float.__truediv__(self.$real, other),
             _b_.float.__truediv__(self.$imag, other))
@@ -623,7 +623,7 @@ var comp_func_body = `
     if(other === undefined || other == _b_.None){
         return _b_.NotImplemented
     }
-    throw _b_.TypeError.$factory("no ordering relation " +
+    $B.RAISE(_b_.TypeError, "no ordering relation " +
         "is defined for complex numbers")`
 
 for(var $op in $B.$comps){
@@ -635,14 +635,14 @@ for(var $op in $B.$comps){
 complex.real = function(self){
     return self.$real
 }
-complex.real.setter = function(){
-    throw _b_.AttributeError.$factory("readonly attribute")
+complex.real.setter = function(self, value){
+    $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, 'real')
 }
 complex.imag = function(self){
     return self.$imag
 }
 complex.imag.setter = function(){
-    throw _b_.AttributeError.$factory("readonly attribute")
+    $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, 'imag')
 }
 
 var _real = 1,
@@ -668,13 +668,13 @@ function _convert(obj){
         if(method !== missing){
             var res = method(obj)
             if(!$B.$isinstance(res, expected_class[method_name])){
-                throw _b_.TypeError.$factory(method_name + "returned non-" +
+                $B.RAISE(_b_.TypeError, method_name + "returned non-" +
                     expected_class[method_name].__name__ +
                     "(type " + $B.get_class(res) +")")
             }
             if(method_name == '__index__' &&
                     $B.rich_comp('__gt__', res, __BRYTHON__.MAX_VALUE)){
-                throw _b_.OverflowError.$factory('int too large to convert to float')
+                $B.RAISE(_b_.OverflowError, 'int too large to convert to float')
             }
             if(method_name == '__complex__' && res.__class__ !== complex){
                 $B.warn(_b_.DeprecationWarning, "__complex__ returned " +

@@ -12,7 +12,7 @@ var float_check = function(x) {
     if(x.__class__ === $B.long_int){
         var res = parseInt(x.value)
         if(! isFinite(res)){
-            throw _b_.OverflowError.$factory('int too big for float')
+            $B.RAISE(_b_.OverflowError, 'int too big for float')
         }
         return res
     }else if(x.__class__ === _b_.float){
@@ -21,14 +21,14 @@ var float_check = function(x) {
     try{
         return _b_.float.$factory(x).value
     }catch(err){
-        throw _b_.TypeError.$factory('must be real number, not ' +
+        $B.RAISE(_b_.TypeError, 'must be real number, not ' +
             $B.class_name(x))
     }
 }
 
 function check_int(x){
     if(! $B.$isinstance(x, _b_.int)){
-        throw _b_.TypeError.$factory("'" + $B.class_name(x) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(x) +
             "' object cannot be interpreted as an integer")
     }
 }
@@ -45,11 +45,11 @@ var isOdd = function(x) {return isWholeNumber(x) && 2 * Math.floor(x / 2) != x}
 var isNegZero = function(x) {return x === 0 && Math.atan2(x,x) < 0}
 
 function overflow(){
-    throw _b_.OverflowError.$factory("math range error")
+    $B.RAISE(_b_.OverflowError, "math range error")
 }
 
 function value_error(){
-    throw _b_.ValueError.$factory("math range error")
+    $B.RAISE(_b_.ValueError, "math range error")
 }
 
 var EPSILON = Math.pow(2, -52),
@@ -282,13 +282,13 @@ function acos(x){
     $B.check_nb_args('acos', 1, arguments)
     $B.check_no_kw('acos', x)
     if(_mod.isinf(x)){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }else if(_mod.isnan(x)){
         return _mod.nan
     }else{
         x = float_check(x)
         if(x > 1 || x < -1){
-            throw _b_.ValueError.$factory("math domain error")
+            $B.RAISE(_b_.ValueError, "math domain error")
         }
         return _b_.float.$factory(Math.acos(x))
     }
@@ -300,7 +300,7 @@ function acosh(x){
 
     if(_b_.float.$funcs.isinf(x)){
         if(_b_.float.$funcs.isninf(x)){
-            throw _b_.ValueError.$factory("math domain error")
+            $B.RAISE(_b_.ValueError, "math domain error")
         }
         return _mod.inf
     }else if(_mod.isnan(x)){
@@ -308,7 +308,7 @@ function acosh(x){
     }
     var y = float_check(x)
     if(y <= 0){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     if(y > Math.pow(2, 28)){ // issue 1590
         return _b_.float.$factory(_mod.log(y).value + _mod.log(2).value)
@@ -320,13 +320,13 @@ function asin(x){
     $B.check_nb_args('asin', 1, arguments)
     $B.check_no_kw('asin', x)
     if(_mod.isinf(x)){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }else if(_mod.isnan(x)){
         return _mod.nan
     }else{
         x = float_check(x)
         if(x > 1 || x < -1){
-            throw _b_.ValueError.$factory("math domain error")
+            $B.RAISE(_b_.ValueError, "math domain error")
         }
         return _b_.float.$factory(Math.asin(x))
     }
@@ -368,13 +368,13 @@ function atanh(x){
     $B.check_nb_args('atanh', 1, arguments)
     $B.check_no_kw('atanh', x)
     if(_b_.float.$funcs.isinf(x)){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     var y = float_check(x)
     if(y == 0){
         return 0
     }else if(y <= -1 || y >= 1){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     return _b_.float.$factory(0.5 * Math.log((1 / y + 1)/(1 / y - 1)));
 }
@@ -392,7 +392,7 @@ function cbrt(x){
     }
     var _r = $B.fast_float(Math.cbrt(y))
     if(_b_.float.$funcs.isinf(_r)){
-        throw _b_.OverflowError.$factory("math range error")
+        $B.RAISE(_b_.OverflowError, "math range error")
     }
     return _r
 }
@@ -405,10 +405,10 @@ function ceil(x){
 
     if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
-            throw _b_.OverflowError.$factory(
+            $B.RAISE(_b_.OverflowError, 
                 "cannot convert float infinity to integer")
         }else if(_mod.isnan(x)){
-            throw _b_.OverflowError.$factory(
+            $B.RAISE(_b_.OverflowError, 
                 "cannot convert float NaN to integer")
         }
     }
@@ -431,7 +431,7 @@ function ceil(x){
         if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
         }else{
-            throw _b_.TypeError.$factory("must be real number, not " +
+            $B.RAISE(_b_.TypeError, "must be real number, not " +
                $B.class_name(x))
         }
     }
@@ -675,11 +675,11 @@ function comb(n, k){
     k = _b_.int.$to_bigint(k);
 
     if(n < 0){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
                         "n must be a non-negative integer");
     }
     if(k < 0){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
                         "k must be a non-negative integer");
     }
 
@@ -709,7 +709,7 @@ function comb(n, k){
 
         overflow = k > LLONG_MAX || k < LLONG_MIN
         if (overflow) {
-            throw _b_.OverflowError.$factory(
+            $B.RAISE(_b_.OverflowError, 
                          "min(n - k, k) must not exceed " +
                          LLONG_MAX);
         }
@@ -766,7 +766,7 @@ function dist(p, q){
         }
         var y = $B.$getattr(x, '__float__', null)
         if(y === null){
-            throw _b_.TypeError.$factory('not a float')
+            $B.RAISE(_b_.TypeError, 'not a float')
         }
         return $B.$call(y)().value
     }
@@ -778,7 +778,7 @@ function dist(p, q){
     if(Array.isArray(p) && Array.isArray(q)){
         // simple case : p and q are lists of tuples
         if(p.length != q.length){
-            throw _b_.ValueError.$factory("both points must have " +
+            $B.RAISE(_b_.ValueError, "both points must have " +
                 "the same number of dimensions")
         }
         p = p.map(test)
@@ -802,7 +802,7 @@ function dist(p, q){
                     // check that the other iterator is also exhausted
                     try{
                         var next_q = _b_.next(itq)
-                        throw _b_.ValueError.$factory("both points must have " +
+                        $B.RAISE(_b_.ValueError, "both points must have " +
                             "the same number of dimensions")
                     }catch(err){
                         if(err.__class__ === _b_.StopIteration){
@@ -818,7 +818,7 @@ function dist(p, q){
                 var next_q = _b_.next(itq)
             }catch(err){
                 if(err.__class__ === _b_.StopIteration){
-                    throw _b_.ValueError.$factory("both points must have " +
+                    $B.RAISE(_b_.ValueError, "both points must have " +
                         "the same number of dimensions")
                 }
                 throw err
@@ -996,7 +996,7 @@ function exp(x){
      }
      var _r = Math.exp(float_check(x))
      if(! isNaN(_r) && ! isFinite(_r)){
-         throw _b_.OverflowError.$factory("math range error")
+         $B.RAISE(_b_.OverflowError, "math range error")
      }
      return _b_.float.$factory(_r)
 }
@@ -1152,11 +1152,11 @@ function factorial(arg){
     x = _b_.int.$to_bigint($B.PyNumber_Index(arg))
     overflow = x > LONG_MAX || x < LONG_MIN
     if(x > LONG_MAX) {
-        throw _b_.OverflowError.$factory(
+        $B.RAISE(_b_.OverflowError, 
                      "factorial() argument should not exceed " +
                      LONG_MAX)
     }else if(x < 0) {
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
                         "factorial() not defined for negative values");
     }
 
@@ -1187,7 +1187,7 @@ function floor(x){
                 return floor(float)
             }catch(err){
                 if($B.is_exc(err, [_b_.AttributeError])){
-                    throw _b_.TypeError.$factory("no __float__")
+                    $B.RAISE(_b_.TypeError, "no __float__")
                 }
                 throw err
             }
@@ -1326,11 +1326,11 @@ function fma(x, y, z){
     if(isNaN(res)){
         if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
             /* NaN result from non-NaN inputs. */
-            throw _b_.ValueError.$factory("invalid operation in fma");
+            $B.RAISE(_b_.ValueError, "invalid operation in fma");
         }
     }else if(isFinite(x) && isFinite(y) && isFinite(z)) {
         /* Infinite result from finite inputs. */
-        throw _b_.OverflowError.$factory("overflow in fma");
+        $B.RAISE(_b_.OverflowError, "overflow in fma");
     }
 
     return $B.fast_float(res)
@@ -1340,12 +1340,12 @@ function fmod(x, y){
     $B.check_nb_args_no_kw('fmod', 2, arguments)
     if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
-            throw _b_.ValueError.$factory('math domain error')
+            $B.RAISE(_b_.ValueError, 'math domain error')
         }
     }
     y = float_check(y)
     if(y == 0){
-        throw _b_.ValueError.$factory('math domain error')
+        $B.RAISE(_b_.ValueError, 'math domain error')
     }
     return _b_.float.$factory(float_check(x) % float_check(y))
 }
@@ -1413,19 +1413,19 @@ function gamma(x){
     if($B.$isinstance(x, _b_.float)){
         x_as_number = x.value
     }else if(! $B.$isinstance(x, _b_.int)){
-        throw _b_.TypeError.$factory("must be real number, not " +
+        $B.RAISE(_b_.TypeError, "must be real number, not " +
             $B.class_name(x))
     }
     if(x_as_number === Number.POSITIVE_INFINITY || isNaN(x_as_number)){
         return x
     }else if(x_as_number === Number.NEGATIVE_INFINITY || x_as_number == 0){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
 
     /* integer arguments */
     if(Number.isInteger(x_as_number)){
         if($B.rich_comp('__lt__', x, 0.0)){
-            throw _b_.ValueError.$factory("math domain error")
+            $B.RAISE(_b_.ValueError, "math domain error")
         }
         if($B.rich_comp('__le__', x, NGAMMA_INTEGRAL)){
             return $B.fast_float(gamma_integral[x_as_number - 1])
@@ -1654,7 +1654,7 @@ function hypot(x, y){
             args.push(float_check(arg))
         }catch(err){
             if($B.is_exc(err, [_b_.ValueError])){
-                throw _b_.TypeError.$factory('must be real number, not ' +
+                $B.RAISE(_b_.TypeError, 'must be real number, not ' +
                     $B.class_name(arg))
             }
             throw err
@@ -1681,7 +1681,7 @@ function isclose(){
         abs_tol = float_check($.abs_tol)
 
     if(rel_tol < 0.0 || abs_tol < 0.0){
-        throw _b_.ValueError.$factory('tolerances must be non-negative')
+        $B.RAISE(_b_.ValueError, 'tolerances must be non-negative')
     }
 
     if(a == b){
@@ -1733,7 +1733,7 @@ function isqrt(x){
 
     x = $B.PyNumber_Index(x)
     if($B.rich_comp("__lt__", x, 0)){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "isqrt() argument must be nonnegative")
     }
     if(typeof x == "number"){
@@ -1827,32 +1827,32 @@ function log(x, base){
     var log
     if($B.$isinstance(x, $B.long_int)){
         if(x.value <= 0){
-            throw _b_.ValueError.$factory('math domain error')
+            $B.RAISE(_b_.ValueError, 'math domain error')
         }
         var mant_exp = longint_mant_exp(x)
         log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
     }else if($B.$isinstance(x, _b_.int)){
         x = _b_.int.$int_value(x)
         if(x <= 0){
-            throw _b_.ValueError.$factory('math domain error')
+            $B.RAISE(_b_.ValueError, 'math domain error')
         }
         log = Math.log(x)
     }else{
         var x1 = float_check(x)
         if(x1 <= 0){
-            throw _b_.ValueError.$factory('math domain error')
+            $B.RAISE(_b_.ValueError, 'math domain error')
         }
         log = Math.log(x1)
     }
     if(x1 <= 0){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     if(base === _b_.None){
         return $B.fast_float(log)
     }
     var denom = _mod.log(base).value
     if(denom == 0){
-        throw _b_.ZeroDivisionError.$factory('float division by zero')
+        $B.RAISE(_b_.ZeroDivisionError, 'float division by zero')
     }
     return $B.fast_float(log / denom)
 }
@@ -1862,7 +1862,7 @@ function log1p(x){
     $B.check_no_kw('log1p', x)
     if($B.$isinstance(x, $B.long_int)){
         if($B.long_int.bit_length(x) > 1024){
-            throw _b_.OverflowError.$factory(
+            $B.RAISE(_b_.OverflowError, 
                 "int too large to convert to float")
         }
         x = $B.long_int.$log2($B.fast_long_int(x.value + 1n))
@@ -1870,7 +1870,7 @@ function log1p(x){
     }
     x = float_check(x)
     if(x + 1 <= 0){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     return $B.fast_float(Math.log1p(x))
 }
@@ -1881,23 +1881,23 @@ function log2(x){
     var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
     if($B.$isinstance(x, $B.long_int)){
         if(x.value <= 0){
-            throw _b_.ValueError.$factory('math domain error')
+            $B.RAISE(_b_.ValueError, 'math domain error')
         }
         var mant_exp = longint_mant_exp(x)
         return $B.fast_float(log2_func(mant_exp[0]) + mant_exp[1])
     }
     if(_b_.float.$funcs.isninf(x)){
-        throw _b_.ValueError.$factory('')
+        $B.RAISE(_b_.ValueError, '')
     }
     x = float_check(x)
     if(x == 0){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     if(isNaN(x)){
         return _b_.float.$factory('nan')
     }
     if(x < 0.0){
-        throw _b_.ValueError.$factory('math domain error')
+        $B.RAISE(_b_.ValueError, 'math domain error')
     }
     return $B.fast_float(log2_func(x))
 }
@@ -1910,7 +1910,7 @@ function log10(x){
     }
     x = float_check(x)
     if(x <= 0){
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     return $B.fast_float(Math.log10(x))
 }
@@ -2045,11 +2045,11 @@ function nextafter(){
         y = $.y,
         steps = $.steps
     if(! $B.$isinstance(x, [_b_.int, _b_.float])){
-        throw _b_.TypeError.$factory('must be a real number, not ' +
+        $B.RAISE(_b_.TypeError, 'must be a real number, not ' +
             $B.class_name(x))
     }
     if(! $B.$isinstance(y, [_b_.int, _b_.float])){
-        throw _b_.TypeError.$factory('must be a real number, not ' +
+        $B.RAISE(_b_.TypeError, 'must be a real number, not ' +
             $B.class_name(y))
     }
     if(isnan(x)){
@@ -2063,7 +2063,7 @@ function nextafter(){
     }
     steps = $B.PyNumber_Index(steps);
     if(steps < 0) {
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
                         "steps must be a non-negative integer");
     }
     if(steps == 0){
@@ -2112,10 +2112,10 @@ function perm(n, k){
         k1 = _b_.int.$to_bigint(k);
 
     if(k1 < 0){
-        throw _b_.ValueError.$factory("k must be a non-negative integer")
+        $B.RAISE(_b_.ValueError, "k must be a non-negative integer")
     }
     if(n1 < 0){
-        throw _b_.ValueError.$factory("n must be a non-negative integer")
+        $B.RAISE(_b_.ValueError, "n must be a non-negative integer")
     }
     if(k1 == 0){
         return 1
@@ -2153,10 +2153,10 @@ function pow(){
         if(y1 === -Infinity){
             return INF
         }
-        throw _b_.ValueError.$factory('math domain error')
+        $B.RAISE(_b_.ValueError, 'math domain error')
     }
     if(isFinite(x1) && x1 < 0 && isFinite(y1) && ! Number.isInteger(y1)){
-        throw _b_.ValueError.$factory('math domain error')
+        $B.RAISE(_b_.ValueError, 'math domain error')
     }
 
     if(isNaN(y1)){
@@ -2265,7 +2265,7 @@ function remainder(x, y){
             r;
 
         if(float_check(y) == 0.0){
-            throw _b_.ValueError.$factory("math domain error")
+            $B.RAISE(_b_.ValueError, "math domain error")
         }
 
         absx = fabs(x);
@@ -2294,7 +2294,7 @@ function remainder(x, y){
         if(isnan(y)){
             return y
         }
-        throw _b_.ValueError.$factory("math domain error")
+        $B.RAISE(_b_.ValueError, "math domain error")
     }
     if(isnan(y)){
         return y;
@@ -2513,7 +2513,7 @@ function sumprod(p, q){
             q_i = q_i.value
         }
         if (p_stopped != q_stopped) {
-            throw _b_.ValueError.$factory("Inputs are not the same length");
+            $B.RAISE(_b_.ValueError, "Inputs are not the same length");
         }
 
         finished = p_stopped & q_stopped;
@@ -2672,7 +2672,7 @@ function trunc(x) {
       }
       return _b_.int.$factory(Math.ceil(x1))  // x1 < 0
    }
-   throw _b_.ValueError.$factory(
+   $B.RAISE(_b_.ValueError, 
        'object is not a number and does not contain __trunc__')
 }
 

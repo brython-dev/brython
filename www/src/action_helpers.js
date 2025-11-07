@@ -914,7 +914,7 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
-    var exc = errtype.$factory(errmsg)
+    var exc = $B.EXC(errtype, errmsg)
     exc.filename = p.filename
     if(p.known_err_token){
         var token = p.known_err_token

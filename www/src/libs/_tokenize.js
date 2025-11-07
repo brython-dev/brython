@@ -42,7 +42,7 @@ TokenizerIter.__iter__ = function(self){
                 break
             }else if(self.encoding !== _b_.None){
                 if(! $B.$isinstance(line, [_b_.bytes, _b_.bytearray])){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError, 
                         'readline() returned a non-bytes object')
                 }
                 line = _b_.bytes.decode(line, self.encoding)
@@ -55,7 +55,7 @@ TokenizerIter.__iter__ = function(self){
                     var endmarker = token
                     continue
                 }else if(token.num_type == $B.py_tokens.ERRORTOKEN){
-                    throw _b_.SyntaxError.$factory(token.message)
+                    $B.RAISE(_b_.SyntaxError, token.message)
                 }
                 //token.type = token.num_type
                 token.lineno = line_num

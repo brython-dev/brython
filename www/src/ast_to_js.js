@@ -88,7 +88,7 @@ function string_from_ast_value(value){
 
 function compiler_error(ast_obj, message, end){
     prefix = ''
-    var exc = _b_.SyntaxError.$factory(message)
+    var exc = $B.EXC(_b_.SyntaxError, message)
     exc.filename = state.filename
     if(exc.filename != '<string>'){
         var src = $B.file_cache[exc.filename],
@@ -626,7 +626,7 @@ $B.resolve_local = function(name, inum){
             }
         }
     }
-    var exc = _b_.UnboundLocalError.$factory(`cannot access local variable ` +
+    var exc = $B.EXC(_b_.UnboundLocalError, `cannot access local variable ` +
               `'${name}' where it is not associated with a value`)
     $B.set_inum(inum)
     throw exc
@@ -2700,7 +2700,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               prefix + tab + `return $B.trace_return_and_leave(frame, res)\n` +
               prefix + '}\n' +
               prefix + `frame.inum = 2 * frame.positions.length - 1\n` +
-              prefix + `throw _b_.NotImplementedError.$factory('')\n`
+              prefix + `$.RAISE(_b_.NotImplementedError, '')\n`
         dedent()
         js += prefix + `}catch(err){\n`
         indent()
@@ -4049,10 +4049,8 @@ $B.ast.With.prototype.to_js = function(scopes){
         indent()
         s += prefix + `var klass_name = $B.class_name(mgr_${id})\n` +
              prefix + `frame.inum = ${inum}\n` +
-             prefix + `throw _b_.TypeError.$factory("'" + klass_name + ` +
-                      `"' object does not support the con` +
-                      // split word 'context', replaced by "C" in brython.js...
-                      `text manager protocol")\n`
+             prefix + `$B.RAISE(_b_.TypeError, "'" + klass_name + ` +
+                      `"' object does not support the context manager protocol")\n`
         dedent()
         s += prefix + `}\n` +
              prefix + `var value_${id} = $B.$call(enter_${id})(mgr_${id}),\n` +

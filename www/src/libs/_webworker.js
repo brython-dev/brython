@@ -99,7 +99,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         worker_script = $B.webworkers[id]
 
     if(worker_script === undefined){
-        throw _b_.KeyError.$factory(id)
+        $B.RAISE(_b_.KeyError, id)
     }
     var filepath = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
         filename = $B.strip_host(filepath),
@@ -165,7 +165,7 @@ function create_worker(){
         onerror = $.onerror === _b_.None ? _b_.None : $B.$call($.onerror)
 
     if(worker_script === undefined){
-        throw _b_.RuntimeError.$factory(`No webworker with id '${id}'`)
+        $B.RAISE(_b_.RuntimeError, `No webworker with id '${id}'`)
     }
     var script_id = "worker" + $B.UUID(),
         filepath = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
@@ -257,7 +257,7 @@ function create_worker(){
                 resolve(res)
             }else if(typeof ev.data == 'string' &&
                     ev.data.startsWith(error_token)){
-                reject(_b_.Exception.$factory(ev.data.substr(error_token.length)))
+                reject($B.EXC(_b_.Exception, ev.data.substr(error_token.length)))
             }else{
                 if(onmessage !== _b_.None){
                     onmessage(ev)

@@ -52,7 +52,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
     for(var base of bases){
         if(base.__flags__ !== undefined &&
                  ! (base.__flags__ & TPFLAGS.BASETYPE)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 "type 'bool' is not an acceptable base type")
         }
     }
@@ -85,7 +85,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
         }else{
             for(let item of $B.make_js_iterator(slots)){
                 if(typeof item != 'string'){
-                    throw _b_.TypeError.$factory('__slots__ items must be ' +
+                    $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
                         `strings, not '${$B.class_name(item)}'`)
                 }
             }
@@ -150,13 +150,13 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
             // Might inherit a Javascript constructor
             if(typeof bases[0] == "function"){
                 if(bases.length != 1){
-                    throw _b_.TypeError.$factory("A Brython class " +
+                    $B.RAISE(_b_.TypeError, "A Brython class " +
                         "can inherit at most 1 Javascript constructor")
                 }
                 $B.set_func_names(bases[0], module)
                 return $B.JSMeta
             }else{
-                throw _b_.TypeError.$factory("Argument of " + class_name +
+                $B.RAISE(_b_.TypeError, "Argument of " + class_name +
                     " is not a class (type '" + $B.class_name(bases[0]) +
                     "')")
             }
@@ -171,7 +171,7 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
                 metaclass = mc
             }else if(metaclass.__bases__ &&
                     metaclass.__bases__.indexOf(mc) == -1){
-                throw _b_.TypeError.$factory("metaclass conflict: the " +
+                $B.RAISE(_b_.TypeError, "metaclass conflict: the " +
                     "metaclass of a derived class must be a (non-" +
                     "strict) subclass of the metaclasses of all its bases")
             }
@@ -311,7 +311,7 @@ var type = $B.make_class("type",
         var kwargs = {$kw: [kwarg]}
         if(cl_dict === missing){
             if(bases !== missing){
-                throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
+                $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
             }
             var res = $B.get_class(kls)
             if(res === $B.long_int){
@@ -455,7 +455,7 @@ type.__dict__.__annotations__ = $B.getset_descriptor.$factory(type,
     },
     function(klass){
         if(klass.__annotations_cache__ === undefined){
-            throw _b_.AttributeError.$factory('__annotations__')
+            $B.RAISE_ATTRIBUTE_ERROR('__annotations__', klass, '__annotations__')
         }
         klass.__annotations_cache__ = $B.empty_dict()
         klass.__annotate__ = _b_.None
@@ -475,7 +475,7 @@ type.__dict__.__annotate__ = $B.getset_descriptor.$factory(type, '__annotate__',
             $B.$call(value)
         }catch(err){
             if(value !== _b_.None){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError,
                     '__annotate__ must be callable or None')
             }
             klass.__annotate__ = value
@@ -604,7 +604,7 @@ type.__getattribute__ = function(klass, attr){
             return method_wrapper.$factory(attr, klass,
                 function(key){
                     if(klass.__flags__ && TPFLAGS.IMMUTABLETYPE){
-                        throw _b_.TypeError.$factory(
+                        $B.RAISE(_b_.TypeError,
                             `cannot delete '${key}' attribute ` +
                             `of immutable type '${klass.__name__}'`)
                     }
@@ -811,7 +811,7 @@ type.__hash__ = function(cls){
 
 type.__init__ = function(){
     if(arguments.length == 0){
-        throw _b_.TypeError.$factory("descriptor '__init__' of 'type' " +
+        $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'type' " +
             "object needs an argument")
     }
 }
@@ -822,12 +822,12 @@ type.__init_subclass__ = function(){
     var $ = $B.args("__init_subclass__", 1, {cls: null}, ['cls'],
             arguments, {}, "args", "kwargs")
     if($.args.length > 0){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             `${$.cls.__qualname__}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
     }
     if(_b_.dict.__len__($.kwargs) > 0){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             `${$.cls.__qualname__}.__init_subclass__() ` +
             `takes no keyword arguments`)
     }
@@ -963,7 +963,7 @@ type.__repr__ = function(kls){
 type.__ror__ = function(){
     var len = arguments.length
     if(len != 1){
-        throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)
+        $B.RAISE(_b_.TypeError, `expected 1 argument, got ${len}`)
     }
     return _b_.NotImplemented
 }
@@ -992,7 +992,7 @@ type.__setattr__ = function(kls, attr, value){
         }
     }
     if(kls.__flags__ && TPFLAGS.IMMUTABLETYPE){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             `cannot set '${attr}' attribute of immutable type '` +
                 kls.__qualname__ + "'")
     }
@@ -1027,7 +1027,7 @@ type.$mro = function(cls){
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
     if(cls === undefined){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             'unbound method type.mro() needs an argument')
     }
     var bases = cls.__bases__,
@@ -1094,7 +1094,7 @@ type.$mro = function(cls){
             }
         }
         if(candidate === null){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 "inconsistent hierarchy, no C3 MRO is possible")
         }
         mro[mpos++] = candidate
@@ -1184,7 +1184,7 @@ property.__init__ = function(){
 
 property.__get__ = function(self, kls){
     if(self.fget === undefined){
-        throw _b_.AttributeError.$factory("unreadable attribute")
+        $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
     return $B.$call(self.fget)(kls)
 }
@@ -1200,7 +1200,7 @@ property.__set__ = function(self, obj, value){
         var name = self.fget.$function_infos[$B.func_attrs.__name__]
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
-        throw _b_.AttributeError.$factory(msg)
+        $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
     }
     $B.$getattr(self.fset, '__call__')(obj, value)
 }
@@ -1239,7 +1239,7 @@ $B.$instance_creator = function(klass){
             var ams = Array.from($B.make_js_iterator(klass.__abstractmethods__))
             ams.sort()
             var msg = (ams.length > 1 ? 's ' : ' ') + ams.join(', ')
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 "Can't instantiate abstract class interface " +
                 "with abstract method" + msg)
         }
@@ -1307,7 +1307,7 @@ var member_descriptor = $B.member_descriptor = $B.make_class("member_descriptor"
 member_descriptor.__delete__ = function(self, kls){
     if(kls.$slot_values === undefined ||
             ! kls.$slot_values.hasOwnProperty(self.attr)){
-        throw _b_.AttributeError.$factory(self.attr)
+        $B.RAISE_ATTRIBUTE_ERROR('cannot delete', self, self.attr)
     }
     kls.$slot_values.delete(self.attr)
 }
@@ -1408,7 +1408,7 @@ method.__setattr__ = function(self, key){
     // Attempting to set an attribute on a method results in an AttributeError
     // being raised.
     if(key == "__class__"){
-        throw _b_.TypeError.$factory("__class__ assignment only supported " +
+        $B.RAISE(_b_.TypeError, "__class__ assignment only supported " +
             "for heap types or ModuleType subclasses")
     }
     throw $B.attr_error(key, self)
@@ -1468,7 +1468,7 @@ $B.make_iterator_class = function(name, reverse){
                 // created. If not, items have been added to or removed from
                 // the dictionary
                 if(message){
-                    throw _b_.RuntimeError.$factory(message)
+                    $B.RAISE(_b_.RuntimeError, message)
                 }
             }
 
@@ -1495,7 +1495,7 @@ $B.make_iterator_class = function(name, reverse){
                     return item
                 }
             }
-            throw _b_.StopIteration.$factory("StopIteration")
+            $B.RAISE(_b_.StopIteration, "StopIteration")
         },
 
         __reduce_ex__: function(self){
@@ -1538,7 +1538,7 @@ $B.GenericAlias.__eq__ = function(self, other){
 }
 
 $B.GenericAlias.__getitem__ = function(self, item){
-    throw _b_.TypeError.$factory("descriptor '__getitem__' for '" +
+    $B.RAISE(_b_.TypeError, "descriptor '__getitem__' for '" +
         self.origin_class.__name__ +"' objects doesn't apply to a '" +
         $B.class_name(item) +"' object")
 }
@@ -1748,7 +1748,7 @@ $B.make_module_annotate = function(locals){
                 }
                 return ann_dict
             default:
-                throw _b_.NotImplementedError.$factory()
+                $B.RAISE(_b_.NotImplementedError, )
         }
     }
     $B.add_function_infos(locals, '__annotate_func__')

@@ -126,7 +126,7 @@ function normalize_start_end($){
     }
 
     if(! $B.$isinstance($.start, _b_.int) || ! $B.$isinstance($.end, _b_.int)){
-        throw _b_.TypeError.$factory("slice indices must be integers " +
+        $B.RAISE(_b_.TypeError, "slice indices must be integers " +
             "or None or have an __index__ method")
     }
     if($.self.surrogates){
@@ -145,7 +145,7 @@ function check_str(obj, prefix){
         return
     }
     if(! $B.$isinstance(obj, str)){
-        throw _b_.TypeError.$factory((prefix || '') +
+        $B.RAISE(_b_.TypeError, (prefix || '') +
             "must be str, not " + $B.class_name(obj))
     }
 }
@@ -162,7 +162,7 @@ str.__add__ = function(_self, other){
         try{
             return $B.$getattr(other, "__radd__")(_self)
         }catch(err){
-            throw _b_.TypeError.$factory("Can't convert " +
+            $B.RAISE(_b_.TypeError, "Can't convert " +
                 $B.class_name(other) + " to str implicitly")}
     }
     [_self, other] = to_string([_self, other])
@@ -174,7 +174,7 @@ str.__add__ = function(_self, other){
 
 str.__contains__ = function(_self, item){
     if(! $B.$isinstance(item, str)){
-        throw _b_.TypeError.$factory("'in <string>' requires " +
+        $B.RAISE(_b_.TypeError, "'in <string>' requires " +
             "string as left operand, not " + $B.class_name(item))
     }
     [_self, item] = to_string([_self, item])
@@ -182,7 +182,7 @@ str.__contains__ = function(_self, item){
 }
 
 str.__delitem__ = function(){
-    throw _b_.TypeError.$factory("'str' object doesn't support item deletion")
+    $B.RAISE(_b_.TypeError, "'str' object doesn't support item deletion")
 }
 
 // __dir__must be assigned explicitely because attribute resolution for
@@ -202,7 +202,7 @@ function preformat(_self, fmt){
         return _b_.str.$factory(_self)
     }
     if(fmt.type && fmt.type != "s"){
-        throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
+        $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'str'")
     }
     return _self
@@ -213,7 +213,7 @@ str.__format__ = function(_self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec, _self)
 
     if(fmt.sign !== undefined){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "Sign not allowed in string format specifier")
     }
     if(fmt.precision){
@@ -240,7 +240,7 @@ str.__getitem__ = function(_self, arg){
                 return _self[jspos]
             }
         }
-        throw _b_.IndexError.$factory("string index out of range")
+        $B.RAISE(_b_.IndexError, "string index out of range")
     }
     if($B.$isinstance(arg, _b_.slice)){
         return _b_.str.$getitem_slice(_self, arg)
@@ -248,7 +248,7 @@ str.__getitem__ = function(_self, arg){
     if($B.$isinstance(arg, _b_.bool)){
         return _self.__getitem__(_b_.int.$factory(arg))
     }
-    throw _b_.TypeError.$factory("string indices must be integers")
+    $B.RAISE(_b_.TypeError, "string indices must be integers")
 }
 
 str.$getitem_slice = function(_self, slice){
@@ -341,7 +341,7 @@ str_iterator.__iter__ = function(_self){
 str_iterator.__next__ = function(_self){
     var res = _self.it.next()
     if(res.done){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return res.value
 }
@@ -369,7 +369,7 @@ str.__len__ = function(_self){
 var number_check = function(s, flags){
     if(! $B.$isinstance(s, [_b_.int, _b_.float])){
         var type = flags.conversion_type
-        throw _b_.TypeError.$factory(`%${type} format: a real number ` +
+        $B.RAISE(_b_.TypeError, `%${type} format: a real number ` +
             `is required, not ${$B.class_name(s)}`)
     }
 }
@@ -409,7 +409,7 @@ var format_int_precision = function(val, flags){
     }
     precision = parseInt(precision, 10)
     if(precision > max_precision){
-        throw _b_.OverflowError.$factory('precision too large')
+        $B.RAISE(_b_.OverflowError, 'precision too large')
     }
     var s
     if(val.__class__ === $B.long_int){
@@ -418,7 +418,7 @@ var format_int_precision = function(val, flags){
        s = val.toString()
     }
     if(precision - s.length > max_repeat){
-        throw _b_.OverflowError.$factory('precision too large')
+        $B.RAISE(_b_.OverflowError, 'precision too large')
     }
     if(s[0] === "-"){
         return "-" + "0".repeat(Math.max(0, precision - s.length + 1)) +
@@ -717,7 +717,7 @@ $B.formatters = {
 var signed_hex_format = function(val, upper, flags){
     var ret
     if(! $B.$isinstance(val, _b_.int)){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             `%X format: an integer is required, not ${$B.class_name(val)}`)
     } else if ($B.$isinstance(val, _b_.bool)) {
         val = val ? 1 : 0
@@ -806,7 +806,7 @@ function series_of_bytes(val, flags){
             return format_padding(_b_.bytes.decode(bytes_obj), flags)
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
-                throw _b_.TypeError.$factory("%b does not accept '" +
+                $B.RAISE(_b_.TypeError, "%b does not accept '" +
                     $B.class_name(val) + "'")
             }
             throw err
@@ -818,11 +818,11 @@ var single_char_format = function(val, flags, type){
     if(type == 'bytes'){
         if($B.$isinstance(val, _b_.int)){
             if(val.__class__ === $B.long_int || val < 0 || val > 255){
-                throw _b_.OverflowError.$factory("%c arg not in range(256)")
+                $B.RAISE(_b_.OverflowError, "%c arg not in range(256)")
             }
         }else if($B.$isinstance(val, [_b_.bytes, _b_.bytearray])){
             if(val.source.length > 1){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError, 
                     "%c requires an integer in range(256) or a single byte")
             }
             val = val.source[0]
@@ -832,14 +832,14 @@ var single_char_format = function(val, flags, type){
             if(_b_.str.__len__(val) == 1){
                 return val
             }
-            throw _b_.TypeError.$factory("%c requires int or char")
+            $B.RAISE(_b_.TypeError, "%c requires int or char")
         }else if(! $B.$isinstance(val, _b_.int)){
-            throw _b_.TypeError.$factory("%c requires int or char")
+            $B.RAISE(_b_.TypeError, "%c requires int or char")
         }
         if((val.__class__ === $B.long_int &&
                 (val.value < 0 || val.value >= 0x110000)) ||
                 (val < 0 || val >= 0x110000)){
-            throw _b_.OverflowError.$factory('%c arg not in range(0x110000)')
+            $B.RAISE(_b_.OverflowError, '%c arg not in range(0x110000)')
         }
     }
     return format_padding(_b_.chr(val), flags)
@@ -947,7 +947,7 @@ function parse_mod_format(s, type, pos){
         if(char == '('){
             var end = s.substr(pos).indexOf(')')
             if(end == -1){
-                throw _b_.ValueError.$factory('incomplete format key')
+                $B.RAISE(_b_.ValueError, 'incomplete format key')
             }else{
                 flags.mapping_key = s.substr(pos + 1, end - 1)
                 pos += end + 1
@@ -1005,10 +1005,10 @@ function parse_mod_format(s, type, pos){
             }
             return flags
         }else{
-            throw _b_.ValueError.$factory(`invalid character in format: ${char}`)
+            $B.RAISE(_b_.ValueError, `invalid character in format: ${char}`)
         }
     }
-    throw _b_.ValueError.$factory('invalid format')
+    $B.RAISE(_b_.ValueError, 'invalid format')
 }
 
 function is_mapping(obj){
@@ -1048,7 +1048,7 @@ $B.printf_format = function(s, type, args){
                 // issue 2184
                 if((! $B.$isinstance(args, _b_.tuple)) &&
                         ! is_mapping(args)){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError, 
                         "not enough arguments for format string")
                 }
             }
@@ -1057,7 +1057,7 @@ $B.printf_format = function(s, type, args){
             if(fmt.padding == '*'){
                 // read value in arguments
                 if(args[argpos] === undefined){
-                    throw _b_.ValueError.$factory('no value for field width *')
+                    $B.RAISE(_b_.ValueError, 'no value for field width *')
                 }
                 fmt.padding = args[argpos]
                 argpos++
@@ -1065,7 +1065,7 @@ $B.printf_format = function(s, type, args){
             if(fmt.precision == '*'){
                 // read value in arguments
                 if(args[argpos] === undefined){
-                    throw _b_.ValueError.$factory('no value for precision *')
+                    $B.RAISE(_b_.ValueError, 'no value for precision *')
                 }
                 fmt.precision = args[argpos]
                 argpos++
@@ -1080,7 +1080,7 @@ $B.printf_format = function(s, type, args){
                 }else{
                     value = args[argpos]
                     if(value === undefined){
-                        throw _b_.TypeError.$factory(
+                        $B.RAISE(_b_.TypeError, 
                             "not enough arguments for format string")
                     }
                     argpos++
@@ -1092,14 +1092,14 @@ $B.printf_format = function(s, type, args){
 
     if(argpos !== null){
         if(args.length > argpos){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "not enough arguments for format string")
         }else if(args.length < argpos){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "not all arguments converted during string formatting")
         }
     }else if(nbph == 0){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             "not all arguments converted during string formatting")
     }
     return ret
@@ -1117,7 +1117,7 @@ str.__mul__ = function(self, other){
     $B.check_nb_args_no_kw('str.__mul__', 2, arguments)
     var _self = to_string(self)
     if(! $B.$isinstance(other, _b_.int)){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
         "Can't multiply sequence by non-int of type '" +
             $B.class_name(other) + "'")
     }
@@ -1131,7 +1131,7 @@ str.__ne__ = function(_self, other){
 
 str.__new__ = function(cls, value){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("str.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "str.__new__(): not enough arguments")
     }else if(cls === _b_.str){
         return value
     }else{
@@ -1209,12 +1209,12 @@ str.__rmul__ = function(_self, other){
 str.__setattr__ = function(_self, attr, value){
     if(typeof _self === "string"){
         if(str.hasOwnProperty(attr)){
-            throw _b_.AttributeError.$factory("'str' object attribute '" +
-                attr + "' is read-only")
+            $B.RAISE_ATTRIBUTE_ERROR("'str' object attribute '" +
+                attr + "' is read-only", _self, attr)
         }else{
-            throw _b_.AttributeError.$factory(
+            $B.RAISE_ATTRIBUTE_ERROR(
                 `'str' object has no attribute '${attr}' and no __dict__ ` +
-                'for setting new attributes')
+                'for setting new attributes', _self, attr)
         }
     }
     // str subclass : use __dict__
@@ -1223,7 +1223,7 @@ str.__setattr__ = function(_self, attr, value){
 }
 
 str.__setitem__ = function(){
-    throw _b_.TypeError.$factory(
+    $B.RAISE(_b_.TypeError, 
         "'str' object does not support item assignment")
 }
 
@@ -1324,7 +1324,7 @@ str.count = function(){
         sub
 
     if(! $B.$isinstance($.sub, str)){
-        throw _b_.TypeError.$factory("Can't convert '" + $B.class_name($.sub) +
+        $B.RAISE(_b_.TypeError, "Can't convert '" + $B.class_name($.sub) +
             "' object to str implicitly")
     }
     [_self, sub] = to_string([$.self, $.sub])
@@ -1411,7 +1411,7 @@ str.endswith = function(){
     for(var i = 0, len = suffixes.length; i < len; i++){
         var suffix = suffixes[i]
         if(! $B.$isinstance(suffix, str)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "endswith first arg must be str or a tuple of str, not int")
         }
         suffix = suffix.__class__ ? suffix.$brython_value : suffix
@@ -1622,7 +1622,7 @@ $B.split_format = function(s){
                 }else{end++}
             }
             if(nb > 0){
-                throw _b_.ValueError.$factory("wrong format " + s)
+                $B.RAISE(_b_.ValueError, "wrong format " + s)
             }
             pos = end
         }else{
@@ -1752,7 +1752,7 @@ str.index = function(){
     // Like find(), but raise ValueError when the substring is not found.
     var res = str.find.apply(null, arguments)
     if(res === -1){
-        throw _b_.ValueError.$factory("substring not found")
+        $B.RAISE(_b_.ValueError, "substring not found")
     }
     return res
 }
@@ -2004,7 +2004,7 @@ str.join = function(self, iterable){
         try{
             var obj2 = _b_.next(iterable)
             if(! $B.$isinstance(obj2, str)){
-                throw _b_.TypeError.$factory("sequence item " + count +
+                $B.RAISE(_b_.TypeError, "sequence item " + count +
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
             }
@@ -2077,7 +2077,7 @@ str.maketrans = function() {
         // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
         if(! $B.$isinstance($.x, _b_.dict)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "maketrans only argument must be a dict")
         }
         var items = _b_.list.$factory(_b_.dict.items($.x))
@@ -2087,11 +2087,11 @@ str.maketrans = function() {
             if(! $B.$isinstance(k, _b_.int)){
                 if($B.$isinstance(k, _b_.str) && k.length == 1){
                     k = _b_.ord(k)
-                }else{throw _b_.TypeError.$factory("dictionary key " + k +
+                }else{$B.RAISE(_b_.TypeError, "dictionary key " + k +
                     " is not int or 1-char string")}
             }
             if(v !== _b_.None && ! $B.$isinstance(v, [_b_.int, _b_.str])){
-                throw _b_.TypeError.$factory("dictionary value " + v +
+                $B.RAISE(_b_.TypeError, "dictionary value " + v +
                     " is not None, integer or string")
             }
             _b_.dict.$setitem(_t, k, v)
@@ -2102,9 +2102,9 @@ str.maketrans = function() {
         // and in the resulting dictionary, each character in x will be mapped
         // to the character at the same position in y
         if(! ($B.$isinstance($.x, _b_.str) && $B.$isinstance($.y, _b_.str))){
-            throw _b_.TypeError.$factory("maketrans arguments must be strings")
+            $B.RAISE(_b_.TypeError, "maketrans arguments must be strings")
         }else if($.x.length !== $.y.length){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "maketrans arguments must be strings or same length")
         }else{
             var toNone = {}
@@ -2112,7 +2112,7 @@ str.maketrans = function() {
                 // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
                 if(! $B.$isinstance($.z, _b_.str)){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError, 
                         "maketrans third argument must be a string")
                 }
                 for(let i = 0, len = $.z.length; i < len; i++){
@@ -2138,7 +2138,7 @@ str.partition = function(self, sep) {
     $B.check_nb_args_no_kw('str.partition', 2, arguments)
     var _self
     if(sep == ""){
-        throw _b_.ValueError.$factory("empty separator")
+        $B.RAISE(_b_.ValueError, "empty separator")
     }
     check_str(sep);
     [_self, sep] = to_string([self, sep])
@@ -2155,7 +2155,7 @@ str.removeprefix = function(self, prefix){
     $B.check_nb_args_no_kw('str.removeprefix', 2, arguments)
     var _self
     if(!$B.$isinstance(prefix, str)){
-        throw _b_.ValueError.$factory("prefix should be str, not " +
+        $B.RAISE(_b_.ValueError, "prefix should be str, not " +
             `'${$B.class_name(prefix)}'`)
     }
     [_self, prefix] = to_string([self, prefix])
@@ -2169,7 +2169,7 @@ str.removesuffix = function(self, suffix){
     $B.check_nb_args_no_kw('str.removesuffix', 2, arguments)
     var _self
     if(!$B.$isinstance(suffix, str)){
-        throw _b_.ValueError.$factory("suffix should be str, not " +
+        $B.RAISE(_b_.ValueError, "suffix should be str, not " +
             `'${$B.class_name(suffix)}'`)
     }
     [_self, suffix] = to_string([self, suffix])
@@ -2196,10 +2196,10 @@ str.replace = function(){
     check_str(_new, "replace() argument 2 ")
     // Validate instance type of 'count'
     if(! $B.$isinstance(count, [_b_.int, _b_.float])){
-        throw _b_.TypeError.$factory("'" + $B.class_name(count) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(count) +
             "' object cannot be interpreted as an integer")
     }else if($B.$isinstance(count, _b_.float)){
-        throw _b_.TypeError.$factory("integer argument expected, got float")
+        $B.RAISE(_b_.TypeError, "integer argument expected, got float")
     }
     if(count == 0){
         return _self
@@ -2293,7 +2293,7 @@ str.rindex = function(){
     // Like rfind() but raises ValueError when the substring sub is not found
     var res = str.rfind.apply(null, arguments)
     if(res == -1){
-        throw _b_.ValueError.$factory("substring not found")
+        $B.RAISE(_b_.ValueError, "substring not found")
     }
     return res
 }
@@ -2382,7 +2382,7 @@ str.split = function(){
         maxsplit = parseInt(maxsplit.value)
     }
     if(sep == ""){
-        throw _b_.ValueError.$factory("empty separator")
+        $B.RAISE(_b_.ValueError, "empty separator")
     }
 
     if(sep === _b_.None){
@@ -2423,7 +2423,7 @@ str.split = function(){
         return $B.$list(res.map($B.String))
     }else{
         if(! $B.$isinstance(sep, _b_.str)){
-            throw _b_.TypeError.$factory('must be str or None, not ' +
+            $B.RAISE(_b_.TypeError, 'must be str or None, not ' +
                 $B.class_name(sep))
         }
         sep = to_string(sep)
@@ -2507,7 +2507,7 @@ str.startswith = function(){
     var s = _self.substring($.start, $.end)
     for(var prefix of prefixes){
         if(! $B.$isinstance(prefix, str)){
-            throw _b_.TypeError.$factory("endswith first arg must be str " +
+            $B.RAISE(_b_.TypeError, "endswith first arg must be str " +
                 "or a tuple of str, not int")
         }
         if(s.substr(0, prefix.length) == prefix){
@@ -2636,11 +2636,11 @@ str.$factory = function(arg, encoding){
         encoding = $.encoding,
         errors = $.errors
         if(! $B.$isinstance(encoding, str)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
         }
         if(! $B.$isinstance(errors, str)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
         }
     }
@@ -2668,7 +2668,7 @@ str.$factory = function(arg, encoding){
             method = $B.search_in_mro(klass, '__repr__')
         }
         if(method === undefined){
-            throw _b_.AttributeError.$factory('no str', klass)
+            $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
         }
     }catch(err){
         console.log("no __str__ for", arg)
@@ -2684,7 +2684,7 @@ str.$factory = function(arg, encoding){
     if(typeof res == "string" || $B.$isinstance(res, str)){
         return res
     }
-    throw _b_.TypeError.$factory("__str__ returned non-string " +
+    $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
         `(type ${$B.class_name(res)})`)
 }
 
@@ -2775,17 +2775,17 @@ $B.parse_format_spec = function(spec, obj){
             car = spec.charAt(pos)
             if(car == "," || car == "_"){
                 if(car == this.grouping_option){
-                    throw _b_.ValueError.$factory(
+                    $B.RAISE(_b_.ValueError, 
                         `Cannot specify '${car}' with '${car}'.`)
                 }else{
-                    throw _b_.ValueError.$factory(
+                    $B.RAISE(_b_.ValueError, 
                         "Cannot specify both ',' and '_'.")
                 }
             }
         }
         if(car == "."){
             if(digits.indexOf(spec.charAt(pos + 1)) == -1){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "Missing precision in format spec")
             }
             this.precision = spec.charAt(pos + 1)
@@ -2808,7 +2808,7 @@ $B.parse_format_spec = function(spec, obj){
             if(obj){
                 err_msg += ` for object of type '${$B.class_name(obj)}'`
             }
-            throw _b_.ValueError.$factory(err_msg)
+            $B.RAISE(_b_.ValueError, err_msg)
         }
     }
 
@@ -3179,7 +3179,7 @@ Template.__iter__ = function(self){
 Template.__next__ = function(self){
     self.$counter++
     if(self.$counter >= self.$len){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     var type = 'si'[self.$counter % 2]
     var rank = Math.floor(self.$counter / 2)

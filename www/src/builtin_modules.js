@@ -114,7 +114,7 @@
         }
         browser.document = _b_.property.$factory(
             function(){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "'document' is not available in Web Workers")
             },
             function(self, value){
@@ -262,7 +262,7 @@
                                         attribute_mapper(arg)
                                     self.setAttribute(arg, $B.pyobj2jsobj(value))
                                 }catch(err){
-                                    throw _b_.ValueError.$factory(
+                                    $B.RAISE(_b_.ValueError, 
                                         "can't set attribute " + arg)
                                 }
                             }
@@ -355,10 +355,10 @@
                 // "tagName". For instance, "makeTag('P2')" creates the class
                 // that can be used to create tags "<P2></P2>"
                 if(!(typeof tagName == 'string')){
-                    throw _b_.TypeError.$factory("html.maketag expects a string as argument")
+                    $B.RAISE(_b_.TypeError, "html.maketag expects a string as argument")
                 }
                 if(html[tagName] !== undefined){
-                    throw _b_.ValueError.$factory("cannot reset class for "
+                    $B.RAISE(_b_.ValueError, "cannot reset class for "
                         + tagName)
                 }
                 var klass = makeTagDict(tagName)
@@ -441,7 +441,7 @@
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
                 console.log(js_constr)
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError, 
                     'argument of extend must be a Javascript class')
             }
             js_constr.__class__ = _b_.type
@@ -476,11 +476,11 @@
                             result.__file__ = url
                         }else{
                             console.log(this.responseText)
-                            result = _b_.ImportError.$factory('Javascript ' +
+                            result = $B.EXC(_b_.ImportError, 'Javascript ' +
                                 `module at ${url} doesn't define $module`)
                         }
                     }else{
-                        result = _b_.ModuleNotFoundError.$factory(url)
+                        result = $B.EXC(_b_.ModuleNotFoundError, url)
                     }
                 }
             }
@@ -509,7 +509,7 @@
                 loaded = []
             }
             if(! Array.isArray(refs)){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError, 
                     `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
@@ -534,7 +534,7 @@
                 loaded = []
             }
             if(! Array.isArray(refs)){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError, 
                     `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
@@ -646,7 +646,7 @@
             self.buf = []
         }
         if(typeof msg != "string"){
-            throw _b_.TypeError.$factory("write() argument must be str, not " +
+            $B.RAISE(_b_.TypeError, "write() argument must be str, not " +
                 $B.class_name(msg))
         }
         self.buf.push(msg)
@@ -754,7 +754,7 @@
                 return $B.obj_dict($B.imported)
             },
             function(){
-                 throw _b_.TypeError.$factory("Read only property 'sys.modules'")
+                 $B.RAISE(_b_.TypeError, "Read only property 'sys.modules'")
             }
         ),
         path: _b_.property.$factory(
@@ -792,7 +792,7 @@
                 return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))
             },
             function(){
-                throw _b_.TypeError.$factory("Read only property" +
+                $B.RAISE(_b_.TypeError, "Read only property" +
                     " 'sys.path_importer_cache'")
             }
         ),
@@ -832,7 +832,7 @@
                 }
             },
             function(){
-                throw _b_.TypeError.$factory("Read only property 'sys.vfs'")
+                $B.RAISE(_b_.TypeError, "Read only property 'sys.vfs'")
             }
         )
     }
@@ -893,7 +893,7 @@
                 filters = modules._warnings.filters
             }
             if(filters[0][0] == 'error'){
-                var syntax_error = _b_.SyntaxError.$factory(message.args[0])
+                var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
                 syntax_error.args[1] = [message.filename, message.lineno,
                     message.offset, message.line]
                 syntax_error.filename = message.filename
@@ -1114,7 +1114,7 @@
                     }
                 }else{
                     if(params.__class__ !== _b_.dict){
-                        throw _b_.TypeError.$factory("wrong type for data, " +
+                        $B.RAISE(_b_.TypeError, "wrong type for data, " +
                             "expected dict, bytes or str, got " +
                             $B.class_name(params))
                     }
@@ -1127,7 +1127,7 @@
                 }
             }else if(key == "headers"){
                 if(! $B.$isinstance(value, _b_.dict)){
-                    throw _b_.ValueError.$factory(
+                    $B.RAISE(_b_.ValueError, 
                         "headers must be a dict, not " + $B.class_name(value))
                 }
                 for(let subitem of _b_.dict.$iter_items(value)){
@@ -1327,7 +1327,7 @@
             if(seconds.__class__ === _b_.float){
                 seconds = seconds.value
             }else if(typeof seconds != "number"){
-                throw _b_.TypeError.$factory("'sleep' argument must be " +
+                $B.RAISE(_b_.TypeError, "'sleep' argument must be " +
                     "int or float, not " + $B.class_name(seconds))
             }
             var func = function(){
@@ -1469,7 +1469,7 @@
     $B.cell.cell_contents = $B.$call(_b_.property)(
         function(self){
             if(self.$cell_contents === null){
-                throw _b_.ValueError.$factory("empty cell")
+                $B.RAISE(_b_.ValueError, "empty cell")
             }
             return self.$cell_contents
         },

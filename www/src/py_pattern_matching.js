@@ -186,7 +186,7 @@ $B.pattern_match = function(subject, pattern){
             // Check that key is not already used. Use __contains__ to handle
             // corner cases like {0: _, False: _}
             if(_b_.list.__contains__(keys, key)){
-                throw _b_.ValueError.$factory('mapping pattern checks ' +
+                $B.RAISE(_b_.ValueError, 'mapping pattern checks ' +
                     'duplicate key (' +
                     _b_.str.$factory(key) + ')')
             }
@@ -244,7 +244,7 @@ $B.pattern_match = function(subject, pattern){
     if(pattern.class){
         let klass = pattern.class
         if(! $B.$isinstance(klass, _b_.type)){
-            throw _b_.TypeError.$factory('called match pattern must be a type')
+            $B.RAISE(_b_.TypeError, 'called match pattern must be a type')
         }
         if(! $B.$isinstance(subject, klass)){
             return false
@@ -256,7 +256,7 @@ $B.pattern_match = function(subject, pattern){
                 // a single positional subpattern is accepted which will match
                 // the entire subject
                 if(pattern.args.length > 1){
-                    throw _b_.TypeError.$factory('for builtin type ' +
+                    $B.RAISE(_b_.TypeError, 'for builtin type ' +
                         $B.class_name(subject) + ', a single positional ' +
                         'subpattern is accepted')
                 }
@@ -267,11 +267,11 @@ $B.pattern_match = function(subject, pattern){
                 let match_args = $B.$getattr(klass, '__match_args__',
                     $B.fast_tuple([]))
                 if(! $B.$isinstance(match_args, _b_.tuple)){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError, 
                         '__match_args__() did not return a tuple')
                 }
                 if(pattern.args.length > match_args.length){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError, 
                         '__match_args__() returns ' + match_args.length +
                         ' names but ' + pattern.args.length + ' positional ' +
                         'arguments were passed')
@@ -282,12 +282,12 @@ $B.pattern_match = function(subject, pattern){
                     let pattern_arg = pattern.args[i],
                         klass_arg = match_args[i]
                     if(typeof klass_arg !== "string"){
-                        throw _b_.TypeError.$factory('item in __match_args__ ' +
+                        $B.RAISE(_b_.TypeError, 'item in __match_args__ ' +
                             'is not a string: ' + klass_arg)
                     }
                     // Check duplicate pattern
                     if(pattern.keywords.hasOwnProperty(klass_arg)){
-                        throw _b_.TypeError.$factory('__match_arg__ item ' +
+                        $B.RAISE(_b_.TypeError, '__match_arg__ item ' +
                             klass_arg + ' was passed as keyword pattern')
                     }
                     pattern.keywords[klass_arg] = pattern_arg

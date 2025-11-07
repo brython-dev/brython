@@ -21,7 +21,7 @@ function to_simple(value){
             }
             break
         default:
-            throw _b_.TypeError.$factory("keys must be str, int, " +
+            $B.RAISE(_b_.TypeError, "keys must be str, int, " +
                 "float, bool or None, not " + $B.class_name(value))
     }
 }
@@ -49,7 +49,7 @@ $B.pyobj2structuredclone = function(obj, strict){
         if(strict){
             for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){
                 if(typeof key !== 'string'){
-                    throw _b_.TypeError.$factory("a dictionary with non-string " +
+                    $B.RAISE(_b_.TypeError, "a dictionary with non-string " +
                         "keys does not support structured clone")
                 }
             }
@@ -70,7 +70,7 @@ $B.pyobj2structuredclone = function(obj, strict){
     }else{
         return obj
     }
-    throw _b_.TypeError.$factory(`cannot send '${$B.class_name(obj)}' object`)
+    $B.RAISE(_b_.TypeError, `cannot send '${$B.class_name(obj)}' object`)
 }
 
 $B.structuredclone2pyobj = function(obj){
@@ -109,7 +109,7 @@ $B.structuredclone2pyobj = function(obj){
             return obj
         }
     }else{
-        throw _b_.TypeError.$factory(_b_.str.$factory(obj) +
+        $B.RAISE(_b_.TypeError, _b_.str.$factory(obj) +
             " does not support the structured clone algorithm")
     }
 }
@@ -201,7 +201,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             for(var i = 0, len = arguments.length; i < len; ++i){
                 var arg = arguments[i]
                 if(arg !== null && arg.constructor === Object && arg.$kw){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError,
                         'keyword arguments are not supported for ' +
                         'Javascript functions')
                 }
@@ -394,7 +394,7 @@ function pyargs2jsargs(pyargs){
             // code like foo(y=1, x=2) applied to a JS function
             // defined by function foo(x, y) can't be determined.
             //
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 "A Javascript function can't take " +
                     "keyword arguments")
         }
@@ -410,7 +410,7 @@ $B.JSObj = $B.make_class("JSObject", jsobj2pyobj)
 // Operations are implemented only for BigInt objects (cf. issue 1417)
 function check_big_int(x, y){
     if(typeof x != "bigint" || typeof y != "bigint"){
-        throw _b_.TypeError.$factory("unsupported operand type(s) for - : '" +
+        $B.RAISE(_b_.TypeError, "unsupported operand type(s) for - : '" +
             $B.class_name(x) + "' and '" + $B.class_name(y) + "'")
     }
 }
@@ -512,7 +512,7 @@ var iterator = $B.make_class('js_iterator',
 iterator.__next__ = function(_self){
     _self.counter++
     if(_self.counter == _self.length){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return _self.keys[_self.counter]
 }
@@ -720,7 +720,7 @@ $B.JSObj.__getitem__ = function(_self, key){
             return $B.JSObj.__getattribute__(_self, key)
         }catch(err){
             if($B.is_exc(err, [_b_.AttributeError])){
-                throw _b_.KeyError.$factory(err.name)
+                $B.RAISE(_b_.KeyError, err.name)
             }
             throw err
         }
@@ -737,7 +737,7 @@ $B.JSObj.__getitem__ = function(_self, key){
                 }
                 let res = _self.item(rank)
                 if(res === null){
-                    throw _b_.IndexError.$factory(rank)
+                    $B.RAISE(_b_.IndexError, rank)
                 }
                 return jsobj2pyobj(res)
             }
@@ -752,7 +752,7 @@ $B.JSObj.__getitem__ = function(_self, key){
         }
         return res
     }
-    throw _b_.KeyError.$factory(key)
+    $B.RAISE(_b_.KeyError, key)
 }
 
 $B.JSObj.__setitem__ = $B.JSObj.__setattr__
@@ -841,7 +841,7 @@ $B.JSObj.unbind = function(_self, evt, func){
 $B.JSObj.to_dict = function(_self){
     // Returns a Python dictionary based on the underlying Javascript object
     if(typeof _self == 'function'){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             "method 'to_dict()' not supported for functions")
     }
     var res = $B.empty_dict()
@@ -890,7 +890,8 @@ js_list_meta.__getattribute__ = function(_self, attr){
         if(js_array.hasOwnProperty(attr)){
             return js_array[attr]
         }
-        throw _b_.AttributeError.$factory(attr)
+        $B.RAISE_ATTRIBUTE_ERROR(
+            `${$B.class_name(_self)} has no attribute '${attr}'`, _self, attr)
     }
     if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
         // Transform Python values to Javascript values before setting item
@@ -971,7 +972,7 @@ $B.IterableJSObj.__next__ = function(_self){
     if(! value.done){
         return jsobj2pyobj(value.value)
     }
-    throw _b_.StopIteration.$factory('')
+    $B.RAISE(_b_.StopIteration, '')
 }
 
 $B.set_func_names($B.IterableJSObj, 'builtins')
@@ -1063,7 +1064,7 @@ var js_array_iterator = $B.make_class('JSArray_iterator',
 js_array_iterator.__next__ = function(_self){
     var v = _self.it.next()
     if(v.done){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return jsobj2pyobj(v.value)
 }
@@ -1199,7 +1200,7 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     }`
     var proto = bases[0].$js_func.prototype
     if(proto instanceof Node){
-        throw _b_.TypeError.$factory(`class ${class_name} cannot inherit ` +
+        $B.RAISE(_b_.TypeError, `class ${class_name} cannot inherit ` +
             `a subclass of Node`)
     }
     var new_js_class = Function('cl_dict', 'bases', body)(cl_dict, bases)

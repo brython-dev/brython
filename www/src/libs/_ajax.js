@@ -98,7 +98,7 @@ function handle_kwargs(self, kw, method){
             }else if($B.$isinstance(rawdata, [_b_.bytes, _b_.bytearray])){
                 data = new Uint8Array(Array.from($B.make_js_iterator(rawdata)))
             }else{
-                throw _b_.TypeError.$factory("wrong type for data: " +
+                $B.RAISE(_b_.TypeError, "wrong type for data: " +
                     $B.class_name(rawdata))
             }
         }else if(key == "encoding"){
@@ -106,7 +106,7 @@ function handle_kwargs(self, kw, method){
         }else if(key == "headers"){
             var value = item.value
             if(! $B.$isinstance(value, _b_.dict)){
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "headers must be a dict, not " + $B.class_name(value))
             }
             for(var subitem of _b_.dict.$iter_items(value)){
@@ -129,7 +129,7 @@ function handle_kwargs(self, kw, method){
         }
     }
     if(encoding && mode != "text"){
-        throw _b_.ValueError.$factory("encoding not supported for mode " +
+        $B.RAISE(_b_.ValueError, "encoding not supported for mode " +
             mode)
     }
     if((method == "post" || method == "put") && ! headers){
@@ -154,8 +154,8 @@ ajax.__getattribute__ = function(self, attr){
         }
     }else if(attr == "text"){
         if(self.js.responseType == "json"){
-            throw _b_.AttributeError.$factory("no attribute 'text'" +
-                "for JSON requests")
+            $B.RAISE_ATTRIBUTE_ERROR("no attribute 'text'" +
+                "for JSON requests", self, attr)
         }
         return _read(self)
     }else if(attr == "json"){
@@ -214,12 +214,12 @@ ajax.open = function(){
         url = $.url,
         async = $.async
     if(typeof method !== "string"){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             'open() argument method should be string, got ' +
             $B.class_name(method))
     }
     if(typeof url !== "string"){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             'open() argument url should be string, got ' +
             $B.class_name(url))
     }
@@ -293,7 +293,7 @@ ajax.send = function(self, params){
     }else if(params instanceof FormData){
         res = params
     }else{
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             "send() argument must be string or dictionary, not '" +
             _b_.str.$factory(params.__class__) + "'")
     }
@@ -400,7 +400,7 @@ function _request_without_body(method){
         }else{
             self.js.responseType = "arraybuffer"
             if(mode != "text" && mode != "binary"){
-                throw _b_.ValueError.$factory("invalid mode: " + mode)
+                $B.RAISE(_b_.ValueError, "invalid mode: " + mode)
             }
         }
     }else{
@@ -548,7 +548,7 @@ function file_upload(){
                 formdata.append(item.key, item.value)
             }
         }else{
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError, 
                 'data value must be a dict of form_data')
         }
     }

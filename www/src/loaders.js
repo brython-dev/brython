@@ -342,7 +342,7 @@ $B.ajax_load_script = function(s){
         }
         req.send()
     }else{
-        throw _b_.IOError.$factory("can't load external script at " +
+        $B.RAISE(_b_.IOError, "can't load external script at " +
             script.url + " (Ajax calls not supported with protocol file:///)")
     }
 }
@@ -443,7 +443,7 @@ var loop = $B.loop = function(){
                         // console.log('script\n', script.js)
                     }
                     $B.print_stack()
-                    err = _b_.RuntimeError.$factory(err + '')
+                    err = $B.EXC(_b_.RuntimeError, err + '')
                     err.$stack = stack
                     err.$frame_obj = frame_obj
                     err.$linenums = linenums

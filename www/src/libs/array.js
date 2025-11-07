@@ -27,12 +27,12 @@ var array = $B.make_class("array",
             typecode = $.typecode,
             initializer = $.initializer
         if(! typecodes.hasOwnProperty(typecode)){
-            throw _b_.ValueError.$factory("bad typecode (must be b, " +
+            $B.RAISE(_b_.ValueError, "bad typecode (must be b, " +
                 "B, u, h, H, i, I, l, L, q, Q, f or d)")
         }
         if(typecodes[typecode] === null){
             console.log("array factory, $", $, typecode)
-            throw _b_.NotImplementedError.$factory("type code " +
+            $B.RAISE(_b_.NotImplementedError, "type code " +
                 typecode + " is not implemented")
         }
         var res = {
@@ -69,7 +69,7 @@ array.__getitem__ = function(self, key){
             }
         }
     }
-    throw _b_.IndexError.$factory("array index out of range")
+    $B.RAISE(_b_.IndexError, "array index out of range")
 }
 
 var array_iterator = $B.make_iterator_class("array_iterator")
@@ -94,13 +94,13 @@ array.__mul__ = function(self, nb){
             obj: t
         }
     }
-    throw _b_.ValueError.$factory("cannot multiply array by " +
+    $B.RAISE(_b_.ValueError, "cannot multiply array by " +
         $B.class_name(nb))
 }
 
 array.__setitem__ = function(_self, index, value){
     if(_self.obj[index] === undefined){
-        throw _b_.IndexError.$factory("array index out of range")
+        $B.RAISE(_b_.IndexError, "array index out of range")
     }
     _self.obj[index] = value
 }
@@ -148,7 +148,7 @@ array.extend = function(self, iterable){
         ["self", "iterable"], arguments, {}, null, null)
     if(iterable.__class__ === array){
         if(iterable.typecode !== self.typecode){
-            throw _b_.TypeError.$factory("can only extend with array " +
+            $B.RAISE(_b_.TypeError, "can only extend with array " +
                 "of same kind")
         }
         if(iterable.obj === null){return _b_.None}
@@ -181,7 +181,7 @@ array.frombytes = function(self, s){
     $B.args("frombytes", 2, {self: null, s: null},
         ["self", "s"], arguments, {}, null, null)
     if(! $B.$isinstance(s, _b_.bytes)){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name(s) + "'")
     }
     self.obj = new typecodes[self.typecode](s.source)
@@ -217,7 +217,7 @@ array.index = function(self, x){
         ["self", "x"], arguments, {}, null, null)
     var res = self.obj.findIndex(function(item){return x == item})
     if(res == -1){
-        throw _b_.ValueError.$factory("array.index(x): x not in array")
+        $B.RAISE(_b_.ValueError, "array.index(x): x not in array")
     }
     return res
 }
@@ -242,7 +242,7 @@ array.pop = function(self, i){
         ["self", "i"], arguments, {i: -1}, null, null)
     i = $.i
     if(self.obj === null){
-        throw _b_.IndexError.$factory("pop from empty array")
+        $B.RAISE(_b_.IndexError, "pop from empty array")
     }else if(self.obj.length == 1){
         var res = self.obj[0]
         self.obj = null
@@ -268,7 +268,7 @@ array.remove = function(self, x){
         ["self", "x"], arguments, {}, null, null)
     var res = self.obj.findIndex(function(item){return x == item})
     if(res == -1){
-        throw _b_.ValueError.$factory("array.remove(x): x not in array")
+        $B.RAISE(_b_.ValueError, "array.remove(x): x not in array")
     }
     array.pop(self, res)
     return _b_.None

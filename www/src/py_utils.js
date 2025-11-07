@@ -19,7 +19,7 @@ function missing_required_kwonly(fname, args){
         arg_list = args.slice(0, args.length - 1).join(', ') + ', and ' +
             args[args.length - 1]
     }
-    throw _b_.TypeError.$factory(fname + '() ' +
+    $B.RAISE(_b_.TypeError, fname + '() ' +
         `missing ${args.length} required keyword-only argument${plural}: ` +
         arg_list)
 }
@@ -36,18 +36,18 @@ function missing_required_pos(fname, args){
         arg_list = args.slice(0, args.length - 1).join(', ') + ', and ' +
             args[args.length - 1]
     }
-    throw _b_.TypeError.$factory(fname + '() ' +
+    $B.RAISE(_b_.TypeError, fname + '() ' +
         `missing ${args.length} required positional argument${plural}: ` +
         arg_list)
 }
 
 function multiple_values(fname, arg){
-    throw _b_.TypeError.$factory(fname + '() ' +
+    $B.RAISE(_b_.TypeError, fname + '() ' +
         `got multiple values for argument '${arg}'`)
 }
 
 function pos_only_passed_as_keyword(fname, arg){
-    return _b_.TypeError.$factory(fname +
+    return $B.EXC(_b_.TypeError, fname +
         `() got some positional-only arguments passed as keyword arguments:` +
         ` '${arg}'`)
 }
@@ -76,7 +76,7 @@ function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, s
         plural = 's'
     }
     var verb = nb_pos == 1 ? 'was' : 'were'
-    return _b_.TypeError.$factory(fname + '() takes ' +
+    return $B.EXC(_b_.TypeError, fname + '() takes ' +
         `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)
 }
 
@@ -85,7 +85,7 @@ function unexpected_keyword(fname, k, suggestion){
     if(suggestion !== _b_.None){
         msg += `. Did you mean: '${suggestion}'?`
     }
-    return _b_.TypeError.$factory(msg)
+    return $B.EXC(_b_.TypeError, msg)
 }
 
 var empty = {}
@@ -627,10 +627,10 @@ $B.parse_kwargs = function(kw_args, fname){
             for(var entry of _b_.dict.$iter_items(kw_arg)){
                 key = entry.key
                 if(typeof key !== 'string'){
-                    throw _b_.TypeError.$factory(fname +
+                    $B.RAISE(_b_.TypeError, fname +
                         "() keywords must be strings")
                 }else if(kwa[key] !== undefined){
-                    throw _b_.TypeError.$factory(fname +
+                    $B.RAISE(_b_.TypeError, fname +
                         "() got multiple values for argument '" +
                         key + "'")
                 }else{
@@ -644,18 +644,18 @@ $B.parse_kwargs = function(kw_args, fname){
             try{
                 var keys_method = $B.$call1($B.$getattr(cls, 'keys'))
             }catch(err){
-                throw _b_.TypeError.$factory(`${fname} argument ` +
+                $B.RAISE(_b_.TypeError, `${fname} argument ` +
                     `after ** must be a mapping, not ${$B.class_name(kw_arg)}`)
             }
             var keys_iter = $B.make_js_iterator(keys_method(kw_arg)),
                 getitem
             for(var k of keys_iter){
                 if(typeof k !== "string"){
-                    throw _b_.TypeError.$factory(fname +
+                    $B.RAISE(_b_.TypeError, fname +
                         "() keywords must be strings")
                 }
                 if(kwa[k] !== undefined){
-                    throw _b_.TypeError.$factory(fname +
+                    $B.RAISE(_b_.TypeError, fname +
                         "() got multiple values for argument '" +
                         k + "'")
                 }
@@ -663,7 +663,7 @@ $B.parse_kwargs = function(kw_args, fname){
                     try{
                         getitem = $B.$getattr(cls, '__getitem__')
                     }catch(err){
-                        throw _b_.TypeError.$factory(
+                        $B.RAISE(_b_.TypeError,
                             `'${$B.class_name(kw_arg)}' object is not subscriptable`)
                     }
                 }
@@ -688,10 +688,10 @@ $B.check_nb_args = function(name, expected, args){
     }
     if(len != expected){
         if(expected == 0){
-            throw _b_.TypeError.$factory(name + "() takes no argument" +
+            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
                 " (" + len + " given)")
         }else{
-            throw _b_.TypeError.$factory(name + "() takes exactly " +
+            $B.RAISE(_b_.TypeError, name + "() takes exactly " +
                 expected + " argument" + (expected < 2 ? '' : 's') +
                 " (" + len + " given)")
         }
@@ -700,12 +700,9 @@ $B.check_nb_args = function(name, expected, args){
 
 $B.check_no_kw = function(name, x, y){
     // Throw error if one of x, y is a keyword argument
-    if(x === undefined){
-        console.log("x undef", name, x, y)
-    }
     if((x.$kw && x.$kw[0] && Object.keys(x.$kw[0]).length > 0) ||
             (y !== undefined && y.$kw)){
-        throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
+        $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")}
 }
 
 $B.check_nb_args_no_kw = function(name, expected, args){
@@ -716,15 +713,15 @@ $B.check_nb_args_no_kw = function(name, expected, args){
         if(last.$kw.length == 2 && Object.keys(last.$kw[0]).length == 0){
             len--
         }else{
-            throw _b_.TypeError.$factory(name + "() takes no keyword arguments")
+            $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
         }
     }
     if(len != expected){
         if(expected == 0){
-            throw _b_.TypeError.$factory(name + "() takes no argument" +
+            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
                 " (" + len + " given)")
         }else{
-            throw _b_.TypeError.$factory(name + "() takes exactly " +
+            $B.RAISE(_b_.TypeError, name + "() takes exactly " +
                 expected + " argument" + (expected < 2 ? '' : 's') +
                 " (" + len + " given)")
         }
@@ -733,11 +730,11 @@ $B.check_nb_args_no_kw = function(name, expected, args){
 
 $B.check_annotate_format = function(format){
     if(! $B.$isinstance(format, _b_.int)){
-        throw _b_.TypeError.$factory('__annotate__ argument should be ' +
+        $B.RAISE(_b_.TypeError, '__annotate__ argument should be ' +
             `int, not ${$B.class_name(format)}`)
     }
     if(format != 1 && format != 2){
-        throw _b_.NotImplementedError.$factory('')
+        $B.RAISE(_b_.NotImplementedError, '')
     }
 }
 
@@ -806,7 +803,7 @@ $B.unpack_mapping = function(func, obj){
     if($B.$isinstance(obj, _b_.dict)){
         for(var item of _b_.dict.$iter_items(obj)){
             if(! $B.$isinstance(item.key, _b_.str)){
-                throw _b_.TypeError.$factory('keywords must be strings')
+                $B.RAISE(_b_.TypeError, 'keywords must be strings')
             }
             items.push(item)
         }
@@ -815,20 +812,20 @@ $B.unpack_mapping = function(func, obj){
     var klass = $B.get_class(obj)
     var getitem = $B.$getattr(klass, '__getitem__', null)
     if(getitem === null){
-        throw _b_.TypeError.$factory(`'${$B.class_name(obj)}' object ` +
+        $B.RAISE(_b_.TypeError, `'${$B.class_name(obj)}' object ` +
             'is not subscriptable')
     }
     getitem = $B.$call(getitem)
     var key_func = $B.$getattr(klass, 'keys', null)
     if(key_func === null){
         var f = `${func.$infos.__module__}.${func.$infos.__name__}`
-        throw _b_.TypeError.$factory(`${f}() argument after **` +
+        $B.RAISE(_b_.TypeError, `${f}() argument after **` +
             ` must be a mapping, not ${$B.class_name(obj)}`)
     }
     var keys = $B.$call($B.$getattr(klass, 'keys'))(obj)
     for(var key of $B.make_js_iterator(keys)){
         if(! $B.$isinstance(key, _b_.str)){
-            throw _b_.TypeError.$factory('keywords must be strings')
+            $B.RAISE(_b_.TypeError, 'keywords must be strings')
         }
         items.push({key, value: getitem(obj, key)})
     }
@@ -942,13 +939,13 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
         $B.set_inum(inum)
-        var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
+        var exc = $B.EXC(_b_.ValueError, `not enough values to unpack ` +
             `(expected ${has_starred ? ' at least ' : ''} ` +
             `${left_length}, got ${right_length})`)
         throw exc
     }
     if((! has_starred) && right_length > left_length){
-        var exc = _b_.ValueError.$factory("too many values to unpack " +
+        var exc = $B.EXC(_b_.ValueError, "too many values to unpack " +
             `(expected ${left_length}, got ${right_length})`)
         throw exc
     }
@@ -1002,7 +999,7 @@ $B.get_method_class = function(method, ns, qualname, refs){
 
 // warning
 $B.warn = function(klass, message, filename, token){
-    var warning = klass.$factory(message)
+    var warning = $B.EXC(klass, message)
     warning.filename = filename
     if(klass === _b_.SyntaxWarning){
         warning.lineno = token.lineno
@@ -1022,7 +1019,7 @@ $B.warn = function(klass, message, filename, token){
 // assert
 $B.assert = function(test, msg, inum){
     if(! $B.$bool(test)){
-        var exc = _b_.AssertionError.$factory(msg)
+        var exc = $B.EXC(_b_.AssertionError, msg)
         $B.set_inum(inum)
         throw exc
     }
@@ -1031,7 +1028,7 @@ $B.assert = function(test, msg, inum){
 // get item
 function index_error(obj){
     var type = typeof obj == "string" ? "string" : "list"
-    return _b_.IndexError.$factory(type + " index out of range")
+    return $B.EXC(_b_.IndexError, type + " index out of range")
 }
 
 $B.$getitem = function(obj, item, inum){
@@ -1075,7 +1072,7 @@ $B.$getitem1 = function(obj, item){
             if(class_gi !== _b_.None){
                 return class_gi(obj, item)
             }else{
-                throw _b_.TypeError.$factory("type '" +
+                $B.RAISE(_b_.TypeError, "type '" +
                     $B.$getattr(obj, '__qualname__') +
                     "' is not subscriptable")
             }
@@ -1095,7 +1092,7 @@ $B.$getitem1 = function(obj, item){
         return gi(obj, item)
     }
 
-    var exc = _b_.TypeError.$factory("'" + $B.class_name(obj) +
+    var exc = $B.EXC(_b_.TypeError, "'" + $B.class_name(obj) +
         "' object is not subscriptable")
     throw exc
 }
@@ -1129,7 +1126,7 @@ $B.$setitem = function(obj, item, value, inum){
         }
         if(obj[item] === undefined){
             $B.set_inum(inum)
-            throw _b_.IndexError.$factory("list assignment index out of range")
+            $B.RAISE(_b_.IndexError, "list assignment index out of range")
         }
         obj[item] = value
         return
@@ -1150,7 +1147,7 @@ $B.$setitem = function(obj, item, value, inum){
         null)
     if(si === null || typeof si != 'function'){
         $B.set_inum(inum)
-        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object does not support item assignment")
     }
     return si(obj, item, value)
@@ -1172,7 +1169,7 @@ $B.$delitem = function(obj, item, inum){
         }
         if(obj[item] === undefined){
             $B.set_inum(inum)
-            throw _b_.IndexError.$factory("list deletion index out of range")
+            $B.RAISE(_b_.IndexError, "list deletion index out of range")
         }
         obj.splice(item, 1)
         return
@@ -1217,7 +1214,7 @@ $B.$delitem = function(obj, item, inum){
     var di = $B.$getattr($B.get_class(obj), "__delitem__",
         null)
     if(di === null){
-        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object doesn't support item deletion")
     }
     return di(obj, item)
@@ -1292,7 +1289,7 @@ $B.augm_assign = function(left, op, right){
     if(augm_func !== null){
         var res = $B.$call(augm_func)(right)
         if(res === _b_.NotImplemented){
-            throw _b_.TypeError.$factory(`unsupported operand type(s)` +
+            $B.RAISE(_b_.TypeError, `unsupported operand type(s)` +
                 ` for ${op}: '${$B.class_name(left)}' ` +
                 `and '${$B.class_name(right)}'`)
         }
@@ -1382,7 +1379,7 @@ $B.member_func = function(obj){
                 }
             }
         }else{
-            throw _b_.TypeError.$factory('argument of type ' +
+            $B.RAISE(_b_.TypeError, 'argument of type ' +
                 `'${$B.class_name(obj)}' is not iterable`)
         }
     }
@@ -1454,7 +1451,7 @@ $B.$call1 = function(callable){
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
-        throw _b_.TypeError.$factory("'" + $B.class_name(callable) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }
 }
@@ -1503,7 +1500,7 @@ $B.to_num = function(obj, methods){
         if(method !== missing){
             var res = method(obj)
             if(!$B.$isinstance(res, expected_class[methods[i]])){
-                throw _b_.TypeError.$factory(methods[i] + "returned non-" +
+                $B.RAISE(_b_.TypeError, methods[i] + "returned non-" +
                     expected_class[methods[i]].__name__ +
                     "(type " + $B.get_class(res) +")")
             }
@@ -1534,11 +1531,11 @@ $B.PyNumber_Index = function(item){
                             method : $B.$getattr(method, "__call__")
                 return $B.int_or_bool(method())
             }else{
-                throw _b_.TypeError.$factory("'" + $B.class_name(item) +
+                $B.RAISE(_b_.TypeError, "'" + $B.class_name(item) +
                     "' object cannot be interpreted as an integer")
             }
         default:
-            throw _b_.TypeError.$factory("'" + $B.class_name(item) +
+            $B.RAISE(_b_.TypeError, "'" + $B.class_name(item) +
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1553,11 +1550,11 @@ $B.int_or_bool = function(v){
             if(v.__class__ === $B.long_int){
                 return v
             }else{
-                throw _b_.TypeError.$factory("'" + $B.class_name(v) +
+                $B.RAISE(_b_.TypeError, "'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
             }
         default:
-            throw _b_.TypeError.$factory("'" + $B.class_name(v) +
+            $B.RAISE(_b_.TypeError, "'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
     }
 }
@@ -1566,7 +1563,7 @@ $B.enter_frame = function(frame, __file__, lineno){
     // Enter execution frame
     var count = $B.frame_obj === null ? 0 : $B.frame_obj.count
     if(count > $B.recursion_limit){
-        var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
+        var exc = $B.EXC(_b_.RecursionError, "maximum recursion depth exceeded")
         $B.set_exc(exc, frame)
         throw exc
     }
@@ -1671,11 +1668,14 @@ $B.leave_frame = function(arg){
             $B.trace_return(arg.value)
         }
     }
+    if($B.frame_obj === undefined){
+        throw Error('no frame_obj')
+    }
     var frame = $B.frame_obj.frame
     if(frame.$coroutine){
         if(! frame.$coroutine.$sent){
             var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.name]
-            var message = _b_.RuntimeWarning.$factory(
+            var message = $B.EXC(_b_.RuntimeWarning,
                 `coroutine '${cname}' was never awaited`)
             message.lineno = frame.$coroutine.$lineno
             $B.imported._warnings.warn(message)
@@ -1734,7 +1734,7 @@ var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
 
 $B.rich_comp = function(op, x, y){
     if(x === undefined){
-        throw _b_.RuntimeError.$factory('error in rich comp')
+        $B.RAISE(_b_.RuntimeError, 'error in rich comp')
     }
     var x1 = x !== null && x.valueOf ? x.valueOf() : x,
         y1 = y !== null && y.valueOf ? y.valueOf() : y
@@ -1763,7 +1763,7 @@ $B.rich_comp = function(op, x, y){
         }else if(op == "__ne__"){
             return !(x === y)
         }else{
-            throw _b_.TypeError.$factory("'" + method2comp[op] +
+            $B.RAISE(_b_.TypeError, "'" + method2comp[op] +
                 "' not supported between instances of '" + $B.class_name(x) +
                 "' and '" + $B.class_name(y) + "'")
         }
@@ -1809,7 +1809,7 @@ $B.rich_comp = function(op, x, y){
         return _b_.True
     }
 
-    throw _b_.TypeError.$factory("'" + method2comp[op] +
+    $B.RAISE(_b_.TypeError, "'" + method2comp[op] +
         "' not supported between instances of '" + $B.class_name(x) +
         "' and '" + $B.class_name(y) + "'")
 }
@@ -1880,7 +1880,7 @@ $B.rich_op1 = function(op, x, y){
                 break
             case "__truediv__":
                 if(y_num == 0){
-                    throw _b_.ZeroDivisionError.$factory("division by zero")
+                    $B.RAISE(_b_.ZeroDivisionError, "division by zero")
                 }
                 // always returns a float
                 z = x_num / y_num
@@ -1914,7 +1914,7 @@ $B.rich_op1 = function(op, x, y){
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
                 var kl_name = $B.class_name(x)
-                throw _b_.TypeError.$factory("unsupported operand type(s) " +
+                $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
                     "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
                     kl_name + "'")
             }
@@ -1934,11 +1934,11 @@ $B.rich_op1 = function(op, x, y){
     }
     if(op == '__mul__'){
         if(x_class.$is_sequence && $B.$isinstance(y, [_b_.float, _b_.complex])){
-            throw _b_.TypeError.$factory("can't multiply sequence by " +
+            $B.RAISE(_b_.TypeError, "can't multiply sequence by " +
                 `non-int of type '${$B.class_name(y)}'`)
         }
         if(y_class.$is_sequence && $B.$isinstance(x, [_b_.float, _b_.complex])){
-            throw _b_.TypeError.$factory("can't multiply sequence by " +
+            $B.RAISE(_b_.TypeError, "can't multiply sequence by " +
                 `non-int of type '${$B.class_name(x)}'`)
         }
     }
@@ -1965,7 +1965,7 @@ $B.rich_op1 = function(op, x, y){
                 return res
             }
         }
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
             ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
     }
@@ -1977,13 +1977,13 @@ $B.rich_op1 = function(op, x, y){
             if(err.__class__ !== _b_.AttributeError){
                 throw err
             }
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
                 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
         }
         res = method(y, x)
         if(res === _b_.NotImplemented){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
                 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
         }
@@ -2009,7 +2009,7 @@ $B.repr = {
             repr_stack.add(obj_id)
             if(repr_stack.size > $B.recursion_limit){
                 repr_stack.clear()
-                throw _b_.RecursionError.$factory("maximum recursion depth " +
+                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
                     "exceeded while getting the repr of an object")
             }
         }

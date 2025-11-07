@@ -195,7 +195,7 @@ Attributes.__delitem__ = function(){
     var $ = $B.args("__getitem__", 2, {self: null, key:null},
         ["self", "key"], arguments, {}, null, null)
     if(!Attributes.__contains__($.self, $.key)){
-        throw _b_.KeyError.$factory($.key)
+        $B.RAISE(_b_.KeyError, $.key)
     }
     if($.self.elt instanceof SVGElement){
         $.self.elt.removeAttributeNS(null, $.key)
@@ -216,7 +216,7 @@ Attributes.__getitem__ = function(){
             $.self.elt.hasAttribute($.key)){
         return $.self.elt.getAttribute($.key)
     }
-    throw _b_.KeyError.$factory($.key)
+    $B.RAISE(_b_.KeyError, $.key)
 }
 
 Attributes.__iter__ = function(self){
@@ -239,7 +239,7 @@ Attributes.__next__ = function(){
         $.self.$counter++
         return res
     }else{
-        throw _b_.StopIteration.$factory("")
+        $B.RAISE(_b_.StopIteration, "")
     }
 }
 
@@ -254,7 +254,7 @@ Attributes.__setitem__ = function(){
         $.self.elt.setAttribute($.key, _b_.str.$factory($.value))
         return _b_.None
     }
-    throw _b_.TypeError.$factory("Can't set attributes on element")
+    $B.RAISE(_b_.TypeError, "Can't set attributes on element")
 }
 
 Attributes.__repr__ = Attributes.__str__ = function(self){
@@ -376,14 +376,14 @@ DOMEvent.__getattribute__ = function(ev, attr){
             if(ev.target instanceof SVGSVGElement){
                 return Math.floor(dom2svg(ev.target, $mouseCoords(ev)).x)
             }
-            throw _b_.AttributeError.$factory("event target is not an SVG " +
-                "element")
+            $B.RAISE_ATTRIBUTE_ERROR("event target is not an SVG " +
+                "element", ev, attr)
         case 'svgY':
             if(ev.target instanceof SVGSVGElement){
                 return Math.floor(dom2svg(ev.target, $mouseCoords(self)).y)
             }
-            throw _b_.AttributeError.$factory("event target is not an SVG " +
-                "element")
+            $B.RAISE_ATTRIBUTE_ERROR("event target is not an SVG " +
+                "element", ev, attr)
     }
 
     var res =  ev[attr]
@@ -467,7 +467,7 @@ DOMNode.__add__ = function(self, other){
         // If other is iterable, add all items
         try{
             res.children = res.children.concat(_b_.list.$factory(other))
-        }catch(err){throw _b_.TypeError.$factory("can't add '" +
+        }catch(err){$B.RAISE(_b_.TypeError, "can't add '" +
             $B.class_name(other) + "' object to DOMNode instance")
         }
     }
@@ -496,15 +496,15 @@ DOMNode.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
     if(!self.parentNode){
-        throw _b_.ValueError.$factory("can't delete " + _b_.str.$factory(self))
+        $B.RAISE(_b_.ValueError, "can't delete " + _b_.str.$factory(self))
     }
     self.parentNode.removeChild(self)
 }
 
 DOMNode.__delattr__ = function(self, attr){
     if(self[attr] === undefined){
-        throw _b_.AttributeError.$factory(
-            `cannot delete DOMNode attribute '${attr}'`)
+        $B.RAISE_ATTRIBUTE_ERROR(`cannot delete DOMNode attribute '${attr}'`,
+            self, attr)
     }
     delete self[attr]
     return _b_.None
@@ -514,7 +514,7 @@ DOMNode.__delitem__ = function(self, key){
     if(self.nodeType == Node.DOCUMENT_NODE){ // document : remove by id
         var res = self.getElementById(key)
         if(res){res.parentNode.removeChild(res)}
-        else{throw _b_.KeyError.$factory(key)}
+        else{$B.RAISE(_b_.KeyError, key)}
     }else{ // other node : remove by rank in child nodes
         self.parentNode.removeChild(self)
     }
@@ -579,8 +579,8 @@ DOMNode.__getattribute__ = function(self, attr){
             }else if(self.style[attr]){
                 return parseInt(self.style[attr])
             }else{
-                throw _b_.AttributeError.$factory("style." + attr +
-                    " is not set for " + _b_.str.$factory(self))
+                $B.RAISE_ATTRIBUTE_ERROR("style." + attr +
+                    " is not set for " + _b_.str.$factory(self), self, attr)
             }
         case "x":
         case "y":
@@ -812,7 +812,7 @@ DOMNode.__getitem__ = function(self, key){
             if(res){
                 return DOMNode.$factory(res)
             }
-            throw _b_.KeyError.$factory(key)
+            $B.RAISE(_b_.KeyError, key)
         }else{
             try{
                 let elts = self.getElementsByTagName(key.__name__),
@@ -822,7 +822,7 @@ DOMNode.__getitem__ = function(self, key){
                     }
                     return res
             }catch(err){
-                throw _b_.KeyError.$factory(_b_.str.$factory(key))
+                $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
             }
         }
     }else{
@@ -834,7 +834,7 @@ DOMNode.__getitem__ = function(self, key){
                 }
                 let res = DOMNode.$factory(self.item(key_to_int))
                 if(res === undefined){
-                    throw _b_.KeyError.$factory(key)
+                    $B.RAISE(_b_.KeyError, key)
                 }
                 return res
         }else if(typeof key == "string" &&
@@ -844,7 +844,7 @@ DOMNode.__getitem__ = function(self, key){
              if(attr !== null){
                  return attr.value
              }
-             throw _b_.KeyError.$factory(key)
+             $B.RAISE(_b_.KeyError, key)
         }
     }
 }
@@ -892,7 +892,7 @@ DOMNode.__le__ = function(self, other){
                 DOMNode.__le__(self, item)
             })
         }catch(err){
-            throw _b_.TypeError.$factory("can't add '" +
+            $B.RAISE(_b_.TypeError, "can't add '" +
                 $B.class_name(other) + "' object to DOMNode instance")
         }
     }
@@ -912,7 +912,7 @@ DOMNode.__mul__ = function(self,other){
         }
         return res
     }
-    throw _b_.ValueError.$factory("can't multiply " + self.__class__ +
+    $B.RAISE(_b_.ValueError, "can't multiply " + self.__class__ +
         "by " + other)
 }
 
@@ -925,7 +925,7 @@ DOMNode.__next__ = function(self){
    if(self.$counter < self.childNodes.length){
        return DOMNode.$factory(self.childNodes[self.$counter])
    }
-   throw _b_.StopIteration.$factory("StopIteration")
+   $B.RAISE(_b_.StopIteration, "StopIteration")
 }
 
 DOMNode.__radd__ = function(self, other){ // add to a string
@@ -973,7 +973,7 @@ DOMNode.__setattr__ = function(self, attr, value){
                 self.style[attr] = value + "px"
                 return _b_.None
             }else{
-                throw _b_.ValueError.$factory(attr + " value should be" +
+                $B.RAISE(_b_.ValueError, attr + " value should be" +
                     " an integer or float, not " + $B.class_name(value))
             }
     }
@@ -1055,9 +1055,9 @@ DOMNode.abs_left = {
     __get__: function(self){
         return $getPosition(self).left
     },
-    __set__: function(){
-        throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
-            "'abs_left' is read-only")
+    __set__: function(self, value){
+        $B.RAISE_ATTRIBUTE_ERROR("'DOMNode' objectattribute " +
+            "'abs_left' is read-only", self, 'abs_left')
     }
 }
 
@@ -1065,9 +1065,9 @@ DOMNode.abs_top = {
     __get__: function(self){
         return $getPosition(self).top
     },
-    __set__: function(){
-        throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
-            "'abs_top' is read-only")
+    __set__: function(self, value){
+        $B.RAISE_ATTRIBUTE_ERROR("'DOMNode' objectattribute " +
+            "'abs_top' is read-only", self, 'abs_top')
     }
 }
 
@@ -1188,12 +1188,12 @@ DOMNode.closest = function(){
         self = $.self,
         selector = $.selector
     if(self.closest === undefined){
-        throw _b_.AttributeError.$factory(_b_.str.$factory(self) +
-            " has no attribute 'closest'")
+        $B.RAISE_ATTRIBUTE_ERROR(_b_.str.$factory(self) +
+            " has no attribute 'closest'", self, 'closest')
     }
     var res = self.closest(selector)
     if(res === null){
-        throw _b_.KeyError.$factory("no parent with selector " + selector)
+        $B.RAISE(_b_.KeyError, "no parent with selector " + selector)
     }
     return DOMNode.$factory(res)
 }
@@ -1236,28 +1236,28 @@ DOMNode.get = function(self){
 
     if($dict["name"] !== undefined){
         if(self.getElementsByName === undefined){
-            throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+            $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by name")
         }
         return make_list(self.getElementsByName($dict['name']))
     }
     if($dict["tag"] !== undefined){
         if(self.getElementsByTagName === undefined){
-            throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+            $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by tag name")
         }
         return make_list(self.getElementsByTagName($dict["tag"]))
     }
     if($dict["classname"] !== undefined){
         if(self.getElementsByClassName === undefined){
-            throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+            $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by class name")
         }
         return make_list(self.getElementsByClassName($dict['classname']))
     }
     if($dict["id"] !== undefined){
         if(self.getElementById === undefined){
-            throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+            $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by id")
         }
         var id_res = document.getElementById($dict['id'])
@@ -1266,7 +1266,7 @@ DOMNode.get = function(self){
     }
     if($dict["selector"] !== undefined){
         if(self.querySelectorAll === undefined){
-            throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+            $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by selector")
         }
         return make_list(self.querySelectorAll($dict['selector']))
@@ -1276,7 +1276,8 @@ DOMNode.get = function(self){
 
 DOMNode.getContext = function(self){ // for CANVAS tag
     if(!("getContext" in self)){
-      throw _b_.AttributeError.$factory("object has no attribute 'getContext'")
+      $B.RAISE_ATTRIBUTE_ERROR("object has no attribute 'getContext'", self,
+          'getContext')
     }
     return function(ctx){
         return $B.jsobj2pyobj(self.getContext(ctx))
@@ -1341,9 +1342,9 @@ DOMNode.scrolled_left = {
         return $getPosition(self).left -
             document.scrollingElement.scrollLeft
     },
-    __set__: function(){
-        throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
-            "'scrolled_left' is read-only")
+    __set__: function(self, value){
+        $B.RAISE_ATTRIBUTE_ERROR("'DOMNode' objectattribute " +
+            "'scrolled_left' is read-only", self, 'scrolled_left')
     }
 }
 
@@ -1352,16 +1353,16 @@ DOMNode.scrolled_top = {
         return $getPosition(self).top -
             document.scrollingElement.scrollTop
     },
-    __set__: function(){
-        throw _b_.AttributeError.$factory("'DOMNode' objectattribute " +
-            "'scrolled_top' is read-only")
+    __set__: function(self, value){
+        $B.RAISE_ATTRIBUTE_ERROR("'DOMNode' objectattribute " +
+            "'scrolled_top' is read-only", self, 'scrolled_top')
     }
 }
 
 DOMNode.select = function(self, selector){
     // alias for get(selector=...)
     if(self.querySelectorAll === undefined){
-        throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+        $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
             "selection by selector")
     }
     return make_list(self.querySelectorAll(selector))
@@ -1370,7 +1371,7 @@ DOMNode.select = function(self, selector){
 DOMNode.select_one = function(self, selector){
     // return the element matching selector, or None
     if(self.querySelector === undefined){
-        throw _b_.TypeError.$factory("DOMNode object doesn't support " +
+        $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
             "selection by selector")
     }
     var res = self.querySelector(selector)
@@ -1416,7 +1417,7 @@ DOMNode.set_style = function(self, style){ // style is a dict
         self.style = style
         return
     }else if(!$B.$isinstance(style, _b_.dict)){
-        throw _b_.TypeError.$factory("style must be str or dict, not " +
+        $B.RAISE(_b_.TypeError, "style must be str or dict, not " +
             $B.class_name(style))
     }
     var items = _b_.list.$factory(_b_.dict.items(style))
@@ -1528,7 +1529,7 @@ DOMNode.unbind = function(self, event){
         }
         // The indicated func was not found, error is thrown
         if(! flag){
-            throw _b_.KeyError.$factory('missing callback for event ' + event)
+            $B.RAISE(_b_.KeyError, 'missing callback for event ' + event)
         }
     }
 }
@@ -1548,7 +1549,7 @@ Query.__getitem__ = function(self, key){
     // associated with key, or raise KeyError
     var result = self._values[key]
     if(result === undefined){
-        throw _b_.KeyError.$factory(key)
+        $B.RAISE(_b_.KeyError, key)
     }else if(result.length == 1){
         return result[0]
     }

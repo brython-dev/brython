@@ -65,7 +65,7 @@ for(var $func in None){
 $B.set_func_names(NoneType, "builtins")
 
 _b_.__build_class__ = function(){
-    throw _b_.NotImplementedError.$factory('__build_class__')
+    $B.RAISE(_b_.NotImplementedError, '__build_class__')
 }
 
 _b_.abs = function(obj){
@@ -76,7 +76,7 @@ _b_.abs = function(obj){
         var method = $B.$getattr(klass, "__abs__")
     }catch(err){
         if(err.__class__ === _b_.AttributeError){
-            throw _b_.TypeError.$factory("Bad operand type for abs(): '" +
+            $B.RAISE(_b_.TypeError, "Bad operand type for abs(): '" +
                 $B.class_name(obj) + "'")
         }
         throw err
@@ -170,7 +170,7 @@ function $builtin_base_convert_helper(obj, base) {
 
   if(value === undefined){
      // need to raise an error
-     throw _b_.TypeError.$factory('Error, argument must be an integer or' +
+     $B.RAISE(_b_.TypeError, 'Error, argument must be an integer or' +
          ' contains an __index__ function')
   }
 
@@ -189,7 +189,7 @@ function bin_hex_oct(base, obj){
                 method = $B.$getattr(klass, '__index__')
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
-                throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+                $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
                     "' object cannot be interpreted as an integer")
             }
             throw err
@@ -211,7 +211,7 @@ _b_.breakpoint = function(){
     var missing = {},
         hook = $B.$getattr($B.imported.sys, 'breakpointhook', missing)
     if(hook === missing){
-        throw _b_.RuntimeError.$factory('lost sys.breakpointhook')
+        $B.RAISE(_b_.RuntimeError, 'lost sys.breakpointhook')
     }
     return $B.$call(hook).apply(null, arguments)
 }
@@ -228,7 +228,7 @@ _b_.chr = function(i){
     i = $B.PyNumber_Index(i)
 
     if(i < 0 || i > 1114111){
-        throw _b_.ValueError.$factory('Outside valid range')
+        $B.RAISE(_b_.ValueError, 'Outside valid range')
     }else if(i >= 0x10000 && i <= 0x10FFFF){
         var code = (i - 0x10000),
             s =  String.fromCodePoint(0xD800 | (code >> 10)) +
@@ -286,7 +286,7 @@ _b_.compile = function() {
     $B.url2name[filename] = module_name
 
     if ($.flags & $B.PyCF_TYPE_COMMENTS) {
-        // throw _b_.NotImplementedError.$factory('Brython does not currently support parsing of type comments')
+        // $B.RAISE(_b_.NotImplementedError, 'Brython does not currently support parsing of type comments')
     }
 
     if($B.$isinstance($.source, _b_.bytes)){
@@ -338,7 +338,7 @@ _b_.compile = function() {
             last_line = $B.last(lines)
         if(last_line.startsWith(" ")){
             var msg = "unexpected EOF while parsing",
-                exc = _b_.SyntaxError.$factory()
+                exc = $B.EXC(_b_.SyntaxError)
             exc.filename = filename
             exc.lineno = exc.end_lineno = lines.length - 1
             exc.offset = 0
@@ -429,7 +429,7 @@ _b_.delattr = function(obj, attr) {
     // a method __delete__(), use it
     check_nb_args_no_kw('delattr', 2, arguments)
     if(typeof attr != 'string'){
-        throw _b_.TypeError.$factory("attribute name must be string, not '" +
+        $B.RAISE(_b_.TypeError, "attribute name must be string, not '" +
             $B.class_name(attr) + "'")
     }
     // If the object's class has a __delattr__ method, use it
@@ -480,7 +480,7 @@ $B.$delete = function(name, locals_id, inum){
     if(! found){
         $B.set_inum(inum)
         if(locals_id == 'local'){
-            throw _b_.UnboundLocalError.$factory(
+            $B.RAISE(_b_.UnboundLocalError,
                 `cannot access local variable '${name}' ` +
                 'where it is not associated with a value')
         }else{
@@ -592,7 +592,7 @@ var $$eval = _b_.eval = function(){
         filename = src.filename
         // result of compile()
     }else if((! src.valueOf) || typeof src.valueOf() !== 'string'){
-        throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,` +
+        $B.RAISE(_b_.TypeError, `${mode}() arg 1 must be a string,` +
             " bytes or code object")
     }else{
         // src might be an instance of JS String if source has surrogate pairs
@@ -620,7 +620,7 @@ var $$eval = _b_.eval = function(){
     $B.exec_scope = $B.exec_scope || {}
 
     if(typeof src == 'string' && src.endsWith('\\\n')){
-        var exc = _b_.SyntaxError.$factory('unexpected EOF while parsing')
+        var exc = $B.EXC(_b_.SyntaxError, 'unexpected EOF while parsing')
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
         exc.args = ['unexpected EOF while parsing',
@@ -665,7 +665,7 @@ var $$eval = _b_.eval = function(){
         }
     }else{
         if(_globals.__class__ !== _b_.dict){
-            throw _b_.TypeError.$factory(`${mode}() globals must be ` +
+            $B.RAISE(_b_.TypeError, `${mode}() globals must be ` +
                 "a dict, not " + $B.class_name(_globals))
         }
         // _globals is used for both globals and locals
@@ -922,7 +922,7 @@ _b_.format = function() {
         var method = $B.$getattr(klass, '__format__')
     }catch(err){
         if(err.__class__ === _b_.AttributeError){
-            throw _b_.NotImplementedError("__format__ is not implemented " +
+            $B.RAISE(_b_.NotImplementedError, "__format__ is not implemented " +
                 "for object '" + _b_.str.$factory(value) + "'")
         }
         throw err
@@ -935,13 +935,13 @@ function attr_error(attr, obj){
     var msg = "bad operand type for unary #: '" + cname + "'"
     switch(attr){
         case '__neg__':
-            throw _b_.TypeError.$factory(msg.replace('#', '-'))
+            $B.RAISE(_b_.TypeError, msg.replace('#', '-'))
         case '__pos__':
-            throw _b_.TypeError.$factory(msg.replace('#', '+'))
+            $B.RAISE(_b_.TypeError, msg.replace('#', '+'))
         case '__invert__':
-            throw _b_.TypeError.$factory(msg.replace('#', '~'))
+            $B.RAISE(_b_.TypeError, msg.replace('#', '~'))
         case '__call__':
-            throw _b_.TypeError.$factory("'" + cname + "'" +
+            $B.RAISE(_b_.TypeError, "'" + cname + "'" +
                 ' object is not callable')
         default:
             throw $B.attr_error(attr, obj)
@@ -954,7 +954,7 @@ _b_.getattr = function(){
         ["obj", "attr", "_default"], arguments, {_default: missing},
         null, null)
     if(! $B.$isinstance($.attr, _b_.str)){
-        throw _b_.TypeError.$factory("attribute name must be string, " +
+        $B.RAISE(_b_.TypeError, "attribute name must be string, " +
             `not '${$B.class_name($.attr)}'`)
     }
 
@@ -995,8 +995,8 @@ $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var res
     if(obj === undefined || obj === null){
-        throw _b_.AttributeError.$factory("Javascript object '" + obj +
-            "' has no attribute")
+        $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
+            "' has no attribute", obj, attr)
     }
     if(obj.$method_cache &&
             obj.$method_cache[attr] &&
@@ -1436,14 +1436,14 @@ $B.$hash = function(obj){
     // obj has an attribute __hash__
     var klass = obj.__class__ || $B.get_class(obj)
     if(klass === undefined){
-        throw _b_.TypeError.$factory("unhashable type: '" +
+        $B.RAISE(_b_.TypeError, "unhashable type: '" +
                 _b_.str.$factory($B.jsobj2pyobj(obj)) + "'")
     }
 
     var hash_method = _b_.type.__getattribute__(klass, '__hash__', _b_.None)
 
     if(hash_method === _b_.None){
-        throw _b_.TypeError.$factory("unhashable type: '" +
+        $B.RAISE(_b_.TypeError, "unhashable type: '" +
                 $B.class_name(obj) + "'")
     }
 
@@ -1459,7 +1459,7 @@ $B.$hash = function(obj){
     // throws an exception : unhashable type: 'A'
     function check_int(v){
         if((! Number.isInteger(v)) && ! $B.$isinstance(v, _b_.int)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 '__hash__ method should return an integer')
         }
         return v
@@ -1467,7 +1467,7 @@ $B.$hash = function(obj){
     var res
     if(hash_method === _b_.object.__hash__){
         if(_b_.type.__getattribute__(klass, '__eq__') !== _b_.object.__eq__){
-            throw _b_.TypeError.$factory("unhashable type: '" +
+            $B.RAISE(_b_.TypeError, "unhashable type: '" +
                 $B.class_name(obj) + "'", 'hash')
         }else{
             return obj.__hashvalue__ = check_int(_b_.object.__hash__(obj))
@@ -1616,12 +1616,12 @@ $B.$isinstance = function(obj, cls){
 
     if(cls.__class__ === $B.GenericAlias){
         // PEP 585
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             'isinstance() arg 2 cannot be a parameterized generic')
     }
     if((!cls.__class__) && (! cls.$is_class)){
         if(! $B.$getattr(cls, '__instancecheck__', false)){
-            throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
+            $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type " +
                 "or tuple of types")
         }
     }
@@ -1694,7 +1694,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
         var meta = $B.$getattr(klass, '__class__', null) // found in unittest.mock
         if(meta === null){
             console.log('no class for', klass)
-            throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
+            $B.RAISE(_b_.TypeError, "issubclass() arg 1 must be a class")
         }else{
             mro = [_b_.object]
         }
@@ -1708,7 +1708,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
         return false
     }
     if(classinfo.__class__ === $B.GenericAlias){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
     }
 
@@ -1743,7 +1743,7 @@ iterator_class.__next__ = function(self){
     try{
         return self.getitem(self.counter)
     }catch(err){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
 }
 
@@ -1766,7 +1766,7 @@ callable_iterator.__iter__ = function(self){
 callable_iterator.__next__ = function(self){
     var res = self.func()
     if($B.rich_comp("__eq__", res, self.sentinel)){
-        throw _b_.StopIteration.$factory()
+        $B.RAISE(_b_.StopIteration, )
     }
     return res
 }
@@ -1788,7 +1788,7 @@ $B.$iter = function(obj, sentinel){
                         len
                     return iterator_class.$factory(gi)
                 }catch(err){
-                    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+                    $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
                         "' object is not iterable")
                 }
             }
@@ -1799,7 +1799,7 @@ $B.$iter = function(obj, sentinel){
             $B.$getattr(res, '__next__')
         }catch(err){
             if($B.$isinstance(err, _b_.AttributeError)){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError,
                     "iter() returned non-iterator of type '" +
                      $B.class_name(res) + "'")
             }
@@ -1828,18 +1828,18 @@ var len = _b_.len = function(obj){
     try{
         var method = $B.$getattr(klass, '__len__')
     }catch(err){
-        throw _b_.TypeError.$factory("object of type '" +
+        $B.RAISE(_b_.TypeError, "object of type '" +
             $B.class_name(obj) + "' has no len()")
     }
 
     let res = $B.$call(method)(obj)
 
     if (!$B.$isinstance(res, _b_.int)) {
-        throw _b_.TypeError.$factory(`'${$B.class_name(res)}' object cannot be interpreted as an integer`)
+        $B.RAISE(_b_.TypeError, `'${$B.class_name(res)}' object cannot be interpreted as an integer`)
     }
 
     if(!$B.rich_comp('__ge__', res, 0)) {
-        throw _b_.ValueError.$factory('ValueError: __len__() should return >= 0')
+        $B.RAISE(_b_.ValueError, 'ValueError: __len__() should return >= 0')
     }
 
     return res
@@ -1892,7 +1892,7 @@ map.__next__ = function(self){
     for(var iter of self.args){
         var arg = iter.next()
         if(arg.done){
-            throw _b_.StopIteration.$factory('')
+            $B.RAISE(_b_.StopIteration, '')
         }
         args.push(arg.value)
     }
@@ -1921,7 +1921,7 @@ function $extreme(args, op){ // used by min() and max()
                 has_default = true
                 break
             default:
-                throw _b_.TypeError.$factory("'" + item.key +
+                $B.RAISE(_b_.TypeError, "'" + item.key +
                     "' is an invalid keyword argument for this function")
         }
     }
@@ -1931,7 +1931,7 @@ function $extreme(args, op){ // used by min() and max()
     }
 
     if($.args.length == 0){
-        throw _b_.TypeError.$factory($op_name +
+        $B.RAISE(_b_.TypeError, $op_name +
             " expected 1 arguments, got 0")
     }else if($.args.length == 1){
         // Only one positional argument : it must be an iterable
@@ -1955,7 +1955,7 @@ function $extreme(args, op){ // used by min() and max()
             if(has_default){
                 return default_value
             }else{
-                throw _b_.ValueError.$factory($op_name +
+                $B.RAISE(_b_.ValueError, $op_name +
                     "() arg is an empty sequence")
             }
         }else{
@@ -1963,7 +1963,7 @@ function $extreme(args, op){ // used by min() and max()
         }
     }else{
         if(has_default){
-           throw _b_.TypeError.$factory("Cannot specify a default for " +
+           $B.RAISE(_b_.TypeError, "Cannot specify a default for " +
                $op_name + "() with multiple positional arguments")
         }
         var _args
@@ -2002,7 +2002,7 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
                 contiguous: true
             }
         }else{
-            throw _b_.TypeError.$factory("memoryview: a bytes-like object " +
+            $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
                 "is required, not '" + $B.class_name(obj) + "'")
         }
     }
@@ -2032,7 +2032,7 @@ memoryview.__getitem__ = function(self, key){
             return res
         }else if("B".indexOf(self.format) > -1){
             if(key > self.obj.source.length - 1){
-                throw _b_.KeyError.$factory(key)
+                $B.RAISE(_b_.KeyError, key)
             }
             return self.obj.source[key]
         }else{
@@ -2055,7 +2055,7 @@ memoryview.__setitem__ = function(self, key, value){
     try{
         $B.$setitem(self.obj, key, value)
     }catch(err){
-        throw _b_.TypeError.$factory("cannot modify read-only memory")
+        $B.RAISE(_b_.TypeError, "cannot modify read-only memory")
     }
 }
 
@@ -2081,25 +2081,25 @@ var struct_format = {
 
 memoryview.cast = function(self, format, shape){
     if(! struct_format.hasOwnProperty(format)){
-        throw _b_.ValueError.$factory(`unknown format: '${format}'`)
+        $B.RAISE(_b_.ValueError, `unknown format: '${format}'`)
     }
     var new_itemsize = struct_format[format].size
     if(shape === undefined){
         shape = _b_.len(self) // new_itemsize
     }else{
         if(! $B.$isinstance(shape, [_b_.list, _b_.tuple])){
-            throw _b_.TypeError.$factory('shape must be a list or a tuple')
+            $B.RAISE(_b_.TypeError, 'shape must be a list or a tuple')
         }
         var nb = 1
         for(var item of shape){
             if(! $B.$isinstance(item, _b_.int)){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError,
                     'memoryview.cast(): elements of shape must be integers')
             }
             nb *= item
         }
         if(nb * new_itemsize != _b_.len(self)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 'memoryview: product(shape) * itemsize != buffer size')
         }
     }
@@ -2112,7 +2112,7 @@ memoryview.cast = function(self, format, shape){
             res.itemsize = 4
             res.format = "I"
             if(objlen % 4 != 0){
-                throw _b_.TypeError.$factory("memoryview: length is not " +
+                $B.RAISE(_b_.TypeError, "memoryview: length is not " +
                     "a multiple of itemsize")
             }
             return res
@@ -2176,7 +2176,7 @@ var next = _b_.next = function(obj){
             throw err
         }
     }
-    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+    $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
         "' object is not an iterator")
 }
 
@@ -2212,7 +2212,7 @@ _b_.ord = function(c){
                 return code
             }
         }
-        throw _b_.TypeError.$factory('ord() expected a character, but ' +
+        $B.RAISE(_b_.TypeError, 'ord() expected a character, but ' +
             'string of length ' + c.length + ' found')
     }
     switch($B.get_class(c)){
@@ -2220,23 +2220,23 @@ _b_.ord = function(c){
         if(c.length == 1){
             return c.charCodeAt(0)
         }
-        throw _b_.TypeError.$factory('ord() expected a character, but ' +
+        $B.RAISE(_b_.TypeError, 'ord() expected a character, but ' +
             'string of length ' + c.length + ' found')
       case _b_.bytes:
       case _b_.bytearray:
         if(c.source.length == 1){
             return c.source[0]
         }
-        throw _b_.TypeError.$factory('ord() expected a character, but ' +
+        $B.RAISE(_b_.TypeError, 'ord() expected a character, but ' +
             'string of length ' + c.source.length + ' found')
       default:
-        throw _b_.TypeError.$factory('ord() expected a character, but ' +
+        $B.RAISE(_b_.TypeError, 'ord() expected a character, but ' +
             $B.class_name(c) + ' was found')
     }
 }
 
-var complex_modulo = () => _b_.ValueError.$factory('complex modulo')
-var all_ints = () => _b_.TypeError.$factory('pow() 3rd argument not ' +
+var complex_modulo = () => $B.EXC(_b_.ValueError, 'complex modulo')
+var all_ints = () => $B.EXC(_b_.TypeError, 'pow() 3rd argument not ' +
     'allowed unless all arguments are integers')
 
 _b_.pow = function() {
@@ -2328,7 +2328,7 @@ var reversed = _b_.reversed = $B.make_class("reversed",
         try{
             var method = $B.$getattr(klass, '__getitem__')
         }catch(err){
-            throw _b_.TypeError.$factory("argument to reversed() must be a sequence")
+            $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
         }
 
         var res = {
@@ -2349,7 +2349,7 @@ reversed.__iter__ = function(self){
 reversed.__next__ = function(self){
     self.$counter--
     if(self.$counter < 0){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return self.getter(self.$counter)
 }
@@ -2370,7 +2370,7 @@ _b_.round = function(){
             return $B.$call($B.$getattr(klass, "__round__")).apply(null, arguments)
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
-                throw _b_.TypeError.$factory("type " + $B.class_name(arg) +
+                $B.RAISE(_b_.TypeError, "type " + $B.class_name(arg) +
                     " doesn't define __round__ method")
             }else{
                 throw err
@@ -2379,7 +2379,7 @@ _b_.round = function(){
     }
 
     if(! $B.$isinstance(n, _b_.int)){
-        throw _b_.TypeError.$factory("'" + $B.class_name(n) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(n) +
             "' object cannot be interpreted as an integer")
     }
 
@@ -2403,7 +2403,7 @@ _b_.round = function(){
         res = _b_.int.__truediv__(Math.round(x), mult)
     }
     if(res.value === Infinity || res.value === -Infinity){
-        throw _b_.OverflowError.$factory(
+        $B.RAISE(_b_.OverflowError,
             "rounded value too large to represent")
     }
     if($.ndigits === None){
@@ -2421,7 +2421,7 @@ _b_.setattr = function(){
         ['obj', 'attr', 'value'], arguments, {}, null, null),
         obj = $.obj, attr = $.attr, value = $.value
     if(!(typeof attr == 'string')){
-        throw _b_.TypeError.$factory("setattr(): attribute name must be string")
+        $B.RAISE(_b_.TypeError, "setattr(): attribute name must be string")
     }
     return $B.$setattr(obj, attr, value)
 }
@@ -2447,7 +2447,7 @@ $B.$setattr = function(obj, attr, value){
             // set attribute __dict__
             // remove previous attributes
             if(! $B.$isinstance(value, _b_.dict)){
-                throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, " +
+                $B.RAISE(_b_.TypeError, "__dict__ must be set to a dictionary, " +
                     "not a '" + $B.class_name(value) + "'")
             }
             if(obj.$function_infos && ! obj.$infos){
@@ -2463,7 +2463,7 @@ $B.$setattr = function(obj, attr, value){
             // __class__ assignment only supported for heap types or ModuleType
             // subclasses
             function error(msg){
-                throw _b_.TypeError.$factory(msg)
+                $B.RAISE(_b_.TypeError, msg)
             }
             if(value.__class__){
                 if(value.__module__ == "builtins"){
@@ -2538,7 +2538,7 @@ $B.$setattr = function(obj, attr, value){
                 setter(obj, value)
                 return None
             }else{
-                throw _b_.AttributeError.$factory('readonly attribute')
+                $B.RAISE_ATTRIBUTE_ERROR('readonly attribute', obj, attr)
             }
         }
     }
@@ -2604,9 +2604,9 @@ $B.$setattr = function(obj, attr, value){
         if(obj[attr] !== undefined){
             obj[attr] = value
         }else if(obj.__dict__ === undefined){
-            throw _b_.AttributeError.$factory(`'${$B.class_name(obj)}' ` +
+            $B.RAISE_ATTRIBUTE_ERROR(`'${$B.class_name(obj)}' ` +
                 `object has no attribute '${attr}' and no __dict__ for ` +
-                `setting new attributes`)
+                `setting new attributes`, obj, attr)
         }else{
             _b_.dict.$setitem(obj.__dict__, attr, value)
             // remove from method cache, cf. issue #2555
@@ -2650,7 +2650,7 @@ _b_.sum = function(){
         start = $.start
 
     if($B.$isinstance(start, [_b_.str, _b_.bytes])){
-        throw _b_.TypeError.$factory("sum() can't sum bytes" +
+        $B.RAISE(_b_.TypeError, "sum() can't sum bytes" +
             " [use b''.join(seq) instead]")
     }
 
@@ -2682,11 +2682,11 @@ var $$super = _b_.super = $B.make_class("super",
             if(co_varnames.length > 0){
                 _type = frame[1].__class__
                 if(_type === undefined){
-                    throw _b_.RuntimeError.$factory("super(): no arguments")
+                    $B.RAISE(_b_.RuntimeError, "super(): no arguments")
                 }
                 object_or_type = frame[1][code.co_varnames[0]]
             }else{
-                throw _b_.RuntimeError.$factory("super(): no arguments")
+                $B.RAISE(_b_.RuntimeError, "super(): no arguments")
             }
         }
         if((! no_object_or_type) && Array.isArray(object_or_type)){
@@ -2702,7 +2702,7 @@ var $$super = _b_.super = $B.make_class("super",
             }else if($B.$isinstance(object_or_type, _type)){
                 $arg2 = 'object'
             }else{
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError,
                     'super(type, obj): obj must be an instance ' +
                     'or subtype of type')
             }
@@ -2819,11 +2819,11 @@ $$super.__getattribute__ = function(self, attr){
 
 $$super.__init__ = function(cls){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("descriptor '__init__' of 'super' " +
+        $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'super' " +
             "object needs an argument")
     }
     if(cls.__class__ !== $$super){
-        throw _b_.TypeError.$factory("descriptor '__init__' requires a" +
+        $B.RAISE(_b_.TypeError, "descriptor '__init__' requires a" +
             " 'super' object but received a '" + $B.class_name(cls) + "'")
     }
 }
@@ -2852,7 +2852,7 @@ _b_.vars = function(){
             return $B.$getattr($.obj, '__dict__')
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
-                throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")
+                $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
             }
             throw err
         }
@@ -2889,7 +2889,7 @@ _IOBase.__exit__ = function(self){
 
 _IOBase.__iter__ = function(_self){
     if(_self.closed){
-        throw _b_.ValueError.$factory('closed')
+        $B.RAISE(_b_.ValueError, 'closed')
     }
     return _self
 }
@@ -2899,7 +2899,7 @@ _IOBase.__next__ = function(_self){
     var line = readline(_self)
 
     if(line == undefined || _b_.len(line) === 0){
-        throw _b_.StopIteration.$factory('')
+        $B.RAISE(_b_.StopIteration, '')
     }
     return line;
 }
@@ -2924,7 +2924,7 @@ _IOBase.__len__ = function(self){
 _IOBase.__next__ = function(self){
     self.$lc++
     if(self.$lc >= self.$lines.length){
-        throw _b_.StopIteration.$factory()
+        $B.RAISE(_b_.StopIteration, )
     }
     return self.$lines[self.$lc]
 }
@@ -2951,7 +2951,7 @@ _IOBase.fileno = function(_self){
 
 _IOBase.flush = function(_self){
     if(_self._closed){
-        throw _b_.ValueError.$factory("I/O operation on closed file.")
+        $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return _b_.None
 }
@@ -2967,7 +2967,7 @@ _IOBase.read = function(){
             self = $.self,
             size = $B.PyNumber_Index($.size)
     if(self.closed === true){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
     var len = _b_.len(self.$content)
     if(size < 0){
@@ -3035,7 +3035,7 @@ _IOBase.readline = function(){
     if(size === _b_.None){
         size = -1
     }else if(! _b_.isinstance(size, _b_.int)){
-        throw _b_.TypeError.$factory('argument should be integer or None, ' +
+        $B.RAISE(_b_.TypeError, 'argument should be integer or None, ' +
             `not '${$B.class_name(size)}'`)
     }else{
         size = _b_.int.$int_value(size)
@@ -3044,7 +3044,7 @@ _IOBase.readline = function(){
     self.$lc = self.$lc === undefined ? -1 : self.$lc
 
     if(self.closed === true){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
 
     if(self.$binary){
@@ -3115,7 +3115,7 @@ _IOBase.readline = function(_self, limit=-1){
         if(peek != null){
             var readahead = peek(1)
             if (! $B.$isinstance(readahead, _b_.bytes)) {
-                throw _b_.OSError.$factory(
+                $B.RAISE(_b_.OSError,
                      "peek() should have returned a bytes object, " +
                      `not '${$B.class_name(readahead)}'`)
             }
@@ -3148,7 +3148,7 @@ _IOBase.readline = function(_self, limit=-1){
         var read = $B.search_in_mro($B.get_class(_self), "read")
         b = $B.$call(read)(_self, nreadahead)
         if(! $B.$isinstance(b, _b_.bytes)) {
-            throw _b_.OSError.$factory(
+            $B.RAISE(_b_.OSError,
                 "read() should have returned a bytes object, " +
                 `not '${$B.class_name(b)}'`)
         }
@@ -3204,7 +3204,7 @@ _IOBase.readlines = function(_self, hint){
 /*
 _IOBase.seek = function(self, offset, whence){
     if(self.closed === True){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
     if(whence === undefined){
         whence = 0
@@ -3246,13 +3246,13 @@ _IOBase.write = function(_self, data){
     if(_self.mode.indexOf('b') == -1){
         // text mode
         if(typeof data != "string"){
-            throw _b_.TypeError.$factory('write() argument must be str,' +
+            $B.RAISE(_b_.TypeError, 'write() argument must be str,' +
                 ` not ${$B.class_name(data)}`)
         }
         _self.$content += data
     }else{
         if(! $B.$isinstance(data, [_b_.bytes, _b_.bytearray])){
-            throw _b_.TypeError.$factory('write() argument must be bytes,' +
+            $B.RAISE(_b_.TypeError, 'write() argument must be bytes,' +
                 ` not ${$B.class_name(data)}`)
         }
         _self.$content.source = _self.$content.source.concat(data.source)
@@ -3276,8 +3276,9 @@ _IOBase.writelines = function(_self, lines){
     var iter = $B.make_js_iterator(lines)
     var writer = $B.search_in_mro($B.get_class(_self), 'write')
     if(writer === undefined){
-        throw _b_.AttributeError.$factory(
-            `'${$B.class_name(_self)}' object has no attribute 'write'`)
+        $B.RAISE_ATTRIBUTE_ERROR(
+            `'${$B.class_name(_self)}' object has no attribute 'write'`,
+            _self, 'write')
     }
 
     for(var line of iter){
@@ -3290,7 +3291,7 @@ _IOBase.writelines = function(_self, lines){
     var iter, res;
 
     if(_self.closed){
-        throw _b_.OSError.$factory('closed')
+        $B.RAISE(_b_.OSError, 'closed')
     }
     var writer = $B.$call($B.$getattr(_self, 'write'))
     for(var line of $B.make_js_iterator(lines)){
@@ -3334,7 +3335,7 @@ $B._RawIOBase.readall = function(_self){
             break
         }
         if(! $B.$isinstance(data, _b_.bytes)){
-            throw _b_.TypeError.$factory("read() should return bytes")
+            $B.RAISE(_b_.TypeError, "read() should return bytes")
         }
         if(_b_.len(data) == 0){
             break
@@ -3366,12 +3367,12 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
     data = $B.$call($B.$getattr(_self, attr))(buffer.length)
 
     if(! $B.$isinstance(data, _b_.bytes)) {
-        throw _b_.TypeError.$factory("read() should return bytes")
+        $B.RAISE(_b_.TypeError, "read() should return bytes")
     }
 
     len = _b_.bytes.__len__(data)
     if(len > buffer.length) {
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError,
             "read() returned too much data: "
             `${buffer.length} bytes requested, ${len} returned`)
     }
@@ -3471,7 +3472,7 @@ $B._BufferedReader.seek = function(_self, offset, whence){
         offset = $.offset,
         whence = $.whence
     if(_self.closed){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
     if(whence === undefined){
         whence = 0
@@ -3488,7 +3489,7 @@ $B._BufferedReader.seek = function(_self, offset, whence){
 
 function CHECK_CLOSED(fileobj, msg){
     if(fileobj.closed){
-        throw _b_.ValueError.$factory(msg)
+        $B.RAISE(_b_.ValueError, msg)
     }
 }
 
@@ -3496,7 +3497,7 @@ $B._BufferedReader.read = function(_self, n=-1){
     var res;
 
     if(n < -1){
-        throw _b_.ValueError.$factory("read length must be non-negative or -1")
+        $B.RAISE(_b_.ValueError, "read length must be non-negative or -1")
     }
 
     CHECK_CLOSED(self, "read of closed file")
@@ -3525,13 +3526,13 @@ $B._FileIO.__bases__ = [$B._RawIOBase]
 $B._FileIO.__mro__ = _b_.type.$mro($B._FileIO)
 
 function bad_mode(){
-    throw _b_.ValueError.$factory(
+    $B.RAISE(_b_.ValueError,
         "Must have exactly one of create/read/write/append " +
         "mode and at most one plus")
 }
 
 function err_closed(){
-    throw _b_.ValueError.$factory("I/O operation on closed file")
+    $B.RAISE(_b_.ValueError, "I/O operation on closed file")
 }
 
 const O_RDONLY = 0,
@@ -3618,7 +3619,7 @@ $B._FileIO.__init__ = function(){
                 plus = 1
                 break
             default:
-                throw _b_.ValueError.$factory(`invalid mode: ${mode}`);
+                $B.RAISE(_b_.ValueError, `invalid mode: ${mode}`);
         }
         pos++
     }
@@ -3673,9 +3674,9 @@ $B._FileIO.__init__ = function(){
         }
         var status = this.status
         if(status == 404){
-            this.error = _b_.FileNotFoundError.$factory(name)
+            this.error = $B.EXC(_b_.FileNotFoundError, name)
         }else if(status != 200){
-            this.error = _b_.IOError.$factory('Could not open file ' +
+            this.error = $B.EXC(_b_.IOError, 'Could not open file ' +
                 name + ' : status ' + status)
         }else{
             var bytes = []
@@ -3837,7 +3838,7 @@ $B._TextIOWrapper.read = function(){
             _self = $.self,
             size = $B.PyNumber_Index($.size)
     if(_self.closed === true){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
     if(_self.$text === undefined){
         _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
@@ -3861,7 +3862,7 @@ $B._TextIOWrapper.readline = function(){
             _self = $.self,
             size = $B.PyNumber_Index($.size)
     if(_self.closed === true){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
     if(_self.$text === undefined){
         _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
@@ -3894,7 +3895,7 @@ $B._TextIOWrapper.readline = function(){
 
 $B._TextIOWrapper.seek = function(_self, offset, whence){
     if(_self.closed){
-        throw _b_.ValueError.$factory('I/O operation on closed file')
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
     if(whence === undefined){
         whence = 0
@@ -3915,7 +3916,7 @@ $B._IOBase = _IOBase
 //$B.BufferedReader = $BufferedReader
 
 function invalid_mode(mode){
-    throw _b_.ValueError.$factory(`invalid mode: '${mode}'`)
+    $B.RAISE(_b_.ValueError, `invalid mode: '${mode}'`)
 }
 
 function _io_open_impl(file, mode, buffering, encoding, errors, newline,
@@ -3932,7 +3933,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     path_or_fd = file
 
     if (! $B.$isinstance(path_or_fd, _b_.str)){
-        throw _b_.TypeError.$factory(`invalid file: ${file}`)
+        $B.RAISE(_b_.TypeError, `invalid file: ${file}`)
     }
 
     if(encoding == 'locale'){
@@ -3986,32 +3987,32 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
     /* Parameters validation */
     if(text && binary){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError,
             "can't have text and binary mode at once")
     }
 
     if(creating + reading + writing + appending > 1){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError,
             "must have exactly one of create/read/write/append mode")
     }
 
     if(binary && encoding !== _b_.None){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError,
             "binary mode doesn't take an encoding argument")
     }
 
     if(binary && errors != _b_.None) {
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError,
             "binary mode doesn't take an errors argument");
     }
 
     if(binary && newline !== _b_.None){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError,
             "binary mode doesn't take a newline argument");
     }
 
     if(binary && buffering == 1){
-        throw _b_.RuntimeWarning.$factory(
+        $B.RAISE(_b_.RuntimeWarning,
             "line buffering (buffering=1) isn't supported in " +
             "binary mode, the default buffer size will be used")
     }
@@ -4043,7 +4044,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     /* if not buffering, returns the raw file object */
     if(buffering == 0){
         if(! binary){
-            throw _b_.ValueError.$factory(
+            $B.RAISE(_b_.ValueError,
                 "can't have unbuffered text I/O")
         }
         return result
@@ -4059,7 +4060,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }else if(reading){
         Buffered_class = $B._BufferedReader
     }else{
-        throw _b_.ValueError.$factory(`unknown mode: '${mode}'`)
+        $B.RAISE(_b_.ValueError, `unknown mode: '${mode}'`)
     }
 
     result = $B.$call(Buffered_class)(raw, buffering)
@@ -4105,7 +4106,7 @@ _b_.open = function(){
         $B.file_cache[file] = result.$content
         return result
     }else if(['r', 'rb'].indexOf(mode) == -1){
-        throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
+        $B.RAISE(_b_.ValueError, "Invalid mode '" + mode + "'")
     }
     if($B.$isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
@@ -4146,9 +4147,9 @@ _b_.open = function(){
                 }
                 var status = this.status
                 if(status == 404){
-                    result.error = _b_.FileNotFoundError.$factory(file)
+                    result.error = $B.EXC(_b_.FileNotFoundError, file)
                 }else if(status != 200){
-                    result.error = _b_.IOError.$factory('Could not open file ' +
+                    result.error = $B.EXC(_b_.IOError, 'Could not open file ' +
                         file + ' : status ' + status)
                 }else{
                     var bytes = []
@@ -4177,7 +4178,7 @@ _b_.open = function(){
             req.open('GET', encodeURI(file + fake_qs), false)
             req.send()
         }else{
-            throw _b_.FileNotFoundError.$factory(
+            $B.RAISE(_b_.FileNotFoundError,
                 "cannot use 'open()' with protocol 'file'")
         }
 
@@ -4203,7 +4204,7 @@ _b_.open = function(){
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
         return res
     }else{
-        throw _b_.TypeError.$factory("invalid argument for open(): " +
+        $B.RAISE(_b_.TypeError, "invalid argument for open(): " +
             _b_.str.$factory(file))
     }
 }
@@ -4260,19 +4261,19 @@ zip.__next__ = function(self){
         if(v.done){
             if(self.strict){
                 if(i > 0){
-                    throw _b_.ValueError.$factory(
+                    $B.RAISE(_b_.ValueError,
                         `zip() argument ${i + 1} is longer than argument ${i}`)
                 }else{
                     for(var j = 1; j < len; j++){
                         var v1 = self.iters[j].next()
                         if(! v1.done){
-                            throw _b_.ValueError.$factory(
+                            $B.RAISE(_b_.ValueError,
                                 `zip() argument ${j + 1} is longer than argument ${i + 1}`)
                         }
                     }
                 }
             }
-            throw _b_.StopIteration.$factory('')
+            $B.RAISE(_b_.StopIteration, '')
         }
         res.push(v.value)
     }
@@ -4285,8 +4286,8 @@ $B.set_func_names(zip, "builtins")
 
 function no_set_attr(klass, attr){
     if(klass[attr] !== undefined){
-        throw _b_.AttributeError.$factory("'" + klass.__name__ +
-            "' object attribute '" + attr + "' is read-only")
+        $B.RAISE_ATTRIBUTE_ERROR("'" + klass.__name__ +
+            "' object attribute '" + attr + "' is read-only", klass, attr)
     }else{
         throw $B.attr_error(attr, klass)
     }

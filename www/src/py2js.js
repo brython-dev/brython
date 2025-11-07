@@ -519,7 +519,7 @@ function set_script_id(script){
         script_to_id.set(script, script.id)
     }else{
         if(script.className === 'webworker'){
-            throw _b_.AttributeError.$factory(
+            $B.RAISE(_b_.AttributeError, 
                     "webworker script has no attribute 'id'")
         }
         if(status.first_unnamed_script){
@@ -574,7 +574,7 @@ var brython = $B.parser.brython = function(options){
     var ids = $B.get_page_option('ids')
     if(ids !== undefined){
         if(! Array.isArray(ids)){
-            throw _b_.ValueError.$factory("ids is not a list")
+            $B.RAISE(_b_.ValueError, "ids is not a list")
         }
         if(ids.length == 0){
             // no script to run: return immediately
@@ -587,7 +587,7 @@ var brython = $B.parser.brython = function(options){
                 scripts.push(script)
             }else{
                 console.log(`no script with id '${id}'`)
-                throw _b_.KeyError.$factory(`no script with id '${id}'`)
+                $B.RAISE(_b_.KeyError, `no script with id '${id}'`)
             }
         }
     }else if($B.isWebWorker){

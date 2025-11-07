@@ -274,7 +274,7 @@ $B.helper_functions = helper_functions
 // XXX redundant with above functions
 function raise_error_known_location(type, filename, lineno, col_offset,
         end_lineno, end_col_offset, line, message){
-    var exc = type.$factory(message)
+    var exc = $B.EXC(type, message)
     exc.filename = filename
     exc.lineno = lineno
     exc.offset = col_offset + 1
@@ -290,7 +290,7 @@ function raise_error_known_location(type, filename, lineno, col_offset,
 $B.raise_error_known_location = raise_error_known_location
 
 function make_error_known_token(type, filename, token, message){
-    var exc = type.$factory(message)
+    var exc = $B.EXC(type, message)
     exc.filename = filename
     exc.lineno = token.lineno
     exc.offset = token.col_offset + 1

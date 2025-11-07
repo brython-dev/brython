@@ -6,7 +6,7 @@ var _b_ = $B.builtins
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
         " : 'int' and '" + $B.class_name(other) + "'"
-    throw _b_.TypeError.$factory(msg)
+    $B.RAISE(_b_.TypeError, msg)
 }
 
 
@@ -100,7 +100,7 @@ int.from_bytes = function() {
     if(byteorder == "big"){
         _bytes.reverse()
     }else if(byteorder != "little"){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "byteorder must be either 'little' or 'big'")
     }
     var num = _bytes[0]
@@ -132,11 +132,11 @@ int.to_bytes = function(){
         byteorder = $.byteorder,
         signed = $.signed
     if(! $B.$isinstance(len, _b_.int)){
-        throw _b_.TypeError.$factory("integer argument expected, got " +
+        $B.RAISE(_b_.TypeError, "integer argument expected, got " +
             $B.class_name(len))
     }
     if(["little", "big"].indexOf(byteorder) == -1){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "byteorder must be either 'little' or 'big'")
     }
 
@@ -146,7 +146,7 @@ int.to_bytes = function(){
 
     if(self < 0){
         if(! signed){
-            throw _b_.OverflowError.$factory(
+            $B.RAISE(_b_.OverflowError, 
                 "can't convert negative int to unsigned")
         }
         self = Math.pow(256, len) + self
@@ -160,7 +160,7 @@ int.to_bytes = function(){
             rest = value - 256 * quotient
         res.push(rest)
         if(res.length > len){
-            throw _b_.OverflowError.$factory("int too big to convert")
+            $B.RAISE(_b_.OverflowError, "int too big to convert")
         }
         value = quotient
     }
@@ -230,7 +230,7 @@ int.__float__ = function(self){
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type) == -1){
-        throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
+        $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'int'")
     }
     var res
@@ -293,12 +293,12 @@ int.__format__ = function(self, format_spec){
 int.__floordiv__ = function(self, other){
     if(typeof other == "number"){
         if(other == 0){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
+            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         return Math.floor(self / other)
     }else if(typeof other == "boolean"){
         if(other === false){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
+            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         return self
     }else if(other !== null && other.__class__ === $B.long_int){
@@ -354,7 +354,7 @@ int.__mod__ = function(self, other) {
         self = BigInt(self)
         other = other.value
         if(other == 0){
-            throw _b_.ZeroDivisionError.$factory(
+            $B.RAISE(_b_.ZeroDivisionError, 
                 "integer division or modulo by zero")
         }
         return int_or_long((self % other + other) % other)
@@ -363,7 +363,7 @@ int.__mod__ = function(self, other) {
         other = int_value(other)
         if(other === false){other = 0}
         else if(other === true){other = 1}
-        if(other == 0){throw _b_.ZeroDivisionError.$factory(
+        if(other == 0){$B.RAISE(_b_.ZeroDivisionError, 
             "integer division or modulo by zero")}
         return (self % other + other) % other
     }
@@ -388,15 +388,15 @@ int.__neg__ = function(self){
 
 int.__new__ = function(cls, value, base){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("int.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
     }else if(! $B.$isinstance(cls, _b_.type)){
-        throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")
+        $B.RAISE(_b_.TypeError, "int.__new__(X): X is not a type object")
     }
     if(cls === int){
         return int.$factory(value, base)
     }
     if(cls === bool) {
-        throw _b_.TypeError.$factory("int.__new__(bool) is not safe, use bool.__new__()")
+        $B.RAISE(_b_.TypeError, "int.__new__(bool) is not safe, use bool.__new__()")
     }
     // set method .toString so that BigInt(instance) returns a bingint
     return {
@@ -451,7 +451,7 @@ int.__pow__ = function(self, other, z){
                 var gcd, inv, _
                 [gcd, inv, _] = extended_euclidean(self, z)
                 if(gcd != 1){
-                    throw _b_.ValueError.$factory("not relative primes: " +
+                    $B.RAISE(_b_.ValueError, "not relative primes: " +
                         self + ' and ' + z)
                 }
                 return int.__pow__(int_or_long(inv),
@@ -512,7 +512,7 @@ int.__repr__ = function(self){
 
     if($B.int_max_str_digits != 0 &&
             x >= 10n ** BigInt($B.int_max_str_digits)){
-        throw _b_.ValueError.$factory(`Exceeds the limit ` +
+        $B.RAISE(_b_.ValueError, `Exceeds the limit ` +
             `(${$B.int_max_str_digits}) for integer string conversion`)
     }
     return x.toString()
@@ -522,11 +522,11 @@ int.__setattr__ = function(self, attr, value){
     if(typeof self == "number" || typeof self == "boolean"){
         var cl_name = $B.class_name(self)
         if(_b_.dir(self).indexOf(attr) > -1){
-            throw _b_.AttributeError.$factory("attribute '" + attr +
-                `' of '${cl_name}' objects is not writable`)
+            $B.RAISE_ATTRIBUTE_ERROR("attribute '" + attr +
+                `' of '${cl_name}' objects is not writable`, self, attr)
         }else{
-            throw _b_.AttributeError.$factory(`'${cl_name}' object` +
-                ` has no attribute '${attr}'`)
+            $B.RAISE_ATTRIBUTE_ERROR(`'${cl_name}' object` +
+                ` has no attribute '${attr}'`, self, attr)
         }
     }
     // subclasses of int can have attributes set
@@ -541,7 +541,7 @@ int.__truediv__ = function(self, other){
     if($B.$isinstance(other, int)){
         other = int_value(other)
         if(other == 0){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
+            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         if(other.__class__ === $B.long_int){
             return $B.fast_float(self / parseInt(other.value))
@@ -577,8 +577,8 @@ int.real = (self) => self
 for(var attr of ['numerator', 'denominator', 'imag', 'real']){
     int[attr].setter = (function(x){
         return function(self){
-            throw _b_.AttributeError.$factory(`attribute '${x}' of ` +
-                `'${$B.class_name(self)}' objects is not writable`)
+            $B.RAISE_ATTRIBUTE_ERROR(`attribute '${x}' of ` +
+                `'${$B.class_name(self)}' objects is not writable`, self, x)
         }
     })(attr)
 }
@@ -696,7 +696,7 @@ int.$factory = function(){
     // int() with no argument returns 0
     if(value === missing || value === undefined){
         if(base !== missing){
-            throw _b_.TypeError.$factory("int() missing string argument")
+            $B.RAISE(_b_.TypeError, "int() missing string argument")
         }
         return 0
     }
@@ -705,7 +705,7 @@ int.$factory = function(){
         // transform to string
         value = $B.$getattr(value, 'decode')('latin-1')
     }else if(explicit_base && ! $B.$isinstance(value, _b_.str)){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             "int() can't convert non-string with explicit base")
     }else if($B.$isinstance(value, _b_.memoryview)){
         value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
@@ -713,7 +713,7 @@ int.$factory = function(){
 
     if(! $B.$isinstance(value, _b_.str)){
         if(base !== missing){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "int() can't convert non-string with explicit base")
         }else{
             // booleans, bigints, objects with method __index__
@@ -727,7 +727,7 @@ int.$factory = function(){
                         'The delegation of int() to __trunc__ is deprecated.')
                         let index_method = $B.$getattr(res, '__index__', null)
                         if(index_method === null){
-                            throw _b_.TypeError.$factory('__trunc__ returned' +
+                            $B.RAISE(_b_.TypeError, '__trunc__ returned' +
                                 ` non-Integral (type ${$B.class_name(res)})`)
                         }
                         res = $B.$call(index_method)()
@@ -746,21 +746,21 @@ int.$factory = function(){
                         let klass = $B.get_class(res),
                             index_method = $B.$getattr(klass, '__index__', null)
                         if(index_method === null){
-                            throw _b_.TypeError.$factory(special_method +
+                            $B.RAISE(_b_.TypeError, special_method +
                                 `returned non-int (type ${$B.class_name(res)})`)
                         }
                         return int_value(res)
                     }
                 }
             }
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 "int() argument must be a string, a bytes-like object " +
                 `or a real number, not '${$B.class_name(value)}'`)
         }
     }
 
     if(value.length == 0){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             `invalid literal for int() with base 10: ${_b_.repr(value)}`)
     }
     base = base === missing ? 10: $B.PyNumber_Index(base)
@@ -768,12 +768,12 @@ int.$factory = function(){
     if(! (base >=2 && base <= 36)){
         // throw error (base must be 0, or 2-36)
         if(base != 0){
-            throw _b_.ValueError.$factory("invalid base")
+            $B.RAISE(_b_.ValueError, "invalid base")
         }
     }
 
     function invalid(base){
-        throw _b_.ValueError.$factory("invalid literal for int() with base " +
+        $B.RAISE(_b_.ValueError, "invalid literal for int() with base " +
             base + ": " + _b_.repr(initial_value))
     }
 
@@ -791,7 +791,7 @@ int.$factory = function(){
 
     if(_value.length == 2 && base == 0 &&
             (_value == "0b" || _value == "0o" || _value == "0x")){
-       throw _b_.ValueError.$factory("invalid value")
+       $B.RAISE(_b_.ValueError, "invalid value")
     }
 
     if(_value.endsWith('_')){
@@ -882,7 +882,7 @@ int.$factory = function(){
     }else{
         if($B.int_max_str_digits != 0 &&
                 _value.length > $B.int_max_str_digits){
-            throw _b_.ValueError.$factory("Exceeds the limit " +
+            $B.RAISE(_b_.ValueError, "Exceeds the limit " +
                 `(${$B.int_max_str_digits}) for integer string conversion: ` +
                 `value has ${value.length} digits; use ` +
                 "sys.set_int_max_str_digits() to increase the limit.")
@@ -948,7 +948,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
             }else{
                 var res = $B.$call(bool_method)(obj)
                 if(res !== true && res !== false){
-                    throw _b_.TypeError.$factory("__bool__ should return " +
+                    $B.RAISE(_b_.TypeError, "__bool__ should return " +
                         "bool, returned " + $B.class_name(res))
                 }
                 if(test){
@@ -1036,15 +1036,15 @@ bool.$factory = function(){
 
 bool.__new__ = function (cls, value) {
     if (cls === undefined) {
-        throw _b_.TypeError.$factory("bool.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "bool.__new__(): not enough arguments")
     } else if (!$B.$isinstance(cls, _b_.type)) {
-        throw _b_.TypeError.$factory(`bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
+        $B.RAISE(_b_.TypeError, `bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
     } else if (!_b_.issubclass(cls, bool)) {
         let class_name = $B.class_name(cls)
-        throw _b_.TypeError.$factory(`bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)
+        $B.RAISE(_b_.TypeError, `bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)
     }
     if (arguments.length > 2) {
-        throw _b_.TypeError.$factory(`bool expected at most 1 argument, got ${arguments.length - 1}`)
+        $B.RAISE(_b_.TypeError, `bool expected at most 1 argument, got ${arguments.length - 1}`)
     }
     return bool.$factory(value)
 }
@@ -1066,8 +1066,8 @@ bool.imag = int.imag
 for (var attr of ['real']) {
     bool[attr].setter = (function (x) {
         return function (self) {
-            throw _b_.AttributeError.$factory(`attribute '${x}' of ` +
-                `'${$B.class_name(self)}' objects is not writable`)
+            $B.RAISE_ATTRIBUTE_ERROR(`attribute '${x}' of ` +
+                `'${$B.class_name(self)}' objects is not writable`, self, x)
         }
     })(attr)
 }

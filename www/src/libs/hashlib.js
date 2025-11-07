@@ -36,7 +36,7 @@ function $get_CryptoJS_lib(alg){
         // use file in brython_stdlib.js
         var lib = $B.VFS["crypto_js.rollups." + alg]
         if (lib === undefined){
-            throw _b_.ImportError.$factory("can't import hashlib." + alg)
+            $B.RAISE(_b_.ImportError, "can't import hashlib." + alg)
         }
         var res = lib[1]
         try{
@@ -126,7 +126,7 @@ hash.$factory = function(alg, obj) {
         }
         break
       default:
-        throw $B.builtins.AttributeError.$factory('Invalid hash algorithm: ' + alg)
+        $B.RAISE_ATTRIBUTE_ERROR('Invalid hash algorithm: ' + alg, obj, alg)
     }
     res.digest_size = res.hash._hash.sigBytes
     res.block_size = block_size[alg]

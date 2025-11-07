@@ -26,7 +26,7 @@ function makeTagDict(tagName){
                 }
             }else{ // argument is another DOMNode instance
                 try{self.appendChild(first.elt)}
-                catch(err){throw _b_.ValueError.$factory('wrong element ' + first)}
+                catch(err){$B.RAISE(_b_.ValueError, 'wrong element ' + first)}
             }
         }
 
@@ -54,7 +54,7 @@ function makeTagDict(tagName){
                         arg = arg.replace('_', '-')
                         self.setAttributeNS(null, arg, value)
                     }catch(err){
-                        throw _b_.ValueError.$factory("can't set attribute " + arg)
+                        $B.RAISE(_b_.ValueError, "can't set attribute " + arg)
                     }
                 }
             }

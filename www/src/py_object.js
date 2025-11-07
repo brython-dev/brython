@@ -85,7 +85,7 @@ object.__format__ = function(){
     var $ = $B.args("__format__", 2, {self: null, spec: null},
         ["self", "spec"], arguments, {}, null, null)
     if($.spec !== ""){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             "non-empty format string passed to object.__format__")}
     return _b_.getattr($.self, "__str__")()
 }
@@ -357,7 +357,7 @@ object.__hash__ = function(self){
 
 object.__init__ = function(){
     if(arguments.length == 0){
-        throw _b_.TypeError.$factory("descriptor '__init__' of 'object' " +
+        $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
             "object needs an argument")
     }
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
@@ -367,12 +367,12 @@ object.__init__ = function(){
         var type = $B.get_class(self)
         var tp_init = $B.search_in_mro(type, '__init__')
         if(tp_init !== object.__init__){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 "object.__init__() takes exactly one argument (the instance to initialize)")
         }
         var tp_new = $B.search_in_mro(type, '__new__')
         if(tp_new == object.__new__){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError,
                 `${$B.class_name(self)}.__init__() takes exactly` +
                 ` one argument (the instance to initialize)`)
         }
@@ -390,7 +390,7 @@ object.$new = function(cls){
     return function(){
         var $ = $B.args('__new__', 0, [], [], arguments, {}, 'args', 'kwargs')
         if($.args.length > 0 || _b_.dict.__len__($.kwargs) > 0){
-            throw _b_.TypeError.$factory("object() takes no parameters")
+            $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
         var res = Object.create(null)
         res.__class__ = cls
@@ -410,12 +410,12 @@ object.$no_new_init = function(cls){
 
 object.__new__ = function(cls, ...args){
     if(cls === undefined){
-        throw _b_.TypeError.$factory("object.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "object.__new__(): not enough arguments")
     }
     var init_func = $B.$getattr(cls, "__init__")
     if(init_func === object.__init__){
         if(args.length > 0){
-            throw _b_.TypeError.$factory("object() takes no parameters")
+            $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
     }
     var res = Object.create(null)
@@ -441,7 +441,7 @@ object.__ne__ = function(self, other){
 
 object.__reduce__ = function(self){
     if(! self.__dict__){
-        throw _b_.TypeError.$factory(`cannot pickle '${$B.class_name(self)}' object`)
+        $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(self)}' object`)
     }
     if($B.imported.copyreg === undefined){
         $B.$import('copyreg')
@@ -477,21 +477,21 @@ function getNewArguments(self, klass){
     if(newargs_ex !== null){
         let newargs = newargs_ex()
         if((! newargs) || newargs.__class__ !== _b_.tuple){
-            throw _b_.TypeError.$factory("__getnewargs_ex__ should " +
+            $B.RAISE(_b_.TypeError, "__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
         }
         if(newargs.length != 2){
-            throw _b_.ValueError.$factory("__getnewargs_ex__ should " +
+            $B.RAISE(_b_.ValueError, "__getnewargs_ex__ should " +
                 `return a tuple of length 2, not ${newargs.length}`)
         }
         let args = newargs[0],
             kwargs = newargs[1]
         if((! args) || args.__class__ !== _b_.tuple){
-            throw _b_.TypeError.$factory("first item of the tuple returned " +
+            $B.RAISE(_b_.TypeError, "first item of the tuple returned " +
                 `by __getnewargs_ex__ must be a tuple, not '${$B.class_name(args)}'`)
         }
         if((! kwargs) || kwargs.__class__ !== _b_.dict){
-            throw  _b_.TypeError.$factory("second item of the tuple returned " +
+            $B.RAISE(_b_.TypeError, "second item of the tuple returned " +
                 `by __getnewargs_ex__ must be a dict, not '${$B.class_name(kwargs)}'`)
         }
         return {args, kwargs}
@@ -504,7 +504,7 @@ function getNewArguments(self, klass){
     if(newargs){
         args = newargs(self)
         if((! args) || args.__class__ !== _b_.tuple){
-            throw _b_.TypeError.$factory("__getnewargs__ should " +
+            $B.RAISE(_b_.TypeError, "__getnewargs__ should " +
                 `return a tuple, not '${$B.class_name(args)}'`)
         }
         return {args}
@@ -580,15 +580,16 @@ object.__repr__ = function(self){
 object.__setattr__ = function(self, attr, val){
     if(val === undefined){
         // setting an attribute to 'object' type is not allowed
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError,
             "can't set attributes of built-in/extension type 'object'")
     }else if(self.__class__ === object){
         // setting an attribute to object() is not allowed
         if(object[attr] === undefined){
             throw $B.attr_error(attr, self)
         }else{
-            throw _b_.AttributeError.$factory(
-                "'object' object attribute '" + attr + "' is read-only")
+            $B.RAISE_ATTRIBUTE_ERROR(
+                "'object' object attribute '" + attr + "' is read-only",
+                self, attr)
         }
     }
     if(self.__dict__){
@@ -609,7 +610,7 @@ object.__setattr__.__str__ = function(){return "method object.setattr"}
 
 object.__str__ = function(self){
     if(self === undefined || self.$kw){
-        throw _b_.TypeError.$factory("descriptor '__str__' of 'object' " +
+        $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
     // Default to __repr__
@@ -626,7 +627,7 @@ object.$factory = function(){
             (arguments.length == 1 && arguments[0].$kw &&
                 Object.keys(arguments[0].$kw).length > 0)
             ){
-        throw _b_.TypeError.$factory('object() takes no arguments')
+        $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
     var res = {__class__: object},
         args = [res]

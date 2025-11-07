@@ -45,7 +45,7 @@ $B.imported._string = {
         // Parse the argument as a format string
 
         if(! _b_.isinstance(format_string, _b_.str)){
-            throw _b_.ValueError.$factory("Invalid format string type: " +
+            $B.RAISE(_b_.ValueError, "Invalid format string type: " +
                 $B.class_name(format_string))
         }
 

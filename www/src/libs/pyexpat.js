@@ -1495,25 +1495,25 @@ function create_parser(){
         ns_sep = $.namespace_separator,
         intern = $.intern
     if(encoding !== _b_.None && ! _b_.isinstance(encoding, _b_.str)){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             `ParserCreate() argument 'encoding' must be ` +
             `str or None, not ${$B.class_name(encoding)}`)
     }
     if(ns_sep !== _b_.None){
         if(! _b_.isinstance(ns_sep, _b_.str)){
-            throw _b_.TypeError.$factory(
+            $B.RAISE(_b_.TypeError, 
                 `ParserCreate() argument 'namespace_separator' must be ` +
                 `str or None, not ${$B.class_name(ns_sep)}`)
         }
         if(ns_sep.length != 1){
-            throw _b_.ValueError.$factory("namespace_separator must be at " +
+            $B.RAISE(_b_.ValueError, "namespace_separator must be at " +
                 "most one character, omitted, or None")
         }
     }
     if(intern === _b_.None){
         intern = $B.empty_dict()
     }else if(! _b_.isinstance(intern, _b_.dict)){
-        throw _b_.TypeError.$factory('intern must be a dictionary')
+        $B.RAISE(_b_.TypeError, 'intern must be a dictionary')
     }
     return xmlparser.$factory(encoding, ns_sep, intern)
 }

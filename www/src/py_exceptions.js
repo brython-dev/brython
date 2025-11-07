@@ -63,13 +63,13 @@ $B.$raise = function(arg, cause){
         if(active_exc !== undefined){
             throw active_exc
         }
-        throw _b_.RuntimeError.$factory("No active exception to reraise")
+        $B.RAISE(_b_.RuntimeError, "No active exception to reraise")
     }else{
         if($B.$isinstance(arg, _b_.BaseException)){
             if(arg.__class__ === _b_.StopIteration &&
                     $B.frame_obj.frame.$is_generator){
                 // PEP 479
-                arg = _b_.RuntimeError.$factory("generator raised StopIteration")
+                arg = $B.EXC(_b_.RuntimeError, "generator raised StopIteration")
             }
             arg.__context__ = active_exc === undefined ? _b_.None : active_exc
             arg.__cause__ = cause || _b_.None
@@ -79,7 +79,7 @@ $B.$raise = function(arg, cause){
             if(arg === _b_.StopIteration){
                 if($B.frame_obj.frame[1].$is_generator){
                     // PEP 479
-                    throw _b_.RuntimeError.$factory("generator raised StopIteration")
+                    $B.RAISE(_b_.RuntimeError, "generator raised StopIteration")
                 }
             }
             var exc = $B.$call(arg)()
@@ -88,7 +88,7 @@ $B.$raise = function(arg, cause){
             exc.__suppress_context__ = cause !== undefined
             throw exc
         }else{
-            throw _b_.TypeError.$factory("exceptions must derive from BaseException")
+            $B.RAISE(_b_.TypeError, "exceptions must derive from BaseException")
         }
     }
 }
@@ -354,11 +354,11 @@ $B.exception = function(js_exc){
             console.log('Javascript error', js_exc)
         }
         var msg = js_exc.name + ': ' + js_exc.message
-        exc = _b_.JavascriptError.$factory(msg)
+        exc = $B.EXC(_b_.JavascriptError, msg)
         exc.$js_exc = js_exc
         if($B.is_recursion_error(js_exc)){
             msg = "maximum recursion depth exceeded"
-            exc = _b_.RecursionError.$factory(msg)
+            exc = $B.EXC(_b_.RecursionError, msg)
         }
         exc.__cause__ = _b_.None
         exc.__context__ = _b_.None
@@ -408,6 +408,21 @@ $B.is_recursion_error = function(js_exc){
         (err_type == 'RangeError' && err_msg == 'Maximum call stack size exceeded')
 }
 
+$B.RAISE = function(error_type, message){
+    throw $B.$call(error_type)(message)
+}
+
+$B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name){
+    var exc = $B.EXC(_b_.AttributeError, message)
+    exc.obj = obj
+    exc.name = name
+    throw exc
+}
+
+$B.EXC = function(error_type, message){
+    return $B.$call(error_type)(message)
+}
+
 // built-in exceptions
 
 function make_builtin_exception(exc_name, base, set_value){
@@ -423,7 +438,8 @@ function make_builtin_exception(exc_name, base, set_value){
         }
         return
     }
-    var exc_class = $B.make_class(exc_name,
+    var exc_class = $B.make_class(exc_name)
+    /*,
         function(){
             var err = Error()
             err.args = $B.fast_tuple(Array.from(arguments))
@@ -444,6 +460,7 @@ function make_builtin_exception(exc_name, base, set_value){
             return err
         }
     )
+    */
     exc_class.__bases__ = [base]
     exc_class.__mro__ = _b_.type.$mro(exc_class).slice(1)
     $B.set_func_names(exc_class, 'builtins')
@@ -452,9 +469,16 @@ function make_builtin_exception(exc_name, base, set_value){
 
 make_builtin_exception("BaseException", _b_.object)
 
-_b_.BaseException.__init__ = function(self){
-    var args = arguments[1] === undefined ? [] : [arguments[1]]
-    self.args = _b_.tuple.$factory(args)
+function check_no_keywords(obj, kw){
+    if(_b_.len(kw)){
+        $B.RAISE(_b_.TypeError, `${$B.class_name(obj)}() takes no keyword arguments`)
+    }
+}
+
+_b_.BaseException.__init__ = function(){
+    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
+    check_no_keywords($.self, $.kw)
+    $.self.args = $B.fast_tuple($.args)
 }
 
 _b_.BaseException.__repr__ = function(self){
@@ -476,10 +500,17 @@ _b_.BaseException.__str__ = function(self){
 }
 
 _b_.BaseException.__new__ = function(cls){
-    var err = _b_.BaseException.$factory()
-    err.__class__ = cls
-    err.__dict__ = $B.empty_dict()
-    return err
+    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw')
+    return {
+        __class__: $.cls,
+        __dict__: $B.empty_dict(),
+        args: $B.fast_tuple($.args),
+        notes: _b_.None,
+        __traceback__: _b_.None,
+        __cause__: _b_.None,
+        __context__: _b_.None,
+        __suppress_context__: false
+    }
 }
 
 _b_.BaseException.__getattr__ = function(self, attr){
@@ -499,7 +530,7 @@ _b_.BaseException.__getattr__ = function(self, attr){
 _b_.BaseException.add_note = function(self, note){
     // PEP 678
     if(! $B.$isinstance(note, _b_.str)){
-        throw _b_.TypeError.$factory('note must be a str, not ' +
+        $B.RAISE(_b_.TypeError, 'note must be a str, not ' +
             `'${$B.class_name(note)}'`)
     }
     if(self.__notes__ !== undefined){
@@ -527,51 +558,93 @@ make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
     "RuntimeError", "SystemError", "TypeError", "ValueError", "Warning"],
     _b_.Exception)
 
-make_builtin_exception("StopIteration", _b_.Exception, "value")
-make_builtin_exception("StopAsyncIteration", _b_.Exception, "value")
-make_builtin_exception("ImportError", _b_.Exception, "name")
-make_builtin_exception("SyntaxError", _b_.Exception,
-    function(err, args){
-        err.msg = args[0]
-        err.args = $B.fast_tuple(Array.from(args))
-        var details = args[1]
-        if(details){
+make_builtin_exception("StopIteration", _b_.Exception)
+
+_b_.StopIteration.__init__ = function(){
+    var $ = $B.args("StopIteration", 1, {self: null},
+                ['self'], arguments, {}, 'args', 'kw')
+    check_no_keywords($.self, $.kw)
+    _b_.BaseException.__init__($.self, ...$.args)
+    if($.args.length > 0){
+        $.self.value = $.args[0]
+    }
+}
+
+_b_.StopIteration.value = $B.getset_descriptor.$factory(
+    _b_.StopIteration,
+    'value',
+    function(_self){
+        return _self.value ?? _b_.None
+    },
+    function(_self, value){
+        _self.value = value
+    }
+)
+
+$B.set_func_names(_b_.StopIteration, 'builtins')
+
+make_builtin_exception("StopAsyncIteration", _b_.Exception)
+make_builtin_exception("ImportError", _b_.Exception)
+
+_b_.ImportError.__init__ = function(){
+    var $ = $B.args("ImportError", 1, {self: null},
+                ['self'], arguments, {}, 'args', 'kw')
+    _b_.BaseException.__init__($.self, ...$.args)
+    $B.set_expected_kwargs($.self, ['name', 'path'], $.kw)
+}
+
+$B.set_func_names(_b_.ImportError, 'builtins')
+
+make_builtin_exception("SyntaxError", _b_.Exception)
+
+_b_.SyntaxError.__init__ = function(){
+    var $ = $B.args('SyntaxError', 1, {self: null},
+                ['self'], arguments, {}, 'args', 'kw')
+    var _self = $.self,
+        args = $.args,
+        kw = $.kw
+    check_no_keywords(_self, kw)
+
+    _self.msg = args[0] ?? _b_.None
+    _self.args = $B.fast_tuple(Array.from(args))
+    var details = []
+    if(args.length > 1){
+        details = args[1]
+        if(details.length > 0){
             details = _b_.tuple.$factory(details)
             if(details.length < 4){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError,
                     `function takes at least 4 arguments (${args.length} given)`)
             }
             if(details.length > 6){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError,
                     `function takes at most 6 arguments (${args.length} given)`)
-            }
-        }else{
-            details = []
-        }
-        let attrs = ['filename', 'lineno', 'offset', 'text', 'end_lineno',
-                     'end_offset'],
-            expected_types = [_b_.str, _b_.int, _b_.int, _b_.str, _b_.int,
-                     _b_.int]
-        for(var i = 0; i < attrs.length; i++){
-            if(details[i] !== undefined){
-                if(! $B.$isinstance(details[i], expected_types[i])){
-                    throw _b_.TypeError.$factory(`item #${i + 1} (${attrs[i]}) ` +
-                        `of the second argument of SyntaxError should be ` +
-                        `'${expected_types[i].__name__}', not ` +
-                        `'${$B.class_name(details[i])}'`)
-                }
-                err[attrs[i]] = details[i]
-            }else{
-                err[attrs[i]] = _b_.None
             }
         }
     }
-)
+    let attrs = ['filename', 'lineno', 'offset', 'text', 'end_lineno',
+                 'end_offset'],
+        expected_types = [_b_.str, _b_.int, _b_.int, _b_.str, _b_.int,
+                 _b_.int]
+    for(var i = 0; i < attrs.length; i++){
+        if(details[i] !== undefined){
+            if(! $B.$isinstance(details[i], expected_types[i])){
+                $B.RAISE(_b_.TypeError, `item #${i + 1} (${attrs[i]}) ` +
+                    `of the second argument of SyntaxError should be ` +
+                    `'${expected_types[i].__name__}', not ` +
+                    `'${$B.class_name(details[i])}'`)
+            }
+            _self[attrs[i]] = details[i]
+        }else{
+            _self[attrs[i]] = _b_.None
+        }
+    }
+}
 
 make_builtin_exception(["FloatingPointError", "OverflowError",
     "ZeroDivisionError"], _b_.ArithmeticError)
 
-make_builtin_exception("ModuleNotFoundError", _b_.ImportError, "name")
+make_builtin_exception("ModuleNotFoundError", _b_.ImportError)
 
 make_builtin_exception(["IndexError","KeyError"], _b_.LookupError)
 
@@ -615,29 +688,31 @@ _b_.KeyError.__str__ = function(self){
 
 $B.set_func_names(_b_.KeyError, 'builtins')
 
-// AttributeError supports keyword-only "name" and "obj" parameters
-_b_.AttributeError = $B.make_class('AttributeError',
-    function(){
-        var $ = $B.args("AttributeError", 3,
-                {"msg": null, "name": null, "obj": null},
-                ["msg", "name", "obj"], arguments,
-                {msg: _b_.None, name: _b_.None, obj: _b_.None}, "*", null)
-        var err = Error()
-        err.__class__ = _b_.AttributeError
-        err.__traceback__ = _b_.None
-        err.$py_error = true
-        err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])
-        err.name = $.name
-        err.obj = $.obj
-        if(err.obj === undefined){
-            console.log('pas de obj', $)
+$B.set_expected_kwargs = function(obj, expected, kwargs){
+    for(var item of _b_.dict.$iter_items(kwargs)){
+        if(expected.includes(item.key)){
+            obj[item.key] = item.value
+        }else{
+            var msg = `${$B.class_name(obj)}()  got an unexpected ` +
+                      `keyword argument '${item.key}'`
+            var suggestions = calculate_suggestions(expected, item.key)
+            if(suggestions){
+                msg += `. Did you mean '${suggestions}'?`
+            }
+            $B.RAISE(_b_.TypeError, msg)
         }
-        err.__cause__ = _b_.None // XXX fix me
-        err.__context__ = _b_.None // XXX fix me
-        err.__suppress_context__ = false // XXX fix me
-        return err
     }
-)
+}
+
+// AttributeError supports keyword-only "name" and "obj" parameters
+_b_.AttributeError = $B.make_class('AttributeError')
+
+_b_.AttributeError.__init__ = function(){
+    var $ = $B.args("AttributeError", 1, {self: null},
+                ['self'], arguments, {}, 'args', 'kw')
+    _b_.BaseException.__init__($.self, ...$.args)
+    $B.set_expected_kwargs($.self, ['name', 'obj'], $.kw)
+}
 
 _b_.AttributeError.__bases__ = [_b_.Exception]
 _b_.AttributeError.__mro__ = _b_.type.$mro(_b_.AttributeError)
@@ -657,33 +732,20 @@ $B.attr_error = function(name, obj){
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return _b_.AttributeError.$factory({$kw:[{name, obj, msg}]})
+    return $B.$call(_b_.AttributeError)(msg, {$kw:[{name, obj}]})
 }
 
 // NameError supports keyword-only "name" parameter
-_b_.NameError = $B.make_class('NameError',
-    function(){
-        var $ = $B.args("NameError", 2, {"message":null, "name": null},
-                ["message", "name"], arguments,
-                {message: _b_.None, name: _b_.None}, "*", null, 1)
-
-        var err = Error()
-        err.__class__ = _b_.NameError
-        err.__traceback__ = _b_.None
-        err.$py_error = true
-
-        err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])
-        err.name = $.name
-
-        err.__cause__ = _b_.None // XXX fix me
-        err.__context__ = _b_.None // XXX fix me
-        err.__suppress_context__ = false // XXX fix me
-        return err
-    }
-)
+_b_.NameError = $B.make_class('NameError')
 
 _b_.NameError.__bases__ = [_b_.Exception]
 _b_.NameError.__mro__ = _b_.type.$mro(_b_.NameError).slice(1)
+
+_b_.NameError.__init__ = function(){
+    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
+    _b_.BaseException.__init__($.self, ...$.args)
+    $B.set_expected_kwargs($.self, ['name'], $.kw)
+}
 
 _b_.NameError.__str__ = function(self){
     return self.args[0]
@@ -701,13 +763,13 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 // Shortcut to create a NameError
 $B.name_error = function(name){
-    var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
+    var exc = $B.$call(_b_.NameError)(`name '${name}' is not defined`)
     exc.name = name
     return exc
 }
 
 $B.recursion_error = function(frame){
-    var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
+    var exc = $B.$call(_b_.RecursionError)("maximum recursion depth exceeded")
     $B.set_exc(exc, frame)
     return exc
 }
@@ -774,41 +836,35 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
 }
 
 // PEP 654
-_b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup",
-    function(){
-        var missing = {},
-            $ = $B.args("BaseExceptionGroup", 2,
-                        {message: null, exceptions: null},
-                        ['message', 'exceptions'], arguments,
-                        {exceptions: missing}, null, null)
-        var err = Error()
-        err.args = $B.fast_tuple(Array.from(arguments))
-        err.__class__ = _b_.BaseExceptionGroup
-        err.__traceback__ = _b_.None
-        err.$py_error = true
+_b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup")
 
-        err.message = $.message
-        err.exceptions = $.exceptions === missing ? [] : $.exceptions
-        if(err.exceptions !== _b_.None){
-            var exc_list = _b_.list.$factory(err.exceptions)
-            var all_exceptions = true
-            for(var exc of exc_list){
-                if(! $B.$isinstance(exc, _b_.Exception)){
-                    all_exceptions = false
-                    break
-                }
-            }
-            if(all_exceptions){
-                err.__class__ = _b_.ExceptionGroup
+_b_.BaseExceptionGroup.__new__ = function(){
+    var missing = {},
+        $ = $B.args("BaseExceptionGroup", 3,
+                    {cls: null, message: null, exceptions: null},
+                    ['cls', 'message', 'exceptions'], arguments,
+                    {exceptions: missing}, null, null)
+    var cls = $.cls
+    var exceptions = $.exceptions === missing ? [] : $.exceptions
+    if(exceptions !== _b_.None){
+        var exc_list = _b_.list.$factory(exceptions)
+        var all_exceptions = true
+        for(var exc of exc_list){
+            if(! $B.$isinstance(exc, _b_.Exception)){
+                all_exceptions = false
+                break
             }
         }
-
-        err.__cause__ = _b_.None // XXX fix me
-        err.__context__ = _b_.None // XXX fix me
-        err.__suppress_context__ = false // XXX fix me
-        return err
+        if(all_exceptions){
+            cls = _b_.ExceptionGroup
+        }
     }
-)
+    var args = Array.from(arguments).slice(1)
+    var exc = _b_.BaseException.__new__(cls, ...args)
+    exc.message = $.message
+    exc.exceptions = exceptions
+    return exc
+}
 
 _b_.BaseExceptionGroup.__bases__ = [_b_.BaseException]
 
@@ -897,7 +953,7 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGroup",
             var exc_list = _b_.list.$factory(err.exceptions)
             for(var exc of exc_list){
                 if(! $B.$isinstance(exc, _b_.Exception)){
-                    throw _b_.TypeError.$factory(
+                    $B.RAISE(_b_.TypeError,
                         'Cannot nest BaseExceptions in an ExceptionGroup')
                 }
             }
@@ -1414,8 +1470,6 @@ $B.error_trace = function(err){
         trace += trace_from_stack(err)
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
-        var save_frame_obj = $B.frame_obj
-        $B.frame_obj = err.$frame_obj
         if(err.__class__ === _b_.NameError){
             let suggestion = $B.offer_suggestions_for_name_error(err)
             if(suggestion !== _b_.None && suggestion !== err.name){
@@ -1426,7 +1480,6 @@ $B.error_trace = function(err){
                 trace += `. Did you forget to import '${err.name}'?`
             }
         }else if(err.__class__ === _b_.AttributeError){
-            var tb = err.__traceback__
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
             if(suggestion !== _b_.None){
                 trace += `. Did you mean: '${suggestion}'?`
@@ -1436,7 +1489,6 @@ $B.error_trace = function(err){
                 trace += `. Did you mean: '${err.$suggestion}'?`
             }
         }
-        $B.frame_obj = save_frame_obj
     }else{
         trace = err + ""
     }
@@ -1476,6 +1528,7 @@ $B.show_error = function(err){
 
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
+    console.log('handle error', $B.frame_obj)
     if(err.$handled){
         return
     }

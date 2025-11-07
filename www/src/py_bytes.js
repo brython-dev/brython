@@ -23,7 +23,7 @@ $B.to_bytes = function(obj){
         if(ga !== null){
             res = $B.$call(ga)().source
         }else{
-            throw _b_.TypeError.$factory("object doesn't support the buffer protocol")
+            $B.RAISE(_b_.TypeError, "object doesn't support the buffer protocol")
         }
     }
     return res
@@ -39,7 +39,7 @@ function _strip(self, cars, lr){
     }else if($B.$isinstance(cars, bytes)){
         cars = cars.source
     }else{
-        throw _b_.TypeError.$factory("Type str doesn't support the buffer API")
+        $B.RAISE(_b_.TypeError, "Type str doesn't support the buffer API")
     }
     if(lr == 'l'){
         let i,
@@ -101,9 +101,9 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
 bytearray.__setitem__ = function(self, arg, value){
     if($B.$isinstance(arg, _b_.int)){
         if(! $B.$isinstance(value, _b_.int)){
-            throw _b_.TypeError.$factory('an integer is required')
+            $B.RAISE(_b_.TypeError, 'an integer is required')
         }else if(value > 255){
-            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+            $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
         var pos = arg
         if(arg < 0){
@@ -112,7 +112,7 @@ bytearray.__setitem__ = function(self, arg, value){
         if(pos >= 0 && pos < self.source.length){
             self.source[pos] = value
         }else{
-            throw _b_.IndexError.$factory('list index out of range')
+            $B.RAISE(_b_.IndexError, 'list index out of range')
         }
     }else if($B.$isinstance(arg, _b_.slice)){
         var start = arg.start === _b_.None ? 0 : arg.start
@@ -133,31 +133,31 @@ bytearray.__setitem__ = function(self, arg, value){
             var $temp = _b_.list.$factory(value)
             for(var i = $temp.length - 1; i >= 0; i--){
                 if(! $B.$isinstance($temp[i], _b_.int)){
-                    throw _b_.TypeError.$factory('an integer is required')
+                    $B.RAISE(_b_.TypeError, 'an integer is required')
                 }else if($temp[i] > 255){
-                    throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+                    $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
                 }
                 self.source.splice(start, 0, $temp[i])
             }
         }catch(err){
-            throw _b_.TypeError.$factory("can only assign an iterable")
+            $B.RAISE(_b_.TypeError, "can only assign an iterable")
         }
     }else{
-        throw _b_.TypeError.$factory('list indices must be integer, not ' +
+        $B.RAISE(_b_.TypeError, 'list indices must be integer, not ' +
             $B.class_name(arg))
     }
 }
 
 bytearray.append = function(self, b){
-    if(arguments.length != 2){throw _b_.TypeError.$factory(
+    if(arguments.length != 2){$B.RAISE(_b_.TypeError, 
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
     }
     if(! $B.$isinstance(b, _b_.int)){
-        throw _b_.TypeError.$factory("an integer is required")
+        $B.RAISE(_b_.TypeError, "an integer is required")
     }
     if(b > 255){
-        throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+        $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
     }
     self.source[self.source.length] = b
 }
@@ -165,7 +165,7 @@ bytearray.append = function(self, b){
 bytearray.extend = function(self, b){
     if(self.in_iteration){
         // happens in re.finditer()
-        throw _b_.BufferError.$factory("Existing exports of data: object " +
+        $B.RAISE(_b_.BufferError, "Existing exports of data: object " +
             "cannot be re-sized")
     }
     if(b.__class__ === bytearray || b.__class__ === bytes){
@@ -180,15 +180,15 @@ bytearray.extend = function(self, b){
 
 bytearray.insert = function(self, pos, b){
     if(arguments.length != 3){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             "insert takes exactly 2 arguments (" + (arguments.length - 1) +
             " given)")
     }
     if(! $B.$isinstance(b, _b_.int)){
-        throw _b_.TypeError.$factory("an integer is required")
+        $B.RAISE(_b_.TypeError, "an integer is required")
     }
     if(b > 255){
-        throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+        $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
     }
     _b_.list.insert(self.source, pos, b)
 }
@@ -224,7 +224,7 @@ bytes.__add__ = function(self, other){
             source: self.source.concat(other_bytes)
         }
     }
-    throw _b_.TypeError.$factory("can't concat bytes to " +
+    $B.RAISE(_b_.TypeError, "can't concat bytes to " +
         _b_.str.$factory(other))
 }
 
@@ -292,7 +292,7 @@ bytes.__getitem__ = function(self, arg){
         if(pos >= 0 && pos < self.source.length){
             return self.source[pos]
         }
-        throw _b_.IndexError.$factory("index out of range")
+        $B.RAISE(_b_.IndexError, "index out of range")
     }else if($B.$isinstance(arg, _b_.slice)){
         let s = _b_.slice.$conv_for_seq(arg, self.source.length),
             start = s.start,
@@ -417,12 +417,12 @@ bytes.__new__ = function(){
         }
     }else if(typeof $.source == "string" || $B.$isinstance($.source, _b_.str)){
         if($.encoding === missing){
-            throw _b_.TypeError.$factory('string argument without an encoding')
+            $B.RAISE(_b_.TypeError, 'string argument without an encoding')
         }
         $.errors = $.errors === missing ? 'strict' : $.errors
         let res = encode($.source, $.encoding, $.errors)
         if(! $B.$isinstance(res, bytes)){
-            throw _b_.TypeError.$factory(`'${$.encoding}' codec returns ` +
+            $B.RAISE(_b_.TypeError, `'${$.encoding}' codec returns ` +
                 `${$B.class_name(res)}, not bytes`)
         }
         // encode returns bytes
@@ -430,7 +430,7 @@ bytes.__new__ = function(){
         return res
     }
     if($.encoding !== missing){
-        throw _b_.TypeError.$factory("encoding without a string argument")
+        $B.RAISE(_b_.TypeError, "encoding without a string argument")
     }
     if(typeof $.source == "number" || $B.$isinstance($.source, _b_.int)){
         var size = $B.PyNumber_Index($.source)
@@ -452,12 +452,12 @@ bytes.__new__ = function(){
             }catch(err){
                 var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
                 if(bytes_method === _b_.None){
-                    throw _b_.TypeError.$factory("cannot convert " +
+                    $B.RAISE(_b_.TypeError, "cannot convert " +
                         `'${$B.class_name(source)}' object to bytes`)
                 }
                 let res = $B.$call(bytes_method)()
                 if(! $B.$isinstance(res, _b_.bytes)){
-                    throw _b_.TypeError.$factory(`__bytes__ returned ` +
+                    $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
                 }
                 return res
@@ -469,7 +469,7 @@ bytes.__new__ = function(){
             if(item >= 0 && item < 256){
                 source.push(item)
             }else{
-                throw _b_.ValueError.$factory(
+                $B.RAISE(_b_.ValueError, 
                     "bytes must be in range (0, 256)")
             }
         }
@@ -496,13 +496,13 @@ bytes.$new = function(cls, source, encoding, errors){
     }else{
         if(typeof source == "string" || $B.$isinstance(source, _b_.str)){
             if(encoding === undefined){
-                throw _b_.TypeError.$factory("string argument without an encoding")
+                $B.RAISE(_b_.TypeError, "string argument without an encoding")
             }
             int_list = encode(source, encoding || "utf-8", errors || "strict")
         }else{
             if(encoding !== undefined){
                 console.log('encoding', encoding)
-                throw _b_.TypeError.$factory("encoding without a string argument")
+                $B.RAISE(_b_.TypeError, "encoding without a string argument")
             }
             // tranform iterable "source" into a list
             if(Array.isArray(source)){
@@ -513,12 +513,12 @@ bytes.$new = function(cls, source, encoding, errors){
                 }catch(err){
                     var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
                     if(bytes_method === _b_.None){
-                        throw _b_.TypeError.$factory("cannot convert " +
+                        $B.RAISE(_b_.TypeError, "cannot convert " +
                             `'${$B.class_name(source)}' object to bytes`)
                     }
                     var res = $B.$call(bytes_method)()
                     if(! $B.$isinstance(res, _b_.bytes)){
-                        throw _b_.TypeError.$factory(`__bytes__ returned ` +
+                        $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                             `non-bytes (type ${$B.class_name(res)})`)
                     }
                     return res
@@ -527,12 +527,12 @@ bytes.$new = function(cls, source, encoding, errors){
                     try{
                         var item = _b_.int.$factory(int_list[i])
                     }catch(err){
-                        throw _b_.TypeError.$factory("'" +
+                        $B.RAISE(_b_.TypeError, "'" +
                             $B.class_name(int_list[i]) + "' object " +
                             "cannot be interpreted as an integer")
                     }
                     if(item < 0 || item > 255){
-                        throw _b_.ValueError.$factory("bytes must be in range" +
+                        $B.RAISE(_b_.ValueError, "bytes must be in range" +
                             "(0, 256)")
                     }
                 }
@@ -610,13 +610,13 @@ bytes.count = function() {
 
     if(typeof $.sub == "number"){
         if ($.sub < 0 || $.sub > 255)
-            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+            $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         len = 1
     }else if(!$.sub.__class__){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name($.sub) + "'")
     }else if(!$.sub.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name($.sub) + "'")
     }else{
         len = $.sub.source.length
@@ -668,14 +668,14 @@ bytes.endswith = function() {
                     return true
                 }
             }else{
-                throw _b_.TypeError.$factory("endswith first arg must be " +
+                $B.RAISE(_b_.TypeError, "endswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
                     $B.class_name($.suffix))
             }
         }
         return false
     }else{
-        throw _b_.TypeError.$factory("endswith first arg must be bytes " +
+        $B.RAISE(_b_.TypeError, "endswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.class_name($.suffix))
     }
 }
@@ -718,14 +718,14 @@ bytes.find = function(self, sub){
     }
     if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
-            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+            $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
         return self.source.slice(0, end == -1 ? undefined : end).indexOf(sub, start)
     }else if(! sub.__class__){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name(sub) + "'")
     }else if(! sub.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name(sub) + "'")
     }
     end = end == -1 ? self.source.length : Math.min(self.source.length, end)
@@ -757,7 +757,7 @@ bytes.fromhex = function(){
         source = []
     for(var i = 0; i < string.length; i += 2){
         if(i + 2 > string.length){
-            throw _b_.ValueError.$factory("non-hexadecimal number found " +
+            $B.RAISE(_b_.ValueError, "non-hexadecimal number found " +
                 "in fromhex() arg")
         }
         source.push(_b_.int.$factory(string.substr(i, 2), 16))
@@ -811,7 +811,7 @@ bytes.index = function() {
     var index = bytes.find($.self, $.sub, $.start, $.end)
     console.log('index', index)
     if(index == -1){
-        throw _b_.ValueError.$factory("subsection not found")
+        $B.RAISE(_b_.ValueError, "subsection not found")
     }
     return index
 }
@@ -1001,10 +1001,10 @@ bytes.ljust = function() {
         {fillbyte: bytes.$factory([32])}, null, null)
 
     if(!$.fillbyte.__class__){
-        throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
+        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
             "not '" + $B.class_name($.fillbyte) + "'")
     }else if (!$.fillbyte.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
+        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
             "not '" + $B.class_name($.fillbyte) + "'")
     }
 
@@ -1041,10 +1041,10 @@ bytes.partition = function() {
             arguments, {}, null, null)
 
     if(! $.sep.__class__){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name($.sep) + "'")
     }else if (! $.sep.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name($.sep) + "'")
     }
 
@@ -1063,7 +1063,7 @@ bytes.removeprefix = function(){
     var $ = $B.args("removeprefix", 2, {self: null, prefix: null},
                     ["self", "prefix"], arguments, {}, null, null)
     if(!$B.$isinstance($.prefix, [bytes, bytearray])){
-        throw _b_.ValueError.$factory("prefix should be bytes, not " +
+        $B.RAISE(_b_.ValueError, "prefix should be bytes, not " +
             `'${$B.class_name($.prefix)}'`)
     }
     if(bytes.startswith($.self, $.prefix)){
@@ -1077,7 +1077,7 @@ bytes.removesuffix = function(){
     var $ = $B.args("removesuffix", 2, {self: null, suffix: null},
                     ["self", "suffix"], arguments, {}, null, null)
     if(!$B.$isinstance($.suffix, [bytes, bytearray])){
-        throw _b_.ValueError.$factory("suffix should be bytes, not " +
+        $B.RAISE(_b_.ValueError, "suffix should be bytes, not " +
             `'${$B.class_name($.suffix)}'`)
     }
     if(bytes.endswith($.self, $.suffix)){
@@ -1101,18 +1101,18 @@ bytes.replace = function(){
     var count = $.count >= 0 ? $.count : src.length
 
     if(! $.old.__class__){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name($.old) + "'")
     }else if(! $.old.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name($.sep) + "'")
     }
 
     if(! $.new.__class__){
-        throw _b_.TypeError.$factory("second argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "second argument must be a bytes-like " +
             "object, not '" + $B.class_name($.old) + "'")
     }else if(! $.new.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("second argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "second argument must be a bytes-like " +
             "object, not '" + $B.class_name($.sep) + "'")
     }
 
@@ -1149,15 +1149,15 @@ bytes.rfind = function(self, subbytes){
     }
     if(typeof sub == "number"){
         if(sub < 0 || sub > 255){
-            throw _b_.ValueError.$factory("byte must be in range(0, 256)")
+            $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
         return $.self.source.slice(start, $.end == -1 ? undefined : $.end).
             lastIndexOf(sub) + start
     }else if(! sub.__class__){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name($.sub) + "'")
     }else if(! sub.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("first argument must be a bytes-like " +
+        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
             "object, not '" + $B.class_name(sub) + "'")
     }
     end = end == -1 ? self.source.length : Math.min(self.source.length, end)
@@ -1185,7 +1185,7 @@ bytes.rindex = function() {
 
     var index = bytes.rfind($.self, $.sub, $.start, $.end)
     if(index == -1){
-        throw _b_.ValueError.$factory("subsection not found")
+        $B.RAISE(_b_.ValueError, "subsection not found")
     }
     return index
 }
@@ -1196,10 +1196,10 @@ bytes.rjust = function() {
         {fillbyte: bytes.$factory([32])}, null, null)
 
     if (!$.fillbyte.__class__){
-        throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
+        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
             "not '" + $B.class_name($.fillbyte) + "'")
     }else if (!$.fillbyte.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("argument 2 must be a byte string of length 1, " +
+        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
             "not '" + $B.class_name($.fillbyte) + "'")
     }
 
@@ -1216,10 +1216,10 @@ bytes.rpartition = function() {
             arguments, {}, null, null)
 
     if(!$.sep.__class__){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
                 "not '" + $B.class_name($.sep) + "'")
     }else if (!$.sep.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
                 "not '" + $B.class_name($.sep) + "'")
     }
 
@@ -1243,10 +1243,10 @@ bytes.split = function(){
         start = 0,
         stop = 0
     if(! $.sep.__class__ ){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name($.sep) + "'")
     }else if(! $.sep.__class__.$buffer_protocol){
-        throw _b_.TypeError.$factory("a bytes-like object is required, " +
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name($.sep) + "'")
     }
     var seps = $.sep.source,
@@ -1323,7 +1323,7 @@ bytes.startswith = function(){
             if($B.$isinstance($.prefix[i], bytes)){
                 items = items.concat($.prefix[i].source)
             }else{
-                throw _b_.TypeError.$factory("startswith first arg must be " +
+                $B.RAISE(_b_.TypeError, "startswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
                     $B.class_name($.prefix))
             }
@@ -1331,7 +1331,7 @@ bytes.startswith = function(){
         let prefix = bytes.$factory(items)
         return bytes.startswith($.self, prefix, start)
     }else{
-        throw _b_.TypeError.$factory("startswith first arg must be bytes " +
+        $B.RAISE(_b_.TypeError, "startswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.class_name($.prefix))
     }
 }
@@ -1391,7 +1391,7 @@ bytes.translate = function(self, table, _delete) {
     }else if($B.$isinstance(_delete, bytes)){
         _delete = _delete.source
     }else{
-        throw _b_.TypeError.$factory("Type " +
+        $B.RAISE(_b_.TypeError, "Type " +
             $B.get_class(_delete).__name + " doesn't support the buffer API")
     }
     var res = [],
@@ -1437,7 +1437,7 @@ bytes.zfill = function(self, width) {
 }
 
 function $UnicodeEncodeError(encoding, code_point, position){
-    throw _b_.UnicodeEncodeError.$factory("'" + encoding +
+    $B.RAISE(_b_.UnicodeEncodeError, "'" + encoding +
         "' codec can't encode character " + _b_.hex(code_point) +
         " in position " + position)
 }
@@ -1625,7 +1625,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                       if(errors == "ignore"){
                           pos++
                       }else{
-                          throw _b_.UnicodeDecodeError.$factory(
+                          $B.RAISE(_b_.UnicodeDecodeError, 
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
                               err_info[1] +
@@ -1659,7 +1659,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                           }
                           pos = err_info[3]
                       }else{
-                          throw _b_.UnicodeDecodeError.$factory(
+                          $B.RAISE(_b_.UnicodeDecodeError, 
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
                               err_info[1] +
@@ -1698,7 +1698,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                           }
                           pos = err_info[3]
                       }else{
-                          throw _b_.UnicodeDecodeError.$factory(
+                          $B.RAISE(_b_.UnicodeDecodeError, 
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
                               err_info[1] +
@@ -1722,7 +1722,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                       s += String.fromCodePoint(0xdc80 + b[pos] - 0x80)
                       pos++
                   }else{
-                      throw _b_.UnicodeDecodeError.$factory(
+                      $B.RAISE(_b_.UnicodeDecodeError, 
                           "'utf-8' codec can't decode byte 0x" +
                           byte.toString(16) + " in position " + pos +
                           ": invalid start byte")
@@ -1777,7 +1777,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                       let msg = "'ascii' codec can't decode byte 0x" +
                         cp.toString(16) + " in position " + i +
                         ": ordinal not in range(128)"
-                      throw _b_.UnicodeDecodeError.$factory(msg)
+                      $B.RAISE(_b_.UnicodeDecodeError, msg)
                   }
               }
           }
@@ -1786,12 +1786,12 @@ var decode = $B.decode = function(obj, encoding, errors){
           try{
               load_decoder(enc)
           }catch(err){
-              throw _b_.LookupError.$factory("unknown encoding: " + enc)
+              $B.RAISE(_b_.LookupError, "unknown encoding: " + enc)
           }
           var decoded = to_unicode[enc](obj)[0]
           for(let i = 0, len = decoded.length; i < len; i++){
               if(decoded.codePointAt(i) == 0xfffe){
-                  throw _b_.UnicodeDecodeError.$factory("'charmap' codec " +
+                  $B.RAISE(_b_.UnicodeDecodeError, "'charmap' codec " +
                       `can't decode byte ${_hex(b[i])} in position ${i}: ` +
                       "character maps to <undefined>")
               }
@@ -1905,7 +1905,7 @@ var encode = $B.encode = function(){
             try{
                 load_encoder(enc)
             }catch(err){
-                throw _b_.LookupError.$factory("unknown encoding: " + encoding)
+                $B.RAISE(_b_.LookupError, "unknown encoding: " + encoding)
             }
             return from_unicode[enc](s)[0]
     }

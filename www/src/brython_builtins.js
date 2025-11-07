@@ -444,7 +444,7 @@ $B.builtins_repr_check = function(builtin, args){
         self = $.self
     if(! $B.$isinstance(self, builtin)){
         var _b_ = $B.builtins
-        throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
+        $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
             `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)
     }

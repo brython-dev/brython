@@ -834,7 +834,7 @@ __BRYTHON__.imported._locale = (function($B){
             if(spec == "p"){
                 var res = hours < 12 ? am[locale] : pm[locale]
                 if(res === undefined){
-                    throw _b_.ValueError.$factory("no format " + spec + " for locale " +
+                    $B.RAISE(_b_.ValueError, "no format " + spec + " for locale " +
                         locale)
                 }
                 return res
@@ -844,14 +844,14 @@ __BRYTHON__.imported._locale = (function($B){
             }else if(spec == "X"){
                 t = X_format
             }else{
-                throw _b_.ValueError.$factory("invalid format", spec)
+                $B.RAISE(_b_.ValueError, "invalid format", spec)
             }
             for(var key in t){
                 if(t[key].indexOf(locale) > -1){
                     return key
                 }
             }
-            throw _b_.ValueError.$factory("no format " + spec + " for locale " +
+            $B.RAISE(_b_.ValueError, "no format " + spec + " for locale " +
                 locale)
         },
 

@@ -351,7 +351,7 @@ Random.getrandbits = function(){
         k = $B.PyNumber_Index($.k)
 
     if(k < 0)
-        throw _b_.ValueError.$factory('number of bits must be non-negative')
+        $B.RAISE(_b_.ValueError, 'number of bits must be non-negative')
 
     if(k === 0)
         return 0

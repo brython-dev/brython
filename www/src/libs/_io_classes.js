@@ -86,7 +86,7 @@ StringIO.__init__ = function(){
     if(value === _b_.None){
         value = ''
     }else if(! $B.$isinstance(value, _b_.str)){
-        throw _b_.TypeError.$factory(
+        $B.RAISE(_b_.TypeError, 
             `initial_value must be str or None, not ${$B.class_name(value)}`)
     }
     $.self.$text = value
@@ -122,12 +122,12 @@ StringIO.seek = function(self, pos, whence){
         whence = $.whence
 
     if(whence != 0 && whence != 1 && whence != 2){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             `Invalid whence (${whence}, should be 0, 1 or 2)`)
     }else if(pos < 0 && whence == 0){
-        throw _b_.ValueError.$factory(`Negative seek position ${pos}`)
+        $B.RAISE(_b_.ValueError, `Negative seek position ${pos}`)
     }else if(whence != 0 && pos != 0){
-        throw _b_.OSError.$factory("Can't do nonzero cur-relative seeks")
+        $B.RAISE(_b_.OSError, "Can't do nonzero cur-relative seeks")
     }
 
     /* whence = 0: offset relative to beginning of the string.
@@ -147,7 +147,7 @@ StringIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
     if(! $B.$isinstance($.data, _b_.str)){
-        throw _b_.TypeError.$factory('string argument expected, got ' +
+        $B.RAISE(_b_.TypeError, 'string argument expected, got ' +
             `'${$B.class_name($.data)}'`)
     }
     var text = $.self.$text,
@@ -202,7 +202,7 @@ BytesIO.read = function(){
         res = $B.fast_bytes(source.slice(self.$counter))
         self.$counter = source.length
     }else if(! _b_.isinstance(nbytes, _b_.int)){
-        throw _b_.TypeError.$factory('number of bytes should be int, not ' +
+        $B.RAISE(_b_.TypeError, 'number of bytes should be int, not ' +
             $B.class_name(nbytes))
     }else{
         res = $B.fast_bytes(source.slice(self.$counter,
@@ -217,7 +217,7 @@ BytesIO.write = function(){
             ["self", "data"], arguments, {}, null, null)
     var data_cls = $B.get_class($.data)
     if(! data_cls.$buffer_protocol){
-        throw _b_.TypeError.$factory('a bytes-like object is required, ' +
+        $B.RAISE(_b_.TypeError, 'a bytes-like object is required, ' +
             `not '${$B.class_name($.data)}'`)
     }
     var source = $.self.$content.source,

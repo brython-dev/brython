@@ -26,7 +26,7 @@ list.__add__ = function(self, other){
         var this_name = $B.class_name(self) // can be tuple
         var radd = $B.$getattr(other, '__radd__', null)
         if(radd === null){
-            throw _b_.TypeError.$factory('can only concatenate ' +
+            $B.RAISE(_b_.TypeError, 'can only concatenate ' +
                 this_name + ' (not "' + $B.class_name(other) +
                 '") to ' + this_name)
         }
@@ -72,7 +72,7 @@ list.__delitem__ = function(self, arg){
             self.splice(pos, 1)
             return _b_.None
         }
-        throw _b_.IndexError.$factory($B.class_name(self) +
+        $B.RAISE(_b_.IndexError, $B.class_name(self) +
             " index out of range")
     }
     if(isinstance(arg, _b_.slice)) {
@@ -127,7 +127,7 @@ list.__delitem__ = function(self, arg){
        return _b_.None
     }
 
-    throw _b_.TypeError.$factory($B.class_name(self) +
+    $B.RAISE(_b_.TypeError, $B.class_name(self) +
         " indices must be integer, not " + $B.class_name(arg))
 }
 
@@ -185,14 +185,14 @@ list.$getitem = function(self, key){
             return items[pos]
         }
 
-        throw _b_.IndexError.$factory($B.class_name(self) +
+        $B.RAISE(_b_.IndexError, $B.class_name(self) +
             " index out of range")
     }
     if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
         return _b_.list.$getitem_slice(self, key)
     }
 
-    throw _b_.TypeError.$factory($B.class_name(self) +
+    $B.RAISE(_b_.TypeError, $B.class_name(self) +
         " indices must be integer, not " + $B.class_name(key))
 }
 
@@ -277,7 +277,7 @@ list.__imul__ = function() {
     try{
         var x = $B.PyNumber_Index($.x)
     }catch(err){
-        throw _b_.TypeError.$factory(`can't multiply sequence by non-int` +
+        $B.RAISE(_b_.TypeError, `can't multiply sequence by non-int` +
             ` of type '${$B.class_name($.x)}'`)
     }
     if(x == 0){
@@ -299,11 +299,11 @@ list.__init__ = function(){
         args = $.args,
         kw = $.kw
     if(args.length > 1){
-        throw _b_.TypeError.$factory('expected at most 1 argument, got ' +
+        $B.RAISE(_b_.TypeError, 'expected at most 1 argument, got ' +
             args.length)
     }
     if(_b_.dict.__len__(kw) > 0){
-        throw _b_.TypeError.$factory('list() takes no keyword arguments')
+        $B.RAISE(_b_.TypeError, 'list() takes no keyword arguments')
     }
     while(self.length > 0){
         self.pop()
@@ -382,7 +382,7 @@ list.__lt__ = function(self, other){
 
 list.__mul__ = function(self, other){
     if($B.$isinstance(other, [_b_.float, _b_.complex])){
-        throw _b_.TypeError.$factory("'" + $B.class_name(other) +
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
                 "' object cannot be interpreted as an integer")
     }
     if(self.length == 0){
@@ -398,7 +398,7 @@ list.__mul__ = function(self, other){
             return list.__new__(list)
         }
         if(self.length > $B.max_array_size / other){
-            throw _b_.OverflowError.$factory(`cannot fit ` +
+            $B.RAISE(_b_.OverflowError, `cannot fit ` +
                 `'${$B.class_name(other)}' into an index-sized integer`)
         }
         var res = [],
@@ -412,7 +412,7 @@ list.__mul__ = function(self, other){
         res.__class__ = self.__class__
         return res
     }else if(isinstance(other, $B.long_int)){
-        throw _b_.OverflowError.$factory(`cannot fit ` +
+        $B.RAISE(_b_.OverflowError, `cannot fit ` +
         `'${$B.class_name(other)}' into an index-sized integer`)
     }else{
         return _b_.NotImplemented
@@ -422,7 +422,7 @@ list.__mul__ = function(self, other){
 list.__new__ = function(cls){
     // ignores other arguments than the first
     if(cls === undefined){
-        throw _b_.TypeError.$factory("list.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "list.__new__(): not enough arguments")
     }
     var res = []
     res.__class__ = cls
@@ -478,11 +478,11 @@ list.__setattr__ = function(self, attr, value){
     if(self.__class__ === list || self.__class__ === tuple){
         var cl_name = $B.class_name(self)
         if(list.hasOwnProperty(attr)){
-            throw _b_.AttributeError.$factory("'" + cl_name +
-                "' object attribute '" + attr + "' is read-only")
+            $B.RAISE_ATTRIBUTE_ERROR("'" + cl_name +
+                "' object attribute '" + attr + "' is read-only", self, attr)
         }else{
-            throw _b_.AttributeError.$factory(
-                "'" + cl_name + " object has no attribute '" + attr + "'")
+            $B.RAISE_ATTRIBUTE_ERROR(
+                `'${cl_name}' object has no attribute '${attr}'`, self, attr)
         }
     }
     // list subclass : use __dict__
@@ -512,7 +512,7 @@ function set_list_slice_step(obj, start, stop, step, value){
     }
 
     if(step == 0){
-        throw _b_.ValueError.$factory("slice step cannot be zero")
+        $B.RAISE(_b_.ValueError, "slice step cannot be zero")
     }
 
     var repl = _b_.list.$factory(value),
@@ -535,7 +535,7 @@ function set_list_slice_step(obj, start, stop, step, value){
         nb++
     }
     if(nb != repl.length){
-        throw _b_.ValueError.$factory(
+        $B.RAISE(_b_.ValueError, 
             "attempt to assign sequence of size " + repl.length +
             " to extended slice of size " + nb)
     }
@@ -556,7 +556,7 @@ list.$setitem = function(self, arg, value){
         if(pos >= 0 && pos < self.length){
             self[pos] = value
         }else{
-            throw _b_.IndexError.$factory("list assignment index out of range")
+            $B.RAISE(_b_.IndexError, "list assignment index out of range")
         }
         return _b_.None
     }
@@ -575,7 +575,7 @@ list.$setitem = function(self, arg, value){
        return _b_.None
     }
 
-    throw _b_.TypeError.$factory("list indices must be integer, not " +
+    $B.RAISE(_b_.TypeError, "list indices must be integer, not " +
         $B.class_name(arg))
 }
 
@@ -666,7 +666,7 @@ list.index = function(){
             return i
         }
     }
-    throw _b_.ValueError.$factory(_b_.repr($.x) + " is not in " +
+    $B.RAISE(_b_.ValueError, _b_.repr($.x) + " is not in " +
         $B.class_name(self))
 }
 
@@ -697,7 +697,7 @@ list.pop = function(){
     }
     var res = self[pos]
     if(res === undefined){
-        throw _b_.IndexError.$factory("pop index out of range")
+        $B.RAISE(_b_.IndexError, "pop index out of range")
     }
     self.splice(pos, 1)
     return res
@@ -712,7 +712,7 @@ list.remove = function(){
             return _b_.None
         }
     }
-    throw _b_.ValueError.$factory(_b_.str.$factory($.x) + " is not in list")
+    $B.RAISE(_b_.ValueError, _b_.str.$factory($.x) + " is not in list")
 }
 
 list.reverse = function(){
@@ -754,7 +754,7 @@ list.sort = function(self){
         }else if(item.key == "reverse"){
             reverse = item.value
         }else{
-            throw _b_.TypeError.$factory("'" + item.key +
+            $B.RAISE(_b_.TypeError, "'" + item.key +
                 "' is an invalid keyword argument for this function")
         }
     }
@@ -860,7 +860,7 @@ list.$unpack = function(obj){
             $B.$call($B.$getattr(it, "__next__"))
         }catch(err1){
             if($B.is_exc(err1, [_b_.TypeError])){
-                throw _b_.TypeError.$factory(
+                $B.RAISE(_b_.TypeError, 
                     `Value after * must be an iterable, not ${$B.class_name(obj)}`)
             }
             throw err1
@@ -972,7 +972,7 @@ tuple.__init__ = function(){
 
 tuple.__new__ = function(){
     if(arguments.length === undefined){
-        throw _b_.TypeError.$factory("tuple.__new__(): not enough arguments")
+        $B.RAISE(_b_.TypeError, "tuple.__new__(): not enough arguments")
     }
     var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments,
                     {}, 'args', 'kw'),
@@ -988,12 +988,12 @@ tuple.__new__ = function(){
                 self.push(item)
             }
         }else{
-            throw _b_.TypeError.$factory('tuple expected at most 1 ' +
+            $B.RAISE(_b_.TypeError, 'tuple expected at most 1 ' +
                 `argument, got ${args.length}`)
         }
     }
     if(cls === tuple && _b_.dict.__len__(kw) > 0){
-        throw _b_.TypeError.$factory('tuple() takes no keyword arguments')
+        $B.RAISE(_b_.TypeError, 'tuple() takes no keyword arguments')
     }
     return self
 }

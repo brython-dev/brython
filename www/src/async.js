@@ -18,7 +18,7 @@ coroutine.send = function(self){
                 self.$function_infos[$B.func_attrs.flags] & 128){
             msg += '. Maybe you forgot to call the async function ?'
         }
-        throw _b_.TypeError.$factory(msg)
+        $B.RAISE(_b_.TypeError, msg)
     }
     var res = self.$func.apply(null, self.$args)
     // restore frames after resolution
@@ -100,12 +100,12 @@ $B.promise = function(obj){
         // must be an iterator
         awaitable = $B.$call(awaitable)()
         if($B.$getattr(awaitable, '__next__', null) === null){
-            throw _b_.TypeError.$factory('__await__() returned non-iterator' +
+            $B.RAISE(_b_.TypeError, '__await__() returned non-iterator' +
                 ` of type '${$B.class_name(awaitable)}'`)
         }
         return awaitable
     }
-    throw _b_.TypeError.$factory(`object ${$B.class_name(obj)} ` +
+    $B.RAISE(_b_.TypeError, `object ${$B.class_name(obj)} ` +
         `can't be used in 'await' expression`)
 }
 

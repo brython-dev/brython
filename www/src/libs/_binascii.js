@@ -98,7 +98,7 @@ var module = {
         }else if($B.$isinstance($.s, [_b_.bytes, _b_.bytearray])){
             bytes = $.s
         }else{
-            throw _b_.TypeError.$factory('wrong type: ' + $B.class_name($.s))
+            $B.RAISE(_b_.TypeError, 'wrong type: ' + $B.class_name($.s))
         }
         return decode(bytes)
     },
@@ -110,13 +110,13 @@ var module = {
             s = _b_.bytes.decode(s, 'ascii')
         }
         if(typeof s !== "string"){
-            throw _b_.TypeError.$factory("argument should be bytes, " +
+            $B.RAISE(_b_.TypeError, "argument should be bytes, " +
                 "buffer or ASCII string, not '" + $B.class_name(s) + "'")
         }
 
         var len = s.length
         if(len % 2 == 1){
-            throw _b_.TypeError.$factory('Odd-length string')
+            $B.RAISE(_b_.TypeError, 'Odd-length string')
         }
 
         var res = []
