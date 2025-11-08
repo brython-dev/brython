@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-07 22:34:07.515916"
-__BRYTHON__.timestamp=1762551247515
+__BRYTHON__.compiled_date="2025-11-08 21:17:50.448107"
+__BRYTHON__.timestamp=1762633070447
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -944,7 +944,8 @@ if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){set_script_id(a
 run_scripts([addedNode])}}
 function set_script_id(script){if(script_to_id.has(script)){}else if(script.id){if(defined_ids[script.id]){throw Error("Brython error : Found 2 scripts with the "+
 "same id '"+script.id+"'")}else{defined_ids[script.id]=true}
-script_to_id.set(script,script.id)}else{if(script.className==='webworker'){$B.RAISE(_b_.AttributeError,"webworker script has no attribute 'id'")}
+script_to_id.set(script,script.id)}else{if(script.className==='webworker'){$B.RAISE_ATTRIBUTE_ERROR(
+"webworker script has no attribute 'id'",script,'id')}
 if(status.first_unnamed_script){script_to_id.set(script,'__main__')
 status.first_unnamed_script=false}else{script_to_id.set(script,'__main__'+$B.UUID())}}
 var id=script_to_id.get(script)
@@ -4346,7 +4347,7 @@ length+=line_length;}
 return result}
 _IOBase.seek=function(_self){_io_unsupported('seek')}
 _IOBase.seekable=function(){return false}
-_IOBase.tell=function(self){return _IOBase.seek(self,0,1)}
+_IOBase.tell=function(self){return $B.$getattr(self,'seek')(0,1)}
 _IOBase.truncate=function(){_io_unsupported('truncate')}
 _IOBase.writable=function(){return false}
 _IOBase.writelines=function(_self,lines){if(_self.closed){return _b_.None}
@@ -4403,11 +4404,7 @@ $B._BufferedIOBase.read=function(){_io_unsupported("read")}
 $B._BufferedIOBase.read1=function(){_io_unsupported("read1")}
 $B._BufferedIOBase.write=function(){_io_unsupported("write")}
 $B.set_func_names($B._BufferedIOBase,'_io')
-function _bufferedreader_read_all(_self){var raw=_self.raw
-if(raw.$byte_pos >=raw.$bytes.length){return _b_.None}
-var b=raw.$bytes.slice(raw.$byte_pos,raw.$bytes.length)
-raw.$byte_pos=raw.$bytes.length
-return $B.fast_bytes(b)}
+function _bufferedreader_read_all(_self){return $B.$call($B.$getattr(_self.raw,'readall'))()}
 function _bufferedreader_read_fast(_self,n){var raw=_self.raw
 if(raw.$byte_pos >=raw.$bytes.length){return _b_.None}
 var b=raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+n)
@@ -4437,12 +4434,12 @@ if(whence===undefined){whence=0}
 if(whence===0){_self.$byte_pos=offset}else if(whence===1){_self.$byte_pos+=offset}else if(whence===2){_self.$byte_pos=self.$bytes.length+offset}
 return _b_.None}
 function CHECK_CLOSED(fileobj,msg){if(fileobj.closed){$B.RAISE(_b_.ValueError,msg)}}
-$B._BufferedReader.read=function(_self,n=-1){var res;
+$B._BufferedReader.read=function(_self,n=-1){var res
 if(n <-1){$B.RAISE(_b_.ValueError,"read length must be non-negative or -1")}
 CHECK_CLOSED(self,"read of closed file")
 if(n==-1){
 res=_bufferedreader_read_all(_self)}else{res=_bufferedreader_read_fast(_self,n)
-if(res !=_b_.None){return res;}
+if(res !=_b_.None){return res}
 return $B.fast_bytes()}
 return res}
 $B._BufferedReader.readline=function(_self,size=-1){return _bufferedreader_readline(_self)}
@@ -4532,10 +4529,11 @@ $B._FileIO.readable=function(_self){if(_self.fd < 0){err_closed()}
 return $B.$bool(_self.readable)}
 $B._FileIO.readall=function(_self){var buffer=_b_.bytearray.$factory()
 $B._FileIO.readinto(_self,buffer)
+buffer.__class__=_b_.bytes
 return buffer}
 $B._FileIO.readinto=function(_self,buffer){if(_self.fd < 0){err_closed()}
-if(! _self.readable){return err_mode(state,"reading");}
-_b_.bytearray.extend(buffer,$B.fast_bytes(_self.fd.$bytes))
+if(! _self.readable){return err_mode(state,"reading")}
+_b_.bytearray.extend(buffer,$B.fast_bytes(_self.$bytes))
 var n=_b_.len(buffer)
 return n}
 $B._FileIO.readinto1=$B._FileIO.readinto
@@ -13652,7 +13650,7 @@ prefix+tab+`var res = _b_.dict.$literal(${anns_values})\n`+
 prefix+tab+`return $B.trace_return_and_leave(frame, res)\n`+
 prefix+'}\n'+
 prefix+`frame.inum = 2 * frame.positions.length - 1\n`+
-prefix+`$.RAISE(_b_.NotImplementedError, '')\n`
+prefix+`$B.RAISE(_b_.NotImplementedError, '')\n`
 dedent()
 js+=prefix+`}catch(err){\n`
 indent()

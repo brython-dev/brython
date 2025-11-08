@@ -158,7 +158,7 @@ var module = {
     "_getfullpathname", "_isdir", "abort", "access", "chdir", "chmod",
     "close", "closerange", "device_encoding", "dup", "dup2",
     "execv", "execve", "fsat", "fsync", "get_terminal_size", "getcwdb",
-    "getlogin", "getppid", "isatty", "kill", "link", "listdir", "lseek",
+    "getlogin", "getppid", "kill", "link", "listdir", "lseek",
     "mkdir", "pipe", "putenv", "read", "readlink", "rename",
     "replace", "rmdir", "spawnv", "spawnve", "startfile", "stat_float_times",
     "statvfs_result", "strerror", "symlink", "system", "terminal_size",
@@ -169,5 +169,9 @@ var module = {
                 " is not implemented")
         }
     });
+
+module.isatty = function(){
+    return false
+}
 
 $B.addToImported('posix', module)

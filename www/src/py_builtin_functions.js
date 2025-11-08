@@ -3096,7 +3096,6 @@ _IOBase.readline = function(){
 */
 
 _IOBase.readline = function(_self, limit=-1){
-
     var $ = $B.args('readline', 2, {self: null, limit: null},
                 ['self', 'limit'], arguments, {limit: -1}, null, null),
         _self = $.self,
@@ -3229,7 +3228,7 @@ _IOBase.seekable = function(){
 }
 
 _IOBase.tell = function(self){
-    return _IOBase.seek(self, 0, 1)
+    return $B.$getattr(self, 'seek')(0, 1)
 }
 
 /*
@@ -3408,13 +3407,7 @@ $B._BufferedIOBase.write = function(){
 $B.set_func_names($B._BufferedIOBase, '_io')
 
 function _bufferedreader_read_all(_self){
-    var raw = _self.raw
-    if(raw.$byte_pos >= raw.$bytes.length){
-        return _b_.None
-    }
-    var b = raw.$bytes.slice(raw.$byte_pos, raw.$bytes.length)
-    raw.$byte_pos = raw.$bytes.length
-    return $B.fast_bytes(b)
+    return $B.$call($B.$getattr(_self.raw, 'readall'))()
 }
 
 function _bufferedreader_read_fast(_self, n){
@@ -3494,7 +3487,7 @@ function CHECK_CLOSED(fileobj, msg){
 }
 
 $B._BufferedReader.read = function(_self, n=-1){
-    var res;
+    var res
 
     if(n < -1){
         $B.RAISE(_b_.ValueError, "read length must be non-negative or -1")
@@ -3508,7 +3501,7 @@ $B._BufferedReader.read = function(_self, n=-1){
     }else{
         res = _bufferedreader_read_fast(_self, n)
         if (res != _b_.None){
-            return res;
+            return res
         }
         return $B.fast_bytes()
     }
@@ -3712,6 +3705,7 @@ $B._FileIO.readable = function(_self){
 $B._FileIO.readall = function(_self){
     var buffer = _b_.bytearray.$factory()
     $B._FileIO.readinto(_self, buffer)
+    buffer.__class__ = _b_.bytes
     return buffer
 }
 
@@ -3720,10 +3714,9 @@ $B._FileIO.readinto = function(_self, buffer){
         err_closed()
     }
     if(! _self.readable) {
-        return err_mode(state, "reading");
+        return err_mode(state, "reading")
     }
-
-    _b_.bytearray.extend(buffer, $B.fast_bytes(_self.fd.$bytes))
+    _b_.bytearray.extend(buffer, $B.fast_bytes(_self.$bytes))
     var n = _b_.len(buffer)
 
     return n

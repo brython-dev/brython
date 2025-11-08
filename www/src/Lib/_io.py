@@ -267,8 +267,4 @@ class OpenWrapper:
         return open(*args, **kwargs)
 
 
-# In normal operation, both `UnsupportedOperation`s should be bound to the
-# same object.
-class UnsupportedOperation(ValueError, IOError):
-    pass
 

@@ -2700,7 +2700,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
               prefix + tab + `return $B.trace_return_and_leave(frame, res)\n` +
               prefix + '}\n' +
               prefix + `frame.inum = 2 * frame.positions.length - 1\n` +
-              prefix + `$.RAISE(_b_.NotImplementedError, '')\n`
+              prefix + `$B.RAISE(_b_.NotImplementedError, '')\n`
         dedent()
         js += prefix + `}catch(err){\n`
         indent()

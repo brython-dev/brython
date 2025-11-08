@@ -519,8 +519,8 @@ function set_script_id(script){
         script_to_id.set(script, script.id)
     }else{
         if(script.className === 'webworker'){
-            $B.RAISE(_b_.AttributeError, 
-                    "webworker script has no attribute 'id'")
+            $B.RAISE_ATTRIBUTE_ERROR(
+                    "webworker script has no attribute 'id'", script, 'id')
         }
         if(status.first_unnamed_script){
             script_to_id.set(script, '__main__')

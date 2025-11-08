@@ -86,11 +86,12 @@ StringIO.__init__ = function(){
     if(value === _b_.None){
         value = ''
     }else if(! $B.$isinstance(value, _b_.str)){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             `initial_value must be str or None, not ${$B.class_name(value)}`)
     }
     $.self.$text = value
     $.self.$text_pos = 0
+    $.self.$text_iterator = $.self.$text[Symbol.iterator]()
 }
 
 StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
@@ -101,13 +102,60 @@ StringIO.getvalue = function(){
     return $.self.$text.substr(0) // copy
 }
 
+StringIO.read = function(){
+    var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
+            arguments, {size: -1}, null, null),
+        _self = $.self,
+        size = $.size
+
+    var res = ''
+    var nb = 0
+    while(true){
+        var char = _self.$text_iterator.next()
+        if(char.done){
+            return res
+        }
+        res += char.value
+        nb += 1
+        _self.$text_pos += 1
+        if(size > 0 && nb > size){
+            return res
+        }
+    }
+    return nb
+}
+
+StringIO.readline = function(){
+    var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
+            arguments, {size: -1}, null, null),
+        _self = $.self,
+        size = $.size
+
+    var res = ''
+    var nb = 0
+    while(true){
+        var char = _self.$text_iterator.next()
+        if(char.done){
+            return res
+        }
+        res += char.value
+        nb += 1
+        self.$text_pos += 1
+        if(size > 0 && nb > size){
+            return res
+        }else if(char.value == '\n'){
+            return res
+        }
+    }
+}
+
 StringIO.truncate = function(self, size){
     var $ = $B.args('truncate', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: _b_.None}, null, null),
         self = $.self,
         size = $.size
     if(size === _b_.None){
-        size = self.$counter
+        size = self.$text_pos
     }
     self.$text = self.$text.substr(0, size)
     self.$text_pos = self.$text.length
@@ -118,11 +166,11 @@ StringIO.seek = function(self, pos, whence){
     var $ = $B.args('seek', 3, {self: null, pos: null, whence: null},
                 ['self', 'pos', 'whence'], arguments, {whence: 0}, null, null),
         _self = $.self,
-        pos = $.posn
+        pos = $.pos
         whence = $.whence
 
     if(whence != 0 && whence != 1 && whence != 2){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             `Invalid whence (${whence}, should be 0, 1 or 2)`)
     }else if(pos < 0 && whence == 0){
         $B.RAISE(_b_.ValueError, `Negative seek position ${pos}`)
@@ -134,13 +182,18 @@ StringIO.seek = function(self, pos, whence){
        whence = 1: no change to current position.
        whence = 2: change position to end of file. */
     if(whence == 1){
-        pos = self.$text.pos
+        pos = _self.$text_pos
     }else if(whence == 2){
-        pos = self.$text_length
+        pos = _self.$text_length
     }
 
-    self.$text_pos = pos
-    return self.$text_pos
+    _self.$text_pos = pos
+    // reset iterator
+    _self.$text_iterator = _self.$text[Symbol.iterator]()
+    for(var i = 0; i < pos; i++){
+        _self.$text_iterator.next()
+    }
+    return _self.$text_pos
 }
 
 StringIO.write = function(){
@@ -174,7 +227,7 @@ var BytesIO = $B.make_class("BytesIO",
             $binary: true,
             $content: $.value,
             $length: $.value.source.length,
-            $counter: 0
+            $pos: 0
         }
     }
 )
@@ -199,17 +252,45 @@ BytesIO.read = function(){
         res
     var source = self.$content.source
     if(nbytes === _b_.None){
-        res = $B.fast_bytes(source.slice(self.$counter))
-        self.$counter = source.length
+        res = $B.fast_bytes(source.slice(self.$pos))
+        self.$pos = source.length
     }else if(! _b_.isinstance(nbytes, _b_.int)){
         $B.RAISE(_b_.TypeError, 'number of bytes should be int, not ' +
             $B.class_name(nbytes))
     }else{
-        res = $B.fast_bytes(source.slice(self.$counter,
-                            self.$counter + nbytes))
-        self.$counter = Math.min(self.$counter + nbytes, source.length)
+        res = $B.fast_bytes(source.slice(self.$pos,
+                            self.$pos + nbytes))
+        self.$pos = Math.min(self.$pos + nbytes, source.length)
     }
     return res
+}
+
+BytesIO.seek = function(self, offset, whence){
+    var $ = $B.args('seek', 3, {self: null, offset: null, whence: null},
+                ['self', 'offset', 'whence'], arguments, {whence: 0}, null, null),
+        _self = $.self,
+        offset = $.offset
+        whence = $.whence
+
+    if(whence != 0 && whence != 1 && whence != 2){
+        $B.RAISE(_b_.ValueError,
+            `Invalid whence (${whence}, should be 0, 1 or 2)`)
+    }else if(offset < 0 && whence == 0){
+        $B.RAISE(_b_.ValueError, `negative seek value ${pos}`)
+    }
+
+    /* whence = 0: offset relative to beginning of the string.
+       whence = 1: no change to current position.
+       whence = 2: change position to end of file. */
+    if(whence == 1){
+        offset = _self.$pos
+    }else if(whence == 2){
+        offset += _self.$length
+    }
+
+    _self.$pos = offset
+
+    return _self.$pos
 }
 
 BytesIO.write = function(){
@@ -221,15 +302,15 @@ BytesIO.write = function(){
             `not '${$B.class_name($.data)}'`)
     }
     var source = $.self.$content.source,
-        counter = $.self.$counter,
+        pos = $.self.$pos,
         data = _b_.bytes.$factory($.data)
-    if(counter > source.length){
+    if(pos > source.length){
         // pad with 0's
-        var padding = (new Array(counter - source.length)).fill(0)
+        var padding = (new Array(pos - source.length)).fill(0)
         source.splice(source.length, 0, ...padding)
     }
-    source.splice(counter, data.source.length, ...data.source)
-    $.self.$counter += data.source.length
+    source.splice(pos, data.source.length, ...data.source)
+    $.self.$pos += data.source.length
     return _b_.None
 }
 
