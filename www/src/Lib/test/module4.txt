@@ -1,0 +1,9 @@
+Testing Brython with CPython test suite
+
+So far bugs in Brython have been mostly detected by users who can't make valid Python code work. A better method would be to use the test suite provided in the CPython distribution, in Lib/test. 
+
+I have been working on the test page initialised by Billy, accessible from the url /tests/unittests/index.html. After fixing a few things to make this page work, I ran the test "test_int" ; it showed a couple of errors that I fixed in py_int.js, and I am glad to announce that this test now passes completely.
+
+I plan to go on with this approach in the future to progress towards yet more Python compatibility, and I encourage people who want to contribute to do so, reporting the bugs they find in the Github tracker.
+
+The main problem is currently the loading time of the page, it's because unittest imports dozens of modules.
