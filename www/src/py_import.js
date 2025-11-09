@@ -1192,7 +1192,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'builtins' // fromlist.length == 1 && fromlist[0] == "aliases"
+    var test = false // mod_name == 'test.support' // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
@@ -1366,12 +1366,21 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
+                        if(test){
+                            console.log('try to import', mod_name + '.' + name)
+                        }
                         $B.$getattr(__import__, '__call__')(mod_name + '.' + name,
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
                         ns[alias] = $B.$getattr(modobj, name)
                     }catch($err3){
+                        if(test){
+                            console.log('error 3', $err3)
+                        }
                         $B.set_inum(inum)
+                        if(! $B.is_exc($err3, [_b_.ImportError])){
+                            throw $err3
+                        }
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
@@ -1393,7 +1402,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                             $err3.$suggestion = suggestion
                             throw $err3
                         }
-                        if($B.get_option('debug') > 1){
+                        if($B.get_option('debug') > 2){
+                            console.log('no name', name, 'in module', modobj)
                             console.log($err3)
                             console.log($B.frame_obj.frame)
                         }
