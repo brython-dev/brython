@@ -105,12 +105,12 @@ array.__setitem__ = function(_self, index, value){
     _self.obj[index] = value
 }
 
-array.__str__ = function(self){
-    $B.args("__str__", 1, {self: null},
+array.__repr__ = function(self){
+    $B.args("__repr__", 1, {self: null},
         ["self"], arguments, {}, null, null)
     var res = "array('" + self.typecode + "'"
     if(self.obj !== null){
-        res += ", [" + self.obj + "]"
+        res += ", [" + self.obj.join(', ') + "]"
     }
     return res + ")"
 }
