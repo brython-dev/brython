@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_socket'
+stdlib_name = '_opcode'
 
 include_doc = False
 include_base_classes = False
