@@ -114,7 +114,7 @@
         }
         browser.document = _b_.property.$factory(
             function(){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "'document' is not available in Web Workers")
             },
             function(self, value){
@@ -262,7 +262,7 @@
                                         attribute_mapper(arg)
                                     self.setAttribute(arg, $B.pyobj2jsobj(value))
                                 }catch(err){
-                                    $B.RAISE(_b_.ValueError, 
+                                    $B.RAISE(_b_.ValueError,
                                         "can't set attribute " + arg)
                                 }
                             }
@@ -441,7 +441,7 @@
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
                 console.log(js_constr)
-                $B.RAISE(_b_.TypeError, 
+                $B.RAISE(_b_.TypeError,
                     'argument of extend must be a Javascript class')
             }
             js_constr.__class__ = _b_.type
@@ -509,7 +509,7 @@
                 loaded = []
             }
             if(! Array.isArray(refs)){
-                $B.RAISE(_b_.TypeError, 
+                $B.RAISE(_b_.TypeError,
                     `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
@@ -534,7 +534,7 @@
                 loaded = []
             }
             if(! Array.isArray(refs)){
-                $B.RAISE(_b_.TypeError, 
+                $B.RAISE(_b_.TypeError,
                     `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
@@ -1058,10 +1058,10 @@
             if(dir.length >= MAX_CANDIDATE_ITEMS) {
                 return null
             }
-    
+
             var suggestion_distance = 2 ** 52,
                 suggestion = null
-    
+
             for(var item of dir){
                 // No more than 1/3 of the involved characters should need changed.
                 var max_distance = (name.length + item.length + 3) * MOVE_COST / 6
@@ -1127,7 +1127,7 @@
                 }
             }else if(key == "headers"){
                 if(! $B.$isinstance(value, _b_.dict)){
-                    $B.RAISE(_b_.ValueError, 
+                    $B.RAISE(_b_.ValueError,
                         "headers must be a dict, not " + $B.class_name(value))
                 }
                 for(let subitem of _b_.dict.$iter_items(value)){

@@ -241,10 +241,10 @@ frame.f_builtins = {
 frame.f_code = {
     __get__: function(_self){
         var res
-        var positions
+        var positions = [[0, 0, 0, 0]] // fake value
         if(_self[4]){
             res = $B.$getattr(_self[4], '__code__')
-            positions = _self.positions ?? []
+            positions = _self.positions ?? positions
         }else if(_self.f_code){
             // set in comprehensions
             res = _self.f_code
@@ -256,12 +256,12 @@ frame.f_code = {
                 co_firstlineno: 1
             }
             res.co_qualname = res.co_name // XXX
-            positions = _self.positions
+            positions = _self.positions ?? positions
         }
         res.__class__ = _b_.code
-        if(positions){
-            res.co_positions = positions.map($B.decode_position)
-        }
+        positions = positions.map($B.decode_position)
+        res.co_positions = () => $B.$list(positions)
+        res.co_positions.__class__ = $B.function
         return res
     }
 }
@@ -640,6 +640,8 @@ _b_.SyntaxError.__init__ = function(){
         }
     }
 }
+
+$B.set_func_names(_b_.SyntaxError, 'builtins')
 
 make_builtin_exception(["FloatingPointError", "OverflowError",
     "ZeroDivisionError"], _b_.ArithmeticError)

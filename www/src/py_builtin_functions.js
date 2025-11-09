@@ -248,18 +248,17 @@ code.__repr__ = code.__str__ = function(_self){
         `line ${_self.co_firstlineno || 1}>`
 }
 
-code.__getattribute__ = function(self, attr){
-    if(attr == 'co_positions'){
-        // fake value
-        var positions = [[0, 0, 0, 0]]
-        if(self.co_positions){
-            positions = self.co_positions
-        }
-        var f = () => $B.$list(positions)
-        f.__class__ = $B.function
-        return f
-    }
-    return self[attr]
+code.replace = function(){
+    var $ = $B.args('replace', 1, {self: null}, ['self'], arguments, {}, null, 'kw')
+    var _self = $.self
+    var expected = ['co_argcount', 'co_branches', 'co_cellvars', 'co_code',
+        'co_consts', 'co_exceptiontable', 'co_filename', 'co_firstlineno',
+        'co_flags', 'co_freevars', 'co_kwonlyargcount', 'co_lines',
+        'co_linetable', 'co_lnotab', 'co_name', 'co_names', 'co_nlocals',
+        'co_positions', 'co_posonlyargcount', 'co_qualname', 'co_stacksize',
+        'co_varnames']
+    $B.set_expected_kwargs(_self, expected, $.kw)
+    return _self
 }
 
 $B.set_func_names(code, "builtins")
@@ -1021,7 +1020,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__annotations__" // && obj.__name__ === "MagicMock"
+    var $test = false // attr == "f_code" // && obj.__name__ === "MagicMock"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
