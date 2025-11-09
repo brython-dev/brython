@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-09 18:29:02.613945"
-__BRYTHON__.timestamp=1762709342613
+__BRYTHON__.compiled_date="2025-11-09 18:50:21.779440"
+__BRYTHON__.timestamp=1762710621779
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -9315,6 +9315,19 @@ res_num :
 $B.fast_long_int(res)}
 return Math.trunc(self.value)}
 float.is_integer=function(self){return Number.isInteger(self.value)}
+float.from_number=function(){var $=$B.args('from_number',1,{number:null},['number'],arguments,{},null,null)
+var number=$.number
+if($B.$isinstance(number,_b_.float)){return float_value(number)}
+var klass=$B.get_class(number)
+var __float__=$B.search_in_mro(klass,'__float__')
+if(__float__){return __float__(number)}
+var __index__=$B.search_in_mro(klass,'__index__')
+if(__index__){var res=__index__(number)
+if($B.$isinstance(res,_b_.int)){return fast_float(res)}
+$B.RAISE(_b_.TypeError,'__index__ returned non-int of type '+
+$B.class_name(res))}
+$B.RAISE(_b_.TypeError,'TypeError: must be real number, not '+
+$B.class_name(number))}
 float.__mod__=function(self,other){
 check_self_is_float(self,'__mod__')
 if(other==0){$B.RAISE(_b_.ZeroDivisionError,"float modulo")}
@@ -9472,7 +9485,7 @@ if(index_method !== null){
 var inv_op = $B.$getattr(other, "__le__", _b_.None)
 if(inv_op !== _b_.None){
     return inv_op(self)}
-$B.RAISE(_b_.TypeError, 
+$B.RAISE(_b_.TypeError,
     "unorderable types: float() > " + $B.class_name(other) + "()")
 `
 for(let op in $B.$comps){let body=comp_func_body.replace(/>/gm,op).

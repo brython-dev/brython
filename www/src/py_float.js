@@ -233,16 +233,16 @@ float.fromhex = function(klass, s){
       return klass === _b_.float ? x : $B.$call(klass)(x)
     }
     function overflow_error(){
-        $B.RAISE(_b_.OverflowError, 
+        $B.RAISE(_b_.OverflowError,
                       "hexadecimal value too large to represent as a float");
     }
     function parse_error(){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                       "invalid hexadecimal floating-point string");
     }
 
     function insane_length_error(){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                       "hexadecimal string too long to convert");
     }
 
@@ -420,7 +420,7 @@ float.__getformat__ = function(arg){
         return "IEEE, little-endian"
     }
     if(typeof arg !== 'string'){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             " __getformat__() argument must be str, not " +
             $B.class_name(arg))
     }
@@ -844,6 +844,31 @@ float.is_integer = function(self){
     return Number.isInteger(self.value)
 }
 
+float.from_number = function(){
+    var $ = $B.args('from_number', 1, {number: null},
+                ['number'], arguments, {}, null, null)
+    var number = $.number
+    if($B.$isinstance(number, _b_.float)){
+        return float_value(number) // ensure class is float
+    }
+    var klass = $B.get_class(number)
+    var __float__ = $B.search_in_mro(klass, '__float__')
+    if(__float__){
+        return __float__(number)
+    }
+    var __index__ = $B.search_in_mro(klass, '__index__')
+    if(__index__){
+        var res = __index__(number)
+        if($B.$isinstance(res, _b_.int)){
+            return fast_float(res)
+        }
+        $B.RAISE(_b_.TypeError, '__index__ returned non-int of type ' +
+            $B.class_name(res))
+    }
+    $B.RAISE(_b_.TypeError, 'TypeError: must be real number, not ' +
+        $B.class_name(number))
+}
+
 float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
     check_self_is_float(self, '__mod__')
@@ -1070,14 +1095,14 @@ float.__round__ = function(){
 
 float.$round = function(x, ndigits){
     function overflow(){
-        $B.RAISE(_b_.OverflowError, 
+        $B.RAISE(_b_.OverflowError,
             "cannot convert float infinity to integer")
     }
 
     var no_digits = ndigits === _b_.None
     if(isnan(x)){
         if(ndigits === _b_.None){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "cannot convert float NaN to integer")
         }
         return NAN
@@ -1147,7 +1172,7 @@ float.$round = function(x, ndigits){
     }
     /* if computation resulted in overflow, raise OverflowError */
     if (! isFinite(z)) {
-        $B.RAISE(_b_.OverflowError, 
+        $B.RAISE(_b_.OverflowError,
                         "overflow occurred during round");
     }
 
@@ -1245,7 +1270,7 @@ if(inv_op !== _b_.None){
     return inv_op(self)
 }
 
-$B.RAISE(_b_.TypeError, 
+$B.RAISE(_b_.TypeError,
     "unorderable types: float() > " + $B.class_name(other) + "()")
 `
 
@@ -1327,7 +1352,7 @@ float.$factory = function(value){
         try{
             value = $B.$getattr(value, "decode")("utf-8")
         }catch(err){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "could not convert string to float: " +
                 _b_.repr(original_value))
         }
@@ -1335,7 +1360,7 @@ float.$factory = function(value){
 
     if(typeof value == "string"){
        if(value.trim().length == 0){
-           $B.RAISE(_b_.ValueError, 
+           $B.RAISE(_b_.ValueError,
                    `could not convert string to float: ${_b_.repr(value)}`)
        }
        value = value.trim()   // remove leading and trailing whitespace
@@ -1376,7 +1401,7 @@ float.$factory = function(value){
                if(isFinite(value)){
                    return fast_float(parseFloat(value))
                }else{
-                   $B.RAISE(_b_.ValueError, 
+                   $B.RAISE(_b_.ValueError,
                        "could not convert string to float: " +
                        _b_.repr(original_value))
                }
