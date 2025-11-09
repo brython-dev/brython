@@ -86,7 +86,7 @@ function $last(t){
 }
 
 function fail(message, pos, pattern){
-    var err = error.$factory(message)
+    var err = $B.EXC(error, message)
     err.msg = message
     err.pos = pos
     if(pattern){

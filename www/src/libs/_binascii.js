@@ -25,11 +25,11 @@ function decode(bytes, altchars, validate){
         var char_num = alphabet.indexOf(car)
         if(char_num == -1){
             if(validate){
-                throw error.$factory("Non-base64 digit found: " + car)
+                $B.RAISE(error, "Non-base64 digit found: " + car)
             }
         }else if(char_num == 64 && i < input.length - 2){
             if(validate){
-                throw error.$factory("Non-base64 digit found: " + car)
+                $B.RAISE(error, "Non-base64 digit found: " + car)
             }
         }else if(char_num == 64 && i >= input.length - 2){
             padding++
@@ -43,7 +43,7 @@ function decode(bytes, altchars, validate){
         return _b_.bytes.$factory([])
     }
     if( _input.length % 4 > 0){
-        throw error.$factory("Incorrect padding")
+        $B.RAISE(error, "Incorrect padding")
     }
 
     var i = 0
