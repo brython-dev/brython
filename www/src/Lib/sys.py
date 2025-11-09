@@ -137,7 +137,9 @@ maxsize = __BRYTHON__.max_array_size
 
 maxunicode = 1114111
 
-platform = scope.navigator.platform
+# a unique name accross all OS is required. Stdlib module sysconfig imports
+# _sysconfigdata_{sys.abiflags}_{sys.platform}_{multiarch}
+platform = 'brython'
 
 platlibdir = __BRYTHON__.brython_path + 'Lib'
 
@@ -315,6 +317,19 @@ monitoring.PROFILER_ID = 2
 monitoring.DISABLE = None #<object object at 0x00007FFC95225080>
 monitoring.MISSING = None #<object object at 0x00007FFC95225090>
 monitoring.OPTIMIZER_ID = 5
+
+class _JIT:
+
+    def is_available(self):
+        return False
+
+    def is_enabled(self):
+        return False
+
+    def is_active(self):
+        return False
+
+_jit = _JIT()
 
 ## __stdxxx__ contains the original values of sys.stdxxx
 __stdout__ = stdout
