@@ -149,7 +149,7 @@ bytearray.__setitem__ = function(self, arg, value){
 }
 
 bytearray.append = function(self, b){
-    if(arguments.length != 2){$B.RAISE(_b_.TypeError, 
+    if(arguments.length != 2){$B.RAISE(_b_.TypeError,
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
     }
@@ -180,7 +180,7 @@ bytearray.extend = function(self, b){
 
 bytearray.insert = function(self, pos, b){
     if(arguments.length != 3){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             "insert takes exactly 2 arguments (" + (arguments.length - 1) +
             " given)")
     }
@@ -212,11 +212,23 @@ var bytes = {
 }
 
 bytes.__add__ = function(self, other){
+    console.log('bytes add', self, other)
+    if(self.source === undefined){
+        console.log('no source')
+        console.log(Error().stack)
+    }
     var other_bytes
     if($B.$isinstance(other, [bytes, bytearray])){
         other_bytes = other.source
     }else if($B.$isinstance(other, _b_.memoryview)){
         other_bytes = _b_.memoryview.tobytes(other).source
+    }else if($B.imported.array && $B.$isinstance(other, $B.imported.array.array)){
+        other_bytes = $B.imported.array.array.tobytes(other).source
+    }
+    try{
+        self.source.concat(other_bytes)
+    }catch(err){
+        console.log('cannot concat', self, other)
     }
     if(other_bytes !== undefined){
         return {
@@ -442,6 +454,8 @@ bytes.__new__ = function(){
         source = $.source.source
     }else if($B.$isinstance($.source, _b_.memoryview)){
         source = $.source.obj.source
+    }else if($B.imported.array && $B.$isinstance($.source, $B.imported.array.array)){
+        source = $B.imported.array.array.tobytes($.source).source
     }else{
         var int_list
         if(Array.isArray($.source)){
@@ -460,6 +474,9 @@ bytes.__new__ = function(){
                     $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
                 }
+                if(res.source === undefined){
+                    console.log('!!!!!!!', $.source)
+                }
                 return res
             }
         }
@@ -469,10 +486,13 @@ bytes.__new__ = function(){
             if(item >= 0 && item < 256){
                 source.push(item)
             }else{
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "bytes must be in range (0, 256)")
             }
         }
+    }
+    if(source === undefined){
+        console.log('bytes.__new__, no source', $.source)
     }
     return {
         __class__: $.cls,
@@ -1625,7 +1645,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                       if(errors == "ignore"){
                           pos++
                       }else{
-                          $B.RAISE(_b_.UnicodeDecodeError, 
+                          $B.RAISE(_b_.UnicodeDecodeError,
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
                               err_info[1] +
@@ -1659,7 +1679,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                           }
                           pos = err_info[3]
                       }else{
-                          $B.RAISE(_b_.UnicodeDecodeError, 
+                          $B.RAISE(_b_.UnicodeDecodeError,
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
                               err_info[1] +
@@ -1698,7 +1718,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                           }
                           pos = err_info[3]
                       }else{
-                          $B.RAISE(_b_.UnicodeDecodeError, 
+                          $B.RAISE(_b_.UnicodeDecodeError,
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
                               err_info[1] +
@@ -1722,7 +1742,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                       s += String.fromCodePoint(0xdc80 + b[pos] - 0x80)
                       pos++
                   }else{
-                      $B.RAISE(_b_.UnicodeDecodeError, 
+                      $B.RAISE(_b_.UnicodeDecodeError,
                           "'utf-8' codec can't decode byte 0x" +
                           byte.toString(16) + " in position " + pos +
                           ": invalid start byte")

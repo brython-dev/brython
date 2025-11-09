@@ -2126,10 +2126,15 @@ memoryview.hex = function(self){
     return res
 }
 memoryview.tobytes = function(self){
-    return {
-        __class__: _b_.bytes,
-        source: self.obj.source
+    if($B.$isinstance(self.obj, [_b_.bytes, _b_.bytearray])){
+        return {
+            __class__: _b_.bytes,
+            source: self.obj.source
+        }
+    }else if($B.imported.array && $B.$isinstance(self.obj, $B.imported.array.array)){
+        return $B.imported.array.array.tobytes(self.obj)
     }
+    $B.RAISE(_b_.TypeError, 'cannot run tobytes with ' + $B.class_name(self.obj))
 }
 memoryview.tolist = function(self){
     if(self.itemsize == 1){
