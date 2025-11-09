@@ -212,11 +212,6 @@ var bytes = {
 }
 
 bytes.__add__ = function(self, other){
-    console.log('bytes add', self, other)
-    if(self.source === undefined){
-        console.log('no source')
-        console.log(Error().stack)
-    }
     var other_bytes
     if($B.$isinstance(other, [bytes, bytearray])){
         other_bytes = other.source
@@ -224,11 +219,6 @@ bytes.__add__ = function(self, other){
         other_bytes = _b_.memoryview.tobytes(other).source
     }else if($B.imported.array && $B.$isinstance(other, $B.imported.array.array)){
         other_bytes = $B.imported.array.array.tobytes(other).source
-    }
-    try{
-        self.source.concat(other_bytes)
-    }catch(err){
-        console.log('cannot concat', self, other)
     }
     if(other_bytes !== undefined){
         return {

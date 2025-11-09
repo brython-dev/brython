@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-09 18:26:11.407049"
-__BRYTHON__.timestamp=1762709171406
+__BRYTHON__.compiled_date="2025-11-09 18:29:02.613945"
+__BRYTHON__.timestamp=1762709342613
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5861,12 +5861,8 @@ bytearray.$factory=function(){var args=[bytearray]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return bytearray.__new__.apply(null,args)}
 var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer_protocol:true,$is_sequence:true,$is_class:true}
-bytes.__add__=function(self,other){console.log('bytes add',self,other)
-if(self.source===undefined){console.log('no source')
-console.log(Error().stack)}
-var other_bytes
+bytes.__add__=function(self,other){var other_bytes
 if($B.$isinstance(other,[bytes,bytearray])){other_bytes=other.source}else if($B.$isinstance(other,_b_.memoryview)){other_bytes=_b_.memoryview.tobytes(other).source}else if($B.imported.array && $B.$isinstance(other,$B.imported.array.array)){other_bytes=$B.imported.array.array.tobytes(other).source}
-try{self.source.concat(other_bytes)}catch(err){console.log('cannot concat',self,other)}
 if(other_bytes !==undefined){return{
 __class__:self.__class__,source:self.source.concat(other_bytes)}}
 $B.RAISE(_b_.TypeError,"can't concat bytes to "+
