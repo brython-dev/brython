@@ -193,6 +193,22 @@ bytearray.insert = function(self, pos, b){
     _b_.list.insert(self.source, pos, b)
 }
 
+bytearray.resize = function(self, size){
+    size = $B.PyNumber_Index(size)
+    if(size < 0){
+        $B.RAISE(_b_.ValueError,
+            `Can only resize to positive sizes, got -${size}`)
+    }
+    if(size > self.source.length){
+        for(var i = 0, len = size - self.source.length; i < len; i++){
+            self.source.push(0)
+        }
+    }else{
+        self.source = self.source.slice(0, size)
+    }
+    return _b_.None
+}
+
 bytearray.$factory = function(){
     var args = [bytearray]
     for(var i = 0, len = arguments.length; i < len; i++){
