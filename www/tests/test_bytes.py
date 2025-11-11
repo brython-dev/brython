@@ -302,4 +302,28 @@ assert b.__bytes__() is b
 data = b'"\''
 assert len(data) == 2
 
+# a memoryview on a bytearray blocks resizing operations
+b = bytearray(b'abcd')
+m = memoryview(b)
+assert_raises(BufferError, b.extend, b'ef')
+m.release()
+b.extend(b'ef')
+assert b == bytearray(b'abcdef')
+
+m = memoryview(b)
+assert_raises(BufferError, b.extend, b'ef')
+del m
+b.extend(b'gh')
+assert b == bytearray(b'abcdefgh')
+
+def create_mm(obj):
+  memoryview(obj)
+
+create_mm(b)
+# assert memoryview object is released when function exits
+b.extend(b'ij')
+assert b == bytearray(b'abcdefghij')
+
+
+
 print('passed all tests...')
