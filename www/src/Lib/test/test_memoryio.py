@@ -114,6 +114,7 @@ class MemoryTestMixin:
 
     def test_writelines_error(self):
         memio = self.ioclass()
+
         def error_gen():
             yield self.buftype('spam')
             raise KeyboardInterrupt
