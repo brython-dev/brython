@@ -2012,8 +2012,30 @@ memoryview.$buffer_protocol = true
 memoryview.$not_basetype = true // cannot be a base class
 memoryview.$is_sequence = true
 
+memoryview.nbytes = $B.getset_descriptor.$factory(
+    memoryview,
+    'nbytes',
+    function(_self){
+        var product = 1
+        for(var x of _self.shape){
+            product *= x
+        }
+        return x * _self.itemsize
+    }
+)
+
+memoryview.__enter__ = function(_self){
+    return _self
+}
+
+memoryview.__exit__ = function(_self){
+    memoryview.release(_self)
+}
+
 memoryview.__eq__ = function(self, other){
-    if(other.__class__ !== memoryview){return false}
+    if(other.__class__ !== memoryview){
+        return false
+    }
     return $B.$getattr(self.obj, '__eq__')(other.obj)
 }
 
@@ -2125,6 +2147,11 @@ memoryview.hex = function(self){
     })
     return res
 }
+
+memoryview.release = function(){
+    // ignore
+}
+
 memoryview.tobytes = function(self){
     if($B.$isinstance(self.obj, [_b_.bytes, _b_.bytearray])){
         return {
@@ -3367,19 +3394,19 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
     var len, data
 
     var attr = readinto1 ? "read1" : "read"
-    data = $B.$call($B.$getattr(_self, attr))(buffer.length)
+    data = $B.$call($B.$getattr(_self, attr))(_b_.len(buffer))
 
     if(! $B.$isinstance(data, _b_.bytes)) {
         $B.RAISE(_b_.TypeError, "read() should return bytes")
     }
 
     len = _b_.bytes.__len__(data)
-    if(len > buffer.length) {
+    if(len > _b_.len(buffer)) {
         $B.RAISE(_b_.ValueError,
             "read() returned too much data: "
-            `${buffer.length} bytes requested, ${len} returned`)
+            `${_b_.len(buffer)} bytes requested, ${len} returned`)
     }
-    memcpy(buffer.buf, PyBytes_AS_STRING(data), len)
+    _b_.bytearray.__setitem__(buffer, _b_.slice.$factory(0, len), data)
 
     return len
 }
@@ -3390,6 +3417,10 @@ $B._BufferedIOBase.readinto = function(_self, buffer){
 
 $B._BufferedIOBase.readinto1 = function(_self, buffer){
     return _bufferediobase_readinto_generic(_self, buffer, 1);
+}
+
+$B._BufferedIOBase.close = function(_self){
+    _self.closed = true
 }
 
 $B._BufferedIOBase.detach = function(){
@@ -3753,7 +3784,6 @@ $B._TextIOBase.encoding = $B.getset_descriptor.$factory(
     $B._TextIOBase,
     'encoding',
     function(_self){
-        console.log('get encoding', _self)
         return _self._encoding ?? _b_.None
     },
     function(_self, value){
