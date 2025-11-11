@@ -455,6 +455,10 @@ $B.$delete = function(name, locals_id, inum){
             // Force generator return (useful if yield was in a context manager)
             obj.js_gen.return()
         }
+        var del_method = $B.search_in_mro($B.get_class(obj), '__del__')
+        if(del_method){
+            del_method(obj)
+        }
     }
     var found = false
     if(locals_id == 'local'){
@@ -1986,8 +1990,9 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
             return obj
         }
         if($B.get_class(obj).$buffer_protocol){
-            obj.$exports = 1 // used to prevent resizing
-            return {
+            obj.$exports = obj.$exports ?? 0
+            obj.$exports++ // used to prevent resizing
+            var res = {
                 __class__: memoryview,
                 obj: obj,
                 // XXX fix me : next values are only for bytes and bytearray
@@ -2001,6 +2006,8 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
                 f_contiguous: true,
                 contiguous: true
             }
+            $B.need_delete(res)
+            return res
         }else{
             $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
                 "is required, not '" + $B.class_name(obj) + "'")
@@ -2154,7 +2161,7 @@ memoryview.hex = function(self){
 }
 
 memoryview.release = function(self){
-    self.obj.$exports = 0
+    self.obj.$exports -= 1
 }
 
 memoryview.tobytes = function(self){
