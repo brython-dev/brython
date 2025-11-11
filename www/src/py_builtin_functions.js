@@ -1986,6 +1986,7 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
             return obj
         }
         if($B.get_class(obj).$buffer_protocol){
+            obj.$exports = 1 // used to prevent resizing
             return {
                 __class__: memoryview,
                 obj: obj,
@@ -2030,6 +2031,10 @@ memoryview.__enter__ = function(_self){
 
 memoryview.__exit__ = function(_self){
     memoryview.release(_self)
+}
+
+memoryview.__del__ = function(self){
+    memoryview.release(self)
 }
 
 memoryview.__eq__ = function(self, other){
@@ -2148,8 +2153,8 @@ memoryview.hex = function(self){
     return res
 }
 
-memoryview.release = function(){
-    // ignore
+memoryview.release = function(self){
+    self.obj.$exports = 0
 }
 
 memoryview.tobytes = function(self){
