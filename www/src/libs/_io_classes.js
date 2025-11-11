@@ -246,108 +246,6 @@ StringIO.write = function(){
 
 $B.set_func_names(StringIO, "_io")
 
-/*
-var BytesIO = $B.make_class("BytesIO",
-    function(){
-        var $ = $B.args("BytesIO", 1, {value: null},
-                ["value"], arguments, {value: _b_.bytes.$factory()},
-                null, null)
-        return {
-            __class__: BytesIO,
-            __dict__: $B.empty_dict(),
-            $binary: true,
-            $content: $.value,
-            $length: $.value.source.length,
-            $pos: 0
-        }
-    }
-)
-
-BytesIO.__mro__ = [$B._IOBase, _b_.object]
-
-BytesIO.getbuffer = function(){
-    var self = get_self("getbuffer", arguments)
-    return _b_.memoryview.$factory(self.$content)
-}
-
-BytesIO.getvalue = function(){
-    var self = get_self("getvalue", arguments)
-    return self.$content
-}
-
-BytesIO.read = function(){
-    var $ = $B.args("read", 2, {self: null, nbytes: null},
-            ["self", "nbytes"], arguments, {nbytes: _b_.None}, null, null),
-        self = $.self,
-        nbytes = $.nbytes,
-        res
-    var source = self.$content.source
-    if(nbytes === _b_.None){
-        res = $B.fast_bytes(source.slice(self.$pos))
-        self.$pos = source.length
-    }else if(! _b_.isinstance(nbytes, _b_.int)){
-        $B.RAISE(_b_.TypeError, 'number of bytes should be int, not ' +
-            $B.class_name(nbytes))
-    }else{
-        res = $B.fast_bytes(source.slice(self.$pos,
-                            self.$pos + nbytes))
-        self.$pos = Math.min(self.$pos + nbytes, source.length)
-    }
-    return res
-}
-
-BytesIO.seek = function(self, offset, whence){
-    var $ = $B.args('seek', 3, {self: null, offset: null, whence: null},
-                ['self', 'offset', 'whence'], arguments, {whence: 0}, null, null),
-        _self = $.self,
-        offset = $.offset
-        whence = $.whence
-
-    if(whence != 0 && whence != 1 && whence != 2){
-        $B.RAISE(_b_.ValueError,
-            `Invalid whence (${whence}, should be 0, 1 or 2)`)
-    }else if(offset < 0 && whence == 0){
-        $B.RAISE(_b_.ValueError, `negative seek value ${pos}`)
-    }
-
-    // whence = 0: offset relative to beginning of the string.
-    //   whence = 1: no change to current position.
-    //   whence = 2: change position to end of file.
-    if(whence == 1){
-        offset = _self.$pos
-    }else if(whence == 2){
-        offset += _self.$length
-    }
-
-    _self.$pos = offset
-
-    return _self.$pos
-}
-
-BytesIO.write = function(){
-    var $ = $B.args("write", 2, {self: null, data: null},
-            ["self", "data"], arguments, {}, null, null)
-    var data_cls = $B.get_class($.data)
-    if(! data_cls.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, 'a bytes-like object is required, ' +
-            `not '${$B.class_name($.data)}'`)
-    }
-    var source = $.self.$content.source,
-        pos = $.self.$pos,
-        data = _b_.bytes.$factory($.data)
-    if(pos > source.length){
-        // pad with 0's
-        var padding = (new Array(pos - source.length)).fill(0)
-        source.splice(source.length, 0, ...padding)
-    }
-    source.splice(pos, data.source.length, ...data.source)
-    $.self.$pos += data.source.length
-    return _b_.None
-}
-
-$B.set_func_names(BytesIO, "_io")
-
-*/
 var BytesIO = $B.make_class('BytesIO')
 
 BytesIO.__bases__ = [$B._BufferedIOBase]
@@ -391,6 +289,13 @@ BytesIO.getbuffer = function(_self){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
     return _b_.memoryview.$factory(_self._buffer)
+}
+
+BytesIO.isatty = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, "isatty on closed file")
+    }
+    return false
 }
 
 BytesIO.close = function(_self){
@@ -449,6 +354,11 @@ BytesIO.write = function(_self, b){
     if($B.$isinstance(b, _b_.str)){
         $B.RAISE(_b_.TypeError, "can't write str to binary stream")
     }
+    if(_self._buffer.$exports){
+        $B.RAISE(_b_.BufferError,
+            'Existing exports of data: object cannot be re-sized')
+    }
+
     var view = _b_.memoryview.$factory(b)
     var n = _b_.memoryview.nbytes.getter(view)  // Size of any bytes-like object
     if(n == 0){
@@ -503,6 +413,10 @@ BytesIO.tell = function(_self){
 }
 
 BytesIO.truncate = function(_self, pos=_b_.None){
+    var $ = $B.args('truncate', 2, {self: null, pos: null}, ['self', 'pos'],
+                arguments, {pos: _b_.None}, null, null)
+    var _self = $.self,
+        pos = $.pos
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "truncate on closed file")
     }
@@ -525,7 +439,7 @@ BytesIO.truncate = function(_self, pos=_b_.None){
             $B.RAISE(_b_.ValueError, `negative truncate position ${pos}`)
         }
     }
-    _self._buffer.source.splice(pos)
+    _b_.bytearray.resize(_self._buffer, pos)
     return pos
 }
 
