@@ -70,7 +70,7 @@ var bytearray = {
     $is_class: true
 }
 
-var mutable_methods = ["__delitem__", "clear", "copy", "count", "index",
+var mutable_methods = ["__delitem__", "copy", "count", "index",
     "pop", "remove", "reverse"]
 
 for(var method of mutable_methods){
@@ -98,7 +98,15 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
     return 'bytearray(' + bytes.__repr__(self) + ")"
 }
 
+function check_exports(self){
+    if(self.$exports){
+        $B.RAISE(_b_.BufferError,
+            'Existing exports of data: object cannot be re-sized')
+    }
+}
+
 bytearray.__setitem__ = function(self, arg, value){
+    check_exports(self)
     if($B.$isinstance(arg, _b_.int)){
         if(! $B.$isinstance(value, _b_.int)){
             $B.RAISE(_b_.TypeError, 'an integer is required')
@@ -149,6 +157,7 @@ bytearray.__setitem__ = function(self, arg, value){
 }
 
 bytearray.append = function(self, b){
+    check_exports(self)
     if(arguments.length != 2){$B.RAISE(_b_.TypeError,
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
@@ -162,7 +171,13 @@ bytearray.append = function(self, b){
     self.source[self.source.length] = b
 }
 
+bytearray.clear = function(self){
+    check_exports(self)
+    self.source = []
+}
+
 bytearray.extend = function(self, b){
+    check_exports(self)
     if(self.in_iteration){
         // happens in re.finditer()
         $B.RAISE(_b_.BufferError, "Existing exports of data: object " +
@@ -179,6 +194,7 @@ bytearray.extend = function(self, b){
 }
 
 bytearray.insert = function(self, pos, b){
+    check_exports(self)
     if(arguments.length != 3){
         $B.RAISE(_b_.TypeError,
             "insert takes exactly 2 arguments (" + (arguments.length - 1) +
@@ -194,6 +210,7 @@ bytearray.insert = function(self, pos, b){
 }
 
 bytearray.resize = function(self, size){
+    check_exports(self)
     size = $B.PyNumber_Index(size)
     if(size < 0){
         $B.RAISE(_b_.ValueError,
