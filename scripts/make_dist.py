@@ -9,6 +9,7 @@ import sys
 import javascript_minifier
 from version import version, implementation
 from directories import src_dir
+from core_scripts import core_scripts
 
 cpython_version = sys.version_info
 if cpython_version[0] != version[0] or \
@@ -29,56 +30,6 @@ def run():
     import make_version_info      # generates /src/version_info.js
 
     # build brython.js from base Javascript files
-    sources = [
-        'brython_builtins',
-
-        'py_ast_classes',
-        'stdlib_paths',
-        'unicode_data',
-        'version_info',
-
-        'py_tokens',
-        'python_tokenizer',
-        'py_ast',
-        'py2js',
-        'loaders',
-        'py_utils',
-        'py_object',
-        'py_type',
-        'py_functions',
-        'py_builtin_functions',
-        'py_sort',
-        'py_exceptions',
-        'py_range_slice',
-        'py_bytes',
-        'py_set',
-        'py_import',
-        'py_string',
-        'py_int',
-        'py_long_int',
-        'py_float',
-        'py_complex',
-        'py_dict',
-        'py_list',
-        'js_objects',
-        'py_generator',
-        'py_dom',
-        'py_pattern_matching',
-        'async',
-        'py_flags',
-        'builtin_modules',
-        'ast_to_js',
-        'symtable',
-
-        'action_helpers',
-        'string_parser',
-        'number_parser',
-        'python_parser',
-        'pegen',
-        'gen_parse',
-        'brython_ready'
-
-    ]
 
     res = f"""// brython.js brython.info
 // version {version}
@@ -90,7 +41,7 @@ def run():
     res_no_static = res # same but without static stdlib files
     src_size = 0
 
-    for fname in sources:
+    for fname in core_scripts:
         src = open(os.path.join(src_dir, fname) + '.js').read() + '\n'
         src_size += len(src)
         try:
