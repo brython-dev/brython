@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-11 08:59:31.198802"
-__BRYTHON__.timestamp=1762847971198
+__BRYTHON__.compiled_date="2025-11-11 16:05:00.359519"
+__BRYTHON__.timestamp=1762873500358
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1771,6 +1771,10 @@ $B.trace_return=function(value){var frame=$B.frame_obj.frame,trace_func=frame.$f
 if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame,'return',value)}
+$B.need_delete=function(obj){
+if($B.frame_obj !==null){var frame=$B.frame_obj.frame
+frame.need_delete=frame.need_delete ||[]
+frame.need_delete.push(obj)}}
 $B.leave_frame=function(arg){
 if($B.frame_obj===null){return}
 if(arg && arg.value !==undefined && $B.tracefunc !==_b_.None){if($B.frame_obj.frame.$f_trace===undefined){$B.frame_obj.frame.$f_trace=$B.tracefunc}
@@ -1787,6 +1791,9 @@ if(gen.$frame===undefined){continue}
 var ctx_managers=gen.$frame[1].$context_managers
 if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__'))(
 _b_.None,_b_.None,_b_.None)}}}}}
+if(frame.need_delete){
+for(var obj of frame.need_delete){var del_method=$B.$getattr($B.get_class(obj),'__del__')
+if(del_method){del_method(obj)}}}
 if(frame[1].$current_exception){delete frame[1].$current_exception}
 return _b_.None}
 $B.trace_return_and_leave=function(frame,return_value){if(frame.$f_trace !==_b_.None){$B.trace_return(return_value)}
@@ -3482,7 +3489,9 @@ $B.$delattr=function(obj,attr,inum){try{_b_.delattr(obj,attr)}catch(err){$B.set_
 throw err}}
 $B.$delete=function(name,locals_id,inum){
 function del(obj){if(obj.__class__===$B.generator){
-obj.js_gen.return()}}
+obj.js_gen.return()}
+var del_method=$B.search_in_mro($B.get_class(obj),'__del__')
+if(del_method){del_method(obj)}}
 var found=false
 if(locals_id=='local'){var frame=$B.frame_obj.frame
 if(frame[1].hasOwnProperty(name)){found=true
@@ -3994,9 +4003,12 @@ return $extreme.call(null,_args,op)}}
 _b_.max=function(){return $extreme(arguments,'__gt__')}
 var memoryview=_b_.memoryview=$B.make_class('memoryview',function(obj){check_nb_args_no_kw('memoryview',1,arguments)
 if(obj.__class__===memoryview){return obj}
-if($B.get_class(obj).$buffer_protocol){return{
-__class__:memoryview,obj:obj,
-format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
+if($B.get_class(obj).$buffer_protocol){obj.$exports=obj.$exports ?? 0
+obj.$exports++
+var res={__class__:memoryview,obj:obj,
+format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}
+$B.need_delete(res)
+return res}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
 "is required, not '"+$B.class_name(obj)+"'")}}
 )
 memoryview.$match_sequence_pattern=true,
@@ -4010,6 +4022,7 @@ return x*_self.itemsize}
 )
 memoryview.__enter__=function(_self){return _self}
 memoryview.__exit__=function(_self){memoryview.release(_self)}
+memoryview.__del__=function(self){memoryview.release(self)}
 memoryview.__eq__=function(self,other){if(other.__class__ !==memoryview){return false}
 return $B.$getattr(self.obj,'__eq__')(other.obj)}
 memoryview.__getitem__=function(self,key){var res
@@ -4045,7 +4058,7 @@ return res}}
 memoryview.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 bytes.source.forEach(function(item){res+=item.toString(16)})
 return res}
-memoryview.release=function(){}
+memoryview.release=function(self){self.obj.$exports-=1}
 memoryview.tobytes=function(self){if($B.$isinstance(self.obj,[_b_.bytes,_b_.bytearray])){return{
 __class__:_b_.bytes,source:self.obj.source}}else if($B.imported.array && $B.$isinstance(self.obj,$B.imported.array.array)){return $B.imported.array.array.tobytes(self.obj)}
 $B.RAISE(_b_.TypeError,'cannot run tobytes with '+$B.class_name(self.obj))}
@@ -5828,7 +5841,7 @@ for(i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break
 return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
 var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_sequence:true,$is_class:true}
-var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse"]
+var mutable_methods=["__delitem__","copy","count","index","pop","remove","reverse"]
 for(var method of mutable_methods){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
 return _b_.list[m].apply(null,args)}})(method)}
@@ -5837,7 +5850,9 @@ var bytearray_iterator=$B.make_iterator_class('bytearray_iterator')
 bytearray.__iter__=function(self){return bytearray_iterator.$factory(self.source)}
 bytearray.__mro__=[_b_.object]
 bytearray.__repr__=bytearray.__str__=function(self){return 'bytearray('+bytes.__repr__(self)+")"}
-bytearray.__setitem__=function(self,arg,value){if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
+function check_exports(self){if(self.$exports){$B.RAISE(_b_.BufferError,'Existing exports of data: object cannot be re-sized')}}
+bytearray.__setitem__=function(self,arg,value){check_exports(self)
+if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 var pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){self.source[pos]=value}else{$B.RAISE(_b_.IndexError,'list index out of range')}}else if($B.$isinstance(arg,_b_.slice)){var start=arg.start===_b_.None ? 0 :arg.start
@@ -5849,24 +5864,30 @@ try{var $temp=_b_.list.$factory(value)
 for(var i=$temp.length-1;i >=0;i--){if(! $B.$isinstance($temp[i],_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 self.source.splice(start,0,$temp[i])}}catch(err){$B.RAISE(_b_.TypeError,"can only assign an iterable")}}else{$B.RAISE(_b_.TypeError,'list indices must be integer, not '+
 $B.class_name(arg))}}
-bytearray.append=function(self,b){if(arguments.length !=2){$B.RAISE(_b_.TypeError,"append takes exactly one argument ("+(arguments.length-1)+
+bytearray.append=function(self,b){check_exports(self)
+if(arguments.length !=2){$B.RAISE(_b_.TypeError,"append takes exactly one argument ("+(arguments.length-1)+
 " given)")}
 if(! $B.$isinstance(b,_b_.int)){$B.RAISE(_b_.TypeError,"an integer is required")}
 if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 self.source[self.source.length]=b}
-bytearray.extend=function(self,b){if(self.in_iteration){
+bytearray.clear=function(self){check_exports(self)
+self.source=[]}
+bytearray.extend=function(self,b){check_exports(self)
+if(self.in_iteration){
 $B.RAISE(_b_.BufferError,"Existing exports of data: object "+
 "cannot be re-sized")}
 if(b.__class__===bytearray ||b.__class__===bytes){self.source=self.source.concat(b.source)
 return _b_.None}
 for(var item of $B.make_js_iterator(b)){bytearray.append(self,$B.PyNumber_Index(item))}
 return _b_.None}
-bytearray.insert=function(self,pos,b){if(arguments.length !=3){$B.RAISE(_b_.TypeError,"insert takes exactly 2 arguments ("+(arguments.length-1)+
+bytearray.insert=function(self,pos,b){check_exports(self)
+if(arguments.length !=3){$B.RAISE(_b_.TypeError,"insert takes exactly 2 arguments ("+(arguments.length-1)+
 " given)")}
 if(! $B.$isinstance(b,_b_.int)){$B.RAISE(_b_.TypeError,"an integer is required")}
 if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 _b_.list.insert(self.source,pos,b)}
-bytearray.resize=function(self,size){size=$B.PyNumber_Index(size)
+bytearray.resize=function(self,size){check_exports(self)
+size=$B.PyNumber_Index(size)
 if(size < 0){$B.RAISE(_b_.ValueError,`Can only resize to positive sizes, got -${size}`)}
 if(size > self.source.length){for(var i=0,len=size-self.source.length;i < len;i++){self.source.push(0)}}else{self.source=self.source.slice(0,size)}
 return _b_.None}
