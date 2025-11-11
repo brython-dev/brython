@@ -533,19 +533,24 @@ object.__reduce_ex__ = function(self, protocol){
         arg2 = arg2.concat(newargs.args)
     }
     res.push($B.fast_tuple(arg2))
-    var d = $B.empty_dict(),
-        nb = 0
-    if(self.__dict__){
-        for(var item of _b_.dict.$iter_items(self.__dict__)){
-            if(item.key == "__class__" || item.key.startsWith("$")){
-                continue
+    var getstate = $B.search_in_mro(klass, '__getstate__')
+    if(getstate){
+        var d = $B.$call(getstate)(self)
+    }else{
+        var d = $B.empty_dict(),
+            nb = 0
+        if(self.__dict__){
+            for(var item of _b_.dict.$iter_items(self.__dict__)){
+                if(item.key == "__class__" || item.key.startsWith("$")){
+                    continue
+                }
+                _b_.dict.$setitem(d, item.key, item.value)
+                nb++
             }
-            _b_.dict.$setitem(d, item.key, item.value)
-            nb++
         }
-    }
-    if(nb == 0){
-        d = _b_.None
+        if(nb == 0){
+            d = _b_.None
+        }
     }
     res.push(d)
     var list_like_iterator = _b_.None
