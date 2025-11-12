@@ -3211,7 +3211,7 @@ _IOBase.readlines = function(_self, hint){
     var length = 0;
     var result, it
 
-    result = []
+    result = $B.$list([])
 
     if(hint <= 0){
         return _b_.list.$factory(_self)
@@ -3231,36 +3231,17 @@ _IOBase.readlines = function(_self, hint){
         var line_length = _b_.len(line)
 
         if(line_length == 0){
-            break;
+            break
         }else{
             result[result.length] = line
         }
         if(line_length > hint - length){
             break
         }
-        length += line_length;
+        length += line_length
     }
     return result
 }
-
-/*
-_IOBase.seek = function(self, offset, whence){
-    if(self.closed === True){
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
-    if(whence === undefined){
-        whence = 0
-    }
-    if(whence === 0){
-        self.$counter = offset
-    }else if(whence === 1){
-        self.$counter += offset
-    }else if(whence === 2){
-        self.$counter = _b_.len(self.$content) + offset
-    }
-    return None
-}
-*/
 
 _IOBase.seek = function(_self){
     _io_unsupported('seek')

@@ -8,7 +8,7 @@ var _IOBase = $B._IOBase //$B.make_class("_IOBase")
 _IOBase.__mro__ = [_b_.object]
 
 _IOBase.close = function(){
-    get_self("close", arguments).__closed = true
+    get_self("close", arguments)._closed = true
 }
 
 _IOBase.flush = function(){
@@ -76,6 +76,12 @@ _RawIOBase = $B._RawIOBase
 _TextIOBase = $B.make_class("_TextIOBase")
 _TextIOBase.__mro__ = [_IOBase, _b_.object]
 
+function check_closed(_self){
+    if(_self._closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+}
+
 var StringIO = $B.make_class("StringIO")
 
 StringIO.__init__ = function(){
@@ -88,6 +94,16 @@ StringIO.__init__ = function(){
     }else if(! $B.$isinstance(value, _b_.str)){
         $B.RAISE(_b_.TypeError,
             `initial_value must be str or None, not ${$B.class_name(value)}`)
+    }
+    var newline = $.newline
+    if(newline !== _b_.None){
+        if(! $B.$isinstance(newline, _b_.str)){
+            $B.RAISE(_b_.TypeError,
+                `newline must be str or None, not ${$B.class_name(newline)}`)
+        }
+    }
+    if(! [_b_.None, '', '\n', '\r', '\r\n'].includes(newline)){
+        $B.RAISE(_b_.ValueError, `illegal newline value: ${_b_.repr(newline)}`)
     }
     $.self.newlines = $.newline
     $.self.$text = value
@@ -122,10 +138,30 @@ StringIO.__setstate__ = function(_self, state){
     }
 }
 
+function transform_newline(s, newline){
+    switch(newline){
+        case _b_.None:
+            s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+            break
+        case '\r':
+            s = s.replace(/\n/g, '\r')
+            break
+        case '\r\n':
+            s = s.replace(/\n/g, '\r\n')
+            break
+    }
+    return s
+}
+
 StringIO.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
             ["self"], arguments, {}, null, null)
-    return $.self.$text.substr(0) // copy
+    var _self = $.self
+    var res = _self.$text.substr(0) // copy
+    if(_self.newlines == '\r'){
+        res = res.replace(/\n/g, '\r')
+    }
+    return transform_newline(res, _self.newlines)
 }
 
 StringIO.read = function(){
@@ -134,24 +170,56 @@ StringIO.read = function(){
         _self = $.self,
         size = $.size
 
+    check_closed(_self)
     var res = ''
     var nb = 0
-    if(_self.$text_iterator === undefined){
-        console.log('undef 114', _self)
+    var last_is_cr = false
+    if(size === _b_.None){
+        size = -1
+    }else{
+        size = $B.PyNumber_Index($.size)
     }
-    while(true){
+    if(size < 0){
+        size = _b_.len(_self.$text)
+    }
+    if(size == 0){
+        return ''
+    }
+    if(_self.trailing_cr){
+        res = _self.next_char
+        delete _self.trailing_cr
+        nb += 1
+    }
+    while(nb < size){
         var char = _self.$text_iterator.next()
         if(char.done){
-            return res
+            break
         }
-        res += char.value
-        nb += 1
+        if(char.value == '\r' && _self.newlines == _b_.None){
+            // if next char is '\n', don't count this \r as one char
+            res += char.value
+            _self.trailing_cr = true
+        }else if(char.value == '\n' && _self.trailing_cr){
+            res += char.value
+            delete _self.trailing_cr
+            nb += 1
+        }else{
+            if(_self.trailing_cr){
+                // newlines is None and previous char was \r
+                res += '\n'
+                nb += 1
+                if(nb >= size){
+                    _self.next_char = char.value
+                    break
+                }
+                delete _self.trailing_cr
+            }
+            res += char.value
+            nb += 1
+        }
         _self.$text_pos += 1
-        if(size > 0 && nb > size){
-            return res
-        }
     }
-    return nb
+    return transform_newline(res, _self.newlines)
 }
 
 StringIO.readline = function(){
@@ -159,36 +227,102 @@ StringIO.readline = function(){
             arguments, {size: -1}, null, null),
         _self = $.self,
         size = $.size
-
+    if(size < 0){
+        size = _b_.len(_self.$text)
+    }
+    check_closed(_self)
+    var universal = [_b_.None, ''].includes(_self.newlines)
     var res = ''
     var nb = 0
-    while(true){
+    if(_self.trailing_cr){
+        // we are in universal mode; in previous readline, we stopped at a
+        // character after a \r, emitted the line ending at \r and saved this
+        // character in _self.next_char
+        res = _self.next_char
+        nb = 1
+        delete _self.trailing_cr
+        delete _self.next_char
+    }
+    while(nb < size){
         var char = _self.$text_iterator.next()
         if(char.done){
             return res
         }
-        res += char.value
-        nb += 1
-        self.$text_pos += 1
-        if(size > 0 && nb > size){
-            return res
-        }else if(char.value == '\n'){
-            return res
+        nb++
+        self.$text_pos++
+        if(char.value == '\n'){
+            if(_self.newlines == '\r'){
+                res += '\r'
+            }else if(_self.newlines == '\r\n'){
+                res += '\r\n'
+            }else{
+                res += char.value
+                if(_self.newlines === _b_.None){
+                    res = res.replace('\r\n', '\n').replace('\r', '\n')
+                }
+                if(universal){
+                    delete _self.trailing_cr
+                }
+            }
+            break
+        }else if(char.value == '\r'){
+            if(_self.newlines == '\r'){
+                res += char.value
+                break
+            }else{
+                // wait in case next char is \n
+                res += char.value
+                if(universal){
+                    _self.trailing_cr = true
+                }
+            }
+        }else if(_self.trailing_cr){
+            // we are in universal mode and previous char was \r
+            if(_self.newlines === _b_.None){
+                res = res.replace('\r', '\n')
+            }
+            // save current char for next iteration
+            _self.next_char = char.value
+            break
+        }else{
+            res += char.value
         }
     }
+    if(_self.newlines === _b_.None){
+        res = res.replace('\r\n', '\n')
+    }
+    return $B.String(res)
 }
 
 StringIO.truncate = function(self, size){
     var $ = $B.args('truncate', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: _b_.None}, null, null),
-        self = $.self,
+        _self = $.self,
         size = $.size
+    check_closed(_self)
     if(size === _b_.None){
-        size = self.$text_pos
+        size = _self.$text_pos
     }
-    self.$text = self.$text.substr(0, size)
-    self.$text_pos = self.$text.length
-    return self.$text_pos
+    _self.$text_iterator = _self.$text[Symbol.iterator]()
+    var res = ''
+    var nb = 0
+    while(true){
+        var char = _self.$text_iterator.next()
+        if(char.done){
+            break
+        }
+        res += char.value
+        nb += 1
+        if(nb >= size){
+            break
+        }
+    }
+    _self.$text = res
+    _self.$text_pos = size
+    for(var _ of _self.$text_iterator){
+        // exhaust so that next read() returns ''
+    }
+    return _self.$text_pos
 }
 
 StringIO.seek = function(self, pos, whence){
@@ -214,13 +348,17 @@ StringIO.seek = function(self, pos, whence){
         pos = _self.$text_pos
     }else if(whence == 2){
         pos = _self.$text_length
-    }
-
-    _self.$text_pos = pos
-    // reset iterator
-    _self.$text_iterator = _self.$text[Symbol.iterator]()
-    for(var i = 0; i < pos; i++){
-        _self.$text_iterator.next()
+        for(var item of _self.$text_iterator){
+            // exhaust iterator
+        }
+        _self.$text_pos = pos
+    }else{
+        _self.$text_pos = pos
+        // reset iterator at specified position
+        _self.$text_iterator = _self.$text[Symbol.iterator]()
+        for(var i = 0; i < pos; i++){
+            _self.$text_iterator.next()
+        }
     }
     return _self.$text_pos
 }

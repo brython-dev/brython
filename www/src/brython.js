@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-11 16:05:00.359519"
-__BRYTHON__.timestamp=1762873500358
+__BRYTHON__.compiled_date="2025-11-12 10:43:00.960203"
+__BRYTHON__.timestamp=1762940580959
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4355,7 +4355,7 @@ break}}
 return buffer}
 _IOBase.readlines=function(_self,hint){var length=0;
 var result,it
-result=[]
+result=$B.$list([])
 if(hint <=0){return _b_.list.$factory(_self)}
 var readline=$B.search_in_mro($B.get_class(_self),'readline')
 var nb=0
@@ -4364,9 +4364,9 @@ if(nb > 5000){console.log('overflow',result)
 break}
 var line=readline(_self)
 var line_length=_b_.len(line)
-if(line_length==0){break;}else{result[result.length]=line}
+if(line_length==0){break}else{result[result.length]=line}
 if(line_length > hint-length){break}
-length+=line_length;}
+length+=line_length}
 return result}
 _IOBase.seek=function(_self){_io_unsupported('seek')}
 _IOBase.seekable=function(){return false}

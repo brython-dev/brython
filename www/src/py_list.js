@@ -535,7 +535,7 @@ function set_list_slice_step(obj, start, stop, step, value){
         nb++
     }
     if(nb != repl.length){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "attempt to assign sequence of size " + repl.length +
             " to extended slice of size " + nb)
     }
@@ -860,7 +860,7 @@ list.$unpack = function(obj){
             $B.$call($B.$getattr(it, "__next__"))
         }catch(err1){
             if($B.is_exc(err1, [_b_.TypeError])){
-                $B.RAISE(_b_.TypeError, 
+                $B.RAISE(_b_.TypeError,
                     `Value after * must be an iterable, not ${$B.class_name(obj)}`)
             }
             throw err1
