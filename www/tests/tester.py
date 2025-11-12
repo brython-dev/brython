@@ -96,21 +96,21 @@ class Tester:
         if round(diff, 7) != 0:
             if msg is not None:
                 raise AssertionError(msg)
-            raise AssertionError('assertEqual, expected %s, got %s'
-                %(expected, result))
+            raise AssertionError(
+                f'assertAlmostEqual, expected {expected!r}, got {result!r}')
 
     def assertEqual(self, result, expected, msg=None):
         if result != expected:
             if msg is not None:
                 raise AssertionError(msg)
-            raise AssertionError('assertEqual, expected %s, got %s'
-                %(expected, result))
+            raise AssertionError(
+                f'assertEqual, expected {expected!r}, got {result!r}')
 
     def assertTypedEqual(self, result, expected, msg=None):
         if result != expected or type(result) != type(expected):
             if msg is not None:
                 raise AssertionError(msg)
-            raise AssertionError('assertEqual, expected %s, got %s'
+            raise AssertionError('assertTypedEqual, expected %s, got %s'
                 %(expected, result))
 
     def assertLess(self, result, value):
