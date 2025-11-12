@@ -2946,38 +2946,6 @@ _IOBase.__next__ = function(_self){
     }
     return line;
 }
-/*
-_IOBase.__bool__ = function(){
-    return true
-}
-
-
-
-_IOBase.__init__ = function(_self, initial_value=''){
-    _self.$content = initial_value
-    _self.$counter = 0
-}
-
-
-
-_IOBase.__len__ = function(self){
-    return self.lines.length
-}
-
-_IOBase.__next__ = function(self){
-    self.$lc++
-    if(self.$lc >= self.$lines.length){
-        $B.RAISE(_b_.StopIteration, )
-    }
-    return self.$lines[self.$lc]
-}
-
-_IOBase.__new__ = function(cls){
-    return {
-        __class__: cls
-    }
-}
-*/
 
 _IOBase.__del__ = function(_self){
     return _IOBase.close(_self)
@@ -3002,31 +2970,6 @@ _IOBase.flush = function(_self){
 _IOBase.isatty = function(){
     return false
 }
-
-/*
-_IOBase.read = function(){
-    var $ = $B.args("read", 2, {self: null, size: null},
-            ["self", "size"], arguments, {size: -1}, null, null),
-            self = $.self,
-            size = $B.PyNumber_Index($.size)
-    if(self.closed === true){
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
-    var len = _b_.len(self.$content)
-    if(size < 0){
-        size = len - self.$counter
-    }
-    var res
-    if(self.$binary){
-        res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
-            self.$counter + size))
-    }else{
-        res = self.$content.substr(self.$counter, size)
-    }
-    self.$counter += size
-    return res
-}
-*/
 
 _IOBase.readable = function(){
     return false
@@ -3064,79 +3007,6 @@ function make_lines(self){
         }
     }
 }
-
-/*
-_IOBase.readline = function(){
-    var $ = $B.args("readline", 2, {self: null, size: null},
-            ["self", "size"], arguments, {size: -1}, null, null),
-            self = $.self,
-            size = $.size,
-            result,
-            rest,
-            ix
-
-    if(size === _b_.None){
-        size = -1
-    }else if(! _b_.isinstance(size, _b_.int)){
-        $B.RAISE(_b_.TypeError, 'argument should be integer or None, ' +
-            `not '${$B.class_name(size)}'`)
-    }else{
-        size = _b_.int.$int_value(size)
-    }
-    // set line counter
-    self.$lc = self.$lc === undefined ? -1 : self.$lc
-
-    if(self.closed === true){
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
-
-    if(self.$binary){
-        // search next \n
-        ix = self.$content.source.indexOf(10, self.$counter)
-        if(ix == -1){
-            rest = self.$content.source.slice(self.$counter)
-            if(size > -1){
-                rest = rest.slice(0, size)
-            }
-            self.$counter = self.$content.source.length
-            return _b_.bytes.$factory(rest)
-        }else{
-            var line_source = self.$content.source.slice(self.$counter,
-                    ix + 1)
-            if(size > -1){
-                line_source = line_source.slice(0, size)
-            }
-            result = {
-                __class__: _b_.bytes,
-                source : line_source
-            }
-            self.$counter = ix + 1
-            return result
-        }
-    }else{
-        if(self.$counter == self.$content.length){
-            return ''
-        }
-        ix = self.$content.indexOf("\n", self.$counter)
-        if(ix == -1){
-            rest = self.$content.substr(self.$counter)
-            if(size > -1){
-                rest = rest.substr(0, size)
-            }
-            self.$counter = self.$content.length
-            return rest
-        }else{
-            result = self.$content.substring(self.$counter, ix + 1)
-            if(size > -1){
-                result = result.substr(0, size)
-            }
-            self.$counter = ix + 1
-            self.$lc += 1
-            return result
-        }
-    }
-}
-*/
 
 _IOBase.readline = function(_self, limit=-1){
     var $ = $B.args('readline', 2, {self: null, limit: null},
@@ -3783,6 +3653,18 @@ $B._TextIOBase.encoding = $B.getset_descriptor.$factory(
         _self._encoding = value
     }
 )
+
+$B._TextIOBase.errors = $B.getset_descriptor.$factory(
+    $B._TextIOBase,
+    'errors',
+    function(_self){
+        return _self.errors ?? _b_.None
+    },
+    function(_self, value){
+        _self._errors = value
+    }
+)
+
 
 $B._TextIOBase.read = function(){
     _io_unsupported('read')

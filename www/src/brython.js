@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-12 10:43:00.960203"
-__BRYTHON__.timestamp=1762940580959
+__BRYTHON__.compiled_date="2025-11-12 15:08:53.116484"
+__BRYTHON__.timestamp=1762956533116
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2270,7 +2270,9 @@ return res}
 $B.getset_descriptor.__delete__=function(self,obj){return self.deleter(obj)}
 $B.getset_descriptor.__get__=function(self,obj){if(obj===_b_.None){return self}
 return self.getter(obj)}
-$B.getset_descriptor.__set__=function(self,klass,value){return self.setter(klass,value)}
+$B.getset_descriptor.__set__=function(self,klass,value){if(self.setter===undefined){$B.RAISE_ATTRIBUTE_ERROR(
+`attribute '${self.attr}' of '${self.cls.__qualname__}' objects is not writable`,self,self.attr)}
+return self.setter(klass,value)}
 $B.getset_descriptor.__repr__=function(self){return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`}
 $B.set_func_names($B.getset_descriptor,"builtins")
 type.__dict__={}
@@ -4571,6 +4573,9 @@ $B._TextIOBase.__bases__=[_IOBase]
 $B._TextIOBase.__mro__=[_IOBase,_b_.object]
 $B._TextIOBase.encoding=$B.getset_descriptor.$factory(
 $B._TextIOBase,'encoding',function(_self){return _self._encoding ?? _b_.None},function(_self,value){_self._encoding=value}
+)
+$B._TextIOBase.errors=$B.getset_descriptor.$factory(
+$B._TextIOBase,'errors',function(_self){return _self.errors ?? _b_.None},function(_self,value){_self._errors=value}
 )
 $B._TextIOBase.read=function(){_io_unsupported('read')}
 var $BufferedReader=$B.make_class('_io.BufferedReader',function(content){return{

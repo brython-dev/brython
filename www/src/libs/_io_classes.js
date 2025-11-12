@@ -72,14 +72,41 @@ $B.set_func_names(_RawIOBase, '_io')
 */
 _RawIOBase = $B._RawIOBase
 
-// Base class for text streams.
-_TextIOBase = $B.make_class("_TextIOBase")
-_TextIOBase.__mro__ = [_IOBase, _b_.object]
-
 function check_closed(_self){
     if(_self._closed){
         $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
+}
+
+function get_newlines(text, newline){
+    // return all the newline sequences (\r, \n, \r\n) in text
+    var newlines = new Set()
+    var trailing_cr = false
+    for(var char of text){
+        if(char == '\n'){
+            if(trailing_cr){
+                newlines.add('\r\n')
+                trailing_cr = false
+            }else{
+                newlines.add(char)
+            }
+            if(newlines.size == 3){
+                break
+            }
+        }else if(char == '\r'){
+            trailing_cr = true
+        }else if(trailing_cr){
+            newlines.add('\r')
+            if(newlines.size == 3){
+                break
+            }
+            trailing_cr = false
+        }
+    }
+    if(trailing_cr){ // text ends with \r
+        newlines.add('\r')
+    }
+    return newlines
 }
 
 var StringIO = $B.make_class("StringIO")
@@ -105,7 +132,17 @@ StringIO.__init__ = function(){
     if(! [_b_.None, '', '\n', '\r', '\r\n'].includes(newline)){
         $B.RAISE(_b_.ValueError, `illegal newline value: ${_b_.repr(newline)}`)
     }
-    $.self.newlines = $.newline
+    $.self.$newlines = _b_.None
+    if(newline === _b_.None || newline == ''){
+        // get all the newline sequences from value
+        var newlines = get_newlines(value)
+        if(newlines.size == 1){
+            $.self.$newlines = Array.from(newlines)[0]
+        }else if(newlines.size > 1){
+            $.self.$newlines = $B.$list(Array.from(newlines))
+        }
+    }
+    $.self.$newline = newline
     $.self.$text = value
     $.self.$text_pos = 0
     $.self.$text_iterator = $.self.$text[Symbol.iterator]()
@@ -119,7 +156,7 @@ StringIO.__getstate__ = function(_self){
     var dict = _self.__dict__ ? _b_.dict.copy(_self.__dict__) : _b_.None
 
     var state = $B.fast_tuple([initvalue,
-                          _self.newlines ? _self.newlines : _b_.None,
+                          _self.$newline,
                           _self.$text_pos, dict])
     return state
 }
@@ -161,8 +198,24 @@ StringIO.getvalue = function(){
     if(_self.newlines == '\r'){
         res = res.replace(/\n/g, '\r')
     }
-    return transform_newline(res, _self.newlines)
+    return transform_newline(res, _self.$newline)
 }
+
+StringIO.line_buffering = $B.getset_descriptor.$factory(
+    StringIO,
+    'line_buffering',
+    function(){
+        return false
+    }
+)
+
+StringIO.newlines = $B.getset_descriptor.$factory(
+    StringIO,
+    'newlines',
+    function(self){
+        return self.$newlines
+    }
+)
 
 StringIO.read = function(){
     var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
@@ -195,11 +248,12 @@ StringIO.read = function(){
         if(char.done){
             break
         }
-        if(char.value == '\r' && _self.newlines == _b_.None){
-            // if next char is '\n', don't count this \r as one char
+        if(char.value == '\r' && _self.$newline == _b_.None){
+            // wait in case next char is '\n'
             res += char.value
             _self.trailing_cr = true
         }else if(char.value == '\n' && _self.trailing_cr){
+            // sequence \r\n
             res += char.value
             delete _self.trailing_cr
             nb += 1
@@ -208,18 +262,18 @@ StringIO.read = function(){
                 // newlines is None and previous char was \r
                 res += '\n'
                 nb += 1
+                delete _self.trailing_cr
                 if(nb >= size){
                     _self.next_char = char.value
                     break
                 }
-                delete _self.trailing_cr
             }
             res += char.value
             nb += 1
         }
         _self.$text_pos += 1
     }
-    return transform_newline(res, _self.newlines)
+    return transform_newline(res, _self.$newline)
 }
 
 StringIO.readline = function(){
@@ -227,11 +281,16 @@ StringIO.readline = function(){
             arguments, {size: -1}, null, null),
         _self = $.self,
         size = $.size
+    if(size === _b_.None){
+        size = -1
+    }else{
+        size = $B.PyNumber_Index(size)
+    }
     if(size < 0){
         size = _b_.len(_self.$text)
     }
     check_closed(_self)
-    var universal = [_b_.None, ''].includes(_self.newlines)
+    var universal = [_b_.None, ''].includes(_self.$newline)
     var res = ''
     var nb = 0
     if(_self.trailing_cr){
@@ -251,13 +310,13 @@ StringIO.readline = function(){
         nb++
         self.$text_pos++
         if(char.value == '\n'){
-            if(_self.newlines == '\r'){
+            if(_self.$newline == '\r'){
                 res += '\r'
-            }else if(_self.newlines == '\r\n'){
+            }else if(_self.$newline == '\r\n'){
                 res += '\r\n'
             }else{
                 res += char.value
-                if(_self.newlines === _b_.None){
+                if(_self.$newline === _b_.None){
                     res = res.replace('\r\n', '\n').replace('\r', '\n')
                 }
                 if(universal){
@@ -266,7 +325,7 @@ StringIO.readline = function(){
             }
             break
         }else if(char.value == '\r'){
-            if(_self.newlines == '\r'){
+            if(_self.$newline == '\r'){
                 res += char.value
                 break
             }else{
@@ -278,7 +337,7 @@ StringIO.readline = function(){
             }
         }else if(_self.trailing_cr){
             // we are in universal mode and previous char was \r
-            if(_self.newlines === _b_.None){
+            if(_self.$newline === _b_.None){
                 res = res.replace('\r', '\n')
             }
             // save current char for next iteration
@@ -288,7 +347,7 @@ StringIO.readline = function(){
             res += char.value
         }
     }
-    if(_self.newlines === _b_.None){
+    if(_self.$newline === _b_.None){
         res = res.replace('\r\n', '\n')
     }
     return $B.String(res)
@@ -332,6 +391,7 @@ StringIO.seek = function(self, pos, whence){
         pos = $.pos
         whence = $.whence
 
+    pos = $B.PyNumber_Index(pos)
     if(whence != 0 && whence != 1 && whence != 2){
         $B.RAISE(_b_.ValueError,
             `Invalid whence (${whence}, should be 0, 1 or 2)`)
