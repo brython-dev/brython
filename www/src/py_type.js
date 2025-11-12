@@ -419,6 +419,12 @@ $B.getset_descriptor.__get__ = function(self, obj){
 }
 
 $B.getset_descriptor.__set__ = function(self, klass, value){
+    if(self.setter === undefined){
+        $B.RAISE_ATTRIBUTE_ERROR(
+            `attribute '${self.attr}' of '${self.cls.__qualname__}' objects is not writable`,
+            self,
+            self.attr)
+    }
     return self.setter(klass, value)
 }
 
