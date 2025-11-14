@@ -33,7 +33,7 @@ def file_read(ev):
         score.patterns.value = data['patterns']
         for i, notes in enumerate(data['bars']):
             score.new_tab(notes=notes)
-        document["bpm_control"].value = document["bpm_value"].text = data['bpm']
+        document["bpm_control"].value = document["bpm_value"].text = data.get('bpm', 120)
         # set attribute "download" to file name
         ev.target.attrs["download"] = file.name
 
@@ -45,9 +45,7 @@ def file_read(ev):
     reader.readAsText(file)
     reader.bind("load", onload)
 
-#save_button = document['save_score']
 
-#@bind(save_button, "mousedown")
 def save_score(ev, score):
       """Create a "data URI" to set the downloaded file content
       Cf. https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
@@ -89,19 +87,34 @@ def create_score(notes_per_bar):
 
     document['load'].clear()
 
-    play_control = html.BUTTON("&#x23f5",
-                             id="play_score", Class="pure-button start_loop")
-    play_control.bind('click', lambda ev: play_score(ev, score))
-    bpm <= play_control
+    bpm <= html.SPAN('VOLUME')
+    volume_control = html.INPUT(id="volume_control",
+                             type="range", min=0, max=100, step=1, value=100)
+    bpm <= volume_control
+    volume_control.bind('input', change_volume)
 
+    volume_value = html.SPAN(100, id='volume_value')
+    bpm <= volume_value
+
+    bpm <= html.BR()
+
+
+    bpm <= html.SPAN('BPM')
     bpm_control = html.INPUT(id="bpm_control",
                              type="range", min=30, max=300, step=1, value=120)
     bpm <= bpm_control
     bpm_control.bind('input', lambda ev: change_bpm(ev, score))
-    bpm_value = html.SPAN(id="bpm_value")
+    bpm_value = html.SPAN(120, id="bpm_value")
     bpm <= bpm_value
 
     score.bpm = bpm_control.value
+
+    bpm <= html.BR()
+
+    play_control = html.BUTTON("&#x23f5",
+                             id="play_score", Class="pure-button start_loop")
+    play_control.bind('click', lambda ev: play_score(ev, score))
+    bpm <= play_control
 
     save_control = html.A("SAVE", href="#", id="save_score",
                           download=True, Class="pure-button")
@@ -114,6 +127,9 @@ def create_score(notes_per_bar):
 def create_12_16(ev):
     create_score(int(ev.target.text))
 
+def change_volume(ev):
+    document['volume_value'].text = ev.target.value
+    player.set_gain(int(ev.target.value))
 
 def change_bpm(ev, score):
     document["bpm_value"].text = ev.target.value
@@ -130,7 +146,6 @@ def play_score(ev, score):
     player.Sequencer.running = True
     ev.target.html = '&#x23f9;'
     score.bpm = int(document['bpm_control'].value)
+    player.set_gain(int(document['volume_control'].value))
     seq, nb_bars = score.get_seq()
-    duration = nb_bars * 240 / score.bpm
-    timer.set_timeout(end_play, duration * 1000, ev)
     player.start_loop(seq, nb_bars, score, None)

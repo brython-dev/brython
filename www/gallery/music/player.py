@@ -5,24 +5,34 @@ https://github.com/chrislo/drum_synthesis
 import random
 import json
 
-from browser import bind, console, document, html, timer, window, ajax
+from browser import bind, document, timer, window, ajax
 
 import drum_score
 
 class Config:
 
     context = None
+    gain_node = None
+    gain_value = None
 
 def ensure_context():
     if Config.context is None:
         Config.context = window.AudioContext.new()
+        Config.gain_node = window.GainNode.new(Config.context)
+        Config.gain_node.gain.value = Config.gain_value or 0.5
+        Config.gain_node.connect(Config.context.destination)
 
-def setup(callback, *args):
+def setup(callback, seq, nb_bars, score, bar_nums):
     if Config.context is None:
         Config.context = window.AudioContext.new()
-        load_instruments(callback, *args)
+        load_instruments(callback, seq, nb_bars, score, bar_nums)
     else:
-        callback(*args)
+        callback(seq, nb_bars, score, bar_nums)
+
+def set_gain(value):
+    Config.gain_value = value
+    if Config.gain_node:
+        Config.gain_node.gain.value = value / 100
 
 class Instrument:
 
@@ -32,7 +42,7 @@ class Instrument:
     def setup(self, time):
         self.source = Config.context.createBufferSource()
         self.source.buffer = self.buffer
-        self.source.connect(Config.context.destination)
+        self.source.connect(Config.gain_node)
         self.play(time)
 
     def trigger(self, time=None):
@@ -128,7 +138,6 @@ def loop(t0, num, i, score, bar_nums):
         instrument.trigger(start + 0.1)
         i += 1
         if i >= len(Sequencer.seq):
-            return end_loop()
             i = 0
             t0 = t0 + Sequencer.nb_bars * 240 / score.bpm # bar duration (4 quarter notes)
             Sequencer.read_sequence(score, bar_nums)
