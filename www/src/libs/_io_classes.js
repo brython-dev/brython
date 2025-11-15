@@ -466,6 +466,7 @@ BytesIO.__init__ = function(){
     _self._buffer = buf
     _self._pos = 0
     _self.closed = false
+    _self.$exports = 0
 }
 
 BytesIO.__getstate__ = function(_self){
@@ -486,7 +487,10 @@ BytesIO.getbuffer = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
-    return _b_.memoryview.$factory(_self._buffer)
+    _self.$exports++
+    var view = _b_.memoryview.$factory(_self._buffer)
+    view.$owners.push(_self)
+    return view
 }
 
 BytesIO.isatty = function(_self){
@@ -500,6 +504,7 @@ BytesIO.close = function(_self){
     if(_self._buffer !== _b_.None){
         $B.$call($B.$getattr(_self._buffer, 'clear'))()
     }
+    _self.$exports = 0
     $B._BufferedIOBase.close(_self)
 }
 
@@ -551,10 +556,6 @@ BytesIO.write = function(_self, b){
     }
     if($B.$isinstance(b, _b_.str)){
         $B.RAISE(_b_.TypeError, "can't write str to binary stream")
-    }
-    if(_self._buffer.$exports){
-        $B.RAISE(_b_.BufferError,
-            'Existing exports of data: object cannot be re-sized')
     }
 
     var view = _b_.memoryview.$factory(b)
