@@ -993,6 +993,10 @@ js_array.__add__ = function(_self, other){
     return res
 }
 
+js_array.__delitem__ = function(_self, key){
+    _self.splice(key, 1)
+}
+
 js_array.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
