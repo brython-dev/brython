@@ -1211,14 +1211,38 @@ $B.$delitem = function(obj, item, inum){
             throw err
         }
     }
-    var di = $B.$getattr($B.get_class(obj), "__delitem__",
-        null)
-    if(di === null){
+    var di = $B.search_in_mro($B.get_class(obj), "__delitem__")
+    if(di === undefined){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object doesn't support item deletion")
     }
     return di(obj, item)
 }
+
+
+$B.delete_for_reassign = function(name, namespace){
+    // same as $B.$delete, but doesn't raise an exception if the name has been
+    // previously removed from the namespace by an explicit "del"
+    if(namespace.$is_namespace){
+        return $B.$delitem(namespace, name)
+    }
+    if(namespace.hasOwnProperty && namespace.hasOwnProperty(name)){
+        try{
+            var value = namespace[name]
+        }catch(err){
+            // name might have already been remove from the namespace by an
+            // explicit del (eg del globals()[name]) and name has become an
+            // accessor whose 'get' method raises a NameError
+            return
+        }
+        var del_method = $B.search_in_mro($B.get_class(value), '__del__')
+        if(del_method){
+            $B.$call(del_method)(value)
+        }
+    }
+    delete namespace[name]
+}
+
 
 function num_result_type(x, y){
     var is_int,
@@ -1656,7 +1680,7 @@ $B.need_delete = function(obj){
     // add object to those that need to be explicitely deleted on frame leave
     if($B.frame_obj !== null){
         var frame = $B.frame_obj.frame
-        frame.need_delete = frame.need_delete || []
+        frame.need_delete = frame.need_delete ?? []
         frame.need_delete.push(obj)
     }
 }
