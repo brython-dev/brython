@@ -150,7 +150,7 @@ function $last(array){
 function raise_error(err_type, filename,
         lineno, col_offset, end_lineno, end_col_offset,
         line, message){
-    var exc = err_type.$factory(message)
+    var exc = $B.EXC(err_type, message)
     exc.filename = filename
     exc.lineno = lineno
     exc.offset = col_offset
