@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-12 15:08:53.116484"
-__BRYTHON__.timestamp=1762956533116
+__BRYTHON__.compiled_date="2025-11-15 15:00:47.615929"
+__BRYTHON__.timestamp=1763215247614
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -296,7 +296,7 @@ code+=(char.charCodeAt(0)& 0x03FF)<< 10
 code+=(char.charCodeAt(1)& 0x03FF)
 return code}
 function $last(array){return array[array.length-1]}
-function raise_error(err_type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=err_type.$factory(message)
+function raise_error(err_type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=$B.EXC(err_type,message)
 exc.filename=filename
 exc.lineno=lineno
 exc.offset=col_offset
@@ -1178,7 +1178,7 @@ module.__file__=script.__file__
 module.__doc__=script.__doc__
 $B.imported[script_id]=module
 try{var modobj=new Function(script.js+`\nreturn locals`)()
-for(var key in modobj){if(! key.startsWith('$')){module[key]=modobj[key]}}
+for(var key in modobj){if(! key.startsWith('$')){try{module[key]=modobj[key]}catch(err){}}}
 $B.dispatch_load_event(script.script_element)}catch(err){
 if(err.__class__===undefined){if(err.$py_exc){err=err.$py_exc}else{if($B.get_option('debug')> 2){console.log('JS error stack',err.stack)}
 var stack=err.$stack,frame_obj=err.$frame_obj,linenums=err.$linenums
@@ -1608,10 +1608,17 @@ return _b_.None}}
 throw err}}
 return}else if(obj.__class__===_b_.list){try{return _b_.list.__delitem__(obj,item)}catch(err){if(err.__class__===_b_.IndexError){$B.set_inum(inum)}
 throw err}}
-var di=$B.$getattr($B.get_class(obj),"__delitem__",null)
-if(di===null){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
+var di=$B.search_in_mro($B.get_class(obj),"__delitem__")
+if(di===undefined){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
 return di(obj,item)}
+$B.delete_for_reassign=function(name,namespace){
+if(namespace.$is_namespace){return $B.$delitem(namespace,name)}
+if(namespace.hasOwnProperty && namespace.hasOwnProperty(name)){try{var value=namespace[name]}catch(err){
+return}
+var del_method=$B.search_in_mro($B.get_class(value),'__del__')
+if(del_method){$B.$call(del_method)(value)}}
+delete namespace[name]}
 function num_result_type(x,y){var is_int,is_float,x_num,y_num
 if(typeof x=="number"){x_num=x
 if(typeof y=="number"){is_int=true
@@ -1773,7 +1780,7 @@ return _b_.None}
 trace_func(frame,'return',value)}
 $B.need_delete=function(obj){
 if($B.frame_obj !==null){var frame=$B.frame_obj.frame
-frame.need_delete=frame.need_delete ||[]
+frame.need_delete=frame.need_delete ??[]
 frame.need_delete.push(obj)}}
 $B.leave_frame=function(arg){
 if($B.frame_obj===null){return}
@@ -2162,7 +2169,7 @@ if(class_obj_proxy instanceof $B.str_dict){dict=$B.empty_dict()
 dict.$strings=class_obj_proxy}else{dict=class_obj_proxy.$target}
 var module=class_obj_proxy.__module__
 for(var base of bases){if(base.__flags__ !==undefined &&
-!(base.__flags__ & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,"type 'bool' is not an acceptable base type")}}
+!(base.__flags__ & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${base.__qualname__}' is not an acceptable base type`)}}
 var extra_kwargs={}
 if(kwargs){for(let i=0;i < kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key !="metaclass"){
@@ -4007,8 +4014,7 @@ var memoryview=_b_.memoryview=$B.make_class('memoryview',function(obj){check_nb_
 if(obj.__class__===memoryview){return obj}
 if($B.get_class(obj).$buffer_protocol){obj.$exports=obj.$exports ?? 0
 obj.$exports++
-var res={__class__:memoryview,obj:obj,
-format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}
+var res={__class__:memoryview,obj:obj,mbuf:null,format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true,$owners:[]}
 $B.need_delete(res)
 return res}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
 "is required, not '"+$B.class_name(obj)+"'")}}
@@ -4017,6 +4023,7 @@ memoryview.$match_sequence_pattern=true,
 memoryview.$buffer_protocol=true
 memoryview.$not_basetype=true 
 memoryview.$is_sequence=true
+memoryview.$getbuffer=function(self){self.$exports++}
 memoryview.nbytes=$B.getset_descriptor.$factory(
 memoryview,'nbytes',function(_self){var product=1
 for(var x of _self.shape){product*=x}
@@ -4024,7 +4031,9 @@ return x*_self.itemsize}
 )
 memoryview.__enter__=function(_self){return _self}
 memoryview.__exit__=function(_self){memoryview.release(_self)}
-memoryview.__del__=function(self){memoryview.release(self)}
+memoryview.__del__=function(self){if(! self.$released){memoryview.release(self)}
+while(self.$owners.length){var owner=self.$owners.pop()
+owner.$exports--}}
 memoryview.__eq__=function(self,other){if(other.__class__ !==memoryview){return false}
 return $B.$getattr(self.obj,'__eq__')(other.obj)}
 memoryview.__getitem__=function(self,key){var res
@@ -4039,7 +4048,9 @@ return self.obj.source[key]}}
 res=self.obj.__class__.__getitem__(self.obj,key)
 if(key.__class__===_b_.slice){return memoryview.$factory(res)}}
 memoryview.__len__=function(self){return len(self.obj)/self.itemsize}
-memoryview.__setitem__=function(self,key,value){try{$B.$setitem(self.obj,key,value)}catch(err){$B.RAISE(_b_.TypeError,"cannot modify read-only memory")}}
+memoryview.__setitem__=function(self,key,value){try{$B.$setitem(self.obj,key,value)}catch(err){console.log('error setitem',err)
+console.log($B.frame_obj)
+$B.RAISE(_b_.TypeError,"cannot modify read-only memory")}}
 var struct_format={'x':{'size':1},'b':{'size':1},'B':{'size':1},'c':{'size':1},'s':{'size':1},'p':{'size':1},'h':{'size':2},'H':{'size':2},'i':{'size':4},'I':{'size':4},'l':{'size':4},'L':{'size':4},'q':{'size':8},'Q':{'size':8},'f':{'size':4},'d':{'size':8},'P':{'size':8}}
 memoryview.cast=function(self,format,shape){if(! struct_format.hasOwnProperty(format)){$B.RAISE(_b_.ValueError,`unknown format: '${format}'`)}
 var new_itemsize=struct_format[format].size
@@ -4060,7 +4071,8 @@ return res}}
 memoryview.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 bytes.source.forEach(function(item){res+=item.toString(16)})
 return res}
-memoryview.release=function(self){self.obj.$exports-=1}
+memoryview.release=function(self){self.$released=true
+self.obj.$exports-=1}
 memoryview.tobytes=function(self){if($B.$isinstance(self.obj,[_b_.bytes,_b_.bytearray])){return{
 __class__:_b_.bytes,source:self.obj.source}}else if($B.imported.array && $B.$isinstance(self.obj,$B.imported.array.array)){return $B.imported.array.array.tobytes(self.obj)}
 $B.RAISE(_b_.TypeError,'cannot run tobytes with '+$B.class_name(self.obj))}
@@ -4307,6 +4319,12 @@ $B._IOUnsupported.__module__='_io'}}
 function _io_unsupported(value){$B.make_IOUnsupported()
 throw $B.$call($B._IOUnsupported)(value)}
 var _IOBase=$B.make_class("_IOBase")
+_IOBase.__del__=function(_self){
+console.log('del',_self)
+try{var closed=$B.$getattr(_self,'closed')}catch(err){if($B.is_exc(err,_b_.AttributeError)){
+return}}
+if(closed){return}
+$B$call($B.$getattr(_self,'close'))()}
 _IOBase.__enter__=function(self){return self}
 _IOBase.__exit__=function(self){_IOBase.close(self)}
 _IOBase.__iter__=function(_self){if(_self.closed){$B.RAISE(_b_.ValueError,'closed')}
@@ -4335,6 +4353,7 @@ _IOBase.readline=function(_self,limit=-1){var $=$B.args('readline',2,{self:null,
 var old_size=-1
 var peek=$B.$getattr(_self,"peek",null)
 var buffer=_b_.bytearray.$factory()
+limit=$B.PyNumber_Index(limit)
 while(limit < 0 ||buffer.length < limit){var nreadahead=1
 var b
 if(peek !=null){var readahead=peek(1)
@@ -5203,7 +5222,8 @@ $B.exception=function(js_exc){
 var exc
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-if($B.get_option('debug',exc)> 1){console.log('Javascript error',js_exc)}
+if(true){
+console.log('Javascript error',js_exc)}
 var msg=js_exc.name+': '+js_exc.message
 exc=$B.EXC(_b_.JavascriptError,msg)
 exc.$js_exc=js_exc
@@ -5365,7 +5385,9 @@ return exc}
 function calculate_suggestions(list,name){return $B.imported._suggestions._generate_suggestions(list,name)}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 if(name===_b_.None){return _b_.None}
-var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
+try{var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)}catch(err){console.log('erreur pour',name,obj)
+console.log($B.frame_obj)
+throw err}
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name
 if(typeof name !='string'){return _b_.None}
@@ -5665,6 +5687,7 @@ var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}catch(print_exc_err){console.debug(trace)}}
 $B.handle_error=function(err){
 console.log('handle error',$B.frame_obj)
+console.log(Error().stack)
 if(err.$handled){return}
 err.$handled=true
 $B.show_error(err)
@@ -5846,28 +5869,37 @@ for(i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break
 return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
 var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_sequence:true,$is_class:true}
-var mutable_methods=["__delitem__","copy","count","index","pop","remove","reverse"]
+var mutable_methods=["copy","count","index","remove","reverse"]
 for(var method of mutable_methods){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
 return _b_.list[m].apply(null,args)}})(method)}
+function no_resizing(){$B.RAISE(_b_.BufferError,"Existing exports of data: object cannot be re-sized")}
+bytearray.__add__=function(self,other){try{var other_bytes=$B.to_bytes(other)}catch(err){$B.RAISE(_b_.TypeError,`can't concat ${$B.class_name(other)} to bytes`)}
+if(other_bytes.length > 0){check_exports(self)}
+return{
+__class__:self.__class__,source:self.source.concat(other_bytes)}}
+bytearray.__delitem__=function(self,arg){if(self.$exports){if($B.$isinstance(arg,_b_.slice)){var slice=_b_.slice.$conv_for_seq(arg,self.source.length)
+if(slice.stop-slice.start > 0){no_resizing()}}else{no_resizing()}}
+return _b_.list.__delitem__(self.source,arg)}
 bytearray.__hash__=_b_.None
 var bytearray_iterator=$B.make_iterator_class('bytearray_iterator')
 bytearray.__iter__=function(self){return bytearray_iterator.$factory(self.source)}
 bytearray.__mro__=[_b_.object]
 bytearray.__repr__=bytearray.__str__=function(self){return 'bytearray('+bytes.__repr__(self)+")"}
-function check_exports(self){if(self.$exports){$B.RAISE(_b_.BufferError,'Existing exports of data: object cannot be re-sized')}}
-bytearray.__setitem__=function(self,arg,value){check_exports(self)
-if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
+function check_exports(self){if(self.$exports){no_resizing()}}
+bytearray.__setitem__=function(self,arg,value){if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 var pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){self.source[pos]=value}else{$B.RAISE(_b_.IndexError,'list index out of range')}}else if($B.$isinstance(arg,_b_.slice)){var start=arg.start===_b_.None ? 0 :arg.start
 var stop=arg.stop===_b_.None ? self.source.length :arg.stop
 if(start < 0){start=self.source.length+start}
 if(stop < 0){stop=self.source.length+stop}
+if(stop > self.source.length){check_exports(self)}
 self.source.splice(start,stop-start)
-try{var $temp=_b_.list.$factory(value)
+try{var $temp=_b_.list.$factory(value)}catch(err){$B.RAISE(_b_.TypeError,"can only assign an iterable")}
+if($temp.length !=stop-start){check_exports(self)}
 for(var i=$temp.length-1;i >=0;i--){if(! $B.$isinstance($temp[i],_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
-self.source.splice(start,0,$temp[i])}}catch(err){$B.RAISE(_b_.TypeError,"can only assign an iterable")}}else{$B.RAISE(_b_.TypeError,'list indices must be integer, not '+
+self.source.splice(start,0,$temp[i])}}else{$B.RAISE(_b_.TypeError,'list indices must be integer, not '+
 $B.class_name(arg))}}
 bytearray.append=function(self,b){check_exports(self)
 if(arguments.length !=2){$B.RAISE(_b_.TypeError,"append takes exactly one argument ("+(arguments.length-1)+
@@ -5879,8 +5911,7 @@ bytearray.clear=function(self){check_exports(self)
 self.source=[]}
 bytearray.extend=function(self,b){check_exports(self)
 if(self.in_iteration){
-$B.RAISE(_b_.BufferError,"Existing exports of data: object "+
-"cannot be re-sized")}
+no_resizing()}
 if(b.__class__===bytearray ||b.__class__===bytes){self.source=self.source.concat(b.source)
 return _b_.None}
 for(var item of $B.make_js_iterator(b)){bytearray.append(self,$B.PyNumber_Index(item))}
@@ -5891,6 +5922,9 @@ if(arguments.length !=3){$B.RAISE(_b_.TypeError,"insert takes exactly 2 argument
 if(! $B.$isinstance(b,_b_.int)){$B.RAISE(_b_.TypeError,"an integer is required")}
 if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 _b_.list.insert(self.source,pos,b)}
+bytearray.pop=function(self){check_exports(self)
+var args=[self.source].concat(Array.from(arguments).slice(1))
+return _b_.list.pop.apply(null,args)}
 bytearray.resize=function(self,size){check_exports(self)
 size=$B.PyNumber_Index(size)
 if(size < 0){$B.RAISE(_b_.ValueError,`Can only resize to positive sizes, got -${size}`)}
@@ -5898,14 +5932,13 @@ if(size > self.source.length){for(var i=0,len=size-self.source.length;i < len;i+
 return _b_.None}
 bytearray.$factory=function(){var args=[bytearray]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
-return bytearray.__new__.apply(null,args)}
+var res=bytearray.__new__.apply(null,args)
+res.$exports=0
+return res}
 var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer_protocol:true,$is_sequence:true,$is_class:true}
-bytes.__add__=function(self,other){var other_bytes
-if($B.$isinstance(other,[bytes,bytearray])){other_bytes=other.source}else if($B.$isinstance(other,_b_.memoryview)){other_bytes=_b_.memoryview.tobytes(other).source}else if($B.imported.array && $B.$isinstance(other,$B.imported.array.array)){other_bytes=$B.imported.array.array.tobytes(other).source}
-if(other_bytes !==undefined){return{
-__class__:self.__class__,source:self.source.concat(other_bytes)}}
-$B.RAISE(_b_.TypeError,"can't concat bytes to "+
-_b_.str.$factory(other))}
+bytes.__add__=function(self,other){try{var other_bytes=$B.to_bytes(other)
+return{
+__class__:self.__class__,source:self.source.concat(other_bytes)}}catch(err){$B.RAISE(_b_.TypeError,"can't concat str to bytes")}}
 bytes.__bytes__=function(self){return self}
 bytes.__contains__=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)>-1}
 if(self.source.length < other.source.length){return false}
@@ -11080,6 +11113,7 @@ js_array.__add__=function(_self,other){var res=_self.slice()
 if($B.$isinstance(other,js_array)){return _self.slice().concat(other)}
 for(var item of $B.make_js_iterator(other)){res.push(pyobj2jsobj(item))}
 return res}
+js_array.__delitem__=function(_self,key){_self.splice(key,1)}
 js_array.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
 var proto=Object.getPrototypeOf(_self),res=proto[attr]
 if(res !==undefined){
@@ -11454,8 +11488,7 @@ if(self.nodeType==Node.DOCUMENT_NODE && typeof key=="string"){return document.ge
 if(self.length !==undefined && typeof self.item=="function"){for(var i=0,len=self.length;i < len;i++){if(self.item(i)===key){return true}}}
 return false}
 DOMNode.__del__=function(self){
-if(!self.parentNode){$B.RAISE(_b_.ValueError,"can't delete "+_b_.str.$factory(self))}
-self.parentNode.removeChild(self)}
+if(self.parentNode){self.parentNode.removeChild(self)}}
 DOMNode.__delattr__=function(self,attr){if(self[attr]===undefined){$B.RAISE_ATTRIBUTE_ERROR(`cannot delete DOMNode attribute '${attr}'`,self,attr)}
 delete self[attr]
 return _b_.None}
@@ -12684,11 +12717,16 @@ return '_'+scope_name+name}
 ix--}}
 return name}
 function reference(scopes,scope,name){return make_scope_name(scopes,scope)+'.'+mangle(scopes,scope,name)}
-function bind(name,scopes){var scope=$B.last(scopes),up_scope=last_scope(scopes)
+function get_binding_scope(name,scopes){var scope=$B.last(scopes),up_scope=last_scope(scopes)
 name=mangle(scopes,up_scope,name)
+if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)||
+(scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){return[name,scopes[i],up_scope]}}}
+return[name,scope,up_scope]}
+function bind(name,scopes){var[name,scope,up_scope]=get_binding_scope(name,scopes)
 if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)||
 (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){return scopes[i]}}}
 scope.locals.add(name)
+var up_scope=last_scope(scopes)
 if(up_scope.type=='class' ||up_scope !==scope){up_scope.maybe_locals=up_scope.maybe_locals ?? new Set()
 up_scope.maybe_locals.add(name)}
 return scope}
@@ -12789,6 +12827,7 @@ if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][na
 if(value !==undefined){return value}}}
 var exc=$B.EXC(_b_.UnboundLocalError,`cannot access local variable `+
 `'${name}' where it is not associated with a value`)
+exc.name=name
 $B.set_inum(inum)
 throw exc}
 $B.resolve_in_scopes=function(name,namespaces,inum){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
@@ -13063,7 +13102,16 @@ var js
 if(! this.lineno ||this.$loopvar){
 js=''}else{js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`}
 var value=$B.js_from_ast(this.value,scopes)
-function assign_one(target,value){if(target instanceof $B.ast.Name){return prefix+$B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){var inum=add_to_positions(scopes,target)
+function assign_one(target,value){if(target instanceof $B.ast.Name){let js=''
+var[name,binding_scope,up_scope]=get_binding_scope(target.id,scopes)
+if(binding_scope.locals.has(name)){
+if(name=='buf1'){console.log('reassign',name)}
+var ref=$B.js_from_ast(target,scopes)
+var scope_name=make_scope_name(scopes,binding_scope)
+return prefix+`var $temp = ${value}\n`+
+prefix+`$B.delete_for_reassign('${name}', ${scope_name})\n`+
+prefix+$B.js_from_ast(target,scopes)+' = $temp'}
+return js+prefix+$B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){var inum=add_to_positions(scopes,target)
 return prefix+`$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
 `, ${$B.js_from_ast(target.slice, scopes)}, ${value}, ${inum})`}else if(target instanceof $B.ast.Attribute){if(target.value.id=='self'){maybe_add_static(target,scopes)}
 var inum=add_to_positions(scopes,target)
