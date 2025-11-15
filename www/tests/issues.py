@@ -3327,3 +3327,7 @@ assert datetime.time(0).strftime('%I') == '12'
 # Finally, report that all tests have passed
 # ==========================================
 print('passed all tests')
+
+# issue 2628
+foo = "bar"
+assert f"{foo=}" == "foo='bar'"
