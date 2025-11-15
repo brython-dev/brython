@@ -417,7 +417,13 @@ var loop = $B.loop = function(){
             var modobj = new Function(script.js + `\nreturn locals`)()
             for(var key in modobj){
                 if(! key.startsWith('$')){
-                    module[key] = modobj[key]
+                    try{
+                        module[key] = modobj[key]
+                    }catch(err){
+                        // ignore; the name might have been removed by
+                        // del globals()[name], then it becomes an accessor
+                        // whose method get() raises NameError
+                    }
                 }
             }
             // dispatch "load" event on the <script> element
