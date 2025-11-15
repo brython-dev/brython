@@ -53,7 +53,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
         if(base.__flags__ !== undefined &&
                  ! (base.__flags__ & TPFLAGS.BASETYPE)){
             $B.RAISE(_b_.TypeError,
-                "type 'bool' is not an acceptable base type")
+                `type '${base.__qualname__}' is not an acceptable base type`)
         }
     }
 
