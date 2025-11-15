@@ -70,8 +70,7 @@ var bytearray = {
     $is_class: true
 }
 
-var mutable_methods = ["__delitem__", "copy", "count", "index",
-    "pop", "remove", "reverse"]
+var mutable_methods = ["copy", "count", "index", "remove", "reverse"]
 
 for(var method of mutable_methods){
     bytearray[method] = (function(m){
@@ -83,6 +82,40 @@ for(var method of mutable_methods){
             return _b_.list[m].apply(null, args)
         }
     })(method)
+}
+
+function no_resizing(){
+    $B.RAISE(_b_.BufferError,
+        "Existing exports of data: object cannot be re-sized")
+}
+
+bytearray.__add__ = function(self, other){
+    try{
+        var other_bytes = $B.to_bytes(other)
+    }catch(err){
+        $B.RAISE(_b_.TypeError, `can't concat ${$B.class_name(other)} to bytes`)
+    }
+    if(other_bytes.length > 0){
+        check_exports(self)
+    }
+    return {
+        __class__: self.__class__,
+        source: self.source.concat(other_bytes)
+    }
+}
+
+bytearray.__delitem__ = function(self, arg){
+    if(self.$exports){
+        if($B.$isinstance(arg, _b_.slice)){
+            var slice = _b_.slice.$conv_for_seq(arg, self.source.length)
+            if(slice.stop - slice.start > 0){
+                no_resizing()
+            }
+        }else{
+            no_resizing()
+        }
+    }
+    return _b_.list.__delitem__(self.source, arg)
 }
 
 bytearray.__hash__ = _b_.None
@@ -100,13 +133,11 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
 
 function check_exports(self){
     if(self.$exports){
-        $B.RAISE(_b_.BufferError,
-            'Existing exports of data: object cannot be re-sized')
+        no_resizing()
     }
 }
 
 bytearray.__setitem__ = function(self, arg, value){
-    check_exports(self)
     if($B.$isinstance(arg, _b_.int)){
         if(! $B.$isinstance(value, _b_.int)){
             $B.RAISE(_b_.TypeError, 'an integer is required')
@@ -132,6 +163,9 @@ bytearray.__setitem__ = function(self, arg, value){
         if(stop < 0){
             stop = self.source.length + stop
         }
+        if(stop > self.source.length){
+            check_exports(self)
+        }
 
         self.source.splice(start, stop - start)
 
@@ -139,16 +173,19 @@ bytearray.__setitem__ = function(self, arg, value){
         // otherwise, a[:0] = a fails
         try{
             var $temp = _b_.list.$factory(value)
-            for(var i = $temp.length - 1; i >= 0; i--){
-                if(! $B.$isinstance($temp[i], _b_.int)){
-                    $B.RAISE(_b_.TypeError, 'an integer is required')
-                }else if($temp[i] > 255){
-                    $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
-                }
-                self.source.splice(start, 0, $temp[i])
-            }
         }catch(err){
             $B.RAISE(_b_.TypeError, "can only assign an iterable")
+        }
+        if($temp.length != stop - start){
+            check_exports(self)
+        }
+        for(var i = $temp.length - 1; i >= 0; i--){
+            if(! $B.$isinstance($temp[i], _b_.int)){
+                $B.RAISE(_b_.TypeError, 'an integer is required')
+            }else if($temp[i] > 255){
+                $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
+            }
+            self.source.splice(start, 0, $temp[i])
         }
     }else{
         $B.RAISE(_b_.TypeError, 'list indices must be integer, not ' +
@@ -180,8 +217,7 @@ bytearray.extend = function(self, b){
     check_exports(self)
     if(self.in_iteration){
         // happens in re.finditer()
-        $B.RAISE(_b_.BufferError, "Existing exports of data: object " +
-            "cannot be re-sized")
+        no_resizing()
     }
     if(b.__class__ === bytearray || b.__class__ === bytes){
         self.source = self.source.concat(b.source)
@@ -209,6 +245,12 @@ bytearray.insert = function(self, pos, b){
     _b_.list.insert(self.source, pos, b)
 }
 
+bytearray.pop = function(self){
+    check_exports(self)
+    var args = [self.source].concat(Array.from(arguments).slice(1))
+    return _b_.list.pop.apply(null, args)
+}
+
 bytearray.resize = function(self, size){
     check_exports(self)
     size = $B.PyNumber_Index(size)
@@ -231,7 +273,9 @@ bytearray.$factory = function(){
     for(var i = 0, len = arguments.length; i < len; i++){
         args.push(arguments[i])
     }
-    return bytearray.__new__.apply(null, args)
+    var res = bytearray.__new__.apply(null, args)
+    res.$exports = 0
+    return res
 }
 
 //bytes() (built in function)
@@ -245,22 +289,15 @@ var bytes = {
 }
 
 bytes.__add__ = function(self, other){
-    var other_bytes
-    if($B.$isinstance(other, [bytes, bytearray])){
-        other_bytes = other.source
-    }else if($B.$isinstance(other, _b_.memoryview)){
-        other_bytes = _b_.memoryview.tobytes(other).source
-    }else if($B.imported.array && $B.$isinstance(other, $B.imported.array.array)){
-        other_bytes = $B.imported.array.array.tobytes(other).source
-    }
-    if(other_bytes !== undefined){
+    try{
+        var other_bytes = $B.to_bytes(other)
         return {
             __class__: self.__class__,
             source: self.source.concat(other_bytes)
         }
+    }catch(err){
+        $B.RAISE(_b_.TypeError, "can't concat str to bytes")
     }
-    $B.RAISE(_b_.TypeError, "can't concat bytes to " +
-        _b_.str.$factory(other))
 }
 
 bytes.__bytes__ = function(self){

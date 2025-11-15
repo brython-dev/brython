@@ -1995,7 +1995,7 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
             var res = {
                 __class__: memoryview,
                 obj: obj,
-                // XXX fix me : next values are only for bytes and bytearray
+                mbuf: null,
                 format: 'B',
                 itemsize: 1,
                 ndim: 1,
@@ -2004,7 +2004,8 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
                 suboffsets: _b_.tuple.$factory([]),
                 c_contiguous: true,
                 f_contiguous: true,
-                contiguous: true
+                contiguous: true,
+                $owners: []
             }
             $B.need_delete(res)
             return res
@@ -2019,6 +2020,10 @@ memoryview.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
 memoryview.$buffer_protocol = true
 memoryview.$not_basetype = true // cannot be a base class
 memoryview.$is_sequence = true
+
+memoryview.$getbuffer = function(self){
+    self.$exports++
+}
 
 memoryview.nbytes = $B.getset_descriptor.$factory(
     memoryview,
@@ -2041,7 +2046,13 @@ memoryview.__exit__ = function(_self){
 }
 
 memoryview.__del__ = function(self){
-    memoryview.release(self)
+    if(! self.$released){
+        memoryview.release(self)
+    }
+    while(self.$owners.length){
+        var owner = self.$owners.pop()
+        owner.$exports--
+    }
 }
 
 memoryview.__eq__ = function(self, other){
@@ -2088,6 +2099,8 @@ memoryview.__setitem__ = function(self, key, value){
     try{
         $B.$setitem(self.obj, key, value)
     }catch(err){
+        console.log('error setitem', err)
+        console.log($B.frame_obj)
         $B.RAISE(_b_.TypeError, "cannot modify read-only memory")
     }
 }
@@ -2161,6 +2174,7 @@ memoryview.hex = function(self){
 }
 
 memoryview.release = function(self){
+    self.$released = true
     self.obj.$exports -= 1
 }
 
@@ -2922,6 +2936,25 @@ function _io_unsupported(value){
 
 var _IOBase = $B.make_class("_IOBase")
 
+_IOBase.__del__ = function(_self){
+    // Destructor.  Calls close()
+    console.log('del', _self)
+    try{
+        var closed = $B.$getattr(_self, 'closed')
+    }catch(err){
+        if($B.is_exc(err, _b_.AttributeError)){
+            // If getting closed fails, then the object is probably
+            // in an unusable state, so ignore.
+            return
+        }
+    }
+    if(closed){
+        return
+    }
+
+    $B$call($B.$getattr(_self, 'close'))()
+}
+
 _IOBase.__enter__ = function(self){
     return self
 }
@@ -3019,6 +3052,8 @@ _IOBase.readline = function(_self, limit=-1){
     var peek = $B.$getattr(_self, "peek", null)
 
     var buffer = _b_.bytearray.$factory()
+
+    limit = $B.PyNumber_Index(limit)
 
     while (limit < 0 || buffer.length < limit) {
         var nreadahead = 1
