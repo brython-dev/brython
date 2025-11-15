@@ -495,10 +495,9 @@ DOMNode.__contains__ = function(self, key){
 DOMNode.__del__ = function(self){
     // if element has a parent, calling __del__ removes object
     // from the parent's children
-    if(!self.parentNode){
-        $B.RAISE(_b_.ValueError, "can't delete " + _b_.str.$factory(self))
+    if(self.parentNode){
+        self.parentNode.removeChild(self)
     }
-    self.parentNode.removeChild(self)
 }
 
 DOMNode.__delattr__ = function(self, attr){
