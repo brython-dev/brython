@@ -302,10 +302,25 @@ function reference(scopes, scope, name){
     return make_scope_name(scopes, scope) + '.' + mangle(scopes, scope, name)
 }
 
-function bind(name, scopes){
+function get_binding_scope(name, scopes){
     var scope = $B.last(scopes),
         up_scope = last_scope(scopes)
     name = mangle(scopes, up_scope, name)
+    if(up_scope.globals && up_scope.globals.has(name)){
+        scope = scopes[0]
+    }else if(up_scope.nonlocals.has(name)){
+        for(var i = scopes.indexOf(up_scope) - 1; i >= 0; i--){
+            if(scopes[i].locals.has(name) ||
+                    (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){
+                return [name, scopes[i], up_scope]
+            }
+        }
+    }
+    return [name, scope, up_scope]
+}
+
+function bind(name, scopes){
+    var [name, scope, up_scope] = get_binding_scope(name, scopes)
     if(up_scope.globals && up_scope.globals.has(name)){
         scope = scopes[0]
     }else if(up_scope.nonlocals.has(name)){
@@ -317,6 +332,7 @@ function bind(name, scopes){
         }
     }
     scope.locals.add(name)
+    var up_scope = last_scope(scopes)
     if(up_scope.type == 'class' || up_scope !== scope){
         up_scope.maybe_locals = up_scope.maybe_locals ?? new Set()
         up_scope.maybe_locals.add(name)
@@ -628,6 +644,7 @@ $B.resolve_local = function(name, inum){
     }
     var exc = $B.EXC(_b_.UnboundLocalError, `cannot access local variable ` +
               `'${name}' where it is not associated with a value`)
+    exc.name = name
     $B.set_inum(inum)
     throw exc
 }
@@ -1297,7 +1314,21 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
-            return prefix + $B.js_from_ast(target, scopes) + ' = ' + value
+            let js = ''
+            var [name, binding_scope, up_scope] = get_binding_scope(target.id, scopes)
+            if(binding_scope.locals.has(name)){
+                // reassigning the same id in a scope: must call __del__ on
+                // the replaced object (needed at least for memoryview)
+                if(name == 'buf1'){
+                    console.log('reassign', name)
+                }
+                var ref = $B.js_from_ast(target, scopes)
+                var scope_name = make_scope_name(scopes, binding_scope)
+                return prefix + `var $temp = ${value}\n` +
+                     prefix + `$B.delete_for_reassign('${name}', ${scope_name})\n` +
+                     prefix + $B.js_from_ast(target, scopes) + ' = $temp'
+            }
+            return js + prefix + $B.js_from_ast(target, scopes) + ' = ' + value
         }else if(target instanceof $B.ast.Starred){
             return assign_one(target.value, value)
         }else if(target instanceof $B.ast.Subscript){
