@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-15 15:00:47.615929"
-__BRYTHON__.timestamp=1763215247614
+__BRYTHON__.compiled_date="2025-11-16 21:51:57.782577"
+__BRYTHON__.timestamp=1763326317782
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1778,10 +1778,6 @@ $B.trace_return=function(value){var frame=$B.frame_obj.frame,trace_func=frame.$f
 if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame,'return',value)}
-$B.need_delete=function(obj){
-if($B.frame_obj !==null){var frame=$B.frame_obj.frame
-frame.need_delete=frame.need_delete ??[]
-frame.need_delete.push(obj)}}
 $B.leave_frame=function(arg){
 if($B.frame_obj===null){return}
 if(arg && arg.value !==undefined && $B.tracefunc !==_b_.None){if($B.frame_obj.frame.$f_trace===undefined){$B.frame_obj.frame.$f_trace=$B.tracefunc}
@@ -1798,9 +1794,6 @@ if(gen.$frame===undefined){continue}
 var ctx_managers=gen.$frame[1].$context_managers
 if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__'))(
 _b_.None,_b_.None,_b_.None)}}}}}
-if(frame.need_delete){
-for(var obj of frame.need_delete){var del_method=$B.$getattr($B.get_class(obj),'__del__')
-if(del_method){del_method(obj)}}}
 if(frame[1].$current_exception){delete frame[1].$current_exception}
 return _b_.None}
 $B.trace_return_and_leave=function(frame,return_value){if(frame.$f_trace !==_b_.None){$B.trace_return(return_value)}
@@ -4014,8 +4007,7 @@ var memoryview=_b_.memoryview=$B.make_class('memoryview',function(obj){check_nb_
 if(obj.__class__===memoryview){return obj}
 if($B.get_class(obj).$buffer_protocol){obj.$exports=obj.$exports ?? 0
 obj.$exports++
-var res={__class__:memoryview,obj:obj,mbuf:null,format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true,$owners:[]}
-$B.need_delete(res)
+var res={__class__:memoryview,obj:obj,mbuf:null,format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}
 return res}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
 "is required, not '"+$B.class_name(obj)+"'")}}
 )
@@ -4031,9 +4023,7 @@ return x*_self.itemsize}
 )
 memoryview.__enter__=function(_self){return _self}
 memoryview.__exit__=function(_self){memoryview.release(_self)}
-memoryview.__del__=function(self){if(! self.$released){memoryview.release(self)}
-while(self.$owners.length){var owner=self.$owners.pop()
-owner.$exports--}}
+memoryview.__del__=function(self){if(! self.$released){memoryview.release(self)}}
 memoryview.__eq__=function(self,other){if(other.__class__ !==memoryview){return false}
 return $B.$getattr(self.obj,'__eq__')(other.obj)}
 memoryview.__getitem__=function(self,key){var res
@@ -4048,9 +4038,7 @@ return self.obj.source[key]}}
 res=self.obj.__class__.__getitem__(self.obj,key)
 if(key.__class__===_b_.slice){return memoryview.$factory(res)}}
 memoryview.__len__=function(self){return len(self.obj)/self.itemsize}
-memoryview.__setitem__=function(self,key,value){try{$B.$setitem(self.obj,key,value)}catch(err){console.log('error setitem',err)
-console.log($B.frame_obj)
-$B.RAISE(_b_.TypeError,"cannot modify read-only memory")}}
+memoryview.__setitem__=function(self,key,value){try{$B.$setitem(self.obj,key,value)}catch(err){$B.RAISE(_b_.TypeError,"cannot modify read-only memory")}}
 var struct_format={'x':{'size':1},'b':{'size':1},'B':{'size':1},'c':{'size':1},'s':{'size':1},'p':{'size':1},'h':{'size':2},'H':{'size':2},'i':{'size':4},'I':{'size':4},'l':{'size':4},'L':{'size':4},'q':{'size':8},'Q':{'size':8},'f':{'size':4},'d':{'size':8},'P':{'size':8}}
 memoryview.cast=function(self,format,shape){if(! struct_format.hasOwnProperty(format)){$B.RAISE(_b_.ValueError,`unknown format: '${format}'`)}
 var new_itemsize=struct_format[format].size
@@ -4071,7 +4059,8 @@ return res}}
 memoryview.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 bytes.source.forEach(function(item){res+=item.toString(16)})
 return res}
-memoryview.release=function(self){self.$released=true
+memoryview.release=function(self){if(self.$released){return}
+self.$released=true
 self.obj.$exports-=1}
 memoryview.tobytes=function(self){if($B.$isinstance(self.obj,[_b_.bytes,_b_.bytearray])){return{
 __class__:_b_.bytes,source:self.obj.source}}else if($B.imported.array && $B.$isinstance(self.obj,$B.imported.array.array)){return $B.imported.array.array.tobytes(self.obj)}
@@ -5222,8 +5211,7 @@ $B.exception=function(js_exc){
 var exc
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-if(true){
-console.log('Javascript error',js_exc)}
+if($B.get_option('debug',exc)> 1){console.log('Javascript error',js_exc)}
 var msg=js_exc.name+': '+js_exc.message
 exc=$B.EXC(_b_.JavascriptError,msg)
 exc.$js_exc=js_exc
@@ -5385,9 +5373,7 @@ return exc}
 function calculate_suggestions(list,name){return $B.imported._suggestions._generate_suggestions(list,name)}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
 if(name===_b_.None){return _b_.None}
-try{var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)}catch(err){console.log('erreur pour',name,obj)
-console.log($B.frame_obj)
-throw err}
+var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name
 if(typeof name !='string'){return _b_.None}
@@ -5687,7 +5673,6 @@ var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}catch(print_exc_err){console.debug(trace)}}
 $B.handle_error=function(err){
 console.log('handle error',$B.frame_obj)
-console.log(Error().stack)
 if(err.$handled){return}
 err.$handled=true
 $B.show_error(err)
@@ -5886,7 +5871,16 @@ var bytearray_iterator=$B.make_iterator_class('bytearray_iterator')
 bytearray.__iter__=function(self){return bytearray_iterator.$factory(self.source)}
 bytearray.__mro__=[_b_.object]
 bytearray.__repr__=bytearray.__str__=function(self){return 'bytearray('+bytes.__repr__(self)+")"}
-function check_exports(self){if(self.$exports){no_resizing()}}
+function check_exports(self){if(self.$exports==0){return}
+var frame_obj=$B.frame_obj
+var has_exports=false
+while(frame_obj !==null){var locals=frame_obj.frame[1]
+for(var key in locals){try{var value=locals[key]
+if(value.__class__===_b_.memoryview && value.obj===self){has_exports=true
+break}}catch(err){}}
+frame_obj=frame_obj.prev}
+if(has_exports){if(self.$exports){no_resizing()}}else{
+self.$exports=0}}
 bytearray.__setitem__=function(self,arg,value){if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 var pos=arg
 if(arg < 0){pos=self.source.length+pos}

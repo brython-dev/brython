@@ -488,9 +488,7 @@ BytesIO.getbuffer = function(_self){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
     _self.$exports++
-    var view = _b_.memoryview.$factory(_self._buffer)
-    view.$owners.push(_self)
-    return view
+    return _b_.memoryview.$factory(_self._buffer)
 }
 
 BytesIO.isatty = function(_self){

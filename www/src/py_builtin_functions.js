@@ -2004,10 +2004,8 @@ var memoryview = _b_.memoryview = $B.make_class('memoryview',
                 suboffsets: _b_.tuple.$factory([]),
                 c_contiguous: true,
                 f_contiguous: true,
-                contiguous: true,
-                $owners: []
+                contiguous: true
             }
-            $B.need_delete(res)
             return res
         }else{
             $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
@@ -2048,10 +2046,6 @@ memoryview.__exit__ = function(_self){
 memoryview.__del__ = function(self){
     if(! self.$released){
         memoryview.release(self)
-    }
-    while(self.$owners.length){
-        var owner = self.$owners.pop()
-        owner.$exports--
     }
 }
 
@@ -2099,8 +2093,6 @@ memoryview.__setitem__ = function(self, key, value){
     try{
         $B.$setitem(self.obj, key, value)
     }catch(err){
-        console.log('error setitem', err)
-        console.log($B.frame_obj)
         $B.RAISE(_b_.TypeError, "cannot modify read-only memory")
     }
 }
@@ -2174,6 +2166,9 @@ memoryview.hex = function(self){
 }
 
 memoryview.release = function(self){
+    if(self.$released){
+        return
+    }
     self.$released = true
     self.obj.$exports -= 1
 }

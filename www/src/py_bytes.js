@@ -132,8 +132,56 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
 }
 
 function check_exports(self){
-    if(self.$exports){
-        no_resizing()
+    if(self.$exports == 0){
+        return
+    }
+    /* Check if there is a reference to a memoryview on self
+
+    Since there is no explicit garbage collection, the bytearray might have
+    been created but not referenced
+    For instance with:
+
+         b = bytearray(b'abc')
+         memoryview(b)
+         b.extend(b'd')
+
+    the memoryview created in the second line is not referenced, so is
+    implicitely garbage-collected, and the 3rd line doesn't raise BufferError
+
+    On the contrary, in the code below where the memoryview is referenced,
+    the 3rd line raises BufferError:
+
+        b = bytearray(b'abc')
+        x = memoryview(b)
+        b.extend(b'd')
+
+    To detect a reference, we scan the current execution frames
+    */
+
+    var frame_obj = $B.frame_obj
+    var has_exports = false
+    while(frame_obj !== null){
+        var locals = frame_obj.frame[1]
+        for(var key in locals){
+            try{
+                var value = locals[key]
+                if(value.__class__ === _b_.memoryview && value.obj === self){
+                    has_exports = true
+                    break
+                }
+            }catch(err){
+                // ignore
+            }
+        }
+        frame_obj = frame_obj.prev
+    }
+    if(has_exports){
+        if(self.$exports){
+            no_resizing()
+        }
+    }else{
+        // would have been set before if there was a garbage collector
+        self.$exports = 0
     }
 }
 

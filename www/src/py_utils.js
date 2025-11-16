@@ -1676,15 +1676,6 @@ $B.trace_return = function(value){
     trace_func(frame, 'return', value)
 }
 
-$B.need_delete = function(obj){
-    // add object to those that need to be explicitely deleted on frame leave
-    if($B.frame_obj !== null){
-        var frame = $B.frame_obj.frame
-        frame.need_delete = frame.need_delete ?? []
-        frame.need_delete.push(obj)
-    }
-}
-
 $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frame_obj === null){
@@ -1734,16 +1725,6 @@ $B.leave_frame = function(arg){
                             _b_.None, _b_.None, _b_.None)
                     }
                 }
-            }
-        }
-    }
-    if(frame.need_delete){
-        // call __del__ on objects that need explicit deletion, such as
-        // memoryview objects
-        for(var obj of frame.need_delete){
-            var del_method = $B.$getattr($B.get_class(obj), '__del__')
-            if(del_method){
-                del_method(obj)
             }
         }
     }
