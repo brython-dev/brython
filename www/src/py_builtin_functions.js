@@ -3867,14 +3867,163 @@ $B._TextIOWrapper.seek = function(_self, offset, whence){
         whence = 0
     }
     if(whence === 0){
-        self.$text_pos = offset
+        _self.$text_pos = offset
     }else if(whence === 1){
-        self.$text_pos += offset
+        _self.$text_pos += offset
     }else if(whence === 2){
-        self.$text_pos = self.$text_length + offset
+        _self.$text_pos = _self.$text_length + offset
+    }
+    return _self.$text_pos
+}
+
+$B._TextIOWrapper.tell = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    return _self.$text_pos || 0
+}
+
+$B._TextIOWrapper.write = function(){
+    var $ = $B.args("write", 2, {self: null, data: null},
+            ["self", "data"], arguments, {}, null, null),
+        _self = $.self,
+        data = $.data
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    if(! $B.$isinstance(data, _b_.str)){
+        $B.RAISE(_b_.TypeError, 'string argument expected, got ' +
+            `'${$B.class_name(data)}'`)
+    }
+    // Initialize text buffer if needed
+    if(_self.$text === undefined){
+        _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
+        _self.$text_pos = 0
+    }
+    var position = _self.$text_pos
+    // Write data at current position
+    _self.$text = _self.$text.substr(0, position) + data +
+        _self.$text.substr(position + data.length)
+    _self.$text_pos = position + data.length
+    // Mark buffer as modified
+    _self.$modified = true
+    return data.length
+}
+
+$B._TextIOWrapper.writelines = function(){
+    var $ = $B.args("writelines", 2, {self: null, lines: null},
+            ["self", "lines"], arguments, {}, null, null),
+        _self = $.self,
+        lines = $.lines
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    for(var line of $B.make_js_iterator(lines)){
+        $B._TextIOWrapper.write(_self, line)
     }
     return _b_.None
 }
+
+$B._TextIOWrapper.readlines = function(){
+    var $ = $B.args("readlines", 2, {self: null, hint: null},
+            ["self", "hint"], arguments, {hint: -1}, null, null),
+        _self = $.self,
+        hint = $.hint
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    if(hint === _b_.None){
+        hint = -1
+    }else{
+        hint = $B.PyNumber_Index(hint)
+    }
+    var lines = []
+    var total_len = 0
+    while(true){
+        var line = $B._TextIOWrapper.readline(_self)
+        if(line.length == 0){
+            break
+        }
+        lines.push(line)
+        total_len += line.length
+        if(hint > 0 && total_len >= hint){
+            break
+        }
+    }
+    return lines
+}
+
+$B._TextIOWrapper.truncate = function(){
+    var $ = $B.args("truncate", 2, {self: null, size: null},
+            ["self", "size"], arguments, {size: _b_.None}, null, null),
+        _self = $.self,
+        size = $.size
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    if(_self.$text === undefined){
+        _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
+        _self.$text_pos = 0
+    }
+    if(size === _b_.None){
+        size = _self.$text_pos
+    }else{
+        size = $B.PyNumber_Index(size)
+    }
+    _self.$text = _self.$text.substr(0, size)
+    _self.$modified = true
+    return size
+}
+
+$B._TextIOWrapper.flush = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    // For text wrapper, flush doesn't need to do anything special
+    // in Brython's implementation
+    return _b_.None
+}
+
+$B._TextIOWrapper.close = function(_self){
+    _self.closed = true
+    return _b_.None
+}
+
+$B._TextIOWrapper.readable = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    return true
+}
+
+$B._TextIOWrapper.writable = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    return true
+}
+
+$B._TextIOWrapper.seekable = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    return true
+}
+
+$B._TextIOWrapper.isatty = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
+    return false
+}
+
+$B._TextIOWrapper.$tp_dict.closed = $B.getset_descriptor.$factory(
+    $B._TextIOWrapper,
+    'closed',
+    function(_self){
+        return _self.closed === true
+    }
+)
 
 $B.set_func_names($B._TextIOWrapper, "builtins")
 

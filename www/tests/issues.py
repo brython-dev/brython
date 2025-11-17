@@ -3361,6 +3361,29 @@ try:
 except json.JSONDecodeError as e:
     assert 'Expecting' in str(e)
 
+# issue 2613
+from unittest.mock import patch, mock_open
+
+# Test that mock_open has writelines method
+m = mock_open()
+with patch('builtins.open', m):
+    with open("test.txt", "w") as f:
+        f.writelines(["line1\n", "line2\n"])
+
+# Test that mock_open has truncate method
+m = mock_open()
+with patch('builtins.open', m):
+    with open("test.txt", "w") as f:
+        f.truncate.return_value = 10
+        result = f.truncate(10)
+        assert result == 10
+
+# Test that mock_open has readlines method
+m = mock_open(read_data="line1\nline2\n")
+with patch('builtins.open', m):
+    with open("test.txt", "r") as f:
+        lines = f.readlines()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

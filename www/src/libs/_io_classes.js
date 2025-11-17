@@ -113,6 +113,7 @@ StringIO.__init__ = function(){
     $.self.$text = value
     $.self.$text_pos = 0
     $.self.$text_iterator = $.self.$text[Symbol.iterator]()
+    $.self._closed = false
 }
 
 StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
@@ -416,6 +417,89 @@ StringIO.write = function(){
     return data.length
 }
 
+StringIO.writelines = function(){
+    var $ = $B.args("writelines", 2, {self: null, lines: null},
+            ["self", "lines"], arguments, {}, null, null),
+        _self = $.self,
+        lines = $.lines
+    check_closed(_self)
+    for(var line of $B.make_js_iterator(lines)){
+        StringIO.write(_self, line)
+    }
+    return _b_.None
+}
+
+StringIO.readlines = function(){
+    var $ = $B.args("readlines", 2, {self: null, hint: null},
+            ["self", "hint"], arguments, {hint: -1}, null, null),
+        _self = $.self,
+        hint = $.hint
+    check_closed(_self)
+    if(hint === _b_.None){
+        hint = -1
+    }else{
+        hint = $B.PyNumber_Index(hint)
+    }
+    var lines = []
+    var total_len = 0
+    while(true){
+        var line = StringIO.readline(_self)
+        if(line.length == 0){
+            break
+        }
+        lines.push(line)
+        total_len += line.length
+        if(hint > 0 && total_len >= hint){
+            break
+        }
+    }
+    return lines
+}
+
+StringIO.tell = function(_self){
+    check_closed(_self)
+    return _self.$text_pos
+}
+
+StringIO.flush = function(_self){
+    check_closed(_self)
+    return _b_.None
+}
+
+StringIO.close = function(_self){
+    _self._closed = true
+    return _b_.None
+}
+
+StringIO.readable = function(_self){
+    check_closed(_self)
+    return true
+}
+
+StringIO.writable = function(_self){
+    check_closed(_self)
+    return true
+}
+
+StringIO.seekable = function(_self){
+    check_closed(_self)
+    return true
+}
+
+StringIO.isatty = function(_self){
+    check_closed(_self)
+    return false
+}
+
+StringIO.$tp_dict = StringIO.$tp_dict || {}
+StringIO.$tp_dict.closed = $B.getset_descriptor.$factory(
+    StringIO,
+    'closed',
+    function(_self){
+        return _self._closed === true
+    }
+)
+
 $B.set_func_names(StringIO, "_io")
 
 var BytesIO = $B.make_class('BytesIO')
@@ -705,6 +789,88 @@ BytesIO.seekable = function(_self){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
+}
+
+BytesIO.readline = function(){
+    var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
+            arguments, {size: -1}, null, null),
+        _self = $.self,
+        size = $.size
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, "readline on closed file")
+    }
+    if(size === _b_.None){
+        size = -1
+    }else{
+        size = $B.PyNumber_Index(size)
+    }
+    if(size < 0){
+        size = _b_.len(_self._buffer)
+    }
+    var result = []
+    var count = 0
+    while(_self._pos < _b_.len(_self._buffer) && count < size){
+        var byte = _b_.bytes.__getitem__(_self._buffer, _self._pos)
+        result.push(_b_.int.from_bytes(byte, 'big'))
+        _self._pos++
+        count++
+        // Check for newline (byte value 10 is '\n')
+        if(_b_.int.from_bytes(byte, 'big') == 10){
+            break
+        }
+    }
+    return _b_.bytes.$factory(result)
+}
+
+BytesIO.readlines = function(){
+    var $ = $B.args('readlines', 2, {self: null, hint: null},
+            ['self', 'hint'], arguments, {hint: -1}, null, null),
+        _self = $.self,
+        hint = $.hint
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, "readlines on closed file")
+    }
+    if(hint === _b_.None){
+        hint = -1
+    }else{
+        hint = $B.PyNumber_Index(hint)
+    }
+    var lines = []
+    var total_len = 0
+    while(true){
+        var line = BytesIO.readline(_self)
+        if(_b_.len(line) == 0){
+            break
+        }
+        lines.push(line)
+        total_len += _b_.len(line)
+        if(hint > 0 && total_len >= hint){
+            break
+        }
+    }
+    return lines
+}
+
+BytesIO.writelines = function(){
+    var $ = $B.args('writelines', 2, {self: null, lines: null},
+            ['self', 'lines'], arguments, {}, null, null),
+        _self = $.self,
+        lines = $.lines
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, "writelines on closed file")
+    }
+    for(var line of $B.make_js_iterator(lines)){
+        BytesIO.write(_self, line)
+    }
+    return _b_.None
+}
+
+BytesIO.flush = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, "flush on closed file")
+    }
+    // For BytesIO, flush doesn't need to do anything special
+    return _b_.None
 }
 
 $B.set_func_names(BytesIO, '_io')
