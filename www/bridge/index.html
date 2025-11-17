@@ -6,12 +6,13 @@
     <script type="text/javascript" src="/src/brython.js"></script>
     <script type="text/javascript" src="print.brython.js"></script>
     <script type="text/javascript" src="printJSFile.js"></script>
+    <script type="text/python" src="print_py_file.py"></script>
   </head>
   <body>
 
     <script type="text/python" id="pythonscript">
 from browser import console, window, document
-import print_py, printJS
+import print_py, printJS, print_py_file
 
 def print_python_from_script(message):
     print(message)
@@ -20,14 +21,15 @@ def print_python_from_script(message):
 print("pythonscript 1: print")
 print_python_from_script("pythonscript 2: print_python_from_script")
 print_py.print_python_from_module("pythonscript 3: print_python_from_module")
+print_py_file.print_python_from_file("pythonscript 4: print_python_from_file")
 
 # JavaScript code
-console.log("pythonscript 4: console.log")
-window.printJavaScriptFromScript("pythonscript 5: printJavaScriptFromScript")
-printJS.printJavaScriptFromModule("pythonscript 6: printJavaScriptFromModule")
-window.printJavaScriptFromFile("pythonscript 7: printJavaScriptFromFile")
+console.log("pythonscript 5: console.log")
+window.printJavaScriptFromScript("pythonscript 6: printJavaScriptFromScript")
+printJS.printJavaScriptFromModule("pythonscript 7: printJavaScriptFromModule")
+window.printJavaScriptFromFile("pythonscript 8: printJavaScriptFromFile")
 
-document <= "Look at the 18 print in the JavaScript console"
+document <= "Look at the 20 print in the JavaScript console"
     </script>
 
     <script type="text/javascript" id="javascriptscript">
@@ -48,6 +50,8 @@ document.getElementById("pythonscript").addEventListener('load', function(script
     pythonscript.print_python_from_script("javascriptscript 6: print_python_from_script")
 })
 print_py.print_python_from_module("javascriptscript 7: print_python_from_module")
+print_py_file = __BRYTHON__.importModule("print_py_file")
+print_py_file.print_python_from_file("javascriptscript 8: print_python_from_file")
     </script>
 
   </body>
