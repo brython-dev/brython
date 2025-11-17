@@ -5,6 +5,7 @@
     <title>JavaScript/Python bridge demo</title>
     <script type="text/javascript" src="/src/brython.js"></script>
     <script type="text/javascript" src="print.brython.js"></script>
+    <script type="text/javascript" src="printJSFile.js"></script>
   </head>
   <body>
 
@@ -24,8 +25,9 @@ print_py.print_python_from_module("pythonscript 3: print_python_from_module")
 console.log("pythonscript 4: console.log")
 window.printJavaScriptFromScript("pythonscript 5: printJavaScriptFromScript")
 printJS.printJavaScriptFromModule("pythonscript 6: printJavaScriptFromModule")
+window.printJavaScriptFromFile("pythonscript 7: printJavaScriptFromFile")
 
-document <= "Look at the 16 print in the JavaScript console"
+document <= "Look at the 18 print in the JavaScript console"
     </script>
 
     <script type="text/javascript" id="javascriptscript">
@@ -37,14 +39,15 @@ printJavaScriptFromScript = function(message){
 console.log("javascriptscript 1: console.log")
 printJavaScriptFromScript("javascriptscript 2: printJavaScriptFromScript")
 printJS.printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
+printJavaScriptFromFile("javascriptscript 4: printJavaScriptFromFile")
 
 // Python code
-__BRYTHON__.runPythonSource("print('javascriptscript 4: print')")
+__BRYTHON__.runPythonSource("print('javascriptscript 5: print')")
 document.getElementById("pythonscript").addEventListener('load', function(script){
     pythonscript = __BRYTHON__.importModule("pythonscript")
-    pythonscript.print_python_from_script("javascriptscript 5: print_python_from_script")
+    pythonscript.print_python_from_script("javascriptscript 6: print_python_from_script")
 })
-print_py.print_python_from_module("javascriptscript 6: print_python_from_module")
+print_py.print_python_from_module("javascriptscript 7: print_python_from_module")
     </script>
 
   </body>
