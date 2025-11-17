@@ -12,7 +12,6 @@
 
     <script type="text/python" id="pythonscript">
 from browser import console, window, document
-import print_py, printJS, print_py_file
 
 def print_python_from_script(message):
     print(message)
@@ -20,13 +19,23 @@ def print_python_from_script(message):
 # Python code
 print("pythonscript 1: print")
 print_python_from_script("pythonscript 2: print_python_from_script")
+
+import print_py
 print_py.print_python_from_module("pythonscript 3: print_python_from_module")
+
+import print_py_file
 print_py_file.print_python_from_file("pythonscript 4: print_python_from_file")
 
 # JavaScript code
 console.log("pythonscript 5: console.log")
+
+# Direct acces
 window.printJavaScriptFromScript("pythonscript 6: printJavaScriptFromScript")
+
+import printJS
 printJS.printJavaScriptFromModule("pythonscript 7: printJavaScriptFromModule")
+
+# Direct acces
 window.printJavaScriptFromFile("pythonscript 8: printJavaScriptFromFile")
 
 document <= "Look at the 20 print in the JavaScript console"
@@ -40,7 +49,11 @@ printJavaScriptFromScript = function(message){
 // JavaScript code
 console.log("javascriptscript 1: console.log")
 printJavaScriptFromScript("javascriptscript 2: printJavaScriptFromScript")
+
+printJS = __BRYTHON__.importModule("printJS")
 printJS.printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
+
+// Direct acces
 printJavaScriptFromFile("javascriptscript 4: printJavaScriptFromFile")
 
 // Python code
@@ -49,7 +62,10 @@ document.getElementById("pythonscript").addEventListener('load', function(script
     pythonscript = __BRYTHON__.importModule("pythonscript")
     pythonscript.print_python_from_script("javascriptscript 6: print_python_from_script")
 })
+
+print_py = __BRYTHON__.importModule("print_py")
 print_py.print_python_from_module("javascriptscript 7: print_python_from_module")
+
 print_py_file = __BRYTHON__.importModule("print_py_file")
 print_py_file.print_python_from_file("javascriptscript 8: print_python_from_file")
     </script>
