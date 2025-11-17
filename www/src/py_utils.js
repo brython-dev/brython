@@ -1758,6 +1758,7 @@ var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
 
 $B.rich_comp = function(op, x, y){
     if(x === undefined){
+        console.log(Error().stack)
         $B.RAISE(_b_.RuntimeError, 'error in rich comp')
     }
     var x1 = x !== null && x.valueOf ? x.valueOf() : x,

@@ -151,6 +151,8 @@ StringIO.__init__ = function(){
 StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
 
 StringIO.__getstate__ = function(_self){
+    check_closed(_self)
+
     var initvalue = StringIO.getvalue(_self)
 
     var dict = _self.__dict__ ? _b_.dict.copy(_self.__dict__) : _b_.None
@@ -194,6 +196,7 @@ StringIO.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
             ["self"], arguments, {}, null, null)
     var _self = $.self
+    check_closed(_self)
     var res = _self.$text.substr(0) // copy
     if(_self.newlines == '\r'){
         res = res.replace(/\n/g, '\r')
@@ -391,6 +394,7 @@ StringIO.seek = function(self, pos, whence){
         pos = $.pos
         whence = $.whence
 
+    check_closed(_self)
     pos = $B.PyNumber_Index(pos)
     if(whence != 0 && whence != 1 && whence != 2){
         $B.RAISE(_b_.ValueError,
@@ -407,7 +411,7 @@ StringIO.seek = function(self, pos, whence){
     if(whence == 1){
         pos = _self.$text_pos
     }else if(whence == 2){
-        pos = _self.$text_length
+        pos = _b_.len(_self.$text)
         for(var item of _self.$text_iterator){
             // exhaust iterator
         }
@@ -426,20 +430,23 @@ StringIO.seek = function(self, pos, whence){
 StringIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
-    if(! $B.$isinstance($.data, _b_.str)){
+            var _self = $.self,
+                data = $.data
+    if(! $B.$isinstance(data, _b_.str)){
         $B.RAISE(_b_.TypeError, 'string argument expected, got ' +
-            `'${$B.class_name($.data)}'`)
+            `'${$B.class_name(data)}'`)
     }
-    var text = $.self.$text,
-        position = $.self.$text_pos
+    check_closed(_self)
+    var text = _self.$text,
+        position = _self.$text_pos
     if(position > text.length){
         text += String.fromCodePoint(0).repeat(position - text.length)
     }
-    text = text.substr(0, position) + $.data +
-        text.substr(position + $.data.length)
-    $.self.$text = text
-    $.self.$text_pos = position + $.data.length
-    return $.data.length
+    text = text.substr(0, position) + data +
+        text.substr(position + data.length)
+    _self.$text = text
+    _self.$text_pos = position + data.length
+    return data.length
 }
 
 $B.set_func_names(StringIO, "_io")

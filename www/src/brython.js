@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-16 21:51:57.782577"
-__BRYTHON__.timestamp=1763326317782
+__BRYTHON__.compiled_date="2025-11-17 08:42:20.360721"
+__BRYTHON__.timestamp=1763365340360
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1804,7 +1804,8 @@ return{
 prev:$B.frame_obj,frame,count:count+1}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
-$B.rich_comp=function(op,x,y){if(x===undefined){$B.RAISE(_b_.RuntimeError,'error in rich comp')}
+$B.rich_comp=function(op,x,y){if(x===undefined){console.log(Error().stack)
+$B.RAISE(_b_.RuntimeError,'error in rich comp')}
 var x1=x !==null && x.valueOf ? x.valueOf():x,y1=y !==null && y.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
 x.__class__===undefined && y.__class__===undefined){switch(op){case "__eq__":
@@ -4343,7 +4344,7 @@ var old_size=-1
 var peek=$B.$getattr(_self,"peek",null)
 var buffer=_b_.bytearray.$factory()
 limit=$B.PyNumber_Index(limit)
-while(limit < 0 ||buffer.length < limit){var nreadahead=1
+while(limit < 0 ||_b_.len(buffer)< limit){var nreadahead=1
 var b
 if(peek !=null){var readahead=peek(1)
 if(! $B.$isinstance(readahead,_b_.bytes)){$B.RAISE(_b_.OSError,"peek() should have returned a bytes object, "+
@@ -4352,7 +4353,7 @@ if(readahead.length > 0){var n=0
 var buf=_b_.bytes.$decode(readahead,'latin-1')
 if(limit >=0){while(true){if(n >=readahead.length ||n >=limit){break}
 if(buf[n++]=='\n'){break}}}else{while(true){if(n >=readahead.length){break}
-if(buf[n++]=='\n'){break}}}
+if($B.$getitem(buffer,n++)=='\n'){break}}}
 nreadahead=n}}
 var read=$B.search_in_mro($B.get_class(_self),"read")
 b=$B.$call(read)(_self,nreadahead)
@@ -4362,9 +4363,12 @@ if(_b_.len(b)==0){break;}
 _b_.bytearray.extend(buffer,b)
 if($B.last(_b_.list.$factory(buffer))==10){
 break}}
-return buffer}
-_IOBase.readlines=function(_self,hint){var length=0;
+return $B.$call(_b_.bytes)(buffer)}
+_IOBase.readlines=function(_self,hint){var $=$B.args('readlines',2,{self:null,hint:null},['self','hint'],arguments,{hint:-1},null,null)
+var _self=$.self,hint=$.hint
+var length=0;
 var result,it
+if(hint===_b_.None){hint=-1}else{hint=$B.PyNumber_Index(hint)}
 result=$B.$list([])
 if(hint <=0){return _b_.list.$factory(_self)}
 var readline=$B.search_in_mro($B.get_class(_self),'readline')

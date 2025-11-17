@@ -3041,7 +3041,6 @@ _IOBase.readline = function(_self, limit=-1){
                 ['self', 'limit'], arguments, {limit: -1}, null, null),
         _self = $.self,
         limit = $.limit
-
     var old_size = -1
 
     var peek = $B.$getattr(_self, "peek", null)
@@ -3050,7 +3049,7 @@ _IOBase.readline = function(_self, limit=-1){
 
     limit = $B.PyNumber_Index(limit)
 
-    while (limit < 0 || buffer.length < limit) {
+    while (limit < 0 || _b_.len(buffer) < limit) {
         var nreadahead = 1
         var b
 
@@ -3078,7 +3077,7 @@ _IOBase.readline = function(_self, limit=-1){
                         if(n >= readahead.length){
                             break
                         }
-                        if(buf[n++] == '\n'){
+                        if($B.$getitem(buffer, n++) == '\n'){
                             break
                         }
                     }
@@ -3104,13 +3103,22 @@ _IOBase.readline = function(_self, limit=-1){
             break
         }
     }
-    return buffer
+    return $B.$call(_b_.bytes)(buffer)
 }
 
 _IOBase.readlines = function(_self, hint){
+    var $ = $B.args('readlines', 2, {self: null, hint: null}, ['self', 'hint'],
+            arguments, {hint: -1}, null, null)
+    var _self=  $.self,
+        hint = $.hint
     var length = 0;
     var result, it
 
+    if(hint === _b_.None){
+        hint = -1
+    }else{
+        hint = $B.PyNumber_Index(hint)
+    }
     result = $B.$list([])
 
     if(hint <= 0){
