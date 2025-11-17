@@ -36,14 +36,15 @@ printJavaScriptFromScript = function(message){
 // JavaScript code
 console.log("javascriptscript 1: console.log")
 printJavaScriptFromScript("javascriptscript 2: printJavaScriptFromScript")
-__BRYTHON__.getPythonModule("printJS").printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
+printJS.printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
 
 // Python code
 __BRYTHON__.runPythonSource("print('javascriptscript 4: print')")
 document.getElementById("pythonscript").addEventListener('load', function(script){
-    __BRYTHON__.getPythonModule("pythonscript").print_python_from_script("javascriptscript 5: print_python_from_script")
+    pythonscript = __BRYTHON__.importModule("pythonscript")
+    pythonscript.print_python_from_script("javascriptscript 5: print_python_from_script")
 })
-__BRYTHON__.getPythonModule("print_py").print_python_from_module("javascriptscript 6: print_python_from_module")
+print_py.print_python_from_module("javascriptscript 6: print_python_from_module")
     </script>
 
   </body>
