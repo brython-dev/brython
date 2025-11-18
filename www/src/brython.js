@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-17 08:42:20.360721"
-__BRYTHON__.timestamp=1763365340360
+__BRYTHON__.compiled_date="2025-11-18 11:56:57.512146"
+__BRYTHON__.timestamp=1763463417510
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4060,6 +4060,9 @@ return res}}
 memoryview.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 bytes.source.forEach(function(item){res+=item.toString(16)})
 return res}
+memoryview.readonly=$B.getset_descriptor.$factory(
+memoryview,'readonly',function(_self){return $B.$isinstance(_self.obj,_b_.bytes)}
+)
 memoryview.release=function(self){if(self.$released){return}
 self.$released=true
 self.obj.$exports-=1}
@@ -4425,14 +4428,20 @@ $B.set_func_names($B._RawIOBase,"_io")
 $B._BufferedIOBase=$B.make_class('_BufferedIOBase')
 $B._BufferedIOBase.__bases__=[_IOBase]
 $B._BufferedIOBase.__mro__=[_IOBase,_b_.object]
+$B.is_buffer=function(obj){if($B.get_class(obj).$buffer_protocol){return true}
+for(var klass of $B.get_class(obj).__mro__){if(klass.$buffer_protocol){return true}}
+return false}
 function _bufferediobase_readinto_generic(_self,buffer,readinto1){var len,data
+if(! $B.is_buffer(buffer)){$B.RAISE(_b_.TypeError," readinto() argument must be "+
+`read-write bytes-like object, not ${$B.class_name(buffer)}`)}
 var attr=readinto1 ? "read1" :"read"
 data=$B.$call($B.$getattr(_self,attr))(_b_.len(buffer))
 if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
 len=_b_.bytes.__len__(data)
 if(len > _b_.len(buffer)){$B.RAISE(_b_.ValueError,"read() returned too much data: "
 `${_b_.len(buffer)} bytes requested, ${len} returned`)}
-_b_.bytearray.__setitem__(buffer,_b_.slice.$factory(0,len),data)
+var setitem=$B.search_in_mro($B.get_class(buffer),'__setitem__')
+$B.$call(setitem)(buffer,_b_.slice.$factory(0,len),data)
 return len}
 $B._BufferedIOBase.readinto=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,0);}
 $B._BufferedIOBase.readinto1=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,1);}
@@ -5937,6 +5946,7 @@ var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer
 bytes.__add__=function(self,other){try{var other_bytes=$B.to_bytes(other)
 return{
 __class__:self.__class__,source:self.source.concat(other_bytes)}}catch(err){$B.RAISE(_b_.TypeError,"can't concat str to bytes")}}
+bytes.__buffer__=function(_self,flags){return $B.$call(_b_.memoryview)(_self)}
 bytes.__bytes__=function(self){return self}
 bytes.__contains__=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)>-1}
 if(self.source.length < other.source.length){return false}
@@ -6038,6 +6048,7 @@ self.source=int_list
 self.encoding=encoding
 self.errors=errors
 return self}
+bytes.__release_buffer__=function(_self,buffer){_b_.memoryview.release(buffer)}
 bytes.__repr__=bytes.__str__=function(self){var t=$B.special_string_repr,
 res=""
 for(var i=0,len=self.source.length;i < len;i++){var s=self.source[i]

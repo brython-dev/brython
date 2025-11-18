@@ -2165,6 +2165,14 @@ memoryview.hex = function(self){
     return res
 }
 
+memoryview.readonly = $B.getset_descriptor.$factory(
+    memoryview,
+    'readonly',
+    function(_self){
+        return $B.$isinstance(_self.obj, _b_.bytes)
+    }
+)
+
 memoryview.release = function(self){
     if(self.$released){
         return
@@ -3291,8 +3299,25 @@ $B._BufferedIOBase = $B.make_class('_BufferedIOBase')
 $B._BufferedIOBase.__bases__ = [_IOBase]
 $B._BufferedIOBase.__mro__ = [_IOBase, _b_.object]
 
+$B.is_buffer = function(obj){
+    if($B.get_class(obj).$buffer_protocol){
+        return true
+    }
+    for(var klass of $B.get_class(obj).__mro__){
+        if(klass.$buffer_protocol){
+            return true
+        }
+    }
+    return false
+}
+
 function _bufferediobase_readinto_generic(_self, buffer, readinto1){
     var len, data
+
+    if(! $B.is_buffer(buffer)){
+        $B.RAISE(_b_.TypeError, " readinto() argument must be " +
+            `read-write bytes-like object, not ${$B.class_name(buffer)}`)
+    }
 
     var attr = readinto1 ? "read1" : "read"
     data = $B.$call($B.$getattr(_self, attr))(_b_.len(buffer))
@@ -3307,7 +3332,8 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
             "read() returned too much data: "
             `${_b_.len(buffer)} bytes requested, ${len} returned`)
     }
-    _b_.bytearray.__setitem__(buffer, _b_.slice.$factory(0, len), data)
+    var setitem = $B.search_in_mro($B.get_class(buffer), '__setitem__')
+    $B.$call(setitem)(buffer, _b_.slice.$factory(0, len), data)
 
     return len
 }

@@ -348,6 +348,10 @@ bytes.__add__ = function(self, other){
     }
 }
 
+bytes.__buffer__ = function(_self, flags){
+    return $B.$call(_b_.memoryview)(_self)
+}
+
 bytes.__bytes__ = function(self){
     return self
 }
@@ -671,6 +675,10 @@ bytes.$new = function(cls, source, encoding, errors){
     self.encoding = encoding
     self.errors = errors
     return self
+}
+
+bytes.__release_buffer__ = function(_self, buffer){
+    _b_.memoryview.release(buffer)
 }
 
 bytes.__repr__ = bytes.__str__ = function(self){
