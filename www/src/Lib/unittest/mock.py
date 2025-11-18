@@ -1226,7 +1226,19 @@ class CallableMixin(Base):
                 if _is_exception(result):
                     raise result
             else:
-                result = effect(*args, **kwargs)
+                # BRYTHON FIX: Try calling with all args first, if that fails with
+                # "too many positional arguments" error, retry without first arg.
+                # This handles cases where Brython passes self as first argument
+                # to magic methods like __iter__.
+                try:
+                    result = effect(*args, **kwargs)
+                except TypeError as e:
+                    error_msg = str(e)
+                    if 'positional argument' in error_msg and args:
+                        # Retry without first argument
+                        result = effect(*args[1:], **kwargs)
+                    else:
+                        raise
 
             if result is not DEFAULT:
                 return result
@@ -2230,6 +2242,16 @@ class MagicProxy(Base):
 
     def __get__(self, obj, _type=None):
         return self.create_mock()
+
+    def __call__(self, *args, **kwargs):
+        # BRYTHON FIX: In Brython, when magic methods are accessed via operators
+        # (e.g., str(obj), obj == other, iter(obj)), the descriptor protocol is
+        # bypassed and the raw MagicProxy object is called directly. This __call__
+        # method intercepts those calls, creates the mock, and forwards the call.
+        m = self.create_mock()
+        # Note: We don't strip arguments here - let _execute_mock_call handle it
+        # with its try-except logic, which is more robust.
+        return m(*args, **kwargs)
 
 
 try:

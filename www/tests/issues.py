@@ -3384,7 +3384,50 @@ with patch('builtins.open', m):
     with open("test.txt", "r") as f:
         lines = f.readlines()
 
+# issue 2633
+# MagicMock should allow calling methods that are set up as MagicProxy descriptors
+from unittest.mock import MagicMock
+
+# Test direct method call on MagicMock
+mock = MagicMock()
+result = mock.some_method()
+assert result is not None
+
+# Test magic methods accessed via operators (tests MagicProxy.__call__)
+str_result = str(mock)  # Should not raise "MagicProxy object is not callable"
+assert str_result is not None
+repr_result = repr(mock)  # Test __repr__ as well
+assert repr_result is not None
+
+# Test patching datetime.datetime and calling now()
+import datetime
+with patch('datetime.datetime') as mock_dt:
+    result = mock_dt.now()
+    assert result is not None
+    # Should be able to call it multiple times
+    result2 = mock_dt.now()
+    assert result2 is not None
+
+# test iteration over CSV data using mock_open
+import csv
+fake_csv_data = """item,quantity,price
+apple,10,0.5
+banana,5,0.2
+orange,8,0.3
+"""
+with patch("builtins.open", mock_open(read_data=fake_csv_data)):
+    with open("test.csv", "r") as f:
+        reader = csv.reader(f)
+        next(reader)  # Skip header
+        total_revenue = 0
+        for row in reader:
+            quantity = int(row[1])
+            price = float(row[2])
+            total_revenue += quantity * price
+assert total_revenue == 10*0.5 + 5*0.2 + 8*0.3
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
 print('passed all tests')
+
