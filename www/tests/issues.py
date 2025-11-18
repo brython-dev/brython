@@ -3339,6 +3339,28 @@ except json.JSONDecodeError as e:
     assert 'Expecting value' in str(e)
     assert e.pos == 0
 
+# issue 2637
+# Test that json.loads with unterminated string raises JSONDecodeError
+try:
+    json.loads('"unclosed')
+    assert False, "Expected JSONDecodeError for unterminated string"
+except json.JSONDecodeError as e:
+    assert 'Unterminated string' in str(e)
+
+# Test that json.loads with incomplete object raises JSONDecodeError
+try:
+    json.loads('{"key": "value"')
+    assert False, "Expected JSONDecodeError for incomplete object"
+except json.JSONDecodeError as e:
+    assert 'Expecting' in str(e)
+
+# Test that json.loads with incomplete array raises JSONDecodeError
+try:
+    json.loads('["item1", "item2"')
+    assert False, "Expected JSONDecodeError for incomplete array"
+except json.JSONDecodeError as e:
+    assert 'Expecting' in str(e)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

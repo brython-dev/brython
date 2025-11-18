@@ -307,6 +307,8 @@ function string_at(s, i){
             j++
         }
     }
+    // If we reach here, the string was not properly closed
+    throw error('Unterminated string starting at', s, i)
 }
 
 function to_num(num_string, nb_dots, exp){
@@ -538,8 +540,10 @@ function parse(s){
       node = new Node(),
       root = node,
       token
+  var last_pos = 0
   for(var item of tokenize(s)){
       token = item[0]
+      last_pos = item[1]
       try{
           node = node.transition(token)
       }catch(err){
@@ -558,6 +562,12 @@ function parse(s){
   if(!root.content && root.list.length === 0){
       var error = $B.$call($B.imported["json"].JSONDecodeError)
       throw error('Expecting value', s, 0)
+  }
+  // Check if we're still inside an incomplete structure
+  if(node !== root){
+      var error = $B.$call($B.imported["json"].JSONDecodeError)
+      var expected = node instanceof Dict ? "'}'" : "']'"
+      throw error("Expecting ',' delimiter", s, last_pos)
   }
   return root.content ? root.content : root.list[0]
 }
