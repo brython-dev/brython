@@ -3323,11 +3323,23 @@ assert not os.path.exists('coucou')
 import datetime
 assert datetime.time(0).strftime('%I') == '12'
 
+# issue 2628
+foo = "bar"
+assert f"{foo=}" == "foo='bar'"
+
+# issue 2636
+# Test that json.loads with empty string raises JSONDecodeError
+import json
+
+try:
+    json.loads('')
+    assert False, "Expected JSONDecodeError to be raised"
+except json.JSONDecodeError as e:
+    # Verify it's the correct error type and message
+    assert 'Expecting value' in str(e)
+    assert e.pos == 0
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
 print('passed all tests')
-
-# issue 2628
-foo = "bar"
-assert f"{foo=}" == "foo='bar'"

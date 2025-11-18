@@ -554,6 +554,11 @@ function parse(s){
           }
       }
   }
+  // Check if no valid JSON was parsed (empty string or whitespace only)
+  if(!root.content && root.list.length === 0){
+      var error = $B.$call($B.imported["json"].JSONDecodeError)
+      throw error('Expecting value', s, 0)
+  }
   return root.content ? root.content : root.list[0]
 }
 
