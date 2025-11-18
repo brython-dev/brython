@@ -14,7 +14,20 @@ class Context(object):
 
     keys = "<method 'keys' of 'Context' objects>"
 
-    run = "<method 'run' of 'Context' objects>"
+    def run(self, func, *args, **kwargs):
+        """Execute a function within this context.
+
+        Args:
+            func: The callable to execute
+            *args: Positional arguments for func
+            **kwargs: Keyword arguments for func
+
+        Returns:
+            The return value of func
+        """
+        # In a dummy implementation, we just call the function directly
+        # In a real implementation, this would set up the context properly
+        return func(*args, **kwargs)
 
     values = "<method 'values' of 'Context' objects>"
 
@@ -56,5 +69,10 @@ class Token(object):
         except LookupError:
             self.old_value = Token.MISSING
 
-def copy_context(*args,**kw):
-    pass
+def copy_context(*args, **kw):
+    """Return a copy of the current context.
+
+    In a dummy implementation without real threading,
+    we just return a new Context instance.
+    """
+    return Context()

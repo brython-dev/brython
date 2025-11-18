@@ -64,7 +64,37 @@ def start_new_thread(function, args, kwargs={}):
         _interrupt = False
         raise KeyboardInterrupt
 
-start_joinable_thread = start_new_thread # lazy
+def start_joinable_thread(function, handle=None, daemon=False):
+    """Dummy implementation of _thread.start_joinable_thread().
+
+    For internal use only. Starts a joinable thread.
+    Unlike start_new_thread, this function calls the function with no arguments.
+
+    Args:
+        function: The callable to execute (called with no arguments)
+        handle: Thread handle (ignored in dummy implementation)
+        daemon: Whether the thread is a daemon (ignored in dummy implementation)
+
+    Returns:
+        A thread handle object
+    """
+    if handle is None:
+        handle = _make_thread_handle(get_ident())
+    global _main
+    _main = False
+    try:
+        function()  # Called with NO arguments
+    except SystemExit:
+        pass
+    except:
+        import traceback
+        traceback.print_exc()
+    _main = True
+    global _interrupt
+    if _interrupt:
+        _interrupt = False
+        raise KeyboardInterrupt
+    return handle
 
 def _make_thread_handle(ident):
     return 999
@@ -102,7 +132,30 @@ def _is_main_interpreter():
     return True
 
 class _ThreadHandle:
-    pass
+    """Dummy implementation of _thread._ThreadHandle.
+
+    Provides methods for joining and detaching threads.
+    Since this is a dummy implementation without real threads,
+    these methods are no-ops.
+    """
+
+    def join(self, timeout=None):
+        """Wait for the thread to complete.
+
+        In a dummy implementation, the thread has already completed
+        synchronously, so this is a no-op.
+
+        Args:
+            timeout: Maximum time to wait (ignored)
+        """
+        pass
+
+    def detach(self):
+        """Detach the thread handle.
+
+        In a dummy implementation, this is a no-op.
+        """
+        pass
 
 
 class LockType(object):
