@@ -10,64 +10,81 @@
   </head>
   <body>
 
+    <script type="text/python" id="otherpythonscript">
+def print_python_from_other_script(message):
+    print(message)
+    </script>
+
+    <script type="text/javascript" id="otherjavascriptscript">
+printJavaScriptFromOtherScript = function(message){
+    console.log(message)
+}
+    </script>
+
     <script type="text/python" id="pythonscript">
 from browser import console, window, document
 
-def print_python_from_script(message):
+def print_python_from_same_script(message):
     print(message)
 
 # Python code
 print("pythonscript 1: print")
-print_python_from_script("pythonscript 2: print_python_from_script")
+print_python_from_same_script("pythonscript 2: print_python_from_same_script")
+
+import otherpythonscript
+otherpythonscript.print_python_from_other_script("pythonscript 3: print_python_from_other_script")
 
 import print_py
-print_py.print_python_from_module("pythonscript 3: print_python_from_module")
+print_py.print_python_from_module("pythonscript 4: print_python_from_module")
 
 import print_py_file
-print_py_file.print_python_from_file("pythonscript 4: print_python_from_file")
+print_py_file.print_python_from_file("pythonscript 5: print_python_from_file")
 
 # JavaScript code
-console.log("pythonscript 5: console.log")
+console.log("pythonscript 6: console.log")
 
 # Direct acces
-window.printJavaScriptFromScript("pythonscript 6: printJavaScriptFromScript")
+window.printJavaScriptFromOtherScript("pythonscript 7: printJavaScriptFromOtherScript")
 
 import printJS
-printJS.printJavaScriptFromModule("pythonscript 7: printJavaScriptFromModule")
+printJS.printJavaScriptFromModule("pythonscript 8: printJavaScriptFromModule")
 
 # Direct acces
-window.printJavaScriptFromFile("pythonscript 8: printJavaScriptFromFile")
+window.printJavaScriptFromFile("pythonscript 9: printJavaScriptFromFile")
 
-document <= "Look at the 20 print in the JavaScript console"
+document <= "Look at the 22 print in the JavaScript console"
     </script>
 
     <script type="text/javascript" id="javascriptscript">
-printJavaScriptFromScript = function(message){
+printJavaScriptFromSameScript = function(message){
     console.log(message)
 }
 
 // JavaScript code
 console.log("javascriptscript 1: console.log")
-printJavaScriptFromScript("javascriptscript 2: printJavaScriptFromScript")
-
-printJS = __BRYTHON__.importModule("printJS")
-printJS.printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
+printJavaScriptFromSameScript("javascriptscript 2: printJavaScriptFromSameScript")
 
 // Direct acces
-printJavaScriptFromFile("javascriptscript 4: printJavaScriptFromFile")
+printJavaScriptFromOtherScript("javascriptscript 3: printJavaScriptFromOtherScript")
+
+printJS = __BRYTHON__.importModule("printJS")
+printJS.printJavaScriptFromModule("javascriptscript 4: printJavaScriptFromModule")
+
+// Direct acces
+printJavaScriptFromFile("javascriptscript 5: printJavaScriptFromFile")
 
 // Python code
-__BRYTHON__.runPythonSource("print('javascriptscript 5: print')")
-document.getElementById("pythonscript").addEventListener('load', function(script){
-    pythonscript = __BRYTHON__.importModule("pythonscript")
-    pythonscript.print_python_from_script("javascriptscript 6: print_python_from_script")
+__BRYTHON__.runPythonSource("print('javascriptscript 6: print')")
+document.getElementById("otherpythonscript").addEventListener('load', function(script){
+    otherpythonscript = __BRYTHON__.importModule("otherpythonscript")
+    otherpythonscript.print_python_from_other_script("javascriptscript 7: print_python_from_other_script")
 })
 
 print_py = __BRYTHON__.importModule("print_py")
-print_py.print_python_from_module("javascriptscript 7: print_python_from_module")
+print_py.print_python_from_module("javascriptscript 8: print_python_from_module")
 
 print_py_file = __BRYTHON__.importModule("print_py_file")
-print_py_file.print_python_from_file("javascriptscript 8: print_python_from_file")
+print_py_file.print_python_from_file("javascriptscript 9: print_python_from_file")
     </script>
 
   </body>
