@@ -997,6 +997,79 @@ js_array.__delitem__ = function(_self, key){
     _self.splice(key, 1)
 }
 
+js_array.__eq__ = function(_self, other){
+    if($B.$isinstance(other, _b_.list)){
+        return _b_.list.__eq__($B.$list(_self.map(jsobj2pyobj)), other)
+    }else if(other.$is_js_array){
+        if(_self.length != other.length){
+            return false
+        }
+        for(var i = 0, len = _self.length; i <len; i++){
+            if(_self[i] != other[i]){
+                return false
+            }
+        }
+        return true
+    }
+    return _b_.NotImplemented
+}
+
+js_array.__ge__ = function(_self, other){
+    return js_array.__le__(other, _self)
+}
+
+js_array.__gt__ = function(_self, other){
+    return js_array.__lt__(other, _self)
+}
+
+js_array.__le__ = function(self, other){
+    if($B.$isinstance(other, _b_.list)){
+        return _b_.list.__le__($B.$list(_self.map(jsobj2pyobj)), other)
+    }else if(other.$is_js_array){
+        var i = 0
+        // skip all items that compare equal
+        while(i < _self.length && i < other.length &&
+                _self[i] == other[i]){
+            i++
+        }
+        if(i == _self.length){
+            // [1] <= [1, 2] is True
+            return _self.length <= other.length
+        }
+        if(i == other.length){
+            // [1, 2] <= [1] is false
+            return false
+        }
+        // First different item: [1, x] <= [1, y] is x <= y
+        return _self[i] <= other[i]
+    }
+    return _b_.NotImplemented
+}
+
+js_array.__lt__ = function(_self, other){
+    if($B.$isinstance(other, _b_.list)){
+        return _b_.list.__lt__($B.$list(_self.map(jsobj2pyobj)), other)
+    }else if(other.$is_js_array){
+        var i = 0
+        // skip all items that compare equal
+        while(i < _self.length && i < other.length &&
+                _self[i] == other[i]){
+            i++
+        }
+        if(i == _self.length){
+            // [1] < [1, 2] is True
+            return _self.length < other.length
+        }
+        if(i == other.length){
+            // [1, 2] < [1] is false
+            return false
+        }
+        // First different item: [1, x] < [1, y] is x < y
+        return self[i] <= other[i]
+    }
+    return _b_.NotImplemented
+}
+
 js_array.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
@@ -1022,7 +1095,11 @@ js_array.__getattribute__ = function(_self, attr){
     }
     return function(){
         var args = pyobj2jsobj(Array.from(arguments))
-        return _b_.list[attr].call(null, _self, ...args)
+        var res = _b_.list[attr].call(null, _self, ...args)
+        if(attr == 'sort'){
+            console.log('res', res)
+        }
+        return res
     }
 }
 

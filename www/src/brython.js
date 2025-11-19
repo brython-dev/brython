@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-18 11:56:57.512146"
-__BRYTHON__.timestamp=1763463417510
+__BRYTHON__.compiled_date="2025-11-19 23:30:20.844609"
+__BRYTHON__.timestamp=1763591420844
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1824,12 +1824,16 @@ var res
 if(x !==null &&(x.$is_class ||x.$factory)){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{$B.RAISE(_b_.TypeError,"'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
-var x_class_op=$B.$call($B.$getattr($B.get_class(x),op)),rev_op=reversed_op[op]||op,y_rev_func
+var rev_op=reversed_op[op]||op,y_rev_func
 if(x !==null && x.__class__ && y !==null && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){y_rev_func=$B.$getattr(y,rev_op)
 res=$B.$call(y_rev_func)(x)
 if(res !==_b_.NotImplemented){return res}}}
-res=x_class_op(x,y)
+var in_mro=$B.search_in_mro($B.get_class(x),op)
+if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
+var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){var func=getter(in_mro,x,$B.get_class(x))
+res=func(y)}else{res=in_mro(x,y)}
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
 y_rev_func=$B.$call($B.$getattr($B.get_class(y),rev_op))
@@ -2220,9 +2224,13 @@ if(orig_bases !==bases){$B.$setitem(class_dict,'__orig_bases__',orig_bases)}
 if(class_dict.__class__===_b_.dict){if(class_dict.$all_str){return class_dict.$strings}
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return _b_.dict}else if(prop=='$target'){return target}
 if(_b_.dict.$contains_string(target,prop)){return _b_.dict.$getitem_string(target,prop)}
-return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}})}else{var setitem=$B.$getattr(class_dict,"__setitem__"),getitem=$B.$getattr(class_dict,"__getitem__")
+return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}})}else{var setitem=$B.$call($B.$getattr(class_dict,"__setitem__")),getitem=$B.$getattr(class_dict,"__getitem__")
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return $B.get_class(target)}else if(prop=='$target'){return target}
-try{return getitem(prop)}catch(err){return undefined}},set:function(target,prop,value){setitem(prop,value)
+try{return getitem(prop)}catch(err){return undefined}},set:function(target,prop,value){try{setitem(prop,value)}catch(err){console.log('error calling setitem',setitem)
+console.log('class dict',class_dict)
+console.log('prop',prop,'value',value)
+console.log('frame obj',$B.frame_obj)
+throw err}
 return _b_.None}})}}
 $B.resolve_mro_entries=function(bases){
 var new_bases=[],has_mro_entries=false
@@ -2349,7 +2357,7 @@ if(klass.__dict__){_b_.dict.__delitem__(klass.__dict__,key)}
 delete klass[key]})}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
 var $test=false 
-if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
+if($test){console.log("attr",attr,"of",klass,'res',res)}
 if(klass.__class__ &&
 klass.__class__[attr]&&
 klass.__class__[attr].__get__ &&
@@ -2365,6 +2373,7 @@ _b_.dict.$contains_string(klass.__dict__,attr)){res=klass[attr]=_b_.dict.$getite
 if($test){console.log('found in __dict__',res)}}else{var mro=klass.__mro__
 if(mro===undefined){console.log("no mro for",klass,'attr',attr)}
 for(let i=0;i < mro.length;i++){if(mro[i].hasOwnProperty(attr)){res=mro[i][attr]
+if($test){console.log('found in class',mro[i])}
 break}}}}else{res=v}}
 if(res===undefined){
 if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass)
@@ -2392,15 +2401,19 @@ var getattr=meta.__getattr__
 if(getattr===undefined){for(let i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
 break}}}
 if(getattr !==undefined){return getattr(klass,attr)}}}
-if(res !==undefined){if($test){console.log("res",res)}
+if(res !==undefined){if($test){console.log("res",res,'class',$B.get_class(res))}
 if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
 if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
 if(res.$infos.__self__){
 return res}
 var result=res.__get__(res.__func__,klass)
 result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
-return result}else if(res.__class__ && res.__class__.__get__){
-if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
+return result}else if(res.__class__){var getter=$B.search_in_mro(res.__class__,'__get__')
+if(getter){
+var getter_res=$B.$call(getter)(res,_b_.None,klass)
+if(getter_res===undefined){console.log('no result for getter',getter)
+console.log(Error().stack)}
+res=getter_res}}
 if(typeof res=="function"){
 if(res.$infos !==undefined && res.$function_infos===undefined){console.log('$infos not undef',res,res.$infos)
 throw Error()}
@@ -3669,12 +3682,15 @@ var $=$B.args("getattr",3,{obj:null,attr:null,_default:null},["obj","attr","_def
 if(! $B.$isinstance($.attr,_b_.str)){$B.RAISE(_b_.TypeError,"attribute name must be string, "+
 `not '${$B.class_name($.attr)}'`)}
 return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
-$B.search_in_mro=function(klass,attr){var test=false 
-if(klass.hasOwnProperty(attr)){return klass[attr]}else if(klass.__dict__){var v=_b_.dict.$get_string(klass.__dict__,attr,false)
+$B.search_in_mro=function(klass,attr){var test=attr=='__eq__' && klass.__qualname__=='MagicMock'
+if(test){console.log('search',attr,'in mro of',klass)}
+if(klass.hasOwnProperty(attr)){if(test){console.log('found in klass',klass[attr])}
+return klass[attr]}else if(klass.__dict__){var v=_b_.dict.$get_string(klass.__dict__,attr,false)
 if(v !==false){if(test){console.log('found in klass dict',klass.__dict__,v)}
 return v}}
 var mro=klass.__mro__
-for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}else if(mro[i].__dict__){var v=_b_.dict.$get_string(mro[i].__dict__,attr,false)
+for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){if(test){console.log('found in mro',i,mro[i])}
+return mro[i][attr]}else if(mro[i].__dict__){var v=_b_.dict.$get_string(mro[i].__dict__,attr,false)
 if(v !==false){if(test){console.log('found in dict of mro',i,v)}
 return v}}}}
 $B.$getattr=function(obj,attr,_default){
@@ -3787,8 +3803,10 @@ if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,r
 return res}}}
 var getattr
 try{res=attr_func(obj,attr)
-if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr_func raised error',err.__class__,err.args,err.name)
-console.log(err)}
+if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr',attr,'of',obj)
+console.log('attr_func raised error',err.__class__,err.args,err.name)
+console.log(err)
+console.log(Error().stack)}
 if(klass===$B.module){
 getattr=obj.__getattr__
 if($test){console.log('use module getattr',getattr)
@@ -8206,7 +8224,7 @@ let name=""
 while(1){if(_self.charAt(pos).search(/\s/)==-1){if(name==""){name=_self.charAt(pos)}else{name+=_self.charAt(pos)}}else{if(name !==""){res.push(name)
 if(maxsplit !==-1 && res.length==maxsplit+1){res.pop()
 res.push(name+_self.substr(pos))
-return res}
+return $B.$list(res.map($B.String))}
 name=""}}
 pos++
 if(pos > _self.length-1){if(name){res.push(name)}
@@ -8219,7 +8237,7 @@ if(maxsplit==0){return $B.$list([$.self])}
 while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
 pos+=seplen
 if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))
-return res.map($B.String)}
+return $B.$list(res.map($B.String))}
 s=""}else{s+=_self.charAt(pos)
 pos++}}
 res.push(s)
@@ -8285,6 +8303,8 @@ default:
 return "0".repeat(width-len)+_self}}
 str.$factory=function(arg,encoding){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
+var test=arg.__class__ && arg.__class__.__name__=='MagicMock'
+if(test){console.log('call str of',arg)}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors
 if(! $B.$isinstance(encoding,str)){$B.RAISE(_b_.TypeError,`str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)}
@@ -8303,7 +8323,8 @@ if($B.get_option('debug')> 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
 throw err}
-var res=$B.$call(method)(arg)
+var getter=$B.search_in_mro($B.get_class(method),'__get__')
+if(getter){var res=$B.$call(getter)(method,arg,klass)()}else{var res=$B.$call(method)(arg)}
 if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}
@@ -11123,6 +11144,30 @@ if($B.$isinstance(other,js_array)){return _self.slice().concat(other)}
 for(var item of $B.make_js_iterator(other)){res.push(pyobj2jsobj(item))}
 return res}
 js_array.__delitem__=function(_self,key){_self.splice(key,1)}
+js_array.__eq__=function(_self,other){if($B.$isinstance(other,_b_.list)){return _b_.list.__eq__($B.$list(_self.map(jsobj2pyobj)),other)}else if(other.$is_js_array){if(_self.length !=other.length){return false}
+for(var i=0,len=_self.length;i <len;i++){if(_self[i]!=other[i]){return false}}
+return true}
+return _b_.NotImplemented}
+js_array.__ge__=function(_self,other){return js_array.__le__(other,_self)}
+js_array.__gt__=function(_self,other){return js_array.__lt__(other,_self)}
+js_array.__le__=function(self,other){if($B.$isinstance(other,_b_.list)){return _b_.list.__le__($B.$list(_self.map(jsobj2pyobj)),other)}else if(other.$is_js_array){var i=0
+while(i < _self.length && i < other.length &&
+_self[i]==other[i]){i++}
+if(i==_self.length){
+return _self.length <=other.length}
+if(i==other.length){
+return false}
+return _self[i]<=other[i]}
+return _b_.NotImplemented}
+js_array.__lt__=function(_self,other){if($B.$isinstance(other,_b_.list)){return _b_.list.__lt__($B.$list(_self.map(jsobj2pyobj)),other)}else if(other.$is_js_array){var i=0
+while(i < _self.length && i < other.length &&
+_self[i]==other[i]){i++}
+if(i==_self.length){
+return _self.length < other.length}
+if(i==other.length){
+return false}
+return self[i]<=other[i]}
+return _b_.NotImplemented}
 js_array.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
 var proto=Object.getPrototypeOf(_self),res=proto[attr]
 if(res !==undefined){
@@ -11133,7 +11178,9 @@ if(js_array.hasOwnProperty(attr)){return js_array[attr]}
 throw $B.attr_error(attr,_self)}
 if(js_array.hasOwnProperty(attr)){return function(){return js_array[attr](_self,...arguments)}}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
-return _b_.list[attr].call(null,_self,...args)}}
+var res=_b_.list[attr].call(null,_self,...args)
+if(attr=='sort'){console.log('res',res)}
+return res}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return jsobj2pyobj(_self[i])}
 js_array.__iadd__=function(_self,other){if($B.$isinstance(other,js_array)){for(var item of other){_self.push(item)}}else{for(var item of $B.make_js_iterator(other)){_self.push($B.pyobj2jsobj(item))}}
@@ -15656,11 +15703,11 @@ var ast_obj=$B._PyAST.JoinedStr(values)
 set_position_from_list(ast_obj,[lineno,col_offset,debug_end_line,debug_end_offset])
 console.log('JoinedStr',ast_obj)
 return ast_obj}
-$B._PyPegen.formatted_value=function(p,expression,debug,conversion,format,closing_brace,arena){var conversion_val=-1
-if(conversion){var conversion_expr=conversion.result,first=conversion_expr.id
-if(first.length > 1 ||! 'sra'.includes(first)){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion_expr,`f-string: invalid conversion character {first}: `+
+$B._PyPegen.formatted_value=function(p,expression,debug,conversion,format,closing_brace,arena){var conversion_val=_get_interpolation_conversion(p,debug,conversion,format)
+if(typeof conversion_val=='string'){
+if(conversion_val.length > 1 ||! 'sra'.includes(conversion_val)){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion.result,`f-string: invalid conversion character ${conversion_val}: `+
 "expected 's', 'r', or 'a'")}
-var conversion_val=first.charCodeAt(0)}
+conversion_val=conversion_val.charCodeAt(0)}
 var formatted_value=new $B.ast.FormattedValue(expression,conversion_val,format===undefined ? format :format.result)
 set_position_from_obj(formatted_value,arena)
 if(debug){var debug_end_line,debug_end_offset,debug_metadata
