@@ -966,8 +966,14 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr){
-    var test = false // attr == '__setattr__'
+    var test = attr == '__eq__' && klass.__qualname__ == 'MagicMock'
+    if(test){
+        console.log('search', attr, 'in mro of', klass)
+    }
     if(klass.hasOwnProperty(attr)){
+        if(test){
+            console.log('found in klass', klass[attr])
+        }
         return klass[attr]
     }else if(klass.__dict__){
         var v = _b_.dict.$get_string(klass.__dict__, attr, false)
@@ -981,6 +987,9 @@ $B.search_in_mro = function(klass, attr){
     var mro = klass.__mro__
     for(var i = 0, len = mro.length; i < len; i++){
         if(mro[i].hasOwnProperty(attr)){
+            if(test){
+                console.log('found in mro', i, mro[i])
+            }
             return mro[i][attr]
         }else if(mro[i].__dict__){
             var v = _b_.dict.$get_string(mro[i].__dict__, attr, false)
@@ -1327,8 +1336,10 @@ $B.$getattr = function(obj, attr, _default){
         if($test){console.log("result of attr_func", res)}
     }catch(err){
         if($test){
+            console.log('attr', attr, 'of', obj)
             console.log('attr_func raised error', err.__class__, err.args, err.name)
             console.log(err)
+            console.log(Error().stack)
         }
         if(klass === $B.module){
             // try __getattr__ at module level (PEP 562)

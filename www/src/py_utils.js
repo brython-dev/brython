@@ -1472,6 +1472,13 @@ $B.$call1 = function(callable){
         }
         return callable
     }
+    /*
+    var getter = $B.$getattr($B.get_class(callable), '__get__', null)
+    if(getter !== null){
+        console.log('>>>>>>>>>>>>>> callable with getter')
+        callable = getter(callable, $B.get_class(callable))
+    }
+    */
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
@@ -1813,6 +1820,7 @@ $B.rich_comp = function(op, x, y){
         }
     }
     res = x_class_op(x, y)
+    // res = x_class_op(x, y)
     if(res !== _b_.NotImplemented){
         return res
     }
