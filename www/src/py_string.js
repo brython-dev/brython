@@ -2407,7 +2407,7 @@ str.split = function(){
                     if(maxsplit !== -1 && res.length == maxsplit + 1){
                         res.pop()
                         res.push(name + _self.substr(pos))
-                        return res
+                        return $B.$list(res.map($B.String))
                     }
                     name = ""
                 }
@@ -2439,7 +2439,7 @@ str.split = function(){
                 pos += seplen
                 if(maxsplit > -1 && res.length >= maxsplit){
                     res.push(_self.substr(pos))
-                    return res.map($B.String)
+                    return $B.$list(res.map($B.String))
                 }
                 s = ""
             }else{
