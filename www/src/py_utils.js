@@ -1800,9 +1800,7 @@ $B.rich_comp = function(op, x, y){
                 "' and '" + $B.class_name(y) + "'")
         }
     }
-
-    var x_class_op = $B.$call($B.$getattr($B.get_class(x), op)),
-        rev_op = reversed_op[op] || op,
+    var rev_op = reversed_op[op] || op,
         y_rev_func
     if(x !== null && x.__class__ && y !== null && y.__class__){
         // cf issue #600 and
@@ -1819,8 +1817,18 @@ $B.rich_comp = function(op, x, y){
             }
         }
     }
-    res = x_class_op(x, y)
-    // res = x_class_op(x, y)
+
+    var in_mro = $B.search_in_mro($B.get_class(x), op)
+    if(in_mro === undefined){
+        $B.RAISE(_b_TypeError, `no attribute ${op}`)
+    }
+    var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
+    if(getter){
+        var func = getter(in_mro, x, $B.get_class(x))
+        res = func(y)
+    }else{
+        res = in_mro(x, y)
+    }
     if(res !== _b_.NotImplemented){
         return res
     }
