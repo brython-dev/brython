@@ -1,4 +1,6 @@
-__BRYTHON__.loadBrythonPackage({"$timestamp": 1757632247016, "print_py": [".py", "def print_python_from_module(message):\n print(message)\n", []], "printJS": [".js", "printJavaScriptFromModule = function(message){\n\tconsole.log(message)\n\t}\n", []]})
+console.log("LOAD print.brython.js package")
+
+__BRYTHON__.loadBrythonPackage({"$timestamp": 1757632247016, "print_py": [".py", "print('LOAD print_py module')\ndef print_python_from_module(message):\n print(message)\n", []], "printJS": [".js", "console.log('LOAD printJS module')\n printJavaScriptFromModule = function(message){\n\tconsole.log(message)\n\t}\n", []]})
 printJS = __BRYTHON__.importModule("printJS")
 print_py = __BRYTHON__.importModule("print_py")
 

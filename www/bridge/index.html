@@ -11,17 +11,23 @@
   <body>
 
     <script type="text/python" id="otherpythonscript">
+print("LOAD otherpythonscript")
+
 def print_python_from_other_script(message):
     print(message)
     </script>
 
     <script type="text/javascript" id="otherjavascriptscript">
+console.log("LOAD otherjavascriptscript")
+
 printJavaScriptFromOtherScript = function(message){
     console.log(message)
 }
     </script>
 
     <script type="text/python" id="pythonscript">
+print("LOAD pythonscript")
+
 from browser import console, window, document
 
 def print_python_from_same_script(message):
@@ -56,6 +62,8 @@ document <= "Look at the 22 print in the JavaScript console"
     </script>
 
     <script type="text/javascript" id="javascriptscript">
+console.log("LOAD javascriptscript")
+
 printJavaScriptFromSameScript = function(message){
     console.log(message)
 }
