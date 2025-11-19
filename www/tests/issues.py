@@ -3426,6 +3426,27 @@ with patch("builtins.open", mock_open(read_data=fake_csv_data)):
             total_revenue += quantity * price
 assert total_revenue == 10*0.5 + 5*0.2 + 8*0.3
 
+# issue 2639 pickle load should raise UnpicklingError for invalid data
+import pickle
+
+invalid_data = b"this is not valid pickle data"
+try:
+    pickle.loads(invalid_data)
+    assert False, "Expected UnpicklingError to be raised"
+except pickle.UnpicklingError:
+    assert True
+
+from unittest.mock import patch, mock_open
+
+with patch("builtins.open", mock_open(read_data=invalid_data)):
+  with open("dummy_file", "rb") as f:
+    try:
+      pickle.load(f)
+      assert False, "Expected UnpicklingError to be raised"
+    except pickle.UnpicklingError:
+      assert True
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
