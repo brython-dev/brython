@@ -1824,8 +1824,7 @@ $B.rich_comp = function(op, x, y){
     }
     var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
     if(getter){
-        var func = getter(in_mro, x, $B.get_class(x))
-        res = func(y)
+        res = getter(in_mro, x, $B.get_class(x))(y)
     }else{
         res = in_mro(x, y)
     }

@@ -427,8 +427,9 @@ object.__new__ = function(cls, ...args){
 }
 
 object.__ne__ = function(self, other){
-    //return ! $B.rich_comp("__eq__", self, other)
-    if(self === other){return false}
+    if(self === other){
+        return false
+    }
     var eq = $B.$getattr(self.__class__ || $B.get_class(self),
         "__eq__", null)
     if(eq !== null){

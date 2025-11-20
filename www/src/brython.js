@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-19 23:30:20.844609"
-__BRYTHON__.timestamp=1763591420844
+__BRYTHON__.compiled_date="2025-11-20 07:41:29.543566"
+__BRYTHON__.timestamp=1763620889543
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1832,8 +1832,7 @@ if(res !==_b_.NotImplemented){return res}}}
 var in_mro=$B.search_in_mro($B.get_class(x),op)
 if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
 var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
-if(getter){var func=getter(in_mro,x,$B.get_class(x))
-res=func(y)}else{res=in_mro(x,y)}
+if(getter){res=getter(in_mro,x,$B.get_class(x))(y)}else{res=in_mro(x,y)}
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
 y_rev_func=$B.$call($B.$getattr($B.get_class(y),rev_op))
@@ -2066,8 +2065,7 @@ if(init_func===object.__init__){if(args.length > 0){$B.RAISE(_b_.TypeError,"obje
 var res=Object.create(null)
 $B.update_obj(res,{__class__ :cls,__dict__:$B.obj_dict({})})
 return res}
-object.__ne__=function(self,other){
-if(self===other){return false}
+object.__ne__=function(self,other){if(self===other){return false}
 var eq=$B.$getattr(self.__class__ ||$B.get_class(self),"__eq__",null)
 if(eq !==null){var res=$B.$call(eq)(self,other)
 if(res===_b_.NotImplemented){return res}
@@ -11178,9 +11176,7 @@ if(js_array.hasOwnProperty(attr)){return js_array[attr]}
 throw $B.attr_error(attr,_self)}
 if(js_array.hasOwnProperty(attr)){return function(){return js_array[attr](_self,...arguments)}}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
-var res=_b_.list[attr].call(null,_self,...args)
-if(attr=='sort'){console.log('res',res)}
-return res}}
+return _b_.list[attr].call(null,_self,...args)}}
 js_array.__getitem__=function(_self,i){i=$B.PyNumber_Index(i)
 return jsobj2pyobj(_self[i])}
 js_array.__iadd__=function(_self,other){if($B.$isinstance(other,js_array)){for(var item of other){_self.push(item)}}else{for(var item of $B.make_js_iterator(other)){_self.push($B.pyobj2jsobj(item))}}

@@ -1095,11 +1095,7 @@ js_array.__getattribute__ = function(_self, attr){
     }
     return function(){
         var args = pyobj2jsobj(Array.from(arguments))
-        var res = _b_.list[attr].call(null, _self, ...args)
-        if(attr == 'sort'){
-            console.log('res', res)
-        }
-        return res
+        return _b_.list[attr].call(null, _self, ...args)
     }
 }
 
