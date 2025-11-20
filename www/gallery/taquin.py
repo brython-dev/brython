@@ -1,0 +1,272 @@
+from browser import window, document, alert, html
+import random
+
+container = document['container'] # Game board
+zone = document['zone'] # Zone where cells move
+
+def trace(*args):
+    msg = ''
+    for arg in args:
+        msg += str(arg) + ' '
+    alert(msg)
+
+# Window dimensions
+width = window.innerWidth
+height = window.innerHeight
+dim = min(width, height)
+
+d = int(0.03 * dim) # Distance of board to top and left of browser window
+padding = int(dim / 25) # Board padding
+
+# Adapt container and zone dimensions to browser window dimensions
+container.top = container.left = d
+
+zwidth = dim - 2 * d - 2 * padding
+container.style.width = container.style.height = f'{zwidth}px'
+container.style.padding = f'{padding}px'
+
+side = int(zwidth / 4)
+zone.style.width = zone.style.height = f'{4 * side}px'
+
+zone.style.fontSize = f'{int(side / 2)}px'
+
+# Get position of zone upper left corner relative to window
+ztop, zleft = zone.offsetLeft, zone.offsetTop
+elt = zone.offsetParent
+while elt:
+    zleft += elt.offsetLeft
+    ztop += elt.offsetTop
+    elt = elt.offsetParent
+
+# Global variables
+X0 = Y0 = None # Initial mouse or finger position
+allow = None   # Possible move direction : 'right', 'left', 'up' or 'down'
+moving = []    # List of moving cells : between clicked cell and empty cell
+coords = []    # Initial position of moving cells
+rect = None    # Current clicked cell
+
+def click_cell(ev):
+    """Handler for mouse click or finger touch"""
+    global X0, Y0, moving, allow, rect
+
+    if ev.type == 'touchstart':
+        if len(ev.targetTouches)>1:
+            return
+
+    # New mouse / finger position
+    if ev.type == 'mousedown':
+        X, Y = ev.x, ev.y
+    else:
+        touch = ev.targetTouches[0]
+        X, Y = touch.pageX, touch.pageY
+
+    row = int((Y - ztop)/side)
+    col = int((X - zleft)/side)
+    rect = grid[row][col]
+
+    #trace(row, col, rect)
+
+    if rect is None:
+        return
+
+    # Cell can be moved if in same row or column as the empty cell
+    if row == erow or col == ecol:
+        if row == erow:
+            if col < ecol:
+                allow = 'right'
+                moving = [grid[row][i] for i in range(col, ecol)]
+            else:
+                allow = 'left'
+                moving = [grid[row][i] for i in range(ecol + 1, col + 1)]
+        else:
+            if row < erow:
+                allow = 'down'
+                moving = [grid[i][col] for i in range(row, erow)]
+            else:
+                allow = 'up'
+                moving = [grid[i][col] for i in range(erow + 1, row + 1)]
+
+        # Store initial position of moving cells
+        del coords[:]
+        for i, cell in enumerate(moving):
+            coords.append([cell.left, cell.top])
+
+        # Store initial mouse position
+        if ev.type == 'mousedown':
+            X0 = ev.x
+            Y0 = ev.y
+        elif ev.type == 'touchstart':
+            X0 = ev.targetTouches[0].pageX
+            Y0 = ev.targetTouches[0].pageY
+
+def check_done():
+    """Test if puzzle is solved"""
+    for cell in cells:
+        if cell.row != cell.srow or cell.col != cell.scol:
+            return
+
+    zone.unbind()
+
+    alert('Bravo !')
+
+    # Start a new game
+    init()
+
+def release_cell(ev):
+    """Handler for mouse or finger release"""
+    global erow, ecol, rect
+
+    target = rect
+    if target is None:
+        return
+
+    # Row and column of cell when move stops
+    row = round(target.top / side)
+    col = round(target.left / side)
+
+    # Detect if cell has moved to a different row / column
+    has_moved = [row, col] != [target.row, target.col]
+
+    if has_moved:
+        # Previous position of target becomes the empty cell
+        erow, ecol = target.row, target.col
+        grid[erow][ecol] = None
+
+        # Delta row and column
+        drow, dcol = row - target.row, col - target.col
+
+        # Change attributes row and col of all moving cells
+        for cell in moving:
+            cell.row += drow
+            cell.col += dcol
+            grid[cell.row][cell.col] = cell
+
+    # Reset position of moving cells
+    for cell in moving:
+        cell.left = cell.col * side
+        cell.top = cell.row * side
+
+    # Check if puzzle is solved
+    if has_moved:
+        check_done()
+
+    rect = None
+
+def move_cell(ev):
+    """Handler for mouse or finger move"""
+    ev.preventDefault()
+    ev.stopPropagation()
+
+    if rect is None:
+        return
+
+    # New mouse / finger position
+    if ev.type == 'mousemove':
+        X, Y = ev.x, ev.y
+    else:
+        touch = ev.targetTouches[0]
+        X, Y = touch.pageX, touch.pageY
+
+    # Maximum move is the size of a cell
+    if abs(Y - Y0) >= side or abs(X - X0) >= side:
+        return release_cell(ev)
+
+    # Move vertically if allowed
+    if (allow == 'up' and Y < Y0) or (allow == 'down' and Y > Y0):
+        for i, (cell, (x0, y0)) in enumerate(zip(moving,coords)):
+            cell.top = round(y0 + Y - Y0)
+
+    # Else move horizontally
+    elif (allow == 'right' and X > X0) or (allow == 'left' and X < X0):
+        for i, (cell, (x0, y0)) in enumerate(zip(moving, coords)):
+            cell.left = round(x0 + X - X0)
+
+grid = []               # grid[row][cell] is the cell at specified row and column
+cells = []              # list of cells
+erow, ecol = None, None # row and column of the empty cell
+
+def init(*args):
+    """Create a new game"""
+
+    global erow, ecol
+
+    # Remove existing cells if it is not the first game
+    for cell in cells:
+        cell.parent.removeChild(cell)
+
+    del cells[:]
+    del grid[:]
+
+    ranks = list(range(15)) + [None]
+
+    erow, ecol = 3, 3
+
+    # Simulate permutations to make sure we have a valid game
+    for i in range(300):
+        movable = []
+        for row, col in [(erow - 1, ecol), (erow + 1, ecol),
+            (erow, ecol - 1), (erow, ecol + 1)]:
+                if row in range(4) and col in range(4):
+                    movable.append((row, col))
+        row, col = random.choice(movable)
+        ranks[4 * erow + ecol] = ranks[4 * row + col]
+        ranks[4 * row + col] = None
+        erow, ecol = row, col
+
+    # Create cells at positions determined by ranks
+    for row in range(4):
+        cell_row = []
+        for col in range(4):
+            num = ranks[4 * row + col]
+            if num is not None:
+                # Create DIV element
+                rect = html.DIV(num + 1,
+                    style=dict(
+                        top=side * row,
+                        left=side * col,
+                        width=f'{side - 1}px',
+                        height=f'{side - 1}px',
+                        fontSize=f'{int(side / 2)}spx',
+                        lineHeight=f'{int(0.8 * side)}px'
+                    ),
+                    Class="square"
+                )
+                # Coordinates of cell when puzzle is solved
+                rect.srow, rect.scol = divmod(num, 4)
+
+                # Draw cell
+                zone <= rect
+                cell_row.append(rect)
+                cells.append(rect)
+
+                # Current cell row and column
+                rect.row = row
+                rect.col = col
+
+            else:
+
+                # row and column of the empty cell
+                erow = row
+                ecol = col
+                cell_row.append(None)
+
+        grid.append(cell_row)
+
+        zone.bind('mousedown', click_cell)
+        zone.bind('mousemove', move_cell)
+        zone.bind('mouseup', release_cell)
+
+        zone.bind('touchstart', click_cell)
+        zone.bind('touchmove', move_cell)
+        zone.bind('touchend', release_cell)
+
+def no_sel(ev):
+    ev.preventDefault()
+    ev.stopPropagation()
+
+# avoid default behaviour to select text when dragging mouse
+document.bind('mousedown', no_sel)
+document.bind('mousemove', no_sel)
+document.bind('touchmove', no_sel)
+
+init()
