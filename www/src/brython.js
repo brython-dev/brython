@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-20 11:22:35.094908"
-__BRYTHON__.timestamp=1763634155094
+__BRYTHON__.compiled_date="2025-11-20 14:34:49.183779"
+__BRYTHON__.timestamp=1763645689183
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -15902,11 +15902,11 @@ $B._PyPegen.augoperator=function(p,kind){return{kind}}
 $B._PyPegen.function_def_decorators=function(p,decorators,function_def){var constr=function_def instanceof $B.ast.AsyncFunctionDef ?
 $B.ast.AsyncFunctionDef :$B.ast.FunctionDef
 var ast_obj=new constr(
-function_def.name,function_def.args,function_def.body,decorators,function_def.returns,function_def.type_comment,function_def.type_params)
+function_def.name,function_def.args,function_def.body,decorators,function_def.returns,function_def.type_comment,function_def.type_params,p.arena)
 for(var position of positions){ast_obj[position]=function_def[position]}
 return ast_obj}
 $B._PyPegen.class_def_decorators=function(p,decorators,class_def){var ast_obj=$B._PyAST.ClassDef(
-class_def.name,class_def.bases,class_def.keywords,class_def.body,decorators,class_def.type_params)
+class_def.name,class_def.bases,class_def.keywords,class_def.body,decorators,class_def.type_params,p.arena)
 set_position_from_obj(ast_obj,class_def)
 return ast_obj}
 $B._PyPegen.keyword_or_starred=function(p,element,is_keyword){return{

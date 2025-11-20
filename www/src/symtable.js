@@ -271,7 +271,7 @@ function error_at_directive(exc, ste, name){
             return 0
         }
     }
-    $B.RAISE(_b_.RuntimeError, 
+    $B.RAISE(_b_.RuntimeError,
         "BUG: internal directive bookkeeping broken")
 }
 

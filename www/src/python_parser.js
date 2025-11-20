@@ -152,7 +152,7 @@ var helper_functions = {
     PyErr_Occurred: function(){
         return false
     },
-    
+
     RAISE_ERROR_KNOWN_LOCATION: function(p, errtype,
                                lineno, col_offset,
                                end_lineno, end_col_offset,
