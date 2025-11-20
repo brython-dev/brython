@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-20 17:16:20.649375"
-__BRYTHON__.timestamp=1763655380649
+__BRYTHON__.compiled_date="2025-11-20 21:53:57.674004"
+__BRYTHON__.timestamp=1763672037673
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1895,22 +1895,18 @@ if(op=='__mul__'){if(x_class.$is_sequence && $B.$isinstance(y,[_b_.float,_b_.com
 if(y_class.$is_sequence && $B.$isinstance(x,[_b_.float,_b_.complex])){$B.RAISE(_b_.TypeError,"can't multiply sequence by "+
 `non-int of type '${$B.class_name(x)}'`)}}
 var res
-try{
-var attr=$B.$getattr(x,op)
-method=$B.$getattr(x_class,op)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
-var rmethod=$B.$getattr(y_class,rop,null)
-if(rmethod !==null){res=$B.$call(rmethod)(y,x)
-if(res !==_b_.NotImplemented){return res}}
+var fail
+try{res=$B.call_with_mro(x,op,y)
+if(res===_b_.NotImplemented){fail=true}}catch(err){if(! $B.is_exc(err,[_b_.AttributeError])){throw err}
+fail=true}
+if(! fail){return res}
+fail=false
+try{res=$B.call_with_mro(y,rop,x)
+if(res===_b_.NotImplemented){fail=true}}catch(err){if(! $B.is_exc(err,[_b_.AttributeError])){throw err}
+fail=true}
+if(! fail){return res}
 $B.RAISE(_b_.TypeError,`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-res=method(x,y)
-if(res===_b_.NotImplemented){try{method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
-$B.RAISE(_b_.TypeError,`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
-` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-res=method(y,x)
-if(res===_b_.NotImplemented){$B.RAISE(_b_.TypeError,`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
-` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-return res}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
 var repr_stack=new Set()
 $B.repr={enter:function(obj){var obj_id=_b_.id(obj)
@@ -4152,6 +4148,13 @@ for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){if(test)
 return mro[i][attr]}else if(mro[i].__dict__){var v=_b_.dict.$get_string(mro[i].__dict__,attr,false)
 if(v !==false){if(test){console.log('found in dict of mro',i,v)}
 return v}}}}
+$B.call_with_mro=function(obj,attr){var args=Array.from(arguments).slice(2)
+var obj_class=$B.get_class(obj)
+var in_mro=$B.search_in_mro(obj_class,attr)
+if(in_mro===undefined){$B.RAISE(_b_.AttributeError,`no attribute ${attr}`)}
+var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){return getter(in_mro,obj,obj_class).call(null,...args)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
+if(call_in_mro){return call_in_mro(in_mro,...args)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{return in_mro(obj,...args)}}}
 $B.$getattr=function(obj,attr,_default){
 var res
 if(obj===undefined ||obj===null){$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+

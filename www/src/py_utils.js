@@ -1992,54 +1992,39 @@ $B.rich_op1 = function(op, x, y){
         }
     }
     var res
+    var fail
     try{
-        // Test if object has attribute op. If so, it is not used in the
-        // operation, but the attribute op of its class, if is exits
-        // This prevents a + b to succeed if the instance a has __add__
-        // but its class has no __add__
-        // It also prevents a | b to succeed if getattr(a, op) fails
-        // although getattr(type(a), op) succeeds, which is the case for
-        // [1] | 'a' : getattr(list, '__or__') succeeds because type.__or__ is
-        // defined, but hasattr([1], '__or__') is False
-        var attr = $B.$getattr(x, op)
-        method = $B.$getattr(x_class, op)
+        res = $B.call_with_mro(x, op, y)
+        if(res === _b_.NotImplemented){
+            fail = true
+        }
     }catch(err){
-        if(err.__class__ !== _b_.AttributeError){
+        if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
         }
-        var rmethod = $B.$getattr(y_class, rop, null)
-        if(rmethod !== null){
-            res = $B.$call(rmethod)(y, x)
-            if(res !== _b_.NotImplemented){
-                return res
-            }
-        }
-        $B.RAISE(_b_.TypeError,
-            `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
-            ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
+        fail = true
     }
-    res = method(x, y)
-    if(res === _b_.NotImplemented){
-        try{
-            method = $B.$getattr(y_class, rop)
-        }catch(err){
-            if(err.__class__ !== _b_.AttributeError){
-                throw err
-            }
-            $B.RAISE(_b_.TypeError,
-                `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
-                ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
-        }
-        res = method(y, x)
+    if(! fail){
+        return res
+    }
+    fail = false
+    try{
+        res = $B.call_with_mro(y, rop, x)
         if(res === _b_.NotImplemented){
-            $B.RAISE(_b_.TypeError,
-                `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
-                ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
+            fail = true
         }
-        return res
-    }else{
+    }catch(err){
+        if(! $B.is_exc(err, [_b_.AttributeError])){
+            throw err
+        }
+        fail = true
+    }
+    if(! fail){
         return res
     }
+    $B.RAISE(_b_.TypeError,
+        `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
+        ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
 }
 
 $B.is_none = function(o){

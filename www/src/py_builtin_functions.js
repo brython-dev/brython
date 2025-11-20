@@ -1003,6 +1003,30 @@ $B.search_in_mro = function(klass, attr){
     }
 }
 
+$B.call_with_mro = function(obj, attr){
+    var args = Array.from(arguments).slice(2)
+    var obj_class = $B.get_class(obj)
+    var in_mro = $B.search_in_mro(obj_class, attr)
+    if(in_mro === undefined){
+        $B.RAISE(_b_.AttributeError, `no attribute ${attr}`)
+    }
+    var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
+    if(getter){
+        return getter(in_mro, obj, obj_class).call(null, ...args)
+    }else{
+        if(typeof in_mro !== 'function'){
+            var call_in_mro = $B.search_in_mro($B.get_class(in_mro), '__call__')
+            if(call_in_mro){
+                return call_in_mro(in_mro, ...args)
+            }else{
+                $B.RAISE(_b_.TypeError, `not callable {op}`)
+            }
+        }else{
+            return in_mro(obj, ...args)
+        }
+    }
+}
+
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var res
