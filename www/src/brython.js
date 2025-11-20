@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-20 21:53:57.674004"
-__BRYTHON__.timestamp=1763672037673
+__BRYTHON__.compiled_date="2025-11-20 22:36:58.232286"
+__BRYTHON__.timestamp=1763674618231
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1616,8 +1616,9 @@ $B.delete_for_reassign=function(name,namespace){
 if(namespace.$is_namespace){return $B.$delitem(namespace,name)}
 if(namespace.hasOwnProperty && namespace.hasOwnProperty(name)){try{var value=namespace[name]}catch(err){
 return}
-var del_method=$B.search_in_mro($B.get_class(value),'__del__')
-if(del_method){$B.$call(del_method)(value)}}
+var klass=$B.get_class(value)
+if($B.$isinstance(value,$B.DOMNode)){}else{var del_method=$B.search_in_mro(klass,'__del__')
+if(del_method){$B.$call(del_method)(value)}}}
 delete namespace[name]}
 function num_result_type(x,y){var is_int,is_float,x_num,y_num
 if(typeof x=="number"){x_num=x
