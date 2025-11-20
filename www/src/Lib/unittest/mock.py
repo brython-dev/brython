@@ -1160,7 +1160,6 @@ class CallableMixin(Base):
         )
 
         self.side_effect = side_effect
-        print('unittest.mock 1163, CallableMixin', id(self), spec)
 
 
     def _mock_check_sig(self, /, *args, **kwargs):
@@ -1171,7 +1170,6 @@ class CallableMixin(Base):
     def __call__(self, /, *args, **kwargs):
         # can't use self in-case a function / method we are mocking uses self
         # in the signature
-        print('unittest.mock 1173 __call__', id(self), args)
         self._mock_check_sig(*args, **kwargs)
         self._increment_mock_call(*args, **kwargs)
         return self._mock_call(*args, **kwargs)
@@ -1239,7 +1237,6 @@ class CallableMixin(Base):
                 if _is_exception(result):
                     raise result
             else:
-                print('unittest.mock 1240, side effect', effect)
                 result = effect(*args, **kwargs)
 
             if result is not DEFAULT:
@@ -1481,7 +1478,6 @@ class _patch(object):
 
     def __enter__(self):
         """Perform the patch."""
-        print('unittest.mock 1483, enter __enter__')
         if self.is_started:
             raise RuntimeError("Patch is already started")
 
@@ -2256,8 +2252,6 @@ class MagicProxy(Base):
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
-        if name == '__eq__':
-            print('unittest.mock 2259, MagicProxy', name)
 
     def create_mock(self):
         entry = self.name
@@ -2269,7 +2263,6 @@ class MagicProxy(Base):
         return m
 
     def __get__(self, obj, _type=None):
-        print('unittest.mock 2272, __get__')
         return self.create_mock()
 
 
@@ -3022,7 +3015,6 @@ def mock_open(mock=None, read_data=''):
     if open_spec is None:
         import _io
         open_spec = list(set(dir(_io.open)))
-    print('unittest.mock, mock_open 3020')
     if mock is None:
         mock = MagicMock(name='open', spec=open_spec)
 
@@ -3043,13 +3035,11 @@ def mock_open(mock=None, read_data=''):
     handle.__exit__.side_effect = _exit_side_effect
 
     def reset_data(*args, **kwargs):
-        print('unittest.mock 3025 reset_data', args, kwargs)
         _state[0] = _to_stream(read_data)
         if handle.readline.side_effect == _state[1]:
             # Only reset the side effect if the user hasn't overridden it.
             _state[1] = _readline_side_effect()
             handle.readline.side_effect = _state[1]
-        print('unittest.mock 3051 end reset_data')
         return DEFAULT
 
     mock.side_effect = reset_data
