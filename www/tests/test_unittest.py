@@ -49,3 +49,16 @@ def test_mock_open(mock_file):
     assert content == "mocked file content"
 
 test_mock_open()
+
+# issue 2613
+m = mock_open()
+with patch('builtins.open', m):
+  with open("test.txt", "w") as f:
+    f.writelines(["line1"])
+
+m.assert_called_once_with("test.txt", "w")
+m().writelines.assert_called_once_with(["line1"])
+
+# issue 2633
+with patch("datetime.datetime") as mock_dt:
+    print(mock_dt.now())

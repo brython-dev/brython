@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-20 07:41:29.543566"
-__BRYTHON__.timestamp=1763620889543
+__BRYTHON__.compiled_date="2025-11-20 10:56:18.788898"
+__BRYTHON__.timestamp=1763632578788
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1832,7 +1832,8 @@ if(res !==_b_.NotImplemented){return res}}}
 var in_mro=$B.search_in_mro($B.get_class(x),op)
 if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
 var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
-if(getter){res=getter(in_mro,x,$B.get_class(x))(y)}else{res=in_mro(x,y)}
+if(getter){res=getter(in_mro,x,$B.get_class(x))(y)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
+if(call_in_mro){res=call_in_mro(in_mro,y)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{res=in_mro(x,y)}}
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
 y_rev_func=$B.$call($B.$getattr($B.get_class(y),rev_op))
@@ -3680,7 +3681,7 @@ var $=$B.args("getattr",3,{obj:null,attr:null,_default:null},["obj","attr","_def
 if(! $B.$isinstance($.attr,_b_.str)){$B.RAISE(_b_.TypeError,"attribute name must be string, "+
 `not '${$B.class_name($.attr)}'`)}
 return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
-$B.search_in_mro=function(klass,attr){var test=attr=='__eq__' && klass.__qualname__=='MagicMock'
+$B.search_in_mro=function(klass,attr){var test=false 
 if(test){console.log('search',attr,'in mro of',klass)}
 if(klass.hasOwnProperty(attr)){if(test){console.log('found in klass',klass[attr])}
 return klass[attr]}else if(klass.__dict__){var v=_b_.dict.$get_string(klass.__dict__,attr,false)
@@ -8301,7 +8302,7 @@ default:
 return "0".repeat(width-len)+_self}}
 str.$factory=function(arg,encoding){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
-var test=arg.__class__ && arg.__class__.__name__=='MagicMock'
+var test=false 
 if(test){console.log('call str of',arg)}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors
@@ -8322,7 +8323,11 @@ console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
 throw err}
 var getter=$B.search_in_mro($B.get_class(method),'__get__')
-if(getter){var res=$B.$call(getter)(method,arg,klass)()}else{var res=$B.$call(method)(arg)}
+var res
+if(getter){if(typeof getter=='function'){if(arg.$is_class){method=getter(method,_b_.None,klass)
+res=$B.$call(method)(arg)}else{method=getter(method,arg,klass)
+res=$B.$call(method)()}}else{var call_in_mro=$B.search_in_mro($B.get_class(getter,'__call__'))
+if(call_in_mro){res=call_in_mro(getter,arg)}else{$B.RAISE(_b_.TypeError,'__str__ or __repr__ is not callable')}}}else{res=$B.$call(method)(arg)}
 if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}

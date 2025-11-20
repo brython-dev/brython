@@ -1826,7 +1826,16 @@ $B.rich_comp = function(op, x, y){
     if(getter){
         res = getter(in_mro, x, $B.get_class(x))(y)
     }else{
-        res = in_mro(x, y)
+        if(typeof in_mro !== 'function'){
+            var call_in_mro = $B.search_in_mro($B.get_class(in_mro), '__call__')
+            if(call_in_mro){
+                res = call_in_mro(in_mro, y)
+            }else{
+                $B.RAISE(_b_.TypeError, `not callable {op}`)
+            }
+        }else{
+            res = in_mro(x, y)
+        }
     }
     if(res !== _b_.NotImplemented){
         return res

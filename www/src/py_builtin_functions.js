@@ -966,7 +966,7 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr){
-    var test = attr == '__eq__' && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == '__eq__' && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
     }

@@ -2628,7 +2628,7 @@ str.$factory = function(arg, encoding){
     }else if(arg === null){
         return '<Javascript null>'
     }
-    var test = arg.__class__ && arg.__class__.__name__ == 'MagicMock'
+    var test = false // arg.__class__ && arg.__class__.__name__ == 'MagicMock'
     if(test){
         console.log('call str of', arg)
     }
@@ -2686,10 +2686,26 @@ str.$factory = function(arg, encoding){
         throw err
     }
     var getter = $B.search_in_mro($B.get_class(method), '__get__')
+    var res
     if(getter){
-        var res = $B.$call(getter)(method, arg, klass)()
+        if(typeof getter == 'function'){
+            if(arg.$is_class){
+                method = getter(method, _b_.None, klass)
+                res = $B.$call(method)(arg)
+            }else{
+                method = getter(method, arg, klass)
+                res = $B.$call(method)()
+            }
+        }else{
+            var call_in_mro = $B.search_in_mro($B.get_class(getter, '__call__'))
+            if(call_in_mro){
+                res = call_in_mro(getter, arg)
+            }else{
+                $B.RAISE(_b_.TypeError, '__str__ or __repr__ is not callable')
+            }
+        }
     }else{
-        var res = $B.$call(method)(arg)
+        res = $B.$call(method)(arg)
     }
     if(typeof res == "string" || $B.$isinstance(res, str)){
         return res
