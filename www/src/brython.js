@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-20 22:36:58.232286"
-__BRYTHON__.timestamp=1763674618231
+__BRYTHON__.compiled_date="2025-11-24 14:40:41.190329"
+__BRYTHON__.timestamp=1763991641190
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1833,7 +1833,7 @@ if(res !==_b_.NotImplemented){return res}}}
 var in_mro=$B.search_in_mro($B.get_class(x),op)
 if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
 var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
-if(getter){res=getter(in_mro,x,$B.get_class(x))(y)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
+if(getter){res=$B.$call(getter(in_mro,x,$B.get_class(x)))(y)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
 if(call_in_mro){res=call_in_mro(in_mro,y)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{res=in_mro(x,y)}}
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
@@ -4154,7 +4154,7 @@ var obj_class=$B.get_class(obj)
 var in_mro=$B.search_in_mro(obj_class,attr)
 if(in_mro===undefined){$B.RAISE(_b_.AttributeError,`no attribute ${attr}`)}
 var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
-if(getter){return getter(in_mro,obj,obj_class).call(null,...args)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
+if(getter){return $B.$call(getter(in_mro,obj,obj_class))(...args)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
 if(call_in_mro){return call_in_mro(in_mro,...args)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{return in_mro(obj,...args)}}}
 $B.$getattr=function(obj,attr,_default){
 var res
@@ -4411,11 +4411,24 @@ if($B.rich_comp("__eq__",res,self.sentinel)){$B.RAISE(_b_.StopIteration,)}
 return res}
 $B.set_func_names(callable_iterator,"builtins")
 $B.$iter=function(obj,sentinel){
+var test=false 
+if(test){console.log('iter',obj)}
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
+var in_mro=$B.search_in_mro(klass,'__iter__')
+var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){in_mro=getter(in_mro,obj,klass)}
+var in_mro_klass=$B.get_class(in_mro)
+var call=$B.search_in_mro(in_mro_klass,'__call__')
+if(call){var iterator=call(in_mro_klass,in_mro)
+return iterator}
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},len
 return iterator_class.$factory(gi)}catch(err){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 "' object is not iterable")}}
 throw err}
+var in_mro=$B.search_in_mro(klass,'__iter__')
+if(in_mro){var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){var descr_get=getter(in_mro)
+if(getter && klass.__qualname__.startsWith('Magic')){console.log('descr get',descr_get)}}}
 var res=$B.$call(_iter)(obj)
 try{$B.$getattr(res,'__next__')}catch(err){if($B.$isinstance(err,_b_.AttributeError)){$B.RAISE(_b_.TypeError,"iter() returned non-iterator of type '"+
 $B.class_name(res)+"'")}}
@@ -6930,8 +6943,7 @@ $B.imported[name]=modobj
 if(modobj===undefined){$B.RAISE(_b_.ImportError,'imported not set by module')}
 modobj.__class__=Module
 modobj.__name__=name
-for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){if(modobj[attr]===_b_.iter){console.log('set iter',modobj,name)}
-modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr}
+for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr,__code__:{co_filename:modobj.__file__,co_code:modobj[attr]+'',co_flags:$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS}}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=name}}}
 function run_js(module_contents,path,_module){var keys_before=new Set(Object.keys(globalThis))
@@ -8896,15 +8908,11 @@ return false
 default:
 if(obj.$is_class){return true}
 var klass=$B.get_class(obj),missing={},bool_method=$B.search_in_mro(klass,'__bool__')
-var test=false 
-if(test){console.log('bool(obj)',obj,'bool_class',bool_class,'klass',klass,'apply bool method',bool_method)
-console.log('$B.$call(bool_method)',bool_method+'')}
 if(bool_method===undefined){var len_method=$B.$getattr(klass,'__len__',missing)
 if(len_method===missing){return true}
-return _b_.len(obj)> 0}else{var res=$B.$call(bool_method)(obj)
+return _b_.len(obj)> 0}else{var res=$B.call_with_mro(obj,'__bool__')
 if(res !==true && res !==false){$B.RAISE(_b_.TypeError,"__bool__ should return "+
 "bool, returned "+$B.class_name(res))}
-if(test){console.log('bool method returns',res)}
 return res}}}
 var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],__qualname__:'bool',$is_class:true,$not_basetype:true,
 $is_number:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
