@@ -1830,7 +1830,7 @@ $B.rich_comp = function(op, x, y){
     }
     var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
     if(getter){
-        res = getter(in_mro, x, $B.get_class(x))(y)
+        res = $B.$call(getter(in_mro, x, $B.get_class(x)))(y)
     }else{
         if(typeof in_mro !== 'function'){
             var call_in_mro = $B.search_in_mro($B.get_class(in_mro), '__call__')
