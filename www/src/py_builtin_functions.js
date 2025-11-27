@@ -1821,15 +1821,21 @@ $B.$iter = function(obj, sentinel){
     if(sentinel === undefined){
         var klass = obj.__class__ || $B.get_class(obj)
         var in_mro = $B.search_in_mro(klass, '__iter__')
-        var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
-        if(getter){
-            in_mro = getter(in_mro, obj, klass)
-        }
-        var in_mro_klass = $B.get_class(in_mro)
-        var call = $B.search_in_mro(in_mro_klass, '__call__')
-        if(call){
-              var iterator = call(in_mro_klass, in_mro)
-              return iterator
+        if(in_mro){
+            var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
+            if(getter){
+                if(obj.$is_class){
+                    in_mro = getter(in_mro, _b_.None, klass)
+                }else{
+                    in_mro = getter(in_mro, obj, klass)
+                }
+            }
+            var in_mro_klass = $B.get_class(in_mro)
+            var call = $B.search_in_mro(in_mro_klass, '__call__')
+            if(call){
+                var iterator = call(in_mro_klass, in_mro)
+                return iterator
+            }
         }
         try{
             var _iter = $B.$call($B.$getattr(klass, '__iter__'))
@@ -1846,16 +1852,6 @@ $B.$iter = function(obj, sentinel){
                 }
             }
             throw err
-        }
-        var in_mro = $B.search_in_mro(klass, '__iter__')
-        if(in_mro){
-            var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
-            if(getter){
-                var descr_get = getter(in_mro)
-                if(getter && klass.__qualname__.startsWith('Magic')){
-                    console.log('descr get', descr_get)
-                }
-            }
         }
         var res = $B.$call(_iter)(obj)
         try{
