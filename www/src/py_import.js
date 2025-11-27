@@ -767,11 +767,11 @@ PathEntryFinder.find_spec = function(self, fullname){
         py_ext = $B.get_option('python_extension') // defaults to .py (issue #1748)
     var tryall = hint === undefined
     if(tryall || hint == 'py'){
-        // either py or undefined , try py code
+        // either py or undefined , try py or js code
         modpaths = modpaths.concat([[base_path + py_ext, "py", false],
-            [base_path + "/__init__" + py_ext, "py", true]])
+            [base_path + "/__init__" + py_ext, "py", true],
+            [base_path + '.js', 'js', false]])
     }
-
     for(var j = 0; notfound && j < modpaths.length; ++j){
         try{
             var file_info = modpaths[j],

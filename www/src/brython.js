@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-24 14:40:41.190329"
-__BRYTHON__.timestamp=1763991641190
+__BRYTHON__.compiled_date="2025-11-27 16:13:31.302750"
+__BRYTHON__.timestamp=1764256411302
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2397,7 +2397,8 @@ var getattr=meta.__getattr__
 if(getattr===undefined){for(let i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
 break}}}
 if(getattr !==undefined){return getattr(klass,attr)}}}
-if(res !==undefined){if($test){console.log("res",res,'class',$B.get_class(res))}
+if(res !==undefined){if($test){console.log("res",res,'class',$B.get_class(res))
+console.log('is $B.in_mro ?',res===$B.in_mro)}
 if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
 if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
 if(res.$infos.__self__){
@@ -4415,20 +4416,16 @@ var test=false
 if(test){console.log('iter',obj)}
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
 var in_mro=$B.search_in_mro(klass,'__iter__')
-var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
-if(getter){in_mro=getter(in_mro,obj,klass)}
+if(in_mro){var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){if(obj.$is_class){in_mro=getter(in_mro,_b_.None,klass)}else{in_mro=getter(in_mro,obj,klass)}}
 var in_mro_klass=$B.get_class(in_mro)
 var call=$B.search_in_mro(in_mro_klass,'__call__')
 if(call){var iterator=call(in_mro_klass,in_mro)
-return iterator}
+return iterator}}
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},len
 return iterator_class.$factory(gi)}catch(err){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 "' object is not iterable")}}
 throw err}
-var in_mro=$B.search_in_mro(klass,'__iter__')
-if(in_mro){var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
-if(getter){var descr_get=getter(in_mro)
-if(getter && klass.__qualname__.startsWith('Magic')){console.log('descr get',descr_get)}}}
 var res=$B.$call(_iter)(obj)
 try{$B.$getattr(res,'__next__')}catch(err){if($B.$isinstance(err,_b_.AttributeError)){$B.RAISE(_b_.TypeError,"iter() returned non-iterator of type '"+
 $B.class_name(res)+"'")}}
@@ -7153,7 +7150,7 @@ PathEntryFinder.find_spec=function(self,fullname){
 var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[],py_ext=$B.get_option('python_extension')
 var tryall=hint===undefined
 if(tryall ||hint=='py'){
-modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true]])}
+modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true],[base_path+'.js','js',false]])}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package:false}
 loader_data.code=$download_module(module,file_info[0],undefined)
 notfound=false
