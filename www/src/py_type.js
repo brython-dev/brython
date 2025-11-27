@@ -630,7 +630,7 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = false // attr == "__str__" // && klass.__name__ == 'Pattern'
+    var $test = false // attr == "__iter__" && klass.__name__ == 'MagicMock'
 
     if($test){
         console.log("attr", attr, "of", klass, 'res', res) //, '\n  ', res, res + "")
@@ -753,7 +753,10 @@ type.__getattribute__ = function(klass, attr){
     }
 
     if(res !== undefined){
-        if($test){console.log("res", res, 'class', $B.get_class(res))}
+        if($test){
+            console.log("res", res, 'class', $B.get_class(res))
+            console.log('is $B.in_mro ?', res === $B.in_mro)
+        }
         // If the attribute is a property, return it
         if(res.__class__ === _b_.property){
             return res
@@ -780,12 +783,6 @@ type.__getattribute__ = function(klass, attr){
                 result = res.__get__(klass)
             }
             return result
-        /*}else if(res.__class__ && res.__class__.__get__){
-            // issue #1391
-            if(!(attr.startsWith("__") && attr.endsWith("__"))){
-                return res.__class__.__get__(res, _b_.None, klass)
-            }
-            */
         }else if(res.__class__){
             var getter = $B.search_in_mro(res.__class__, '__get__')
             if(getter){
