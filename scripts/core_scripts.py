@@ -15,6 +15,7 @@ core_scripts = [
     'py_object',
     'py_type',
     'py_functions',
+    'py_io',
     'py_builtin_functions',
     'py_sort',
     'py_exceptions',

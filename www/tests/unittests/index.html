@@ -298,16 +298,52 @@ document['version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 </script>
 
 <script type="text/python">
+import sys
+import os
+
 from browser import worker
 from browser import document, alert, bind, window, html, console
+from browser.widgets.dialog import Dialog
+
 import javascript
 
 table = document["result_table"]
 limit = document["duration"]
 
+test_dir = os.path.join(os.environ['PYTHONPATH'], "Lib", "test")
+
 def ready(w):
     global worker
     worker = w
+
+def show_method(ev):
+    sel = document['test']
+    module = sel.options[sel.selectedIndex].value
+    path = os.path.join(test_dir, f'{module}.py')
+    with open(path, encoding='utf-8') as f:
+        lines = f.readlines()
+    lineno = int(ev.target.text)
+    start = lineno - 1
+    method_line = lines[start]
+    indent = len(method_line) - len(method_line.lstrip())
+    end = lineno
+    while end < len(lines):
+        line = lines[end]
+        end += 1
+        if not line.strip():
+            continue
+        if len(line) - len(line.lstrip()) <= indent:
+            break
+    method_lines = lines[start:end - 1]
+    while not method_lines[-1].strip():
+        method_lines.pop()
+        end -= 1
+    d = Dialog(method_line, top=ev.y, left=ev.x)
+    d.attach(table := html.TABLE())
+    table.attach(tr := html.TR())
+    tr <= html.TD() <= html.PRE('\n'.join(map(str, range(start + 1, end))))
+    tr <= html.TD() <= html.PRE(''.join(method_lines))
+
 
 def message(ev):
     if ev.data == 'ready':
@@ -326,9 +362,11 @@ def message(ev):
         test_class, method, lineno, duration, result, *comment = ev.data
         if result == 'ok' and duration < float(limit.value) * 1000:
             return
+        link = html.A(lineno, href='#')
+        link.bind('click', show_method)
         row = html.TR(
             html.TD(f'{test_class}.{method}') +
-            html.TD(lineno, Class="number") +
+            html.TD(link, Class="number") +
             html.TD(duration, Class="number") +
             html.TD(result) +
             html.TD(comment if comment else ''),
@@ -467,6 +505,7 @@ Brython version: <span id="version"></span>
 <script type="text/javascript" src="/src/py_object.js"></script>
 <script type="text/javascript" src="/src/py_type.js"></script>
 <script type="text/javascript" src="/src/py_functions.js"></script>
+<script type="text/javascript" src="/src/py_io.js"></script>
 <script type="text/javascript" src="/src/py_builtin_functions.js"></script>
 <script type="text/javascript" src="/src/py_sort.js"></script>
 <script type="text/javascript" src="/src/py_exceptions.js"></script>

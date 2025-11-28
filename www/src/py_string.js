@@ -213,7 +213,7 @@ str.__format__ = function(_self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec, _self)
 
     if(fmt.sign !== undefined){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "Sign not allowed in string format specifier")
     }
     if(fmt.precision){
@@ -717,7 +717,7 @@ $B.formatters = {
 var signed_hex_format = function(val, upper, flags){
     var ret
     if(! $B.$isinstance(val, _b_.int)){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             `%X format: an integer is required, not ${$B.class_name(val)}`)
     } else if ($B.$isinstance(val, _b_.bool)) {
         val = val ? 1 : 0
@@ -822,7 +822,7 @@ var single_char_format = function(val, flags, type){
             }
         }else if($B.$isinstance(val, [_b_.bytes, _b_.bytearray])){
             if(val.source.length > 1){
-                $B.RAISE(_b_.TypeError, 
+                $B.RAISE(_b_.TypeError,
                     "%c requires an integer in range(256) or a single byte")
             }
             val = val.source[0]
@@ -1048,7 +1048,7 @@ $B.printf_format = function(s, type, args){
                 // issue 2184
                 if((! $B.$isinstance(args, _b_.tuple)) &&
                         ! is_mapping(args)){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         "not enough arguments for format string")
                 }
             }
@@ -1080,7 +1080,7 @@ $B.printf_format = function(s, type, args){
                 }else{
                     value = args[argpos]
                     if(value === undefined){
-                        $B.RAISE(_b_.TypeError, 
+                        $B.RAISE(_b_.TypeError,
                             "not enough arguments for format string")
                     }
                     argpos++
@@ -1092,14 +1092,14 @@ $B.printf_format = function(s, type, args){
 
     if(argpos !== null){
         if(args.length > argpos){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "not enough arguments for format string")
         }else if(args.length < argpos){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "not all arguments converted during string formatting")
         }
     }else if(nbph == 0){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             "not all arguments converted during string formatting")
     }
     return ret
@@ -1117,7 +1117,7 @@ str.__mul__ = function(self, other){
     $B.check_nb_args_no_kw('str.__mul__', 2, arguments)
     var _self = to_string(self)
     if(! $B.$isinstance(other, _b_.int)){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
         "Can't multiply sequence by non-int of type '" +
             $B.class_name(other) + "'")
     }
@@ -1223,7 +1223,7 @@ str.__setattr__ = function(_self, attr, value){
 }
 
 str.__setitem__ = function(){
-    $B.RAISE(_b_.TypeError, 
+    $B.RAISE(_b_.TypeError,
         "'str' object does not support item assignment")
 }
 
@@ -1411,7 +1411,7 @@ str.endswith = function(){
     for(var i = 0, len = suffixes.length; i < len; i++){
         var suffix = suffixes[i]
         if(! $B.$isinstance(suffix, str)){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "endswith first arg must be str or a tuple of str, not int")
         }
         suffix = suffix.__class__ ? suffix.$brython_value : suffix
@@ -2077,7 +2077,7 @@ str.maketrans = function() {
         // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
         if(! $B.$isinstance($.x, _b_.dict)){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "maketrans only argument must be a dict")
         }
         var items = _b_.list.$factory(_b_.dict.items($.x))
@@ -2104,7 +2104,7 @@ str.maketrans = function() {
         if(! ($B.$isinstance($.x, _b_.str) && $B.$isinstance($.y, _b_.str))){
             $B.RAISE(_b_.TypeError, "maketrans arguments must be strings")
         }else if($.x.length !== $.y.length){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "maketrans arguments must be strings or same length")
         }else{
             var toNone = {}
@@ -2112,7 +2112,7 @@ str.maketrans = function() {
                 // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
                 if(! $B.$isinstance($.z, _b_.str)){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         "maketrans third argument must be a string")
                 }
                 for(let i = 0, len = $.z.length; i < len; i++){
@@ -2407,7 +2407,7 @@ str.split = function(){
                     if(maxsplit !== -1 && res.length == maxsplit + 1){
                         res.pop()
                         res.push(name + _self.substr(pos))
-                        return res
+                        return $B.$list(res.map($B.String))
                     }
                     name = ""
                 }
@@ -2439,7 +2439,7 @@ str.split = function(){
                 pos += seplen
                 if(maxsplit > -1 && res.length >= maxsplit){
                     res.push(_self.substr(pos))
-                    return res.map($B.String)
+                    return $B.$list(res.map($B.String))
                 }
                 s = ""
             }else{
@@ -2628,6 +2628,10 @@ str.$factory = function(arg, encoding){
     }else if(arg === null){
         return '<Javascript null>'
     }
+    var test = false // arg.__class__ && arg.__class__.__name__ == 'MagicMock'
+    if(test){
+        console.log('call str of', arg)
+    }
     if(encoding !== undefined){
         // Arguments may be passed as keywords (cf. issue #1060)
         var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
@@ -2636,11 +2640,11 @@ str.$factory = function(arg, encoding){
         encoding = $.encoding,
         errors = $.errors
         if(! $B.$isinstance(encoding, str)){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
         }
         if(! $B.$isinstance(errors, str)){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
         }
     }
@@ -2664,6 +2668,7 @@ str.$factory = function(arg, encoding){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
         var method = $B.search_in_mro(klass, '__str__')
+        //console.log('__str__ for klass', klass, method)
         if(method === undefined){
             method = $B.search_in_mro(klass, '__repr__')
         }
@@ -2680,7 +2685,28 @@ str.$factory = function(arg, encoding){
             "default to toString", arg)
         throw err
     }
-    var res = $B.$call(method)(arg)
+    var getter = $B.search_in_mro($B.get_class(method), '__get__')
+    var res
+    if(getter){
+        if(typeof getter == 'function'){
+            if(arg.$is_class){
+                method = getter(method, _b_.None, klass)
+                res = $B.$call(method)(arg)
+            }else{
+                method = getter(method, arg, klass)
+                res = $B.$call(method)()
+            }
+        }else{
+            var call_in_mro = $B.search_in_mro($B.get_class(getter, '__call__'))
+            if(call_in_mro){
+                res = call_in_mro(getter, arg)
+            }else{
+                $B.RAISE(_b_.TypeError, '__str__ or __repr__ is not callable')
+            }
+        }
+    }else{
+        res = $B.$call(method)(arg)
+    }
     if(typeof res == "string" || $B.$isinstance(res, str)){
         return res
     }
@@ -2775,17 +2801,17 @@ $B.parse_format_spec = function(spec, obj){
             car = spec.charAt(pos)
             if(car == "," || car == "_"){
                 if(car == this.grouping_option){
-                    $B.RAISE(_b_.ValueError, 
+                    $B.RAISE(_b_.ValueError,
                         `Cannot specify '${car}' with '${car}'.`)
                 }else{
-                    $B.RAISE(_b_.ValueError, 
+                    $B.RAISE(_b_.ValueError,
                         "Cannot specify both ',' and '_'.")
                 }
             }
         }
         if(car == "."){
             if(digits.indexOf(spec.charAt(pos + 1)) == -1){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "Missing precision in format spec")
             }
             this.precision = spec.charAt(pos + 1)

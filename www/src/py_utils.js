@@ -1235,9 +1235,15 @@ $B.delete_for_reassign = function(name, namespace){
             // accessor whose 'get' method raises a NameError
             return
         }
-        var del_method = $B.search_in_mro($B.get_class(value), '__del__')
-        if(del_method){
-            $B.$call(del_method)(value)
+        var klass = $B.get_class(value)
+        if($B.$isinstance(value, $B.DOMNode)){
+            // don't call __del__ for this case because it would remove the
+            // element from its parent...
+        }else{
+            var del_method = $B.search_in_mro(klass, '__del__')
+            if(del_method){
+                $B.$call(del_method)(value)
+            }
         }
     }
     delete namespace[name]
@@ -1472,6 +1478,13 @@ $B.$call1 = function(callable){
         }
         return callable
     }
+    /*
+    var getter = $B.$getattr($B.get_class(callable), '__get__', null)
+    if(getter !== null){
+        console.log('>>>>>>>>>>>>>> callable with getter')
+        callable = getter(callable, $B.get_class(callable))
+    }
+    */
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
@@ -1758,6 +1771,7 @@ var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
 
 $B.rich_comp = function(op, x, y){
     if(x === undefined){
+        console.log(Error().stack)
         $B.RAISE(_b_.RuntimeError, 'error in rich comp')
     }
     var x1 = x !== null && x.valueOf ? x.valueOf() : x,
@@ -1792,9 +1806,7 @@ $B.rich_comp = function(op, x, y){
                 "' and '" + $B.class_name(y) + "'")
         }
     }
-
-    var x_class_op = $B.$call($B.$getattr($B.get_class(x), op)),
-        rev_op = reversed_op[op] || op,
+    var rev_op = reversed_op[op] || op,
         y_rev_func
     if(x !== null && x.__class__ && y !== null && y.__class__){
         // cf issue #600 and
@@ -1811,7 +1823,26 @@ $B.rich_comp = function(op, x, y){
             }
         }
     }
-    res = x_class_op(x, y)
+
+    var in_mro = $B.search_in_mro($B.get_class(x), op)
+    if(in_mro === undefined){
+        $B.RAISE(_b_TypeError, `no attribute ${op}`)
+    }
+    var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
+    if(getter){
+        res = $B.$call(getter(in_mro, x, $B.get_class(x)))(y)
+    }else{
+        if(typeof in_mro !== 'function'){
+            var call_in_mro = $B.search_in_mro($B.get_class(in_mro), '__call__')
+            if(call_in_mro){
+                res = call_in_mro(in_mro, y)
+            }else{
+                $B.RAISE(_b_.TypeError, `not callable {op}`)
+            }
+        }else{
+            res = in_mro(x, y)
+        }
+    }
     if(res !== _b_.NotImplemented){
         return res
     }
@@ -1967,54 +1998,39 @@ $B.rich_op1 = function(op, x, y){
         }
     }
     var res
+    var fail
     try{
-        // Test if object has attribute op. If so, it is not used in the
-        // operation, but the attribute op of its class, if is exits
-        // This prevents a + b to succeed if the instance a has __add__
-        // but its class has no __add__
-        // It also prevents a | b to succeed if getattr(a, op) fails
-        // although getattr(type(a), op) succeeds, which is the case for
-        // [1] | 'a' : getattr(list, '__or__') succeeds because type.__or__ is
-        // defined, but hasattr([1], '__or__') is False
-        var attr = $B.$getattr(x, op)
-        method = $B.$getattr(x_class, op)
+        res = $B.call_with_mro(x, op, y)
+        if(res === _b_.NotImplemented){
+            fail = true
+        }
     }catch(err){
-        if(err.__class__ !== _b_.AttributeError){
+        if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
         }
-        var rmethod = $B.$getattr(y_class, rop, null)
-        if(rmethod !== null){
-            res = $B.$call(rmethod)(y, x)
-            if(res !== _b_.NotImplemented){
-                return res
-            }
-        }
-        $B.RAISE(_b_.TypeError,
-            `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
-            ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
+        fail = true
     }
-    res = method(x, y)
-    if(res === _b_.NotImplemented){
-        try{
-            method = $B.$getattr(y_class, rop)
-        }catch(err){
-            if(err.__class__ !== _b_.AttributeError){
-                throw err
-            }
-            $B.RAISE(_b_.TypeError,
-                `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
-                ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
-        }
-        res = method(y, x)
+    if(! fail){
+        return res
+    }
+    fail = false
+    try{
+        res = $B.call_with_mro(y, rop, x)
         if(res === _b_.NotImplemented){
-            $B.RAISE(_b_.TypeError,
-                `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
-                ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
+            fail = true
         }
-        return res
-    }else{
+    }catch(err){
+        if(! $B.is_exc(err, [_b_.AttributeError])){
+            throw err
+        }
+        fail = true
+    }
+    if(! fail){
         return res
     }
+    $B.RAISE(_b_.TypeError,
+        `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
+        ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
 }
 
 $B.is_none = function(o){

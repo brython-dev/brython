@@ -49,3 +49,33 @@ def test_mock_open(mock_file):
     assert content == "mocked file content"
 
 test_mock_open()
+
+# issue 2613
+m = mock_open()
+with patch('builtins.open', m):
+  with open("test.txt", "w") as f:
+    f.writelines(["line1"])
+
+m.assert_called_once_with("test.txt", "w")
+m().writelines.assert_called_once_with(["line1"])
+
+# issue 2633
+import datetime
+with patch("datetime.datetime") as mock_dt:
+    print(mock_dt.now())
+
+# issue 2641
+with patch('datetime.datetime'):
+  start_time = datetime.datetime.now()
+  print(start_time)
+  ts = start_time + datetime.timedelta(seconds=1)
+  print(ts)
+
+mock_file_content = "foo\nbar"
+m = mock_open(read_data=mock_file_content)
+with patch("builtins.open", m):
+    f = open("test.log", "r")
+    chunks = []
+    for chunk in f:
+        chunks.append(chunk)
+    assert chunks == ['foo\n', 'bar'], chunks

@@ -100,7 +100,7 @@ int.from_bytes = function() {
     if(byteorder == "big"){
         _bytes.reverse()
     }else if(byteorder != "little"){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "byteorder must be either 'little' or 'big'")
     }
     var num = _bytes[0]
@@ -136,7 +136,7 @@ int.to_bytes = function(){
             $B.class_name(len))
     }
     if(["little", "big"].indexOf(byteorder) == -1){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "byteorder must be either 'little' or 'big'")
     }
 
@@ -146,7 +146,7 @@ int.to_bytes = function(){
 
     if(self < 0){
         if(! signed){
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                 "can't convert negative int to unsigned")
         }
         self = Math.pow(256, len) + self
@@ -354,7 +354,7 @@ int.__mod__ = function(self, other) {
         self = BigInt(self)
         other = other.value
         if(other == 0){
-            $B.RAISE(_b_.ZeroDivisionError, 
+            $B.RAISE(_b_.ZeroDivisionError,
                 "integer division or modulo by zero")
         }
         return int_or_long((self % other + other) % other)
@@ -363,7 +363,7 @@ int.__mod__ = function(self, other) {
         other = int_value(other)
         if(other === false){other = 0}
         else if(other === true){other = 1}
-        if(other == 0){$B.RAISE(_b_.ZeroDivisionError, 
+        if(other == 0){$B.RAISE(_b_.ZeroDivisionError,
             "integer division or modulo by zero")}
         return (self % other + other) % other
     }
@@ -705,7 +705,7 @@ int.$factory = function(){
         // transform to string
         value = $B.$getattr(value, 'decode')('latin-1')
     }else if(explicit_base && ! $B.$isinstance(value, _b_.str)){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             "int() can't convert non-string with explicit base")
     }else if($B.$isinstance(value, _b_.memoryview)){
         value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
@@ -713,7 +713,7 @@ int.$factory = function(){
 
     if(! $B.$isinstance(value, _b_.str)){
         if(base !== missing){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "int() can't convert non-string with explicit base")
         }else{
             // booleans, bigints, objects with method __index__
@@ -753,14 +753,14 @@ int.$factory = function(){
                     }
                 }
             }
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "int() argument must be a string, a bytes-like object " +
                 `or a real number, not '${$B.class_name(value)}'`)
         }
     }
 
     if(value.length == 0){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             `invalid literal for int() with base 10: ${_b_.repr(value)}`)
     }
     base = base === missing ? 10: $B.PyNumber_Index(base)
@@ -931,12 +931,6 @@ $B.$bool = function(obj, bool_class){ // return true or false
             var klass = $B.get_class(obj),
                 missing = {},
                 bool_method = $B.search_in_mro(klass, '__bool__')
-            var test = false // klass.$infos.__name__ == 'FlagBoundary'
-            if(test){
-                console.log('bool(obj)', obj, 'bool_class', bool_class,
-                            'klass', klass, 'apply bool method', bool_method)
-                console.log('$B.$call(bool_method)', bool_method + '')
-            }
             if(bool_method === undefined){
                 var len_method = $B.$getattr(klass, '__len__', missing)
                 if(len_method === missing){
@@ -946,13 +940,10 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 // len's handling of non-integer and negative values
                 return _b_.len(obj) > 0
             }else{
-                var res = $B.$call(bool_method)(obj)
+                var res = $B.call_with_mro(obj, '__bool__')
                 if(res !== true && res !== false){
                     $B.RAISE(_b_.TypeError, "__bool__ should return " +
                         "bool, returned " + $B.class_name(res))
-                }
-                if(test){
-                    console.log('bool method returns', res)
                 }
                 return res
             }

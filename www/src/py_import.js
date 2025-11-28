@@ -221,13 +221,15 @@ $B.addToImported = function(name, modobj){
     modobj.__name__ = name
     for(var attr in modobj){
         if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
-            if(modobj[attr] === _b_.iter){
-                console.log('set iter', modobj, name)
-            }
             modobj[attr].$infos = {
                 __module__: name,
                 __name__: attr,
-                __qualname__: attr
+                __qualname__: attr,
+                __code__: {
+                    co_filename: modobj.__file__,
+                    co_code: modobj[attr] + '',
+                    co_flags: $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
+                }
             }
             modobj[attr].$in_js_module = true
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
@@ -765,11 +767,11 @@ PathEntryFinder.find_spec = function(self, fullname){
         py_ext = $B.get_option('python_extension') // defaults to .py (issue #1748)
     var tryall = hint === undefined
     if(tryall || hint == 'py'){
-        // either py or undefined , try py code
+        // either py or undefined , try py or js code
         modpaths = modpaths.concat([[base_path + py_ext, "py", false],
-            [base_path + "/__init__" + py_ext, "py", true]])
+            [base_path + "/__init__" + py_ext, "py", true],
+            [base_path + '.js', 'js', false]])
     }
-
     for(var j = 0; notfound && j < modpaths.length; ++j){
         try{
             var file_info = modpaths[j],

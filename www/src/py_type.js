@@ -231,7 +231,7 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
             }
         })
     }else{
-        var setitem = $B.$getattr(class_dict, "__setitem__"),
+        var setitem = $B.$call($B.$getattr(class_dict, "__setitem__")),
             getitem = $B.$getattr(class_dict, "__getitem__")
         return new Proxy(class_dict, {
             get: function(target, prop){
@@ -247,7 +247,15 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
                 }
             },
             set: function(target, prop, value){
-                setitem(prop, value)
+                try{
+                    setitem(prop, value)
+                }catch(err){
+                    console.log('error calling setitem', setitem)
+                    console.log('class dict', class_dict)
+                    console.log('prop', prop, 'value', value)
+                    console.log('frame obj', $B.frame_obj)
+                    throw err
+                }
                 return _b_.None
             }
         })
@@ -622,12 +630,11 @@ type.__getattribute__ = function(klass, attr){
     }
 
     var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var $test = false // attr == "__globals__" // && klass.__name__ == 'Pattern'
+    var $test = false // attr == "__iter__" && klass.__name__ == 'MagicMock'
 
     if($test){
-        console.log("attr", attr, "of", klass, '\n  ', res, res + "")
+        console.log("attr", attr, "of", klass, 'res', res) //, '\n  ', res, res + "")
     }
-
 
     if(klass.__class__ &&
             klass.__class__[attr] &&
@@ -663,6 +670,9 @@ type.__getattribute__ = function(klass, attr){
                 for(let i = 0; i < mro.length; i++){
                     if(mro[i].hasOwnProperty(attr)){
                         res = mro[i][attr]
+                        if($test){
+                            console.log('found in class', mro[i])
+                        }
                         break
                     }
                 }
@@ -743,7 +753,10 @@ type.__getattribute__ = function(klass, attr){
     }
 
     if(res !== undefined){
-        if($test){console.log("res", res)}
+        if($test){
+            console.log("res", res, 'class', $B.get_class(res))
+            console.log('is $B.in_mro ?', res === $B.in_mro)
+        }
         // If the attribute is a property, return it
         if(res.__class__ === _b_.property){
             return res
@@ -770,10 +783,16 @@ type.__getattribute__ = function(klass, attr){
                 result = res.__get__(klass)
             }
             return result
-        }else if(res.__class__ && res.__class__.__get__){
-            // issue #1391
-            if(!(attr.startsWith("__") && attr.endsWith("__"))){
-                return res.__class__.__get__(res, _b_.None, klass)
+        }else if(res.__class__){
+            var getter = $B.search_in_mro(res.__class__, '__get__')
+            if(getter){
+                //console.log('has getter', getter)
+                var getter_res = $B.$call(getter)(res, _b_.None, klass)
+                if(getter_res === undefined){
+                    console.log('no result for getter', getter)
+                    console.log(Error().stack)
+                }
+                res = getter_res
             }
         }
         if(typeof res == "function"){

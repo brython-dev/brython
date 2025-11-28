@@ -31,7 +31,6 @@ var array = $B.make_class("array",
                 "B, u, h, H, i, I, l, L, q, Q, f or d)")
         }
         if(typecodes[typecode] === null){
-            console.log("array factory, $", $, typecode)
             $B.RAISE(_b_.NotImplementedError, "type code " +
                 typecode + " is not implemented")
         }
@@ -56,15 +55,19 @@ var array = $B.make_class("array",
 array.$buffer_protocol = true
 array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 
-array.__getitem__ = function(self, key){
-    if(self.obj){
-        if(self.obj[key] !== undefined){
-            return self.obj[key]
+array.__buffer__ = function(_self, flag){
+    return $B.$call(_b_.memoryview)(_self)
+}
+
+array.__getitem__ = function(_self, key){
+    if(_self.obj){
+        if(_self.obj[key] !== undefined){
+            return _self.obj[key]
         }else if($B.$isinstance(key, _b_.slice)){
-            var t = self.obj.slice(key.start, key.stop)
+            var t = _self.obj.slice(key.start, key.stop)
             return {
                 __class__: array,
-                typecode: self.typecode,
+                typecode: _self.typecode,
                 obj: t
             }
         }
@@ -98,11 +101,38 @@ array.__mul__ = function(self, nb){
         $B.class_name(nb))
 }
 
+array.__release_buffer__ = function(_self, buffer){
+    _b_.memoryview.release(buffer)
+}
+
 array.__setitem__ = function(_self, index, value){
-    if(_self.obj[index] === undefined){
-        $B.RAISE(_b_.IndexError, "array index out of range")
+    if($B.$isinstance(index, _b_.int)){
+        if(_self.obj[index] === undefined){
+            $B.RAISE(_b_.IndexError, "array index out of range")
+        }
+        _self.obj[index] = value
+    }else if($B.$isinstance(index, _b_.slice)){
+        if(! $B.$isinstance(value, array)){
+            $B.RAISE(_b_.TypeError, 'can only assign array ' +
+                `(not "${$B.class_name(value)}") to array slice`)
+        }else if(value.typecode !== _self.typecode){
+            $B.RAISE(_b_.TypeError, 'can only assign array of the same typecode')
+        }
+
+        var itemsize = array.itemsize(_self)
+        var slice = _b_.slice.$conv_for_seq(index, _self.obj.length / itemsize)
+        if(slice.start * itemsize + value.obj.length > _self.obj.length){
+            if(_self.$exports > 0){
+                $B.RAISE(_b_.BufferError,
+                    'cannot resize an array that is exporting buffers')
+            }
+        }
+        _self.obj.splice(slice.start * itemsize,
+            (slice.stop - slice.start) *itemsize,
+            ...value.obj)
+    }else{
+        $B.RAISE(_b_.TypeError, 'array indices must be integers')
     }
-    _self.obj[index] = value
 }
 
 array.__repr__ = function(self){

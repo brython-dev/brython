@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-16 21:51:57.782577"
-__BRYTHON__.timestamp=1763326317782
+__BRYTHON__.compiled_date="2025-11-27 16:13:31.302750"
+__BRYTHON__.timestamp=1764256411302
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1616,8 +1616,9 @@ $B.delete_for_reassign=function(name,namespace){
 if(namespace.$is_namespace){return $B.$delitem(namespace,name)}
 if(namespace.hasOwnProperty && namespace.hasOwnProperty(name)){try{var value=namespace[name]}catch(err){
 return}
-var del_method=$B.search_in_mro($B.get_class(value),'__del__')
-if(del_method){$B.$call(del_method)(value)}}
+var klass=$B.get_class(value)
+if($B.$isinstance(value,$B.DOMNode)){}else{var del_method=$B.search_in_mro(klass,'__del__')
+if(del_method){$B.$call(del_method)(value)}}}
 delete namespace[name]}
 function num_result_type(x,y){var is_int,is_float,x_num,y_num
 if(typeof x=="number"){x_num=x
@@ -1804,7 +1805,8 @@ return{
 prev:$B.frame_obj,frame,count:count+1}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
-$B.rich_comp=function(op,x,y){if(x===undefined){$B.RAISE(_b_.RuntimeError,'error in rich comp')}
+$B.rich_comp=function(op,x,y){if(x===undefined){console.log(Error().stack)
+$B.RAISE(_b_.RuntimeError,'error in rich comp')}
 var x1=x !==null && x.valueOf ? x.valueOf():x,y1=y !==null && y.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
 x.__class__===undefined && y.__class__===undefined){switch(op){case "__eq__":
@@ -1823,12 +1825,16 @@ var res
 if(x !==null &&(x.$is_class ||x.$factory)){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{$B.RAISE(_b_.TypeError,"'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
-var x_class_op=$B.$call($B.$getattr($B.get_class(x),op)),rev_op=reversed_op[op]||op,y_rev_func
+var rev_op=reversed_op[op]||op,y_rev_func
 if(x !==null && x.__class__ && y !==null && y.__class__){
 if(y.__class__.__mro__.indexOf(x.__class__)>-1){y_rev_func=$B.$getattr(y,rev_op)
 res=$B.$call(y_rev_func)(x)
 if(res !==_b_.NotImplemented){return res}}}
-res=x_class_op(x,y)
+var in_mro=$B.search_in_mro($B.get_class(x),op)
+if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
+var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){res=$B.$call(getter(in_mro,x,$B.get_class(x)))(y)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
+if(call_in_mro){res=call_in_mro(in_mro,y)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{res=in_mro(x,y)}}
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
 y_rev_func=$B.$call($B.$getattr($B.get_class(y),rev_op))
@@ -1890,22 +1896,18 @@ if(op=='__mul__'){if(x_class.$is_sequence && $B.$isinstance(y,[_b_.float,_b_.com
 if(y_class.$is_sequence && $B.$isinstance(x,[_b_.float,_b_.complex])){$B.RAISE(_b_.TypeError,"can't multiply sequence by "+
 `non-int of type '${$B.class_name(x)}'`)}}
 var res
-try{
-var attr=$B.$getattr(x,op)
-method=$B.$getattr(x_class,op)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
-var rmethod=$B.$getattr(y_class,rop,null)
-if(rmethod !==null){res=$B.$call(rmethod)(y,x)
-if(res !==_b_.NotImplemented){return res}}
+var fail
+try{res=$B.call_with_mro(x,op,y)
+if(res===_b_.NotImplemented){fail=true}}catch(err){if(! $B.is_exc(err,[_b_.AttributeError])){throw err}
+fail=true}
+if(! fail){return res}
+fail=false
+try{res=$B.call_with_mro(y,rop,x)
+if(res===_b_.NotImplemented){fail=true}}catch(err){if(! $B.is_exc(err,[_b_.AttributeError])){throw err}
+fail=true}
+if(! fail){return res}
 $B.RAISE(_b_.TypeError,`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-res=method(x,y)
-if(res===_b_.NotImplemented){try{method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
-$B.RAISE(_b_.TypeError,`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
-` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-res=method(y,x)
-if(res===_b_.NotImplemented){$B.RAISE(_b_.TypeError,`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
-` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-return res}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
 var repr_stack=new Set()
 $B.repr={enter:function(obj){var obj_id=_b_.id(obj)
@@ -2061,8 +2063,7 @@ if(init_func===object.__init__){if(args.length > 0){$B.RAISE(_b_.TypeError,"obje
 var res=Object.create(null)
 $B.update_obj(res,{__class__ :cls,__dict__:$B.obj_dict({})})
 return res}
-object.__ne__=function(self,other){
-if(self===other){return false}
+object.__ne__=function(self,other){if(self===other){return false}
 var eq=$B.$getattr(self.__class__ ||$B.get_class(self),"__eq__",null)
 if(eq !==null){var res=$B.$call(eq)(self,other)
 if(res===_b_.NotImplemented){return res}
@@ -2219,9 +2220,13 @@ if(orig_bases !==bases){$B.$setitem(class_dict,'__orig_bases__',orig_bases)}
 if(class_dict.__class__===_b_.dict){if(class_dict.$all_str){return class_dict.$strings}
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return _b_.dict}else if(prop=='$target'){return target}
 if(_b_.dict.$contains_string(target,prop)){return _b_.dict.$getitem_string(target,prop)}
-return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}})}else{var setitem=$B.$getattr(class_dict,"__setitem__"),getitem=$B.$getattr(class_dict,"__getitem__")
+return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}})}else{var setitem=$B.$call($B.$getattr(class_dict,"__setitem__")),getitem=$B.$getattr(class_dict,"__getitem__")
 return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return $B.get_class(target)}else if(prop=='$target'){return target}
-try{return getitem(prop)}catch(err){return undefined}},set:function(target,prop,value){setitem(prop,value)
+try{return getitem(prop)}catch(err){return undefined}},set:function(target,prop,value){try{setitem(prop,value)}catch(err){console.log('error calling setitem',setitem)
+console.log('class dict',class_dict)
+console.log('prop',prop,'value',value)
+console.log('frame obj',$B.frame_obj)
+throw err}
 return _b_.None}})}}
 $B.resolve_mro_entries=function(bases){
 var new_bases=[],has_mro_entries=false
@@ -2348,7 +2353,7 @@ if(klass.__dict__){_b_.dict.__delitem__(klass.__dict__,key)}
 delete klass[key]})}
 var res=klass.hasOwnProperty(attr)? klass[attr]:undefined
 var $test=false 
-if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
+if($test){console.log("attr",attr,"of",klass,'res',res)}
 if(klass.__class__ &&
 klass.__class__[attr]&&
 klass.__class__[attr].__get__ &&
@@ -2364,6 +2369,7 @@ _b_.dict.$contains_string(klass.__dict__,attr)){res=klass[attr]=_b_.dict.$getite
 if($test){console.log('found in __dict__',res)}}else{var mro=klass.__mro__
 if(mro===undefined){console.log("no mro for",klass,'attr',attr)}
 for(let i=0;i < mro.length;i++){if(mro[i].hasOwnProperty(attr)){res=mro[i][attr]
+if($test){console.log('found in class',mro[i])}
 break}}}}else{res=v}}
 if(res===undefined){
 if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass)
@@ -2391,15 +2397,20 @@ var getattr=meta.__getattr__
 if(getattr===undefined){for(let i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
 break}}}
 if(getattr !==undefined){return getattr(klass,attr)}}}
-if(res !==undefined){if($test){console.log("res",res)}
+if(res !==undefined){if($test){console.log("res",res,'class',$B.get_class(res))
+console.log('is $B.in_mro ?',res===$B.in_mro)}
 if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
 if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
 if(res.$infos.__self__){
 return res}
 var result=res.__get__(res.__func__,klass)
 result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
-return result}else if(res.__class__ && res.__class__.__get__){
-if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
+return result}else if(res.__class__){var getter=$B.search_in_mro(res.__class__,'__get__')
+if(getter){
+var getter_res=$B.$call(getter)(res,_b_.None,klass)
+if(getter_res===undefined){console.log('no result for getter',getter)
+console.log(Error().stack)}
+res=getter_res}}
 if(typeof res=="function"){
 if(res.$infos !==undefined && res.$function_infos===undefined){console.log('$infos not undef',res,res.$infos)
 throw Error()}
@@ -3317,6 +3328,466 @@ return parser}})(__BRYTHON__);
 ;
 
 (function($B){var _b_=$B.builtins
+var IOUnsupported
+const DEFAULT_BUFFER_SIZE=(128*1024)
+$B.make_IOUnsupported=function(){if($B._IOUnsupported===undefined){$B._IOUnsupported=$B.make_class('UnsupportedOperation')
+$B._IOUnsupported.__bases__=[_b_.OSError,_b_.ValueError]
+$B._IOUnsupported.__mro__=_b_.type.$mro($B._IOUnsupported)
+$B._IOUnsupported.__module__='_io'}}
+function _io_unsupported(value){$B.make_IOUnsupported()
+throw $B.$call($B._IOUnsupported)(value)}
+var _IOBase=$B.make_class("_IOBase")
+_IOBase.__del__=function(_self){
+console.log('del',_self)
+try{var closed=$B.$getattr(_self,'closed')}catch(err){if($B.is_exc(err,_b_.AttributeError)){
+return}}
+if(closed){return}
+$B$call($B.$getattr(_self,'close'))()}
+_IOBase.__enter__=function(self){return self}
+_IOBase.__exit__=function(self){_IOBase.close(self)}
+_IOBase.__iter__=function(_self){if(_self.closed){$B.RAISE(_b_.ValueError,'closed')}
+return _self}
+_IOBase.__next__=function(_self){var readline=$B.search_in_mro($B.get_class(_self),'readline')
+var line=readline(_self)
+if(line==undefined ||_b_.len(line)===0){$B.RAISE(_b_.StopIteration,'')}
+return line;}
+_IOBase.__del__=function(_self){return _IOBase.close(_self)}
+_IOBase.close=function(_self){_self._closed=true}
+_IOBase.fileno=function(_self){_io_unsupported('fileno')}
+_IOBase.flush=function(_self){if(_self._closed){$B.RAISE(_b_.ValueError,"I/O operation on closed file.")}
+return _b_.None}
+_IOBase.isatty=function(){return false}
+_IOBase.readable=function(){return false}
+function make_lines(self){
+if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")
+if($B.last(self.$lines)==''){self.$lines.pop()}
+self.$lines=self.$lines.map(x=> x+'\n')}else{var lines=[],pos=0,source=self.$content.source,len=source.length
+while(pos < len){var ix=source.indexOf(10,pos)
+if(ix==-1){lines.push({__class__:_b_.bytes,source:source.slice(pos)})
+break}else{lines.push({__class__:_b_.bytes,source:source.slice(pos,ix+1)})
+pos=ix+1}}
+self.$lines=lines}}}
+_IOBase.readline=function(_self,limit=-1){var $=$B.args('readline',2,{self:null,limit:null},['self','limit'],arguments,{limit:-1},null,null),_self=$.self,limit=$.limit
+var old_size=-1
+var peek=$B.$getattr(_self,"peek",null)
+var buffer=_b_.bytearray.$factory()
+limit=$B.PyNumber_Index(limit)
+while(limit < 0 ||_b_.len(buffer)< limit){var nreadahead=1
+var b
+if(peek !=null){var readahead=peek(1)
+if(! $B.$isinstance(readahead,_b_.bytes)){$B.RAISE(_b_.OSError,"peek() should have returned a bytes object, "+
+`not '${$B.class_name(readahead)}'`)}
+if(readahead.length > 0){var n=0
+var buf=_b_.bytes.$decode(readahead,'latin-1')
+if(limit >=0){while(true){if(n >=readahead.length ||n >=limit){break}
+if(buf[n++]=='\n'){break}}}else{while(true){if(n >=readahead.length){break}
+if($B.$getitem(buffer,n++)=='\n'){break}}}
+nreadahead=n}}
+var read=$B.search_in_mro($B.get_class(_self),"read")
+b=$B.$call(read)(_self,nreadahead)
+if(! $B.$isinstance(b,_b_.bytes)){$B.RAISE(_b_.OSError,"read() should have returned a bytes object, "+
+`not '${$B.class_name(b)}'`)}
+if(_b_.len(b)==0){break;}
+_b_.bytearray.extend(buffer,b)
+if($B.last(_b_.list.$factory(buffer))==10){
+break}}
+return $B.$call(_b_.bytes)(buffer)}
+_IOBase.readlines=function(_self,hint){var $=$B.args('readlines',2,{self:null,hint:null},['self','hint'],arguments,{hint:-1},null,null)
+var _self=$.self,hint=$.hint
+var length=0;
+var result,it
+if(hint===_b_.None){hint=-1}else{hint=$B.PyNumber_Index(hint)}
+result=$B.$list([])
+if(hint <=0){return _b_.list.$factory(_self)}
+var readline=$B.search_in_mro($B.get_class(_self),'readline')
+var nb=0
+while(true){nb++
+if(nb > 5000){console.log('overflow',result)
+break}
+var line=readline(_self)
+var line_length=_b_.len(line)
+if(line_length==0){break}else{result[result.length]=line}
+if(line_length > hint-length){break}
+length+=line_length}
+return result}
+_IOBase.seek=function(_self){_io_unsupported('seek')}
+_IOBase.seekable=function(){return false}
+_IOBase.tell=function(self){return $B.$getattr(self,'seek')(0,1)}
+_IOBase.truncate=function(){_io_unsupported('truncate')}
+_IOBase.writable=function(){return false}
+_IOBase.writelines=function(_self,lines){if(_self.closed){return _b_.None}
+var iter=$B.make_js_iterator(lines)
+var writer=$B.search_in_mro($B.get_class(_self),'write')
+if(writer===undefined){$B.RAISE_ATTRIBUTE_ERROR(
+`'${$B.class_name(_self)}' object has no attribute 'write'`,_self,'write')}
+for(var line of iter){writer(_self,line)}
+return _b_.None}
+_IOBase.writelines=function(_self,lines){var iter,res;
+if(_self.closed){$B.RAISE(_b_.OSError,'closed')}
+var writer=$B.$call($B.$getattr(_self,'write'))
+for(var line of $B.make_js_iterator(lines)){writer(line)}
+return _b_.None}
+$B.set_func_names(_IOBase,"builtins")
+$B._RawIOBase=$B.make_class('_io._RawIOBase')
+$B._RawIOBase.__bases__=[_IOBase]
+$B._RawIOBase.__mro__=[_IOBase,_b_.object]
+$B._RawIOBase.read=function(_self,n){var b,res
+if(n < 0){return $B.$call($B.$getattr(_self,"readall"))}
+b=_b_.bytearray.$factory()
+$B.$call($B.$getattr(_self,"readinto"))(b)
+return b}
+$B._RawIOBase.readall=function(_self){var r
+var chunks=[]
+var result
+while(1){var data=$B.$call($B.$getattr(_self,"read"))(DEFAULT_BUFFER_SIZE)
+if(data===_b_.None){if(chunks.length==0){return data}
+break}
+if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
+if(_b_.len(data)==0){break}
+chunks.push(data)}
+result=_b_.bytes.join(_b_.bytes.$fast_bytes([]),chunks)
+return result}
+$B._RawIOBase.readinto=function(_self,b){throw _b_.NotImplementedError('readinto')}
+$B._RawIOBase.write=function(){throw _b_.NotImplementedError('readinto')}
+$B.set_func_names($B._RawIOBase,"_io")
+$B._BufferedIOBase=$B.make_class('_BufferedIOBase')
+$B._BufferedIOBase.__bases__=[_IOBase]
+$B._BufferedIOBase.__mro__=[_IOBase,_b_.object]
+$B.is_buffer=function(obj){if($B.get_class(obj).$buffer_protocol){return true}
+for(var klass of $B.get_class(obj).__mro__){if(klass.$buffer_protocol){return true}}
+return false}
+function _bufferediobase_readinto_generic(_self,buffer,readinto1){var len,data
+if(! $B.is_buffer(buffer)){$B.RAISE(_b_.TypeError," readinto() argument must be "+
+`read-write bytes-like object, not ${$B.class_name(buffer)}`)}
+var attr=readinto1 ? "read1" :"read"
+data=$B.$call($B.$getattr(_self,attr))(_b_.len(buffer))
+if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
+len=_b_.bytes.__len__(data)
+if(len > _b_.len(buffer)){$B.RAISE(_b_.ValueError,"read() returned too much data: "
+`${_b_.len(buffer)} bytes requested, ${len} returned`)}
+var setitem=$B.search_in_mro($B.get_class(buffer),'__setitem__')
+$B.$call(setitem)(buffer,_b_.slice.$factory(0,len),data)
+return len}
+$B._BufferedIOBase.readinto=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,0);}
+$B._BufferedIOBase.readinto1=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,1);}
+$B._BufferedIOBase.close=function(_self){_self.closed=true}
+$B._BufferedIOBase.detach=function(){_io_unsupported("detach")}
+$B._BufferedIOBase.read=function(){_io_unsupported("read")}
+$B._BufferedIOBase.read1=function(){_io_unsupported("read1")}
+$B._BufferedIOBase.write=function(){_io_unsupported("write")}
+$B.set_func_names($B._BufferedIOBase,'_io')
+function _bufferedreader_read_all(_self){return $B.$call($B.$getattr(_self.raw,'readall'))()}
+function _bufferedreader_read_fast(_self,n){var raw=_self.raw
+if(raw.$byte_pos >=raw.$bytes.length){return _b_.None}
+var b=raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+n)
+raw.$byte_pos+=n
+raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
+return $B.fast_bytes(b)}
+function _bufferedreader_readline(_self){var raw=_self.raw
+if(raw.$byte_pos >=raw.$bytes.length){return $B.fast_bytes()}
+var eof=raw.$byte_pos
+while(eof < raw.$bytes.length){if(raw.$bytes[eof]==10){break}
+eof++}
+var b=raw.$bytes.slice(raw.$byte_pos,eof+1)
+raw.$byte_pos=eof+1
+raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
+return $B.fast_bytes(b)}
+$B._BufferedReader=$B.make_class('_BufferedReader')
+$B._BufferedReader.__bases__=[$B._BufferedIOBase]
+$B._BufferedReader.__mro__=_b_.type.$mro($B._BufferedReader)
+$B._BufferedReader.__init__=function(_self,raw,buffer_size=DEFAULT_BUFFER_SIZE){_self.raw=raw
+_self.buffer_size=buffer_size}
+$B._BufferedReader.peek=function(_self,size){var $=$B.args('peek',2,{self:null,size:null},['self','size'],arguments,{size:0},null,null),_self=$.self,size=$.size
+var raw=_self.raw
+return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+size))}
+$B._BufferedReader.seek=function(_self,offset,whence){var $=$B.args('seek',2,{self:null,offset:null,whence:null},['self','offset','whence'],arguments,{whence:0},null,null),_self=$.self,offset=$.offset,whence=$.whence
+if(_self.closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+if(whence===undefined){whence=0}
+if(whence===0){_self.$byte_pos=offset}else if(whence===1){_self.$byte_pos+=offset}else if(whence===2){_self.$byte_pos=self.$bytes.length+offset}
+return _b_.None}
+function CHECK_CLOSED(fileobj,msg){if(fileobj.closed){$B.RAISE(_b_.ValueError,msg)}}
+$B._BufferedReader.read=function(_self,n=-1){var res
+if(n <-1){$B.RAISE(_b_.ValueError,"read length must be non-negative or -1")}
+CHECK_CLOSED(self,"read of closed file")
+if(n==-1){
+res=_bufferedreader_read_all(_self)}else{res=_bufferedreader_read_fast(_self,n)
+if(res !=_b_.None){return res}
+return $B.fast_bytes()}
+return res}
+$B._BufferedReader.readline=function(_self,size=-1){return _bufferedreader_readline(_self)}
+$B.set_func_names($B._BufferedReader,'_io')
+$B._FileIO=$B.make_class('_FileIO')
+$B._FileIO.__bases__=[$B._RawIOBase]
+$B._FileIO.__mro__=_b_.type.$mro($B._FileIO)
+function bad_mode(){$B.RAISE(_b_.ValueError,"Must have exactly one of create/read/write/append "+
+"mode and at most one plus")}
+function err_closed(){$B.RAISE(_b_.ValueError,"I/O operation on closed file")}
+const O_RDONLY=0,O_WRONLY=1,O_RDWR=2,O_EXCL=1024,O_CREAT=256,O_TRUNC=512,O_APPEND=8
+$B._FileIO.__new__=function(cls){return{
+__class__:cls,fd:-1,created:0,readable:0,writable:0,appending:0,seekable:-1,closefd:1}}
+$B._FileIO.__init__=function(){var $=$B.args('__init__',5,{self:null,name:null,mode:null,closefd:null,opener:null},['self','name','mode','closefd','opener'],arguments,{mode:'r',closefd:true,opener:_b_.None},null,null),_self=$.self,name=$.name,mode=$.mode,closefd=$.closefd,opener=$.opener
+var flags=0
+var ret=0
+var rwa=0,plus=0
+var s=mode
+var pos=0
+while(pos < s.length){switch(s[pos]){case 'x':
+if(rwa){bad_mode()}
+rwa=1
+_self.created=1
+_self.writable=1
+flags |=O_EXCL |O_CREAT
+break
+case 'r':
+if(rwa){bad_mode()}
+rwa=1
+_self.readable=1
+break
+case 'w':
+if(rwa){bad_mode()}
+rwa=1
+_self.writable=1
+flags |=O_CREAT |O_TRUNC
+break
+case 'a':
+if(rwa){bad_mode()}
+rwa=1;
+_self.writable=1
+_self.appending=1
+flags |=O_APPEND |O_CREAT
+break
+case 'b':
+break
+case '+':
+if(plus){bad_mode()}
+_self.readable=_self.writable=1
+plus=1
+break
+default:
+$B.RAISE(_b_.ValueError,`invalid mode: ${mode}`);}
+pos++}
+if(!rwa){bad_mode()}
+if(_self.readable && _self.writable){flags |=O_RDWR;}else if(_self.readable){flags |=O_RDONLY}else{flags |=O_WRONLY}
+if($B.file_cache.hasOwnProperty(name)){_self.$bytes=$B.to_bytes($B.encode($B.file_cache[name],'utf-8'))
+_self.$byte_pos=0
+_self.$line_pos=0
+_self.$text=$B.file_cache[name]
+_self.$text_iterator=_self.$text[Symbol.iterator]()
+_self.$text_length=_b_.len(_self.$text)
+return}else if($B.files && $B.files.hasOwnProperty(name)){
+var $res=atob($B.files[name].content)
+var bytes=[]
+for(const char of $res){bytes.push(char.charCodeAt(0))}
+_self.$bytes=bytes
+_self.$byte_pos=_self.$line_pos=0
+return}
+_self.fd=new XMLHttpRequest()
+_self.fd.overrideMimeType('text/plain;charset=x-user-defined')
+_self.fd.onreadystatechange=function(){if(this.readyState !=4){return}
+var status=this.status
+if(status==404){this.error=$B.EXC(_b_.FileNotFoundError,name)}else if(status !=200){this.error=$B.EXC(_b_.IOError,'Could not open file '+
+name+' : status '+status)}else{var bytes=[]
+for(var codePoint of this.response){var cp=codePoint.codePointAt(0)
+if(cp > 0xf700){cp-=0xf700}
+bytes[bytes.length]=cp}
+_self.$bytes=bytes
+_self.$byte_pos=0
+_self.$line_pos=0}}
+var cache=$B.get_option('cache'),fake_qs=cache ? '' :'?foo='+(new Date().getTime())
+_self.fd.open('GET',encodeURI(name+fake_qs),false)
+_self.fd.send()
+if(_self.fd.error){throw _self.fd.error}}
+$B._FileIO.readable=function(_self){if(_self.fd < 0){err_closed()}
+return $B.$bool(_self.readable)}
+$B._FileIO.readall=function(_self){var buffer=_b_.bytearray.$factory()
+$B._FileIO.readinto(_self,buffer)
+buffer.__class__=_b_.bytes
+return buffer}
+$B._FileIO.readinto=function(_self,buffer){if(_self.fd < 0){err_closed()}
+if(! _self.readable){return err_mode(state,"reading")}
+_b_.bytearray.extend(buffer,$B.fast_bytes(_self.$bytes))
+var n=_b_.len(buffer)
+return n}
+$B._FileIO.readinto1=$B._FileIO.readinto
+$B._FileIO.seekable=function(_self){if(_self.fd < 0){err_closed()}
+return $B.$bool(_self.seekable)}
+$B._FileIO.writable=function(_self){if(_self.fd < 0){err_closed()}
+return $B.$bool(_self.writable)}
+$B.set_func_names($B._FileIO,'_io')
+$B._TextIOBase=$B.make_class('_io._TextIOBase')
+$B._TextIOBase.__bases__=[_IOBase]
+$B._TextIOBase.__mro__=[_IOBase,_b_.object]
+$B._TextIOBase.encoding=$B.getset_descriptor.$factory(
+$B._TextIOBase,'encoding',function(_self){return _self._encoding ?? _b_.None},function(_self,value){_self._encoding=value}
+)
+$B._TextIOBase.errors=$B.getset_descriptor.$factory(
+$B._TextIOBase,'errors',function(_self){return _self.errors ?? _b_.None},function(_self,value){_self._errors=value}
+)
+$B._TextIOBase.read=function(){_io_unsupported('read')}
+var $BufferedReader=$B.make_class('_io.BufferedReader',function(content){return{
+__class__:$BufferedReader,$binary:true,$content:content,$read_func:$B.$getattr(content,'read')}}
+)
+$BufferedReader.__mro__=[_IOBase,_b_.object]
+$BufferedReader.read=function(self,size){if(self.$read_func===undefined){return _IOBase.read(self,size===undefined ?-1 :size)}
+return self.$read_func(size ||-1)}
+$B._TextIOWrapper=$B.make_class('_io._TextIOWrapper',function(){var $=$B.args("TextIOWrapper",6,{buffer:null,encoding:null,errors:null,newline:null,line_buffering:null,write_through:null},["buffer","encoding","errors","newline","line_buffering","write_through"],arguments,{encoding:"utf-8",errors:_b_.None,newline:_b_.None,line_buffering:_b_.False,write_through:_b_.False},null,null)
+if($.encoding===_b_.None){$.encoding='utf-8'}
+var bytes=$B.fast_bytes($.buffer.raw.$bytes)
+var res={__class__:$B._TextIOWrapper,$buffer:$.buffer,$bytes:bytes,$encoding:$.encoding,$errors:$.errors,$newline:$.newline,__dict__:$B.empty_dict()}
+return res}
+)
+$B._TextIOWrapper.$tp_dict={}
+$B._TextIOWrapper.__bases__=[$B._TextIOBase]
+$B._TextIOWrapper.__mro__=[$B._TextIOBase,_IOBase,_b_.object]
+$B._TextIOWrapper.$tp_dict.buffer=$B.getset_descriptor.$factory(
+$B._TextIOWrapper,'buffer',function(_self){return _self.$buffer}
+)
+$B._TextIOWrapper.fileno=function(_self){return-1}
+$B._TextIOWrapper.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),_self=$.self,size=$B.PyNumber_Index($.size)
+if(_self.closed===true){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+if(_self.$text===undefined){_self.$text=$B.decode(_self.$bytes,_self.$encoding,_self.$errors)
+_self.$text_pos=0}
+var len=_b_.len(_self.$text)
+if(size < 0){size=len-_self.$text_pos}
+var res=_b_.str.__getitem__(_self.$text,_b_.slice.$fast_slice(_self.$text_pos,_self.$text_pos+size,1))
+_self.$text_pos+=size
+_self.$text_pos=Math.min(_self.$text_pos,_self.$text.length)
+return res}
+$B._TextIOWrapper.readline=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),_self=$.self,size=$B.PyNumber_Index($.size)
+if(_self.closed===true){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+if(_self.$text===undefined){_self.$text=$B.decode(_self.$bytes,_self.$encoding,_self.$errors)
+_self.$text_iterator=_self.$text[Symbol.iterator]()
+_self.$text_pos=0
+_self.$text_length=_b_.len(_self.$text)}
+var res=''
+var nb=0
+if(size < 0){size=_self.$text_length}
+while(1){var char=_self.$text_iterator.next()
+if(char.done){break}else if(char.value=='\n'){res+=char.value
+break}else{res+=char.value
+nb++
+if(nb > size){break}}}
+return $B.String(res)}
+$B._TextIOWrapper.seek=function(_self,offset,whence){if(_self.closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+if(whence===undefined){whence=0}
+if(whence===0){self.$text_pos=offset}else if(whence===1){self.$text_pos+=offset}else if(whence===2){self.$text_pos=self.$text_length+offset}
+return _b_.None}
+$B.set_func_names($B._TextIOWrapper,"builtins")
+$B._IOBase=_IOBase
+function invalid_mode(mode){$B.RAISE(_b_.ValueError,`invalid mode: '${mode}'`)}
+function _io_open_impl(file,mode,buffering,encoding,errors,newline,closefd,opener){var i;
+var creating=0,reading=0,writing=0,appending=0,updating=0;
+var text=0,binary=0;
+var rawmode='',m;
+var line_buffering,is_number,isatty=0;
+var raw,modeobj,buffer,wrapper,result,path_or_fd=NULL;
+path_or_fd=file
+if(! $B.$isinstance(path_or_fd,_b_.str)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
+if(encoding=='locale'){
+encoding='utf-8'}
+for(var i=0,len=mode.length;i < len;i++){var c=mode[i]
+switch(c){case 'x':
+creating=1
+break
+case 'r':
+reading=1
+break
+case 'w':
+writing=1
+break
+case 'a':
+appending=1
+break
+case '+':
+updating=1
+break
+case 't':
+text=1
+break
+case 'b':
+binary=1
+break
+default:
+invalid_mode(mode)}
+if(mode[i+1]==c){invalid_mode(mode)}}
+m=''
+if(creating)m+='x';
+if(reading)m+='r';
+if(writing)m+='w';
+if(appending)m+='a';
+if(updating)m+='+';
+rawmode=m
+if(text && binary){$B.RAISE(_b_.ValueError,"can't have text and binary mode at once")}
+if(creating+reading+writing+appending > 1){$B.RAISE(_b_.ValueError,"must have exactly one of create/read/write/append mode")}
+if(binary && encoding !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an encoding argument")}
+if(binary && errors !=_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an errors argument");}
+if(binary && newline !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take a newline argument");}
+if(binary && buffering==1){$B.RAISE(_b_.RuntimeWarning,"line buffering (buffering=1) isn't supported in "+
+"binary mode, the default buffer size will be used")}
+var RawIO_class=$B._FileIO
+raw=$B.$call(RawIO_class)(path_or_fd,rawmode,closefd ? true :false,opener)
+result=raw
+modeobj=mode
+if(buffering < 0){isatty=false}
+if(buffering==1 ||isatty){buffering=-1
+line_buffering=1}else{line_buffering=0}
+if(buffering < 0){buffering=DEFAULT_BUFFER_SIZE}
+if(buffering==0){if(! binary){$B.RAISE(_b_.ValueError,"can't have unbuffered text I/O")}
+return result}
+var Buffered_class
+if(updating){Buffered_class=$B._BufferedRandom}else if(creating ||writing ||appending){Buffered_class=$B._BufferedWriter}else if(reading){Buffered_class=$B._BufferedReader}else{$B.RAISE(_b_.ValueError,`unknown mode: '${mode}'`)}
+result=$B.$call(Buffered_class)(raw,buffering)
+if(binary){return result}
+var wrapper=$B.$call($B._TextIOWrapper)(result,encoding,errors,newline,line_buffering ? true :false)
+$B.$setattr(wrapper,'mode',modeobj)
+return wrapper}
+_b_.open=function(){
+var $=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),file=$.file,mode=$.mode,encoding=$.encoding,result={}
+if(encoding=='locale'){
+encoding='utf-8'}
+var is_binary=mode.search('b')>-1
+if(mode.search('w')>-1){
+result={$binary:is_binary,$content:is_binary ? _b_.bytes.$factory():'',$encoding:encoding,closed:False,mode,name:file}
+result.__class__=is_binary ? $BufferedReader :$TextIOWrapper
+$B.file_cache[file]=result.$content
+return result}else if(['r','rb'].indexOf(mode)==-1){$B.RAISE(_b_.ValueError,"Invalid mode '"+mode+"'")}
+if($B.$isinstance(file,_b_.str)){
+if($B.file_cache.hasOwnProperty($.file)){var f=$B.file_cache[$.file]
+result.content=f
+if(is_binary && typeof f=='string'){result.content=_b_.str.encode(f,'utf-8')}else if(f.__class__===_b_.bytes && ! is_binary){result.content=_b_.bytes.decode(f,encoding)}}else if($B.files && $B.files.hasOwnProperty($.file)){
+var $res=atob($B.files[$.file].content)
+var source=[]
+for(const char of $res){source.push(char.charCodeAt(0))}
+result.content=_b_.bytes.$factory(source)
+if(!is_binary){
+try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}else if($B.protocol !="file"){
+var req=new XMLHttpRequest()
+req.overrideMimeType('text/plain;charset=x-user-defined')
+req.onreadystatechange=function(){if(this.readyState !=4){return}
+var status=this.status
+if(status==404){result.error=$B.EXC(_b_.FileNotFoundError,file)}else if(status !=200){result.error=$B.EXC(_b_.IOError,'Could not open file '+
+file+' : status '+status)}else{var bytes=[]
+for(var codePoint of this.response){var cp=codePoint.codePointAt(0)
+if(cp > 0xf700){cp-=0xf700}
+bytes[bytes.length]=cp}
+result.content=_b_.bytes.$factory(bytes)
+if(! is_binary){
+try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}}
+var cache=$B.get_option('cache'),fake_qs=cache ? '' :'?foo='+(new Date().getTime())
+req.open('GET',encodeURI(file+fake_qs),false)
+req.send()}else{$B.RAISE(_b_.FileNotFoundError,"cannot use 'open()' with protocol 'file'")}
+if(result.error !==undefined){throw result.error}
+if(! is_binary){return $B.TextIOWrapper.$factory()}
+var res={$binary:is_binary,$content:result.content,$counter:0,$encoding:encoding,$length:is_binary ? result.content.source.length :
+result.content.length,closed:False,mode,name:file}
+res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
+return res}else{$B.RAISE(_b_.TypeError,"invalid argument for open(): "+
+_b_.str.$factory(file))}}
+_b_.open=function(){var $=$B.args('open',3,{file:null,mode:null,buffering:null,encoding:null,errors:null,newline:null,closefd:null,opener:null},['file','mode','buffering','encoding','errors','newline','closefd','opener'],arguments,{mode:'r',buffering:-1,encoding:_b_.None,errors:_b_.None,newline:_b_.None,closefd:true,opener:_b_.None}),file=$.file,mode=$.mode,encoding=$.encoding,result={}
+return _io_open_impl($.file,$.mode,$.buffering,$.encoding,$.errors,$.newline,$.closefd,$.opener)}})(__BRYTHON__)
+;
+
+(function($B){var _b_=$B.builtins
 _b_.__debug__=false
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
 $B.$inv_comps={'>':'lt','>=':'le','<':'gt','<=':'ge'}
@@ -3669,13 +4140,23 @@ if(! $B.$isinstance($.attr,_b_.str)){$B.RAISE(_b_.TypeError,"attribute name must
 `not '${$B.class_name($.attr)}'`)}
 return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
 $B.search_in_mro=function(klass,attr){var test=false 
-if(klass.hasOwnProperty(attr)){return klass[attr]}else if(klass.__dict__){var v=_b_.dict.$get_string(klass.__dict__,attr,false)
+if(test){console.log('search',attr,'in mro of',klass)}
+if(klass.hasOwnProperty(attr)){if(test){console.log('found in klass',klass[attr])}
+return klass[attr]}else if(klass.__dict__){var v=_b_.dict.$get_string(klass.__dict__,attr,false)
 if(v !==false){if(test){console.log('found in klass dict',klass.__dict__,v)}
 return v}}
 var mro=klass.__mro__
-for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}else if(mro[i].__dict__){var v=_b_.dict.$get_string(mro[i].__dict__,attr,false)
+for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){if(test){console.log('found in mro',i,mro[i])}
+return mro[i][attr]}else if(mro[i].__dict__){var v=_b_.dict.$get_string(mro[i].__dict__,attr,false)
 if(v !==false){if(test){console.log('found in dict of mro',i,v)}
 return v}}}}
+$B.call_with_mro=function(obj,attr){var args=Array.from(arguments).slice(2)
+var obj_class=$B.get_class(obj)
+var in_mro=$B.search_in_mro(obj_class,attr)
+if(in_mro===undefined){$B.RAISE(_b_.AttributeError,`no attribute ${attr}`)}
+var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){return $B.$call(getter(in_mro,obj,obj_class))(...args)}else{if(typeof in_mro !=='function'){var call_in_mro=$B.search_in_mro($B.get_class(in_mro),'__call__')
+if(call_in_mro){return call_in_mro(in_mro,...args)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{return in_mro(obj,...args)}}}
 $B.$getattr=function(obj,attr,_default){
 var res
 if(obj===undefined ||obj===null){$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
@@ -3786,8 +4267,10 @@ if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,r
 return res}}}
 var getattr
 try{res=attr_func(obj,attr)
-if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr_func raised error',err.__class__,err.args,err.name)
-console.log(err)}
+if($test){console.log("result of attr_func",res)}}catch(err){if($test){console.log('attr',attr,'of',obj)
+console.log('attr_func raised error',err.__class__,err.args,err.name)
+console.log(err)
+console.log(Error().stack)}
 if(klass===$B.module){
 getattr=obj.__getattr__
 if($test){console.log('use module getattr',getattr)
@@ -3929,7 +4412,16 @@ if($B.rich_comp("__eq__",res,self.sentinel)){$B.RAISE(_b_.StopIteration,)}
 return res}
 $B.set_func_names(callable_iterator,"builtins")
 $B.$iter=function(obj,sentinel){
+var test=false 
+if(test){console.log('iter',obj)}
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
+var in_mro=$B.search_in_mro(klass,'__iter__')
+if(in_mro){var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
+if(getter){if(obj.$is_class){in_mro=getter(in_mro,_b_.None,klass)}else{in_mro=getter(in_mro,obj,klass)}}
+var in_mro_klass=$B.get_class(in_mro)
+var call=$B.search_in_mro(in_mro_klass,'__call__')
+if(call){var iterator=call(in_mro_klass,in_mro)
+return iterator}}
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},len
 return iterator_class.$factory(gi)}catch(err){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 "' object is not iterable")}}
@@ -4059,6 +4551,9 @@ return res}}
 memoryview.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 bytes.source.forEach(function(item){res+=item.toString(16)})
 return res}
+memoryview.readonly=$B.getset_descriptor.$factory(
+memoryview,'readonly',function(_self){return $B.$isinstance(_self.obj,_b_.bytes)}
+)
 memoryview.release=function(self){if(self.$released){return}
 self.$released=true
 self.obj.$exports-=1}
@@ -4299,454 +4794,6 @@ $B.set_func_names($$super,"builtins")
 _b_.vars=function(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj:def},null,null)
 if($.obj===def){return _b_.locals()}else{try{return $B.$getattr($.obj,'__dict__')}catch(err){if(err.__class__===_b_.AttributeError){$B.RAISE(_b_.TypeError,"vars() argument must have __dict__ attribute")}
 throw err}}}
-var IOUnsupported
-const DEFAULT_BUFFER_SIZE=(128*1024)
-$B.make_IOUnsupported=function(){if($B._IOUnsupported===undefined){$B._IOUnsupported=$B.make_class('UnsupportedOperation')
-$B._IOUnsupported.__bases__=[_b_.OSError,_b_.ValueError]
-$B._IOUnsupported.__mro__=_b_.type.$mro($B._IOUnsupported)
-$B._IOUnsupported.__module__='_io'}}
-function _io_unsupported(value){$B.make_IOUnsupported()
-throw $B.$call($B._IOUnsupported)(value)}
-var _IOBase=$B.make_class("_IOBase")
-_IOBase.__del__=function(_self){
-console.log('del',_self)
-try{var closed=$B.$getattr(_self,'closed')}catch(err){if($B.is_exc(err,_b_.AttributeError)){
-return}}
-if(closed){return}
-$B$call($B.$getattr(_self,'close'))()}
-_IOBase.__enter__=function(self){return self}
-_IOBase.__exit__=function(self){_IOBase.close(self)}
-_IOBase.__iter__=function(_self){if(_self.closed){$B.RAISE(_b_.ValueError,'closed')}
-return _self}
-_IOBase.__next__=function(_self){var readline=$B.search_in_mro($B.get_class(_self),'readline')
-var line=readline(_self)
-if(line==undefined ||_b_.len(line)===0){$B.RAISE(_b_.StopIteration,'')}
-return line;}
-_IOBase.__del__=function(_self){return _IOBase.close(_self)}
-_IOBase.close=function(_self){_self._closed=true}
-_IOBase.fileno=function(_self){_io_unsupported('fileno')}
-_IOBase.flush=function(_self){if(_self._closed){$B.RAISE(_b_.ValueError,"I/O operation on closed file.")}
-return _b_.None}
-_IOBase.isatty=function(){return false}
-_IOBase.readable=function(){return false}
-function make_lines(self){
-if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")
-if($B.last(self.$lines)==''){self.$lines.pop()}
-self.$lines=self.$lines.map(x=> x+'\n')}else{var lines=[],pos=0,source=self.$content.source,len=source.length
-while(pos < len){var ix=source.indexOf(10,pos)
-if(ix==-1){lines.push({__class__:_b_.bytes,source:source.slice(pos)})
-break}else{lines.push({__class__:_b_.bytes,source:source.slice(pos,ix+1)})
-pos=ix+1}}
-self.$lines=lines}}}
-_IOBase.readline=function(_self,limit=-1){var $=$B.args('readline',2,{self:null,limit:null},['self','limit'],arguments,{limit:-1},null,null),_self=$.self,limit=$.limit
-var old_size=-1
-var peek=$B.$getattr(_self,"peek",null)
-var buffer=_b_.bytearray.$factory()
-limit=$B.PyNumber_Index(limit)
-while(limit < 0 ||buffer.length < limit){var nreadahead=1
-var b
-if(peek !=null){var readahead=peek(1)
-if(! $B.$isinstance(readahead,_b_.bytes)){$B.RAISE(_b_.OSError,"peek() should have returned a bytes object, "+
-`not '${$B.class_name(readahead)}'`)}
-if(readahead.length > 0){var n=0
-var buf=_b_.bytes.$decode(readahead,'latin-1')
-if(limit >=0){while(true){if(n >=readahead.length ||n >=limit){break}
-if(buf[n++]=='\n'){break}}}else{while(true){if(n >=readahead.length){break}
-if(buf[n++]=='\n'){break}}}
-nreadahead=n}}
-var read=$B.search_in_mro($B.get_class(_self),"read")
-b=$B.$call(read)(_self,nreadahead)
-if(! $B.$isinstance(b,_b_.bytes)){$B.RAISE(_b_.OSError,"read() should have returned a bytes object, "+
-`not '${$B.class_name(b)}'`)}
-if(_b_.len(b)==0){break;}
-_b_.bytearray.extend(buffer,b)
-if($B.last(_b_.list.$factory(buffer))==10){
-break}}
-return buffer}
-_IOBase.readlines=function(_self,hint){var length=0;
-var result,it
-result=$B.$list([])
-if(hint <=0){return _b_.list.$factory(_self)}
-var readline=$B.search_in_mro($B.get_class(_self),'readline')
-var nb=0
-while(true){nb++
-if(nb > 5000){console.log('overflow',result)
-break}
-var line=readline(_self)
-var line_length=_b_.len(line)
-if(line_length==0){break}else{result[result.length]=line}
-if(line_length > hint-length){break}
-length+=line_length}
-return result}
-_IOBase.seek=function(_self){_io_unsupported('seek')}
-_IOBase.seekable=function(){return false}
-_IOBase.tell=function(self){return $B.$getattr(self,'seek')(0,1)}
-_IOBase.truncate=function(){_io_unsupported('truncate')}
-_IOBase.writable=function(){return false}
-_IOBase.writelines=function(_self,lines){if(_self.closed){return _b_.None}
-var iter=$B.make_js_iterator(lines)
-var writer=$B.search_in_mro($B.get_class(_self),'write')
-if(writer===undefined){$B.RAISE_ATTRIBUTE_ERROR(
-`'${$B.class_name(_self)}' object has no attribute 'write'`,_self,'write')}
-for(var line of iter){writer(_self,line)}
-return _b_.None}
-_IOBase.writelines=function(_self,lines){var iter,res;
-if(_self.closed){$B.RAISE(_b_.OSError,'closed')}
-var writer=$B.$call($B.$getattr(_self,'write'))
-for(var line of $B.make_js_iterator(lines)){writer(line)}
-return _b_.None}
-$B.set_func_names(_IOBase,"builtins")
-$B._RawIOBase=$B.make_class('_io._RawIOBase')
-$B._RawIOBase.__bases__=[_IOBase]
-$B._RawIOBase.__mro__=[_IOBase,_b_.object]
-$B._RawIOBase.read=function(_self,n){var b,res
-if(n < 0){return $B.$call($B.$getattr(_self,"readall"))}
-b=_b_.bytearray.$factory()
-$B.$call($B.$getattr(_self,"readinto"))(b)
-return b}
-$B._RawIOBase.readall=function(_self){var r
-var chunks=[]
-var result
-while(1){var data=$B.$call($B.$getattr(_self,"read"))(DEFAULT_BUFFER_SIZE)
-if(data===_b_.None){if(chunks.length==0){return data}
-break}
-if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
-if(_b_.len(data)==0){break}
-chunks.push(data)}
-result=_b_.bytes.join(_b_.bytes.$fast_bytes([]),chunks)
-return result}
-$B._RawIOBase.readinto=function(_self,b){throw _b_.NotImplementedError('readinto')}
-$B._RawIOBase.write=function(){throw _b_.NotImplementedError('readinto')}
-$B.set_func_names($B._RawIOBase,"_io")
-$B._BufferedIOBase=$B.make_class('_BufferedIOBase')
-$B._BufferedIOBase.__bases__=[_IOBase]
-$B._BufferedIOBase.__mro__=[_IOBase,_b_.object]
-function _bufferediobase_readinto_generic(_self,buffer,readinto1){var len,data
-var attr=readinto1 ? "read1" :"read"
-data=$B.$call($B.$getattr(_self,attr))(_b_.len(buffer))
-if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
-len=_b_.bytes.__len__(data)
-if(len > _b_.len(buffer)){$B.RAISE(_b_.ValueError,"read() returned too much data: "
-`${_b_.len(buffer)} bytes requested, ${len} returned`)}
-_b_.bytearray.__setitem__(buffer,_b_.slice.$factory(0,len),data)
-return len}
-$B._BufferedIOBase.readinto=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,0);}
-$B._BufferedIOBase.readinto1=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,1);}
-$B._BufferedIOBase.close=function(_self){_self.closed=true}
-$B._BufferedIOBase.detach=function(){_io_unsupported("detach")}
-$B._BufferedIOBase.read=function(){_io_unsupported("read")}
-$B._BufferedIOBase.read1=function(){_io_unsupported("read1")}
-$B._BufferedIOBase.write=function(){_io_unsupported("write")}
-$B.set_func_names($B._BufferedIOBase,'_io')
-function _bufferedreader_read_all(_self){return $B.$call($B.$getattr(_self.raw,'readall'))()}
-function _bufferedreader_read_fast(_self,n){var raw=_self.raw
-if(raw.$byte_pos >=raw.$bytes.length){return _b_.None}
-var b=raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+n)
-raw.$byte_pos+=n
-raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
-return $B.fast_bytes(b)}
-function _bufferedreader_readline(_self){var raw=_self.raw
-if(raw.$byte_pos >=raw.$bytes.length){return $B.fast_bytes()}
-var eof=raw.$byte_pos
-while(eof < raw.$bytes.length){if(raw.$bytes[eof]==10){break}
-eof++}
-var b=raw.$bytes.slice(raw.$byte_pos,eof+1)
-raw.$byte_pos=eof+1
-raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
-return $B.fast_bytes(b)}
-$B._BufferedReader=$B.make_class('_BufferedReader')
-$B._BufferedReader.__bases__=[$B._BufferedIOBase]
-$B._BufferedReader.__mro__=_b_.type.$mro($B._BufferedReader)
-$B._BufferedReader.__init__=function(_self,raw,buffer_size=DEFAULT_BUFFER_SIZE){_self.raw=raw
-_self.buffer_size=buffer_size}
-$B._BufferedReader.peek=function(_self,size){var $=$B.args('peek',2,{self:null,size:null},['self','size'],arguments,{size:0},null,null),_self=$.self,size=$.size
-var raw=_self.raw
-return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+size))}
-$B._BufferedReader.seek=function(_self,offset,whence){var $=$B.args('seek',2,{self:null,offset:null,whence:null},['self','offset','whence'],arguments,{whence:0},null,null),_self=$.self,offset=$.offset,whence=$.whence
-if(_self.closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
-if(whence===undefined){whence=0}
-if(whence===0){_self.$byte_pos=offset}else if(whence===1){_self.$byte_pos+=offset}else if(whence===2){_self.$byte_pos=self.$bytes.length+offset}
-return _b_.None}
-function CHECK_CLOSED(fileobj,msg){if(fileobj.closed){$B.RAISE(_b_.ValueError,msg)}}
-$B._BufferedReader.read=function(_self,n=-1){var res
-if(n <-1){$B.RAISE(_b_.ValueError,"read length must be non-negative or -1")}
-CHECK_CLOSED(self,"read of closed file")
-if(n==-1){
-res=_bufferedreader_read_all(_self)}else{res=_bufferedreader_read_fast(_self,n)
-if(res !=_b_.None){return res}
-return $B.fast_bytes()}
-return res}
-$B._BufferedReader.readline=function(_self,size=-1){return _bufferedreader_readline(_self)}
-$B.set_func_names($B._BufferedReader,'_io')
-$B._FileIO=$B.make_class('_FileIO')
-$B._FileIO.__bases__=[$B._RawIOBase]
-$B._FileIO.__mro__=_b_.type.$mro($B._FileIO)
-function bad_mode(){$B.RAISE(_b_.ValueError,"Must have exactly one of create/read/write/append "+
-"mode and at most one plus")}
-function err_closed(){$B.RAISE(_b_.ValueError,"I/O operation on closed file")}
-const O_RDONLY=0,O_WRONLY=1,O_RDWR=2,O_EXCL=1024,O_CREAT=256,O_TRUNC=512,O_APPEND=8
-$B._FileIO.__new__=function(cls){return{
-__class__:cls,fd:-1,created:0,readable:0,writable:0,appending:0,seekable:-1,closefd:1}}
-$B._FileIO.__init__=function(){var $=$B.args('__init__',5,{self:null,name:null,mode:null,closefd:null,opener:null},['self','name','mode','closefd','opener'],arguments,{mode:'r',closefd:true,opener:_b_.None},null,null),_self=$.self,name=$.name,mode=$.mode,closefd=$.closefd,opener=$.opener
-var flags=0
-var ret=0
-var rwa=0,plus=0
-var s=mode
-var pos=0
-while(pos < s.length){switch(s[pos]){case 'x':
-if(rwa){bad_mode()}
-rwa=1
-_self.created=1
-_self.writable=1
-flags |=O_EXCL |O_CREAT
-break
-case 'r':
-if(rwa){bad_mode()}
-rwa=1
-_self.readable=1
-break
-case 'w':
-if(rwa){bad_mode()}
-rwa=1
-_self.writable=1
-flags |=O_CREAT |O_TRUNC
-break
-case 'a':
-if(rwa){bad_mode()}
-rwa=1;
-_self.writable=1
-_self.appending=1
-flags |=O_APPEND |O_CREAT
-break
-case 'b':
-break
-case '+':
-if(plus){bad_mode()}
-_self.readable=_self.writable=1
-plus=1
-break
-default:
-$B.RAISE(_b_.ValueError,`invalid mode: ${mode}`);}
-pos++}
-if(!rwa){bad_mode()}
-if(_self.readable && _self.writable){flags |=O_RDWR;}else if(_self.readable){flags |=O_RDONLY}else{flags |=O_WRONLY}
-if($B.file_cache.hasOwnProperty(name)){_self.$bytes=$B.to_bytes($B.encode($B.file_cache[name],'utf-8'))
-_self.$byte_pos=0
-_self.$line_pos=0
-_self.$text=$B.file_cache[name]
-_self.$text_iterator=_self.$text[Symbol.iterator]()
-_self.$text_length=_b_.len(_self.$text)
-return}else if($B.files && $B.files.hasOwnProperty(name)){
-var $res=atob($B.files[name].content)
-var bytes=[]
-for(const char of $res){bytes.push(char.charCodeAt(0))}
-_self.$bytes=bytes
-_self.$byte_pos=_self.$line_pos=0
-return}
-_self.fd=new XMLHttpRequest()
-_self.fd.overrideMimeType('text/plain;charset=x-user-defined')
-_self.fd.onreadystatechange=function(){if(this.readyState !=4){return}
-var status=this.status
-if(status==404){this.error=$B.EXC(_b_.FileNotFoundError,name)}else if(status !=200){this.error=$B.EXC(_b_.IOError,'Could not open file '+
-name+' : status '+status)}else{var bytes=[]
-for(var codePoint of this.response){var cp=codePoint.codePointAt(0)
-if(cp > 0xf700){cp-=0xf700}
-bytes[bytes.length]=cp}
-_self.$bytes=bytes
-_self.$byte_pos=0
-_self.$line_pos=0}}
-var cache=$B.get_option('cache'),fake_qs=cache ? '' :'?foo='+(new Date().getTime())
-_self.fd.open('GET',encodeURI(name+fake_qs),false)
-_self.fd.send()
-if(_self.fd.error){throw _self.fd.error}}
-$B._FileIO.readable=function(_self){if(_self.fd < 0){err_closed()}
-return $B.$bool(_self.readable)}
-$B._FileIO.readall=function(_self){var buffer=_b_.bytearray.$factory()
-$B._FileIO.readinto(_self,buffer)
-buffer.__class__=_b_.bytes
-return buffer}
-$B._FileIO.readinto=function(_self,buffer){if(_self.fd < 0){err_closed()}
-if(! _self.readable){return err_mode(state,"reading")}
-_b_.bytearray.extend(buffer,$B.fast_bytes(_self.$bytes))
-var n=_b_.len(buffer)
-return n}
-$B._FileIO.readinto1=$B._FileIO.readinto
-$B._FileIO.seekable=function(_self){if(_self.fd < 0){err_closed()}
-return $B.$bool(_self.seekable)}
-$B._FileIO.writable=function(_self){if(_self.fd < 0){err_closed()}
-return $B.$bool(_self.writable)}
-$B.set_func_names($B._FileIO,'_io')
-$B._TextIOBase=$B.make_class('_io._TextIOBase')
-$B._TextIOBase.__bases__=[_IOBase]
-$B._TextIOBase.__mro__=[_IOBase,_b_.object]
-$B._TextIOBase.encoding=$B.getset_descriptor.$factory(
-$B._TextIOBase,'encoding',function(_self){return _self._encoding ?? _b_.None},function(_self,value){_self._encoding=value}
-)
-$B._TextIOBase.errors=$B.getset_descriptor.$factory(
-$B._TextIOBase,'errors',function(_self){return _self.errors ?? _b_.None},function(_self,value){_self._errors=value}
-)
-$B._TextIOBase.read=function(){_io_unsupported('read')}
-var $BufferedReader=$B.make_class('_io.BufferedReader',function(content){return{
-__class__:$BufferedReader,$binary:true,$content:content,$read_func:$B.$getattr(content,'read')}}
-)
-$BufferedReader.__mro__=[_IOBase,_b_.object]
-$BufferedReader.read=function(self,size){if(self.$read_func===undefined){return _IOBase.read(self,size===undefined ?-1 :size)}
-return self.$read_func(size ||-1)}
-$B._TextIOWrapper=$B.make_class('_io._TextIOWrapper',function(){var $=$B.args("TextIOWrapper",6,{buffer:null,encoding:null,errors:null,newline:null,line_buffering:null,write_through:null},["buffer","encoding","errors","newline","line_buffering","write_through"],arguments,{encoding:"utf-8",errors:_b_.None,newline:_b_.None,line_buffering:_b_.False,write_through:_b_.False},null,null)
-if($.encoding===_b_.None){$.encoding='utf-8'}
-var bytes=$B.fast_bytes($.buffer.raw.$bytes)
-var res={__class__:$B._TextIOWrapper,$buffer:$.buffer,$bytes:bytes,$encoding:$.encoding,$errors:$.errors,$newline:$.newline,__dict__:$B.empty_dict()}
-return res}
-)
-$B._TextIOWrapper.$tp_dict={}
-$B._TextIOWrapper.__bases__=[$B._TextIOBase]
-$B._TextIOWrapper.__mro__=[$B._TextIOBase,_IOBase,_b_.object]
-$B._TextIOWrapper.$tp_dict.buffer=$B.getset_descriptor.$factory(
-$B._TextIOWrapper,'buffer',function(_self){return _self.$buffer}
-)
-$B._TextIOWrapper.fileno=function(_self){return-1}
-$B._TextIOWrapper.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),_self=$.self,size=$B.PyNumber_Index($.size)
-if(_self.closed===true){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
-if(_self.$text===undefined){_self.$text=$B.decode(_self.$bytes,_self.$encoding,_self.$errors)
-_self.$text_pos=0}
-var len=_b_.len(_self.$text)
-if(size < 0){size=len-_self.$text_pos}
-var res=_b_.str.__getitem__(_self.$text,_b_.slice.$fast_slice(_self.$text_pos,_self.$text_pos+size,1))
-_self.$text_pos+=size
-_self.$text_pos=Math.min(_self.$text_pos,_self.$text.length)
-return res}
-$B._TextIOWrapper.readline=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),_self=$.self,size=$B.PyNumber_Index($.size)
-if(_self.closed===true){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
-if(_self.$text===undefined){_self.$text=$B.decode(_self.$bytes,_self.$encoding,_self.$errors)
-_self.$text_iterator=_self.$text[Symbol.iterator]()
-_self.$text_pos=0
-_self.$text_length=_b_.len(_self.$text)}
-var res=''
-var nb=0
-if(size < 0){size=_self.$text_length}
-while(1){var char=_self.$text_iterator.next()
-if(char.done){break}else if(char.value=='\n'){res+=char.value
-break}else{res+=char.value
-nb++
-if(nb > size){break}}}
-return $B.String(res)}
-$B._TextIOWrapper.seek=function(_self,offset,whence){if(_self.closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
-if(whence===undefined){whence=0}
-if(whence===0){self.$text_pos=offset}else if(whence===1){self.$text_pos+=offset}else if(whence===2){self.$text_pos=self.$text_length+offset}
-return _b_.None}
-$B.set_func_names($B._TextIOWrapper,"builtins")
-$B._IOBase=_IOBase
-function invalid_mode(mode){$B.RAISE(_b_.ValueError,`invalid mode: '${mode}'`)}
-function _io_open_impl(file,mode,buffering,encoding,errors,newline,closefd,opener){var i;
-var creating=0,reading=0,writing=0,appending=0,updating=0;
-var text=0,binary=0;
-var rawmode='',m;
-var line_buffering,is_number,isatty=0;
-var raw,modeobj,buffer,wrapper,result,path_or_fd=NULL;
-path_or_fd=file
-if(! $B.$isinstance(path_or_fd,_b_.str)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
-if(encoding=='locale'){
-encoding='utf-8'}
-for(var i=0,len=mode.length;i < len;i++){var c=mode[i]
-switch(c){case 'x':
-creating=1
-break
-case 'r':
-reading=1
-break
-case 'w':
-writing=1
-break
-case 'a':
-appending=1
-break
-case '+':
-updating=1
-break
-case 't':
-text=1
-break
-case 'b':
-binary=1
-break
-default:
-invalid_mode(mode)}
-if(mode[i+1]==c){invalid_mode(mode)}}
-m=''
-if(creating)m+='x';
-if(reading)m+='r';
-if(writing)m+='w';
-if(appending)m+='a';
-if(updating)m+='+';
-rawmode=m
-if(text && binary){$B.RAISE(_b_.ValueError,"can't have text and binary mode at once")}
-if(creating+reading+writing+appending > 1){$B.RAISE(_b_.ValueError,"must have exactly one of create/read/write/append mode")}
-if(binary && encoding !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an encoding argument")}
-if(binary && errors !=_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an errors argument");}
-if(binary && newline !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take a newline argument");}
-if(binary && buffering==1){$B.RAISE(_b_.RuntimeWarning,"line buffering (buffering=1) isn't supported in "+
-"binary mode, the default buffer size will be used")}
-var RawIO_class=$B._FileIO
-raw=$B.$call(RawIO_class)(path_or_fd,rawmode,closefd ? true :false,opener)
-result=raw
-modeobj=mode
-if(buffering < 0){isatty=false}
-if(buffering==1 ||isatty){buffering=-1
-line_buffering=1}else{line_buffering=0}
-if(buffering < 0){buffering=DEFAULT_BUFFER_SIZE}
-if(buffering==0){if(! binary){$B.RAISE(_b_.ValueError,"can't have unbuffered text I/O")}
-return result}
-var Buffered_class
-if(updating){Buffered_class=$B._BufferedRandom}else if(creating ||writing ||appending){Buffered_class=$B._BufferedWriter}else if(reading){Buffered_class=$B._BufferedReader}else{$B.RAISE(_b_.ValueError,`unknown mode: '${mode}'`)}
-result=$B.$call(Buffered_class)(raw,buffering)
-if(binary){return result}
-var wrapper=$B.$call($B._TextIOWrapper)(result,encoding,errors,newline,line_buffering ? true :false)
-$B.$setattr(wrapper,'mode',modeobj)
-return wrapper}
-_b_.open=function(){
-var $=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),file=$.file,mode=$.mode,encoding=$.encoding,result={}
-if(encoding=='locale'){
-encoding='utf-8'}
-var is_binary=mode.search('b')>-1
-if(mode.search('w')>-1){
-result={$binary:is_binary,$content:is_binary ? _b_.bytes.$factory():'',$encoding:encoding,closed:False,mode,name:file}
-result.__class__=is_binary ? $BufferedReader :$TextIOWrapper
-$B.file_cache[file]=result.$content
-return result}else if(['r','rb'].indexOf(mode)==-1){$B.RAISE(_b_.ValueError,"Invalid mode '"+mode+"'")}
-if($B.$isinstance(file,_b_.str)){
-if($B.file_cache.hasOwnProperty($.file)){var f=$B.file_cache[$.file]
-result.content=f
-if(is_binary && typeof f=='string'){result.content=_b_.str.encode(f,'utf-8')}else if(f.__class__===_b_.bytes && ! is_binary){result.content=_b_.bytes.decode(f,encoding)}}else if($B.files && $B.files.hasOwnProperty($.file)){
-var $res=atob($B.files[$.file].content)
-var source=[]
-for(const char of $res){source.push(char.charCodeAt(0))}
-result.content=_b_.bytes.$factory(source)
-if(!is_binary){
-try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}else if($B.protocol !="file"){
-var req=new XMLHttpRequest()
-req.overrideMimeType('text/plain;charset=x-user-defined')
-req.onreadystatechange=function(){if(this.readyState !=4){return}
-var status=this.status
-if(status==404){result.error=$B.EXC(_b_.FileNotFoundError,file)}else if(status !=200){result.error=$B.EXC(_b_.IOError,'Could not open file '+
-file+' : status '+status)}else{var bytes=[]
-for(var codePoint of this.response){var cp=codePoint.codePointAt(0)
-if(cp > 0xf700){cp-=0xf700}
-bytes[bytes.length]=cp}
-result.content=_b_.bytes.$factory(bytes)
-if(! is_binary){
-try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}}
-var cache=$B.get_option('cache'),fake_qs=cache ? '' :'?foo='+(new Date().getTime())
-req.open('GET',encodeURI(file+fake_qs),false)
-req.send()}else{$B.RAISE(_b_.FileNotFoundError,"cannot use 'open()' with protocol 'file'")}
-if(result.error !==undefined){throw result.error}
-if(! is_binary){return $B.TextIOWrapper.$factory()}
-var res={$binary:is_binary,$content:result.content,$counter:0,$encoding:encoding,$length:is_binary ? result.content.source.length :
-result.content.length,closed:False,mode,name:file}
-res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
-return res}else{$B.RAISE(_b_.TypeError,"invalid argument for open(): "+
-_b_.str.$factory(file))}}
-_b_.open=function(){var $=$B.args('open',3,{file:null,mode:null,buffering:null,encoding:null,errors:null,newline:null,closefd:null,opener:null},['file','mode','buffering','encoding','errors','newline','closefd','opener'],arguments,{mode:'r',buffering:-1,encoding:_b_.None,errors:_b_.None,newline:_b_.None,closefd:true,opener:_b_.None}),file=$.file,mode=$.mode,encoding=$.encoding,result={}
-return _io_open_impl($.file,$.mode,$.buffering,$.encoding,$.errors,$.newline,$.closefd,$.opener)}
 var zip=_b_.zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
@@ -4804,7 +4851,8 @@ concat(other_builtins)
 for(var name of builtin_names){try{if($B.builtin_funcs.indexOf(name)>-1){_b_[name].__class__=builtin_function
 _b_[name].$infos={__module__:'builtins',__name__:name,__qualname__:name}
 $B.set_function_infos(_b_[name],{__module__:'builtins',__name__:name,__qualname__:name}
-)}}catch(err){}}
+)}}catch(err){
+console.log('error for',name,err)}}
 _b_.object.__init__.__class__=$B.wrapper_descriptor 
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__);
 ;
@@ -5933,6 +5981,7 @@ var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer
 bytes.__add__=function(self,other){try{var other_bytes=$B.to_bytes(other)
 return{
 __class__:self.__class__,source:self.source.concat(other_bytes)}}catch(err){$B.RAISE(_b_.TypeError,"can't concat str to bytes")}}
+bytes.__buffer__=function(_self,flags){return $B.$call(_b_.memoryview)(_self)}
 bytes.__bytes__=function(self){return self}
 bytes.__contains__=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)>-1}
 if(self.source.length < other.source.length){return false}
@@ -6034,6 +6083,7 @@ self.source=int_list
 self.encoding=encoding
 self.errors=errors
 return self}
+bytes.__release_buffer__=function(_self,buffer){_b_.memoryview.release(buffer)}
 bytes.__repr__=bytes.__str__=function(self){var t=$B.special_string_repr,
 res=""
 for(var i=0,len=self.source.length;i < len;i++){var s=self.source[i]
@@ -6890,8 +6940,7 @@ $B.imported[name]=modobj
 if(modobj===undefined){$B.RAISE(_b_.ImportError,'imported not set by module')}
 modobj.__class__=Module
 modobj.__name__=name
-for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){if(modobj[attr]===_b_.iter){console.log('set iter',modobj,name)}
-modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr}
+for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr,__code__:{co_filename:modobj.__file__,co_code:modobj[attr]+'',co_flags:$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS}}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 ! modobj[attr].hasOwnProperty('__module__')){modobj[attr].__module__=name}}}
 function run_js(module_contents,path,_module){var keys_before=new Set(Object.keys(globalThis))
@@ -7101,7 +7150,7 @@ PathEntryFinder.find_spec=function(self,fullname){
 var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[],py_ext=$B.get_option('python_extension')
 var tryall=hint===undefined
 if(tryall ||hint=='py'){
-modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true]])}
+modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true],[base_path+'.js','js',false]])}
 for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package:false}
 loader_data.code=$download_module(module,file_info[0],undefined)
 notfound=false
@@ -8191,7 +8240,7 @@ let name=""
 while(1){if(_self.charAt(pos).search(/\s/)==-1){if(name==""){name=_self.charAt(pos)}else{name+=_self.charAt(pos)}}else{if(name !==""){res.push(name)
 if(maxsplit !==-1 && res.length==maxsplit+1){res.pop()
 res.push(name+_self.substr(pos))
-return res}
+return $B.$list(res.map($B.String))}
 name=""}}
 pos++
 if(pos > _self.length-1){if(name){res.push(name)}
@@ -8204,7 +8253,7 @@ if(maxsplit==0){return $B.$list([$.self])}
 while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
 pos+=seplen
 if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))
-return res.map($B.String)}
+return $B.$list(res.map($B.String))}
 s=""}else{s+=_self.charAt(pos)
 pos++}}
 res.push(s)
@@ -8270,6 +8319,8 @@ default:
 return "0".repeat(width-len)+_self}}
 str.$factory=function(arg,encoding){if(arguments.length==0){return ""}
 if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
+var test=false 
+if(test){console.log('call str of',arg)}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors
 if(! $B.$isinstance(encoding,str)){$B.RAISE(_b_.TypeError,`str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)}
@@ -8288,7 +8339,12 @@ if($B.get_option('debug')> 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
 throw err}
-var res=$B.$call(method)(arg)
+var getter=$B.search_in_mro($B.get_class(method),'__get__')
+var res
+if(getter){if(typeof getter=='function'){if(arg.$is_class){method=getter(method,_b_.None,klass)
+res=$B.$call(method)(arg)}else{method=getter(method,arg,klass)
+res=$B.$call(method)()}}else{var call_in_mro=$B.search_in_mro($B.get_class(getter,'__call__'))
+if(call_in_mro){res=call_in_mro(getter,arg)}else{$B.RAISE(_b_.TypeError,'__str__ or __repr__ is not callable')}}}else{res=$B.$call(method)(arg)}
 if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}
@@ -8849,15 +8905,11 @@ return false
 default:
 if(obj.$is_class){return true}
 var klass=$B.get_class(obj),missing={},bool_method=$B.search_in_mro(klass,'__bool__')
-var test=false 
-if(test){console.log('bool(obj)',obj,'bool_class',bool_class,'klass',klass,'apply bool method',bool_method)
-console.log('$B.$call(bool_method)',bool_method+'')}
 if(bool_method===undefined){var len_method=$B.$getattr(klass,'__len__',missing)
 if(len_method===missing){return true}
-return _b_.len(obj)> 0}else{var res=$B.$call(bool_method)(obj)
+return _b_.len(obj)> 0}else{var res=$B.call_with_mro(obj,'__bool__')
 if(res !==true && res !==false){$B.RAISE(_b_.TypeError,"__bool__ should return "+
 "bool, returned "+$B.class_name(res))}
-if(test){console.log('bool method returns',res)}
 return res}}}
 var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],__qualname__:'bool',$is_class:true,$not_basetype:true,
 $is_number:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
@@ -11108,6 +11160,30 @@ if($B.$isinstance(other,js_array)){return _self.slice().concat(other)}
 for(var item of $B.make_js_iterator(other)){res.push(pyobj2jsobj(item))}
 return res}
 js_array.__delitem__=function(_self,key){_self.splice(key,1)}
+js_array.__eq__=function(_self,other){if($B.$isinstance(other,_b_.list)){return _b_.list.__eq__($B.$list(_self.map(jsobj2pyobj)),other)}else if(other.$is_js_array){if(_self.length !=other.length){return false}
+for(var i=0,len=_self.length;i <len;i++){if(_self[i]!=other[i]){return false}}
+return true}
+return _b_.NotImplemented}
+js_array.__ge__=function(_self,other){return js_array.__le__(other,_self)}
+js_array.__gt__=function(_self,other){return js_array.__lt__(other,_self)}
+js_array.__le__=function(self,other){if($B.$isinstance(other,_b_.list)){return _b_.list.__le__($B.$list(_self.map(jsobj2pyobj)),other)}else if(other.$is_js_array){var i=0
+while(i < _self.length && i < other.length &&
+_self[i]==other[i]){i++}
+if(i==_self.length){
+return _self.length <=other.length}
+if(i==other.length){
+return false}
+return _self[i]<=other[i]}
+return _b_.NotImplemented}
+js_array.__lt__=function(_self,other){if($B.$isinstance(other,_b_.list)){return _b_.list.__lt__($B.$list(_self.map(jsobj2pyobj)),other)}else if(other.$is_js_array){var i=0
+while(i < _self.length && i < other.length &&
+_self[i]==other[i]){i++}
+if(i==_self.length){
+return _self.length < other.length}
+if(i==other.length){
+return false}
+return self[i]<=other[i]}
+return _b_.NotImplemented}
 js_array.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
 var proto=Object.getPrototypeOf(_self),res=proto[attr]
 if(res !==undefined){
@@ -15641,11 +15717,11 @@ var ast_obj=$B._PyAST.JoinedStr(values)
 set_position_from_list(ast_obj,[lineno,col_offset,debug_end_line,debug_end_offset])
 console.log('JoinedStr',ast_obj)
 return ast_obj}
-$B._PyPegen.formatted_value=function(p,expression,debug,conversion,format,closing_brace,arena){var conversion_val=-1
-if(conversion){var conversion_expr=conversion.result,first=conversion_expr.id
-if(first.length > 1 ||! 'sra'.includes(first)){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion_expr,`f-string: invalid conversion character {first}: `+
+$B._PyPegen.formatted_value=function(p,expression,debug,conversion,format,closing_brace,arena){var conversion_val=_get_interpolation_conversion(p,debug,conversion,format)
+if(typeof conversion_val=='string'){
+if(conversion_val.length > 1 ||! 'sra'.includes(conversion_val)){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion.result,`f-string: invalid conversion character ${conversion_val}: `+
 "expected 's', 'r', or 'a'")}
-var conversion_val=first.charCodeAt(0)}
+conversion_val=conversion_val.charCodeAt(0)}
 var formatted_value=new $B.ast.FormattedValue(expression,conversion_val,format===undefined ? format :format.result)
 set_position_from_obj(formatted_value,arena)
 if(debug){var debug_end_line,debug_end_offset,debug_metadata
@@ -15839,11 +15915,11 @@ $B._PyPegen.augoperator=function(p,kind){return{kind}}
 $B._PyPegen.function_def_decorators=function(p,decorators,function_def){var constr=function_def instanceof $B.ast.AsyncFunctionDef ?
 $B.ast.AsyncFunctionDef :$B.ast.FunctionDef
 var ast_obj=new constr(
-function_def.name,function_def.args,function_def.body,decorators,function_def.returns,function_def.type_comment,function_def.type_params)
+function_def.name,function_def.args,function_def.body,decorators,function_def.returns,function_def.type_comment,function_def.type_params,p.arena)
 for(var position of positions){ast_obj[position]=function_def[position]}
 return ast_obj}
 $B._PyPegen.class_def_decorators=function(p,decorators,class_def){var ast_obj=$B._PyAST.ClassDef(
-class_def.name,class_def.bases,class_def.keywords,class_def.body,decorators,class_def.type_params)
+class_def.name,class_def.bases,class_def.keywords,class_def.body,decorators,class_def.type_params,p.arena)
 set_position_from_obj(ast_obj,class_def)
 return ast_obj}
 $B._PyPegen.keyword_or_starred=function(p,element,is_keyword){return{

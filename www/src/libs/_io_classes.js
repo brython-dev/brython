@@ -8,7 +8,7 @@ var _IOBase = $B._IOBase //$B.make_class("_IOBase")
 _IOBase.__mro__ = [_b_.object]
 
 _IOBase.close = function(){
-    get_self("close", arguments)._closed = true
+    get_self("close", arguments).closed = true
 }
 
 _IOBase.flush = function(){
@@ -37,43 +37,10 @@ _BufferedIOBase.__exit__ = function(self, type, value, traceback){
 
 $B.set_func_names(_BufferedIOBase, '_io')
 
-/*
-// Base class for raw binary I/O.
-var _RawIOBase = $B.make_class("_RawIOBase")
-
-_RawIOBase.__mro__ = [_IOBase, _b_.object]
-
-_RawIOBase.read = function(){
-    var $ = $B.args("read", 2, {self: null, size: null}, ["self", "size"],
-                    arguments, {size: -1}, null, null),
-        self = $.self,
-        size = $.size,
-        res
-    self.$pos = self.$pos || 0
-    if(size == -1){
-        if(self.$pos == 0){
-            res = self.$content
-        }else{
-            res = _b_.bytes.$factory(self.$content.source.slice(self.$pos))
-        }
-        self.$pos = self.$content.source.length - 1
-    }else{
-        res = _b_.bytes.$factory(self.$content.source.slice(self.$pos, size))
-        self.$pos += size
-    }
-    return res
-}
-
-_RawIOBase.readall = function(){
-    return _RawIOBase.read(get_self("readall", arguments))
-}
-
-$B.set_func_names(_RawIOBase, '_io')
-*/
 _RawIOBase = $B._RawIOBase
 
 function check_closed(_self){
-    if(_self._closed){
+    if(_self.closed){
         $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
 }
@@ -151,6 +118,8 @@ StringIO.__init__ = function(){
 StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
 
 StringIO.__getstate__ = function(_self){
+    check_closed(_self)
+
     var initvalue = StringIO.getvalue(_self)
 
     var dict = _self.__dict__ ? _b_.dict.copy(_self.__dict__) : _b_.None
@@ -194,6 +163,7 @@ StringIO.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
             ["self"], arguments, {}, null, null)
     var _self = $.self
+    check_closed(_self)
     var res = _self.$text.substr(0) // copy
     if(_self.newlines == '\r'){
         res = res.replace(/\n/g, '\r')
@@ -391,6 +361,7 @@ StringIO.seek = function(self, pos, whence){
         pos = $.pos
         whence = $.whence
 
+    check_closed(_self)
     pos = $B.PyNumber_Index(pos)
     if(whence != 0 && whence != 1 && whence != 2){
         $B.RAISE(_b_.ValueError,
@@ -407,7 +378,7 @@ StringIO.seek = function(self, pos, whence){
     if(whence == 1){
         pos = _self.$text_pos
     }else if(whence == 2){
-        pos = _self.$text_length
+        pos = _b_.len(_self.$text)
         for(var item of _self.$text_iterator){
             // exhaust iterator
         }
@@ -426,20 +397,23 @@ StringIO.seek = function(self, pos, whence){
 StringIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
-    if(! $B.$isinstance($.data, _b_.str)){
+            var _self = $.self,
+                data = $.data
+    if(! $B.$isinstance(data, _b_.str)){
         $B.RAISE(_b_.TypeError, 'string argument expected, got ' +
-            `'${$B.class_name($.data)}'`)
+            `'${$B.class_name(data)}'`)
     }
-    var text = $.self.$text,
-        position = $.self.$text_pos
+    check_closed(_self)
+    var text = _self.$text,
+        position = _self.$text_pos
     if(position > text.length){
         text += String.fromCodePoint(0).repeat(position - text.length)
     }
-    text = text.substr(0, position) + $.data +
-        text.substr(position + $.data.length)
-    $.self.$text = text
-    $.self.$text_pos = position + $.data.length
-    return $.data.length
+    text = text.substr(0, position) + data +
+        text.substr(position + data.length)
+    _self.$text = text
+    _self.$text_pos = position + data.length
+    return data.length
 }
 
 $B.set_func_names(StringIO, "_io")
@@ -473,7 +447,52 @@ BytesIO.__getstate__ = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "__getstate__ on closed file")
     }
-    return $B.$call($B.$getattr($B.$getattr(_self, '__dict__'), 'copy'))()
+
+    var initvalue = BytesIO.getvalue(_self)
+    var dict = _self.dict ?? $B.empty_dict()
+
+    return $B.fast_tuple([initvalue, _self._pos, dict])
+}
+
+BytesIO.__setstate__ = function(_self, state){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, "__setstate__ on closed file")
+    }
+    if(! $B.$isinstance(state, _b_.tuple)){
+        $B.RAISE(_b_.TypeError,
+            `${$B.class_name(_self)}.__setstate__ argument ` +
+            `should be 3-tuple, got ${$B.class_name(state)}`)
+    }
+    if(state.length < 3){
+        $B.RAISE(_b_.TypeError,
+            `${$B.class_name(_self)}.__setstate__ argument ` +
+            `should be 3-tuple, got tuple of size ${state.length}`)
+    }
+    var [initvalue, position, dict] = state
+    var obj = $B.$call(BytesIO)(initvalue)
+
+    if(! $B.$isinstance(position, _b_.int)){
+        $B.RAISE(_b_.TypeError, "second item of state must be an integer, " +
+            `not ${$B.class_name(position)}`)
+    }
+    if(position < 0){
+        $B.RAISE(_b_.ValueError, "position value cannot be negative")
+    }
+    obj._pos = position
+
+    if(dict != _b_.None){
+        if(! $B.$isinstance(dict, _b_.dict)){
+            $B.RAISE(_b_.TypeError, "third item of state should be a dict, " +
+                `got a ${$B.class_name(dict)}`)
+        }
+        if(_self.__dict__){
+            _b_.dict.update(_self.__dict__, dict)
+        }else{
+            _self.__dict__ = dict
+        }
+    }
+
+    return _b_.None
 }
 
 BytesIO.getvalue = function(_self){
@@ -547,6 +566,33 @@ BytesIO.read = function(){
 BytesIO.read1 = function(_self, size=-1){
     return BytesIO.read(_self, size)
 }
+
+BytesIO.readinto = function(_self, buffer){
+    check_closed(_self)
+    
+    if(! $B.is_buffer(buffer)){
+        $B.RAISE(_b_.TypeError, " readinto() argument must be " +
+            `read-write bytes-like object, not ${$B.class_name(buffer)}`)
+    }
+
+    /* adjust invalid sizes */
+    var len = _b_.len(buffer)
+    var n = _self._buffer.source.length - _self._pos
+    if(len > n){
+        len = n
+        if(len < 0){
+            len = 0
+        }
+    }
+    var buf = $B.$isinstance(buffer, _b_.bytearray) ? buffer.source : buffer.obj
+    for(var i = 0; i < len; i++){
+        buf[i] = _self._buffer.source[_self._pos + i]
+    }
+    _self._pos += len
+
+    return len
+}
+
 
 BytesIO.write = function(_self, b){
     if(_self.closed){

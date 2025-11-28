@@ -373,16 +373,15 @@ $B._PyPegen.interpolation = function(p, expression,
 $B._PyPegen.formatted_value = function(p,
         expression, debug,  conversion, format, closing_brace,
         arena){
-    var conversion_val = -1
-    if(conversion){
-        var conversion_expr = conversion.result,
-            first = conversion_expr.id
-        if(first.length > 1 || ! 'sra'.includes(first)){
-            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion_expr,
-                `f-string: invalid conversion character {first}: ` +
+    var conversion_val = _get_interpolation_conversion(p, debug, conversion, format)
+    if(typeof conversion_val == 'string'){
+        // Got a conversion character, validate and convert to charCode
+        if(conversion_val.length > 1 || ! 'sra'.includes(conversion_val)){
+            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion.result,
+                `f-string: invalid conversion character ${conversion_val}: ` +
                 "expected 's', 'r', or 'a'")
         }
-        var conversion_val = first.charCodeAt(0)
+        conversion_val = conversion_val.charCodeAt(0)
     }
     var formatted_value = new $B.ast.FormattedValue(expression,
         conversion_val,
@@ -823,7 +822,8 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
         function_def.name, function_def.args,
         function_def.body, decorators, function_def.returns,
         function_def.type_comment,
-        function_def.type_params)
+        function_def.type_params,
+        p.arena)
     for(var position of positions){
         ast_obj[position] = function_def[position]
     }
@@ -835,7 +835,9 @@ $B._PyPegen.class_def_decorators = function(p, decorators, class_def){
     var ast_obj = $B._PyAST.ClassDef(
         class_def.name, class_def.bases,
         class_def.keywords, class_def.body, decorators,
-        class_def.type_params)
+        class_def.type_params,
+        p.arena) // add fake value because last arg is interpreted as EXTRA
+                 // in ClassDef constructor. Cf. issue 2632
     set_position_from_obj(ast_obj, class_def)
     return ast_obj
 }
