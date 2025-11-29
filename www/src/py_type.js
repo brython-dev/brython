@@ -1263,10 +1263,12 @@ $B.$instance_creator = function(klass){
         return function(){
             var ams = Array.from($B.make_js_iterator(klass.__abstractmethods__))
             ams.sort()
-            var msg = (ams.length > 1 ? 's ' : ' ') + ams.join(', ')
+            var quoted_methods = ams.map(m => "'" + m + "'").join(', ')
+            var method_word = ams.length > 1 ? 'methods' : 'method'
             $B.RAISE(_b_.TypeError,
-                "Can't instantiate abstract class interface " +
-                "with abstract method" + msg)
+                "Can't instantiate abstract class " + klass.__name__ +
+                " without an implementation for abstract " + method_word + " " +
+                quoted_methods)
         }
     }
     var metaclass = klass.__class__ || $B.get_class(klass),
