@@ -3323,11 +3323,21 @@ assert not os.path.exists('coucou')
 import datetime
 assert datetime.time(0).strftime('%I') == '12'
 
+# issue 2628
+foo = "bar"
+assert f"{foo=}" == "foo='bar'"
+
+# issue 2646
+from unittest.mock import MagicMock
+
+class EmailChannel:
+    def send(self):
+        return "foo"
+
+MagicMock(spec=EmailChannel)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
 print('passed all tests')
 
-# issue 2628
-foo = "bar"
-assert f"{foo=}" == "foo='bar'"

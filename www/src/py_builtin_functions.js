@@ -1144,8 +1144,16 @@ $B.$getattr = function(obj, attr, _default){
                   }
               }
               dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__',
-                  function(){
-                      // here for compliance, what should it do ?
+                  function(klass){
+                      // Return the __dict__ of a class
+                      // Used by inspect.getattr_static and related functions
+                      if(klass.__dict__ !== undefined){
+                          return klass.__dict__
+                      }
+                      if(klass.$tp_dict){
+                          return $B.obj_dict(klass.$tp_dict)
+                      }
+                      return $B.empty_dict()
                   }
               )
               return {
