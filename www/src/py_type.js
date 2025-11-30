@@ -1406,6 +1406,10 @@ var method = $B.method = $B.make_class("method",
     }
 )
 
+method.__call__ = function(f){
+    return f(...Array.from(arguments).slice(1))
+}
+
 method.__eq__ = function(self, other){
     return self.$infos !== undefined &&
            other.$infos !== undefined &&

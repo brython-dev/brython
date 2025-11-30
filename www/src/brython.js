@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-30 21:07:57.098149"
-__BRYTHON__.timestamp=1764533277097
+__BRYTHON__.compiled_date="2025-11-30 21:20:32.479573"
+__BRYTHON__.timestamp=1764534032479
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2633,6 +2633,7 @@ f.$infos.__self__=cls
 f.$infos.__dict__=$B.empty_dict()
 return f}
 )
+method.__call__=function(f){return f(...Array.from(arguments).slice(1))}
 method.__eq__=function(self,other){return self.$infos !==undefined &&
 other.$infos !==undefined &&
 self.$infos.__func__===other.$infos.__func__ &&
@@ -4430,7 +4431,7 @@ if(in_mro){var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
 if(getter){if(obj.$is_class){in_mro=getter(in_mro,_b_.None,klass)}else{in_mro=getter(in_mro,obj,klass)}}
 var in_mro_klass=$B.get_class(in_mro)
 var call=$B.search_in_mro(in_mro_klass,'__call__')
-if(call){var iterator=call(in_mro_klass,in_mro)
+if(call){var iterator=call(in_mro)
 return iterator}}
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},len
 return iterator_class.$factory(gi)}catch(err){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
