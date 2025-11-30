@@ -1841,7 +1841,7 @@ $B.$iter = function(obj, sentinel){
             var in_mro_klass = $B.get_class(in_mro)
             var call = $B.search_in_mro(in_mro_klass, '__call__')
             if(call){
-                var iterator = call(in_mro_klass, in_mro)
+                var iterator = call(in_mro)
                 return iterator
             }
         }
