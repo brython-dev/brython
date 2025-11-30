@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-27 16:13:31.302750"
-__BRYTHON__.timestamp=1764256411302
+__BRYTHON__.compiled_date="2025-11-30 21:07:57.098149"
+__BRYTHON__.timestamp=1764533277097
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2298,6 +2298,11 @@ return klass.__annotate_func__ ?? _b_.None},function(klass,value){try{$B.$call(v
 klass.__annotate__=value}}
 )
 type.__dict__.__mro__={__get__:function(cls){return $B.fast_tuple([cls].concat(cls.__mro__))}}
+type.__dict__.__dict__={__get__:function(cls){
+if(cls===undefined ||cls===null){return $B.empty_dict()}
+if(cls.__dict__ !==undefined){return cls.__dict__}
+if(cls.$tp_dict){return $B.obj_dict(cls.$tp_dict)}
+return $B.empty_dict()}}
 type.$call=function(klass,new_func,init_func){
 return function(){
 var instance=new_func.bind(null,klass).apply(null,arguments)
@@ -2586,9 +2591,11 @@ if(klass.prototype && klass.prototype.constructor==klass){
 return function(){return new klass(...arguments)}}
 if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){return function(){var ams=Array.from($B.make_js_iterator(klass.__abstractmethods__))
 ams.sort()
-var msg=(ams.length > 1 ? 's ' :' ')+ams.join(', ')
-$B.RAISE(_b_.TypeError,"Can't instantiate abstract class interface "+
-"with abstract method"+msg)}}
+var quoted_methods=ams.map(m=> "'"+m+"'").join(', ')
+var method_word=ams.length > 1 ? 'methods' :'method'
+$B.RAISE(_b_.TypeError,"Can't instantiate abstract class "+klass.__name__+
+" without an implementation for abstract "+method_word+" "+
+quoted_methods)}}
 var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
 if(metaclass===_b_.type){var new_func=type.__getattribute__(klass,'__new__'),init_func=type.__getattribute__(klass,'__init__')
 if(init_func===_b_.object.__init__){if(new_func===_b_.object.__new__){factory=_b_.object.$new(klass)}else{factory=new_func.bind(null,klass)}}else if(new_func===_b_.object.__new__){factory=type.$call_no_new_init(klass,init_func)}else{factory=type.$call(klass,new_func,init_func)}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
@@ -4201,7 +4208,10 @@ if(is_class){var dict={},key
 if(obj.__dict__){for(key of _b_.dict.$keys_string(obj.__dict__)){dict[key]=_b_.dict.$getitem_string(obj.__dict__,key)
 if(key=='__new__' && dict[key].__class__ !==_b_.staticmethod){dict[key]=_b_.staticmethod.$factory(dict[key])}}}else{for(key in obj){if(! key.startsWith("$")){dict[key]=obj[key]
 if(key=='__new__' && dict[key].__class__ !==_b_.staticmethod){dict[key]=_b_.staticmethod.$factory(dict[key])}}}}
-dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__',function(){}
+dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__',function(klass){
+if(klass.__dict__ !==undefined){return klass.__dict__}
+if(klass.$tp_dict){return $B.obj_dict(klass.$tp_dict)}
+return $B.empty_dict()}
 )
 return{
 __class__:$B.mappingproxy,
