@@ -113,6 +113,7 @@ StringIO.__init__ = function(){
     $.self.$text = value
     $.self.$text_pos = 0
     $.self.$text_iterator = $.self.$text[Symbol.iterator]()
+    $.self.closed = false
 }
 
 StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
