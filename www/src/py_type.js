@@ -503,6 +503,25 @@ type.__dict__.__mro__ = {
     }
 }
 
+type.__dict__.__dict__ = {
+    __get__: function(cls){
+        // Return the __dict__ of a class
+        // Used by inspect.getattr_static and related functions
+        if(cls === undefined || cls === null){
+            return $B.empty_dict()
+        }
+        if(cls.__dict__ !== undefined){
+            return cls.__dict__
+        }
+        // For types that have $tp_dict instead
+        if(cls.$tp_dict){
+            return $B.obj_dict(cls.$tp_dict)
+        }
+        // Fallback for built-in types without explicit __dict__
+        return $B.empty_dict()
+    }
+}
+
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
     return function(){

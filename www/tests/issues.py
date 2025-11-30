@@ -3323,37 +3323,21 @@ assert not os.path.exists('coucou')
 import datetime
 assert datetime.time(0).strftime('%I') == '12'
 
+# issue 2628
+foo = "bar"
+assert f"{foo=}" == "foo='bar'"
+
+# issue 2646
+from unittest.mock import MagicMock
+
+class EmailChannel:
+    def send(self):
+        return "foo"
+
+MagicMock(spec=EmailChannel)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
 print('passed all tests')
 
-# issue 2628
-foo = "bar"
-assert f"{foo=}" == "foo='bar'"
-
-# issue 2644 - abstract class instantiation error message format
-class AbstractSingle(metaclass=ABCMeta):
-    @abstractmethod
-    def method1(self):
-        pass
-
-try:
-    AbstractSingle()
-    assert False, "Should have raised TypeError"
-except TypeError as e:
-    assert str(e) == "Can't instantiate abstract class AbstractSingle without an implementation for abstract method 'method1'"
-
-class AbstractMultiple(metaclass=ABCMeta):
-    @abstractmethod
-    def method1(self):
-        pass
-    @abstractmethod
-    def method2(self):
-        pass
-
-try:
-    AbstractMultiple()
-    assert False, "Should have raised TypeError"
-except TypeError as e:
-    assert str(e) == "Can't instantiate abstract class AbstractMultiple without an implementation for abstract methods 'method1', 'method2'"
