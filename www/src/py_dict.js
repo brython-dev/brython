@@ -1324,10 +1324,15 @@ dict.setdefault = function(){
     _default = _default === undefined ? _b_.None : _default
 
     if(self.$all_str){
-        if(! self.$strings.hasOwnProperty(key)){
-            self.$strings[key] = _default
+        if(typeof key === 'string'){
+            if(! self.$strings.hasOwnProperty(key)){
+                self.$strings[key] = _default
+            }
+            return self.$strings[key]
+        }else{
+            // Non-string key, convert to regular dict
+            convert_all_str(self)
         }
-        return self.$strings[key]
     }
 
     if(self.$jsobj){
