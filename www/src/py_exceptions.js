@@ -785,7 +785,8 @@ function calculate_suggestions(list, name){
 $B.offer_suggestions_for_attribute_error = function(exc){
     var name = exc.name,
         obj = exc.obj
-    if(name === _b_.None){
+    if(name === _b_.None || name === undefined ||
+            obj === _b_.None || obj === undefined){
         return _b_.None
     }
     var dir = _b_.dir(obj),
