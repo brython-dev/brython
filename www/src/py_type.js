@@ -1262,14 +1262,13 @@ wrapper_descriptor.__get__ = function(self, obj, klass){
     if(obj === _b_.None){
         return self
     }
-    console.log('wrapper get', self.$function_infos, obj, klass)
     // self is the dunder method, obj is an object
     var f = function(){
-        console.log('call result of __get__ with', arguments)
-        return self.apply(null, obj, ...arguments)
+        return self.call(null, obj, ...arguments)
     }
     f.__class__ = $B.method_wrapper
     f.$function_infos = self.$function_infos
+    f.__objclass__ = klass
     return f
 }
 
@@ -1362,7 +1361,9 @@ var method_wrapper = $B.method_wrapper = $B.make_class("method_wrapper",
 )
 
 method_wrapper.__repr__ = function(self){
-    return "<method-wrapper '" + self.$function_infos[$B.func_attrs.__name__] + "' of function object>"
+    var class_name = self.__objclass__.__name__
+    return "<method-wrapper '" + self.$function_infos[$B.func_attrs.__name__] + 
+        `' of ${class_name} object>`
 }
 
 // Used for class members, defined in __slots__

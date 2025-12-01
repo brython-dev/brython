@@ -129,8 +129,20 @@ const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults_
 var i=0
 $B.func_attrs={}
 for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
+$B.dunder_methods=Object.create(null)
+$B.dunder_methods.$tp_iter='__iter__'
+$B.dunder_methods.$tp_iternext='__next__'
+$B.make_dunder={__iter__:function(klass,attr){return function(obj){return klass[attr](obj)}},__next__:function(klass,attr){return function(obj){var res=klass.$tp_iternext(obj).next()
+if(res.done){$B.RAISE(__BRYTHON__.builtins.StopIteration)}
+return res.value}}}
 $B.set_func_names=function(klass,module){klass.__module__=module
-for(var attr in klass){if(typeof klass[attr]=='function'){$B.add_function_infos(klass,attr)}}}
+for(var attr in klass){if(typeof klass[attr]=='function'){$B.add_function_infos(klass,attr)
+var dunder=$B.dunder_methods[attr]
+if(dunder){if(klass.hasOwnProperty(dunder)){console.log('class',klass.__name__ ?? klass,`should not have both ${attr} and ${dunder}`)}else{if(typeof $B.make_dunder[dunder]!=='function'){console.log('not a func',attr,dunder)}
+klass[dunder]=$B.make_dunder[dunder](klass,attr)
+$B.add_function_infos(klass,dunder)
+klass[dunder].__class__=$B.wrapper_descriptor
+klass[dunder].__objclass__=klass}}}}}
 $B.add_function_infos=function(klass,attr){var module=klass.__module__
 $B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :klass.__qualname__+'.'+attr,__defaults__:[],__kwdefaults__:{}}
 )
@@ -224,8 +236,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-12-01 21:00:34.620256"
-__BRYTHON__.timestamp=1764619234619
+__BRYTHON__.compiled_date="2025-12-01 22:01:45.976635"
+__BRYTHON__.timestamp=1764622905976
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1497,6 +1509,13 @@ if(iterator[Symbol.iterator]&& ! iterator.$is_js_array){var it=iterator[Symbol.i
 return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}
+var klass=$B.get_class(iterator)
+if(klass.$tp_iter){var res=klass.$tp_iter(iterator)
+var next=$B.get_class(res).$tp_iternext
+if(next===undefined){$B.RAISE(_b_.TypeError,'not an iterator')}
+var next_func=next(res)
+return next_func}
+var it=_b_.iter(iterator)
 var next_func=$B.$getattr(_b_.iter(iterator),'__next__',null)
 if(next_func !==null){next_func=$B.$call(next_func)
 return{
@@ -2143,8 +2162,8 @@ object.__setattr__.__str__=function(){return "method object.setattr"}
 object.__str__=function(self){if(self===undefined ||self.$kw){$B.RAISE(_b_.TypeError,"descriptor '__str__' of 'object' "+
 "object needs an argument")}
 var klass=self.__class__ ||$B.get_class(self)
-var repr_func=$B.$getattr(klass,"__repr__")
-return $B.$call(repr_func).apply(null,arguments)}
+var repr_func=$B.search_in_mro(klass,"__repr__")
+return $B.$call(repr_func)(...arguments)}
 object.__subclasshook__=function(){return _b_.NotImplemented}
 object.$factory=function(){if(arguments.length > 0 ||
 (arguments.length==1 && arguments[0].$kw &&
@@ -2583,6 +2602,15 @@ $B.$getattr(self.fset,'__call__')(obj,value)}
 $B.set_func_names(property,"builtins")
 var wrapper_descriptor=$B.wrapper_descriptor=
 $B.make_class("wrapper_descriptor")
+wrapper_descriptor.__get__=function(self,obj,klass){if(obj===_b_.None){return self}
+var f=function(){return self.call(null,obj,...arguments)}
+f.__class__=$B.method_wrapper
+f.$function_infos=self.$function_infos
+f.__objclass__=klass
+return f}
+wrapper_descriptor.__repr__=function(self){var name=self.$function_infos[$B.func_attrs.__name__]
+var class_name=self.__objclass__.__name__
+return `<slot wrapper '${name}' of '${class_name}' objects>`}
 wrapper_descriptor.__text_signature__={__get__:function(){return '(self, /, *args, **kwargs)'}}
 $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
@@ -2608,7 +2636,9 @@ var method_wrapper=$B.method_wrapper=$B.make_class("method_wrapper",function(att
 f.$infos={__name__:attr,__module__:klass.__module__}
 return f}
 )
-method_wrapper.__str__=method_wrapper.__repr__=function(self){return "<method '"+self.$infos.__name__+"' of function object>"}
+method_wrapper.__repr__=function(self){var class_name=self.__objclass__.__name__
+return "<method-wrapper '"+self.$function_infos[$B.func_attrs.__name__]+
+`' of ${class_name} object>`}
 var member_descriptor=$B.member_descriptor=$B.make_class("member_descriptor",function(attr,cls){return{__class__:member_descriptor,cls:cls,attr:attr}}
 )
 member_descriptor.__delete__=function(self,kls){if(kls.$slot_values===undefined ||
@@ -4423,10 +4453,29 @@ callable_iterator.__next__=function(self){var res=self.func()
 if($B.rich_comp("__eq__",res,self.sentinel)){$B.RAISE(_b_.StopIteration,)}
 return res}
 $B.set_func_names(callable_iterator,"builtins")
+$B.PySequence_Check=function(s){if($B.$isinstance(s,_b_.dict)){return false}
+var t=$B.get_class(s)
+return t.$tp_as_sequence &&
+t.$tp_as_sequence.sq_item !=undefined}
+$B.PyIter_Check=function(obj){var tp=$B.get_class(obj)
+return(tp.$tp_iternext !==undefined &&
+tp.$tp_iternext !=$B._PyObject_NextNotImplemented)}
+$B.PySeqIter_New=function(seq){return{
+__class__ :$B.PySeqIter_Type,it_index:0,it_seq:seq}}
+$B.PyObject_GetIter=function(obj){var t=$B.get_class(obj)
+var f=t.$tp_iter;
+if(f===undefined){if(PySequence_Check(o)){return PySeqIter_New(o);}
+$B.RAISE(_b_.TypeError,`'${t.__name__}' object is not iterable`)}else{var res=f(o)
+if(! $B.PyIter_Check(res)){$B.RAISE(_b_.TypeError,"iter() returned non-iterator "
+`of type '${$B.class_name(res)}'`)}
+return res}}
 $B.$iter=function(obj,sentinel){
-var test=false 
+var test=obj.__class__ && obj.__class__.__name__=='Dict'
 if(test){console.log('iter',obj)}
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
+if(klass.$tp_iter){var res=klass.$tp_iter(obj)
+if($B.get_class(res).$tp_iternext===undefined){$B.RAISE(_b_.TypeError,`iter() returned non-iterable of type '${$B.class_name(res)}'`)}
+return res}
 var in_mro=$B.search_in_mro(klass,'__iter__')
 if(in_mro){var getter=$B.search_in_mro($B.get_class(in_mro),'__get__')
 if(getter){if(obj.$is_class){in_mro=getter(in_mro,_b_.None,klass)}else{in_mro=getter(in_mro,obj,klass)}}
@@ -8354,9 +8403,8 @@ console.log("Warning - no method __str__ or __repr__, "+
 throw err}
 var getter=$B.search_in_mro($B.get_class(method),'__get__')
 var res
-if(getter){if(typeof getter=='function'){if(arg.$is_class){method=getter(method,_b_.None,klass)
-res=$B.$call(method)(arg)}else{method=getter(method,arg,klass)
-res=$B.$call(method)()}}else{var call_in_mro=$B.search_in_mro($B.get_class(getter,'__call__'))
+if(getter){if(typeof getter=='function'){var method=getter(method,arg,klass)
+res=$B.$call(method)()}else{var call_in_mro=$B.search_in_mro($B.get_class(getter,'__call__'))
 if(call_in_mro){res=call_in_mro(getter,arg)}else{$B.RAISE(_b_.TypeError,'__str__ or __repr__ is not callable')}}}else{res=$B.$call(method)(arg)}
 if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
@@ -10007,6 +10055,14 @@ dict.$iter_items_check=function*(d){if(d.$jsobj){for(var key in d.$jsobj){yield[
 for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield[d._keys[i],d._values[i]]
 if(d.$version !==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}
 if(d.$version !==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}
+var dkit=$B.make_class('dict_keyiterator',function(d){return{
+__class__:dkit,it:dict.$iter_items(d)}}
+)
+dkit.$tp_iternext=function*(self){for(var item of self.it){yield item.key}}
+dkit.$tp_iter=function(self){return self}
+dkit.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(dkit.$tp_iternext(self)))])])}
+$B.set_func_names(dkit,'builtins')
+dict.$tp_iter=function(self){return dkit.$factory(self)}
 var $copy_dict=function(left,right){
 right.$version=right.$version ||0
 var right_version=right.$version
@@ -10178,7 +10234,6 @@ throw err}}}}else{if(! Array.isArray(args)){args=_b_.list.$factory(args)}
 init_from_list(self,args)}}}
 for(let item of _b_.dict.$iter_items($.second)){dict.$setitem(self,item.key,item.value)}
 return _b_.None}
-dict.__iter__=function(self){return _b_.iter(dict.keys(self))}
 dict.__ior__=function(self,other){
 dict.update(self,other)
 return self}
@@ -10329,7 +10384,7 @@ return dict_items.$factory(self)}
 var dict_keys=$B.make_class("dict_keys",function(d){return{
 __class__:dict_keys,dict:d,make_iter:function(){return dict.$iter_keys_check(d)}}}
 )
-dict_keys.__iter__=function(self){return dict_keyiterator.$factory(self.make_iter)}
+dict_keys.$tp_iter=function(self){return dkit.$factory(self.dict)}
 dict_keys.__len__=function(self){return dict.__len__(self.dict)}
 dict_keys.__reduce__=function(self){var items=$B.$list(Array.from(self.make_iter()))
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([items])])}
@@ -10338,16 +10393,6 @@ return 'dict_keys('+_b_.repr(items)+')'}
 dict_keys.__reversed__=function(self){return dict_reversekeyiterator.$factory(self.dict)}
 make_view_comparison_methods(dict_keys)
 $B.set_func_names(dict_keys,'builtins')
-var dict_keyiterator=$B.make_class('dict_keyiterator',function(make_iter){return{
-__class__:dict_keyiterator,iter:make_iter(),make_iter}}
-)
-dict_keyiterator.__iter__=function(self){self[Symbol.iterator]=function(){return self.iter}
-return self}
-dict_keyiterator.__next__=function(self){var res=self.iter.next()
-if(res.done){$B.RAISE(_b_.StopIteration,'')}
-return res.value}
-dict_keyiterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])}
-$B.set_func_names(dict_keyiterator,'builtins')
 dict.keys=function(self){$B.args('keys',1,{self:null},['self'],arguments,{},null,null)
 return dict_keys.$factory(self)}
 dict.pop=function(){var missing={},$=$B.args("pop",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:missing},null,null),self=$.self,key=$.key,_default=$._default
@@ -10461,6 +10506,8 @@ mappingproxy.__setitem__=function(){$B.RAISE(_b_.TypeError,"'mappingproxy' objec
 for(var attr in dict){if(mappingproxy[attr]!==undefined ||
 ["__class__","__mro__","__new__","__init__","__delitem__","clear","fromkeys","pop","popitem","setdefault","update"].indexOf(attr)>-1){continue}
 if(typeof dict[attr]=="function"){mappingproxy[attr]=(function(key){return function(){return dict[key].apply(null,arguments)}})(attr)}else{mappingproxy[attr]=dict[attr]}}
+for(var attr in $B.dunder_methods){if(mappingproxy.hasOwnProperty($B.dunder_methods[attr])){
+delete mappingproxy[$B.dunder_methods[attr]]}}
 $B.set_func_names(mappingproxy,"builtins")
 function jsobj2dict(x,exclude){exclude=exclude ||function(){return false}
 var d=$B.empty_dict()

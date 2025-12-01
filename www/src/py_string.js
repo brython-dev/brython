@@ -2684,19 +2684,12 @@ str.$factory = function(arg, encoding){
             "default to toString", arg)
         throw err
     }
-    console.log('method', method)
     var getter = $B.search_in_mro($B.get_class(method), '__get__')
-    console.log('getter', getter)
     var res
     if(getter){
         if(typeof getter == 'function'){
-            if(arg.$is_class){
-                method = getter(method, _b_.None, klass)
-                res = $B.$call(method)(arg)
-            }else{
-                method = getter(method, arg, klass)
-                res = $B.$call(method)()
-            }
+            var method = getter(method, arg, klass)
+            res = $B.$call(method)()
         }else{
             var call_in_mro = $B.search_in_mro($B.get_class(getter, '__call__'))
             if(call_in_mro){

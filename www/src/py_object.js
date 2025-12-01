@@ -621,8 +621,8 @@ object.__str__ = function(self){
     }
     // Default to __repr__
     var klass = self.__class__ || $B.get_class(self)
-    var repr_func = $B.$getattr(klass, "__repr__")
-    return $B.$call(repr_func).apply(null, arguments)
+    var repr_func = $B.search_in_mro(klass, "__repr__")
+    return $B.$call(repr_func)(...arguments)
 }
 
 object.__subclasshook__ = function(){return _b_.NotImplemented}
