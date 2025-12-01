@@ -231,6 +231,36 @@ dict.$iter_items_check = function*(d){
     }
 }
 
+var dkit = $B.make_class('dict_keyiterator',
+    function(d){
+        return {
+            __class__: dkit,
+            it: dict.$iter_items(d)
+        }
+    }
+)
+
+dkit.$tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item.key
+    }
+}
+
+dkit.$tp_iter = function(self){
+    return self
+}
+
+dkit.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(dkit.$tp_iternext(self)))])])
+}
+
+$B.set_func_names(dkit, 'builtins')
+
+dict.$tp_iter = function(self){
+    return dkit.$factory(self)
+}
+
 var $copy_dict = function(left, right){
     // left and right are dicts
     right.$version = right.$version || 0
@@ -632,7 +662,7 @@ function init_from_list(self, args){
 
 dict.$set_string_no_duplicate = function(d, keys, string, value){
     if(typeof string !== 'string'){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             'keywords must be strings')
     }
     if(keys.has(string)){
@@ -766,9 +796,11 @@ dict.__init__ = function(self, first, second){
     return _b_.None
 }
 
+/*
 dict.__iter__ = function(self){
     return _b_.iter(dict.keys(self))
 }
+*/
 
 dict.__ior__ = function(self, other){
     // PEP 584
@@ -1205,8 +1237,8 @@ var dict_keys = $B.make_class("dict_keys",
     }
 )
 
-dict_keys.__iter__ = function(self){
-    return dict_keyiterator.$factory(self.make_iter)
+dict_keys.$tp_iter = function(self){
+    return dkit.$factory(self.dict)
 }
 
 dict_keys.__len__ = function(self){
@@ -1231,6 +1263,7 @@ make_view_comparison_methods(dict_keys)
 
 $B.set_func_names(dict_keys, 'builtins')
 
+/*
 var dict_keyiterator = $B.make_class('dict_keyiterator',
     function(make_iter){
         return {
@@ -1260,6 +1293,7 @@ dict_keyiterator.__reduce_ex__ = function(self){
 }
 
 $B.set_func_names(dict_keyiterator, 'builtins')
+*/
 
 dict.keys = function(self){
     $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
@@ -1579,6 +1613,12 @@ for(var attr in dict){
     }
 }
 
+for(var attr in $B.dunder_methods){
+    if(mappingproxy.hasOwnProperty($B.dunder_methods[attr])){
+        // will created in set_func_names
+        delete mappingproxy[$B.dunder_methods[attr]]
+    }
+}
 $B.set_func_names(mappingproxy, "builtins")
 
 function jsobj2dict(x, exclude){

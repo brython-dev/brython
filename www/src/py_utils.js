@@ -893,6 +893,17 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+    var klass = $B.get_class(iterator)
+    if(klass.$tp_iter){
+        var res = klass.$tp_iter(iterator)
+        var next = $B.get_class(res).$tp_iternext
+        if(next === undefined){
+            $B.RAISE(_b_.TypeError, 'not an iterator')
+        }
+        var next_func = next(res)
+        return next_func
+    }
+    var it = _b_.iter(iterator)
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
     var next_func = $B.$getattr(_b_.iter(iterator), '__next__', null)

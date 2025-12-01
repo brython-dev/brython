@@ -130,6 +130,9 @@ $B.$class_constructor = function(class_name, frame, metaclass,
         bases[i].$subclasses.push(kls)
     }
 
+    // add $tp_ methods if the matching dunder is not defined
+
+
     return kls
 }
 
@@ -1251,8 +1254,30 @@ property.__set__ = function(self, obj, value){
 
 $B.set_func_names(property, "builtins")
 
+
 var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
+
+wrapper_descriptor.__get__ = function(self, obj, klass){
+    if(obj === _b_.None){
+        return self
+    }
+    console.log('wrapper get', self.$function_infos, obj, klass)
+    // self is the dunder method, obj is an object
+    var f = function(){
+        console.log('call result of __get__ with', arguments)
+        return self.apply(null, obj, ...arguments)
+    }
+    f.__class__ = $B.method_wrapper
+    f.$function_infos = self.$function_infos
+    return f
+}
+
+wrapper_descriptor.__repr__ = function(self){
+    var name = self.$function_infos[$B.func_attrs.__name__]
+    var class_name = self.__objclass__.__name__
+    return `<slot wrapper '${name}' of '${class_name}' objects>`
+}
 
 wrapper_descriptor.__text_signature__ = {
     __get__: function(){
@@ -1335,8 +1360,9 @@ var method_wrapper = $B.method_wrapper = $B.make_class("method_wrapper",
         return f
     }
 )
-method_wrapper.__str__ = method_wrapper.__repr__ = function(self){
-    return "<method '" + self.$infos.__name__ + "' of function object>"
+
+method_wrapper.__repr__ = function(self){
+    return "<method-wrapper '" + self.$function_infos[$B.func_attrs.__name__] + "' of function object>"
 }
 
 // Used for class members, defined in __slots__

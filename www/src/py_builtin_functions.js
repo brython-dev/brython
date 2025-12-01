@@ -1819,15 +1819,65 @@ callable_iterator.__next__ = function(self){
 
 $B.set_func_names(callable_iterator, "builtins")
 
+$B.PySequence_Check = function(s){
+    if($B.$isinstance(s, _b_.dict)){
+        return false
+    }
+    var t = $B.get_class(s)
+    return t.$tp_as_sequence &&
+        t.$tp_as_sequence.sq_item != undefined
+}
+
+$B.PyIter_Check = function(obj){
+    var tp = $B.get_class(obj)
+    return (tp.$tp_iternext !== undefined &&
+            tp.$tp_iternext != $B._PyObject_NextNotImplemented)
+}
+
+$B.PySeqIter_New = function(seq){
+    return {
+        __class__ : $B.PySeqIter_Type,
+        it_index: 0,
+        it_seq: seq
+    }
+}
+
+$B.PyObject_GetIter = function(obj){
+    var t = $B.get_class(obj)
+    var f = t.$tp_iter;
+    if(f === undefined){
+        if(PySequence_Check(o)){
+            return PySeqIter_New(o);
+        }
+        $B.RAISE(_b_.TypeError, `'${t.__name__}' object is not iterable`)
+    }else{
+        var res = f(o)
+        if(! $B.PyIter_Check(res)){
+            $B.RAISE(_b_.TypeError,
+                         "iter() returned non-iterator "
+                         `of type '${$B.class_name(res)}'`)
+        }
+        return res
+    }
+}
+
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
-    var test = false // obj.__class__ && obj.__class__.__name__ == 'MagicMock'
+    var test = obj.__class__ && obj.__class__.__name__ == 'Dict'
     if(test){
         console.log('iter', obj)
     }
     if(sentinel === undefined){
         var klass = obj.__class__ || $B.get_class(obj)
+        if(klass.$tp_iter){
+            var res = klass.$tp_iter(obj)
+            if($B.get_class(res).$tp_iternext === undefined){
+                $B.RAISE(_b_.TypeError,
+                    `iter() returned non-iterable of type '${$B.class_name(res)}'`)
+            }
+            return res
+        }
         var in_mro = $B.search_in_mro(klass, '__iter__')
         if(in_mro){
             var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')

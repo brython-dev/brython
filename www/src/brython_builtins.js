@@ -361,12 +361,48 @@ for(var func_attr of func_attrs){
     $B.func_attrs[func_attr] = i++
 }
 
+$B.dunder_methods = Object.create(null)
+$B.dunder_methods.$tp_iter = '__iter__'
+$B.dunder_methods.$tp_iternext = '__next__'
+
+$B.make_dunder = {
+    __iter__: function(klass, attr){
+        return function(obj){
+            return klass[attr](obj)
+        }
+    },
+    __next__: function(klass, attr){
+        return function(obj){
+            var res = klass.$tp_iternext(obj).next()
+            if(res.done){
+                $B.RAISE(__BRYTHON__.builtins.StopIteration)
+            }
+            return res.value
+        }
+    }
+}
+
 // Set attributes of klass methods
 $B.set_func_names = function(klass, module){
     klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
             $B.add_function_infos(klass, attr)
+            var dunder = $B.dunder_methods[attr]
+            if(dunder){
+                if(klass.hasOwnProperty(dunder)){
+                    console.log('class', klass.__name__ ?? klass,
+                        `should not have both ${attr} and ${dunder}`)
+                }else{
+                    if(typeof $B.make_dunder[dunder] !== 'function'){
+                        console.log('not a func', attr, dunder)
+                    }
+                    klass[dunder] = $B.make_dunder[dunder](klass, attr)
+                    $B.add_function_infos(klass, dunder)
+                    klass[dunder].__class__ = $B.wrapper_descriptor
+                    klass[dunder].__objclass__ = klass
+                }
+            }
         }
     }
 }

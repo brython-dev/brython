@@ -16,7 +16,7 @@ function make_new_set(type){
         for(var item of set_iter(res)){
             yield item
             if(res.$version != version){
-                $B.RAISE(_b_.RuntimeError, 
+                $B.RAISE(_b_.RuntimeError,
                     'Set changed size during iteration')
             }
         }
@@ -675,6 +675,7 @@ set.update = function(self){
                 set_add(self, entry.key, entry.hash)
             }
         }else{
+            console.log('set update from iterable', iterable)
             var iterator = $B.make_js_iterator(iterable)
             for(let item of iterator){
                 set_add(self, item)

@@ -2668,7 +2668,6 @@ str.$factory = function(arg, encoding){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
         var method = $B.search_in_mro(klass, '__str__')
-        //console.log('__str__ for klass', klass, method)
         if(method === undefined){
             method = $B.search_in_mro(klass, '__repr__')
         }
@@ -2685,7 +2684,9 @@ str.$factory = function(arg, encoding){
             "default to toString", arg)
         throw err
     }
+    console.log('method', method)
     var getter = $B.search_in_mro($B.get_class(method), '__get__')
+    console.log('getter', getter)
     var res
     if(getter){
         if(typeof getter == 'function'){
