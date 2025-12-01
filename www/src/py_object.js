@@ -14,6 +14,13 @@ var object = {
 }
 
 object.__delattr__ = function(self, attr){
+    // First check for data descriptor with __delete__ in class
+    var klass = $B.get_class(self)
+    var kl_attr = $B.search_in_mro(klass, attr)
+    if(kl_attr !== undefined && _b_.hasattr(kl_attr, '__delete__')){
+        return $B.$getattr(kl_attr, '__delete__')(self)
+    }
+    // No data descriptor, delete from instance __dict__
     if(self.__dict__ && $B.$isinstance(self.__dict__, _b_.dict) &&
             _b_.dict.$contains_string(self.__dict__, attr)){
         _b_.dict.$delete_string(self.__dict__, attr)
@@ -22,13 +29,6 @@ object.__delattr__ = function(self, attr){
     }else if(self.__dict__ === undefined && self[attr] !== undefined){
         delete self[attr]
         return _b_.None
-    }else{
-        // If attr is a descriptor and has a __delete__ method, use it
-        var klass = $B.get_class(self)
-        var kl_attr = $B.search_in_mro(klass, attr)
-        if(_b_.hasattr(kl_attr, '__get__') && _b_.hasattr(kl_attr, '__delete__')){
-            return $B.$getattr(kl_attr, '__delete__')(self)
-        }
     }
     throw $B.attr_error(attr, self)
 }

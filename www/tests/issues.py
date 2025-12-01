@@ -3336,6 +3336,23 @@ class EmailChannel:
 
 MagicMock(spec=EmailChannel)
 
+# issue 2652 - descriptor __delete__ not called
+class DeleteDescriptor2652:
+    def __delete__(self, instance):
+        raise AttributeError("deletion not allowed")
+
+class Config2652:
+    port = DeleteDescriptor2652()
+    def __init__(self, port):
+        self.__dict__["port"] = port
+
+config2652 = Config2652(8080)
+try:
+    del config2652.port
+    raise AssertionError("should have raised AttributeError")
+except AttributeError as e:
+    assert "deletion not allowed" in str(e)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
