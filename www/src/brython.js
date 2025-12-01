@@ -224,8 +224,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2025-11-30 21:20:32.479573"
-__BRYTHON__.timestamp=1764534032479
+__BRYTHON__.compiled_date="2025-12-01 21:00:34.620256"
+__BRYTHON__.timestamp=1764619234619
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1919,14 +1919,15 @@ $B.RAISE(_b_.RecursionError,"maximum recursion depth "+
 (function($B){var _b_=$B.builtins
 var object={
 __name__:'object',__qualname__:'object',$is_class:true,$native:true}
-object.__delattr__=function(self,attr){if(self.__dict__ && $B.$isinstance(self.__dict__,_b_.dict)&&
+object.__delattr__=function(self,attr){
+var klass=$B.get_class(self)
+var kl_attr=$B.search_in_mro(klass,attr)
+if(kl_attr !==undefined && _b_.hasattr(kl_attr,'__delete__')){return $B.$getattr(kl_attr,'__delete__')(self)}
+if(self.__dict__ && $B.$isinstance(self.__dict__,_b_.dict)&&
 _b_.dict.$contains_string(self.__dict__,attr)){_b_.dict.$delete_string(self.__dict__,attr)
 delete self[attr]
 return _b_.None}else if(self.__dict__===undefined && self[attr]!==undefined){delete self[attr]
-return _b_.None}else{
-var klass=$B.get_class(self)
-var kl_attr=$B.search_in_mro(klass,attr)
-if(_b_.hasattr(kl_attr,'__get__')&& _b_.hasattr(kl_attr,'__delete__')){return $B.$getattr(kl_attr,'__delete__')(self)}}
+return _b_.None}
 throw $B.attr_error(attr,self)}
 object.__dir__=function(self){var objects
 if(self.$is_class){objects=[self].concat(self.__mro__)}else{var klass=self.__class__ ||$B.get_class(self)
@@ -5431,7 +5432,8 @@ $B.set_exc(exc,frame)
 return exc}
 function calculate_suggestions(list,name){return $B.imported._suggestions._generate_suggestions(list,name)}
 $B.offer_suggestions_for_attribute_error=function(exc){var name=exc.name,obj=exc.obj
-if(name===_b_.None){return _b_.None}
+if(name===_b_.None ||name===undefined ||
+obj===_b_.None ||obj===undefined){return _b_.None}
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions ||_b_.None}
 $B.offer_suggestions_for_name_error=function(exc,frame){var name=exc.name
@@ -10370,8 +10372,9 @@ return res}
 index--}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:_b_.None},null,null),self=$.self,key=$.key,_default=$._default
 _default=_default===undefined ? _b_.None :_default
-if(self.$all_str){if(! self.$strings.hasOwnProperty(key)){self.$strings[key]=_default}
-return self.$strings[key]}
+if(self.$all_str){if(typeof key==='string'){if(! self.$strings.hasOwnProperty(key)){self.$strings[key]=_default}
+return self.$strings[key]}else{
+convert_all_str(self)}}
 if(self.$jsobj){if(! self.$jsobj.hasOwnProperty(key)){self.$jsobj[key]=_default}
 return self.$jsobj[key]}
 var lookup=dict.$lookup_by_key(self,key)
