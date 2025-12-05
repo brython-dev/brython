@@ -123,6 +123,7 @@ def _get_tzname():
     "check if timezone is available, if not return a tuple of empty str"
     d = date()
     d = d.toTimeString()
+    print('time 126, d', d)
     try:
         d = d.split('(')[1].split(')')[0]
         return (d, 'NotAvailable')

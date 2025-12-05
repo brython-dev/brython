@@ -27,6 +27,14 @@ Module.__annotations__ = _b_.property.$factory(
     }
 )
 
+Module.__dict__ = $B.getset_descriptor.$factory(
+    Module,
+    '__dict__',
+    function(mod){
+        return $B.obj_dict(mod)
+    }
+)
+
 Module.__dir__ = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)()
@@ -927,7 +935,7 @@ function import_engine(mod_name, _path, from_stdlib){
                 }
             }
         }else{
-            spec = find_spec(mod_name, _path)
+            spec = $B.$call(find_spec)(mod_name, _path)
             if(!$B.is_none(spec)){
                 module = $B.imported[spec.name]
                 if(module !== undefined){
@@ -1194,7 +1202,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'test.support' // fromlist.length == 1 && fromlist[0] == "aliases"
+    var test = false // mod_name == 'browser' // fromlist.length == 1 && fromlist[0] == "aliases"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
@@ -1371,7 +1379,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                         if(test){
                             console.log('try to import', mod_name + '.' + name)
                         }
-                        $B.$getattr(__import__, '__call__')(mod_name + '.' + name,
+                        $B.$call(__import__)(mod_name + '.' + name,
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
                         ns[alias] = $B.$getattr(modobj, name)

@@ -319,12 +319,28 @@ list.__init__ = function(){
     return _b_.None
 }
 
-var list_iterator = $B.make_iterator_class("list_iterator")
+var list_iterator = $B.make_class("list_iterator",
+    function(t){
+        return {
+            __class__: list_iterator,
+            it: t[Symbol.iterator]()
+        }
+    }
+)
+
+list_iterator.$tp_iternext = function*(self){
+    for(var value of self.it){
+        yield value
+    }
+}
+
 list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
-list.__iter__ = function(self){
+$B.set_func_names(list_iterator, 'builtins')
+
+list.$tp_iter = function(self){
     return list_iterator.$factory(self)
 }
 

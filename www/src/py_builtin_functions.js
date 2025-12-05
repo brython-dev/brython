@@ -965,7 +965,7 @@ _b_.getattr = function(){
         $._default === missing ? undefined : $._default)
 }
 
-$B.search_in_mro = function(klass, attr){
+$B.search_in_mro = function(klass, attr, _default){
     var test = false // attr == '__eq__' && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
@@ -975,11 +975,11 @@ $B.search_in_mro = function(klass, attr){
             console.log('found in klass', klass[attr])
         }
         return klass[attr]
-    }else if(klass.__dict__){
-        var v = _b_.dict.$get_string(klass.__dict__, attr, false)
+    }else if(klass.$dict){
+        var v = _b_.dict.$get_string(klass.$dict, attr, false)
         if(v !== false){
             if(test){
-                console.log('found in klass dict', klass.__dict__, v)
+                console.log('found in klass dict', klass.$dict, v)
             }
             return v
         }
@@ -1001,6 +1001,7 @@ $B.search_in_mro = function(klass, attr){
             }
         }
     }
+    return _default
 }
 
 $B.call_with_mro = function(obj, attr){
@@ -1026,6 +1027,94 @@ $B.call_with_mro = function(obj, attr){
         }
     }
 }
+
+var missing_attr = {'missing_attr': true}
+var NULL = {}
+
+function search_in_dict(obj, attr){
+    if(obj.__dict__){
+        var in_dict = _b_.dict.$get_string(obj.__dict__, attr)
+        if(in_dict !== _b_.dict.$missing){
+            return in_dict
+        }
+    }
+    if(obj.hasOwnProperty){
+        if(obj.hasOwnProperty(attr)){
+            return obj[attr]
+        }
+    }
+    return missing_attr
+}
+
+function standard_getattribute(obj, attr){
+    var test = false // attr == 'x'
+    var klass = $B.get_class(obj)
+    if(test){
+        console.log('getattr', attr, 'of obj', obj, klass)
+    }
+    var in_mro = $B.search_in_mro(klass, attr, NULL)
+    if(test){
+        console.log('in mro', in_mro)
+        console.log('class of in_mro', $B.get_class(in_mro))
+    }
+    var getter = missing_attr
+    if(in_mro !== NULL){
+        var in_mro_class = $B.get_class(in_mro)
+        var getter = $B.search_in_mro(in_mro_class, '__get__')
+        if(test){
+            console.log('getter', getter)
+        }
+        if(getter){
+            var is_data_descr = $B.search_in_mro(in_mro_class, '__set__') ??
+                                $B.search_in_mro(in_mro_class, '__del__')
+            if(is_data_descr){
+                return getter(in_mro, obj, klass)
+            }
+        }else{
+            getter = missing_attr
+        }
+    }
+    // search in obj dict
+    var in_dict = search_in_dict(obj, attr)
+    if(in_dict !== missing_attr){
+        return in_dict
+    }else if(getter !== missing_attr){
+        // non-data descriptor
+        if(typeof getter !== 'function'){
+            console.log('not a function', getter)
+            console.log('class of in_mro', in_mro_class)
+        }
+        return getter(in_mro, obj, klass)
+    }else if(in_mro !== NULL){
+        return in_mro
+    }
+    if(test){
+        console.log('attr', attr, 'not found on obj', obj)
+    }
+    return missing_attr
+}
+
+function getattr_hook(obj, attr){
+    var klass = $B.get_class(obj)
+    var getattribute = $B.search_in_mro(klass, '__getattribute__')
+    if(getattribute && getattribute !== _b_.object.__getattribute__){
+        // use specific __getattribute__
+        if(typeof getattribute !== 'function'){
+            console.log('not a function', getattribute)
+        }
+        return getattribute(obj, attr)
+    }
+    var res = standard_getattribute(obj, attr)
+    if(res === missing_attr){
+        var getattr = $B.search_in_mro(klass, '__getattr__')
+        if(getattr){
+            return getattr(obj, attr)
+        }
+    }
+    return res
+}
+
+$B.object_getattribute = getattr_hook
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
@@ -1057,11 +1146,26 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "f_code" // && obj.__name__ === "MagicMock"
+    var $test = false // attr == "_member_names_" && obj.__name__ === "FlagBoundary"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
         "isclass", is_class)
+        console.log('in $dict', obj.$dict.$strings._member_names_)
+    }
+
+    if(! is_class){
+        var std_res = getattr_hook(obj, attr)
+        if($test){
+            console.log(obj, attr, std_res)
+        }
+        if(std_res === missing_attr){
+            if(_default !== undefined){
+                return _default
+            }
+            throw $B.attr_error(attr, obj)
+        }
+        return std_res
     }
 
     if(klass === undefined){
@@ -1126,9 +1230,9 @@ $B.$getattr = function(obj, attr, _default){
           if(is_class){
               var dict = {},
                   key
-              if(obj.__dict__){
-                  for(key of _b_.dict.$keys_string(obj.__dict__)){
-                      dict[key] = _b_.dict.$getitem_string(obj.__dict__, key)
+              if(obj.$dict){
+                  for(key of _b_.dict.$keys_string(obj.$dict)){
+                      dict[key] = _b_.dict.$getitem_string(obj.$dict, key)
                       if(key == '__new__' && dict[key].__class__ !== _b_.staticmethod){
                           dict[key] = _b_.staticmethod.$factory(dict[key])
                       }
@@ -1261,6 +1365,7 @@ $B.$getattr = function(obj, attr, _default){
         if(klass.$descriptors && klass.$descriptors[attr] !== undefined){
             return klass[attr](obj)
         }
+        console.log('attr', attr, klass[attr])
         if(typeof klass[attr] == 'function'){
             var func = klass[attr]
             // new is a static method
@@ -1313,9 +1418,9 @@ $B.$getattr = function(obj, attr, _default){
             attr_func = _b_.type.__getattribute__
         }else{
             attr_func = $B.$call($B.$getattr(klass, '__getattribute__'))
-        }
-        if($test){
-            console.log('attr func', attr_func)
+            if($test){
+                console.log('use __getattribute__ of klass', klass)
+            }
         }
     }else{
         attr_func = klass.__getattribute__
@@ -1337,9 +1442,11 @@ $B.$getattr = function(obj, attr, _default){
 
     var odga = _b_.object.__getattribute__
     if($test){
-        console.log("attr_func is odga ?", attr_func,
-            attr_func === odga, '\n',
+        console.log("attr_func", attr_func,
+            '\n     is oject.__ga__ ?', attr_func === odga,
+            '\n     is type.__ga__ ?', attr_func === _b_.type.__getattribute__,
             '\nobj[attr]', obj[attr])
+        console.log('original', attr_func.$original)
     }
     if(attr_func === odga){
         res = obj[attr]
@@ -1710,6 +1817,9 @@ $B.$isinstance = function(obj, cls){
         return true
     }
     var mro = klass.__mro__
+    if(mro === undefined){
+        console.log('obj', obj, 'klass', klass)
+    }
     for(var i = 0; i < mro.length; i++){
        if(mro[i] === cls){
            return true
@@ -1864,12 +1974,15 @@ $B.PyObject_GetIter = function(obj){
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
-    var test = obj.__class__ && obj.__class__.__name__ == 'Dict'
+    var test = false // obj.$is_class // obj.__class__ && obj.__class__.__name__ == 'StrEnum'
+    var NULL = {}
     if(test){
         console.log('iter', obj)
     }
     if(sentinel === undefined){
+
         var klass = obj.__class__ || $B.get_class(obj)
+
         if(klass.$tp_iter){
             var res = klass.$tp_iter(obj)
             if($B.get_class(res).$tp_iternext === undefined){
@@ -2000,11 +2113,11 @@ var map = _b_.map = $B.make_class("map",
     }
 )
 
-map.__iter__ = function (self){
+map.$tp_iter = function (self){
     return self
 }
 
-map.__next__ = function(self){
+map.$tp_iternext = function*(self){
     var args = []
     for(var iter of self.args){
         var arg = iter.next()
@@ -2013,7 +2126,7 @@ map.__next__ = function(self){
         }
         args.push(arg.value)
     }
-    return self.func.apply(null, args)
+    yield self.func.apply(null, args)
 }
 
 $B.set_func_names(map, "builtins")
@@ -2851,7 +2964,7 @@ var $$super = _b_.super = $B.make_class("super",
         if(_type === undefined && object_or_type === undefined){
             var frame = $B.frame_obj.frame,
                 pyframe = $B.imported["_sys"]._getframe(),
-                code = $B.frame.f_code.__get__(pyframe),
+                code = $B.$getattr(pyframe, 'f_code'),
                 co_varnames = code.co_varnames
             if(co_varnames.length > 0){
                 _type = frame[1].__class__
@@ -2896,7 +3009,6 @@ $$super.__get__ = function(self, instance){
 }
 
 $$super.__getattribute__ = function(self, attr){
-
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -2914,7 +3026,7 @@ $$super.__getattribute__ = function(self, attr){
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "new" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = false // attr == "__delattr__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }
@@ -3143,17 +3255,31 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
+$B.builtin_method = $B.make_class('builtin_method')
+
+$B.builtin_method.__repr__ = function(self){
+    return `<built-in method>`
+}
+
+$B.set_func_names($B.builtin_method, 'builtins')
+
 var builtin_function = $B.builtin_function_or_method = $B.make_class(
     "builtin_function_or_method", function(f){
         f.__class__ = builtin_function
         return f
     })
 
+builtin_function.__get__ = function(_self, obj, klass){
+    return _self
+}
+
 builtin_function.__getattribute__ = $B.function.__getattribute__
 builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
     return self.$function_infos[$B.func_attrs.__name__]
 }
 builtin_function.__repr__ = builtin_function.__str__ = function(self){
+    console.log('builtin func', self)
+    console.log(self.$function_infos, self.$infos)
     return '<built-in function ' + self.$function_infos[$B.func_attrs.__name__] + '>'
 }
 $B.set_func_names(builtin_function, "builtins")

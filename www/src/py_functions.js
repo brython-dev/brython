@@ -18,6 +18,7 @@ $B.function = {
 
 
 $B.function.__dict__ = {}
+$B.function.$dict = $B.function.__dict__
 
 $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
     $B.function,
@@ -213,6 +214,9 @@ $B.function.__dict__.__type_params__ = $B.getset_descriptor.$factory(
 $B.function.__dir__ = function(self){
     if(self.$function_infos && ! self.$infos){
         $B.make_function_infos(self, ...self.$function_infos)
+    }
+    if(self.$infos === undefined){
+        console.log('no $infos', self, self.$function_infos)
     }
     var infos = self.$infos.__dict__ || {},
         attrs = self.$attrs || {}

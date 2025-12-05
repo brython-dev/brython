@@ -21,9 +21,9 @@ object.__delattr__ = function(self, attr){
         return $B.$getattr(kl_attr, '__delete__')(self)
     }
     // No data descriptor, delete from instance __dict__
-    if(self.__dict__ && $B.$isinstance(self.__dict__, _b_.dict) &&
-            _b_.dict.$contains_string(self.__dict__, attr)){
-        _b_.dict.$delete_string(self.__dict__, attr)
+    if(self.$dict && $B.$isinstance(self.$dict, _b_.dict) &&
+            _b_.dict.$contains_string(self.$dict, attr)){
+        _b_.dict.$delete_string(self.$dict, attr)
         delete self[attr]
         return _b_.None
     }else if(self.__dict__ === undefined && self[attr] !== undefined){
@@ -101,7 +101,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'f_code' // false // attr == "__args__"
+    var $test = attr == '__iter__' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
         console.log('obj.__dict__', obj.__dict__)
@@ -174,6 +174,7 @@ object.__getattribute__ = function(obj, attr){
             if($test){
                 console.log(attr, 'found in own class')
             }
+
             if(res.__class__ !== $B.method && res.__get__ === undefined){
                 is_own_class_instance_method = true
             }

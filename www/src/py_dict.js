@@ -10,17 +10,23 @@ and because Map is much slower than regular Javascript objects.
 
 A Python dictionary is implemented as a Javascript objects with these
 attributes:
+. $all_str: indicates if all the keys are strings. Common use case, optimized
+. $strings: a JS object mapping string keys to values, used only if $all_str
+  is true
 . $version: an integer with an initial value of 0, incremented at each
   insertion
 . _keys: list of the keys
 . _values: list of the values
+. _hashes: list of the key hashes
 . table: a JS object with keys = hash of entries, value = list of indices in
   _keys and _values
 
 Lookup by keys:
-- compute hash(key)
-- if dict.table[hash] exists, it is a list of indices
-- for each index, if dict._keys[index] == key, return dict._values[index]
+- if all keys are strings, use $strings[key]
+- otherwise:
+    - compute hash(key)
+    - if dict.table[hash] exists, it is a list of indices
+    - for each index, if dict._keys[index] == key, return dict._values[index]
 
 */
 
@@ -210,55 +216,86 @@ dict.$iter_items = function*(d){
     }
 }
 
-dict.$iter_items_check = function*(d){
-    if(d.$jsobj){
-        for(var key in d.$jsobj){
-            yield [key, d.$jsobj[key]]
-        }
-    }else{
-        var version = d.$version
-        for(var i = 0, len = d._keys.length; i < len; i++){
-            if(d._keys[i] !== undefined){
-                yield [d._keys[i], d._values[i]]
-                if(d.$version !== version){
-                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-                }
-            }
-        }
-        if(d.$version !== version){
-            $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-        }
-    }
-}
-
-var dkit = $B.make_class('dict_keyiterator',
+var dict_keyiterator = $B.make_class('dict_keyiterator',
     function(d){
         return {
-            __class__: dkit,
+            __class__: dict_keyiterator,
             it: dict.$iter_items(d)
         }
     }
 )
 
-dkit.$tp_iternext = function*(self){
+dict_keyiterator.$tp_iternext = function*(self){
     for(var item of self.it){
         yield item.key
     }
 }
 
-dkit.$tp_iter = function(self){
+dict_keyiterator.$tp_iter = function(self){
     return self
 }
 
-dkit.__reduce_ex__ = function(self){
+dict_keyiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dkit.$tp_iternext(self)))])])
+        $B.fast_tuple([$B.$list(Array.from(dict_keyiterator.$tp_iternext(self)))])])
 }
 
-$B.set_func_names(dkit, 'builtins')
+$B.set_func_names(dict_keyiterator, 'builtins')
+
+var dict_valueiterator = $B.make_class('dict_valueiterator',
+    function(d){
+        return {
+            __class__: dict_valueiterator,
+            it: dict.$iter_items(d)
+        }
+    }
+)
+
+dict_valueiterator.$tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item.value
+    }
+}
+
+dict_valueiterator.$tp_iter = function(self){
+    return self
+}
+
+dict_valueiterator.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(dict_valueiterator.$tp_iternext(self)))])])
+}
+
+$B.set_func_names(dict_valueiterator, 'builtins')
+
+var dict_itemiterator = $B.make_class('dict_itemiterator',
+    function(d){
+        return {
+            __class__: dict_itemiterator,
+            it: dict.$iter_items(d)
+        }
+    }
+)
+
+dict_itemiterator.$tp_iternext = function*(self){
+    for(var item of self.it){
+        yield $B.fast_tuple([item.key, item.value])
+    }
+}
+
+dict_itemiterator.$tp_iter = function(self){
+    return self
+}
+
+dict_itemiterator.__reduce_ex__ = function(self){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(dict_itemiterator.$tp_iternext(self)))])])
+}
+
+$B.set_func_names(dict_itemiterator, 'builtins')
 
 dict.$tp_iter = function(self){
-    return dkit.$factory(self)
+    return dict_keyiterator.$factory(self)
 }
 
 var $copy_dict = function(left, right){
@@ -796,12 +833,6 @@ dict.__init__ = function(self, first, second){
     return _b_.None
 }
 
-/*
-dict.__iter__ = function(self){
-    return _b_.iter(dict.keys(self))
-}
-*/
-
 dict.__ior__ = function(self, other){
     // PEP 584
     dict.update(self, other)
@@ -1151,18 +1182,13 @@ var dict_items = $B.make_class("dict_items",
     function(d){
         return {
             __class__: dict_items,
-            dict: d,
-            make_iter: function*(){
-                for(var entry of dict.$iter_items(d)){
-                    yield $B.fast_tuple([entry.key, entry.value])
-                }
-            }
+            dict: d
         }
     }
 )
 
-dict_items.__iter__ = function(self){
-    return dict_itemiterator.$factory(self.make_iter)
+dict_items.$tp_iter = function(self){
+    return dict_itemiterator.$factory(self.dict)
 }
 
 dict_items.__len__ = function(self){
@@ -1170,12 +1196,12 @@ dict_items.__len__ = function(self){
 }
 
 dict_items.__reduce__ = function(self){
-    var items = $B.$list(Array.from(self.make_iter()))
+    var items = $B.$list(Array.from(dict_items.$tp_iter(self.dict)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
 dict_items.__repr__ = function(self){
-    var items = Array.from(self.make_iter())
+    var items = Array.from(dict_items.$tp_iter(self.dict))
     items = items.map($B.fast_tuple)
     return 'dict_items(' + _b_.repr(items) + ')'
 }
@@ -1192,35 +1218,6 @@ make_view_comparison_methods(dict_items)
 
 $B.set_func_names(dict_items, 'builtins')
 
-var dict_itemiterator = $B.make_class('dict_itemiterator',
-    function(make_iter){
-        return {
-            __class__: dict_itemiterator,
-            iter: make_iter(),
-            make_iter
-        }
-    }
-)
-
-dict_itemiterator.__iter__ = function(self){
-    self[Symbol.iterator] = function(){return self.iter}
-    return self
-}
-
-dict_itemiterator.__next__ = function(self){
-    var res = self.iter.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return $B.fast_tuple(res.value)
-}
-
-dict_itemiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-}
-
-$B.set_func_names(dict_itemiterator, 'builtins')
 
 dict.items = function(self){
     $B.args('items', 1, {self: null}, ['self'], arguments, {}, null, null)
@@ -1231,14 +1228,13 @@ var dict_keys = $B.make_class("dict_keys",
     function(d){
         return {
             __class__: dict_keys,
-            dict: d,
-            make_iter: function(){return dict.$iter_keys_check(d)}
+            dict: d
         }
     }
 )
 
 dict_keys.$tp_iter = function(self){
-    return dkit.$factory(self.dict)
+    return dict_keyiterator.$factory(self.dict)
 }
 
 dict_keys.__len__ = function(self){
@@ -1246,12 +1242,12 @@ dict_keys.__len__ = function(self){
 }
 
 dict_keys.__reduce__ = function(self){
-    var items = $B.$list(Array.from(self.make_iter()))
+    var items = $B.$list(Array.from(dict_keys.$tp_iter(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
 dict_keys.__repr__ = function(self){
-    var items = Array.from(self.make_iter())
+    var items = Array.from(dict_keys.$tp_iter(self.dict))
     return 'dict_keys(' + _b_.repr(items) + ')'
 }
 
@@ -1263,37 +1259,6 @@ make_view_comparison_methods(dict_keys)
 
 $B.set_func_names(dict_keys, 'builtins')
 
-/*
-var dict_keyiterator = $B.make_class('dict_keyiterator',
-    function(make_iter){
-        return {
-            __class__: dict_keyiterator,
-            iter: make_iter(),
-            make_iter
-        }
-    }
-)
-
-dict_keyiterator.__iter__ = function(self){
-    self[Symbol.iterator] = function(){return self.iter}
-    return self
-}
-
-dict_keyiterator.__next__ = function(self){
-    var res = self.iter.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return res.value
-}
-
-dict_keyiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-}
-
-$B.set_func_names(dict_keyiterator, 'builtins')
-*/
 
 dict.keys = function(self){
     $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
@@ -1439,14 +1404,13 @@ var dict_values = $B.make_class("dict_values",
     function(d){
         return {
             __class__: dict_values,
-            dict: d,
-            make_iter: function(){return dict.$iter_values_check(d)}
+            dict: d
         }
     }
 )
 
-dict_values.__iter__ = function(self){
-    return dict_valueiterator.$factory(self.make_iter)
+dict_values.$tp_iter = function(self){
+    return dict_valueiterator.$factory(self.dict)
 }
 
 dict_values.__len__ = function(self){
@@ -1454,12 +1418,12 @@ dict_values.__len__ = function(self){
 }
 
 dict_values.__reduce__ = function(self){
-    var items = $B.$list(Array.from(self.make_iter()))
+    var items = $B.$list(Array.from(dict_values.$tp_iter(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
 dict_values.__repr__ = function(self){
-    var items = Array.from(self.make_iter())
+    var items = Array.from(dict_values.$tp_iter(self))
     return 'dict_values(' + _b_.repr(items) + ')'
 }
 
@@ -1474,36 +1438,6 @@ dict_values.__reversed__ = function(self){
 make_view_comparison_methods(dict_values)
 
 $B.set_func_names(dict_values, 'builtins')
-
-var dict_valueiterator = $B.make_class('dict_valueiterator',
-    function(make_iter){
-        return {
-            __class__: dict_valueiterator,
-            iter: make_iter(),
-            make_iter
-        }
-    }
-)
-
-dict_valueiterator.__iter__ = function(self){
-    self[Symbol.iterator] = function(){return self.iter}
-    return self
-}
-
-dict_valueiterator.__next__ = function(self){
-    var res = self.iter.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return res.value
-}
-
-dict_valueiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-}
-
-$B.set_func_names(dict_valueiterator, 'builtins')
 
 
 dict.values = function(self){
@@ -1553,7 +1487,6 @@ $B.empty_dict = function(){
         _hashes: [],
         $strings: new $B.str_dict(),
         $version: 0,
-        $order: 0,
         $all_str: true
     }
 }

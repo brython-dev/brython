@@ -749,14 +749,7 @@
                 $B.frame_obj.frame.$current_exception = value
             }
         ),
-        modules: _b_.property.$factory(
-            function(){
-                return $B.obj_dict($B.imported)
-            },
-            function(){
-                 $B.RAISE(_b_.TypeError, "Read only property 'sys.modules'")
-            }
-        ),
+        modules: $B.obj_dict($B.imported),
         path: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename_for_import()
@@ -1356,7 +1349,7 @@
     function load(name, module_obj){
         // add class and __str__
         module_obj.__class__ = $B.module
-        //module_obj.__file__ = '<builtin>'
+        module_obj.__dict__ = $B.empty_dict()
         module_obj.__name__ = name
         $B.imported[name] = module_obj
         // set attribute "name" of functions
@@ -1408,7 +1401,7 @@
     $B.method_descriptor.__getattribute__ = $B.function.__getattribute__
     $B.wrapper_descriptor.__getattribute__ = $B.function.__getattribute__
 
-    _b_.type.__dict__ = $B.mappingproxy.$factory(_b_.type.__dict__)
+    _b_.type.__dict__ = _b_.type.$dict = $B.mappingproxy.$factory(_b_.type.__dict__)
 
     // Set type of methods of builtin classes
     for(var name in _b_){
@@ -1426,6 +1419,9 @@
                     continue
                 }else if(key == "__new__"){
                     value.__class__ = $B.builtin_function_or_method
+                }else if(key == '__class_getitem__'){
+                    value.__class__ = $B.classmethod_descriptor
+                    value.__objclass__ = _b_[name]
                 }else if(key.startsWith("__")){
                     value.__class__ = $B.wrapper_descriptor
                 }else{
@@ -1603,6 +1599,6 @@ $B.__ARGV = $B.$list([])
 $B.tracefunc = _b_.None
 
 // function dict
-$B.function.__dict__ = $B.obj_dict($B.function.__dict__)
+$B.function.__dict__ = $B.function.$dict = $B.obj_dict($B.function.__dict__)
 
 })(__BRYTHON__);

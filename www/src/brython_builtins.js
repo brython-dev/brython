@@ -393,15 +393,14 @@ $B.set_func_names = function(klass, module){
                 if(klass.hasOwnProperty(dunder)){
                     console.log('class', klass.__name__ ?? klass,
                         `should not have both ${attr} and ${dunder}`)
-                }else{
-                    if(typeof $B.make_dunder[dunder] !== 'function'){
-                        console.log('not a func', attr, dunder)
-                    }
-                    klass[dunder] = $B.make_dunder[dunder](klass, attr)
-                    $B.add_function_infos(klass, dunder)
-                    klass[dunder].__class__ = $B.wrapper_descriptor
-                    klass[dunder].__objclass__ = klass
                 }
+                if(typeof $B.make_dunder[dunder] !== 'function'){
+                    console.log('not a func', attr, dunder)
+                }
+                klass[dunder] = $B.make_dunder[dunder](klass, attr)
+                $B.add_function_infos(klass, dunder)
+                klass[dunder].__class__ = $B.wrapper_descriptor
+                klass[dunder].__objclass__ = klass
             }
         }
     }

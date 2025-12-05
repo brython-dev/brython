@@ -232,14 +232,18 @@ frame.__str__ = frame.__repr__ = function(_self){
         frame.f_code.__get__(_self).co_name + '>'
 }
 
-frame.f_builtins = {
-    __get__: function(_self){
+frame.f_builtins = $B.getset_descriptor.$factory(
+    frame,
+    'f_builtins',
+    function(_self){
         return $B.$getattr(_self[3].__builtins__, '__dict__')
     }
-}
+)
 
-frame.f_code = {
-    __get__: function(_self){
+frame.f_code = $B.getset_descriptor.$factory(
+    frame,
+    'f_code',
+    function(_self){
         var res
         var positions = [[0, 0, 0, 0]] // fake value
         if(_self[4]){
@@ -264,10 +268,12 @@ frame.f_code = {
         res.co_positions.__class__ = $B.function
         return res
     }
-}
+)
 
-frame.f_globals = {
-    __get__: function(_self){
+frame.f_globals = $B.getset_descriptor.$factory(
+    frame,
+    'f_globals',
+    function(_self){
         if(_self.f_globals){
             return _self.f_globals
         }else if(_self.f_locals && _self[1] == _self[3]){
@@ -276,16 +282,20 @@ frame.f_globals = {
             return _self.f_globals = $B.obj_dict(_self[3])
         }
     }
-}
+)
 
-frame.f_lineno = {
-    __get__: function(_self){
+frame.f_lineno = $B.getset_descriptor.$factory(
+    frame,
+    'f_lineno',
+    function(_self){
         return _self.$lineno
     }
-}
+)
 
-frame.f_locals = {
-    __get__: function(_self){
+frame.f_locals = $B.getset_descriptor.$factory(
+    frame,
+    'f_locals',
+    function(_self){
         // If locals and globals are the same, f_locals and f_globals
         // are the same object
         if(_self.f_locals){
@@ -296,13 +306,15 @@ frame.f_locals = {
             return _self.f_locals = $B.obj_dict(_self[1])
         }
     }
-}
+)
 
-frame.f_trace = {
-    __get__: function(_self){
+frame.f_trace =$B.getset_descriptor.$factory(
+    frame,
+    'f_trace',
+    function(_self){
         return _self.$f_trace
     }
-}
+)
 
 $B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
@@ -350,8 +362,9 @@ $B.exception = function(js_exc){
             // same Python exception
             return js_exc.$py_exc
         }
-        if($B.get_option('debug', exc) > 1){
+        if(true){ // $B.get_option('debug', exc) > 1){
             console.log('Javascript error', js_exc)
+            console.log(js_exc.stack)
         }
         var msg = js_exc.name + ': ' + js_exc.message
         exc = $B.EXC(_b_.JavascriptError, msg)
@@ -789,8 +802,13 @@ $B.offer_suggestions_for_attribute_error = function(exc){
             obj === _b_.None || obj === undefined){
         return _b_.None
     }
-    var dir = _b_.dir(obj),
-        suggestions = calculate_suggestions(dir, name)
+    try{
+        var dir = _b_.dir(obj)
+    }catch(err){
+        console.log('error in dir, attribute error', name, obj)
+        throw err
+    }
+    var suggestions = calculate_suggestions(dir, name)
     return suggestions || _b_.None
 }
 
@@ -1483,6 +1501,7 @@ $B.error_trace = function(err){
                 trace += `. Did you forget to import '${err.name}'?`
             }
         }else if(err.__class__ === _b_.AttributeError){
+            console.log('attriute error stack', err.__traceback__)
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
             if(suggestion !== _b_.None){
                 trace += `. Did you mean: '${suggestion}'?`

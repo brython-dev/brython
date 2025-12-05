@@ -379,8 +379,24 @@ bytes.__contains__ = function(self, other){
     return false
 }
 
-var bytes_iterator = $B.make_iterator_class("bytes_iterator")
-bytes.__iter__ = function(self){
+var bytes_iterator = $B.make_class("bytes_iterator",
+    function(t){
+        return {
+            __class__: bytes_iterator,
+            it: t[Symbol.iterator]()
+        }
+    }
+)
+
+bytes_iterator.$tp_iternext = function*(self){
+    for(var value of self.it){
+        yield value
+    }
+}
+
+$B.set_func_names(bytes_iterator, 'builtins')
+
+bytes.$tp_iter = function(self){
     return bytes_iterator.$factory(self.source)
 }
 

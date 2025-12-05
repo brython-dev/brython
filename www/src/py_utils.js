@@ -893,20 +893,12 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
-    var klass = $B.get_class(iterator)
-    if(klass.$tp_iter){
-        var res = klass.$tp_iter(iterator)
-        var next = $B.get_class(res).$tp_iternext
-        if(next === undefined){
-            $B.RAISE(_b_.TypeError, 'not an iterator')
-        }
-        var next_func = next(res)
-        return next_func
-    }
+
     var it = _b_.iter(iterator)
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
     var next_func = $B.$getattr(_b_.iter(iterator), '__next__', null)
+
     if(next_func !== null){
         next_func = $B.$call(next_func)
         return {
@@ -1431,6 +1423,7 @@ $B.$is_member = function(item, _set){
 }
 
 $B.$call = function(callable, inum){
+    var original = callable
     try{
         callable = $B.$call1(callable)
     }catch(err){
@@ -1438,7 +1431,7 @@ $B.$call = function(callable, inum){
         throw err
     }
 
-    return function(){
+    var f = function(){
         try{
             return callable.apply(null, arguments)
         }catch(exc){
@@ -1446,8 +1439,9 @@ $B.$call = function(callable, inum){
             throw exc
         }
     }
+    f.$original = original
 
-    return callable
+    return f
 }
 
 $B.$call1 = function(callable){
@@ -1499,6 +1493,8 @@ $B.$call1 = function(callable){
     try{
         return $B.$getattr(callable, "__call__")
     }catch(err){
+        console.log('not callable', callable)
+        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }
