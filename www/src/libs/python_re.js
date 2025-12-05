@@ -68,7 +68,7 @@ var error = $B.make_class("error",
             __suppress_context__: false
         }
     })
-error.__bases__ = [_b_.Exception, _b_.object]
+error.tp_bases = [_b_.Exception, _b_.object]
 error.__mro__ = [_b_.Exception, _b_.BaseException, _b_.object]
 
 error.__str__ = function(self){

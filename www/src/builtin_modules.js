@@ -408,7 +408,7 @@
         function(){
             // Use Brython's super() to get a reference to self
             var res = _b_.super.$factory()
-            var js_constr = res.__thisclass__.__bases__[0]
+            var js_constr = res.__thisclass__.tp_bases[0]
             return function(){
                 var obj = new js_constr.$js_func(...arguments)
                 for(var attr in obj){
@@ -446,7 +446,7 @@
             }
             js_constr.__class__ = _b_.type
             return function(obj){
-                obj.__bases__.splice(0, 0, js_constr)
+                obj.tp_bases.splice(0, 0, js_constr)
                 obj.__mro__.splice(0, 0, js_constr)
                 return obj
             }
@@ -1387,10 +1387,8 @@
         _b_.__builtins__[attr] = _b_[attr]
         $B.builtins_scope.binding[attr] = true
         if(_b_[attr].$is_class){
-            if(_b_[attr].__bases__){
-                _b_[attr].__bases__.__class__ = _b_.tuple
-            }else{
-                _b_[attr].__bases__ = $B.fast_tuple([_b_.object])
+            if(! _b_[attr].tp_bases){
+                _b_[attr].tp_bases = [_b_.object]
             }
         }
     }

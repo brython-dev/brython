@@ -930,7 +930,7 @@ $B.set_func_names(js_list_meta, 'builtins')
 
 
 $B.SizedJSObj = $B.make_class('SizedJavascriptObject')
-$B.SizedJSObj.__bases__ = [$B.JSObj]
+$B.SizedJSObj.tp_bases = [$B.JSObj]
 $B.SizedJSObj.__mro__ = [$B.JSObj, _b_.object]
 
 $B.SizedJSObj.__len__ = function(_self){
@@ -940,7 +940,7 @@ $B.SizedJSObj.__len__ = function(_self){
 $B.set_func_names($B.SizedJSObj, 'builtins')
 
 $B.IterableJSObj = $B.make_class('IterableJavascriptObject')
-$B.IterableJSObj.__bases__ = [$B.JSObj]
+$B.IterableJSObj.tp_bases = [$B.JSObj]
 $B.IterableJSObj.__mro__ = [$B.JSObj, _b_.object]
 
 $B.IterableJSObj.__contains__ = function(self, key){
@@ -1286,7 +1286,7 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     Object.defineProperty(new_js_class, '$js_func',
                           {value: bases[0].$js_func})
     new_js_class.__class__ = $B.JSMeta
-    new_js_class.__bases__ = [bases[0]]
+    new_js_class.tp_bases = [bases[0]]
     new_js_class.__mro__ = [bases[0], _b_.object]
     new_js_class.__qualname__ = new_js_class.__name__ = class_name
     new_js_class.$is_js_class = true

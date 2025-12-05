@@ -951,7 +951,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
 }
 
 var bool = {
-    __bases__: [int],
+    tp_bases: [int],
     __class__: _b_.type,
     __mro__: [int, _b_.object],
     __qualname__: 'bool',

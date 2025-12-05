@@ -10,7 +10,7 @@ const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
 $B.make_IOUnsupported = function(){
     if($B._IOUnsupported === undefined){
         $B._IOUnsupported = $B.make_class('UnsupportedOperation')
-        $B._IOUnsupported.__bases__ = [_b_.OSError, _b_.ValueError]
+        $B._IOUnsupported.tp_bases = [_b_.OSError, _b_.ValueError]
         $B._IOUnsupported.__mro__ = _b_.type.$mro($B._IOUnsupported)
         $B._IOUnsupported.__module__ = '_io'
     }
@@ -327,7 +327,7 @@ $B.set_func_names(_IOBase, "builtins")
 
 $B._RawIOBase = $B.make_class('_io._RawIOBase') // Base class for raw binary streams.
 
-$B._RawIOBase.__bases__ = [_IOBase]
+$B._RawIOBase.tp_bases = [_IOBase]
 $B._RawIOBase.__mro__ = [_IOBase, _b_.object]
 
 $B._RawIOBase.read = function(_self, n){
@@ -380,7 +380,7 @@ $B._RawIOBase.write = function(){
 $B.set_func_names($B._RawIOBase, "_io")
 
 $B._BufferedIOBase = $B.make_class('_BufferedIOBase')
-$B._BufferedIOBase.__bases__ = [_IOBase]
+$B._BufferedIOBase.tp_bases = [_IOBase]
 $B._BufferedIOBase.__mro__ = [_IOBase, _b_.object]
 
 $B.is_buffer = function(obj){
@@ -486,7 +486,7 @@ function _bufferedreader_readline(_self){
 }
 
 $B._BufferedReader = $B.make_class('_BufferedReader')
-$B._BufferedReader.__bases__ = [$B._BufferedIOBase]
+$B._BufferedReader.tp_bases = [$B._BufferedIOBase]
 $B._BufferedReader.__mro__ = _b_.type.$mro($B._BufferedReader)
 
 $B._BufferedReader.__init__ = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZE){
@@ -561,7 +561,7 @@ $B._BufferedReader.readline = function(_self, size=-1){
 $B.set_func_names($B._BufferedReader, '_io')
 
 $B._FileIO = $B.make_class('_FileIO')
-$B._FileIO.__bases__ = [$B._RawIOBase]
+$B._FileIO.tp_bases = [$B._RawIOBase]
 $B._FileIO.__mro__ = _b_.type.$mro($B._FileIO)
 
 function bad_mode(){
@@ -788,7 +788,7 @@ $B.set_func_names($B._FileIO, '_io')
 
 $B._TextIOBase = $B.make_class('_io._TextIOBase')
 
-$B._TextIOBase.__bases__ = [_IOBase]
+$B._TextIOBase.tp_bases = [_IOBase]
 $B._TextIOBase.__mro__ = [_IOBase, _b_.object]
 
 $B._TextIOBase.encoding = $B.getset_descriptor.$factory(
@@ -867,7 +867,7 @@ $B._TextIOWrapper = $B.make_class('_io._TextIOWrapper',
 )
 
 $B._TextIOWrapper.$tp_dict = {}
-$B._TextIOWrapper.__bases__ = [$B._TextIOBase]
+$B._TextIOWrapper.tp_bases = [$B._TextIOBase]
 $B._TextIOWrapper.__mro__ = [$B._TextIOBase, _IOBase, _b_.object]
 
 $B._TextIOWrapper.$tp_dict.buffer = $B.getset_descriptor.$factory(

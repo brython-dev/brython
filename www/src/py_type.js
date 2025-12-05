@@ -172,8 +172,8 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
                 // same metaclass or a subclass, do nothing
             }else if(_b_.issubclass(mc, metaclass)){
                 metaclass = mc
-            }else if(metaclass.__bases__ &&
-                    metaclass.__bases__.indexOf(mc) == -1){
+            }else if(metaclass.tp_bases &&
+                    metaclass.tp_bases.indexOf(mc) == -1){
                 $B.RAISE(_b_.TypeError, "metaclass conflict: the " +
                     "metaclass of a derived class must be a (non-" +
                     "strict) subclass of the metaclasses of all its bases")
@@ -292,7 +292,7 @@ $B.make_class = function(qualname, factory){
 
     var A = {
         __class__: type,
-        __bases__: [_b_.object],
+        tp_bases: [_b_.object],
         __mro__: [_b_.object],
         __name__: qualname,
         __qualname__: qualname,
@@ -500,6 +500,20 @@ type.__dict__.__annotate__ = $B.getset_descriptor.$factory(type, '__annotate__',
     }
 )
 
+type.__dict__.__bases__ = $B.getset_descriptor.$factory(
+    type,
+    '__bases__',
+    function(klass){
+        var bases = klass.tp_bases
+        return $B.fast_tuple(bases)
+    },
+    function(klass, value){
+        klass.tp_bases = value
+        klass.__mro__ = type.$mro(klass)
+        return _b_.None
+    }
+)
+
 type.__dict__.__mro__ = {
     __get__: function(cls){
         return $B.fast_tuple([cls].concat(cls.__mro__))
@@ -594,7 +608,7 @@ function merge_class_dict(dict, klass){
         return
     }
     /* Recursively merge in the base types' (if any) dicts. */
-    bases = klass.__bases__
+    bases = klass.tp_bases
     if(bases === undefined){
         return
     }
@@ -617,7 +631,7 @@ type.__format__ = function(klass){
 var NULL = {NULL:true}
 
 $B.class_getattribute = function(obj, name, _default){
-    var test = false // name == '_member_names_'
+    var test = false // name == '__bases__'
     var klass = $B.get_class(obj)
     var in_mro = $B.search_in_mro(klass, name, NULL)
     // print('in mro', in_mro, type(in_mro), in_mro is null)
@@ -670,30 +684,42 @@ $B.class_getattribute = function(obj, name, _default){
     return _default
 }
 
-type.__getattribute__ = function(klass, attr){
-    var with_class_ga = $B.class_getattribute(klass, attr)
-    var save_klass = {}
-    for(var key in klass){
-        save_klass[key] = klass[key]
+function type_getattr_hook(obj, attr){
+    var klass = $B.get_class(obj)
+    var getattribute = $B.search_in_mro(klass, '__getattribute__')
+    if(getattribute && getattribute !== _b_.type.__getattribute__){
+        // use specific __getattribute__
+        if(typeof getattribute !== 'function'){
+            console.log('not a function', getattribute)
+        }
+        return getattribute(obj, attr)
     }
-    var res = type_getattribute(klass, attr)
-    for(var key in klass){
-        if(klass[key] !== save_klass[key]){
-            console.log(' ********** key changed', klass, '\n    ', key)
-            console.log('   before', save_klass[key])
-            console.log('   after', klass[key])
-            if(key == '__code__'){
-                console.log(Error().stack)
-                console.log($B.frame_obj)
-            }
+    var res = $B.class_getattribute(obj, attr, NULL)
+    if(res === NULL){
+        var getattr = $B.search_in_mro(klass, '__getattr__', NULL)
+        if(getattr !== NULL){
+            return getattr(obj, attr)
         }
     }
-    return with_class_ga
+    $B.RAISE_ATTRIBUTE_ERROR('type object has no attribute ${attr}',
+        obj, attr)
+}
+
+type.__getattribute__ = function(klass, attr){
+    var with_class_ga = $B.class_getattribute(klass, attr, NULL)
+    if(with_class_ga === NULL){
+        var getattr = $B.search_in_mro($B.get_class(klass), '__getattr__', NULL)
+        if(getattr !== NULL){
+            return getattr(klass, attr)
+        }
+    }else{
+        return with_class_ga
+    }
 }
 
 function type_getattribute(klass, attr){
     switch(attr) {
-        case "__bases__":
+        case "__bases__XXX":
             if(klass.__bases__ !== undefined){
                 return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__))
             }
@@ -1004,7 +1030,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
 
     var class_dict = {
         __class__ : meta,
-        __bases__ : bases.length == 0 ? [_b_.object] : bases,
+        tp_bases : bases.length == 0 ? [_b_.object] : bases,
         __qualname__: qualname,
         __module__: module,
         __name__: name,
@@ -1151,7 +1177,7 @@ type.__setattr__ = function(kls, attr, value){
             // redefine the function that creates instances of the class
             kls.$factory = $B.$instance_creator(kls)
             break
-        case "__bases__":
+        case "__bases__XXX":
             // redefine mro
             kls.__mro__ = _b_.type.mro(kls)
             break
@@ -1173,7 +1199,7 @@ type.$mro = function(cls){
         $B.RAISE(_b_.TypeError,
             'unbound method type.mro() needs an argument')
     }
-    var bases = cls.__bases__,
+    var bases = cls.tp_bases,
         seqs = [],
         pos1 = 0
     for(var base of bases){
@@ -1261,10 +1287,10 @@ type.mro = function(cls){
 type.__subclasscheck__ = function(self, subclass){
     // Is subclass a subclass of self ?
     var klass = self
-    if(subclass.__bases__ === undefined){
+    if(subclass.tp_bases === undefined){
         return self === _b_.object
     }
-    return subclass.__bases__.indexOf(klass) > -1
+    return subclass.tp_bases.indexOf(klass) > -1
 }
 
 $B.set_func_names(type, "builtins")
@@ -1345,7 +1371,7 @@ property.__set__ = function(self, obj, value){
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
     }
-    $B.$getattr(self.fset, '__call__')(obj, value)
+    $B.$call(self.fset)(obj, value)
 }
 
 $B.set_func_names(property, "builtins")

@@ -33,7 +33,7 @@ $B.pattern_match = function(subject, pattern){
         }
         let supported = false
         let klass = subject.__class__ || $B.get_class(subject)
-        for(let base of [klass].concat(klass.__bases__ || [])){
+        for(let base of [klass].concat(klass.tp_bases || [])){
             if(base.$match_sequence_pattern){
                 // set for builtin classes list, tuple, range, memoryview
                 // and for array.array
@@ -156,7 +156,7 @@ $B.pattern_match = function(subject, pattern){
             Mapping = $B.imported['collections.abc'].Mapping
         }
         let klass = subject.__class__ || $B.get_class(subject)
-        for(let base of [klass].concat(klass.__bases__ || [])){
+        for(let base of [klass].concat(klass.tp_bases || [])){
             // $match_mapping_pattern is set for dict and mappingproxy
             if(base.$match_mapping_pattern || base === Mapping){
                 supported = true

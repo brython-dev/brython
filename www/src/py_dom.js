@@ -680,7 +680,7 @@ DOMNode.__getattribute__ = function(self, attr){
             // cf. issue #1543 : if an element has the attribute "attr" set and
             // its class has an attribute of the same name, show a warning that
             // the class attribute is ignored
-            var bases = self.__class__.__bases__
+            var bases = self.__class__.tp_bases
             var show_message = true
             for(var base of bases){
                 if(base.__module__ == "browser.html"){

@@ -1025,8 +1025,8 @@ $B.set_func_names(tuple, "builtins")
 _b_.list = list
 _b_.tuple = tuple
 
-// set object.__bases__ to an empty tuple
-_b_.object.__bases__ = tuple.$factory()
-_b_.type.__bases__ = $B.fast_tuple([_b_.object])
+// set object.tp_bases and type.tp_bases
+_b_.object.tp_bases = []
+_b_.type.tp_bases = [_b_.object]
 
 })(__BRYTHON__);

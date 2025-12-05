@@ -354,7 +354,7 @@ function num_at(s, i){
 }
 
 var JSONError = $B.make_class('json.decoder.JSONError')
-JSONError.__bases__ = [_b_.Exception]
+JSONError.tp_bases = [_b_.Exception]
 JSONError.__mro__ = _b_.type.mro(JSONError)
 
 

@@ -421,7 +421,7 @@ $B.set_func_names(StringIO, "_io")
 
 var BytesIO = $B.make_class('BytesIO')
 
-BytesIO.__bases__ = [$B._BufferedIOBase]
+BytesIO.tp_bases = [$B._BufferedIOBase]
 BytesIO.__mro__ = _b_.type.$mro(BytesIO)
 
 // Initialize _buffer as soon as possible since it's used by __del__()
@@ -711,7 +711,7 @@ BytesIO.seekable = function(_self){
 $B.set_func_names(BytesIO, '_io')
 
 var BlockingIOError = $B.make_class('BlockingIOError')
-BlockingIOError.__bases__ = [_b_.OSError]
+BlockingIOError.tp_bases = [_b_.OSError]
 
 $B.set_func_names(BlockingIOError, '_io')
 

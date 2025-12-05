@@ -4,7 +4,7 @@ var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 
 var error = $B.make_class("error", _b_.Exception.$factory)
-error.__bases__ = [_b_.Exception]
+error.tp_bases = [_b_.Exception]
 $B.set_func_names(error, "binascii")
 
 function decode(bytes, altchars, validate){

@@ -23,7 +23,7 @@ function define(tag_name, cls, options){
             // ignore
         }
     }else{
-        let stack = [...cls.__bases__];
+        let stack = [...cls.tp_bases];
         while(stack.length) {
             base = stack.pop();
         if(base.__module__ === 'browser.html'){
@@ -31,7 +31,7 @@ function define(tag_name, cls, options){
                 break
         }
 
-        stack.push(...base.__bases__);
+        stack.push(...base.tp_bases);
     }
     }
 

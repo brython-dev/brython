@@ -474,7 +474,7 @@ function make_builtin_exception(exc_name, base, set_value){
         }
     )
     */
-    exc_class.__bases__ = [base]
+    exc_class.tp_bases = [base]
     exc_class.__mro__ = _b_.type.$mro(exc_class).slice(1)
     $B.set_func_names(exc_class, 'builtins')
     _b_[exc_name] = exc_class
@@ -729,7 +729,7 @@ _b_.AttributeError.__init__ = function(){
     $B.set_expected_kwargs($.self, ['name', 'obj'], $.kw)
 }
 
-_b_.AttributeError.__bases__ = [_b_.Exception]
+_b_.AttributeError.tp_bases = [_b_.Exception]
 _b_.AttributeError.__mro__ = _b_.type.$mro(_b_.AttributeError)
 
 _b_.AttributeError.__str__ = function(self){
@@ -753,7 +753,7 @@ $B.attr_error = function(name, obj){
 // NameError supports keyword-only "name" parameter
 _b_.NameError = $B.make_class('NameError')
 
-_b_.NameError.__bases__ = [_b_.Exception]
+_b_.NameError.tp_bases = [_b_.Exception]
 _b_.NameError.__mro__ = _b_.type.$mro(_b_.NameError).slice(1)
 
 _b_.NameError.__init__ = function(){
@@ -887,7 +887,7 @@ _b_.BaseExceptionGroup.__new__ = function(){
     return exc
 }
 
-_b_.BaseExceptionGroup.__bases__ = [_b_.BaseException]
+_b_.BaseExceptionGroup.tp_bases = [_b_.BaseException]
 
 _b_.BaseExceptionGroup.__class_getitem__ = $B.$class_getitem
 
@@ -987,7 +987,7 @@ _b_.ExceptionGroup = $B.make_class("ExceptionGroup",
     }
 )
 
-_b_.ExceptionGroup.__bases__ = [_b_.BaseExceptionGroup, _b_.Exception]
+_b_.ExceptionGroup.tp_bases = [_b_.BaseExceptionGroup, _b_.Exception]
 _b_.ExceptionGroup.__mro__ = _b_.type.$mro(_b_.ExceptionGroup)
 
 
