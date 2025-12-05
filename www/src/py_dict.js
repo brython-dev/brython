@@ -1506,6 +1506,7 @@ dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
+        console.log('make mapping proxy', obj)
         var res
         if($B.$isinstance(obj, dict)){
             res = $B.obj_dict(dict.$to_obj(obj))

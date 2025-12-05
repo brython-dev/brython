@@ -395,6 +395,7 @@ object.$new = function(cls){
         }
         var res = Object.create(null)
         res.__class__ = cls
+        res.ob_type = cls
         res.__dict__ = $B.obj_dict({})
         return res
     }
@@ -405,6 +406,7 @@ object.$no_new_init = function(cls){
     // explicit __init__
     var res = Object.create(null)
     res.__class__ = cls
+    res.ob_type = cls
     res.__dict__ = $B.obj_dict({})
     return res
 }
@@ -421,7 +423,8 @@ object.__new__ = function(cls, ...args){
     }
     var res = Object.create(null)
     $B.update_obj(res, {
-        __class__ : cls,
+        __class__: cls,
+        ob_type: cls,
         __dict__: $B.obj_dict({})
         })
     return res
@@ -607,6 +610,7 @@ object.__setattr__ = function(self, attr, val){
     }
     return _b_.None
 }
+
 object.__setattr__.__get__ = function(obj){
     return function(attr, val){
         object.__setattr__(obj, attr, val)
@@ -636,7 +640,10 @@ object.$factory = function(){
             ){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
-    var res = {__class__: object},
+    var res = {
+            __class__: object,
+            ob_type: object
+        },
         args = [res]
     object.__init__.apply(null, args)
     return res

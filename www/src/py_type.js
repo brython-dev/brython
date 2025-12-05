@@ -48,6 +48,10 @@ $B.$class_constructor = function(class_name, frame, metaclass,
     }
     var module = class_obj_proxy.__module__
 
+    if(metaclass.__mro__ === undefined){
+        console.log('no mro in metaclass', metaclass)
+    }
+
     // bool is not a valid base
     for(var base of bases){
         if(base.__flags__ !== undefined &&
@@ -149,7 +153,7 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
         metaclass = kw_meta
     }
     if(bases && bases.length > 0){
-        if(bases[0].__class__ === undefined){
+        if(bases[0].__class__ === undefined && bases[0].ob_type === undefined){
             // Might inherit a Javascript constructor
             if(typeof bases[0] == "function"){
                 if(bases.length != 1){
@@ -165,7 +169,7 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
             }
         }
         for(var base of bases){
-            var mc = base.__class__
+            var mc = $B.get_class(base)
             if(metaclass === undefined){
                 metaclass = mc
             }else if(mc === metaclass || _b_.issubclass(metaclass, mc)){
@@ -514,6 +518,20 @@ type.__dict__.__bases__ = $B.getset_descriptor.$factory(
     }
 )
 
+type.__dict__.__class__ = $B.getset_descriptor.$factory(
+    type,
+    '__class__',
+    function(klass){
+        return $B.get_class(klass)
+    },
+    function(klass, value){
+        console.log('set class', klass, value)
+        klass.tp_bases = value
+        klass.__mro__ = type.$mro(klass)
+        return _b_.None
+    }
+)
+
 type.__dict__.__mro__ = {
     __get__: function(cls){
         return $B.fast_tuple([cls].concat(cls.__mro__))
@@ -631,7 +649,11 @@ type.__format__ = function(klass){
 var NULL = {NULL:true}
 
 $B.class_getattribute = function(obj, name, _default){
-    var test = false // name == '__bases__'
+    var test = false // name == '__str__'
+    if(test){
+        console.log('class_getattr', obj, name)
+        console.log(Error().stack)
+    }
     var klass = $B.get_class(obj)
     var in_mro = $B.search_in_mro(klass, name, NULL)
     // print('in mro', in_mro, type(in_mro), in_mro is null)
@@ -643,18 +665,24 @@ $B.class_getattribute = function(obj, name, _default){
     if(in_mro !== NULL){
         var in_mro_class = $B.get_class(in_mro)
         if(test){
-            console.log('in_mro class', $B.get_class(in_mro))
+            console.log('in_mro class', in_mro_class)
         }
         var getter = $B.search_in_mro(in_mro_class, '__get__', NULL)
         if(test){
-            console.log('attr', name, 'of class', obj)
-            console.log('in mro', in_mro)
             console.log('getter', getter)
         }
         if(getter !== NULL){
             if($B.search_in_mro(in_mro_class, '__set__', NULL) !== NULL
                     || $B.search_in_mro(in_mro_class, '__delete__', NULL) !== NULL){
+                if(test){
+                    console.log('data descriptor', name)
+                    console.log('__set__', $B.search_in_mro(in_mro_class, '__set__', NULL))
+                }
                 return getter(in_mro, obj)     // data descriptor
+            }else{
+                if(test){
+                    console.log('non-data descriptor', name)
+                }
             }
         }
     }
@@ -996,10 +1024,10 @@ type.__init_subclass__ = function(){
 _b_.object.__init_subclass__ = type.__init_subclass__
 
 type.__instancecheck__ = function(cls, instance){
-    var kl = instance.__class__ || $B.get_class(instance)
+    var kl = $B.get_class(instance)
     if(kl === cls){
         return true
-    }else{
+    }else if(kl.__mro__){
         for(var i = 0; i < kl.__mro__.length; i++){
             if(kl.__mro__[i] === cls){return true}
         }
@@ -1030,6 +1058,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
 
     var class_dict = {
         __class__ : meta,
+        ob_type: meta,
         tp_bases : bases.length == 0 ? [_b_.object] : bases,
         __qualname__: qualname,
         __module__: module,
@@ -1411,7 +1440,7 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 type.__call__.__class__ = wrapper_descriptor
 
 $B.$instance_creator = function(klass){
-    var test = false // klass.__name__ == 'KeyError'
+    var test = false //klass.__name__ == 'A'
     if(test){
         console.log('instance creator of', klass)
     }
@@ -1679,7 +1708,16 @@ $B.classmethod_descriptor.__get__ = function(_self, obj, type){
 $B.set_func_names($B.classmethod_descriptor, 'builtins')
 
 // this could not be done before $type and $factory are defined
-_b_.object.__class__ = type
+
+_b_.object.ob_type = type
+
+_b_.object.__class__ = $B.getset_descriptor.$factory(
+    _b_.object,
+    '__class__',
+    function(obj){
+        return $B.get_class(obj)
+    }
+)
 
 $B.make_iterator_class = function(name, reverse){
     // Builds a class to iterate over items

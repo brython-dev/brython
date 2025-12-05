@@ -748,7 +748,10 @@ $B.get_class = function(obj){
     if(obj === undefined){
         return $B.imported.javascript.UndefinedType // idem
     }
-    var klass = obj.__class__ || obj.$tp_class
+    if(obj.ob_type){
+        return obj.ob_type
+    }
+    var klass = obj.__class__
     if(klass === undefined){
         switch(typeof obj){
             case "number":

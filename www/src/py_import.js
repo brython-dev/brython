@@ -12,7 +12,7 @@ var _b_ = $B.builtins,
 var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
         return {
-            $tp_class: Module,
+            ob_type: Module,
             __builtins__: _b_.__builtins__,
             __name__: name,
             __doc__: doc || _b_.None,

@@ -2667,7 +2667,7 @@ str.$factory = function(arg, encoding){
         if(klass === undefined){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
-        var method = $B.search_in_mro(klass, '__str__')
+        var method = _b_.type.__getattribute__(klass, '__str__')
         if(method === undefined){
             method = $B.search_in_mro(klass, '__repr__')
         }

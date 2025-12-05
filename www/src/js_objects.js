@@ -201,6 +201,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
             for(var i = 0, len = arguments.length; i < len; ++i){
                 var arg = arguments[i]
                 if(arg !== null && arg.constructor === Object && arg.$kw){
+                    console.log(Error().stack)
                     $B.RAISE(_b_.TypeError,
                         'keyword arguments are not supported for ' +
                         'Javascript functions')
