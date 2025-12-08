@@ -1106,7 +1106,7 @@
                         array[i] = params.source[i]
                     }
                 }else{
-                    if(params.__class__ !== _b_.dict){
+                    if($B.get_class(params) !== _b_.dict){
                         $B.RAISE(_b_.TypeError, "wrong type for data, " +
                             "expected dict, bytes or str, got " +
                             $B.class_name(params))
@@ -1399,10 +1399,15 @@
     $B.method_descriptor.__getattribute__ = $B.function.__getattribute__
     $B.wrapper_descriptor.__getattribute__ = $B.function.__getattribute__
 
-    _b_.type.__dict__ = _b_.type.$dict = $B.mappingproxy.$factory(_b_.type.__dict__)
+    _b_.type.dict = $B.mappingproxy.$factory(_b_.type.dict)
+    _b_.object.dict = $B.mappingproxy.$factory(_b_.object.dict)
 
     // Set type of methods of builtin classes
     for(var name in _b_){
+        if(name == 'dict'){
+            // new version experimented in py_dict.js
+            continue
+        }
         var builtin = _b_[name]
         if(_b_[name].__class__ === _b_.type){
             _b_[name].__qualname__ = _b_[name].__qualname__ ?? name
@@ -1597,6 +1602,19 @@ $B.__ARGV = $B.$list([])
 $B.tracefunc = _b_.None
 
 // function dict
-$B.function.__dict__ = $B.function.$dict = $B.obj_dict($B.function.__dict__)
+$B.function.dict = $B.obj_dict($B.function.dict)
+
+_b_.object.__init__.__class__ = $B.wrapper_descriptor // in py_type.js
+_b_.object.__new__.__class__ = $B.builtin_function_or_method
+
+_b_.dict.$setitem(_b_.object.dict,
+    '__setattr__',
+    $B.wrapper_descriptor.$factory(_b_.object.tp_setattro, _b_.object)
+)
+_b_.dict.$setitem(_b_.object.dict,
+    '__str__',
+    $B.wrapper_descriptor.$factory(_b_.object.tp_str, _b_.object)
+)
+console.log('object dict', _b_.object.dict)
 
 })(__BRYTHON__);

@@ -797,8 +797,15 @@ $B.class_name = function(obj){
     if(klass === $B.JSObj){
         return 'Javascript ' + obj.constructor.name
     }else{
-        return klass.__name__
+        return klass.tp_name ?? klass.__name__
     }
+}
+
+$B.get_mro = function(klass){
+    return klass.tp_mro ?? klass.__mro__
+}
+$B.get_name = function(klass){
+    return klass.tp_name ?? klass.__name__
 }
 
 $B.unpack_mapping = function(func, obj){
@@ -900,7 +907,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     var it = _b_.iter(iterator)
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
-    var next_func = $B.$getattr(_b_.iter(iterator), '__next__', null)
+    var next_func = $B.$getattr(it, '__next__', null)
 
     if(next_func !== null){
         next_func = $B.$call(next_func)

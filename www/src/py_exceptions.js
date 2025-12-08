@@ -514,8 +514,9 @@ _b_.BaseException.__str__ = function(self){
 
 _b_.BaseException.__new__ = function(cls){
     var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw')
-    return {
+    var res = {
         __class__: $.cls,
+        ob_type: $.cls,
         __dict__: $B.empty_dict(),
         args: $B.fast_tuple($.args),
         notes: _b_.None,
@@ -524,6 +525,7 @@ _b_.BaseException.__new__ = function(cls){
         __context__: _b_.None,
         __suppress_context__: false
     }
+    return res
 }
 
 _b_.BaseException.__getattr__ = function(self, attr){
@@ -742,6 +744,7 @@ $B.set_func_names(_b_.AttributeError, 'builtins')
 $B.attr_error = function(name, obj){
     var msg
     if(obj.$is_class){
+        console.log('no attr', name, 'for class', obj)
         msg = `type object '${obj.__name__}'`
     }else{
         msg = `'${$B.class_name(obj)}' object`
@@ -796,6 +799,7 @@ function calculate_suggestions(list, name){
 }
 
 $B.offer_suggestions_for_attribute_error = function(exc){
+    console.log('offer suggestions', exc)
     var name = exc.name,
         obj = exc.obj
     if(name === _b_.None || name === undefined ||
@@ -806,6 +810,7 @@ $B.offer_suggestions_for_attribute_error = function(exc){
         var dir = _b_.dir(obj)
     }catch(err){
         console.log('error in dir, attribute error', name, obj)
+        console.log(err)
         throw err
     }
     var suggestions = calculate_suggestions(dir, name)

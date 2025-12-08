@@ -31,6 +31,7 @@ Lookup by keys:
 */
 
 var _b_ = $B.builtins
+console.log('_b_.None.ob_type dans py_dict', _b_.None.ob_type)
 
 var set_ops = ["eq", "le", "lt", "ge", "gt",
     "sub", "rsub", "and", "rand", "or", "ror", "xor", "rxor"]
@@ -136,14 +137,16 @@ function make_view_comparison_methods(klass){
 
 $B.str_dict = function(){}
 
-var dict = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'dict',
-    $is_class: true,
-    $native: true,
-    $match_mapping_pattern: true // for pattern matching (PEP 634)
-}
+var dict = _b_.dict
+Object.assign(dict,
+    {
+        __mro__: [_b_.object],
+        __qualname__: 'dict',
+        $is_class: true,
+        $native: true,
+        $match_mapping_pattern: true // for pattern matching (PEP 634)
+    }
+)
 
 dict.$to_obj = function(d){
     // Function applied to dictionary that only has string keys,
@@ -219,28 +222,34 @@ dict.$iter_items = function*(d){
 var dict_keyiterator = $B.make_class('dict_keyiterator',
     function(d){
         return {
-            __class__: dict_keyiterator,
+            ob_type: dict_keyiterator,
             it: dict.$iter_items(d)
         }
     }
 )
 
-dict_keyiterator.$tp_iternext = function*(self){
+dict_keyiterator.tp_iternext = function*(self){
     for(var item of self.it){
         yield item.key
     }
 }
 
-dict_keyiterator.$tp_iter = function(self){
+dict_keyiterator.tp_iter = function(self){
     return self
 }
 
 dict_keyiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_keyiterator.$tp_iternext(self)))])])
+        $B.fast_tuple([$B.$list(Array.from(dict_keyiterator.tp_iternext(self)))])])
 }
 
 $B.set_func_names(dict_keyiterator, 'builtins')
+var dict_keyiterator_methods = {
+    'method_descriptor': ['__length_hint__', '__reduce__'],
+    'wrapper_descriptor': ['__iter__', '__next__']
+}
+
+$B.make_class_dict(dict_keyiterator, dict_keyiterator_methods)
 
 var dict_valueiterator = $B.make_class('dict_valueiterator',
     function(d){
@@ -251,22 +260,28 @@ var dict_valueiterator = $B.make_class('dict_valueiterator',
     }
 )
 
-dict_valueiterator.$tp_iternext = function*(self){
+dict_valueiterator.tp_iternext = function*(self){
     for(var item of self.it){
         yield item.value
     }
 }
 
-dict_valueiterator.$tp_iter = function(self){
+dict_valueiterator.tp_iter = function(self){
     return self
 }
 
 dict_valueiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_valueiterator.$tp_iternext(self)))])])
+        $B.fast_tuple([$B.$list(Array.from(dict_valueiterator.tp_iternext(self)))])])
 }
 
 $B.set_func_names(dict_valueiterator, 'builtins')
+
+var dict_valueiterator_methods = {
+    wrapper_descriptor: ['__iter__', '__next__'],
+    method_descriptor: ['__length_hint__', '__reduce__']
+}
+$B.make_class_dict(dict_valueiterator, dict_valueiterator_methods)
 
 var dict_itemiterator = $B.make_class('dict_itemiterator',
     function(d){
@@ -277,24 +292,30 @@ var dict_itemiterator = $B.make_class('dict_itemiterator',
     }
 )
 
-dict_itemiterator.$tp_iternext = function*(self){
+dict_itemiterator.tp_iternext = function*(self){
     for(var item of self.it){
         yield $B.fast_tuple([item.key, item.value])
     }
 }
 
-dict_itemiterator.$tp_iter = function(self){
+dict_itemiterator.tp_iter = function(self){
     return self
 }
 
 dict_itemiterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_itemiterator.$tp_iternext(self)))])])
+        $B.fast_tuple([$B.$list(Array.from(dict_itemiterator.tp_iternext(self)))])])
 }
 
 $B.set_func_names(dict_itemiterator, 'builtins')
 
-dict.$tp_iter = function(self){
+var dict_itemiterator_methods = {
+    wrapper_descriptor: ['__iter__', '__next__'],
+    method_descriptor: ['__length_hint__', '__reduce__']
+}
+$B.make_class_dict(dict_itemiterator, dict_itemiterator_methods)
+
+dict.tp_iter = function(self){
     return dict_keyiterator.$factory(self)
 }
 
@@ -667,9 +688,10 @@ dict.$getitem = function(self, key, ignore_missing){
         }
     }
     if(! ignore_missing){
-        if(self.__class__ !== dict && ! ignore_missing){
+        var klass = $B.get_class(self)
+        if(klass !== dict && ! ignore_missing){
             try{
-                var missing_method = $B.$getattr(self.__class__,
+                var missing_method = $B.$getattr(klass,
                     "__missing__", _b_.None)
             }catch(err){
                 console.log(err)
@@ -874,9 +896,9 @@ dict.__new__ = function(cls){
         $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
     }
     var instance = $B.empty_dict()
-    instance.__class__ = cls
+    instance.ob_type = cls
     if(cls !== dict){
-        instance.__dict__ = $B.empty_dict()
+        instance.dict = $B.empty_dict()
     }
     return instance
 }
@@ -891,10 +913,10 @@ dict.__or__ = function(self, other){
     return res
 }
 
-dict.__repr__ = function(self){
+dict.tp_repr = function(self){
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
     if(self.$jsobj){ // wrapper around Javascript object
-        return dict.__repr__(jsobj2dict(self.$jsobj, self.$exclude))
+        return dict.tp_repr(jsobj2dict(self.$jsobj, self.$exclude))
     }
     if($B.repr.enter(self)){
         return "{...}"
@@ -1187,7 +1209,7 @@ var dict_items = $B.make_class("dict_items",
     }
 )
 
-dict_items.$tp_iter = function(self){
+dict_items.tp_iter = function(self){
     return dict_itemiterator.$factory(self.dict)
 }
 
@@ -1196,12 +1218,12 @@ dict_items.__len__ = function(self){
 }
 
 dict_items.__reduce__ = function(self){
-    var items = $B.$list(Array.from(dict_items.$tp_iter(self.dict)))
+    var items = $B.$list(Array.from(dict_items.tp_iter(self.dict)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
 dict_items.__repr__ = function(self){
-    var items = Array.from(dict_items.$tp_iter(self.dict))
+    var items = Array.from(dict_items.tp_iter(self.dict))
     items = items.map($B.fast_tuple)
     return 'dict_items(' + _b_.repr(items) + ')'
 }
@@ -1233,7 +1255,7 @@ var dict_keys = $B.make_class("dict_keys",
     }
 )
 
-dict_keys.$tp_iter = function(self){
+dict_keys.tp_iter = function(self){
     return dict_keyiterator.$factory(self.dict)
 }
 
@@ -1242,12 +1264,12 @@ dict_keys.__len__ = function(self){
 }
 
 dict_keys.__reduce__ = function(self){
-    var items = $B.$list(Array.from(dict_keys.$tp_iter(self)))
+    var items = $B.$list(Array.from(dict_keys.tp_iter(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
 dict_keys.__repr__ = function(self){
-    var items = Array.from(dict_keys.$tp_iter(self.dict))
+    var items = Array.from(dict_keys.tp_iter(self.dict))
     return 'dict_keys(' + _b_.repr(items) + ')'
 }
 
@@ -1409,7 +1431,7 @@ var dict_values = $B.make_class("dict_values",
     }
 )
 
-dict_values.$tp_iter = function(self){
+dict_values.tp_iter = function(self){
     return dict_valueiterator.$factory(self.dict)
 }
 
@@ -1418,12 +1440,12 @@ dict_values.__len__ = function(self){
 }
 
 dict_values.__reduce__ = function(self){
-    var items = $B.$list(Array.from(dict_values.$tp_iter(self)))
+    var items = $B.$list(Array.from(dict_values.tp_iter(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
 dict_values.__repr__ = function(self){
-    var items = Array.from(dict_values.$tp_iter(self))
+    var items = Array.from(dict_values.tp_iter(self))
     return 'dict_values(' + _b_.repr(items) + ')'
 }
 
@@ -1472,15 +1494,56 @@ dict.$from_array = function(arrays){
     return res
 }
 
-_b_.dict = dict
-
 $B.set_func_names(dict, "builtins")
 
-dict.__class_getitem__ = _b_.classmethod.$factory(dict.__class_getitem__)
+console.log('_b_.None.ob_type py_dict', _b_.None.ob_type)
+
+
+// dict.__class_getitem__ = _b_.classmethod.$factory(dict.__class_getitem__)
+
+var dict_methods = {
+ builtin_function_or_method: ['__new__', 'fromkeys', '__class_getitem__'],
+ method_descriptor: ['__getitem__',
+                       '__contains__',
+                       '__sizeof__',
+                       'get',
+                       'setdefault',
+                       'pop',
+                       'popitem',
+                       'keys',
+                       'items',
+                       'values',
+                       'update',
+                       'clear',
+                       'copy',
+                       '__reversed__'],
+ wrapper_descriptor: ['__repr__',
+                        '__lt__',
+                        '__le__',
+                        '__eq__',
+                        '__ne__',
+                        '__gt__',
+                        '__ge__',
+                        '__iter__',
+                        '__init__',
+                        '__or__',
+                        '__ror__',
+                        '__ior__',
+                        '__len__',
+                        '__setitem__',
+                        '__delitem__']
+}
+
+
+$B.make_class_dict(dict, dict_methods)
+
+console.log('dict', dict)
+console.log('_b_.None.ob_type', _b_.None.ob_type)
+
 
 $B.empty_dict = function(){
     return {
-        __class__: dict,
+        ob_type: dict,
         table: Object.create(null),
         _keys: [],
         _values: [],
@@ -1506,14 +1569,13 @@ dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
-        console.log('make mapping proxy', obj)
         var res
         if($B.$isinstance(obj, dict)){
             res = $B.obj_dict(dict.$to_obj(obj))
         }else{
             res = $B.obj_dict(obj)
         }
-        res.__class__ = mappingproxy
+        res.ob_type = mappingproxy
         res.$version = 0
         return res
     }
@@ -1521,12 +1583,25 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
 
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
-mappingproxy.__repr__ = function(self){
+Object.assign(mappingproxy,
+    {
+        tp_name: 'mappingproxy',
+        tp_bases: [_b_.object],
+        tp_mro: [mappingproxy, _b_.object],
+        dict: $B.obj_dict({})
+    }
+)
+
+mappingproxy.__hash__ = function(self){
+    $B.RAISE(_b_.TypeError, `unhashable type: '${$B.class_name(self)}'`)
+}
+
+mappingproxy.tp_repr = function(self){
     var d = $B.empty_dict()
     for(var key in self.$jsobj){
         dict.$setitem(d, key, self.$jsobj[key])
     }
-    return dict.__repr__(d)
+    return dict.tp_repr(d)
 }
 
 mappingproxy.__setitem__ = function(){
@@ -1549,6 +1624,7 @@ for(var attr in dict){
         })(attr)
     }else{
         mappingproxy[attr] = dict[attr]
+        console.log('set mappingproxy attr from dict', attr)
     }
 }
 
@@ -1559,6 +1635,40 @@ for(var attr in $B.dunder_methods){
     }
 }
 $B.set_func_names(mappingproxy, "builtins")
+
+console.log('_b_.None.ob_type', _b_.None.ob_type)
+console.log('maapingproxy.__hash__', mappingproxy.__hash__)
+
+var mappingproxy_methods = {
+  builtin_function_or_method: ['__new__', '__class_getitem__'],
+  method_descriptor: ['get',
+                       'keys',
+                       'values',
+                       'items',
+                       'copy',
+                       '__reversed__'],
+  wrapper_descriptor: ['__repr__',
+                        '__hash__',
+                        '__str__',
+                        '__lt__',
+                        '__le__',
+                        '__eq__',
+                        '__ne__',
+                        '__gt__',
+                        '__ge__',
+                        '__iter__',
+                        '__or__',
+                        '__ror__',
+                        '__ior__',
+                        '__len__',
+                        '__getitem__',
+                        '__contains__']
+
+}
+
+$B.make_class_dict(mappingproxy, mappingproxy_methods)
+
+console.log('_b_.None.ob_type', _b_.None.ob_type)
 
 function jsobj2dict(x, exclude){
     exclude = exclude || function(){return false}
@@ -1579,18 +1689,6 @@ function jsobj2dict(x, exclude){
     return d
 }
 
-$B.obj_dict = function(obj, exclude){
-    var klass = obj.__class__ || $B.get_class(obj)
-    if(! (obj instanceof $B.str_dict) && klass !== undefined && klass.$native){
-        throw $B.attr_error("__dict__", obj)
-    }
-    var res = {
-        __class__: dict,
-        $jsobj: obj,
-        $exclude: exclude || function(){return false}
-    }
-    return res
-}
 
 })(__BRYTHON__);
 

@@ -61,14 +61,16 @@ function invalid(other){
 }
 
 //bytearray() (built in class)
-var bytearray = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'bytearray',
-    $buffer_protocol: true,
-    $is_sequence: true,
-    $is_class: true
-}
+var bytearray = _b_.bytearray
+Object.assign(bytearray,
+    {
+        __mro__: [_b_.object],
+        __qualname__: 'bytearray',
+        $buffer_protocol: true,
+        $is_sequence: true,
+        $is_class: true
+    }
+)
 
 var mutable_methods = ["copy", "count", "index", "remove", "reverse"]
 
@@ -327,14 +329,16 @@ bytearray.$factory = function(){
 }
 
 //bytes() (built in function)
-var bytes = {
-    __class__ : _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'bytes',
-    $buffer_protocol: true,
-    $is_sequence: true,
-    $is_class: true
-}
+var bytes = _b_.bytes
+Object.assign(bytes,
+    {
+        __mro__: [_b_.object],
+        __qualname__: 'bytes',
+        $buffer_protocol: true,
+        $is_sequence: true,
+        $is_class: true
+    }
+)
 
 bytes.__add__ = function(self, other){
     try{
@@ -388,7 +392,7 @@ var bytes_iterator = $B.make_class("bytes_iterator",
     }
 )
 
-bytes_iterator.$tp_iternext = function*(self){
+bytes_iterator.tp_iternext = function*(self){
     for(var value of self.it){
         yield value
     }
@@ -396,7 +400,7 @@ bytes_iterator.$tp_iternext = function*(self){
 
 $B.set_func_names(bytes_iterator, 'builtins')
 
-bytes.$tp_iter = function(self){
+bytes.tp_iter = function(self){
     return bytes_iterator.$factory(self.source)
 }
 

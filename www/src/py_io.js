@@ -113,11 +113,11 @@ function make_lines(self){
             while(pos < len){
                 var ix = source.indexOf(10, pos)
                 if(ix == -1){
-                    lines.push({__class__: _b_.bytes, source: source.slice(pos)})
+                    lines.push({ob_type: _b_.bytes, source: source.slice(pos)})
                     break
                 }else{
                     lines.push({
-                        __class__: _b_.bytes,
+                        ob_type: _b_.bytes,
                         source: source.slice(pos, ix + 1)
                     })
                     pos = ix + 1
@@ -584,14 +584,15 @@ const O_RDONLY = 0,
 
 $B._FileIO.__new__ = function(cls){
     return {
-        __class__: cls,
+        ob_type: cls,
         fd: -1,
         created: 0,
         readable: 0,
         writable: 0,
         appending: 0,
         seekable: -1,
-        closefd: 1
+        closefd: 1,
+        dict: $B.obj_dict({})
     }
 }
 
@@ -751,7 +752,7 @@ $B._FileIO.readable = function(_self){
 $B._FileIO.readall = function(_self){
     var buffer = _b_.bytearray.$factory()
     $B._FileIO.readinto(_self, buffer)
-    buffer.__class__ = _b_.bytes
+    buffer.ob_type = _b_.bytes
     return buffer
 }
 
@@ -821,7 +822,7 @@ $B._TextIOBase.read = function(){
 var $BufferedReader = $B.make_class('_io.BufferedReader',
     function(content){
         return {
-            __class__: $BufferedReader,
+            ob_type: $BufferedReader,
             $binary: true,
             $content: content,
             $read_func: $B.$getattr(content, 'read')
@@ -854,23 +855,23 @@ $B._TextIOWrapper = $B.make_class('_io._TextIOWrapper',
         }
         var bytes = $B.fast_bytes($.buffer.raw.$bytes)
         var res = {
-            __class__: $B._TextIOWrapper,
+            ob_type: $B._TextIOWrapper,
             $buffer: $.buffer,
             $bytes: bytes,
             $encoding: $.encoding,
             $errors: $.errors,
             $newline: $.newline,
-            __dict__: $B.empty_dict()
+            dict: $B.empty_dict()
         }
         return res
     }
 )
 
-$B._TextIOWrapper.$tp_dict = {}
+$B._TextIOWrapper.dict = {}
 $B._TextIOWrapper.tp_bases = [$B._TextIOBase]
 $B._TextIOWrapper.__mro__ = [$B._TextIOBase, _IOBase, _b_.object]
 
-$B._TextIOWrapper.$tp_dict.buffer = $B.getset_descriptor.$factory(
+$B._TextIOWrapper.dict.buffer = $B.getset_descriptor.$factory(
     $B._TextIOWrapper,
     'buffer',
     function(_self){
@@ -1152,7 +1153,7 @@ _b_.open = function(){
             mode,
             name: file
         }
-        result.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
+        result.ob_type = is_binary ? $BufferedReader : $TextIOWrapper
         $B.file_cache[file] = result.$content
         return result
     }else if(['r', 'rb'].indexOf(mode) == -1){
@@ -1165,7 +1166,7 @@ _b_.open = function(){
             result.content = f
             if(is_binary && typeof f == 'string'){
                 result.content = _b_.str.encode(f, 'utf-8')
-            }else if(f.__class__ === _b_.bytes && ! is_binary){
+            }else if($B.get_class(f) === _b_.bytes && ! is_binary){
                 result.content = _b_.bytes.decode(f, encoding)
             }
         }else if($B.files && $B.files.hasOwnProperty($.file)){
@@ -1251,7 +1252,7 @@ _b_.open = function(){
             mode,
             name: file
         }
-        res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
+        res.ob_type = is_binary ? $BufferedReader : $TextIOWrapper
         return res
     }else{
         $B.RAISE(_b_.TypeError, "invalid argument for open(): " +

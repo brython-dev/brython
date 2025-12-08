@@ -150,7 +150,111 @@ $B.frame_obj = null
 // Python __builtins__
 // Set to Object.create(null) instead of {}
 // to avoid conflicts with JS attributes such as "constructor"
-$B.builtins = Object.create(null)
+var _b_ = $B.builtins = Object.create(null)
+
+$B.NULL = {'null': true}
+
+// Create structure for built-in types so that they can be used in all scripts.
+// For instance, define _b_.dict so that it can be used in py_int.js, although
+// py_int.js is loaded after py_dict.js
+_b_.object = {
+    tp_name: 'object',
+    tp_bases: [],
+}
+_b_.object.tp_mro = [_b_.object]
+
+_b_.type = {
+    tp_name: 'type',
+    tp_bases: [_b_.object],
+}
+
+_b_.object.ob_type = _b_.type
+_b_.type.ob_type = _b_.type
+_b_.type.tp_mro = [_b_.type, _b_.object]
+
+$B.builtin_classes = [
+    "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
+    "filter", "float", "frozenset", "int", "list", "map", "memoryview",
+    "property", "range", "reversed", "set", "slice", "staticmethod",
+    "str", "super", "tuple", "zip"
+]
+
+$B.created_classes = []
+
+$B.make_builtin_class = function(tp_name, tp_bases){
+    var cls = {
+        ob_type: _b_.type,
+        tp_name,
+        tp_bases: tp_bases ?? [_b_.object]
+    }
+    if(tp_bases){
+        cls.tp_mro = [cls, tp_bases, _b_.object]
+    }else{
+        cls.tp_mro = [cls, _b_.object]
+    }
+    $B.created_classes.push(cls)
+    return cls
+}
+
+for(var class_name of $B.builtin_classes){
+    _b_[class_name] = $B.make_builtin_class(class_name)
+}
+
+// bool inherits int
+_b_.bool = $B.make_builtin_class('bool', _b_.int)
+
+$B.obj_dict = function(obj, exclude){
+    var res = {
+        ob_type: _b_.dict,
+        $jsobj: obj,
+        $exclude: exclude || function(){return false}
+    }
+    return res
+}
+
+for(var cls of $B.builtin_classes){
+    if(_b_[cls] === undefined){
+        console.log('undef', cls)
+    }
+    _b_[cls].dict = $B.obj_dict({})
+}
+
+
+$B.set_class_attr = function(klass, attr, value, ob_type){
+    if(ob_type){
+        if(ob_type.$factory === undefined){
+            console.log('no factroy', ob_type)
+        }
+        value = ob_type.$factory(value, klass)
+    }
+    klass.dict.$jsobj[attr] = value
+}
+
+
+$B.make_class_dict = function(klass, methods){
+    var test = klass.tp_name == 'mappingproxy'
+    if(test){
+        console.log('make class attrs of', klass)
+    }
+    klass.dict = klass.dict ?? $B.obj_dict({})
+    for(var cls_name in methods){
+        var cls = $B[cls_name]
+        for(var method of methods[cls_name]){
+            if($B.make_dunder[method]){
+                var func = $B.make_dunder[method](klass)
+                func.ml = {ml_name: method}
+                $B.set_class_attr(klass, method, func, cls)
+            }else{
+                if(klass[method]){
+                    $B.set_class_attr(klass, method, klass[method], cls)
+                }else{
+                    console.log('not implemented', method, 'for', klass.tp_name)
+                }
+            }
+        }
+    }
+}
+
 
 $B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
 
@@ -362,22 +466,35 @@ for(var func_attr of func_attrs){
 }
 
 $B.dunder_methods = Object.create(null)
-$B.dunder_methods.$tp_iter = '__iter__'
-$B.dunder_methods.$tp_iternext = '__next__'
+Object.assign($B.dunder_methods,
+    {
+        tp_iter: '__iter__',
+        tp_iternext: '__next__',
+        tp_repr: '__repr__'
+    }
+)
 
 $B.make_dunder = {
-    __iter__: function(klass, attr){
+    __iter__: function(klass){
         return function(obj){
-            return klass[attr](obj)
+            return klass.tp_iter(obj)
         }
     },
-    __next__: function(klass, attr){
+    __next__: function(klass){
         return function(obj){
-            var res = klass.$tp_iternext(obj).next()
+            var res = klass.tp_iternext(obj).next()
             if(res.done){
                 $B.RAISE(__BRYTHON__.builtins.StopIteration)
             }
             return res.value
+        }
+    },
+    __repr__: function(klass){
+        return function(obj){
+            if(typeof klass.tp_repr !== 'function'){
+                console.log('no tp_repr', klass)
+            }
+            return klass.tp_repr(obj)
         }
     }
 }
@@ -388,38 +505,25 @@ $B.set_func_names = function(klass, module){
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
             $B.add_function_infos(klass, attr)
-            var dunder = $B.dunder_methods[attr]
-            if(dunder){
-                if(klass.hasOwnProperty(dunder)){
-                    console.log('class', klass.__name__ ?? klass,
-                        `should not have both ${attr} and ${dunder}`)
-                }
-                if(typeof $B.make_dunder[dunder] !== 'function'){
-                    console.log('not a func', attr, dunder)
-                }
-                klass[dunder] = $B.make_dunder[dunder](klass, attr)
-                $B.add_function_infos(klass, dunder)
-                klass[dunder].__class__ = $B.wrapper_descriptor
-                klass[dunder].__objclass__ = klass
-            }
         }
     }
 }
 
-$B.add_function_infos = function(klass, attr){
-    var module = klass.__module__
+$B.add_function_infos = function(klass, attr, module, qualname){
+    module = module ?? klass.__module__
+    qualname = qualname ?? klass.tp_name
     $B.set_function_infos(klass[attr],
         {
             __doc__: klass[attr].__doc__ || '',
             __module__: module,
             __name__: attr,
-            __qualname__ : klass.__qualname__ + '.' + attr,
+            __qualname__ : qualname + '.' + attr,
             __defaults__: [],
             __kwdefaults__: {}
        }
     )
     if(klass[attr].$type == "classmethod"){
-        klass[attr].__class__ = $B.method
+        klass[attr].ob_type = $B.method
     }
 }
 
@@ -479,6 +583,7 @@ $B.builtins_repr_check = function(builtin, args){
         self = $.self
     if(! $B.$isinstance(self, builtin)){
         var _b_ = $B.builtins
+        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
             `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)

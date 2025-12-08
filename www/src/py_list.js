@@ -328,7 +328,7 @@ var list_iterator = $B.make_class("list_iterator",
     }
 )
 
-list_iterator.$tp_iternext = function*(self){
+list_iterator.tp_iternext = function*(self){
     for(var value of self.it){
         yield value
     }
@@ -339,8 +339,13 @@ list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
 }
 
 $B.set_func_names(list_iterator, 'builtins')
+var list_iterator_methods = {
+    wrapper_descriptor: ['__iter__', '__next__'],
+    method_descriptor: ['__length_hint__', '__reduce__', '__setstate__']
+}
+$B.make_class_dict(list_iterator, list_iterator_methods)
 
-list.$tp_iter = function(self){
+list.tp_iter = function(self){
     return list_iterator.$factory(self)
 }
 
@@ -441,8 +446,10 @@ list.__new__ = function(cls){
         $B.RAISE(_b_.TypeError, "list.__new__(): not enough arguments")
     }
     var res = []
-    res.__class__ = cls
-    res.__dict__ = $B.empty_dict()
+    res.ob_type = cls
+    if(cls !== list){
+        res.dict = $B.empty_dict()
+    }
     return res
 }
 
@@ -488,22 +495,6 @@ list.__reversed__ = function(self){
 
 list.__rmul__ = function(self, other){
     return list.__mul__(self, other)
-}
-
-list.__setattr__ = function(self, attr, value){
-    if(self.__class__ === list || self.__class__ === tuple){
-        var cl_name = $B.class_name(self)
-        if(list.hasOwnProperty(attr)){
-            $B.RAISE_ATTRIBUTE_ERROR("'" + cl_name +
-                "' object attribute '" + attr + "' is read-only", self, attr)
-        }else{
-            $B.RAISE_ATTRIBUTE_ERROR(
-                `'${cl_name}' object has no attribute '${attr}'`, self, attr)
-        }
-    }
-    // list subclass : use __dict__
-    _b_.dict.$setitem(self.__dict__, attr, value)
-    return _b_.None
 }
 
 list.__setitem__ = function(){
@@ -857,7 +848,7 @@ var factory = function(){
         return obj
     }
     let res = Array.from($B.make_js_iterator(obj))
-    res.__class__ = klass
+    res.ob_type = klass
     return res
 }
 
@@ -996,8 +987,10 @@ tuple.__new__ = function(){
         args = $.args,
         kw = $.kw
     var self = []
-    self.__class__ = cls
-    self.__dict__ = $B.empty_dict()
+    self.ob_type = cls
+    if(cls !== tuple){
+        self.dict = $B.empty_dict()
+    }
     if(args.length > 0){
         if(args.length == 1){
             for(var item of $B.make_js_iterator(args[0])){

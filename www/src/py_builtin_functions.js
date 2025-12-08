@@ -13,56 +13,44 @@ var check_nb_args = $B.check_nb_args,
     check_no_kw = $B.check_no_kw,
     check_nb_args_no_kw = $B.check_nb_args_no_kw
 
-var NoneType = $B.NoneType = {
-    $factory: function(){
-        return None
-    },
-    __bool__: function(){return False},
-    __class__: _b_.type,
-    __hash__: function(){return 0},
-    __module__: 'builtins',
-    __mro__: [_b_.object],
-    __name__: 'NoneType',
-    __qualname__: 'NoneType',
-    __repr__: function(){return 'None'},
-    __str__: function(){return 'None'},
-    $is_class: true
+var NoneType = $B.NoneType = $B.make_builtin_class('NoneType')
+
+NoneType.__bool__ = function(){
+    return false
 }
 
 NoneType.__setattr__ = function(self, attr){
     return no_set_attr(NoneType, attr)
 }
 
+NoneType.tp_repr = function(){
+    return 'None'
+}
+
 var None = _b_.None = {
-    __class__: NoneType
+    ob_type: NoneType
 }
 
 None.__doc__ = None
 NoneType.__doc__ = None
 
-for(var $op in $B.$comps){ // None is not orderable with any type
-    var key = $B.$comps[$op]
-    switch(key){
-      case 'ge':
-      case 'gt':
-      case 'le':
-      case 'lt':
-        NoneType['__' + key + '__'] = (function(){
-            return function(){return _b_.NotImplemented}
-        })($op)
-    }
-}
-for(var $func in None){
-    if(typeof None[$func] == 'function'){
-        None[$func].__str__ = (function(f){
-            return function(){return "<method-wrapper " + f +
-                " of NoneType object>"
-            }
-        })($func)
-    }
+$B.set_func_names(NoneType, "builtins")
+
+var NoneType_methods = {
+ 'builtin_function_or_method': ['__new__'],
+ 'wrapper_descriptor': ['__repr__',
+                        '__hash__',
+                        '__lt__',
+                        '__le__',
+                        '__eq__',
+                        '__ne__',
+                        '__gt__',
+                        '__ge__',
+                        '__bool__']
 }
 
-$B.set_func_names(NoneType, "builtins")
+$B.make_class_dict(NoneType, NoneType_methods)
+
 
 _b_.__build_class__ = function(){
     $B.RAISE(_b_.NotImplementedError, '__build_class__')
@@ -501,11 +489,11 @@ _b_.dir = function(obj){
 
     check_nb_args_no_kw('dir', 1, arguments)
 
-    var klass = obj.__class__ || $B.get_class(obj)
+    var klass = $B.get_class(obj)
 
     if(obj.$is_class){
         // Use metaclass __dir__
-        var dir_func = $B.$getattr(obj.__class__, "__dir__")
+        var dir_func = $B.$getattr($B.get_class(obj), "__dir__")
         return $B.$call(dir_func)(obj)
     }
     try{
@@ -537,21 +525,22 @@ _b_.divmod = function(x,y){
     }
 }
 
-var enumerate = _b_.enumerate = $B.make_class("enumerate",
-    function(){
-        var $ns = $B.args("enumerate", 2, {iterable: null, start: null},
-            ['iterable', 'start'], arguments, {start: 0}, null, null),
-            _iter = iter($ns["iterable"]),
-            start = $ns["start"]
-        return {
-            __class__: enumerate,
-            __name__: 'enumerate iterator',
-            counter: start - 1,
-            iter: _iter,
-            start: start
-        }
+var enumerate = _b_.enumerate
+enumerate.__mro__ = [_b_.object]
+
+enumerate.$factory = function(){
+    var $ns = $B.args("enumerate", 2, {iterable: null, start: null},
+        ['iterable', 'start'], arguments, {start: 0}, null, null),
+        _iter = iter($ns["iterable"]),
+        start = $ns["start"]
+    return {
+        __class__: enumerate,
+        __name__: 'enumerate iterator',
+        counter: start - 1,
+        iter: _iter,
+        start: start
     }
-)
+}
 
 enumerate.__class_getitem__ = $B.$class_getitem
 
@@ -667,7 +656,7 @@ var $$eval = _b_.eval = function(){
             }
         }
     }else{
-        if(_globals.__class__ !== _b_.dict){
+        if($B.get_class(_globals) !== _b_.dict){
             $B.RAISE(_b_.TypeError, `${mode}() globals must be ` +
                 "a dict, not " + $B.class_name(_globals))
         }
@@ -970,11 +959,11 @@ $B.search_in_mro = function(klass, attr, _default){
     if(test){
         console.log('search', attr, 'in mro of', klass)
     }
-    if(klass.$dict){
-        var v = _b_.dict.$get_string(klass.$dict, attr, false)
+    if(klass.dict){
+        var v = _b_.dict.$get_string(klass.dict, attr, false)
         if(v !== false){
             if(test){
-                console.log('found in klass dict', klass.$dict, v)
+                console.log('found in klass dict', klass.dict, v)
             }
             return v
         }
@@ -989,7 +978,11 @@ $B.search_in_mro = function(klass, attr, _default){
             return klass[attr]
         }
     }
-    var mro = klass.__mro__
+    var mro = $B.get_mro(klass)
+    if(mro === undefined){
+        console.log('no mro in class', klass, klass.tp_mro, klass.__mro__)
+        mro = klass.tp_mro = _b_.type.$mro(klass)
+    }
     for(var i = 0, len = mro.length; i < len; i++){
         if(mro[i].hasOwnProperty(attr)){
             if(test){
@@ -997,6 +990,14 @@ $B.search_in_mro = function(klass, attr, _default){
                 console.log(mro[i][attr])
             }
             return mro[i][attr]
+        }else if(mro[i].dict){
+            var v = _b_.dict.$get_string(mro[i].dict, attr, false)
+            if(v !== false){
+                if(test){
+                    console.log('found in dict of mro', i, v)
+                }
+                return v
+            }
         }else if(mro[i].__dict__){
             var v = _b_.dict.$get_string(mro[i].__dict__, attr, false)
             if(v !== false){
@@ -1035,25 +1036,32 @@ $B.call_with_mro = function(obj, attr){
 }
 
 var missing_attr = {'missing_attr': true}
-var NULL = {}
+var NULL = $B.NULL
 
-function search_in_dict(obj, attr){
+function search_in_dict(obj, attr, _default){
     if(obj.__dict__){
         var in_dict = _b_.dict.$get_string(obj.__dict__, attr)
         if(in_dict !== _b_.dict.$missing){
             return in_dict
         }
     }
+    if(obj.dict){
+        var in_dict = _b_.dict.$get_string(obj.dict, attr)
+        if(in_dict !== _b_.dict.$missing){
+            return in_dict
+        }
+    }
+
     if(obj.hasOwnProperty){
         if(obj.hasOwnProperty(attr)){
             return obj[attr]
         }
     }
-    return missing_attr
+    return _default
 }
 
 function standard_getattribute(obj, attr){
-    var test = false // attr == '__class__'
+    var test = false // attr == 'value'
     var klass = $B.get_class(obj)
     if(test){
         console.log('getattr', attr, 'of obj', obj, klass)
@@ -1061,19 +1069,24 @@ function standard_getattribute(obj, attr){
     var in_mro = $B.search_in_mro(klass, attr, NULL)
     if(test){
         console.log('in mro', in_mro)
-        console.log('class of in_mro', $B.get_class(in_mro))
+        if(in_mro !== NULL){
+            console.log('class of in_mro', $B.get_class(in_mro))
+        }
     }
-    var getter = missing_attr
+    var getter = NULL
     if(in_mro !== NULL){
         var in_mro_class = $B.get_class(in_mro)
-        var getter = $B.search_in_mro(in_mro_class, '__get__')
+        var getter = $B.search_in_mro(in_mro_class, '__get__', NULL)
         if(test){
             console.log('getter', getter)
         }
-        if(getter){
-            var is_data_descr = $B.search_in_mro(in_mro_class, '__set__') ??
-                                $B.search_in_mro(in_mro_class, '__del__')
+        if(getter !== NULL){
+            var is_data_descr = $B.search_in_mro(in_mro_class, '__set__', NULL) !== NULL ||
+                                $B.search_in_mro(in_mro_class, '__del__', NULL) !== NULL
             if(is_data_descr){
+                if(test){
+                    console.log('data descriptor')
+                }
                 return getter(in_mro, obj, klass)
             }
         }else{
@@ -1081,10 +1094,10 @@ function standard_getattribute(obj, attr){
         }
     }
     // search in obj dict
-    var in_dict = search_in_dict(obj, attr)
-    if(in_dict !== missing_attr){
+    var in_dict = search_in_dict(obj, attr, NULL)
+    if(in_dict !== NULL){
         return in_dict
-    }else if(getter !== missing_attr){
+    }else if(getter !== NULL){
         // non-data descriptor
         if(typeof getter !== 'function'){
             console.log('not a function', getter)
@@ -1157,7 +1170,7 @@ $B.$getattr = function(obj, attr, _default){
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
         "isclass", is_class)
-        console.log('in $dict', obj.$dict.$strings._member_names_)
+        console.log('in dict', obj.dict.$strings._member_names_)
     }
 
     if(! is_class){
@@ -1236,9 +1249,9 @@ $B.$getattr = function(obj, attr, _default){
           if(is_class){
               var dict = {},
                   key
-              if(obj.$dict){
-                  for(key of _b_.dict.$keys_string(obj.$dict)){
-                      dict[key] = _b_.dict.$getitem_string(obj.$dict, key)
+              if(obj.dict){
+                  for(key of _b_.dict.$keys_string(obj.dict)){
+                      dict[key] = _b_.dict.$getitem_string(obj.dict, key)
                       if(key == '__new__' && dict[key].__class__ !== _b_.staticmethod){
                           dict[key] = _b_.staticmethod.$factory(dict[key])
                       }
@@ -1509,6 +1522,8 @@ $B.$getattr = function(obj, attr, _default){
         }
         if(klass.__mro__ === undefined){
             console.log('no mro for class', klass, 'of obj', obj)
+            klass.__mro__ = _b_.type.$mro(klass)
+            console.log('make mro', klass.__mro__)
         }
         getattr = $B.search_in_mro(klass, '__getattr__')
         if($test){
@@ -1947,8 +1962,8 @@ $B.PySequence_Check = function(s){
 
 $B.PyIter_Check = function(obj){
     var tp = $B.get_class(obj)
-    return (tp.$tp_iternext !== undefined &&
-            tp.$tp_iternext != $B._PyObject_NextNotImplemented)
+    return (tp.tp_iternext !== undefined &&
+            tp.tp_iternext != $B._PyObject_NextNotImplemented)
 }
 
 $B.PySeqIter_New = function(seq){
@@ -1961,7 +1976,7 @@ $B.PySeqIter_New = function(seq){
 
 $B.PyObject_GetIter = function(obj){
     var t = $B.get_class(obj)
-    var f = t.$tp_iter;
+    var f = t.tp_iter;
     if(f === undefined){
         if(PySequence_Check(o)){
             return PySeqIter_New(o);
@@ -1990,9 +2005,9 @@ $B.$iter = function(obj, sentinel){
 
         var klass = obj.__class__ || $B.get_class(obj)
 
-        if(klass.$tp_iter){
-            var res = klass.$tp_iter(obj)
-            if($B.get_class(res).$tp_iternext === undefined){
+        if(klass.tp_iter){
+            var res = klass.tp_iter(obj)
+            if($B.get_class(res).tp_iternext === undefined){
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)
             }
@@ -2061,10 +2076,12 @@ var iter = _b_.iter = function(){
 var len = _b_.len = function(obj){
     check_nb_args_no_kw('len', 1, arguments)
 
-    var klass = obj.__class__ || $B.get_class(obj)
+    var klass = $B.get_class(obj)
     try{
         var method = $B.$getattr(klass, '__len__')
     }catch(err){
+        console.log('error getting len', err)
+        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "object of type '" +
             $B.class_name(obj) + "' has no len()")
     }
@@ -2120,11 +2137,11 @@ var map = _b_.map = $B.make_class("map",
     }
 )
 
-map.$tp_iter = function (self){
+map.tp_iter = function (self){
     return self
 }
 
-map.$tp_iternext = function*(self){
+map.tp_iternext = function*(self){
     var args = []
     for(var iter of self.args){
         var arg = iter.next()
@@ -2570,8 +2587,8 @@ var $print = _b_.print = function(){
         end = _b_.dict.get(kw, 'end', '\n'),
         sep = _b_.dict.get(kw, 'sep', ' '),
         file = _b_.dict.get(kw, 'file', $B.get_stdout())
-    var args = $ns['args'],
-        writer = $B.$getattr(file, 'write')
+    var args = $ns['args']
+    var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
         var arg = _b_.str.$factory(args[i])
         writer(arg)
@@ -2735,7 +2752,7 @@ $B.$setattr = function(obj, attr, value){
     }
     // Used in the code generated by py2js. Avoids having to parse the
     // since we know we will get the 3 values
-    var $test = attr === "__class__" // && value == "my doc."
+    var $test = false // attr === "value" // && value == "my doc."
     switch(attr){
         case '__dict__':
             // set attribute __dict__
@@ -2786,7 +2803,7 @@ $B.$setattr = function(obj, attr, value){
     if(obj.$factory || obj.$is_class){
         var metaclass = obj.__class__
         if(metaclass === _b_.type){
-            return _b_.type.__setattr__(obj, attr, value)
+            return _b_.type.tp_setattro(obj, attr, value)
         }
         return $B.$call($B.$getattr(metaclass, '__setattr__'))(obj, attr, value)
     }
@@ -2912,12 +2929,13 @@ $B.$setattr = function(obj, attr, value){
     if(!_setattr){
         if(obj[attr] !== undefined){
             obj[attr] = value
-        }else if(obj.__dict__ === undefined){
+        }else if(obj.dict === undefined){
+            console.log('obj', obj)
             $B.RAISE_ATTRIBUTE_ERROR(`'${$B.class_name(obj)}' ` +
                 `object has no attribute '${attr}' and no __dict__ for ` +
                 `setting new attributes`, obj, attr)
         }else{
-            _b_.dict.$setitem(obj.__dict__, attr, value)
+            _b_.dict.$setitem(obj.dict, attr, value)
             // remove from method cache, cf. issue #2555
             if(obj.$method_cache && obj.$method_cache[attr]){
                 delete obj.$method_cache[attr]
@@ -3048,19 +3066,16 @@ $$super.__getattribute__ = function(self, attr){
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__delattr__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = false // attr == "__setattr__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }
 
     var f
     for(var klass of search_classes){
-        if(klass === undefined){
-            console.log('klass undef in super', self)
-            console.log('mro', mro)
-        }
-        if(klass[attr] !== undefined){
-            f = klass[attr]
+        var in_dict = search_in_dict(klass, attr, NULL)
+        if(in_dict !== NULL){
+            f = in_dict
             break
         }
     }
@@ -3152,17 +3167,15 @@ $B.set_func_names($$super, "builtins")
 _b_.vars = function(){
     var def = {},
         $ = $B.args('vars', 1, {obj: null}, ['obj'], arguments, {obj: def},
-        null, null)
-    if($.obj === def){
+            null, null),
+        obj = $.obj
+    if(obj === def){
         return _b_.locals()
     }else{
-        try{
-            return $B.$getattr($.obj, '__dict__')
-        }catch(err){
-            if(err.__class__ === _b_.AttributeError){
-                $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
-            }
-            throw err
+        if(obj.dict){
+            return obj.dict
+        }else{
+            $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
         }
     }
 }
@@ -3286,8 +3299,18 @@ $B.builtin_method.__repr__ = function(self){
 $B.set_func_names($B.builtin_method, 'builtins')
 
 var builtin_function = $B.builtin_function_or_method = $B.make_class(
-    "builtin_function_or_method", function(f){
-        f.__class__ = builtin_function
+    "builtin_function_or_method", function(f, klass){
+        f.ob_type = builtin_function
+        if(f.$function_infos === undefined){
+            console.log('no function infos for', f)
+            console.log(Error().stack)
+        }else{
+            var name = f.$function_infos[$B.func_attrs.__name__]
+            f.ml = {
+                ml_name: name
+            }
+        }
+        f.__self__ = klass
         return f
     })
 
@@ -3300,9 +3323,13 @@ builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
     return self.$function_infos[$B.func_attrs.__name__]
 }
 builtin_function.__repr__ = builtin_function.__str__ = function(self){
-    console.log('builtin func', self)
-    console.log(self.$function_infos, self.$infos)
-    return '<built-in function ' + self.$function_infos[$B.func_attrs.__name__] + '>'
+
+    var name = self.ml.ml_name
+    if(self.__self__){
+        var type = $B.class_name($B.get_class(self))
+        return `<built-in method ${name} of ${type} object>`
+    }
+    return `<built-in function ${name}>`
 }
 $B.set_func_names(builtin_function, "builtins")
 
@@ -3312,13 +3339,6 @@ method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
     return "<method wrapper '" + self.$function_infos[$B.func_attrs.__name__] + "' of function object>"
 }
 $B.set_func_names(method_wrapper, "builtins")
-
-$B.builtin_classes = [
-    "bool", "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
-    "filter", "float", "frozenset", "int", "list", "map", "memoryview",
-    "object", "property", "range", "reversed", "set", "slice", "staticmethod",
-    "str", "super", "tuple", "type", "zip"
-]
 
 var other_builtins = [
     'Ellipsis', 'False',  'None', 'True', '__debug__', '__import__',
@@ -3353,19 +3373,6 @@ for(var name of builtin_names){
         console.log('error for', name, err)
     }
 }
-
-_b_.object.__init__.__class__ = $B.wrapper_descriptor // in py_type.js
-_b_.object.__new__.__class__ = builtin_function
-_b_.object.__setattr__ = $B.wrapper_descriptor.$factory(
-    _b_.object,
-    '__setattr__',
-    _b_.object.__setattr__
-)
-_b_.object.__str__ = $B.wrapper_descriptor.$factory(
-    _b_.object,
-    '__str__',
-    _b_.object.__str__
-)
 
 
 })(__BRYTHON__);

@@ -2,15 +2,34 @@
 (function($B){
 
 var _b_ = $B.builtins
+var object = _b_.object
 
 // class object for the built-in class 'object'
-var object = {
-    //__class__:$type, : not here, added in py_type.js after $type is defined
-    // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    __name__: 'object',
-    __qualname__: 'object',
-    $is_class: true,
-    $native: true
+Object.assign(object,
+    {
+        __name__: 'object',
+        __qualname__: 'object',
+        $is_class: true,
+        $native: true,
+        dict: {},
+        tp_bases: [],
+    }
+)
+
+$B.make_class = function(qualname, factory){
+    // Builds a basic class object
+
+    var A = {
+        ob_type: _b_.type,
+        tp_bases: [object],
+        __mro__: [object],
+        __name__: qualname,
+        __qualname__: qualname,
+        $is_class: true
+    }
+
+    A.$factory = factory
+    return A
 }
 
 object.__delattr__ = function(self, attr){
@@ -21,9 +40,9 @@ object.__delattr__ = function(self, attr){
         return $B.$getattr(kl_attr, '__delete__')(self)
     }
     // No data descriptor, delete from instance __dict__
-    if(self.$dict && $B.$isinstance(self.$dict, _b_.dict) &&
-            _b_.dict.$contains_string(self.$dict, attr)){
-        _b_.dict.$delete_string(self.$dict, attr)
+    if(self.dict && $B.$isinstance(self.dict, _b_.dict) &&
+            _b_.dict.$contains_string(self.dict, attr)){
+        _b_.dict.$delete_string(self.dict, attr)
         delete self[attr]
         return _b_.None
     }else if(self.__dict__ === undefined && self[attr] !== undefined){
@@ -396,7 +415,9 @@ object.$new = function(cls){
         var res = Object.create(null)
         res.__class__ = cls
         res.ob_type = cls
-        res.__dict__ = $B.obj_dict({})
+        if(cls !== object){
+            res.dict = $B.obj_dict({})
+        }
         return res
     }
 }
@@ -407,7 +428,9 @@ object.$no_new_init = function(cls){
     var res = Object.create(null)
     res.__class__ = cls
     res.ob_type = cls
-    res.__dict__ = $B.obj_dict({})
+    if(cls !== object){
+        res.dict = $B.obj_dict({})
+    }
     return res
 }
 
@@ -425,8 +448,11 @@ object.__new__ = function(cls, ...args){
     $B.update_obj(res, {
         __class__: cls,
         ob_type: cls,
-        __dict__: $B.obj_dict({})
+        //__dict__: $B.obj_dict({})
         })
+    if(cls !== object){
+        res.dict = $B.obj_dict({})
+    }
     return res
 }
 
@@ -587,12 +613,12 @@ object.__repr__ = function(self){
     }
 }
 
-object.__setattr__ = function(self, attr, val){
+object.tp_setattro = function(self, attr, val){
     if(val === undefined){
         // setting an attribute to 'object' type is not allowed
         $B.RAISE(_b_.TypeError,
             "can't set attributes of built-in/extension type 'object'")
-    }else if(self.__class__ === object){
+    }else if($B.get_class(self) === object){
         // setting an attribute to object() is not allowed
         if(object[attr] === undefined){
             throw $B.attr_error(attr, self)
@@ -602,8 +628,9 @@ object.__setattr__ = function(self, attr, val){
                 self, attr)
         }
     }
-    if(self.__dict__){
-        _b_.dict.$setitem(self.__dict__, attr, val)
+    var dict = self.dict ?? self.__dict__
+    if(dict){
+        _b_.dict.$setitem(dict, attr, val)
     }else{
         // for
         self[attr] = val
@@ -611,26 +638,20 @@ object.__setattr__ = function(self, attr, val){
     return _b_.None
 }
 
-object.__setattr__.__get__ = function(obj){
-    return function(attr, val){
-        object.__setattr__(obj, attr, val)
-    }
-}
-
-object.__setattr__.__str__ = function(){return "method object.setattr"}
-
-object.__str__ = function(self){
+object.tp_str = function(self){
     if(self === undefined || self.$kw){
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
     // Default to __repr__
-    var klass = self.__class__ || $B.get_class(self)
-    var repr_func = $B.search_in_mro(klass, "__repr__")
+    var klass = $B.get_class(self)
+    var repr_func = $B.class_getattribute(klass, "__repr__")
     return $B.$call(repr_func)(...arguments)
 }
 
-object.__subclasshook__ = function(){return _b_.NotImplemented}
+object.__subclasshook__ = function(){
+    return _b_.NotImplemented
+}
 
 // constructor of the built-in class 'object'
 object.$factory = function(){

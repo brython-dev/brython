@@ -2663,15 +2663,15 @@ str.$factory = function(arg, encoding){
         }
         // Implicit invocation of __str__ uses method __str__ on the class,
         // even if arg has an attribute __str__
-        var klass = arg.__class__ || $B.get_class(arg)
+        var klass = $B.get_class(arg)
         if(klass === undefined){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
-        var method = _b_.type.__getattribute__(klass, '__str__')
-        if(method === undefined){
-            method = $B.search_in_mro(klass, '__repr__')
+        var method = $B.class_getattribute(klass, '__str__', $B.NULL)
+        if(method === $B.NULL){
+            method = $B.class_getattribute(klass, '__repr__', $B.NULL)
         }
-        if(method === undefined){
+        if(method === $B.NULL){
             $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
         }
     }catch(err){

@@ -17,10 +17,9 @@ $B.function = {
 }
 
 
-$B.function.__dict__ = {}
-$B.function.$dict = $B.function.__dict__
+$B.function.dict = {}
 
-$B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
+$B.function.dict.__annotations__ = $B.getset_descriptor.$factory(
     $B.function,
     '__annotations__',
     function(f){
@@ -41,7 +40,7 @@ $B.function.__dict__.__annotations__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__builtins__ = $B.getset_descriptor.$factory(
+$B.function.dict.__builtins__ = $B.getset_descriptor.$factory(
     $B.function,
     '__builtins__',
     function(f){
@@ -57,7 +56,7 @@ $B.function.__dict__.__builtins__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__closure__ = $B.getset_descriptor.$factory(
+$B.function.dict.__closure__ = $B.getset_descriptor.$factory(
     $B.function,
     '__closure__',
     function(f){
@@ -82,7 +81,7 @@ $B.function.__dict__.__closure__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
+$B.function.dict.__code__ = $B.getset_descriptor.$factory(
     $B.function,
     '__code__',
     function(f){
@@ -106,7 +105,7 @@ $B.function.__dict__.__code__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__defaults__ = $B.getset_descriptor.$factory(
+$B.function.dict.__defaults__ = $B.getset_descriptor.$factory(
     $B.function,
     '__defaults__',
     function(f){
@@ -134,7 +133,7 @@ $B.function.__delattr__ = function(self, attr){
     }
 }
 
-$B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
+$B.function.dict.__doc__ = $B.getset_descriptor.$factory(
     $B.function,
     '__doc__',
     function(f){
@@ -147,7 +146,7 @@ $B.function.__dict__.__doc__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__module__ = $B.getset_descriptor.$factory(
+$B.function.dict.__module__ = $B.getset_descriptor.$factory(
     $B.function,
     '__module__',
     function(f){
@@ -160,7 +159,7 @@ $B.function.__dict__.__module__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__name__ = $B.getset_descriptor.$factory(
+$B.function.dict.__name__ = $B.getset_descriptor.$factory(
     $B.function,
     '__name__',
     function(f){
@@ -177,7 +176,7 @@ $B.function.__dict__.__name__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
+$B.function.dict.__qualname__ = $B.getset_descriptor.$factory(
     $B.function,
     '__qualname__',
     function(f){
@@ -194,7 +193,7 @@ $B.function.__dict__.__qualname__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__type_params__ = $B.getset_descriptor.$factory(
+$B.function.dict.__type_params__ = $B.getset_descriptor.$factory(
     $B.function,
     '__type_params__',
     function(f){
@@ -237,7 +236,7 @@ $B.function.__get__ = function(self, obj){
     return $B.method.$factory(self, obj)
 }
 
-$B.function.__dict__.__globals__ = $B.getset_descriptor.$factory(
+$B.function.dict.__globals__ = $B.getset_descriptor.$factory(
     $B.function,
     '__globals__',
     function(f){
@@ -250,7 +249,7 @@ $B.function.__dict__.__globals__ = $B.getset_descriptor.$factory(
     }
 )
 
-$B.function.__dict__.__kwdefaults__ = $B.getset_descriptor.$factory(
+$B.function.dict.__kwdefaults__ = $B.getset_descriptor.$factory(
     $B.function,
     '__kwdefaults__',
     function(f){
@@ -299,7 +298,7 @@ $B.function.__setattr__ = function(self, attr, value){
         return klass_attr.__class__.__set__(klass_attr, self, value)
     }
     try{
-        klass_attr = _b_.dict.$getitem($B.function.__dict__, attr)
+        klass_attr = _b_.dict.$getitem($B.function.dict, attr)
     }catch(err){
         klass_attr = null
     }

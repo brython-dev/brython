@@ -280,7 +280,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
     var klass = $B.get_class(pyobj)
 
     function has_type(cls, base){
-        return cls === base || cls.__mro__.includes(base)
+        return cls === base || $B.get_mro(cls).includes(base)
     }
 
     if(has_type(klass, $B.DOMNode)){
@@ -369,6 +369,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     res = pyobj.apply(this, args)
                 }
                 // Return a Javascript result
+                console.log('make jsobj from', res, 'arguments', arguments)
                 return pyobj2jsobj(res)
             }catch(err){
                 $B.handle_error(err)

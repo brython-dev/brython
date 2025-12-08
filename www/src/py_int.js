@@ -34,22 +34,23 @@ function bigint_value(obj){
 }
 
 // dictionary for built-in class 'int'
-var int = {
-    __class__: _b_.type,
-    __dir__: _b_.object.__dir__,
-    __mro__: [_b_.object],
-    __qualname__: 'int',
-    $is_class: true,
-    $native: true,
-    $descriptors: {
-        "numerator": true,
-        "denominator": true,
-        "imag": true,
-        "real": true
-    },
-    $is_int_subclass: true,
-    $is_number: true
-}
+var int = _b_.int
+Object.assign(int,
+    {
+        __mro__: [_b_.object],
+        __qualname__: 'int',
+        $is_class: true,
+        $native: true,
+        $descriptors: {
+            "numerator": true,
+            "denominator": true,
+            "imag": true,
+            "real": true
+        },
+        $is_int_subclass: true,
+        $is_number: true
+    }
+)
 
 var int_or_long = int.$int_or_long = function(bigint){
     var res = Number(bigint)
@@ -505,7 +506,7 @@ int.__pow__ = function(self, other, z){
     $err("**", other)
 }
 
-int.__repr__ = function(self){
+int.tp_repr = function(self){
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     var value = int_value(self),
         x = value.__class__ === $B.long_int ? value.value : value
@@ -908,6 +909,14 @@ int.$factory = function(){
 }
 $B.set_func_names(int, "builtins")
 
+var int_methods = {
+    builtin_function_or_method: ['__new__', 'from_bytes'],
+    wrapper_descriptor: ['__repr__', '__hash__', '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__', '__add__', '__radd__', '__sub__', '__rsub__', '__mul__', '__rmul__', '__mod__', '__rmod__', '__divmod__', '__rdivmod__', '__pow__', '__rpow__', '__neg__', '__pos__', '__abs__', '__bool__', '__invert__', '__lshift__', '__rlshift__', '__rshift__', '__rrshift__', '__and__', '__rand__', '__xor__', '__rxor__', '__or__', '__ror__', '__int__', '__float__', '__floordiv__', '__rfloordiv__', '__truediv__', '__rtruediv__', '__index__'],
+    method_descriptor: ['conjugate', 'bit_length', 'bit_count', 'to_bytes', 'as_integer_ratio', '__trunc__', '__floor__', '__ceil__', '__round__', '__getnewargs__', '__format__', '__sizeof__', 'is_integer'],
+    getset_descriptor: ['real', 'imag', 'numerator', 'denominator']
+}
+$B.make_class_dict(int, int_methods)
+
 _b_.int = int
 
 // Boolean type
@@ -930,10 +939,10 @@ $B.$bool = function(obj, bool_class){ // return true or false
             }
             var klass = $B.get_class(obj),
                 missing = {},
-                bool_method = $B.search_in_mro(klass, '__bool__')
-            if(bool_method === undefined){
-                var len_method = $B.$getattr(klass, '__len__', missing)
-                if(len_method === missing){
+                bool_method = $B.search_in_mro(klass, '__bool__', $B.NULL)
+            if(bool_method === $B.NULL){
+                var len_method = $B.class_getattribute(klass, '__len__', $B.NULL)
+                if(len_method === $B.NULL){
                     return true
                 }
                 // Call _b_.len here instead of len_method directly to use
@@ -950,22 +959,22 @@ $B.$bool = function(obj, bool_class){ // return true or false
     }
 }
 
-var bool = {
-    tp_bases: [int],
-    __class__: _b_.type,
-    __mro__: [int, _b_.object],
-    __qualname__: 'bool',
-    $is_class: true,
-    $not_basetype: true, // bool cannot be a base class
-    $is_number: true,
-    $native: true,
-    $descriptors: {
-        "numerator": true,
-        "denominator": true,
-        "imag": true,
-        "real": true
+var bool = _b_.bool
+Object.assign(bool,
+    {
+        __qualname__: 'bool',
+        $is_class: true,
+        $not_basetype: true, // bool cannot be a base class
+        $is_number: true,
+        $native: true,
+        $descriptors: {
+            "numerator": true,
+            "denominator": true,
+            "imag": true,
+            "real": true
+        }
     }
-}
+)
 
 bool.__and__ = function(self, other){
     if($B.$isinstance(other, bool)){
