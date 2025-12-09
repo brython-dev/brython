@@ -185,7 +185,8 @@ $B.make_builtin_class = function(tp_name, tp_bases){
     var cls = {
         ob_type: _b_.type,
         tp_name,
-        tp_bases: tp_bases ?? [_b_.object]
+        tp_bases: tp_bases ?? [_b_.object],
+        dict: Object.create(null)
     }
     if(tp_bases){
         cls.tp_mro = [cls, tp_bases, _b_.object]
@@ -212,22 +213,18 @@ $B.obj_dict = function(obj, exclude){
     return res
 }
 
-for(var cls of $B.builtin_classes){
-    if(_b_[cls] === undefined){
-        console.log('undef', cls)
-    }
-    _b_[cls].dict = $B.obj_dict({})
-}
-
-
 $B.set_class_attr = function(klass, attr, value, ob_type){
     if(ob_type){
         if(ob_type.$factory === undefined){
             console.log('no factroy', ob_type)
         }
-        value = ob_type.$factory(value, klass)
+        if(ob_type === $B.getset_descriptor){
+            value = ob_type.$factory(klass, attr)
+        }else{
+            value = ob_type.$factory(value, klass)
+        }
     }
-    klass.dict.$jsobj[attr] = value
+    klass.dict[attr] = value
 }
 
 
@@ -237,24 +234,104 @@ $B.make_class_dict = function(klass, methods){
         console.log('make class attrs of', klass)
     }
     klass.dict = klass.dict ?? $B.obj_dict({})
+    for(let attr in klass){
+        if($B.wrapper_methods[attr]){
+            // if klass.tp_iter is present, create entry klass.dict.__iter__
+            $B.wrapper_methods[attr](klass)
+        }
+    }
     for(var cls_name in methods){
         var cls = $B[cls_name]
         for(var method of methods[cls_name]){
-            if($B.make_dunder[method]){
-                var func = $B.make_dunder[method](klass)
-                func.ml = {ml_name: method}
-                $B.set_class_attr(klass, method, func, cls)
+            if(klass[method]){
+                $B.set_class_attr(klass, method, klass[method], cls)
             }else{
-                if(klass[method]){
-                    $B.set_class_attr(klass, method, klass[method], cls)
-                }else{
-                    console.log('not implemented', method, 'for', klass.tp_name)
-                }
+                console.log('not implemented', method, 'for', klass.tp_name)
             }
         }
     }
 }
 
+$B.wrapper_methods = Object.create(null)
+Object.assign($B.wrapper_methods,
+    {
+        tp_iter: make_iter,
+        tp_iternext: make_next,
+        tp_repr: make_repr
+    }
+)
+
+function make_iter(klass){
+    var iter = obj => klass.tp_iter(obj)
+    iter.ml = {ml_name: '__iter__'}
+    klass.dict.__iter__ = iter
+}
+
+function make_next(klass){
+    var next = function(obj){
+        var res = klass.tp_iternext(obj).next()
+        if(res.done){
+            $B.RAISE(__BRYTHON__.builtins.StopIteration)
+        }
+        return res.value
+    }
+    next.ml = {ml_name: '__next__'}
+    klass.dict.__next__ = next
+}
+
+function make_repr(klass){
+    var repr = function(obj){
+        return klass.tp_repr(obj)
+    }
+    repr.ml = {ml_name: '__repr__'}
+    klass.dict.__repr__ = repr
+}
+
+// Set attributes of klass methods
+$B.set_func_names = function(klass, module){
+    klass.__module__ = module
+    for(var attr in klass){
+        if(typeof klass[attr] == 'function'){
+            $B.add_function_infos(klass, attr)
+        }
+    }
+}
+
+$B.add_function_infos = function(klass, attr, module, qualname){
+    module = module ?? klass.__module__
+    qualname = qualname ?? klass.tp_name
+    $B.set_function_infos(klass[attr],
+        {
+            __doc__: klass[attr].__doc__ || '',
+            __module__: module,
+            __name__: attr,
+            __qualname__ : qualname + '.' + attr,
+            __defaults__: [],
+            __kwdefaults__: {}
+       }
+    )
+    if(klass[attr].$type == "classmethod"){
+        klass[attr].ob_type = $B.method
+    }
+}
+
+// Set function attributes
+$B.set_function_infos = function(f, attrs){
+    f.$function_infos = f.$function_infos ?? []
+    for(var key in attrs){
+        if($B.func_attrs[key] === undefined){
+            throw Error('no function attribute ' + key)
+        }
+        f.$function_infos[$B.func_attrs[key]] = attrs[key]
+    }
+}
+
+$B.set_function_attr = function(func, attr, value){
+    if($B.func_attrs[attr] === undefined){
+        throw Error('no function attribute ' + attr)
+    }
+    func.$function_infos[$B.func_attrs[attr]] = value
+}
 
 $B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
 
@@ -463,86 +540,6 @@ var i = 0
 $B.func_attrs = {}
 for(var func_attr of func_attrs){
     $B.func_attrs[func_attr] = i++
-}
-
-$B.dunder_methods = Object.create(null)
-Object.assign($B.dunder_methods,
-    {
-        tp_iter: '__iter__',
-        tp_iternext: '__next__',
-        tp_repr: '__repr__'
-    }
-)
-
-$B.make_dunder = {
-    __iter__: function(klass){
-        return function(obj){
-            return klass.tp_iter(obj)
-        }
-    },
-    __next__: function(klass){
-        return function(obj){
-            var res = klass.tp_iternext(obj).next()
-            if(res.done){
-                $B.RAISE(__BRYTHON__.builtins.StopIteration)
-            }
-            return res.value
-        }
-    },
-    __repr__: function(klass){
-        return function(obj){
-            if(typeof klass.tp_repr !== 'function'){
-                console.log('no tp_repr', klass)
-            }
-            return klass.tp_repr(obj)
-        }
-    }
-}
-
-// Set attributes of klass methods
-$B.set_func_names = function(klass, module){
-    klass.__module__ = module
-    for(var attr in klass){
-        if(typeof klass[attr] == 'function'){
-            $B.add_function_infos(klass, attr)
-        }
-    }
-}
-
-$B.add_function_infos = function(klass, attr, module, qualname){
-    module = module ?? klass.__module__
-    qualname = qualname ?? klass.tp_name
-    $B.set_function_infos(klass[attr],
-        {
-            __doc__: klass[attr].__doc__ || '',
-            __module__: module,
-            __name__: attr,
-            __qualname__ : qualname + '.' + attr,
-            __defaults__: [],
-            __kwdefaults__: {}
-       }
-    )
-    if(klass[attr].$type == "classmethod"){
-        klass[attr].ob_type = $B.method
-    }
-}
-
-// Set function attributes
-$B.set_function_infos = function(f, attrs){
-    f.$function_infos = f.$function_infos ?? []
-    for(var key in attrs){
-        if($B.func_attrs[key] === undefined){
-            throw Error('no function attribute ' + key)
-        }
-        f.$function_infos[$B.func_attrs[key]] = attrs[key]
-    }
-}
-
-$B.set_function_attr = function(func, attr, value){
-    if($B.func_attrs[attr] === undefined){
-        throw Error('no function attribute ' + attr)
-    }
-    func.$function_infos[$B.func_attrs[attr]] = value
 }
 
 var has_storage = typeof(Storage) !== "undefined"

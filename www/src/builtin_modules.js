@@ -1412,7 +1412,7 @@
         if(_b_[name].__class__ === _b_.type){
             _b_[name].__qualname__ = _b_[name].__qualname__ ?? name
             _b_[name].__module__ = 'builtins'
-            _b_[name].__name__ = _b_[name].__name__ ?? name
+            //_b_[name].__name__ = _b_[name].__name__ ?? name
             _b_[name].$is_builtin_class = true
             $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
             for(var key in _b_[name]){
@@ -1601,9 +1601,6 @@ $B.__ARGV = $B.$list([])
 // set default trace function (cf. sys.settrace)
 $B.tracefunc = _b_.None
 
-// function dict
-$B.function.dict = $B.obj_dict($B.function.dict)
-
 _b_.object.__init__.__class__ = $B.wrapper_descriptor // in py_type.js
 _b_.object.__new__.__class__ = $B.builtin_function_or_method
 
@@ -1615,6 +1612,6 @@ _b_.dict.$setitem(_b_.object.dict,
     '__str__',
     $B.wrapper_descriptor.$factory(_b_.object.tp_str, _b_.object)
 )
-console.log('object dict', _b_.object.dict)
+
 
 })(__BRYTHON__);

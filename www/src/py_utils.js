@@ -1079,7 +1079,7 @@ $B.$getitem1 = function(obj, item){
         }
         var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
-            return $B.$call(class_gi)(item)
+            return $B.$call(class_gi)(obj, item)
         }else if(obj.__class__){
             class_gi = $B.$getattr(obj.__class__, "__getitem__", _b_.None)
             if(class_gi !== _b_.None){

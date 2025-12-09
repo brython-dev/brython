@@ -8,16 +8,8 @@ var FunctionCode = $B.make_class("function code")
 
 var FunctionGlobals = $B.make_class("function globals")
 
-$B.function = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __name__: 'function',
-    __qualname__: 'function',
-    $is_class: true
-}
+$B.function = $B.make_builtin_class('function')
 
-
-$B.function.dict = {}
 
 $B.function.dict.__annotations__ = $B.getset_descriptor.$factory(
     $B.function,

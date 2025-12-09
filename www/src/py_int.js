@@ -44,8 +44,7 @@ Object.assign(int,
         $descriptors: {
             "numerator": true,
             "denominator": true,
-            "imag": true,
-            "real": true
+            "imag": true
         },
         $is_int_subclass: true,
         $is_number: true
@@ -941,7 +940,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 missing = {},
                 bool_method = $B.search_in_mro(klass, '__bool__', $B.NULL)
             if(bool_method === $B.NULL){
-                var len_method = $B.class_getattribute(klass, '__len__', $B.NULL)
+                var len_method = $B.search_in_mro(klass, '__len__', $B.NULL)
                 if(len_method === $B.NULL){
                     return true
                 }

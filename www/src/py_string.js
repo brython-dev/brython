@@ -2667,9 +2667,9 @@ str.$factory = function(arg, encoding){
         if(klass === undefined){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
-        var method = $B.class_getattribute(klass, '__str__', $B.NULL)
+        var method = $B.type_getattribute(klass, '__str__', $B.NULL)
         if(method === $B.NULL){
-            method = $B.class_getattribute(klass, '__repr__', $B.NULL)
+            method = $B.type_getattribute(klass, '__repr__', $B.NULL)
         }
         if(method === $B.NULL){
             $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')

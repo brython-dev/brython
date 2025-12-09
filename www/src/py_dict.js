@@ -1151,10 +1151,6 @@ dict.copy = function(){
         $copy_dict(res, self)
         return res
     }
-    var it = $B.make_js_iterator(self)
-    for(var k of it){
-        console.log('iteration yields key', k)
-    }
     return res
 }
 
@@ -1496,9 +1492,6 @@ dict.$from_array = function(arrays){
 
 $B.set_func_names(dict, "builtins")
 
-console.log('_b_.None.ob_type py_dict', _b_.None.ob_type)
-
-
 // dict.__class_getitem__ = _b_.classmethod.$factory(dict.__class_getitem__)
 
 var dict_methods = {
@@ -1536,10 +1529,6 @@ var dict_methods = {
 
 
 $B.make_class_dict(dict, dict_methods)
-
-console.log('dict', dict)
-console.log('_b_.None.ob_type', _b_.None.ob_type)
-
 
 $B.empty_dict = function(){
     return {
@@ -1636,9 +1625,6 @@ for(var attr in $B.dunder_methods){
 }
 $B.set_func_names(mappingproxy, "builtins")
 
-console.log('_b_.None.ob_type', _b_.None.ob_type)
-console.log('maapingproxy.__hash__', mappingproxy.__hash__)
-
 var mappingproxy_methods = {
   builtin_function_or_method: ['__new__', '__class_getitem__'],
   method_descriptor: ['get',
@@ -1667,8 +1653,7 @@ var mappingproxy_methods = {
 }
 
 $B.make_class_dict(mappingproxy, mappingproxy_methods)
-
-console.log('_b_.None.ob_type', _b_.None.ob_type)
+console.log('mapping proxy __repr__', mappingproxy.dict.__repr__)
 
 function jsobj2dict(x, exclude){
     exclude = exclude || function(){return false}

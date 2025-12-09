@@ -955,13 +955,13 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr, _default){
-    var test = false // attr == '__str__' // && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == '__name__' // && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
     }
     if(klass.dict){
-        var v = _b_.dict.$get_string(klass.dict, attr, false)
-        if(v !== false){
+        var v = klass.dict[attr]
+        if(v !== undefined){
             if(test){
                 console.log('found in klass dict', klass.dict, v)
             }
@@ -970,7 +970,7 @@ $B.search_in_mro = function(klass, attr, _default){
     }
     if(klass.hasOwnProperty(attr)){
         if(test){
-            console.log('found in klass', klass[attr])
+            console.log('found in klass', klass, klass[attr])
         }
         if(attr == '__class__' && klass.ob_type){
             // ignore for the moment
@@ -991,8 +991,8 @@ $B.search_in_mro = function(klass, attr, _default){
             }
             return mro[i][attr]
         }else if(mro[i].dict){
-            var v = _b_.dict.$get_string(mro[i].dict, attr, false)
-            if(v !== false){
+            var v = mro[i].dict[attr]
+            if(v !== undefined){
                 if(test){
                     console.log('found in dict of mro', i, v)
                 }
@@ -1061,7 +1061,7 @@ function search_in_dict(obj, attr, _default){
 }
 
 function standard_getattribute(obj, attr){
-    var test = false // attr == 'value'
+    var test = attr == '__code__'
     var klass = $B.get_class(obj)
     if(test){
         console.log('getattr', attr, 'of obj', obj, klass)
@@ -1089,8 +1089,6 @@ function standard_getattribute(obj, attr){
                 }
                 return getter(in_mro, obj, klass)
             }
-        }else{
-            getter = missing_attr
         }
     }
     // search in obj dict
@@ -1110,30 +1108,28 @@ function standard_getattribute(obj, attr){
     if(test){
         console.log('attr', attr, 'not found on obj', obj)
     }
-    return missing_attr
+    throw $B.attr_error(attr, obj)
 }
 
-function getattr_hook(obj, attr){
+$B.object_getattribute = function(obj, attr){
     var klass = $B.get_class(obj)
-    var getattribute = $B.search_in_mro(klass, '__getattribute__')
-    if(getattribute && getattribute !== _b_.object.__getattribute__){
-        // use specific __getattribute__
-        if(typeof getattribute !== 'function'){
-            console.log('not a function', getattribute)
-        }
-        return getattribute(obj, attr)
+    var getattribute = $B.search_in_mro(klass, '__getattribute__', $B.NULL)
+    if(getattribute === $B.NULL){
+        $B.RAISE(_b_.TypeError, 'no __getattribute__')
     }
-    var res = standard_getattribute(obj, attr)
-    if(res === missing_attr){
+    try{
+        return getattribute(obj, attr)
+    }catch(err){
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
         var getattr = $B.search_in_mro(klass, '__getattr__')
         if(getattr){
             return getattr(obj, attr)
         }
+        throw $B.attr_error(attr, obj)
     }
-    return res
 }
 
-$B.object_getattribute = getattr_hook
+_b_.object.__getattribute__ = standard_getattribute
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
@@ -1165,27 +1161,33 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = $B.get_class(obj)
 
-    var $test = false // attr == "_member_names_" && obj.__name__ === "FlagBoundary"
+    var $test = false // attr == "__dict__" // && obj.__name__ === "FlagBoundary"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
         "isclass", is_class)
-        console.log('in dict', obj.dict.$strings._member_names_)
     }
 
     if(! is_class){
-        var std_res = getattr_hook(obj, attr)
-        if($test){
-            console.log(obj, attr, std_res)
-        }
-        if(std_res === missing_attr){
+        try{
+            return $B.object_getattribute(obj, attr)
+        }catch(err){
+            $B.RAISE_IF_NOT(err, _b_.AttributeError)
             if(_default !== undefined){
                 return _default
             }
-            throw $B.attr_error(attr, obj)
         }
-        return std_res
+    }else{
+        try{
+            return $B.type_getattribute(obj, attr)
+        }catch(err){
+            $B.RAISE_IF_NOT(err, _b_.AttributeError)
+            if(_default !== undefined){
+                return _default
+            }
+        }
     }
+    throw $B.attr_error(attr, obj)
 
     if(klass === undefined){
         klass = $B.get_class(obj)
@@ -1782,7 +1784,8 @@ $B.$isinstance = function(obj, cls){
         }
         return false
     }
-    if(cls.__class__ === $B.UnionType){
+    var klass = $B.get_class(cls)
+    if(klass === $B.UnionType){
         for(kls of cls.items){
             if($B.$isinstance(obj, kls)){
                 return true
@@ -1791,12 +1794,12 @@ $B.$isinstance = function(obj, cls){
         return false
     }
 
-    if(cls.__class__ === $B.GenericAlias){
+    if(klass === $B.GenericAlias){
         // PEP 585
         $B.RAISE(_b_.TypeError,
             'isinstance() arg 2 cannot be a parameterized generic')
     }
-    if((!cls.__class__) && (! cls.$is_class)){
+    if((!klass) && (! cls.$is_class)){
         if(! $B.$getattr(cls, '__instancecheck__', false)){
             $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type " +
                 "or tuple of types")
@@ -1817,7 +1820,6 @@ $B.$isinstance = function(obj, cls){
                 return true
         }
     }
-    var klass = $B.get_class(obj)
 
     if(klass == undefined){
         if(typeof obj == 'string'){
@@ -1831,16 +1833,14 @@ $B.$isinstance = function(obj, cls){
                 return true
             }
         }
-        klass = $B.get_class(obj)
-    }
-    if(klass === undefined){
-        return false
     }
 
-    if(klass ===  cls){
+    var obj_class = $B.get_class(obj)
+
+    if(obj_class ===  cls){
         return true
     }
-    var mro = klass.__mro__
+    var mro = $B.get_mro(obj_class)
     if(mro){
         for(var i = 0; i < mro.length; i++){
            if(mro[i] === cls){
@@ -1851,12 +1851,6 @@ $B.$isinstance = function(obj, cls){
     // Search __instancecheck__ on cls's class (ie its metaclass)
     var instancecheck = $B.$getattr($B.get_class(cls),
         '__instancecheck__', _b_.None)
-    if(cls.__name__ == 'DemoComponent2169'){
-        console.log('use instance check', obj, cls, instancecheck)
-        console.log('class of obj', $B.get_class(obj))
-        console.log('same as cls ?', $B.get_class(obj) === cls)
-        console.log('result', instancecheck(cls, obj))
-    }
     if(instancecheck !== _b_.None){
         return instancecheck(cls, obj)
     }
@@ -1877,7 +1871,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
             mro = [_b_.object]
         }
     }else{
-        mro = klass.__mro__
+        mro = $B.get_mro(klass)
     }
     if($B.$isinstance(classinfo, _b_.tuple)){
         for(var i = 0; i < classinfo.length; i++){
@@ -1885,7 +1879,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
         }
         return false
     }
-    if(classinfo.__class__ === $B.GenericAlias){
+    if($B.get_class(classinfo) === $B.GenericAlias){
         $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
     }
@@ -1895,7 +1889,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.$getattr(classinfo.__class__ || $B.get_class(classinfo),
+    var sch = $B.$getattr($B.get_class(classinfo),
         '__subclasscheck__', _b_.None)
 
     if(sch == _b_.None){
@@ -3059,8 +3053,8 @@ $$super.__getattribute__ = function(self, attr){
     }
     // Determine method resolution order from object_or_type
     var object_or_type = self.__self_class__,
-        mro = self.$arg2 == 'type' ? object_or_type.__mro__ :
-                                     $B.get_class(object_or_type).__mro__
+        mro = self.$arg2 == 'type' ? $B.get_mro(object_or_type) :
+                                     $B.get_mro($B.get_class(object_or_type))
 
     // Search of method attr starts in mro after self.__thisclass__
     var search_start = mro.indexOf(self.__thisclass__) + 1,

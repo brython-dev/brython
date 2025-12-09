@@ -933,15 +933,7 @@ for(let attr in list){
     }
 }
 
-tuple.__class_getitem__ = function(cls, item){
-    // PEP 585
-    // Set as a classmethod at the end of this script, after $B.set_func_names()
-    if(! Array.isArray(item)){
-        item = [item]
-    }
-    return $B.GenericAlias.$factory(cls, item)
-}
-
+tuple.__class_getitem__ = $B.$class_getitem
 
 tuple.__eq__ = function(self, other){
     // compare object "self" to class "list"

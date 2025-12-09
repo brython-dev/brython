@@ -425,6 +425,12 @@ $B.RAISE = function(error_type, message){
     throw $B.$call(error_type)(message)
 }
 
+$B.RAISE_IF_NOT = function(exc, exc_type){
+    if(! $B.$isinstance(exc, exc_type)){
+        throw exc
+    }
+}
+
 $B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name){
     var exc = $B.EXC(_b_.AttributeError, message)
     exc.obj = obj
@@ -744,7 +750,6 @@ $B.set_func_names(_b_.AttributeError, 'builtins')
 $B.attr_error = function(name, obj){
     var msg
     if(obj.$is_class){
-        console.log('no attr', name, 'for class', obj)
         msg = `type object '${obj.__name__}'`
     }else{
         msg = `'${$B.class_name(obj)}' object`

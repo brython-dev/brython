@@ -38,15 +38,8 @@ $B.$class_constructor = function(class_name, frame, metaclass,
                                  resolved_bases, bases,
                                  kwargs, static_attributes, annotate,
                                  firstlineno){
-    var dict
-    var class_obj_proxy = frame[1] // locals
-    if(class_obj_proxy instanceof $B.str_dict){
-        dict = $B.empty_dict()
-        dict.$strings = class_obj_proxy
-    }else{
-        dict = class_obj_proxy.$target
-    }
-    var module = class_obj_proxy.__module__
+    var dict = frame[1] // locals
+    var module = dict.__module__
 
     if(metaclass.__mro__ === undefined){
         console.log('no mro in metaclass', metaclass)
@@ -76,13 +69,13 @@ $B.$class_constructor = function(class_name, frame, metaclass,
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
-    if(class_obj_proxy.__eq__ !== undefined &&
-            class_obj_proxy.__hash__ === undefined){
-        $B.$setitem(dict, '__hash__', _b_.None)
+    if(dict.__eq__ !== undefined &&
+            dict.__hash__ === undefined){
+        dict.__hash__ = _b_.None
     }
 
     // Check if class has __slots__
-    var slots = class_obj_proxy.__slots__
+    var slots = dict.__slots__
     if(slots !== undefined){
         if(typeof slots == "string"){
             slots = [slots]
@@ -94,7 +87,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
                 }
             }
         }
-        $B.$setitem(dict, '__slots__', slots)
+        dict.__slots__ = slots
     }
 
     $B.make_annotate_func(dict, annotate, frame)
@@ -202,22 +195,24 @@ function set_attr_if_absent(dict, attr, value){
 $B.make_class_namespace = function(metaclass, class_name, module, qualname,
                                    orig_bases, bases){
     // Use __prepare__ (PEP 3115)
-    var class_dict = _b_.dict.$literal([
-                         ['__module__', module],
-                         ['__qualname__', qualname]
-                         ])
+    var class_dict = {
+        __module__: module
+    }
     if(metaclass !== _b_.type){
         var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None)
         if(prepare !== _b_.None){
-            class_dict = $B.$call(prepare)(class_name, bases) // dict or dict-like
-            set_attr_if_absent(class_dict, '__module__', module)
-            set_attr_if_absent(class_dict, '__qualname__', qualname)
+            var prepared = $B.$call(prepare)(class_name, bases) // dict or dict-like
+            for(var item of _b_.dict.$iter_items(prepared)){
+                class_dict[item.key] = item.value
+            }
         }
     }
     if(orig_bases !== bases){
-        $B.$setitem(class_dict, '__orig_bases__', orig_bases)
+        class_dict.__orig_bases__ = orig_bases
     }
-    if(class_dict.__class__ === _b_.dict){
+    return class_dict
+    /*
+    if($B.get_class(class_dict) === _b_.dict){
         if(class_dict.$all_str){
             return class_dict.$strings
         }
@@ -267,6 +262,7 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
             }
         })
     }
+    */
 }
 
 $B.resolve_mro_entries = function(bases){
@@ -391,7 +387,6 @@ staticmethod.__get__ = function(self){
     return self.__func__
 }
 
-
 $B.set_func_names(staticmethod, "builtins")
 
 $B.getset_descriptor = $B.make_class("getset_descriptor",
@@ -431,7 +426,7 @@ $B.getset_descriptor.__set__ = function(self, klass, value){
 }
 
 $B.getset_descriptor.__repr__ = function(self){
-    return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`
+    return `<attribute '${self.attr}' of '${$B.get_name(self.cls)}' objects>`
 }
 
 $B.set_func_names($B.getset_descriptor, "builtins")
@@ -588,7 +583,6 @@ type.dict.__dict__ = $B.getset_descriptor.$factory(
     type,
     '__dict__',
     function(cls){
-        console.log('get __dict__')
         // Return the __dict__ of a class
         // Used by inspect.getattr_static and related functions
         if(cls === undefined || cls === null){
@@ -599,7 +593,7 @@ type.dict.__dict__ = $B.getset_descriptor.$factory(
         }
         // For types that have dict instead
         if(cls.dict){
-            return cls.dict
+            return $B.mappingproxy.$factory(cls.dict)
         }
         // Fallback for built-in types without explicit __dict__
         return $B.empty_dict()
@@ -697,8 +691,8 @@ type.__format__ = function(klass){
 
 var NULL = {NULL:true}
 
-$B.class_getattribute = function(obj, name, _default){
-    var test = false // name == '__str__'
+type.__getattribute__ = function(obj, name){
+    var test = false // name == '__name__'
     if(test){
         console.log('class_getattr', obj, name)
     }
@@ -757,40 +751,16 @@ $B.class_getattribute = function(obj, name, _default){
     if(in_mro !== NULL){
         return in_mro
     }
-    return _default
+    throw $B.attr_error(name, obj)
 }
 
-function type_getattr_hook(obj, attr){
-    var klass = $B.get_class(obj)
-    var getattribute = $B.search_in_mro(klass, '__getattribute__')
-    if(getattribute && getattribute !== _b_.type.__getattribute__){
-        // use specific __getattribute__
-        if(typeof getattribute !== 'function'){
-            console.log('not a function', getattribute)
-        }
-        return getattribute(obj, attr)
+$B.type_getattribute = function(klass, attr, _default){
+    var meta = $B.get_class(klass)
+    var ga = $B.search_in_mro(meta, '__getattribute__', $B.NULL)
+    if(ga === $B.NULL){
+        $B.RAISE(_b_.TypeError, `type ${$B.get_name(klass)} has no __getattribute__`)
     }
-    var res = $B.class_getattribute(obj, attr, NULL)
-    if(res === NULL){
-        var getattr = $B.search_in_mro(klass, '__getattr__', NULL)
-        if(getattr !== NULL){
-            return getattr(obj, attr)
-        }
-    }
-    $B.RAISE_ATTRIBUTE_ERROR('type object has no attribute ${attr}',
-        obj, attr)
-}
-
-type.__getattribute__ = function(klass, attr){
-    var with_class_ga = $B.class_getattribute(klass, attr, NULL)
-    if(with_class_ga === NULL){
-        var getattr = $B.search_in_mro($B.get_class(klass), '__getattr__', NULL)
-        if(getattr !== NULL){
-            return getattr(klass, attr)
-        }
-    }else{
-        return with_class_ga
-    }
+    return ga(klass, attr)
 }
 
 function type_getattribute(klass, attr){
@@ -1098,48 +1068,31 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         extra_kwargs
 
     // Create the class dictionary
-    var module = _b_.dict.$get_string(cl_dict, '__module__',
-                                      $B.frame_obj.frame[2])
-    var qualname = _b_.dict.$get_string(cl_dict, '__qualname__', name)
+    var module = cl_dict.__module__ ?? $B.frame_obj.frame[2]
+    var qualname = cl_dict.__qualname__ ?? name
 
     var class_dict = {
         __class__ : meta,
         ob_type: meta,
         tp_bases : bases.length == 0 ? [_b_.object] : bases,
-        __qualname__: qualname,
         __module__: module,
-        __name__: name,
+        tp_name: name,
         dict: cl_dict,
         $is_class: true
     }
 
-    _b_.dict.$setitem(class_dict.dict,
-        '__dict__',
-        $B.getset_descriptor.$factory(
-            class_dict,
-            '__dict__',
-            function(obj){
-                if(obj.dict === undefined){
-                    console.log('obj.dict undefn', obj)
-                }
-                return obj.dict
-            }
-        )
-    )
-
-    let slots = _b_.dict.$get_string(cl_dict, '__slots__', _b_.None)
-    if(slots !== _b_.None){
+    let slots = cl_dict.__slots__
+    if(slots !== undefined){
         for(let key of $B.make_js_iterator(slots)){
             class_dict[key] = member_descriptor.$factory(key, class_dict)
         }
     }
 
-    class_dict.__mro__ = type.mro(class_dict).slice(1)
+    class_dict.tp_mro = type.mro(class_dict)
 
     // set class attributes for faster lookups
-    for(var entry of _b_.dict.$iter_items(cl_dict)){
-        var key = entry.key,
-            v = entry.value
+    for(var key in cl_dict){
+        var v = cl_dict[key]
         if(['__module__', '__class__', '__name__', '__qualname__'].includes(key)){
             continue
         }
@@ -1150,12 +1103,13 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
             continue
         }
         class_dict[key] = v
-        if(v.__class__){
-            // cf PEP 487 and issue #1178
-            var set_name = $B.$getattr(v.__class__, "__set_name__", _b_.None)
-            if(set_name !== _b_.None){
-                set_name(v, class_dict, key)
-            }
+
+        // cf PEP 487 and issue #1178
+        try{
+            var set_name = $B.type_getattribute($B.get_class(v), "__set_name__")
+            set_name(v, class_dict, key)
+        }catch(err){
+            $B.RAISE_IF_NOT(err, _b_.AttributeError)
         }
         if(typeof v == "function"){
             if(v.$function_infos === undefined){
@@ -1170,6 +1124,12 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
             }
         }
     }
+
+    class_dict.dict.__dict__ = $B.getset_descriptor.$factory(
+        class_dict,
+        '__dict__',
+        obj => obj.dict
+    )
 
     // set $tp_setattr
     class_dict.$tp_setattr = $B.search_in_mro(class_dict, '__setattr__')
@@ -1200,7 +1160,7 @@ type.__qualname__ = 'type'
 
 type.__repr__ = function(kls){
     $B.builtins_repr_check(type, arguments) // in brython_builtins.js
-    var qualname = kls.__qualname__
+    var qualname = $B.get_name(kls)
     if(kls.__module__    &&
             kls.__module__ != "builtins" &&
             !kls.__module__.startsWith("$")){
@@ -1249,7 +1209,7 @@ type.tp_setattro = function(kls, attr, value){
 
     var mp = kls.dict || $B.$getattr(kls, '__dict__')
     // mapping proxy is read-only, set key/value without using __setitem__
-    _b_.dict.$setitem(mp, attr, value)
+    mp[attr] = value
 
     switch(attr){
         case '__init__':
@@ -1293,7 +1253,7 @@ type.$mro = function(cls){
         let bmro = [],
             pos = 0
         if(base === undefined ||
-                base.__mro__ === undefined){
+                $B.get_mro(base) === undefined){
             if(base.__class__ === undefined){
                 // Brython class inherits a Javascript constructor. The
                 // constructor is the attribute js_func
@@ -1568,9 +1528,14 @@ member_descriptor.__delete__ = function(self, kls){
 }
 
 member_descriptor.__get__ = function(self, kls){
+    console.log('member descr get', self, kls)
     if(kls === _b_.None){
         return self
     }
+    console.log('call self.attr', self.attr)
+    var res = self.attr(kls)
+    console.log('res', res)
+    return res
     if(kls.$slot_values === undefined ||
             ! kls.$slot_values.has(self.attr)){
         throw $B.attr_error(self.attr, kls)
@@ -1850,21 +1815,19 @@ $B.make_iterator_class = function(name, reverse){
 
 
 // PEP 585
-$B.GenericAlias = $B.make_class("GenericAlias",
-    function(origin_class, items){
-        var res = {
-            __class__: $B.GenericAlias,
-            __mro__: [origin_class],
-            origin_class,
-            items
-        }
-        return res
-    }
-)
+$B.GenericAlias = $B.make_builtin_class("GenericAlias")
 
-$B.GenericAlias.__args__ = _b_.property.$factory(
-    self => $B.fast_tuple(self.items)
-)
+$B.GenericAlias.$factory = function(origin_class, items){
+    var res = {
+        ob_type: $B.GenericAlias,
+        origin_class,
+        items
+    }
+    return res
+}
+
+
+$B.GenericAlias.__args__ = self => $B.fast_tuple(self.items)
 
 $B.GenericAlias.__call__ = function(self, ...args){
     return self.origin_class.$factory.apply(null, args)
@@ -1890,8 +1853,7 @@ $B.GenericAlias.__mro_entries__ = function(self){
 
 $B.GenericAlias.__new__ = function(origin_class, items){
     var res = {
-        __class__: $B.GenericAlias,
-        __mro__: [origin_class],
+        ob_type: $B.GenericAlias,
         origin_class,
         items,
         $is_class: true
@@ -1905,29 +1867,23 @@ $B.GenericAlias.__or__ = function(){
     return $B.UnionType.$factory([$.self, $.other])
 }
 
-$B.GenericAlias.__origin__ = _b_.property.$factory(
-    self => self.origin_class
-)
+$B.GenericAlias.__origin__ = self => self.origin_class
 
-$B.GenericAlias.__parameters__ = _b_.property.$factory(
-    // In PEP 585 : "a lazily computed tuple (possibly empty) of unique
-    // type variables found in __args__", but what are "unique type
-    // variables" ?
-    function(){
-        return $B.fast_tuple([])
-    }
-)
+// In PEP 585 : "a lazily computed tuple (possibly empty) of unique
+// type variables found in __args__", but what are "unique type
+// variables" ?
+$B.GenericAlias.__parameters__ = self => $B.fast_tuple([])
 
-$B.GenericAlias.__repr__ = function(self){
+$B.GenericAlias.tp_repr = function(self){
     var items = Array.isArray(self.items) ? self.items : [self.items]
-
+    console.log('repr', self)
     var reprs = []
     for(var item of items){
         if(item === _b_.Ellipsis){
             reprs.push('...')
         }else{
             if(item.$is_class){
-                reprs.push(item.__name__)
+                reprs.push($B.get_name(item))
             }else{
                 reprs.push(_b_.repr(item))
             }
@@ -1939,13 +1895,18 @@ $B.GenericAlias.__repr__ = function(self){
         reprs.join(", ") + ']'
 }
 
-$B.GenericAlias.__type_params__ = _b_.property.$factory(
-    function(self){
-        return $B.$getattr(self.origin_class, '__type_params__')
-    }
-)
+$B.GenericAlias.__type_params__ = self => $B.$getattr(self.origin_class, '__type_params__')
 
 $B.set_func_names($B.GenericAlias, "types")
+var GenericAlias_methods = {
+    builtin_function_or_method: ['__new__'],
+    wrapper_descriptor: ['__repr__', '__hash__', '__call__', '__getattribute__', '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__', '__iter__', '__or__', '__ror__', '__getitem__'],
+    method_descriptor: ['__mro_entries__', '__instancecheck__', '__subclasscheck__', '__reduce__', '__dir__'],
+    member_descriptor: ['__origin__', '__args__', '__unpacked__'],
+    getset_descriptor: ['__parameters__', '__typing_unpacked_tuple_args__'],
+    str: ['__doc__']
+}
+$B.make_class_dict($B.GenericAlias, GenericAlias_methods)
 
 $B.UnionType = $B.make_class("UnionType",
     function(items){

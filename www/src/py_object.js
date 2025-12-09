@@ -115,6 +115,7 @@ object.__ge__ = function(){
 
 $B.nb_from_dict = 0
 
+/*
 object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj),
@@ -366,6 +367,8 @@ object.__getattribute__ = function(obj, attr){
         throw $B.attr_error(attr, obj)
     }
 }
+*/
+
 
 object.__gt__ = function(){return _b_.NotImplemented}
 
@@ -645,7 +648,7 @@ object.tp_str = function(self){
     }
     // Default to __repr__
     var klass = $B.get_class(self)
-    var repr_func = $B.class_getattribute(klass, "__repr__")
+    var repr_func = $B.type_getattribute(klass, "__repr__")
     return $B.$call(repr_func)(...arguments)
 }
 
