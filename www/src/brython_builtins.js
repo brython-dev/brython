@@ -160,12 +160,14 @@ $B.NULL = {'null': true}
 _b_.object = {
     tp_name: 'object',
     tp_bases: [],
+    dict: Object.create(null)
 }
 _b_.object.tp_mro = [_b_.object]
 
 _b_.type = {
     tp_name: 'type',
     tp_bases: [_b_.object],
+    dict: Object.create(null)
 }
 
 _b_.object.ob_type = _b_.type
@@ -189,7 +191,7 @@ $B.make_builtin_class = function(tp_name, tp_bases){
         dict: Object.create(null)
     }
     if(tp_bases){
-        cls.tp_mro = [cls, tp_bases, _b_.object]
+        cls.tp_mro = [cls, ...tp_bases, _b_.object]
     }else{
         cls.tp_mro = [cls, _b_.object]
     }
@@ -202,7 +204,7 @@ for(var class_name of $B.builtin_classes){
 }
 
 // bool inherits int
-_b_.bool = $B.make_builtin_class('bool', _b_.int)
+_b_.bool = $B.make_builtin_class('bool', [_b_.int])
 
 $B.obj_dict = function(obj, exclude){
     var res = {
@@ -216,12 +218,14 @@ $B.obj_dict = function(obj, exclude){
 $B.set_class_attr = function(klass, attr, value, ob_type){
     if(ob_type){
         if(ob_type.$factory === undefined){
-            console.log('no factroy', ob_type)
+            console.log('no factory', ob_type)
         }
-        if(ob_type === $B.getset_descriptor){
-            value = ob_type.$factory(klass, attr)
-        }else{
-            value = ob_type.$factory(value, klass)
+        if(value !== _b_.None){
+            if(ob_type === $B.getset_descriptor){
+                value = ob_type.$factory(klass, attr)
+            }else{
+                value = ob_type.$factory(value, klass)
+            }
         }
     }
     klass.dict[attr] = value
@@ -229,11 +233,12 @@ $B.set_class_attr = function(klass, attr, value, ob_type){
 
 
 $B.make_class_dict = function(klass, methods){
+    console.log('make class dict', $B.get_name(klass))
     var test = klass.tp_name == 'mappingproxy'
     if(test){
         console.log('make class attrs of', klass)
     }
-    klass.dict = klass.dict ?? $B.obj_dict({})
+    klass.dict = Object.create(null)
     for(let attr in klass){
         if($B.wrapper_methods[attr]){
             // if klass.tp_iter is present, create entry klass.dict.__iter__
@@ -246,7 +251,7 @@ $B.make_class_dict = function(klass, methods){
             if(klass[method]){
                 $B.set_class_attr(klass, method, klass[method], cls)
             }else{
-                console.log('not implemented', method, 'for', klass.tp_name)
+                // console.log('not implemented', method, 'for', klass.tp_name)
             }
         }
     }
@@ -255,14 +260,36 @@ $B.make_class_dict = function(klass, methods){
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
+        tp_call: make_call,
+        tp_getattro: make_getattribute,
+        tp_hash: make_hash,
         tp_iter: make_iter,
         tp_iternext: make_next,
-        tp_repr: make_repr
+        tp_repr: make_repr,
+        tp_str : make_str
     }
 )
 
+function make_call(klass){
+    var call = klass.tp_call
+    call.ml = {ml_name: '__call__'}
+    klass.dict.__call__ = klass.tp_call
+}
+
+function make_getattribute(klass){
+    var getattribute = klass.tp_getattro
+    getattribute.ml = {ml_name: '__getattribute__'}
+    klass.dict.__getattribute__ = klass.tp_getattro
+}
+
+function make_hash(klass){
+    var hash = klass.tp_hash
+    hash.ml = {ml_name: '__hash__'}
+    klass.dict.__hash__ = klass.tp_hash
+}
+
 function make_iter(klass){
-    var iter = obj => klass.tp_iter(obj)
+    var iter = klass.tp_iter
     iter.ml = {ml_name: '__iter__'}
     klass.dict.__iter__ = iter
 }
@@ -280,11 +307,15 @@ function make_next(klass){
 }
 
 function make_repr(klass){
-    var repr = function(obj){
-        return klass.tp_repr(obj)
-    }
+    var repr = klass.tp_repr
     repr.ml = {ml_name: '__repr__'}
     klass.dict.__repr__ = repr
+}
+
+function make_str(klass){
+    var str = klass.tp_str
+    str.ml = {ml_name: '__str__'}
+    klass.dict.__str__ = str
 }
 
 // Set attributes of klass methods

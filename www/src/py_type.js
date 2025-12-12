@@ -432,22 +432,20 @@ $B.getset_descriptor.__repr__ = function(self){
 $B.set_func_names($B.getset_descriptor, "builtins")
 
 
-var wrapper_descriptor = $B.wrapper_descriptor = $B.make_class(
-    "wrapper_descriptor",
-    function(f, klass){
-        if(f.$function_infos === undefined){
-            console.log('no $function_infos', f)
-        }else{
-            var name = f.$function_infos[$B.func_attrs.__name__]
-            f.ml = {
-                ml_name: name
-            }
+var wrapper_descriptor = $B.wrapper_descriptor = $B.make_builtin_class("wrapper_descriptor")
+wrapper_descriptor.$factory = function(f, klass){
+    if(f.$function_infos === undefined){
+        console.log('no $function_infos', f)
+    }else{
+        var name = f.$function_infos[$B.func_attrs.__name__]
+        f.ml = {
+            ml_name: name
         }
-        f.ob_type = wrapper_descriptor
-        f.__objclass__ = klass
-        return f
     }
-)
+    f.ob_type = wrapper_descriptor
+    f.__objclass__ = klass
+    return f
+}
 
 wrapper_descriptor.__get__ = function(self, obj, klass){
     if(obj === _b_.None){
@@ -1345,7 +1343,8 @@ $B.set_func_names(type, "builtins")
 // Must do it after set_func_names to have $infos set
 type.__init_subclass__ = _b_.classmethod.$factory(type.__init_subclass__)
 
-_b_.type = type
+$B.make_class_dict(type, {})
+
 
 // property (built in function)
 var property = _b_.property = $B.make_class("property",
