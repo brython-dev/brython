@@ -31,7 +31,6 @@ Lookup by keys:
 */
 
 var _b_ = $B.builtins
-console.log('_b_.None.ob_type dans py_dict', _b_.None.ob_type)
 
 var set_ops = ["eq", "le", "lt", "ge", "gt",
     "sub", "rsub", "and", "rand", "or", "ror", "xor", "rxor"]

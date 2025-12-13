@@ -181,7 +181,22 @@ $B.builtin_classes = [
     "str", "super", "tuple", "zip"
 ]
 
-$B.created_classes = []
+$B.created_types = [_b_.object, _b_.type]
+
+$B.is_type = function(obj){
+    return obj.$is_type
+}
+
+$B._PyType_HasFeature = function(type, feature){
+    return type.tp_flags & feature != 0
+}
+
+$B.make_class_dict = function(klass, obj){
+    console.log('remove $B.make_class_dict for ', klass.tp_name ?? klass.__name__)
+    var stack = Error().stack
+    var lines = stack.split('\n')
+    console.log(lines[2])
+}
 
 $B.make_builtin_class = function(tp_name, tp_bases){
     var cls = {
@@ -195,7 +210,7 @@ $B.make_builtin_class = function(tp_name, tp_bases){
     }else{
         cls.tp_mro = [cls, _b_.object]
     }
-    $B.created_classes.push(cls)
+    $B.created_types.push(cls)
     return cls
 }
 
@@ -213,109 +228,6 @@ $B.obj_dict = function(obj, exclude){
         $exclude: exclude || function(){return false}
     }
     return res
-}
-
-$B.set_class_attr = function(klass, attr, value, ob_type){
-    if(ob_type){
-        if(ob_type.$factory === undefined){
-            console.log('no factory', ob_type)
-        }
-        if(value !== _b_.None){
-            if(ob_type === $B.getset_descriptor){
-                value = ob_type.$factory(klass, attr)
-            }else{
-                value = ob_type.$factory(value, klass)
-            }
-        }
-    }
-    klass.dict[attr] = value
-}
-
-
-$B.make_class_dict = function(klass, methods){
-    console.log('make class dict', $B.get_name(klass))
-    var test = klass.tp_name == 'mappingproxy'
-    if(test){
-        console.log('make class attrs of', klass)
-    }
-    klass.dict = Object.create(null)
-    for(let attr in klass){
-        if($B.wrapper_methods[attr]){
-            // if klass.tp_iter is present, create entry klass.dict.__iter__
-            $B.wrapper_methods[attr](klass)
-        }
-    }
-    for(var cls_name in methods){
-        var cls = $B[cls_name]
-        for(var method of methods[cls_name]){
-            if(klass[method]){
-                $B.set_class_attr(klass, method, klass[method], cls)
-            }else{
-                // console.log('not implemented', method, 'for', klass.tp_name)
-            }
-        }
-    }
-}
-
-$B.wrapper_methods = Object.create(null)
-Object.assign($B.wrapper_methods,
-    {
-        tp_call: make_call,
-        tp_getattro: make_getattribute,
-        tp_hash: make_hash,
-        tp_iter: make_iter,
-        tp_iternext: make_next,
-        tp_repr: make_repr,
-        tp_str : make_str
-    }
-)
-
-function make_call(klass){
-    var call = klass.tp_call
-    call.ml = {ml_name: '__call__'}
-    klass.dict.__call__ = klass.tp_call
-}
-
-function make_getattribute(klass){
-    var getattribute = klass.tp_getattro
-    getattribute.ml = {ml_name: '__getattribute__'}
-    klass.dict.__getattribute__ = klass.tp_getattro
-}
-
-function make_hash(klass){
-    var hash = klass.tp_hash
-    hash.ml = {ml_name: '__hash__'}
-    klass.dict.__hash__ = klass.tp_hash
-}
-
-function make_iter(klass){
-    var iter = klass.tp_iter
-    iter.ml = {ml_name: '__iter__'}
-    klass.dict.__iter__ = iter
-}
-
-function make_next(klass){
-    var next = function(obj){
-        var res = klass.tp_iternext(obj).next()
-        if(res.done){
-            $B.RAISE(__BRYTHON__.builtins.StopIteration)
-        }
-        return res.value
-    }
-    next.ml = {ml_name: '__next__'}
-    klass.dict.__next__ = next
-}
-
-function make_repr(klass){
-    var repr = klass.tp_repr
-    repr.ml = {ml_name: '__repr__'}
-    klass.dict.__repr__ = repr
-}
-
-function make_str(klass){
-    var str = klass.tp_str
-    str.ml = {ml_name: '__str__'}
-    klass.dict.__str__ = str
 }
 
 // Set attributes of klass methods
@@ -385,6 +297,50 @@ while(ix < minlen && short[ix] == long[ix]){
     ix++
 }
 $B.tz_name = long.substr(ix).trim()
+
+// flags for methods
+$B.METH_VARARGS = 0x0001
+$B.METH_KEYWORDS = 0x0002
+$B.METH_NOARGS = 0x0004
+$B.METH_O = 0x0008
+$B.METH_CLASS = 0x0010
+$B.METH_STATIC = 0x0020
+$B.METH_COEXIST = 0x0040
+$B.METH_FASTCALL = 0x0080
+$B.METH_METHOD = 0x0200
+
+// type flags, copied from CPython Include/object.h
+$B.TPFLAGS = {
+    STATIC_BUILTIN: 1 << 1,
+    INLINE_VALUES: 1 << 2,
+    MANAGED_WEAKREF: 1 << 3,
+    MANAGED_DICT: 1 << 4,
+    SEQUENCE: 1 << 5,
+    MAPPING: 1 << 6,
+    DISALLOW_INSTANTIATION: 1 << 7,
+    IMMUTABLETYPE: 1 << 8,
+    HEAPTYPE: 1 << 9,
+    BASETYPE: 1 << 10,
+    HAVE_VECTORCALL: 1 << 11,
+    READY: 1 << 12,
+    READYING: 1 << 13,
+    HAVE_GC: 1 << 14,
+    METHOD_DESCRIPTOR: 1 << 17,
+    IS_ABSTRACT:1 << 20,
+    MATCH_SELF: 1 << 22,
+    ITEMS_AT_END: 1 << 23,
+    LONG_SUBCLASS: 1 << 24,
+    LIST_SUBCLASS: 1 << 25,
+    TUPLE_SUBCLASS: 1 << 26,
+    BYTES_SUBCLASS: 1 << 27,
+    UNICODE_SUBCLASS: 1 << 28,
+    DICT_SUBCLASS: 1 << 29,
+    BASE_EXC_SUBCLASS: 1 << 30,
+    TYPE_SUBCLASS: 1 << 31,
+    HAVE_FINALIZE: 1 << 0,
+    HAVE_VERSION_TAG: 1 << 18
+}
+$B.TPFLAGS.PREHEADER = $B.TPFLAGS.MANAGED_WEAKREF | $B.TPFLAGS.MANAGED_DICT
 
 // compiler flags, used in libs/_ast.js and compile()
 $B.PyCF_ONLY_AST = 1024

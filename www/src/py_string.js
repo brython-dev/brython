@@ -2669,11 +2669,14 @@ str.$factory = function(arg, encoding){
         }
         var method = $B.type_getattribute(klass, '__str__', $B.NULL)
         if(method === $B.NULL){
+            console.log('__str__ is null, try __repr__')
             method = $B.type_getattribute(klass, '__repr__', $B.NULL)
         }
         if(method === $B.NULL){
             $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
         }
+        console.log('str of', arg, klass)
+        console.log('method', method, method.ob_type)
     }catch(err){
         console.log("no __str__ for", arg)
         console.log("err ", err)

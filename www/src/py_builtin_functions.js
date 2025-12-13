@@ -955,9 +955,10 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr, _default){
-    var test = false // attr == '__name__' // && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == '__getattribute__' // && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
+        console.log(Error().stack)
     }
     if(klass.dict){
         var v = klass.dict[attr]
@@ -1849,9 +1850,9 @@ $B.$isinstance = function(obj, cls){
         }
     }
     // Search __instancecheck__ on cls's class (ie its metaclass)
-    var instancecheck = $B.$getattr($B.get_class(cls),
-        '__instancecheck__', _b_.None)
-    if(instancecheck !== _b_.None){
+    var instancecheck = $B.search_in_mro($B.get_class(cls),
+        '__instancecheck__', $B.NULL)
+    if(instancecheck !== $B.NULL){
         return instancecheck(cls, obj)
     }
     return false
@@ -1889,10 +1890,9 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.$getattr($B.get_class(classinfo),
-        '__subclasscheck__', _b_.None)
+    var sch = $B.search_in_mro($B.get_class(classinfo), '__subclasscheck__', $B.NULL)
 
-    if(sch == _b_.None){
+    if(sch === $B.NULL){
         return false
     }
     return sch(classinfo, klass)
@@ -2074,8 +2074,6 @@ var len = _b_.len = function(obj){
     try{
         var method = $B.$getattr(klass, '__len__')
     }catch(err){
-        console.log('error getting len', err)
-        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "object of type '" +
             $B.class_name(obj) + "' has no len()")
     }

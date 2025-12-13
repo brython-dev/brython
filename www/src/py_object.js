@@ -6,15 +6,20 @@ var object = _b_.object
 
 // class object for the built-in class 'object'
 Object.assign(object,
-    {
-        __name__: 'object',
-        __qualname__: 'object',
-        $is_class: true,
-        $native: true,
-        dict: {},
-        tp_bases: [],
-    }
-)
+{
+    tp_basicsize: 16,
+    tp_itersize: 0,
+    tp_flags: 5378,
+    tp_weakrefoffset: 0,
+    tp_base: _b_.None,
+    tp_dictoffset: 0,
+    tp_doc: `The base class of the class hierarchy.
+
+When called, it accepts no arguments and returns a new featureless
+instance that has no instance attributes and cannot be given any.
+`,
+    tp_bases: [],
+})
 
 $B.make_class = function(qualname, factory){
     // Builds a basic class object
@@ -473,39 +478,6 @@ object.__ne__ = function(self, other){
     return _b_.NotImplemented
 }
 
-object.__reduce__ = function(self){
-    if(! self.__dict__){
-        $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(self)}' object`)
-    }
-    if($B.imported.copyreg === undefined){
-        $B.$import('copyreg')
-    }
-    var res = [$B.imported.copyreg._reconstructor]
-    var D = $B.get_class(self),
-        B = object
-    for(var klass of D.__mro__){
-        if(klass.__module__ == 'builtins'){
-            B = klass
-            break
-        }
-    }
-    var args = $B.$list([D, B])
-    if(B === object){
-        args.push(_b_.None)
-    }else{
-        args.push($B.$call(B)(self))
-    }
-
-    res.push($B.fast_tuple(args))
-    var d = $B.empty_dict()
-    for(var attr of _b_.dict.$keys_string(self.__dict__)){
-        _b_.dict.$setitem(d, attr,
-            _b_.dict.$getitem_string(self.__dict__, attr))
-    }
-    res.push(d)
-    return _b_.tuple.$factory(res)
-}
-
 function getNewArguments(self, klass){
     var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
     if(newargs_ex !== null){
@@ -545,64 +517,8 @@ function getNewArguments(self, klass){
     }
 }
 
-
-object.__reduce_ex__ = function(self, protocol){
-    var klass = $B.get_class(self)
-    if($B.imported.copyreg === undefined){
-        $B.$import('copyreg')
-    }
-    if(protocol < 2){
-        return $B.$call($B.imported.copyreg._reduce_ex)(self, protocol)
-    }
-
-    var reduce = $B.$getattr(klass, '__reduce__')
-
-    if(reduce !== object.__reduce__){
-        return $B.$call(reduce)(self)
-    }
-    var res = [$B.imported.copyreg.__newobj__]
-    var arg2 = [klass]
-    var newargs = getNewArguments(self, klass)
-    if(newargs){
-        arg2 = arg2.concat(newargs.args)
-    }
-    res.push($B.fast_tuple(arg2))
-    var getstate = $B.search_in_mro(klass, '__getstate__')
-    if(getstate){
-        var d = $B.$call(getstate)(self)
-    }else{
-        var d = $B.empty_dict(),
-            nb = 0
-        if(self.__dict__){
-            for(var item of _b_.dict.$iter_items(self.__dict__)){
-                if(item.key == "__class__" || item.key.startsWith("$")){
-                    continue
-                }
-                _b_.dict.$setitem(d, item.key, item.value)
-                nb++
-            }
-        }
-        if(nb == 0){
-            d = _b_.None
-        }
-    }
-    res.push(d)
-    var list_like_iterator = _b_.None
-    if($B.$getattr(klass, 'append', null) !== null &&
-            $B.$getattr(klass, 'extend', null) !== null){
-        list_like_iterator = _b_.iter(self)
-    }
-    res.push(list_like_iterator)
-    var key_value_iterator = _b_.None
-    if($B.$isinstance(self, _b_.dict)){
-        key_value_iterator = _b_.dict.items(self)
-    }
-    res.push(key_value_iterator)
-    return _b_.tuple.$factory(res)
-}
-
-object.__repr__ = function(self){
-    if(self === object) {return "<class 'object'>"}
+object.tp_repr = function(self){
+    console.log('object.__repr__', self)
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
@@ -674,6 +590,181 @@ object.$factory = function(){
 }
 
 $B.set_func_names(object, "builtins")
+
+function object_get_class(cls){
+    return cls.ob_type
+}
+
+function object_set_class(cls, new_cls){
+    if(value == $B.NULL){
+        $B.RAISE(_b_.TypeError,
+            "can't delete __class__ attribute")
+    }
+    var old_cls = $B.get_class(cls)
+    if(!($B.issubclass(new_cls, $B.module) &&
+          $B.issubclass(oldto, $B.module)) &&
+        ($B._PyType_HasFeature(newto, $B.TPFLAGS.IMMUTABLETYPE) ||
+         $B._PyType_HasFeature(oldto, $B.TPFLAGS.IMMUTABLETYPE))){
+            $B.RAISE(_b_.TypeError,
+                     "__class__ assignment only supported for mutable types " +
+                     "or ModuleType subclasses")
+    }
+    if(! $B.is_type(value)) {
+        $B.$RAISE(_b_.TypeError, "__class__ must be set to a class," +
+            ` not '${$B.class_name(value)}' object"`)
+    }
+    // XXX skip code in CPython Objects/typeobject/object_set_class_world_stopped
+    cls.ob_type = new_cls
+    return res;
+}
+
+object.tp_getset = [
+    ["__class__", object_get_class, object_set_class]
+]
+
+function object___reduce_ex__(cls){
+    var klass = $B.get_class(cls)
+    if($B.imported.copyreg === undefined){
+        $B.$import('copyreg')
+    }
+    if(protocol < 2){
+        return $B.$call($B.imported.copyreg._reduce_ex)(cls, protocol)
+    }
+
+    var reduce = $B.$getattr(klass, '__reduce__')
+
+    if(reduce !== object.__reduce__){
+        return $B.$call(reduce)(cls)
+    }
+    var res = [$B.imported.copyreg.__newobj__]
+    var arg2 = [klass]
+    var newargs = getNewArguments(cls, klass)
+    if(newargs){
+        arg2 = arg2.concat(newargs.args)
+    }
+    res.push($B.fast_tuple(arg2))
+    var getstate = $B.search_in_mro(klass, '__getstate__')
+    if(getstate){
+        var d = $B.$call(getstate)(cls)
+    }else{
+        var d = $B.empty_dict(),
+            nb = 0
+        if(cls.__dict__){
+            for(var item of _b_.dict.$iter_items(cls.__dict__)){
+                if(item.key == "__class__" || item.key.startsWith("$")){
+                    continue
+                }
+                _b_.dict.$setitem(d, item.key, item.value)
+                nb++
+            }
+        }
+        if(nb == 0){
+            d = _b_.None
+        }
+    }
+    res.push(d)
+    var list_like_iterator = _b_.None
+    if($B.$getattr(klass, 'append', null) !== null &&
+            $B.$getattr(klass, 'extend', null) !== null){
+        list_like_iterator = _b_.iter(cls)
+    }
+    res.push(list_like_iterator)
+    var key_value_iterator = _b_.None
+    if($B.$isinstance(cls, _b_.dict)){
+        key_value_iterator = _b_.dict.items(cls)
+    }
+    res.push(key_value_iterator)
+    return _b_.tuple.$factory(res)
+}
+
+function object___reduce__(cls){
+    if(! cls.__dict__){
+        $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
+    }
+    if($B.imported.copyreg === undefined){
+        $B.$import('copyreg')
+    }
+    var res = [$B.imported.copyreg._reconstructor]
+    var D = $B.get_class(cls),
+        B = object
+    for(var klass of D.__mro__){
+        if(klass.__module__ == 'builtins'){
+            B = klass
+            break
+        }
+    }
+    var args = $B.$list([D, B])
+    if(B === object){
+        args.push(_b_.None)
+    }else{
+        args.push($B.$call(B)(cls))
+    }
+
+    res.push($B.fast_tuple(args))
+    var d = $B.empty_dict()
+    for(var attr of _b_.dict.$keys_string(cls.__dict__)){
+        _b_.dict.$setitem(d, attr,
+            _b_.dict.$getitem_string(cls.__dict__, attr))
+    }
+    res.push(d)
+    return _b_.tuple.$factory(res)
+}
+function object___getstate__(klass){
+
+}
+function object_subclasshook(klass){
+    return _b_.NotImplemented
+}
+function object_init_subclass(klass){
+    return _b_.None
+}
+function object___format__(klass){
+
+}
+function object___sizeof__(klass){
+
+}
+function object___dir__(self){
+{
+    var result
+    var dict
+    var itsclass
+
+    /* Get __dict__ (which may or may not be a real dict...) */
+    dict = self.dict
+    if (dict == undefined) {
+        dict = $B.empty_dict()
+    }else if(! $B.$isinstance(dict, _b_.dict)){
+        dict = $B.empty_dict()
+    }else{
+        /* Copy __dict__ to avoid mutating it. */
+        var temp = _b_.dict.copy(dict)
+    }
+
+    if(dict == undefined)
+        $B.RAISE(_b_.ValueError, 'no __dir__')
+    }
+
+    /* Merge in attrs reachable from its class. */
+    itsclass = self.__class__
+    /* XXX(tomer): Perhaps fall back to Py_TYPE(obj) if no
+                   __class__ exists? */
+    if (itsclass != NULL){
+        merge_class_dict(dict, itsclass)
+    }
+    result = PyDict_Keys(dict);
+}
+
+object.tp_methods = [
+    ["__reduce_ex__", object___reduce_ex__, $B.METH_O],
+    ["__reduce__", object___reduce__, $B.METH_NOARGS],
+    ["__getstate__", object___getstate__, $B.METH_NOARGS],
+    ["__subclasshook__", object_subclasshook, $B.METH_CLASS | $B.METH_O],
+    ["__init_subclass__", object_init_subclass, $B.METH_CLASS | $B.METH_NOARGS],
+    ["__format__", object___format__, $B.METH_O],
+    ["__sizeof__", object___sizeof__, $B.METH_NOARGS],
+    ["__dir__", object___dir__, $B.METH_NOARGS]
+]
 
 _b_.object = object
 
