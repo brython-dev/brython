@@ -63,7 +63,7 @@ $B.ast_js_to_py = function(obj){
         var class_name = obj.constructor.$name,
             py_class = $B.python_ast_classes[class_name],
             py_ast_obj = {
-                __class__: py_class
+                ob_type: py_class
             }
         if(py_class === undefined){
             return obj
@@ -155,7 +155,7 @@ $B.create_python_ast_classes = function(){
                 var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
                         arguments, $B.clone($defaults), null, 'kw')
                 var res = {
-                    __class__: cls,
+                    ob_type: cls,
                     _attributes: $B.fast_tuple([])
                 }
                 for(let key in $){

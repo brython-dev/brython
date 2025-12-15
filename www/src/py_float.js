@@ -4,7 +4,7 @@
 var _b_ = $B.builtins
 
 function float_value(obj){
-    return obj.__class__ === float ? obj : fast_float(obj.value)
+    return obj.ob_type === float ? obj : fast_float(obj.value)
 }
 
 function copysign(x, y){
@@ -16,24 +16,18 @@ function copysign(x, y){
 }
 
 // dictionary for built-in class 'float'
-var float = {
-    __class__: _b_.type,
-    __dir__: _b_.object.__dir__,
-    __qualname__: 'float',
-    $is_class: true,
-    $native: true,
-    $descriptors: {
+var float = _b_.float
+float.$descriptors = {
         "numerator": true,
         "denominator": true,
         "imag": true,
         "real": true
     }
-}
 
 float.$float_value = float_value
 
 float.$to_js_number = function(self){
-    if(self.__class__ === float){
+    if($B.exact_type(self, float)){
         return self.value
     }else{
         return float.$to_js_number(self.value)
@@ -96,7 +90,7 @@ float.as_integer_ratio = function(self){
 }
 
 function check_self_is_float(x, method){
-    if(x.__class__ === _b_.float || $B.$isinstance(x, _b_.float)){
+    if($B.$isinstance(x, _b_.float)){
         return true
     }
     $B.RAISE(_b_.TypeError, `descriptor '${method}' requires a ` +
@@ -824,7 +818,7 @@ float.hex = function(self) {
     return "0x" + _s + "p" + _esign + _e
 }
 
-float.__init__ = function(){
+float.tp_init = function(){
     return _b_.None
 }
 
@@ -897,7 +891,7 @@ float.__mro__ = [_b_.object]
 
 float.__mul__ = function(self, other){
     if($B.$isinstance(other, _b_.int)){
-        if(other.__class__ == $B.long_int){
+        if($B.is_long_int(other)){
             return fast_float(self.value * parseFloat(other.value))
         }
         other = _b_.int.numerator(other)
@@ -918,14 +912,14 @@ float.__neg__ = function(self){
     return fast_float(-self.value)
 }
 
-float.__new__ = function(cls, value){
+float.tp_new = function(cls, value){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "float.__new__(): not enough arguments")
     }else if(! $B.$isinstance(cls, _b_.type)){
         $B.RAISE(_b_.TypeError, "float.__new__(X): X is not a type object")
     }
     return {
-        __class__: cls,
+        ob_type: cls,
         value: float.$factory(value).value
     }
 }
@@ -1010,7 +1004,7 @@ float.__pow__ = function(self, other){
     return _b_.NotImplemented
 }
 
-float.__repr__ = function(self){
+float.tp_repr = function(self){
     $B.builtins_repr_check(float, arguments) // in brython_builtins.js
     self = self.value
     if(self == Infinity){
@@ -1127,7 +1121,7 @@ float.$round = function(x, ndigits){
        }
        return $B.fast_float(res)
     }
-    if(ndigits.__class__ === $B.long_int){
+    if($B.exact_type(ndigits, $B.long_int)){
         ndigits = Number(ndigits.value)
     }
     // avoids parsing arguments
@@ -1179,8 +1173,8 @@ float.$round = function(x, ndigits){
     return fast_float(z);
 }
 
-float.__setattr__ = function(self, attr, value){
-    if(self.__class__ === float){
+float.tp_setattro = function(self, attr, value){
+    if($B.exact_type(self, float)){
         if(float[attr] === undefined){
             $B.RAISE_ATTRIBUTE_ERROR("'float' object has no attribute '" +
                 attr + "'", self, attr)
@@ -1218,7 +1212,7 @@ var op_func_body =
     if($B.$isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value - 1) : self
-        }else if(other.__class__ === $B.long_int){
+        }else if($B.is_long_int(other)){
             return _b_.float.$factory(self.value - parseInt(other.value))
         }else{
             return $B.fast_float(self.value - other)
@@ -1240,7 +1234,7 @@ var comp_func_body = `
 var $B = __BRYTHON__,
     _b_ = $B.builtins
 if($B.$isinstance(other, _b_.int)){
-    if(other.__class__ === $B.long_int){
+    if($B.is_long_int(other)){
         return self.value > parseInt(other.value)
     }
     return self.value > other.valueOf()
@@ -1318,7 +1312,10 @@ function to_digits(s){
 }
 
 const fast_float = $B.fast_float  = function(value){
-    return {__class__: _b_.float, value}
+    return {
+        ob_type: _b_.float,
+        value
+    }
 }
 
 
@@ -1340,7 +1337,7 @@ float.$factory = function(value){
     if(typeof value == "number"){
         return fast_float(value)
     }
-    if(value.__class__ === float){
+    if($B.exact_type(value, float)){
         return value
     }
 

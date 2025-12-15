@@ -1000,11 +1000,15 @@ $B.call_with_mro = function(obj, attr){
     var args = Array.from(arguments).slice(2)
     var obj_class = $B.get_class(obj)
     var in_mro = $B.search_in_mro(obj_class, attr)
+    console.log('attr', attr, 'obj', obj, 'in mro', in_mro, $B.get_class(in_mro))
     if(in_mro === undefined){
         $B.RAISE(_b_.AttributeError, `no attribute ${attr}`)
     }
     var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
+    console.log('getter', getter)
     if(getter){
+        var call_func = getter(in_mro, obj, obj_class)
+        console.log('call func', call_func, call_func.call)
         return $B.$call(getter(in_mro, obj, obj_class))(...args)
     }else{
         if(typeof in_mro !== 'function'){
@@ -2055,13 +2059,11 @@ var len = _b_.len = function(obj){
     check_nb_args_no_kw('len', 1, arguments)
 
     var klass = $B.get_class(obj)
-    try{
-        var method = $B.$getattr(klass, '__len__')
-    }catch(err){
+    var method = $B.search_in_mro(klass, '__len__', null)
+    if(method === null){
         $B.RAISE(_b_.TypeError, "object of type '" +
             $B.class_name(obj) + "' has no len()")
     }
-
     let res = $B.$call(method)(obj)
 
     if (!$B.$isinstance(res, _b_.int)) {

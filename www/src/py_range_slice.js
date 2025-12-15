@@ -3,21 +3,11 @@
 
 var _b_ = $B.builtins,
     None = _b_.None,
-    range = {
-        __class__: _b_.type,
-        __mro__: [_b_.object],
-        __qualname__: 'range',
-        $is_class: true,
-        $native: true,
-        $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
-        $is_sequence: true,
-        $not_basetype: true, // range cannot be a base class
-        $descriptors:{
-            start: true,
-            step: true,
-            stop: true
-        }
-    }
+    range = _b_.range
+
+range.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
+range.$is_sequence = true
+range.$not_basetype = true  // range cannot be a base class
 
 range.__contains__ = function(self, other){
     if(range.__len__(self) == 0){
@@ -128,25 +118,21 @@ range.__hash__ = function(self){
     return _b_.hash(_b_.tuple.$factory([len, self.start, self.step]))
 }
 
-var RangeIterator = $B.make_class("range_iterator",
-    function(obj){
-        return {__class__: RangeIterator, obj: obj}
-    }
-)
+var RangeIterator = $B.make_builtin_class("range_iterator")
 
-RangeIterator.__iter__ = function(self){
+RangeIterator.tp_iter = function(self){
     return self
 }
 
-RangeIterator.__next__ = function(self){
+RangeIterator.tp_iternext = function(self){
     return _b_.next(self.obj)
 }
 
 $B.set_func_names(RangeIterator, "builtins")
 
-range.__iter__ = function(self){
+range.tp_iter = function(self){
     var res = {
-        __class__ : range,
+        ob_type : range,
         start: self.start,
         stop: self.stop,
         step: self.step
@@ -156,10 +142,13 @@ range.__iter__ = function(self){
     }else{
         res.$counter = $B.rich_op('__sub__', self.start, self.step)
     }
-    return RangeIterator.$factory(res)
+    return {
+        ob_type: RangeIterator,
+        obj: self
+    }
 }
 
-range.__len__ = function(self){
+range.sq_length = function(self){
     var len,
         start = _b_.int.$to_bigint(self.start),
         stop = _b_.int.$to_bigint(self.stop),
@@ -299,7 +288,8 @@ range.$factory = function(){
         }
         stop = $B.PyNumber_Index(start)
         safe = typeof stop === "number"
-        return{__class__: range,
+        return{
+            ob_type: range,
             start: 0,
             stop: stop,
             step: 1,
@@ -316,7 +306,8 @@ range.$factory = function(){
     }
     safe = (typeof start == "number" && typeof stop == "number" &&
         typeof step == "number")
-    return {__class__: range,
+    return {
+        ob_type: range,
         start: start,
         stop: stop,
         step: step,
@@ -328,19 +319,9 @@ range.$factory = function(){
 $B.set_func_names(range, "builtins")
 
 // slice
-var slice = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'slice',
-    $is_class: true,
-    $native: true,
-    $not_basetype: true, // slice cannot be a base class
-    $descriptors: {
-        start: true,
-        step: true,
-        stop: true
-    }
-}
+var slice = _b_.slice
+
+slice.$not_basetype = true // slice cannot be a base class
 
 slice.__eq__ = function(self, other){
     var conv1 = conv_slice(self),
@@ -350,13 +331,13 @@ slice.__eq__ = function(self, other){
         conv1[2] == conv2[2]
 }
 
-slice.__repr__ = function(self){
+slice.tp_repr = function(self){
     $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
     return "slice(" + _b_.str.$factory(self.start) + ", " +
         _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }
 
-slice.__setattr__ = function(self, attr){
+slice.tp_setattro = function(self, attr){
     $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, attr)
 }
 
@@ -459,7 +440,12 @@ slice.indices = function(self){
 }
 
 slice.$fast_slice = function(start, stop, step){
-    return {__class__: _b_.slice, start, stop, step}
+    return {
+        ob_type: _b_.slice,
+        start,
+        stop,
+        step
+    }
 }
 
 slice.$factory = function(){
@@ -479,7 +465,7 @@ slice.$fast_slice = function(start, stop, step){
     }
 
     var res = {
-        __class__ : slice,
+        ob_type: slice,
         start: start,
         stop: stop,
         step: step
@@ -489,8 +475,5 @@ slice.$fast_slice = function(start, stop, step){
 }
 
 $B.set_func_names(slice, "builtins")
-
-_b_.range = range
-_b_.slice = slice
 
 })(__BRYTHON__);

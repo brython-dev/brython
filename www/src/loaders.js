@@ -431,7 +431,7 @@ var loop = $B.loop = function(){
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
-            if(err.__class__ === undefined){
+            if(err.ob_type === undefined){
                 if(err.$py_exc){
                     err = err.$py_exc
                 }else{

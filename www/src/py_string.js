@@ -47,7 +47,7 @@ $B.String = function(s){
 
 $B.make_String = function(s, surrogates){
     var res = new String(s)
-    res.__class__ = str
+    res.ob_type = str
     res.surrogates = surrogates
     return res
 }
@@ -86,7 +86,7 @@ function to_string(args){
         }
         return args
     }else{
-        if(args.__class__ && ! (args instanceof String)){
+        if(args.ob_type && ! (args instanceof String)){
             return args.$brython_value
         }else{
             return args
@@ -94,14 +94,8 @@ function to_string(args){
     }
 }
 
-var str = {
-    __class__: _b_.type,
-    __dir__: _b_.object.__dir__,
-    __qualname__: 'str',
-    $is_class: true,
-    $is_sequence: true,
-    $native: true
-}
+var str = _b_.str
+str.$is_sequence = true
 
 str.$to_string = to_string
 
@@ -320,39 +314,33 @@ str.__hash__ = function(_self){
     return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 }
 
-str.__init__ = function(){
+str.tp_init = function(){
     // no-op
     return _b_.None
 }
 
-var str_iterator = $B.make_class("str_iterator",
-    function(s){
-        return {
-            __class__: str_iterator,
-            it: s[Symbol.iterator]()
-        }
-    }
-)
+var str_iterator = $B.make_builtin_class("str_iterator")
 
-str_iterator.__iter__ = function(_self){
-    return _self
+str_iterator.tp_iter = function(self){
+    return self
 }
 
-str_iterator.__next__ = function(_self){
-    var res = _self.it.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
+str_iterator._tp_iternext = function*(self){
+    for(var char of self.it){
+        yield char
     }
-    return res.value
 }
 
 $B.set_func_names(str_iterator, 'builtins')
 
-str.__iter__ = function(_self){
-    return str_iterator.$factory(_self)
+str.tp_iter = function(_self){
+    return {
+        ob_type: str_iterator,
+        it: s[Symbol.iterator]()
+    }
 }
 
-str.__len__ = function(_self){
+str.sq_length = function(_self){
     _self = to_string(_self)
     if(_self.surrogates === undefined){
         return _self.length
@@ -412,7 +400,7 @@ var format_int_precision = function(val, flags){
         $B.RAISE(_b_.OverflowError, 'precision too large')
     }
     var s
-    if(val.__class__ === $B.long_int){
+    if($B.exact_type(val, $B.long_int)){
        s = $B.long_int.to_base(val, 10)
     }else{
        s = val.toString()
@@ -723,7 +711,7 @@ var signed_hex_format = function(val, upper, flags){
         val = val ? 1 : 0
     }
 
-    if(val.__class__ === $B.long_int){
+    if($B.exact_type(val, $B.long_int)){
        ret = val.value.toString(16)
     }else{
        ret = parseInt(val)
@@ -758,7 +746,7 @@ var octal_format = function(val, flags) {
     number_check(val, flags)
     var ret
 
-    if(val.__class__ === $B.long_int){
+    if($B.exact_type(val, $B.long_int)){
         ret = $B.long_int.to_base(8)
     }else{
         ret = parseInt(val)
@@ -786,14 +774,14 @@ var octal_format = function(val, flags) {
 }
 
 function series_of_bytes(val, flags){
-    if(val.__class__ && val.__class__.$buffer_protocol){
+    if($B.get_class(val).$buffer_protocol){
         var it = _b_.iter(val),
             ints = []
         while(true){
             try{
                 ints.push(_b_.next(it))
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
+                if($B.is_exc(err, _b_.StopIteration)){
                     var b = _b_.bytes.$factory(ints)
                     return format_padding(_b_.bytes.decode(b, "ascii"), flags)
                 }
@@ -805,7 +793,7 @@ function series_of_bytes(val, flags){
             var bytes_obj = $B.$getattr(val, "__bytes__")()
             return format_padding(_b_.bytes.decode(bytes_obj), flags)
         }catch(err){
-            if(err.__class__ === _b_.AttributeError){
+            if($B.is_exc(err, _b_.AttributeError)){
                 $B.RAISE(_b_.TypeError, "%b does not accept '" +
                     $B.class_name(val) + "'")
             }
@@ -817,7 +805,7 @@ function series_of_bytes(val, flags){
 var single_char_format = function(val, flags, type){
     if(type == 'bytes'){
         if($B.$isinstance(val, _b_.int)){
-            if(val.__class__ === $B.long_int || val < 0 || val > 255){
+            if($B.exact_type(val, $B.long_int) || val < 0 || val > 255){
                 $B.RAISE(_b_.OverflowError, "%c arg not in range(256)")
             }
         }else if($B.$isinstance(val, [_b_.bytes, _b_.bytearray])){
@@ -836,7 +824,7 @@ var single_char_format = function(val, flags, type){
         }else if(! $B.$isinstance(val, _b_.int)){
             $B.RAISE(_b_.TypeError, "%c requires int or char")
         }
-        if((val.__class__ === $B.long_int &&
+        if(($B.exact_type(val, $B.long_int) &&
                 (val.value < 0 || val.value >= 0x110000)) ||
                 (val < 0 || val >= 0x110000)){
             $B.RAISE(_b_.OverflowError, '%c arg not in range(0x110000)')
@@ -1136,14 +1124,14 @@ str.__new__ = function(cls, value){
         return value
     }else{
         return {
-            __class__: cls,
+            ob_type: cls,
             $brython_value: str.$factory(value),
-            __dict__: $B.empty_dict()
-            }
+            dict: $B.empty_dict()
+        }
     }
 }
 
-str.__repr__ = function(_self){
+str.tp_repr = function(_self){
     // special cases
     _self = to_string(_self)
     var t = $B.special_string_repr, // in brython_builtins.js
@@ -1233,7 +1221,7 @@ for(var cp = 0x300; cp <= 0x36F; cp++){
 }
 var combining_re = new RegExp("(" + combining.join("|") + ")", "g")
 
-str.__str__ = function(_self){
+str.tp_str = function(_self){
     _self = to_string(_self)
     var repl = '',
         chars = to_chars(_self)
@@ -1414,7 +1402,7 @@ str.endswith = function(){
             $B.RAISE(_b_.TypeError,
                 "endswith first arg must be str or a tuple of str, not int")
         }
-        suffix = suffix.__class__ ? suffix.$brython_value : suffix
+        suffix = suffix.ob_type ? suffix.$brython_value : suffix
         if(suffix.length <= s.length &&
                 s.slice(s.length - suffix.length).join('') == suffix){
             return true
@@ -1734,7 +1722,7 @@ str.format = function(){
         // Call attribute __format__ to perform the actual formatting
         if(value.$is_class || value.$factory){
             // For classes, don't use the class __format__ method
-            res += value.__class__.__format__(value, fmt.spec)
+            res += $B.get_class(value).__format__(value, fmt.spec)
         }else{
             res += $B.$getattr(value, "__format__")(fmt.spec)
         }
@@ -2204,9 +2192,9 @@ str.replace = function(){
     if(count == 0){
         return _self
     }
-    if(count.__class__ == $B.long_int){
+    if($B.exact_type(count, $B.long_int)){
         count = parseInt(count.value)
-    }
+    };
     [old, _new] = to_string([old, _new])
     var elts
     if(old == ""){
@@ -2378,7 +2366,7 @@ str.split = function(){
         sep = $.sep,
         pos = 0,
         _self = to_string($.self)
-    if(maxsplit.__class__ === $B.long_int){
+    if($B.exact_type(maxsplit, $B.long_int)){
         maxsplit = parseInt(maxsplit.value)
     }
     if(sep == ""){
@@ -2458,7 +2446,7 @@ str.splitlines = function() {
                     null, null)
     if(!$B.$isinstance($.keepends, [_b_.bool, _b_.int])){
         throw _b_.TypeError('integer argument expected, got '+
-            $B.get_class($.keepends).__name)
+            $B.class_name($.keepends))
     }
     var keepends = _b_.int.$factory($.keepends),
         res = $B.$list([]),
@@ -2655,8 +2643,7 @@ str.$factory = function(arg, encoding){
     }
 
     try{
-        if(arg.__class__ && arg.__class__ === _b_.bytes &&
-                encoding !== undefined){
+        if($B.exact_type(arg, _b_.bytes) && encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
             // bytes.decode(encoding, errors)
             return _b_.bytes.decode(arg, encoding, errors)
@@ -3142,7 +3129,7 @@ $B.jsstring2codepoint = function(c){
 var Interpolation = $B.make_class('Interpolation',
     function(value, expression, conversion, format_spec){
         return {
-            __class__: Interpolation,
+            ob_type: Interpolation,
             value,
             expression,
             conversion,
@@ -3184,7 +3171,7 @@ var Template = $B.make_class('Template', function(){
         strings.push('')
     }
     return {
-        __class__: Template,
+        ob_type: Template,
         strings,
         interpolations
     }

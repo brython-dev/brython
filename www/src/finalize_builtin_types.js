@@ -49,6 +49,7 @@ $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
         mp_length: make_mapping_len,
+        nb_add: make_add,
         sq_length: make_seq_length,
         tp_call: make_call,
         tp_getattro: make_getattribute,
@@ -62,6 +63,23 @@ Object.assign($B.wrapper_methods,
         tp_richcompare: make_richcompare
     }
 )
+
+function make_add(cls){
+    var add = cls.nb_add
+    add.ml = {ml_name: '__add__'}
+    cls.dict.__add__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__add__',
+        add
+    )
+    var radd = (x, y) => add(y, x)
+    radd.ml = {ml_name: '__radd__'}
+    cls.dict.__radd__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__radd__',
+        radd
+    )
+}
 
 function make_call(cls){
     var call = cls.tp_call
@@ -107,6 +125,7 @@ function make_iter(cls){
 
 function make_mapping_len(cls){
     var len = cls.mp_length
+    len.ml = {ml_name: '__len__'}
     cls.dict.__len__ = $B.wrapper_descriptor.$factory(
         cls,
         '__len__',
@@ -223,4 +242,6 @@ for(var ns of [_b_, $B.created_types]){
     }
 }
 
+
+console.log($B.get_class([1, 'a']))
 })(__BRYTHON__)

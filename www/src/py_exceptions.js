@@ -30,6 +30,7 @@ $B.set_exc = function(exc, frame){
 }
 
 $B.set_exc_and_trace = function(frame, exc){
+    console.log('set exc', exc.ob_type)
     $B.set_exc(exc, frame)
     if((! exc.$in_trace_func) && frame.$f_trace !== _b_.None){
         frame.$f_trace = $B.trace_exception()
@@ -66,7 +67,7 @@ $B.$raise = function(arg, cause){
         $B.RAISE(_b_.RuntimeError, "No active exception to reraise")
     }else{
         if($B.$isinstance(arg, _b_.BaseException)){
-            if(arg.__class__ === _b_.StopIteration &&
+            if($B.is_exc(arg, _b_.StopIteration) &&
                     $B.frame_obj.frame.$is_generator){
                 // PEP 479
                 arg = $B.EXC(_b_.RuntimeError, "generator raised StopIteration")
@@ -148,7 +149,7 @@ var make_tb = $B.make_tb = function(frames_list){
     }
     var _frame = frames_list.pop()
     var res = {
-        __class__: traceback,
+        ob_type: traceback,
         tb_frame: frame.$factory(_frame),
         tb_lineno: _frame.$lineno,
         tb_lasti: _frame.inum ?? -1,
@@ -168,7 +169,7 @@ $B.set_func_names(traceback, "builtins")
 // class of frame objects
 var frame = $B.frame
 frame.$factory = function(frame_list){
-    frame_list.__class__ = frame
+    frame_list.ob_type = frame
     return frame_list
 }
 
@@ -260,10 +261,10 @@ frame.f_code = $B.getset_descriptor.$factory(
             res.co_qualname = res.co_name // XXX
             positions = _self.positions ?? positions
         }
-        res.__class__ = _b_.code
+        res.ob_type = _b_.code
         positions = positions.map($B.decode_position)
         res.co_positions = () => $B.$list(positions)
-        res.co_positions.__class__ = $B.function
+        res.co_positions.ob_type = $B.function
         return res
     }
 )
@@ -355,6 +356,7 @@ $B.exception = function(js_exc){
     // or by the Javascript interpreter (ReferenceError for instance)
     var exc
     var klass = $B.get_class(js_exc)
+    console.log('$B.exception, js_exc', js_exc, klass)
     if(klass === $B.JSObject){
         if(js_exc.$py_exc){
             // when the JS exception is handled in a frame above, return the
@@ -383,6 +385,7 @@ $B.exception = function(js_exc){
         exc = js_exc
     }
     exc.__traceback__ = exc.__traceback__ ?? traceback.$factory(exc)
+    console.log('$B.exception returns', exc)
     return exc
 }
 
@@ -393,6 +396,9 @@ $B.is_exc = function(exc, exc_list){
         exc = $B.exception(exc)
     }
 
+    if(! Array.isArray(exc_list)){
+        exc_list = [exc_list]
+    }
     var this_exc_class = exc.$is_class ? exc : $B.get_class(exc)
     for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]
@@ -457,33 +463,8 @@ function make_builtin_exception(exc_name, base, set_value){
         }
         return
     }
-    var exc_class = $B.make_class(exc_name)
-    /*,
-        function(){
-            var err = Error()
-            err.args = $B.fast_tuple(Array.from(arguments))
-            err.__class__ = exc_class
-            err.__traceback__ = _b_.None
-            err.$py_error = true
-
-            if(set_value){
-                if(typeof set_value == 'string'){
-                    err[set_value] = arguments[0] || _b_.None
-                }else if(typeof set_value == 'function'){
-                    set_value(err, arguments)
-                }
-            }
-            err.__cause__ = _b_.None // XXX fix me
-            err.__context__ = _b_.None // XXX fix me
-            err.__suppress_context__ = false // XXX fix me
-            return err
-        }
-    )
-    */
-    exc_class.tp_bases = [base]
-    exc_class.__mro__ = _b_.type.$mro(exc_class).slice(1)
+    var exc_class = $B.make_builtin_class(exc_name, [base])
     $B.set_func_names(exc_class, 'builtins')
-    _b_[exc_name] = exc_class
 }
 
 /* make_builtin_exception("BaseException", _b_.object) */
@@ -506,8 +487,8 @@ _b_.BaseException.tp_init = function(){
     $.self.args = $B.fast_tuple($.args)
 }
 
-_b_.BaseException.__repr__ = function(self){
-    var res =  self.__class__.__name__ + '('
+_b_.BaseException.tp_repr = function(self){
+    var res =  $B.get_name($B.get_class(self)) + '('
     if(self.args[0] !== undefined){
         res += _b_.repr(self.args[0])
     }
@@ -517,19 +498,18 @@ _b_.BaseException.__repr__ = function(self){
     return res + ')'
 }
 
-_b_.BaseException.__str__ = function(self){
+_b_.BaseException.tp_repr = function(self){
     if(self.args.length > 0 && self.args[0] !== _b_.None){
         return _b_.str.$factory(self.args[0])
     }
     return ''
 }
 
-_b_.BaseException.__new__ = function(cls){
+_b_.BaseException.tp_new = function(cls){
     var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw')
     var res = {
-        __class__: $.cls,
         ob_type: $.cls,
-        __dict__: $B.empty_dict(),
+        dict: $B.empty_dict(),
         args: $B.fast_tuple($.args),
         notes: _b_.None,
         __traceback__: _b_.None,
@@ -540,7 +520,7 @@ _b_.BaseException.__new__ = function(cls){
     return res
 }
 
-_b_.BaseException.__getattr__ = function(self, attr){
+_b_.BaseException.tp_getattro = function(self, attr){
     switch(attr){
         case '__context__':
             var frame = $B.frame_obj.frame,
@@ -591,11 +571,11 @@ make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
 make_builtin_exception("StopIteration", _b_.Exception)
 */
 
-_b_.StopIteration.__init__ = function(){
+_b_.StopIteration.tp_init = function(){
     var $ = $B.args("StopIteration", 1, {self: null},
                 ['self'], arguments, {}, 'args', 'kw')
     check_no_keywords($.self, $.kw)
-    _b_.BaseException.__init__($.self, ...$.args)
+    _b_.BaseException.tp_init($.self, ...$.args)
     if($.args.length > 0){
         $.self.value = $.args[0]
     }
@@ -619,10 +599,10 @@ make_builtin_exception("StopAsyncIteration", _b_.Exception)
 make_builtin_exception("ImportError", _b_.Exception)
 */
 
-_b_.ImportError.__init__ = function(){
+_b_.ImportError.tp_init = function(){
     var $ = $B.args("ImportError", 1, {self: null},
                 ['self'], arguments, {}, 'args', 'kw')
-    _b_.BaseException.__init__($.self, ...$.args)
+    _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name', 'path'], $.kw)
 }
 
@@ -630,7 +610,7 @@ $B.set_func_names(_b_.ImportError, 'builtins')
 
 /* make_builtin_exception("SyntaxError", _b_.Exception) */
 
-_b_.SyntaxError.__init__ = function(){
+_b_.SyntaxError.tp_init = function(){
     var $ = $B.args('SyntaxError', 1, {self: null},
                 ['self'], arguments, {}, 'args', 'kw')
     var _self = $.self,
@@ -716,11 +696,11 @@ _b_.WindowsError = _b_.OSError
 _b_.IOError = _b_.OSError
 
 // special case for KeyError.__str__ (cf. issue #2582)
-_b_.KeyError.__str__ = function(self){
+_b_.KeyError.tp_repr = function(self){
     if(self.args.length == 1){
         return _b_.repr(self.args[0])
     }
-    return _b_.BaseException.__str__(self)
+    return _b_.BaseException.tp_repr(self)
 }
 
 $B.set_func_names(_b_.KeyError, 'builtins')
@@ -770,18 +750,14 @@ $B.attr_error = function(name, obj){
 }
 
 // NameError supports keyword-only "name" parameter
-// _b_.NameError = $B.make_class('NameError')
 
-_b_.NameError.tp_bases = [_b_.Exception]
-_b_.NameError.__mro__ = _b_.type.$mro(_b_.NameError).slice(1)
-
-_b_.NameError.__init__ = function(){
+_b_.NameError.tp_init = function(){
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
-    _b_.BaseException.__init__($.self, ...$.args)
+    _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name'], $.kw)
 }
 
-_b_.NameError.__str__ = function(self){
+_b_.NameError.tp_repr = function(self){
     return self.args[0]
 }
 
@@ -789,7 +765,7 @@ $B.set_func_names(_b_.NameError, 'builtins')
 
 /* make_builtin_exception("UnboundLocalError", _b_.NameError) */
 
-_b_.UnboundLocalError.__str__ = function(self){
+_b_.UnboundLocalError.tp_repr = function(self){
     return self.args[0]
 }
 
@@ -908,13 +884,9 @@ _b_.BaseExceptionGroup.__new__ = function(){
     return exc
 }
 
-_b_.BaseExceptionGroup.tp_bases = [_b_.BaseException]
-
 _b_.BaseExceptionGroup.__class_getitem__ = $B.$class_getitem
 
-_b_.BaseExceptionGroup.__mro__ = _b_.type.$mro(_b_.BaseExceptionGroup)
-
-_b_.BaseExceptionGroup.__str__ = function(self){
+_b_.BaseExceptionGroup.tp_repr = function(self){
     return `${self.message} (${self.exceptions.length} sub-exception` +
         `${self.exceptions.length > 1 ? 's' : ''})`
 }
@@ -980,7 +952,7 @@ _b_.ExceptionGroup.factory = function(){
                     null, null)
     var err = Error()
     err.args = $B.fast_tuple(Array.from(arguments))
-    err.__class__ = _b_.ExceptionGroup
+    err.ob_type = _b_.ExceptionGroup
     err.__traceback__ = _b_.None
     err.$py_error = true
 
@@ -1005,10 +977,6 @@ _b_.ExceptionGroup.factory = function(){
     err.__suppress_context__ = false // XXX fix me
     return err
 }
-
-_b_.ExceptionGroup.tp_bases = [_b_.BaseExceptionGroup, _b_.Exception]
-_b_.ExceptionGroup.tp_mro = _b_.type.$mro(_b_.ExceptionGroup)
-
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
@@ -1256,7 +1224,7 @@ function trace_from_stack(err){
         count_repeats = 0,
         tb = err.__traceback__
 
-    var is_syntax_error = $B.is_exc(err, [_b_.SyntaxError])
+    var is_syntax_error = $B.is_exc(err, _b_.SyntaxError)
     while(tb !== _b_.None){
         let frame = tb.tb_frame,
             lineno = tb.tb_lineno,
@@ -1432,7 +1400,7 @@ function _find_keyword_typos(err){
                     var _ast = $B._PyPegen.run_parser(parser)
                     found = true
                 }catch(err){
-                    if($B.is_exc(err, [_b_._IncompleteInputError])){
+                    if($B.is_exc(err, _b_._IncompleteInputError)){
                         found = true
                     }
                 }
@@ -1449,19 +1417,19 @@ function _find_keyword_typos(err){
 }
 
 $B.error_trace = function(err){
+    console.log('error trace', err.ob_type)
     var trace = '',
         has_stack = err.__traceback__ !== _b_.None
 
     var debug = $B.get_option('debug', err)
     if(debug > 1){
-        console.log("handle error", err.__class__, err.args, err.__traceback__)
+        console.log("handle error", $B.get_class(err), err.args, err.__traceback__)
     }
 
     if(has_stack){
         trace = 'Traceback (most recent call last):\n'
     }
-    if(err.__class__ === _b_.SyntaxError ||
-            err.__class__ === _b_.IndentationError){
+    if($B.is_exc(err, [_b_.SyntaxError, _b_.IndentationError])){
         trace += trace_from_stack(err)
         if(err.args.length > 0){
             var filename = err.filename,
@@ -1472,7 +1440,7 @@ $B.error_trace = function(err){
                              `    ${line.trim()}\n`
             }
         }
-        if(err.__class__ !== _b_.IndentationError &&
+        if(! $B.is_exc(err, _b_.IndentationError) &&
                 err.text && err.text !== _b_.None){
             if(err._metadata){
                 _find_keyword_typos(err)
@@ -1504,13 +1472,13 @@ $B.error_trace = function(err){
             trace += marks
         }
 
-        trace += `${err.__class__.__name__}: ${err.args[0] ?? '<no detail available>'}`
-    }else if(err.__class__ !== undefined){
+        trace += `${$B.get_name($B.get_class(err))}: ${err.args[0] ?? '<no detail available>'}`
+    }else if($B.get_class(err) !== $B.JSObj){
         var name = $B.class_name(err)
         trace += trace_from_stack(err)
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
-        if(err.__class__ === _b_.NameError){
+        if($B.is_exc(err, _b_.NameError)){
             let suggestion = $B.offer_suggestions_for_name_error(err)
             if(suggestion !== _b_.None && suggestion !== err.name){
                 trace += `. Did you mean: '${suggestion}'?`
@@ -1519,13 +1487,13 @@ $B.error_trace = function(err){
                 // new in 3.12
                 trace += `. Did you forget to import '${err.name}'?`
             }
-        }else if(err.__class__ === _b_.AttributeError){
+        }else if($B.is_exc(err, _b_.AttributeError)){
             console.log('attriute error stack', err.__traceback__)
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
             if(suggestion !== _b_.None){
                 trace += `. Did you mean: '${suggestion}'?`
             }
-        }else if(err.__class__ === _b_.ImportError){
+        }else if($B.is_exc(err, _b_.ImportError)){
             if(err.$suggestion !== _b_.None){
                 trace += `. Did you mean: '${err.$suggestion}'?`
             }

@@ -4,7 +4,7 @@
 
 var _b_ = $B.builtins
 
-var coroutine = $B.coroutine = $B.make_class("coroutine")
+var coroutine = $B.coroutine = $B.make_builtin_class("coroutine")
 
 coroutine.close = function(self){
     self.$sent = true // avoids RuntimeWarning
@@ -35,7 +35,7 @@ coroutine.send = function(self){
     return res
 }
 
-coroutine.__repr__ = coroutine.__str__ = function(self){
+coroutine.tp_repr = function(self){
     if(self.$func.$function_infos){
         return "<coroutine " + self.$func.$function_infos[$B.func_attrs.name] + ">"
     }else{
@@ -52,7 +52,7 @@ $B.make_async = func => {
     var f = function(){
         var args = arguments
         var res = {
-            __class__: coroutine,
+            ob_type: coroutine,
             $args: args,
             $func: func
         }
@@ -73,7 +73,7 @@ $B.make_async = func => {
 // "x = await coro" is translated into "x = await $B.promise(coro)"
 
 $B.promise = function(obj){
-    if(obj.__class__ === coroutine){
+    if($B.exact_type(obj, coroutine)){
         // store current frames stack, to be able to restore it when the
         // promise resolves
         obj.$frame_obj = $B.frame_obj

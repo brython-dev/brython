@@ -1124,7 +1124,7 @@ function _build_concatenated_str(p, strings){
 
                    u"abc" "def" -> u"abcdef"
                    "abc" u"abc" ->  "abcabc" */
-                var kind = elem.__class__
+                var kind = $B.get_class(elem)
 
                 var concat_str = ''
                 var last_elem = elem;
@@ -1242,7 +1242,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             state = 'string'
         }else{
             items.push(string)
-            var is_bytes = string.value.__class__ === _b_.bytes
+            var is_bytes = $B.exact_type(string.value, _b_.bytes)
             if((is_bytes && state == 'string') ||
                     (state == 'bytestring' && ! is_bytes)){
                 error('cannot mix bytes and nonbytes literals')
@@ -1341,7 +1341,7 @@ $B._PyPegen.register_stmts = function(p, stmts){
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) ||
-            exp.value.__class__ != _b_.complex) {
+            ! $B.exact_type(exp.value, _b_.complex)){
         $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
             "imaginary number required in complex literal");
         return NULL

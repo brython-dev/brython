@@ -32,7 +32,7 @@ $B.pattern_match = function(subject, pattern){
             deque = $B.imported['collections'].deque
         }
         let supported = false
-        let klass = subject.__class__ || $B.get_class(subject)
+        let klass = $B.get_class(subject)
         for(let base of [klass].concat(klass.tp_bases || [])){
             if(base.$match_sequence_pattern){
                 // set for builtin classes list, tuple, range, memoryview
@@ -155,7 +155,7 @@ $B.pattern_match = function(subject, pattern){
         if($B.imported['collections.abc']){
             Mapping = $B.imported['collections.abc'].Mapping
         }
-        let klass = subject.__class__ || $B.get_class(subject)
+        let klass = $B.get_class(subject)
         for(let base of [klass].concat(klass.tp_bases || [])){
             // $match_mapping_pattern is set for dict and mappingproxy
             if(base.$match_mapping_pattern || base === Mapping){
@@ -196,7 +196,7 @@ $B.pattern_match = function(subject, pattern){
             let missing = $B.make_class('missing',
                 function(){
                     return {
-                        __class__: missing
+                        ob_type: missing
                     }
                 }
             )

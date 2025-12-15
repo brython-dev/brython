@@ -288,6 +288,10 @@ $B.is_type = function(obj){
     return obj.$is_type
 }
 
+$B.is_long_int = function(obj){
+    return $B.get_class(obj) === $B.long_int
+}
+
 $B._PyType_HasFeature = function(type, feature){
     return type.tp_flags & feature != 0
 }

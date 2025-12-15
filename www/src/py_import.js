@@ -51,7 +51,7 @@ Module.__dir__ = function(self){
 
 Module.__new__ = function(cls, name, doc, $package){
     return {
-        __class__: cls,
+        ob_type: cls,
         __builtins__: _b_.__builtins__,
         __name__: name,
         __doc__: doc || _b_.None,
@@ -225,7 +225,7 @@ $B.addToImported = function(name, modobj){
     if(modobj === undefined){
         $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
-    modobj.__class__ = Module
+    modobj.ob_type = Module
     modobj.__name__ = name
     for(var attr in modobj){
         if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
@@ -259,7 +259,7 @@ function run_js(module_contents, path, _module){
     if(modobj === undefined){
         $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
-    modobj.__class__ = Module
+    modobj.ob_type = Module
     modobj.__name__ = _module.__name__
     for(var new_key of new_keys){
         modobj[new_key] = globalThis[new_key]
@@ -385,7 +385,7 @@ $B.run_js = run_js
 
 var ModuleSpec = $B.make_class("ModuleSpec",
     function(fields) {
-        fields.__class__ = ModuleSpec
+        fields.ob_type = ModuleSpec
         fields.__dict__ = $B.empty_dict()
         return fields
     }
@@ -418,7 +418,7 @@ function parent_package(mod_name) {
 var VFSFinder = $B.make_class("VFSFinder",
     function(){
         return {
-            __class__: VFSFinder
+            ob_type: VFSFinder
         }
     }
 )
@@ -472,7 +472,7 @@ for(let method in VFSFinder){
 const VFSLoader = $B.make_class("VFSLoader",
     function(){
         return {
-            __class__: VFSLoader
+            ob_type: VFSLoader
         }
     }
 )
@@ -613,7 +613,7 @@ $B.set_func_names(VFSLoader, "builtins")
 var StdlibStaticFinder = $B.make_class("StdlibStaticFinder",
     function(){
         return {
-            __class__: StdlibStaticFinder
+            ob_type: StdlibStaticFinder
         }
     }
 )
@@ -678,7 +678,7 @@ for(let method in StdlibStaticFinder){
 }
 
 StdlibStaticFinder.$factory = function (){
-    return {__class__: StdlibStaticFinder}
+    return {ob_type: StdlibStaticFinder}
 }
 
 // Finder for modules in a list of directories.
@@ -687,7 +687,7 @@ StdlibStaticFinder.$factory = function (){
 var PathFinder = $B.make_class("PathFinder",
     function(){
         return {
-            __class__: PathFinder
+            ob_type: PathFinder
         }
     }
 )
@@ -722,7 +722,7 @@ PathFinder.find_spec = function(cls, fullname, path){
                     $B.path_importer_cache[path_entry] = finder
                     break
                 }catch(e){
-                    if(e.__class__ !== _b_.ImportError){
+                    if($B.get_class(e) !== _b_.ImportError){
                         throw e
                     }
                 }
@@ -756,7 +756,7 @@ for(let method in PathFinder){
 var PathEntryFinder = $B.make_class("PathEntryFinder",
     function(path_entry, hint){
         return {
-            __class__: PathEntryFinder,
+            ob_type: PathEntryFinder,
             path_entry: path_entry,
             hint: hint
         }
@@ -804,7 +804,7 @@ PathEntryFinder.find_spec = function(self, fullname){
             }
             loader_data.path = file_info[0]
         }catch(err){
-            if(err.__class__ !== _b_.ModuleNotFoundError){
+            if(! $B.is_exc(err, _b_.ModuleNotFoundError)){
                 throw err
             }
         }
@@ -833,7 +833,7 @@ $B.set_func_names(PathEntryFinder, "builtins")
 var PathLoader = $B.make_class("PathLoader",
     function(){
         return {
-            __class__: PathLoader
+            ob_type: PathLoader
         }
     }
 )
@@ -1128,7 +1128,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
                     // return it. This is the case for os.path for instance
                     if(i == len - 1 &&
                             $B.imported[_mod_name][parsed_name[len]] &&
-                            $B.imported[_mod_name][parsed_name[len]].__class__ ===
+                            $B.get_class($B.imported[_mod_name][parsed_name[len]]) ===
                                 $B.module){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
@@ -1311,7 +1311,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
         var modobj = importer(mod_name, globals, undefined, fromlist, 0)
     }catch(err){
         if(test){
-            console.log('set error', err.__class__)
+            console.log('set error', $B.get_class(err))
         }
         $B.set_inum(inum)
         throw err
@@ -1405,7 +1405,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                         var $frame = [mod_name, modobj, mod_name, modobj],
                             suggestion = $B.offer_suggestions_for_name_error($err3, $frame)
                         if($err3.$py_error){
-                            $err3.__class__ = _b_.ImportError
+                            $err3.ob_type = _b_.ImportError
                             $err3.args[0] = `cannot import name '${name}' ` +
                                 `from '${mod_name}'`
                             if(modobj.__file__){
@@ -1524,13 +1524,14 @@ function optimize_import_for_path(path, filetype){
 }
 
 // Introspection for builtin importers
-var Loader = {__class__:$B.$type,
+var Loader = {
+    ob_type: _b_.type,
     __mro__: [_b_.object],
     __name__ : "Loader"
 }
 
 var _importlib_module = {
-    __class__ : Module,
+    ob_type : Module,
     __name__ : "_importlib",
     Loader: Loader,
     VFSFinder: VFSFinder,

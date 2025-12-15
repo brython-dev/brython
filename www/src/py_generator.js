@@ -8,40 +8,42 @@ var _b_ = $B.builtins
 // Class used for "return" inside a generator function
 var $GeneratorReturn = {}
 $B.generator_return = function(value){
-    return {__class__: $GeneratorReturn, value: value}
+    return {
+        ob_type: $GeneratorReturn,
+        value: value
+    }
 }
 
-$B.generator = $B.make_class("generator",
-    function(func, name){
-        // func is a Javascript generator, created by "function* "
-        // name is the optional generator name (eg "zip" in
-        // py_builtin_functions.js)
-        var res = function(){
-            var gen = func.apply(null, arguments)
-            gen.$name = name || 'generator'
-            gen.$func = func
-            gen.$has_run = false
-            return {
-                __class__: $B.generator,
-                js_gen: gen
-            }
+$B.generator = $B.make_builtin_class("generator")
+$B.generator.$factory = function(func, name){
+    // func is a Javascript generator, created by "function* "
+    // name is the optional generator name (eg "zip" in
+    // py_builtin_functions.js)
+    var res = function(){
+        var gen = func.apply(null, arguments)
+        gen.$name = name || 'generator'
+        gen.$func = func
+        gen.$has_run = false
+        return {
+            ob_type: $B.generator,
+            js_gen: gen
         }
-        res.$infos = func.$infos
-        res.$is_genfunc = true
-        res.$name = name
-        return res
     }
-)
+    res.$infos = func.$infos
+    res.$is_genfunc = true
+    res.$name = name
+    return res
+}
 
-$B.generator.__iter__ = function(self){
+$B.generator.tp_iter = function(self){
     return self
 }
 
-$B.generator.__next__ = function(self){
+$B.generator.tp_iternext = function(self){
     return $B.generator.send(self, _b_.None)
 }
 
-$B.generator.__str__ = function(self){
+$B.generator.tp_repr = function(self){
     var name = self.js_gen.$name || 'generator'
     if(self.js_gen.$func && self.js_gen.$func.$infos){
         name = self.js_gen.$func.$infos.__qualname__
@@ -98,7 +100,7 @@ $B.generator.send = function(self, value){
     }
     // restore stack
     $B.frame_obj = save_frame_obj
-    if(res.value && res.value.__class__ === $GeneratorReturn){
+    if(res.value && $B.exact_type(res.value, $GeneratorReturn)){
         gen.$finished = true
         $B.RAISE(_b_.StopIteration, res.value.value)
     }
@@ -157,18 +159,17 @@ $B.generator.throw = function(){
 
 $B.set_func_names($B.generator, "builtins")
 
-$B.async_generator = $B.make_class("async_generator",
-    function(func){
-        var f = function(){
-            var gen = func.apply(null, arguments)
-            var res = Object.create(null)
-            res.__class__ = $B.async_generator
-            res.js_gen = gen
-            return res
-        }
-        return f
+$B.async_generator = $B.make_builtin_class("async_generator")
+$B.async_generator.$factory = function(func){
+    var f = function(){
+        var gen = func.apply(null, arguments)
+        var res = Object.create(null)
+        res.ob_type = $B.async_generator
+        res.js_gen = gen
+        return res
     }
-)
+    return f
+}
 
 $B.async_generator.__aiter__ = function(self){
     return self
@@ -217,7 +218,7 @@ $B.async_generator.asend = async function(self, value){
     if(res.done){
         $B.RAISE(_b_.StopAsyncIteration, value)
     }
-    if(res.value.__class__ === $GeneratorReturn){
+    if($B.exact_type(res.value, $GeneratorReturn)){
         gen.$finished = true
         $B.RAISE(_b_.StopAsyncIteration, res.value.value)
     }

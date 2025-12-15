@@ -680,6 +680,7 @@ $B.resolve_in_scopes = function(name, namespaces, inum){
     }
     var exc = $B.name_error(name)
     $B.set_inum(inum)
+    console.log('failure of resolve inscopes', exc)
     throw exc
 }
 
@@ -1497,7 +1498,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         s += prefix + `frame.$lineno = ${lineno}\n` +
              prefix + `exc_${id} = false\n` +
              prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
-             prefix + `var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, \n` +
+             prefix + `var $b = await $B.promise(aexit_${id}(mgr_${id}, $B.get_class(err_${id}), \n` +
              prefix + tab.repeat(4) + `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n` +
              prefix + `if(! $B.$bool($b)){\n` +
              prefix + tab + `throw err_${id}\n` +
@@ -2041,19 +2042,21 @@ $B.ast.Constant.prototype.to_js = function(){
             return `'${s}'`
         }
         return `$B.make_String('${s}', [${srg}])`
-    }else if(this.value.__class__ === _b_.bytes){
+    }
+    var klass = $B.get_class(this.value)
+    if(klass === _b_.bytes){
         return `_b_.bytes.$factory([${this.value.source}])`
     }else if(typeof this.value == "number"){
         if(Number.isInteger(this.value)){
             return this.value
         }else{
-            return `({__class__: _b_.float, value: ${this.value}})`
+            return `({ob_type: _b_.float, value: ${this.value}})`
         }
-    }else if(this.value.__class__ === $B.long_int){
+    }else if(klass === $B.long_int){
         return `$B.fast_long_int(${this.value.value}n)`
-    }else if(this.value.__class__ === _b_.float){
-        return `({__class__: _b_.float, value: ${this.value.value}})`
-    }else if(this.value.__class__ === _b_.complex){
+    }else if(klass === _b_.float){
+        return `({ob_type: _b_.float, value: ${this.value.value}})`
+    }else if(klass === _b_.complex){
         return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`
     }else if(this.value === _b_.Ellipsis){
         return `_b_.Ellipsis`
@@ -4110,7 +4113,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += prefix + `frame.$lineno = ${lineno}\n` +
              prefix + `exc_${id} = false\n` +
              prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
-             prefix + `var $b = $B.$call(exit_${id})(err_${id}.__class__, ` +
+             prefix + `var $b = $B.$call(exit_${id})($B.get_class(err_${id}), ` +
                   `err_${id}, \n` +
              prefix + tab.repeat(4) + `$B.$getattr(err_${id}, '__traceback__'))\n` +
              prefix + `if(! $B.$bool($b)){\n` +
@@ -4240,7 +4243,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
             failed${n} = true
             $B.pmframe = $B.frame_obj.frame
             _e = $B.exception(_e)
-            if(_e.__class__ === _b_.StopIteration){
+            if($B.is_exc(_e, _b_.StopIteration)){
                 var _r${n} = $B.$getattr(_e, "value")
             }else{
                 throw _e
@@ -4255,13 +4258,13 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                     $B.frame_obj = $B.push_frame(frame)
                 }catch(_e){
                     $B.set_exc(_e, frame)
-                    if(_e.__class__ === _b_.GeneratorExit){
+                    if($B.is_exc(_e, _b_.GeneratorExit)){
                         var failed2${n} = false
                         try{
                             var _m${n} = $B.$getattr(_i${n}, "close")
                         }catch(_e1){
                             failed2${n} = true
-                            if(_e1.__class__ !== _b_.AttributeError){
+                            if($B.is_exc(_e1, _b_.AttributeError)){
                                 throw _e1
                             }
                         }
@@ -4269,7 +4272,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                             $B.$call(_m${n})()
                         }
                         throw _e
-                    }else if($B.is_exc(_e, [_b_.BaseException])){
+                    }else if($B.is_exc(_e, _b_.BaseException)){
                         var sys_module = $B.imported._sys,
                             _x${n} = sys_module.exc_info()
                         var failed3${n} = false

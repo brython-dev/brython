@@ -78,7 +78,7 @@ $B.function.dict.__code__ = $B.getset_descriptor.$factory(
     '__code__',
     function(f){
         $B.check_infos(f)
-        var res = {__class__: _b_.code}
+        var res = {ob_type: _b_.code}
         for(var _attr in f.$infos.__code__){
             res[_attr] = f.$infos.__code__[_attr]
         }
@@ -284,24 +284,23 @@ $B.function.__setattr__ = function(self, attr, value){
         $B.make_function_infos(self, ...self.$function_infos)
     }
     var klass_attr = $B.function[attr]
-    if(klass_attr !== undefined && klass_attr.__class__ &&
-            klass_attr.__class__.__get__ &&
-            klass_attr.__set__){
-        return klass_attr.__class__.__set__(klass_attr, self, value)
+    var klass_attr_type = $B.get_class(klass_attr)
+    if(klass_attr !== undefined){
+        if(klass_attr_type.__get__ && klass_attr_type.__set__){
+            return klass_attr_type.__set__(klass_attr, self, value)
+        }
     }
-    try{
-        klass_attr = _b_.dict.$getitem($B.function.dict, attr)
-    }catch(err){
-        klass_attr = null
+    klass_attr = $B.function.dict[attr]
+    if(klass_attr){
+        klass_attr_type = $B.get_class(klass_attr)
+        if(klass_attr_type.__get__ && klass_attr_type.__set__){
+            return klass_attr_type.__set__(klass_attr, self, value)
+        }
     }
-    if(klass_attr && klass_attr.__class__.__get__ &&
-            klass_attr.__class__.__set__){
-        return klass_attr.__class__.__set__(klass_attr, self, value)
+    if(! self.dict){
+        self.dict = $B.empty_dict()
     }
-    if(! self.__dict__){
-        self.__dict__ = $B.empty_dict()
-    }
-    _b_.dict.$setitem(self.__dict__, attr, value)
+    _b_.dict.$setitem(self.dict, attr, value)
 }
 
 $B.check_infos = function(f){
@@ -328,7 +327,7 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
         f.$is_async = true
     }
     __defaults__ = __defaults__ === _b_.None ? [] : __defaults__
-    __defaults__.__class__ = _b_.tuple
+    __defaults__.ob_type = _b_.tuple
     __kwdefaults__ = __kwdefaults__ === _b_.None ? _b_.None :
         _b_.dict.$from_js(__kwdefaults__)
     f.$infos = {__module__,
@@ -337,12 +336,12 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
     f.$infos.__name__ = co_name
     f.$infos.__qualname__ = co_qualname
     type_params = type_params ?? []
-    type_params.__class__ = _b_.tuple
+    type_params.ob_type = _b_.tuple
     f.$infos.__type_params__ = type_params
     co_freevars = co_freevars ?? []
-    co_freevars.__class__ = _b_.tuple
+    co_freevars.ob_type = _b_.tuple
     co_varnames = co_varnames ?? []
-    co_varnames.__class__ = _b_.tuple
+    co_varnames.ob_type = _b_.tuple
     if(annotations){
         // passed with 'from __future__ import annotations'
         f.__annotations__ = _b_.dict.$literal(annotations)
@@ -353,7 +352,7 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
         co_posonlyargcount, co_qualname, co_varnames
         }
     f.$infos.__code__.co_positions = () => $B.$list([])
-    f.$infos.__code__.co_positions.__class__ = $B.function
+    f.$infos.__code__.co_positions.ob_type = $B.function
     f.$infos.__dict__ = $B.empty_dict()
 }
 
@@ -1076,7 +1075,7 @@ function make_arguments_parser(f){
                 add_key(key, elt.$kw[0][key])
             }
             for(let i = 1; i< elt.$kw.length; i++){
-                if(elt.$kw[i].__class__ === _b_.dict){
+                if($B.get_class(elt.$kw[i]) === _b_.dict){
                     for(let item of _b_.dict.$iter_items(elt.$kw[i])){
                         add_key(item.key, item.value)
                     }

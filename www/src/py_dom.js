@@ -71,7 +71,7 @@ var $mouseCoords = $B.$mouseCoords = function(ev){
         res.x = _b_.int.$factory(ev.touches[0].screenX)
         res.y = _b_.int.$factory(ev.touches[0].screenY)
         res.__getattr__ = function(attr){return this[attr]}
-        res.__class__ = "MouseCoords"
+        res.ob_type = "MouseCoords"
         return res
     }
     var posx = 0,
@@ -92,7 +92,7 @@ var $mouseCoords = $B.$mouseCoords = function(ev){
     res.x = _b_.int.$factory(posx)
     res.y = _b_.int.$factory(posy)
     res.__getattr__ = function(attr){return this[attr]}
-    res.__class__ = "MouseCoords"
+    res.ob_type = "MouseCoords"
     return res
 }
 
@@ -171,14 +171,13 @@ var $NodeTypes = {1:  "ELEMENT",
 }
 
 // Class for DOM attributes
-var Attributes = $B.make_class("Attributes",
-    function(elt){
-        return{
-            __class__: Attributes,
-            elt: elt
-        }
+var Attributes = $B.make_builtin_class("Attributes")
+Attributes.$factory = function(elt){
+    return{
+        ob_type: Attributes,
+        elt: elt
     }
-)
+}
 
 Attributes.__contains__ = function(){
     var $ = $B.args("__getitem__", 2, {self: null, key:null},
@@ -219,7 +218,7 @@ Attributes.__getitem__ = function(){
     $B.RAISE(_b_.KeyError, $.key)
 }
 
-Attributes.__iter__ = function(self){
+Attributes.tp_iter = function(self){
     self.$counter = 0
     // Initialize list of key-value attribute pairs
     var attrs = self.elt.attributes,
@@ -231,7 +230,7 @@ Attributes.__iter__ = function(self){
     return self
 }
 
-Attributes.__next__ = function(){
+Attributes.tp_iternext = function(){
     var $ = $B.args("__next__", 1, {self: null},
         ["self"], arguments, {}, null, null)
     if($.self.$counter < $.self.$items.length){
@@ -257,7 +256,7 @@ Attributes.__setitem__ = function(){
     $B.RAISE(_b_.TypeError, "Can't set attributes on element")
 }
 
-Attributes.__repr__ = Attributes.__str__ = function(self){
+Attributes.tp_repr = function(self){
     var attrs = self.elt.attributes,
         items = []
     for(var i = 0; i < attrs.length; i++){
@@ -273,7 +272,7 @@ Attributes.get = function(){
     try{
         return Attributes.__getitem__($.self, $.key)
     }catch(err){
-        if(err.__class__ === _b_.KeyError){
+        if($B.is_exc(err, _b_.KeyError)){
             return $.deflt
         }else{
             throw err
@@ -282,7 +281,7 @@ Attributes.get = function(){
 }
 
 Attributes.keys = function(){
-    return Attributes.__iter__.apply(null, arguments)
+    return Attributes.tp_iter.apply(null, arguments)
 }
 
 Attributes.items = function(){
@@ -293,7 +292,7 @@ Attributes.items = function(){
     for(var i = 0; i < attrs.length; i++){
         values.push($B.$list([attrs[i].name, attrs[i].value]))
     }
-    return _b_.list.__iter__($B.$list(values))
+    return _b_.list.tp_iter($B.$list(values))
 }
 
 Attributes.values = function(){
@@ -304,23 +303,22 @@ Attributes.values = function(){
     for(var i = 0; i < attrs.length; i++){
         values.push(attrs[i].value)
     }
-    return _b_.list.__iter__($B.$list(values))
+    return _b_.list.tp_iter($B.$list(values))
 }
 
 $B.set_func_names(Attributes, "<dom>")
 
 // Class for DOM events
 
-var DOMEvent = $B.DOMEvent = $B.make_class("DOMEvent",
-    function(evt_name){
-        // Factory to create instances of DOMEvent, based on an event name
-        return DOMEvent.__new__(DOMEvent, evt_name)
-    }
-)
+var DOMEvent = $B.DOMEvent = $B.make_builtin_class("DOMEvent")
+DOMEvent.$factory = function(evt_name){
+    // Factory to create instances of DOMEvent, based on an event name
+    return DOMEvent.tp_new(DOMEvent, evt_name)
+}
 
-DOMEvent.__new__ = function(cls, evt_name){
+DOMEvent.tp_new = function(cls, evt_name){
     var ev = new Event(evt_name)
-    ev.__class__ = DOMEvent
+    ev.ob_type = DOMEvent
     if(ev.preventDefault === undefined){
         ev.preventDefault = function(){ev.returnValue = false}
     }
@@ -330,7 +328,7 @@ DOMEvent.__new__ = function(cls, evt_name){
     return ev
 }
 
-DOMEvent.__setattr__ = function(self, attr, value){
+DOMEvent.tp_setattro = function(self, attr, value){
     self[attr] = value
 }
 
@@ -344,7 +342,7 @@ function dom2svg(svg_elt, coords){
     return pt.matrixTransform(svg_elt.getScreenCTM().inverse())
 }
 
-DOMEvent.__getattribute__ = function(ev, attr){
+DOMEvent.tp_getattro = function(ev, attr){
     switch(attr) {
         case '__repr__':
         case '__str__':
@@ -409,7 +407,7 @@ DOMEvent.__getattribute__ = function(ev, attr){
 
 // Function to transform a DOM event into an instance of DOMEvent
 var $DOMEvent = $B.$DOMEvent = function(ev){
-    ev.__class__ = DOMEvent
+    ev.ob_type = DOMEvent
     ev.$no_dict = true
     if(ev.preventDefault === undefined){
         ev.preventDefault = function(){ev.returnValue = false}
@@ -422,15 +420,14 @@ var $DOMEvent = $B.$DOMEvent = function(ev){
 
 $B.set_func_names(DOMEvent, "browser")
 
-var Clipboard = $B.make_class('Clipboard',
-    function(data){
-        return {
-            __class__ : Clipboard,
-            __dict__: $B.empty_dict(),
-            data : data
-        }
+var Clipboard = $B.make_builtin_class('Clipboard')
+Clipboard.$factory = function(data){
+    return {
+        ob_type : Clipboard,
+        dict: $B.empty_dict(),
+        data : data
     }
-)
+}
 
 Clipboard.__getitem__ = function(self, name){
     return self.data.getData(name)
@@ -444,11 +441,8 @@ $B.set_func_names(Clipboard, "<dom>")
 
 
 // Class for DOM nodes
-var DOMNode = $B.make_class('DOMNode',
-    function(elt){
-        return elt
-    }
-)
+var DOMNode = $B.make_builtin_class('DOMNode')
+DOMNode.$factory = (elt) => elt
 
 DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
@@ -538,7 +532,7 @@ DOMNode.__eq__ = function(self, other){
     return self == other
 }
 
-DOMNode.__getattribute__ = function(self, attr){
+DOMNode.tp_getattro = function(self, attr){
     switch(attr) {
         case "attrs":
             return Attributes.$factory(self)
@@ -639,7 +633,7 @@ DOMNode.__getattribute__ = function(self, attr){
         // document.query is a instance of class Query, representing the
         // Query String
         let res = {
-            __class__: Query,
+            ob_type: Query,
             _keys : $B.$list([]),
             _values : {}
         }
@@ -665,7 +659,7 @@ DOMNode.__getattribute__ = function(self, attr){
 
     var property = self[attr]
 
-    if(property !== undefined && self.__class__ &&
+    if(property !== undefined && self.ob_type &&
             klass.__module__ != "browser.html" &&
             klass.__module__ != "browser.svg" &&
             ! klass.$webcomponent){
@@ -680,7 +674,7 @@ DOMNode.__getattribute__ = function(self, attr){
             // cf. issue #1543 : if an element has the attribute "attr" set and
             // its class has an attribute of the same name, show a warning that
             // the class attribute is ignored
-            var bases = self.__class__.tp_bases
+            var bases = $B.get_class(self).tp_bases
             var show_message = true
             for(var base of bases){
                 if(base.__module__ == "browser.html"){
@@ -689,7 +683,7 @@ DOMNode.__getattribute__ = function(self, attr){
                 }
             }
             if(show_message){
-                from_class = $B.$getattr(self.__class__, attr, _b_.None)
+                from_class = $B.$getattr($B.get_class(self), attr, _b_.None)
                 if(from_class !== _b_.None){
                     var frame = $B.frame_obj.frame,
                         line = frame.$lineno
@@ -708,21 +702,21 @@ DOMNode.__getattribute__ = function(self, attr){
             var ce = customElements.get(self.tagName.toLowerCase())
             if(ce !== undefined && ce.$cls !== undefined){
                 // Temporarily set self.__class_ to the WebComponent class
-                var save_class = self.__class__
-                self.__class__ = ce.$cls
+                var save_class = $B.get_class(self)
+                self.ob_type = ce.$cls
                 try{
-                    let res = _b_.object.__getattribute__(self, attr)
-                    self.__class__ = save_class
+                    let res = _b_.object.tp_getattro(self, attr)
+                    self.ob_type = save_class
                     return res
                 }catch(err){
-                    self.__class__ = save_class
+                    self.ob_type = save_class
                     if(! $B.is_exc(err, [_b_.AttributeError])){
                         throw err
                     }
                 }
             }
         }else{
-            return object.__getattribute__(self, attr)
+            return object.tp_getattro(self, attr)
         }
     }
 
@@ -733,8 +727,8 @@ DOMNode.__getattribute__ = function(self, attr){
             return res
         }
         if(typeof res === "function"){
-            if(self.__class__ && self.__class__.$webcomponent){
-                var method = $B.$getattr(self.__class__, attr, null)
+            if(self.ob_type && self.ob_type.$webcomponent){
+                var method = $B.$getattr($B.get_class(self), attr, null)
                 if(method !== null){
                     // element is a web component, function is a method of the
                     // webcomp class: call it with Python arguments, bind to
@@ -801,7 +795,7 @@ DOMNode.__getattribute__ = function(self, attr){
         }
         return js_immutable_to_py(res)
     }
-    return object.__getattribute__(self, attr)
+    return object.tp_getattro(self, attr)
 }
 
 DOMNode.__getitem__ = function(self, key){
@@ -854,7 +848,7 @@ DOMNode.__hash__ = function(self){
         self.__hashvalue__
 }
 
-DOMNode.__iter__ = function(self){
+DOMNode.tp_iter = function(self){
     // iteration on a Node
     var items = []
     if(self.length !== undefined && typeof self.item == "function"){
@@ -898,7 +892,7 @@ DOMNode.__le__ = function(self, other){
     return self // to allow chained appends
 }
 
-DOMNode.__len__ = function(self){
+DOMNode.sq_length = function(self){
     return self.length
 }
 
@@ -911,15 +905,15 @@ DOMNode.__mul__ = function(self,other){
         }
         return res
     }
-    $B.RAISE(_b_.ValueError, "can't multiply " + self.__class__ +
-        "by " + other)
+    $B.RAISE(_b_.ValueError, "can't multiply " + $B.class_name(self) +
+        "by " + $B.class_name(other))
 }
 
 DOMNode.__ne__ = function(self, other){
     return ! DOMNode.__eq__(self, other)
 }
 
-DOMNode.__next__ = function(self){
+DOMNode.tp_iternext = function(self){
    self.$counter++
    if(self.$counter < self.childNodes.length){
        return DOMNode.$factory(self.childNodes[self.$counter])
@@ -934,7 +928,7 @@ DOMNode.__radd__ = function(self, other){ // add to a string
     return res
 }
 
-DOMNode.__str__ = DOMNode.__repr__ = function(self){
+DOMNode.tp_repr = function(self){
     var attrs = self.attributes,
         attrs_str = "",
         items = []
@@ -960,7 +954,7 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
         self.nodeName + "'" + attrs_str + ">"
 }
 
-DOMNode.__setattr__ = function(self, attr, value){
+DOMNode.tp_setattro = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
     switch(attr){
@@ -1094,11 +1088,14 @@ DOMNode.bind = function(){
             try{
                 return $B.$call(f)($DOMEvent(ev))
             }catch(err){
-                if(err.__class__ !== undefined){
+                if(err.ob_type !== undefined){
                     $B.handle_error(err)
                 }else{
-                    try{$B.$getattr($B.get_stderr(), "write")(err)}
-                    catch(err1){console.log(err)}
+                    try{
+                        $B.$getattr($B.get_stderr(), "write")(err)
+                    }catch(err1){
+                        console.log(err)
+                    }
                 }
             }
         }}
@@ -1108,7 +1105,7 @@ DOMNode.bind = function(){
     callback.$func = func
     if(typeof options == "boolean"){
         self.addEventListener(event, callback, options)
-    }else if(options.__class__ === _b_.dict){
+    }else if($B.exact_type(options, _b_.dict)){
         self.addEventListener(event, callback, _b_.dict.$to_obj(options))
     }else if(options === _b_.None){
         self.addEventListener(event, callback, false)
@@ -1162,7 +1159,9 @@ DOMNode.Class = function(self){
     return _b_.None
 }
 
-DOMNode.class_name = function(self){return DOMNode.Class(self)}
+DOMNode.class_name = function(self){
+    return DOMNode.Class(self)
+}
 
 DOMNode.clone = function(self){
     var res = DOMNode.$factory(self.cloneNode(true))
@@ -1537,7 +1536,7 @@ $B.set_func_names(DOMNode, "builtins")
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
-var Query = $B.make_class("query")
+var Query = $B.make_builtin_class("query")
 
 Query.__contains__ = function(self, key){
     return self._keys.indexOf(key) > -1
@@ -1556,7 +1555,8 @@ Query.__getitem__ = function(self, key){
 }
 
 var Query_iterator = $B.make_iterator_class("query string iterator")
-Query.__iter__ = function(self){
+
+Query.tp_iter = function(self){
     return Query_iterator.$factory(self._keys)
 }
 
@@ -1565,7 +1565,7 @@ Query.__setitem__ = function(self, key, value){
     return _b_.None
 }
 
-Query.__str__ = Query.__repr__ = function(self){
+Query.tp_repr = function(self){
     // build query string from keys/values
     var elts = []
     for(var key in self._values){
@@ -1613,15 +1613,15 @@ Query.keys = function(self){
 $B.set_func_names(Query, "<dom>")
 
 // class used for tag sums
-var TagSum = $B.make_class("TagSum",
-    function(){
-        return {
-            __class__: TagSum,
-            children: [],
-            toString: function(){return "(TagSum)"}
-        }
+var TagSum = $B.make_builtin_class("TagSum")
+
+TagSum.$factory = function(){
+    return {
+        ob_type: TagSum,
+        children: [],
+        toString: function(){return "(TagSum)"}
     }
-)
+}
 
 TagSum.appendChild = function(self, child){
     self.children.push(child)
@@ -1647,7 +1647,7 @@ TagSum.__radd__ = function(self, other){
     return res
 }
 
-TagSum.__repr__ = function(self){
+TagSum.tp_repr = function(self){
     var res = "<object TagSum> "
     for(var i = 0; i < self.children.length; i++){
         res += self.children[i]
@@ -1657,8 +1657,6 @@ TagSum.__repr__ = function(self){
     }
     return res
 }
-
-TagSum.__str__ = TagSum.toString = TagSum.__repr__
 
 TagSum.clone = function(self){
     var res = TagSum.$factory()
@@ -1671,7 +1669,6 @@ TagSum.clone = function(self){
 $B.set_func_names(TagSum, "<dom>")
 
 $B.TagSum = TagSum // used in _html.js and _svg.js
-
 
 $B.DOMNode = DOMNode
 

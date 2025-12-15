@@ -115,15 +115,15 @@ function make_view_comparison_methods(klass){
         klass[op] = (function(op){
             return function(self, other){
                 // compare set of items to other
-                if(self.__class__.__name__ == 'dict_keys' ||
-                        (self.__class__.__name__ == 'dict_items'
+                if($B.exact_type(self, _dict_keys) ||
+                        ($B.exact_type(self, _dict_items)
                          && dict.$set_like(self.dict))){
                     return _b_.set[op](_b_.set.$factory(self),
                         _b_.set.$factory(other))
                 }else{
                     // Non-set like views can only be compared to
                     // instances of the same class
-                    if(other.__class__ !== klass){
+                    if(! $B.exact_type(other, klass)){
                         return false
                     }
                     var other_items = _b_.list.$factory(other)
@@ -137,28 +137,6 @@ function make_view_comparison_methods(klass){
 $B.str_dict = function(){}
 
 var dict = _b_.dict
-/* dict slots start */
-Object.assign(dict,
-{
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 541087042,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `dict() -> new empty dictionary
-dict(mapping) -> new dictionary initialized from a mapping object's
-    (key, value) pairs
-dict(iterable) -> new dictionary initialized as if via:
-    d = {}
-    for k, v in iterable:
-        d[k] = v
-dict(**kwargs) -> new dictionary initialized with the name=value pairs
-    in the keyword argument list.  For example:  dict(one=1, two=2)`,
-    tp_bases: [_b_.object],
-})
-/* dict slots end */
-
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
 function dict___contains__(){
@@ -233,7 +211,7 @@ function dict_setdefault(){
 function dict_pop(){
     var missing = {},
         $ = $B.args("pop", 3, {self: null, key: null, _default: null},
-        ["self", "key", "_default"], arguments, {_default: missing}, null, null),
+        ["self", "key", "_default"], arguments, {_default: $B.NULL}, null, null),
         self = $.self,
         key = $.key,
         _default = $._default
@@ -243,8 +221,10 @@ function dict_pop(){
         dict.__delitem__(self, key)
         return res
     }catch(err){
-        if(err.__class__ === _b_.KeyError){
-            if(_default !== missing){return _default}
+        if($B.is_exc(err, _b_.KeyError)){
+            if(_default !== $B.NULL){
+                return _default
+            }
             throw err
         }
         throw err
@@ -280,7 +260,10 @@ function dict_popitem(){
 
 function dict_keys(){
     $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
-    return dict_keys.$factory(self)
+    return {
+        ob_type: _dict_keys,
+        dict: $.self
+    }
 }
 
 function dict_items(self){
@@ -323,7 +306,9 @@ function dict_update(){
                 try{
                     var item = _b_.next(it)
                 }catch(err){
-                    if(err.__class__ === _b_.StopIteration){break}
+                    if($B.is_exc(err, _b_.StopIteration)){
+                        break
+                    }
                     throw err
                 }
                 try{
@@ -403,7 +388,7 @@ function dict_copy(){
         self = $.self,
         res = $B.empty_dict()
 
-    if(self.__class__ === _b_.dict){
+    if($B.exact_type(self, _b_.dict)){
         $copy_dict(res, self)
         return res
     }
@@ -467,9 +452,9 @@ dict.$set_like = function(self){
                 typeof v == 'number' ||
                 typeof v == 'boolean'){
             continue
-        }else if([_b_.tuple, _b_.float, _b_.complex].indexOf(v.__class__) > -1){
+        }else if([_b_.tuple, _b_.float, _b_.complex].includes($B.get_class(v))){
             continue
-        }else if(! _b_.hasattr(v.__class__, '__hash__')){
+        }else if(! _b_.hasattr($B.get_class(v), '__hash__')){
             return false
         }
     }
@@ -550,7 +535,7 @@ $B.set_func_names(dict_valueiterator, 'builtins')
 var dict_itemiterator = $B.make_builtin_class('dict_itemiterator')
 dict_itemiterator.$factory = function(d){
     return {
-        __class__: dict_itemiterator,
+        ob_type: dict_itemiterator,
         it: dict.$iter_items(d)
     }
 }
@@ -1032,7 +1017,7 @@ dict.tp_init = function(self, first, second){
         }else if(first[Symbol.iterator]){
             init_from_list(self, first)
             return _b_.None
-        }else if(first.__class__ === $B.generator){
+        }else if($B.exact_type(first, $B.generator)){
             init_from_list(self, first.js_gen)
             return _b_.None
         }
@@ -1066,7 +1051,7 @@ dict.tp_init = function(self, first, second){
         }
     }else if(args.length == 1){
         args = args[0]
-        if(args.__class__ === dict){
+        if($B.exact_type(args, dict)){
             for(let entry of dict.$iter_items(args)){
                 dict.$setitem(self, entry.key, entry.value, entry.hash)
             }
@@ -1085,7 +1070,7 @@ dict.tp_init = function(self, first, second){
                                 value = gi(key)
                             dict.__setitem__(self, key, value)
                         }catch(err){
-                            if(err.__class__ === _b_.StopIteration){
+                            if($B.is_exc(err, _b_.StopIteration)){
                                 break
                             }
                             throw err
@@ -1226,7 +1211,7 @@ function make_reverse_iterator(name, iter_func){
     var klass = $B.make_class(name,
         function(d){
             return {
-                __class__: klass,
+                ob_type: klass,
                 d,
                 iter: iter_func(d),
                 make_iter:function(){
@@ -1315,7 +1300,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
             // dictionary created by method to_dict of JSObj instances
             value = $B.pyobj2jsobj(value)
         }
-        if(self.$jsobj.__class__ === _b_.type){
+        if($B.exact_type(self.$jsobj, _b_.type)){
             self.$jsobj[key] = value
             if(key == "__init__" || key == "__new__"){
                 // If class attribute __init__ or __new__ are reset,
@@ -1404,39 +1389,39 @@ make_view_comparison_methods(_dict_items)
 
 $B.set_func_names(_dict_items, 'builtins')
 
-var dict_keys = $B.make_builtin_class("dict_keys")
+var _dict_keys = $B.make_builtin_class("dict_keys")
 
-dict_keys.tp_iter = function(self){
+_dict_keys.tp_iter = function(self){
     return dict_keyiterator.$factory(self.dict)
 }
 
-dict_keys.sq_length = function(self){
+_dict_keys.sq_length = function(self){
     return dict.mp_length(self.dict)
 }
 
-dict_keys.__reduce__ = function(self){
-    var items = $B.$list(Array.from(dict_keys.tp_iter(self)))
+_dict_keys.__reduce__ = function(self){
+    var items = $B.$list(Array.from(_dict_keys.tp_iter(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
 }
 
-dict_keys.tp_repr = function(self){
-    var items = Array.from(dict_keys.tp_iter(self.dict))
+_dict_keys.tp_repr = function(self){
+    var items = Array.from(_dict_keys.tp_iter(self.dict))
     return 'dict_keys(' + _b_.repr(items) + ')'
 }
 
-dict_keys.__reversed__ = function(self){
+_dict_keys.__reversed__ = function(self){
     return dict_reversekeyiterator.$factory(self.dict)
 }
 
-make_view_comparison_methods(dict_keys)
+make_view_comparison_methods(_dict_keys)
 
-$B.set_func_names(dict_keys, 'builtins')
+$B.set_func_names(_dict_keys, 'builtins')
 
 var dict_values = $B.make_builtin_class("dict_values")
 
 dict_values.tp_iter = function(self){
     return {
-        __class__: dict_valueiterator,
+        ob_type: dict_valueiterator,
         it: dict.$iter_items(self)
     }
 }

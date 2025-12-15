@@ -9,14 +9,7 @@ function $UnsupportedOpType(op, class1, class2){
 }
 
 var complex = _b_.complex
-Object.assign(complex,
-    {
-        __qualname__: 'complex',
-        $is_class: true,
-        $native: true,
-        $descriptors: {real: true, imag: true}
-    }
-)
+complex.$descriptors = {real: true, imag: true}
 
 complex.__abs__ = function(self){
     var _rf = isFinite(self.$real.value),
@@ -39,7 +32,7 @@ complex.__abs__ = function(self){
     return $B.fast_float(mag)
 }
 
-complex.__add__ = function(self, other){
+complex.nb_add = function(self, other){
     if($B.$isinstance(other, complex)){
         return make_complex(self.$real.value + other.$real.value,
                             self.$imag.value + other.$imag.value)
@@ -63,7 +56,7 @@ complex.__bool__ = function(self){
 
 complex.__complex__ = function(self){
     // returns an instance of complex (not a subclass)
-    if(self.__class__ === complex){
+    if($B.exact_type(self, complex)){
         return self
     }
     return $B.make_complex(self.$real, self.$imag)
@@ -177,7 +170,7 @@ complex.__hash__ = function(self){
     return $B.$hash(self.$real) + $B.$hash(self.$imag) * 1000003
 }
 
-complex.__init__ = function() {
+complex.tp_init = function() {
     return _b_.None
 }
 
@@ -213,7 +206,7 @@ complex.__neg__ = function(self){
     return make_complex(-self.$real.value, -self.$imag.value)
 }
 
-complex.__new__ = function(cls){
+complex.tp_new = function(cls){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, 'complex.__new__(): not enough arguments')
     }
@@ -282,13 +275,13 @@ complex.__new__ = function(cls){
                 second = 0
             }
             res = make_complex(first, second)
-            res.__class__ = cls
-            res.__dict__ = $B.empty_dict()
+            res.ob_type = cls
+            res.dict = $B.empty_dict()
             return res
         }
     }
 
-    if(first.__class__ === complex && cls === complex && second === missing){
+    if($B.exact_type(first, complex) && cls === complex && second === missing){
         return first
     }
     var arg1 = _convert(first),
@@ -329,8 +322,8 @@ complex.__new__ = function(cls){
     }
 
     res = make_complex(r, i)
-    res.__class__ = cls
-    res.__dict__ = $B.empty_dict()
+    res.ob_type = cls
+    res.dict = $B.empty_dict()
     return res
 }
 
@@ -481,7 +474,9 @@ complex.__pow__ = function(self, other, mod){
     }
 }
 
+/*
 complex.__radd__ = function(self, other){
+    console.log('complex radd', self, other)
     if($B.$isinstance(other, _b_.bool)){
         other = other ? 1 : 0
     }
@@ -492,8 +487,9 @@ complex.__radd__ = function(self, other){
     }
     return _b_.NotImplemented
 }
+*/
 
-complex.__repr__ = function(self){
+complex.tp_repr = function(self){
     $B.builtins_repr_check(complex, arguments) // in brython_builtins.js
     var real = Number.isInteger(self.$real.value) ?
                    self.$real.value + '' :
@@ -662,7 +658,7 @@ var expected_class = {
 function _convert(obj){
     // If object's class defines one of the methods, return the result
     // of method(obj), else return null
-    var klass = obj.__class__ || $B.get_class(obj)
+    var klass = $B.get_class(obj)
     for(var method_name in expected_class) {
         var missing = {},
             method = $B.$getattr(klass, method_name, missing)
@@ -677,7 +673,7 @@ function _convert(obj){
                     $B.rich_comp('__gt__', res, __BRYTHON__.MAX_VALUE)){
                 $B.RAISE(_b_.OverflowError, 'int too large to convert to float')
             }
-            if(method_name == '__complex__' && res.__class__ !== complex){
+            if(method_name == '__complex__' && ! $B.exact_tye(res, complex)){
                 $B.warn(_b_.DeprecationWarning, "__complex__ returned " +
                 `non-complex (type ${$B.class_name(res)}). ` +
                 "The ability to return an instance of a strict subclass " +
@@ -692,7 +688,7 @@ function _convert(obj){
 
 var make_complex = $B.make_complex = function(real, imag){
     return {
-        __class__: complex,
+        ob_type: complex,
         $real: _b_.float.$factory(real),
         $imag: _b_.float.$factory(imag)
     }
@@ -701,7 +697,7 @@ var make_complex = $B.make_complex = function(real, imag){
 var c_1 = make_complex(1, 0)
 
 complex.$factory = function(){
-    return complex.__new__(complex, ...arguments)
+    return complex.tp_new(complex, ...arguments)
 }
 
 $B.set_func_names(complex, "builtins")

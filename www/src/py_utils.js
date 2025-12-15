@@ -257,7 +257,7 @@ function args0_NEW(fct, args) {
         for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
 
             kargs = ARGS_NAMED[id];
-            for(let argname of $B.make_js_iterator($B.$getattr(kargs.__class__, "keys")(kargs)) ) {
+            for(let argname of $B.make_js_iterator($B.$getattr($B.get_class(kargs), "keys")(kargs)) ) {
 
                 if( typeof argname !== "string") {
             $B.args0_old(fct, args);
@@ -337,7 +337,7 @@ function args0_NEW(fct, args) {
     for(let id = 1, len = ARGS_NAMED.length; id < len; ++id){
 
             kargs = ARGS_NAMED[id];
-        for(let argname of $B.make_js_iterator( $B.$getattr(kargs.__class__, "keys")(kargs) ) ) {
+        for(let argname of $B.make_js_iterator( $B.$getattr($B.get_class(kargs), "keys")(kargs) ) ) {
 
             if( typeof argname !== "string") {
             $B.args0_old(fct, args);
@@ -470,7 +470,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
     // Handle arguments passed to the function
     for(var i = 0; i < nb_passed; i++){
         var arg = args[i]
-        if(arg && arg.__class__ === $B.generator){
+        if(arg && $B.get_class(arg) === $B.generator){
             slots.$has_generators = true
         }
         if(arg && arg.$kw){
@@ -623,7 +623,7 @@ $B.parse_kwargs = function(kw_args, fname){
         var kw_arg = kw_args[i],
             key,
             value
-        if(kw_arg.__class__ === _b_.dict){
+        if($B.get_class(kw_arg) === _b_.dict){
             for(var entry of _b_.dict.$iter_items(kw_arg)){
                 key = entry.key
                 if(typeof key !== 'string'){
@@ -790,6 +790,20 @@ $B.get_class = function(obj){
         return $B.get_jsobj_class(obj)
     }
     return klass
+}
+
+$B.exact_type = function(obj, cls){
+    var klass = $B.get_class(obj)
+    if(Array.isArray(cls)){
+        for(var item of cls){
+            if(klass === item){
+                return true
+            }
+        }
+        return false
+    }else{
+        return klass === cls
+    }
 }
 
 $B.class_name = function(obj){
@@ -1054,8 +1068,8 @@ $B.$getitem = function(obj, item, inum){
 }
 
 $B.$getitem1 = function(obj, item){
-    var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
-        is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
+    var is_list = Array.isArray(obj) && $B.get_class(obj) === _b_.list,
+        is_dict = $B.get_class(obj) === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
         if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item
@@ -1080,8 +1094,8 @@ $B.$getitem1 = function(obj, item){
         var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
             return $B.$call(class_gi)(obj, item)
-        }else if(obj.__class__){
-            class_gi = $B.$getattr(obj.__class__, "__getitem__", _b_.None)
+        }else if($B.get_class(obj) !== $B.JSObj){
+            class_gi = $B.$getattr($B.get_class(obj), "__getitem__", _b_.None)
             if(class_gi !== _b_.None){
                 return class_gi(obj, item)
             }else{
@@ -1099,8 +1113,7 @@ $B.$getitem1 = function(obj, item){
         return _b_.dict.$getitem(obj, item)
     }
 
-    var gi = $B.$getattr(obj.__class__ || $B.get_class(obj),
-        "__getitem__", _b_.None)
+    var gi = $B.$getattr($B.get_class(obj), "__getitem__", _b_.None)
     if(gi !== _b_.None){
         return gi(obj, item)
     }
@@ -1112,12 +1125,13 @@ $B.$getitem1 = function(obj, item){
 
 $B.getitem_slice = function(obj, slice){
     var res
-    if(Array.isArray(obj) && obj.__class__ === _b_.list){
+    var klass = $B.get_class(obj)
+    if(Array.isArray(obj) && klass === _b_.list){
         return _b_.list.$getitem(obj, slice)
     }else if(typeof obj == "string"){
         return _b_.str.__getitem__(obj, slice)
     }
-    return $B.$getattr($B.get_class(obj), "__getitem__")(obj, slice)
+    return $B.$getattr(klass, "__getitem__")(obj, slice)
 }
 
 $B.$getattr_pep657 = function(obj, attr, inum){
@@ -1130,7 +1144,8 @@ $B.$getattr_pep657 = function(obj, attr, inum){
 }
 
 $B.$setitem = function(obj, item, value, inum){
-    if(Array.isArray(obj) && obj.__class__ === undefined &&
+    var klass = $B.get_class(obj)
+    if(Array.isArray(obj) && klass === $B.js_array &&
             ! obj.$is_js_array &&
             typeof item == "number" &&
             ! $B.$isinstance(obj, _b_.tuple)){
@@ -1143,10 +1158,10 @@ $B.$setitem = function(obj, item, value, inum){
         }
         obj[item] = value
         return
-    }else if(obj.__class__ === _b_.dict){
+    }else if(klass === _b_.dict){
         _b_.dict.$setitem(obj, item, value)
         return
-    }else if(obj.__class__ === _b_.list){
+    }else if(klass === _b_.list){
         try{
             return _b_.list.$setitem(obj, item, value)
         }catch(err){
@@ -1156,8 +1171,7 @@ $B.$setitem = function(obj, item, value, inum){
             throw err
         }
     }
-    var si = $B.$getattr(obj.__class__ || $B.get_class(obj), "__setitem__",
-        null)
+    var si = $B.$getattr($B.get_class(obj), "__setitem__", null)
     if(si === null || typeof si != 'function'){
         $B.set_inum(inum)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
@@ -1174,7 +1188,8 @@ $B.set_inum = function(inum){
 
 // item deletion
 $B.$delitem = function(obj, item, inum){
-    if(Array.isArray(obj) && obj.__class__ === _b_.list &&
+    var klass = $B.get_class(obj)
+    if(Array.isArray(obj) && klass === _b_.list &&
             typeof item == "number" &&
             !$B.$isinstance(obj, _b_.tuple)){
         if(item < 0){
@@ -1186,7 +1201,7 @@ $B.$delitem = function(obj, item, inum){
         }
         obj.splice(item, 1)
         return
-    }else if(obj.__class__ === _b_.dict){
+    }else if(klass === _b_.dict){
         if(obj.$is_namespace){
             // Deleting a name from a namespace should trigger a NameError in
             // the next references to the name. Cf issue #2423.
@@ -1207,24 +1222,24 @@ $B.$delitem = function(obj, item, inum){
             try{
                 _b_.dict.__delitem__(obj, item)
             }catch(err){
-                if(err.__class__ === _b_.KeyError){
+                if($B.is_exc(err, [_b_.KeyError])){
                     $B.set_inum(inum)
                 }
                 throw err
             }
         }
         return
-    }else if(obj.__class__ === _b_.list){
+    }else if(klass === _b_.list){
         try{
             return _b_.list.__delitem__(obj, item)
         }catch(err){
-            if(err.__class__ === _b_.IndexError){
+            if($B.is_exc(err, [_b_.IndexError])){
                 $B.set_inum(inum)
             }
             throw err
         }
     }
-    var di = $B.search_in_mro($B.get_class(obj), "__delitem__")
+    var di = $B.search_in_mro(klass, "__delitem__")
     if(di === undefined){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object doesn't support item deletion")
@@ -1273,16 +1288,16 @@ function num_result_type(x, y){
         if(typeof y == "number"){
             is_int = true
             y_num = y
-        }else if(y.__class__ === _b_.float){
+        }else if($B.get_class(y) === _b_.float){
             is_float = true
             y_num = y.value
         }
-    }else if(x.__class__ === _b_.float){
+    }else if($B.get_class(x) === _b_.float){
         x_num = x.value
         if(typeof y == "number"){
             y_num = y
             is_float = true
-        }else if(y.__class__ === _b_.float){
+        }else if($B.get_class(y) === _b_.float){
             is_float = true
             y_num = y.value
         }
@@ -1359,7 +1374,7 @@ $B.$is = function(a, b){
     if(b === null){
         return a === null
     }
-    if(a.__class__ === _b_.float && b.__class__ === _b_.float){
+    if($B.get_class(a) === _b_.float && $B.get_class(b) === _b_.float){
         if(isNaN(a.value) && isNaN(b.value)){
             return true
         }
@@ -1460,9 +1475,10 @@ $B.$call = function(callable, inum){
 }
 
 $B.$call1 = function(callable){
-    if(callable.__class__ === $B.method){
+    var klass = $B.get_class(callable)
+    if(klass === $B.method){
         return callable
-    }else if(callable.__class__ === _b_.staticmethod){
+    }else if(klass === _b_.staticmethod){
         return callable.__func__
     }else if(callable.$factory){
         return callable.$factory
@@ -1552,7 +1568,7 @@ $B.to_num = function(obj, methods){
         "__index__": _b_.int,
         "__int__": _b_.int
     }
-    var klass = obj.__class__ || $B.get_class(obj)
+    var klass = $B.get_class(obj)
     for(var i = 0; i < methods.length; i++) {
         var missing = {},
             method = $B.$getattr(klass, methods[i], missing)
@@ -1577,7 +1593,7 @@ $B.PyNumber_Index = function(item){
         case "number":
             return item
         case "object":
-            if(item.__class__ === $B.long_int){
+            if($B.get_class(item) === $B.long_int){
                 return item
             }
             if($B.$isinstance(item, _b_.int)){
@@ -1606,7 +1622,7 @@ $B.int_or_bool = function(v){
         case "number":
             return v
         case "object":
-            if(v.__class__ === $B.long_int){
+            if($B.get_class(v) === $B.long_int){
                 return v
             }else{
                 $B.RAISE(_b_.TypeError, "'" + $B.class_name(v) +
@@ -1626,7 +1642,7 @@ $B.enter_frame = function(frame, __file__, lineno){
         $B.set_exc(exc, frame)
         throw exc
     }
-    frame.__class__ = $B.frame
+    frame.ob_type = $B.frame
     frame.__file__ = __file__
     frame.$lineno = lineno
     frame.$f_trace = _b_.None
@@ -1685,7 +1701,7 @@ $B.trace_exception = function(){
     var trace_func = frame.$f_trace,
         exc = frame[1].$current_exception
     return trace_func(frame, 'exception', $B.fast_tuple([
-        exc.__class__, exc, $B.traceback.$factory(exc)]))
+        $B.get_class(exc), exc, $B.traceback.$factory(exc)]))
 }
 
 $B.trace_line = function(){
@@ -1748,7 +1764,7 @@ $B.leave_frame = function(arg){
     // $has_generators
     if(frame.$has_generators){
         for(var key in frame[1]){
-            if(frame[1][key] && frame[1][key].__class__ === $B.generator){
+            if(frame[1][key] && $B.get_class(frame[1][key]) === $B.generator){
                 var gen = frame[1][key]
                 if(gen.$frame === undefined){
                     continue
@@ -1799,7 +1815,7 @@ $B.rich_comp = function(op, x, y){
     var x1 = x !== null && x.valueOf ? x.valueOf() : x,
         y1 = y !== null && y.valueOf ? y.valueOf() : y
     if(typeof x1 == "number" && typeof y1 == "number" &&
-            x.__class__ === undefined && y.__class__ === undefined){
+            x.ob_type === undefined && y.ob_type === undefined){
         switch(op){
             case "__eq__":
                 return x1 == y1
@@ -1830,14 +1846,14 @@ $B.rich_comp = function(op, x, y){
     }
     var rev_op = reversed_op[op] || op,
         y_rev_func
-    if(x !== null && x.__class__ && y !== null && y.__class__){
+    if(x !== null && x.ob_type && y !== null && y.ob_type){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
         // "If the operands are of different types, and right operand's type
         // is a direct or indirect subclass of the left operand's type, the
         // reflected method of the right operand has priority, otherwise the
         // left operand's method has priority."
-        if(y.__class__.__mro__.indexOf(x.__class__) > -1){
+        if($B.get_mro(y.ob_type).indexOf(x.ob_type) > -1){
             y_rev_func = $B.$getattr(y, rev_op)
             res = $B.$call(y_rev_func)(x)
             if(res !== _b_.NotImplemented){
@@ -1914,26 +1930,29 @@ $B.rich_op = function(op, x, y, inum){
 }
 
 $B.rich_op1 = function(op, x, y){
+    console.log('rich op', op, x, y)
     // shortcuts
     var res_is_int,
         res_is_float,
         x_num,
-        y_num
+        y_num,
+        x_type = $B.get_class(x),
+        y_type = $B.get_class(y)
     if(typeof x == "number"){
         x_num = x
         if(typeof y == "number"){
             res_is_int = true
             y_num = y
-        }else if(y.__class__ === _b_.float){
+        }else if(y_type === _b_.float){
             res_is_float = true
             y_num = y.value
         }
-    }else if(x.__class__ === _b_.float){
+    }else if(x_type === _b_.float){
         x_num = x.value
         if(typeof y == "number"){
             y_num = y
             res_is_float = true
-        }else if(y.__class__ === _b_.float){
+        }else if(y_type === _b_.float){
             res_is_float = true
             y_num = y.value
         }
@@ -1961,35 +1980,33 @@ $B.rich_op1 = function(op, x, y){
                 }
                 // always returns a float
                 z = x_num / y_num
-                return {__class__: _b_.float, value: z}
+                return {ob_type: _b_.float, value: z}
         }
         if(z){
             if(res_is_int && Number.isSafeInteger(z)){
                 return z
             }else if(res_is_float){
-                return {__class__: _b_.float, value: z}
+                return {ob_type: _b_.float, value: z}
             }
         }
     }else if(typeof x == "string" && typeof y == "string" && op == "__add__"){
         return x + y
     }
 
-    var x_class = x.__class__ || $B.get_class(x),
-        y_class = y.__class__ || $B.get_class(y),
-        rop = '__r' + op.substr(2),
+    var rop = '__r' + op.substr(2),
         method
-    if(x_class === y_class){
+    if(x_type === y_type){
         // For objects of the same type, don't try the reversed operator
-        if(x_class === _b_.int){
+        if(x_type === _b_.int){
             return _b_.int[op](x, y)
-        }else if(x_class === _b_.bool){
+        }else if(x_type === _b_.bool){
             return (_b_.bool[op] || _b_.int[op])
                 (x, y)
         }
         try{
-            method = $B.$call($B.$getattr(x_class, op))
+            method = $B.$call($B.$getattr(x_type, op))
         }catch(err){
-            if(err.__class__ === _b_.AttributeError){
+            if($B.is_exc(err, [_b_.AttributeError])){
                 var kl_name = $B.class_name(x)
                 $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
                     "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
@@ -2000,55 +2017,42 @@ $B.rich_op1 = function(op, x, y){
         return method(x, y)
     }
 
-    if(_b_.issubclass(y_class, x_class)){
+    if(_b_.issubclass(y_type, x_type)){
         // issue #1686
-        var reflected_left = $B.$getattr(x_class, rop, false),
-            reflected_right = $B.$getattr(y_class, rop, false)
+        var reflected_left = $B.$getattr(x_type, rop, false),
+            reflected_right = $B.$getattr(y_type, rop, false)
         if(reflected_right && reflected_left &&
                 reflected_right !== reflected_left){
             return reflected_right(y, x)
         }
     }
     if(op == '__mul__'){
-        if(x_class.$is_sequence && $B.$isinstance(y, [_b_.float, _b_.complex])){
+        if(x_type.$is_sequence && $B.$isinstance(y, [_b_.float, _b_.complex])){
             $B.RAISE(_b_.TypeError, "can't multiply sequence by " +
                 `non-int of type '${$B.class_name(y)}'`)
         }
-        if(y_class.$is_sequence && $B.$isinstance(x, [_b_.float, _b_.complex])){
+        if(y_type.$is_sequence && $B.$isinstance(x, [_b_.float, _b_.complex])){
             $B.RAISE(_b_.TypeError, "can't multiply sequence by " +
                 `non-int of type '${$B.class_name(x)}'`)
         }
     }
     var res
     var fail
-    try{
-        res = $B.call_with_mro(x, op, y)
-        if(res === _b_.NotImplemented){
-            fail = true
+    console.log('try call with mro', x_type, op)
+    var op_method = $B.search_in_mro(x_type, op, null)
+    if(op_method !== null){
+        console.log('op meth', op_meth)
+        res = op_method(x, y)
+        if(res !== _b_.NotImplemented){
+            return res
         }
-    }catch(err){
-        if(! $B.is_exc(err, [_b_.AttributeError])){
-            throw err
-        }
-        fail = true
     }
-    if(! fail){
-        return res
-    }
-    fail = false
-    try{
-        res = $B.call_with_mro(y, rop, x)
-        if(res === _b_.NotImplemented){
-            fail = true
+    var rop_method = $B.search_in_mro(y_type, rop, null)
+    if(rop_method !== null){
+        res = rop_method(x, y)
+        if(res !== _b_.NotImplemented){
+            return res
         }
-    }catch(err){
-        if(! $B.is_exc(err, [_b_.AttributeError])){
-            throw err
-        }
-        fail = true
-    }
-    if(! fail){
-        return res
     }
     $B.RAISE(_b_.TypeError,
         `unsupported operand type(s) for ${$B.method_to_op[op]}:` +

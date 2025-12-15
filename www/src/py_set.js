@@ -6,7 +6,7 @@ var _b_ = $B.builtins,
 
 function make_new_set(type){
     var res = {
-        __class__: type,
+        ob_type: type,
         $store: Object.create(null),
         $version: 0,
         $used: 0
@@ -58,8 +58,7 @@ function set_copy(obj){
     return res
 }
 
-var set = $B.make_class('set')
-set.$native = true
+var set = _b_.set
 
 function set_copy_and_difference(so, other){
     var result = set_copy(so)
@@ -104,7 +103,7 @@ function set_difference(so, other){
         }
     }
 
-    result.__class__ = so.__class__
+    result.ob_type = $B.get_class(so)
     return result
 }
 
@@ -366,7 +365,7 @@ set.__gt__ = function(self, other){
 
 set.__hash__ = _b_.None
 
-set.__init__ = function(self, iterable){
+set.tp_init = function(self, iterable){
     if(iterable === undefined){
         return _b_.None
     }
@@ -378,18 +377,9 @@ set.__init__ = function(self, iterable){
     return _b_.None
 }
 
-var set_iterator = $B.make_class('set_iterator',
-    function(so){
-        return {
-            __class__: set_iterator,
-            so,
-            it: set_iter(so),
-            version: so.$version
-        }
-    }
-)
+var set_iterator = $B.make_builtin_class('set_iterator')
 
-set_iterator.__iter__ = function(self){
+set_iterator.tp_iter = function(self){
     return self
 }
 
@@ -397,10 +387,10 @@ set_iterator.__length_hint__ = function(self){
     return self.so.$used
 }
 
-set_iterator.__next__ = function(self){
+set_iterator.tp_iternext = function(self){
     var res = self.it.next()
     if(res.done){
-        $B.RAISE(_b_.StopIteration, )
+        $B.RAISE(_b_.StopIteration)
     }
     if(self.so.$version != self.version){
         $B.RAISE(_b_.RuntimeError, "Set changed size during iteration")
@@ -415,8 +405,13 @@ set_iterator.__reduce_ex__ = function(self){
 
 $B.set_func_names(set_iterator, 'builtins')
 
-set.__iter__ = function(self){
-    return set_iterator.$factory(self)
+set.tp_iter = function(self){
+    return {
+        ob_type: set_iterator,
+        so,
+        it: set_iter(so),
+        version: so.$version
+    }
 }
 
 function set_make_items(so){
@@ -449,9 +444,7 @@ set.__lt__ = function(self, other){
     }
 }
 
-set.__mro__ = [_b_.object]
-
-set.__new__ = function(cls, iterable){
+set.tp_new = function(cls, iterable){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "set.__new__(): not enough arguments")
     }
@@ -478,7 +471,7 @@ set.__rand__ = function(self, other){
 }
 
 set.__reduce__ = function(self){
-    return $B.fast_tuple([self.__class__,
+    return $B.fast_tuple([$B.get_class(self),
                          $B.fast_tuple([set_make_items(self)]),
                          _b_.None])
 }
@@ -487,7 +480,7 @@ set.__reduce_ex__ = function(self){
     return set.__reduce__(self)
 }
 
-set.__repr__ = function(self){
+set.tp_repr = function(self){
     $B.builtins_repr_check(set, arguments) // in brython_builtins.js
     return set_repr(self)
 }
@@ -554,7 +547,7 @@ set.__xor__ = function(self, other){
             set_add(res, entry.item, entry.hash)
         }
     }
-    res.__class__ = self.__class__
+    res.ob_type = $B.get_class(self)
     return res
 }
 
@@ -746,7 +739,7 @@ set.union = function(){
             for(let entry of set_iter_with_hash(arg)){
                 set_add(res, entry.item, entry.hash)
             }
-        }else if(arg.__class__ === _b_.dict){
+        }else if($B.get_class(arg) === _b_.dict){
             // dict.$iter_items_hash produces [key, value, hash]
             for(let entry of _b_.dict.$iter_items(arg)){
                 set_add(res, entry.key, entry.hash)
@@ -859,8 +852,7 @@ $B.set_func_names(set, "builtins")
 
 set.__class_getitem__ = _b_.classmethod.$factory(set.__class_getitem__)
 
-var frozenset = $B.make_class('frozenset')
-frozenset.$native = true
+var frozenset = _b_.frozenset
 
 for(var attr in set){
     switch(attr) {
@@ -914,12 +906,12 @@ frozenset.__hash__ = function(self) {
    return self.__hashvalue__ = _hash
 }
 
-frozenset.__init__ = function(){
+frozenset.tp_init = function(){
     // does nothing, initialization is done in __new__
     return _b_.None
 }
 
-frozenset.__new__ = function(cls, iterable){
+frozenset.tp_new = function(cls, iterable){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "frozenset.__new__(): not enough arguments")
     }
@@ -931,7 +923,7 @@ frozenset.__new__ = function(cls, iterable){
 
     $B.check_nb_args_no_kw('__new__', 2, arguments)
 
-    if(cls === frozenset && iterable.__class__ === frozenset){
+    if(cls === frozenset && $B.get_class(iterable) === frozenset){
         return iterable
     }
 
@@ -940,13 +932,13 @@ frozenset.__new__ = function(cls, iterable){
     return self
 }
 
-frozenset.__repr__ = function(self){
+frozenset.tp_repr = function(self){
     $B.builtins_repr_check(frozenset, arguments) // in brython_builtins.js
     return set_repr(self)
 }
 
 frozenset.copy = function(self){
-    if(self.__class__ === frozenset){
+    if($B.get_class(self) === frozenset){
         return self
     }
     return set_copy(self)
@@ -960,9 +952,6 @@ frozenset.$factory = function(){
 }
 
 $B.set_func_names(frozenset, "builtins")
-
-_b_.set = set
-_b_.frozenset = frozenset
 
 })(__BRYTHON__);
 

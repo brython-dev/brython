@@ -6,23 +6,7 @@ Module to manipulate long integers
 
 var _b_ = $B.builtins
 
-var long_int = {
-    __class__: _b_.type,
-    __mro__: [_b_.int, _b_.object],
-    __qualname__: 'int',
-    $infos: {
-        __module__: "builtins",
-        __name__: "int"
-    },
-    $is_class: true,
-    $native: true,
-    $descriptors: {
-        "numerator": true,
-        "denominator": true,
-        "imag": true,
-        "real": true
-    }
-}
+var long_int = $B.make_builtin_class('long_int', [_b_.int])
 
 var int_or_long = _b_.int.$int_or_long
 
@@ -99,7 +83,7 @@ long_int.__abs__ = function(self){
 long_int.__add__ = function(self, other){
     if(typeof other == "number"){
         return int_or_long(self.value + BigInt(other))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return int_or_long(self.value + other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value + (other ? 1n : 0n))
@@ -123,7 +107,7 @@ long_int.__divmod__ = function(self, other){
 }
 
 long_int.__eq__ = function(self, other){
-    if(other.__class__ === $B.long_int){
+    if($B.is_long_int(other)){
         return self.value == other.value
     }else if(typeof other == "number" || typeof other == "boolean"){
         return false
@@ -143,7 +127,7 @@ long_int.__float__ = function(self){
 long_int.__floordiv__ = function(self, other){
     if(typeof other == "number"){
         return int_or_long(self.value / BigInt(other))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return int_or_long(self.value / other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value / (other ? 1n : 0n))
@@ -156,7 +140,7 @@ long_int.__floordiv__ = function(self, other){
 long_int.__ge__ = function(self, other){
     if(typeof other == "number"){
         return self.value >= other
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return self.value >= other.value
     }else if(typeof other == "boolean"){
         return self.value >= (other ? 1 : 0)
@@ -190,7 +174,7 @@ long_int.__invert__ = function(self){
 long_int.__le__ = function(self, other){
     if(typeof other == "number"){
         return self.value <= other
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return self.value <= other.value
     }else if(typeof other == "boolean"){
         return self.value <= (other ? 1 : 0)
@@ -208,7 +192,7 @@ long_int.__lt__ = function(self, other){
 long_int.__lshift__ = function(self, other){
     if(typeof other == "number"){
         return int_or_long(self.value << BigInt(other))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return int_or_long(self.value << other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value << (other ? 1n : 0n))
@@ -221,7 +205,7 @@ long_int.__lshift__ = function(self, other){
 long_int.__mod__ = function(self, other){
     if(typeof other == "number"){
         return int_or_long(self.value % BigInt(other))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         var n = self.value,
             m = other.value
         return int_or_long(((n % m) + m) % m)
@@ -240,7 +224,7 @@ long_int.__mul__ = function(self, other){
         return int_or_long(self.value * BigInt(other))
     }else if(typeof other == "boolean"){
         return int_or_long(self.value * (other ? 1n : 0n))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_iint(other)){
         return int_or_long(self.value * other.value)
     }else if($B.$isinstance(other, _b_.int)){
         // int subclass
@@ -268,7 +252,7 @@ long_int.__pow__ = function(self, power, z){
         return int_or_long(self.value ** BigInt(power))
     }else if(typeof power == "boolean"){
         return int_or_long(self.value ** power ? 1n : 0n)
-    }else if(power.__class__ === $B.long_int){
+    }else if($B.is_long_int(power)){
         return int_or_long(self.value ** power.value)
     }else if($B.$isinstance(power, _b_.int)){
         // int subclass
@@ -280,7 +264,7 @@ long_int.__pow__ = function(self, power, z){
 long_int.__rshift__ = function(self, other){
     if(typeof other == "number"){
         return int_or_long(self.value >> BigInt(other))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return int_or_long(self.value >> other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value >> (other ? 1n : 0n))
@@ -290,7 +274,7 @@ long_int.__rshift__ = function(self, other){
     return _b_.NotImplemented
 }
 
-long_int.__repr__ = function(self){
+long_int.tp_repr = function(self){
     $B.builtins_repr_check($B.long_int, arguments) // in brython_builtins.js
     if($B.int_max_str_digits != 0 &&
             self.value >= 10n ** BigInt($B.int_max_str_digits)){
@@ -305,7 +289,7 @@ long_int.__sub__ = function(self, other){
         return int_or_long(self.value - BigInt(other))
     }else if(typeof other == "boolean"){
         return int_or_long(self.value - (other ? 1n : 0n))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return int_or_long(self.value - other.value)
     }else if($B.$isinstance(other, _b_.int)){
         // int subclass
@@ -319,7 +303,7 @@ long_int.__truediv__ = function(self, other){
         return $B.fast_float(Number(self.value) / other)
     }else if(typeof other == "boolean"){
         return $B.fast_float(Number(self.value) * (other ? 1 : 0))
-    }else if(other.__class__ === $B.long_int){
+    }else if($B.is_long_int(other)){
         return $B.fast_float(Number(self.value) / Number(other.value))
     }else if($B.$isinstance(other, _b_.int)){
         // int subclass
@@ -388,7 +372,7 @@ if(typeof other == "number"){
     return _b_.int.$int_or_long(self.value & BigInt(other))
 }else if(typeof other == "boolean"){
     return _b_.int.$int_or_long(self.value & (other ? 1n : 0n))
-}else if(other.__class__ === $B.long_int){
+}else if($B.is_long_int(other)){
     return _b_.int.$int_or_long(self.value & other.value)
 }else if($B.$isinstance(other, _b_.int)){
     // int subclass
@@ -452,7 +436,11 @@ function digits(base){
 }
 
 long_int.$from_int = function(value){
-    return {__class__: long_int, value: value.toString(), pos: value > 0}
+    return {
+        ob_type: long_int,
+        value: value.toString(),
+        pos: value > 0
+    }
 }
 
 long_int.$factory = function(value, base){
@@ -460,7 +448,7 @@ long_int.$factory = function(value, base){
     var is_digits = digits(base)
     for(let i = 0; i < value.length; i++){
         if(is_digits[value.charAt(i)] === undefined){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 'int argument is not a valid number: "' + value + '"')
         }
     }
@@ -482,7 +470,10 @@ long_int.$factory = function(value, base){
             coef *= base
         }
     }
-    return {__class__: $B.long_int, value: res}
+    return {
+        ob_type: $B.long_int,
+        value: res
+    }
 }
 
 function extended_euclidean_algorithm(a, b){
@@ -551,7 +542,7 @@ $B.fast_long_int = function(value){
         throw Error('not a big int')
     }
     return {
-        __class__: $B.long_int,
+        ob_type: $B.long_int,
         value: value
     }
 }

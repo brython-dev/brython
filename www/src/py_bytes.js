@@ -8,7 +8,7 @@ var from_unicode = {},
     to_unicode = {}
 
 function bytes_value(obj){
-    return obj.__class__ === bytes ? obj : fast_bytes(obj.source)
+    return $B.get_class(obj) === bytes ? obj : fast_bytes(obj.source)
 }
 
 // Conversion of byte-like objects (bytes, bytearray, memoryview, array.array...)
@@ -60,6 +60,13 @@ function invalid(other){
     return ! $B.$isinstance(other, [bytes, bytearray])
 }
 
+function check_buffer(arg){
+    if(! $B.get_class(arg).$buffer_protocol){
+        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
+                "not '" + $B.class_name(arg) + "'")
+    }
+}
+
 //bytearray() (built in class)
 var bytearray = _b_.bytearray
 Object.assign(bytearray,
@@ -101,7 +108,7 @@ bytearray.__add__ = function(self, other){
         check_exports(self)
     }
     return {
-        __class__: self.__class__,
+        ob_type: $B.get_class(self),
         source: self.source.concat(other_bytes)
     }
 }
@@ -167,7 +174,7 @@ function check_exports(self){
         for(var key in locals){
             try{
                 var value = locals[key]
-                if(value.__class__ === _b_.memoryview && value.obj === self){
+                if($B.get_class(value) === _b_.memoryview && value.obj === self){
                     has_exports = true
                     break
                 }
@@ -269,7 +276,7 @@ bytearray.extend = function(self, b){
         // happens in re.finditer()
         no_resizing()
     }
-    if(b.__class__ === bytearray || b.__class__ === bytes){
+    if([bytearray, bytes].includes($B.get_class(b))){
         self.source = self.source.concat(b.source)
         return _b_.None
     }
@@ -330,21 +337,14 @@ bytearray.$factory = function(){
 
 //bytes() (built in function)
 var bytes = _b_.bytes
-Object.assign(bytes,
-    {
-        __mro__: [_b_.object],
-        __qualname__: 'bytes',
-        $buffer_protocol: true,
-        $is_sequence: true,
-        $is_class: true
-    }
-)
+bytes.$buffer_protocol = true,
+bytes.$is_sequence = true,
 
 bytes.__add__ = function(self, other){
     try{
         var other_bytes = $B.to_bytes(other)
         return {
-            __class__: self.__class__,
+            ob_type: $B.get_class(self),
             source: self.source.concat(other_bytes)
         }
     }catch(err){
@@ -383,14 +383,7 @@ bytes.__contains__ = function(self, other){
     return false
 }
 
-var bytes_iterator = $B.make_class("bytes_iterator",
-    function(t){
-        return {
-            __class__: bytes_iterator,
-            it: t[Symbol.iterator]()
-        }
-    }
-)
+var bytes_iterator = $B.make_builtin_class("bytes_iterator")
 
 bytes_iterator.tp_iternext = function*(self){
     for(var value of self.it){
@@ -401,7 +394,10 @@ bytes_iterator.tp_iternext = function*(self){
 $B.set_func_names(bytes_iterator, 'builtins')
 
 bytes.tp_iter = function(self){
-    return bytes_iterator.$factory(self.source)
+    return {
+        ob_type: bytes_iterator,
+        it: self.source[Symbol.iterator]()
+    }
 }
 
 bytes.__eq__ = function(self, other){
@@ -556,7 +552,7 @@ bytes.__new__ = function(){
         source = $.source
     if($.source === missing){
         return {
-            __class__: $.cls,
+            ob_type: $.cls,
             source: []
         }
     }else if(typeof $.source == "string" || $B.$isinstance($.source, _b_.str)){
@@ -570,7 +566,7 @@ bytes.__new__ = function(){
                 `${$B.class_name(res)}, not bytes`)
         }
         // encode returns bytes
-        res.__class__ = $.cls
+        res.ob_type = $.cls
         return res
     }
     if($.encoding !== missing){
@@ -627,7 +623,7 @@ bytes.__new__ = function(){
         console.log('bytes.__new__, no source', $.source)
     }
     return {
-        __class__: $.cls,
+        ob_type: $.cls,
         source
     }
 }
@@ -635,7 +631,7 @@ bytes.__new__ = function(){
 bytes.$new = function(cls, source, encoding, errors){
     // Create an instance of bytes. Called by methods that have already parsed
     // the arguments.
-    var self = {__class__: cls},
+    var self = {ob_type: cls},
         int_list = [],
         pos = 0
     if(source === undefined){
@@ -725,7 +721,7 @@ bytes.__repr__ = bytes.__str__ = function(self){
     }
 }
 
-bytes.capitalize = function(self) {
+bytes.capitalize = function(self){
     var src = self.source,
         len = src.length,
         buffer = src.slice()
@@ -740,7 +736,7 @@ bytes.capitalize = function(self) {
     return bytes.$factory(buffer)
 }
 
-bytes.center = function() {
+bytes.center = function(){
     var $ = $B.args('center', 3, {self: null, width: null, fillbyte: null},
             ['self', 'width', 'fillbyte'], arguments,
             {fillbyte: bytes.$factory([32])}, null, null)
@@ -754,7 +750,7 @@ bytes.center = function() {
     return bytes.rjust(ljust, $.width, $.fillbyte)
 }
 
-bytes.count = function() {
+bytes.count = function(){
     var $ = $B.args('count', 4,
         {self: null, sub: null, start: null, end: null},
         ['self', 'sub', 'start', 'end'],
@@ -768,15 +764,8 @@ bytes.count = function() {
         if ($.sub < 0 || $.sub > 255)
             $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         len = 1
-    }else if(!$.sub.__class__){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.sub) + "'")
-    }else if(!$.sub.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.sub) + "'")
-    }else{
-        len = $.sub.source.length
-    }
+    check_buffer($.sub)}
+    len = $.sub.source.length
 
     do{
         index = bytes.find($.self, $.sub, Math.max(index + len, $.start), $.end)
@@ -804,7 +793,7 @@ bytes.decode = function(){
     }
 }
 
-bytes.endswith = function() {
+bytes.endswith = function(){
     var $ = $B.args('endswith', 4,
             {self: null, suffix: null, start: null, end: null},
             ['self', 'suffix', 'start', 'end'], arguments,
@@ -836,7 +825,7 @@ bytes.endswith = function() {
     }
 }
 
-bytes.expandtabs = function() {
+bytes.expandtabs = function(){
     var $ = $B.args('expandtabs', 2, {self: null, tabsize: null},
         ['self', 'tabsize'], arguments, {tabsize: 8}, null, null)
 
@@ -877,13 +866,8 @@ bytes.find = function(self, sub){
             $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
         return self.source.slice(0, end == -1 ? undefined : end).indexOf(sub, start)
-    }else if(! sub.__class__){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name(sub) + "'")
-    }else if(! sub.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name(sub) + "'")
     }
+    check_buffer(sub)
     end = end == -1 ? self.source.length : Math.min(self.source.length, end)
 
     var len = sub.source.length
@@ -959,13 +943,12 @@ bytes.hex = function(){
     return res
 }
 
-bytes.index = function() {
+bytes.index = function(){
     var $ = $B.args('index', 4,
         {self: null, sub: null, start: null, end: null},
         ['self', 'sub', 'start', 'end'],
         arguments, {start: 0, end: -1}, null, null)
     var index = bytes.find($.self, $.sub, $.start, $.end)
-    console.log('index', index)
     if(index == -1){
         $B.RAISE(_b_.ValueError, "subsection not found")
     }
@@ -1113,7 +1096,7 @@ bytes.join = function(){
         self = $ns['self'],
         iterable = $ns['iterable']
     var next_func = $B.$getattr(_b_.iter(iterable), '__next__'),
-        res = self.__class__.$factory(),
+        res = $B.get_class(self).$factory(),
         empty = true
     while(true){
         try{
@@ -1156,13 +1139,7 @@ bytes.ljust = function() {
         ['self', 'width', 'fillbyte'], arguments,
         {fillbyte: bytes.$factory([32])}, null, null)
 
-    if(!$.fillbyte.__class__){
-        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
-            "not '" + $B.class_name($.fillbyte) + "'")
-    }else if (!$.fillbyte.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
-            "not '" + $B.class_name($.fillbyte) + "'")
-    }
+    check_buffer($.fillbyte)
 
     var padding = [],
         count = $.width - $.self.source.length
@@ -1172,7 +1149,9 @@ bytes.ljust = function() {
     return bytes.$factory($.self.source.concat(padding))
 }
 
-bytes.lstrip = function(self, cars){return _strip(self, cars, 'l')}
+bytes.lstrip = function(self, cars){
+    return _strip(self, cars, 'l')
+}
 
 bytes.maketrans = function(from, to) {
     var _t = []
@@ -1196,13 +1175,7 @@ bytes.partition = function() {
     var $ = $B.args('partition', 2, {self:null, sep:null}, ['self', 'sep'],
             arguments, {}, null, null)
 
-    if(! $.sep.__class__){
-        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
-            "not '" + $B.class_name($.sep) + "'")
-    }else if (! $.sep.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
-            "not '" + $B.class_name($.sep) + "'")
-    }
+    check_buffer($.sep)
 
     var len = $.sep.source.length,
         src = $.self.source,
@@ -1256,21 +1229,8 @@ bytes.replace = function(){
         $new = $.new
     var count = $.count >= 0 ? $.count : src.length
 
-    if(! $.old.__class__){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.old) + "'")
-    }else if(! $.old.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.sep) + "'")
-    }
-
-    if(! $.new.__class__){
-        $B.RAISE(_b_.TypeError, "second argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.old) + "'")
-    }else if(! $.new.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "second argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.sep) + "'")
-    }
+    check_buffer($.old)
+    check_buffer($.new)
 
     for(var i = 0; i < len; i++){
         if(bytes.startswith(self, old, i) && count){
@@ -1290,7 +1250,7 @@ bytes.rfind = function(self, subbytes){
     var sub,
         start,
         end
-    if(arguments.length == 2 && subbytes.__class__ === bytes){
+    if(arguments.length == 2 && $B.get_class(subbytes) === bytes){
         sub = subbytes
         start = 0
         end = -1
@@ -1309,13 +1269,7 @@ bytes.rfind = function(self, subbytes){
         }
         return $.self.source.slice(start, $.end == -1 ? undefined : $.end).
             lastIndexOf(sub) + start
-    }else if(! sub.__class__){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name($.sub) + "'")
-    }else if(! sub.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "first argument must be a bytes-like " +
-            "object, not '" + $B.class_name(sub) + "'")
-    }
+    check_buffer(sub)}
     end = end == -1 ? self.source.length : Math.min(self.source.length, end)
 
     var len = sub.source.length
@@ -1351,13 +1305,7 @@ bytes.rjust = function() {
         ['self', 'width', 'fillbyte'], arguments,
         {fillbyte: bytes.$factory([32])}, null, null)
 
-    if (!$.fillbyte.__class__){
-        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
-            "not '" + $B.class_name($.fillbyte) + "'")
-    }else if (!$.fillbyte.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "argument 2 must be a byte string of length 1, " +
-            "not '" + $B.class_name($.fillbyte) + "'")
-    }
+    check_buffer($.fillbyte)
 
     var padding = [],
         count = $.width - $.self.source.length
@@ -1371,13 +1319,7 @@ bytes.rpartition = function() {
     var $ = $B.args('rpartition', 2, {self:null, sep:null}, ['self', 'sep'],
             arguments, {}, null, null)
 
-    if(!$.sep.__class__){
-        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
-                "not '" + $B.class_name($.sep) + "'")
-    }else if (!$.sep.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
-                "not '" + $B.class_name($.sep) + "'")
-    }
+    check_buffer($.sep)
 
     var len = $.sep.source.length,
         src = $.self.source,
@@ -1390,7 +1332,9 @@ bytes.rpartition = function() {
     ])
 }
 
-bytes.rstrip = function(self, cars){return _strip(self, cars, 'r')}
+bytes.rstrip = function(self, cars){
+    return _strip(self, cars, 'r')
+}
 
 bytes.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
@@ -1398,13 +1342,9 @@ bytes.split = function(){
         res = [],
         start = 0,
         stop = 0
-    if(! $.sep.__class__ ){
-        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
-            "not '" + $B.class_name($.sep) + "'")
-    }else if(! $.sep.__class__.$buffer_protocol){
-        $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
-            "not '" + $B.class_name($.sep) + "'")
-    }
+
+    check_buffer($.sep)
+
     var seps = $.sep.source,
         len = seps.length,
         src = $.self.source,
@@ -1901,7 +1841,7 @@ var decode = $B.decode = function(obj, encoding, errors){
           break
       case "unicode_escape":
           // obj is str or bytes
-          if(obj.__class__ === bytes || obj.__class__ === bytearray){
+          if([bytes, bytearray].includes($B.get_class(obj))){
               obj = decode(obj, "latin-1", "strict")
           }
           return obj.replace(/\\n/g, "\n").
@@ -1912,7 +1852,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                    replace(/\\'/g, "'").
                    replace(/\\"/g, '"')
       case "raw_unicode_escape":
-          if(obj.__class__ === bytes || obj.__class__ === bytearray){
+          if([bytes, bytearray].includes($B.get_class(obj))){
               obj = decode(obj, "latin-1", "strict")
           }
           return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
@@ -2070,7 +2010,7 @@ var encode = $B.encode = function(){
 
 function fast_bytes(t){
     return {
-        __class__: _b_.bytes,
+        ob_type: _b_.bytes,
         source: t ?? []
     }
 }
@@ -2080,10 +2020,6 @@ $B.fast_bytes = fast_bytes
 bytes.$factory = function(){
     return bytes.__new__.bind(null, bytes).apply(null, arguments)
 }
-
-bytes.__class__ = _b_.type
-bytes.$is_class = true
-
 
 $B.set_func_names(bytes, "builtins")
 
@@ -2105,7 +2041,5 @@ $B.set_func_names(bytearray, "builtins")
 
 bytearray.fromhex = bytes.fromhex
 
-_b_.bytes = bytes
-_b_.bytearray = bytearray
 
 })(__BRYTHON__);

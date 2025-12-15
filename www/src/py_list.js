@@ -5,7 +5,7 @@ var _b_ = $B.builtins,
     isinstance = $B.$isinstance
 
 function check_not_tuple(self, attr){
-    if(self.__class__ === tuple){
+    if($B.exact_type(self, tuple)){
         throw $B.attr_error(attr, self)
     }
 }
@@ -29,7 +29,7 @@ The argument must be an iterable if specified.`,
 list.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 list.$is_sequence = true
 
-list.__add__ = function(self, other){
+list.nb_add = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
         var this_name = $B.class_name(self) // can be tuple
         var radd = $B.$getattr(other, '__radd__', null)
@@ -170,9 +170,9 @@ list.__getitem__ = function(self, key){
 }
 
 list.$getitem = function(self, key){
-    var klass = (self.__class__ || $B.get_class(self))
+    var klass = $B.get_class(self)
     var factory = function(list_res){
-        list_res.__class__ = klass
+        list_res.ob_type = klass
         return list_res
     }
 
@@ -196,7 +196,7 @@ list.$getitem = function(self, key){
         $B.RAISE(_b_.IndexError, $B.class_name(self) +
             " index out of range")
     }
-    if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
+    if($B.$isinstance(key, _b_.slice)){
         return _b_.list.$getitem_slice(self, key)
     }
 
@@ -205,12 +205,12 @@ list.$getitem = function(self, key){
 }
 
 list.$getitem_slice = function(self, key){
-    var klass = self.__class__ ?? $B.get_class(self)
+    var klass = $B.get_class(self)
     // Find integer values for start, stop and step
     if(key.start === _b_.None && key.stop === _b_.None &&
             key.step === _b_.None){
         let res = self.slice()
-        res.__class__ = klass
+        res.ob_type = klass
         return res
     }
     let s = _b_.slice.$conv_for_seq(key, self.length)
@@ -221,7 +221,7 @@ list.$getitem_slice = function(self, key){
         start = s.start,
         stop = s.stop,
         step = s.step
-    res.__class__ = klass
+    res.ob_type = klass
     if(step > 0){
         if(stop <= start){
             return res
@@ -370,7 +370,7 @@ list.__le__ = function(self, other){
     return $B.rich_comp('__le__', self[i], other[i])
 }
 
-list.__len__ = function(self){
+list.sq_length = function(self){
     return self.length
 }
 
@@ -427,7 +427,7 @@ list.__mul__ = function(self, other){
                 res.push($temp[j])
             }
         }
-        res.__class__ = self.__class__
+        res.ob_type = $B.get_class(self)
         return res
     }else if(isinstance(other, $B.long_int)){
         $B.RAISE(_b_.OverflowError, `cannot fit ` +
@@ -597,7 +597,7 @@ function $elts_class(self){
 
 // function used for list literals
 $B.$list = function(t){
-    t.__class__ = _b_.list
+    t.ob_type = _b_.list
     return t
 }
 
@@ -610,9 +610,9 @@ var factory = function(){
     var $ = $B.args(klass.__name__, 1, {obj: null}, ["obj"],
         arguments, {}, null, null),
         obj = $.obj
-    if(Array.isArray(obj) && obj.__class__){ // most simple case
+    if(Array.isArray(obj) && obj.ob_type){ // most simple case
         obj = obj.slice() // list(t) is not t
-        obj.__class__ = klass
+        obj.ob_type = klass
         return obj
     }
     let res = Array.from($B.make_js_iterator(obj))
@@ -671,7 +671,7 @@ function list_copy(self){
     var $ = $B.args("copy", 1, {self: null}, ["self"],
         arguments, {}, null, null)
     var res = $.self.slice()
-    res.__class__ = $.self.__class__
+    res.ob_type = $B.get_class($.self)
     return res
 }
 
@@ -756,7 +756,7 @@ function list_index(){
         self = $.self,
         start = $.start,
         stop = $.stop
-    if(start.__class__ === $B.long_int){
+    if($B.exact_type(start, $B.long_int)){
         start = parseInt(start.value) * (start.pos ? 1 : -1)
     }
     if(start < 0){
@@ -765,7 +765,7 @@ function list_index(){
     if(stop === missing){
         stop = self.length
     }else{
-        if(stop.__class__ === $B.long_int){
+        if($B.exact_type(stop, $B.long_int)){
             stop = parseInt(stop.value) * (stop.pos ? 1 : -1)
         }
         if(stop < 0){
@@ -926,12 +926,12 @@ tuple_iterator.tp_iternext = function*(self){
 
 tuple.$factory = function(){
     var obj = factory.apply(tuple, arguments)
-    obj.__class__ = tuple
+    obj.ob_type = tuple
     return obj
 }
 
 $B.fast_tuple = function(array){
-    array.__class__ = tuple
+    array.ob_type = tuple
     return array
 }
 

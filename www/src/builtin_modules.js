@@ -387,39 +387,39 @@
     modules['browser'] = browser
 
     // Class for Javascript "undefined"
-    $B.UndefinedType = $B.make_class("UndefinedType",
-        function(){return $B.Undefined}
-    )
-    $B.UndefinedType.__mro__ = [_b_.object]
+    $B.UndefinedType = $B.make_builtin_class("UndefinedType")
+    $B.UndefinedType.$factory = function(){
+        return $B.Undefined
+    }
     $B.UndefinedType.__bool__ = function(){
         return false
     }
-    $B.UndefinedType.__repr__ = function(){
+    $B.UndefinedType.tp_repr = function(){
         return "<Javascript undefined>"
     }
-    $B.UndefinedType.__str__ = $B.UndefinedType.__repr__;
 
-    $B.Undefined = {ob_type: $B.UndefinedType}
+    $B.Undefined = {
+        ob_type: $B.UndefinedType
+    }
 
     $B.set_func_names($B.UndefinedType, "javascript")
 
     // Class used by javascript.super()
-    var super_class = $B.make_class("JavascriptSuper",
-        function(){
-            // Use Brython's super() to get a reference to self
-            var res = _b_.super.$factory()
-            var js_constr = res.__thisclass__.tp_bases[0]
-            return function(){
-                var obj = new js_constr.$js_func(...arguments)
-                for(var attr in obj){
-                    res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
-                }
-                return obj
+    var super_class = $B.make_builtin_class("JavascriptSuper")
+    super_class.$factory = function(){
+        // Use Brython's super() to get a reference to self
+        var res = _b_.super.$factory()
+        var js_constr = res.__thisclass__.tp_bases[0]
+        return function(){
+            var obj = new js_constr.$js_func(...arguments)
+            for(var attr in obj){
+                res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
             }
+            return obj
         }
-    )
+    }
 
-    super_class.__getattribute__ = function(self, attr){
+    super_class.tp_getattro = function(self, attr){
         if(attr == "__init__" || attr == "__call__"){
             return self.__init__
         }
@@ -580,7 +580,7 @@
         },
         Math: self.Math && $B.jsobj2pyobj(self.Math),
         NULL: null,
-        NullType: $B.make_class('NullType'),
+        NullType: $B.make_builtin_class('NullType'),
         Number: self.Number && $B.jsobj2pyobj(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
@@ -607,7 +607,7 @@
         return other === null || other === $B.Undefined
     }
 
-    modules.javascript.NullType.__repr__ = function(_self){
+    modules.javascript.NullType.tp_repr = function(_self){
         // in Javascript, null == undefined is true...
         return '<Javascript null>'
     }
@@ -829,29 +829,29 @@
         )
     }
 
-    var WarningMessage = $B.make_class("WarningMessage",
-        function(){
-            var $ = $B.make_args("WarningMessage", 8,
-                {message: null, category: null, filename: null, lineno: null,
-                 file: null, line:null, source: null},
-                 ['message', 'category', 'filename', 'lineno', 'file',
-                  'line', 'source'],
-                 arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
-                 null, null)
-            return {
-                ob_type: WarningMessage,
-                message: $.message,
-                category: $.category,
-                filename: $.filename,
-                lineno: $.lineno,
-                file: $.file,
-                line: $.line,
-                source: $.source,
-                _category_name: _b_.bool.$factory($.category) ?
-                    $B.$getattr($.category, "__name__") : _b_.None
-            }
+    var WarningMessage = $B.make_builtin_class("WarningMessage")
+    WarningMessage.$factory = function(){
+        var $ = $B.make_args("WarningMessage", 8,
+            {message: null, category: null, filename: null, lineno: null,
+             file: null, line:null, source: null},
+             ['message', 'category', 'filename', 'lineno', 'file',
+              'line', 'source'],
+             arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
+             null, null)
+        return {
+            ob_type: WarningMessage,
+            message: $.message,
+            category: $.category,
+            filename: $.filename,
+            lineno: $.lineno,
+            file: $.file,
+            line: $.line,
+            source: $.source,
+            _category_name: _b_.bool.$factory($.category) ?
+                $B.$getattr($.category, "__name__") : _b_.None
         }
-    )
+    }
+
     // _warnings provides basic warning filtering support.
     modules._warnings = {
         _defaultaction: "default",
@@ -1138,7 +1138,7 @@
         return result
     }
 
-    var HTTPRequest = $B.make_class("Request")
+    var HTTPRequest = $B.make_builtin_class("HTTPRequest")
 
     HTTPRequest.data = _b_.property.$factory(function(self){
         if(self.format == "binary"){
@@ -1173,19 +1173,18 @@
         return res
     })
 
-    var Future = $B.make_class("Future",
-        function(){
-            var methods = {}
-            var promise = new Promise(function(resolve, reject){
-                methods.resolve = resolve
-                methods.reject = reject
-            })
-            promise._methods = methods
-            promise._done = false
-            promise.ob_type = Future
-            return promise
-        }
-    )
+    var Future = $B.make_builtin_class("Future")
+    Future.$factory = function(){
+        var methods = {}
+        var promise = new Promise(function(resolve, reject){
+            methods.resolve = resolve
+            methods.reject = reject
+        })
+        promise._methods = methods
+        promise._done = false
+        promise.ob_type = Future
+        return promise
+    }
 
     Future.done = function(){
         var $ = $B.args('done', 1, {self:null},
@@ -1395,53 +1394,6 @@
         _b_[attr] = value
     }
 
-    // Set type of methods of builtin classes
-    /*
-    for(var name in _b_){
-        if(name == 'dict'){
-            // new version experimented in py_dict.js
-            continue
-        }
-        var builtin = _b_[name]
-        if(_b_[name].__class__ === _b_.type){
-            _b_[name].__qualname__ = _b_[name].__qualname__ ?? name
-            _b_[name].__module__ = 'builtins'
-            //_b_[name].__name__ = _b_[name].__name__ ?? name
-            _b_[name].$is_builtin_class = true
-            $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
-            for(var key in _b_[name]){
-                var value = _b_[name][key]
-                if(value === undefined || value.__class__ ||
-                        typeof value != 'function'){
-                    continue
-                }else if(key == "__new__"){
-                    value.__class__ = $B.builtin_function_or_method
-                }else if(key == '__class_getitem__'){
-                    value.__class__ = $B.classmethod_descriptor
-                    value.__objclass__ = _b_[name]
-                }else if(key.startsWith("__")){
-                    value.__class__ = $B.wrapper_descriptor
-                }else{
-                    value.__class__ = $B.method_descriptor
-                }
-                value.__objclass__ = _b_[name]
-            }
-        }else if(typeof builtin == 'function'){
-            builtin.$infos = {
-                __name__: name,
-                __qualname__: name,
-                __dict__: $B.empty_dict()
-            }
-            $B.set_function_infos(builtin,
-                {
-                    __name__: name,
-                    __qualname__: name
-                }
-            )
-        }
-    }
-    */
-
     // Attributes of __BRYTHON__ are Python lists
     for(let attr in $B){
         if(Array.isArray($B[attr])){
@@ -1451,14 +1403,13 @@
 
     // Cell objects, for free variables in functions
     // Must be defined after dict, because property uses it
-    $B.cell = $B.make_class("cell",
-        function(value){
-            return {
-                ob_type: $B.cell,
-                $cell_contents: value
-            }
+    $B.cell = $B.make_builtin_class("cell")
+    $B.cell.$factory = function(value){
+        return {
+            ob_type: $B.cell,
+            $cell_contents: value
         }
-    )
+    }
 
     $B.cell.cell_contents = $B.$call(_b_.property)(
         function(self){
