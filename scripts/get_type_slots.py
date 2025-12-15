@@ -1,3 +1,69 @@
+import types
+import builtins
+
+types_module = {}
+for t in dir(types):
+    value = getattr(types, t)
+    if type(value) is type:
+        types_module[value.__name__] = value
+
+def make_builtins_init(bltins):
+    builtin_names = dir(builtins)
+    builtins_and_types = set()
+    types_module = {}
+    for t in dir(types):
+        value = getattr(types, t)
+        if type(value) is type:
+            builtins_and_types.add(value)
+
+    for attr in dir(bltins):
+        value = getattr(bltins, attr)
+        if type(value) is type:
+            builtins_and_types.add(value)
+
+    def get_children(parent_bases):
+        # get classes whoses bases are in parent_bases
+        res = set()
+        for b in builtins_and_types:
+            if hasattr(b, '__bases__'):
+                bases = b.__bases__
+                for base in bases:
+                    if base in parent_bases:
+                        res.add(b)
+            elif hasattr(b, '__base__'):
+                if b.__base__ in parent_bases:
+                    res.add(b)
+        return res
+
+    # top of types hierarchy
+    parent_bases = {object}
+
+    # Get a list of sets of types
+    # Each type in a set has all its bases in the previous sets
+    sets = [list(parent_bases)]
+    builtins_and_types -= parent_bases
+
+    def sort_key(cls):
+        return (cls.__name__ not in builtin_names, cls.__name__)
+
+    n = 0
+    while builtins_and_types:
+        children = get_children(parent_bases)
+        sets.append(sorted(list(children), key=sort_key))
+        parent_bases |= children
+        builtins_and_types -= children
+        n += 1
+        if n > 20:
+            print(builtins)
+            raise Exception('infinite loop')
+
+    init = ''
+    for _set in sets:
+        for cls in _set:
+            init += get_slots_by_type(cls)
+
+    return init
+
 def make_methods(cls):
     methods = {}
     for attr in cls.__dict__:
@@ -14,12 +80,9 @@ def make_methods(cls):
     js += ',\n'.join(lines)
     return js + '\n}'
 
-def get_slots(cls_name):
-    try:
-        cls = eval(cls_name)
-    except:
-        return ''
+def get_slots_by_type(cls):
     slots = {
+        'tp_name': "__name__",
         'tp_basicsize': "__basicsize__",
         'tp_itersize': "__itemsize__",
         'tp_flags': "__flags__",
@@ -29,28 +92,48 @@ def get_slots(cls_name):
         'tp_doc': '__doc__',
         'tp_bases': '__bases__'
     }
-    res = 'Object.assign(' + cls_name + ',\n{\n'
+    head = '_b_' if cls.__name__ in dir(builtins) else '$B'
+    name = cls.__name__.replace('-', '_')
+    res = f'{head}.{name} = Object.create(null)\n'
+    res += f'Object.assign({head}.{name}' + ',\n{\n'
     for slot in slots:
+        value = None
         if slot == 'tp_doc':
-            value = '`' + getattr(cls, slots[slot]) + '`'
+            v = getattr(cls, slots[slot])
+            if isinstance(v, str):
+                value = '`' + v + '`'
         elif slot == 'tp_base':
-            attr_value = getattr(cls, slots[slot])
-            if attr_value is None:
-                value = '_b_.None'
-            else:
+            attr_value = getattr(cls, slots[slot], None)
+            if attr_value is not None:
                 value = '_b_.' + attr_value.__name__
         elif slot == 'tp_bases':
-            bases = cls.__bases__
-            value = '[' + ', '.join(f'_b_.{x.__name__}' for x in bases) + ']'
+            if hasattr(cls, '__bases__'):
+                bases = cls.__bases__
+                value = '[' + ', '.join(f'_b_.{x.__name__}' for x in bases) + ']'
+        elif slot == 'tp_name':
+            value = f'"{cls.__name__}"'
         else:
-            value = getattr(cls, slots[slot])
-        res += f'    {slot}: {value},\n'
+            value = getattr(cls, slots[slot], None)
+
+        if value is not None:
+            res += f'    {slot}: {value},\n'
     return res + '})\n\n'
 
+def get_slots(cls_name):
+    try:
+        cls = eval(cls_name)
+        return get_slots_by_type(cls)
+    except:
+        if cls_name in types_module:
+            return get_slots_by_type(types_module[cls_name])
+        return ''
+
+
 if __name__ == '__main__':
+    print(make_builtins_init(__builtins__))
+
     print(make_methods(type))
     print(get_slots(object))
-
     wd = type(int.__init__)
 
     all_wrappers = set()
