@@ -48,20 +48,29 @@ $B.make_class_dict = function(klass, methods){
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
+        mp_length: make_mapping_len,
+        sq_length: make_seq_length,
         tp_call: make_call,
         tp_getattro: make_getattribute,
         tp_hash: make_hash,
+        tp_init: make_init,
         tp_iter: make_iter,
         tp_iternext: make_next,
+        tp_new: make_new,
         tp_repr: make_repr,
-        tp_str : make_str
+        tp_str : make_str,
+        tp_richcompare: make_richcompare
     }
 )
 
 function make_call(cls){
     var call = cls.tp_call
     call.ml = {ml_name: '__call__'}
-    cls.dict.__call__ = cls.tp_call
+    cls.dict.__call__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__call__',
+        call
+    )
 }
 
 function make_getattribute(cls){
@@ -76,6 +85,16 @@ function make_hash(cls){
     cls.dict.__hash__ = cls.tp_hash
 }
 
+function make_init(cls){
+    var init = cls.tp_init
+    init.ml = {ml_name: '__init__'}
+    cls.dict.__init__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__init__',
+        init
+    )
+}
+
 function make_iter(cls){
     var iter = cls.tp_iter
     iter.ml = {ml_name: '__iter__'}
@@ -84,6 +103,19 @@ function make_iter(cls){
         '__iter__',
         iter
     )
+}
+
+function make_mapping_len(cls){
+    var len = cls.mp_length
+    cls.dict.__len__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__len__',
+        len
+    )
+}
+
+function make_new(cls){
+    cls.dict.__new__ = cls.tp_new
 }
 
 function make_next(cls){
@@ -108,41 +140,87 @@ function make_repr(cls){
     )
 }
 
+function make_richcompare(cls){
+    var comp = cls.tp_richcompare
+    var eq = (a, b) => comp(a, b) == 0
+    var ne = (a, b) => comp(a, b) != 0
+    var le = (a, b) => comp(a, b) <= 0
+    var lt = (a, b) => comp(a, b) < 0
+    var ge = (a, b) => comp(a, b) >= 0
+    var gt = (a, b) => comp(a, b) > 0
+    cls.dict.__eq__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__eq__',
+        eq
+    )
+    cls.dict.__ne__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__ne__',
+        ne
+    )
+    cls.dict.__le__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__le__',
+        le
+    )
+    cls.dict.__lt__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__lt__',
+        lt
+    )
+    cls.dict.__ge__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__ge__',
+        ge
+    )
+    cls.dict.__gt__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__gt__',
+        gt
+    )
+}
+
+function make_seq_length(cls){
+    var len = cls.sq_length
+    cls.dict.__len__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__len__',
+        len
+    )
+}
+
 function make_str(klass){
     var str = klass.tp_str
     str.ml = {ml_name: '__str__'}
     klass.dict.__str__ = str
 }
 
-console.log('_b_.type.ob_type 118', _b_.type.ob_type)
+console.log('create types', $B.created_types)
 
-var builtin_types = $B.created_types // updated by $B.make_builtin_class
-
-for(var cls of builtin_types){
-    console.log(cls.tp_name, cls.ob_type)
-    var test = cls === _b_.type
-    if(cls.tp_getset){
-        for(var getset of cls.tp_getset){
-            var [name, get, set] = getset
-            cls.dict[name] = $B.getset_descriptor.$factory(cls, name, get, set)
+for(var ns of [_b_, $B.created_types]){
+    for(var name in ns){
+        if(ns[name].ob_type !== _b_.type){
+            continue
         }
-    }
-    if(test){
-        console.log(_b_.type.ob_type === _b_.type)
-    }
-    for(var slot in $B.wrapper_methods){
-        if(cls[slot]){
-            if(cls.tp_name == 'wrapper_descriptor' && slot == 'tp_getattro'){
-                console.log('set slot', cls, slot, cls[slot])
+        var cls = ns[name]
+        if(cls.tp_getset){
+            for(var getset of cls.tp_getset){
+                var [name, get, set] = getset
+                cls.dict[name] = $B.getset_descriptor.$factory(cls, name, get, set)
             }
-            $B.wrapper_methods[slot](cls)
-            if(test){
-                console.log('after slot', slot, _b_.type.ob_type === _b_.type)
+        }
+        if(cls.tp_methods){
+            for(var method of cls.tp_methods){
+                var [name, get] = method
+                cls.dict[name] = $B.method_descriptor.$factory(cls, name, get)
+            }
+        }
+        for(var slot in $B.wrapper_methods){
+            if(cls[slot]){
+                $B.wrapper_methods[slot](cls)
             }
         }
     }
 }
-
-console.log('_b_.type.ob_type', _b_.type.ob_type)
 
 })(__BRYTHON__)
