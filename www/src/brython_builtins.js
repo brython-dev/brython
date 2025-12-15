@@ -147,10 +147,13 @@ $B.precompiled = {}
 // Current frame
 $B.frame_obj = null
 
+var _b_ = $B.builtins = Object.create(null)
+
+/*
 // Python __builtins__
 // Set to Object.create(null) instead of {}
 // to avoid conflicts with JS attributes such as "constructor"
-var _b_ = $B.builtins = Object.create(null)
+
 
 $B.NULL = {'null': true}
 
@@ -181,7 +184,105 @@ $B.builtin_classes = [
     "str", "super", "tuple", "zip"
 ]
 
-$B.created_types = [_b_.object, _b_.type]
+*/
+$B.created_types = {}
+
+$B.get_mro = function(cls){
+    return cls.tp_mro ?? cls.__mro__
+}
+
+$B.make_mro = function(cls){
+    // method resolution order
+    // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
+    // by Steve d'Aprano
+    if(cls === undefined){
+        $B.RAISE(_b_.TypeError,
+            'unbound method type.mro() needs an argument')
+    }
+    var bases = cls.tp_bases,
+        seqs = [],
+        pos1 = 0
+    for(var base of bases){
+        // We can't simply push bases[i].__mro__
+        // because it would be modified in the algorithm
+        let bmro = [],
+            pos = 0
+        if(base === undefined ||
+                $B.get_mro(base) === undefined){
+            if(base.ob_type === undefined){
+                // Brython class inherits a Javascript constructor. The
+                // constructor is the attribute js_func
+                return [_b_.object]
+            }else{
+                console.log('error for base', base)
+                console.log('cls', cls)
+            }
+        }
+        bmro[pos++] = base
+        var _tmp = base.tp_mro
+        if(_tmp){
+            if(_tmp[0] === base){
+                _tmp.splice(0, 1)
+            }
+            for(var k = 0; k < _tmp.length; k++){
+                bmro[pos++] = _tmp[k]
+            }
+        }
+        seqs[pos1++] = bmro
+    }
+
+    seqs[pos1++] = bases.slice()
+
+    var mro = [cls],
+        mpos = 1
+    while(1){
+        let non_empty = [],
+            pos = 0
+        for(let i = 0; i < seqs.length; i++){
+            if(seqs[i].length > 0){non_empty[pos++] = seqs[i]}
+        }
+        if(non_empty.length == 0){
+            break
+        }
+        let candidate
+        for(let i = 0; i < non_empty.length; i++){
+            let seq = non_empty[i]
+            candidate = seq[0]
+            let not_head = [],
+                pos = 0
+            for(let j = 0; j < non_empty.length; j++){
+                let s = non_empty[j]
+                if(s.slice(1).indexOf(candidate) > -1){
+                    not_head[pos++] = s
+                }
+            }
+            if(not_head.length > 0){
+                candidate = null
+            }else{
+                break
+            }
+        }
+        if(candidate === null){
+            $B.RAISE(_b_.TypeError,
+                "inconsistent hierarchy, no C3 MRO is possible")
+        }
+        mro[mpos++] = candidate
+        for(let i = 0; i < seqs.length;  i++){
+            let seq = seqs[i]
+            if(seq[0] === candidate){ // remove candidate
+                seqs[i].shift()
+            }
+        }
+    }
+    if(mro[mro.length - 1] !== _b_.object){
+        mro[mpos++] = _b_.object
+    }
+    if(mro[0] !== cls){
+        console.log('bizarre', cls, mro)
+    }
+    return mro
+}
+
 
 $B.is_type = function(obj){
     return obj.$is_type
@@ -191,14 +292,19 @@ $B._PyType_HasFeature = function(type, feature){
     return type.tp_flags & feature != 0
 }
 
+/*
 $B.make_class_dict = function(klass, obj){
     console.log('remove $B.make_class_dict for ', klass.tp_name ?? klass.__name__)
     var stack = Error().stack
     var lines = stack.split('\n')
     console.log(lines[2])
 }
-
+*/
 $B.make_builtin_class = function(tp_name, tp_bases){
+    if(tp_name === undefined){
+        console.log('no tp name')
+        console.log(Error().stack)
+    }
     var cls = {
         ob_type: _b_.type,
         tp_name,
@@ -210,16 +316,19 @@ $B.make_builtin_class = function(tp_name, tp_bases){
     }else{
         cls.tp_mro = [cls, _b_.object]
     }
-    $B.created_types.push(cls)
+    $B.created_types[tp_name] = cls
     return cls
 }
 
+/*
 for(var class_name of $B.builtin_classes){
     _b_[class_name] = $B.make_builtin_class(class_name)
 }
 
 // bool inherits int
 _b_.bool = $B.make_builtin_class('bool', [_b_.int])
+
+*/
 
 $B.obj_dict = function(obj, exclude){
     var res = {

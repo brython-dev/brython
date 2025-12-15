@@ -26,7 +26,7 @@
             var options = $.options
             if(typeof options == "boolean"){
                 // ignore
-            }else if(options.__class__ === _b_.dict){
+            }else if($B.get_class(options) === _b_.dict){
                 var _options = {}
                 for(var key of _b_.dict.$keys_string(options)){
                     _options[key] = _b_.dict.$getitem_string(options, key)
@@ -200,7 +200,7 @@
             function makeTagDict(tagName){
                 // return the dictionary for the class associated with tagName
                 var dict = {
-                    __class__: _b_.type,
+                    ob_type: _b_.type,
                     __name__: tagName,
                     __module__: "browser.html",
                     __qualname__: tagName
@@ -216,7 +216,7 @@
                         if($B.$isinstance(first,[_b_.str, _b_.int, _b_.float])){
                             // set "first" as HTML content (not text)
                             self.innerHTML = _b_.str.$factory(first)
-                        }else if(first.__class__ === TagSum){
+                        }else if($B.get_class(first) === TagSum){
                             for(var i = 0, len = first.children.length; i < len; i++){
                                 self.appendChild(first.children[i])
                             }
@@ -233,7 +233,7 @@
                                     }
                                 }catch(err){
                                     if($B.get_option('debug', err) > 1){
-                                        console.log(err, err.__class__, err.args)
+                                        console.log(err, $B.get_class(err), err.args)
                                         console.log("first", first)
                                         console.log(arguments)
                                     }
@@ -276,8 +276,8 @@
                     // Only called for subclasses of the HTML tag
                     var res = document.createElement(tagName)
                     if(cls !== html[tagName]){
-                        // Only set __class__ if it is not browser.html.<tagName>
-                        res.__class__ = cls
+                        // Only set ob_type if it is not browser.html.<tagName>
+                        res.ob_type = cls
                     }
                     return res
                 }
@@ -399,7 +399,7 @@
     }
     $B.UndefinedType.__str__ = $B.UndefinedType.__repr__;
 
-    $B.Undefined = {__class__: $B.UndefinedType}
+    $B.Undefined = {ob_type: $B.UndefinedType}
 
     $B.set_func_names($B.UndefinedType, "javascript")
 
@@ -444,7 +444,7 @@
                 $B.RAISE(_b_.TypeError,
                     'argument of extend must be a Javascript class')
             }
-            js_constr.__class__ = _b_.type
+            js_constr.ob_type = _b_.type
             return function(obj){
                 obj.tp_bases.splice(0, 0, js_constr)
                 obj.__mro__.splice(0, 0, js_constr)
@@ -556,7 +556,7 @@
 
         JSObject: $B.JSObj,
         JSON: {
-            __class__: $B.make_class("JSON"),
+            ob_type: $B.make_class("JSON"),
             parse: function(){
                 return $B.structuredclone2pyobj(
                     JSON.parse.apply(this, arguments))
@@ -618,16 +618,15 @@
 
     // Default standard output and error
     // Can be reset by sys.stdout or sys.stderr
-    var $io = $B.$io = $B.make_class("io",
-        function(out){
-            return {
-                __class__: $io,
-                __dict__: $B.empty_dict(),
-                out,
-                encoding: 'utf-8'
-            }
+    var $io = $B.$io = $B.make_builtin_class("io")
+    $io.$factory = function(out){
+        return {
+            ob_type: $io,
+            dict: $B.empty_dict(),
+            out,
+            encoding: 'utf-8'
         }
-    )
+    }
 
     $io.flush = function(self){
         if(self.buf){
@@ -699,7 +698,7 @@
                 frame = frame_obj.frame
                 exc = frame[1].$current_exception
                 if(exc){
-                    return _b_.tuple.$factory([exc.__class__, exc,
+                    return _b_.tuple.$factory([$B.get_class(exc), exc,
                         $B.$getattr(exc, "__traceback__")])
                 }
                 frame_obj = frame_obj.prev
@@ -840,7 +839,7 @@
                  arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
                  null, null)
             return {
-                __class__: WarningMessage,
+                ob_type: WarningMessage,
                 message: $.message,
                 category: $.category,
                 filename: $.filename,
@@ -910,7 +909,7 @@
                         line = lines[lineno - 1]
                 }
                 warning_message = {
-                    __class__: WarningMessage,
+                    ob_type: WarningMessage,
                     message: message,
                     category,
                     filename,
@@ -929,7 +928,7 @@
                 lineno = message.lineno || frame.$lineno
                 line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
-                    __class__: WarningMessage,
+                    ob_type: WarningMessage,
                     message: message,
                     category,
                     filename: message.filename || f_code.co_filename,
@@ -1183,7 +1182,7 @@
             })
             promise._methods = methods
             promise._done = false
-            promise.__class__ = Future
+            promise.ob_type = Future
             return promise
         }
     )
@@ -1238,7 +1237,7 @@
                     xhr.responseType = responseType[args.format]
                     xhr.onreadystatechange = function(){
                         if(this.readyState == 4){
-                            this.__class__ = HTTPRequest
+                            this.ob_type = HTTPRequest
                             resolve(this)
                         }
                     }
@@ -1256,7 +1255,7 @@
             func.$function_infos = []
             func.$function_infos[$B.func_attrs.name] = `ajax_${method}`
             return {
-                __class__: $B.coroutine,
+                ob_type: $B.coroutine,
                 $args: [url, args],
                 $func: func
             }
@@ -1289,7 +1288,7 @@
             return $B.imported['browser.aio'].ajax.bind(null, "GET").apply(null, arguments)
         },
         iscoroutine: function(f){
-            return f.__class__ === $B.coroutine
+            return $B.get_class(f) === $B.coroutine
         },
         iscoroutinefunction: function(f){
             return (f.$function_infos[$B.func_attrs.flags] & 128) != 0
@@ -1317,7 +1316,7 @@
             return _b_.None
         },
         sleep: function(seconds){
-            if(seconds.__class__ === _b_.float){
+            if($B.get_class(seconds) === _b_.float){
                 seconds = seconds.value
             }else if(typeof seconds != "number"){
                 $B.RAISE(_b_.TypeError, "'sleep' argument must be " +
@@ -1333,7 +1332,7 @@
             func.$function_infos = []
             func.$function_infos[$B.func_attrs.name] = 'sleep'
             return {
-                __class__: $B.coroutine,
+                ob_type: $B.coroutine,
                 $args: [seconds],
                 $func: func
             }
@@ -1348,8 +1347,8 @@
 
     function load(name, module_obj){
         // add class and __str__
-        module_obj.__class__ = $B.module
-        module_obj.__dict__ = $B.empty_dict()
+        module_obj.ob_type = $B.module
+        module_obj.dict = $B.empty_dict()
         module_obj.__name__ = name
         $B.imported[name] = module_obj
         // set attribute "name" of functions
@@ -1397,6 +1396,7 @@
     }
 
     // Set type of methods of builtin classes
+    /*
     for(var name in _b_){
         if(name == 'dict'){
             // new version experimented in py_dict.js
@@ -1440,11 +1440,12 @@
             )
         }
     }
+    */
 
     // Attributes of __BRYTHON__ are Python lists
     for(let attr in $B){
         if(Array.isArray($B[attr])){
-            $B[attr].__class__ = _b_.list
+            $B[attr].ob_type = _b_.list
         }
     }
 
@@ -1453,7 +1454,7 @@
     $B.cell = $B.make_class("cell",
         function(value){
             return {
-                __class__: $B.cell,
+                ob_type: $B.cell,
                 $cell_contents: value
             }
         }
@@ -1496,6 +1497,7 @@
     $B.set_func_names($B.cell, "builtins")
 
     // Set __flags__ of internal classes, defined in py_flags.js
+    /*
     for(let flag in $B.builtin_class_flags.builtins){
         for(let key of $B.builtin_class_flags.builtins[flag]){
             if(_b_[key]){
@@ -1505,6 +1507,7 @@
             }
         }
     }
+    */
 
     for(let flag in $B.builtin_class_flags.types){
         for(let key of $B.builtin_class_flags.types[flag]){
@@ -1515,9 +1518,9 @@
     }
 
     $B.AST = {
-        __class__: _b_.type,
+        ob_type: _b_.type,
         __mro__: [_b_.object],
-        __name__: 'AST',
+        tp_name: 'AST',
         __qualname__: 'AST',
         $is_class: true,
         $convert: function(js_node){
@@ -1566,7 +1569,7 @@
                 return js_node.$name + '()'
             }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
                 return js_node
-            }else if(js_node.__class__){
+            }else if($B.get_class(js_node) !== $B.JSObj){
                 return js_node
             }else{
                 console.log('cannot handle', js_node)
@@ -1576,7 +1579,7 @@
     }
 
 $B.stdin = {
-    __class__: $io,
+    ob_type: $io,
     __original__: true,
     closed: false,
     len: 1,

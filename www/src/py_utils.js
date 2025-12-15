@@ -856,7 +856,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             lineno = frame.$lineno
         }
     }
-    if(iterator.__class__ === _b_.range){
+    if(iterator.ob_type === _b_.range){
         var obj = {ix: iterator.start}
         if(iterator.step > 0){
             return {
@@ -1432,7 +1432,12 @@ $B.$is_member = function(item, _set){
     return $B.member_func(_set)(item)
 }
 
+var counter = 0
 $B.$call = function(callable, inum){
+    counter++
+    if(counter > 50){
+        throw Error('call overflow')
+    }
     var original = callable
     try{
         callable = $B.$call1(callable)
@@ -1450,7 +1455,7 @@ $B.$call = function(callable, inum){
         }
     }
     f.$original = original
-
+    counter--
     return f
 }
 

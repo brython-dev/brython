@@ -62,7 +62,7 @@ object.__dir__ = function(self) {
     if(self.$is_class){
         objects = [self].concat(self.__mro__)
     }else{
-        var klass = self.__class__ || $B.get_class(self)
+        var klass = $B.get_class(self)
         objects = [self, klass].concat(klass.__mro__)
     }
 
@@ -383,28 +383,30 @@ object.__hash__ = function(self){
     return self.__hashvalue__ = $B.$py_next_hash--
 }
 
-object.__init__ = function(){
+object.tp_init = function(){
     if(arguments.length == 0){
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
             "object needs an argument")
     }
+    /*
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
             'args', 'kw'),
         self = $.self
     if($.args.length > 0 || _b_.dict.__len__($.kw) > 0){
         var type = $B.get_class(self)
         var tp_init = $B.search_in_mro(type, '__init__')
-        if(tp_init !== object.__init__){
+        if(tp_init !== object.dict.tp_init){
             $B.RAISE(_b_.TypeError,
                 "object.__init__() takes exactly one argument (the instance to initialize)")
         }
         var tp_new = $B.search_in_mro(type, '__new__')
-        if(tp_new == object.__new__){
+        if(tp_new == object.dict.__new__){
             $B.RAISE(_b_.TypeError,
                 `${$B.class_name(self)}.__init__() takes exactly` +
                 ` one argument (the instance to initialize)`)
         }
     }
+    */
     return _b_.None
 }
 
@@ -421,7 +423,6 @@ object.$new = function(cls){
             $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
         var res = Object.create(null)
-        res.__class__ = cls
         res.ob_type = cls
         if(cls !== object){
             res.dict = $B.obj_dict({})
@@ -434,7 +435,6 @@ object.$no_new_init = function(cls){
     // Used to create instances of classes with no explicit __new__ and an
     // explicit __init__
     var res = Object.create(null)
-    res.__class__ = cls
     res.ob_type = cls
     if(cls !== object){
         res.dict = $B.obj_dict({})
@@ -442,21 +442,19 @@ object.$no_new_init = function(cls){
     return res
 }
 
-object.__new__ = function(cls, ...args){
+object.tp_new = function(cls, ...args){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "object.__new__(): not enough arguments")
     }
     var init_func = $B.$getattr(cls, "__init__")
-    if(init_func === object.__init__){
+    if(init_func === object.tp_init){
         if(args.length > 0){
             $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
     }
     var res = Object.create(null)
     $B.update_obj(res, {
-        __class__: cls,
         ob_type: cls,
-        //__dict__: $B.obj_dict({})
         })
     if(cls !== object){
         res.dict = $B.obj_dict({})
@@ -468,8 +466,7 @@ object.__ne__ = function(self, other){
     if(self === other){
         return false
     }
-    var eq = $B.$getattr(self.__class__ || $B.get_class(self),
-        "__eq__", null)
+    var eq = $B.$getattr($B.get_class(self), "__eq__", null)
     if(eq !== null){
         var res = $B.$call(eq)(self, other)
         if(res === _b_.NotImplemented){return res}
@@ -482,7 +479,7 @@ function getNewArguments(self, klass){
     var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
     if(newargs_ex !== null){
         let newargs = newargs_ex()
-        if((! newargs) || newargs.__class__ !== _b_.tuple){
+        if((! newargs) || $B.get_class(newargs) !== _b_.tuple){
             $B.RAISE(_b_.TypeError, "__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
         }
@@ -492,11 +489,11 @@ function getNewArguments(self, klass){
         }
         let args = newargs[0],
             kwargs = newargs[1]
-        if((! args) || args.__class__ !== _b_.tuple){
+        if((! args) || $B.get_class(args) !== _b_.tuple){
             $B.RAISE(_b_.TypeError, "first item of the tuple returned " +
                 `by __getnewargs_ex__ must be a tuple, not '${$B.class_name(args)}'`)
         }
-        if((! kwargs) || kwargs.__class__ !== _b_.dict){
+        if((! kwargs) || $B.get_class(kwargs) !== _b_.dict){
             $B.RAISE(_b_.TypeError, "second item of the tuple returned " +
                 `by __getnewargs_ex__ must be a dict, not '${$B.class_name(kwargs)}'`)
         }
@@ -509,7 +506,7 @@ function getNewArguments(self, klass){
     }
     if(newargs){
         args = newargs(self)
-        if((! args) || args.__class__ !== _b_.tuple){
+        if((! args) || $B.get_class(args) !== _b_.tuple){
             $B.RAISE(_b_.TypeError, "__getnewargs__ should " +
                 `return a tuple, not '${$B.class_name(args)}'`)
         }
@@ -518,12 +515,11 @@ function getNewArguments(self, klass){
 }
 
 object.tp_repr = function(self){
-    console.log('object.__repr__', self)
-    if(self.__class__ === _b_.type) {
-        return "<class '" + self.__name__ + "'>"
+    var klass = $B.get_class(self)
+    if(klass === _b_.type) {
+        return "<class '" + $B.get_name(self) + "'>"
     }
-    var klass = $B.get_class(self),
-        module = klass.__module__
+    var module = klass.__module__
     if(module !== undefined && !module.startsWith("$") &&
             module !== "builtins"){
         return `<${module}.${$B.class_name(self)} object>`
@@ -581,7 +577,6 @@ object.$factory = function(){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
     var res = {
-            __class__: object,
             ob_type: object
         },
         args = [res]
@@ -746,7 +741,7 @@ function object___dir__(self){
     }
 
     /* Merge in attrs reachable from its class. */
-    itsclass = self.__class__
+    itsclass = $B.get_class(self)
     /* XXX(tomer): Perhaps fall back to Py_TYPE(obj) if no
                    __class__ exists? */
     if (itsclass != NULL){

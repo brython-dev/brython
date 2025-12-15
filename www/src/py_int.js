@@ -3,126 +3,79 @@
 
 var _b_ = $B.builtins
 
-function $err(op, other){
-    var msg = "unsupported operand type(s) for " + op +
-        " : 'int' and '" + $B.class_name(other) + "'"
-    $B.RAISE(_b_.TypeError, msg)
-}
-
-
-function int_value(obj){
-    // Instances of int subclasses that call int.__new__(cls, value)
-    // have an attribute $brython_value set
-    if(typeof obj == "boolean"){
-        return obj ? 1 : 0
-    }
-    return obj.$brython_value !== undefined ? obj.$brython_value : obj
-}
-
-function bigint_value(obj){
-    // Instances of int subclasses that call int.__new__(cls, value)
-    // have an attribute $brython_value set
-    if(typeof obj == "boolean"){
-        return obj ? 1n : 0n
-    }else if(typeof obj == "number"){
-        return BigInt(obj)
-    }else if(obj.__class__ === $B.long_int){
-        return obj.value
-    }else if($B.$isinstance(obj, _b_.int)){
-        return bigint_value(obj.$brython_value)
-    }
-}
-
-// dictionary for built-in class 'int'
 var int = _b_.int
+var NULL = $B.NULL
+
+/* int slots start */
 Object.assign(int,
-    {
-        __mro__: [_b_.object],
-        __qualname__: 'int',
-        $is_class: true,
-        $native: true,
-        $descriptors: {
-            "numerator": true,
-            "denominator": true,
-            "imag": true
-        },
-        $is_int_subclass: true,
-        $is_number: true
-    }
-)
+{
+    tp_basicsize: 24,
+    tp_itersize: 4,
+    tp_flags: 20976898,
+    tp_weakrefoffset: 0,
+    tp_base: _b_.object,
+    tp_dictoffset: 0,
+    tp_doc: `int([x]) -> integer
+int(x, base=10) -> integer
 
-var int_or_long = int.$int_or_long = function(bigint){
-    var res = Number(bigint)
-    return Number.isSafeInteger(res) ? res : $B.fast_long_int(bigint)
+Convert a number or string to an integer, or return 0 if no arguments
+are given.  If x is a number, return x.__int__().  For floating-point
+numbers, this truncates towards zero.
+
+If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.  The literal can be preceded by '+' or '-' and be surrounded
+by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.
+>>> int('0b100', base=0)
+4`,
+    tp_bases: [_b_.object],
+})
+/* int slots end */
+
+function long_long_getter(self){
+    return int_value(self)
 }
 
-int.$to_js_number = function(obj){
-    // convert booleans, long ints, subclasses of int to a Javascript number
-    if(typeof obj == "number"){
-        return obj
-    }else if(obj.__class__ === $B.long_int){
-        return Number(obj.value)
-    }else if($B.$isinstance(obj, _b_.int)){
-        return int.$to_js_value(obj.$brython_value)
-    }
-    return null
+function long_get0(){
+    return 0
 }
 
-int.$to_bigint = bigint_value
-int.$int_value = int_value
-
-int.as_integer_ratio = function(){
-  var $ = $B.args("as_integer_ratio", 1, {self:null}, ["self"],
-          arguments, {}, null, null)
-  return $B.fast_tuple([$.self, 1])
+function long_get1(){
+    return 1
 }
 
-int.from_bytes = function() {
-    var $ = $B.args("from_bytes", 3,
-        {bytes:null, byteorder:null, signed:null},
-        ["bytes", "byteorder", "signed"],
-        arguments, {byteorder: 'big', signed: false}, null, null)
+/* int.tp_getset start */
+int.tp_getset = [
+    ["real", long_long_getter, NULL],
+    ["imag", long_get0, NULL],
+    ["numerator", long_long_getter, NULL],
+    ["denominator", long_get1, NULL]
+]
+/* int.tp_getset end */
 
-    var x = $.bytes,
-        byteorder = $.byteorder,
-        signed = $.signed,
-        _bytes, _len
-    if($B.$isinstance(x, [_b_.bytes, _b_.bytearray])){
-        _bytes = x.source
-        _len = x.source.length
-    }else{
-        _bytes = _b_.list.$factory(x)
-        _len = _bytes.length
-        for(let i = 0; i < _len; i++){
-            _b_.bytes.$factory([_bytes[i]])
+function long_long_meth(self){
+    return int_value(self)
+}
+
+function int_bit_length(self){
+    var s = _b_.bin(self)
+    s = $B.$getattr(s, "lstrip")("-0b") // remove leading zeros and minus sign
+    return s.length       // len('100101') --> 6
+}
+
+function int_bit_count(self){
+    var s = _b_.bin(_b_.abs(self)),
+        nb = 0
+    for(var x of s){
+        if(x == '1'){
+            nb++
         }
     }
-    if(byteorder == "big"){
-        _bytes.reverse()
-    }else if(byteorder != "little"){
-        $B.RAISE(_b_.ValueError,
-            "byteorder must be either 'little' or 'big'")
-    }
-    var num = _bytes[0]
-    if(signed && num >= 128){
-        num = num - 256
-    }
-    num = BigInt(num)
-    var _mult = 256n
-    for(let i = 1;  i < _len; i++){
-        num += _mult * BigInt(_bytes[i])
-        _mult *= 256n
-    }
-    if(! signed){
-        return int_or_long(num)
-    }
-    if(_bytes[_len - 1] < 128){
-        return int_or_long(num)
-    }
-    return int_or_long(num - _mult)
+    return nb
 }
 
-int.to_bytes = function(){
+function int_to_bytes(){
     var $ = $B.args("to_bytes", 3,
         {self: null, len: null, byteorder: null, signed: null},
         ["self", "len", "byteorder", "signed"],
@@ -176,6 +129,152 @@ int.to_bytes = function(){
     }
 }
 
+function int_from_bytes(){
+    var $ = $B.args("from_bytes", 3,
+        {bytes:null, byteorder:null, signed:null},
+        ["bytes", "byteorder", "signed"],
+        arguments, {byteorder: 'big', signed: false}, null, null)
+
+    var x = $.bytes,
+        byteorder = $.byteorder,
+        signed = $.signed,
+        _bytes, _len
+    if($B.$isinstance(x, [_b_.bytes, _b_.bytearray])){
+        _bytes = x.source
+        _len = x.source.length
+    }else{
+        _bytes = _b_.list.$factory(x)
+        _len = _bytes.length
+        for(let i = 0; i < _len; i++){
+            _b_.bytes.$factory([_bytes[i]])
+        }
+    }
+    if(byteorder == "big"){
+        _bytes.reverse()
+    }else if(byteorder != "little"){
+        $B.RAISE(_b_.ValueError,
+            "byteorder must be either 'little' or 'big'")
+    }
+    var num = _bytes[0]
+    if(signed && num >= 128){
+        num = num - 256
+    }
+    num = BigInt(num)
+    var _mult = 256n
+    for(let i = 1;  i < _len; i++){
+        num += _mult * BigInt(_bytes[i])
+        _mult *= 256n
+    }
+    if(! signed){
+        return int_or_long(num)
+    }
+    if(_bytes[_len - 1] < 128){
+        return int_or_long(num)
+    }
+    return int_or_long(num - _mult)
+}
+
+function int_as_integer_ratio(){
+    var $ = $B.args("as_integer_ratio", 1, {self:null}, ["self"],
+          arguments, {}, null, null)
+    return $B.fast_tuple([$.self, 1])
+}
+
+function int___round__(){
+
+}
+
+function int___getnewargs__(){
+
+}
+
+function int___format__(){
+
+}
+
+function int___sizeof__(){
+
+}
+
+function int_is_integer(){
+    return true
+}
+
+/* int.tp_methods start */
+int.tp_methods = [
+    ["conjugate", long_long_meth, $B.METH_NOARGS],
+    ["bit_length", int_bit_length, $B.METH_NOARGS],
+    ["bit_count", int_bit_count, $B.METH_NOARGS],
+    ["to_bytes", int_to_bytes, $B.METH_FASTCALL|$B.METH_KEYWORDS],
+    ["from_bytes", int_from_bytes, $B.METH_FASTCALL|$B.METH_KEYWORDS|$B.METH_CLASS],
+    ["as_integer_ratio", int_as_integer_ratio, $B.METH_NOARGS],
+    ["__trunc__", long_long_meth, $B.METH_NOARGS],
+    ["__floor__", long_long_meth, $B.METH_NOARGS],
+    ["__ceil__", long_long_meth, $B.METH_NOARGS],
+    ["__round__", int___round__, $B.METH_FASTCALL],
+    ["__getnewargs__", int___getnewargs__, $B.METH_NOARGS],
+    ["__format__", int___format__, $B.METH_O],
+    ["__sizeof__", int___sizeof__, $B.METH_NOARGS],
+    ["is_integer", int_is_integer, $B.METH_NOARGS]
+]
+/* int.tp_methods end */
+
+function $err(op, other){
+    var msg = "unsupported operand type(s) for " + op +
+        " : 'int' and '" + $B.class_name(other) + "'"
+    $B.RAISE(_b_.TypeError, msg)
+}
+
+
+function int_value(obj){
+    // Instances of int subclasses that call int.__new__(cls, value)
+    // have an attribute $brython_value set
+    if(typeof obj == "boolean"){
+        return obj ? 1 : 0
+    }
+    return obj.$brython_value !== undefined ? obj.$brython_value : obj
+}
+
+function bigint_value(obj){
+    // Instances of int subclasses that call int.__new__(cls, value)
+    // have an attribute $brython_value set
+    if(typeof obj == "boolean"){
+        return obj ? 1n : 0n
+    }else if(typeof obj == "number"){
+        return BigInt(obj)
+    }else if(obj.__class__ === $B.long_int){
+        return obj.value
+    }else if($B.$isinstance(obj, _b_.int)){
+        return bigint_value(obj.$brython_value)
+    }
+}
+
+
+var int_or_long = int.$int_or_long = function(bigint){
+    var res = Number(bigint)
+    return Number.isSafeInteger(res) ? res : $B.fast_long_int(bigint)
+}
+
+int.$to_js_number = function(obj){
+    // convert booleans, long ints, subclasses of int to a Javascript number
+    if(typeof obj == "number"){
+        return obj
+    }else if(obj.__class__ === $B.long_int){
+        return Number(obj.value)
+    }else if($B.$isinstance(obj, _b_.int)){
+        return int.$to_js_value(obj.$brython_value)
+    }
+    return null
+}
+
+int.$to_bigint = bigint_value
+int.$int_value = int_value
+
+
+
+
+
+
 int.__abs__ = function(self){
     return Math.abs(int_value(self))
 }
@@ -211,7 +310,7 @@ int.__divmod__ = function(self, other){
     return $B.fast_tuple([int.__floordiv__(self, other),
         int.__mod__(self, other)])
 }
-
+/*
 int.__eq__ = function(self, other){
     var self_as_int = int_value(self)
     if(self_as_int.__class__ === $B.long_int){
@@ -222,7 +321,7 @@ int.__eq__ = function(self, other){
     }
     return _b_.NotImplemented
 }
-
+*/
 int.__float__ = function(self){
     return $B.fast_float(int_value(self))
 }
@@ -373,10 +472,12 @@ int.__mod__ = function(self, other) {
 int.__mul__ = Function('self', 'other',
     op_model.replace(/\+/g, '*').replace(/add/g, "mul"))
 
+/*
 int.__ne__ = function(self, other){
     var res = int.__eq__(self, other)
     return (res  === _b_.NotImplemented) ? res : !res
 }
+*/
 
 int.__neg__ = function(self){
     var self_as_int = int_value(self)
@@ -551,36 +652,26 @@ int.__truediv__ = function(self, other){
     return _b_.NotImplemented
 }
 
-int.bit_count = function(self){
-    var s = _b_.bin(_b_.abs(self)),
-        nb = 0
-    for(var x of s){
-        if(x == '1'){
-            nb++
-        }
+/* if a < b, return a negative number
+   if a == b, return 0
+   if a > b, return a positive number */
+function long_richcompare(a, b, op){
+    var result
+    if(typeof a == 'number' || $B.$isinstance(a, int)){
+        a = int_value(a)
+    }else if($B.get_class(other) === $B.long_int){
+        other = other.value
+    }else if(typeof b == 'boolean'){
+        b = b ? 1 : 0
+    }else{
+        return _b_.NotImplemented
     }
-    return nb
-}
-
-int.bit_length = function(self){
-    var s = _b_.bin(self)
-    s = $B.$getattr(s, "lstrip")("-0b") // remove leading zeros and minus sign
-    return s.length       // len('100101') --> 6
-}
-
-// descriptors
-int.numerator = (self) => int_value(self)
-int.denominator = () => 1
-int.imag = () => 0
-int.real = (self) => self
-
-for(var attr of ['numerator', 'denominator', 'imag', 'real']){
-    int[attr].setter = (function(x){
-        return function(self){
-            $B.RAISE_ATTRIBUTE_ERROR(`attribute '${x}' of ` +
-                `'${$B.class_name(self)}' objects is not writable`, self, x)
-        }
-    })(attr)
+    if(a === b){
+        result = 0
+    }else{
+        result = a > b ? 1 : -1
+    }
+    return $B.RICHCOMPARE(result, 0, op)
 }
 
 // code for operands & | ^
@@ -609,6 +700,7 @@ int.__or__ = Function('self', 'other',
 int.__xor__ = Function('self', 'other',
      model.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
 
+/*
 int.__ge__ = function(self, other){
     self = int_value(self)
     if(typeof other == "number"){
@@ -646,7 +738,7 @@ int.__lt__ = function(self, other){
     var res = int.__ge__(self, other)
     return res === _b_.NotImplemented ? res : ! res
 }
-
+*/
 // add "reflected" methods
 var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
     "lshift", "rshift", "and", "xor", "or", "divmod"]
@@ -908,15 +1000,6 @@ int.$factory = function(){
 }
 $B.set_func_names(int, "builtins")
 
-var int_methods = {
-    builtin_function_or_method: ['__new__', 'from_bytes'],
-    wrapper_descriptor: ['__repr__', '__hash__', '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__', '__add__', '__radd__', '__sub__', '__rsub__', '__mul__', '__rmul__', '__mod__', '__rmod__', '__divmod__', '__rdivmod__', '__pow__', '__rpow__', '__neg__', '__pos__', '__abs__', '__bool__', '__invert__', '__lshift__', '__rlshift__', '__rshift__', '__rrshift__', '__and__', '__rand__', '__xor__', '__rxor__', '__or__', '__ror__', '__int__', '__float__', '__floordiv__', '__rfloordiv__', '__truediv__', '__rtruediv__', '__index__'],
-    method_descriptor: ['conjugate', 'bit_length', 'bit_count', 'to_bytes', 'as_integer_ratio', '__trunc__', '__floor__', '__ceil__', '__round__', '__getnewargs__', '__format__', '__sizeof__', 'is_integer'],
-    getset_descriptor: ['real', 'imag', 'numerator', 'denominator']
-}
-$B.make_class_dict(int, int_methods)
-
-_b_.int = int
 
 // Boolean type
 $B.$bool = function(obj, bool_class){ // return true or false
@@ -959,21 +1042,6 @@ $B.$bool = function(obj, bool_class){ // return true or false
 }
 
 var bool = _b_.bool
-Object.assign(bool,
-    {
-        __qualname__: 'bool',
-        $is_class: true,
-        $not_basetype: true, // bool cannot be a base class
-        $is_number: true,
-        $native: true,
-        $descriptors: {
-            "numerator": true,
-            "denominator": true,
-            "imag": true,
-            "real": true
-        }
-    }
-)
 
 bool.__and__ = function(self, other){
     if($B.$isinstance(other, bool)){
@@ -1006,7 +1074,7 @@ bool.__or__ = function(self, other){
 
 bool.__pos__ = $B.int_or_bool
 
-bool.__repr__ = function(self){
+bool.tp_repr = function(self){
     $B.builtins_repr_check(bool, arguments) // in brython_builtins.js
     return self ? "True" : "False"
 }
@@ -1033,7 +1101,7 @@ bool.$factory = function(){
     return $B.$bool($.x, true)
 }
 
-bool.__new__ = function (cls, value) {
+bool.tp_new = function (cls, value) {
     if (cls === undefined) {
         $B.RAISE(_b_.TypeError, "bool.__new__(): not enough arguments")
     } else if (!$B.$isinstance(cls, _b_.type)) {
@@ -1070,9 +1138,6 @@ for (var attr of ['real']) {
         }
     })(attr)
 }
-
-
-_b_.bool = bool
 
 $B.set_func_names(bool, "builtins")
 
