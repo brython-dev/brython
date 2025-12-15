@@ -30,7 +30,6 @@ $B.set_exc = function(exc, frame){
 }
 
 $B.set_exc_and_trace = function(frame, exc){
-    console.log('set exc', exc.ob_type)
     $B.set_exc(exc, frame)
     if((! exc.$in_trace_func) && frame.$f_trace !== _b_.None){
         frame.$f_trace = $B.trace_exception()
@@ -356,7 +355,6 @@ $B.exception = function(js_exc){
     // or by the Javascript interpreter (ReferenceError for instance)
     var exc
     var klass = $B.get_class(js_exc)
-    console.log('$B.exception, js_exc', js_exc, klass)
     if(klass === $B.JSObject){
         if(js_exc.$py_exc){
             // when the JS exception is handled in a frame above, return the
@@ -385,7 +383,6 @@ $B.exception = function(js_exc){
         exc = js_exc
     }
     exc.__traceback__ = exc.__traceback__ ?? traceback.$factory(exc)
-    console.log('$B.exception returns', exc)
     return exc
 }
 
@@ -1417,7 +1414,6 @@ function _find_keyword_typos(err){
 }
 
 $B.error_trace = function(err){
-    console.log('error trace', err.ob_type)
     var trace = '',
         has_stack = err.__traceback__ !== _b_.None
 

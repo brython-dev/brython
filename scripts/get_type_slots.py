@@ -1,6 +1,20 @@
 import types
 import builtins
 
+# build a set of all the types with __module__ set to "builtins" by
+# recursively adding all the subclasses of such types, starting with
+# the type "object"
+def get_builtins(head, classes=None):
+    if classes is None:
+        classes = set([head])
+    for cls in type.__subclasses__(head):
+        if cls.__module__ == 'builtins':
+            classes.add(cls)
+            classes |= get_builtins(cls, classes)
+    return classes
+
+all_builtins = get_builtins(object)
+
 types_module = {}
 for t in dir(types):
     value = getattr(types, t)
@@ -9,17 +23,8 @@ for t in dir(types):
 
 def make_builtins_init(bltins):
     builtin_names = dir(builtins)
-    builtins_and_types = set()
+    builtins_and_types = all_builtins.copy()
     types_module = {}
-    for t in dir(types):
-        value = getattr(types, t)
-        if type(value) is type:
-            builtins_and_types.add(value)
-
-    for attr in dir(bltins):
-        value = getattr(bltins, attr)
-        if type(value) is type:
-            builtins_and_types.add(value)
 
     def get_children(parent_bases):
         # get classes whoses bases are in parent_bases
@@ -93,9 +98,9 @@ def get_slots_by_type(cls):
         'tp_bases': '__bases__'
     }
     head = '_b_' if cls.__name__ in dir(builtins) else '$B'
-    name = cls.__name__.replace('-', '_')
-    res = f'{head}.{name} = Object.create(null)\n'
-    res += f'Object.assign({head}.{name}' + ',\n{\n'
+    name = cls.__name__.replace('-', '_').replace(' ', '_')
+    res = f'init_type({head}, "{name}", {{\n'
+
     for slot in slots:
         value = None
         if slot == 'tp_doc':
@@ -108,8 +113,11 @@ def get_slots_by_type(cls):
                 value = '_b_.' + attr_value.__name__
         elif slot == 'tp_bases':
             if hasattr(cls, '__bases__'):
-                bases = cls.__bases__
-                value = '[' + ', '.join(f'_b_.{x.__name__}' for x in bases) + ']'
+                bases = []
+                for base in cls.__bases__:
+                    head = '_b_' if base.__name__ in dir(builtins) else '$B'
+                    bases.append(f'{head}.{base.__name__}')
+                value = '[' + ', '.join(bases) + ']'
         elif slot == 'tp_name':
             value = f'"{cls.__name__}"'
         else:

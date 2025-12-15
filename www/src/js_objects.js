@@ -411,7 +411,9 @@ function pyargs2jsargs(pyargs){
     return args
 }
 
-$B.JSObj = $B.make_class("JSObject", jsobj2pyobj)
+$B.JSObj = $B.make_builtin_class("JSObject")
+
+$B.JSObj.$factory = jsobj2pyobj
 
 // Operations are implemented only for BigInt objects (cf. issue 1417)
 function check_big_int(x, y){
@@ -975,7 +977,7 @@ $B.IterableJSObj.tp_iternext = function(_self){
 $B.set_func_names($B.IterableJSObj, 'builtins')
 
 
-var js_array = $B.js_array = $B.make_builtin_class('JavascriptArray', 
+var js_array = $B.js_array = $B.make_builtin_class('JavascriptArray',
     [$B.JSObj])
 js_array.ob_type = js_list_meta
 
@@ -1067,7 +1069,7 @@ js_array.__lt__ = function(_self, other){
     return _b_.NotImplemented
 }
 
-js_array.__getattribute__ = function(_self, attr){
+js_array.tp_getattro = function(_self, attr){
     if(_b_.list[attr] === undefined){
         // Methods of Python lists take precedence, but if they fail, try
         // attributes of _self Javascript prototype
@@ -1114,7 +1116,7 @@ js_array.__iadd__ = function(_self, other){
     return _self
 }
 
-js_array.__iter__ = function(_self){
+js_array.tp_iter = function(_self){
     return js_array_iterator.$factory(_self)
 }
 
@@ -1126,16 +1128,16 @@ js_array.__mul__ = function(_self, nb){
     return res
 }
 
-var js_array_iterator = $B.make_class('JSArray_iterator',
-    function(obj){
-        return {
-            ob_type: js_array_iterator,
-            it: obj[Symbol.iterator]()
-        }
-    }
-)
+var js_array_iterator = $B.make_builtin_class('JSArray_iterator')
 
-js_array_iterator.__next__ = function(_self){
+js_array_iterator.$factory = function(obj){
+    return {
+        ob_type: js_array_iterator,
+        it: obj[Symbol.iterator]()
+    }
+}
+
+js_array_iterator.tp_iternext = function(_self){
     var v = _self.it.next()
     if(v.done){
         $B.RAISE(_b_.StopIteration, '')
@@ -1206,7 +1208,7 @@ $B.get_jsobj_class = function(obj){
 }
 // Class used as a metaclass for Brython classes that inherit a Javascript
 // constructor
-$B.JSMeta = $B.make_class("JSMeta")
+$B.JSMeta = $B.make_builtin_class("JSMeta", [_b_.type])
 
 $B.JSMeta.__call__ = function(cls){
     // Create an instance of a class that inherits a Javascript contructor
@@ -1232,9 +1234,7 @@ $B.JSMeta.__call__ = function(cls){
     return instance
 }
 
-$B.JSMeta.__mro__ = [_b_.type, _b_.object]
-
-$B.JSMeta.__getattribute__ = function(cls, attr){
+$B.JSMeta.tp_getattro = function(cls, attr){
     if(cls[attr] !== undefined){
         return cls[attr]
     }else if($B.JSMeta[attr] !== undefined){
@@ -1256,7 +1256,7 @@ $B.JSMeta.__init_subclass__ = function(){
     // do nothing
 }
 
-$B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
+$B.JSMeta.tp_new = function(metaclass, class_name, bases, cl_dict){
     // Creating a class that inherits a Javascript class A must return
     // another Javascript class B that extends A
     var body = `

@@ -680,7 +680,6 @@ $B.resolve_in_scopes = function(name, namespaces, inum){
     }
     var exc = $B.name_error(name)
     $B.set_inum(inum)
-    console.log('failure of resolve inscopes', exc)
     throw exc
 }
 

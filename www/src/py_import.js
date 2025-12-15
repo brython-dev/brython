@@ -9,17 +9,17 @@ var _b_ = $B.builtins,
 // var dbUpdater = new Worker($B.brython_path + 'indexedDBupdater.js')
 
 // Class for modules
-var Module = $B.module = $B.make_class("module",
-    function(name, doc, $package){
-        return {
-            ob_type: Module,
-            __builtins__: _b_.__builtins__,
-            __name__: name,
-            __doc__: doc || _b_.None,
-            __package__: $package || _b_.None
-        }
+var Module = $B.module
+
+Module.$factory = function(name, doc, $package){
+    return {
+        ob_type: Module,
+        __builtins__: _b_.__builtins__,
+        __name__: name,
+        __doc__: doc || _b_.None,
+        __package__: $package || _b_.None
     }
-)
+}
 
 Module.__annotations__ = _b_.property.$factory(
     function(){
@@ -49,7 +49,7 @@ Module.__dir__ = function(self){
     return $B.$list(res.sort())
 }
 
-Module.__new__ = function(cls, name, doc, $package){
+Module.tp_new = function(cls, name, doc, $package){
     return {
         ob_type: cls,
         __builtins__: _b_.__builtins__,
@@ -59,7 +59,7 @@ Module.__new__ = function(cls, name, doc, $package){
     }
 }
 
-Module.__repr__ = Module.__str__ = function(self){
+Module.tp_repr = function(self){
     var res = "<module " + self.__name__
     res += self.__file__ === undefined ? " (built-in)" :
         ' at ' + self.__file__
@@ -383,15 +383,15 @@ $B.run_py = run_py // used in importlib.basehook
 $B.run_js = run_js
 
 
-var ModuleSpec = $B.make_class("ModuleSpec",
-    function(fields) {
-        fields.ob_type = ModuleSpec
-        fields.__dict__ = $B.empty_dict()
-        return fields
-    }
-)
+var ModuleSpec = $B.make_builtin_class("ModuleSpec")
 
-ModuleSpec.__str__ = ModuleSpec.__repr__ = function(self){
+ModuleSpec.$factory = function(fields) {
+    fields.ob_type = ModuleSpec
+    fields.dict = $B.empty_dict()
+    return fields
+}
+
+ModuleSpec.tp_repr = function(self){
     var res = `ModuleSpec(name='${self.name}', ` +
         `loader=${_b_.str.$factory(self.loader)}, ` +
         `origin='${self.origin}'`
@@ -415,13 +415,13 @@ function parent_package(mod_name) {
 // Finder for a Virtual File System.
 // Used if brython_stdlib.js or brython_modules.js or a "Brython
 // package" is loaded in the page.
-var VFSFinder = $B.make_class("VFSFinder",
-    function(){
-        return {
-            ob_type: VFSFinder
-        }
+var VFSFinder = $B.make_builtin_class("VFSFinder")
+
+VFSFinder.$factory = function(){
+    return {
+        ob_type: VFSFinder
     }
-)
+}
 
 VFSFinder.find_spec = function(cls, fullname){
     var stored,
@@ -469,13 +469,13 @@ for(let method in VFSFinder){
 }
 
 // Loader for VFS modules
-const VFSLoader = $B.make_class("VFSLoader",
-    function(){
-        return {
-            ob_type: VFSLoader
-        }
+const VFSLoader = $B.make_builtin_class("VFSLoader")
+
+VFSLoader.$factory = function(){
+    return {
+        ob_type: VFSLoader
     }
-)
+}
 
 VFSLoader.create_module = function(){
     // Fallback to default module creation
@@ -610,13 +610,13 @@ $B.set_func_names(VFSLoader, "builtins")
 
 // Finder for modules in the standard library when brython_stdlib.js is
 // not included in the page.
-var StdlibStaticFinder = $B.make_class("StdlibStaticFinder",
-    function(){
-        return {
-            ob_type: StdlibStaticFinder
-        }
+var StdlibStaticFinder = $B.make_builtin_class("StdlibStaticFinder")
+
+StdlibStaticFinder.$factory = function(){
+    return {
+        ob_type: StdlibStaticFinder
     }
-)
+}
 
 StdlibStaticFinder.find_spec = function(self, fullname){
     // find_spec() relies on $B.stdlib, a precompiled list of the existing
@@ -684,13 +684,13 @@ StdlibStaticFinder.$factory = function (){
 // Finder for modules in a list of directories.
 // By default, this list has one element, the directory of the current script.
 // It can be extended with the option "python_path" passed to brython().
-var PathFinder = $B.make_class("PathFinder",
-    function(){
-        return {
-            ob_type: PathFinder
-        }
+var PathFinder = $B.make_builtin_class("PathFinder")
+
+PathFinder.$factory = function(){
+    return {
+        ob_type: PathFinder
     }
-)
+}
 
 PathFinder.find_spec = function(cls, fullname, path){
     if($B.VFS && $B.VFS[fullname]){
@@ -753,15 +753,15 @@ for(let method in PathFinder){
 }
 
 // Find modules deployed in a hierarchy under a given base URL
-var PathEntryFinder = $B.make_class("PathEntryFinder",
-    function(path_entry, hint){
-        return {
-            ob_type: PathEntryFinder,
-            path_entry: path_entry,
-            hint: hint
-        }
+var PathEntryFinder = $B.make_builtin_class("PathEntryFinder")
+
+PathEntryFinder.$factory = function(path_entry, hint){
+    return {
+        ob_type: PathEntryFinder,
+        path_entry: path_entry,
+        hint: hint
     }
-)
+}
 
 PathEntryFinder.find_spec = function(self, fullname){
     // Search a module at different locations.
@@ -830,13 +830,13 @@ PathEntryFinder.find_spec = function(self, fullname){
 $B.set_func_names(PathEntryFinder, "builtins")
 
 // Loader for modules or packages found by StdlibStaticFinder or PathFinder
-var PathLoader = $B.make_class("PathLoader",
-    function(){
-        return {
-            ob_type: PathLoader
-        }
+var PathLoader = $B.make_builtin_class("PathLoader")
+
+PathLoader.$factory = function(){
+    return {
+        ob_type: PathLoader
     }
-)
+}
 
 PathLoader.create_module = function(){
     // Fallback to default module creation

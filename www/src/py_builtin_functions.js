@@ -213,9 +213,9 @@ _b_.chr = function(i){
 
 // classmethod is in py_type.js
 
-var code = _b_.code = $B.make_class("code")
+var code = $B.code
 
-code.__repr__ = code.__str__ = function(_self){
+code.tp_repr = function(_self){
     return `<code object ${_self.co_name}, file '${_self.co_filename}', ` +
         `line ${_self.co_firstlineno || 1}>`
 }
@@ -863,24 +863,25 @@ exit.__repr__ = exit.__str__ = function(){
     return "Use exit() or Ctrl-Z plus Return to exit"
 }
 
-var filter = _b_.filter = $B.make_class("filter",
-    function(func, iterable){
-        check_nb_args_no_kw('filter', 2, arguments)
+var filter = _b_.filter
+filter.$factory = function(func, iterable){
+    check_nb_args_no_kw('filter', 2, arguments)
 
-        iterable = iter(iterable)
-        if(func === _b_.None){func = $B.$bool}
+    iterable = iter(iterable)
+    if(func === _b_.None){func = $B.$bool}
 
-        return {
-            ob_type: filter,
-            func: func,
-            iterable: iterable
-        }
+    return {
+        ob_type: filter,
+        func: func,
+        iterable: iterable
     }
-)
+}
 
-filter.__iter__ = function(self){return self}
+filter.tp_iter = function(self){
+    return self
+}
 
-filter.__next__ = function(self) {
+filter.tp_iternext = function(self) {
     while(true){
         var _item = next(self.iterable)
         if(self.func(_item)){return _item}
@@ -966,6 +967,7 @@ $B.search_in_mro = function(klass, attr, _default){
     var mro = $B.get_mro(klass)
     if(mro === undefined){
         console.log('no mro in class', klass, klass.tp_mro, klass.__mro__)
+        console.log(Error().stack)
         mro = klass.tp_mro = _b_.type.$mro(klass)
     }
     for(var i = 0, len = mro.length; i < len; i++){
@@ -1035,9 +1037,18 @@ function search_in_dict(obj, attr, _default){
         }
     }
     if(obj.dict){
-        var in_dict = obj.dict[attr]
-        if(in_dict !== undefined){
-            return in_dict
+        if(obj.dict instanceof Object){
+            // instance
+            try{
+                return _b_.dict.$getitem(obj.dict, attr)
+            }catch(err){
+                $B.RAISE_IF_NOT(err, _b_.KeyError)
+            }
+        }else{
+            var in_dict = obj.dict[attr]
+            if(in_dict !== undefined){
+                return in_dict
+            }
         }
     }
 
@@ -1050,7 +1061,7 @@ function search_in_dict(obj, attr, _default){
 }
 
 function standard_getattribute(obj, attr){
-    var test = false // attr == 'write'
+    var test = false // attr == 'x'
     var klass = $B.get_class(obj)
     if(test){
         console.log('getattr', attr, 'of obj', obj, klass)
@@ -1888,18 +1899,19 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
 
 // Utility class for iterators built from objects that have a __getitem__ and
 // __len__ method
-var iterator_class = $B.make_class("iterator",
-    function(getitem){
-        return {
-            ob_type: iterator_class,
-            getitem: getitem,
-            counter: -1
-        }
-    }
-)
+var iterator_class = $B.iterator
 
-iterator_class.__next__ = function(self){
+iterator_class.$factory = function(getitem){
+    return {
+        ob_type: iterator_class,
+        getitem: getitem,
+        counter: -1
+    }
+}
+
+iterator_class.tp_iternext = function(self){
     self.counter++
+    console.log('call iternext', self)
     try{
         return self.getitem(self.counter)
     }catch(err){
@@ -1909,21 +1921,21 @@ iterator_class.__next__ = function(self){
 
 $B.set_func_names(iterator_class, "builtins")
 
-const callable_iterator = $B.make_class("callable_iterator",
-    function(func, sentinel){
-        return {
-            ob_type: callable_iterator,
-            func: func,
-            sentinel: sentinel
-        }
-    }
-)
+const callable_iterator = $B.make_builtin_class("callable_iterator")
 
-callable_iterator.__iter__ = function(self){
+callable_iterator.$factory = function(func, sentinel){
+    return {
+        ob_type: callable_iterator,
+        func: func,
+        sentinel: sentinel
+    }
+}
+
+callable_iterator.tp_iter_ = function(self){
     return self
 }
 
-callable_iterator.__next__ = function(self){
+callable_iterator.tp_iternext = function(self){
     var res = self.func()
     if($B.rich_comp("__eq__", res, self.sentinel)){
         $B.RAISE(_b_.StopIteration, )
@@ -2212,36 +2224,36 @@ _b_.max = function(){
     return $extreme(arguments, '__gt__')
 }
 
-var memoryview = _b_.memoryview = $B.make_class('memoryview',
-    function(obj){
-        check_nb_args_no_kw('memoryview', 1, arguments)
-        if($B.get_class(obj) === memoryview){
-            return obj
-        }
-        if($B.get_class(obj).$buffer_protocol){
-            obj.$exports = obj.$exports ?? 0
-            obj.$exports++ // used to prevent resizing
-            var res = {
-                ob_type: memoryview,
-                obj: obj,
-                mbuf: null,
-                format: 'B',
-                itemsize: 1,
-                ndim: 1,
-                shape: _b_.tuple.$factory([_b_.len(obj)]),
-                strides: _b_.tuple.$factory([1]),
-                suboffsets: _b_.tuple.$factory([]),
-                c_contiguous: true,
-                f_contiguous: true,
-                contiguous: true
-            }
-            return res
-        }else{
-            $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
-                "is required, not '" + $B.class_name(obj) + "'")
-        }
+var memoryview = _b_.memoryview
+
+memoryview.$factory = function(obj){
+    check_nb_args_no_kw('memoryview', 1, arguments)
+    if($B.get_class(obj) === memoryview){
+        return obj
     }
-)
+    if($B.get_class(obj).$buffer_protocol){
+        obj.$exports = obj.$exports ?? 0
+        obj.$exports++ // used to prevent resizing
+        var res = {
+            ob_type: memoryview,
+            obj: obj,
+            mbuf: null,
+            format: 'B',
+            itemsize: 1,
+            ndim: 1,
+            shape: _b_.tuple.$factory([_b_.len(obj)]),
+            strides: _b_.tuple.$factory([1]),
+            suboffsets: _b_.tuple.$factory([]),
+            c_contiguous: true,
+            f_contiguous: true,
+            contiguous: true
+        }
+        return res
+    }else{
+        $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
+            "is required, not '" + $B.class_name(obj) + "'")
+    }
+}
 
 memoryview.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
 memoryview.$buffer_protocol = true
@@ -2314,7 +2326,7 @@ memoryview.__getitem__ = function(self, key){
     }
 }
 
-memoryview.__len__ = function(self){
+memoryview.sq_length = function(self){
     return len(self.obj) / self.itemsize
 }
 
@@ -2469,14 +2481,16 @@ var next = _b_.next = function(obj){
         "' object is not an iterator")
 }
 
-var NotImplementedType = $B.NotImplementedType =
-    $B.make_class("NotImplementedType",
-        function(){return NotImplemented}
-    )
+var NotImplementedType = $B.NotImplementedType
 
-NotImplementedType.__repr__ = NotImplementedType.__str__ = function(){
+NotImplementedType.$factory = function(){
+    return NotImplemented
+}
+
+NotImplementedType.tp_repr = function(){
     return "NotImplemented"
 }
+
 $B.set_func_names(NotImplementedType, "builtins")
 
 var NotImplemented = _b_.NotImplemented = {
@@ -2600,42 +2614,42 @@ var repr = _b_.repr = function(obj){
     return $B.$call($B.$getattr(klass, "__repr__"))(obj)
 }
 
-var reversed = _b_.reversed = $B.make_class("reversed",
-    function(seq){
-        // Return a reverse iterator. seq must be an object which has a
-        // __reversed__() method or supports the sequence protocol (the
-        // __len__() method and the __getitem__() method with integer
-        // arguments starting at 0).
+var reversed = _b_.reversed
 
-        check_nb_args_no_kw('reversed', 1, arguments)
+reversed.$factory = function(seq){
+    // Return a reverse iterator. seq must be an object which has a
+    // __reversed__() method or supports the sequence protocol (the
+    // __len__() method and the __getitem__() method with integer
+    // arguments starting at 0).
 
-        var klass = $B.get_class(seq),
-            rev_method = $B.$getattr(klass, '__reversed__', null)
-        if(rev_method !== null){
-            return $B.$call(rev_method)(seq)
-        }
-        try{
-            var method = $B.$getattr(klass, '__getitem__')
-        }catch(err){
-            $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
-        }
+    check_nb_args_no_kw('reversed', 1, arguments)
 
-        var res = {
-            ob_type: reversed,
-            $counter : _b_.len(seq),
-            getter: function(i){
-                return $B.$call(method)(seq, i)
-            }
-        }
-        return res
+    var klass = $B.get_class(seq),
+        rev_method = $B.$getattr(klass, '__reversed__', null)
+    if(rev_method !== null){
+        return $B.$call(rev_method)(seq)
     }
-)
+    try{
+        var method = $B.$getattr(klass, '__getitem__')
+    }catch(err){
+        $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
+    }
 
-reversed.__iter__ = function(self){
+    var res = {
+        ob_type: reversed,
+        $counter : _b_.len(seq),
+        getter: function(i){
+            return $B.$call(method)(seq, i)
+        }
+    }
+    return res
+}
+
+reversed.tp_iter = function(self){
     return self
 }
 
-reversed.__next__ = function(self){
+reversed.tp_iternext = function(self){
     self.$counter--
     if(self.$counter < 0){
         $B.RAISE(_b_.StopIteration, '')
@@ -2976,57 +2990,57 @@ _b_.sum = function(){
     return res
 }
 
-var $$super = _b_.super = $B.make_class("super",
-    function (_type, object_or_type){
-        var no_object_or_type = object_or_type === undefined
-        if(_type === undefined && object_or_type === undefined){
-            var frame = $B.frame_obj.frame,
-                pyframe = $B.imported["_sys"]._getframe(),
-                code = $B.$getattr(pyframe, 'f_code'),
-                co_varnames = code.co_varnames
-            if(co_varnames.length > 0){
-                _type = $B.get_class(frame[1])
-                if(_type === undefined){
-                    $B.RAISE(_b_.RuntimeError, "super(): no arguments")
-                }
-                object_or_type = frame[1][code.co_varnames[0]]
-            }else{
+var $$super = _b_.super
+
+$$super.$factory = function (_type, object_or_type){
+    var no_object_or_type = object_or_type === undefined
+    if(_type === undefined && object_or_type === undefined){
+        var frame = $B.frame_obj.frame,
+            pyframe = $B.imported["_sys"]._getframe(),
+            code = $B.$getattr(pyframe, 'f_code'),
+            co_varnames = code.co_varnames
+        if(co_varnames.length > 0){
+            _type = $B.get_class(frame[1])
+            if(_type === undefined){
                 $B.RAISE(_b_.RuntimeError, "super(): no arguments")
             }
-        }
-        if((! no_object_or_type) && Array.isArray(object_or_type)){
-            object_or_type = object_or_type[0]
-        }
-        var $arg2
-
-        if(object_or_type !== undefined){
-            if(object_or_type === _type ||
-                    (object_or_type.$is_class &&
-                    _b_.issubclass(object_or_type, _type))){
-                $arg2 = 'type'
-            }else if($B.$isinstance(object_or_type, _type)){
-                $arg2 = 'object'
-            }else{
-                $B.RAISE(_b_.TypeError,
-                    'super(type, obj): obj must be an instance ' +
-                    'or subtype of type')
-            }
-        }
-        return {
-            ob_type: $$super,
-            __thisclass__: _type,
-            __self_class__: object_or_type,
-            $arg2
+            object_or_type = frame[1][code.co_varnames[0]]
+        }else{
+            $B.RAISE(_b_.RuntimeError, "super(): no arguments")
         }
     }
-)
+    if((! no_object_or_type) && Array.isArray(object_or_type)){
+        object_or_type = object_or_type[0]
+    }
+    var $arg2
+
+    if(object_or_type !== undefined){
+        if(object_or_type === _type ||
+                (object_or_type.$is_class &&
+                _b_.issubclass(object_or_type, _type))){
+            $arg2 = 'type'
+        }else if($B.$isinstance(object_or_type, _type)){
+            $arg2 = 'object'
+        }else{
+            $B.RAISE(_b_.TypeError,
+                'super(type, obj): obj must be an instance ' +
+                'or subtype of type')
+        }
+    }
+    return {
+        ob_type: $$super,
+        __thisclass__: _type,
+        __self_class__: object_or_type,
+        $arg2
+    }
+}
 
 $$super.__get__ = function(self, instance){
     // https://www.artima.com/weblogs/viewpost.jsp?thread=236278
     return $$super.$factory(self.__thisclass__, instance)
 }
 
-$$super.__getattribute__ = function(self, attr){
+$$super.tp_getattro = function(self, attr){
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -3122,7 +3136,7 @@ $$super.__getattribute__ = function(self, attr){
     }
 }
 
-$$super.__init__ = function(cls){
+$$super.tp_init = function(cls){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'super' " +
             "object needs an argument")
@@ -3133,7 +3147,7 @@ $$super.__init__ = function(cls){
     }
 }
 
-$$super.__repr__ = function(self){
+$$super.tp_repr = function(self){
     $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
     var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
     if(self.__self_class__ !== undefined){
@@ -3162,35 +3176,35 @@ _b_.vars = function(){
     }
 }
 
-var zip = _b_.zip = $B.make_class("zip",
-    function(){
-        var res = {
-            ob_type: zip,
-            items: []
-        }
-        if(arguments.length == 0){
-            return res
-        }
-        var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
-        var _args = $ns['args'],
-            strict = $B.$bool(_b_.dict.get($ns.kw, 'strict', false))
-        var iters = []
-        for(var arg of _args){
-            iters.push($B.make_js_iterator(arg))
-        }
-        return {
-            ob_type: zip,
-            iters,
-            strict
-        }
-    }
-)
+var zip = _b_.zip
 
-zip.__iter__ = function(self){
+zip.$factory = function(){
+    var res = {
+        ob_type: zip,
+        items: []
+    }
+    if(arguments.length == 0){
+        return res
+    }
+    var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
+    var _args = $ns['args'],
+        strict = $B.$bool(_b_.dict.get($ns.kw, 'strict', false))
+    var iters = []
+    for(var arg of _args){
+        iters.push($B.make_js_iterator(arg))
+    }
+    return {
+        ob_type: zip,
+        iters,
+        strict
+    }
+}
+
+zip.tp_iter = function(self){
     return self
 }
 
-zip.__next__ = function(self){
+zip.tp_iternext = function(self){
     var res = [],
         len = self.iters.length
     for(var i = 0; i < len; i++){
@@ -3235,15 +3249,19 @@ function no_set_attr(klass, attr){
 var True = _b_.True = true
 var False = _b_.False = false
 
-var ellipsis = $B.ellipsis = $B.make_class("ellipsis",
-    function(){return Ellipsis}
-)
+var ellipsis = $B.ellipsis
 
-ellipsis.__repr__ = function(){
+ellipsis.$factory = function(){
+    return Ellipsis
+}
+
+ellipsis.tp_repr = function(){
     return 'Ellipsis'
 }
 
-var Ellipsis = _b_.Ellipsis = {ob_type: ellipsis}
+var Ellipsis = _b_.Ellipsis = {
+    ob_type: ellipsis
+}
 
 for(var comp in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[comp]) {
@@ -3272,40 +3290,43 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
-$B.builtin_method = $B.make_class('builtin_method')
+$B.builtin_method = $B.make_builtin_class('builtin_method')
 
-$B.builtin_method.__repr__ = function(self){
+$B.builtin_method.tp_repr = function(self){
     return `<built-in method>`
 }
 
 $B.set_func_names($B.builtin_method, 'builtins')
 
-var builtin_function = $B.builtin_function_or_method = $B.make_class(
-    "builtin_function_or_method", function(f, klass){
-        f.ob_type = builtin_function
-        if(f.$function_infos === undefined){
-            console.log('no function infos for', f)
-            console.log(Error().stack)
-        }else{
-            var name = f.$function_infos[$B.func_attrs.__name__]
-            f.ml = {
-                ml_name: name
-            }
-        }
-        f.__self__ = klass
-        return f
-    })
+var builtin_function_or_method = $B.builtin_function_or_method
 
-builtin_function.__get__ = function(_self, obj, klass){
+builtin_function_or_method.$factory = function(f, klass){
+    f.ob_type = builtin_function
+    if(f.$function_infos === undefined){
+        console.log('no function infos for', f)
+        console.log(Error().stack)
+    }else{
+        var name = f.$function_infos[$B.func_attrs.__name__]
+        f.ml = {
+            ml_name: name
+        }
+    }
+    f.__self__ = klass
+    return f
+}
+
+builtin_function_or_method.__get__ = function(_self, obj, klass){
     return _self
 }
 
-builtin_function.__getattribute__ = $B.function.__getattribute__
-builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
+builtin_function_or_method.tp_getattro = $B.function.__getattribute__
+
+builtin_function_or_method.__reduce_ex__ =
+builtin_function_or_method.__reduce__ = function(self){
     return self.$function_infos[$B.func_attrs.__name__]
 }
-builtin_function.__repr__ = builtin_function.__str__ = function(self){
 
+builtin_function_or_method.tp_repr = function(self){
     var name = self.ml.ml_name
     if(self.__self__){
         var type = $B.class_name($B.get_class(self))
@@ -3313,11 +3334,11 @@ builtin_function.__repr__ = builtin_function.__str__ = function(self){
     }
     return `<built-in function ${name}>`
 }
-$B.set_func_names(builtin_function, "builtins")
+$B.set_func_names(builtin_function_or_method, "builtins")
 
-var method_wrapper = $B.make_class("method_wrapper")
+var method_wrapper = $B.method_wrapper
 
-method_wrapper.__repr__ = method_wrapper.__str__ = function(self){
+method_wrapper.tp_repr = function(self){
     return "<method wrapper '" + self.$function_infos[$B.func_attrs.__name__] + "' of function object>"
 }
 $B.set_func_names(method_wrapper, "builtins")
@@ -3331,10 +3352,11 @@ var builtin_names = $B.builtin_funcs.
                     concat($B.builtin_classes).
                     concat(other_builtins)
 
+/*
 for(var name of builtin_names){
     try{
         if($B.builtin_funcs.indexOf(name) > -1){
-            _b_[name].ob_type = builtin_function
+            _b_[name].ob_type = builtin_function_or_method
             // used by inspect module
             _b_[name].$infos = {
                 __module__: 'builtins',
@@ -3355,7 +3377,7 @@ for(var name of builtin_names){
         console.log('error for', name, err)
     }
 }
-
+*/
 
 })(__BRYTHON__);
 

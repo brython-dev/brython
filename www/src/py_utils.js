@@ -752,6 +752,9 @@ $B.get_class = function(obj){
         return obj.ob_type
     }
     var klass = obj.__class__
+    if(klass !== undefined){
+        console.log('old school __class__', klass)
+    }
     if(klass === undefined){
         switch(typeof obj){
             case "number":
@@ -919,6 +922,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     }
 
     var it = _b_.iter(iterator)
+
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
     var next_func = $B.$getattr(it, '__next__', null)

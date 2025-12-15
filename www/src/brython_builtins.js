@@ -209,6 +209,9 @@ $B.make_mro = function(cls){
             pos = 0
         if(base === undefined ||
                 $B.get_mro(base) === undefined){
+            if(base === undefined){
+                console.log('no base', cls)
+            }
             if(base.ob_type === undefined){
                 // Brython class inherits a Javascript constructor. The
                 // constructor is the attribute js_func
@@ -280,6 +283,7 @@ $B.make_mro = function(cls){
     if(mro[0] !== cls){
         console.log('bizarre', cls, mro)
     }
+
     return mro
 }
 

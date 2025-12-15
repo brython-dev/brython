@@ -556,7 +556,7 @@
 
         JSObject: $B.JSObj,
         JSON: {
-            ob_type: $B.make_class("JSON"),
+            ob_type: $B.make_builtin_class("JSON"),
             parse: function(){
                 return $B.structuredclone2pyobj(
                     JSON.parse.apply(this, arguments))

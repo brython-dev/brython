@@ -3126,19 +3126,19 @@ $B.jsstring2codepoint = function(c){
     return code
 }
 
-var Interpolation = $B.make_class('Interpolation',
-    function(value, expression, conversion, format_spec){
-        return {
-            ob_type: Interpolation,
-            value,
-            expression,
-            conversion,
-            format_spec
-        }
-    }
-)
+var Interpolation = $B.make_builtin_class('Interpolation')
 
-Interpolation.__repr__ = function(self){
+Interpolation.$factory = function(value, expression, conversion, format_spec){
+    return {
+        ob_type: Interpolation,
+        value,
+        expression,
+        conversion,
+        format_spec
+    }
+}
+
+Interpolation.tp_repr = function(self){
     var res = 'Interpolation(',
         items = []
     for(var attr of ['value', 'expression', 'conversion', 'format_spec']){
@@ -3149,7 +3149,9 @@ Interpolation.__repr__ = function(self){
 
 $B.set_func_names(Interpolation, 'builtins')
 
-var Template = $B.make_class('Template', function(){
+var Template = $B.make_builtin_class('Template')
+
+Template.$factory = function(){
     // create a Template string (PEP 750)
     // arguments are strings or arrays
     var strings = $B.fast_tuple([]),
@@ -3175,15 +3177,15 @@ var Template = $B.make_class('Template', function(){
         strings,
         interpolations
     }
-})
+}
 
-Template.__iter__ = function(self){
+Template.tp_iter = function(self){
     self.$counter = -1
     self.$len = self.strings.length + self.interpolations.length
     return self
 }
 
-Template.__next__ = function(self){
+Template.tp_iternext = function(self){
     self.$counter++
     if(self.$counter >= self.$len){
         $B.RAISE(_b_.StopIteration, '')

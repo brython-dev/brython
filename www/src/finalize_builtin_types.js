@@ -216,7 +216,7 @@ function make_str(klass){
 
 console.log('create types', $B.created_types)
 
-for(var ns of [_b_, $B.created_types]){
+for(var ns of [$B.builtin_types, $B.created_types]){
     for(var name in ns){
         if(ns[name].ob_type !== _b_.type){
             continue
@@ -242,6 +242,4 @@ for(var ns of [_b_, $B.created_types]){
     }
 }
 
-
-console.log($B.get_class([1, 'a']))
 })(__BRYTHON__)

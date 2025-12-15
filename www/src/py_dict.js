@@ -1208,25 +1208,25 @@ function make_reverse_iterator(name, iter_func){
     // in reverse order
     // iter_func is the Javascript function that returns the generator for
     // each specific iteration
-    var klass = $B.make_class(name,
-        function(d){
-            return {
-                ob_type: klass,
-                d,
-                iter: iter_func(d),
-                make_iter:function(){
-                    return iter_func(d)
-                }
+    var klass = $B[name] // already created in init_builtin_types.js
+    
+    klass.$factory = function(d){
+        return {
+            ob_type: klass,
+            d,
+            iter: iter_func(d),
+            make_iter:function(){
+                return iter_func(d)
             }
         }
-    )
+    }
 
-    klass.__iter__ = function(self){
+    klass.tp_iter = function(self){
         self[Symbol.iterator] = self.make_iter
         return self
     }
 
-    klass.__next__ = function(self){
+    klass.tp_iternext = function(self){
         var res = self.iter.next()
         if(res.done){
             $B.RAISE(_b_.StopIteration, '')
@@ -1372,8 +1372,9 @@ _dict_items.__reduce__ = function(self){
 }
 
 _dict_items.tp_repr = function(self){
-    var items = Array.from(dict_items.tp_iter(self.dict))
-    items = items.map($B.fast_tuple)
+    var items = Array.from(self.it)
+    items = items.map(item => $B.fast_tuple([item.key, item.value]))
+    items = $B.$list(items)
     return 'dict_items(' + _b_.repr(items) + ')'
 }
 
@@ -1508,19 +1509,19 @@ dict.$from_js = function(jsobj){
 dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 
 // Class for attribute __dict__ of classes
-var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
-    function(obj){
-        var res
-        if($B.$isinstance(obj, dict)){
-            res = $B.obj_dict(dict.$to_obj(obj))
-        }else{
-            res = $B.obj_dict(obj)
-        }
-        res.ob_type = mappingproxy
-        res.$version = 0
-        return res
+var mappingproxy = $B.mappingproxy
+
+mappingproxy.$factory = function(obj){
+    var res
+    if($B.$isinstance(obj, dict)){
+        res = $B.obj_dict(dict.$to_obj(obj))
+    }else{
+        res = $B.obj_dict(obj)
     }
-)
+    res.ob_type = mappingproxy
+    res.$version = 0
+    return res
+}
 
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 

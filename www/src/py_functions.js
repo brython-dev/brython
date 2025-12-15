@@ -4,12 +4,7 @@
 var _b_ = $B.builtins
 
 // add attributes to native Function
-var FunctionCode = $B.make_class("function code")
-
-var FunctionGlobals = $B.make_class("function globals")
-
 $B.function = $B.make_builtin_class('function')
-
 
 $B.function.dict.__annotations__ = $B.getset_descriptor.$factory(
     $B.function,

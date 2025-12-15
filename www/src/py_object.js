@@ -4,25 +4,11 @@
 var _b_ = $B.builtins
 var object = _b_.object
 
-// class object for the built-in class 'object'
-Object.assign(object,
-{
-    tp_basicsize: 16,
-    tp_itersize: 0,
-    tp_flags: 5378,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.None,
-    tp_dictoffset: 0,
-    tp_doc: `The base class of the class hierarchy.
-
-When called, it accepts no arguments and returns a new featureless
-instance that has no instance attributes and cannot be given any.
-`,
-    tp_bases: [],
-})
-
 $B.make_class = function(qualname, factory){
     // Builds a basic class object
+    console.log('old school make class', qualname)
+    var stack = Error().stack.split('\n')
+    console.log(stack[2])
 
     var A = {
         ob_type: _b_.type,

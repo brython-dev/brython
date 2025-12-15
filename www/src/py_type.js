@@ -43,7 +43,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
     if(metaclass.__mro__ === undefined){
         console.log('no mro in metaclass', metaclass)
     }
-    
+
     // bool is not a valid base
     for(var base of bases){
         if(base.__flags__ !== undefined &&
@@ -90,7 +90,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
     }
 
     $B.make_annotate_func(dict, annotate, frame)
-    
+
     // Apply method __new__ of metaclass to create the class object
     var meta_new = metaclass.tp_new
     var kls = meta_new(metaclass, class_name, resolved_bases, dict,
@@ -370,14 +370,13 @@ $B.set_func_names(classmethod, "builtins")
 
 
 // staticmethod() built in function
-var staticmethod = _b_.staticmethod = $B.make_class("staticmethod",
-    function(func){
-        return {
-            ob_type: staticmethod,
-            __func__: func
-        }
+var staticmethod = _b_.staticmethod
+staticmethod.$factory = function(func){
+    return {
+        ob_type: staticmethod,
+        __func__: func
     }
-)
+}
 
 staticmethod.__call__ = function(self){
     return $B.$call(self.__func__)
@@ -389,20 +388,19 @@ staticmethod.__get__ = function(self){
 
 $B.set_func_names(staticmethod, "builtins")
 
-$B.getset_descriptor = $B.make_class("getset_descriptor",
-    function(klass, attr, getter, setter, deleter){
-        var res = {
-            ob_type: $B.getset_descriptor,
-            __doc__: _b_.None,
-            cls: klass,
-            attr,
-            getter,
-            setter,
-            deleter
-        }
-        return res
+$B.getset_descriptor = $B.make_builtin_class("getset_descriptor")
+$B.getset_descriptor.$factory = function(klass, attr, getter, setter, deleter){
+    var res = {
+        ob_type: $B.getset_descriptor,
+        __doc__: _b_.None,
+        cls: klass,
+        attr,
+        getter,
+        setter,
+        deleter
     }
-)
+    return res
+}
 
 $B.getset_descriptor.__delete__ = function(self, obj){
     return self.deleter(obj)
@@ -433,6 +431,7 @@ $B.set_func_names($B.getset_descriptor, "builtins")
 
 
 var wrapper_descriptor = $B.wrapper_descriptor = $B.make_builtin_class("wrapper_descriptor")
+
 wrapper_descriptor.$factory = function(cls, attr, f){
     if(f === undefined){
         console.log('wrapper descriptor')
@@ -526,22 +525,6 @@ function type_set_annotate(klass, value){
         klass.__annotate__ = value
     }
 }
-
-/*
-type.dict.__class__ = $B.getset_descriptor.$factory(
-    type,
-    '__class__',
-    function(klass){
-        return $B.get_class(klass)
-    },
-    function(klass, value){
-        console.log('set class', klass, value)
-        klass.tp_bases = value
-        klass.__mro__ = type.$mro(klass)
-        return _b_.None
-    }
-)
-*/
 
 function type_name(klass){
     return $B.get_name(klass)
@@ -1206,7 +1189,7 @@ type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
     class_dict.$tp_setattr = $B.search_in_mro(class_dict, '__setattr__')
 
     var sup = _b_.super.$factory(class_dict, class_dict)
-    var init_subclass = _b_.super.__getattribute__(sup, "__init_subclass__")
+    var init_subclass = _b_.super.tp_getattro(sup, "__init_subclass__")
     init_subclass(extra_kwargs)
     return class_dict
 }
@@ -1389,17 +1372,16 @@ type.tp_members = [
 type.__init_subclass__ = _b_.classmethod.$factory(type.__init_subclass__)
 
 // property (built in function)
-var property = _b_.property = $B.make_class("property",
-    function(fget, fset, fdel, doc){
-        var res = {
-            ob_type: property
-        }
-        property.__init__(res, fget, fset, fdel, doc)
-        return res
+var property = _b_.property
+property.$factory = function(fget, fset, fdel, doc){
+    var res = {
+        ob_type: property
     }
-)
+    property.tp_init(res, fget, fset, fdel, doc)
+    return res
+}
 
-property.__init__ = function(){
+property.tp_init = function(){
     var $ = $B.args('__init__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
@@ -1446,7 +1428,7 @@ property.__get__ = function(self, kls){
     return $B.$call(self.fget)(kls)
 }
 
-property.__new__ = function(cls){
+property.tp_new = function(cls){
     return {
         ob_type: cls
     }
@@ -1526,35 +1508,34 @@ $B.$instance_creator = function(klass){
     return factory
 }
 
-var method_wrapper = $B.method_wrapper = $B.make_class("method_wrapper",
-    function(attr, klass, method){
-        var f = function(){
-            return method.apply(null, arguments)
-        }
-        f.$infos = {
-            __name__: attr,
-            __module__: klass.__module__
-        }
-        return f
+var method_wrapper = $B.method_wrapper
+method_wrapper.$factory = function(attr, klass, method){
+    var f = function(){
+        return method.apply(null, arguments)
     }
-)
+    f.$infos = {
+        __name__: attr,
+        __module__: klass.__module__
+    }
+    return f
+}
 
-method_wrapper.__repr__ = function(self){
+method_wrapper.tp_repr = function(self){
     var class_name = self.__objclass__.__name__
     return "<method-wrapper '" + self.$function_infos[$B.func_attrs.__name__] +
         `' of ${class_name} object>`
 }
 
 // Used for class members, defined in __slots__
-var member_descriptor = $B.member_descriptor = $B.make_class("member_descriptor",
-    function(attr, cls){
-        return{
-            ob_type: member_descriptor,
-            cls: cls,
-            attr: attr
-        }
+var member_descriptor = $B.member_descriptor
+
+member_descriptor.$factory = function(attr, cls){
+    return{
+        ob_type: member_descriptor,
+        cls: cls,
+        attr: attr
     }
-)
+}
 
 member_descriptor.__delete__ = function(self, kls){
     if(kls.$slot_values === undefined ||
@@ -1587,7 +1568,7 @@ member_descriptor.__set__ = function(self, kls, value){
     kls.$slot_values.set(self.attr, value)
 }
 
-member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
+member_descriptor.tp_repr = function(self){
     return "<member '" + self.attr + "' of '" + self.cls.__name__ +
         "' objects>"
 }
@@ -1597,32 +1578,31 @@ $B.set_func_names(member_descriptor, "builtins")
 // used as the factory for method objects
 
 $B.objs = []
-var method = $B.method = $B.make_class("method",
-    function(func, obj){
-        var f = function(){
-            return $B.$call(func).bind(null, obj).apply(null, arguments)
-        }
-        f.ob_type = method
-        if(typeof func !== 'function'){
-            console.log('method from func w-o $infos', func, 'all', $B.$call(func))
-        }
-        if(! func.$infos && func.$function_infos){
-            $B.make_function_infos(func, ...func.$function_infos)
-            f.$function_infos = func.$function_infos
-        }
-        f.$infos = {}
-        if(func.$infos){
-            for(var key in func.$infos){
-                f.$infos[key] = func.$infos[key]
-            }
-        }
-        f.$infos.__func__ = func
-        f.$infos.__self__ = obj
-        f.$infos.__dict__ = $B.empty_dict()
-
-        return f
+var method = $B.method
+method.$factory = function(func, obj){
+    var f = function(){
+        return $B.$call(func).bind(null, obj).apply(null, arguments)
     }
-)
+    f.ob_type = method
+    if(typeof func !== 'function'){
+        console.log('method from func w-o $infos', func, 'all', $B.$call(func))
+    }
+    if(! func.$infos && func.$function_infos){
+        $B.make_function_infos(func, ...func.$function_infos)
+        f.$function_infos = func.$function_infos
+    }
+    f.$infos = {}
+    if(func.$infos){
+        for(var key in func.$infos){
+            f.$infos[key] = func.$infos[key]
+        }
+    }
+    f.$infos.__func__ = func
+    f.$infos.__self__ = obj
+    f.$infos.__dict__ = $B.empty_dict()
+
+    return f
+}
 
 method.__call__ = function(f){
     return f(...Array.from(arguments).slice(1))
@@ -1646,7 +1626,7 @@ method.__get__ = function(self){
     return f
 }
 
-method.__getattribute__ = function(self, attr){
+method.tp_getattro = function(self, attr){
     // Internal attributes __name__, __func__, __self__ etc.
     // are stored in self.$infos
     var infos = self.$infos
@@ -1667,7 +1647,7 @@ method.__getattribute__ = function(self, attr){
     }
 }
 
-method.__repr__ = method.__str__ = function(self){
+method.tp_repr = function(self){
     return "<bound method " + self.$infos.__qualname__ +
        " of " + _b_.str.$factory(self.$infos.__self__) + ">"
 }
@@ -1684,18 +1664,18 @@ method.__setattr__ = function(self, key){
 
 $B.set_func_names(method, "builtins")
 
-$B.method_descriptor = $B.make_class("method_descriptor",
-    function(cls, attr, f){
-        f.ob_type = $B.method_descriptor
-        f.ml = {
-            ml_name: attr
-        }
-        f.__objclass__ = cls
-        return f
+$B.method_descriptor.$factory = function(cls, attr, f){
+    f.ob_type = $B.method_descriptor
+    f.ml = {
+        ml_name: attr
     }
-)
+    f.__objclass__ = cls
+    return f
+}
 
-$B.method_descriptor.__get__ = function(self, obj, klass){
+console.log('method descriptor', $B.method_descriptor)
+
+$B.method_descriptor.dict.__get__ = function(self, obj, klass){
     if(obj === _b_.None){
         return self
     }
@@ -1706,16 +1686,14 @@ $B.method_descriptor.__get__ = function(self, obj, klass){
     return f
 }
 
-$B.method_descriptor.__repr__ = function(self){
+$B.method_descriptor.tp_repr = function(self){
     var name = self.ml.ml_name
     var class_name = self.__objclass__.tp_name
     return `<method '${name}' of '${class_name}' objects>`
 }
 $B.set_func_names($B.method_descriptor, 'builtins')
 
-$B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
-
-$B.classmethod_descriptor.__repr__ = function(_self){
+$B.classmethod_descriptor.tp_repr = function(_self){
     console.log(_self, _self.$infos, _self.$function_infos)
     var name = _self.$function_infos[$B.func_attrs.__name__]
     return `<method '${name}' of '${_self.__objclass__.__name__}' objects>`
@@ -1754,18 +1732,6 @@ $B.classmethod_descriptor.__get__ = function(_self, obj, type){
 
 $B.set_func_names($B.classmethod_descriptor, 'builtins')
 
-// this could not be done before $type and $factory are defined
-/*
-_b_.object.ob_type = type
-
-_b_.object.__class__ = $B.getset_descriptor.$factory(
-    _b_.object,
-    '__class__',
-    function(obj){
-        return $B.get_class(obj)
-    }
-)
-*/
 $B.make_iterator_class = function(name, reverse){
     // Builds a class to iterate over items
 
@@ -1863,7 +1829,6 @@ $B.GenericAlias.$factory = function(origin_class, items){
     return res
 }
 
-
 $B.GenericAlias.__args__ = self => $B.fast_tuple(self.items)
 
 $B.GenericAlias.__call__ = function(self, ...args){
@@ -1888,7 +1853,7 @@ $B.GenericAlias.__mro_entries__ = function(self){
     return $B.fast_tuple([self.origin_class])
 }
 
-$B.GenericAlias.__new__ = function(origin_class, items){
+$B.GenericAlias.tp_new = function(origin_class, items){
     var res = {
         ob_type: $B.GenericAlias,
         origin_class,
@@ -1913,7 +1878,6 @@ $B.GenericAlias.__parameters__ = self => $B.fast_tuple([])
 
 $B.GenericAlias.tp_repr = function(self){
     var items = Array.isArray(self.items) ? self.items : [self.items]
-    console.log('repr', self)
     var reprs = []
     for(var item of items){
         if(item === _b_.Ellipsis){
@@ -1936,14 +1900,14 @@ $B.GenericAlias.__type_params__ = self => $B.$getattr(self.origin_class, '__type
 
 $B.set_func_names($B.GenericAlias, "types")
 
-$B.UnionType = $B.make_class("UnionType",
-    function(items){
-        return {
-            ob_type: $B.UnionType,
-            items
-        }
+$B.UnionType = $B.make_builtin_class("UnionType")
+
+$B.UnionType.$factory = function(items){
+    return {
+        ob_type: $B.UnionType,
+        items
     }
-)
+}
 
 $B.UnionType.__args__ = _b_.property.$factory(
     self => $B.fast_tuple(self.items)
@@ -1976,7 +1940,7 @@ $B.UnionType.__parameters__ = _b_.property.$factory(
     () => $B.fast_tuple([])
 )
 
-$B.UnionType.__repr__ = function(self){
+$B.UnionType.tp_repr = function(self){
     var t = []
     for(var item of self.items){
         if(item.$is_class){
