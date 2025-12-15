@@ -1,6 +1,6 @@
 core_scripts = [
     'brython_builtins',
-
+    'init_builtin_types',
     'py_ast_classes',
     'stdlib_paths',
     'unicode_data',
@@ -37,6 +37,7 @@ core_scripts = [
     'async',
     'py_flags',
     'builtin_modules',
+    'finalize_builtin_types',
     'ast_to_js',
     'symtable',
 
