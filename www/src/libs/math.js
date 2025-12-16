@@ -9,13 +9,13 @@ const INF = $B.fast_float(Number.POSITIVE_INFINITY),
 
 var float_check = function(x) {
     // Returns a Javascript number
-    if(x.__class__ === $B.long_int){
+    if($B.exact_type(x, $B.long_int)){
         var res = parseInt(x.value)
         if(! isFinite(res)){
             $B.RAISE(_b_.OverflowError, 'int too big for float')
         }
         return res
-    }else if(x.__class__ === _b_.float){
+    }else if($B.exact_type(x, _b_.float)){
         return x.value
     }
     try{
@@ -405,15 +405,15 @@ function ceil(x){
 
     if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                 "cannot convert float infinity to integer")
         }else if(_mod.isnan(x)){
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                 "cannot convert float NaN to integer")
         }
     }
 
-    var klass = x.__class__ || $B.get_class(x)
+    var klass = $B.get_class(x)
 
     try{
         // Use attribute of the object's class, not of the object
@@ -675,11 +675,11 @@ function comb(n, k){
     k = _b_.int.$to_bigint(k);
 
     if(n < 0){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "n must be a non-negative integer");
     }
     if(k < 0){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "k must be a non-negative integer");
     }
 
@@ -709,7 +709,7 @@ function comb(n, k){
 
         overflow = k > LLONG_MAX || k < LLONG_MIN
         if (overflow) {
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                          "min(n - k, k) must not exceed " +
                          LLONG_MAX);
         }
@@ -761,7 +761,7 @@ function dist(p, q){
     function test(x){
         if(typeof x === "number"){
             return x
-        }else if(x.__class__ === _b_.float){
+        }else if($B.exact_type(x, _b_.float)){
             return x.value
         }
         var y = $B.$getattr(x, '__float__', null)
@@ -798,14 +798,14 @@ function dist(p, q){
             try{
                 var next_p = _b_.next(itp)
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
+                if($B.is_exc(err, _b_.StopIteration)){
                     // check that the other iterator is also exhausted
                     try{
                         var next_q = _b_.next(itq)
                         $B.RAISE(_b_.ValueError, "both points must have " +
                             "the same number of dimensions")
                     }catch(err){
-                        if(err.__class__ === _b_.StopIteration){
+                        if($B.is_exc(err, _b_.StopIteration)){
                             break
                         }
                         throw err
@@ -817,7 +817,7 @@ function dist(p, q){
             try{
                 var next_q = _b_.next(itq)
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
+                if($B.is_exc(err, _b_.StopIteration)){
                     $B.RAISE(_b_.ValueError, "both points must have " +
                         "the same number of dimensions")
                 }
@@ -1152,11 +1152,11 @@ function factorial(arg){
     x = _b_.int.$to_bigint($B.PyNumber_Index(arg))
     overflow = x > LONG_MAX || x < LONG_MIN
     if(x > LONG_MAX) {
-        $B.RAISE(_b_.OverflowError, 
+        $B.RAISE(_b_.OverflowError,
                      "factorial() argument should not exceed " +
                      LONG_MAX)
     }else if(x < 0) {
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "factorial() not defined for negative values");
     }
 
@@ -1174,7 +1174,7 @@ function factorial(arg){
 function floor(x){
     $B.check_nb_args_no_kw('floor', 1, arguments)
 
-    if(typeof x == "number" || x.__class__ === _b_.float){
+    if(typeof x == "number" || $B.exact_type(x, _b_.float)){
         return Math.floor(float_check(x))
     }
     var klass = $B.get_class(x)
@@ -1196,7 +1196,7 @@ function floor(x){
 }
 
 var _fma = (function () {
-    // copied from 
+    // copied from
     // https://gist.github.com/Yaffle/fb47de4c18b63147699e0b621f1031f7
 
   "use strict";
@@ -1733,7 +1733,7 @@ function isqrt(x){
 
     x = $B.PyNumber_Index(x)
     if($B.rich_comp("__lt__", x, 0)){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "isqrt() argument must be nonnegative")
     }
     if(typeof x == "number"){
@@ -1862,7 +1862,7 @@ function log1p(x){
     $B.check_no_kw('log1p', x)
     if($B.$isinstance(x, $B.long_int)){
         if($B.long_int.bit_length(x) > 1024){
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                 "int too large to convert to float")
         }
         x = $B.long_int.$log2($B.fast_long_int(x.value + 1n))
@@ -1998,7 +1998,7 @@ function byteArrayToDouble(bytearray) {
 
 function addSteps(array, steps){
     // convert to BigInt, avoids issue when steps >= 2 ** 32
-    if(steps.__class__ == $B.long_int){
+    if($B.exact_type(steps, $B.long_int)){
         steps = steps.value
     }else{
         steps = BigInt(steps)
@@ -2063,7 +2063,7 @@ function nextafter(){
     }
     steps = $B.PyNumber_Index(steps);
     if(steps < 0) {
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "steps must be a non-negative integer");
     }
     if(steps == 0){
@@ -2231,10 +2231,8 @@ function prod(){
             }
             res = $B.rich_op('__mul__', res, x)
         }catch(err){
-            if(err.__class__ === _b_.StopIteration){
-                return res
-            }
-            throw err
+            $B.RAISE_IF_NOT(err, _b_.StopIteration)
+            return res
         }
     }
 }
@@ -2248,7 +2246,7 @@ function radians(x){
 
 function is_finite(x){
     return typeof x == "number" ||
-               (x.__class__ === _b_.floar && isFinite(x.value)) ||
+               ($B.exact_type(x, _b_.float) && isFinite(x.value)) ||
                $B.$isinstance(x, _b_.int) ||
                ($B.$isinstance(x, _b_.float) && isFinite(x.value))
 }
@@ -2417,7 +2415,7 @@ function long_add_would_overflow(a, b){
 }
 
 function PyLong_CheckExact(n){
-    return typeof n == 'number' || n.__class__ === $B.long_int
+    return typeof n == 'number' || $B.exact_type(n, $B.long_int)
 }
 
 /*
@@ -2571,8 +2569,8 @@ function sumprod(p, q){
 
             if (!finished) {
                 var flt_p, flt_q;
-                var p_type_float = p_i.__class__ === _b_.float;
-                var q_type_float = q_i.__class__ === _b_.float
+                var p_type_float = $B.exact_type(p_i, _b_.float)
+                var q_type_float = $B.exact_type(q_i, _b_.float)
                 if(p_type_float && q_type_float) {
                     flt_p = p_i;
                     flt_q = q_i;
@@ -2672,7 +2670,7 @@ function trunc(x) {
       }
       return _b_.int.$factory(Math.ceil(x1))  // x1 < 0
    }
-   $B.RAISE(_b_.ValueError, 
+   $B.RAISE(_b_.ValueError,
        'object is not a number and does not contain __trunc__')
 }
 
@@ -2771,7 +2769,7 @@ var _mod = {
 
 for(var $attr in _mod){
     if(typeof _mod[$attr] === 'function'){
-        _mod[$attr].__class__ = $B.builtin_function_or_method
+        _mod[$attr].ob_type = $B.builtin_function_or_method
     }
 }
 

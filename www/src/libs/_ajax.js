@@ -93,7 +93,7 @@ function handle_kwargs(self, kw, method){
             var rawdata = item.value
             if(typeof rawdata == "string" || rawdata instanceof FormData){
                 data = rawdata
-            }else if(rawdata.__class__ === _b_.dict){
+            }else if($B.exact_type(rawdata, _b_.dict)){
                 data = stringify(rawdata)
             }else if($B.$isinstance(rawdata, [_b_.bytes, _b_.bytearray])){
                 data = new Uint8Array(Array.from($B.make_js_iterator(rawdata)))
@@ -106,7 +106,7 @@ function handle_kwargs(self, kw, method){
         }else if(key == "headers"){
             var value = item.value
             if(! $B.$isinstance(value, _b_.dict)){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "headers must be a dict, not " + $B.class_name(value))
             }
             for(var subitem of _b_.dict.$iter_items(value)){
@@ -141,13 +141,13 @@ function handle_kwargs(self, kw, method){
     return {cache, data, rawdata, encoding, headers, mode, timeout}
 }
 
-var ajax = $B.make_class('ajax')
+var ajax = $B.make_type('ajax')
 
-ajax.__repr__ = function(self){
+ajax.tp_repr = function(self){
     return '<object Ajax>'
 }
 
-ajax.__getattribute__ = function(self, attr){
+ajax.tp_getattro = function(self, attr){
     if(ajax[attr] !== undefined){
         return function(){
             return ajax[attr].call(null, self, ...arguments)
@@ -214,12 +214,12 @@ ajax.open = function(){
         url = $.url,
         async = $.async
     if(typeof method !== "string"){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             'open() argument method should be string, got ' +
             $B.class_name(method))
     }
     if(typeof url !== "string"){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             'open() argument url should be string, got ' +
             $B.class_name(url))
     }
@@ -293,9 +293,9 @@ ajax.send = function(self, params){
     }else if(params instanceof FormData){
         res = params
     }else{
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             "send() argument must be string or dictionary, not '" +
-            _b_.str.$factory(params.__class__) + "'")
+            $B.class_name(params) + "'")
     }
     self.js.send(res)
     return _b_.None
@@ -359,8 +359,8 @@ ajax.$factory = function(){
         }
     }
     var res = {
-        __class__: ajax,
-        __dict__: $B.empty_dict(),
+        ob_type: ajax,
+        dict: $B.empty_dict(),
         js: xmlhttp,
         headers: {}
     }
@@ -548,7 +548,7 @@ function file_upload(){
                 formdata.append(item.key, item.value)
             }
         }else{
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 'data value must be a dict of form_data')
         }
     }
@@ -559,6 +559,7 @@ function file_upload(){
 }
 
 $B.set_func_names(ajax)
+$B.finalize_type(ajax)
 
 return {
     ajax: ajax,

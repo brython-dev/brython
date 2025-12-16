@@ -21,25 +21,25 @@ const xml_entities = {
     '&amp;': '&'
     }
 
-var xmlparser = $B.make_class('xmlparser',
-    function(encoding, namespace_separator, intern){
-        return {
-            __class__: xmlparser,
-            __dict__: $B.empty_dict(),
-            encoding,
-            namespace_separator,
-            intern,
-            buffer_text: false,
-            _buffer: '',
-            _state: 'data',
-            _data_buffer: '',
-            _initialized: false,
-            _maybe_entity: null,
-            _element_stack: [],
-            _chunk_size: 2 << 14
-        }
+var xmlparser = $B.make_type('xmlparser')
+
+xmlparser.$factory = function(encoding, namespace_separator, intern){
+    return {
+        ob_type: xmlparser,
+        dict: $B.empty_dict(),
+        encoding,
+        namespace_separator,
+        intern,
+        buffer_text: false,
+        _buffer: '',
+        _state: 'data',
+        _data_buffer: '',
+        _initialized: false,
+        _maybe_entity: null,
+        _element_stack: [],
+        _chunk_size: 2 << 14
     }
-)
+}
 
 xmlparser._handle_stack = function(self){
     if(! (self._element instanceof ELEMENT)){
@@ -250,12 +250,10 @@ xmlparser.xml_tokenizer = function*(self){
         }
         self._pos++
     }
-    console.log('element', self._element)
-    console.log('fini')
-    alert()
 }
 
 $B.set_func_names(xmlparser, 'expat')
+$B.finalize_type(xmlparser)
 
 function raise_error_known_position(parser, message, pos){
     message += ' at position ' + pos
@@ -285,21 +283,21 @@ function raise_error1(element, char){
     raise_error_known_position(head.parser, message, pos)
 }
 
-var error = $B.make_class("error",
-    function(message){
-        return {
-            __class__: error,
-            msg: message,
-            args: $B.fast_tuple([message]),
-            __cause__: _b_.None,
-            __context__: _b_.None,
-            __suppress_context__: false
-        }
-    })
-error.tp_bases = [_b_.Exception, _b_.object]
-error.__mro__ = [_b_.Exception, _b_.BaseException, _b_.object]
+var error = $B.make_type("error", [_b_.Exception])
+
+error.$factory = function(message){
+    return {
+        ob_type: error,
+        msg: message,
+        args: $B.fast_tuple([message]),
+        __cause__: _b_.None,
+        __context__: _b_.None,
+        __suppress_context__: false
+    }
+}
 
 $B.set_func_names(error, "expat")
+$B.finalize_type(error)
 
 function expect_chars(element, char, stop){
     var res
@@ -1495,13 +1493,13 @@ function create_parser(){
         ns_sep = $.namespace_separator,
         intern = $.intern
     if(encoding !== _b_.None && ! _b_.isinstance(encoding, _b_.str)){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             `ParserCreate() argument 'encoding' must be ` +
             `str or None, not ${$B.class_name(encoding)}`)
     }
     if(ns_sep !== _b_.None){
         if(! _b_.isinstance(ns_sep, _b_.str)){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 `ParserCreate() argument 'namespace_separator' must be ` +
                 `str or None, not ${$B.class_name(ns_sep)}`)
         }

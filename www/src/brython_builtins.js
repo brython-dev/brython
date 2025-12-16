@@ -328,6 +328,26 @@ $B.make_builtin_class = function(tp_name, tp_bases){
     return cls
 }
 
+// same, but used in Javascript modules, not in core scripts
+$B.make_type = function(tp_name, tp_bases){
+    if(tp_name === undefined){
+        console.log('no tp name')
+        console.log(Error().stack)
+    }
+    var cls = {
+        ob_type: _b_.type,
+        tp_name,
+        tp_bases: tp_bases ?? [_b_.object],
+        dict: Object.create(null)
+    }
+    if(tp_bases){
+        cls.tp_mro = [cls, ...tp_bases, _b_.object]
+    }else{
+        cls.tp_mro = [cls, _b_.object]
+    }
+    return cls
+}
+
 /*
 for(var class_name of $B.builtin_classes){
     _b_[class_name] = $B.make_builtin_class(class_name)

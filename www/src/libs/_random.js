@@ -285,7 +285,7 @@ function RandomStream(seed) {
         // Transform to long integer
         if(typeof seed == "number"){
             seed = BigInt(seed)
-        }else if(seed.__class__ === $B.long_int){
+        }else if($B.exact_type(seed, $B.long_int)){
             seed = seed.value
         }else{
             return random.seed(seed.$brython_value)
@@ -335,14 +335,14 @@ function RandomStream(seed) {
 
 }
 
-var Random = $B.make_class("Random",
-    function(){
-        return {
-            __class__: Random,
-            _random: RandomStream(Date.now())
-        }
+var Random = $B.make_type("Random"
+
+Random.$factory = function(){
+    return {
+        ob_type: Random,
+        _random: RandomStream(Date.now())
     }
-)
+}
 
 Random.getrandbits = function(){
     var $ = $B.args("getrandbits", 2, {self: null, k:null}, ["self", "k"],
@@ -408,6 +408,7 @@ Random.setstate = function(){
 }
 
 $B.set_func_names(Random, "_random")
+$B.finalize_type(Random)
 
 $B.imported._random = { Random }
 

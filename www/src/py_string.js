@@ -1206,7 +1206,7 @@ str.__setattr__ = function(_self, attr, value){
         }
     }
     // str subclass : use __dict__
-    _b_.dict.$setitem(_self.__dict__, attr, value)
+    _b_.dict.$setitem(_self.dict, attr, value)
     return _b_.None
 }
 

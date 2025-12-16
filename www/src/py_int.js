@@ -463,8 +463,8 @@ int.__new__ = function(cls, value, base){
     }
     // set method .toString so that BigInt(instance) returns a bingint
     return {
-        __class__: cls,
-        __dict__: $B.empty_dict(),
+        ob_type: cls,
+        dict: $B.empty_dict(),
         $brython_value: int.$factory(value, base),
         toString: function(){
             return value

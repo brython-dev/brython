@@ -1020,7 +1020,9 @@ $B.get_method_class = function(method, ns, qualname, refs){
     }
     for(var ref of refs){
         if(klass[ref] === undefined){
-            return $B.make_class(qualname)
+            var cls = $B.make_type(qualname)
+            $B.finalize_type(cls)
+            return cls
         }
         klass = klass[ref]
     }
@@ -1117,8 +1119,8 @@ $B.$getitem1 = function(obj, item){
         return _b_.dict.$getitem(obj, item)
     }
 
-    var gi = $B.$getattr($B.get_class(obj), "__getitem__", _b_.None)
-    if(gi !== _b_.None){
+    var gi = $B.search_in_mro($B.get_class(obj), "__getitem__", $B.NULL)
+    if(gi !== $B.NULL){
         return gi(obj, item)
     }
 

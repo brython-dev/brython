@@ -341,7 +341,7 @@ classmethod.$factory = function(func){
     }
 }
 
-classmethod.__get__ = function(){
+classmethod.tp_descr_get = function(){
     // adapted from
     // https://docs.python.org/3/howto/descriptor.html#class-methods
     var $ = $B.args('classmethod', 3, {self: null, obj: null, cls: null},
@@ -364,6 +364,10 @@ classmethod.__get__ = function(){
         }
     }
     return $B.method.$factory(self.__func__, cls)
+}
+
+classmethod.tp_repr = function(self){
+    return `<classmethod(${_b_.repr(self.__func__)})>`
 }
 
 $B.set_func_names(classmethod, "builtins")
@@ -855,8 +859,8 @@ function type_getattribute(klass, attr){
                             `cannot delete '${key}' attribute ` +
                             `of immutable type '${klass.__name__}'`)
                     }
-                    if(klass.__dict__){
-                        _b_.dict.__delitem__(klass.__dict__, key)
+                    if(klass.dict){
+                        delete klass.dict[key]
                     }
                     delete klass[key]
                 })
@@ -887,12 +891,7 @@ function type_getattribute(klass, attr){
                 console.log(attr, 'not in klass[attr], search in __dict__',
                     klass.dict)
             }
-            /*
-            if(klass.dict && ! klass.__dict__){
-                klass.__dict__ = $B.obj_dict(klass.dict)
-            }
-            */
-            if(klass.dict && $B.get_class(klass.dict) === _b_.dict &&
+        if(klass.dict && $B.get_class(klass.dict) === _b_.dict &&
                     klass.dict[attr] !== undefined){
                 res = klass.dict[attr]
                 if($test){
@@ -1257,7 +1256,7 @@ type.tp_setattro = function(kls, attr, value){
     }
     kls[attr] = value
 
-    var mp = kls.dict || $B.$getattr(kls, '__dict__')
+    var mp = kls.dict
     // mapping proxy is read-only, set key/value without using __setitem__
     mp[attr] = value
 
@@ -1599,7 +1598,7 @@ method.$factory = function(func, obj){
     }
     f.$infos.__func__ = func
     f.$infos.__self__ = obj
-    f.$infos.__dict__ = $B.empty_dict()
+    f.$infos.dict = $B.empty_dict()
 
     return f
 }

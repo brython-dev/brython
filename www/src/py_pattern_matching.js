@@ -102,7 +102,7 @@ $B.pattern_match = function(subject, pattern){
                     store_starred.push(nxt())
                 }
                 // bind capture name
-                locals[pattern.sequence[i].capture_starred] = 
+                locals[pattern.sequence[i].capture_starred] =
                     $B.$list(store_starred)
                 nb_matched_in_subject += starred_match_length
             }else{
@@ -193,13 +193,14 @@ $B.pattern_match = function(subject, pattern){
             keys.push(key)
 
             // create a dummy class to pass as default value for get()
-            let missing = $B.make_class('missing',
-                function(){
-                    return {
-                        ob_type: missing
-                    }
+            let missing = $B.make_type('missing')
+            
+            missing.$factory = function(){
+                return {
+                    ob_type: missing
                 }
-            )
+            }
+            $B.finalize_type(missing)
 
             try{
                 let v = $B.$call($B.$getattr(subject, "get"))(key, missing)
@@ -267,11 +268,11 @@ $B.pattern_match = function(subject, pattern){
                 let match_args = $B.$getattr(klass, '__match_args__',
                     $B.fast_tuple([]))
                 if(! $B.$isinstance(match_args, _b_.tuple)){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         '__match_args__() did not return a tuple')
                 }
                 if(pattern.args.length > match_args.length){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         '__match_args__() returns ' + match_args.length +
                         ' names but ' + pattern.args.length + ' positional ' +
                         'arguments were passed')

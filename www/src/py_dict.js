@@ -1209,7 +1209,7 @@ function make_reverse_iterator(name, iter_func){
     // iter_func is the Javascript function that returns the generator for
     // each specific iteration
     var klass = $B[name] // already created in init_builtin_types.js
-    
+
     klass.$factory = function(d){
         return {
             ob_type: klass,
@@ -1555,7 +1555,9 @@ for(var attr in dict){
     if(mappingproxy[attr] !== undefined ||
             ["__class__", "__mro__", "__new__", "__init__", "__delitem__",
              "clear", "fromkeys", "pop", "popitem", "setdefault",
-             "update"].indexOf(attr) > -1){
+             "update",
+             "tp_getset", "tp_methods",
+             "__getitem__"].indexOf(attr) > -1){
         continue
     }
     if(typeof dict[attr] == "function"){
@@ -1569,13 +1571,26 @@ for(var attr in dict){
     }
 }
 
+mappingproxy.dict.__getitem__ = function(self, key){
+    var res = self.$jsobj[key]
+    if(res !== undefined){
+        return res
+    }
+    $B.RAISE(_b_.KeyError, key)
+}
+
+/*
 for(var attr in $B.dunder_methods){
     if(mappingproxy.hasOwnProperty($B.dunder_methods[attr])){
         // will created in set_func_names
         delete mappingproxy[$B.dunder_methods[attr]]
     }
 }
+*/
 $B.set_func_names(mappingproxy, "builtins")
+
+console.log('mappiingproxy getitem', mappingproxy.dict.__getitem__)
+
 
 function jsobj2dict(x, exclude){
     exclude = exclude || function(){return false}

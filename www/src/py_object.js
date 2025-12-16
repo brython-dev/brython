@@ -37,6 +37,7 @@ object.__delattr__ = function(self, attr){
         delete self[attr]
         return _b_.None
     }else if(self.__dict__ === undefined && self[attr] !== undefined){
+        console.log('suspect')
         delete self[attr]
         return _b_.None
     }
@@ -73,8 +74,8 @@ object.__dir__ = function(self) {
     }
 
     // add object's own attributes
-    if(self.__dict__){
-        for(let attr of $B.make_js_iterator(self.__dict__)){
+    if(self.dict){
+        for(let attr of $B.make_js_iterator(self.dict)){
             if(attr.charAt(0) != "$"){
                 res.push(attr)
             }
@@ -529,11 +530,11 @@ object.tp_setattro = function(self, attr, val){
                 self, attr)
         }
     }
-    var dict = self.dict ?? self.__dict__
+    var dict = self.dict
     if(dict){
         _b_.dict.$setitem(dict, attr, val)
     }else{
-        // for
+        console.log('no dict for', self)
         self[attr] = val
     }
     return _b_.None
@@ -630,8 +631,8 @@ function object___reduce_ex__(cls){
     }else{
         var d = $B.empty_dict(),
             nb = 0
-        if(cls.__dict__){
-            for(var item of _b_.dict.$iter_items(cls.__dict__)){
+        if(cls.dict){
+            for(var item of _b_.dict.$iter_items(cls.dict)){
                 if(item.key == "__class__" || item.key.startsWith("$")){
                     continue
                 }
@@ -659,7 +660,7 @@ function object___reduce_ex__(cls){
 }
 
 function object___reduce__(cls){
-    if(! cls.__dict__){
+    if(! cls.dict){
         $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
     }
     if($B.imported.copyreg === undefined){
@@ -668,7 +669,7 @@ function object___reduce__(cls){
     var res = [$B.imported.copyreg._reconstructor]
     var D = $B.get_class(cls),
         B = object
-    for(var klass of D.__mro__){
+    for(var klass of $B.get_mro(D)){
         if(klass.__module__ == 'builtins'){
             B = klass
             break
@@ -683,9 +684,9 @@ function object___reduce__(cls){
 
     res.push($B.fast_tuple(args))
     var d = $B.empty_dict()
-    for(var attr of _b_.dict.$keys_string(cls.__dict__)){
+    for(var attr of _b_.dict.$keys_string(cls.dict)){
         _b_.dict.$setitem(d, attr,
-            _b_.dict.$getitem_string(cls.__dict__, attr))
+            _b_.dict.$getitem_string(cls.dict, attr))
     }
     res.push(d)
     return _b_.tuple.$factory(res)

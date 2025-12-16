@@ -19,7 +19,7 @@ var Load = 'Load',
 //       set of non-recursive literals that have already been checked with
 //       validate_expr, so they don't accept the validator state
 function ensure_literal_number(exp, allow_real, allow_imaginary){
-    if(exp.__class__ !== mod.Constant){
+    if(! $B.exact_type(exp, mod.Constant)){
         return false
     }
     var value = exp.value
@@ -33,7 +33,7 @@ function ensure_literal_number(exp, allow_real, allow_imaginary){
 }
 
 function ensure_literal_negative(exp, allow_real, allow_imaginary){
-    if(exp.__class__ !== mod.UnaryOp){
+    if(! $B.exact_type(exp, mod.UnaryOp)){
         return false
     }
     // Must be negation ...
@@ -42,7 +42,7 @@ function ensure_literal_negative(exp, allow_real, allow_imaginary){
     }
     // ... of a constant ...
     var operand = exp.operand
-    if(operand.__class__ !== mod.Constant){
+    if(! $B.exact_type(operand, mod.Constant)){
         return false
     }
     // ... number
@@ -50,7 +50,7 @@ function ensure_literal_negative(exp, allow_real, allow_imaginary){
 }
 
 function ensure_literal_complex(exp){
-    if(exp.__class__ !== mod.BinOp){
+    if(! $B.exact_type(exp, mod.BinOp)){
         return false
     }
     var left = exp.left,
@@ -60,7 +60,7 @@ function ensure_literal_complex(exp){
         return false
     }
     // Check LHS is a real number (potentially signed)
-    switch(left.__class__){
+    switch(left.ob_type){
         case mod.Constant:
             if(!ensure_literal_number(left, true, false)){
                 return false
@@ -75,7 +75,7 @@ function ensure_literal_complex(exp){
             return false
     }
     // Check RHS is an imaginary number (no separate sign allowed)
-    switch(right.__class__){
+    switch(right.ob_type){
         case mod.Constant:
             if(!ensure_literal_number(right, false, true)){
                 return false
@@ -112,7 +112,7 @@ function validate_arguments(args){
 
 function validate_pattern(p, star_ok){
     var ret = -1
-    switch(p.__class__) {
+    switch(p.ob_type) {
         case mod.MatchValue:
             validate_pattern_match_value(p.value)
             break;
@@ -136,7 +136,7 @@ function validate_pattern(p, star_ok){
 
             var keys = p.keys;
             for(var key of keys){
-                if(key.__class__ === mod.Constant) {
+                if($B.exact_type(key, mod.Constant)){
                     var literal = key.value;
                     if([_b_.None, _b_.True, _b_.False].indexOf(literal) > -1){
                         /* validate_pattern_match_value will ensure the key
@@ -159,9 +159,9 @@ function validate_pattern(p, star_ok){
             validate_expr(p.cls, Load)
             var cls = p.cls;
             while(true){
-                if(cls.__class__ === mod.Name){
+                if($B.exact_type(cls, mod.Name)){
                     break
-                }else if(cls.__class__ === mod.Attribute) {
+                }else if($B.exact_type(cls, mod.Attribute)){
                     cls = cls.value;
                     continue;
                 }else {
@@ -224,7 +224,7 @@ function validate_patterns(patterns, star_ok){
 
 function validate_pattern_match_value(exp){
     validate_expr(exp, Load)
-    switch (exp.__class__){
+    switch (exp.ob_type){
         case mod.Constant:
             /* Ellipsis and immutable sequences are not allowed.
                For True, False and None, MatchSingleton() should
@@ -343,7 +343,7 @@ function validate_expr(exp, ctx){
         actual_ctx;
 
     /* First check expression context. */
-    switch (exp.__class__) {
+    switch (exp.ob_type) {
     case mod.Name:
         validate_name(exp.id)
         actual_ctx = exp.ctx
@@ -365,14 +365,14 @@ function validate_expr(exp, ctx){
         actual_ctx = 0;
     }
     actual_ctx = actual_ctx === 0 ? actual_ctx :
-                 actual_ctx.__class__.__name__
+                 $B.get_name($B.get_class(actual_ctx))
     if(check_ctx && actual_ctx != ctx){
         $B.RAISE(_b_.ValueError, `expression must have ` +
             `${ctx} context but has ${actual_ctx} instead`)
     }
 
     /* Now validate expression. */
-    switch (exp.__class__) {
+    switch (exp.ob_type) {
     case mod.BoolOp:
         if(exp.values.length < 2){
             $B.RAISE(_b_.ValueError, "BoolOp with less than 2 values")
@@ -534,7 +534,7 @@ function validate_stmts(seq){
 }
 
 function validate_stmt(stmt){
-    switch (stmt.__class__) {
+    switch (stmt.ob_type) {
     case mod.FunctionDef:
         validate_body(stmt.body, "FunctionDef")
         validate_arguments(stmt.args)
@@ -566,7 +566,7 @@ function validate_stmt(stmt){
             validate_expr(stmt.value, Load);
         break;
     case mod.AnnAssign:
-        if(stmt.target.__class__ != mod.Name && stmt.simple){
+        if(! $B.exact_type(stmt.target, mod.Name) && stmt.simple){
             $B.RAISE(_b_.TypeError, 
                 "AnnAssign with simple non-Name target")
         }
@@ -727,7 +727,7 @@ function validate_stmt(stmt){
 
 
 mod._validate = function(ast_obj){
-    switch (ast_obj.__class__) {
+    switch (ast_obj.ob_type) {
         case mod.Module:
             validate_stmts(ast_obj.body);
             break;

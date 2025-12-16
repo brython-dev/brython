@@ -413,7 +413,7 @@
         return function(){
             var obj = new js_constr.$js_func(...arguments)
             for(var attr in obj){
-                res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
+                res.__self_class__.dict[attr] = $B.jsobj2pyobj(obj[attr])
             }
             return obj
         }

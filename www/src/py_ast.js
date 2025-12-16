@@ -132,7 +132,7 @@ $B.create_python_ast_classes = function(){
                         x.substr(0, x.length - 1) : x)
                 }
             }
-            var cls = $B.make_class(kl),
+            var cls = $B.make_builtin_class(kl),
                 $defaults = {},
                 slots = {},
                 nb_args = 0
@@ -175,9 +175,9 @@ $B.create_python_ast_classes = function(){
             if(_fields){
                 cls._fields = _fields
             }
-            cls.__mro__ = [$B.AST, _b_.object]
+            cls.tp_mro = [$B.AST, _b_.object]
             cls.__module__ = 'ast'
-            cls.__dict__ = $B.empty_dict()
+            cls.dict = Object.create(null)
 
             // For fields that end with "?", set class attribute to None
             // Used in ast.dump to skip printing the field
@@ -185,7 +185,7 @@ $B.create_python_ast_classes = function(){
                 for(let i=0, len=raw_fields.length; i < len; i++){
                     var raw_field = raw_fields[i]
                     if(raw_field.endsWith('?')){
-                        _b_.dict.$setitem(cls.__dict__, _fields[i], _b_.None)
+                        cls.dict[_fields[i]] = _b_.None
                     }
                 }
             }

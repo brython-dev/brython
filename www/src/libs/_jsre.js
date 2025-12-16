@@ -2,15 +2,16 @@
 
     var _b_ = $B.builtins
 
-    var MatchObject = $B.make_class("Match",
-        function(jsmatch, string, pattern){
-            return {
-                __class__: MatchObject,
-                jsmatch: jsmatch,
-                string: string
-            }
+    var MatchObject = $B.make_type("Match")
+
+    MatchObject$factory = function(jsmatch, string, pattern){
+        return {
+            ob_type: MatchObject,
+            jsmatch: jsmatch,
+            string: string
         }
-    )
+    }
+
     MatchObject.item = function(self, rank){
         return self.jsmatch[rank]
     }
@@ -40,6 +41,7 @@
     }
 
     $B.set_func_names(MatchObject, '_jsre')
+    $B.finalize_type(MatchObject)
 
     var obj = {
         __str__: function(){return "<module 're'>"}
@@ -90,7 +92,7 @@
         return true
     }
     var $SRE_PatternDict = {
-        __class__:_b_.type,
+        ob_type:_b_.type,
         $infos:{
             __name__:'SRE_Pattern'
         }
@@ -122,7 +124,7 @@
     // TODO: subn()
     obj.compile = function(pattern, flags){
         return {
-            __class__: $SRE_PatternDict,
+            ob_type: $SRE_PatternDict,
             pattern: pattern,
             flags: normflags(flags)
         }

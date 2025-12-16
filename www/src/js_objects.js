@@ -542,16 +542,16 @@ function jsclass2pyclass(js_class){
     // Create a Python class based on a Javascript class
     //console.log('jsclass', js_class)
     var proto = js_class.prototype,
-        klass = $B.make_class(js_class.name)
-    klass.__init__ = function(self){
+        klass = $B.make_builtin_class(js_class.name)
+    klass.tp_init = function(self){
         var args = pyargs2jsargs(Array.from(arguments).slice(1))
         var js_obj = new proto.constructor(...args)
         for(var attr in js_obj){
-            _b_.dict.$setitem(self.__dict__, attr, $B.jsobj2pyobj(js_obj[attr]))
+            _b_.dict.$setitem(self.dict, attr, $B.jsobj2pyobj(js_obj[attr]))
         }
         return _b_.None
     }
-    klass.new = function(){
+    klass.tp_new = function(){
         var args = pyargs2jsargs(arguments)
         return jsobj2pyobj(new proto.constructor(...args))
     }
@@ -563,7 +563,7 @@ function jsclass2pyclass(js_class){
         if(value.get){
             var getter = (function(v){
                     return function(self){
-                        return v.get.call(self.__dict__.$jsobj)
+                        return v.get.call(self.dict.$jsobj)
                     }
                 })(value)
             getter.$infos = {__name__: key}
@@ -571,25 +571,25 @@ function jsclass2pyclass(js_class){
             if(value.set){
                 setter = (function(v){
                         return function(self, x){
-                            v.set.call(self.__dict__.$jsobj, x)
+                            v.set.call(self.dict.$jsobj, x)
                         }
                     })(value)
-                klass[key] = _b_.property.$factory(getter, setter)
+                klass.dict[key] = _b_.property.$factory(getter, setter)
             }else{
-                klass[key] = _b_.property.$factory(getter)
+                klass.dict[key] = _b_.property.$factory(getter)
             }
 
         }else{
-            klass[key] = (function(m){
+            klass.dict[key] = (function(m){
                 return function(self){
                     var args = Array.from(arguments).slice(1)
-                    return proto[m].apply(self.__dict__.$jsobj, args)
+                    return proto[m].apply(self.dict.$jsobj, args)
                 }
             })(key)
         }
     }
     for(var name of Object.getOwnPropertyNames(js_class)){
-        klass[name] = (function(k){
+        klass.dict[name] = (function(k){
             return function(self){
                 var args = Array.from(arguments).map(pyobj2jsobj)
                 return js_class[k].apply(self, args)
@@ -605,6 +605,8 @@ function jsclass2pyclass(js_class){
     if(frame){
         $B.set_func_names(klass, frame[2])
     }
+
+    $B.finalize_type(klass)
     return klass
 }
 

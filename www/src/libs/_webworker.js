@@ -67,14 +67,14 @@ function scripts_to_load(debug_level){
     return brython_scripts
 }
 
-var wclass = $B.make_class("Worker",
-    function(worker){
-        return {
-            __class__: wclass,
-            worker
-        }
+var wclass = $B.make_type("Worker")
+
+wclass.$factory = function(worker){
+    return {
+        ob_type: wclass,
+        worker
     }
-)
+}
 
 wclass.send = function(){
     var $ = $B.args('send', 2, {self: null, message: null}, ['self', 'message'],
@@ -86,9 +86,11 @@ wclass.send = function(){
 wclass.__mro__ = [$B.JSObj, _b_.object]
 
 $B.set_func_names(wclass, "browser.worker")
+$B.finalize_type(wclass)
 
+var _Worker = $B.make_type("Worker")
 
-var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
+_Worker.$factory = function(id, onmessage, onerror){
     $B.warn(_b_.DeprecationWarning,
         "worker.Worker is deprecated in version 3.12. " +
         "Use worker.create_worker instead")
@@ -150,7 +152,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         w = new Worker(url),
         res = wclass.$factory(w)
     return res
-})
+}
 
 function create_worker(){
     var $ = $B.args("__init__", 4,

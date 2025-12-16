@@ -18,39 +18,39 @@ var typecodes = {
     'd': Float64Array  // double float, 8
 }
 
-var array = $B.make_class("array",
-    function(){
-        var missing = {},
-            $ = $B.args("array", 2, {typecode: null, initializer: null},
-                ["typecode", "initializer"], arguments, {initializer: missing},
-                null, null),
-            typecode = $.typecode,
-            initializer = $.initializer
-        if(! typecodes.hasOwnProperty(typecode)){
-            $B.RAISE(_b_.ValueError, "bad typecode (must be b, " +
-                "B, u, h, H, i, I, l, L, q, Q, f or d)")
-        }
-        if(typecodes[typecode] === null){
-            $B.RAISE(_b_.NotImplementedError, "type code " +
-                typecode + " is not implemented")
-        }
-        var res = {
-            __class__: array,
-            typecode: typecode,
-            obj: null
-        }
-        if(initializer !== missing){
-            if(Array.isArray(initializer)){
-                array.fromlist(res, initializer)
-            }else if($B.$isinstance(initializer, _b_.bytes)){
-                array.frombytes(res, initializer)
-            }else{
-                array.extend(res, initializer)
-            }
-        }
-        return res
+var array = $B.make_type("array")
+
+array.$factory = function(){
+    var missing = {},
+        $ = $B.args("array", 2, {typecode: null, initializer: null},
+            ["typecode", "initializer"], arguments, {initializer: missing},
+            null, null),
+        typecode = $.typecode,
+        initializer = $.initializer
+    if(! typecodes.hasOwnProperty(typecode)){
+        $B.RAISE(_b_.ValueError, "bad typecode (must be b, " +
+            "B, u, h, H, i, I, l, L, q, Q, f or d)")
     }
-)
+    if(typecodes[typecode] === null){
+        $B.RAISE(_b_.NotImplementedError, "type code " +
+            typecode + " is not implemented")
+    }
+    var res = {
+        ob_type: array,
+        typecode: typecode,
+        obj: null
+    }
+    if(initializer !== missing){
+        if(Array.isArray(initializer)){
+            array.fromlist(res, initializer)
+        }else if($B.$isinstance(initializer, _b_.bytes)){
+            array.frombytes(res, initializer)
+        }else{
+            array.extend(res, initializer)
+        }
+    }
+    return res
+}
 
 array.$buffer_protocol = true
 array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
@@ -66,7 +66,7 @@ array.__getitem__ = function(_self, key){
         }else if($B.$isinstance(key, _b_.slice)){
             var t = _self.obj.slice(key.start, key.stop)
             return {
-                __class__: array,
+                ob_type: array,
                 typecode: _self.typecode,
                 obj: t
             }
@@ -92,7 +92,7 @@ array.__mul__ = function(self, nb){
             t = t.concat(copy)
         }
         return {
-            __class__: array,
+            ob_type: array,
             typecode: self.typecode,
             obj: t
         }
@@ -135,7 +135,7 @@ array.__setitem__ = function(_self, index, value){
     }
 }
 
-array.__repr__ = function(self){
+array.tp_repr = function(self){
     $B.args("__repr__", 1, {self: null},
         ["self"], arguments, {}, null, null)
     var res = "array('" + self.typecode + "'"
@@ -176,7 +176,7 @@ array.count = function(self, x){
 array.extend = function(self, iterable){
     $B.args("extend", 2, {self: null, iterable: null},
         ["self", "iterable"], arguments, {}, null, null)
-    if(iterable.__class__ === array){
+    if($B.exact_type(iterable, array)){
         if(iterable.typecode !== self.typecode){
             $B.RAISE(_b_.TypeError, "can only extend with array " +
                 "of same kind")
@@ -197,9 +197,7 @@ array.extend = function(self, iterable){
                 var item = _b_.next(it)
                 array.append(self, item)
             }catch(err){
-                if(err.__class__ !== _b_.StopIteration){
-                    throw err
-                }
+                $B.RAISE_IF_NOT(err, _b_.StopIteration)
                 break
             }
         }
@@ -232,7 +230,7 @@ array.fromlist = function(self, list){
                 return _b_.None
             }
         }catch(err){
-            if(err.__class__ === _b_.StopIteration){
+            if($B.is_exc(err, _b_.StopIteration)){
                 return _b_.None
             }
             throw err
@@ -343,6 +341,7 @@ array.typecode = function(self){
 }
 
 $B.set_func_names(array, "array")
+$B.finalize_type(array)
 
 var module = {
     array: array,

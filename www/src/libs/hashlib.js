@@ -76,12 +76,7 @@ function bytes2WordArray(obj){
     return {words: words, sigBytes: obj.source.length}
 }
 
-var hash = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'hash',
-    __name__: 'hash'
-}
+var hash = $B.make_type('hash')
 
 hash.update = function(self, msg){
     self.hash.update(bytes2WordArray(msg))
@@ -106,7 +101,7 @@ hash.hexdigest = function(self) {
 
 hash.$factory = function(alg, obj) {
     var res = {
-        __class__: hash
+        ob_type: hash
     }
 
     switch(alg) {
@@ -132,6 +127,8 @@ hash.$factory = function(alg, obj) {
     res.block_size = block_size[alg]
     return res
 }
+
+$B.finalize_type(hash)
 
 $B.addToImported('hashlib', $mod)
 

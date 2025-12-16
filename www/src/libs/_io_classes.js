@@ -4,8 +4,7 @@ function get_self(name, args){
     return $B.args(name, 1, {self: null}, ["self"], args, {}, null, null).self
 }
 
-var _IOBase = $B._IOBase //$B.make_class("_IOBase")
-_IOBase.__mro__ = [_b_.object]
+var _IOBase = $B._IOBase
 
 _IOBase.close = function(){
     get_self("close", arguments).closed = true
@@ -19,8 +18,7 @@ _IOBase.flush = function(){
 $B.set_func_names(_IOBase, '_io')
 
 // Base class for binary streams that support some kind of buffering.
-var _BufferedIOBase = $B.make_class("_BufferedIOBase")
-_BufferedIOBase.__mro__ = [_IOBase, _b_.object]
+var _BufferedIOBase = $B.make_type("_BufferedIOBase", [_IOBase])
 
 _BufferedIOBase.__enter__ = function(self){
     return self
@@ -36,6 +34,7 @@ _BufferedIOBase.__exit__ = function(self, type, value, traceback){
 }
 
 $B.set_func_names(_BufferedIOBase, '_io')
+$B.finalize_type(_BufferedIOBase)
 
 _RawIOBase = $B._RawIOBase
 
@@ -76,9 +75,9 @@ function get_newlines(text, newline){
     return newlines
 }
 
-var StringIO = $B.make_class("StringIO")
+var StringIO = $B.make_type("StringIO", [$B._TextIOBase])
 
-StringIO.__init__ = function(){
+StringIO.tp_init = function(){
     var $ = $B.args("StringIO", 3, {self: null, value: null, newline: null},
             ["self", "value", "newline"], arguments, {value: '', newline: "\n"},
             null, null),
@@ -116,14 +115,12 @@ StringIO.__init__ = function(){
     $.self.closed = false
 }
 
-StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
-
 StringIO.__getstate__ = function(_self){
     check_closed(_self)
 
     var initvalue = StringIO.getvalue(_self)
 
-    var dict = _self.__dict__ ? _b_.dict.copy(_self.__dict__) : _b_.None
+    var dict = _self.dict ? _b_.dict.copy(_self.dict) : _b_.None
 
     var state = $B.fast_tuple([initvalue,
                           _self.$newline,
@@ -136,7 +133,7 @@ StringIO.__setstate__ = function(_self, state){
     _self.$text = initvalue
     _self.newlines = readnl
     if(dict !== _b_.None){
-        _self.__dict__ = dict
+        _self.dict = dict
     }
     _self.$text_pos = pos
     _self.$text_iterator = _self.$text[Symbol.iterator]()
@@ -418,17 +415,15 @@ StringIO.write = function(){
 }
 
 $B.set_func_names(StringIO, "_io")
+$B.finalize_type(StringIO)
 
-var BytesIO = $B.make_class('BytesIO')
-
-BytesIO.tp_bases = [$B._BufferedIOBase]
-BytesIO.__mro__ = _b_.type.$mro(BytesIO)
+var BytesIO = $B.make_type('BytesIO', [$B._BufferedIOBase])
 
 // Initialize _buffer as soon as possible since it's used by __del__()
 // which calls close()
 BytesIO._buffer = _b_.None
 
-BytesIO.__init__ = function(){
+BytesIO.tp_init = function(){
     var $ = $B.args('__init__', 2, {self: null, initial_bytes: null},
             ['self', 'initial_bytes'], arguments, {initial_bytes: _b_.None},
             null, null)
@@ -486,11 +481,7 @@ BytesIO.__setstate__ = function(_self, state){
             $B.RAISE(_b_.TypeError, "third item of state should be a dict, " +
                 `got a ${$B.class_name(dict)}`)
         }
-        if(_self.__dict__){
-            _b_.dict.update(_self.__dict__, dict)
-        }else{
-            _self.__dict__ = dict
-        }
+        _self.dict = dict
     }
 
     return _b_.None
@@ -570,7 +561,7 @@ BytesIO.read1 = function(_self, size=-1){
 
 BytesIO.readinto = function(_self, buffer){
     check_closed(_self)
-    
+
     if(! $B.is_buffer(buffer)){
         $B.RAISE(_b_.TypeError, " readinto() argument must be " +
             `read-write bytes-like object, not ${$B.class_name(buffer)}`)
@@ -709,14 +700,47 @@ BytesIO.seekable = function(_self){
 }
 
 $B.set_func_names(BytesIO, '_io')
+$B.finalize_type(BytesIO)
 
-var BlockingIOError = $B.make_class('BlockingIOError')
-BlockingIOError.tp_bases = [_b_.OSError]
+var BlockingIOError = $B.make_type('BlockingIOError', [_b_.OSError])
 
 $B.set_func_names(BlockingIOError, '_io')
+$B.finalize_type(BlockingIOError)
 
 // generate $B._IOUnsupported if not defined yet
 $B.make_IOUnsupported()
+
+BufferedWriter = $B.make_type("BufferedWriter", [$B._TextIOBase])
+
+BufferedWriter.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(BufferedWriter)
+
+BufferedRWPair = $B.make_type("BufferedRWPair", [$B._TextIOBase])
+
+BufferedRWPair.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(BufferedRWPair)
+
+BufferedRandom: $B.make_type("BufferedRandom", [$B._TextIOBase])
+
+BufferedRandom.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(BufferedRandom)
+
+IncrementalNewlineDecoder: $B.make_type("IncrementalNewlineDecoder", [$B._TextIOBase])
+
+IncrementalNewlineDecoder.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(IncrementalNewlineDecoder)
 
 var $module = (function($B){
     return {
@@ -729,26 +753,10 @@ var $module = (function($B){
         FileIO: $B._FileIO,
         StringIO: StringIO,
         BufferedReader: $B._BufferedReader,
-        BufferedWriter: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        BufferedRWPair: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        BufferedRandom: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        IncrementalNewlineDecoder: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
+        BufferedWriter,
+        BufferedRWPair,
+        BufferedRandom,
+        IncrementalNewlineDecoder,
         UnsupportedOperation: $B._IOUnsupported,
         TextIOWrapper: $B._TextIOWrapper
     }

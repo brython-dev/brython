@@ -52,6 +52,7 @@ Object.assign($B.wrapper_methods,
         nb_add: make_add,
         sq_length: make_seq_length,
         tp_call: make_call,
+        tp_descr_get: make_descr_get,
         tp_getattro: make_getattribute,
         tp_hash: make_hash,
         tp_init: make_init,
@@ -88,6 +89,16 @@ function make_call(cls){
         cls,
         '__call__',
         call
+    )
+}
+
+function make_descr_get(cls){
+    var descr_get = cls.tp_descr_get
+    descr_get.ml = {ml_name: '__get__'}
+    cls.dict.__get__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__get__',
+        descr_get
     )
 }
 
@@ -216,29 +227,41 @@ function make_str(klass){
 
 console.log('create types', $B.created_types)
 
+$B.finalize_type = function(cls){
+    if(cls.tp_name == 'mappingproxy'){
+        console.log('mapping proxy dict.__getitem__ enter', cls.dict.__getitem__)
+        console.log('tp_getset', cls.tp_getset)
+        console.log('tp_methods', cls.tp_methods)
+    }
+    if(cls.tp_getset){
+        for(var getset of cls.tp_getset){
+            var [name, get, set] = getset
+            cls.dict[name] = $B.getset_descriptor.$factory(cls, name, get, set)
+        }
+    }
+    if(cls.tp_methods){
+        for(var method of cls.tp_methods){
+            var [name, get] = method
+            cls.dict[name] = $B.method_descriptor.$factory(cls, name, get)
+        }
+    }
+    for(var slot in $B.wrapper_methods){
+        if(cls[slot]){
+            $B.wrapper_methods[slot](cls)
+        }
+    }
+    if(cls.tp_name == 'mappingproxy'){
+        console.log('mapping proxy dict.__getitem__ exit', cls.dict.__getitem__)
+    }
+}
+
 for(var ns of [$B.builtin_types, $B.created_types]){
     for(var name in ns){
         if(ns[name].ob_type !== _b_.type){
             continue
         }
         var cls = ns[name]
-        if(cls.tp_getset){
-            for(var getset of cls.tp_getset){
-                var [name, get, set] = getset
-                cls.dict[name] = $B.getset_descriptor.$factory(cls, name, get, set)
-            }
-        }
-        if(cls.tp_methods){
-            for(var method of cls.tp_methods){
-                var [name, get] = method
-                cls.dict[name] = $B.method_descriptor.$factory(cls, name, get)
-            }
-        }
-        for(var slot in $B.wrapper_methods){
-            if(cls[slot]){
-                $B.wrapper_methods[slot](cls)
-            }
-        }
+        $B.finalize_type(cls)
     }
 }
 

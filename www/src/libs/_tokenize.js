@@ -4,21 +4,21 @@ var _b_ = $B.builtins
 
 $B.$import('token')
 
-var TokenizerIter = $B.make_class('TokenizerIter',
-    function(it){
-        var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
-                    ['it', 'encoding', 'extra_tokens'], arguments,
-                    {encoding: _b_.None, extra_tokens: false}, null, null)
-        return {
-            __class__: TokenizerIter,
-            it: $B.$call($.it),
-            encoding: $.encoding,
-            extra_tokens: $.extra_tokens
-        }
-    }
-)
+var TokenizerIter = $B.maketype('TokenizerIter')
 
-TokenizerIter.__iter__ = function(self){
+TokenizerIter.$factory = function(it){
+    var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
+                ['it', 'encoding', 'extra_tokens'], arguments,
+                {encoding: _b_.None, extra_tokens: false}, null, null)
+    return {
+        ob_type: TokenizerIter,
+        it: $B.$call($.it),
+        encoding: $.encoding,
+        extra_tokens: $.extra_tokens
+    }
+}
+
+TokenizerIter.tp_iter = function(self){
     var js_iter = function*(){
         var line_num = 0
         var err
@@ -42,7 +42,7 @@ TokenizerIter.__iter__ = function(self){
                 break
             }else if(self.encoding !== _b_.None){
                 if(! $B.$isinstance(line, [_b_.bytes, _b_.bytearray])){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         'readline() returned a non-bytes object')
                 }
                 line = _b_.bytes.decode(line, self.encoding)
@@ -76,6 +76,7 @@ TokenizerIter.__next__ = function*(self){
 }
 
 $B.set_func_names(TokenizerIter, '_tokenize')
+$B.finalize_type(TokenizerIter)
 
 $B.addToImported('_tokenize', {TokenizerIter})
 

@@ -9,9 +9,9 @@ var $xlinkNS = "http://www.w3.org/1999/xlink"
 
 function makeTagDict(tagName){
     // return the dictionary for the class associated with tagName
-    var dict = $B.make_class(tagName)
+    var dict = $B.make_type(tagName, [$B.DOMNode])
 
-    dict.__init__ = function(){
+    dict.tp_init = function(){
         var $ns = $B.args('__init__', 1, {self: null}, ['self'],
             arguments, {}, 'args', 'kw'),
             self = $ns['self'],
@@ -20,7 +20,7 @@ function makeTagDict(tagName){
             var first = args[0]
             if($B.$isinstance(first, [_b_.str, _b_.int, _b_.float])){
                 self.appendChild(document.createTextNode(_b_.str.$factory(first)))
-            }else if(first.__class__ === TagSum){
+            }else if($B.exact_type(first, TagSum)){
                 for(var i = 0, len = first.children.length; i < len; i++){
                     self.appendChild(first.children[i].elt)
                 }
@@ -61,24 +61,23 @@ function makeTagDict(tagName){
         }
     }
 
-    dict.__mro__ = [$B.DOMNode, $B.builtins.object]
-
-    dict.__new__ = function(cls){
+    dict.tp_new = function(cls){
         var res = $B.DOMNode.$factory(document.createElementNS($svgNS, tagName))
-        res.__class__ = cls
+        res.ob_type = cls
         return res
     }
 
     dict.$factory = function(){
         var res = $B.DOMNode.$factory(
             document.createElementNS($svgNS, tagName))
-        res.__class__ = dict
+        res.ob_type = dict
         // apply __init__
         dict.__init__(res, ...arguments)
         return res
     }
 
     $B.set_func_names(dict, "browser.svg")
+    $B.finalize_type(dict)
 
     return dict
 }

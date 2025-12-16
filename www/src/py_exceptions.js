@@ -1420,6 +1420,7 @@ $B.error_trace = function(err){
     var debug = $B.get_option('debug', err)
     if(debug > 1){
         console.log("handle error", $B.get_class(err), err.args, err.__traceback__)
+        console.log(Error().stack)
     }
 
     if(has_stack){
