@@ -2266,18 +2266,74 @@ memoryview.$getbuffer = function(self){
     self.$exports++
 }
 
-memoryview.nbytes = $B.getset_descriptor.$factory(
-    memoryview,
-    'nbytes',
-    function(_self){
-        var product = 1
-        for(var x of _self.shape){
-            product *= x
-        }
-        return x * _self.itemsize
-    }
-)
+function memory_obj_get(){
 
+}
+
+function memory_nbytes_get(self){
+    var product = 1
+    for(var x of self.shape){
+        product *= x
+    }
+    return x * self.itemsize
+}
+
+function memory_readonly_get(self){
+    return $B.$isinstance(self.obj, _b_.bytes)
+}
+
+function memory_itemsize_get(){
+
+}
+
+function memory_format_get(){
+
+}
+
+function memory_ndim_get(){
+
+}
+
+function memory_shape_get(){
+
+}
+
+function memory_strides_get(){
+
+}
+
+function memory_suboffsets_get(){
+
+}
+
+function memory_c_contiguous(){
+
+}
+
+function memory_f_contiguous(){
+
+}
+
+function memory_contiguous(){
+
+}
+
+/* memoryview.tp_getset start */
+memoryview.tp_getset = [
+    ["obj", memory_obj_get, NULL],
+    ["nbytes", memory_nbytes_get, NULL],
+    ["readonly", memory_readonly_get, NULL],
+    ["itemsize", memory_itemsize_get, NULL],
+    ["format", memory_format_get, NULL],
+    ["ndim", memory_ndim_get, NULL],
+    ["shape", memory_shape_get, NULL],
+    ["strides", memory_strides_get, NULL],
+    ["suboffsets", memory_suboffsets_get, NULL],
+    ["c_contiguous", memory_c_contiguous, NULL],
+    ["f_contiguous", memory_f_contiguous, NULL],
+    ["contiguous", memory_contiguous, NULL]
+]
+/* memoryview.tp_getset end */
 memoryview.__enter__ = function(_self){
     return _self
 }
@@ -2407,14 +2463,6 @@ memoryview.hex = function(self){
     })
     return res
 }
-
-memoryview.readonly = $B.getset_descriptor.$factory(
-    memoryview,
-    'readonly',
-    function(_self){
-        return $B.$isinstance(_self.obj, _b_.bytes)
-    }
-)
 
 memoryview.release = function(self){
     if(self.$released){

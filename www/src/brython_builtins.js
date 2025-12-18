@@ -149,43 +149,9 @@ $B.frame_obj = null
 
 var _b_ = $B.builtins = Object.create(null)
 
-/*
-// Python __builtins__
-// Set to Object.create(null) instead of {}
-// to avoid conflicts with JS attributes such as "constructor"
-
-
-$B.NULL = {'null': true}
-
-// Create structure for built-in types so that they can be used in all scripts.
-// For instance, define _b_.dict so that it can be used in py_int.js, although
-// py_int.js is loaded after py_dict.js
-_b_.object = {
-    tp_name: 'object',
-    tp_bases: [],
-    dict: Object.create(null)
-}
-_b_.object.tp_mro = [_b_.object]
-
-_b_.type = {
-    tp_name: 'type',
-    tp_bases: [_b_.object],
-    dict: Object.create(null)
-}
-
-_b_.object.ob_type = _b_.type
-_b_.type.ob_type = _b_.type
-_b_.type.tp_mro = [_b_.type, _b_.object]
-
-$B.builtin_classes = [
-    "bytearray", "bytes", "classmethod", "complex", "dict", "enumerate",
-    "filter", "float", "frozenset", "int", "list", "map", "memoryview",
-    "property", "range", "reversed", "set", "slice", "staticmethod",
-    "str", "super", "tuple", "zip"
-]
-
-*/
 $B.created_types = {}
+
+$B.NULL = {null: null}
 
 $B.get_mro = function(cls){
     return cls.tp_mro ?? cls.__mro__
@@ -289,7 +255,7 @@ $B.make_mro = function(cls){
 
 
 $B.is_type = function(obj){
-    return obj.$is_type
+    return $B.get_mro(obj).includes(_b_.type)
 }
 
 $B.is_long_int = function(obj){

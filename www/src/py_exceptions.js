@@ -191,28 +191,10 @@ frame.__dir__ = function(){
 frame.__getattr__ = function(_self, attr){
     // Used for f_back to avoid computing it when the frame object
     // is initialised
-    if(attr == "f_back"){
-        // search _self in $B.frame_obj
-        var frame_obj = $B.frame_obj
-        while(frame_obj !== null){
-            if(frame_obj.frame === _self){
-                break
-            }
-            frame_obj = frame_obj.prev
-        }
-        if(frame_obj.prev !== null){
-            return frame.$factory(frame_obj.prev.frame)
-        }
-        return _b_.None
-    }else if(attr == "clear"){
+    if(attr == "clear"){
         return function(){
             // XXX fix me
         }
-    }else if(attr == "f_trace"){
-        return _self.$f_trace ?? _b_.None
-    }else if(attr == "f_lasti"){
-        // last instruction not relevant in Brython
-        return 0
     }
     throw $B.attr_error(attr, _self)
 }
@@ -224,95 +206,114 @@ frame.__setattr__ = function(_self, attr, value){
     }
 }
 
-frame.__str__ = frame.__repr__ = function(_self){
+frame.tp_repr = function(_self){
     return '<frame object, file ' + _self.__file__ +
         ', line ' + _self.$lineno + ', code ' +
         frame.f_code.__get__(_self).co_name + '>'
 }
 
-frame.f_builtins = $B.getset_descriptor.$factory(
-    frame,
-    'f_builtins',
-    function(_self){
-        return $B.$getattr(_self[3].__builtins__, '__dict__')
-    }
-)
 
-frame.f_code = $B.getset_descriptor.$factory(
-    frame,
-    'f_code',
-    function(_self){
-        var res
-        var positions = [[0, 0, 0, 0]] // fake value
-        if(_self[4]){
-            res = $B.$getattr(_self[4], '__code__')
-            positions = _self.positions ?? positions
-        }else if(_self.f_code){
-            // set in comprehensions
-            res = _self.f_code
-        }else{
-            res = {
-                co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
-                co_filename: _self.__file__,
-                co_varnames: $B.fast_tuple([]),
-                co_firstlineno: 1
-            }
-            res.co_qualname = res.co_name // XXX
-            positions = _self.positions ?? positions
+function frame_back_get(self){
+    // search self in $B.frame_obj
+    var frame_obj = $B.frame_obj
+    while(frame_obj !== null){
+        if(frame_obj.frame === self){
+            break
         }
-        res.ob_type = _b_.code
-        positions = positions.map($B.decode_position)
-        res.co_positions = () => $B.$list(positions)
-        res.co_positions.ob_type = $B.function
-        return res
+        frame_obj = frame_obj.prev
     }
-)
+    if(frame_obj.prev !== null){
+        return frame.$factory(frame_obj.prev.frame)
+    }
+    return _b_.None
+}
 
-frame.f_globals = $B.getset_descriptor.$factory(
-    frame,
-    'f_globals',
-    function(_self){
-        if(_self.f_globals){
-            return _self.f_globals
-        }else if(_self.f_locals && _self[1] == _self[3]){
-            return _self.f_globals = _self.f_locals
-        }else{
-            return _self.f_globals = $B.obj_dict(_self[3])
+function frame_locals_get(self){
+    // If locals and globals are the same, f_locals and f_globals
+    // are the same object
+    if(self.f_locals){
+        return self.f_locals
+    }else if(self.f_globals && self[1] == self[3]){
+        return self.f_locals = self.f_globals
+    }else{
+        return self.f_locals = $B.obj_dict(self[1])
+    }
+}
+
+function frame_lineno_set(self, value){
+    self.$lineno = value
+}
+
+function frame_trace_set(self, value){
+    self.$f_trace = value
+}
+
+function frame_lasti_get(){
+    return 0
+}
+
+function frame_globals_get(self){
+    if(self.f_globals){
+        return self.f_globals
+    }else if(self.f_locals && self[1] == self[3]){
+        return self.f_globals = self.f_locals
+    }else{
+        return self.f_globals = $B.obj_dict(_self[3])
+    }
+}
+
+function frame_builtins_get(self){
+    return $B.$getattr(self[3].__builtins__, '__dict__')
+}
+
+function frame_code_get(self){
+    var res
+    var positions = [[0, 0, 0, 0]] // fake value
+    if(self[4]){
+        res = $B.$getattr(self[4], '__code__')
+        positions = self.positions ?? positions
+    }else if(self.f_code){
+        // set in comprehensions
+        res = self.f_code
+    }else{
+        res = {
+            co_name: (self[0] == self[2] ? '<module>' : self[0]),
+            co_filename: self.__file__,
+            co_varnames: $B.fast_tuple([]),
+            co_firstlineno: 1
         }
+        res.co_qualname = res.co_name // XXX
+        positions = self.positions ?? positions
     }
-)
+    res.ob_type = _b_.code
+    positions = positions.map($B.decode_position)
+    res.co_positions = () => $B.$list(positions)
+    res.co_positions.ob_type = $B.function
+    return res
+}
 
-frame.f_lineno = $B.getset_descriptor.$factory(
-    frame,
-    'f_lineno',
-    function(_self){
-        return _self.$lineno
-    }
-)
+function frame_trace_opcodes_set(self, value){
 
-frame.f_locals = $B.getset_descriptor.$factory(
-    frame,
-    'f_locals',
-    function(_self){
-        // If locals and globals are the same, f_locals and f_globals
-        // are the same object
-        if(_self.f_locals){
-            return _self.f_locals
-        }else if(_self.f_globals && _self[1] == _self[3]){
-            return _self.f_locals = _self.f_globals
-        }else{
-            return _self.f_locals = $B.obj_dict(_self[1])
-        }
-    }
-)
+}
 
-frame.f_trace =$B.getset_descriptor.$factory(
-    frame,
-    'f_trace',
-    function(_self){
-        return _self.$f_trace
-    }
-)
+function frame_generator_get(){
+
+}
+
+/* frame.tp_getset start */
+frame.tp_getset = [
+    ["f_back", frame_back_get, $B.NULL],
+    ["f_locals", frame_locals_get, $B.NULL],
+    ["f_lineno", $B.NULL, frame_lineno_set],
+    ["f_trace", $B.NULL, frame_trace_set],
+    ["f_lasti", frame_lasti_get, $B.NULL],
+    ["f_globals", frame_globals_get, $B.NULL],
+    ["f_builtins", frame_builtins_get, $B.NULL],
+    ["f_code", frame_code_get, $B.NULL],
+    ["f_trace_opcodes", $B.NULL, frame_trace_opcodes_set],
+    ["f_generator", frame_generator_get, $B.NULL]
+]
+/* frame.tp_getset end */
 
 $B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
@@ -568,7 +569,7 @@ make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
 make_builtin_exception("StopIteration", _b_.Exception)
 */
 
-_b_.StopIteration.tp_init = function(){
+_b_.StopIteration.tp_init = function(self){
     var $ = $B.args("StopIteration", 1, {self: null},
                 ['self'], arguments, {}, 'args', 'kw')
     check_no_keywords($.self, $.kw)
@@ -578,17 +579,13 @@ _b_.StopIteration.tp_init = function(){
     }
 }
 
-_b_.StopIteration.value = $B.getset_descriptor.$factory(
-    _b_.StopIteration,
-    'value',
-    function(_self){
-        return _self.value ?? _b_.None
-    },
-    function(_self, value){
-        _self.value = value
-    }
-)
+var StopIteration_funcs = _b_.StopIteration.tp_funcs = {}
 
+StopIteration_funcs.value_get = function(self){
+    return _self.value ?? _b_.None
+}
+
+_b_.StopIteration.tp_members = ["value"]
 $B.set_func_names(_b_.StopIteration, 'builtins')
 
 /*

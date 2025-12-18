@@ -11,7 +11,49 @@ var _b_ = $B.builtins,
 // Class for modules
 var Module = $B.module
 
+// legacy
 Module.$factory = function(name, doc, $package){
+    var self = {
+        ob_type: Module
+    }
+    Module.tp_init(self, name, doc, $package)
+    return self
+}
+
+Module.tp_new = function(cls, name, doc, $package){
+    return {
+        ob_type: cls,
+        __builtins__: _b_.__builtins__,
+        __name__: name,
+        __doc__: doc || _b_.None,
+        __package__: $package || _b_.None
+    }
+}
+
+Module.__setattr__ = function(self, attr, value){
+    if(self.__name__ == '__builtins__'){
+        // set a Python builtin
+        $B.builtins[attr] = value
+    }else if(self.__name__ == 'builtins'){
+        _b_[attr] = value
+    }else{
+        self[attr] = value
+    }
+}
+
+/* module */
+$B.module.tp_repr = function(self){
+    var res = "<module " + self.__name__
+    res += self.__file__ === undefined ? " (built-in)" :
+        ' at ' + self.__file__
+    return res + ">"
+}
+
+$B.module.tp_getattro = function(self){
+
+}
+
+$B.module.tp_init = function(self, name, doc, $package){
     return {
         ob_type: Module,
         __builtins__: _b_.__builtins__,
@@ -21,21 +63,25 @@ Module.$factory = function(name, doc, $package){
     }
 }
 
-Module.__annotations__ = _b_.property.$factory(
-    function(){
-        return 'coucou'
-    }
-)
+var module_funcs = $B.module.tp_funcs = {}
 
-Module.__dict__ = $B.getset_descriptor.$factory(
-    Module,
-    '__dict__',
-    function(mod){
-        return $B.obj_dict(mod)
-    }
-)
+module_funcs.__annotate___get = function(self){
 
-Module.__dir__ = function(self){
+}
+
+module_funcs.__annotate___set = function(self){
+
+}
+
+module_funcs.__annotations___get = function(self){
+
+}
+
+module_funcs.__annotations___set = function(self){
+
+}
+
+module_funcs.__dir___get = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)()
     }
@@ -49,33 +95,9 @@ Module.__dir__ = function(self){
     return $B.$list(res.sort())
 }
 
-Module.tp_new = function(cls, name, doc, $package){
-    return {
-        ob_type: cls,
-        __builtins__: _b_.__builtins__,
-        __name__: name,
-        __doc__: doc || _b_.None,
-        __package__: $package || _b_.None
-    }
-}
+$B.module.tp_methods = ["__dir__"]
 
-Module.tp_repr = function(self){
-    var res = "<module " + self.__name__
-    res += self.__file__ === undefined ? " (built-in)" :
-        ' at ' + self.__file__
-    return res + ">"
-}
-
-Module.__setattr__ = function(self, attr, value){
-    if(self.__name__ == '__builtins__'){
-        // set a Python builtin
-        $B.builtins[attr] = value
-    }else if(self.__name__ == 'builtins'){
-        _b_[attr] = value
-    }else{
-        self[attr] = value
-    }
-}
+$B.module.tp_getset = ["__annotations__", "__annotate__"]
 
 $B.set_func_names(Module, "builtins")
 

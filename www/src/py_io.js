@@ -751,32 +751,29 @@ $B.set_func_names($B._FileIO, '_io')
 
 $B._TextIOBase = $B.make_builtin_class('_io._TextIOBase', [_IOBase])
 
-$B._TextIOBase.encoding = $B.getset_descriptor.$factory(
-    $B._TextIOBase,
-    'encoding',
-    function(_self){
-        return _self._encoding ?? _b_.None
-    },
-    function(_self, value){
-        _self._encoding = value
-    }
-)
+function encoding_get(_self){
+    return _self._encoding ?? _b_.None
+}
+function encoding_set(_self, value){
+    _self._encoding = value
+}
 
-$B._TextIOBase.errors = $B.getset_descriptor.$factory(
-    $B._TextIOBase,
-    'errors',
-    function(_self){
-        return _self.errors ?? _b_.None
-    },
-    function(_self, value){
-        _self._errors = value
-    }
-)
+function errors_get(_self){
+    return _self.errors ?? _b_.None
+}
 
+function errors_set(_self, value){
+    _self._errors = value
+}
 
 $B._TextIOBase.read = function(){
     _io_unsupported('read')
 }
+
+$B._TextIOBase.tp_getset = [
+    ["encoding", encoding_get, encoding_set],
+    ["errors", errors_get, errors_set]
+]
 
 var $BufferedReader = $B.make_builtin_class('_io.BufferedReader', [_IOBase])
 
@@ -824,13 +821,13 @@ $B._TextIOWrapper.$factory = function(){
     return res
 }
 
-$B._TextIOWrapper.dict.buffer = $B.getset_descriptor.$factory(
-    $B._TextIOWrapper,
-    'buffer',
-    function(_self){
-        return _self.$buffer
-    }
-)
+function buffer_get(_self){
+    return _self.$buffer
+}
+
+$B._TextIOWrapper.tp_getset = [
+    ["buffer", buffer_get, $B.NULL]
+]
 
 $B._TextIOWrapper.fileno = function(_self){
     return -1

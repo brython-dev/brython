@@ -386,22 +386,26 @@ staticmethod.__call__ = function(self){
     return $B.$call(self.__func__)
 }
 
-staticmethod.__get__ = function(self){
+staticmethod.tp_descr_get = function(self){
     return self.__func__
+}
+
+staticmethod.tp_repr = function(self){
+    return `<staticmethod(${_b_.repr(self.__func__)})>`
 }
 
 $B.set_func_names(staticmethod, "builtins")
 
 $B.getset_descriptor = $B.make_builtin_class("getset_descriptor")
-$B.getset_descriptor.$factory = function(klass, attr, getter, setter, deleter){
+$B.getset_descriptor.$factory = function(klass, attr, getset){
+    var [getter, setter] = getset
     var res = {
         ob_type: $B.getset_descriptor,
         __doc__: _b_.None,
         cls: klass,
         attr,
         getter,
-        setter,
-        deleter
+        setter
     }
     return res
 }
@@ -410,9 +414,14 @@ $B.getset_descriptor.__delete__ = function(self, obj){
     return self.deleter(obj)
 }
 
-$B.getset_descriptor.__get__ = function(self, obj){
+$B.getset_descriptor.tp_descr_get = function(self, obj){
     if(obj === _b_.None){
         return self
+    }
+    if(! $B.get_mro(obj.ob_type).includes(self.cls)){
+        $B.RAISE(_b_.TypeError, `descriptor '${self.attr}' for ` +
+            `'${$B.get_name(self.cls)}' objects doesn't apply to a ` +
+            `'${$B.class_name(obj)}' object`)
     }
     return self.getter(obj)
 }
@@ -427,7 +436,7 @@ $B.getset_descriptor.__set__ = function(self, klass, value){
     return self.setter(klass, value)
 }
 
-$B.getset_descriptor.__repr__ = function(self){
+$B.getset_descriptor.tp_repr = function(self){
     return `<attribute '${self.attr}' of '${$B.get_name(self.cls)}' objects>`
 }
 
@@ -1178,11 +1187,13 @@ type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
         }
     }
 
+    /*
     class_dict.dict.__dict__ = $B.getset_descriptor.$factory(
         class_dict,
         '__dict__',
         obj => obj.dict
     )
+    */
 
     // set $tp_setattr
     class_dict.$tp_setattr = $B.search_in_mro(class_dict, '__setattr__')
@@ -1671,8 +1682,6 @@ $B.method_descriptor.$factory = function(cls, attr, f){
     f.__objclass__ = cls
     return f
 }
-
-console.log('method descriptor', $B.method_descriptor)
 
 $B.method_descriptor.dict.__get__ = function(self, obj, klass){
     if(obj === _b_.None){
