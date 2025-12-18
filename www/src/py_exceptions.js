@@ -468,14 +468,8 @@ function make_builtin_exception(exc_name, base, set_value){
 /* make_builtin_exception("BaseException", _b_.object) */
 
 function check_no_keywords(obj, kw){
-    try{
-        if(_b_.len(kw)){
-            $B.RAISE(_b_.TypeError, `${$B.class_name(obj)}() takes no keyword arguments`)
-        }
-    }catch(err){
-        console.log('no len for kw', kw)
-        console.log(Error().stack)
-        alert()
+    if(_b_.len(kw)){
+        $B.RAISE(_b_.TypeError, `${$B.class_name(obj)}() takes no keyword arguments`)
     }
 }
 

@@ -2626,9 +2626,9 @@ var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
               {}, 'args', 'kw')
     var kw = $ns['kw'],
-        end = _b_.dict.get(kw, 'end', '\n'),
-        sep = _b_.dict.get(kw, 'sep', ' '),
-        file = _b_.dict.get(kw, 'file', $B.get_stdout())
+        end = $B.dict_get(kw, 'end', '\n'),
+        sep = $B.dict_get(kw, 'sep', ' '),
+        file = $B.dict_get(kw, 'file', $B.get_stdout())
     var args = $ns['args']
     var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){

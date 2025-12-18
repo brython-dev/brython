@@ -238,14 +238,23 @@ $B.finalize_type = function(cls){
         }
         if(cls.tp_methods){
             for(var descr of cls.tp_methods){
-                var method = cls.tp_funcs[descr + '_get']
+                var method = cls.tp_funcs[descr]
+                if(method === undefined){
+                    console.log('no method', cls, cls.tp_funcs, descr)
+                    alert()
+                }
                 cls.dict[descr] = $B.method_descriptor.$factory(cls, descr, method)
             }
         }
         if(cls.tp_members){
             for(var descr of cls.tp_members){
-                var member = cls.tp_funcs[descr + '_get']
+                var member = cls.tp_funcs[descr]
                 cls.dict[descr] = $B.member_descriptor.$factory(cls, descr, member)
+            }
+        }
+        for(var slot in $B.wrapper_methods){
+            if(cls[slot]){
+                $B.wrapper_methods[slot](cls)
             }
         }
         return

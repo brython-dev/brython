@@ -160,6 +160,8 @@ func_slots = {
     'getset_descriptor': 'tp_getset',
     'method_descriptor': 'tp_methods',
     'member_descriptor': 'tp_members',
+    'classmethod_descriptor': 'classmethods',
+    'staticmethod': 'staticmethods',
     'builtin_function_or_method': 'functions_or_methods'
 }
 
@@ -614,13 +616,15 @@ with open(path, 'w', encoding='utf-8') as out:
     while sets:
         types = sets.pop()
 
-        exclude = ("__dict__", "__doc__", "__init_subclass__", "__new__",
+        exclude = ("__dict__", "__doc__", "__init_subclass__", 
             "__subclasshook__")
 
         for cls in types:
             diffs = {}
 
             for attr in cls.__dict__:
+                if cls is dict:
+                    print('attr', attr)
                 if attr in exclude:
                     continue
                 try:
@@ -636,7 +640,6 @@ with open(path, 'w', encoding='utf-8') as out:
                         break
                 else:
                     diffs[attr] = value
-            #print(cls.__name__, list(diffs))
 
             keys = set(diffs)
             define_wds = []
@@ -677,9 +680,10 @@ with open(path, 'w', encoding='utf-8') as out:
                     for attr in specific[vtype]:
                         if tname == 'getset_descriptor':
                             funcs += [f'{attr}_get', f'{attr}_set']
-                        elif tname in ['member_descriptor', 'method_descriptor']:
-                            funcs.append(f'{attr}_get')
+                        else:
+                            funcs.append(f'{attr}')
                     defs.write('\n')
+
             for func in sorted(funcs):
                 out.write(f'{member_name}.{func} = function(self){{\n\n}}\n\n')
             out.write(defs.getvalue())

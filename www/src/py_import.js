@@ -81,7 +81,7 @@ module_funcs.__annotations___set = function(self){
 
 }
 
-module_funcs.__dir___get = function(self){
+module_funcs.__dir__ = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)()
     }
