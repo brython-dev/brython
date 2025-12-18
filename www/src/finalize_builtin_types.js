@@ -45,25 +45,41 @@ $B.make_class_dict = function(klass, methods){
     }
 }
 
+function wrap(dunder){
+    return function(cls, attr){
+        var func = cls[attr]
+        if(func === undefined){
+            console.log('no attr', attr, 'for cls', cls)
+        }
+        if(func !== _b_.None){
+            func.ml = {ml_name: dunder}
+        }
+        cls.dict[dunder] = func
+    }
+}
+
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
-        mp_length: make_mapping_len,
+        mp_length: wrap('__len__'),
+        mp_subscript: wrap('__getitem__'),
+        nb_absolute: wrap('__abs__'),
         nb_add: make_add,
-        sq_length: make_seq_length,
-        tp_call: make_call,
-        tp_descr_get: make_descr_get,
-        tp_getattro: make_getattribute,
-        tp_hash: make_hash,
-        tp_init: make_init,
-        tp_iter: make_iter,
+        sq_length: wrap('__len__'),
+        tp_call: wrap('__call__'),
+        tp_descr_get: wrap('__get__'),
+        tp_getattro: wrap('__getattribute__'),
+        tp_hash: wrap('__hash__'),
+        tp_init: wrap('__init__'),
+        tp_iter: wrap('__iter__'),
         tp_iternext: make_next,
         tp_new: make_new,
-        tp_repr: make_repr,
-        tp_str : make_str,
+        tp_repr: wrap('__repr__'),
+        tp_str : wrap('__str__'),
         tp_richcompare: make_richcompare
     }
 )
+
 
 function make_add(cls){
     var add = cls.nb_add
@@ -82,75 +98,14 @@ function make_add(cls){
     )
 }
 
-function make_call(cls){
-    var call = cls.tp_call
-    call.ml = {ml_name: '__call__'}
-    cls.dict.__call__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__call__',
-        call
-    )
-}
-
-function make_descr_get(cls){
-    var descr_get = cls.tp_descr_get
-    descr_get.ml = {ml_name: '__get__'}
-    cls.dict.__get__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__get__',
-        descr_get
-    )
-}
-
-function make_getattribute(cls){
-    var getattribute = cls.tp_getattro
-    getattribute.ml = {ml_name: '__getattribute__'}
-    cls.dict.__getattribute__ = cls.tp_getattro
-}
-
-function make_hash(cls){
-    var hash = cls.tp_hash
-    hash.ml = {ml_name: '__hash__'}
-    cls.dict.__hash__ = cls.tp_hash
-}
-
-function make_init(cls){
-    var init = cls.tp_init
-    init.ml = {ml_name: '__init__'}
-    cls.dict.__init__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__init__',
-        init
-    )
-}
-
-function make_iter(cls){
-    var iter = cls.tp_iter
-    iter.ml = {ml_name: '__iter__'}
-    cls.dict.__iter__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__iter__',
-        iter
-    )
-}
-
-function make_mapping_len(cls){
-    var len = cls.mp_length
-    len.ml = {ml_name: '__len__'}
-    cls.dict.__len__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__len__',
-        len
-    )
-}
-
 function make_new(cls){
     cls.dict.__new__ = cls.tp_new
 }
 
 function make_next(cls){
     var next = function(obj){
-        var res = cls.tp_iternext(obj).next()
+        var itn = cls.tp_iternext(obj)
+        var res = itn.next()
         if(res.done){
             $B.RAISE(__BRYTHON__.builtins.StopIteration)
         }
@@ -158,16 +113,6 @@ function make_next(cls){
     }
     next.ml = {ml_name: '__next__'}
     cls.dict.__next__ = next
-}
-
-function make_repr(cls){
-    var repr = cls.tp_repr
-    repr.ml = {ml_name: '__repr__'}
-    cls.dict.__repr__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__repr__',
-        repr
-    )
 }
 
 function make_richcompare(cls){
@@ -210,21 +155,6 @@ function make_richcompare(cls){
     )
 }
 
-function make_seq_length(cls){
-    var len = cls.sq_length
-    cls.dict.__len__ = $B.wrapper_descriptor.$factory(
-        cls,
-        '__len__',
-        len
-    )
-}
-
-function make_str(klass){
-    var str = klass.tp_str
-    str.ml = {ml_name: '__str__'}
-    klass.dict.__str__ = str
-}
-
 $B.finalize_type = function(cls){
     if(cls.tp_funcs){
         if(cls.tp_getset){
@@ -252,9 +182,16 @@ $B.finalize_type = function(cls){
                 cls.dict[descr] = $B.member_descriptor.$factory(cls, descr, member)
             }
         }
+        if(cls.classmethods){
+            for(var descr of cls.classmethods){
+                if(! ['__new__', '__class_getitem__'].includes(descr)){
+                    cls.dict[descr] = _b_.classmethod.$factory(cls.tp_funcs[descr])
+                }
+            }
+        }
         for(var slot in $B.wrapper_methods){
             if(cls[slot]){
-                $B.wrapper_methods[slot](cls)
+                $B.wrapper_methods[slot](cls, slot)
             }
         }
         return
@@ -273,7 +210,7 @@ $B.finalize_type = function(cls){
     }
     for(var slot in $B.wrapper_methods){
         if(cls[slot]){
-            $B.wrapper_methods[slot](cls)
+            $B.wrapper_methods[slot](cls, slot)
         }
     }
 }

@@ -342,7 +342,7 @@ list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
 list.tp_iter = function(self){
     return {
         ob_type: list_iterator,
-        it: t[Symbol.iterator]()
+        it: self[Symbol.iterator]()
     }
 }
 
@@ -912,6 +912,7 @@ tuple.$is_sequence = true
 
 var tuple_iterator = $B.make_iterator_class("tuple_iterator")
 tuple.tp_iter = function(self){
+    console.log('tyuple iter', self)
     return {
         ob_type: tuple_iterator,
         it: self[Symbol.iterator]()

@@ -859,6 +859,8 @@ $B.unpack_mapping = function(func, obj){
     return items
 }
 
+
+
 $B.make_js_iterator = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
     // "for(item of $B.make_js_iterator(...)){"

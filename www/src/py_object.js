@@ -107,259 +107,56 @@ object.__ge__ = function(){
 
 $B.nb_from_dict = 0
 
-/*
-object.__getattribute__ = function(obj, attr){
-
-    var klass = obj.__class__ || $B.get_class(obj),
-        is_own_class_instance_method = false
-
-    var $test = attr == '__iter__' // false // attr == "__args__"
-    if($test){
-        console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
-        console.log('obj.__dict__', obj.__dict__)
+object.tp_getattro = function(obj, attr){
+    var test = attr == 'Date'
+    var klass = $B.get_class(obj)
+    if(test){
+        console.log('getattr', attr, 'of obj', obj, klass)
     }
-    if(attr === "__class__"){
-        return klass
-    }
-
-    if(obj.$is_class && attr == '__bases__'){
-        throw $B.attr_error(attr, obj)
-    }
-
-    var res = obj[attr]
-
-    if($test){
-        console.log('obj[attr]', obj[attr])
-    }
-    if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
-        // Special case for list subclasses. Cf. issue 1081
-        res = undefined
-    }
-
-    if(res === undefined && obj.__dict__){
-        var dict = obj.__dict__
-        if($test){
-            console.log('obj.__dict__', obj.__dict__)
-        }
-        if(dict.__class__ === $B.getset_descriptor){
-            return dict.cls[attr]
-        }
-        var in_dict = _b_.dict.$get_string(dict, attr)
-        if(in_dict !== _b_.dict.$missing){
-            return in_dict
+    var in_mro = $B.search_in_mro(klass, attr, NULL)
+    if(test){
+        console.log('in mro', in_mro)
+        if(in_mro !== NULL){
+            console.log('class of in_mro', $B.get_class(in_mro))
         }
     }
-
-    if(res === undefined){
-        // search in classes hierarchy, following method resolution order
-        function check(obj, kl, attr){
-            var v
-            if(kl.__dict__){
-                v = _b_.dict.$get_string(kl.__dict__, attr)
-                if(v !== _b_.dict.$missing){
-                    return v
+    var getter = NULL
+    if(in_mro !== NULL){
+        var in_mro_class = $B.get_class(in_mro)
+        var getter = $B.search_in_mro(in_mro_class, '__get__', NULL)
+        if(test){
+            console.log('getter', getter)
+        }
+        if(getter !== NULL){
+            var is_data_descr = $B.search_in_mro(in_mro_class, '__set__', NULL) !== NULL ||
+                                $B.search_in_mro(in_mro_class, '__del__', NULL) !== NULL
+            if(is_data_descr){
+                if(test){
+                    console.log('data descriptor')
                 }
+                return getter(in_mro, obj, klass)
             }
-            v = kl[attr]
-            if(v !== undefined){
-                if($test){
-                    console.log('check, kl', kl, 'attr', attr, 'v', v)
-                }
-                return v
-            }
-        }
-
-        res = check(obj, klass, attr)
-        if(res === undefined){
-            var mro = klass.__mro__
-            for(let i = 0, len = mro.length; i < len; i++){
-                res = check(obj, mro[i], attr)
-                if($test){
-                    console.log('in class', mro[i], 'res', res)
-                }
-                if(res !== undefined){
-                    if($test){console.log("found in", mro[i])}
-                    break
-                }
-            }
-        }else{
-            if($test){
-                console.log(attr, 'found in own class')
-            }
-
-            if(res.__class__ !== $B.method && res.__get__ === undefined){
-                is_own_class_instance_method = true
-            }
-        }
-
-    }else{
-        if(res.__set__ === undefined){
-            // For non-data descriptors, the attribute found in object
-            // dictionary takes precedence
-            return res
         }
     }
-    if($test){
-        console.log('after search classes', res)
+    // search in obj dict
+    var in_dict = $B.search_in_dict(obj, attr, NULL)
+    if(in_dict !== NULL){
+        return in_dict
+    }else if(getter !== NULL){
+        // non-data descriptor
+        if(typeof getter !== 'function'){
+            console.log('not a function', getter)
+            console.log('class of in_mro', in_mro_class)
+        }
+        return getter(in_mro, obj, klass)
+    }else if(in_mro !== NULL){
+        return in_mro
     }
-    if(res !== undefined){
-        if($test){
-            console.log(res)
-        }
-        if(res.__class__ && _b_.issubclass(res.__class__, _b_.property)){
-            return $B.$getattr(res, '__get__')(obj, klass)
-        }else if(res.__class__ === _b_.classmethod){
-            return _b_.classmethod.__get__(res, obj, klass)
-        }
-        if(res.__class__ === $B.method){
-            if(res.$infos.__self__){
-                // Bound method
-                return res
-            }
-            return $B.method.__get__(res)
-        }
-
-        var get = res.__get__
-        if(get === undefined && res.__class__){
-            get = res.__class__.__get__
-            for(let i = 0; i < res.__class__.__mro__.length &&
-                    get === undefined; i++){
-                get = res.__class__.__mro__[i].__get__
-            }
-        }
-        if($test){console.log("get", get)}
-        var __get__ = get === undefined ? null :
-            $B.$getattr(res, "__get__", null)
-
-        if($test){console.log("__get__", __get__)}
-        // For descriptors, attribute resolution is done by applying __get__
-        if(__get__ !== null){
-            if($test){
-                console.log('apply __get__', [obj, klass])
-            }
-            try{
-                return __get__.apply(null, [obj, klass])
-            }catch(err){
-                if($B.get_option('debug') > 2){
-                    console.log('error in get.apply', err)
-                    console.log("get attr", attr, "of", obj)
-                    console.log('res', res)
-                    console.log('__get__', __get__)
-                    console.log(__get__ + '')
-                }
-                throw err
-            }
-        }
-
-        if(__get__ === null && (typeof res == "function")){
-            __get__ = function(x){return x}
-        }
-        if(__get__ !== null){ // descriptor
-            res.__name__ = attr
-            // __new__ is a static method
-            // ... and so are builtin functions (is this documented ?)
-            if(attr == "__new__" ||
-                    res.__class__ === $B.builtin_function_or_method){
-                res.$type = "staticmethod"
-            }
-            var res1 = __get__.apply(null, [res, obj, klass])
-            if($test){console.log("res", res, "res1", res1)}
-
-            if(typeof res1 == "function"){
-                // If attribute is a class then return it unchanged
-                //
-                // Example :
-                // ===============
-                // class A:
-                //    def __init__(self,x):
-                //        self.x = x
-                //
-                // class B:
-                //    foo = A
-                //    def __init__(self):
-                //        self.info = self.foo(18)
-                //
-                // B()
-                // ===============
-                // In class B, when we call self.foo(18), self.foo is the
-                // class A, its method __init__ must be called without B's
-                // self as first argument
-
-                // Same thing if the attribute is a method of an instance
-                // =================
-                // class myRepr:
-                //     def repr(self, a):
-                //         return a
-                //
-                // class myclass:
-                //     _repr = myRepr()
-                //     repr = _repr.repr
-                //
-                //     def myfunc(self):
-                //         return self.repr('test')
-                // =================
-                // In function myfunc, self.repr is an instance of MyRepr,
-                // it must be used as is, not transformed into a method
-
-                if(res1.__class__ === $B.method){
-                    return res
-                }
-
-                // instance method object
-                if(res.$type == "staticmethod"){
-                    return res
-                }else{
-                    var self = res.__class__ === $B.method ? klass : obj,
-                        method = function(){
-                            var args = [self] // add self as first argument
-                            for(var i = 0, len = arguments.length; i < len; i++){
-                                args.push(arguments[i])
-                            }
-                            return res.apply(this, args)
-                        }
-                    method.__class__ = $B.method
-                    method.__get__ = function(obj, cls){
-                        var clmethod = res.bind(null, cls)
-                        clmethod.__class__ = $B.method
-                        clmethod.$infos = {
-                            __self__: cls,
-                            __func__: res,
-                            __name__: res.$infos.__name__,
-                            __qualname__: cls.__name__ + "." +
-                                res.$infos.__name__
-                        }
-                        return clmethod
-                    }
-                    method.__get__.__class__ = $B.method_wrapper
-                    method.__get__.$infos = res.$infos
-                    method.$infos = {
-                        __self__: self,
-                        __func__: res,
-                        __name__: attr,
-                        __qualname__: klass.__qualname__ + "." + attr
-                    }
-                    if($test){console.log("return method", method)}
-                    if(is_own_class_instance_method){
-                        obj.$method_cache = obj.$method_cache || {}
-                        obj.$method_cache[attr] = [method, res]
-                    }
-                    return method
-                }
-            }else{
-                // result of __get__ is not a function
-                return res1
-            }
-        }
-        // attribute is not a descriptor : return it unchanged
-        return res
-    }else if(obj.hasOwnProperty && obj.hasOwnProperty(attr) &&
-            ! Array.isArray(obj)){
-        return $B.Undefined
-    }else{
-        throw $B.attr_error(attr, obj)
+    if(test){
+        console.log('attr', attr, 'not found on obj', obj)
     }
+    throw $B.attr_error(attr, obj)
 }
-*/
 
 
 object.__gt__ = function(){return _b_.NotImplemented}

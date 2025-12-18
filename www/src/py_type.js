@@ -604,7 +604,7 @@ function type_set_abstractmethods(klass, value){
 }
 
 function type_dict(klass){
-    return $B.mappingproxy.$factory(klass.dict)
+    return $B.mappingproxy.tp_new($B.mappingproxy, klass.dict)
 }
 
 function type_get_doc(klass){
@@ -717,7 +717,7 @@ function merge_class_dict(dict, klass){
     /* Merge in the type's dict (if any). */
     classdict = $B.$getattr(klass, '__dict__', null)
     if(classdict !== null){
-        _b_.dict.update(dict, classdict)
+        _b_.dict.dict.update(dict, classdict)
     }else{
         return
     }
@@ -1133,13 +1133,17 @@ type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
     var qualname = cl_dict.__qualname__ ?? name
 
     var class_dict = Object.create(null)
+    // XXX cl_dict should also be created with Object.create(null)
+    var dict = Object.create(null)
+    Object.assign(dict, cl_dict)
+
     Object.assign(class_dict,
     {
         ob_type: meta,
         tp_bases : bases.length == 0 ? [_b_.object] : bases,
         __module__: module,
         tp_name: name,
-        dict: cl_dict,
+        dict,
         $is_class: true
     })
 
@@ -1253,8 +1257,8 @@ function update_subclasses(kls, name, alias, value){
 type.tp_setattro = function(kls, attr, value){
     var $test = false
     if($test){console.log("kls is class", type)}
-    if($B.mappingproxy.$contains(type.dict, attr)){
-        var v = $B.mappingproxy.$getitem(type.dict, attr)
+    if(type.dict[attr] !== undefined){
+        var v = type.dict[attr]
         var vtype = $B.get_class(v)
         if(vtype.__set__){
             return vtype.__set__(v, kls, value)

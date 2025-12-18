@@ -1346,6 +1346,7 @@
 
     function load(name, module_obj){
         // add class and __str__
+        console.log('load builtin module', name, module_obj)
         module_obj.ob_type = $B.module
         module_obj.dict = $B.empty_dict()
         module_obj.__name__ = name
@@ -1366,6 +1367,7 @@
                     }
                 )
             }
+            _b_.dict.$setitem(module_obj.dict, attr, module_obj[attr])
         }
     }
 
@@ -1446,19 +1448,6 @@
     })
 
     $B.set_func_names($B.cell, "builtins")
-
-    // Set __flags__ of internal classes, defined in py_flags.js
-    /*
-    for(let flag in $B.builtin_class_flags.builtins){
-        for(let key of $B.builtin_class_flags.builtins[flag]){
-            if(_b_[key]){
-                _b_[key].__flags__ = parseInt(flag)
-            }else{
-                console.log('not in _b_', key)
-            }
-        }
-    }
-    */
 
     for(let flag in $B.builtin_class_flags.types){
         for(let key of $B.builtin_class_flags.types[flag]){

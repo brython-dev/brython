@@ -44,6 +44,7 @@ _b_.abs = function(obj){
     check_nb_args_no_kw('abs', 1, arguments)
 
     var klass = $B.get_class(obj)
+    console.log('abs', obj, klass)
     try{
         var method = $B.$getattr(klass, "__abs__")
     }catch(err){
@@ -475,7 +476,7 @@ _b_.dir = function(obj){
 
     var klass = $B.get_class(obj)
 
-    if(obj.$is_class){
+    if($B.is_type(obj)){
         // Use metaclass __dir__
         var dir_func = $B.$getattr($B.get_class(obj), "__dir__")
         return $B.$call(dir_func)(obj)
@@ -1030,7 +1031,7 @@ $B.call_with_mro = function(obj, attr){
 var missing_attr = {'missing_attr': true}
 var NULL = $B.NULL
 
-function search_in_dict(obj, attr, _default){
+$B.search_in_dict = function(obj, attr, _default){
     if(obj.__dict__){
         console.log('old school __dict__')
         var in_dict = _b_.dict.$get_string(obj.__dict__, attr)
@@ -1063,7 +1064,7 @@ function search_in_dict(obj, attr, _default){
 }
 
 function standard_getattribute(obj, attr){
-    var test = false // attr == 'x'
+    var test = attr == 'Date'
     var klass = $B.get_class(obj)
     if(test){
         console.log('getattr', attr, 'of obj', obj, klass)
@@ -1094,7 +1095,7 @@ function standard_getattribute(obj, attr){
         }
     }
     // search in obj dict
-    var in_dict = search_in_dict(obj, attr, NULL)
+    var in_dict = $B.search_in_dict(obj, attr, NULL)
     if(in_dict !== NULL){
         return in_dict
     }else if(getter !== NULL){
@@ -1115,9 +1116,13 @@ function standard_getattribute(obj, attr){
 
 $B.object_getattribute = function(obj, attr){
     var klass = $B.get_class(obj)
+    var test = attr == 'Date'
     var getattribute = $B.search_in_mro(klass, '__getattribute__', $B.NULL)
     if(getattribute === $B.NULL){
         $B.RAISE(_b_.TypeError, 'no __getattribute__')
+    }
+    if(test){
+        console.log(obj, attr, getattribute)
     }
     try{
         return getattribute(obj, attr)
@@ -1131,7 +1136,7 @@ $B.object_getattribute = function(obj, attr){
     }
 }
 
-_b_.object.tp_getattro = standard_getattribute
+// _b_.object.tp_getattro = standard_getattribute
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
@@ -1162,7 +1167,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = $B.get_class(obj)
 
-    var $test = false // attr == "write" // && obj.__name__ === "FlagBoundary"
+    var $test = attr == "Date" // && obj.__name__ === "FlagBoundary"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1189,380 +1194,6 @@ $B.$getattr = function(obj, attr, _default){
         }
     }
     throw $B.attr_error(attr, obj)
-    /*
-    if(klass === undefined){
-        klass = $B.get_class(obj)
-        if(klass === undefined){
-            // for native JS objects used in Python code
-            if($test){console.log("no class", attr, obj.hasOwnProperty(attr), obj[attr])}
-            res = obj[attr]
-            if(res !== undefined){
-                if(typeof res == "function"){
-                    var f = function(){
-                        // In function, "this" is set to the object
-                        return res.apply(obj, arguments)
-                    }
-                    f.$infos = {
-                        __name__: attr,
-                        __qualname__: attr
-                    }
-                    $B.set_function_infos(f,
-                        {
-                            name: attr,
-                            qualname: attr
-                        }
-                    )
-                    return f
-                }else{
-                    return $B.jsobj2pyobj(res)
-                }
-            }
-            if(_default !== undefined){
-                return _default
-            }
-            throw $B.attr_error(rawname, obj)
-        }
-    }
-
-    switch(attr) {
-      case '__call__':
-          if(typeof obj == 'function'){
-              res = function(){return obj.apply(null, arguments)}
-              res.__class__ = method_wrapper
-              res.$infos = {__name__: "__call__"}
-              return res
-          }
-          break
-      case '__class__':
-          // attribute __class__ is set for all Python objects
-          if(klass.__dict__){
-              var klass_from_dict = _b_.None
-              if($B.$isinstance(klass.__dict__, _b_.dict)){
-                  klass_from_dict = $B.$call($B.$getattr(klass.__dict__, 'get'))('__class__')
-              }
-              if(klass_from_dict !== _b_.None){
-                  if(klass_from_dict.$is_property){
-                      return klass_from_dict.fget(obj)
-                  }
-                  return klass_from_dict
-              }
-          }
-          return klass
-      case '__dict__':
-          if(is_class){
-              var dict = {},
-                  key
-              if(obj.dict){
-                  for(key of _b_.dict.$keys_string(obj.dict)){
-                      dict[key] = _b_.dict.$getitem_string(obj.dict, key)
-                      if(key == '__new__' && dict[key].__class__ !== _b_.staticmethod){
-                          dict[key] = _b_.staticmethod.$factory(dict[key])
-                      }
-                  }
-              }else{
-                  for(key in obj){
-                      if(! key.startsWith("$")){
-                          dict[key] = obj[key]
-                          if(key == '__new__' && dict[key].__class__ !== _b_.staticmethod){
-                              dict[key] = _b_.staticmethod.$factory(dict[key])
-                          }
-                      }
-                  }
-              }
-              dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__',
-                  function(klass){
-                      // Return the __dict__ of a class
-                      // Used by inspect.getattr_static and related functions
-                      if(klass.__dict__ !== undefined){
-                          return klass.__dict__
-                      }
-                      if(klass.$tp_dict){
-                          return $B.obj_dict(klass.$tp_dict)
-                      }
-                      return $B.empty_dict()
-                  }
-              )
-              return {
-                  __class__: $B.mappingproxy, // in py_dict.js
-                  $jsobj: dict,
-                  $version: 0
-              }
-          }else if(! klass.$native){
-              if(obj[attr] !== undefined){
-                  return obj[attr]
-              }else if(obj.__dict__){
-                  return obj.__dict__
-              }else if(obj.$function_infos || obj.$infos){
-                  if(! obj.$infos){
-                      $B.make_function_infos(obj, ...obj.$function_infos)
-                  }
-                  if(obj.hasOwnProperty("__dict__")){
-                      return obj.__dict__
-                  }else if(obj.$infos.hasOwnProperty("__func__") &&
-                          obj.$infos.__func__){
-                      obj.$infos.__func__.__dict__ = obj.$infos.__func__.__dict__ ??
-                          $B.empty_dict()
-                  }
-              }else if(obj.__class__ && obj.__class__.__dict__){
-                  // console.log('class has __dict__', obj.__class__.__dict__)
-              }else if(! obj.__class__){
-                  // console.log('no class', obj)
-              }
-              return $B.obj_dict(obj,
-                  function(attr){
-                      return attr.startsWith('$') || ['__class__'].indexOf(attr) > -1
-                  }
-              )
-          }
-          break
-      case '__mro__':
-          // The attribute __mro__ of class objects doesn't include the
-          // class itself
-          if(obj.__mro__){
-              return _b_.tuple.$factory([obj].concat(obj.__mro__))
-          }else if(obj.__dict__ &&
-                  _b_.dict.$contains_string(obj.__dict__, '__mro__')){
-              return _b_.dict.$getitem_string(obj.__dict__, '__mro__')
-          }
-          // stop search here, looking in the objects's class would return
-          // the class's __mro__
-          throw $B.attr_error(attr, obj)
-      case '__subclasses__':
-          if(klass.$factory || klass.$is_class){
-              var subclasses = obj.$subclasses || []
-              return function(){
-                  return $B.$list(subclasses)
-              }
-          }
-          break
-    }
-
-    if(typeof obj == 'function') {
-        var value = obj[attr]
-        if(value !== undefined){
-            if(attr == '__module__'){
-                return value
-            }
-        }
-    }
-
-    if((! is_class) && klass.$native){
-
-        if(obj.$method_cache && obj.$method_cache[attr]){
-            return obj.$method_cache[attr]
-        }
-
-        if($test){
-            console.log("native class", klass, klass[attr])
-        }
-        if(klass[attr] === undefined){
-            var parent_attr
-            for(var parent_class of klass.__mro__){
-                if(parent_class[attr] !== undefined){
-                    parent_attr = parent_class[attr]
-                    break
-                }
-            }
-            if($test){
-                console.log("parent class attr", parent_attr)
-            }
-            if(parent_attr !== undefined){
-                klass[attr] = parent_attr
-            }else{
-                if($test){
-                    console.log("obj[attr]", obj[attr])
-                }
-                var attrs = obj.__dict__
-                if(attrs && _b_.dict.$contains_string(attrs, attr)){
-                    return _b_.dict.$getitem_string(attrs, attr)
-                }
-                if(_default === undefined){
-                    throw $B.attr_error(attr, obj)
-                }
-                return _default
-            }
-        }else if(['__name__', '__qualname__'].includes(attr)){
-            attr_error(attr, obj)
-        }
-        if(klass.$descriptors && klass.$descriptors[attr] !== undefined){
-            return klass[attr](obj)
-        }
-        console.log('attr', attr, klass[attr])
-        if(typeof klass[attr] == 'function'){
-            var func = klass[attr]
-            // new is a static method
-            if(attr == '__new__'){
-                func.$type = "staticmethod"
-            }
-
-            if(func.$type == "staticmethod"){
-                return func
-            }
-
-            var self = klass[attr].__class__ == $B.method ? klass : obj,
-                method = klass[attr].bind(null, self)
-            method.__class__ = $B.method
-            method.$infos = {
-                __func__: func,
-                __name__: attr,
-                __self__: self,
-                __qualname__: klass.__qualname__ + "." + attr
-            }
-            if(typeof obj == "object"){
-                // Optimization : set attribute __class__ and store method
-                // as attribute of obj.$method_cache
-                obj.__class__ = klass
-                obj.$method_cache = obj.$method_cache || {}
-                if(obj.$method_cache){
-                    // might not be set, eg for Javascript list proxy
-                    // in js_objects.js
-                    obj.$method_cache[attr] = method
-                }
-            }
-            return method
-        }else if(klass[attr].__class__ === _b_.classmethod){
-            return _b_.classmethod.__get__(klass[attr], obj, klass)
-        }else if(klass[attr] !== undefined){
-            return klass[attr]
-        }
-        attr_error(rawname, klass)
-    }
-
-    var attr_func
-
-    if(is_class){
-        if($test){
-            console.log('obj is class', obj)
-            console.log('is a type ?', _b_.isinstance(klass, _b_.type))
-            console.log('is type', klass === _b_.type)
-        }
-        if(klass === _b_.type){
-            attr_func = _b_.type.__getattribute__
-        }else{
-            attr_func = $B.$call($B.$getattr(klass, '__getattribute__'))
-            if($test){
-                console.log('use __getattribute__ of klass', klass)
-            }
-        }
-    }else{
-        attr_func = klass.__getattribute__
-        if(attr_func === undefined){
-            for(var cls of klass.__mro__){
-                attr_func = cls['__getattribute__']
-                if(attr_func !== undefined){
-                    break
-                }
-            }
-        }
-        if($test){
-            console.log('attr func', attr_func)
-        }
-    }
-    if(typeof attr_func !== 'function'){
-        console.log(attr + ' is not a function ' + attr_func, klass)
-    }
-
-    var odga = _b_.object.__getattribute__
-    if($test){
-        console.log("attr_func", attr_func,
-            '\n     is oject.__ga__ ?', attr_func === odga,
-            '\n     is type.__ga__ ?', attr_func === _b_.type.__getattribute__,
-            '\nobj[attr]', obj[attr])
-        console.log('original', attr_func.$original)
-    }
-    if(attr_func === odga){
-        res = obj[attr]
-        if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
-            // Special case for list subclasses. Cf issue 1081.
-            res = undefined
-        }else if(res === null){
-            return null
-        }else if(res !== undefined){
-            if($test){console.log(obj, attr, obj[attr],
-                res.__set__ || res.$is_class)}
-            if(res.$is_property){
-                return _b_.property.__get__(res)
-            }
-            // Cf. issue 1081
-            if(res.__set__ === undefined || res.$is_class){
-                if($test){console.log("return", res, res+'',
-                    res.__set__, res.$is_class)}
-                return res
-            }
-        }
-    }
-    var getattr
-    try{
-        res = attr_func(obj, attr)
-        if($test){console.log("result of attr_func", res)}
-    }catch(err){
-        if($test){
-            console.log('attr', attr, 'of', obj)
-            console.log('attr_func raised error', err.__class__, err.args, err.name)
-            console.log(err)
-            console.log(Error().stack)
-        }
-        if(klass === $B.module){
-            // try __getattr__ at module level (PEP 562)
-            getattr = obj.__getattr__
-            if($test){
-                console.log('use module getattr', getattr)
-                console.log(getattr + '')
-            }
-            if(getattr){
-                try{
-                    return getattr(attr)
-                }catch(err){
-                    if($test){
-                        console.log('encore erreur', err)
-                    }
-                    if(_default !== undefined){
-                        return _default
-                    }
-                    throw err
-                }
-            }
-        }
-        if(klass.__mro__ === undefined){
-            console.log('no mro for class', klass, 'of obj', obj)
-            klass.__mro__ = _b_.type.$mro(klass)
-            console.log('make mro', klass.__mro__)
-        }
-        getattr = $B.search_in_mro(klass, '__getattr__')
-        if($test){
-            console.log('try getattr', getattr)
-        }
-        if(getattr){
-            if($test){
-                console.log('try with getattr', getattr)
-            }
-            try{
-                return getattr(obj, attr)
-            }catch(err){
-                if($B.is_exc(err, [_b_.AttributeError])){
-                    if(_default !== undefined){
-                        return _default
-                    }
-                }
-                throw err
-            }
-        }
-        if(_default !== undefined){
-            return _default
-        }
-
-        throw err
-    }
-
-    if(res !== undefined){
-        return res
-    }
-    if(_default !== undefined){
-        return _default
-    }
-
-    attr_error(rawname, is_class ? obj : klass)
-    */
 }
 
 // globals() (built in function)
@@ -1901,27 +1532,39 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
 
 // Utility class for iterators built from objects that have a __getitem__ and
 // __len__ method
-var iterator_class = $B.iterator
 
-iterator_class.$factory = function(getitem){
-    return {
-        ob_type: iterator_class,
-        getitem: getitem,
-        counter: -1
+/* iterator start */
+$B.iterator.tp_iter = function(self){
+    return self
+}
+
+$B.iterator.tp_iternext = function*(self){
+    var ob_type = $B.get_class(self.it_seq)
+    var len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
+    var getitem = $B.search_in_mro(ob_type, '__getitem__')
+    if(self.it_index <= len){
+        yield getitem(self.it_seq, self.it_index)
+        self.it_index++
     }
 }
 
-iterator_class.tp_iternext = function(self){
-    self.counter++
-    console.log('call iternext', self)
-    try{
-        return self.getitem(self.counter)
-    }catch(err){
-        $B.RAISE(_b_.StopIteration, '')
-    }
+var iterator_funcs = $B.iterator.tp_funcs = {}
+
+iterator_funcs.__length_hint__ = function(self){
+
 }
 
-$B.set_func_names(iterator_class, "builtins")
+iterator_funcs.__reduce__ = function(self){
+
+}
+
+iterator_funcs.__setstate__ = function(self){
+
+}
+
+$B.iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+/* iterator end */
 
 const callable_iterator = $B.make_builtin_class("callable_iterator")
 
@@ -2001,15 +1644,29 @@ $B.$iter = function(obj, sentinel){
 
         var klass = $B.get_class(obj)
 
-        if(klass.tp_iter){
-            var res = klass.tp_iter(obj)
-            if($B.get_class(res).tp_iternext === undefined){
+        var iter_func = $B.search_in_mro(klass, '__iter__', $B.NULL)
+        if(iter_func !== $B.NULL){
+            var res = iter_func(obj)
+            if($B.search_in_mro($B.get_class(res), '__next__', $B.NULL) === $B.NULL){
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)
             }
             return res
         }
-        var in_mro = $B.search_in_mro(klass, '__iter__')
+        var getitem_func = $B.search_in_mro(klass, '__getitem__', $B.NULL)
+        var len_func = $B.search_in_mro(klass, '__len__', $B.NULL)
+        if(getitem_func !== $B.NULL && len_func !== $B.NULL){
+            return {
+                ob_type: $B.iterator,
+                it_seq: obj,
+                it_index: 0
+            }
+        }
+
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
+            "' object is not iterable")
+
+        /*
         if(in_mro){
             var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
             if(getter){
@@ -2053,6 +1710,7 @@ $B.$iter = function(obj, sentinel){
             }
         }
         return res
+        */
     }else{
         return callable_iterator.$factory(obj, sentinel)
     }
@@ -3007,7 +2665,7 @@ _b_.sorted = function(){
         arguments, {}, null, 'kw')
     var _list = _b_.list.$factory($.iterable),
         args = [_list].concat(Array.from(arguments).slice(1))
-    _b_.list.sort.apply(null, args)
+    _b_.list.dict.sort.apply(null, args)
     return _list
 }
 
@@ -3121,7 +2779,7 @@ $$super.tp_getattro = function(self, attr){
         if($test){
             console.log('search', attr, 'in dict of', klass)
         }
-        var in_dict = search_in_dict(klass, attr, NULL)
+        var in_dict = $B.search_in_dict(klass, attr, NULL)
         if(in_dict !== NULL){
             f = in_dict
             break

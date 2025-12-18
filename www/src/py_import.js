@@ -49,8 +49,12 @@ $B.module.tp_repr = function(self){
     return res + ">"
 }
 
-$B.module.tp_getattro = function(self){
-
+$B.module.tp_getattro = function(self, attr){
+    var res = _b_.dict.$get_string(self.dict, attr, $B.NULL)
+    if(res !== $B.NULL){
+        return res
+    }
+    $B.attr_error(attr, self)
 }
 
 $B.module.tp_init = function(self, name, doc, $package){
@@ -263,7 +267,7 @@ $B.addToImported = function(name, modobj){
             }
             modobj[attr].$in_js_module = true
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
-                ! modobj[attr].hasOwnProperty('__module__')){
+                modobj[attr].__module__ === undefined){
             modobj[attr].__module__ = name
         }
     }
@@ -296,7 +300,7 @@ function run_js(module_contents, path, _module){
             }
             modobj[attr].$in_js_module = true
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
-                ! modobj[attr].hasOwnProperty('__module__')){
+                modobj[attr].__module__ === undefined){
             console.log('set module to', attr, modobj[attr])
             console.log($B.$isinstance(127, _b_.type))
             modobj[attr].__module__ = _module.__name__

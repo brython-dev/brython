@@ -2608,6 +2608,10 @@ str.zfill = function(self, width){
 }
 
 str.$factory = function(arg, encoding){
+    if(arg === undefined){
+        console.log('arg undef')
+        console.log(Error().stack)
+    }
     if(arguments.length == 0){
         return ""
     }
