@@ -127,7 +127,7 @@ function make_init(cls){
 function make_iter(cls){
     var iter = cls.tp_iter
     iter.ml = {ml_name: '__iter__'}
-    cls.dict.__iter__ = $B.getset_descriptor.$factory(
+    cls.dict.__iter__ = $B.wrapper_descriptor.$factory(
         cls,
         '__iter__',
         iter
@@ -225,18 +225,35 @@ function make_str(klass){
     klass.dict.__str__ = str
 }
 
-console.log('create types', $B.created_types)
-
 $B.finalize_type = function(cls){
-    if(cls.tp_name == 'mappingproxy'){
-        console.log('mapping proxy dict.__getitem__ enter', cls.dict.__getitem__)
-        console.log('tp_getset', cls.tp_getset)
-        console.log('tp_methods', cls.tp_methods)
+    if(cls.tp_funcs){
+        if(cls.tp_getset){
+            for(var descr of cls.tp_getset){
+                var getset = [
+                    cls.tp_funcs[descr + '_get'], // getter
+                    cls.tp_funcs[descr + '_set'] // setter
+                ]
+                cls.dict[descr] = $B.getset_descriptor.$factory(cls, descr, getset)
+            }
+        }
+        if(cls.tp_methods){
+            for(var descr of cls.tp_methods){
+                var method = cls.tp_funcs[descr + '_get']
+                cls.dict[descr] = $B.method_descriptor.$factory(cls, descr, method)
+            }
+        }
+        if(cls.tp_members){
+            for(var descr of cls.tp_members){
+                var member = cls.tp_funcs[descr + '_get']
+                cls.dict[descr] = $B.member_descriptor.$factory(cls, descr, member)
+            }
+        }
+        return
     }
     if(cls.tp_getset){
         for(var getset of cls.tp_getset){
             var [name, get, set] = getset
-            cls.dict[name] = $B.getset_descriptor.$factory(cls, name, get, set)
+            cls.dict[name] = $B.getset_descriptor.$factory(cls, name, [get, set])
         }
     }
     if(cls.tp_methods){
@@ -249,9 +266,6 @@ $B.finalize_type = function(cls){
         if(cls[slot]){
             $B.wrapper_methods[slot](cls)
         }
-    }
-    if(cls.tp_name == 'mappingproxy'){
-        console.log('mapping proxy dict.__getitem__ exit', cls.dict.__getitem__)
     }
 }
 

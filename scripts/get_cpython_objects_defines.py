@@ -2,11 +2,12 @@ import os
 import re
 
 obj_dir = os.path.join('/cpython', 'Objects')
-
+define_re = re.compile(r'^#\s*define\s+(?P<name>[a-zA-Z_]+)')
 defines = {}
 for dirpath, dirnames, filenames in os.walk(obj_dir):
     for filename in filenames:
         if filename.endswith('.h'):
+            print(filename)
             path = os.path.join(dirpath, filename)
             with open(path, encoding='utf-8') as f:
                 reading_def = False
@@ -17,11 +18,7 @@ for dirpath, dirnames, filenames in os.walk(obj_dir):
                             if define.lstrip().startswith('{'):
                                 defines[def_name] = define
                             reading_def = False
-                    elif line.startswith('#define'):
-                        mo = re.match(r'#define\s+(?P<name>[a-zA-Z_]+)', line)
-                        if not mo:
-                            print('not mo ???')
-                            input()
+                    elif mo := define_re.search(line):
                         def_name = mo.group('name')
                         line = line[mo.end():]
                         if not line.strip().endswith('\\'):
@@ -30,3 +27,6 @@ for dirpath, dirnames, filenames in os.walk(obj_dir):
                         else:
                             define = line.strip(' \n\\')
                             reading_def = True
+
+if __name__ == '__main__':
+    print(defines)

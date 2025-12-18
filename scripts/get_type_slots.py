@@ -1,6 +1,7 @@
 import types
 import builtins
 
+
 # build a set of all the types with __module__ set to "builtins" by
 # recursively adding all the subclasses of such types, starting with
 # the type "object"
@@ -15,13 +16,25 @@ def get_builtins(head, classes=None):
 
 all_builtins = get_builtins(object)
 
+slots = {
+    'tp_name': "__name__",
+    'tp_basicsize': "__basicsize__",
+    'tp_itersize': "__itemsize__",
+    'tp_flags': "__flags__",
+    'tp_weakrefoffset': "__weakrefoffset__",
+    'tp_base': "__base__",
+    'tp_dictoffset': "__dictoffset__",
+    'tp_doc': '__doc__',
+    'tp_bases': '__bases__'
+}
+
 types_module = {}
 for t in dir(types):
     value = getattr(types, t)
     if type(value) is type:
         types_module[value.__name__] = value
 
-def make_builtins_init(bltins):
+def make_sets():
     builtin_names = dir(builtins)
     builtins_and_types = all_builtins.copy()
     types_module = {}
@@ -62,7 +75,53 @@ def make_builtins_init(bltins):
             print(builtins)
             raise Exception('infinite loop')
 
-    init = ''
+    return sets
+
+def make_builtins_init(bltins):
+    """
+    builtin_names = dir(builtins)
+    builtins_and_types = all_builtins.copy()
+    types_module = {}
+
+    def get_children(parent_bases):
+        # get classes whoses bases are in parent_bases
+        res = set()
+        for b in builtins_and_types:
+            if hasattr(b, '__bases__'):
+                bases = b.__bases__
+                for base in bases:
+                    if base in parent_bases:
+                        res.add(b)
+            elif hasattr(b, '__base__'):
+                if b.__base__ in parent_bases:
+                    res.add(b)
+        return res
+
+    # top of types hierarchy
+    parent_bases = {object}
+
+    # Get a list of sets of types
+    # Each type in a set has all its bases in the previous sets
+    sets = [list(parent_bases)]
+    builtins_and_types -= parent_bases
+
+    def sort_key(cls):
+        return (cls.__name__ not in builtin_names, cls.__name__)
+
+    n = 0
+    while builtins_and_types:
+        children = get_children(parent_bases)
+        sets.append(sorted(list(children), key=sort_key))
+        parent_bases |= children
+        builtins_and_types -= children
+        n += 1
+        if n > 20:
+            print(builtins)
+            raise Exception('infinite loop')
+    """
+    sets = make_sets()
+    init = 'var slots = [\n' + \
+        ',\n'.join(f'    "{slot}"' for slot in slots) + '\n]\n\n'
     for _set in sets:
         for cls in _set:
             init += get_slots_by_type(cls)
@@ -86,20 +145,9 @@ def make_methods(cls):
     return js + '\n}'
 
 def get_slots_by_type(cls):
-    slots = {
-        'tp_name': "__name__",
-        'tp_basicsize': "__basicsize__",
-        'tp_itersize': "__itemsize__",
-        'tp_flags': "__flags__",
-        'tp_weakrefoffset': "__weakrefoffset__",
-        'tp_base': "__base__",
-        'tp_dictoffset': "__dictoffset__",
-        'tp_doc': '__doc__',
-        'tp_bases': '__bases__'
-    }
     head = '_b_' if cls.__name__ in dir(builtins) else '$B'
     name = cls.__name__.replace('-', '_').replace(' ', '_')
-    res = f'init_type({head}, "{name}", {{\n'
+    res = f'init_type({head}, "{name}", [\n'
 
     for slot in slots:
         value = None
@@ -123,9 +171,11 @@ def get_slots_by_type(cls):
         else:
             value = getattr(cls, slots[slot], None)
 
-        if value is not None:
-            res += f'    {slot}: {value},\n'
-    return res + '})\n\n'
+        if value is None:
+            value = '$B.NULL'
+        res += f'    {value},\n'
+
+    return res + '])\n\n'
 
 def get_slots(cls_name):
     try:

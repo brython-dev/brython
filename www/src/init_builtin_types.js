@@ -6,46 +6,61 @@ $B.builtin_types = {}
 
 function init_type(ns, name, data){
     var cls = ns[name] = Object.create(null)
-    Object.assign(cls, data)
+    for(var i = 0, len = slots.length; i < len; i++){
+        cls[slots[i]] = data[i]
+    }
     $B.builtin_types[name] = cls
 }
 
-init_type(_b_, "object", {
-    tp_name: "object",
-    tp_basicsize: 16,
-    tp_itersize: 0,
-    tp_flags: 5378,
-    tp_weakrefoffset: 0,
-    tp_dictoffset: 0,
-    tp_doc: `The base class of the class hierarchy.
+var slots = [
+    "tp_name",
+    "tp_basicsize",
+    "tp_itersize",
+    "tp_flags",
+    "tp_weakrefoffset",
+    "tp_base",
+    "tp_dictoffset",
+    "tp_doc",
+    "tp_bases"
+]
+
+init_type(_b_, "object", [
+    "object",
+    16,
+    0,
+    5378,
+    0,
+    $B.NULL,
+    0,
+    `The base class of the class hierarchy.
 
 When called, it accepts no arguments and returns a new featureless
 instance that has no instance attributes and cannot be given any.
 `,
-    tp_bases: [],
-})
+    [],
+])
 
-init_type(_b_, "BaseException", {
-    tp_name: "BaseException",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 16,
-    tp_doc: `Common base class for all exceptions`,
-    tp_bases: [_b_.object],
-})
+init_type(_b_, "BaseException", [
+    "BaseException",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.object,
+    16,
+    `Common base class for all exceptions`,
+    [_b_.object],
+])
 
-init_type(_b_, "bytearray", {
-    tp_name: "bytearray",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 4199682,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `bytearray(iterable_of_ints) -> bytearray
+init_type(_b_, "bytearray", [
+    "bytearray",
+    56,
+    0,
+    4199682,
+    0,
+    _b_.object,
+    0,
+    `bytearray(iterable_of_ints) -> bytearray
 bytearray(string, encoding[, errors]) -> bytearray
 bytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer
 bytearray(int) -> bytes array of size given by the parameter initialized with null bytes
@@ -57,18 +72,18 @@ Construct a mutable bytearray object from:
   - a bytes or a buffer object
   - any object implementing the buffer API.
   - an integer`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "bytes", {
-    tp_name: "bytes",
-    tp_basicsize: 33,
-    tp_itersize: 1,
-    tp_flags: 138417410,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `bytes(iterable_of_ints) -> bytes
+init_type(_b_, "bytes", [
+    "bytes",
+    33,
+    1,
+    138417410,
+    0,
+    _b_.object,
+    0,
+    `bytes(iterable_of_ints) -> bytes
 bytes(string, encoding[, errors]) -> bytes
 bytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer
 bytes(int) -> bytes object of size given by the parameter initialized with null bytes
@@ -79,18 +94,18 @@ Construct an immutable array of bytes from:
   - a text string encoded using the specified encoding
   - any object implementing the buffer API.
   - an integer`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "classmethod", {
-    tp_name: "classmethod",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 24,
-    tp_doc: `Convert a function to be a class method.
+init_type(_b_, "classmethod", [
+    "classmethod",
+    32,
+    0,
+    21762,
+    0,
+    _b_.object,
+    24,
+    `Convert a function to be a class method.
 
 A class method receives the class as implicit first argument,
 just like an instance method receives the instance.
@@ -108,35 +123,35 @@ object is passed as the implied first argument.
 
 Class methods are different than C++ or Java static methods.
 If you want those, see the staticmethod builtin.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "complex", {
-    tp_name: "complex",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 5378,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Create a complex number from a string or numbers.
+init_type(_b_, "complex", [
+    "complex",
+    32,
+    0,
+    5378,
+    0,
+    _b_.object,
+    0,
+    `Create a complex number from a string or numbers.
 
 If a string is given, parse it as a complex number.
 If a single number is given, convert it to a complex number.
 If the 'real' or 'imag' arguments are given, create a complex number
 with the specified real and imaginary components.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "dict", {
-    tp_name: "dict",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 541087042,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `dict() -> new empty dictionary
+init_type(_b_, "dict", [
+    "dict",
+    48,
+    0,
+    541087042,
+    0,
+    _b_.object,
+    0,
+    `dict() -> new empty dictionary
 dict(mapping) -> new dictionary initialized from a mapping object's
     (key, value) pairs
 dict(iterable) -> new dictionary initialized as if via:
@@ -145,18 +160,18 @@ dict(iterable) -> new dictionary initialized as if via:
         d[k] = v
 dict(**kwargs) -> new dictionary initialized with the name=value pairs
     in the keyword argument list.  For example:  dict(one=1, two=2)`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "enumerate", {
-    tp_name: "enumerate",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Return an enumerate object.
+init_type(_b_, "enumerate", [
+    "enumerate",
+    56,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `Return an enumerate object.
 
   iterable
     an object supporting iteration
@@ -166,55 +181,55 @@ defaults to zero) and a value yielded by the iterable argument.
 
 enumerate is useful for obtaining an indexed list:
     (0, seq[0]), (1, seq[1]), (2, seq[2]), ...`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "filter", {
-    tp_name: "filter",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Return an iterator yielding those items of iterable for which function(item)
+init_type(_b_, "filter", [
+    "filter",
+    32,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `Return an iterator yielding those items of iterable for which function(item)
 is true. If function is None, return the items that are true.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "float", {
-    tp_name: "float",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 4199682,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Convert a string or number to a floating-point number, if possible.`,
-    tp_bases: [_b_.object],
-})
+init_type(_b_, "float", [
+    "float",
+    24,
+    0,
+    4199682,
+    0,
+    _b_.object,
+    0,
+    `Convert a string or number to a floating-point number, if possible.`,
+    [_b_.object],
+])
 
-init_type(_b_, "frozenset", {
-    tp_name: "frozenset",
-    tp_basicsize: 200,
-    tp_itersize: 0,
-    tp_flags: 4216066,
-    tp_weakrefoffset: 192,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Build an immutable unordered collection of unique elements.`,
-    tp_bases: [_b_.object],
-})
+init_type(_b_, "frozenset", [
+    "frozenset",
+    200,
+    0,
+    4216066,
+    192,
+    _b_.object,
+    0,
+    `Build an immutable unordered collection of unique elements.`,
+    [_b_.object],
+])
 
-init_type(_b_, "int", {
-    tp_name: "int",
-    tp_basicsize: 24,
-    tp_itersize: 4,
-    tp_flags: 20976898,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `int([x]) -> integer
+init_type(_b_, "int", [
+    "int",
+    24,
+    4,
+    20976898,
+    0,
+    _b_.object,
+    0,
+    `int([x]) -> integer
 int(x, base=10) -> integer
 
 Convert a number or string to an integer, or return 0 if no arguments
@@ -228,61 +243,61 @@ by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
 Base 0 means to interpret the base from the string as an integer literal.
 >>> int('0b100', base=0)
 4`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "list", {
-    tp_name: "list",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 37770530,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Built-in mutable sequence.
+init_type(_b_, "list", [
+    "list",
+    40,
+    0,
+    37770530,
+    0,
+    _b_.object,
+    0,
+    `Built-in mutable sequence.
 
 If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "map", {
-    tp_name: "map",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Make an iterator that computes the function using arguments from
+init_type(_b_, "map", [
+    "map",
+    40,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `Make an iterator that computes the function using arguments from
 each of the iterables.  Stops when the shortest iterable is exhausted.
 
 If strict is true and one of the arguments is exhausted before the others,
 raise a ValueError.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "memoryview", {
-    tp_name: "memoryview",
-    tp_basicsize: 144,
-    tp_itersize: 8,
-    tp_flags: 20770,
-    tp_weakrefoffset: 136,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Create a new memoryview object which references the given object.`,
-    tp_bases: [_b_.object],
-})
+init_type(_b_, "memoryview", [
+    "memoryview",
+    144,
+    8,
+    20770,
+    136,
+    _b_.object,
+    0,
+    `Create a new memoryview object which references the given object.`,
+    [_b_.object],
+])
 
-init_type(_b_, "property", {
-    tp_name: "property",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Property attribute.
+init_type(_b_, "property", [
+    "property",
+    64,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `Property attribute.
 
   fget
     function to be used for getting an attribute value
@@ -314,18 +329,18 @@ class C(object):
     @x.deleter
     def x(self):
         del self._x`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "range", {
-    tp_name: "range",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 4386,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `range(stop) -> range object
+init_type(_b_, "range", [
+    "range",
+    48,
+    0,
+    4386,
+    0,
+    _b_.object,
+    0,
+    `range(stop) -> range object
 range(start, stop[, step]) -> range object
 
 Return an object that produces a sequence of integers from start (inclusive)
@@ -333,57 +348,57 @@ to stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.
 start defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.
 These are exactly the valid indices for a list of 4 elements.
 When step is given, it specifies the increment (or decrement).`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "reversed", {
-    tp_name: "reversed",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Return a reverse iterator over the values of the given sequence.`,
-    tp_bases: [_b_.object],
-})
+init_type(_b_, "reversed", [
+    "reversed",
+    32,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `Return a reverse iterator over the values of the given sequence.`,
+    [_b_.object],
+])
 
-init_type(_b_, "set", {
-    tp_name: "set",
-    tp_basicsize: 200,
-    tp_itersize: 0,
-    tp_flags: 4216066,
-    tp_weakrefoffset: 192,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Build an unordered collection of unique elements.`,
-    tp_bases: [_b_.object],
-})
+init_type(_b_, "set", [
+    "set",
+    200,
+    0,
+    4216066,
+    192,
+    _b_.object,
+    0,
+    `Build an unordered collection of unique elements.`,
+    [_b_.object],
+])
 
-init_type(_b_, "slice", {
-    tp_name: "slice",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `slice(stop)
+init_type(_b_, "slice", [
+    "slice",
+    40,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `slice(stop)
 slice(start, stop[, step])
 
 Create a slice object.  This is used for extended slicing (e.g. a[0:10:2]).`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "staticmethod", {
-    tp_name: "staticmethod",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 24,
-    tp_doc: `Convert a function to be a static method.
+init_type(_b_, "staticmethod", [
+    "staticmethod",
+    32,
+    0,
+    21762,
+    0,
+    _b_.object,
+    24,
+    `Convert a function to be a static method.
 
 A static method does not receive an implicit first argument.
 To declare a static method, use this idiom:
@@ -399,18 +414,18 @@ neither is passed implicitly as the first argument to the method.
 
 Static methods in Python are similar to those found in Java or C++.
 For a more advanced concept, see the classmethod builtin.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "str", {
-    tp_name: "str",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 272635138,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `str(object='') -> str
+init_type(_b_, "str", [
+    "str",
+    64,
+    0,
+    272635138,
+    0,
+    _b_.object,
+    0,
+    `str(object='') -> str
 str(bytes_or_buffer[, encoding[, errors]]) -> str
 
 Create a new string object from the given object. If encoding or
@@ -420,18 +435,18 @@ Otherwise, returns the result of object.__str__() (if defined)
 or repr(object).
 encoding defaults to 'utf-8'.
 errors defaults to 'strict'.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "super", {
-    tp_name: "super",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `super() -> same as super(__class__, <first argument>)
+init_type(_b_, "super", [
+    "super",
+    40,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `super() -> same as super(__class__, <first argument>)
 super(type) -> unbound super object
 super(type, obj) -> bound super object; requires isinstance(obj, type)
 super(type, type2) -> bound super object; requires issubclass(type2, type)
@@ -445,48 +460,48 @@ class C(B):
     def cmeth(cls, arg):
         super().cmeth(arg)
 `,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "tuple", {
-    tp_name: "tuple",
-    tp_basicsize: 32,
-    tp_itersize: 8,
-    tp_flags: 71324962,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Built-in immutable sequence.
+init_type(_b_, "tuple", [
+    "tuple",
+    32,
+    8,
+    71324962,
+    0,
+    _b_.object,
+    0,
+    `Built-in immutable sequence.
 
 If no argument is given, the constructor returns an empty tuple.
 If iterable is specified the tuple is initialized from iterable's items.
 
 If the argument is a tuple, the return value is the same object.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "type", {
-    tp_name: "type",
-    tp_basicsize: 936,
-    tp_itersize: 40,
-    tp_flags: 2155896066,
-    tp_weakrefoffset: 368,
-    tp_base: _b_.object,
-    tp_dictoffset: 264,
-    tp_doc: `type(object) -> the object's type
+init_type(_b_, "type", [
+    "type",
+    936,
+    40,
+    2155896066,
+    368,
+    _b_.object,
+    264,
+    `type(object) -> the object's type
 type(name, bases, dict, **kwds) -> a new type`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type(_b_, "zip", {
-    tp_name: "zip",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `The zip object yields n-length tuples, where n is the number of iterables
+init_type(_b_, "zip", [
+    "zip",
+    48,
+    0,
+    21762,
+    0,
+    _b_.object,
+    0,
+    `The zip object yields n-length tuples, where n is the number of iterables
 passed as positional arguments to zip().  The i-th element in every tuple
 comes from the i-th iterable argument to zip().  This continues until the
 shortest argument is exhausted.
@@ -496,91 +511,93 @@ raise a ValueError.
 
    >>> list(zip('abcdefg', range(3), range(4)))
    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type($B, "EncodingMap", {
-    tp_name: "EncodingMap",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "EncodingMap", [
+    "EncodingMap",
+    64,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "FrameLocalsProxy", {
-    tp_name: "FrameLocalsProxy",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20802,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "FrameLocalsProxy", [
+    "FrameLocalsProxy",
+    24,
+    0,
+    20802,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "InstructionSequence", {
-    tp_name: "InstructionSequence",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `InstructionSequenceType()
+init_type($B, "InstructionSequence", [
+    "InstructionSequence",
+    72,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `InstructionSequenceType()
 --
 
 Create a new InstructionSequence object.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type($B, "NoDefaultType", {
-    tp_name: "NoDefaultType",
-    tp_basicsize: 16,
-    tp_itersize: 0,
-    tp_flags: 4354,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `The type of the NoDefault singleton.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "NoDefaultType", [
+    "NoDefaultType",
+    16,
+    0,
+    4354,
+    0,
+    _b_.object,
+    0,
+    `The type of the NoDefault singleton.`,
+    [_b_.object],
+])
 
-init_type($B, "NoneType", {
-    tp_name: "NoneType",
-    tp_basicsize: 16,
-    tp_itersize: 0,
-    tp_flags: 4354,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `The type of the None singleton.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "NoneType", [
+    "NoneType",
+    16,
+    0,
+    4354,
+    0,
+    _b_.object,
+    0,
+    `The type of the None singleton.`,
+    [_b_.object],
+])
 
-init_type($B, "NotImplementedType", {
-    tp_name: "NotImplementedType",
-    tp_basicsize: 16,
-    tp_itersize: 0,
-    tp_flags: 4354,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `The type of the NotImplemented singleton.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "NotImplementedType", [
+    "NotImplementedType",
+    16,
+    0,
+    4354,
+    0,
+    _b_.object,
+    0,
+    `The type of the NotImplemented singleton.`,
+    [_b_.object],
+])
 
-init_type($B, "PyCapsule", {
-    tp_name: "PyCapsule",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Capsule objects let you wrap a C "void *" pointer in a Python
+init_type($B, "PyCapsule", [
+    "PyCapsule",
+    64,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    `Capsule objects let you wrap a C "void *" pointer in a Python
 object.  They're a way of passing data through the Python interpreter
 without creating your own custom type.
 
@@ -589,336 +606,360 @@ They provide a way for an extension module to export a C interface
 to other extension modules, so that extension modules can use the
 Python import mechanism to link to one another.
 `,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type($B, "_buffer_wrapper", {
-    tp_name: "_buffer_wrapper",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "_buffer_wrapper", [
+    "_buffer_wrapper",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "anext_awaitable", {
-    tp_name: "anext_awaitable",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "anext_awaitable", [
+    "anext_awaitable",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "async_generator", {
-    tp_name: "async_generator",
-    tp_basicsize: 152,
-    tp_itersize: 8,
-    tp_flags: 20866,
-    tp_weakrefoffset: 16,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "async_generator", [
+    "async_generator",
+    152,
+    8,
+    20866,
+    16,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "async_generator_asend", {
-    tp_name: "async_generator_asend",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "async_generator_asend", [
+    "async_generator_asend",
+    40,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "async_generator_athrow", {
-    tp_name: "async_generator_athrow",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "async_generator_athrow", [
+    "async_generator_athrow",
+    40,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "async_generator_wrapped_value", {
-    tp_name: "async_generator_wrapped_value",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "async_generator_wrapped_value", [
+    "async_generator_wrapped_value",
+    24,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "builtin_function_or_method", {
-    tp_name: "builtin_function_or_method",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 22914,
-    tp_weakrefoffset: 40,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "builtin_function_or_method", [
+    "builtin_function_or_method",
+    56,
+    0,
+    22914,
+    40,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "bytearray_iterator", {
-    tp_name: "bytearray_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "bytearray_iterator", [
+    "bytearray_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "bytes_iterator", {
-    tp_name: "bytes_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "bytes_iterator", [
+    "bytes_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "callable_iterator", {
-    tp_name: "callable_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "callable_iterator", [
+    "callable_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "cell", {
-    tp_name: "cell",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Create a new cell object.
+init_type($B, "cell", [
+    "cell",
+    24,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `Create a new cell object.
 
   contents
     the contents of the cell. If not specified, the cell will be empty,
     and 
  further attempts to access its cell_contents attribute will
     raise a ValueError.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type($B, "classmethod_descriptor", {
-    tp_name: "classmethod_descriptor",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "classmethod_descriptor", [
+    "classmethod_descriptor",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "code", {
-    tp_name: "code",
-    tp_basicsize: 208,
-    tp_itersize: 2,
-    tp_flags: 4354,
-    tp_weakrefoffset: 144,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Create a code object.  Not for the faint of heart.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "code", [
+    "code",
+    208,
+    2,
+    4354,
+    144,
+    _b_.object,
+    0,
+    `Create a code object.  Not for the faint of heart.`,
+    [_b_.object],
+])
 
-init_type($B, "coroutine", {
-    tp_name: "coroutine",
-    tp_basicsize: 152,
-    tp_itersize: 8,
-    tp_flags: 20866,
-    tp_weakrefoffset: 16,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "coroutine", [
+    "coroutine",
+    152,
+    8,
+    20866,
+    16,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "coroutine_wrapper", {
-    tp_name: "coroutine_wrapper",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `A wrapper object implementing __await__ for coroutines.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "coroutine_wrapper", [
+    "coroutine_wrapper",
+    24,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    `A wrapper object implementing __await__ for coroutines.`,
+    [_b_.object],
+])
 
-init_type($B, "dict_itemiterator", {
-    tp_name: "dict_itemiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_itemiterator", [
+    "dict_itemiterator",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_items", {
-    tp_name: "dict_items",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_items", [
+    "dict_items",
+    24,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_keyiterator", {
-    tp_name: "dict_keyiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_keyiterator", [
+    "dict_keyiterator",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_keys", {
-    tp_name: "dict_keys",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_keys", [
+    "dict_keys",
+    24,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_reverseitemiterator", {
-    tp_name: "dict_reverseitemiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_reverseitemiterator", [
+    "dict_reverseitemiterator",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_reversekeyiterator", {
-    tp_name: "dict_reversekeyiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_reversekeyiterator", [
+    "dict_reversekeyiterator",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_reversevalueiterator", {
-    tp_name: "dict_reversevalueiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_reversevalueiterator", [
+    "dict_reversevalueiterator",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_valueiterator", {
-    tp_name: "dict_valueiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_valueiterator", [
+    "dict_valueiterator",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "dict_values", {
-    tp_name: "dict_values",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "dict_values", [
+    "dict_values",
+    24,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "ellipsis", {
-    tp_name: "ellipsis",
-    tp_basicsize: 16,
-    tp_itersize: 0,
-    tp_flags: 4354,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `The type of the Ellipsis singleton.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "ellipsis", [
+    "ellipsis",
+    16,
+    0,
+    4354,
+    0,
+    _b_.object,
+    0,
+    `The type of the Ellipsis singleton.`,
+    [_b_.object],
+])
 
-init_type($B, "fieldnameiterator", {
-    tp_name: "fieldnameiterator",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "fieldnameiterator", [
+    "fieldnameiterator",
+    56,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "formatteriterator", {
-    tp_name: "formatteriterator",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "formatteriterator", [
+    "formatteriterator",
+    48,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "frame", {
-    tp_name: "frame",
-    tp_basicsize: 152,
-    tp_itersize: 8,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "frame", [
+    "frame",
+    152,
+    8,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "function", {
-    tp_name: "function",
-    tp_basicsize: 152,
-    tp_itersize: 0,
-    tp_flags: 153858,
-    tp_weakrefoffset: 96,
-    tp_base: _b_.object,
-    tp_dictoffset: 88,
-    tp_doc: `Create a function object.
+init_type($B, "function", [
+    "function",
+    152,
+    0,
+    153858,
+    96,
+    _b_.object,
+    88,
+    `Create a function object.
 
   code
     a code object
@@ -932,1331 +973,1368 @@ init_type($B, "function", {
     a tuple that supplies the bindings for free variables
   kwdefaults
     a dictionary that specifies the default keyword argument values`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type($B, "generator", {
-    tp_name: "generator",
-    tp_basicsize: 152,
-    tp_itersize: 8,
-    tp_flags: 20866,
-    tp_weakrefoffset: 16,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "generator", [
+    "generator",
+    152,
+    8,
+    20866,
+    16,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "generic_alias_iterator", {
-    tp_name: "generic_alias_iterator",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "generic_alias_iterator", [
+    "generic_alias_iterator",
+    24,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "getset_descriptor", {
-    tp_name: "getset_descriptor",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "getset_descriptor", [
+    "getset_descriptor",
+    48,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "hamt", {
-    tp_name: "hamt",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 24,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "hamt", [
+    "hamt",
+    40,
+    0,
+    20738,
+    24,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "hamt_array_node", {
-    tp_name: "hamt_array_node",
-    tp_basicsize: 280,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "hamt_array_node", [
+    "hamt_array_node",
+    280,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "hamt_bitmap_node", {
-    tp_name: "hamt_bitmap_node",
-    tp_basicsize: 32,
-    tp_itersize: 8,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "hamt_bitmap_node", [
+    "hamt_bitmap_node",
+    32,
+    8,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "hamt_collision_node", {
-    tp_name: "hamt_collision_node",
-    tp_basicsize: 32,
-    tp_itersize: 8,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "hamt_collision_node", [
+    "hamt_collision_node",
+    32,
+    8,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "instancemethod", {
-    tp_name: "instancemethod",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Bind a function to a class.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "instancemethod", [
+    "instancemethod",
+    24,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `Bind a function to a class.`,
+    [_b_.object],
+])
 
-init_type($B, "items", {
-    tp_name: "items",
-    tp_basicsize: 168,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "items", [
+    "items",
+    168,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "iterator", {
-    tp_name: "iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "iterator", [
+    "iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "keys", {
-    tp_name: "keys",
-    tp_basicsize: 168,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "keys", [
+    "keys",
+    168,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "line_iterator", {
-    tp_name: "line_iterator",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 5506,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "line_iterator", [
+    "line_iterator",
+    64,
+    0,
+    5506,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "list_iterator", {
-    tp_name: "list_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "list_iterator", [
+    "list_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "list_reverseiterator", {
-    tp_name: "list_reverseiterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "list_reverseiterator", [
+    "list_reverseiterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "longrange_iterator", {
-    tp_name: "longrange_iterator",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "longrange_iterator", [
+    "longrange_iterator",
+    40,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "managedbuffer", {
-    tp_name: "managedbuffer",
-    tp_basicsize: 112,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "managedbuffer", [
+    "managedbuffer",
+    112,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "mappingproxy", {
-    tp_name: "mappingproxy",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20802,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Read-only proxy of a mapping.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "mappingproxy", [
+    "mappingproxy",
+    24,
+    0,
+    20802,
+    0,
+    _b_.object,
+    0,
+    `Read-only proxy of a mapping.`,
+    [_b_.object],
+])
 
-init_type($B, "member_descriptor", {
-    tp_name: "member_descriptor",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "member_descriptor", [
+    "member_descriptor",
+    48,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "memory_iterator", {
-    tp_name: "memory_iterator",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "memory_iterator", [
+    "memory_iterator",
+    48,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "method", {
-    tp_name: "method",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 22786,
-    tp_weakrefoffset: 32,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Create a bound instance method object.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "method", [
+    "method",
+    48,
+    0,
+    22786,
+    32,
+    _b_.object,
+    0,
+    `Create a bound instance method object.`,
+    [_b_.object],
+])
 
-init_type($B, "method_wrapper", {
-    tp_name: "method-wrapper",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "method_wrapper", [
+    "method-wrapper",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "method_descriptor", {
-    tp_name: "method_descriptor",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 153986,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "method_descriptor", [
+    "method_descriptor",
+    56,
+    0,
+    153986,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "module", {
-    tp_name: "module",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 21762,
-    tp_weakrefoffset: 40,
-    tp_base: _b_.object,
-    tp_dictoffset: 16,
-    tp_doc: `Create a module object.
+init_type($B, "module", [
+    "module",
+    56,
+    0,
+    21762,
+    40,
+    _b_.object,
+    16,
+    `Create a module object.
 
 The name must be a string; the optional doc argument can have any type.`,
-    tp_bases: [_b_.object],
-})
+    [_b_.object],
+])
 
-init_type($B, "moduledef", {
-    tp_name: "moduledef",
-    tp_basicsize: 104,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "moduledef", [
+    "moduledef",
+    104,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "odict_iterator", {
-    tp_name: "odict_iterator",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "odict_iterator", [
+    "odict_iterator",
+    64,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "positions_iterator", {
-    tp_name: "positions_iterator",
-    tp_basicsize: 80,
-    tp_itersize: 0,
-    tp_flags: 5506,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "positions_iterator", [
+    "positions_iterator",
+    80,
+    0,
+    5506,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "range_iterator", {
-    tp_name: "range_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "range_iterator", [
+    "range_iterator",
+    32,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "set_iterator", {
-    tp_name: "set_iterator",
-    tp_basicsize: 48,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "set_iterator", [
+    "set_iterator",
+    48,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "stderrprinter", {
-    tp_name: "stderrprinter",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "stderrprinter", [
+    "stderrprinter",
+    24,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "str_ascii_iterator", {
-    tp_name: "str_ascii_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "str_ascii_iterator", [
+    "str_ascii_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "str_iterator", {
-    tp_name: "str_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "str_iterator", [
+    "str_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "symtable_entry", {
-    tp_name: "symtable entry",
-    tp_basicsize: 144,
-    tp_itersize: 0,
-    tp_flags: 4482,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "symtable_entry", [
+    "symtable entry",
+    144,
+    0,
+    4482,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "traceback", {
-    tp_name: "traceback",
-    tp_basicsize: 40,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_doc: `Create a new traceback object.`,
-    tp_bases: [_b_.object],
-})
+init_type($B, "traceback", [
+    "traceback",
+    40,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `Create a new traceback object.`,
+    [_b_.object],
+])
 
-init_type($B, "tuple_iterator", {
-    tp_name: "tuple_iterator",
-    tp_basicsize: 32,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "tuple_iterator", [
+    "tuple_iterator",
+    32,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "uop_executor", {
-    tp_name: "uop_executor",
-    tp_basicsize: 128,
-    tp_itersize: 1,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "uop_executor", [
+    "uop_executor",
+    128,
+    1,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "values", {
-    tp_name: "values",
-    tp_basicsize: 168,
-    tp_itersize: 0,
-    tp_flags: 20866,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "values", [
+    "values",
+    168,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type($B, "wrapper_descriptor", {
-    tp_name: "wrapper_descriptor",
-    tp_basicsize: 56,
-    tp_itersize: 0,
-    tp_flags: 151938,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.object,
-    tp_dictoffset: 0,
-    tp_bases: [_b_.object],
-})
+init_type($B, "wrapper_descriptor", [
+    "wrapper_descriptor",
+    56,
+    0,
+    151938,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
 
-init_type(_b_, "BaseExceptionGroup", {
-    tp_name: "BaseExceptionGroup",
-    tp_basicsize: 88,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.BaseException,
-    tp_dictoffset: 16,
-    tp_doc: `A combination of multiple unrelated exceptions.`,
-    tp_bases: [_b_.BaseException],
-})
+init_type(_b_, "BaseExceptionGroup", [
+    "BaseExceptionGroup",
+    88,
+    0,
+    1073763586,
+    0,
+    _b_.BaseException,
+    16,
+    `A combination of multiple unrelated exceptions.`,
+    [_b_.BaseException],
+])
 
-init_type(_b_, "Exception", {
-    tp_name: "Exception",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.BaseException,
-    tp_dictoffset: 16,
-    tp_doc: `Common base class for all non-exit exceptions.`,
-    tp_bases: [_b_.BaseException],
-})
+init_type(_b_, "Exception", [
+    "Exception",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.BaseException,
+    16,
+    `Common base class for all non-exit exceptions.`,
+    [_b_.BaseException],
+])
 
-init_type(_b_, "GeneratorExit", {
-    tp_name: "GeneratorExit",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.BaseException,
-    tp_dictoffset: 16,
-    tp_doc: `Request that a generator exit.`,
-    tp_bases: [_b_.BaseException],
-})
+init_type(_b_, "GeneratorExit", [
+    "GeneratorExit",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.BaseException,
+    16,
+    `Request that a generator exit.`,
+    [_b_.BaseException],
+])
 
-init_type(_b_, "KeyboardInterrupt", {
-    tp_name: "KeyboardInterrupt",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.BaseException,
-    tp_dictoffset: 16,
-    tp_doc: `Program interrupted by user.`,
-    tp_bases: [_b_.BaseException],
-})
+init_type(_b_, "KeyboardInterrupt", [
+    "KeyboardInterrupt",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.BaseException,
+    16,
+    `Program interrupted by user.`,
+    [_b_.BaseException],
+])
 
-init_type(_b_, "SystemExit", {
-    tp_name: "SystemExit",
-    tp_basicsize: 80,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.BaseException,
-    tp_dictoffset: 16,
-    tp_doc: `Request to exit from the interpreter.`,
-    tp_bases: [_b_.BaseException],
-})
+init_type(_b_, "SystemExit", [
+    "SystemExit",
+    80,
+    0,
+    1073763586,
+    0,
+    _b_.BaseException,
+    16,
+    `Request to exit from the interpreter.`,
+    [_b_.BaseException],
+])
 
-init_type(_b_, "bool", {
-    tp_name: "bool",
-    tp_basicsize: 24,
-    tp_itersize: 4,
-    tp_flags: 20975874,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.int,
-    tp_dictoffset: 0,
-    tp_doc: `Returns True when the argument is true, False otherwise.
+init_type(_b_, "bool", [
+    "bool",
+    24,
+    4,
+    20975874,
+    0,
+    _b_.int,
+    0,
+    `Returns True when the argument is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.`,
-    tp_bases: [_b_.int],
-})
+    [_b_.int],
+])
 
-init_type($B, "UnraisableHookArgs", {
-    tp_name: "UnraisableHookArgs",
-    tp_basicsize: 32,
-    tp_itersize: 8,
-    tp_flags: 71323938,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.tuple,
-    tp_dictoffset: 0,
-    tp_doc: `UnraisableHookArgs
+init_type($B, "UnraisableHookArgs", [
+    "UnraisableHookArgs",
+    32,
+    8,
+    71323938,
+    0,
+    _b_.tuple,
+    0,
+    `UnraisableHookArgs
 
 Type used to pass arguments to sys.unraisablehook.`,
-    tp_bases: [_b_.tuple],
-})
+    [_b_.tuple],
+])
 
-init_type($B, "asyncgen_hooks", {
-    tp_name: "asyncgen_hooks",
-    tp_basicsize: 32,
-    tp_itersize: 8,
-    tp_flags: 71323938,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.tuple,
-    tp_dictoffset: 0,
-    tp_doc: `asyncgen_hooks
+init_type($B, "asyncgen_hooks", [
+    "asyncgen_hooks",
+    32,
+    8,
+    71323938,
+    0,
+    _b_.tuple,
+    0,
+    `asyncgen_hooks
 
 A named tuple providing information about asynchronous
 generators hooks.  The attributes are read only.`,
-    tp_bases: [_b_.tuple],
-})
+    [_b_.tuple],
+])
 
-init_type($B, "builtin_method", {
-    tp_name: "builtin_method",
-    tp_basicsize: 64,
-    tp_itersize: 0,
-    tp_flags: 22786,
-    tp_weakrefoffset: 40,
-    tp_base: _b_.builtin_function_or_method,
-    tp_dictoffset: 0,
-    tp_bases: [$B.builtin_function_or_method],
-})
+init_type($B, "builtin_method", [
+    "builtin_method",
+    64,
+    0,
+    22786,
+    40,
+    _b_.builtin_function_or_method,
+    0,
+    $B.NULL,
+    [$B.builtin_function_or_method],
+])
 
-init_type($B, "odict_items", {
-    tp_name: "odict_items",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.dict_items,
-    tp_dictoffset: 0,
-    tp_bases: [$B.dict_items],
-})
+init_type($B, "odict_items", [
+    "odict_items",
+    24,
+    0,
+    20738,
+    0,
+    _b_.dict_items,
+    0,
+    $B.NULL,
+    [$B.dict_items],
+])
 
-init_type($B, "odict_keys", {
-    tp_name: "odict_keys",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.dict_keys,
-    tp_dictoffset: 0,
-    tp_bases: [$B.dict_keys],
-})
+init_type($B, "odict_keys", [
+    "odict_keys",
+    24,
+    0,
+    20738,
+    0,
+    _b_.dict_keys,
+    0,
+    $B.NULL,
+    [$B.dict_keys],
+])
 
-init_type($B, "odict_values", {
-    tp_name: "odict_values",
-    tp_basicsize: 24,
-    tp_itersize: 0,
-    tp_flags: 20738,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.dict_values,
-    tp_dictoffset: 0,
-    tp_bases: [$B.dict_values],
-})
+init_type($B, "odict_values", [
+    "odict_values",
+    24,
+    0,
+    20738,
+    0,
+    _b_.dict_values,
+    0,
+    $B.NULL,
+    [$B.dict_values],
+])
 
-init_type(_b_, "ArithmeticError", {
-    tp_name: "ArithmeticError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for arithmetic errors.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "ArithmeticError", [
+    "ArithmeticError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Base class for arithmetic errors.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "AssertionError", {
-    tp_name: "AssertionError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Assertion failed.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "AssertionError", [
+    "AssertionError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Assertion failed.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "AttributeError", {
-    tp_name: "AttributeError",
-    tp_basicsize: 88,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Attribute not found.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "AttributeError", [
+    "AttributeError",
+    88,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Attribute not found.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "BufferError", {
-    tp_name: "BufferError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Buffer error.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "BufferError", [
+    "BufferError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Buffer error.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "EOFError", {
-    tp_name: "EOFError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Read beyond end of file.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "EOFError", [
+    "EOFError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Read beyond end of file.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "ExceptionGroup", {
-    tp_name: "ExceptionGroup",
-    tp_basicsize: 88,
-    tp_itersize: 0,
-    tp_flags: 1073763848,
-    tp_weakrefoffset: -32,
-    tp_base: _b_.BaseExceptionGroup,
-    tp_dictoffset: 16,
-    tp_bases: [_b_.BaseExceptionGroup, _b_.Exception],
-})
+init_type(_b_, "ExceptionGroup", [
+    "ExceptionGroup",
+    88,
+    0,
+    1073763848,
+    -32,
+    _b_.BaseExceptionGroup,
+    16,
+    $B.NULL,
+    [_b_.BaseExceptionGroup, _b_.Exception],
+])
 
-init_type(_b_, "ImportError", {
-    tp_name: "ImportError",
-    tp_basicsize: 104,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Import can't find module, or can't find name in module.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "ImportError", [
+    "ImportError",
+    104,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Import can't find module, or can't find name in module.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "LookupError", {
-    tp_name: "LookupError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for lookup errors.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "LookupError", [
+    "LookupError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Base class for lookup errors.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "MemoryError", {
-    tp_name: "MemoryError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Out of memory.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "MemoryError", [
+    "MemoryError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Out of memory.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "NameError", {
-    tp_name: "NameError",
-    tp_basicsize: 80,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Name not found globally.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "NameError", [
+    "NameError",
+    80,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Name not found globally.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "OSError", {
-    tp_name: "OSError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for I/O related errors.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "OSError", [
+    "OSError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Base class for I/O related errors.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "ReferenceError", {
-    tp_name: "ReferenceError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Weak ref proxy used after referent went away.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "ReferenceError", [
+    "ReferenceError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Weak ref proxy used after referent went away.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "RuntimeError", {
-    tp_name: "RuntimeError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Unspecified run-time error.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "RuntimeError", [
+    "RuntimeError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Unspecified run-time error.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "StopAsyncIteration", {
-    tp_name: "StopAsyncIteration",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Signal the end from iterator.__anext__().`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "StopAsyncIteration", [
+    "StopAsyncIteration",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Signal the end from iterator.__anext__().`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "StopIteration", {
-    tp_name: "StopIteration",
-    tp_basicsize: 80,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Signal the end from iterator.__next__().`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "StopIteration", [
+    "StopIteration",
+    80,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Signal the end from iterator.__next__().`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "SyntaxError", {
-    tp_name: "SyntaxError",
-    tp_basicsize: 144,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Invalid syntax.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "SyntaxError", [
+    "SyntaxError",
+    144,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Invalid syntax.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "SystemError", {
-    tp_name: "SystemError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Internal error in the Python interpreter.
+init_type(_b_, "SystemError", [
+    "SystemError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Internal error in the Python interpreter.
 
 Please report this to the Python maintainer, along with the traceback,
 the Python version, and the hardware/OS platform and version.`,
-    tp_bases: [_b_.Exception],
-})
+    [_b_.Exception],
+])
 
-init_type(_b_, "TypeError", {
-    tp_name: "TypeError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Inappropriate argument type.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "TypeError", [
+    "TypeError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Inappropriate argument type.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "ValueError", {
-    tp_name: "ValueError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Inappropriate argument value (of correct type).`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "ValueError", [
+    "ValueError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Inappropriate argument value (of correct type).`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "Warning", {
-    tp_name: "Warning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Exception,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warning categories.`,
-    tp_bases: [_b_.Exception],
-})
+init_type(_b_, "Warning", [
+    "Warning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Exception,
+    16,
+    `Base class for warning categories.`,
+    [_b_.Exception],
+])
 
-init_type(_b_, "BlockingIOError", {
-    tp_name: "BlockingIOError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `I/O operation would block.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "BlockingIOError", [
+    "BlockingIOError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `I/O operation would block.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "BytesWarning", {
-    tp_name: "BytesWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about bytes and buffer related problems, mostly
+init_type(_b_, "BytesWarning", [
+    "BytesWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about bytes and buffer related problems, mostly
 related to conversion from str or comparing to str.`,
-    tp_bases: [_b_.Warning],
-})
+    [_b_.Warning],
+])
 
-init_type(_b_, "ChildProcessError", {
-    tp_name: "ChildProcessError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Child process error.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "ChildProcessError", [
+    "ChildProcessError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Child process error.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "ConnectionError", {
-    tp_name: "ConnectionError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Connection error.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "ConnectionError", [
+    "ConnectionError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Connection error.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "DeprecationWarning", {
-    tp_name: "DeprecationWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about deprecated features.`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "DeprecationWarning", [
+    "DeprecationWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about deprecated features.`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "EncodingWarning", {
-    tp_name: "EncodingWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about encodings.`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "EncodingWarning", [
+    "EncodingWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about encodings.`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "FileExistsError", {
-    tp_name: "FileExistsError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `File already exists.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "FileExistsError", [
+    "FileExistsError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `File already exists.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "FileNotFoundError", {
-    tp_name: "FileNotFoundError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `File not found.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "FileNotFoundError", [
+    "FileNotFoundError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `File not found.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "FloatingPointError", {
-    tp_name: "FloatingPointError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ArithmeticError,
-    tp_dictoffset: 16,
-    tp_doc: `Floating-point operation failed.`,
-    tp_bases: [_b_.ArithmeticError],
-})
+init_type(_b_, "FloatingPointError", [
+    "FloatingPointError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.ArithmeticError,
+    16,
+    `Floating-point operation failed.`,
+    [_b_.ArithmeticError],
+])
 
-init_type(_b_, "FutureWarning", {
-    tp_name: "FutureWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about constructs that will change semantically
+init_type(_b_, "FutureWarning", [
+    "FutureWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about constructs that will change semantically
 in the future.`,
-    tp_bases: [_b_.Warning],
-})
+    [_b_.Warning],
+])
 
-init_type(_b_, "ImportWarning", {
-    tp_name: "ImportWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about probable mistakes in module imports`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "ImportWarning", [
+    "ImportWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about probable mistakes in module imports`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "IndentationError", {
-    tp_name: "IndentationError",
-    tp_basicsize: 144,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.SyntaxError,
-    tp_dictoffset: 16,
-    tp_doc: `Improper indentation.`,
-    tp_bases: [_b_.SyntaxError],
-})
+init_type(_b_, "IndentationError", [
+    "IndentationError",
+    144,
+    0,
+    1073763586,
+    0,
+    _b_.SyntaxError,
+    16,
+    `Improper indentation.`,
+    [_b_.SyntaxError],
+])
 
-init_type(_b_, "IndexError", {
-    tp_name: "IndexError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.LookupError,
-    tp_dictoffset: 16,
-    tp_doc: `Sequence index out of range.`,
-    tp_bases: [_b_.LookupError],
-})
+init_type(_b_, "IndexError", [
+    "IndexError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.LookupError,
+    16,
+    `Sequence index out of range.`,
+    [_b_.LookupError],
+])
 
-init_type(_b_, "InterruptedError", {
-    tp_name: "InterruptedError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Interrupted by signal.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "InterruptedError", [
+    "InterruptedError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Interrupted by signal.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "IsADirectoryError", {
-    tp_name: "IsADirectoryError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Operation doesn't work on directories.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "IsADirectoryError", [
+    "IsADirectoryError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Operation doesn't work on directories.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "KeyError", {
-    tp_name: "KeyError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.LookupError,
-    tp_dictoffset: 16,
-    tp_doc: `Mapping key not found.`,
-    tp_bases: [_b_.LookupError],
-})
+init_type(_b_, "KeyError", [
+    "KeyError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.LookupError,
+    16,
+    `Mapping key not found.`,
+    [_b_.LookupError],
+])
 
-init_type(_b_, "ModuleNotFoundError", {
-    tp_name: "ModuleNotFoundError",
-    tp_basicsize: 104,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ImportError,
-    tp_dictoffset: 16,
-    tp_doc: `Module not found.`,
-    tp_bases: [_b_.ImportError],
-})
+init_type(_b_, "ModuleNotFoundError", [
+    "ModuleNotFoundError",
+    104,
+    0,
+    1073763586,
+    0,
+    _b_.ImportError,
+    16,
+    `Module not found.`,
+    [_b_.ImportError],
+])
 
-init_type(_b_, "NotADirectoryError", {
-    tp_name: "NotADirectoryError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Operation only works on directories.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "NotADirectoryError", [
+    "NotADirectoryError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Operation only works on directories.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "NotImplementedError", {
-    tp_name: "NotImplementedError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.RuntimeError,
-    tp_dictoffset: 16,
-    tp_doc: `Method or function hasn't been implemented yet.`,
-    tp_bases: [_b_.RuntimeError],
-})
+init_type(_b_, "NotImplementedError", [
+    "NotImplementedError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.RuntimeError,
+    16,
+    `Method or function hasn't been implemented yet.`,
+    [_b_.RuntimeError],
+])
 
-init_type(_b_, "OverflowError", {
-    tp_name: "OverflowError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ArithmeticError,
-    tp_dictoffset: 16,
-    tp_doc: `Result too large to be represented.`,
-    tp_bases: [_b_.ArithmeticError],
-})
+init_type(_b_, "OverflowError", [
+    "OverflowError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.ArithmeticError,
+    16,
+    `Result too large to be represented.`,
+    [_b_.ArithmeticError],
+])
 
-init_type(_b_, "PendingDeprecationWarning", {
-    tp_name: "PendingDeprecationWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about features which will be deprecated
+init_type(_b_, "PendingDeprecationWarning", [
+    "PendingDeprecationWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about features which will be deprecated
 in the future.`,
-    tp_bases: [_b_.Warning],
-})
+    [_b_.Warning],
+])
 
-init_type(_b_, "PermissionError", {
-    tp_name: "PermissionError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Not enough permissions.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "PermissionError", [
+    "PermissionError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Not enough permissions.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "ProcessLookupError", {
-    tp_name: "ProcessLookupError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Process not found.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "ProcessLookupError", [
+    "ProcessLookupError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Process not found.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "PythonFinalizationError", {
-    tp_name: "PythonFinalizationError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.RuntimeError,
-    tp_dictoffset: 16,
-    tp_doc: `Operation blocked during Python finalization.`,
-    tp_bases: [_b_.RuntimeError],
-})
+init_type(_b_, "PythonFinalizationError", [
+    "PythonFinalizationError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.RuntimeError,
+    16,
+    `Operation blocked during Python finalization.`,
+    [_b_.RuntimeError],
+])
 
-init_type(_b_, "RecursionError", {
-    tp_name: "RecursionError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.RuntimeError,
-    tp_dictoffset: 16,
-    tp_doc: `Recursion limit exceeded.`,
-    tp_bases: [_b_.RuntimeError],
-})
+init_type(_b_, "RecursionError", [
+    "RecursionError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.RuntimeError,
+    16,
+    `Recursion limit exceeded.`,
+    [_b_.RuntimeError],
+])
 
-init_type(_b_, "ResourceWarning", {
-    tp_name: "ResourceWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about resource usage.`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "ResourceWarning", [
+    "ResourceWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about resource usage.`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "RuntimeWarning", {
-    tp_name: "RuntimeWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about dubious runtime behavior.`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "RuntimeWarning", [
+    "RuntimeWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about dubious runtime behavior.`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "SyntaxWarning", {
-    tp_name: "SyntaxWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about dubious syntax.`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "SyntaxWarning", [
+    "SyntaxWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about dubious syntax.`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "TimeoutError", {
-    tp_name: "TimeoutError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.OSError,
-    tp_dictoffset: 16,
-    tp_doc: `Timeout expired.`,
-    tp_bases: [_b_.OSError],
-})
+init_type(_b_, "TimeoutError", [
+    "TimeoutError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.OSError,
+    16,
+    `Timeout expired.`,
+    [_b_.OSError],
+])
 
-init_type(_b_, "UnboundLocalError", {
-    tp_name: "UnboundLocalError",
-    tp_basicsize: 80,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.NameError,
-    tp_dictoffset: 16,
-    tp_doc: `Local name referenced but not bound to a value.`,
-    tp_bases: [_b_.NameError],
-})
+init_type(_b_, "UnboundLocalError", [
+    "UnboundLocalError",
+    80,
+    0,
+    1073763586,
+    0,
+    _b_.NameError,
+    16,
+    `Local name referenced but not bound to a value.`,
+    [_b_.NameError],
+])
 
-init_type(_b_, "UnicodeError", {
-    tp_name: "UnicodeError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ValueError,
-    tp_dictoffset: 16,
-    tp_doc: `Unicode related error.`,
-    tp_bases: [_b_.ValueError],
-})
+init_type(_b_, "UnicodeError", [
+    "UnicodeError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.ValueError,
+    16,
+    `Unicode related error.`,
+    [_b_.ValueError],
+])
 
-init_type(_b_, "UnicodeWarning", {
-    tp_name: "UnicodeWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings about Unicode related problems, mostly
+init_type(_b_, "UnicodeWarning", [
+    "UnicodeWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings about Unicode related problems, mostly
 related to conversion problems.`,
-    tp_bases: [_b_.Warning],
-})
+    [_b_.Warning],
+])
 
-init_type(_b_, "UserWarning", {
-    tp_name: "UserWarning",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.Warning,
-    tp_dictoffset: 16,
-    tp_doc: `Base class for warnings generated by user code.`,
-    tp_bases: [_b_.Warning],
-})
+init_type(_b_, "UserWarning", [
+    "UserWarning",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.Warning,
+    16,
+    `Base class for warnings generated by user code.`,
+    [_b_.Warning],
+])
 
-init_type(_b_, "ZeroDivisionError", {
-    tp_name: "ZeroDivisionError",
-    tp_basicsize: 72,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ArithmeticError,
-    tp_dictoffset: 16,
-    tp_doc: `Second argument to a division or modulo operation was zero.`,
-    tp_bases: [_b_.ArithmeticError],
-})
+init_type(_b_, "ZeroDivisionError", [
+    "ZeroDivisionError",
+    72,
+    0,
+    1073763586,
+    0,
+    _b_.ArithmeticError,
+    16,
+    `Second argument to a division or modulo operation was zero.`,
+    [_b_.ArithmeticError],
+])
 
-init_type(_b_, "_IncompleteInputError", {
-    tp_name: "_IncompleteInputError",
-    tp_basicsize: 144,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.SyntaxError,
-    tp_dictoffset: 16,
-    tp_doc: `incomplete input.`,
-    tp_bases: [_b_.SyntaxError],
-})
+init_type(_b_, "_IncompleteInputError", [
+    "_IncompleteInputError",
+    144,
+    0,
+    1073763586,
+    0,
+    _b_.SyntaxError,
+    16,
+    `incomplete input.`,
+    [_b_.SyntaxError],
+])
 
-init_type(_b_, "BrokenPipeError", {
-    tp_name: "BrokenPipeError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ConnectionError,
-    tp_dictoffset: 16,
-    tp_doc: `Broken pipe.`,
-    tp_bases: [_b_.ConnectionError],
-})
+init_type(_b_, "BrokenPipeError", [
+    "BrokenPipeError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.ConnectionError,
+    16,
+    `Broken pipe.`,
+    [_b_.ConnectionError],
+])
 
-init_type(_b_, "ConnectionAbortedError", {
-    tp_name: "ConnectionAbortedError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ConnectionError,
-    tp_dictoffset: 16,
-    tp_doc: `Connection aborted.`,
-    tp_bases: [_b_.ConnectionError],
-})
+init_type(_b_, "ConnectionAbortedError", [
+    "ConnectionAbortedError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.ConnectionError,
+    16,
+    `Connection aborted.`,
+    [_b_.ConnectionError],
+])
 
-init_type(_b_, "ConnectionRefusedError", {
-    tp_name: "ConnectionRefusedError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ConnectionError,
-    tp_dictoffset: 16,
-    tp_doc: `Connection refused.`,
-    tp_bases: [_b_.ConnectionError],
-})
+init_type(_b_, "ConnectionRefusedError", [
+    "ConnectionRefusedError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.ConnectionError,
+    16,
+    `Connection refused.`,
+    [_b_.ConnectionError],
+])
 
-init_type(_b_, "ConnectionResetError", {
-    tp_name: "ConnectionResetError",
-    tp_basicsize: 120,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.ConnectionError,
-    tp_dictoffset: 16,
-    tp_doc: `Connection reset.`,
-    tp_bases: [_b_.ConnectionError],
-})
+init_type(_b_, "ConnectionResetError", [
+    "ConnectionResetError",
+    120,
+    0,
+    1073763586,
+    0,
+    _b_.ConnectionError,
+    16,
+    `Connection reset.`,
+    [_b_.ConnectionError],
+])
 
-init_type(_b_, "TabError", {
-    tp_name: "TabError",
-    tp_basicsize: 144,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.IndentationError,
-    tp_dictoffset: 16,
-    tp_doc: `Improper mixture of spaces and tabs.`,
-    tp_bases: [_b_.IndentationError],
-})
+init_type(_b_, "TabError", [
+    "TabError",
+    144,
+    0,
+    1073763586,
+    0,
+    _b_.IndentationError,
+    16,
+    `Improper mixture of spaces and tabs.`,
+    [_b_.IndentationError],
+])
 
-init_type(_b_, "UnicodeDecodeError", {
-    tp_name: "UnicodeDecodeError",
-    tp_basicsize: 112,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.UnicodeError,
-    tp_dictoffset: 16,
-    tp_doc: `Unicode decoding error.`,
-    tp_bases: [_b_.UnicodeError],
-})
+init_type(_b_, "UnicodeDecodeError", [
+    "UnicodeDecodeError",
+    112,
+    0,
+    1073763586,
+    0,
+    _b_.UnicodeError,
+    16,
+    `Unicode decoding error.`,
+    [_b_.UnicodeError],
+])
 
-init_type(_b_, "UnicodeEncodeError", {
-    tp_name: "UnicodeEncodeError",
-    tp_basicsize: 112,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.UnicodeError,
-    tp_dictoffset: 16,
-    tp_doc: `Unicode encoding error.`,
-    tp_bases: [_b_.UnicodeError],
-})
+init_type(_b_, "UnicodeEncodeError", [
+    "UnicodeEncodeError",
+    112,
+    0,
+    1073763586,
+    0,
+    _b_.UnicodeError,
+    16,
+    `Unicode encoding error.`,
+    [_b_.UnicodeError],
+])
 
-init_type(_b_, "UnicodeTranslateError", {
-    tp_name: "UnicodeTranslateError",
-    tp_basicsize: 112,
-    tp_itersize: 0,
-    tp_flags: 1073763586,
-    tp_weakrefoffset: 0,
-    tp_base: _b_.UnicodeError,
-    tp_dictoffset: 16,
-    tp_doc: `Unicode translation error.`,
-    tp_bases: [_b_.UnicodeError],
-})
+init_type(_b_, "UnicodeTranslateError", [
+    "UnicodeTranslateError",
+    112,
+    0,
+    1073763586,
+    0,
+    _b_.UnicodeError,
+    16,
+    `Unicode translation error.`,
+    [_b_.UnicodeError],
+])
 
 
 
