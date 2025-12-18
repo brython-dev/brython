@@ -2691,6 +2691,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var annotations = postponed ? anns_strings : 'false'
 
     // Set admin infos
+    js += prefix + `${name2}.ob_type = $B.function\n`
     js += prefix + `${name2}.$function_infos = [` +
         `'${gname}', ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +

@@ -44,7 +44,6 @@ _b_.abs = function(obj){
     check_nb_args_no_kw('abs', 1, arguments)
 
     var klass = $B.get_class(obj)
-    console.log('abs', obj, klass)
     try{
         var method = $B.$getattr(klass, "__abs__")
     }catch(err){
@@ -1116,13 +1115,14 @@ function standard_getattribute(obj, attr){
 
 $B.object_getattribute = function(obj, attr){
     var klass = $B.get_class(obj)
-    var test = attr == 'Date'
+    var test = false // attr == 'new'
     var getattribute = $B.search_in_mro(klass, '__getattribute__', $B.NULL)
     if(getattribute === $B.NULL){
         $B.RAISE(_b_.TypeError, 'no __getattribute__')
     }
     if(test){
-        console.log(obj, attr, getattribute)
+        console.log(obj, attr, 'klass', klass)
+        console.log(getattribute)
     }
     try{
         return getattribute(obj, attr)
@@ -1167,7 +1167,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = $B.get_class(obj)
 
-    var $test = attr == "Date" // && obj.__name__ === "FlagBoundary"
+    var $test = false // attr == "Date" // && obj.__name__ === "FlagBoundary"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),

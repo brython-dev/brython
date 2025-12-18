@@ -179,7 +179,10 @@ $B.finalize_type = function(cls){
         if(cls.tp_members){
             for(var descr of cls.tp_members){
                 var member = cls.tp_funcs[descr]
-                cls.dict[descr] = $B.member_descriptor.$factory(cls, descr, member)
+                cls.dict[descr] = {
+                    ob_type: $B.member_descriptor,
+                    d_member: member
+                }
             }
         }
         if(cls.classmethods){
@@ -204,8 +207,10 @@ $B.finalize_type = function(cls){
     }
     if(cls.tp_methods){
         for(var method of cls.tp_methods){
-            var [name, get] = method
-            cls.dict[name] = $B.method_descriptor.$factory(cls, name, get)
+            cls.dict[name] = {
+                ob_type: $B.method_descriptor,
+                d_member: method
+            }
         }
     }
     for(var slot in $B.wrapper_methods){

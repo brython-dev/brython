@@ -3153,7 +3153,7 @@ Interpolation.tp_repr = function(self){
 
 $B.set_func_names(Interpolation, 'builtins')
 
-var Template = $B.make_builtin_class('Template')
+var Template = $B.Template = $B.make_builtin_class('Template')
 
 Template.$factory = function(){
     // create a Template string (PEP 750)
@@ -3208,22 +3208,20 @@ Template.tp_iternext = function(self){
     }
 }
 
-Template.values = _b_.property.$factory(
-    function(self){
-        var values = []
-        for(var itp of self.interpolations){
-            values.push(itp.value)
-        }
-        return $B.fast_tuple(values)
+var Template_funcs = $B.Template.tp_funcs = {}
+
+Template_funcs.values_get = function(self){
+    var values = []
+    for(var itp of self.interpolations){
+        values.push(itp.value)
     }
-)
+    return $B.fast_tuple(values)
+}
 
 $B.set_func_names(Template, 'builtins')
 
-$B.Template = function(){
-    return Template.$factory(...arguments)
-}
 
+Template.tp_getset = ["values"]
 
 })(__BRYTHON__);
 

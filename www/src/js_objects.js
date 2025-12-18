@@ -611,7 +611,7 @@ function jsclass2pyclass(js_class){
 }
 
 $B.JSObj.tp_getattro = function(_self, attr){
-    var test = false // attr == "setFilter"
+    var test = false // attr == "new"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -647,7 +647,6 @@ $B.JSObj.tp_getattro = function(_self, attr){
                 writable: true
             }
         )
-
         return new_func
     }
     var js_attr = _self[attr]

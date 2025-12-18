@@ -418,7 +418,7 @@ $B.getset_descriptor.tp_descr_get = function(self, obj){
     if(obj === _b_.None){
         return self
     }
-    if(! $B.get_mro(obj.ob_type).includes(self.cls)){
+    if(! $B.get_mro($B.get_class(obj)).includes(self.cls)){
         $B.RAISE(_b_.TypeError, `descriptor '${self.attr}' for ` +
             `'${$B.get_name(self.cls)}' objects doesn't apply to a ` +
             `'${$B.class_name(obj)}' object`)
@@ -1543,6 +1543,7 @@ method_wrapper.tp_repr = function(self){
 // Used for class members, defined in __slots__
 var member_descriptor = $B.member_descriptor
 
+/*
 member_descriptor.$factory = function(attr, cls){
     return{
         ob_type: member_descriptor,
@@ -1550,42 +1551,69 @@ member_descriptor.$factory = function(attr, cls){
         attr: attr
     }
 }
+*/
 
-member_descriptor.__delete__ = function(self, kls){
-    if(kls.$slot_values === undefined ||
-            ! kls.$slot_values.hasOwnProperty(self.attr)){
-        $B.RAISE_ATTRIBUTE_ERROR('cannot delete', self, self.attr)
+/* member_descriptor start */
+$B.member_descriptor.tp_descr_set = function(self, kls, value){
+    if(value === $B.NULL){
+            if(kls.$slot_values === undefined ||
+                ! kls.$slot_values.hasOwnProperty(self.attr)){
+            $B.RAISE_ATTRIBUTE_ERROR('cannot delete', self, self.attr)
+        }
+        kls.$slot_values.delete(self.attr)
+        return
     }
-    kls.$slot_values.delete(self.attr)
-}
-
-member_descriptor.__get__ = function(self, kls){
-    console.log('member descr get', self, kls)
-    if(kls === _b_.None){
-        return self
-    }
-    console.log('call self.attr', self.attr)
-    var res = self.attr(kls)
-    console.log('res', res)
-    return res
-    if(kls.$slot_values === undefined ||
-            ! kls.$slot_values.has(self.attr)){
-        throw $B.attr_error(self.attr, kls)
-    }
-    return kls.$slot_values.get(self.attr)
-}
-
-member_descriptor.__set__ = function(self, kls, value){
     if(kls.$slot_values === undefined){
         kls.$slot_values = new Map()
     }
     kls.$slot_values.set(self.attr, value)
 }
 
-member_descriptor.tp_repr = function(self){
+$B.member_descriptor.tp_name = function(self){
+    return $B.get_name(self.cls)
+}
+
+$B.member_descriptor.tp_repr = function(self){
     return "<member '" + self.attr + "' of '" + self.cls.__name__ +
         "' objects>"
 }
+
+$B.member_descriptor.tp_descr_get = function(self, obj, kls){
+    if(obj === _b_.None){
+        return self
+    }
+    return self.d_member
+}
+
+var member_descriptor_funcs = $B.member_descriptor.tp_funcs = {}
+
+member_descriptor_funcs.__name__ = function(self){
+
+}
+
+member_descriptor_funcs.__objclass__ = function(self){
+
+}
+
+member_descriptor_funcs.__qualname___get = function(self){
+
+}
+
+member_descriptor_funcs.__qualname___set = function(self){
+
+}
+
+member_descriptor_funcs.__reduce__ = function(self){
+
+}
+
+$B.member_descriptor.tp_methods = ["__reduce__"]
+
+$B.member_descriptor.tp_members = ["__objclass__", "__name__"]
+
+$B.member_descriptor.tp_getset = ["__qualname__"]
+
+/* member_descriptor end */
 
 $B.set_func_names(member_descriptor, "builtins")
 
@@ -1921,9 +1949,11 @@ $B.UnionType.$factory = function(items){
     }
 }
 
-$B.UnionType.__args__ = _b_.property.$factory(
-    self => $B.fast_tuple(self.items)
-)
+var UnionType_funcs = $B.UnionType.tp_funcs = {}
+
+UnionType_funcs.__args__ = function(self){
+    return $B.fast_tuple(self.items)
+}
 
 $B.UnionType.__class_getitem__ = function(cls, items){
     if($B.$isinstance(items, _b_.tuple)){
@@ -1948,9 +1978,9 @@ $B.UnionType.__or__ = function(self, other){
     return $B.UnionType.$factory(items)
 }
 
-$B.UnionType.__parameters__ = _b_.property.$factory(
-    () => $B.fast_tuple([])
-)
+UnionType_funcs.__parameters___get = function(self){
+    return $B.fast_tuple([]) // XXX
+}
 
 $B.UnionType.tp_repr = function(self){
     var t = []
@@ -1968,7 +1998,12 @@ $B.UnionType.tp_repr = function(self){
     return t.join(' | ')
 }
 
+$B.UnionType.tp_members = ['__args__']
+
+$B.UnionType.tp_getset = ['__parameters__']
+
 $B.set_func_names($B.UnionType, "types")
+
 
 $B.make_annotate_func = function(dict, annotations, class_frame){
     if(annotations === undefined){

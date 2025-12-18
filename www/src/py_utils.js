@@ -767,10 +767,13 @@ $B.get_class = function(obj){
             case "boolean":
                 return _b_.bool
             case "function":
+                /*
                 if(! obj.$js_func){
                     // not a Javascript function or constructor
                     return $B.function
                 }
+                */
+                break
             case "object":
                 if(Array.isArray(obj)){
                     return $B.js_array
@@ -1483,6 +1486,10 @@ $B.$call = function(callable, inum){
 }
 
 $B.$call1 = function(callable){
+    var test = false // callable.tp_name == 'NameError'
+    if(test){
+        console.log('call', callable)
+    }
     var klass = $B.get_class(callable)
     if(klass === $B.method){
         return callable
@@ -1529,8 +1536,13 @@ $B.$call1 = function(callable){
         callable = getter(callable, $B.get_class(callable))
     }
     */
+    if(test){
+        console.log('try __call__')
+        console.log($B.$getattr(callable, "__call__"))
+    }
     try{
-        return $B.$getattr(callable, "__call__")
+        var call = $B.$getattr(callable, "__call__")
+        return call.apply(null, arguments)
     }catch(err){
         console.log('not callable', callable)
         console.log(Error().stack)

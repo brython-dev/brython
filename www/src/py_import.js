@@ -301,8 +301,6 @@ function run_js(module_contents, path, _module){
             modobj[attr].$in_js_module = true
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
                 modobj[attr].__module__ === undefined){
-            console.log('set module to', attr, modobj[attr])
-            console.log($B.$isinstance(127, _b_.type))
             modobj[attr].__module__ = _module.__name__
         }
     }

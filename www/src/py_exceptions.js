@@ -149,7 +149,7 @@ var make_tb = $B.make_tb = function(frames_list){
     var _frame = frames_list.pop()
     var res = {
         ob_type: traceback,
-        tb_frame: frame.$factory(_frame),
+        tb_frame: _frame,
         tb_lineno: _frame.$lineno,
         tb_lasti: _frame.inum ?? -1,
         tb_next: make_tb(frames_list)
@@ -167,53 +167,25 @@ $B.set_func_names(traceback, "builtins")
 
 // class of frame objects
 var frame = $B.frame
-frame.$factory = function(frame_list){
-    frame_list.ob_type = frame
-    return frame_list
-}
 
-frame.__bool__ = function(){
-    return true
-}
-
-frame.__delattr__ = function(_self, attr){
-    if(attr == "f_trace"){
-        _self.$f_trace = _b_.None
-    }
-}
-
-frame.__dir__ = function(){
-    return _b_.object.__dir__(frame).concat(['clear',
-        'f_back', 'f_builtins', 'f_code', 'f_globals', 'f_lasti', 'f_lineno',
-        'f_locals', 'f_trace', 'f_trace_lines', 'f_trace_opcodes'])
-}
-
-frame.__getattr__ = function(_self, attr){
-    // Used for f_back to avoid computing it when the frame object
-    // is initialised
-    if(attr == "clear"){
-        return function(){
-            // XXX fix me
-        }
-    }
-    throw $B.attr_error(attr, _self)
-}
-
-frame.__setattr__ = function(_self, attr, value){
-    if(attr == "f_trace"){
-        // used in trace functions, as defined by sys.settrace()
-        _self.$f_trace = value
-    }
-}
-
-frame.tp_repr = function(_self){
+/* frame */
+$B.frame.tp_repr = function(self){
     return '<frame object, file ' + _self.__file__ +
         ', line ' + _self.$lineno + ', code ' +
         frame.f_code.__get__(_self).co_name + '>'
 }
 
+var frame_funcs = $B.frame.tp_funcs = {}
 
-function frame_back_get(self){
+frame_funcs.__sizeof__ = function(self){
+
+}
+
+frame_funcs.clear = function(self){
+
+}
+
+frame_funcs.f_back_get = function(self){
     // search self in $B.frame_obj
     var frame_obj = $B.frame_obj
     while(frame_obj !== null){
@@ -228,45 +200,15 @@ function frame_back_get(self){
     return _b_.None
 }
 
-function frame_locals_get(self){
-    // If locals and globals are the same, f_locals and f_globals
-    // are the same object
-    if(self.f_locals){
-        return self.f_locals
-    }else if(self.f_globals && self[1] == self[3]){
-        return self.f_locals = self.f_globals
-    }else{
-        return self.f_locals = $B.obj_dict(self[1])
-    }
-}
+frame_funcs.f_back_set = $B.NULL
 
-function frame_lineno_set(self, value){
-    self.$lineno = value
-}
-
-function frame_trace_set(self, value){
-    self.$f_trace = value
-}
-
-function frame_lasti_get(){
-    return 0
-}
-
-function frame_globals_get(self){
-    if(self.f_globals){
-        return self.f_globals
-    }else if(self.f_locals && self[1] == self[3]){
-        return self.f_globals = self.f_locals
-    }else{
-        return self.f_globals = $B.obj_dict(_self[3])
-    }
-}
-
-function frame_builtins_get(self){
+frame_funcs.f_builtins_get = function(self){
     return $B.$getattr(self[3].__builtins__, '__dict__')
 }
 
-function frame_code_get(self){
+frame_funcs.f_builtins_set = $B.NULL
+
+frame_funcs.f_code_get = function(self){
     var res
     var positions = [[0, 0, 0, 0]] // fake value
     if(self[4]){
@@ -285,35 +227,87 @@ function frame_code_get(self){
         res.co_qualname = res.co_name // XXX
         positions = self.positions ?? positions
     }
-    res.ob_type = _b_.code
+    res.ob_type = $B.code
     positions = positions.map($B.decode_position)
     res.co_positions = () => $B.$list(positions)
     res.co_positions.ob_type = $B.function
     return res
 }
 
-function frame_trace_opcodes_set(self, value){
+frame_funcs.f_code_set = $B.NULL
+
+frame_funcs.f_generator_get = function(self){
 
 }
 
-function frame_generator_get(){
+frame_funcs.f_generator_set = $B.NULL
+
+frame_funcs.f_globals_get = function(self){
+    if(self.f_globals){
+        return self.f_globals
+    }else if(self.f_locals && self[1] == self[3]){
+        return self.f_globals = self.f_locals
+    }else{
+        return self.f_globals = $B.obj_dict(_self[3])
+    }
+}
+
+frame_funcs.f_globals_set = $B.NULL
+
+frame_funcs.f_lasti_get = function(self){
+    return 0
+}
+
+frame_funcs.f_lasti_set = $B.NULL
+
+frame_funcs.f_lineno_get = function(self){
+    return self.$lineno
+}
+
+frame_funcs.f_lineno_set = function(self, value){
+    $B.RAISE(_b_.ValueError, 'f_lineno can only be set in a trace function')
+}
+
+frame_funcs.f_locals_get = function(self){
+    // If locals and globals are the same, f_locals and f_globals
+    // are the same object
+    if(self.f_locals){
+        return self.f_locals
+    }else if(self.f_globals && self[1] == self[3]){
+        return self.f_locals = self.f_globals
+    }else{
+        return self.f_locals = $B.obj_dict(self[1])
+    }
+}
+
+frame_funcs.f_locals_set = $B.NULL
+
+frame_funcs.f_trace_get = function(self){
+    return self.$f_trace
+}
+
+frame_funcs.f_trace_lines = function(self){
 
 }
 
-/* frame.tp_getset start */
-frame.tp_getset = [
-    ["f_back", frame_back_get, $B.NULL],
-    ["f_locals", frame_locals_get, $B.NULL],
-    ["f_lineno", $B.NULL, frame_lineno_set],
-    ["f_trace", $B.NULL, frame_trace_set],
-    ["f_lasti", frame_lasti_get, $B.NULL],
-    ["f_globals", frame_globals_get, $B.NULL],
-    ["f_builtins", frame_builtins_get, $B.NULL],
-    ["f_code", frame_code_get, $B.NULL],
-    ["f_trace_opcodes", $B.NULL, frame_trace_opcodes_set],
-    ["f_generator", frame_generator_get, $B.NULL]
-]
-/* frame.tp_getset end */
+frame_funcs.f_trace_opcodes_get = function(self){
+
+}
+
+frame_funcs.f_trace_opcodes_set = function(self){
+
+}
+
+frame_funcs.f_trace_set = function(self, value){
+    self.$f_trace = value
+}
+
+$B.frame.tp_methods = ["clear", "__sizeof__"]
+
+$B.frame.tp_members = ["f_trace_lines"]
+
+$B.frame.tp_getset = ["f_back", "f_locals", "f_lineno", "f_trace", "f_lasti", "f_globals", "f_builtins", "f_code", "f_trace_opcodes", "f_generator"]
+
 
 $B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
@@ -426,7 +420,7 @@ $B.is_recursion_error = function(js_exc){
 }
 
 $B.RAISE = function(error_type, message){
-    throw $B.$call(error_type)(message)
+    throw $B.$call1(error_type, message)
 }
 
 $B.RAISE_IF_NOT = function(exc, exc_type){
@@ -443,7 +437,7 @@ $B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name){
 }
 
 $B.EXC = function(error_type, message){
-    return $B.$call(error_type)(message)
+    return $B.$call(error_type, message)
 }
 
 // built-in exceptions
@@ -761,13 +755,13 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 // Shortcut to create a NameError
 $B.name_error = function(name){
-    var exc = $B.$call(_b_.NameError)(`name '${name}' is not defined`)
+    var exc = $B.$call1(_b_.NameError, `name '${name}' is not defined`)
     exc.name = name
     return exc
 }
 
 $B.recursion_error = function(frame){
-    var exc = $B.$call(_b_.RecursionError)("maximum recursion depth exceeded")
+    var exc = $B.$call1(_b_.RecursionError, "maximum recursion depth exceeded")
     $B.set_exc(exc, frame)
     return exc
 }

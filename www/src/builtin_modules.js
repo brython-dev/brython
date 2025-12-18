@@ -627,8 +627,9 @@
             encoding: 'utf-8'
         }
     }
-
-    $io.flush = function(self){
+    var $io_funcs = $io.tp_funcs = {}
+    
+    $io_funcs.flush = function(self){
         if(self.buf){
             // replace chr(0) by ' ' for printing
             var s = self.buf.join(''),
@@ -639,7 +640,7 @@
         }
     }
 
-    $io.write = function(self, msg){
+    $io_funcs.write = function(self, msg){
         // Default to printing to browser console
         if(self.buf === undefined){
             self.buf = []
@@ -651,6 +652,9 @@
         self.buf.push(msg)
         return _b_.None
     }
+
+    $io.tp_methods = ["flush", "write"]
+
     // _sys module is at the core of Brython since it is paramount for
     // the import machinery.
     // see https://github.com/brython-dev/brython/issues/189
@@ -923,7 +927,7 @@
                 let frame_rank = Math.max(0, $B.count_frames() - stacklevel)
                 var frame = $B.get_frame_at(frame_rank)
                 file = frame.__file__
-                let f_code = $B._frame.f_code.__get__(frame),
+                let f_code = $B.$getattr(frame, 'f_code'),
                     src = $B.file_cache[file]
                 lineno = message.lineno || frame.$lineno
                 line = src ? src.split('\n')[lineno - 1] : null
@@ -1346,7 +1350,6 @@
 
     function load(name, module_obj){
         // add class and __str__
-        console.log('load builtin module', name, module_obj)
         module_obj.ob_type = $B.module
         module_obj.dict = $B.empty_dict()
         module_obj.__name__ = name

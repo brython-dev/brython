@@ -108,7 +108,7 @@ object.__ge__ = function(){
 $B.nb_from_dict = 0
 
 object.tp_getattro = function(obj, attr){
-    var test = attr == 'Date'
+    var test = false // attr == 'write'
     var klass = $B.get_class(obj)
     if(test){
         console.log('getattr', attr, 'of obj', obj, klass)
