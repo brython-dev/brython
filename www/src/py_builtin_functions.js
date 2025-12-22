@@ -940,7 +940,7 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr, _default){
-    var test = false // attr == '__getitem__' // && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == '__new__' // && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
         console.log(Error().stack)
@@ -1041,10 +1041,9 @@ $B.search_in_dict = function(obj, attr, _default){
     if(obj.dict){
         if(obj.dict instanceof Object){
             // instance
-            try{
-                return _b_.dict.$getitem(obj.dict, attr)
-            }catch(err){
-                $B.RAISE_IF_NOT(err, _b_.KeyError)
+            var res = _b_.dict.$get_string(obj.dict, attr, $B.NULL)
+            if(res !== $B.NULL){
+                return res
             }
         }else{
             var in_dict = obj.dict[attr]
@@ -1115,7 +1114,7 @@ function standard_getattribute(obj, attr){
 
 $B.object_getattribute = function(obj, attr){
     var klass = $B.get_class(obj)
-    var test = false // attr == 'new'
+    var test = false // attr == 'write' // klass === _b_.TypeError
     var getattribute = $B.search_in_mro(klass, '__getattribute__', $B.NULL)
     if(getattribute === $B.NULL){
         $B.RAISE(_b_.TypeError, 'no __getattribute__')
@@ -1125,7 +1124,7 @@ $B.object_getattribute = function(obj, attr){
         console.log(getattribute)
     }
     try{
-        return getattribute(obj, attr)
+        return $B.$call1(getattribute, obj, attr)
     }catch(err){
         $B.RAISE_IF_NOT(err, _b_.AttributeError)
         var getattr = $B.search_in_mro(klass, '__getattr__')
@@ -1167,7 +1166,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = $B.get_class(obj)
 
-    var $test = false // attr == "Date" // && obj.__name__ === "FlagBoundary"
+    var $test = false // obj.ob_type === _b_.TypeError // attr == "Date" // && obj.__name__ === "FlagBoundary"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -1178,6 +1177,7 @@ $B.$getattr = function(obj, attr, _default){
         try{
             return $B.object_getattribute(obj, attr)
         }catch(err){
+            console.log('error in object_getattribute', err)
             $B.RAISE_IF_NOT(err, _b_.AttributeError)
             if(_default !== undefined){
                 return _default
@@ -1482,10 +1482,11 @@ $B.$isinstance = function(obj, cls){
         }
     }
     // Search __instancecheck__ on cls's class (ie its metaclass)
-    var instancecheck = $B.search_in_mro($B.get_class(cls),
+    var instancecheck = $B.type_getattribute($B.get_class(cls),
         '__instancecheck__', $B.NULL)
     if(instancecheck !== $B.NULL){
-        return instancecheck(cls, obj)
+        console.log('instancecheck', instancecheck)
+        return $B.$call1(instancecheck, cls, obj)
     }
     return false
 }
@@ -1736,7 +1737,8 @@ var len = _b_.len = function(obj){
         $B.RAISE(_b_.TypeError, "object of type '" +
             $B.class_name(obj) + "' has no len()")
     }
-    let res = $B.$call(method)(obj)
+
+    let res = $B.$call1(method, obj)
 
     if (!$B.$isinstance(res, _b_.int)) {
         $B.RAISE(_b_.TypeError, `'${$B.class_name(res)}' object cannot be interpreted as an integer`)
@@ -2284,28 +2286,29 @@ var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
               {}, 'args', 'kw')
     var kw = $ns['kw'],
-        end = $B.dict_get(kw, 'end', '\n'),
-        sep = $B.dict_get(kw, 'sep', ' '),
-        file = $B.dict_get(kw, 'file', $B.get_stdout())
+        end = '\n', //$B.dict_get(kw, 'end', '\n'),
+        sep = ' ', //$B.dict_get(kw, 'sep', ' '),
+        file = $B.get_stdout() //$B.dict_get(kw, 'file', $B.get_stdout())
     var args = $ns['args']
     var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
         var arg = _b_.str.$factory(args[i])
-        writer(arg)
+        $B.$call1(writer, arg)
         if(i < len - 1){
-            writer(sep)
+            $B.$call1(writer, sep)
         }
     }
     writer(end)
     var flush = $B.$getattr(file, 'flush', None)
     if(flush !== None){
-        $B.$call(flush)()
+        $B.$call1(flush)
     }
     return None
 }
 
 $print.__name__ = 'print'
 $print.is_func = true
+$print.ob_type = $B.builtin_function_or_method
 
 var quit = _b_.quit = function(){
     throw _b_.SystemExit
@@ -2317,10 +2320,12 @@ quit.__repr__ = quit.__str__ = function(){
 
 var repr = _b_.repr = function(obj){
     check_nb_args_no_kw('repr', 1, arguments)
-
     var klass = $B.get_class(obj)
-    return $B.$call($B.$getattr(klass, "__repr__"))(obj)
+    var tp_repr = $B.search_slot(klass, 'tp_repr')
+    return tp_repr(obj)
 }
+
+repr.ob_type = $B.builtin_function_or_method
 
 var reversed = _b_.reversed
 
@@ -3009,10 +3014,11 @@ $B.builtin_method.tp_repr = function(self){
 
 $B.set_func_names($B.builtin_method, 'builtins')
 
+/*
 var builtin_function_or_method = $B.builtin_function_or_method
 
 builtin_function_or_method.$factory = function(f, klass){
-    f.ob_type = builtin_function
+    f.ob_type = builtin_function_or_method
     if(f.$function_infos === undefined){
         console.log('no function infos for', f)
         console.log(Error().stack)
@@ -3030,29 +3036,13 @@ builtin_function_or_method.__get__ = function(_self, obj, klass){
     return _self
 }
 
-builtin_function_or_method.tp_getattro = $B.function.__getattribute__
-
 builtin_function_or_method.__reduce_ex__ =
 builtin_function_or_method.__reduce__ = function(self){
     return self.$function_infos[$B.func_attrs.__name__]
 }
+*/
 
-builtin_function_or_method.tp_repr = function(self){
-    var name = self.ml.ml_name
-    if(self.__self__){
-        var type = $B.class_name($B.get_class(self))
-        return `<built-in method ${name} of ${type} object>`
-    }
-    return `<built-in function ${name}>`
-}
-$B.set_func_names(builtin_function_or_method, "builtins")
 
-var method_wrapper = $B.method_wrapper
-
-method_wrapper.tp_repr = function(self){
-    return "<method wrapper '" + self.$function_infos[$B.func_attrs.__name__] + "' of function object>"
-}
-$B.set_func_names(method_wrapper, "builtins")
 
 var other_builtins = [
     'Ellipsis', 'False',  'None', 'True', '__debug__', '__import__',
