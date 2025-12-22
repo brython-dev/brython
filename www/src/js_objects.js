@@ -1211,7 +1211,7 @@ $B.get_jsobj_class = function(obj){
 // constructor
 $B.JSMeta = $B.make_builtin_class("JSMeta", [_b_.type])
 
-$B.JSMeta.__call__ = function(cls){
+$B.JSMeta.tp_call = function(cls){
     // Create an instance of a class that inherits a Javascript contructor
     console.log('create', cls)
     var extra_args = new Array(arguments.length-1),

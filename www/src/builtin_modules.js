@@ -628,7 +628,7 @@
         }
     }
     var $io_funcs = $io.tp_funcs = {}
-    
+
     $io_funcs.flush = function(self){
         if(self.buf){
             // replace chr(0) by ' ' for printing
@@ -1416,17 +1416,6 @@
         }
     }
 
-    $B.cell.cell_contents = $B.$call(_b_.property)(
-        function(self){
-            if(self.$cell_contents === null){
-                $B.RAISE(_b_.ValueError, "empty cell")
-            }
-            return self.$cell_contents
-        },
-        function(self, value){
-            self.$cell_contents = value
-        }
-    )
 
     var $comps = Object.values($B.$comps).concat(["eq", "ne"])
     $comps.forEach(function(comp){
@@ -1449,6 +1438,46 @@
             }
         })(op)
     })
+
+    /* cell start */
+    $B.cell.tp_richcompare = function(self){
+
+    }
+
+    $B.cell.tp_repr = function(self){
+        return '<cell object>'
+    }
+
+    $B.cell.tp_hash = function(self){
+
+    }
+
+    $B.cell.tp_new = function(self){
+
+    }
+
+    var cell_funcs = $B.cell.tp_funcs = {}
+
+    cell_funcs.__new__ = function(self){
+
+    }
+
+    cell_funcs.cell_contents_get = function(self){
+        if(self.$cell_contents === null){
+            $B.RAISE(_b_.ValueError, "empty cell")
+        }
+        return self.$cell_contents
+    }
+
+    cell_funcs.cell_contents_set = function(self){
+        self.$cell_contents = value
+    }
+
+    $B.cell.functions_or_methods = ["__new__"]
+
+    $B.cell.tp_getset = ["cell_contents"]
+
+    /* cell end */
 
     $B.set_func_names($B.cell, "builtins")
 

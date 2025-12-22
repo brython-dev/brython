@@ -108,7 +108,7 @@ object.__ge__ = function(){
 $B.nb_from_dict = 0
 
 object.tp_getattro = function(obj, attr){
-    var test = false // attr == 'write'
+    var test = false // attr == '__name__' // $B.get_class(obj) === _b_.TypeError
     var klass = $B.get_class(obj)
     if(test){
         console.log('getattr', attr, 'of obj', obj, klass)
@@ -123,13 +123,12 @@ object.tp_getattro = function(obj, attr){
     var getter = NULL
     if(in_mro !== NULL){
         var in_mro_class = $B.get_class(in_mro)
-        var getter = $B.search_in_mro(in_mro_class, '__get__', NULL)
+        var getter = $B.search_slot(in_mro_class, 'tp_descr_get', NULL)
         if(test){
             console.log('getter', getter)
         }
         if(getter !== NULL){
-            var is_data_descr = $B.search_in_mro(in_mro_class, '__set__', NULL) !== NULL ||
-                                $B.search_in_mro(in_mro_class, '__del__', NULL) !== NULL
+            var is_data_descr = $B.search_slot(in_mro_class, 'tp_descr_set', NULL) !== NULL
             if(is_data_descr){
                 if(test){
                     console.log('data descriptor')
@@ -147,6 +146,9 @@ object.tp_getattro = function(obj, attr){
         if(typeof getter !== 'function'){
             console.log('not a function', getter)
             console.log('class of in_mro', in_mro_class)
+        }
+        if(test){
+            console.log('call getter of non-data descr', in_mro, obj, klass)
         }
         return getter(in_mro, obj, klass)
     }else if(in_mro !== NULL){
@@ -344,8 +346,8 @@ object.tp_str = function(self){
     }
     // Default to __repr__
     var klass = $B.get_class(self)
-    var repr_func = $B.type_getattribute(klass, "__repr__")
-    return $B.$call(repr_func)(...arguments)
+    var repr_func = $B.search_slot(klass, "tp_repr")
+    return repr_func.apply(null, arguments)
 }
 
 object.__subclasshook__ = function(){

@@ -2658,10 +2658,12 @@ str.$factory = function(arg, encoding){
         if(klass === undefined){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
-        var method = $B.type_getattribute(klass, '__str__', $B.NULL)
+        var method = $B.search_slot(klass, 'tp_str', $B.NULL)
+        /*
         if(method === $B.NULL){
-            method = $B.type_getattribute(klass, '__repr__', $B.NULL)
+            method = $B.$getattr(arg, '__repr__', $B.NULL)
         }
+        */
         if(method === $B.NULL){
             $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
         }
@@ -2675,12 +2677,15 @@ str.$factory = function(arg, encoding){
             "default to toString", arg)
         throw err
     }
+    /*
+    console.log('str method', method)
+    console.log('type(method)', $B.get_class(method))
     var getter = $B.search_in_mro($B.get_class(method), '__get__')
     var res
     if(getter){
         if(typeof getter == 'function'){
             var method = getter(method, arg, klass)
-            res = $B.$call(method)()
+            res = $B.$call1(method)
         }else{
             var call_in_mro = $B.search_in_mro($B.get_class(getter, '__call__'))
             if(call_in_mro){
@@ -2690,8 +2695,10 @@ str.$factory = function(arg, encoding){
             }
         }
     }else{
-        res = $B.$call(method)(arg)
+        res = $B.$call1(method, arg)
     }
+    */
+    var res = method(arg)
     if(typeof res == "string" || $B.$isinstance(res, str)){
         return res
     }

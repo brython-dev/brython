@@ -305,6 +305,7 @@ var $valid_digits = function(base) {
 }
 
 int.$factory = function(){
+    console.log('nt factory', arguments)
     var missing = {},
         $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"],
             arguments, {x: missing, base: missing}, null, null, 1),
@@ -340,17 +341,22 @@ int.$factory = function(){
             for(let special_method of ['__int__', '__index__', '__trunc__']){
                 let num_value = $B.$getattr($B.get_class(value),
                                             special_method, _b_.None)
+                console.log('special method', special_method, 'of class', $B.get_class(value))
+                console.log(num_value)
                 if(num_value !== _b_.None){
-                    let res = $B.$call(num_value)(value)
+                    console.log('num value', num_value, $B.get_class(num_value))
+                    let res = $B.$call1(num_value, value)
+                    console.log('res', res)
                     if(special_method == '__trunc__'){
                         $B.warn(_b_.DeprecationWarning,
                         'The delegation of int() to __trunc__ is deprecated.')
-                        let index_method = $B.$getattr(res, '__index__', null)
+                        let index_method = $B.$getattr($get_class(res), '__index__', null)
                         if(index_method === null){
                             $B.RAISE(_b_.TypeError, '__trunc__ returned' +
                                 ` non-Integral (type ${$B.class_name(res)})`)
                         }
-                        res = $B.$call(index_method)()
+                        console.log('call index method', index_method)
+                        res = $B.$call1(index_method, value)
                     }
                     if($B.$isinstance(res, _b_.int)){
                         if(typeof res !== "number" &&
@@ -780,6 +786,7 @@ _b_.int.nb_or = function(self, other){
 }
 
 _b_.int.tp_repr = function(self){
+    console.log('int repr', self)
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     var value = int_value(self),
         x = $B.is_long_int(value) ? value.value : value
@@ -950,7 +957,7 @@ int_funcs.__sizeof__ = function(self){
 }
 
 int_funcs.__trunc__ = function(self){
-
+    return int_value(self)
 }
 
 int_funcs.as_integer_ratio = function(self){

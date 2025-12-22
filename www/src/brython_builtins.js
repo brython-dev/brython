@@ -188,7 +188,7 @@ $B.make_mro = function(cls){
             }
         }
         bmro[pos++] = base
-        var _tmp = base.tp_mro
+        var _tmp = base.tp_mro.slice()
         if(_tmp){
             if(_tmp[0] === base){
                 _tmp.splice(0, 1)

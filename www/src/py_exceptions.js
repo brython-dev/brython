@@ -437,7 +437,7 @@ $B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name){
 }
 
 $B.EXC = function(error_type, message){
-    return $B.$call(error_type, message)
+    return $B.$call1(error_type, message)
 }
 
 // built-in exceptions
@@ -467,11 +467,7 @@ function check_no_keywords(obj, kw){
     }
 }
 
-_b_.BaseException.tp_init = function(){
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
-    check_no_keywords($.self, $.kw)
-    $.self.args = $B.fast_tuple($.args)
-}
+
 
 _b_.BaseException.tp_repr = function(self){
     var res =  $B.get_name($B.get_class(self)) + '('
@@ -484,11 +480,43 @@ _b_.BaseException.tp_repr = function(self){
     return res + ')'
 }
 
+
+
+
+
+/*
+_b_.BaseException.tp_getattro = function(self, attr){
+    switch(attr){
+        case '__context__':
+            var frame = $B.frame_obj.frame,
+                ctx = frame[1].$current_exception
+            return ctx || _b_.None
+        case '__cause__':
+        case '__suppress_context__':
+            return self[attr] ?? _b_.None
+        default:
+            throw $B.attr_error(attr, self)
+    }
+}
+*/
+
+
+
+
+/* BaseException start */
 _b_.BaseException.tp_repr = function(self){
     if(self.args.length > 0 && self.args[0] !== _b_.None){
         return _b_.str.$factory(self.args[0])
     }
     return ''
+}
+
+_b_.BaseException.tp_str = _b_.BaseException.tp_repr
+
+_b_.BaseException.tp_init = function(self, ...args){
+    //var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
+    //check_no_keywords($.self, $.kw)
+    self.args = $B.fast_tuple(args)
 }
 
 _b_.BaseException.tp_new = function(cls){
@@ -506,21 +534,45 @@ _b_.BaseException.tp_new = function(cls){
     return res
 }
 
-_b_.BaseException.tp_getattro = function(self, attr){
-    switch(attr){
-        case '__context__':
-            var frame = $B.frame_obj.frame,
-                ctx = frame[1].$current_exception
-            return ctx || _b_.None
-        case '__cause__':
-        case '__suppress_context__':
-            return self[attr] ?? _b_.None
-        default:
-            throw $B.attr_error(attr, self)
-    }
+var BaseException_funcs = _b_.BaseException.tp_funcs = {}
+
+BaseException_funcs.__cause___get = function(self){
+
 }
 
-_b_.BaseException.add_note = function(self, note){
+BaseException_funcs.__cause___set = function(self){
+
+}
+
+BaseException_funcs.__context___get = function(self){
+
+}
+
+BaseException_funcs.__context___set = function(self){
+
+}
+
+BaseException_funcs.__reduce__ = function(self){
+
+}
+
+BaseException_funcs.__setstate__ = function(self){
+
+}
+
+BaseException_funcs.__suppress_context__ = function(self){
+
+}
+
+BaseException_funcs.__traceback___get = function(self){
+
+}
+
+BaseException_funcs.__traceback___set = function(self){
+
+}
+
+BaseException_funcs.add_note = function(self, note){
     // PEP 678
     if(! $B.$isinstance(note, _b_.str)){
         $B.RAISE(_b_.TypeError, 'note must be a str, not ' +
@@ -533,10 +585,28 @@ _b_.BaseException.add_note = function(self, note){
     }
 }
 
-_b_.BaseException.with_traceback = function(_self, tb){
-    _self.__traceback__ = tb
-    return _self
+BaseException_funcs.args_get = function(self){
+
 }
+
+BaseException_funcs.args_set = function(self){
+
+}
+
+BaseException_funcs.with_traceback = function(self, tb){
+    self.__traceback__ = tb
+    return self
+}
+
+_b_.BaseException.functions_or_methods = ["__new__"]
+
+_b_.BaseException.tp_methods = ["__reduce__", "__setstate__", "with_traceback", "add_note"]
+
+_b_.BaseException.tp_members = ["__suppress_context__"]
+
+_b_.BaseException.tp_getset = ["args", "__traceback__", "__context__", "__cause__"]
+
+/* BaseException end */
 
 $B.set_func_names(_b_.BaseException, 'builtins')
 
@@ -679,6 +749,7 @@ _b_.IOError = _b_.OSError
 
 // special case for KeyError.__str__ (cf. issue #2582)
 _b_.KeyError.tp_repr = function(self){
+    console.log('KeyError repr', self)
     if(self.args.length == 1){
         return _b_.repr(self.args[0])
     }
@@ -728,7 +799,7 @@ $B.attr_error = function(name, obj){
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return $B.$call(_b_.AttributeError)(msg, {$kw:[{name, obj}]})
+    return $B.$call1(_b_.AttributeError, msg, {$kw:[{name, obj}]})
 }
 
 // NameError supports keyword-only "name" parameter

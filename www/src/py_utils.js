@@ -1051,6 +1051,7 @@ $B.warn = function(klass, message, filename, token){
                                          warning.end_lineno,
                                          warning.end_offset])
     }
+    console.log('warn', warning)
     $B.imported._warnings.warn(warning)
 }
 
@@ -1459,14 +1460,16 @@ $B.$is_member = function(item, _set){
 }
 
 var counter = 0
-$B.$call = function(callable, inum){
+$B.$call = function(callable, inum, ...args){
     counter++
     if(counter > 50){
         throw Error('call overflow')
     }
     var original = callable
     try{
-        callable = $B.$call1(callable)
+        var res = $B.$call1(callable, ...args)
+        counter--
+        return res
     }catch(err){
         $B.set_inum(inum)
         throw err
@@ -1485,16 +1488,38 @@ $B.$call = function(callable, inum){
     return f
 }
 
-$B.$call1 = function(callable){
-    var test = false // callable.tp_name == 'NameError'
-    if(test){
-        console.log('call', callable)
+$B.$call1 = function(callable, ...args){
+    counter++
+    if(counter > 50){
+        throw Error('call1 overflow')
     }
+    var test = callable.ob_type === _b_.TypeError
     var klass = $B.get_class(callable)
+    if(test){
+        console.log('call', callable, 'klass', klass)
+    }
+    var call_method = $B.search_slot(klass, 'tp_call', $B.NULL)
+    if(call_method === $B.NULL){
+        console.log('no slot tp_call in class', klass)
+        console.log(Error().stack)
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
+            "' object is not callable")
+    }
+    if(test || typeof call_method !== 'function'){
+        console.log('cannot apply call method', call_method)
+    }
+    var res = call_method.apply(null, arguments)
+    if(test){
+        console.log('result of call1', res)
+    }
+    return res
+    /*
     if(klass === $B.method){
         return callable
     }else if(klass === _b_.staticmethod){
         return callable.__func__
+    }else if(klass === $B.wrapper_descriptor){
+        return callable.apply(null, args)
     }else if(callable.$factory){
         return callable.$factory
     }else if(callable.$is_class){
@@ -1512,6 +1537,11 @@ $B.$call1 = function(callable){
             var res = callable(...arguments)
             return res === undefined ? _b_.None : res
         }
+    }else if(klass === $B.builtin_function_or_method){
+        if(test){
+            console.log('call builtin func')
+        }
+        return callable(...args)
     }else if(callable.$is_func || typeof callable == "function"){
         if(callable.$function_infos){
             var flags = callable.$function_infos[$B.func_attrs.flags]
@@ -1527,28 +1557,39 @@ $B.$call1 = function(callable){
                 }
             }
         }
+        if(test){
+            console.log('call function', callable, arguments)
+            var args = Array.from(arguments).slice(1)
+            try{
+                return callable.apply(null, args)
+            }catch(err){
+                console.log('error', err)
+                alert()
+            }
+        }
         return callable
     }
-    /*
+
     var getter = $B.$getattr($B.get_class(callable), '__get__', null)
     if(getter !== null){
         console.log('>>>>>>>>>>>>>> callable with getter')
         callable = getter(callable, $B.get_class(callable))
     }
-    */
     if(test){
         console.log('try __call__')
-        console.log($B.$getattr(callable, "__call__"))
+        console.log($B.$getattr(klass, "__call__"))
     }
     try{
-        var call = $B.$getattr(callable, "__call__")
+        var call = $B.$getattr(klass, "__call__")
         return call.apply(null, arguments)
     }catch(err){
         console.log('not callable', callable)
+        console.log('__call__ of class', $B.$getattr(klass, "__call__"))
         console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }
+    */
 }
 
 // Code to add support of "reflected" methods to built-in types
