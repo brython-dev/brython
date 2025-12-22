@@ -2345,4 +2345,7 @@ for(var name in $B.builtin_types){
     cls.tp_mro = $B.make_mro(cls)
 }
 
+
+$B.builtin_funcs = ['__build_class__', '__import__', 'abs', 'aiter', 'all', 'anext', 'any', 'ascii', 'bin', 'breakpoint', 'callable', 'chr', 'compile', 'delattr', 'dir', 'divmod', 'eval', 'exec', 'format', 'getattr', 'globals', 'hasattr', 'hash', 'hex', 'id', 'input', 'isinstance', 'issubclass', 'iter', 'len', 'locals', 'max', 'min', 'next', 'oct', 'open', 'ord', 'pow', 'print', 'repr', 'round', 'setattr', 'sorted', 'sum', 'vars']
+
 })(__BRYTHON__)

@@ -2,6 +2,7 @@
 
 var _b_ = $B.builtins
 
+console.log('mro of type', _b_.type.tp_mro)
 
 $B.set_class_attr = function(klass, attr, value, ob_type){
     if(ob_type){
@@ -54,7 +55,11 @@ function wrap(dunder){
         if(func !== _b_.None){
             func.ml = {ml_name: dunder}
         }
-        cls.dict[dunder] = func
+        cls.dict[dunder] = $B.wrapper_descriptor.$factory(
+            cls,
+            dunder,
+            func
+        )
     }
 }
 
@@ -65,6 +70,7 @@ Object.assign($B.wrapper_methods,
         mp_subscript: wrap('__getitem__'),
         nb_absolute: wrap('__abs__'),
         nb_add: make_add,
+        nb_index: wrap('__index__'),
         sq_length: wrap('__len__'),
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
@@ -100,6 +106,7 @@ function make_add(cls){
 
 function make_new(cls){
     cls.dict.__new__ = cls.tp_new
+    cls.dict.__new__.ob_type = $B.builtin_function_or_method
 }
 
 function make_next(cls){
@@ -156,6 +163,13 @@ function make_richcompare(cls){
 }
 
 $B.finalize_type = function(cls){
+    if(cls.tp_name == 'JSMeta'){
+        console.log('finalize', cls, 'type mro', _b_.type.tp_mro)
+    }
+    cls.tp_mro = $B.make_mro(cls)
+    if(cls.tp_name == 'JSMeta'){
+        console.log('type mro', _b_.type.tp_mro)
+    }
     if(cls.tp_funcs){
         if(cls.tp_getset){
             for(var descr of cls.tp_getset){
@@ -173,7 +187,12 @@ $B.finalize_type = function(cls){
                     console.log('no method', cls, cls.tp_funcs, descr)
                     alert()
                 }
-                cls.dict[descr] = $B.method_descriptor.$factory(cls, descr, method)
+                cls.dict[descr] = {
+                    ob_type: $B.method_descriptor,
+                    method,
+                    name: descr,
+                    cls
+                }
             }
         }
         if(cls.tp_members){
@@ -197,6 +216,9 @@ $B.finalize_type = function(cls){
                 $B.wrapper_methods[slot](cls, slot)
             }
         }
+        if(_b_.type.tp_mro.length < 2){
+            console.log('type.tp_mro length < 2 for cls', cls)
+        }
         return
     }
     if(cls.tp_getset){
@@ -209,7 +231,9 @@ $B.finalize_type = function(cls){
         for(var method of cls.tp_methods){
             cls.dict[name] = {
                 ob_type: $B.method_descriptor,
-                d_member: method
+                method,
+                name,
+                cls
             }
         }
     }
@@ -229,5 +253,15 @@ for(var ns of [$B.builtin_types, $B.created_types]){
         $B.finalize_type(cls)
     }
 }
+
+// builtin functions
+for(var builtin_func of $B.builtin_funcs){
+    if(_b_[builtin_func]){
+        _b_[builtin_func].ob_type = $B.builtin_function_or_method
+    }else{
+        console.log('missing builtin function', builtin_func)
+    }
+}
+
 
 })(__BRYTHON__)

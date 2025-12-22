@@ -63,7 +63,6 @@ tp_watched
 tp_versions_used""".split()
 
 wrapper_doc = """
-tp_name __name__
 tp_repr __repr__
 tp_hash __hash__
 tp_call __call__
@@ -189,6 +188,16 @@ for(var name in $B.builtin_types){
 
 """
 
+
+builtin_function = type(open)
+builtin_funcs = [attr for attr in dir(builtins)
+    if type(getattr(builtins, attr)) is builtin_function]
+
+
+set_builtin_funcs_type = f"""
+$B.builtin_funcs = {[f"{name}" for name in builtin_funcs]}\n
+"""
+
 def get_slots_by_type(cls):
     head = '_b_' if cls.__name__ in dir(builtins) else '$B'
     name = cls.__name__.replace('-', '_').replace(' ', '_')
@@ -299,6 +308,7 @@ with open(init_path, 'w', encoding='utf-8') as out:
     out.write(init_type)
     out.write(make_builtins_init(__builtins__))
     out.write(set_additional_data)
+    out.write(set_builtin_funcs_type)
     out.write('})(__BRYTHON__)\n')
 
 props = {
@@ -616,7 +626,7 @@ with open(path, 'w', encoding='utf-8') as out:
     while sets:
         types = sets.pop()
 
-        exclude = ("__dict__", "__doc__", "__init_subclass__", 
+        exclude = ("__dict__", "__doc__", "__init_subclass__",
             "__subclasshook__")
 
         for cls in types:
