@@ -1705,12 +1705,12 @@ $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
     var inum = add_to_positions(scopes, this)
     var func =  $B.js_from_ast(this.func, scopes),
-        js = `$B.$call(${func}, ${inum})`
+        js = `$B.$call(${func}, ${inum}, `
 
 
     var args = make_args.bind(this)(scopes)
 
-    return js + `(${args})`
+    return js + `${args})`
 }
 
 $B.ast.Call.prototype._check = function(){
