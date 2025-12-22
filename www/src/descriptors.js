@@ -283,7 +283,6 @@ $B.method_descriptor.tp_repr = function(self){
 }
 
 $B.method_descriptor.tp_call = function(self, ...args){
-    console.log('method descr call', self, args)
     var res = self.method(null, args)
 }
 
@@ -301,7 +300,6 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass){
 var method_descriptor_funcs = $B.method_descriptor.tp_funcs = {}
 
 method_descriptor_funcs.__name__ = function(self){
-    console.log('get name', self)
     return self.name
 }
 

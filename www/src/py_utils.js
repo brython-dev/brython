@@ -1461,14 +1461,9 @@ $B.$is_member = function(item, _set){
 
 var counter = 0
 $B.$call = function(callable, inum, ...args){
-    counter++
-    if(counter > 50){
-        throw Error('call overflow')
-    }
     var original = callable
     try{
         var res = $B.$call1(callable, ...args)
-        counter--
         return res
     }catch(err){
         $B.set_inum(inum)
@@ -1484,16 +1479,17 @@ $B.$call = function(callable, inum, ...args){
         }
     }
     f.$original = original
-    counter--
     return f
 }
 
 $B.$call1 = function(callable, ...args){
+    /*
     counter++
-    if(counter > 50){
+    if(counter > 100){
         throw Error('call1 overflow')
     }
-    var test = callable.ob_type === _b_.TypeError
+    */
+    var test = false // callable.ob_type === _b_.TypeError
     var klass = $B.get_class(callable)
     if(test){
         console.log('call', callable, 'klass', klass)

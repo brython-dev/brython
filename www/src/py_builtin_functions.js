@@ -1485,7 +1485,6 @@ $B.$isinstance = function(obj, cls){
     var instancecheck = $B.type_getattribute($B.get_class(cls),
         '__instancecheck__', $B.NULL)
     if(instancecheck !== $B.NULL){
-        console.log('instancecheck', instancecheck)
         return $B.$call1(instancecheck, cls, obj)
     }
     return false
@@ -1493,20 +1492,6 @@ $B.$isinstance = function(obj, cls){
 
 var issubclass = _b_.issubclass = function(klass, classinfo){
     check_nb_args_no_kw('issubclass', 2, arguments)
-    var mro
-    if(!klass.__class__ ||
-            !(klass.$factory !== undefined || klass.$is_class !== undefined)){
-
-        var meta = $B.$getattr(klass, '__class__', null) // found in unittest.mock
-        if(meta === null){
-            console.log('no class for', klass)
-            $B.RAISE(_b_.TypeError, "issubclass() arg 1 must be a class")
-        }else{
-            mro = [_b_.object]
-        }
-    }else{
-        mro = $B.get_mro(klass)
-    }
     if($B.$isinstance(classinfo, _b_.tuple)){
         for(var i = 0; i < classinfo.length; i++){
            if(issubclass(klass, classinfo[i])){return true}
@@ -1517,18 +1502,19 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
         $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
     }
+    var mro = $B.get_mro(klass)
 
     if(klass === classinfo || mro.indexOf(classinfo) > -1){
         return true
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.search_in_mro($B.get_class(classinfo), '__subclasscheck__', $B.NULL)
-
+    var sch = $B.type_getattribute(classinfo, '__subclasscheck__', $B.NULL)
+    
     if(sch === $B.NULL){
         return false
     }
-    return sch(classinfo, klass)
+    return $B.$call1(sch, classinfo, klass)
 }
 
 // Utility class for iterators built from objects that have a __getitem__ and
