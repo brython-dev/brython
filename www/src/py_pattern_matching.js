@@ -203,7 +203,7 @@ $B.pattern_match = function(subject, pattern){
             $B.finalize_type(missing)
 
             try{
-                let v = $B.$call($B.$getattr(subject, "get"))(key, missing)
+                let v = $B.$call($B.$getattr(subject, "get"), key, missing)
                 if(v === missing){
                     // pattern key not in subject : return false
                     return false

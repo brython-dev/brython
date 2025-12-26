@@ -130,7 +130,7 @@ $B.generator.throw = function(){
             $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")
         }else if(value === undefined || value === _b_.None){
-            exc = $B.$call(exc)()
+            exc = $B.$call(exc)
         }else if($B.$isinstance(value, type)){
             exc = value
         }
@@ -138,7 +138,7 @@ $B.generator.throw = function(){
         if(value === _b_.None){
             value = exc
         }else{
-            exc = $B.$call(exc)(value)
+            exc = $B.$call(exc, value)
         }
     }
     if(traceback !== _b_.None){
@@ -235,13 +235,13 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
             $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")
         }else if(value === undefined){
-            value = $B.$call(exc)()
+            value = $B.$call(exc)
         }
     }else{
         if(value === undefined){
             value = exc
         }else{
-            exc = $B.$call(exc)(value)
+            exc = $B.$call(exc, value)
         }
     }
     if(traceback !== undefined){exc.$traceback = traceback}

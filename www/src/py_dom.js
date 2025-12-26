@@ -1086,7 +1086,7 @@ DOMNode.bind = function(){
     var callback = (function(f){
         return function(ev){
             try{
-                return $B.$call(f)($DOMEvent(ev))
+                return $B.$call(f, $DOMEvent(ev))
             }catch(err){
                 if(err.ob_type !== undefined){
                     $B.handle_error(err)

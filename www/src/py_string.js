@@ -2677,27 +2677,6 @@ str.$factory = function(arg, encoding){
             "default to toString", arg)
         throw err
     }
-    /*
-    console.log('str method', method)
-    console.log('type(method)', $B.get_class(method))
-    var getter = $B.search_in_mro($B.get_class(method), '__get__')
-    var res
-    if(getter){
-        if(typeof getter == 'function'){
-            var method = getter(method, arg, klass)
-            res = $B.$call1(method)
-        }else{
-            var call_in_mro = $B.search_in_mro($B.get_class(getter, '__call__'))
-            if(call_in_mro){
-                res = call_in_mro(getter, arg)
-            }else{
-                $B.RAISE(_b_.TypeError, '__str__ or __repr__ is not callable')
-            }
-        }
-    }else{
-        res = $B.$call1(method, arg)
-    }
-    */
     var res = method(arg)
     if(typeof res == "string" || $B.$isinstance(res, str)){
         return res

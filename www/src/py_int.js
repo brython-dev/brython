@@ -305,7 +305,6 @@ var $valid_digits = function(base) {
 }
 
 int.$factory = function(){
-    console.log('nt factory', arguments)
     var missing = {},
         $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"],
             arguments, {x: missing, base: missing}, null, null, 1),
@@ -341,12 +340,8 @@ int.$factory = function(){
             for(let special_method of ['__int__', '__index__', '__trunc__']){
                 let num_value = $B.$getattr($B.get_class(value),
                                             special_method, _b_.None)
-                console.log('special method', special_method, 'of class', $B.get_class(value))
-                console.log(num_value)
                 if(num_value !== _b_.None){
-                    console.log('num value', num_value, $B.get_class(num_value))
-                    let res = $B.$call1(num_value, value)
-                    console.log('res', res)
+                    let res = $B.$call(num_value, value)
                     if(special_method == '__trunc__'){
                         $B.warn(_b_.DeprecationWarning,
                         'The delegation of int() to __trunc__ is deprecated.')
@@ -355,8 +350,7 @@ int.$factory = function(){
                             $B.RAISE(_b_.TypeError, '__trunc__ returned' +
                                 ` non-Integral (type ${$B.class_name(res)})`)
                         }
-                        console.log('call index method', index_method)
-                        res = $B.$call1(index_method, value)
+                        res = $B.$call(index_method, value)
                     }
                     if($B.$isinstance(res, _b_.int)){
                         if(typeof res !== "number" &&
@@ -786,7 +780,6 @@ _b_.int.nb_or = function(self, other){
 }
 
 _b_.int.tp_repr = function(self){
-    console.log('int repr', self)
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     var value = int_value(self),
         x = $B.is_long_int(value) ? value.value : value
@@ -1186,21 +1179,11 @@ bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
 
 bool.__neg__ = function(self){return -$B.int_or_bool(self)}
 
-bool.__or__ = function(self, other){
-    if($B.$isinstance(other, bool)){
-        return self || other
-    }else if($B.$isinstance(other, int)){
-        return int.__or__(bool.__index__(self), int.__index__(other))
-    }
-    return _b_.NotImplemented
-}
+
 
 bool.__pos__ = $B.int_or_bool
 
-bool.tp_repr = function(self){
-    $B.builtins_repr_check(bool, arguments) // in brython_builtins.js
-    return self ? "True" : "False"
-}
+
 
 bool.__xor__ = function(self, other) {
     if($B.$isinstance(other, bool)){
@@ -1224,29 +1207,9 @@ bool.$factory = function(){
     return $B.$bool($.x, true)
 }
 
-bool.tp_new = function (cls, value) {
-    if (cls === undefined) {
-        $B.RAISE(_b_.TypeError, "bool.__new__(): not enough arguments")
-    } else if (!$B.$isinstance(cls, _b_.type)) {
-        $B.RAISE(_b_.TypeError, `bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
-    } else if (!_b_.issubclass(cls, bool)) {
-        let class_name = $B.class_name(cls)
-        $B.RAISE(_b_.TypeError, `bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)
-    }
-    if (arguments.length > 2) {
-        $B.RAISE(_b_.TypeError, `bool expected at most 1 argument, got ${arguments.length - 1}`)
-    }
-    return bool.$factory(value)
-}
 
-bool.from_bytes = function () {
-    var $ = $B.args("from_bytes", 3,
-        { bytes: null, byteorder: null, signed: null },
-        ["bytes", "byteorder", "signed"],
-        arguments, { byteorder: 'big', signed: false }, null, null)
-    let int_result = int.from_bytes($.bytes, $.byteorder, $.signed)
-    return bool.$factory(int_result)
-}
+
+
 
 bool.numerator = int.numerator
 bool.denominator = int.denominator
@@ -1261,6 +1224,59 @@ for (var attr of ['real']) {
         }
     })(attr)
 }
+
+/* bool start */
+_b_.bool.nb_and = function(self){
+
+}
+
+_b_.bool.nb_xor = function(self){
+
+}
+
+_b_.bool.nb_or = function(self, other){
+    if($B.$isinstance(other, bool)){
+        return self || other
+    }else if($B.$isinstance(other, int)){
+        return int.__or__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
+}
+
+_b_.bool.tp_repr = function(self){
+    $B.builtins_repr_check(bool, arguments) // in brython_builtins.js
+    return self ? "True" : "False"
+}
+
+_b_.bool.tp_new = function(cls, value) {
+    if(cls === undefined){
+        $B.RAISE(_b_.TypeError, "bool.__new__(): not enough arguments")
+    }else if(!$B.$isinstance(cls, _b_.type)) {
+        $B.RAISE(_b_.TypeError, `bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
+    }else if(!_b_.issubclass(cls, bool)) {
+        let class_name = $B.class_name(cls)
+        $B.RAISE(_b_.TypeError, `bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)
+    }
+    if(arguments.length > 2){
+        $B.RAISE(_b_.TypeError, `bool expected at most 1 argument, got ${arguments.length - 1}`)
+    }
+    return bool.$factory(value)
+}
+
+_b_.bool.nb_invert = function(self){
+
+}
+
+var bool_funcs = _b_.bool.tp_funcs = {}
+
+bool_funcs.__new__ = function(self){
+
+}
+
+_b_.bool.functions_or_methods = ["__new__"]
+
+
+/* bool end */
 
 $B.set_func_names(bool, "builtins")
 

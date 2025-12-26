@@ -418,7 +418,7 @@ function ceil(x){
     try{
         // Use attribute of the object's class, not of the object
         // itself (special method)
-        return $B.$call($B.$getattr(klass, '__ceil__'))(x)
+        return $B.$call($B.$getattr(klass, '__ceil__'), x)
     }catch(err){
         if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
@@ -426,7 +426,7 @@ function ceil(x){
     }
 
     try{
-        x = $B.$call($B.$getattr(klass, '__float__'))(x)
+        x = $B.$call($B.$getattr(klass, '__float__'), x)
     }catch(err){
         if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
@@ -768,7 +768,7 @@ function dist(p, q){
         if(y === null){
             $B.RAISE(_b_.TypeError, 'not a float')
         }
-        return $B.$call(y)().value
+        return $B.$call(y).value
     }
 
     // build list of differences (as floats) between coordinates of p and q
@@ -1179,11 +1179,11 @@ function floor(x){
     }
     var klass = $B.get_class(x)
     try{
-        return $B.$call($B.$getattr(klass, "__floor__"))(x)
+        return $B.$call($B.$getattr(klass, "__floor__"), x)
     }catch(err){
         if($B.is_exc(err, [_b_.AttributeError])){
             try{
-                var float = $B.$call($B.$getattr(klass, "__float__"))(x)
+                var float = $B.$call($B.$getattr(klass, "__float__"), x)
                 return floor(float)
             }catch(err){
                 if($B.is_exc(err, [_b_.AttributeError])){
@@ -2695,9 +2695,9 @@ function ulp(){
         if($B.rich_comp('__ge__', x, 0)){
             return $B.rich_op('__sub__', $B.fast_float(nextUp(x.value)), x)
         }else{
-            var neg_x = $B.$call($B.$getattr(x, "__neg__"))()
+            var neg_x = $B.$call($B.$getattr(x, "__neg__"))
             return $B.rich_op('__sub__', x,
-                $B.$call($B.$getattr($B.fast_float(nextUp(neg_x.value)), '__neg__'))())
+                $B.$call($B.$getattr($B.fast_float(nextUp(neg_x.value)), '__neg__')))
         }
     }
 }

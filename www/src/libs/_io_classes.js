@@ -25,7 +25,7 @@ _BufferedIOBase.__enter__ = function(self){
 }
 _BufferedIOBase.__exit__ = function(self, type, value, traceback){
     try{
-        $B.$call($B.$getattr(self, 'close'))()
+        $B.$call($B.$getattr(self, 'close'))
         self.__closed = true
         return true
     }catch(err){
@@ -465,7 +465,7 @@ BytesIO.__setstate__ = function(_self, state){
             `should be 3-tuple, got tuple of size ${state.length}`)
     }
     var [initvalue, position, dict] = state
-    var obj = $B.$call(BytesIO)(initvalue)
+    var obj = $B.$call(BytesIO, initvalue)
 
     if(! $B.$isinstance(position, _b_.int)){
         $B.RAISE(_b_.TypeError, "second item of state must be an integer, " +
@@ -511,7 +511,7 @@ BytesIO.isatty = function(_self){
 
 BytesIO.close = function(_self){
     if(_self._buffer !== _b_.None){
-        $B.$call($B.$getattr(_self._buffer, 'clear'))()
+        $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
     _self.$exports = 0
     $B._BufferedIOBase.close(_self)
@@ -539,7 +539,7 @@ BytesIO.read = function(){
             }
         }
         if(! failed){
-            size = $B.$call(size_index)()
+            size = $B.$call(size_index)
         }
     }
     if(size < 0){
@@ -602,7 +602,7 @@ BytesIO.write = function(_self, b){
     var pos = _self._pos
     if(pos > _b_.len(_self._buffer)){
         // Pad buffer to pos with null bytes.
-        $B.$call($B.$getattr(_self._buffer, 'resize'))(pos)
+        $B.$call($B.$getattr(_self._buffer, 'resize'), pos)
     }
     _b_.bytearray.__setitem__(_self._buffer, _b_.slice.$factory(pos, pos + n), b)
     _self._pos += n
@@ -623,7 +623,7 @@ BytesIO.seek = function(_self, pos, whence=0){
         }
     }
     if(! failed){
-        pos = $B.$call(pos_index)()
+        pos = $B.$call(pos_index)
     }
     if(whence == 0){
         if(pos < 0){
@@ -668,7 +668,7 @@ BytesIO.truncate = function(_self, pos=_b_.None){
             }
         }
         if(! failed){
-            pos = $B.$call(pos_index)()
+            pos = $B.$call(pos_index)
         }
         if(pos < 0){
             $B.RAISE(_b_.ValueError, `negative truncate position ${pos}`)

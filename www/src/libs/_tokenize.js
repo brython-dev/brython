@@ -12,7 +12,7 @@ TokenizerIter.$factory = function(it){
                 {encoding: _b_.None, extra_tokens: false}, null, null)
     return {
         ob_type: TokenizerIter,
-        it: $B.$call($.it),
+        it: $.it,
         encoding: $.encoding,
         extra_tokens: $.extra_tokens
     }
@@ -24,7 +24,7 @@ TokenizerIter.tp_iter = function(self){
         var err
         while(true){
             try{
-                var line = self.it()
+                var line = $B.$call(self.it)
             }catch(err){
                 if(! $B.$isinstance(err, _b_.StopIteration)){
                     throw err

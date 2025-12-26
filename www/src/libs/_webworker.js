@@ -162,9 +162,19 @@ function create_worker(){
                     null, null),
         id = $.id,
         worker_script = $B.webworkers[id],
-        onready = $.onready === _b_.None ? _b_.None : $B.$call($.onready),
-        onmessage = $.onmessage === _b_.None ? _b_.None : $B.$call($.onmessage),
-        onerror = $.onerror === _b_.None ? _b_.None : $B.$call($.onerror)
+        onready = $.onready === _b_.None ? _b_.None :
+            function(){
+                return $B.$call($.onready, ...arguments)
+            },
+        onmessage = $.onmessage === _b_.None ? _b_.None :
+            function(){
+                return $B.$call($.onmessage, ...arguments)
+            }
+        ,
+        onerror = $.onerror === _b_.None ? _b_.None :
+            function(){
+                return $B.$call($.onerror, ...arguments)
+            }
 
     if(worker_script === undefined){
         $B.RAISE(_b_.RuntimeError, `No webworker with id '${id}'`)

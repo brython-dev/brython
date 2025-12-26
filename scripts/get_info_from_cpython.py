@@ -626,8 +626,7 @@ with open(path, 'w', encoding='utf-8') as out:
     while sets:
         types = sets.pop()
 
-        exclude = ("__dict__", "__doc__", "__init_subclass__",
-            "__subclasshook__")
+        exclude = ("__subclasshook__")
 
         for cls in types:
             diffs = {}
@@ -658,7 +657,7 @@ with open(path, 'w', encoding='utf-8') as out:
                     define_wds.append(wd)
                     for m in methods:
                         keys.remove(m)
-
+                        del diffs[m]
             specific = {}
             for attr, value in diffs.items():
                 vtype = type(value)
@@ -670,7 +669,7 @@ with open(path, 'w', encoding='utf-8') as out:
 
             prefix = '_b_' if cls.__name__ in dir(builtins) else '$B'
             if specific or define_wds:
-                out.write(f'/* {name} */\n')
+                out.write(f'/* {name} start */\n')
 
             for wd in define_wds:
                 out.write(f'{prefix}.{name}.{wd} = function(self){{\n\n}}\n\n')
@@ -697,3 +696,5 @@ with open(path, 'w', encoding='utf-8') as out:
             for func in sorted(funcs):
                 out.write(f'{member_name}.{func} = function(self){{\n\n}}\n\n')
             out.write(defs.getvalue())
+            out.write(f'/* {name} end */\n\n')
+

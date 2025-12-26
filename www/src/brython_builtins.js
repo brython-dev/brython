@@ -255,7 +255,7 @@ $B.make_mro = function(cls){
 
 
 $B.is_type = function(obj){
-    return $B.get_mro(obj).includes(_b_.type)
+    return $B.$isinstance(obj, _b_.type)
 }
 
 $B.is_long_int = function(obj){

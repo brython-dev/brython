@@ -576,7 +576,7 @@ function resolve_in_namespace(name, ns){
                 try{
                     return {
                         found: true,
-                        value: $B.$call(ns.$missing)(ns.$dict, name)
+                        value: $B.$call(ns.$missing, ns.$dict, name)
                     }
                 }catch(err){
                     if(! $B.is_exc(err, [_b_.KeyError])){
@@ -1469,7 +1469,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         s += prefix + `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n` +
              prefix + `aexit_${id} = $B.$getattr(mgr_type_${id}, '__aexit__'),\n` +
              prefix + `aenter_${id} = $B.$getattr(mgr_type_${id}, '__aenter__'),\n` +
-             prefix + `value_${id} = await $B.promise($B.$call(aenter_${id})(mgr_${id})),\n` +
+             prefix + `value_${id} = await $B.promise($B.$call(aenter_${id}, mgr_${id})),\n` +
              prefix + `exc_${id} = true\n`
         if(has_generator){
             // add/update attribute used to close context managers in
@@ -1705,7 +1705,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
     var inum = add_to_positions(scopes, this)
     var func =  $B.js_from_ast(this.func, scopes),
-        js = `$B.$call(${func}, ${inum}, `
+        js = `$B.$call_with_position(${func}, ${inum}, `
 
 
     var args = make_args.bind(this)(scopes)
@@ -1832,7 +1832,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
                 name = item.name.id
             }
             name_map.set(item, name)
-            js += prefix + `var ${name} = $B.$call(_typing.${param_type})('${name}')\n`
+            js += prefix + `var ${name} = $B.$call(_typing.${param_type}, '${name}')\n`
         }
         js += prefix + `var generic_base = _typing.Generic.__class_getitem__(_typing.Generic,` +
                 ` $B.fast_tuple([${params.join(', ')}]))\n`
@@ -1953,7 +1953,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         js += prefix + reference(scopes, enclosing_scope, this.name) + ' = '
         var decorate = class_ref
         for(let dec of decorators.reverse()){
-            decorate = `$B.$call(${dec})(${decorate})`
+            decorate = `$B.$call(${dec}, ${decorate})`
         }
         js += decorate + '\n'
     }
@@ -2191,7 +2191,7 @@ $B.ast.For.prototype.to_js = function(scopes){
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
               prefix + tab + tab + `type_${id} = _b_.type.$factory(iter_${id})\n` +
-              prefix + `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
+              prefix + `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"), iter_${id})\n` +
               prefix + `type_${id} = _b_.type.$factory(iter_${id})\n` +
               prefix + `var next_func_${id} = $B.$call(` +
                   `$B.$getattr(type_${id}, '__anext__'))\n` +
@@ -2340,7 +2340,7 @@ function type_param_in_def(tp, ref, scopes){
         scopes.pop()
     }
     js += prefix + `locals_${ref}.${name} = ` +
-        `$B.$call(_typing.${param_type})('${name}', {$kw: [{infer_variance: true}]})\n` +
+        `$B.$call(_typing.${param_type}, '${name}', [], {$kw: [{infer_variance: true}]})\n` +
         prefix + `type_params.push(locals_${ref}.${name})\n`
     if(tp.bound){
         if(! tp.bound.elts){
@@ -2772,7 +2772,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += prefix + `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
         let decorate = func_ref
         for(let dec of decorators.reverse()){
-            decorate = `$B.$call(${dec})(${decorate})`
+            decorate = `$B.$call(${dec}, ${decorate})`
         }
         js += decorate
     }
@@ -2791,7 +2791,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                 `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
             let decorate = func_ref
             for(let dec of decorators.reverse()){
-                decorate = `$B.$call(${dec})(${decorate})`
+                decorate = `$B.$call(${dec}, ${decorate})`
             }
             js += decorate
         }else{
@@ -3828,7 +3828,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                       prefix + `var klass = $B.get_class(${err}),\n`
                 indent()
                 js += prefix + `split_method = $B.$getattr(klass, 'split'),\n` +
-                      prefix + `split = $B.$call(split_method)(${err}, condition),\n` +
+                      prefix + `split = $B.$call(split_method, ${err}, condition),\n` +
                       prefix + 'matching = split[0],\n' +
                       prefix + 'rest = split[1]\n'
                 dedent()
@@ -3961,8 +3961,8 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
           prefix + tab + `return ${value}\n` +
           prefix + `}\n`
     // The function returns an instance of _typing.TypeAliasType
-    js += prefix + `var res = $B.$call($B.imported._typing.TypeAliasType)` +
-          `('${this.name.id}', get_value)\n` +
+    js += prefix + `var res = $B.$call($B.imported._typing.TypeAliasType, ` +
+          `'${this.name.id}', get_value)\n` +
           prefix + `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
           prefix + `$B.$setattr(res, '__type_params__', type_params)\n` +
           prefix + `return res\n`
@@ -3974,16 +3974,16 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
 
 $B.ast.TypeVar.prototype.to_js = function(){
     check_type_params(this)
-    return `$B.$call($B.imported._typing.TypeVar)('${this.name}', ` +
+    return `$B.$call($B.imported._typing.TypeVar, '${this.name}', [], ` +
         `{$kw: [{infer_variance: true}]})`
 }
 
 $B.ast.TypeVarTuple.prototype.to_js = function(){
-    return `$B.$call($B.imported._typing.TypeVarTuple)('${this.name.id}')`
+    return `$B.$call($B.imported._typing.TypeVarTuple, '${this.name.id}')`
 }
 
 $B.ast.ParamSpec.prototype.to_js = function(){
-    return `$B.$call($B.imported._typing.ParamSpec)('${this.name.id}')`
+    return `$B.$call($B.imported._typing.ParamSpec, '${this.name.id}')`
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){
@@ -4087,7 +4087,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                       `"' object does not support the context manager protocol")\n`
         dedent()
         s += prefix + `}\n` +
-             prefix + `var value_${id} = $B.$call(enter_${id})(mgr_${id}),\n` +
+             prefix + `var value_${id} = $B.$call(enter_${id}, mgr_${id}),\n` +
              prefix + tab +  `exc_${id} = true\n`
         if(in_generator){
             // add/update attribute used to close context managers in
@@ -4113,7 +4113,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += prefix + `frame.$lineno = ${lineno}\n` +
              prefix + `exc_${id} = false\n` +
              prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
-             prefix + `var $b = $B.$call(exit_${id})($B.get_class(err_${id}), ` +
+             prefix + `var $b = $B.$call(exit_${id}, $B.get_class(err_${id}), ` +
                   `err_${id}, \n` +
              prefix + tab.repeat(4) + `$B.$getattr(err_${id}, '__traceback__'))\n` +
              prefix + `if(! $B.$bool($b)){\n` +
@@ -4129,7 +4129,7 @@ $B.ast.With.prototype.to_js = function(scopes){
              prefix + `if(exc_${id}){\n`
         indent()
         s += prefix + `try{\n` +
-             prefix + tab + `$B.$call(exit_${id})(_b_.None, _b_.None, _b_.None)\n` +
+             prefix + tab + `$B.$call(exit_${id}, _b_.None, _b_.None, _b_.None)\n` +
              prefix + `}catch(err){\n`
              // If an error occurs in __exit__, make sure the
              // stack frame is preserved (it may have been
@@ -4269,7 +4269,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                             }
                         }
                         if(! failed2${n}){
-                            $B.$call(_m${n})()
+                            $B.$call(_m${n})
                         }
                         throw _e
                     }else if($B.is_exc(_e, _b_.BaseException)){
@@ -4286,8 +4286,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         }
                         if(! failed3${n}){
                             try{
-                                _y${n} = $B.$call(_m${n}).apply(null,
-                                    _b_.list.$factory(_x${n}))
+                                _y${n} = $B.$call(_m${n}, ..._b_.list.$factory(_x${n}))
                             }catch(err){
                                 if($B.is_exc(err, [_b_.StopIteration])){
                                     _r${n} = $B.$getattr(err, "value")
@@ -4303,7 +4302,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         if(_s${n} === _b_.None){
                             _y${n} = _b_.next(_i${n})
                         }else{
-                            _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            _y${n} = $B.$call($B.$getattr(_i${n}, "send"), _s${n})
                         }
                     }catch(err){
                         if($B.is_exc(err, [_b_.StopIteration])){

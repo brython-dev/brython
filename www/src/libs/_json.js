@@ -194,7 +194,7 @@ function to_json(obj, level){
         $B.RAISE(_b_.TypeError, "Object of type " + $B.class_name(obj) +
             " is not JSON serializable")
     }else{
-        return to_json($B.$call(_default)(obj), level, kwarg)
+        return to_json($B.$call(_default, obj), level, kwarg)
     }
 }
 
@@ -220,14 +220,14 @@ function to_py(obj, kw){
                 pairs.push($B.fast_tuple([obj.keys[i],
                     to_py(obj.values[i], kw)]))
             }
-            return $B.$call(kw.object_pairs_hook)(pairs)
+            return $B.$call(kw.object_pairs_hook, pairs)
         }else{
             var dict = $B.empty_dict()
             for(var i = 0, len = obj.keys.length; i < len; i++){
                 _b_.dict.$setitem(dict, obj.keys[i], to_py(obj.values[i], kw))
             }
             return kw.object_hook === _b_.None ? dict :
-                $B.$call(kw.object_hook)(dict)
+                $B.$call(kw.object_hook, dict)
         }
     }else if(obj.type == 'str'){
         return obj.value
@@ -235,13 +235,13 @@ function to_py(obj, kw){
         if(obj.value.search(/[.eE]/) > -1){
             // float
             if(kw.parse_float !== _b_.None){
-                return $B.$call(kw.parse_float)(obj.value)
+                return $B.$call(kw.parse_float, obj.value)
             }
             return $B.fast_float(parseFloat(obj.value))
         }else{
             // integer
             if(kw.parse_int !== _b_.None){
-                return $B.$call(kw.parse_int)(obj.value)
+                return $B.$call(kw.parse_int, obj.value)
             }
             var int = parseInt(obj.value)
             if(Math.abs(int) < $B.max_int){
@@ -252,10 +252,10 @@ function to_py(obj, kw){
         }
     }else{
         if(obj instanceof Number && kw.parse_float !== _b_.None){
-            return $B.$call(kw.parse_float)(obj)
+            return $B.$call(kw.parse_float, obj)
         }else if(kw.parse_int !== _b_.None &&
                 (typeof obj == 'number' || $B.exact_type(obj, $B.long_int))){
-            return $B.$call(kw.parse_int)(obj)
+            return $B.$call(kw.parse_int, obj)
         }else if(kw.parse_constant !== _b_.None && ! isFinite(obj)){
             return kw.parse_constant(obj)
         }
@@ -275,7 +275,7 @@ var escapes = {'n': '\n',
                }
 
 function string_at(s, i){
-    var error = $B.$call($B.imported["json"].JSONDecodeError)
+    var error = $B.imported["json"].JSONDecodeError
 
     var j = i + 1,
         escaped = false,
@@ -300,7 +300,7 @@ function string_at(s, i){
                 j += 5
                 escaped = ! escaped
             }else{
-                throw error('invalid escape "' + s[j] + '"', s, j)
+                throw $B.$call(error, 'invalid escape "' + s[j] + '"', s, j)
             }
         }else{
             value += s[j]
@@ -308,7 +308,7 @@ function string_at(s, i){
         }
     }
     // If we reach here, the string was not properly closed
-    throw error('Unterminated string starting at', s, i)
+    throw $B.$call(error, 'Unterminated string starting at', s, i)
 }
 
 function to_num(num_string, nb_dots, exp){
@@ -399,7 +399,7 @@ function* tokenize(s){
       yield value
       i = value[1]
     }else{
-      throw $B.$call(JSONError)('Extra data: ' +
+      throw $B.$call(JSONError, 'Extra data: ' +
           `line ${line_num} column ${1 + i - column_start}`)
     }
   }
@@ -552,21 +552,21 @@ function parse(s){
           if(err.ob_type){
               throw err
           }else{
-              var error = $B.$call($B.imported["json"].JSONDecodeError)
-              throw error(err.message, s, item[1])
+              var error = $B.imported["json"].JSONDecodeError
+              throw $B.$call(error, err.message, s, item[1])
           }
       }
   }
   // Check if no valid JSON was parsed (empty string or whitespace only)
   if(!root.content && root.list.length === 0){
-      var error = $B.$call($B.imported["json"].JSONDecodeError)
-      throw error('Expecting value', s, 0)
+      var error = $B.imported["json"].JSONDecodeError
+      throw $B.$call(error, 'Expecting value', s, 0)
   }
   // Check if we're still inside an incomplete structure
   if(node !== root){
-      var error = $B.$call($B.imported["json"].JSONDecodeError)
+      var error = $B.imported["json"].JSONDecodeError
       var expected = node instanceof Dict ? "'}'" : "']'"
-      throw error("Expecting ',' delimiter", s, last_pos)
+      throw $B.$call(error, "Expecting ',' delimiter", s, last_pos)
   }
   return root.content ? root.content : root.list[0]
 }

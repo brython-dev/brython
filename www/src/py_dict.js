@@ -1096,12 +1096,12 @@ _b_.dict.tp_init = function(self, first, second){
                 if(gi !== null){
                     // has keys and __getitem__ : it's a mapping, iterate on
                     // keys and values
-                    gi = $B.$call(gi)
-                    let kiter = _b_.iter($B.$call(keys)())
+                    // gi = $B.$call(gi)
+                    let kiter = _b_.iter($B.$call(keys))
                     while(true){
                         try{
                             let key = _b_.next(kiter),
-                                value = gi(key)
+                                value = $B.$call(gi, key)
                             dict.__setitem__(self, key, value)
                         }catch(err){
                             if($B.is_exc(err, _b_.StopIteration)){
@@ -1251,8 +1251,8 @@ dict_funcs.fromkeys = function(){
         value = $.value
 
     // class method
-    var cls = $.cls,
-        res = $B.$call(cls)(),
+    var cls = $.cls
+    var res = $B.$call(cls),
         klass = $B.get_class(res), // might not be cls
         keys_iter = $B.$iter(keys),
         setitem = klass === dict ? dict.$setitem : $B.$getattr(klass, '__setitem__')
@@ -1402,10 +1402,13 @@ dict_funcs.update = function(self){
             }
             $copy_dict(self, o)
         }else if(_b_.hasattr(o, "keys")){
-            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
+            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys")))
             for(let i = 0, len = _keys.length; i < len; i++){
-                var _value = $B.$getattr(o, "__getitem__")(_keys[i])
-                dict.$setitem(self, _keys[i], _value)
+                var getitem = $B.$getattr(o, "__getitem__", $B.NULL)
+                if(getitem !== $B.NULL){
+                    var _value = $B.$call(getitem, _keys[i])
+                    dict.$setitem(self, _keys[i], _value)
+                }
             }
         }else{
             let it = _b_.iter(o),
@@ -1564,11 +1567,12 @@ var mappingproxy = $B.mappingproxy
 mappingproxy.$factory = function(obj){
     var res
     if($B.$isinstance(obj, dict)){
-        res = $B.obj_dict(dict.$to_obj(obj))
+        res = dict.$to_obj(obj)
     }else{
-        res = $B.obj_dict(obj)
+        res = obj
     }
     res.ob_type = mappingproxy
+    res.mapping = obj
     res.$version = 0
     return res
 }
@@ -1581,10 +1585,7 @@ mappingproxy.__hash__ = function(self){
 
 
 
-mappingproxy.__contains__ = function(self, key){
-    console.log('contains', self, key)
-    return self.$jsobj[key] !== undefined
-}
+
 
 $B.mappingproxy_contains = mappingproxy.__contains__
 
@@ -1614,13 +1615,6 @@ for(var attr in dict){
     }
 }
 
-mappingproxy.dict.__getitem__ = function(self, key){
-    var res = self.mapping[key]
-    if(res !== undefined){
-        return res
-    }
-    $B.RAISE(_b_.KeyError, key)
-}
 
 /*
 for(var attr in $B.dunder_methods){
@@ -1630,9 +1624,8 @@ for(var attr in $B.dunder_methods){
     }
 }
 */
-$B.set_func_names(mappingproxy, "builtins")
 
-/* mappingproxy */
+/* mappingproxy start */
 $B.mappingproxy.tp_richcompare = function(self){
 
 }
@@ -1659,8 +1652,8 @@ $B.mappingproxy.tp_str = function(self){
 
 $B.mappingproxy.tp_iter = function(self){
     return {
-        ob_type: $B.iterator,
-        it: self
+        ob_type: $B.dict_keyiterator,
+        it: mappingproxy_iter_items(self)
     }
 }
 
@@ -1687,8 +1680,8 @@ $B.mappingproxy.mp_subscript = function(self, key){
     $B.RAISE(_b_.KeyError, key)
 }
 
-$B.mappingproxy.sq_contains = function(self){
-
+$B.mappingproxy.sq_contains = function(self, key){
+    return self.mapping[key] !== undefined
 }
 
 var mappingproxy_funcs = $B.mappingproxy.tp_funcs = {}
@@ -1720,7 +1713,10 @@ mappingproxy_funcs.items = function(self){
 }
 
 mappingproxy_funcs.keys = function(self){
-    return _b_.dict.dict.keys(mp2dict(self))
+    return {
+        ob_type: $B.dict_keyiterator,
+        it: mappingproxy_iter_items(self)
+    }
 }
 
 mappingproxy_funcs.values = function(self){
@@ -1732,6 +1728,16 @@ $B.mappingproxy.functions_or_methods = ["__new__"]
 $B.mappingproxy.tp_methods = ["get", "keys", "values", "items", "copy", "__reversed__"]
 
 $B.mappingproxy.classmethods = ["__class_getitem__"]
+
+/* mapping proxy end */
+
+$B.set_func_names(mappingproxy, "builtins")
+
+function* mappingproxy_iter_items(self){
+    for(var key in self.mapping){
+        yield {key, value: self.mapping[key]}
+    }
+}
 
 function mp2dict(mp){
     var res = $B.empty_dict()

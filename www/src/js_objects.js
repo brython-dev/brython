@@ -1296,6 +1296,50 @@ $B.JSMeta.tp_new = function(metaclass, class_name, bases, cl_dict){
 
 $B.set_func_names($B.JSMeta, "builtins")
 
+$B.JSFunction = $B.make_builtin_class('JavascriptFunction')
+
+$B.JSFunction.tp_call = function(self, ...args){
+    return self.apply(null, args)
+}
+
+var JSFunction_funcs = $B.JSFunction.tp_funcs = {}
+
+JSFunction_funcs.new = function(self, ...args){
+    var new_func
+    var attr = 'new'
+    args = pyargs2jsargs(args)
+    if(self.$js_func){
+        return new self.$js_func(...args)
+    }else{
+        return new self(...args)
+    }
+    Object.defineProperty(new_func, '$infos',
+        {
+            value: {
+                __name__: attr,
+                __qualname__: attr
+            },
+            writable: true
+        }
+    )
+    let value = []
+    value[$B.func_attrs.__name__] = attr
+    value[$B.func_attrs.__qualname__] = attr
+    Object.defineProperty(new_func, '$function_infos',
+        {
+            value,
+            writable: true
+        }
+    )
+    new_func.ob_type = $B.builtin_function_or_method
+    console.log('JSObject.new returns', new_func)
+    new_func.__name__ = 'new'
+    return new_func
+}
+
+$B.JSFunction.tp_methods = ["new"]
+
+console.log('member descriptor name', $B.member_descriptor.tp_name)
 
 })(__BRYTHON__);
 

@@ -3065,11 +3065,11 @@ function subn(pattern, repl, string, count, flags){
         var mo = bmo.mo // instance of MO
         res += from_codepoint_list(string.codepoints.slice(pos, mo.start))
         if(typeof repl == "function"){
-            var x = $B.$call(repl)(bmo)
+            var x = $B.$call(repl, bmo)
             if($B.exact_type(x, _b_.bytes)){
                 x = _b_.bytes.decode(x, 'latin-1')
             }
-            res += x // $B.$call(repl)(bmo)
+            res += x
         }else{
             res += repl1
         }
@@ -3374,7 +3374,7 @@ MatchObject.expand = function(){
     }
     data = transform_repl(data, {groups: $.self.mo.node.$groups})
     if(typeof data.repl == "function"){
-        return $B.$call(data.repl)(MatchObject.$factory($.self.mo))
+        return $B.$call(data.repl, MatchObject.$factory($.self.mo))
     }else{
         return data.repl1
     }

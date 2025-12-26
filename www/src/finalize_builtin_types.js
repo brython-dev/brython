@@ -2,8 +2,6 @@
 
 var _b_ = $B.builtins
 
-console.log('mro of type', _b_.type.tp_mro)
-
 $B.set_class_attr = function(klass, attr, value, ob_type){
     if(ob_type){
         if(ob_type.$factory === undefined){
@@ -63,14 +61,47 @@ function wrap(dunder){
     }
 }
 
+function wrap_with_reflected(dunder, rdunder){
+    return function(cls, attr){
+        var func = cls[attr]
+        cls.dict[dunder] = $B.wrapper_descriptor.$factory(
+            cls,
+            dunder,
+            func
+        )
+        cls.dict[rdunder] = $B.wrapper_descriptor.$factory(
+            cls,
+            rdunder,
+            (a, b) => func(b, a)
+        )
+    }
+}
+
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
         mp_length: wrap('__len__'),
         mp_subscript: wrap('__getitem__'),
+        mp_ass_subscript: make_setitem_delitem,
         nb_absolute: wrap('__abs__'),
-        nb_add: make_add,
+        nb_add: wrap_with_reflected('__add__', '__radd__'),
+        nb_and: wrap_with_reflected('__and__', '__rand__'),
+        nb_divmod: wrap_with_reflected('__divmod__', '__rdivmod__'),
         nb_index: wrap('__index__'),
+        nb_lshift: wrap_with_reflected('__lshift__', '__rlshift__'),
+        nb_inplace_add: wrap('__iadd__'),
+        nb_inplace_multiply: wrap('__imul__'),
+        nb_matrix_multiply: wrap_with_reflected('__matmul__', '__rmatmul__'),
+        nb_multiply: wrap_with_reflected('__mul__', '__rmul__'),
+        nb_or: wrap_with_reflected('__or__', '__ror__'),
+        nb_power: wrap_with_reflected('__pow__', '__rpow__'),
+        nb_remainder: wrap_with_reflected('__mod__', '__rmod__'),
+        nb_subtract: wrap_with_reflected('__sub__', '__rsub__'),
+        nb_rshift: wrap_with_reflected('__rshift__', '__rrshift__'),
+        nb_xor: wrap_with_reflected('__xor__', '__rxor__'),
+        sq_ass_item: make_setitem_delitem,
+        sq_concat: wrap('__add__'),
+        sq_contains: wrap('__contains__'),
         sq_length: wrap('__len__'),
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
@@ -122,6 +153,20 @@ function make_next(cls){
     cls.dict.__next__ = next
 }
 
+function make_setitem_delitem(cls){
+    var setitem = cls.sq_ass_item ?? cls.mp_ass_subscript
+    cls.dict.__setitem__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__setitem__',
+        setitem
+    )
+    cls.dict.__delitem__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__delitem__',
+        (a) => setitem(a, $B.NULL)
+    )
+}
+
 function make_richcompare(cls){
     var comp = cls.tp_richcompare
     var eq = (a, b) => comp(a, b) == 0
@@ -163,13 +208,7 @@ function make_richcompare(cls){
 }
 
 $B.finalize_type = function(cls){
-    if(cls.tp_name == 'JSMeta'){
-        console.log('finalize', cls, 'type mro', _b_.type.tp_mro)
-    }
     cls.tp_mro = $B.make_mro(cls)
-    if(cls.tp_name == 'JSMeta'){
-        console.log('type mro', _b_.type.tp_mro)
-    }
     if(cls.tp_funcs){
         if(cls.tp_getset){
             for(var descr of cls.tp_getset){
@@ -183,6 +222,7 @@ $B.finalize_type = function(cls){
         if(cls.tp_methods){
             for(var descr of cls.tp_methods){
                 var method = cls.tp_funcs[descr]
+                method.ob_type = $B.builtin_method
                 if(method === undefined){
                     console.log('no method', cls, cls.tp_funcs, descr)
                     alert()
@@ -190,17 +230,25 @@ $B.finalize_type = function(cls){
                 cls.dict[descr] = {
                     ob_type: $B.method_descriptor,
                     method,
-                    name: descr,
+                    ml: {ml_name: descr},
                     cls
                 }
+                method.self = cls.dict[descr]
             }
         }
         if(cls.tp_members){
             for(var descr of cls.tp_members){
-                var member = cls.tp_funcs[descr]
+                var member = {
+                    ob_type: $B.method_descriptor,
+                    method: cls.tp_funcs[descr],
+                    ml: {ml_name: descr},
+                    cls
+                }
                 cls.dict[descr] = {
                     ob_type: $B.member_descriptor,
-                    d_member: member
+                    d_member: member,
+                    d_type: cls,
+                    d_name: descr
                 }
             }
         }
@@ -232,9 +280,11 @@ $B.finalize_type = function(cls){
             cls.dict[name] = {
                 ob_type: $B.method_descriptor,
                 method,
-                name,
+                ml: {ml_name: name},
                 cls
             }
+            method.ob_type = $B.builtin_method
+            method.self = cls.dict[name]
         }
     }
     for(var slot in $B.wrapper_methods){
@@ -253,6 +303,7 @@ for(var ns of [$B.builtin_types, $B.created_types]){
         $B.finalize_type(cls)
     }
 }
+
 
 // builtin functions
 for(var builtin_func of $B.builtin_funcs){

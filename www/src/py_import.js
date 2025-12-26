@@ -87,7 +87,7 @@ module_funcs.__annotations___set = function(self){
 
 module_funcs.__dir__ = function(self){
     if(self.__dir__){
-        return $B.$call(self.__dir__)()
+        return $B.$call(self.__dir__)
     }
     var res = []
     for(var key in self){
@@ -742,7 +742,7 @@ PathFinder.find_spec = function(cls, fullname, path){
             for(var j = 0, lj = path_hooks.length; j < lj; ++j){
                 var hook = path_hooks[j]
                 try{
-                    finder = $B.$call(hook)(path_entry)
+                    finder = $B.$call(hook, path_entry)
                     $B.path_importer_cache[path_entry] = finder
                     break
                 }catch(e){
@@ -759,7 +759,7 @@ PathFinder.find_spec = function(cls, fullname, path){
         // If a finder was found with the path hooks, call its method
         // find_spec() to return a ModuleSpec or None.
         var find_spec = $B.$getattr(finder, "find_spec"),
-            spec = $B.$call(find_spec)(fullname)
+            spec = $B.$call(find_spec, fullname)
         if(!$B.is_none(spec)){
             return spec
         }
@@ -824,7 +824,7 @@ PathEntryFinder.find_spec = function(self, fullname){
             if (loader_data.is_package) {
                 // Populate cache in advance to speed up submodule imports
                 $B.path_importer_cache[base_path + '/'] =
-                        $B.$call(url_hook)(base_path + '/', self.hint)
+                        $B.$call(url_hook, base_path + '/', self.hint)
             }
             loader_data.path = file_info[0]
         }catch(err){
@@ -955,13 +955,13 @@ function import_engine(mod_name, _path, from_stdlib){
                 if(_loader !== _b_.None){
                     // The loader has a method load_module()
                     var load_module = $B.$getattr(_loader, "load_module"),
-                        module = $B.$call(load_module)(mod_name)
+                        module = $B.$call(load_module, mod_name)
                     _sys_modules[mod_name] = module
                     return module
                 }
             }
         }else{
-            spec = $B.$call(find_spec)(mod_name, _path)
+            spec = $B.$call(find_spec, mod_name, _path)
             if(!$B.is_none(spec)){
                 module = $B.imported[spec.name]
                 if(module !== undefined){
@@ -996,7 +996,7 @@ function import_engine(mod_name, _path, from_stdlib){
         if(!$B.is_none(_loader)){
             var create_module = $B.$getattr(_loader, "create_module", _b_.None)
             if(!$B.is_none(create_module)){
-                module = $B.$call(create_module)(spec)
+                module = $B.$call(create_module, spec)
             }
         }
         if(module === undefined){$B.RAISE(_b_.ImportError, mod_name)}
@@ -1405,7 +1405,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                         if(test){
                             console.log('try to import', mod_name + '.' + name)
                         }
-                        $B.$call(__import__)(mod_name + '.' + name,
+                        $B.$call(__import__, mod_name + '.' + name,
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
                         ns[alias] = $B.$getattr(modobj, name)
@@ -1568,6 +1568,8 @@ _importlib_module.__repr__ = _importlib_module.__str__ = function(){
 return "<module '_importlib' (built-in)>"
 }
 $B.imported["_importlib"] = _importlib_module
+
+console.log('member descriptor name', $B.member_descriptor.tp_name)
 
 })(__BRYTHON__);
 

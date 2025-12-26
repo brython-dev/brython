@@ -29,27 +29,6 @@ The argument must be an iterable if specified.`,
 list.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 list.$is_sequence = true
 
-list.nb_add = function(self, other){
-    if($B.get_class(self) !== $B.get_class(other)){
-        var this_name = $B.class_name(self) // can be tuple
-        var radd = $B.$getattr(other, '__radd__', null)
-        if(radd === null){
-            $B.RAISE(_b_.TypeError, 'can only concatenate ' +
-                this_name + ' (not "' + $B.class_name(other) +
-                '") to ' + this_name)
-        }
-        return _b_.NotImplemented
-    }
-    var res = self.slice()
-    for(const item of other){
-        res.push(item)
-    }
-    if(isinstance(self, tuple)){
-        return tuple.$factory(res)
-    }else{
-        return $B.$list(res)
-    }
-}
 
 list.__bool__ = function(self){
     return list.__len__(self) > 0
@@ -57,20 +36,9 @@ list.__bool__ = function(self){
 
 list.__class_getitem__ = $B.$class_getitem
 
-list.__contains__ = function(){
-    var $ = $B.args("__contains__", 2, {self: null, item: null},
-        ["self", "item"], arguments, {}, null, null),
-        self = $.self,
-        item = $.item
-    for(var _item of self) {
-        if($B.is_or_equals(_item, item)){
-            return true
-        }
-    }
-    return false
-}
 
-list.__delitem__ = function(self, arg){
+
+function list_delitem(self, arg){
     if(isinstance(arg, _b_.int)){
         let pos = arg
         if(arg < 0){
@@ -160,14 +128,7 @@ list.__eq__ = function(self, other){
     return _b_.NotImplemented
 }
 
-list.__getitem__ = function(self, key){
-    // var $ = $B.args("__getitem__",2,{self: null, key: null},
-    //     ["self", "key"], arguments, {}, null, null),
-    //     self = $.self,
-    //     key = $.key
-    $B.check_nb_args_no_kw("__getitem__", 2, arguments)
-    return list.$getitem(self, key)
-}
+
 
 list.$getitem = function(self, key){
     var klass = $B.get_class(self)
@@ -267,65 +228,11 @@ list.__gt__ = function(self, other){
 
 list.__hash__ = _b_.None
 
-list.__iadd__ = function() {
-    var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
-    var x = list.$factory($.x)
-    for(var i = 0; i < x.length; i++){
-        $.self.push(x[i])
-    }
-    return $.self
-}
 
-list.__imul__ = function() {
-    var $ = $B.args("__imul__", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null),
-        len = $.self.length,
-        pos = len
-    try{
-        var x = $B.PyNumber_Index($.x)
-    }catch(err){
-        $B.RAISE(_b_.TypeError, `can't multiply sequence by non-int` +
-            ` of type '${$B.class_name($.x)}'`)
-    }
-    if(x == 0){
-        list.clear($.self)
-        return $.self
-    }
-    for(var i = 1; i < x; i++){
-        for(var j = 0; j < len; j++){
-            $.self[pos++] = $.self[j]
-        }
-    }
-    return $.self
-}
 
-list.tp_init = function(){
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
-            'args', 'kw'),
-        self = $.self,
-        args = $.args,
-        kw = $.kw
-    if(args.length > 1){
-        $B.RAISE(_b_.TypeError, 'expected at most 1 argument, got ' +
-            args.length)
-    }
-    if(_b_.dict.__len__(kw) > 0){
-        $B.RAISE(_b_.TypeError, 'list() takes no keyword arguments')
-    }
-    while(self.length > 0){
-        self.pop()
-    }
-    var arg = args[0]
-    if(arg === undefined){
-        return _b_.None
-    }
-    var pos = 0
-    for(var item of $B.make_js_iterator(arg)){
-        self[pos++] = item
-    }
-    return _b_.None
-}
+
+
+
 
 var list_iterator = $B.make_builtin_class("list_iterator")
 
@@ -339,12 +246,7 @@ list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
-list.tp_iter = function(self){
-    return {
-        ob_type: list_iterator,
-        it: self[Symbol.iterator]()
-    }
-}
+
 
 list.__le__ = function(self, other){
     // True if all items in self are <= than in other,
@@ -368,10 +270,6 @@ list.__le__ = function(self, other){
     }
     // First different item: [1, x] <= [1, y] is x <= y
     return $B.rich_comp('__le__', self[i], other[i])
-}
-
-list.sq_length = function(self){
-    return self.length
 }
 
 list.__lt__ = function(self, other){
@@ -398,62 +296,9 @@ list.__lt__ = function(self, other){
     return $B.rich_comp('__lt__', self[i], other[i])
 }
 
-list.__mul__ = function(self, other){
-    if($B.$isinstance(other, [_b_.float, _b_.complex])){
-        $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
-                "' object cannot be interpreted as an integer")
-    }
-    if(self.length == 0){
-        return list.__new__(list)
-    }
-    try{
-        other = $B.PyNumber_Index(other)
-    }catch(err){
-        return _b_.NotImplemented
-    }
-    if(typeof other == 'number'){
-        if(other < 0){
-            return list.__new__(list)
-        }
-        if(self.length > $B.max_array_size / other){
-            $B.RAISE(_b_.OverflowError, `cannot fit ` +
-                `'${$B.class_name(other)}' into an index-sized integer`)
-        }
-        var res = [],
-            $temp = self.slice(),
-            len = $temp.length
-        for(var i = 0; i < other; i++){
-            for(var j = 0; j < len; j++){
-                res.push($temp[j])
-            }
-        }
-        res.ob_type = $B.get_class(self)
-        return res
-    }else if(isinstance(other, $B.long_int)){
-        $B.RAISE(_b_.OverflowError, `cannot fit ` +
-        `'${$B.class_name(other)}' into an index-sized integer`)
-    }else{
-        return _b_.NotImplemented
-    }
-}
 
-list.tp_new = function(cls){
-    // ignores other arguments than the first
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "list.__new__(): not enough arguments")
-    }
-    var res = []
-    res.ob_type = cls
-    if(cls !== list){
-        res.dict = $B.empty_dict()
-    }
-    return res
-}
 
-list.tp_repr = function(self){
-    $B.builtins_repr_check(list, arguments) // in brython_builtins.js
-    return list_repr(self)
-}
+
 
 function list_repr(self){
     // shared between list and tuple
@@ -486,22 +331,13 @@ list_reverseiterator.__reduce__ = list_reverseiterator.__reduce_ex__ = function(
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
-list.__reversed__ = function(self){
-    return list_reverseiterator.$factory(self)
-}
+
 
 list.__rmul__ = function(self, other){
     return list.__mul__(self, other)
 }
 
-list.__setitem__ = function(){
-    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null),
-        self = $.self,
-        arg = $.key,
-        value = $.value
-    list.$setitem(self, arg, value)
-}
+
 
 
 // Set list key or slice
@@ -658,24 +494,232 @@ function list___sizeof__(self){
     $B.RAISE(_b_.NotImplementedError)
 }
 
-function list_clear(self){
-    var $ = $B.args("clear", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
-    while($.self.length){
-        $.self.pop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* list start */
+_b_.list.tp_richcompare = function(self){
+
+}
+
+_b_.list.nb_multiply = function(self, other){
+    if($B.$isinstance(other, [_b_.float, _b_.complex])){
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
+                "' object cannot be interpreted as an integer")
+    }
+    if(self.length == 0){
+        return list.__new__(list)
+    }
+    try{
+        other = $B.PyNumber_Index(other)
+    }catch(err){
+        return _b_.NotImplemented
+    }
+    if(typeof other == 'number'){
+        if(other < 0){
+            return list.__new__(list)
+        }
+        if(self.length > $B.max_array_size / other){
+            $B.RAISE(_b_.OverflowError, `cannot fit ` +
+                `'${$B.class_name(other)}' into an index-sized integer`)
+        }
+        var res = [],
+            $temp = self.slice(),
+            len = $temp.length
+        for(var i = 0; i < other; i++){
+            for(var j = 0; j < len; j++){
+                res.push($temp[j])
+            }
+        }
+        res.ob_type = $B.get_class(self)
+        return res
+    }else if(isinstance(other, $B.long_int)){
+        $B.RAISE(_b_.OverflowError, `cannot fit ` +
+        `'${$B.class_name(other)}' into an index-sized integer`)
+    }else{
+        return _b_.NotImplemented
+    }
+}
+
+_b_.list.mp_ass_subscript = function(){
+    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
+        ["self", "key", "value"], arguments, {}, null, null),
+        self = $.self,
+        arg = $.key,
+        value = $.value
+    if(value === $B.NULL){
+        return list_delitem(self, arg)
+    }else{
+        return list.$setitem(self, arg, value)
+    }
+}
+
+_b_.list.tp_repr = function(self){
+    $B.builtins_repr_check(list, arguments) // in brython_builtins.js
+    return list_repr(self)
+}
+
+_b_.list.tp_hash = _b_.None
+
+_b_.list.tp_iter = function(self){
+    return {
+        ob_type: list_iterator,
+        it: self[Symbol.iterator]()
+    }
+}
+
+_b_.list.tp_init = function(self){
+    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
+            'args', 'kw'),
+        self = $.self,
+        args = $.args,
+        kw = $.kw
+    if(args.length > 1){
+        $B.RAISE(_b_.TypeError, 'expected at most 1 argument, got ' +
+            args.length)
+    }
+    if(_b_.len(kw) > 0){
+        $B.RAISE(_b_.TypeError, 'list() takes no keyword arguments')
+    }
+    while(self.length > 0){
+        self.pop()
+    }
+    var arg = args[0]
+    if(arg === undefined){
+        return _b_.None
+    }
+    var pos = 0
+    for(var item of $B.make_js_iterator(arg)){
+        self[pos++] = item
     }
     return _b_.None
 }
 
-function list_copy(self){
-    var $ = $B.args("copy", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
-    var res = $.self.slice()
-    res.ob_type = $B.get_class($.self)
+_b_.list.tp_new = function(cls){
+    // ignores other arguments than the first
+    if(cls === undefined){
+        $B.RAISE(_b_.TypeError, "list.__new__(): not enough arguments")
+    }
+    var res = []
+    res.ob_type = cls
+    if(cls !== list){
+        res.dict = $B.empty_dict()
+    }
     return res
 }
 
-function list_append(self, x){
+_b_.list.nb_inplace_add = function(){
+    var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
+        arguments, {}, null, null)
+    var x = list.$factory($.x)
+    for(var i = 0; i < x.length; i++){
+        $.self.push(x[i])
+    }
+    return $.self
+}
+
+_b_.list.nb_inplace_multiply = function(self){
+    var $ = $B.args("__imul__", 2, {self: null, x: null}, ["self", "x"],
+        arguments, {}, null, null),
+        len = $.self.length,
+        pos = len
+    try{
+        var x = $B.PyNumber_Index($.x)
+    }catch(err){
+        $B.RAISE(_b_.TypeError, `can't multiply sequence by non-int` +
+            ` of type '${$B.class_name($.x)}'`)
+    }
+    if(x == 0){
+        list.clear($.self)
+        return $.self
+    }
+    for(var i = 1; i < x; i++){
+        for(var j = 0; j < len; j++){
+            $.self[pos++] = $.self[j]
+        }
+    }
+    return $.self
+}
+
+_b_.list.mp_length = function(self){
+    return self.length
+}
+
+_b_.list.mp_subscript = function(self, key){
+    // var $ = $B.args("__getitem__",2,{self: null, key: null},
+    //     ["self", "key"], arguments, {}, null, null),
+    //     self = $.self,
+    //     key = $.key
+    $B.check_nb_args_no_kw("__getitem__", 2, arguments)
+    return list.$getitem(self, key)
+}
+
+_b_.list.sq_concat = function(self, other){
+    if($B.get_class(self) !== $B.get_class(other)){
+        var this_name = $B.class_name(self) // can be tuple
+        var radd = $B.$getattr(other, '__radd__', null)
+        if(radd === null){
+            $B.RAISE(_b_.TypeError, 'can only concatenate ' +
+                this_name + ' (not "' + $B.class_name(other) +
+                '") to ' + this_name)
+        }
+        return _b_.NotImplemented
+    }
+    var res = self.slice()
+    for(const item of other){
+        res.push(item)
+    }
+    if(isinstance(self, tuple)){
+        return tuple.$factory(res)
+    }else{
+        return $B.$list(res)
+    }
+}
+
+_b_.list.sq_contains = function(self){
+    var $ = $B.args("__contains__", 2, {self: null, item: null},
+        ["self", "item"], arguments, {}, null, null),
+        self = $.self,
+        item = $.item
+    for(var _item of self) {
+        if($B.is_or_equals(_item, item)){
+            return true
+        }
+    }
+    return false
+}
+
+var list_funcs = _b_.list.tp_funcs = {}
+
+list_funcs.__class_getitem__ = $B.$class_getitem
+
+list_funcs.__reversed__ = function(self){
+    return list_reverseiterator.$factory(self)
+}
+
+list_funcs.__sizeof__ = function(self){
+
+}
+
+list_funcs.append = function(self, x){
     $B.check_nb_args_no_kw("append", 2, arguments)
     if(self[$B.PYOBJ]){
         self[$B.PYOBJ].push(x)
@@ -688,18 +732,36 @@ function list_append(self, x){
     return _b_.None
 }
 
-function list_insert(){
-    var $ = $B.args("insert", 3, {self: null, i: null, item: null},
-        ["self", "i", "item"], arguments, {}, null, null)
-    if(self.$is_js_array){
-        $.self.splice($.i, 0, $B.pyobj2jsobj($.item))
-    }else{
-        $.self.splice($.i, 0, $.item)
+list_funcs.clear = function(){
+    var $ = $B.args("clear", 1, {self: null}, ["self"],
+        arguments, {}, null, null)
+    while($.self.length){
+        $.self.pop()
     }
     return _b_.None
 }
 
-function list_extend(){
+list_funcs.copy = function(self){
+    var $ = $B.args("copy", 1, {self: null}, ["self"],
+        arguments, {}, null, null)
+    var res = $.self.slice()
+    res.ob_type = $B.get_class($.self)
+    return res
+}
+
+list_funcs.count = function(self){
+    var $ = $B.args("count", 2, {self: null, x: null}, ["self", "x"],
+        arguments, {}, null, null)
+    var res = 0
+    for(var _item of $.self){
+        if($B.is_or_equals(_item, $.x)){
+            res++
+        }
+    }
+    return res
+}
+
+list_funcs.extend = function(self){
     var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
         arguments, {}, null, null)
     if(self.$is_js_array){
@@ -714,41 +776,7 @@ function list_extend(){
     return _b_.None
 }
 
-function list_pop(self){
-    var missing = {}
-    var $ = $B.args("pop", 2, {self: null, pos: null}, ["self", "pos"],
-        arguments, {pos: missing}, null, null),
-        self = $.self,
-        pos = $.pos
-    check_not_tuple(self, "pop")
-    if(pos === missing){
-        pos = self.length - 1
-    }
-    pos = $B.PyNumber_Index(pos)
-    if(pos < 0){
-        pos += self.length
-    }
-    var res = self[pos]
-    if(res === undefined){
-        $B.RAISE(_b_.IndexError, "pop index out of range")
-    }
-    self.splice(pos, 1)
-    return res
-}
-
-function list_remove(){
-    var $ = $B.args("remove", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
-    for(var i = 0, len = $.self.length; i < len; i++){
-        if($B.rich_comp("__eq__", $.self[i], $.x)){
-            $.self.splice(i, 1)
-            return _b_.None
-        }
-    }
-    $B.RAISE(_b_.ValueError, _b_.str.$factory($.x) + " is not in list")
-}
-
-function list_index(){
+list_funcs.index = function(self){
     var missing = {},
         $ = $B.args("index", 4, {self: null, x: null, start: null, stop: null},
             ["self", "x", "start" ,"stop"], arguments,
@@ -782,19 +810,52 @@ function list_index(){
         $B.class_name(self))
 }
 
-function list_count(self){
-    var $ = $B.args("count", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
-    var res = 0
-    for(var _item of $.self){
-        if($B.is_or_equals(_item, $.x)){
-            res++
-        }
+list_funcs.insert = function(self){
+    var $ = $B.args("insert", 3, {self: null, i: null, item: null},
+        ["self", "i", "item"], arguments, {}, null, null)
+    if(self.$is_js_array){
+        $.self.splice($.i, 0, $B.pyobj2jsobj($.item))
+    }else{
+        $.self.splice($.i, 0, $.item)
     }
+    return _b_.None
+}
+
+list_funcs.pop = function(self){
+    var missing = {}
+    var $ = $B.args("pop", 2, {self: null, pos: null}, ["self", "pos"],
+        arguments, {pos: missing}, null, null),
+        self = $.self,
+        pos = $.pos
+    check_not_tuple(self, "pop")
+    if(pos === missing){
+        pos = self.length - 1
+    }
+    pos = $B.PyNumber_Index(pos)
+    if(pos < 0){
+        pos += self.length
+    }
+    var res = self[pos]
+    if(res === undefined){
+        $B.RAISE(_b_.IndexError, "pop index out of range")
+    }
+    self.splice(pos, 1)
     return res
 }
 
-function list_reverse(self){
+list_funcs.remove = function(self){
+    var $ = $B.args("remove", 2, {self: null, x: null}, ["self", "x"],
+        arguments, {}, null, null)
+    for(var i = 0, len = $.self.length; i < len; i++){
+        if($B.rich_comp("__eq__", $.self[i], $.x)){
+            $.self.splice(i, 1)
+            return _b_.None
+        }
+    }
+    $B.RAISE(_b_.ValueError, _b_.str.$factory($.x) + " is not in list")
+}
+
+list_funcs.reverse = function(self){
     var $ = $B.args("reverse", 1, {self: null}, ["self"],
         arguments, {}, null, null),
         _len = $.self.length - 1,
@@ -807,7 +868,7 @@ function list_reverse(self){
     return _b_.None
 }
 
-function list_sort(self){
+list_funcs.sort = function(self){
     var $ = $B.args("sort", 1, {self: null}, ["self"],
         arguments, {}, null, "kw")
 
@@ -827,10 +888,6 @@ function list_sort(self){
     }
     if(self.length == 0){
         return _b_.None
-    }
-
-    if(func !== _b_.None){
-        func = $B.$call(func) // func can be an object with method __call__
     }
 
     self.$cl = $elts_class(self)
@@ -872,7 +929,7 @@ function list_sort(self){
             var temp = [],
                 saved = self.slice()
             for(let i = 0, len = self.length; i < len; i++){
-                temp.push([func(self[i]), i])
+                temp.push([$B.$call(func(self[i], i))])
             }
             temp.sort(cmp)
             for(let i = 0, len = temp.length; i < len; i++){
@@ -887,23 +944,12 @@ function list_sort(self){
     return self.$is_js_array ? self : _b_.None
 }
 
-list.tp_methods = [
-    ["__getitem__", list_subscript, $B.METH_O | $B.METH_COEXIST],
-    ["__reversed__", list___reversed__, $B.METH_NOARGS],
-    ["__sizeof__", list___sizeof__, $B.METH_NOARGS],
-    ["clear", list_clear, $B.METH_NOARGS],
-    ["copy", list_copy, $B.METH_NOARGS],
-    ["append", list_append, $B.METH_O],
-    ["insert", list_insert, $B.METH_FASTCALL],
-    ["extend", list_extend, $B.METH_O],
-    ["pop", list_pop, $B.METH_FASTCALL],
-    ["remove", list_remove, $B.METH_O],
-    ["index", list_index, $B.METH_FASTCALL],
-    ["count", list_count, $B.METH_O],
-    ["reverse", list_reverse, $B.METH_NOARGS],
-    ["sort", list_sort, $B.METH_FASTCALL | $B.METH_KEYWORDS],
-    ["__class_getitem__", $B.$class_getitem, $B.METH_O | $B.METH_CLASS]
-]
+_b_.list.tp_methods = ["__reversed__", "__sizeof__", "clear", "copy", "append", "insert", "extend", "pop", "remove", "index", "count", "reverse", "sort"]
+
+_b_.list.classmethods = ["__class_getitem__"]
+
+/* list end */
+
 
 // Tuples
 var tuple = _b_.tuple

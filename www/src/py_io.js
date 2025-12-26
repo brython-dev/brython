@@ -17,7 +17,7 @@ $B.make_IOUnsupported = function(){
 
 function _io_unsupported(value){
     $B.make_IOUnsupported()
-    throw $B.$call($B._IOUnsupported)(value)
+    throw $B.$call($B._IOUnsupported, value)
 }
 
 var _IOBase = $B.make_builtin_class("_IOBase")
@@ -178,7 +178,7 @@ _IOBase.readline = function(_self, limit=-1){
         }
 
         var read = $B.search_in_mro($B.get_class(_self), "read")
-        b = $B.$call(read)(_self, nreadahead)
+        b = $B.$call(read, _self, nreadahead)
         if(! $B.$isinstance(b, _b_.bytes)) {
             $B.RAISE(_b_.OSError,
                 "read() should have returned a bytes object, " +
@@ -194,7 +194,7 @@ _IOBase.readline = function(_self, limit=-1){
             break
         }
     }
-    return $B.$call(_b_.bytes)(buffer)
+    return $B.$call(_b_.bytes, buffer)
 }
 
 _IOBase.readlines = function(_self, hint){
@@ -306,7 +306,7 @@ $B._RawIOBase.read = function(_self, n){
 
     b = _b_.bytearray.$factory()
 
-    $B.$call($B.$getattr(_self, "readinto"))(b)
+    $B.$call($B.$getattr(_self, "readinto"), b)
 
     return b
 }
@@ -317,7 +317,7 @@ $B._RawIOBase.readall = function(_self){
     var result
 
     while (1) {
-        var data = $B.$call($B.$getattr(_self, "read"))(DEFAULT_BUFFER_SIZE)
+        var data = $B.$call($B.$getattr(_self, "read"), DEFAULT_BUFFER_SIZE)
         if(data === _b_.None){
             if (chunks.length == 0) {
                 return data
@@ -369,7 +369,7 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
     }
 
     var attr = readinto1 ? "read1" : "read"
-    data = $B.$call($B.$getattr(_self, attr))(_b_.len(buffer))
+    data = $B.$call($B.$getattr(_self, attr), _b_.len(buffer))
 
     if(! $B.$isinstance(data, _b_.bytes)) {
         $B.RAISE(_b_.TypeError, "read() should return bytes")
@@ -382,7 +382,7 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
             `${_b_.len(buffer)} bytes requested, ${len} returned`)
     }
     var setitem = $B.search_in_mro($B.get_class(buffer), '__setitem__')
-    $B.$call(setitem)(buffer, _b_.slice.$factory(0, len), data)
+    $B.$call(setitem, buffer, _b_.slice.$factory(0, len), data)
 
     return len
 }
@@ -418,7 +418,7 @@ $B._BufferedIOBase.write = function(){
 $B.set_func_names($B._BufferedIOBase, '_io')
 
 function _bufferedreader_read_all(_self){
-    return $B.$call($B.$getattr(_self.raw, 'readall'))()
+    return $B.$call($B.$getattr(_self.raw, 'readall'))
 }
 
 function _bufferedreader_read_fast(_self, n){
@@ -1020,7 +1020,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
     /* Create the Raw file stream */
     var RawIO_class = $B._FileIO
-    raw = $B.$call(RawIO_class)(path_or_fd, rawmode,
+    raw = $B.$call(RawIO_class, path_or_fd, rawmode,
                                 closefd ? true : false,
                                 opener)
     result = raw
@@ -1064,7 +1064,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
         $B.RAISE(_b_.ValueError, `unknown mode: '${mode}'`)
     }
 
-    result = $B.$call(Buffered_class)(raw, buffering)
+    result = $B.$call(Buffered_class, raw, buffering)
 
     /* if binary, returns the buffered file */
     if(binary){
@@ -1072,7 +1072,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }
 
     /* wraps into a TextIOWrapper */
-    var wrapper = $B.$call($B._TextIOWrapper)(result, encoding, errors, newline,
+    var wrapper = $B.$call($B._TextIOWrapper, result, encoding, errors, newline,
         line_buffering ? true : false)
     $B.$setattr(wrapper, 'mode', modeobj)
     return wrapper

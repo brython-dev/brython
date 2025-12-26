@@ -522,7 +522,7 @@
             }else{
                 import(refs[0]).then(function(module){
                     loaded.push(module)
-                    return $B.$call(callback).apply(null, loaded)
+                    return $B.$call(callback, ...loaded)
                 }).catch($B.show_error)
             }
         },
@@ -550,7 +550,7 @@
                 )
                 document.body.appendChild(script)
             }else{
-                return $B.$call(callback).apply(null, loaded)
+                return $B.$call(callback, ...loaded)
             }
         },
 
@@ -692,7 +692,7 @@
                 console.warn("cannot import breakpoint", hookname)
                 return _b_.None
             }
-            return $B.$call(hook).apply(null, arguments)
+            return $B.$call(hook, ...arguments)
         },
         exc_info: function(){
             var frame_obj = $B.frame_obj,

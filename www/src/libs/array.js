@@ -56,7 +56,7 @@ array.$buffer_protocol = true
 array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 
 array.__buffer__ = function(_self, flag){
-    return $B.$call(_b_.memoryview)(_self)
+    return $B.$call(_b_.memoryview, _self)
 }
 
 array.__getitem__ = function(_self, key){

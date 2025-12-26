@@ -82,7 +82,7 @@ function define(tag_name, cls, options){
                 }
                 _self.ob_type = cls
                 _self.dict = $B.empty_dict()
-                $B.$call(init)(_self)
+                $B.$call(init, _self)
                 if(WebComponent.initialized){
                     // Check that init() did not introduce new attributes,
                     // which is illegal
@@ -117,7 +117,7 @@ function define(tag_name, cls, options){
                     "is deprecated. Set it as a class attribute.")
                 // module _warning is in builtin_modules.js
                 $B.imported._warnings.warn(warning)
-                return $B.$call(obs_attr)(this)
+                return $B.$call(obs_attr, this)
             }else if(Array.isArray(obs_attr)){
                 return obs_attr
             }else{
@@ -171,7 +171,7 @@ function define(tag_name, cls, options){
                 webcomp.prototype[key] = (function(attr, klass){
                     return function(){
                         try{
-                            return $B.$call(klass[attr])($B.DOMNode.$factory(this), ...arguments)
+                            return $B.$call(klass[attr], $B.DOMNode.$factory(this), ...arguments)
                         }catch(err){
                             $B.show_error(err)
                         }

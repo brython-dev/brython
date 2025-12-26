@@ -98,7 +98,7 @@ $B.promise = function(obj){
     var awaitable = $B.$getattr(obj, '__await__', null)
     if(awaitable !== null){
         // must be an iterator
-        awaitable = $B.$call(awaitable)()
+        awaitable = $B.$call(awaitable)
         if($B.$getattr(awaitable, '__next__', null) === null){
             $B.RAISE(_b_.TypeError, '__await__() returned non-iterator' +
                 ` of type '${$B.class_name(awaitable)}'`)

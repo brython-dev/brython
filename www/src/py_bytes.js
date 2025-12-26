@@ -21,7 +21,7 @@ $B.to_bytes = function(obj){
     }else{
         var ga = $B.$getattr(obj, "tobytes", null)
         if(ga !== null){
-            res = $B.$call(ga)().source
+            res = $B.$call(ga).source
         }else{
             $B.RAISE(_b_.TypeError, "object doesn't support the buffer protocol")
         }
@@ -353,7 +353,7 @@ bytes.__add__ = function(self, other){
 }
 
 bytes.__buffer__ = function(_self, flags){
-    return $B.$call(_b_.memoryview)(_self)
+    return $B.$call(_b_.memoryview, _self)
 }
 
 bytes.__bytes__ = function(self){
@@ -597,7 +597,7 @@ bytes.__new__ = function(){
                     $B.RAISE(_b_.TypeError, "cannot convert " +
                         `'${$B.class_name(source)}' object to bytes`)
                 }
-                let res = $B.$call(bytes_method)()
+                let res = $B.$call(bytes_method)
                 if(! $B.$isinstance(res, _b_.bytes)){
                     $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
@@ -664,7 +664,7 @@ bytes.$new = function(cls, source, encoding, errors){
                         $B.RAISE(_b_.TypeError, "cannot convert " +
                             `'${$B.class_name(source)}' object to bytes`)
                     }
-                    var res = $B.$call(bytes_method)()
+                    var res = $B.$call(bytes_method)
                     if(! $B.$isinstance(res, _b_.bytes)){
                         $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                             `non-bytes (type ${$B.class_name(res)})`)

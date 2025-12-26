@@ -171,7 +171,7 @@ xmlparser.Parse = function(){
     for(var handler_name of handler_names){
         let handler = $B.$getattr(self, handler_name)
         if(handler !== _b_.None){
-            handlers[handler_name] = $B.$call(handler)
+            handlers[handler_name] = handler
         }else{
             handlers[handler_name] = _b_.None
         }

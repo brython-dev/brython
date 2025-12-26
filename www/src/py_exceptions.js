@@ -82,7 +82,7 @@ $B.$raise = function(arg, cause){
                     $B.RAISE(_b_.RuntimeError, "generator raised StopIteration")
                 }
             }
-            var exc = $B.$call(arg)()
+            var exc = $B.$call(arg)
             exc.__context__ = active_exc === undefined ? _b_.None : active_exc
             exc.__cause__ = cause || _b_.None
             exc.__suppress_context__ = cause !== undefined
@@ -420,7 +420,7 @@ $B.is_recursion_error = function(js_exc){
 }
 
 $B.RAISE = function(error_type, message){
-    throw $B.$call1(error_type, message)
+    throw $B.$call(error_type, message)
 }
 
 $B.RAISE_IF_NOT = function(exc, exc_type){
@@ -437,7 +437,7 @@ $B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name){
 }
 
 $B.EXC = function(error_type, message){
-    return $B.$call1(error_type, message)
+    return $B.$call(error_type, message)
 }
 
 // built-in exceptions
@@ -467,42 +467,6 @@ function check_no_keywords(obj, kw){
     }
 }
 
-
-
-_b_.BaseException.tp_repr = function(self){
-    var res =  $B.get_name($B.get_class(self)) + '('
-    if(self.args[0] !== undefined){
-        res += _b_.repr(self.args[0])
-    }
-    if(self.args.length > 1){
-        res += ', ' + _b_.repr($B.fast_tuple(self.args.slice(1)))
-    }
-    return res + ')'
-}
-
-
-
-
-
-/*
-_b_.BaseException.tp_getattro = function(self, attr){
-    switch(attr){
-        case '__context__':
-            var frame = $B.frame_obj.frame,
-                ctx = frame[1].$current_exception
-            return ctx || _b_.None
-        case '__cause__':
-        case '__suppress_context__':
-            return self[attr] ?? _b_.None
-        default:
-            throw $B.attr_error(attr, self)
-    }
-}
-*/
-
-
-
-
 /* BaseException start */
 _b_.BaseException.tp_repr = function(self){
     if(self.args.length > 0 && self.args[0] !== _b_.None){
@@ -514,8 +478,8 @@ _b_.BaseException.tp_repr = function(self){
 _b_.BaseException.tp_str = _b_.BaseException.tp_repr
 
 _b_.BaseException.tp_init = function(self, ...args){
-    //var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
-    //check_no_keywords($.self, $.kw)
+    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
+    check_no_keywords($.self, $.kw)
     self.args = $B.fast_tuple(args)
 }
 
@@ -748,8 +712,7 @@ _b_.WindowsError = _b_.OSError
 _b_.IOError = _b_.OSError
 
 // special case for KeyError.__str__ (cf. issue #2582)
-_b_.KeyError.tp_repr = function(self){
-    console.log('KeyError repr', self)
+_b_.KeyError.tp_str = function(self){
     if(self.args.length == 1){
         return _b_.repr(self.args[0])
     }
@@ -799,7 +762,7 @@ $B.attr_error = function(name, obj){
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return $B.$call1(_b_.AttributeError, msg, {$kw:[{name, obj}]})
+    return $B.$call(_b_.AttributeError, msg, [], {$kw:[{name, obj}]})
 }
 
 // NameError supports keyword-only "name" parameter
@@ -826,13 +789,13 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 // Shortcut to create a NameError
 $B.name_error = function(name){
-    var exc = $B.$call1(_b_.NameError, `name '${name}' is not defined`)
+    var exc = $B.$call(_b_.NameError, `name '${name}' is not defined`)
     exc.name = name
     return exc
 }
 
 $B.recursion_error = function(frame){
-    var exc = $B.$call1(_b_.RecursionError, "maximum recursion depth exceeded")
+    var exc = $B.$call(_b_.RecursionError, "maximum recursion depth exceeded")
     $B.set_exc(exc, frame)
     return exc
 }

@@ -3,8 +3,6 @@
 
 var _b_ = $B.builtins
 
-console.log('mro of type', _b_.type.tp_mro)
-
 const TPFLAGS = {
     STATIC_BUILTIN: 1 << 1,
     MANAGED_WEAKREF: 1 << 3,
@@ -110,7 +108,7 @@ $B.$class_constructor = function(class_name, frame, metaclass,
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
         try{
-            meta_init(kls, class_name, resolved_bases, dict,
+            $B.$call(meta_init, kls, class_name, resolved_bases, dict,
                       {$kw: [extra_kwargs]})
         }catch(err){
             if(class_name == 'SupportsInt'){
@@ -199,7 +197,7 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
     if(metaclass !== _b_.type){
         var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None)
         if(prepare !== _b_.None){
-            var prepared = $B.$call(prepare)(class_name, bases) // dict or dict-like
+            var prepared = $B.$call(prepare, class_name, bases) // dict or dict-like
             for(var item of _b_.dict.$iter_items(prepared)){
                 class_dict[item.key] = item.value
             }
@@ -209,58 +207,6 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
         class_dict.__orig_bases__ = orig_bases
     }
     return class_dict
-    /*
-    if($B.get_class(class_dict) === _b_.dict){
-        if(class_dict.$all_str){
-            return class_dict.$strings
-        }
-        return new Proxy(class_dict, {
-            get: function(target, prop){
-                if(prop == '__class__'){
-                    return _b_.dict
-                }else if(prop == '$target'){
-                    return target
-                }
-                if(_b_.dict.$contains_string(target, prop)){
-                    return _b_.dict.$getitem_string(target, prop)
-                }
-                return undefined
-            },
-            set: function(target, prop, value){
-                _b_.dict.$setitem(target, prop, value)
-            }
-        })
-    }else{
-        var setitem = $B.$call($B.$getattr(class_dict, "__setitem__")),
-            getitem = $B.$getattr(class_dict, "__getitem__")
-        return new Proxy(class_dict, {
-            get: function(target, prop){
-                if(prop == '__class__'){
-                    return $B.get_class(target)
-                }else if(prop == '$target'){
-                    return target
-                }
-                try{
-                    return getitem(prop)
-                }catch(err){
-                    return undefined
-                }
-            },
-            set: function(target, prop, value){
-                try{
-                    setitem(prop, value)
-                }catch(err){
-                    console.log('error calling setitem', setitem)
-                    console.log('class dict', class_dict)
-                    console.log('prop', prop, 'value', value)
-                    console.log('frame obj', $B.frame_obj)
-                    throw err
-                }
-                return _b_.None
-            }
-        })
-    }
-    */
 }
 
 $B.resolve_mro_entries = function(bases){
@@ -339,11 +285,18 @@ classmethod.$factory = function(func){
     $B.check_nb_args_no_kw('classmethod', 1, arguments)
     return {
         ob_type: classmethod,
-        __func__: func
+        func
     }
 }
 
-classmethod.tp_descr_get = function(){
+
+
+/* classmethod start */
+_b_.classmethod.tp_repr = function(self){
+    return `<classmethod(${_b_.repr(self.func)})>`
+}
+
+_b_.classmethod.tp_descr_get = function(){
     // adapted from
     // https://docs.python.org/3/howto/descriptor.html#class-methods
     var $ = $B.args('classmethod', 3, {self: null, obj: null, cls: null},
@@ -355,22 +308,78 @@ classmethod.tp_descr_get = function(){
     if(cls === _b_.None || cls === undefined){
         cls = $B.get_class(obj)
     }
-    var func_class = $B.get_class(self.__func__),
-        candidates = [func_class].concat(func_class.__mro__)
+    var func_class = $B.get_class(self.func),
+        candidates = [func_class].concat($B.get_mro(func_class))
     for(var candidate of candidates){
         if(candidate === $B.function){
             break
         }
         if(candidate.__get__){
-            return candidate.__get__(self.__func__, cls, cls)
+            return candidate.__get__(self.func, cls, cls)
         }
     }
-    return $B.method.$factory(self.__func__, cls)
+    try{
+        return $B.method.$factory(self.func, cls)
+    }catch(err){
+        console.log('error, self', self, self.func, 'cls', cls)
+        throw err
+    }
 }
 
-classmethod.tp_repr = function(self){
-    return `<classmethod(${_b_.repr(self.__func__)})>`
+_b_.classmethod.tp_init = function(self, func){
+    self.func = func
 }
+
+_b_.classmethod.tp_new = function(cls){
+    return {
+        ob_type: cls,
+        func : _b_.None
+    }
+}
+
+var classmethod_funcs = _b_.classmethod.tp_funcs = {}
+
+classmethod_funcs.__annotate___get = function(self){
+
+}
+
+classmethod_funcs.__annotate___set = function(self){
+
+}
+
+classmethod_funcs.__annotations___get = function(self){
+
+}
+
+classmethod_funcs.__annotations___set = function(self){
+
+}
+
+classmethod_funcs.__class_getitem__ = $B.$class_getitem
+
+classmethod_funcs.__func__ = function(self){
+    return self.func
+}
+
+classmethod_funcs.__isabstractmethod___get = function(self){
+
+}
+
+classmethod_funcs.__isabstractmethod___set = function(self){
+
+}
+
+classmethod_funcs.__wrapped__ = function(self){
+    return self.func
+}
+
+_b_.classmethod.classmethods = ["__class_getitem__"]
+
+_b_.classmethod.tp_members = ["__func__", "__wrapped__"]
+
+_b_.classmethod.tp_getset = ["__isabstractmethod__", "__annotations__", "__annotate__"]
+
+/* classmethod end */
 
 $B.set_func_names(classmethod, "builtins")
 
@@ -378,167 +387,93 @@ $B.set_func_names(classmethod, "builtins")
 // staticmethod() built in function
 var staticmethod = _b_.staticmethod
 staticmethod.$factory = function(func){
+    console.log('>>>>>>>>>>>>>>  staticmethod factory', func)
     return {
         ob_type: staticmethod,
         __func__: func
     }
 }
 
-staticmethod.__call__ = function(self){
-    return $B.$call(self.__func__)
+/* staticmethod start */
+_b_.staticmethod.tp_repr = function(self){
+    return `<staticmethod(${_b_.repr(self.func)})>`
 }
 
-staticmethod.tp_descr_get = function(self){
-    return self.__func__
+_b_.staticmethod.tp_call = function(self, ...args){
+    return self.func(...args)
 }
 
-staticmethod.tp_repr = function(self){
-    return `<staticmethod(${_b_.repr(self.__func__)})>`
+_b_.staticmethod.tp_descr_get = function(self){
+    return self.func
 }
+
+_b_.staticmethod.tp_init = function(self, func){
+    self.func = func
+}
+
+_b_.staticmethod.tp_new = function(self){
+    return {
+        ob_type: _b_.staticmethod,
+        func: _b_.None
+    }
+}
+
+var staticmethod_funcs = _b_.staticmethod.tp_funcs = {}
+
+staticmethod_funcs.__annotate___get = function(self){
+
+}
+
+staticmethod_funcs.__annotate___set = function(self){
+
+}
+
+staticmethod_funcs.__annotations___get = function(self){
+
+}
+
+staticmethod_funcs.__annotations___set = function(self){
+
+}
+
+staticmethod_funcs.__class_getitem__ = function(self){
+
+}
+
+staticmethod_funcs.__dict___get = function(self){
+
+}
+
+staticmethod_funcs.__dict___set = function(self){
+
+}
+
+staticmethod_funcs.__func__ = function(self){
+    return self.func
+}
+
+staticmethod_funcs.__isabstractmethod___get = function(self){
+
+}
+
+staticmethod_funcs.__isabstractmethod___set = function(self){
+
+}
+
+staticmethod_funcs.__wrapped__ = function(self){
+    return self.func
+}
+
+_b_.staticmethod.classmethods = ["__class_getitem__"]
+
+_b_.staticmethod.tp_members = ["__func__", "__wrapped__"]
+
+_b_.staticmethod.tp_getset = ["__isabstractmethod__", "__dict__", "__annotations__", "__annotate__"]
+
+/* staticmethod end */
 
 $B.set_func_names(staticmethod, "builtins")
 
-/*
-function type_get_annotations(klass){
-    if(klass.__annotations__ !== undefined){
-        // attribute explicitely set
-        return klass.__annotations__
-    }
-    if(klass.__annotations_cache__ !== undefined){
-        return klass.__annotations_cache__
-    }
-    var annotate = $B.search_in_mro(klass, '__annotate__')
-    var annotate_func = klass.__annotate_func__
-    if(annotate_func === undefined){
-        console.log('no __annotate_func__ for klass', klass)
-    }
-    if(annotate_func === _b_.None){
-        return $B.empty_dict()
-    }
-    return klass.__annotations_cache__ = $B.$call(annotate_func)(1)
-}
-
-function type_set_annotations(klass, value){
-    if(value === $B.NULL){
-        if(klass.__annotations_cache__ === undefined){
-            $B.RAISE_ATTRIBUTE_ERROR('__annotations__', klass, '__annotations__')
-        }
-        klass.__annotations_cache__ = $B.empty_dict()
-        klass.__annotate__ = _b_.None
-    }else{
-        klass.__annotations__ = value
-    }
-}
-
-function type_get_annotate(klass){
-    if(klass.__annotate__ !== undefined){
-        // attribute explicitely set
-        return klass.__annotate__
-    }
-    return klass.__annotate_func__ ?? _b_.None
-}
-function type_set_annotate(klass, value){
-    if(value === $B.NULL){
-        $B.RAISE(_b_.TypeError, 'cannot delete __annotate__')
-    }
-    try{
-        $B.$call(value)
-    }catch(err){
-        if(value !== _b_.None){
-            $B.RAISE(_b_.TypeError,
-                '__annotate__ must be callable or None')
-        }
-        klass.__annotate__ = value
-    }
-}
-
-
-function type_get_bases(klass){
-    var bases = klass.tp_bases
-    return $B.fast_tuple(bases)
-}
-
-function type_set_bases(klass, value){
-    klass.tp_bases = value
-    klass.__mro__ = type.$mro(klass)
-    return _b_.None
-}
-
-function type_get_mro(klass){
-    return $B.get_mro(klass)
-}
-
-function type_get_module(klass){
-    if(klass.dict && klass.dict.__module__ !== undefined){
-        return klass.dict.__module__
-    }
-    var parts = $B.get_name(klass).split('.')
-    if(parts.length > 1){
-        return parts.slice(0, parts.length - 1).join('.')
-    }else{
-        return 'builtins'
-    }
-}
-
-function type_set_module(klass, value){
-    if(klass.dict){
-        klass.dict.__module__ = value
-    }
-    $B.RAISE(_b_.RuntimeError, 'cannot set attribute __module__')
-}
-
-
-
-function type_dict(klass){
-    return $B.mappingproxy.tp_new($B.mappingproxy, klass.dict)
-}
-
-function type_get_doc(klass){
-    return klass.tp_doc
-}
-
-function type_set_doc(klass, value){
-    klass.tp_doc = value
-}
-
-function type_get_text_signature(klass){
-    $B.RAISE(_b_.NotImplementedError)
-}
-
-function type_get_annotations(klass){
-
-}
-function type_set_annotations(klass, value){
-
-}
-function type_get_annotate(klass){
-
-}
-function type_set_annotate(klass, value){
-
-}
-function type_get_type_params(klass){
-
-}
-function type_set_type_params(klass, value){
-
-}
-
-type.tp_getset = [
-    ["__name__", type_name, type_set_name, NULL],
-    ["__qualname__", type_qualname, type_set_qualname, NULL],
-    ["__bases__", type_get_bases, type_set_bases, NULL],
-    ["__mro__", type_get_mro, NULL, NULL],
-    ["__module__", type_get_module, type_set_module, NULL],
-    ["__abstractmethods__", type_abstractmethods, type_set_abstractmethods, NULL],
-    ["__dict__", type_dict, NULL, NULL],
-    ["__doc__", type_get_doc, type_set_doc, NULL],
-    ["__text_signature__", type_get_text_signature, NULL, NULL],
-    ["__annotations__", type_get_annotations, type_set_annotations, NULL],
-    ["__annotate__", type_get_annotate, type_set_annotate, NULL],
-    ["__type_params__", type_get_type_params, type_set_type_params, NULL]
-]
-*/
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
     return function(){
@@ -574,14 +509,14 @@ $B.$class_getitem = function(kls, origin, args){
     return $B.GenericAlias.$factory(kls, origin, args)
 }
 
-function merge_class_dict(dict, klass){
+$B.merge_class_dict = function(dict, klass){
     var classdict,
         bases
 
     /* Merge in the type's dict (if any). */
     classdict = $B.$getattr(klass, '__dict__', null)
     if(classdict !== null){
-        _b_.dict.dict.update(dict, classdict)
+        $B.$call($B.type_getattribute(_b_.dict, 'update'), dict, classdict)
     }else{
         return
     }
@@ -591,7 +526,7 @@ function merge_class_dict(dict, klass){
         return
     }
     for(var base of bases){
-        merge_class_dict(dict, base)
+        $B.merge_class_dict(dict, base)
     }
 }
 
@@ -627,262 +562,6 @@ $B.type_getattribute = function(klass, attr, _default){
         $B.RAISE(_b_.TypeError, `type ${$B.get_name(klass)} has no __getattribute__`)
     }
     return getattro(klass, attr)
-    /*
-    var ga = $B.search_in_mro(meta, '__getattribute__', $B.NULL)
-    if(ga === $B.NULL){
-        console.log('type_getattribute', klass, attr)
-        console.log('type.dict.__ga__', type.dict.__getattribute__)
-        $B.RAISE(_b_.TypeError, `type ${$B.get_name(klass)} has no __getattribute__`)
-    }
-    if(test){
-        console.log('getattribute', ga)
-    }
-    return ga(klass, attr)
-    */
-}
-
-function type_getattribute(klass, attr){
-    switch(attr) {
-        case "__bases__XXX":
-            if(klass.__bases__ !== undefined){
-                return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__))
-            }
-            throw $B.attr_error(attr, klass)
-        case "__class__XXX":
-            return klass.__class__
-        case "__doc__":
-            return klass.__doc__ || _b_.None
-        case '__name__':
-            return klass.__name__ || klass.__qualname__
-        case "__setattr__":
-            var func = klass["__setattr__"] ??
-                           function(kls, key, value){
-                               kls[key] = value
-                           }
-            return method_wrapper.$factory(attr, klass, func)
-        case "__delattr__":
-            if(klass["__delattr__"] !== undefined){
-                return klass["__delattr__"]
-            }
-            return method_wrapper.$factory(attr, klass,
-                function(key){
-                    if(klass.__flags__ && TPFLAGS.IMMUTABLETYPE){
-                        $B.RAISE(_b_.TypeError,
-                            `cannot delete '${key}' attribute ` +
-                            `of immutable type '${klass.__name__}'`)
-                    }
-                    if(klass.dict){
-                        delete klass.dict[key]
-                    }
-                    delete klass[key]
-                })
-    }
-    var $test = false // attr == "_member_names_" // && klass.__name__ == 'FlagBoundary'
-
-    if($test){
-        console.log("attr", attr, "of", klass, 'res', res) //, '\n  ', res, res + "")
-    }
-
-    var res = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-    var res_type
-
-    var metaclass = $B.get_class(klass)
-    if(metaclass[attr] &&
-            metaclass[attr].__get__ &&
-            metaclass[attr].__set__){
-        // data descriptor
-        if($test){console.log("data descriptor")}
-        return metaclass[attr].__get__(klass)
-    }
-
-    if(res === undefined){
-        // search in classes hierarchy, following method resolution order
-        var v = klass.hasOwnProperty(attr) ? klass[attr] : undefined
-        if(v === undefined){
-            if($test){
-                console.log(attr, 'not in klass[attr], search in __dict__',
-                    klass.dict)
-            }
-        if(klass.dict && $B.get_class(klass.dict) === _b_.dict &&
-                    klass.dict[attr] !== undefined){
-                res = klass.dict[attr]
-                if($test){
-                    console.log('found in __dict__', res)
-                }
-            }else{
-                var mro = $B.get_mro(klass)
-                if(mro === undefined){
-                    console.log("no mro for", klass, 'attr', attr)
-                }
-                for(let i = 0; i < mro.length; i++){
-                    if(mro[i].hasOwnProperty(attr)){
-                        res = mro[i][attr]
-                        if($test){
-                            console.log('found in class', mro[i])
-                        }
-                        break
-                    }
-                }
-            }
-        }else{
-            res = v
-        }
-    }
-
-    if(res === undefined){
-        // search in metaclass
-        if(res === undefined){
-            var meta = $B.get_class(klass)
-            if(attr == '__annotations__'){
-                console.log('search', attr, 'in klass', klass, meta)
-            }
-            res = meta.hasOwnProperty(attr)
-                ? meta[attr]
-                : meta.dict && _b_.dict.$contains(meta.dict, attr)
-                    ? _b_.dict.$getitem(meta.dict, attr)
-                    : undefined
-            if($test){console.log("search in meta", meta, res)}
-            if(res === undefined){
-                var meta_mro = meta.__mro__
-                for(let i = 0; i < meta_mro.length; i++){
-                    if(meta_mro[i].hasOwnProperty(attr)){
-                        res = meta_mro[i][attr]
-                        break
-                    }
-                }
-            }
-
-            if(res !== undefined){
-                if($test){console.log("found in meta", res, typeof res)}
-                res_type = $B.get_class(res)
-                if(res_type === _b_.property){
-                    return res.fget(klass)
-                }else if(res_type === $B.getset_descriptor){
-                    return res.getter(klass)
-                }
-                if(typeof res == "function"){
-                    // insert klass as first argument
-                    if(attr == '__new__'){ // static
-                        return res
-                    }
-
-                    var meta_method = res.bind(null, klass)
-                    meta_method.ob_type = $B.method
-                    meta_method.$infos = {
-                        __self__: klass,
-                        __func__: res,
-                        __name__: attr,
-                        __qualname__: meta.__name__ + "." + attr,
-                        __module__: res.$infos ? res.$infos.__module__ : ""
-                    }
-                    if($test){
-                        console.log('return method from meta', meta_method,
-                            meta_method + '')
-                    }
-                    return meta_method
-
-                }
-            }
-        }
-
-        if(res === undefined){
-            // search a method __getattr__ in metaclass
-            // (issues #126 and #949)
-            var getattr = meta.__getattr__
-            if(getattr === undefined){
-                for(let i = 0; i < meta_mro.length; i++){
-                    if(meta_mro[i].__getattr__ !== undefined){
-                        getattr = meta_mro[i].__getattr__
-                        break
-                    }
-                }
-            }
-            if(getattr !== undefined){
-                return getattr(klass, attr)
-            }
-        }
-    }
-
-    if(res !== undefined){
-        if($test){
-            console.log("res", res, 'class', $B.get_class(res))
-        }
-        // If the attribute is a property, return it
-        res_type = $B.get_class(res)
-        if(res_type === _b_.property){
-            return res
-        }else if(res_type === _b_.classmethod){
-            return _b_.classmethod.__get__(res, _b_.None, klass)
-        }
-        if(res.__get__){
-            if(res_type === method){
-                if($test){
-                    console.log('__get__ of method', res.$infos.__self__, klass)
-                }
-                if(res.$infos.__self__){
-                    // method is already bound
-                    return res
-                }
-                var result = res.__get__(res.__func__, klass)
-                result.$infos = {
-                    __func__: res,
-                    __name__: res.$infos.__name__,
-                    __qualname__: klass.__name__ + "." + res.$infos.__name__,
-                    __self__: klass
-                }
-            }else{
-                result = res.__get__(klass)
-            }
-            return result
-        }else if(res_type){
-            var getter = $B.search_in_mro(res_type, '__get__')
-            if(getter){
-                //console.log('has getter', getter)
-                var getter_res = $B.$call(getter)(res, _b_.None, klass)
-                if(getter_res === undefined){
-                    console.log('no result for getter', getter)
-                    console.log(Error().stack)
-                }
-                res = getter_res
-            }
-        }
-        if(typeof res == "function"){
-            res_type = $B.get_class(res)
-            // method
-            if(res.$infos !== undefined && res.$function_infos === undefined){
-                console.log('$infos not undef', res, res.$infos)
-                throw Error()
-            }
-            if(res.$infos === undefined && res.$function_infos === undefined
-                    && $B.get_option('debug') > 1){
-                console.log("warning: no attribute $infos for", res,
-                    "klass", klass, "attr", attr)
-            }
-            if($test){
-                console.log("res is function", res, res.__class__)
-            }
-
-            if(attr == "__new__"){
-                res.$type = "staticmethod"
-            }
-            if((attr == "__class_getitem__"  || attr == "__init_subclass__")
-                    && res_type !== _b_.classmethod){
-                res = _b_.classmethod.$factory(res)
-                return _b_.classmethod.__get__(res, _b_.None, klass)
-            }
-            if(res_type === $B.method){
-                return res.__get__(null, klass)
-            }else{
-                if($test){
-                    console.log("return res", res)
-                    console.log($B.get_class(res))
-                }
-                return res
-            }
-        }else{
-            return res
-        }
-    }
 }
 
 type.__hash__ = function(cls){
@@ -956,28 +635,9 @@ function type_mro(cls){
 
 $B.set_func_names(type, "builtins")
 
-/*
-type.tp_getset = [
-    ["__name__", type_name, type_set_name, NULL],
-    ["__qualname__", type_qualname, type_set_qualname, NULL],
-    ["__bases__", type_get_bases, type_set_bases, NULL],
-    ["__mro__", type_get_mro, NULL, NULL],
-    ["__module__", type_get_module, type_set_module, NULL],
-    ["__abstractmethods__", type_abstractmethods, type_set_abstractmethods, NULL],
-    ["__dict__", type_dict, NULL, NULL],
-    ["__doc__", type_get_doc, type_set_doc, NULL],
-    ["__text_signature__", type_get_text_signature, NULL, NULL],
-    ["__annotations__", type_get_annotations, type_set_annotations, NULL],
-    ["__annotate__", type_get_annotate, type_set_annotate, NULL],
-    ["__type_params__", type_get_type_params, type_set_type_params, NULL],
-]
-*/
 function type___subclasses__(klass){
 
 }
-
-
-
 
 function type___subclasscheck__(cls, subclass){
     // Is subclass a subclass of self ?
@@ -988,7 +648,7 @@ function type___subclasscheck__(cls, subclass){
 }
 function type___dir__(klass){
     var dict = $B.empty_dict()
-    merge_class_dict(dict, klass)
+    $B.merge_class_dict(dict, klass)
     return _b_.sorted(dict)
 }
 function type___sizeof__(klass){
@@ -997,19 +657,25 @@ function type___sizeof__(klass){
 
 /* type start */
 _b_.type.tp_setattro = function(kls, attr, value){
-    var $test = false
-    if($test){console.log("kls is class", type)}
+    var $test = false // attr == '__name__'
+    if($test){
+        console.log('set attr', attr, 'of class', kls, 'to', value)
+    }
     if(type.dict[attr] !== undefined){
+        if($test){
+            console.log('use type.dict', type.dict[attr])
+        }
         var v = type.dict[attr]
         var vtype = $B.get_class(v)
-        if(vtype.__set__){
-            return vtype.__set__(v, kls, value)
+        var setter = $B.search_slot(vtype, 'tp_descr_set', $B.NULL)
+        if(setter !== $B.NULL){
+            return setter(v, kls, value)
         }
     }
     if(kls.__flags__ && TPFLAGS.IMMUTABLETYPE){
         $B.RAISE(_b_.TypeError,
             `cannot set '${attr}' attribute of immutable type '` +
-                kls.__qualname__ + "'")
+                kls.tp_name + "'")
     }
     kls[attr] = value
 
@@ -1061,11 +727,15 @@ _b_.type.tp_repr = function(kls){
 }
 
 _b_.type.tp_call = function(klass, ...args){
-    if(klass === _b_.type && args.length == 1){
-        return $B.get_class(args[0])
-    }
-    if(args.length !== 1 && args.length !== 3){
-        $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
+    if(klass === _b_.type){
+        if(args.length == 1){
+            return $B.get_class(args[0])
+        }
+        if(args.length !== 1 && args.length !== 3){
+            console.log(Error().stack)
+            console.log('args', args)
+            $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
+        }
     }
     var new_func = $B.search_slot(klass, "tp_new")
     // create an instance with __new__
@@ -1089,7 +759,7 @@ _b_.type.tp_getattro = function(obj, name){
         console.log('overflow')
         throw Error()
     }
-    var test = false // name == '__new__'
+    var test = false // name == '__self__'
     if(test){
         console.log('class_getattr', obj, name)
     }
@@ -1114,10 +784,14 @@ _b_.type.tp_getattro = function(obj, name){
             if($B.search_slot(in_mro_class, 'tp_descr_set', NULL) !== NULL){
                 if(test){
                     console.log('data descriptor', name)
-                    console.log('__set__', $B.search_in_mro(in_mro_class, '__set__', NULL))
+                    console.log('__set__', $B.search_slot(in_mro_class, 'tp_descr_set', NULL))
                 }
                 counter--
-                return getter(in_mro, obj)     // data descriptor
+                var res = getter(in_mro, obj)     // data descriptor
+                if(test){
+                    console.log('result of getter', res)
+                }
+                return res
             }else{
                 if(test){
                     console.log('non-data descriptor', name)
@@ -1140,6 +814,9 @@ _b_.type.tp_getattro = function(obj, name){
         }
         if(local_get !== NULL){
             var res = local_get(attribute, _b_.None, obj)
+            if(test){
+                console.log('result of local_get', res)
+            }
             counter--
             return res
         }
@@ -1242,14 +919,6 @@ _b_.type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
         }
     }
 
-    /*
-    class_dict.dict.__dict__ = $B.getset_descriptor.$factory(
-        class_dict,
-        '__dict__',
-        obj => obj.dict
-    )
-    */
-
     // set $tp_setattr
     class_dict.$tp_setattr = $B.search_in_mro(class_dict, '__setattr__')
 
@@ -1307,14 +976,35 @@ type_funcs.__basicsize__ = function(self){
 
 }
 
+type_funcs.__dict___get = function(cls){
+    var res = {
+        ob_type: $B.mappingproxy,
+        mapping: cls.dict
+    }
+    return res
+}
+
+type_funcs.__dict___set = function(self){
+
+}
+
 type_funcs.__dictoffset__ = function(self){
 
 }
 
 type_funcs.__dir__ = function(klass){
     var dict = $B.empty_dict()
-    merge_class_dict(dict, klass)
-    return _b_.sorted(dict)
+    $B.merge_class_dict(dict, klass)
+    return _b_.list.$factory(dict)
+}
+
+type_funcs.__doc___get = function(cls){
+    console.log('get doc')
+    return cls.__doc__
+}
+
+type_funcs.__doc___set = function(cls, value){
+    cls.__doc__ = value
 }
 
 type_funcs.__flags__ = function(self){
@@ -1353,10 +1043,12 @@ type_funcs.__mro___set = function(self){
 }
 
 type_funcs.__name___get = function(cls){
+    console.log('name get', cls)
     return $B.get_name(cls)
 }
 
-type_funcs.__name___set = function(cls){
+type_funcs.__name___set = function(cls,value){
+    console.log('set name of class', cls, value)
     cls.tp_name = value
 }
 
@@ -1413,15 +1105,15 @@ type_funcs.mro = function(self){
 
 }
 
-_b_.type.functions_or_methods = ["__new__"]
-
 _b_.type.tp_methods = ["mro", "__subclasses__", "__instancecheck__", "__subclasscheck__", "__dir__", "__sizeof__"]
 
 _b_.type.classmethods = ["__prepare__"]
 
 _b_.type.tp_members = ["__basicsize__", "__itemsize__", "__flags__", "__weakrefoffset__", "__base__", "__dictoffset__"]
 
-_b_.type.tp_getset = ["__name__", "__qualname__", "__bases__", "__mro__", "__module__", "__abstractmethods__", "__text_signature__", "__annotations__", "__annotate__", "__type_params__"]
+_b_.type.tp_getset = ["__name__", "__qualname__", "__bases__", "__mro__", "__module__", "__abstractmethods__", "__dict__", "__doc__", "__text_signature__", "__annotations__", "__annotate__", "__type_params__"]
+
+
 
 
 /* type end */
@@ -1483,7 +1175,7 @@ property.__get__ = function(self, kls){
     if(self.fget === undefined){
         $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
-    return $B.$call(self.fget)(kls)
+    return $B.$call(self.fget, kls)
 }
 
 property.tp_new = function(cls){
@@ -1499,7 +1191,7 @@ property.__set__ = function(self, obj, value){
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
     }
-    $B.$call(self.fset)(obj, value)
+    $B.$call(self.fset, obj, value)
 }
 
 $B.set_func_names(property, "builtins")
@@ -1553,7 +1245,7 @@ $B.$instance_creator = function(klass){
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
         if(call_func.$is_class){
-            factory = $B.$call(call_func)
+            factory = call_func
         }else{
             factory = call_func.bind(null, klass)
         }
@@ -1895,6 +1587,6 @@ $B.make_module_annotate = function(locals){
     $B.set_function_attr(locals.__annotate_func__, '__qualname__', '__annotate__')
 }
 
-console.log('mro of type', _b_.type.tp_mro)
+console.log('member descriptor name', $B.member_descriptor.tp_name)
 
 })(__BRYTHON__);

@@ -23,82 +23,10 @@ $B.make_class = function(qualname, factory){
     return A
 }
 
-object.__delattr__ = function(self, attr){
-    // First check for data descriptor with __delete__ in class
-    var klass = $B.get_class(self)
-    var kl_attr = $B.search_in_mro(klass, attr)
-    if(kl_attr !== undefined && _b_.hasattr(kl_attr, '__delete__')){
-        return $B.$getattr(kl_attr, '__delete__')(self)
-    }
-    // No data descriptor, delete from instance __dict__
-    if(self.dict && $B.$isinstance(self.dict, _b_.dict) &&
-            _b_.dict.$contains_string(self.dict, attr)){
-        _b_.dict.$delete_string(self.dict, attr)
-        delete self[attr]
-        return _b_.None
-    }else if(self.__dict__ === undefined && self[attr] !== undefined){
-        console.log('suspect')
-        delete self[attr]
-        return _b_.None
-    }
-    throw $B.attr_error(attr, self)
-}
-
-object.__dir__ = function(self) {
-    var objects
-    if(self.$is_class){
-        objects = [self].concat(self.__mro__)
-    }else{
-        var klass = $B.get_class(self)
-        objects = [self, klass].concat(klass.__mro__)
-    }
-
-    var res = []
-    for(var i = 0, len = objects.length; i < len; i++){
-        for(let attr in objects[i]){
-            if(attr.charAt(0) == "$") {
-                if(attr.charAt(1) == "$"){
-                    // aliased name
-                    res.push(attr.substr(2))
-                }
-                continue
-            }
-            if(! isNaN(parseInt(attr.charAt(0)))){
-                // Exclude numerical attributes
-                // '0', '1' are in attributes of string 'ab'
-                continue
-            }
-            if(attr == "__mro__"){continue}
-            res.push(attr)
-        }
-    }
-
-    // add object's own attributes
-    if(self.dict){
-        for(let attr of $B.make_js_iterator(self.dict)){
-            if(attr.charAt(0) != "$"){
-                res.push(attr)
-            }
-        }
-    }
-    res = _b_.list.$factory(_b_.set.$factory(res))
-    _b_.list.sort(res)
-    return res
-}
-
 object.__eq__ = function(self, other){
     // equality test defaults to identity of objects
     //test_issue_1393
     return self === other ?  true : _b_.NotImplemented
-}
-
-object.__format__ = function(){
-    var $ = $B.args("__format__", 2, {self: null, spec: null},
-        ["self", "spec"], arguments, {}, null, null)
-    if($.spec !== ""){
-        $B.RAISE(_b_.TypeError,
-            "non-empty format string passed to object.__format__")}
-    return _b_.getattr($.self, "__str__")()
 }
 
 object.__ge__ = function(){
@@ -107,94 +35,14 @@ object.__ge__ = function(){
 
 $B.nb_from_dict = 0
 
-object.tp_getattro = function(obj, attr){
-    var test = false // attr == '__name__' // $B.get_class(obj) === _b_.TypeError
-    var klass = $B.get_class(obj)
-    if(test){
-        console.log('getattr', attr, 'of obj', obj, klass)
-    }
-    var in_mro = $B.search_in_mro(klass, attr, NULL)
-    if(test){
-        console.log('in mro', in_mro)
-        if(in_mro !== NULL){
-            console.log('class of in_mro', $B.get_class(in_mro))
-        }
-    }
-    var getter = NULL
-    if(in_mro !== NULL){
-        var in_mro_class = $B.get_class(in_mro)
-        var getter = $B.search_slot(in_mro_class, 'tp_descr_get', NULL)
-        if(test){
-            console.log('getter', getter)
-        }
-        if(getter !== NULL){
-            var is_data_descr = $B.search_slot(in_mro_class, 'tp_descr_set', NULL) !== NULL
-            if(is_data_descr){
-                if(test){
-                    console.log('data descriptor')
-                }
-                return getter(in_mro, obj, klass)
-            }
-        }
-    }
-    // search in obj dict
-    var in_dict = $B.search_in_dict(obj, attr, NULL)
-    if(in_dict !== NULL){
-        return in_dict
-    }else if(getter !== NULL){
-        // non-data descriptor
-        if(typeof getter !== 'function'){
-            console.log('not a function', getter)
-            console.log('class of in_mro', in_mro_class)
-        }
-        if(test){
-            console.log('call getter of non-data descr', in_mro, obj, klass)
-        }
-        return getter(in_mro, obj, klass)
-    }else if(in_mro !== NULL){
-        return in_mro
-    }
-    if(test){
-        console.log('attr', attr, 'not found on obj', obj)
-    }
-    throw $B.attr_error(attr, obj)
-}
+
 
 
 object.__gt__ = function(){return _b_.NotImplemented}
 
-object.__hash__ = function(self){
-    var hash = self.__hashvalue__
-    if(hash !== undefined){return hash}
-    return self.__hashvalue__ = $B.$py_next_hash--
-}
 
-object.tp_init = function(){
-    if(arguments.length == 0){
-        $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
-            "object needs an argument")
-    }
-    /*
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
-            'args', 'kw'),
-        self = $.self
-    if($.args.length > 0 || _b_.dict.__len__($.kw) > 0){
-        var type = $B.get_class(self)
-        var tp_init = $B.search_in_mro(type, '__init__')
-        if(tp_init !== object.dict.tp_init){
-            $B.RAISE(_b_.TypeError,
-                "object.__init__() takes exactly one argument (the instance to initialize)")
-        }
-        var tp_new = $B.search_in_mro(type, '__new__')
-        if(tp_new == object.dict.__new__){
-            $B.RAISE(_b_.TypeError,
-                `${$B.class_name(self)}.__init__() takes exactly` +
-                ` one argument (the instance to initialize)`)
-        }
-    }
-    */
-    return _b_.None
-}
+
+
 
 object.__le__ = function(){return _b_.NotImplemented}
 
@@ -228,25 +76,7 @@ object.$no_new_init = function(cls){
     return res
 }
 
-object.tp_new = function(cls, ...args){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "object.__new__(): not enough arguments")
-    }
-    var init_func = $B.$getattr(cls, "__init__")
-    if(init_func === object.tp_init){
-        if(args.length > 0){
-            $B.RAISE(_b_.TypeError, "object() takes no parameters")
-        }
-    }
-    var res = Object.create(null)
-    $B.update_obj(res, {
-        ob_type: cls,
-        })
-    if(cls !== object){
-        res.dict = $B.obj_dict({})
-    }
-    return res
-}
+
 
 object.__ne__ = function(self, other){
     if(self === other){
@@ -254,7 +84,7 @@ object.__ne__ = function(self, other){
     }
     var eq = $B.$getattr($B.get_class(self), "__eq__", null)
     if(eq !== null){
-        var res = $B.$call(eq)(self, other)
+        var res = $B.$call(eq, self, other)
         if(res === _b_.NotImplemented){return res}
         return ! $B.$bool(res)
     }
@@ -300,55 +130,8 @@ function getNewArguments(self, klass){
     }
 }
 
-object.tp_repr = function(self){
-    var klass = $B.get_class(self)
-    if(klass === _b_.type) {
-        return "<class '" + $B.get_name(self) + "'>"
-    }
-    var module = klass.__module__
-    if(module !== undefined && !module.startsWith("$") &&
-            module !== "builtins"){
-        return `<${module}.${$B.class_name(self)} object>`
-    }else{
-        return "<" + $B.class_name(self) + " object>"
-    }
-}
 
-object.tp_setattro = function(self, attr, val){
-    if(val === undefined){
-        // setting an attribute to 'object' type is not allowed
-        $B.RAISE(_b_.TypeError,
-            "can't set attributes of built-in/extension type 'object'")
-    }else if($B.get_class(self) === object){
-        // setting an attribute to object() is not allowed
-        if(object[attr] === undefined){
-            throw $B.attr_error(attr, self)
-        }else{
-            $B.RAISE_ATTRIBUTE_ERROR(
-                "'object' object attribute '" + attr + "' is read-only",
-                self, attr)
-        }
-    }
-    var dict = self.dict
-    if(dict){
-        _b_.dict.$setitem(dict, attr, val)
-    }else{
-        console.log('no dict for', self)
-        self[attr] = val
-    }
-    return _b_.None
-}
 
-object.tp_str = function(self){
-    if(self === undefined || self.$kw){
-        $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
-            "object needs an argument")
-    }
-    // Default to __repr__
-    var klass = $B.get_class(self)
-    var repr_func = $B.search_slot(klass, "tp_repr")
-    return repr_func.apply(null, arguments)
-}
 
 object.__subclasshook__ = function(){
     return _b_.NotImplemented
@@ -372,11 +155,183 @@ object.$factory = function(){
 
 $B.set_func_names(object, "builtins")
 
-function object_get_class(cls){
-    return cls.ob_type
+
+function object_subclasshook(klass){
+    return _b_.NotImplemented
 }
 
-function object_set_class(cls, new_cls){
+
+
+/* object start */
+_b_.object.tp_richcompare = function(self){
+
+}
+
+_b_.object.tp_setattro = function(self, attr, value){
+    if(value === $B.NULL){
+        // First check for data descriptor with __delete__ in class
+        var klass = $B.get_class(self)
+        var kl_attr = $B.search_in_mro(klass, attr)
+        if(kl_attr !== undefined && _b_.hasattr(kl_attr, '__delete__')){
+            return $B.$getattr(kl_attr, '__delete__')(self)
+        }
+        // No data descriptor, delete from instance __dict__
+        if(self.dict && $B.$isinstance(self.dict, _b_.dict) &&
+                _b_.dict.$contains_string(self.dict, attr)){
+            _b_.dict.$delete_string(self.dict, attr)
+            delete self[attr]
+            return _b_.None
+        }else if(self.__dict__ === undefined && self[attr] !== undefined){
+            console.log('suspect')
+            delete self[attr]
+            return _b_.None
+        }
+        throw $B.attr_error(attr, self)
+    }
+    if(value === undefined){
+        // setting an attribute to 'object' type is not allowed
+        $B.RAISE(_b_.TypeError,
+            "can't set attributes of built-in/extension type 'object'")
+    }else if($B.get_class(self) === object){
+        // setting an attribute to object() is not allowed
+        if(object[attr] === undefined){
+            throw $B.attr_error(attr, self)
+        }else{
+            $B.RAISE_ATTRIBUTE_ERROR(
+                "'object' object attribute '" + attr + "' is read-only",
+                self, attr)
+        }
+    }
+    var dict = self.dict
+    if(dict){
+        _b_.dict.$setitem(dict, attr, value)
+    }else{
+        console.log('no dict for', self)
+        self[attr] = value
+    }
+    return _b_.None
+}
+
+_b_.object.tp_repr = function(self){
+    var klass = $B.get_class(self)
+    if(klass === _b_.type) {
+        return "<class '" + $B.get_name(self) + "'>"
+    }
+    var module = klass.__module__
+    if(module !== undefined && !module.startsWith("$") &&
+            module !== "builtins"){
+        return `<${module}.${$B.class_name(self)} object>`
+    }else{
+        return "<" + $B.class_name(self) + " object>"
+    }
+}
+
+_b_.object.tp_hash = function(self){
+    var hash = self.__hashvalue__
+    if(hash !== undefined){return hash}
+    return self.__hashvalue__ = $B.$py_next_hash--
+}
+
+_b_.object.tp_str = function(self){
+    if(self === undefined || self.$kw){
+        $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
+            "object needs an argument")
+    }
+    // Default to __repr__
+    var klass = $B.get_class(self)
+    var repr_func = $B.search_slot(klass, "tp_repr")
+    return repr_func.apply(null, arguments)
+}
+
+_b_.object.tp_getattro = function(self, attr){
+    var test = false // attr == '__getitem__' // $B.get_class(self) === _b_.TypeError
+    var klass = $B.get_class(self)
+    if(test){
+        console.log('getattr', attr, 'of self', self, klass)
+    }
+    var in_mro = $B.search_in_mro(klass, attr, NULL)
+    if(test){
+        console.log('in mro', in_mro)
+        if(in_mro !== NULL){
+            console.log('class of in_mro', $B.get_class(in_mro))
+        }
+    }
+    var getter = NULL
+    if(in_mro !== NULL){
+        var in_mro_class = $B.get_class(in_mro)
+        var getter = $B.search_slot(in_mro_class, 'tp_descr_get', NULL)
+        if(test){
+            console.log('getter', getter)
+        }
+        if(getter !== NULL){
+            var is_data_descr = $B.search_slot(in_mro_class, 'tp_descr_set', NULL) !== NULL
+            if(is_data_descr){
+                if(test){
+                    console.log('data descriptor')
+                    console.log('call getter with', in_mro, self, klass)
+                }
+                return getter(in_mro, self, klass)
+            }
+        }
+    }
+    // search in self dict
+    var in_dict = $B.search_in_dict(self, attr, NULL)
+    if(in_dict !== NULL){
+        return in_dict
+    }else if(getter !== NULL){
+        // non-data descriptor
+        if(typeof getter !== 'function'){
+            console.log('not a function', getter)
+            console.log('class of in_mro', in_mro_class)
+        }
+        if(test){
+            console.log('call getter of non-data descr', in_mro, self, klass)
+        }
+        return getter(in_mro, self, klass)
+    }else if(in_mro !== NULL){
+        return in_mro
+    }
+    if(test){
+        console.log('attr', attr, 'not found on self', self)
+    }
+    throw $B.attr_error(attr, self)
+}
+
+_b_.object.tp_init = function(){
+    if(arguments.length == 0){
+        $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
+            "object needs an argument")
+    }
+    return _b_.None
+}
+
+_b_.object.tp_new = function(cls, ...args){
+    if(cls === undefined){
+        $B.RAISE(_b_.TypeError, "object.__new__(): not enough arguments")
+    }
+    var init_func = $B.$getattr(cls, "__init__")
+    if(init_func === object.tp_init){
+        if(args.length > 0){
+            $B.RAISE(_b_.TypeError, "object() takes no parameters")
+        }
+    }
+    var res = Object.create(null)
+    $B.update_obj(res, {
+        ob_type: cls,
+        })
+    if(cls !== object){
+        res.dict = $B.obj_dict({})
+    }
+    return res
+}
+
+var object_funcs = _b_.object.tp_funcs = {}
+
+object_funcs.__class___get = function(self){
+    return $B.get_class(self)
+}
+
+object_funcs.__class___set = function(cls, new_cls){
     if(value == $B.NULL){
         $B.RAISE(_b_.TypeError,
             "can't delete __class__ attribute")
@@ -399,23 +354,98 @@ function object_set_class(cls, new_cls){
     return res;
 }
 
-object.tp_getset = [
-    ["__class__", object_get_class, object_set_class]
-]
+object_funcs.__dir__ = function(self){
+    console.log('object dir', self)
+    var result
+    var dict
+    var itsclass
 
-function object___reduce_ex__(cls){
+    /* Get __dict__ (which may or may not be a real dict...) */
+    dict = self.dict
+    if(dict == undefined){
+        dict = $B.empty_dict()
+    }else if(! $B.$isinstance(dict, _b_.dict)){
+        dict = $B.empty_dict()
+    }else{
+        /* Copy __dict__ to avoid mutating it. */
+        var temp = _b_.dict.copy(dict)
+    }
+
+    if(dict == undefined){
+        $B.RAISE(_b_.ValueError, 'no __dir__')
+    }
+
+    /* Merge in attrs reachable from its class. */
+    itsclass = $B.get_class(self)
+    if(itsclass != NULL){
+        $B.merge_class_dict(dict, itsclass)
+    }
+    result = PyDict_Keys(dict);
+}
+
+object_funcs.__format__ = function(){
+    var $ = $B.args("__format__", 2, {self: null, spec: null},
+        ["self", "spec"], arguments, {}, null, null)
+    if($.spec !== ""){
+        $B.RAISE(_b_.TypeError,
+            "non-empty format string passed to object.__format__")}
+    return _b_.getattr($.self, "__str__")()
+}
+
+object_funcs.__getstate__ = function(self){
+
+}
+
+object_funcs.__init_subclass__ = function(self){
+    return _b_.None
+}
+
+object_funcs.__reduce__ = function(cls){
+    if(! cls.dict){
+        $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
+    }
+    if($B.imported.copyreg === undefined){
+        $B.$import('copyreg')
+    }
+    var res = [$B.imported.copyreg._reconstructor]
+    var D = $B.get_class(cls),
+        B = object
+    for(var klass of $B.get_mro(D)){
+        if(klass.__module__ == 'builtins'){
+            B = klass
+            break
+        }
+    }
+    var args = $B.$list([D, B])
+    if(B === object){
+        args.push(_b_.None)
+    }else{
+        args.push($B.$call(B, cls))
+    }
+
+    res.push($B.fast_tuple(args))
+    var d = $B.empty_dict()
+    for(var attr of _b_.dict.$keys_string(cls.dict)){
+        _b_.dict.$setitem(d, attr,
+            _b_.dict.$getitem_string(cls.dict, attr))
+    }
+    res.push(d)
+    return _b_.tuple.$factory(res)
+}
+
+object_funcs.__reduce_ex__ = function(cls){
     var klass = $B.get_class(cls)
     if($B.imported.copyreg === undefined){
         $B.$import('copyreg')
     }
     if(protocol < 2){
-        return $B.$call($B.imported.copyreg._reduce_ex)(cls, protocol)
+        return $B.$call($B.imported.copyreg._reduce_ex, cls, protocol)
     }
 
     var reduce = $B.$getattr(klass, '__reduce__')
 
     if(reduce !== object.__reduce__){
-        return $B.$call(reduce)(cls)
+        return $B.$call(reduce, cls)
     }
     var res = [$B.imported.copyreg.__newobj__]
     var arg2 = [klass]
@@ -426,7 +456,7 @@ function object___reduce_ex__(cls){
     res.push($B.fast_tuple(arg2))
     var getstate = $B.search_in_mro(klass, '__getstate__')
     if(getstate){
-        var d = $B.$call(getstate)(cls)
+        var d = $B.$call(getstate, cls)
     }else{
         var d = $B.empty_dict(),
             nb = 0
@@ -458,96 +488,20 @@ function object___reduce_ex__(cls){
     return _b_.tuple.$factory(res)
 }
 
-function object___reduce__(cls){
-    if(! cls.dict){
-        $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
-    }
-    if($B.imported.copyreg === undefined){
-        $B.$import('copyreg')
-    }
-    var res = [$B.imported.copyreg._reconstructor]
-    var D = $B.get_class(cls),
-        B = object
-    for(var klass of $B.get_mro(D)){
-        if(klass.__module__ == 'builtins'){
-            B = klass
-            break
-        }
-    }
-    var args = $B.$list([D, B])
-    if(B === object){
-        args.push(_b_.None)
-    }else{
-        args.push($B.$call(B)(cls))
-    }
-
-    res.push($B.fast_tuple(args))
-    var d = $B.empty_dict()
-    for(var attr of _b_.dict.$keys_string(cls.dict)){
-        _b_.dict.$setitem(d, attr,
-            _b_.dict.$getitem_string(cls.dict, attr))
-    }
-    res.push(d)
-    return _b_.tuple.$factory(res)
-}
-function object___getstate__(klass){
+object_funcs.__sizeof__ = function(self){
 
 }
-function object_subclasshook(klass){
-    return _b_.NotImplemented
-}
-function object_init_subclass(klass){
-    return _b_.None
-}
-function object___format__(klass){
 
-}
-function object___sizeof__(klass){
+_b_.object.functions_or_methods = ["__new__"]
 
-}
-function object___dir__(self){
-{
-    var result
-    var dict
-    var itsclass
+_b_.object.tp_methods = ["__reduce_ex__", "__reduce__", "__getstate__", "__format__", "__sizeof__", "__dir__"]
 
-    /* Get __dict__ (which may or may not be a real dict...) */
-    dict = self.dict
-    if (dict == undefined) {
-        dict = $B.empty_dict()
-    }else if(! $B.$isinstance(dict, _b_.dict)){
-        dict = $B.empty_dict()
-    }else{
-        /* Copy __dict__ to avoid mutating it. */
-        var temp = _b_.dict.copy(dict)
-    }
+_b_.object.classmethods = ["__init_subclass__"]
 
-    if(dict == undefined)
-        $B.RAISE(_b_.ValueError, 'no __dir__')
-    }
+_b_.object.tp_getset = ["__class__"]
 
-    /* Merge in attrs reachable from its class. */
-    itsclass = $B.get_class(self)
-    /* XXX(tomer): Perhaps fall back to Py_TYPE(obj) if no
-                   __class__ exists? */
-    if (itsclass != NULL){
-        merge_class_dict(dict, itsclass)
-    }
-    result = PyDict_Keys(dict);
-}
 
-object.tp_methods = [
-    ["__reduce_ex__", object___reduce_ex__, $B.METH_O],
-    ["__reduce__", object___reduce__, $B.METH_NOARGS],
-    ["__getstate__", object___getstate__, $B.METH_NOARGS],
-    ["__subclasshook__", object_subclasshook, $B.METH_CLASS | $B.METH_O],
-    ["__init_subclass__", object_init_subclass, $B.METH_CLASS | $B.METH_NOARGS],
-    ["__format__", object___format__, $B.METH_O],
-    ["__sizeof__", object___sizeof__, $B.METH_NOARGS],
-    ["__dir__", object___dir__, $B.METH_NOARGS]
-]
-
-_b_.object = object
+/* object end */
 
 })(__BRYTHON__);
 

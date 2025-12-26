@@ -224,7 +224,7 @@ float.fromhex = function(klass, s){
       if(negate){
           x = float.__neg__(x)
       }
-      return klass === _b_.float ? x : $B.$call(klass)(x)
+      return klass === _b_.float ? x : $B.$call(klass, x)
     }
     function overflow_error(){
         $B.RAISE(_b_.OverflowError,
@@ -1415,7 +1415,7 @@ float.$factory = function(value){
             $B.RAISE(_b_.TypeError, "float() argument must be a string or a " +
                 "real number, not '" + $B.class_name(value) + "'")
         }
-        let index = $B.$call(index_method)(value),
+        let index = $B.$call(index_method, value),
             index_klass = $B.get_class(index)
 
         if(index_klass === _b_.int){
@@ -1434,7 +1434,7 @@ float.$factory = function(value){
         $B.RAISE(_b_.TypeError, '__index__ returned non-int' +
             ` (type ${$B.class_name(index)})`)
     }
-    let res = $B.$call(float_method)(value)
+    let res = $B.$call(float_method, value)
     klass = $B.get_class(res)
 
     if(klass !== _b_.float){
