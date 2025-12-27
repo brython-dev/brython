@@ -423,7 +423,7 @@
         if(attr == "__init__" || attr == "__call__"){
             return self.__init__
         }
-        return $B.$getattr(self.__self_class__, attr)
+        return $B.$getattr(self.__self_class__, attr, $B.NULL)
     }
 
     $B.set_func_names(super_class, "javascript")
@@ -436,7 +436,7 @@
             return $B.jsobj2pyobj($B.js_this)
         },
         Array: $B.js_array,
-        Date: self.Date && $B.jsobj2pyobj(self.Date),
+        Date: globalThis.Date, // && $B.jsobj2pyobj(self.Date),
         extends: function(js_constr){
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){

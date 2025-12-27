@@ -402,7 +402,7 @@ DOMEvent.tp_getattro = function(ev, attr){
         }
         return convertDomValue(res)
     }
-    throw $B.attr_error(attr, ev)
+    return $B.NULL
 }
 
 // Function to transform a DOM event into an instance of DOMEvent
@@ -704,16 +704,9 @@ DOMNode.tp_getattro = function(self, attr){
                 // Temporarily set self.__class_ to the WebComponent class
                 var save_class = $B.get_class(self)
                 self.ob_type = ce.$cls
-                try{
-                    let res = _b_.object.tp_getattro(self, attr)
-                    self.ob_type = save_class
-                    return res
-                }catch(err){
-                    self.ob_type = save_class
-                    if(! $B.is_exc(err, [_b_.AttributeError])){
-                        throw err
-                    }
-                }
+                let res = _b_.object.tp_getattro(self, attr)
+                self.ob_type = save_class
+                return res
             }
         }else{
             return object.tp_getattro(self, attr)

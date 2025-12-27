@@ -544,11 +544,10 @@ _b_.int.tp_richcompare = function(a, b){
         return _b_.NotImplemented
     }
     if(a === b){
-        result = 0
+        return 0
     }else{
-        result = a > b ? 1 : -1
+        return a > b ? 1 : -1
     }
-    return $B.RICHCOMPARE(result, 0, op)
 }
 
 _b_.int.nb_add = function(self, other){

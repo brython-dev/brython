@@ -686,7 +686,7 @@ $B.JSObj.tp_getattro = function(_self, attr){
                 return class_attr
             }
         }
-        throw $B.attr_error(attr, _self)
+        return $B.NULL
     }
     if(js_attr !== null &&
             js_attr.toString &&
@@ -722,7 +722,7 @@ $B.JSObj.__setattr__ = function(_self, attr, value){
 $B.JSObj.__getitem__ = function(_self, key){
     if(typeof key == "string"){
         try{
-            return $B.JSObj.__getattribute__(_self, key)
+            return $B.JSObj.tp_getattro(_self, key)
         }catch(err){
             if($B.is_exc(err, [_b_.AttributeError])){
                 $B.RAISE(_b_.KeyError, err.name)
@@ -894,8 +894,7 @@ js_list_meta.tp_getattro = function(_self, attr){
         if(js_array.hasOwnProperty(attr)){
             return js_array[attr]
         }
-        $B.RAISE_ATTRIBUTE_ERROR(
-            `${$B.class_name(_self)} has no attribute '${attr}'`, _self, attr)
+        return $B.NULL
     }
     if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
         // Transform Python values to Javascript values before setting item
@@ -1086,7 +1085,7 @@ js_array.tp_getattro = function(_self, attr){
         if(js_array.hasOwnProperty(attr)){
             return js_array[attr]
         }
-        throw $B.attr_error(attr, _self)
+        return $B.NULL
     }
     if(js_array.hasOwnProperty(attr)){
         return function(){
@@ -1219,12 +1218,12 @@ $B.JSMeta.tp_call = function(cls){
     for(var i = 1, len = arguments.length; i < len; i++){
         extra_args[i-1] = arguments[i]
     }
-    var new_func = _b_.type.__getattribute__(klass, "__new__")
+    var new_func = _b_.type.tp_getattro(klass, "__new__")
     // create an instance with __new__
     var instance = new_func.apply(null, arguments)
     if(instance instanceof cls.__mro__[0].$js_func){
         // call __init__ with the same parameters
-        var init_func = _b_.type.__getattribute__(klass, "__init__")
+        var init_func = _b_.type.tp_getattro(klass, "__init__")
         if(init_func !== _b_.object.__init__){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
@@ -1249,7 +1248,7 @@ $B.JSMeta.tp_getattro = function(cls, attr){
         return $B.JSMeta[attr]
     }else{
         // Search in type
-        return _b_.type.__getattribute__(cls, attr)
+        return _b_.type.tp_getattro(cls, attr)
     }
 }
 
@@ -1338,8 +1337,6 @@ JSFunction_funcs.new = function(self, ...args){
 }
 
 $B.JSFunction.tp_methods = ["new"]
-
-console.log('member descriptor name', $B.member_descriptor.tp_name)
 
 })(__BRYTHON__);
 

@@ -105,7 +105,7 @@ Object.assign($B.wrapper_methods,
         sq_length: wrap('__len__'),
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
-        tp_getattro: wrap('__getattribute__'),
+        tp_getattro: make_getattribute,
         tp_hash: wrap('__hash__'),
         tp_init: wrap('__init__'),
         tp_iter: wrap('__iter__'),
@@ -132,6 +132,22 @@ function make_add(cls){
         cls,
         '__radd__',
         radd
+    )
+}
+
+function make_getattribute(cls){
+    var getattribute = cls.tp_getattro
+    var ga_func = function(self, attr){
+        var res = getattribute(self, attr)
+        if(res === $B.NULL){
+            throw $B.attr_error(attr, self)
+        }
+        return res
+    }
+    cls.dict.__getattribute__ = $B.wrapper_descriptor.$factory(
+        cls,
+        '__getattribute__',
+        ga_func
     )
 }
 
@@ -222,11 +238,11 @@ $B.finalize_type = function(cls){
         if(cls.tp_methods){
             for(var descr of cls.tp_methods){
                 var method = cls.tp_funcs[descr]
-                method.ob_type = $B.builtin_method
                 if(method === undefined){
                     console.log('no method', cls, cls.tp_funcs, descr)
                     alert()
                 }
+                method.ob_type = $B.builtin_method
                 cls.dict[descr] = {
                     ob_type: $B.method_descriptor,
                     method,
@@ -234,6 +250,9 @@ $B.finalize_type = function(cls){
                     cls
                 }
                 method.self = cls.dict[descr]
+                if(cls === _b_.dict && descr == '__contains__'){
+                    console.log('!!!!!!!!!!!!!dict.__conatins__', cls.dict[descr])
+                }
             }
         }
         if(cls.tp_members){
@@ -257,6 +276,11 @@ $B.finalize_type = function(cls){
                 if(! ['__new__', '__class_getitem__'].includes(descr)){
                     cls.dict[descr] = _b_.classmethod.$factory(cls.tp_funcs[descr])
                 }
+            }
+        }
+        if(cls.staticmethods){
+            for(var descr of cls.staticmethods){
+                cls.dict[descr] = _b_.staticmethod.$factory(cls.tp_funcs[descr])
             }
         }
         for(var slot in $B.wrapper_methods){
@@ -301,6 +325,9 @@ for(var ns of [$B.builtin_types, $B.created_types]){
         }
         var cls = ns[name]
         $B.finalize_type(cls)
+        if(name == 'PathLoader'){
+            console.log(name, cls)
+        }
     }
 }
 
@@ -313,6 +340,8 @@ for(var builtin_func of $B.builtin_funcs){
         console.log('missing builtin function', builtin_func)
     }
 }
+
+console.log('dict contains', _b_.dict.dict.__contains__)
 
 
 })(__BRYTHON__)

@@ -387,10 +387,9 @@ $B.set_func_names(classmethod, "builtins")
 // staticmethod() built in function
 var staticmethod = _b_.staticmethod
 staticmethod.$factory = function(func){
-    console.log('>>>>>>>>>>>>>>  staticmethod factory', func)
     return {
         ob_type: staticmethod,
-        __func__: func
+        func
     }
 }
 
@@ -541,10 +540,19 @@ var NULL = {NULL:true}
 
 var counter = 0
 
+var slot2dunder = {
+    tp_init: '__init__',
+    tp_repr: '__repr__'
+}
+
 $B.search_slot = function(cls, slot, _default){
+    var dunder = slot2dunder[slot]
     for(var klass of cls.tp_mro){
         if(klass[slot] !== undefined){
             return klass[slot]
+        }
+        if(dunder && klass.dict[dunder]){
+            return klass.dict[dunder]
         }
     }
     return _default
@@ -559,7 +567,7 @@ $B.type_getattribute = function(klass, attr, _default){
     var meta = $B.get_class(klass)
     var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
     if(getattro === $B.NULL){
-        $B.RAISE(_b_.TypeError, `type ${$B.get_name(klass)} has no __getattribute__`)
+        return $B.NULL
     }
     return getattro(klass, attr)
 }
@@ -727,6 +735,11 @@ _b_.type.tp_repr = function(kls){
 }
 
 _b_.type.tp_call = function(klass, ...args){
+    var test = false // args !== undefined && Array.isArray(args) && args[0] === 'flags'
+    if(test){
+        console.log('type.tp_call', klass, args)
+        console.log(Error('trace').stack)
+    }
     if(klass === _b_.type){
         if(args.length == 1){
             return $B.get_class(args[0])
@@ -738,9 +751,15 @@ _b_.type.tp_call = function(klass, ...args){
         }
     }
     var new_func = $B.search_slot(klass, "tp_new")
+    if(test){
+        console.log('new_func', new_func)
+    }
     // create an instance with __new__
     var instance = new_func.apply(null, arguments),
         instance_class = $B.get_class(instance)
+    if(test){
+        console.log('instance of type', instance)
+    }
     if(instance_class === klass){
         // call __init__ with the same parameters
         var init_func = $B.search_slot(klass, 'tp_init', $B.NULL)
@@ -835,7 +854,7 @@ _b_.type.tp_getattro = function(obj, name){
         counter--
         return in_mro
     }
-    throw $B.attr_error(name, obj)
+    return $B.NULL
 }
 
 _b_.type.tp_init = function(self){
@@ -896,14 +915,11 @@ _b_.type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
         if(v === undefined){
             continue
         }
-        class_dict[key] = v
 
         // cf PEP 487 and issue #1178
-        try{
-            var set_name = $B.type_getattribute($B.get_class(v), "__set_name__")
-            set_name(v, class_dict, key)
-        }catch(err){
-            $B.RAISE_IF_NOT(err, _b_.AttributeError)
+        var set_name = $B.type_getattribute($B.get_class(v), "__set_name__")
+        if(set_name !== $B.NULL){
+            $B.$call(set_name, v, class_dict, key)
         }
         if(typeof v == "function"){
             if(v.$function_infos === undefined){
@@ -918,9 +934,6 @@ _b_.type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
             }
         }
     }
-
-    // set $tp_setattr
-    class_dict.$tp_setattr = $B.search_in_mro(class_dict, '__setattr__')
 
     var sup = _b_.super.$factory(class_dict, class_dict)
     var init_subclass = _b_.super.tp_getattro(sup, "__init_subclass__")
@@ -1243,7 +1256,7 @@ $B.$instance_creator = function(klass){
             console.log('factory', factory)
         }
     }else{
-        call_func = _b_.type.__getattribute__(metaclass, "__call__")
+        call_func = _b_.type.tp_getattro(metaclass, "__call__")
         if(call_func.$is_class){
             factory = call_func
         }else{
@@ -1587,6 +1600,5 @@ $B.make_module_annotate = function(locals){
     $B.set_function_attr(locals.__annotate_func__, '__qualname__', '__annotate__')
 }
 
-console.log('member descriptor name', $B.member_descriptor.tp_name)
 
 })(__BRYTHON__);

@@ -249,10 +249,11 @@ $B.method.tp_getattro = function(self, attr){
             return infos[attr]
         }
     }else if(method.hasOwnProperty(attr)){
-        return _b_.object.__getattribute__(self, attr)
+        return _b_.object.tp_getattro(self, attr)
     }else{ // use attributes of underlying function __func__
-        return _b_.object.__getattribute__(self.$infos.__func__, attr)
+        return _b_.object.tp_getattro(self.$infos.__func__, attr)
     }
+    return $B.NULL
 }
 
 $B.method.tp_descr_get = function(self){
@@ -534,6 +535,7 @@ $B.wrapper_descriptor.tp_repr = function(self){
 }
 
 $B.wrapper_descriptor.tp_call = function(self, ...args){
+    console.log('wrapper descr call', self.wrapped, args)
     return self.wrapped(...args)
 }
 
@@ -619,7 +621,13 @@ $B.builtin_function_or_method.tp_hash = function(self){
 }
 
 $B.builtin_function_or_method.tp_call = function(self, ...args){
-    return self(...args)
+    try{
+        return self(...args)
+    }catch(err){
+        console.log('error', err)
+        console.log('call builtin func', self, 'args', args)
+        throw err
+    }
 }
 
 var builtin_function_or_method_funcs = $B.builtin_function_or_method.tp_funcs = {}

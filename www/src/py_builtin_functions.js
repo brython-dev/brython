@@ -943,10 +943,11 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr, _default){
-    var test = false // attr == '__new__' // && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == 'now' // && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
-        console.log(Error().stack)
+        console.log(Error('trace').stack)
+        console.log('default', _default)
     }
     if(klass.dict){
         var v = klass.dict[attr]
@@ -974,6 +975,9 @@ $B.search_in_mro = function(klass, attr, _default){
         mro = klass.tp_mro = _b_.type.$mro(klass)
     }
     for(var i = 0, len = mro.length; i < len; i++){
+        if(test){
+            console.log('search', attr, 'in', mro[i])
+        }
         if(mro[i].hasOwnProperty && mro[i].hasOwnProperty(attr)){
             if(test){
                 console.log('found in mro', i, mro[i])
@@ -1034,6 +1038,10 @@ var missing_attr = {'missing_attr': true}
 var NULL = $B.NULL
 
 $B.search_in_dict = function(obj, attr, _default){
+    var test = attr == 'now'
+    if(test){
+        console.log('search', attr, 'in dict of', obj)
+    }
     if(obj.__dict__){
         console.log('old school __dict__')
         var in_dict = _b_.dict.$get_string(obj.__dict__, attr)
@@ -1064,84 +1072,43 @@ $B.search_in_dict = function(obj, attr, _default){
     return _default
 }
 
-function standard_getattribute(obj, attr){
-    var test = attr == 'Date'
-    var klass = $B.get_class(obj)
-    if(test){
-        console.log('getattr', attr, 'of obj', obj, klass)
-    }
-    var in_mro = $B.search_in_mro(klass, attr, NULL)
-    if(test){
-        console.log('in mro', in_mro)
-        if(in_mro !== NULL){
-            console.log('class of in_mro', $B.get_class(in_mro))
-        }
-    }
-    var getter = NULL
-    if(in_mro !== NULL){
-        var in_mro_class = $B.get_class(in_mro)
-        var getter = $B.search_in_mro(in_mro_class, '__get__', NULL)
-        if(test){
-            console.log('getter', getter)
-        }
-        if(getter !== NULL){
-            var is_data_descr = $B.search_in_mro(in_mro_class, '__set__', NULL) !== NULL ||
-                                $B.search_in_mro(in_mro_class, '__del__', NULL) !== NULL
-            if(is_data_descr){
-                if(test){
-                    console.log('data descriptor')
-                }
-                return getter(in_mro, obj, klass)
-            }
-        }
-    }
-    // search in obj dict
-    var in_dict = $B.search_in_dict(obj, attr, NULL)
-    if(in_dict !== NULL){
-        return in_dict
-    }else if(getter !== NULL){
-        // non-data descriptor
-        if(typeof getter !== 'function'){
-            console.log('not a function', getter)
-            console.log('class of in_mro', in_mro_class)
-        }
-        return getter(in_mro, obj, klass)
-    }else if(in_mro !== NULL){
-        return in_mro
-    }
-    if(test){
-        console.log('attr', attr, 'not found on obj', obj)
-    }
-    throw $B.attr_error(attr, obj)
-}
-
 $B.object_getattribute = function(obj, attr){
     var klass = $B.get_class(obj)
-    var test = false // attr == 'new' // klass === _b_.TypeError
-    var getattribute = $B.search_in_mro(klass, '__getattribute__', $B.NULL)
+    var test = attr == '__dict__' // klass === _b_.TypeError
+    var getattribute = $B.search_slot(klass, 'tp_getattro', $B.NULL)
     if(getattribute === $B.NULL){
         $B.RAISE(_b_.TypeError, 'no __getattribute__')
     }
     if(test){
-        console.log(obj, attr, 'klass', klass)
+        console.log('get attr', attr, 'of obj', obj, 'klass', klass)
         console.log(getattribute)
     }
-    try{
-        return $B.$call(getattribute, obj, attr)
-    }catch(err){
-        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+    var res = $B.$call(getattribute, obj, attr)
+    if(test){
+        console.log('result of getattribute', res)
+    }
+    if(res === $B.NULL){
         var getattr = $B.search_in_mro(klass, '__getattr__')
         if(getattr){
-            return getattr(obj, attr)
+            try{
+                res = getattr(obj, attr)
+            }catch(err){
+                $B.RAISE_IF_NOT(err, _b_.AttributeError)
+                return $B.NULL
+            }
+        }else{
+            return $B.NULL
         }
-        throw $B.attr_error(attr, obj)
     }
+    return res
 }
-
-// _b_.object.tp_getattro = standard_getattribute
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
+    var test = attr == '__all__'
+    if(test){
+        console.log('$getattr', obj, attr)
+    }
     var res
     if(obj === undefined || obj === null){
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
@@ -1177,27 +1144,20 @@ $B.$getattr = function(obj, attr, _default){
     }
 
     if(! is_class){
-        try{
-            return $B.object_getattribute(obj, attr)
-        }catch(err){
-            console.log('error in object_getattribute', err)
-            console.log('attr', attr, 'of obj', obj, $B.get_class(obj))
-            $B.RAISE_IF_NOT(err, _b_.AttributeError)
-            if(_default !== undefined){
-                return _default
-            }
-        }
+        var res =  $B.object_getattribute(obj, attr)
     }else{
-        try{
-            return $B.type_getattribute(obj, attr)
-        }catch(err){
-            $B.RAISE_IF_NOT(err, _b_.AttributeError)
-            if(_default !== undefined){
-                return _default
-            }
-        }
+        var res = $B.type_getattribute(obj, attr)
     }
-    throw $B.attr_error(attr, obj)
+    if(attr == '__all__'){
+        console.log('attr', attr, 'of', obj, res)
+    }
+    if(res === $B.NULL){
+        if(_default !== undefined){
+            return _default
+        }
+        throw $B.attr_error(attr, obj)
+    }
+    return res
 }
 
 // globals() (built in function)
@@ -1234,14 +1194,20 @@ $B.$hash = function(obj){
         return obj ? 1 : 0
     }
     var klass = $B.get_class(obj)
-
+    var hash_func = $B.search_slot(klass, 'tp_hash', $B.NULL)
+    if(hash_func !== $B.NULL){
+        return hash_func(obj)
+    }
+    $B.RAISE(_b_.TypeError, "unhashable type: '" +
+            _b_.str.$factory($B.jsobj2pyobj(obj)) + "'")
+    /*
     if(obj.$is_class ||
             klass === _b_.type ||
             klass === $B.function){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     if(typeof obj == "string"){
-        return _b_.str.__hash__(obj)
+        return _b_.str.tp_hash(obj)
     }else if(typeof obj == "number"){
         return obj
     }else if(typeof obj == "boolean"){
@@ -1291,6 +1257,7 @@ $B.$hash = function(obj){
     }else{
         return check_int($B.$call(hash_method), obj)
     }
+    */
 }
 
 var help = _b_.help = function(obj){
@@ -2703,7 +2670,7 @@ $$super.tp_getattro = function(self, attr){
         if($test){
             console.log("no attr", attr, self, "mro", mro)
         }
-        throw $B.attr_error(attr, self)
+        return $B.NULL
     }
 
     if($test){console.log("super", attr, self, "mro", mro,

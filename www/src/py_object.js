@@ -244,27 +244,27 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__getitem__' // $B.get_class(self) === _b_.TypeError
+    var test = attr == '__dict__' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
     }
-    var in_mro = $B.search_in_mro(klass, attr, NULL)
+    var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
     if(test){
         console.log('in mro', in_mro)
-        if(in_mro !== NULL){
+        if(in_mro !== $B.NULL){
             console.log('class of in_mro', $B.get_class(in_mro))
         }
     }
-    var getter = NULL
-    if(in_mro !== NULL){
+    var getter = $B.NULL
+    if(in_mro !== $B.NULL){
         var in_mro_class = $B.get_class(in_mro)
-        var getter = $B.search_slot(in_mro_class, 'tp_descr_get', NULL)
+        var getter = $B.search_slot(in_mro_class, 'tp_descr_get', $B.NULL)
         if(test){
             console.log('getter', getter)
         }
-        if(getter !== NULL){
-            var is_data_descr = $B.search_slot(in_mro_class, 'tp_descr_set', NULL) !== NULL
+        if(getter !== $B.NULL){
+            var is_data_descr = $B.search_slot(in_mro_class, 'tp_descr_set', $B.NULL) !== $B.NULL
             if(is_data_descr){
                 if(test){
                     console.log('data descriptor')
@@ -275,10 +275,10 @@ _b_.object.tp_getattro = function(self, attr){
         }
     }
     // search in self dict
-    var in_dict = $B.search_in_dict(self, attr, NULL)
-    if(in_dict !== NULL){
+    var in_dict = $B.search_in_dict(self, attr, $B.NULL)
+    if(in_dict !== $B.NULL){
         return in_dict
-    }else if(getter !== NULL){
+    }else if(getter !== $B.NULL){
         // non-data descriptor
         if(typeof getter !== 'function'){
             console.log('not a function', getter)
@@ -288,13 +288,13 @@ _b_.object.tp_getattro = function(self, attr){
             console.log('call getter of non-data descr', in_mro, self, klass)
         }
         return getter(in_mro, self, klass)
-    }else if(in_mro !== NULL){
+    }else if(in_mro !== $B.NULL){
         return in_mro
     }
     if(test){
         console.log('attr', attr, 'not found on self', self)
     }
-    throw $B.attr_error(attr, self)
+    return $B.NULL
 }
 
 _b_.object.tp_init = function(){

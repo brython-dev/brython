@@ -189,7 +189,7 @@ ajax.tp_getattro = function(self, attr){
     }else if(attr == "xml"){
         return $B.jsobj2pyobj(self.js.responseXML)
     }
-    return _b_.object.__getattribute__(self, attr)
+    return _b_.object.tp_getattro(self, attr)
 }
 
 ajax.bind = function(self, evt, func){

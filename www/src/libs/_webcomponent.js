@@ -26,13 +26,12 @@ function define(tag_name, cls, options){
         let stack = [...cls.tp_bases];
         while(stack.length) {
             base = stack.pop();
-        if(base.__module__ === 'browser.html'){
-                _extends = base.__name__.toLowerCase()
-                break
+            if(base.__module__ === 'browser.html'){
+                    _extends = base.__name__.toLowerCase()
+                    break
+            }
+            stack.push(...base.tp_bases);
         }
-
-        stack.push(...base.tp_bases);
-    }
     }
 
     if(_extends){
@@ -138,7 +137,7 @@ function define(tag_name, cls, options){
 
     // Override __getattribute__ to handle DOMNode attributes such as
     // attachShadow
-    cls.__getattribute__ = function(self, attr){
+    cls.tp_getattro = function(self, attr){
         try{
             return $B.DOMNode.__getattribute__(self, attr)
         }catch(err){
@@ -159,7 +158,7 @@ function define(tag_name, cls, options){
         }
     }
 
-    var mro = [cls].concat(cls.__mro__).reverse()
+    var mro = [cls].concat(cls.tp_mro).reverse()
     for(var i = 0, len = mro.length; i < len; i++){
         var pcls = mro[i]
         for(var key in pcls){

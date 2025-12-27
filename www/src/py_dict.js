@@ -301,11 +301,7 @@ dict.$contains = function(self, key){
     return dict.$lookup_by_key(self, key).found
 }
 
-dict.__delitem__ = function(){
-    var $ = $B.args("__eq__", 2, {self: null, key: null},
-        ["self", "key"], arguments, {}, null, null),
-        self = $.self,
-        key = $.key
+dict.$delitem  = function(self, key){
     if(self[$B.JSOBJ]){
         delete self[$B.JSOBJ][key]
     }
@@ -747,22 +743,6 @@ const dict_reversekeyiterator = make_reverse_iterator(
     dict.$iter_keys_reversed)
 
 
-dict.__ror__ = function(self, other){
-    // PEP 584
-    if(! $B.$isinstance(other, dict)){
-        return _b_.NotImplemented
-    }
-    var res = dict.copy(other)
-    dict.update(res, self)
-    return res
-}
-
-dict.__setitem__ = function(){
-    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null)
-    return dict.$setitem($.self, $.key, $.value)
-}
-
 function convert_all_str(d){
     // convert dict with only str keys to regular dict
     d.$all_str = false
@@ -994,7 +974,15 @@ _b_.dict.nb_or = function(self){
 }
 
 _b_.dict.sq_ass_item = function(self){
-
+    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
+        ["self", "key", "value"], arguments, {}, null, null)
+    var self = $.self,
+        key = $.key,
+        value = $.value
+    if(value === $B.NULL){
+        return dict.$delitem(self, key)
+    }
+    return dict.$setitem(self, key, value)
 }
 
 _b_.dict.tp_repr = function(self){
@@ -1158,11 +1146,20 @@ _b_.dict.mp_length = function(self){
 }
 
 _b_.dict.mp_subscript = function(self){
-
+    var $ = $B.args("__getitem__", 2, {self: null, arg: null},
+        ["self", "arg"], arguments, {}, null, null),
+        self = $.self,
+        arg = $.arg
+    return dict.$getitem(self, arg)
 }
 
 _b_.dict.sq_contains = function(self){
-
+    var $ = $B.args("__contains__", 2, {self: null, key: null},
+        ["self", "key"], arguments, {}, null, null),
+        self = $.self,
+        key = $.key
+    console.log('dict.__contains__', self, key)
+    return _b_.dict.$contains(self, key)
 }
 
 _b_.dict.tp_new = function(cls){
@@ -1182,21 +1179,7 @@ var dict_funcs = _b_.dict.tp_funcs = {}
 
 dict_funcs.__class_getitem__ = $B.$class_getitem
 
-dict_funcs.__contains__ = function(){
-    var $ = $B.args("__contains__", 2, {self: null, key: null},
-        ["self", "key"], arguments, {}, null, null),
-        self = $.self,
-        key = $.key
-    return _b_.dict.$contains(self, key)
-}
 
-dict_funcs.__getitem__ = function(self){
-    var $ = $B.args("__getitem__", 2, {self: null, arg: null},
-        ["self", "arg"], arguments, {}, null, null),
-        self = $.self,
-        arg = $.arg
-    return dict.$getitem(self, arg)
-}
 
 dict_funcs.__reversed__ = function(self){
     return dict_reversekeyiterator.$factory(self)
@@ -1452,7 +1435,7 @@ dict_funcs.values = function(self){
     }
 }
 
-_b_.dict.tp_methods = ["__getitem__", "__contains__", "__sizeof__", "get", "setdefault", "pop", "popitem", "keys", "items", "values", "update", "clear", "copy", "__reversed__"]
+_b_.dict.tp_methods = ["__sizeof__", "get", "setdefault", "pop", "popitem", "keys", "items", "values", "update", "clear", "copy", "__reversed__"]
 
 _b_.dict.classmethods = ["fromkeys", "__class_getitem__"]
 

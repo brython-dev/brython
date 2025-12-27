@@ -432,6 +432,7 @@ var loop = $B.loop = function(){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             if(err.ob_type === undefined){
+                console.log('coucou', $B.get_option('debug'))
                 if(err.$py_exc){
                     err = err.$py_exc
                 }else{

@@ -1406,9 +1406,11 @@ $B.is_or_equals = function(x, y){
 $B.member_func = function(obj){
     var klass = $B.get_class(obj),
         contains = $B.$getattr(klass, "__contains__", null)
+    console.log('contains func', contains)
     // use __contains__ if defined
     if(contains !== null){
         return function(){
+            console.log('call member func', contains, obj, arguments)
             return $B.$call(contains, obj, ...arguments)
         }
     }
@@ -2029,7 +2031,7 @@ $B.rich_op1 = function(op, x, y){
     }
     var rop_method = $B.search_in_mro(y_type, rop, null)
     if(rop_method !== null){
-        res = rop_method(x, y)
+        res = $B.$call(rop_method, x, y)
         if(res !== _b_.NotImplemented){
             return res
         }

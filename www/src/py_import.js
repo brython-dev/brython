@@ -51,10 +51,7 @@ $B.module.tp_repr = function(self){
 
 $B.module.tp_getattro = function(self, attr){
     var res = _b_.dict.$get_string(self.dict, attr, $B.NULL)
-    if(res !== $B.NULL){
-        return res
-    }
-    $B.attr_error(attr, self)
+    return res
 }
 
 $B.module.tp_init = function(self, name, doc, $package){
@@ -862,12 +859,14 @@ PathLoader.$factory = function(){
     }
 }
 
-PathLoader.create_module = function(){
+var PathLoader_funcs = PathLoader.tp_funcs = {}
+
+PathLoader_funcs.create_module = function(){
     // Fallback to default module creation
     return _b_.None
 }
 
-PathLoader.exec_module = function(self, module){
+PathLoader_funcs.exec_module = function(self, module){
     // The finder (StdlibStaticFinder, or PathFinder through an import hook)
     // has set the attributes "code" (the source code), "ext" (file
     // extension : "py" or "js"), "path" (the module url) and "is_package" to
@@ -880,6 +879,8 @@ PathLoader.exec_module = function(self, module){
         run_js(metadata.code, metadata.path, module)
     }
 }
+
+PathLoader.tp_methods = ['create_module', 'exec_module']
 
 var url_hook = $B.url_hook = function(path_entry){
     // path hook: a function that returns a path entry finder for the
@@ -1366,7 +1367,12 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                 console.log('import *', modobj)
                 //alert()
             }
-            __all__ = $B.$getattr(modobj, "__all__", thunk);
+            try{
+                __all__ = $B.$getattr(modobj, "__all__", thunk);
+            }catch(err){
+                console.log('getattr __all__ raised', err)
+                throw err
+            }
             if(__all__ !== thunk){
                 // from modname import * ... when __all__ is defined
                 // then fallback to importing __all__ names with no alias
@@ -1568,8 +1574,6 @@ _importlib_module.__repr__ = _importlib_module.__str__ = function(){
 return "<module '_importlib' (built-in)>"
 }
 $B.imported["_importlib"] = _importlib_module
-
-console.log('member descriptor name', $B.member_descriptor.tp_name)
 
 })(__BRYTHON__);
 
