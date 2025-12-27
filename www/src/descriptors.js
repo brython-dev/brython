@@ -535,7 +535,6 @@ $B.wrapper_descriptor.tp_repr = function(self){
 }
 
 $B.wrapper_descriptor.tp_call = function(self, ...args){
-    console.log('wrapper descr call', self.wrapped, args)
     return self.wrapped(...args)
 }
 

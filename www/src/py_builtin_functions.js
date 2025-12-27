@@ -1074,7 +1074,7 @@ $B.search_in_dict = function(obj, attr, _default){
 
 $B.object_getattribute = function(obj, attr){
     var klass = $B.get_class(obj)
-    var test = attr == '__dict__' // klass === _b_.TypeError
+    var test = false // attr == '__dict__' // klass === _b_.TypeError
     var getattribute = $B.search_slot(klass, 'tp_getattro', $B.NULL)
     if(getattribute === $B.NULL){
         $B.RAISE(_b_.TypeError, 'no __getattribute__')

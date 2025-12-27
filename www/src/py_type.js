@@ -231,21 +231,15 @@ $B.resolve_mro_entries = function(bases){
     return has_mro_entries ? new_bases : bases
 }
 
-
+function object_get_dict(obj){
+    return obj.dict
+}
+function object_set_dict(obj, value){
+    obj.dict = value
+}
 
 var type = _b_.type // defined in py_object.js
-Object.assign(type,
-{
-    tp_basicsize: 936,
-    tp_itersize: 40,
-    tp_flags: 2155896066,
-    tp_weakrefoffset: 368,
-    tp_base: _b_.object,
-    tp_dictoffset: 264,
-    tp_doc: `type(object) -> the object's type
-type(name, bases, dict, **kwds) -> a new type`,
-    tp_bases: [_b_.object],
-})
+
 type.$factory = function(){
     var missing = {},
         $ = $B.args('type', 3, {kls: null, bases: null, cl_dict: null},
@@ -901,9 +895,15 @@ _b_.type.tp_new = function(meta, name, bases, cl_dict, extra_kwargs){
         }
     }
 
+    class_dict.dict.__dict__ = $B.getset_descriptor.$factory(
+        class_dict,
+        '__dict__',
+        [object_get_dict, object_set_dict]
+    )
+
     class_dict.tp_mro = type_mro(class_dict)
 
-    // set class attributes for faster lookups
+    // set class attributes
     for(var key in cl_dict){
         var v = cl_dict[key]
         if(['__module__', '__class__', '__name__', '__qualname__'].includes(key)){

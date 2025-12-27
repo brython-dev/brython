@@ -250,9 +250,6 @@ $B.finalize_type = function(cls){
                     cls
                 }
                 method.self = cls.dict[descr]
-                if(cls === _b_.dict && descr == '__contains__'){
-                    console.log('!!!!!!!!!!!!!dict.__conatins__', cls.dict[descr])
-                }
             }
         }
         if(cls.tp_members){
@@ -325,9 +322,6 @@ for(var ns of [$B.builtin_types, $B.created_types]){
         }
         var cls = ns[name]
         $B.finalize_type(cls)
-        if(name == 'PathLoader'){
-            console.log(name, cls)
-        }
     }
 }
 
@@ -340,8 +334,5 @@ for(var builtin_func of $B.builtin_funcs){
         console.log('missing builtin function', builtin_func)
     }
 }
-
-console.log('dict contains', _b_.dict.dict.__contains__)
-
 
 })(__BRYTHON__)

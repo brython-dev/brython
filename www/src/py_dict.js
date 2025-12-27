@@ -1158,7 +1158,6 @@ _b_.dict.sq_contains = function(self){
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
-    console.log('dict.__contains__', self, key)
     return _b_.dict.$contains(self, key)
 }
 

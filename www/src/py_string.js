@@ -2033,7 +2033,6 @@ str_funcs.isupper = function(self){
 str_funcs.join = function(self, iterable){
     $B.check_nb_args_no_kw('str.join', 2, arguments)
     var _self = to_string(self)
-
     iterable = _b_.iter(iterable)
     var res = [],
         count = 0

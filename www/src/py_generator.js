@@ -35,14 +35,8 @@ $B.generator.$factory = function(func, name){
     return res
 }
 
-$B.generator.tp_iter = function(self){
-    return self
-}
 
-$B.generator.tp_iternext = function(self){
-    return $B.generator.send(self, _b_.None)
-}
-
+/* generator start */
 $B.generator.tp_repr = function(self){
     var name = self.js_gen.$name || 'generator'
     if(self.js_gen.$func && self.js_gen.$func.$infos){
@@ -51,7 +45,52 @@ $B.generator.tp_repr = function(self){
     return `<generator object ${name}>`
 }
 
-$B.generator.close = function(self){
+$B.generator.tp_iter = function(self){
+    return self
+}
+
+$B.generator.tp_iternext = function*(self){
+    while(true){
+        try{
+            yield $B.generator.tp_funcs.send(self, _b_.None)
+        }catch(err){
+            $B.RAISE_IF_NOT(err, _b_.StopIteration)
+            break
+        }
+    }
+}
+
+$B.generator.tp_finalize = function(self){
+
+}
+
+var generator_funcs = $B.generator.tp_funcs = {}
+
+generator_funcs.__class_getitem__ = function(self){
+
+}
+
+generator_funcs.__name___get = function(self){
+
+}
+
+generator_funcs.__name___set = function(self){
+
+}
+
+generator_funcs.__qualname___get = function(self){
+
+}
+
+generator_funcs.__qualname___set = function(self){
+
+}
+
+generator_funcs.__sizeof__ = function(self){
+
+}
+
+generator_funcs.close = function(self){
     var save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frame_obj = $B.push_frame(self.$frame)
@@ -67,7 +106,47 @@ $B.generator.close = function(self){
     $B.frame_obj = save_frame_obj
 }
 
-$B.generator.send = function(self, value){
+generator_funcs.gi_code_get = function(self){
+
+}
+
+generator_funcs.gi_code_set = function(self){
+
+}
+
+generator_funcs.gi_frame_get = function(self){
+
+}
+
+generator_funcs.gi_frame_set = function(self){
+
+}
+
+generator_funcs.gi_running_get = function(self){
+
+}
+
+generator_funcs.gi_running_set = function(self){
+
+}
+
+generator_funcs.gi_suspended_get = function(self){
+
+}
+
+generator_funcs.gi_suspended_set = function(self){
+
+}
+
+generator_funcs.gi_yieldfrom_get = function(self){
+
+}
+
+generator_funcs.gi_yieldfrom_set = function(self){
+
+}
+
+generator_funcs.send = function(self, value){
     // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
     // to decide if a generator with "yield" inside context managers must
     // be applied method .return()
@@ -111,7 +190,7 @@ $B.generator.send = function(self, value){
     return res.value
 }
 
-$B.generator.throw = function(){
+generator_funcs.throw = function(self){
     var $ = $B.args('throw', 4,
                     {self: null, type: null, value: null, traceback: null},
                     ['self', 'type', 'value', 'traceback'],
@@ -156,6 +235,13 @@ $B.generator.throw = function(){
     return res.value
 }
 
+$B.generator.tp_methods = ["send", "throw", "close", "__sizeof__"]
+
+$B.generator.classmethods = ["__class_getitem__"]
+
+$B.generator.tp_getset = ["__name__", "__qualname__", "gi_yieldfrom", "gi_running", "gi_frame", "gi_suspended", "gi_code"]
+
+/* generator end */
 
 $B.set_func_names($B.generator, "builtins")
 

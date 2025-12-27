@@ -1406,11 +1406,9 @@ $B.is_or_equals = function(x, y){
 $B.member_func = function(obj){
     var klass = $B.get_class(obj),
         contains = $B.$getattr(klass, "__contains__", null)
-    console.log('contains func', contains)
     // use __contains__ if defined
     if(contains !== null){
         return function(){
-            console.log('call member func', contains, obj, arguments)
             return $B.$call(contains, obj, ...arguments)
         }
     }
