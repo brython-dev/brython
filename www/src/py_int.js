@@ -66,7 +66,6 @@ function $err(op, other){
     $B.RAISE(_b_.TypeError, msg)
 }
 
-
 function int_value(obj){
     // Instances of int subclasses that call int.__new__(cls, value)
     // have an attribute $brython_value set
@@ -345,12 +344,12 @@ int.$factory = function(){
                     if(special_method == '__trunc__'){
                         $B.warn(_b_.DeprecationWarning,
                         'The delegation of int() to __trunc__ is deprecated.')
-                        let index_method = $B.$getattr($get_class(res), '__index__', null)
+                        let index_method = $B.$getattr($B.get_class(res), '__index__', null)
                         if(index_method === null){
                             $B.RAISE(_b_.TypeError, '__trunc__ returned' +
                                 ` non-Integral (type ${$B.class_name(res)})`)
                         }
-                        res = $B.$call(index_method, value)
+                        res = $B.$call(index_method, res)
                     }
                     if($B.$isinstance(res, _b_.int)){
                         if(typeof res !== "number" &&
@@ -1146,7 +1145,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
                 // len's handling of non-integer and negative values
                 return _b_.len(obj) > 0
             }else{
-                var res = $B.call_with_mro(obj, '__bool__')
+                var res = $B.$call($B.search_in_mro(klass, '__bool__'), obj)
                 if(res !== true && res !== false){
                     $B.RAISE(_b_.TypeError, "__bool__ should return " +
                         "bool, returned " + $B.class_name(res))
@@ -1267,10 +1266,6 @@ _b_.bool.nb_invert = function(self){
 }
 
 var bool_funcs = _b_.bool.tp_funcs = {}
-
-bool_funcs.__new__ = function(self){
-
-}
 
 _b_.bool.functions_or_methods = ["__new__"]
 

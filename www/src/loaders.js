@@ -409,9 +409,8 @@ var loop = $B.loop = function(){
     if(func == "execute"){
         let script = task[1],
             script_id = script.__name__.replace(/\./g, "_"),
-            module = $B.module.$factory(script.__name__)
+            module = $B.module.$factory(script.__name__, script.__doc__)
         module.__file__ = script.__file__
-        module.__doc__ = script.__doc__
         $B.imported[script_id] = module
         try{
             var modobj = new Function(script.js + `\nreturn locals`)()
@@ -431,13 +430,14 @@ var loop = $B.loop = function(){
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
+            console.log('error in loaders', err)
             if(err.ob_type === undefined){
-                console.log('coucou', $B.get_option('debug'))
+                err.filename = script.filename
                 if(err.$py_exc){
                     err = err.$py_exc
                 }else{
-                    if($B.get_option('debug') > 2){
-                        console.log('JS error stack', err.stack)
+                    if($B.get_option('debug', err) > 2){
+                        console.log('JS error', err.stack)
                     }
                     var stack = err.$stack,
                         frame_obj = err.$frame_obj,
@@ -455,6 +455,9 @@ var loop = $B.loop = function(){
                     err.$frame_obj = frame_obj
                     err.$linenums = linenums
                 }
+            }
+            if(err.args && err.args[0] && err.args[0].includes('interpreted')){
+                console.log(Error('trace').stack)
             }
             $B.handle_error(err)
         }

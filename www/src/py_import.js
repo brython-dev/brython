@@ -13,23 +13,12 @@ var Module = $B.module
 
 // legacy
 Module.$factory = function(name, doc, $package){
-    var self = {
-        ob_type: Module
-    }
+    var self = Module.tp_new()
     Module.tp_init(self, name, doc, $package)
     return self
 }
 
-Module.tp_new = function(cls, name, doc, $package){
-    return {
-        ob_type: cls,
-        __builtins__: _b_.__builtins__,
-        __name__: name,
-        __doc__: doc || _b_.None,
-        __package__: $package || _b_.None
-    }
-}
-
+/*
 Module.__setattr__ = function(self, attr, value){
     if(self.__name__ == '__builtins__'){
         // set a Python builtin
@@ -40,8 +29,34 @@ Module.__setattr__ = function(self, attr, value){
         self[attr] = value
     }
 }
+*/
 
-/* module */
+
+var module_funcs = $B.module.tp_funcs = {}
+
+module_funcs.__annotate___get = function(self){
+
+}
+
+module_funcs.__annotate___set = function(self){
+
+}
+
+module_funcs.__annotations___get = function(self){
+
+}
+
+module_funcs.__annotations___set = function(self){
+
+}
+
+
+
+$B.module.tp_methods = ["__dir__"]
+
+$B.module.tp_getset = ["__annotations__", "__annotate__"]
+
+/* module start */
 $B.module.tp_repr = function(self){
     var res = "<module " + self.__name__
     res += self.__file__ === undefined ? " (built-in)" :
@@ -50,17 +65,43 @@ $B.module.tp_repr = function(self){
 }
 
 $B.module.tp_getattro = function(self, attr){
-    var res = _b_.dict.$get_string(self.dict, attr, $B.NULL)
-    return res
+    var res
+    if(self.dict){
+        res = _b_.dict.$get_string(self.dict, attr, $B.NULL)
+        if(res !== $B.NULL){
+            return res
+        }
+    }
+    res = self[attr]
+    if(res !== undefined){
+        return res
+    }
+    // search with __getattr__ if defined in the module
+    var getattr = self.__getattr__
+    if(getattr !== undefined){
+        return $B.$call(getattr, attr)
+    }
+    return $B.NULL
 }
 
-$B.module.tp_init = function(self, name, doc, $package){
+$B.module.tp_init = function(self){
+    var $ = $B.args('__init__', 3, {self: null, name: null, doc: null},
+                ['self', 'name', 'doc'], arguments, {doc: _b_.None},
+                'args', 'kw')
+    var self = $.self
+    self.__name__ = $.name
+    self.__doc__ = $.doc
+}
+
+$B.module.tp_new = function(self){
     return {
-        ob_type: Module,
-        __builtins__: _b_.__builtins__,
-        __name__: name,
-        __doc__: doc || _b_.None,
-        __package__: $package || _b_.None
+        ob_type: $B.module,
+        dict: $B.empty_dict(),
+        md_def: $B.NULL,
+        md_state: $B.NULL,
+        md_weaklist: $B.NULL,
+        md_name: $B.NULL,
+        md_dict: $B.empty_dict() // for module namespace
     }
 }
 
@@ -82,6 +123,10 @@ module_funcs.__annotations___set = function(self){
 
 }
 
+module_funcs.__dict__ = function(self){
+    return self.md_dict
+}
+
 module_funcs.__dir__ = function(self){
     if(self.__dir__){
         return $B.$call(self.__dir__)
@@ -98,7 +143,11 @@ module_funcs.__dir__ = function(self){
 
 $B.module.tp_methods = ["__dir__"]
 
+$B.module.tp_members = ["__dict__"]
+
 $B.module.tp_getset = ["__annotations__", "__annotate__"]
+
+/* module end */
 
 $B.set_func_names(Module, "builtins")
 
@@ -498,14 +547,20 @@ VFSLoader.$factory = function(){
     }
 }
 
-VFSLoader.create_module = function(){
+var VFSLoader_funcs = VFSLoader.tp_funcs = {}
+
+VFSLoader_funcs.create_module = function(){
     // Fallback to default module creation
     return _b_.None
 }
 
-VFSLoader.exec_module = function(self, modobj){
+VFSLoader_funcs.exec_module = function(self, modobj){
     // Besides module exection, handles the storage of the module in the
     // indexedBD cache
+    if(modobj === undefined){
+        console.log('no module')
+        console.log(Error('trace').stack)
+    }
     var stored = modobj.__spec__.loader_state.stored,
         timestamp = modobj.__spec__.loader_state.timestamp
     var ext = stored[0],
@@ -626,6 +681,8 @@ VFSLoader.exec_module = function(self, modobj){
         }
     }
 }
+
+VFSLoader.tp_methods = ["create_module", "exec_module"]
 
 $B.set_func_names(VFSLoader, "builtins")
 
@@ -784,7 +841,9 @@ PathEntryFinder.$factory = function(path_entry, hint){
     }
 }
 
-PathEntryFinder.find_spec = function(self, fullname){
+var PathEntryFinder_funcs = PathEntryFinder.tp_funcs = {}
+
+PathEntryFinder_funcs.find_spec = function(self, fullname){
     // Search a module at different locations.
     // self has an attribute "path_entry" set to the directory where
     // modules should be searched.
@@ -847,6 +906,8 @@ PathEntryFinder.find_spec = function(self, fullname){
     }
     return _b_.None
 }
+
+PathEntryFinder.tp_methods = ["find_spec"]
 
 $B.set_func_names(PathEntryFinder, "builtins")
 
@@ -1037,9 +1098,14 @@ function import_engine(mod_name, _path, from_stdlib){
             module = $B.$getattr(_loader, "load_module")(_spec_name)
         }else{
             _sys_modules[_spec_name] = module
+            if(module === undefined){
+                console.log('no module !!!')
+            }
             try{
                 exec_module(module)
             }catch(e){
+                console.log('error for module', module,
+                    'loader', _loader, 'exec module', exec_module)
                 delete _sys_modules[_spec_name]
                 throw e
            }

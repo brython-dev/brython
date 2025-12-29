@@ -49,23 +49,25 @@
                     return callback
                 }else if($B.$isinstance($.elt, $B.DOMNode)){
                     // DOM element
-                    $B.DOMNode.bind($.elt, $.evt, callback, options)
+                    $B.$call($B.$getattr($B.DOMNode, 'bind'), $.elt, $.evt, callback, options)
                     return callback
                 }else if($B.$isinstance($.elt, _b_.str)){
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
+                    var binder = $B.type_getattribute($B.DOMNode, 'bind')
                     for(var i = 0; i < items.length; i++){
-                        $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
+                        $B.$call(binder, $B.DOMNode.$factory(items[i]),
                             $.evt, callback, options)
                     }
                     return callback
                 }
+                var binder = $B.type_getattribute($B.DOMNode, 'bind')
                 try{
                     var it = $B.$iter($.elt)
                     while(true){
                         try{
                             var elt = _b_.next(it)
-                            $B.DOMNode.bind(elt, $.evt, callback)
+                            $B.$call(binder, elt, $.evt, callback)
                         }catch(err){
                             if($B.$isinstance(err, _b_.StopIteration)){
                                 break
@@ -75,7 +77,7 @@
                     }
                 }catch(err){
                     if($B.$isinstance(err, _b_.AttributeError)){
-                        $B.DOMNode.bind($.elt, $.evt, callback)
+                        $B.$call(binder, $.elt, $.evt, callback)
                     }
                     throw err
                 }
@@ -197,16 +199,13 @@
             var _b_ = $B.builtins
             var TagSum = $B.TagSum
 
-            function makeTagDict(tagName){
-                // return the dictionary for the class associated with tagName
-                var dict = {
-                    ob_type: _b_.type,
-                    __name__: tagName,
-                    __module__: "browser.html",
-                    __qualname__: tagName
-                }
+            function makeTagClass(tagName){
+                // return the the class associated with tagName
+                var cls = $B.make_builtin_class(tagName, [$B.DOMNode])
 
-                dict.__init__ = function(){
+                var cls_funcs = cls.tp_funcs = {}
+
+                cls.tp_init = function(){
                     var $ns = $B.args('__init__', 1, {self: null}, ['self'],
                         arguments, {}, 'args', 'kw'),
                         self = $ns['self'],
@@ -270,9 +269,7 @@
                     }
                 }
 
-                dict.__mro__ = [$B.DOMNode, $B.builtins.object]
-
-                dict.__new__ = function(cls){
+                cls.tp_new = function(cls){
                     // Only called for subclasses of the HTML tag
                     var res = document.createElement(tagName)
                     if(cls !== html[tagName]){
@@ -282,12 +279,29 @@
                     return res
                 }
 
-                dict.__rmul__ = function(self, num){
+                cls.tp_getattroXXX = function(self, attr){
+                    console.log('getattro', cls, self, attr)
+                    var res = self[attr] ?? $B.NULL
+                    if(res === $B.NULL && self.dict){
+                        res = _b_.dict.$get_string(self.dict, attr, $B.NULL)
+                    }else{
+                        res = $B.jsobj2pyobj(res)
+                    }
+                    return res
+                }
+
+                cls_funcs.__rmul__ = function(self, num){
                     return $B.DOMNode.__mul__(self, num)
                 }
 
-                $B.set_func_names(dict, "browser.html")
-                return dict
+                cls.dict.__rmul__ = $B.wrapper_descriptor.$factory(
+                    cls,
+                    '__rmul__',
+                    cls_funcs.__rmul__
+                )
+
+                $B.set_func_names(cls, "browser.html")
+                return cls
             }
 
             function makeFactory(klass){
@@ -308,7 +322,7 @@
                             }
                         }
                         // apply __init__
-                        var init = $B.$getattr(k, "__init__", null)
+                        var init = k.tp_init
                         if(init !== null){
                             init(res, ...arguments)
                         }
@@ -361,7 +375,7 @@
                     $B.RAISE(_b_.ValueError, "cannot reset class for "
                         + tagName)
                 }
-                var klass = makeTagDict(tagName)
+                var klass = makeTagClass(tagName)
                 klass.$factory = makeFactory(klass, ComponentClass)
                 html[tagName] = klass
                 _b_.dict.$setitem(html.tags, tagName, html[tagName])
@@ -636,6 +650,9 @@
                 chr0 = String.fromCodePoint(0)
             s = s.replace(new RegExp(chr0, 'g'), ' ')
             console[self.out](s)
+            if(s.includes('__spec__')){
+                console.log(Error('trace').stack)
+            }
             self.buf = []
         }
     }

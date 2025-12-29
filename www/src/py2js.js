@@ -820,7 +820,8 @@ $B.run_script = function(script, src, name, url, run_loop){
             js: js,
             __name__: name,
             __file__: url,
-            script_element: script
+            script_element: script,
+            filename
         }
     $B.tasks.push(["execute", _script])
     if(run_loop){

@@ -1531,7 +1531,9 @@ $B.get_stderr = function(){
 }
 
 $B.get_stdout = function(){
-    return $B.imported.sys ? $B.imported.sys.stdout : $B.imported._sys.stdout
+    return $B.imported.sys ?
+        $B.imported.sys.stdout :
+        $B.imported._sys.stdout
 }
 
 $B.show_error = function(err){

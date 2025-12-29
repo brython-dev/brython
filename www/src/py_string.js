@@ -1157,14 +1157,6 @@ const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 // This regex should match the one in py2js.js
 var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
-
-
-
-
-
-
-
-
 str.$factory = function(arg, encoding){
     if(arg === undefined){
         console.log('arg undef')
@@ -1362,7 +1354,7 @@ _b_.str.tp_new = function(cls, value){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "str.__new__(): not enough arguments")
     }else if(cls === _b_.str){
-        return value
+        return str.$factory(value)
     }else{
         return {
             ob_type: cls,

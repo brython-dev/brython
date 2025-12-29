@@ -35,7 +35,7 @@ $B.method_wrapper.tp_hash = function(self){
 
 $B.method_wrapper.tp_call = function(self, ...args){
     var name = self.d_name
-    var method = self.self.ob_type.dict[name].wrapped
+    var method = $B.get_class(self.self).dict[name].wrapped
     return method(self.self, ...args)
 }
 
@@ -171,6 +171,12 @@ member_descriptor.$factory = function(attr, cls){
 $B.objs = []
 var method = $B.method
 method.$factory = function(func, obj){
+    return {
+        ob_type: $B.method,
+        func,
+        obj
+    }
+    /*
     var f = function(){
         return $B.$call(func, obj, ...arguments)
     }
@@ -193,6 +199,7 @@ method.$factory = function(func, obj){
     f.$infos.dict = $B.empty_dict()
 
     return f
+    */
 }
 
 method.__eq__ = function(self, other){
@@ -222,76 +229,54 @@ $B.method.tp_richcompare = function(self){
 }
 
 $B.method.tp_repr = function(self){
-    return "<bound method " + self.$infos.__qualname__ +
-       " of " + _b_.str.$factory(self.$infos.__self__) + ">"
+    console.log('method repr', self, self.func, self.obj)
+    console.log('func.$function infos', self.func.$function_infos)
+    var name = self.func.$function_infos[$B.func_attrs.__qualname__]
+    return "<bound method " + name +
+       " of " + _b_.str.$factory(self.obj) + ">"
 }
 
 $B.method.tp_hash = function(self){
 
 }
 
-$B.method.tp_call = function(self){
-    return self(...Array.from(arguments).slice(1))
+$B.method.tp_call = function(self, ...args){
+    if(typeof self.func !== 'function'){
+        console.log('not a function', self, self.func)
+    }
+    return self.func(self.obj, ...args)
 }
 
 $B.method.tp_getattro = function(self, attr){
-    // Internal attributes __name__, __func__, __self__ etc.
-    // are stored in self.$infos
-    var infos = self.$infos
-    if(infos && infos[attr]){
-        if(attr == "__code__"){
-            var res = {ob_type: $B.Code}
-            for(var key in infos.__code__){
-                res[key] = infos.__code__[key]
-            }
-            return res
+    var tp = $B.get_class(self)
+    var descr = $B.search_in_mro(tp, attr, $B.NULL)
+    if(descr !== $B.NULL){
+        var getter = $B.search_slot($B.get_class(descr), 'tp_descr_get', $B.NULL)
+        if(getter !== $B.NULL){
+            return getter(descr, self, tp)
         }else{
-            return infos[attr]
+            return descr
         }
-    }else if(method.hasOwnProperty(attr)){
-        return _b_.object.tp_getattro(self, attr)
-    }else{ // use attributes of underlying function __func__
-        return _b_.object.tp_getattro(self.$infos.__func__, attr)
     }
-    return $B.NULL
+    return $B.object_getattribute(self.func, attr);
 }
 
 $B.method.tp_descr_get = function(self){
-    var f = function(){return self(...arguments)}
-    f.ob_type = $B.method_wrapper
-    f.$infos = self.$infos
-    return f
+    return self
 }
 
-$B.method.tp_new = function(func, obj){
-    var f = function(){
-        return $B.$call(func, obj, ...arguments)
+$B.method.tp_new = function(cls, func, obj){
+    return {
+        ob_type: cls,
+        func,
+        obj
     }
-    f.ob_type = method
-    if(typeof func !== 'function'){
-        console.log('method from func w-o $infos', func)
-    }
-    if(! func.$infos && func.$function_infos){
-        $B.make_function_infos(func, ...func.$function_infos)
-        f.$function_infos = func.$function_infos
-    }
-    f.$infos = {}
-    if(func.$infos){
-        for(var key in func.$infos){
-            f.$infos[key] = func.$infos[key]
-        }
-    }
-    f.$infos.__func__ = func
-    f.$infos.__self__ = obj
-    f.$infos.dict = $B.empty_dict()
-
-    return f
 }
 
 var method_funcs = $B.method.tp_funcs = {}
 
 method_funcs.__func__ = function(self){
-
+    return self.func
 }
 
 method_funcs.__reduce__ = function(self){
@@ -299,7 +284,7 @@ method_funcs.__reduce__ = function(self){
 }
 
 method_funcs.__self__ = function(self){
-
+    return self.obj
 }
 
 $B.method.functions_or_methods = ["__new__"]
@@ -448,14 +433,14 @@ $B.getset_descriptor.$factory = function(klass, attr, getset){
 }
 
 /* getset_descriptor start */
-$B.getset_descriptor.tp_descr_set = function(self, klass, value){
+$B.getset_descriptor.tp_descr_set = function(self, obj, value){
     if(self.setter === undefined){
         $B.RAISE_ATTRIBUTE_ERROR(
             `attribute '${self.attr}' of '${self.cls.__qualname__}' objects is not writable`,
             self,
             self.attr)
     }
-    return self.setter(klass, value)
+    return self.setter(obj, value)
 }
 
 $B.getset_descriptor.tp_repr = function(self){
@@ -541,6 +526,9 @@ $B.wrapper_descriptor.tp_call = function(self, ...args){
 $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){
     if(obj === _b_.None){
         return self
+    }
+    if(obj == 'dev'){
+        console.log(Error('bizarre').stack)
     }
     var res = {
         ob_type: $B.method_wrapper,

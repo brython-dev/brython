@@ -188,6 +188,9 @@ $B.make_mro = function(cls){
             }
         }
         bmro[pos++] = base
+        if(base.tp_mro === undefined){
+            console.log('no tp_mro for base', base)
+        }
         var _tmp = base.tp_mro.slice()
         if(_tmp){
             if(_tmp[0] === base){
@@ -732,7 +735,7 @@ function from_py(src, script_id){
     script_id = script_id  || 'python_script_' + $B.UUID()
     var filename = $B.script_path + '#' + script_id
     $B.url2name[filename] = script_id
-    $B.imported[script_id] = {}
+    $B.imported[script_id] = $B.module.$factory(script_id)
 
     var root = __BRYTHON__.py2js({src, filename},
                                  script_id, script_id,

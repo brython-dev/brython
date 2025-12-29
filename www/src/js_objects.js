@@ -373,7 +373,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     res = pyobj.apply(this, args)
                 }
                 // Return a Javascript result
-                console.log('make jsobj from', res, 'arguments', arguments)
                 return pyobj2jsobj(res)
             }catch(err){
                 $B.handle_error(err)

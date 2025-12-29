@@ -1050,7 +1050,6 @@ $B.warn = function(klass, message, filename, token){
                                          warning.end_lineno,
                                          warning.end_offset])
     }
-    console.log('warn', warning)
     $B.imported._warnings.warn(warning)
 }
 
@@ -1847,14 +1846,15 @@ $B.rich_comp = function(op, x, y){
     if(in_mro === undefined){
         $B.RAISE(_b_TypeError, `no attribute ${op}`)
     }
-    var getter = $B.search_in_mro($B.get_class(in_mro), '__get__')
+    var getter = $B.search_slot($B.get_class(in_mro), 'tp_descr_get')
     if(getter){
-        res = $B.$call(getter(in_mro, x, $B.get_class(x)), y)
+        var comp_func = getter(in_mro, x)
+        res = $B.$call(comp_func, y)
     }else{
         if(typeof in_mro !== 'function'){
-            var call_in_mro = $B.search_in_mro($B.get_class(in_mro), '__call__')
+            var call_in_mro = $B.search_slot($B.get_class(in_mro), 'tp_call')
             if(call_in_mro){
-                res = call_in_mro(in_mro, y)
+                res = call_in_mro(in_mro, x, y)
             }else{
                 $B.RAISE(_b_.TypeError, `not callable {op}`)
             }
@@ -1978,10 +1978,9 @@ $B.rich_op1 = function(op, x, y){
     if(x_type === y_type){
         // For objects of the same type, don't try the reversed operator
         if(x_type === _b_.int){
-            return _b_.int[op](x, y)
+            return $B.$call(_b_.int.dict[op], x, y)
         }else if(x_type === _b_.bool){
-            return (_b_.bool[op] || _b_.int[op])
-                (x, y)
+            return $B.$call(_b_.bool.dict[op] || _b_.int.dict[op], x, y)
         }
         try{
             method = $B.$getattr(x_type, op)
@@ -2018,11 +2017,9 @@ $B.rich_op1 = function(op, x, y){
     }
     var res
     var fail
-    console.log('try call with mro', x_type, op)
     var op_method = $B.search_in_mro(x_type, op, null)
     if(op_method !== null){
-        console.log('op meth', op_meth)
-        res = op_method(x, y)
+        res = $B.$call(op_method, x, y)
         if(res !== _b_.NotImplemented){
             return res
         }

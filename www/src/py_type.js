@@ -659,7 +659,7 @@ function type___sizeof__(klass){
 
 /* type start */
 _b_.type.tp_setattro = function(kls, attr, value){
-    var $test = false // attr == '__name__'
+    var $test = attr == 'events'
     if($test){
         console.log('set attr', attr, 'of class', kls, 'to', value)
     }
@@ -767,11 +767,6 @@ _b_.type.tp_call = function(klass, ...args){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    counter++
-    if(counter > 50){
-        console.log('overflow')
-        throw Error()
-    }
     var test = false // name == '__self__'
     if(test){
         console.log('class_getattr', obj, name)
@@ -799,7 +794,6 @@ _b_.type.tp_getattro = function(obj, name){
                     console.log('data descriptor', name)
                     console.log('__set__', $B.search_slot(in_mro_class, 'tp_descr_set', NULL))
                 }
-                counter--
                 var res = getter(in_mro, obj)     // data descriptor
                 if(test){
                     console.log('result of getter', res)
@@ -830,10 +824,8 @@ _b_.type.tp_getattro = function(obj, name){
             if(test){
                 console.log('result of local_get', res)
             }
-            counter--
             return res
         }
-        counter--
         return attribute
     }
     if(getter !== NULL){
@@ -841,11 +833,9 @@ _b_.type.tp_getattro = function(obj, name){
             console.log('getter', getter)
             console.log(Error().stack)
         }
-        counter--
         return getter(in_mro, obj)  // non-data descriptor
     }
     if(in_mro !== NULL){
-        counter--
         return in_mro
     }
     return $B.NULL

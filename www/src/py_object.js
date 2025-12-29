@@ -168,12 +168,16 @@ _b_.object.tp_richcompare = function(self){
 }
 
 _b_.object.tp_setattro = function(self, attr, value){
+    var test = false // attr == 'text'
+    var klass = $B.get_class(self)
+    var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
+    if(test){
+        console.log('object.tp_setattro', self, attr, value)
+    }
     if(value === $B.NULL){
         // First check for data descriptor with __delete__ in class
-        var klass = $B.get_class(self)
-        var kl_attr = $B.search_in_mro(klass, attr)
-        if(kl_attr !== undefined && _b_.hasattr(kl_attr, '__delete__')){
-            return $B.$getattr(kl_attr, '__delete__')(self)
+        if(in_mro !== $B.NULL && _b_.hasattr(in_mro, '__delete__')){
+            return $B.$getattr(in_mro, '__delete__')(self)
         }
         // No data descriptor, delete from instance __dict__
         if(self.dict && $B.$isinstance(self.dict, _b_.dict) &&
@@ -202,11 +206,22 @@ _b_.object.tp_setattro = function(self, attr, value){
                 self, attr)
         }
     }
+    if(in_mro !== $B.NULL){
+        if(test){
+            console.log(attr, 'in class mro', in_mro)
+        }
+        var setter = $B.search_slot($B.get_class(in_mro), 'tp_descr_set', $B.NULL)
+        if(setter !== $B.NULL){
+            if(test){
+                console.log('setter', setter)
+            }
+            return setter(in_mro, self, value)
+        }
+    }
     var dict = self.dict
     if(dict){
         _b_.dict.$setitem(dict, attr, value)
     }else{
-        console.log('no dict for', self)
         self[attr] = value
     }
     return _b_.None
@@ -244,7 +259,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__dict__' // $B.get_class(self) === _b_.TypeError
+    var test = attr == 'add' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -293,6 +308,7 @@ _b_.object.tp_getattro = function(self, attr){
     }
     if(test){
         console.log('attr', attr, 'not found on self', self)
+        console.log('self[attr]', self[attr])
     }
     return $B.NULL
 }
@@ -380,7 +396,9 @@ object_funcs.__dir__ = function(self){
     if(itsclass != NULL){
         $B.merge_class_dict(dict, itsclass)
     }
-    result = PyDict_Keys(dict);
+    console.log('make list from', dict)
+    result = $B.$list(Array.from($B.make_js_iterator(dict)))
+    return result
 }
 
 object_funcs.__format__ = function(){

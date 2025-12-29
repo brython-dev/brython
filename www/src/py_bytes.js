@@ -69,15 +69,6 @@ function check_buffer(arg){
 
 //bytearray() (built in class)
 var bytearray = _b_.bytearray
-Object.assign(bytearray,
-    {
-        __mro__: [_b_.object],
-        __qualname__: 'bytearray',
-        $buffer_protocol: true,
-        $is_sequence: true,
-        $is_class: true
-    }
-)
 
 var mutable_methods = ["copy", "count", "index", "remove", "reverse"]
 
@@ -677,7 +668,7 @@ bytes.$new = function(cls, source, encoding, errors){
                     }catch(err){
                         $B.RAISE(_b_.TypeError, "'" +
                             $B.class_name(int_list[i]) + "' object " +
-                            "cannot be interpreted as an integer")
+                            "cannot be interpreted as an integer 8")
                     }
                     if(item < 0 || item > 255){
                         $B.RAISE(_b_.ValueError, "bytes must be in range" +
