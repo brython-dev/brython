@@ -1748,7 +1748,7 @@ str_funcs.format = function(){
         if(fmt.name.charAt(0).search(/\d/) > -1){
             // Numerical reference : use positional arguments
             let pos = parseInt(fmt.name)
-            value = _b_.tuple.__getitem__($.$args, pos)
+            value = $B.$getitem($.$args, pos)
         }else{
             // Use keyword arguments
             value = getitem(fmt.name)

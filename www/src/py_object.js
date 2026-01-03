@@ -194,6 +194,7 @@ _b_.object.tp_setattro = function(self, attr, value){
     }
     if(value === undefined){
         // setting an attribute to 'object' type is not allowed
+        console.log('value is undefined', self, attr)
         $B.RAISE(_b_.TypeError,
             "can't set attributes of built-in/extension type 'object'")
     }else if($B.get_class(self) === object){
@@ -259,7 +260,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = attr == 'add' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == '__dict__' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -336,7 +337,7 @@ _b_.object.tp_new = function(cls, ...args){
         ob_type: cls,
         })
     if(cls !== object){
-        res.dict = $B.obj_dict({})
+        res.dict = $B.empty_dict()
     }
     return res
 }

@@ -163,6 +163,69 @@ traceback.$factory = function(exc){
     return make_tb()
 }
 
+/* traceback start */
+$B.traceback.tp_new = function(self){
+    return make_tb()
+}
+
+var traceback_funcs = $B.traceback.tp_funcs = {}
+
+traceback_funcs.__dir__ = function(self){
+    return $B.$list(['tb_frame', 'tb_next', 'tb_lasti', 'tb_lineno'])
+}
+
+traceback_funcs.tb_frame = function(self){
+    return self.tb_frame
+}
+
+traceback_funcs.tb_lasti = function(self){
+    return self.tb_lasti
+}
+
+traceback_funcs.tb_lineno_get = function(self){
+    return self.tb_lineno
+}
+
+traceback_funcs.tb_lineno_set = $B.NULL
+
+traceback_funcs.tb_next_get = function(self){
+    return self.tb_next ?? _b_.None
+}
+
+traceback_funcs.tb_next_set = function(self, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, "can't delete tb_next attribute")
+    }
+
+    /* We accept None or a traceback object, and map None -> NULL (inverse of
+       tb_next_get) */
+    if(value == _b_.None) {
+        value = self.tb_next = value
+        return
+    }else if(! $B.exact_type(value, $B.traceback)){
+        $B.RAISE(_b_.TypeError,
+            `expected traceback object, got '$B.class_name(value)'`)
+    }
+
+    /* Check for loops */
+    var cursor = value
+    while(cursor !== _b_.None){
+        if(cursor === self) {
+            $B.RAISE(_b_.ValueError, "traceback loop detected")
+        }
+        cursor = cursor.tb_next
+    }
+    self.tb_next = value
+}
+
+$B.traceback.tp_methods = ["__dir__"]
+
+$B.traceback.tp_members = ["tb_frame", "tb_lasti"]
+
+$B.traceback.tp_getset = ["tb_next", "tb_lineno"]
+
+/* traceback end */
+
 $B.set_func_names(traceback, "builtins")
 
 // class of frame objects
@@ -529,7 +592,7 @@ BaseException_funcs.__suppress_context__ = function(self){
 }
 
 BaseException_funcs.__traceback___get = function(self){
-
+    return self.__traceback__
 }
 
 BaseException_funcs.__traceback___set = function(self){
@@ -756,8 +819,8 @@ $B.set_func_names(_b_.AttributeError, 'builtins')
 // Shortcut to create an AttributeError
 $B.attr_error = function(name, obj){
     var msg
-    if(obj.$is_class){
-        msg = `type object '${obj.__name__}'`
+    if($B.is_type(obj)){
+        msg = `type object '${obj.tp_name}'`
     }else{
         msg = `'${$B.class_name(obj)}' object`
     }
@@ -1527,13 +1590,15 @@ $B.error_trace = function(err){
 }
 
 $B.get_stderr = function(){
-    return $B.imported.sys ? $B.imported.sys.stderr : $B.imported._sys.stderr
+    return $B.imported.sys ?
+        $B.module_getattr($B.imported.sys, 'stderr') :
+        $B.module_getattr($B.imported._sys, 'stderr')
 }
 
 $B.get_stdout = function(){
     return $B.imported.sys ?
-        $B.imported.sys.stdout :
-        $B.imported._sys.stdout
+        $B.module_getattr($B.imported.sys, 'stdout') :
+        $B.module_getattr($B.imported._sys, 'stdout')
 }
 
 $B.show_error = function(err){
@@ -1543,10 +1608,10 @@ $B.show_error = function(err){
     var trace = $B.error_trace($B.exception(err))
     try{
         var stderr = $B.get_stderr()
-        $B.$getattr(stderr, 'write')(trace)
+        $B.$call($B.$getattr(stderr, 'write'), trace)
         var flush = $B.$getattr(stderr, 'flush', _b_.None)
         if(flush !== _b_.None){
-            flush()
+            $B.$call(flush)
         }
     }catch(print_exc_err){
         //console.debug(trace)

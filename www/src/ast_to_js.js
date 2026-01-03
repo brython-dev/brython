@@ -562,6 +562,14 @@ function resolve_in_namespace(name, ns){
         return ns[name] === undefined ? {found: false} :
                             {found: true, value: ns[name]}
     }
+    if($B.exact_type(ns, $B.module)){
+        var res = $B.module.tp_getattro(ns, name)
+        if(res !== $B.NULL){
+            return {found: true, value: res}
+        }else{
+            return {found: false}
+        }
+    }
     if(! ns.hasOwnProperty){
         if(ns[name] !== undefined){
             return {found: true, value: ns[name]}
@@ -650,6 +658,10 @@ $B.resolve_local = function(name, inum){
 }
 
 $B.resolve_in_scopes = function(name, namespaces, inum){
+    var test = false // name == 'dict'
+    if(test){
+        console.log('resolve in scopes', name)
+    }
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top,
@@ -667,6 +679,9 @@ $B.resolve_in_scopes = function(name, namespaces, inum){
                 for(var ns1 of [exec_top[1], exec_top[3]]){
                     let v = resolve_in_namespace(name, ns1)
                     if(v.found){
+                        if(test){
+                            console.log(v.value)
+                        }
                         return v.value
                     }
                 }
@@ -674,6 +689,9 @@ $B.resolve_in_scopes = function(name, namespaces, inum){
         }else{
             let v = resolve_in_namespace(name, ns)
             if(v.found){
+                if(test){
+                    console.log('in namespace', ns, v.value)
+                }
                 return v.value
             }
         }
@@ -1879,7 +1897,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     indent(2)
     js += prefix + `locals = ${locals_name}\n`
     dedent(2)
-    js += prefix + `locals.__doc__ = ${docstring}\n`
+    js += prefix + `locals.$strings.__doc__ = ${docstring}\n`
     js += prefix + `var frame = [name, locals, module, ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var _frame_obj = $B.frame_obj\n` +
@@ -2257,7 +2275,7 @@ $B.ast.FormattedValue.prototype.to_js = function(scopes){
     }
 
     if(this.format_spec){
-        value = `_b_.str.format('{0:' + `+
+        value = `$B.$call($B.$getattr(_b_.str, 'format'), '{0:' + `+
                 $B.js_from_ast(this.format_spec, scopes) +
                 ` + '}', ${value})`
     }else if(this.conversion == -1){
@@ -2553,7 +2571,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
         bind("__class__", scopes)
-        js += prefix + `locals.__class__ =  ` +
+        js += prefix + `locals.ob_type =  ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
 
@@ -2753,16 +2771,17 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     var mangled = mangle(scopes, func_name_scope, this.name),
-        func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
+        scope_name = make_scope_name(scopes, func_name_scope),
+        func_ref
 
     if(decorated){
         func_ref = `decorated${make_id()}`
-        js += prefix + 'var '
+        js += prefix + `var ${func_ref} = ${name2}\n`
+    }else if(func_name_scope.type != 'class'){
+        js += prefix + `${scope_name}.${mangled} = ${name2}\n`
     }else{
-        js += prefix
+        js += prefix + `${scope_name}.$strings.${mangled} = ${name2}\n`
     }
-
-    js += `${func_ref} = ${name2}\n`
 
     if(has_type_params){
         scopes.pop()
@@ -3411,7 +3430,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
 
     var js = `var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `    ${global_name} = $B.imported["${mod_name}"],\n` +
+        js += `    ${global_name} = {},\n` +
               `    locals = ${global_name},\n` +
               `    frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
@@ -3480,7 +3499,11 @@ $B.ast.Name.prototype.to_js = function(scopes){
             // name was referenced but is declared local afterwards
             scope.freevars.delete(this.id)
         }
-        return reference(scopes, scope, this.id)
+        var scope_name = make_scope_name(scopes, scope)
+        if(last_scope(scopes).type == 'class'){
+            scope_name += '.$strings'
+        }
+        return scope_name + '.' + mangle(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
         // special case for name '__debug__' (cf. issue #2541)
         if(this.id == '__debug__'){

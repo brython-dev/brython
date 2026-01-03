@@ -5,7 +5,7 @@ var _b_ = $B.builtins
 $B.builtin_types = {}
 
 function init_type(ns, name, data){
-    var cls = ns[name] = Object.create(null)
+    var cls = ns[name] = {}
     for(var i = 0, len = slots.length; i < len; i++){
         cls[slots[i]] = data[i]
     }
@@ -2341,7 +2341,6 @@ init_type(_b_, "UnicodeTranslateError", [
 for(var name in $B.builtin_types){
     var cls = $B.builtin_types[name]
     cls.ob_type = _b_.type
-    cls.dict = Object.create(null)
     cls.tp_mro = $B.make_mro(cls)
 }
 

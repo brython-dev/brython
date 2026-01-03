@@ -975,12 +975,35 @@ $B.IterableJSObj.tp_iternext = function(_self){
 
 $B.set_func_names($B.IterableJSObj, 'builtins')
 
+/* js_array_iterator */
+
+var js_array_iterator = $B.make_builtin_class('JSArray_iterator')
+
+js_array_iterator.$factory = function(obj){
+    return {
+        ob_type: js_array_iterator,
+        it: obj[Symbol.iterator]()
+    }
+}
+
+js_array_iterator.tp_iternext = function(_self){
+    var v = _self.it.next()
+    if(v.done){
+        $B.RAISE(_b_.StopIteration, '')
+    }
+    return jsobj2pyobj(v.value)
+}
+
+$B.set_func_names(js_array_iterator, 'builtins')
+
+/* js_array : type of Javascript arrays */
 
 var js_array = $B.js_array = $B.make_builtin_class('JavascriptArray',
     [$B.JSObj])
+
 js_array.ob_type = js_list_meta
 
-js_array.__add__ = function(_self, other){
+js_array.sq_concat = function(_self, other){ // __add__
     var res = _self.slice()
     if($B.$isinstance(other, js_array)){
         return _self.slice().concat(other)
@@ -991,8 +1014,12 @@ js_array.__add__ = function(_self, other){
     return res
 }
 
-js_array.__delitem__ = function(_self, key){
-    _self.splice(key, 1)
+js_array.mp_ass_subscript = function(self, key, value){
+    if(value === $B.NULL){
+        self.splice(key, 1)
+    }else{
+        self[key] = value
+    }
 }
 
 js_array.__eq__ = function(_self, other){
@@ -1097,7 +1124,7 @@ js_array.tp_getattro = function(_self, attr){
     }
 }
 
-js_array.__getitem__ = function(_self, i){
+js_array.mp_subscript = function(_self, i){
     i = $B.PyNumber_Index(i)
     return jsobj2pyobj(_self[i])
 }
@@ -1119,36 +1146,12 @@ js_array.tp_iter = function(_self){
     return js_array_iterator.$factory(_self)
 }
 
-js_array.__mul__ = function(_self, nb){
+js_array.nb_multiply = function(_self, nb){
     var res = _self.slice()
     for(var i = 1; i < nb; i++){
         res = res.concat(_self)
     }
     return res
-}
-
-var js_array_iterator = $B.make_builtin_class('JSArray_iterator')
-
-js_array_iterator.$factory = function(obj){
-    return {
-        ob_type: js_array_iterator,
-        it: obj[Symbol.iterator]()
-    }
-}
-
-js_array_iterator.tp_iternext = function(_self){
-    var v = _self.it.next()
-    if(v.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return jsobj2pyobj(v.value)
-}
-
-$B.set_func_names(js_array_iterator, 'builtins')
-
-
-js_array.__iter__ = function(_self){
-    return js_array_iterator.$factory(_self)
 }
 
 js_array.__radd__ = function(_self, other){
@@ -1180,7 +1183,9 @@ js_array.tp_repr = function(_self){
     return res
 }
 
-js_array.append = function(_self, x){
+var js_array_funcs = js_array.tp_funcs = {}
+
+js_array_funcs.append = function(_self, x){
     _self.push(pyobj2jsobj(x))
     if(_self[PYOBJ]){
         _self[PYOBJ].push(x)
@@ -1188,7 +1193,10 @@ js_array.append = function(_self, x){
     return _b_.None
 }
 
+js_array.tp_methods = ["append"]
+
 $B.set_func_names(js_array, 'javascript')
+
 
 $B.get_jsobj_class = function(obj){
     if(typeof obj == 'function'){

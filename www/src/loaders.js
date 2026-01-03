@@ -417,7 +417,7 @@ var loop = $B.loop = function(){
             for(var key in modobj){
                 if(! key.startsWith('$')){
                     try{
-                        module[key] = modobj[key]
+                        $B.module.tp_setattro(module, key, modobj[key])
                     }catch(err){
                         // ignore; the name might have been removed by
                         // del globals()[name], then it becomes an accessor
@@ -431,6 +431,7 @@ var loop = $B.loop = function(){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             console.log('error in loaders', err)
+            console.log('frame obj', $B.frame_obj)
             if(err.ob_type === undefined){
                 err.filename = script.filename
                 if(err.$py_exc){

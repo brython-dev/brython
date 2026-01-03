@@ -141,6 +141,9 @@ $B.import_info = {}
 // Maps the name of imported modules to the module object
 $B.imported = {}
 
+// Maps the name of module to their namespace
+$B.namespace = Object.create(null)
+
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
@@ -285,8 +288,7 @@ $B.make_builtin_class = function(tp_name, tp_bases){
     var cls = {
         ob_type: _b_.type,
         tp_name,
-        tp_bases: tp_bases ?? [_b_.object],
-        dict: Object.create(null)
+        tp_bases: tp_bases ?? [_b_.object]
     }
     if(tp_bases){
         cls.tp_mro = [cls, ...tp_bases, _b_.object]

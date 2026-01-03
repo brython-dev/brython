@@ -3,96 +3,6 @@
 "use strict";
 
 var _b_ = $B.builtins
-var IOUnsupported
-
-const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
-
-$B.make_IOUnsupported = function(){
-    if($B._IOUnsupported === undefined){
-        $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError])
-        $B._IOUnsupported.__module__ = '_io'
-        $B.finalize_type($B._IOUnsupported)
-    }
-}
-
-function _io_unsupported(value){
-    $B.make_IOUnsupported()
-    throw $B.$call($B._IOUnsupported, value)
-}
-
-var _IOBase = $B.make_builtin_class("_IOBase")
-
-_IOBase.__del__ = function(_self){
-    // Destructor.  Calls close()
-    console.log('del', _self)
-    try{
-        var closed = $B.$getattr(_self, 'closed')
-    }catch(err){
-        if($B.is_exc(err, _b_.AttributeError)){
-            // If getting closed fails, then the object is probably
-            // in an unusable state, so ignore.
-            return
-        }
-    }
-    if(closed){
-        return
-    }
-
-    $B$call($B.$getattr(_self, 'close'))()
-}
-
-_IOBase.__enter__ = function(self){
-    return self
-}
-
-_IOBase.__exit__ = function(self){
-    _IOBase.close(self)
-}
-
-_IOBase.tp_iter = function(_self){
-    if(_self.closed){
-        $B.RAISE(_b_.ValueError, 'closed')
-    }
-    return _self
-}
-
-_IOBase.tp_next = function(_self){
-    var readline = $B.search_in_mro($B.get_class(_self), 'readline')
-    var line = readline(_self)
-
-    if(line == undefined || _b_.len(line) === 0){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return line;
-}
-
-_IOBase.__del__ = function(_self){
-    return _IOBase.close(_self)
-}
-
-_IOBase.close = function(_self){
-    _self._closed = true
-}
-
-_IOBase.fileno = function(_self){
-    _io_unsupported('fileno')
-    // return _self._fileno ?? (_self._fileno = $B.UUID(), _self._fileno)
-}
-
-_IOBase.flush = function(_self){
-    if(_self._closed){
-        $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
-    }
-    return _b_.None
-}
-
-_IOBase.isatty = function(){
-    return false
-}
-
-_IOBase.readable = function(){
-    return false
-}
 
 function make_lines(self){
     // If the stream "self" has no attribute $lines, build it as a list of
@@ -127,7 +37,102 @@ function make_lines(self){
     }
 }
 
-_IOBase.readline = function(_self, limit=-1){
+var IOUnsupported
+
+const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
+
+$B.make_IOUnsupported = function(){
+    if($B._IOUnsupported === undefined){
+        $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError])
+        $B._IOUnsupported.__module__ = '_io'
+        $B.finalize_type($B._IOUnsupported)
+    }
+}
+
+function _io_unsupported(value){
+    $B.make_IOUnsupported()
+    throw $B.$call($B._IOUnsupported, value)
+}
+
+var _IOBase = $B.make_builtin_class("_IOBase")
+
+_IOBase.tp_iter = function(_self){
+    if(_self.closed){
+        $B.RAISE(_b_.ValueError, 'closed')
+    }
+    return _self
+}
+
+_IOBase.tp_next = function(_self){
+    var readline = $B.search_in_mro($B.get_class(_self), 'readline')
+    var line = readline(_self)
+
+    if(line == undefined || _b_.len(line) === 0){
+        $B.RAISE(_b_.StopIteration, '')
+    }
+    return line;
+}
+
+_IOBase.tp_finalize = function(_self){
+    // Destructor.  Calls close()
+    console.log('del', _self)
+    try{
+        var closed = $B.$getattr(_self, 'closed')
+    }catch(err){
+        if($B.is_exc(err, _b_.AttributeError)){
+            // If getting closed fails, then the object is probably
+            // in an unusable state, so ignore.
+            return
+        }
+    }
+    if(closed){
+        return
+    }
+
+    $B$call($B.$getattr(_self, 'close'))
+}
+
+var _IOBase_funcs = _IOBase.tp_funcs = {}
+
+_IOBase_funcs.__enter__ = function(self){
+    return self
+}
+
+_IOBase_funcs.__exit__ = function(self){
+    _IOBase.close(self)
+}
+
+_IOBase_funcs.close = function(_self){
+    _self._closed = true
+}
+
+_IOBase_funcs.closed_get = function(self){
+    return self._closed
+}
+
+_IOBase_funcs.closed_set = $B.NULL
+
+_IOBase_funcs.fileno = function(_self){
+    _io_unsupported('fileno')
+    // return _self._fileno ?? (_self._fileno = $B.UUID(), _self._fileno)
+}
+
+_IOBase_funcs.flush = function(_self){
+    if(_self._closed){
+        $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
+    }
+    return _b_.None
+}
+
+_IOBase_funcs.isatty = function(){
+    return false
+}
+
+_IOBase_funcs.readable = function(){
+    return false
+}
+
+_IOBase_funcs.readline = function(_self, limit=-1){
     var $ = $B.args('readline', 2, {self: null, limit: null},
                 ['self', 'limit'], arguments, {limit: -1}, null, null),
         _self = $.self,
@@ -197,7 +202,7 @@ _IOBase.readline = function(_self, limit=-1){
     return $B.$call(_b_.bytes, buffer)
 }
 
-_IOBase.readlines = function(_self, hint){
+_IOBase_funcs.readlines = function(_self, hint){
     var $ = $B.args('readlines', 2, {self: null, hint: null}, ['self', 'hint'],
             arguments, {hint: -1}, null, null)
     var _self=  $.self,
@@ -242,62 +247,57 @@ _IOBase.readlines = function(_self, hint){
     return result
 }
 
-_IOBase.seek = function(_self){
+_IOBase_funcs.seek = function(_self){
     _io_unsupported('seek')
 }
 
-_IOBase.seekable = function(){
+_IOBase_funcs.seekable = function(){
     return false
 }
 
-_IOBase.tell = function(self){
+_IOBase_funcs.tell = function(self){
     return $B.$getattr(self, 'seek')(0, 1)
 }
 
-_IOBase.truncate = function(){
+_IOBase_funcs.truncate = function(){
     _io_unsupported('truncate')
 }
 
-_IOBase.writable = function(){
+_IOBase_funcs.writable = function(){
     return false
 }
 
-_IOBase.writelines = function(_self, lines){
-    if(_self.closed){
-        return _b_.None
-    }
-    var iter = $B.make_js_iterator(lines)
-    var writer = $B.search_in_mro($B.get_class(_self), 'write')
-    if(writer === undefined){
-        $B.RAISE_ATTRIBUTE_ERROR(
-            `'${$B.class_name(_self)}' object has no attribute 'write'`,
-            _self, 'write')
-    }
-
-    for(var line of iter){
-        writer(_self, line)
-    }
-    return _b_.None
-}
-
-_IOBase.writelines = function(_self, lines){
+_IOBase_funcs.writelines = function(_self, lines){
     var iter, res;
 
     if(_self.closed){
         $B.RAISE(_b_.OSError, 'closed')
     }
-    var writer = $B.$call($B.$getattr(_self, 'write'))
+    var writer = $B.$getattr(_self, 'write', $B.NULL)
+    if(writer === $B.NULL){
+        $B.RAISE(_b_.AttributeError, 'no attribute write')
+    }
     for(var line of $B.make_js_iterator(lines)){
-        writer(line)
+        $B.$call(writer, line)
     }
     return _b_.None
 }
+
+_IOBase.tp_methods = [
+    "__enter__", "__exit__", "close", "fileno", "flush", "isatty", "readable",
+    "readlines", "seek", "seekable", "tell", "truncate", "writable",
+    "writelines"
+]
+
+_IOBase.tp_getset = ["closed"]
 
 $B.set_func_names(_IOBase, "builtins")
 
 $B._RawIOBase = $B.make_builtin_class('_io._RawIOBase', [_IOBase]) // Base class for raw binary streams.
 
-$B._RawIOBase.read = function(_self, n){
+var _RawIOBase_funcs = $B._RawIOBase.tp_funcs = {}
+
+_RawIOBase_funcs.read = function(_self, n){
     var b, res
 
     if(n < 0){
@@ -311,7 +311,7 @@ $B._RawIOBase.read = function(_self, n){
     return b
 }
 
-$B._RawIOBase.readall = function(_self){
+_RawIOBase_funcs.readall = function(_self){
     var r
     var chunks = []
     var result
@@ -336,13 +336,17 @@ $B._RawIOBase.readall = function(_self){
     return result
 }
 
-$B._RawIOBase.readinto = function(_self, b){
+_RawIOBase_funcs.readinto = function(_self, b){
     throw _b_.NotImplementedError('readinto')
 }
 
-$B._RawIOBase.write = function(){
+_RawIOBase_funcs.write = function(){
     throw _b_.NotImplementedError('readinto')
 }
+
+$B._RawIOBase.tp_methods = [
+    "read", "readall", "readinto", "write"
+]
 
 $B.set_func_names($B._RawIOBase, "_io")
 
@@ -387,33 +391,39 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
     return len
 }
 
-$B._BufferedIOBase.readinto = function(_self, buffer){
+var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
+
+_BufferedIOBase_funcs.readinto = function(_self, buffer){
     return _bufferediobase_readinto_generic(_self, buffer, 0);
 }
 
-$B._BufferedIOBase.readinto1 = function(_self, buffer){
+_BufferedIOBase_funcs.readinto1 = function(_self, buffer){
     return _bufferediobase_readinto_generic(_self, buffer, 1);
 }
 
-$B._BufferedIOBase.close = function(_self){
+_BufferedIOBase_funcs.close = function(_self){
     _self.closed = true
 }
 
-$B._BufferedIOBase.detach = function(){
+_BufferedIOBase_funcs.detach = function(){
     _io_unsupported("detach")
 }
 
-$B._BufferedIOBase.read = function(){
+_BufferedIOBase_funcs.read = function(){
     _io_unsupported("read")
 }
 
-$B._BufferedIOBase.read1 = function(){
+_BufferedIOBase_funcs.read1 = function(){
     _io_unsupported("read1")
 }
 
-$B._BufferedIOBase.write = function(){
+_BufferedIOBase_funcs.write = function(){
     _io_unsupported("write")
 }
+
+$B._BufferedIOBase.tp_methods = [
+    "readinto", "readinto1", "close", "detach", "read", "read1", "write"
+]
 
 $B.set_func_names($B._BufferedIOBase, '_io')
 
@@ -458,7 +468,9 @@ $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZ
     _self.buffer_size = buffer_size
 }
 
-$B._BufferedReader.peek = function(_self, size){
+var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
+
+_BufferedReader_funcs.peek = function(_self, size){
     var $ = $B.args('peek', 2, {self: null, size: null}, ['self', 'size'],
                 arguments, {size: 0}, null, null),
         _self = $.self,
@@ -467,7 +479,7 @@ $B._BufferedReader.peek = function(_self, size){
     return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos, raw.$byte_pos + size))
 }
 
-$B._BufferedReader.seek = function(_self, offset, whence){
+_BufferedReader_funcs.seek = function(_self, offset, whence){
     var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
                 ['self', 'offset', 'whence'],
                 arguments, {whence: 0}, null, null),
@@ -496,7 +508,7 @@ function CHECK_CLOSED(fileobj, msg){
     }
 }
 
-$B._BufferedReader.read = function(_self, n=-1){
+_BufferedReader_funcs.read = function(_self, n=-1){
     var res
 
     if(n < -1){
@@ -518,9 +530,13 @@ $B._BufferedReader.read = function(_self, n=-1){
     return res
 }
 
-$B._BufferedReader.readline = function(_self, size=-1){
+_BufferedReader_funcs.readline = function(_self, size=-1){
     return _bufferedreader_readline(_self)
 }
+
+$B._BufferedReader.tp_methods = [
+    "peek", "seek", "read", "readline"
+]
 
 $B.set_func_names($B._BufferedReader, '_io')
 
@@ -704,21 +720,23 @@ $B._FileIO.tp_init = function(){
     }
 }
 
-$B._FileIO.readable = function(_self){
+var _FileIO_funcs = $B._FileIO.tp_funcs = {}
+
+_FileIO_funcs.readable = function(_self){
     if(_self.fd < 0){
         err_closed()
     }
     return $B.$bool(_self.readable)
 }
 
-$B._FileIO.readall = function(_self){
+_FileIO_funcs.readall = function(_self){
     var buffer = _b_.bytearray.$factory()
     $B._FileIO.readinto(_self, buffer)
     buffer.ob_type = _b_.bytes
     return buffer
 }
 
-$B._FileIO.readinto = function(_self, buffer){
+_FileIO_funcs.readinto = function(_self, buffer){
     if(_self.fd < 0){
         err_closed()
     }
@@ -731,48 +749,58 @@ $B._FileIO.readinto = function(_self, buffer){
     return n
 }
 
-$B._FileIO.readinto1 = $B._FileIO.readinto
+_FileIO_funcs.readinto1 = $B._FileIO.readinto
 
-$B._FileIO.seekable = function(_self){
+_FileIO_funcs.seekable = function(_self){
     if(_self.fd < 0){
         err_closed()
     }
     return $B.$bool(_self.seekable)
 }
 
-$B._FileIO.writable = function(_self){
+_FileIO_funcs.writable = function(_self){
     if(_self.fd < 0){
         err_closed()
     }
     return $B.$bool(_self.writable)
 }
 
+$B._FileIO.tp_methods = [
+    "readable", "readall", "readinto", "seekable", "writable"
+]
+
 $B.set_func_names($B._FileIO, '_io')
 
 $B._TextIOBase = $B.make_builtin_class('_io._TextIOBase', [_IOBase])
 
-function encoding_get(_self){
+var _TextIOBase_funcs = $B._TextIOBase.tp_funcs = {}
+
+_TextIOBase_funcs.encoding_get = function(_self){
     return _self._encoding ?? _b_.None
 }
-function encoding_set(_self, value){
+
+_TextIOBase_funcs.encoding_set = function(_self, value){
     _self._encoding = value
 }
 
-function errors_get(_self){
+_TextIOBase_funcs.errors_get = function(_self){
     return _self.errors ?? _b_.None
 }
 
-function errors_set(_self, value){
+_TextIOBase_funcs.errors_set = function(_self, value){
     _self._errors = value
 }
 
-$B._TextIOBase.read = function(){
+_TextIOBase_funcs.read = function(){
     _io_unsupported('read')
 }
 
+$B._TextIOBase.tp_methods = [
+    "read"
+]
+
 $B._TextIOBase.tp_getset = [
-    ["encoding", encoding_get, encoding_set],
-    ["errors", errors_get, errors_set]
+    "encoding", "errors"
 ]
 
 var $BufferedReader = $B.make_builtin_class('_io.BufferedReader', [_IOBase])
@@ -786,12 +814,18 @@ $BufferedReader.$factory = function(content){
     }
 }
 
-$BufferedReader.read = function(self, size){
+var $BufferedReader_funcs = $BufferedReader.tp_funcs = {}
+
+$BufferedReader_funcs.read = function(self, size){
     if(self.$read_func === undefined){
         return _IOBase.read(self, size === undefined ? -1 : size)
     }
     return self.$read_func(size || -1)
 }
+
+$BufferedReader.tp_methods = [
+    "read"
+]
 
 $B._TextIOWrapper = $B.make_builtin_class('_io._TextIOWrapper', [$B._TextIOBase])
 
@@ -821,19 +855,21 @@ $B._TextIOWrapper.$factory = function(){
     return res
 }
 
-function buffer_get(_self){
+$B._TextIOWrapper.tp_new = function(cls, ...args){
+    return $B._TextIOWrapper.$factory(...args)
+}
+
+var _TextIOWrapper_funcs = $B._TextIOWrapper.tp_funcs = {}
+
+_TextIOWrapper_funcs.buffer_get = function(_self){
     return _self.$buffer
 }
 
-$B._TextIOWrapper.tp_getset = [
-    ["buffer", buffer_get, $B.NULL]
-]
-
-$B._TextIOWrapper.fileno = function(_self){
+_TextIOWrapper_funcs.fileno = function(_self){
     return -1
 }
 
-$B._TextIOWrapper.read = function(){
+_TextIOWrapper_funcs.read = function(){
     var $ = $B.args("read", 2, {self: null, size: null},
             ["self", "size"], arguments, {size: -1}, null, null),
             _self = $.self,
@@ -849,7 +885,7 @@ $B._TextIOWrapper.read = function(){
     if(size < 0){
         size = len - _self.$text_pos
     }
-    var res = _b_.str.__getitem__(_self.$text,
+    var res = $B.$getitem(_self.$text,
         _b_.slice.$fast_slice(_self.$text_pos, _self.$text_pos + size, 1))
 
     _self.$text_pos += size
@@ -857,7 +893,7 @@ $B._TextIOWrapper.read = function(){
     return res
 }
 
-$B._TextIOWrapper.readline = function(){
+_TextIOWrapper_funcs.readline = function(){
     var $ = $B.args("read", 2, {self: null, size: null},
             ["self", "size"], arguments, {size: -1}, null, null),
             _self = $.self,
@@ -894,7 +930,7 @@ $B._TextIOWrapper.readline = function(){
     return $B.String(res)
 }
 
-$B._TextIOWrapper.seek = function(_self, offset, whence){
+_TextIOWrapper_funcs.seek = function(_self, offset, whence){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
@@ -910,6 +946,14 @@ $B._TextIOWrapper.seek = function(_self, offset, whence){
     }
     return _b_.None
 }
+
+$B._TextIOWrapper.tp_methods = [
+    "fileno", "read", "readline", "seek"
+]
+
+$B._TextIOWrapper.tp_getset = [
+    "buffer"
+]
 
 $B.set_func_names($B._TextIOWrapper, "builtins")
 

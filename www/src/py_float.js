@@ -811,7 +811,7 @@ _b_.float.tp_richcompare = function(self, other){
     */
 }
 
-_b_.float.nb_add = function(self){
+_b_.float.nb_add = function(self, other){
     if($B.$isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value + 1) : self

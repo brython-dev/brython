@@ -429,18 +429,18 @@ $B.$delete = function(name, locals_id, inum){
         }
         var del_method = $B.search_in_mro($B.get_class(obj), '__del__')
         if(del_method){
-            del_method(obj)
+            $B.$call(del_method, obj)
         }
     }
     var found = false
-    if(locals_id == 'local'){
+    if(locals_id === 'local'){
         var frame = $B.frame_obj.frame
         if(frame[1].hasOwnProperty(name)){
             found = true
             del(frame[1][name])
             delete frame[1][name]
         }
-    }else if(locals_id == 'global'){
+    }else if(locals_id === 'global'){
         var frame = $B.frame_obj.frame
         if(frame[3].hasOwnProperty(name)){
             found = true
@@ -943,15 +943,19 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr, _default){
-    var test = false // attr == 'now' // && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == 'upper' // && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
         console.log(Error('trace').stack)
         console.log('default', _default)
     }
+    /*
     if(klass.dict){
-        var v = klass.dict[attr]
-        if(v !== undefined){
+        if(! klass.dict.hasOwnProperty){
+            console.log('no hasOwnProperty', klass)
+        }
+        var v = $B.str_dict_get(klass.dict, attr, $B.NULL)
+        if(v !== $B.NULL){
             if(test){
                 console.log('found in klass dict', klass.dict, v)
             }
@@ -968,6 +972,7 @@ $B.search_in_mro = function(klass, attr, _default){
             return klass[attr]
         }
     }
+    */
     var mro = $B.get_mro(klass)
     if(mro === undefined){
         console.log('no mro in class', klass, klass.tp_mro, klass.__mro__)
@@ -985,8 +990,11 @@ $B.search_in_mro = function(klass, attr, _default){
             }
             return mro[i][attr]
         }else if(mro[i].dict){
-            var v = mro[i].dict[attr]
-            if(v !== undefined){
+            if(mro[i].dict.$strings === undefined){
+                console.log('no $strings in dict', mro[i])
+            }
+            var v = $B.str_dict_get(mro[i].dict, attr, $B.NULL)
+            if(v !== $B.NULL){
                 if(test){
                     console.log('found in dict of mro', i, v)
                 }
@@ -1011,9 +1019,7 @@ var NULL = $B.NULL
 
 $B.search_in_dict = function(obj, attr, _default){
     var test = false // attr == 'now'
-    if(test){
-        console.log('search', attr, 'in dict of', obj)
-    }
+    var is_type = $B.is_type(obj)
     if(obj.__dict__){
         console.log('old school __dict__')
         var in_dict = _b_.dict.$get_string(obj.__dict__, attr)
@@ -1022,15 +1028,13 @@ $B.search_in_dict = function(obj, attr, _default){
         }
     }
     if(obj.dict){
-        if(obj.dict instanceof Object){
-            // instance
-            var res = _b_.dict.$get_string(obj.dict, attr, $B.NULL)
-            if(res !== $B.NULL){
-                return res
+        if(is_type){
+            if(obj.dict.hasOwnProperty(attr)){
+                return obj.dict[attr]
             }
         }else{
-            var in_dict = obj.dict[attr]
-            if(in_dict !== undefined){
+            var in_dict = _b_.dict.$get_string(obj.dict, attr, $B.NULL)
+            if(in_dict !== $B.NULL){
                 return in_dict
             }
         }
@@ -1077,12 +1081,14 @@ $B.object_getattribute = function(obj, attr){
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__all__'
+    var test = attr == '_member_names_'
     if(test){
         console.log('$getattr', obj, attr)
     }
     var res
     if(obj === undefined || obj === null){
+        console.log('attr', attr)
+        console.log(Error('trace 1087').stack)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -1104,13 +1110,11 @@ $B.$getattr = function(obj, attr, _default){
         console.log("get attr", attr, "of undefined")
     }
 
-    var is_class = obj.$is_class || obj.$factory
+    var is_class = $B.is_type(obj) // obj.$is_class || obj.$factory
 
     var klass = $B.get_class(obj)
 
-    var $test = false // obj.ob_type === _b_.TypeError // attr == "Date" // && obj.__name__ === "FlagBoundary"
-
-    if($test){
+    if(test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
         "isclass", is_class)
     }
@@ -1571,10 +1575,15 @@ $B.$iter = function(obj, sentinel){
 
         var klass = $B.get_class(obj)
 
-        var iter_func = $B.search_in_mro(klass, '__iter__', $B.NULL)
+        try{
+            var iter_func = $B.search_slot(klass, 'tp_iter', $B.NULL)
+        }catch(err){
+            console.log('error in search in mro', klass, '__iter__')
+            throw err
+        }
         if(iter_func !== $B.NULL){
             var res = $B.$call(iter_func, obj)
-            if($B.search_in_mro($B.get_class(res), '__next__', $B.NULL) === $B.NULL){
+            if($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL){
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)
             }
@@ -2172,7 +2181,7 @@ var $print = _b_.print = function(){
     var kw = $ns['kw'],
         end = $B.dict_get(kw, 'end', '\n'),
         sep = $B.dict_get(kw, 'sep', ' '),
-        file = $B.get_stdout() //$B.dict_get(kw, 'file', $B.get_stdout())
+        file = $B.dict_get(kw, 'file', $B.get_stdout())
     var args = $ns['args']
     var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
@@ -2182,7 +2191,7 @@ var $print = _b_.print = function(){
             $B.$call(writer, sep)
         }
     }
-    writer(end)
+    $B.$call(writer, end)
     var flush = $B.$getattr(file, 'flush', None)
     if(flush !== None){
         $B.$call(flush)
@@ -2559,56 +2568,20 @@ _b_.sum = function(){
 
 var $$super = _b_.super
 
-$$super.$factory = function (_type, object_or_type){
-    var no_object_or_type = object_or_type === undefined
-    if(_type === undefined && object_or_type === undefined){
-        var frame = $B.frame_obj.frame,
-            pyframe = $B.imported["_sys"]._getframe(),
-            code = $B.$getattr(pyframe, 'f_code'),
-            co_varnames = code.co_varnames
-        if(co_varnames.length > 0){
-            _type = $B.get_class(frame[1])
-            if(_type === undefined){
-                $B.RAISE(_b_.RuntimeError, "super(): no arguments")
-            }
-            object_or_type = frame[1][code.co_varnames[0]]
-        }else{
-            $B.RAISE(_b_.RuntimeError, "super(): no arguments")
-        }
-    }
-    if((! no_object_or_type) && Array.isArray(object_or_type)){
-        object_or_type = object_or_type[0]
-    }
-    var $arg2
 
-    if(object_or_type !== undefined){
-        if(object_or_type === _type ||
-                (object_or_type.$is_class &&
-                _b_.issubclass(object_or_type, _type))){
-            $arg2 = 'type'
-        }else if($B.$isinstance(object_or_type, _type)){
-            $arg2 = 'object'
-        }else{
-            $B.RAISE(_b_.TypeError,
-                'super(type, obj): obj must be an instance ' +
-                'or subtype of type')
-        }
+/* super start */
+_b_.super.tp_repr = function(self){
+    $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
+    var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
+    if(self.__self_class__ !== undefined){
+        res += ', <' + $B.get_name($B.get_class(self.__self_class__)) + ' object>'
+    }else{
+        res += ', NULL'
     }
-    return {
-        ob_type: $$super,
-        __thisclass__: _type,
-        __self_class__: object_or_type,
-        $arg2,
-        dict: $B.empty_dict
-    }
+    return res + '>'
 }
 
-$$super.__get__ = function(self, instance){
-    // https://www.artima.com/weblogs/viewpost.jsp?thread=236278
-    return $$super.$factory(self.__thisclass__, instance)
-}
-
-$$super.tp_getattro = function(self, attr){
+_b_.super.tp_getattro = function(self, attr){
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -2626,7 +2599,7 @@ $$super.tp_getattro = function(self, attr){
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__init_subclass__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = attr == "__init__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }
@@ -2638,6 +2611,9 @@ $$super.tp_getattro = function(self, attr){
         }
         var in_dict = $B.search_in_dict(klass, attr, NULL)
         if(in_dict !== NULL){
+            if($test){
+                console.log('found in dict of', klass)
+            }
             f = in_dict
             break
         }
@@ -2705,27 +2681,83 @@ $$super.tp_getattro = function(self, attr){
     }
 }
 
-$$super.tp_init = function(cls){
-    if(cls === undefined){
+_b_.super.tp_descr_get = function(self, instance){
+    // https://www.artima.com/weblogs/viewpost.jsp?thread=236278
+    return $$super.$factory(self.__thisclass__, instance)
+}
+
+_b_.super.tp_init = function(self, _type, object_or_type){
+    if(self === undefined){
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'super' " +
             "object needs an argument")
     }
-    if($B.get_class(cls) !== $$super){
+    if($B.get_class(self) !== $$super){
         $B.RAISE(_b_.TypeError, "descriptor '__init__' requires a" +
-            " 'super' object but received a '" + $B.class_name(cls) + "'")
+            " 'super' object but received a '" + $B.class_name(self) + "'")
+    }
+    var no_object_or_type = object_or_type === undefined
+    if(_type === undefined && object_or_type === undefined){
+        var frame = $B.frame_obj.frame,
+            pyframe = $B.imported["_sys"]._getframe(),
+            code = $B.$getattr(pyframe, 'f_code'),
+            co_varnames = code.co_varnames
+        if(co_varnames.length > 0){
+            _type = $B.get_class(frame[1])
+            if(_type === undefined){
+                $B.RAISE(_b_.RuntimeError, "super(): no arguments")
+            }
+            object_or_type = frame[1][code.co_varnames[0]]
+        }else{
+            $B.RAISE(_b_.RuntimeError, "super(): no arguments")
+        }
+    }
+    if((! no_object_or_type) && Array.isArray(object_or_type)){
+        object_or_type = object_or_type[0]
+    }
+    var $arg2
+
+    if(object_or_type !== undefined){
+        if(object_or_type === _type ||
+                (object_or_type.$is_class &&
+                _b_.issubclass(object_or_type, _type))){
+            $arg2 = 'type'
+        }else if($B.$isinstance(object_or_type, _type)){
+            $arg2 = 'object'
+        }else{
+            $B.RAISE(_b_.TypeError,
+                'super(type, obj): obj must be an instance ' +
+                'or subtype of type')
+        }
+    }
+    self.__thisclass__ = _type
+    self.__self_class__ = object_or_type
+    self.$args2 = $arg2
+}
+
+_b_.super.tp_new = function(self){
+    return {
+        ob_type: _b_.super,
+        dict: $B.empty_dict()
     }
 }
 
-$$super.tp_repr = function(self){
-    $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
-    var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
-    if(self.__self_class__ !== undefined){
-        res += ', <' + $B.get_name($B.get_class(self.__self_class__)) + ' object>'
-    }else{
-        res += ', NULL'
-    }
-    return res + '>'
+var super_funcs = _b_.super.tp_funcs = {}
+
+super_funcs.__self__ = function(self){
+
 }
+
+super_funcs.__self_class__ = function(self){
+    return self.__self_class__
+}
+
+super_funcs.__thisclass__ = function(self){
+    return self.__thisclass__
+}
+
+_b_.super.tp_members = ["__thisclass__", "__self__", "__self_class__"]
+
+/* super end */
 
 $B.set_func_names($$super, "builtins")
 

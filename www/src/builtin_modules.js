@@ -294,12 +294,6 @@
                     return $B.DOMNode.__mul__(self, num)
                 }
 
-                cls.dict.__rmul__ = $B.wrapper_descriptor.$factory(
-                    cls,
-                    '__rmul__',
-                    cls_funcs.__rmul__
-                )
-
                 $B.set_func_names(cls, "browser.html")
                 return cls
             }
@@ -1331,7 +1325,7 @@
                 onerror = $.onerror
 
             var save_frame_obj = $B.frame_obj
-            $B.coroutine.send(coro).then(onsuccess).catch(onerror)
+            $B.$call($B.$getattr($B.coroutine, 'send'), coro).then(onsuccess).catch(onerror)
             $B.frame_obj = save_frame_obj
             return _b_.None
         },
@@ -1369,7 +1363,7 @@
         // add class and __str__
         module_obj.ob_type = $B.module
         module_obj.dict = $B.empty_dict()
-        module_obj.__name__ = name
+        module_obj.md_dict = $B.empty_dict()
         $B.imported[name] = module_obj
         // set attribute "name" of functions
         for(var attr in module_obj){
@@ -1387,8 +1381,9 @@
                     }
                 )
             }
-            _b_.dict.$setitem(module_obj.dict, attr, module_obj[attr])
+            _b_.dict.$setitem(module_obj.md_dict, attr, module_obj[attr])
         }
+        module_obj.__name__ = name
     }
 
     for(let attr in modules){
@@ -1586,6 +1581,20 @@ $B.__ARGV = $B.$list([])
 
 // set default trace function (cf. sys.settrace)
 $B.tracefunc = _b_.None
+
+// make built-in module builtins
+var builtins_doc = "Built-in functions, types, exceptions, and other " +
+    "objects.\n\nThis module provides direct access to all 'built-in'" +
+    "\nidentifiers of Python; for example, builtins.len is\nthe full name" +
+    " for the built-in function len().\n\nThis module is not normally " +
+    "accessed explicitly by most\napplications, but can be useful in " +
+    "modules that provide\nobjects with the same name as a built-in value, " +
+    "but in\nwhich the built-in of that name is also needed."
+$B.imported.builtins = $B.module.tp_new($B.module, 'builtins', builtins_doc)
+
+for(var attr in _b_){
+    $B.module_setattr($B.imported.builtins, attr, _b_[attr])
+}
 
 
 })(__BRYTHON__);

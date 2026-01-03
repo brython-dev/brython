@@ -149,7 +149,16 @@ function dict___sizeof__(){
 
 }
 
+$B.str_dict_get = function(d, key, _default){
+    if(d.$strings.hasOwnProperty(key)){
+        return d.$strings[key]
+    }
+    return _default === undefined ? $B.NULL : _default
+}
 
+$B.str_dict_set = function(d, attr, value){
+    d.$strings[attr] = value
+}
 
 dict.$to_obj = function(d){
     // Function applied to dictionary that only has string keys,
@@ -646,20 +655,6 @@ dict.__ne__ = function(self, other){
     return res === _b_.NotImplemented ? res : ! res
 }
 
-/*
-dict.tp_new = function(cls){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
-    }
-    var instance = $B.empty_dict()
-    instance.ob_type = cls
-    if(cls !== dict){
-        instance.dict = $B.empty_dict()
-    }
-    return instance
-}
-*/
-
 dict.$iter_items_reversed = function*(d){
     var version = d.$version
     if(d.$all_str){
@@ -757,6 +752,14 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         // Python dictionary is used in a Javascript object
         value = $B.pyobj2jsobj(value)
         self[$B.JSOBJ][key] = value
+    }
+    if(typeof key == 'string'){
+        // Even if dict is not all-string keys, update self.$strings.
+        // This is useful for class dicts: a mappingproxy wrapping the class
+        // dictionary only needs to use d.$strings (the class dictionary
+        // might have non-string keys if __prepare__ returns a dict with
+        // non-string keys)
+        self.$strings[key] = value
     }
     if(self.$all_str){
         if(typeof key == 'string'){
@@ -973,18 +976,6 @@ _b_.dict.nb_or = function(self){
     return res
 }
 
-_b_.dict.sq_ass_item = function(self){
-    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null)
-    var self = $.self,
-        key = $.key,
-        value = $.value
-    if(value === $B.NULL){
-        return dict.$delitem(self, key)
-    }
-    return dict.$setitem(self, key, value)
-}
-
 _b_.dict.tp_repr = function(self){
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
     if(self.$jsobj){ // wrapper around Javascript object
@@ -1120,6 +1111,18 @@ _b_.dict.nb_inplace_or = function(self){
     return self
 }
 
+_b_.dict.mp_ass_subscript = function(self){
+    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
+        ["self", "key", "value"], arguments, {}, null, null)
+    var self = $.self,
+        key = $.key,
+        value = $.value
+    if(value === $B.NULL){
+        return dict.$delitem(self, key)
+    }
+    return dict.$setitem(self, key, value)
+}
+
 _b_.dict.mp_length = function(self){
     var _count = 0
 
@@ -1199,7 +1202,7 @@ dict_funcs.clear = function(self){
     self._keys = []
     self._values = []
     self.$all_str = true
-    self.$strings = new $B.str_dict()
+    self.$strings = {}
 
     if(self.$jsobj){
         for(var attr in self.$jsobj){
@@ -1293,8 +1296,8 @@ dict_funcs.pop = function(self){
         _default = $._default
 
     try{
-        var res = dict.__getitem__(self, key)
-        dict.__delitem__(self, key)
+        var res = dict.mp_subscript(self, key) // __getitem__
+        dict.mp_ass_subscript(self, key, $B.NULL)
         return res
     }catch(err){
         if($B.is_exc(err, _b_.KeyError)){
@@ -1525,7 +1528,7 @@ $B.empty_dict = function(){
         _keys: [],
         _values: [],
         _hashes: [],
-        $strings: new $B.str_dict(),
+        $strings: {},
         $version: 0,
         $all_str: true
     }
@@ -1564,10 +1567,6 @@ mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 mappingproxy.__hash__ = function(self){
     $B.RAISE(_b_.TypeError, `unhashable type: '${$B.class_name(self)}'`)
 }
-
-
-
-
 
 $B.mappingproxy_contains = mappingproxy.__contains__
 
@@ -1617,11 +1616,7 @@ $B.mappingproxy.nb_or = function(self){
 }
 
 $B.mappingproxy.tp_repr = function(self){
-    var d = $B.empty_dict()
-    for(var key in self.mapping){
-        dict.$setitem(d, key, self.mapping[key])
-    }
-    return dict.tp_repr(d)
+    return dict.tp_repr(self.mapping)
 }
 
 $B.mappingproxy.tp_hash = function(self){
@@ -1655,15 +1650,14 @@ $B.mappingproxy.mp_length = function(self){
 }
 
 $B.mappingproxy.mp_subscript = function(self, key){
-    var res = self.mapping[key]
-    if(res !== undefined){
-        return res
+    if(self.mapping.$strings.hasOwnProperty(key)){
+        return self.mapping.$strings[key]
     }
     $B.RAISE(_b_.KeyError, key)
 }
 
 $B.mappingproxy.sq_contains = function(self, key){
-    return self.mapping[key] !== undefined
+    return self.mapping.hasOwnProperty(key)
 }
 
 var mappingproxy_funcs = $B.mappingproxy.tp_funcs = {}
@@ -1677,21 +1671,19 @@ mappingproxy_funcs.__reversed__ = function(self){
 }
 
 mappingproxy_funcs.copy = function(self){
-    var mapping = Object.create(null)
-    Object.assign(mapping, self.mapping)
-    return $B.mappingproxy.tp_new($B.mappingproxy, mapping)
+    var copy_func = $B.type_getattribute(_b_.dict, 'copy')
+    return $B.mappingproxy.tp_new($B.mappingproxy, copy_func(self.mapping))
 }
 
 mappingproxy_funcs.get = function(self, key, _default){
-    var res = self.mapping[key]
-    if(res !== undefined){
-        return res
+    if(self.mapping.$strings.hasOwnProperty(key)){
+        return self.mapping.$strings[key]
     }
     return _default ?? _b_.None
 }
 
 mappingproxy_funcs.items = function(self){
-    return _b_.dict.dict.items(mp2dict(self))
+    return _b_.dict.dict.items(self.mapping)
 }
 
 mappingproxy_funcs.keys = function(self){
@@ -1702,7 +1694,7 @@ mappingproxy_funcs.keys = function(self){
 }
 
 mappingproxy_funcs.values = function(self){
-    return _b_.dict.dict.value(mp2dict(self))
+    return _b_.dict.dict.value(self.mapping)
 }
 
 $B.mappingproxy.functions_or_methods = ["__new__"]
@@ -1716,15 +1708,9 @@ $B.mappingproxy.classmethods = ["__class_getitem__"]
 $B.set_func_names(mappingproxy, "builtins")
 
 function* mappingproxy_iter_items(self){
-    for(var key in self.mapping){
-        yield {key, value: self.mapping[key]}
+    for(var key in self.mapping.$strings){
+        yield {key, value: self.mapping.$strings[key]}
     }
-}
-
-function mp2dict(mp){
-    var res = $B.empty_dict()
-    Object.assign(res.$strings, mp.mapping)
-    return res
 }
 
 function jsobj2dict(x, exclude){

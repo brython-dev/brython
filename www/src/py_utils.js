@@ -754,6 +754,7 @@ $B.get_class = function(obj){
     var klass = obj.__class__
     if(klass !== undefined){
         console.log('old school __class__', klass)
+        console.log(Error('trace').stack)
     }
     if(klass === undefined){
         switch(typeof obj){
@@ -926,10 +927,17 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     }
 
     var it = _b_.iter(iterator)
+    var test = false // $B.get_class(iterator) === $B.js_array
+    if(test){
+        console.log('make js iterator', it)
+    }
 
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
     var next_func = $B.$getattr(it, '__next__', null)
+    if(test){
+        console.log('next_func', next_func)
+    }
 
     if(next_func !== null){
         //next_func = $B.$call(next_func)
@@ -1050,7 +1058,7 @@ $B.warn = function(klass, message, filename, token){
                                          warning.end_lineno,
                                          warning.end_offset])
     }
-    $B.imported._warnings.warn(warning)
+    $B.$call($B.module_getattr($B.imported._warnings, 'warn'), warning)
 }
 
 // assert
@@ -1094,14 +1102,14 @@ $B.$getitem1 = function(obj, item){
     }
 
     // PEP 560
-    if(obj.$is_class){
+    if($B.is_type(obj)){
         if(! Array.isArray(item)){
             item = $B.fast_tuple([item])
         }
         if(obj === _b_.type){
             return $B.$class_getitem(obj, item)
         }
-        var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
+        var class_gi = $B.type_getattribute(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
             return $B.$call(class_gi, obj, item)
         }else if($B.get_class(obj) !== $B.JSObj){
@@ -1978,9 +1986,9 @@ $B.rich_op1 = function(op, x, y){
     if(x_type === y_type){
         // For objects of the same type, don't try the reversed operator
         if(x_type === _b_.int){
-            return $B.$call(_b_.int.dict[op], x, y)
+            return $B.$call($B.str_dict_get(_b_.int.dict, op), x, y)
         }else if(x_type === _b_.bool){
-            return $B.$call(_b_.bool.dict[op] || _b_.int.dict[op], x, y)
+            return $B.$call($B.str_dict_get(_b_.bool.dict, op) || _b_.int.dict[op], x, y)
         }
         try{
             method = $B.$getattr(x_type, op)

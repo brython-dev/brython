@@ -379,43 +379,99 @@ $B.method_descriptor.tp_getset = ["__qualname__", "__text_signature__"]
 $B.set_func_names($B.method_descriptor, 'builtins')
 
 
-
-$B.classmethod_descriptor.tp_repr = function(_self){
-    console.log(_self, _self.$infos, _self.$function_infos)
-    var name = _self.$function_infos[$B.func_attrs.__name__]
-    return `<method '${name}' of '${_self.__objclass__.__name__}' objects>`
+/* classmethod_descriptor start */
+$B.classmethod_descriptor.tp_repr = function(self){
+    console.log(self)
+    //var name = self.$function_infos[$B.func_attrs.__name__]
+    return `<method '${self.d_name}' of '${$B.get_name(self.d_type)}' objects>`
 }
 
-$B.classmethod_descriptor.__get__ = function(_self, obj, type){
-    /*
-    if(type === _b_.None){
-        if(obj !== _b_.None){
-            type = $B.get_class(obj)
-        }else{
+$B.classmethod_descriptor.tp_call = function(self, ...args){
+    return self.d_method(self.d_type, ...args)
+}
 
-            $B.RAISE(_b_.TypeError,
-                `descriptor for type '${$B.class_name(descr)}' ` +
-                "needs either an object or a type")
+$B.classmethod_descriptor.tp_descr_get = function(self, obj, type){
+    if(type === _b_.None){
+        type = $B.get_class(obj)
+    }
+    if(! $B.is_type(type)){
+        $B.RAISE(_b_.TypeError,
+            `descriptor '${self.d_name}' for type '${$B.get_name(self.d_type)}' ` +
+             `needs a type, not a '${$B.class_name(type)}' as arg 2`)
+    }
+    if(! _b_.issubclass(type, self.d_type)) {
+        $B.RAISE(_b_.TypeError,
+                     "descriptor '%V' requires a subtype of '%.100s' " +
+                     "but received '%.100s'",
+                     descr_name(descr),
+                     PyDescr_TYPE(descr).tp_name,
+                     type.tp_name)
+    }
+    var cls = $B.NULL
+    if (self.d_method.ml_flags & $B.METH_METHOD) {
+        cls = descr.d_common.d_type;
+    }
+    var f = function(){
+        return self.d_method.apply(null, arguments)
+    }
+    Object.assign(f,
+        {
+            ob_type: $B.builtin_function_or_method,
+            ml: {ml_name: self.d_name},
+            m_self: self.d_type
         }
-    }
-    if(type.$is_class){
-        $B.RAISE(_b_.TypeError,
-                     `descriptor for type '${$B.class_name(_self)}' ` +
-                     `needs a type, not a '${$B.class_name(type)}' as arg 2`)
-    }
-    if(! _b_.issubclass(type, _self)){
-        $B.RAISE(_b_.TypeError,
-                     `descriptor requires a subtype of '${$B.class_name(_self)}' ` +
-                     `but received '${$B.class_name(type)}'`)
-    }
-    */
+    )
+    return f
+    /*
     var f = function(obj){
-        return _self(type, ...arguments)
+        return self(type, ...arguments)
     }
     f.ob_type = $B.builtin_function_or_method
     f.$function_infos = _self.$function_infos
     return f
+    */
 }
+
+var classmethod_descriptor_funcs = $B.classmethod_descriptor.tp_funcs = {}
+
+classmethod_descriptor_funcs.__doc___get = function(self){
+
+}
+
+classmethod_descriptor_funcs.__doc___set = function(self){
+
+}
+
+classmethod_descriptor_funcs.__name__ = function(self){
+    return self.d_name
+}
+
+classmethod_descriptor_funcs.__objclass__ = function(self){
+    return self.d_type
+}
+
+classmethod_descriptor_funcs.__qualname___get = function(self){
+
+}
+
+classmethod_descriptor_funcs.__qualname___set = function(self){
+
+}
+
+classmethod_descriptor_funcs.__text_signature___get = function(self){
+
+}
+
+classmethod_descriptor_funcs.__text_signature___set = function(self){
+
+}
+
+$B.classmethod_descriptor.tp_members = ["__objclass__", "__name__"]
+
+$B.classmethod_descriptor.tp_getset = ["__doc__", "__qualname__", "__text_signature__"]
+
+/* classmethod_descriptor end */
+
 
 $B.set_func_names($B.classmethod_descriptor, 'builtins')
 
@@ -527,9 +583,6 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){
     if(obj === _b_.None){
         return self
     }
-    if(obj == 'dev'){
-        console.log(Error('bizarre').stack)
-    }
     var res = {
         ob_type: $B.method_wrapper,
         d_name: self.d_name,
@@ -597,7 +650,8 @@ $B.builtin_function_or_method.tp_richcompare = function(self){
 
 $B.builtin_function_or_method.tp_repr = function(self){
     if(self.m_self){
-        return `<built_in method '${self.ml.ml_name}' of ${self.m_self.cls.tp_name} object>`
+        return `<built_in method '${self.ml.ml_name}' ` +
+            `of ${$B.class_name(self.m_self)} object>`
     }else{
         return `<built_in function >`
     }

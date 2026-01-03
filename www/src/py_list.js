@@ -29,15 +29,6 @@ The argument must be an iterable if specified.`,
 list.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 list.$is_sequence = true
 
-
-list.__bool__ = function(self){
-    return list.__len__(self) > 0
-}
-
-list.__class_getitem__ = $B.$class_getitem
-
-
-
 function list_delitem(self, arg){
     if(isinstance(arg, _b_.int)){
         let pos = arg
@@ -494,27 +485,6 @@ function list___sizeof__(self){
     $B.RAISE(_b_.NotImplementedError)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* list start */
 _b_.list.tp_richcompare = function(self){
 
@@ -607,7 +577,8 @@ _b_.list.tp_init = function(self){
         return _b_.None
     }
     var pos = 0
-    for(var item of $B.make_js_iterator(arg)){
+    var it = $B.make_js_iterator(arg)
+    for(var item of it){
         self[pos++] = item
     }
     return _b_.None

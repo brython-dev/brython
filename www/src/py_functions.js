@@ -307,7 +307,7 @@ function_funcs.__dict___set = function(self){
 
 
 function_funcs.__doc__ = function(self){
-
+    return self.$function_infos[$B.func_attrs.__doc__]
 }
 
 function_funcs.__globals__ = function(self){
@@ -449,7 +449,7 @@ $B.make_args_parser = function(f){
           $kwdefaults = new Map()
 
     var nb_kw_defaults = f.$infos.__kwdefaults__ === _b_.None ? 0 :
-                         _b_.dict.__len__(f.$infos.__kwdefaults__)
+                         _b_.len(f.$infos.__kwdefaults__)
     if(f.$infos.__kwdefaults__ !== _b_.None){
         const kwdef = f.$infos.__kwdefaults__
         for(let kw of $B.make_js_iterator(kwdef)){
