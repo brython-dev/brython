@@ -949,6 +949,7 @@ tuple.$factory = function(){
 }
 
 $B.fast_tuple = function(array){
+    array = array ?? []
     array.ob_type = tuple
     return array
 }

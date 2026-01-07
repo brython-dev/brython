@@ -260,7 +260,12 @@ function make_scope_name(scopes, scope){
     if(scope === builtins_scope){
         return `_b_`
     }
-    return 'locals_' + qualified_scope_name(scopes, scope)
+    var scope_name = 'locals_' + qualified_scope_name(scopes, scope)
+    scope = scope ?? last_scope(scopes)
+    while(scope.parent){
+        scope = scope.parent
+    }
+    return scope_name
 }
 
 function make_search_namespaces(scopes){
@@ -1337,9 +1342,6 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             if(binding_scope.locals.has(name)){
                 // reassigning the same id in a scope: must call __del__ on
                 // the replaced object (needed at least for memoryview)
-                if(name == 'buf1'){
-                    console.log('reassign', name)
-                }
                 var ref = $B.js_from_ast(target, scopes)
                 var scope_name = make_scope_name(scopes, binding_scope)
                 return prefix + `var $temp = ${value}\n` +
@@ -1786,7 +1788,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var class_scope = new Scope(this.name, 'class', this)
 
     var js = '',
-        locals_name = make_scope_name(scopes, class_scope),
+        locals_name = 'locals_' + qualified_scope_name(scopes, class_scope),
         ref = this.name + make_id(),
         glob = scopes[0].name,
         globals_name = make_scope_name(scopes, scopes[0]),
@@ -1856,16 +1858,13 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
                 ` $B.fast_tuple([${params.join(', ')}]))\n`
     }
 
-    var keywords = [],
-        metaclass,
-        meta = ''
+    var metaclass,
+        kwds = []
     for(var keyword of this.keywords){
+        var kw_value = $B.js_from_ast(keyword.value, scopes)
+        kwds.push(`${keyword.arg}: ` + kw_value)
         if(keyword.arg == 'metaclass'){
             metaclass = keyword.value
-            meta = metaclass.to_js(scopes)
-        }else{
-            keywords.push(`["${keyword.arg}", ` +
-                $B.js_from_ast(keyword.value, scopes) + ']')
         }
     }
 
@@ -1874,31 +1873,35 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     var inum = add_to_positions(scopes, this)
 
-    js += prefix + `var ${ref} = (function(name, module, bases`
-              + (metaclass ? ', meta' : '') +
-              `){\n`
+    js += prefix + `var ${ref} = (function(name, bases, keywords){\n`
     indent()
     js += prefix + `$B.frame_obj.frame.inum = ${inum}\n`
-    js += prefix + `var _frame_obj = $B.frame_obj,\n`
-    indent(2)
-    js += prefix + `resolved_bases = $B.resolve_mro_entries(bases),\n` +
-          prefix + `metaclass = $B.get_metaclass(name, module, ` +
-          `resolved_bases`
+    js += prefix + `var resolved_bases = $B.resolve_mro_entries(bases)\n`
+    js += prefix + `var metaclass = $B.get_metaclass(name, resolved_bases`
 
     if(metaclass){
-        js += `, meta`
+        js += `, keywords.metaclass`
     }
     js += ')\n'
-    dedent(2)
 
-    js += prefix + `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
-              `name, module, "${qualname}", bases, resolved_bases),\n`
+    js += prefix + `var class_dict = $B.make_class_namespace(metaclass, ` +
+              `name, "${qualname}", bases, resolved_bases)\n` +
+          prefix + `var ${locals_name} = $B.dict_proxy(class_dict),\n`
 
     indent(2)
     js += prefix + `locals = ${locals_name}\n`
     dedent(2)
-    js += prefix + `locals.$strings.__doc__ = ${docstring}\n`
-    js += prefix + `var frame = [name, locals, module, ${globals_name}]\n` +
+
+    var static_attrs = []
+    if(class_scope.static_attributes){
+        static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
+    }
+    js += prefix + `locals.__doc__ = ${docstring}\n` +
+          prefix + `locals.__module__ = '${glob}'\n` +
+          prefix + `locals.__firstlineno__ = ${this.lineno}\n` +
+          prefix + `locals.__static_attributes__ = $B.fast_tuple([${static_attrs}])\n`
+
+    js += prefix + `var frame = [name, locals, '${glob}', ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var _frame_obj = $B.frame_obj\n` +
           prefix + `if(frame.$f_trace !== _b_.None){\n` +
@@ -1927,25 +1930,19 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
-    var static_attrs = []
-    if(class_scope.static_attributes){
-        static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
-    }
-
     js += annotation_code(scopes, class_scope, class_ref)
 
-    js += prefix + `var kls = $B.$class_constructor('${this.name}', frame, metaclass, ` +
-              `resolved_bases, bases, [${keywords.join(', ')}], ` +
-              `[${static_attrs}], annotate, ${this.lineno})\n` +
+    js += prefix + `$B.make_annotate_func(class_dict, annotate, frame)\n`
+
+    js += prefix + `var kls = $B.$class_constructor('${this.name}', ` +
+              `class_dict, metaclass, resolved_bases, bases, ` +
+              `keywords)\n` +
           prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
           prefix + 'return kls\n'
 
-
     dedent()
-    js += prefix + `})('${this.name}',${globals_name}.__name__ ?? '${glob}', ` +
-          `$B.fast_tuple([${bases}])` +
-          (metaclass ? ', ' + meta : '') +
-          `)\n`
+    js += prefix + `})('${this.name}', ` +
+          `$B.fast_tuple([${bases}]), {${kwds.join(', ')}})\n`
 
     if(has_type_params){
         js += prefix + `return ${ref}\n`
@@ -1953,7 +1950,8 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         js += prefix + '}\n'
     }
 
-    var class_ref = reference(scopes, enclosing_scope, this.name)
+    var scope_name = make_scope_name(scopes, enclosing_scope)
+    var class_ref = scope_name + '.' + mangle(scopes, enclosing_scope, this.name)
 
     js += prefix
     if(decorated){
@@ -2777,10 +2775,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(decorated){
         func_ref = `decorated${make_id()}`
         js += prefix + `var ${func_ref} = ${name2}\n`
-    }else if(func_name_scope.type != 'class'){
-        js += prefix + `${scope_name}.${mangled} = ${name2}\n`
     }else{
-        js += prefix + `${scope_name}.$strings.${mangled} = ${name2}\n`
+        js += prefix + `${scope_name}.${mangled} = ${name2}\n`
     }
 
     if(has_type_params){
@@ -2788,7 +2784,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     if(decorated && ! has_type_params){
-        js += prefix + `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
+        js += prefix + `${scope_name}.${mangled} = `
         let decorate = func_ref
         for(let dec of decorators.reverse()){
             decorate = `$B.$call(${dec}, ${decorate})`
@@ -3500,9 +3496,6 @@ $B.ast.Name.prototype.to_js = function(scopes){
             scope.freevars.delete(this.id)
         }
         var scope_name = make_scope_name(scopes, scope)
-        if(last_scope(scopes).type == 'class'){
-            scope_name += '.$strings'
-        }
         return scope_name + '.' + mangle(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
         // special case for name '__debug__' (cf. issue #2541)

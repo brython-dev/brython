@@ -4,7 +4,7 @@
 var _b_ = $B.builtins
 
 $B.del_exc = function(frame){
-    delete frame[1].$current_exception
+    delete frame.$current_exception
 }
 
 $B.set_exc = function(exc, frame){
@@ -25,7 +25,7 @@ $B.set_exc = function(exc, frame){
         }
         throw Error(msg)
     }else{
-        frame[1].$current_exception = $B.exception(exc)
+        frame.$current_exception = $B.exception(exc)
     }
 }
 
@@ -44,7 +44,7 @@ $B.set_exc_and_leave = function(frame, exc){
 
 $B.get_exc = function(){
     var frame = $B.frame_obj.frame
-    return frame[1].$current_exception
+    return frame.$current_exception
 }
 
 $B.set_exception_offsets = function(exc, position){

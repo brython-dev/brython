@@ -88,12 +88,14 @@ Object.assign($B.wrapper_methods,
         nb_absolute: wrap('__abs__'),
         nb_add: wrap_with_reflected('__add__', '__radd__'),
         nb_and: wrap_with_reflected('__and__', '__rand__'),
+        nb_bool: wrap('__bool__'),
         nb_divmod: wrap_with_reflected('__divmod__', '__rdivmod__'),
         nb_floor_divide: wrap('__floordiv__'),
         nb_index: wrap('__index__'),
         nb_lshift: wrap_with_reflected('__lshift__', '__rlshift__'),
         nb_inplace_add: wrap('__iadd__'),
         nb_inplace_multiply: wrap('__imul__'),
+        nb_invert: wrap('__invert__'),
         nb_matrix_multiply: wrap_with_reflected('__matmul__', '__rmatmul__'),
         nb_multiply: wrap_with_reflected('__mul__', '__rmul__'),
         nb_or: wrap_with_reflected('__or__', '__ror__'),
@@ -118,6 +120,7 @@ Object.assign($B.wrapper_methods,
         tp_new: make_new,
         tp_repr: wrap('__repr__'),
         tp_str : wrap('__str__'),
+        tp_setattro: make_setattr_delattr,
         tp_richcompare: make_richcompare
     }
 )
@@ -176,56 +179,42 @@ function make_setitem_delitem(cls){
     )
 }
 
+function make_setattr_delattr(cls){
+    var setattro = cls.tp_setattro
+    $B.str_dict_set(cls.dict, '__setattr__',
+        $B.wrapper_descriptor.$factory(
+            cls,
+            '__setattr__',
+            setattro
+        )
+    )
+    $B.str_dict_set(cls.dict, '__delattr__',
+        $B.wrapper_descriptor.$factory(
+            cls,
+            '__delattr__',
+            function(obj, attr){
+                setattro(obj, attr, $B.NULL)
+            }
+        )
+    )
+}
+
 function make_richcompare(cls){
     var comp = cls.tp_richcompare
-    var eq = (a, b) => comp(a, b) == 0
-    var ne = (a, b) => comp(a, b) != 0
-    var le = (a, b) => comp(a, b) <= 0
-    var lt = (a, b) => comp(a, b) < 0
-    var ge = (a, b) => comp(a, b) >= 0
-    var gt = (a, b) => comp(a, b) > 0
-    $B.str_dict_set(cls.dict, '__eq__',
-        $B.wrapper_descriptor.$factory(
-            cls,
-            '__eq__',
-            eq
+    for(var op of ['__eq__', '__ne__', '__lt__', '__le__', '__ge__', '__gt__']){
+        var func = (function(_op){
+            return function(self, other){
+                return comp(self, other, _op)
+            }
+        })(op)
+        $B.str_dict_set(cls.dict, op,
+            $B.wrapper_descriptor.$factory(
+                cls,
+                op,
+                func
+            )
         )
-    )
-    $B.str_dict_set(cls.dict, '__ne__',
-        $B.wrapper_descriptor.$factory(
-            cls,
-            '__ne__',
-            ne
-        )
-    )
-    $B.str_dict_set(cls.dict, '__le__',
-        $B.wrapper_descriptor.$factory(
-            cls,
-            '__le__',
-            le
-        )
-    )
-    $B.str_dict_set(cls.dict, '__lt__',
-        $B.wrapper_descriptor.$factory(
-            cls,
-            '__lt__',
-            lt
-        )
-    )
-    $B.str_dict_set(cls.dict, '__ge__',
-        $B.wrapper_descriptor.$factory(
-            cls,
-            '__ge__',
-            ge
-        )
-    )
-    $B.str_dict_set(cls.dict, '__gt__',
-        $B.wrapper_descriptor.$factory(
-            cls,
-            '__gt__',
-            gt
-        )
-    )
+    }
 }
 
 $B.finalize_type = function(cls){
@@ -281,6 +270,9 @@ $B.finalize_type = function(cls){
         }
         if(cls.classmethods){
             for(var descr of cls.classmethods){
+                if(descr == '__init_subclass__'){
+                    console.log('set init subclass', cls, cls.tp_funcs[descr])
+                }
                 $B.str_dict_set(cls.dict, descr, {
                     ob_type: $B.classmethod_descriptor,
                     d_name: descr,

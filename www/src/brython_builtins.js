@@ -677,7 +677,7 @@ $B.builtins_repr_check = function(builtin, args){
         var _b_ = $B.builtins
         console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
-            `'${builtin.__name__}' object but received a ` +
+            `'${builtin.tp_name}' object but received a ` +
             `'${$B.class_name(self)}'`)
     }
 }

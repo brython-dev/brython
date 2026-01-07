@@ -824,7 +824,7 @@ DOMNode.tp_iter = function(self){
     return $B.$iter(items)
 }
 
-DOMNode.__le__ = function(self, other){
+DOMNode.attach = function(self, other){
     // for document, append child to document.body
     if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
@@ -913,6 +913,15 @@ DOMNode.tp_repr = function(self){
     var res = "<DOMNode object type '"
     return res + $NodeTypes[self.nodeType] + "' name '" +
         self.nodeName + "'" + attrs_str + ">"
+}
+
+DOMNode.tp_richcompare = function(self, other, op){
+    switch(op){
+        case '__le__':
+            return DOMNode.attach(self, other)
+        default:
+            return _b_.NotImplemented
+    }
 }
 
 DOMNode.tp_setattroXXX = function(self, attr, value){
@@ -1053,8 +1062,6 @@ DOMNode_funcs.abs_top_get = function(self){
 }
 
 DOMNode_funcs.abs_top_set = $B.NULL
-
-DOMNode.attach = DOMNode.__le__ // For allergics to syntax elt <= child
 
 DOMNode_funcs.bind = function(){
     // bind functions to the event (event = "click", "mouseover" etc.)

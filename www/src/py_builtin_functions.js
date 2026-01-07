@@ -13,28 +13,38 @@ var check_nb_args = $B.check_nb_args,
     check_no_kw = $B.check_no_kw,
     check_nb_args_no_kw = $B.check_nb_args_no_kw
 
-var NoneType = $B.NoneType = $B.make_builtin_class('NoneType')
+var NoneType = $B.NoneType
 
-NoneType.__bool__ = function(){
+/* NoneType start */
+$B.NoneType.tp_richcompare = function(self, other, op){
+    return _b_.object.tp_richcompare(self, other, op)
+}
+
+$B.NoneType.tp_repr = function(self){
+    return 'None'
+}
+
+$B.NoneType.tp_hash = function(self){
+    return 0xFCA86420
+}
+
+$B.NoneType.tp_new = function(cls){
+    return None
+}
+
+$B.NoneType.nb_bool = function(self){
     return false
 }
 
-NoneType.__setattr__ = function(self, attr){
-    return no_set_attr(NoneType, attr)
-}
+var NoneType_funcs = $B.NoneType.tp_funcs = {}
 
-NoneType.tp_repr = function(){
-    return 'None'
-}
+/* NoneType end */
 
 var None = _b_.None = {
     ob_type: NoneType
 }
 
 None.__doc__ = None
-NoneType.__doc__ = None
-
-$B.set_func_names(NoneType, "builtins")
 
 _b_.__build_class__ = function(){
     $B.RAISE(_b_.NotImplementedError, '__build_class__')
@@ -988,6 +998,11 @@ $B.search_in_mro = function(klass, attr, _default){
                 console.log('found in mro', i, mro[i])
                 console.log(mro[i][attr])
             }
+            if(! mro[i].dict ||
+                    $B.str_dict_get(mro[i].dict, attr, $B.NULL) === $B.NULL){
+                console.log('attr', attr, 'found in mro[i]', mro[i],
+                    'but absent in dict')
+            }
             return mro[i][attr]
         }else if(mro[i].dict){
             if(mro[i].dict.$strings === undefined){
@@ -1028,15 +1043,9 @@ $B.search_in_dict = function(obj, attr, _default){
         }
     }
     if(obj.dict){
-        if(is_type){
-            if(obj.dict.hasOwnProperty(attr)){
-                return obj.dict[attr]
-            }
-        }else{
-            var in_dict = _b_.dict.$get_string(obj.dict, attr, $B.NULL)
-            if(in_dict !== $B.NULL){
-                return in_dict
-            }
+        var v = $B.str_dict_get(obj.dict, attr, $B.NULL)
+        if(v !== $B.NULL){
+            return v
         }
     }
 
@@ -1081,7 +1090,7 @@ $B.object_getattribute = function(obj, attr){
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var test = attr == '_member_names_'
+    var test = false // attr == '_member_names_'
     if(test){
         console.log('$getattr', obj, attr)
     }
@@ -1566,7 +1575,7 @@ $B.PyObject_GetIter = function(obj){
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
-    var test = false // obj.$is_class // obj.__class__ && obj.__class__.__name__ == 'StrEnum'
+    var test = false // obj.tp_name == 'FlagBoundary'
     var NULL = {}
     if(test){
         console.log('iter', obj)
@@ -1574,12 +1583,9 @@ $B.$iter = function(obj, sentinel){
     if(sentinel === undefined){
 
         var klass = $B.get_class(obj)
-
-        try{
-            var iter_func = $B.search_slot(klass, 'tp_iter', $B.NULL)
-        }catch(err){
-            console.log('error in search in mro', klass, '__iter__')
-            throw err
+        var iter_func = $B.search_slot(klass, 'tp_iter', $B.NULL)
+        if(test){
+            console.log('iter func', iter_func)
         }
         if(iter_func !== $B.NULL){
             var res = $B.$call(iter_func, obj)
@@ -1591,6 +1597,10 @@ $B.$iter = function(obj, sentinel){
         }
         var getitem_func = $B.search_in_mro(klass, '__getitem__', $B.NULL)
         var len_func = $B.search_in_mro(klass, '__len__', $B.NULL)
+        if(test){
+            console.log('getitem_func', getitem_func)
+            console.log('len_func', len_func)
+        }
         if(getitem_func !== $B.NULL && len_func !== $B.NULL){
             return {
                 ob_type: $B.iterator,
@@ -2582,7 +2592,7 @@ _b_.super.tp_repr = function(self){
 }
 
 _b_.super.tp_getattro = function(self, attr){
-    if(self.__thisclass__.$is_js_class){
+    if(self.type.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
             return function(){
@@ -2591,17 +2601,17 @@ _b_.super.tp_getattro = function(self, attr){
         }
     }
     // Determine method resolution order from object_or_type
-    var object_or_type = self.__self_class__,
+    var object_or_type = self.obj,
         mro = self.$arg2 == 'type' ? $B.get_mro(object_or_type) :
                                      $B.get_mro($B.get_class(object_or_type))
-
     // Search of method attr starts in mro after self.__thisclass__
-    var search_start = mro.indexOf(self.__thisclass__) + 1,
+    var search_start = mro.indexOf(self.type) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = attr == "__init__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = false // attr == "__new__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
+        console.log('frame obj', $B.frame_obj)
     }
 
     var f
@@ -2609,8 +2619,8 @@ _b_.super.tp_getattro = function(self, attr){
         if($test){
             console.log('search', attr, 'in dict of', klass)
         }
-        var in_dict = $B.search_in_dict(klass, attr, NULL)
-        if(in_dict !== NULL){
+        var in_dict = $B.search_in_dict(klass, attr, $B.NULL)
+        if(in_dict !== $B.NULL){
             if($test){
                 console.log('found in dict of', klass)
             }
@@ -2637,10 +2647,21 @@ _b_.super.tp_getattro = function(self, attr){
         return $B.NULL
     }
 
-    if($test){console.log("super", attr, self, "mro", mro,
-        "found in mro[0]", mro[0],
-        f, f + '')}
-    var cls = $B.get_class(f)
+    if($test){
+        console.log("super", attr, self, "mro", mro,
+            "found in mro[0]", mro[0], '\nf',
+            f, 'type(f)', $B.get_class(f))
+    }
+    var f_cls = $B.get_class(f)
+    var getter = $B.search_slot(f_cls, 'tp_descr_get', $B.NULL)
+    var res
+    if(getter !== $B.NULL){
+        res = getter(f, self.obj, self.obj_type)
+    }else{
+        res = f
+    }
+    return res
+    /*
     if(f.$type == "staticmethod" || attr == "__new__"){
         return f
     }else if(cls === _b_.classmethod){
@@ -2679,6 +2700,7 @@ _b_.super.tp_getattro = function(self, attr){
         }
         return method
     }
+    */
 }
 
 _b_.super.tp_descr_get = function(self, instance){
@@ -2717,9 +2739,7 @@ _b_.super.tp_init = function(self, _type, object_or_type){
     var $arg2
 
     if(object_or_type !== undefined){
-        if(object_or_type === _type ||
-                (object_or_type.$is_class &&
-                _b_.issubclass(object_or_type, _type))){
+        if($B.is_type(object_or_type)){
             $arg2 = 'type'
         }else if($B.$isinstance(object_or_type, _type)){
             $arg2 = 'object'
@@ -2729,8 +2749,9 @@ _b_.super.tp_init = function(self, _type, object_or_type){
                 'or subtype of type')
         }
     }
-    self.__thisclass__ = _type
-    self.__self_class__ = object_or_type
+    self.type = _type
+    self.obj = object_or_type
+    self.obj_type = $B.get_class(self.obj)
     self.$args2 = $arg2
 }
 
@@ -2744,15 +2765,15 @@ _b_.super.tp_new = function(self){
 var super_funcs = _b_.super.tp_funcs = {}
 
 super_funcs.__self__ = function(self){
-
+    return self.obj
 }
 
 super_funcs.__self_class__ = function(self){
-    return self.__self_class__
+    return self.obj_type
 }
 
 super_funcs.__thisclass__ = function(self){
-    return self.__thisclass__
+    return self.type
 }
 
 _b_.super.tp_members = ["__thisclass__", "__self__", "__self_class__"]

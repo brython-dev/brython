@@ -449,7 +449,7 @@ for(var js_op in js_ops){
     $B.JSObj[js_op] = js_ops[js_op]
 }
 
-$B.JSObj.__bool__ = function(_self){
+$B.JSObj.nb_bool = function(_self){
     if(typeof _self == 'object'){
         for(var key in _self){
             return true
@@ -459,7 +459,7 @@ $B.JSObj.__bool__ = function(_self){
     return !! _self
 }
 
-$B.JSObj.__contains__ = function(_self, key){
+$B.JSObj.sq_contains = function(_self, key){
     return key in _self
 }
 

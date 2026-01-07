@@ -711,7 +711,7 @@
                 exc
             while(frame_obj !== null){
                 frame = frame_obj.frame
-                exc = frame[1].$current_exception
+                exc = frame.$current_exception
                 if(exc){
                     return _b_.tuple.$factory([$B.get_class(exc), exc,
                         $B.$getattr(exc, "__traceback__")])
@@ -729,7 +729,7 @@
                 exc
             while(frame_obj !== null){
                 frame = frame_obj.frame
-                exc = frame[1].$current_exception
+                exc = frame.$current_exception
                 if(exc !== undefined){
                     return exc
                 }

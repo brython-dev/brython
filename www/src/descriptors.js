@@ -34,9 +34,7 @@ $B.method_wrapper.tp_hash = function(self){
 }
 
 $B.method_wrapper.tp_call = function(self, ...args){
-    var name = self.d_name
-    var method = $B.get_class(self.self).dict[name].wrapped
-    return method(self.self, ...args)
+    return self.wrapped(self.self, ...args)
 }
 
 var method_wrapper_funcs = $B.method_wrapper.tp_funcs = {}
@@ -91,6 +89,16 @@ $B.method_wrapper.tp_getset = ["__objclass__", "__name__", "__qualname__", "__te
 
 $B.set_func_names($B.method_wrapper, 'builtins')
 /* method_wrapper end */
+
+$B.member_descriptor.$factory = function(name, cls){
+    return {
+        ob_type: $B.member_descriptor,
+        d_member: {
+            ml: {ml_name: name},
+            cls
+        }
+    }
+}
 
 /* member_descriptor start */
 $B.member_descriptor.tp_descr_set = function(self, kls, value){
@@ -411,8 +419,8 @@ $B.classmethod_descriptor.tp_descr_get = function(self, obj, type){
     if (self.d_method.ml_flags & $B.METH_METHOD) {
         cls = descr.d_common.d_type;
     }
-    var f = function(){
-        return self.d_method.apply(null, arguments)
+    var f = function(...args){
+        return self.d_method.call(null, self.d_type, ...args)
     }
     Object.assign(f,
         {
@@ -576,6 +584,9 @@ $B.wrapper_descriptor.tp_repr = function(self){
 }
 
 $B.wrapper_descriptor.tp_call = function(self, ...args){
+    if(typeof self.wrapped !== 'function'){
+        console.log('self.wrapped not a function', self)
+    }
     return self.wrapped(...args)
 }
 
@@ -586,7 +597,8 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){
     var res = {
         ob_type: $B.method_wrapper,
         d_name: self.d_name,
-        self: obj
+        self: obj,
+        wrapped: self.wrapped
     }
     return res
     /*

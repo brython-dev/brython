@@ -32,6 +32,28 @@ Lookup by keys:
 
 var _b_ = $B.builtins
 
+$B.dict_proxy = function(dict){
+    // Given a dictionary dict, returns an object obj such that obj.x = y is
+    // the same as dict[x] = y
+    // Used for the namespace of user-defined classes
+    if($B.exact_type(dict, _b_.dict)){
+        // most usual case
+        return dict.$strings
+    }
+    var getitem = $B.type_getattribute($B.get_class(dict), '__getitem__')
+    var setitem = $B.type_getattribute($B.get_class(dict), '__setitem__')
+    return new Proxy(dict,
+        {
+            get(target, prop){
+                return $B.$call(getitem, target, prop)
+            },
+            set(target, prop, value){
+                return $B.$call(setitem, target, prop, value)
+            }
+        }
+    )
+}
+
 var set_ops = ["eq", "le", "lt", "ge", "gt",
     "sub", "rsub", "and", "rand", "or", "ror", "xor", "rxor"]
 
@@ -158,6 +180,28 @@ $B.str_dict_get = function(d, key, _default){
 
 $B.str_dict_set = function(d, attr, value){
     d.$strings[attr] = value
+}
+
+$B.str_dict_del = function(d, attr){
+    delete d.$strings[attr]
+}
+
+$B.hasOnlyStringKeys = function(d){
+    return d.$all_str
+}
+
+$B.dict2kwarg = function(d){
+    // create an internal kw argument from dictionary d
+    var kw = dict.$to_obj(d)
+    return {$kw: [kw]}
+}
+
+$B.dict_from_jsobj = function(obj){
+    var d = $B.empty_dict()
+    for(var key in obj){
+        $B.str_dict_set(d, key, obj[key])
+    }
+    return d
 }
 
 dict.$to_obj = function(d){
@@ -1657,7 +1701,7 @@ $B.mappingproxy.mp_subscript = function(self, key){
 }
 
 $B.mappingproxy.sq_contains = function(self, key){
-    return self.mapping.hasOwnProperty(key)
+    return self.mapping.$strings.hasOwnProperty(key)
 }
 
 var mappingproxy_funcs = $B.mappingproxy.tp_funcs = {}
@@ -1683,7 +1727,7 @@ mappingproxy_funcs.get = function(self, key, _default){
 }
 
 mappingproxy_funcs.items = function(self){
-    return _b_.dict.dict.items(self.mapping)
+    return _b_.dict.tp_funcs.items(self.mapping)
 }
 
 mappingproxy_funcs.keys = function(self){
@@ -1694,7 +1738,7 @@ mappingproxy_funcs.keys = function(self){
 }
 
 mappingproxy_funcs.values = function(self){
-    return _b_.dict.dict.value(self.mapping)
+    return _b_.dict.tp_funcs.value(self.mapping)
 }
 
 $B.mappingproxy.functions_or_methods = ["__new__"]

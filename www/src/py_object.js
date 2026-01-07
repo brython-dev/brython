@@ -23,32 +23,7 @@ $B.make_class = function(qualname, factory){
     return A
 }
 
-object.__eq__ = function(self, other){
-    // equality test defaults to identity of objects
-    //test_issue_1393
-    return self === other ?  true : _b_.NotImplemented
-}
-
-object.__ge__ = function(){
-    return _b_.NotImplemented
-}
-
 $B.nb_from_dict = 0
-
-
-
-
-object.__gt__ = function(){return _b_.NotImplemented}
-
-
-
-
-
-object.__le__ = function(){return _b_.NotImplemented}
-
-object.__lt__ = function(){return _b_.NotImplemented}
-
-object.__mro__ = []
 
 object.$new = function(cls){
     return function(){
@@ -163,8 +138,36 @@ function object_subclasshook(klass){
 
 
 /* object start */
-_b_.object.tp_richcompare = function(self){
+_b_.object.tp_richcompare = function(self, other, op){
+    var res
 
+    switch (op) {
+        case '__eq__':
+            /* Return NotImplemented instead of False, so if two
+               objects are compared, both get a chance at the
+               comparison.  See issue #1393. */
+            res = $B.$is(self, other) ? true : _b_.NotImplemented
+            break;
+
+        case '__ne__':
+            /* By default, __ne__() delegates to __eq__() and inverts the result,
+               unless the latter returns NotImplemented. */
+            var self_richcomp = $B.search_slot($B.get_class(self), 'tp_richcompare', $B.NULL)
+            if(self_richcomp === $B.NULL){
+                res = _b_.NotImplemented
+            }else{
+                res = $B.$call(self_richcomp(self, other, '__eq__'))
+                if(res !== _b_.NotImplemented){
+                    return ! $B.$bool(res)
+                }
+            }
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+
+    return res
 }
 
 _b_.object.tp_setattro = function(self, attr, value){
@@ -255,8 +258,8 @@ _b_.object.tp_str = function(self){
     }
     // Default to __repr__
     var klass = $B.get_class(self)
-    var repr_func = $B.search_slot(klass, "tp_repr")
-    return repr_func.apply(null, arguments)
+    var repr_func = $B.$getattr(klass, "__repr__", $B.NULL)
+    return $B.$call(repr_func, self)
 }
 
 _b_.object.tp_getattro = function(self, attr){
@@ -385,7 +388,7 @@ object_funcs.__dir__ = function(self){
         dict = $B.empty_dict()
     }else{
         /* Copy __dict__ to avoid mutating it. */
-        var temp = _b_.dict.copy(dict)
+        var temp = _b_.dict.tp_funcs.copy(dict)
     }
 
     if(dict == undefined){
@@ -416,6 +419,23 @@ object_funcs.__getstate__ = function(self){
 }
 
 object_funcs.__init_subclass__ = function(self){
+    // Default implementation only checks that no keyword arguments were passed
+    // Defined as classmethod after set_func_names is called
+    var $ = $B.args("__init_subclass__", 1, {cls: null}, ['cls'],
+            arguments, {}, "args", "kwargs")
+    if($.args.length > 0){
+        console.log('init subclass, args', $.args)
+        var qualname = $B.$getattr($.cls, '__qualname__', '<type>')
+        $B.RAISE(_b_.TypeError,
+            `${qualname}.__init_subclass__ takes no arguments ` +
+            `(${$.args.length} given)`)
+    }
+    if(_b_.len($.kwargs) > 0){
+        var qualname = $B.$getattr($.cls, '__qualname__', '<type>')
+        $B.RAISE(_b_.TypeError,
+            `${qualname}.__init_subclass__() ` +
+            `takes no keyword arguments`)
+    }
     return _b_.None
 }
 

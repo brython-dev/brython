@@ -434,7 +434,7 @@ function run_py(module_contents, path, module, compiled) {
             console.log(root)
             // console.log(err)
             if($B.get_option('debug', err) > 1){
-                console.log($B.format_indent(js, 0))
+                console.log(src)
             }
             for(let attr in err){
                 console.log(attr, err[attr])
@@ -521,7 +521,9 @@ VFSFinder.$factory = function(){
     }
 }
 
-VFSFinder.find_spec = function(cls, fullname){
+var VFSFinder_funcs = VFSFinder.tp_funcs = {}
+
+VFSFinder_funcs.find_spec = function(cls, fullname){
     var stored,
         is_package,
         timestamp
@@ -556,6 +558,8 @@ VFSFinder.find_spec = function(cls, fullname){
         })
     }
 }
+
+VFSFinder.classmethods = ["find_spec"]
 
 $B.set_func_names(VFSFinder, "<import>")
 
@@ -725,7 +729,9 @@ StdlibStaticFinder.$factory = function(){
     }
 }
 
-StdlibStaticFinder.find_spec = function(self, fullname){
+var StdlibStaticFinder_funcs = StdlibStaticFinder.tp_funcs = {}
+
+StdlibStaticFinder_funcs.find_spec = function(self, fullname){
     // find_spec() relies on $B.stdlib, a precompiled list of the existing
     // modules in subdirectories Lib and libs below the directory where
     // brython.js stands. This list is in file stdlib_paths.js.
@@ -775,18 +781,18 @@ StdlibStaticFinder.find_spec = function(self, fullname){
     return _b_.None
 }
 
+StdlibStaticFinder.classmethods = ["find_spec"]
+
 $B.set_func_names(StdlibStaticFinder, "<import>")
 
+/*
 for(let method in StdlibStaticFinder){
     if(typeof StdlibStaticFinder[method] == "function"){
         StdlibStaticFinder[method] = _b_.classmethod.$factory(
             StdlibStaticFinder[method])
     }
 }
-
-StdlibStaticFinder.$factory = function (){
-    return {ob_type: StdlibStaticFinder}
-}
+*/
 
 // Finder for modules in a list of directories.
 // By default, this list has one element, the directory of the current script.
@@ -799,7 +805,9 @@ PathFinder.$factory = function(){
     }
 }
 
-PathFinder.find_spec = function(cls, fullname, path){
+var PathFinder_funcs = PathFinder.tp_funcs = {}
+
+PathFinder_funcs.find_spec = function(cls, fullname, path){
     if($B.VFS && $B.VFS[fullname]){
         // If current module is in VFS (ie standard library) it's
         // pointless to search in other locations
@@ -850,14 +858,18 @@ PathFinder.find_spec = function(cls, fullname, path){
     return _b_.None
 }
 
+PathFinder.classmethods = ["find_spec"]
+
 $B.set_func_names(PathFinder, "<import>")
 
+/*
 for(let method in PathFinder){
     if(typeof PathFinder[method] == "function"){
         PathFinder[method] = _b_.classmethod.$factory(
             PathFinder[method])
     }
 }
+*/
 
 // Find modules deployed in a hierarchy under a given base URL
 var PathEntryFinder = $B.make_builtin_class("PathEntryFinder")
@@ -1137,6 +1149,7 @@ function import_engine(mod_name, _path, from_stdlib){
             }catch(e){
                 console.log('error for module', module,
                     'loader', _loader, 'exec module', exec_module)
+                console.log(e)
                 delete _sys_modules[_spec_name]
                 throw e
            }

@@ -927,7 +927,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     }
 
     var it = _b_.iter(iterator)
-    var test = false // $B.get_class(iterator) === $B.js_array
+    var test = false // iterator.tp_name == 'FlagBoundary'
     if(test){
         console.log('make js iterator', it)
     }
@@ -969,6 +969,10 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     // For "[a, b] = t", nb_targets is 2, has_starred is false
     // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
     // nb_after_starred is 1 (c)
+    var test = false // obj.tp_name == 'FlagBoundary'
+    if(test){
+        console.log('unpacker', obj, nb_targets, has_starred)
+    }
     var inum_rank = 3
     if(has_starred){
         var nb_after_starred = arguments[3]
@@ -978,7 +982,9 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     var t = _b_.list.$factory(obj),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
-
+    if(test){
+        console.log('list from obj', t)
+    }
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
         $B.set_inum(inum)
@@ -1147,9 +1153,9 @@ $B.getitem_slice = function(obj, slice){
     if(Array.isArray(obj) && klass === _b_.list){
         return _b_.list.$getitem(obj, slice)
     }else if(typeof obj == "string"){
-        return _b_.str.__getitem__(obj, slice)
+        return _b_.str.mp_subscript(obj, slice)
     }
-    return $B.$getattr(klass, "__getitem__")(obj, slice)
+    return $B.$call($B.$getattr(klass, "__getitem__"), obj, slice)
 }
 
 $B.$getattr_pep657 = function(obj, attr, inum){
@@ -1634,7 +1640,7 @@ $B.enter_frame = function(frame, __file__, lineno){
     frame.__file__ = __file__
     frame.$lineno = lineno
     frame.$f_trace = _b_.None
-    frame.$has_generators = !! frame[1].$has_generators
+    // frame.$has_generators = !! frame[1].$has_generators
     $B.frame_obj = {
         prev: $B.frame_obj,
         frame,
@@ -1687,7 +1693,7 @@ $B.trace_exception = function(){
         return _b_.None
     }
     var trace_func = frame.$f_trace,
-        exc = frame[1].$current_exception
+        exc = frame.$current_exception
     return trace_func(frame, 'exception', $B.fast_tuple([
         $B.get_class(exc), exc, $B.traceback.$factory(exc)]))
 }
@@ -1767,8 +1773,8 @@ $B.leave_frame = function(arg){
             }
         }
     }
-    if(frame[1].$current_exception){
-        delete frame[1].$current_exception
+    if(frame.$current_exception){
+        delete frame.$current_exception
     }
     return _b_.None
 }

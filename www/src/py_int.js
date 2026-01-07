@@ -528,7 +528,7 @@ int.$factory = function(){
 $B.set_func_names(int, "builtins")
 
 /* int start */
-_b_.int.tp_richcompare = function(a, b){
+_b_.int.tp_richcompare = function(a, b, op){
     /* if a < b, return a negative number
        if a == b, return 0
        if a > b, return a positive number */
@@ -542,11 +542,31 @@ _b_.int.tp_richcompare = function(a, b){
     }else{
         return _b_.NotImplemented
     }
-    if(a === b){
-        return 0
-    }else{
-        return a > b ? 1 : -1
+
+    switch(op){
+        case '__eq__':
+            res = a === b
+            break
+        case '__ne__':
+            res = a != b
+            break
+        case '__lt__':
+            res = a < b
+            break
+        case '__le__':
+            res = a <= b
+            break
+        case '__ge__':
+            res = a >= b
+            break
+        case '__gt__':
+            res = a > b
+            break
+        default:
+            res = _b_.NotImplemented
+            break
     }
+    return res
 }
 
 _b_.int.nb_add = function(self, other){
@@ -1157,46 +1177,6 @@ $B.$bool = function(obj, bool_class){ // return true or false
 
 var bool = _b_.bool
 
-bool.__and__ = function(self, other){
-    if($B.$isinstance(other, bool)){
-        return self && other
-    }else if($B.$isinstance(other, int)){
-        return int.__and__(bool.__index__(self), int.__index__(other))
-    }
-    return _b_.NotImplemented
-}
-
-bool.__float__ = function(self){
-    return self ? $B.fast_float(1) : $B.fast_float(0)
-}
-
-bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
-   if(self.valueOf()) return 1
-   return 0
-}
-
-bool.__neg__ = function(self){return -$B.int_or_bool(self)}
-
-
-
-bool.__pos__ = $B.int_or_bool
-
-
-
-bool.__xor__ = function(self, other) {
-    if($B.$isinstance(other, bool)){
-        return self ^ other ? true : false
-    }else if($B.$isinstance(other, int)){
-        return int.__xor__(bool.__index__(self), int.__index__(other))
-    }
-    return _b_.NotImplemented
-}
-
-bool.__invert__ = function(self) {
-    $B.warn(_b_.DeprecationWarning, `Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
-    return int.__invert__(self)
-}
-
 bool.$factory = function(){
     // Calls $B.$bool, which is used inside the generated JS code and skips
     // arguments control.
@@ -1205,31 +1185,23 @@ bool.$factory = function(){
     return $B.$bool($.x, true)
 }
 
-
-
-
-
-bool.numerator = int.numerator
-bool.denominator = int.denominator
-bool.real = (self) => self ? 1 : 0
-bool.imag = int.imag
-
-for (var attr of ['real']) {
-    bool[attr].setter = (function (x) {
-        return function (self) {
-            $B.RAISE_ATTRIBUTE_ERROR(`attribute '${x}' of ` +
-                `'${$B.class_name(self)}' objects is not writable`, self, x)
-        }
-    })(attr)
-}
-
 /* bool start */
-_b_.bool.nb_and = function(self){
-
+_b_.bool.nb_and = function(self, other){
+    if($B.$isinstance(other, bool)){
+        return self && other
+    }else if($B.$isinstance(other, int)){
+        return int.__and__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
-_b_.bool.nb_xor = function(self){
-
+_b_.bool.nb_xor = function(self, other) {
+    if($B.$isinstance(other, bool)){
+        return self ^ other ? true : false
+    }else if($B.$isinstance(other, int)){
+        return int.__xor__(bool.__index__(self), int.__index__(other))
+    }
+    return _b_.NotImplemented
 }
 
 _b_.bool.nb_or = function(self, other){
@@ -1262,7 +1234,8 @@ _b_.bool.tp_new = function(cls, value) {
 }
 
 _b_.bool.nb_invert = function(self){
-
+    $B.warn(_b_.DeprecationWarning, `Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
+    return int_funcs.__invert__(self)
 }
 
 var bool_funcs = _b_.bool.tp_funcs = {}
