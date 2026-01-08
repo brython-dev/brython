@@ -1617,7 +1617,9 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    var test = false // args[0] === 'EnumCheck' // args !== undefined && Array.isArray(args) && args[0] === 'flags'
+    console.log('call type.tp_call, cls', cls, 'args', args, 'kw', kw)
+
+    var test = cls.tp_name === 'KeyError' // args !== undefined && Array.isArray(args) && args[0] === 'flags'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -1640,7 +1642,7 @@ _b_.type.tp_call = function(){
     console.log('in tp_call, kw', $.kw, 'args', $.args)
     console.log('call new_func', new_func)
     // create an instance with __new__
-    var instance = new_func(...$.args, $.kw), //arguments),
+    var instance = new_func(cls, ...args, $B.dict2kwarg(kw)), //arguments),
         instance_class = $B.get_class(instance)
     if(test){
         console.log('instance of type', instance)
@@ -1768,13 +1770,12 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         console.log('type.tp_new', name, 'metatype', metatype,
             'extrakw', extra_kwargs)
     }
-    extra_kwargs = extra_kwargs === undefined ? {$kw: [{}]} :
-        extra_kwargs
+    extra_kwargs = kwds
 
     // Create the class dictionary
-    var module = $B.dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
+    var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
     $B.set_class_attr(cl_dict, '__module__', module)
-    var qualname = $B.dict_get(cl_dict, '__qualname__', name)
+    var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
 
     var [name, bases, orig_dict] = args
 
@@ -1831,7 +1832,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         $is_class: true
     }
 
-    let slots = $B.dict_get(cl_dict, '__slots__', $B.NULL)
+    let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if(slots !== $B.NULL){
         for(let key of $B.make_js_iterator(slots)){
             $B.str_dict_set(cl_dict, key,
@@ -1895,6 +1896,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     }catch(err){
         console.log('error for extra_kwargs', extra_kwargs)
         console.log('tp new', name)
+        console.log(err)
         throw err
     }
     $B.$call(init_subclass, $B.dict2kwarg(extra_kwargs))

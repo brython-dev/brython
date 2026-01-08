@@ -2189,12 +2189,13 @@ var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
               {}, 'args', 'kw')
     var kw = $ns['kw'],
-        end = $B.dict_get(kw, 'end', '\n'),
-        sep = $B.dict_get(kw, 'sep', ' '),
-        file = $B.dict_get(kw, 'file', $B.get_stdout())
+        end = $B.str_dict_get(kw, 'end', '\n'),
+        sep = $B.str_dict_get(kw, 'sep', ' '),
+        file = $B.str_dict_get(kw, 'file', $B.get_stdout())
     var args = $ns['args']
     var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
+        console.log('call str.$factory on', args[i], $B.get_class(args[i]))
         var arg = _b_.str.$factory(args[i])
         $B.$call(writer, arg)
         if(i < len - 1){
@@ -2608,7 +2609,7 @@ _b_.super.tp_getattro = function(self, attr){
     var search_start = mro.indexOf(self.type) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__new__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = attr == "__new__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
         console.log('frame obj', $B.frame_obj)
@@ -2659,6 +2660,9 @@ _b_.super.tp_getattro = function(self, attr){
         res = getter(f, self.obj, self.obj_type)
     }else{
         res = f
+    }
+    if($test){
+        console.log('result of super.tp_getattro', attr, res)
     }
     return res
     /*
