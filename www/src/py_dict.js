@@ -394,7 +394,7 @@ dict.$delitem  = function(self, key){
     $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
 }
 
-dict.__eq__ = function(){
+function dict_eq(){
     var $ = $B.args("__eq__", 2, {self: null, other: null},
         ["self", "other"], arguments, {}, null, null),
         self = $.self,
@@ -1006,8 +1006,23 @@ dict.$from_array = function(arrays){
     return res
 }
 
-_b_.dict.tp_richcompare = function(self){
-
+_b_.dict.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, _b_.dict)){
+        return _b_.NotImplemented
+    }
+    var res
+    switch(op){
+        case '__eq__':
+            res = dict_eq(self, other)
+            break
+        case '__ne__':
+            res = ! dict_eq(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+    return res
 }
 
 _b_.dict.nb_or = function(self){
@@ -1619,6 +1634,8 @@ mappingproxy.__setitem__ = function(){
         "item assignment")
 }
 
+
+/*
 for(var attr in dict){
     if(mappingproxy[attr] !== undefined ||
             ["__class__", "__mro__", "__new__", "__init__", "__delitem__",
@@ -1641,7 +1658,6 @@ for(var attr in dict){
 }
 
 
-/*
 for(var attr in $B.dunder_methods){
     if(mappingproxy.hasOwnProperty($B.dunder_methods[attr])){
         // will created in set_func_names

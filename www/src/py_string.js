@@ -208,8 +208,9 @@ str_iterator.tp_iter = function(self){
     return self
 }
 
-str_iterator._tp_iternext = function*(self){
+str_iterator.tp_iternext = function*(self){
     for(var char of self.it){
+        console.log('yield', char)
         yield char
     }
 }
@@ -351,8 +352,8 @@ var ascii_format = function(val, flags, type) {
     var ascii
     if(type == 'bytes'){
         var repr = _b_.repr(val)
-        ascii = _b_.str.encode(repr, 'ascii', 'backslashreplace')
-        ascii = _b_.bytes.decode(ascii, 'ascii')
+        ascii = _b_.str.tp_funcs.encode(repr, 'ascii', 'backslashreplace')
+        ascii = _b_.bytes.tp_funcs.decode(ascii, 'ascii')
     }else{
         ascii = _b_.ascii(val)
     }
@@ -1209,11 +1210,6 @@ str.$factory = function(arg, encoding){
             return $B.JSObj.__str__($B.jsobj2pyobj(arg))
         }
         var method = $B.search_slot(klass, 'tp_str', $B.NULL)
-        /*
-        if(method === $B.NULL){
-            method = $B.$getattr(arg, '__repr__', $B.NULL)
-        }
-        */
         if(method === $B.NULL){
             $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
         }
@@ -1523,7 +1519,7 @@ str_funcs.count = function(){
         }else{
             _slice = _b_.slice.$factory($.start, _self.length)
         }
-        substr = str.__getitem__.apply(null, [_self].concat(_slice))
+        substr = str.mp_subscript.apply(null, [_self].concat(_slice))
     }else{
         if(_self.length + sub.length == 0){
             return 1
@@ -2249,7 +2245,7 @@ str_funcs.replace = function(){
             return _new + elts.join(_new) + _new
         }
     }else{
-        elts = str.split(_self, old, count)
+        elts = str.tp_funcs.split(_self, old, count)
     }
 
     var res = _self,
@@ -2316,7 +2312,7 @@ str_funcs.rfind = function(){
 
 str_funcs.rindex = function(self){
     // Like rfind() but raises ValueError when the substring sub is not found
-    var res = str.rfind.apply(null, arguments)
+    var res = str.tp_funcs.rfind.apply(null, arguments)
     if(res == -1){
         $B.RAISE(_b_.ValueError, "substring not found")
     }
@@ -2360,7 +2356,7 @@ str_funcs.rsplit = function(){
     // Use split on the reverse of the string and of separator
     var rev_str = reverse(_self),
         rev_sep = sep === _b_.None ? sep : reverse(sep),
-        rev_res = str.split(rev_str, rev_sep, $.maxsplit)
+        rev_res = str.tp_funcs.split(rev_str, rev_sep, $.maxsplit)
 
     // Reverse the list, then each string inside the list
     rev_res.reverse()
@@ -2549,7 +2545,7 @@ str_funcs.strip = function(){
     if($.chars === _b_.None){
         return _self.trim()
     }
-    return str.rstrip(str.lstrip(_self, $.chars), $.chars)
+    return str.tp_funcs.rstrip(str.tp_funcs.lstrip(_self, $.chars), $.chars)
 }
 
 str_funcs.swapcase = function(self){

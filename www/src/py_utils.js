@@ -710,10 +710,15 @@ $B.check_nb_args_no_kw = function(name, expected, args){
     var len = args.length,
         last = args[len - 1]
     if(last && last.$kw){
-        if(last.$kw.length == 2 && Object.keys(last.$kw[0]).length == 0){
-            len--
-        }else{
+        len--
+        var first = last.$kw[0]
+        for(var key in last.$kw[0]){
             $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
+        }
+        for(var i = 1; i < last.$kw.length; i++){
+            for(var item of _b_.dict.$iter_items(last.$kw[i])){
+                $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
+            }
         }
     }
     if(len != expected){
@@ -1151,7 +1156,7 @@ $B.getitem_slice = function(obj, slice){
     var res
     var klass = $B.get_class(obj)
     if(Array.isArray(obj) && klass === _b_.list){
-        return _b_.list.$getitem(obj, slice)
+        return _b_.list.mp_subscript(obj, slice)
     }else if(typeof obj == "string"){
         return _b_.str.mp_subscript(obj, slice)
     }
@@ -1849,7 +1854,13 @@ $B.rich_comp = function(op, x, y){
         // left operand's method has priority."
         if($B.get_mro(y.ob_type).indexOf(x.ob_type) > -1){
             y_rev_func = $B.$getattr(y, rev_op)
-            res = $B.$call(y_rev_func, x)
+            try{
+                res = $B.$call(y_rev_func, x)
+            }catch(err){
+                console.log('error', 'x', x, 'y', y, 'op', op, 'y_rev_func', y_rev_func)
+                console.log(err)
+                throw err
+            }
             if(res !== _b_.NotImplemented){
                 return res
             }
@@ -2040,7 +2051,7 @@ $B.rich_op1 = function(op, x, y){
     }
     var rop_method = $B.search_in_mro(y_type, rop, null)
     if(rop_method !== null){
-        res = $B.$call(rop_method, x, y)
+        res = $B.$call(rop_method, y, x)
         if(res !== _b_.NotImplemented){
             return res
         }

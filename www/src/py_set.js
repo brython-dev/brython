@@ -564,17 +564,9 @@ _b_.set.tp_init = function(self, iterable){
 }
 
 _b_.set.tp_new = function(cls, iterable){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "set.__new__(): not enough arguments")
-    }
-    var self = make_new_set(cls)
-    if(iterable === undefined){
-        return self
-    }
-    if(cls === set){
-        $B.check_nb_args_no_kw('__new__', 2, arguments)
-    }
-    return self
+    var $ = $B.args('__new__', 2, {cls: null, iterable: null},
+            ['cls', 'iterable'], arguments, {iterable: _b_.None}, null, null)
+    return make_new_set($.cls)
 }
 
 _b_.set.nb_inplace_subtract = function(self, other){

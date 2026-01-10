@@ -2,50 +2,6 @@
 
 var _b_ = $B.builtins
 
-/*
-$B.set_class_attr = function(klass, attr, value, ob_type){
-    if(ob_type){
-        if(ob_type.$factory === undefined){
-            console.log('no factory', ob_type)
-        }
-        if(value !== _b_.None){
-            if(ob_type === $B.getset_descriptor){
-                value = ob_type.$factory(klass, attr)
-            }else{
-                value = ob_type.$factory(value, klass)
-            }
-        }
-    }
-    klass.dict[attr] = value
-}
-
-
-$B.make_class_dict = function(klass, methods){
-    console.log('make class dict', $B.get_name(klass))
-    var test = klass.tp_name == 'mappingproxy'
-    if(test){
-        console.log('make class attrs of', klass)
-    }
-    klass.dict = Object.create(null)
-    for(let attr in klass){
-        if($B.wrapper_methods[attr]){
-            // if klass.tp_iter is present, create entry klass.dict.__iter__
-            $B.wrapper_methods[attr](klass)
-        }
-    }
-    for(var cls_name in methods){
-        var cls = $B[cls_name]
-        for(var method of methods[cls_name]){
-            if(klass[method]){
-                $B.set_class_attr(klass, method, klass[method], cls)
-            }else{
-                // console.log('not implemented', method, 'for', klass.tp_name)
-            }
-        }
-    }
-}
-*/
-
 function wrap(dunder){
     return function(cls, attr){
         var func = cls[attr]
@@ -98,7 +54,9 @@ Object.assign($B.wrapper_methods,
         nb_invert: wrap('__invert__'),
         nb_matrix_multiply: wrap_with_reflected('__matmul__', '__rmatmul__'),
         nb_multiply: wrap_with_reflected('__mul__', '__rmul__'),
+        nb_negative: wrap('__neg__'),
         nb_or: wrap_with_reflected('__or__', '__ror__'),
+        nb_positive: wrap('__pos__'),
         nb_power: wrap_with_reflected('__pow__', '__rpow__'),
         nb_remainder: wrap_with_reflected('__mod__', '__rmod__'),
         nb_subtract: wrap_with_reflected('__sub__', '__rsub__'),

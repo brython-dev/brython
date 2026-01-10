@@ -773,17 +773,40 @@ float.$factory = function(value){
 }
 
 /* float start */
-_b_.float.tp_richcompare = function(self, other){
+_b_.float.tp_richcompare = function(self, other, op){
     var other_type = $B.get_class(other)
     var other_nb_float = $B.search_slot(other_type, 'nb_float', $B.NULL)
     if(other_nb_float === $B.NULL){
         return _b_.NotImplemented
     }
     var other_value = other_nb_float(other).value
-    if(other_value == self.value){
-        return 0
+
+    var res
+
+    switch(op){
+        case '__eq__':
+            res = self.value == other_value
+            break
+        case '__ne__':
+            res = self.value != other_value
+            break
+        case '__lt__':
+            res = self.value < other_value
+            break
+        case '__le__':
+            res = self.value <= other_value
+            break
+        case '__ge__':
+            res = self.value >= other_value
+            break
+        case '__gt__':
+            res = self.value > other_value
+            break
+        default:
+            res = _b_.NotImplemented
+            break
     }
-    return self.value > other_value ? 1 : -1
+    return res
     /*
     if($B.$isinstance(other, _b_.int)){
         if($B.is_long_int(other)){

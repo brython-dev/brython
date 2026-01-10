@@ -2371,7 +2371,7 @@ StringEnd.prototype.toString = function(){
 var cache = new Map()
 
 function compile(pattern, flags){
-    if($B.exact_type(pattern, Pattern){
+    if($B.exact_type(pattern, Pattern)){
         if(flags !== no_flag){
             $B.RAISE(_b_.ValueError, "no flags")
         }
@@ -2897,7 +2897,7 @@ function string2bytes(s){
 }
 
 function check_pattern_flags(pattern, flags){
-    if($B.exact_type(pattern, Pattern){
+    if($B.exact_type(pattern, Pattern)){
         if(flags !== no_flag){
             $B.RAISE(_b_.ValueError,
                 "cannot process flags argument with a compiled pattern")
@@ -3306,14 +3306,14 @@ GroupMO.prototype.groups = function(_default){
 }
 
 // Brython MatchObject
-var MatchObject = $B.make_type("Match",
-    function(mo){
-        return {
-            ob_type: MatchObject,
-            mo
-        }
+var MatchObject = $B.make_type("Match")
+
+MatchObject.$factory = function(mo){
+    return {
+        ob_type: MatchObject,
+        mo
     }
-)
+}
 
 MatchObject.__copy__ = function(self){
     return self
@@ -3860,7 +3860,7 @@ var module = {
                 flags = $.flags,
                 data
         pattern = check_pattern_flags(pattern, flags)
-        if($B.exact_type(pattern, Pattern){
+        if($B.exact_type(pattern, Pattern)){
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
@@ -3917,7 +3917,7 @@ var module = {
         var original_string = string,
             data
         pattern = check_pattern_flags(pattern, flags)
-        if($B.exact_type(pattern, Pattern){
+        if($B.exact_type(pattern, Pattern)){
             data = prepare({string})
             flags = pattern.flags
         }else{
@@ -3939,7 +3939,7 @@ var module = {
                 flags = $.flags
         pattern = check_pattern_flags(pattern, flags)
         var data
-        if($B.exact_type(pattern, Pattern){
+        if($B.exact_type(pattern, Pattern)){
             data = prepare({string})
             pattern = pattern.$pattern
         }else{
@@ -3971,7 +3971,7 @@ var module = {
                 flags = $.flags
         pattern = check_pattern_flags(pattern, flags)
         var data
-        if($B.exact_type(pattern, Pattern){
+        if($B.exact_type(pattern, Pattern)){
             data = prepare({string})
             pattern = pattern.$pattern
         }else{

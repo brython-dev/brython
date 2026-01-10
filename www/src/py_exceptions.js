@@ -613,7 +613,7 @@ BaseException_funcs.add_note = function(self, note){
 }
 
 BaseException_funcs.args_get = function(self){
-
+    return self.args
 }
 
 BaseException_funcs.args_set = function(self){
@@ -849,6 +849,20 @@ _b_.UnboundLocalError.tp_repr = function(self){
 }
 
 $B.set_func_names(_b_.UnboundLocalError, 'builtins')
+
+/* IndexError start */
+_b_.IndexError.tp_new = function(cls, ...args){
+    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {},
+                'args', 'kw')
+    return {
+        ob_type: cls,
+        args: $.args
+    }
+}
+
+var IndexError_funcs = _b_.IndexError.tp_funcs = {}
+
+/* IndexError end */
 
 // Shortcut to create a NameError
 $B.name_error = function(name){

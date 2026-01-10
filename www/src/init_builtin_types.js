@@ -15,7 +15,7 @@ function init_type(ns, name, data){
 var slots = [
     "tp_name",
     "tp_basicsize",
-    "tp_itersize",
+    "tp_itemsize",
     "tp_flags",
     "tp_weakrefoffset",
     "tp_base",

@@ -340,7 +340,6 @@ $B.obj_dict = function(obj, exclude){
 
 // Set attributes of klass methods
 $B.set_func_names = function(klass, module){
-    klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
             $B.add_function_infos(klass, attr)

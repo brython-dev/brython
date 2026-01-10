@@ -210,7 +210,9 @@ method.$factory = function(func, obj){
     */
 }
 
+/*
 method.__eq__ = function(self, other){
+    console.log('émthod eq', self, other)
     return self.$infos !== undefined &&
            other.$infos !== undefined &&
            self.$infos.__func__ === other.$infos.__func__ &&
@@ -220,6 +222,7 @@ method.__eq__ = function(self, other){
 method.__ne__ = function(self, other){
     return ! $B.method.__eq__(self, other)
 }
+*/
 
 method.__setattr__ = function(self, key){
     // Attempting to set an attribute on a method results in an AttributeError
@@ -232,8 +235,25 @@ method.__setattr__ = function(self, key){
 }
 
 /* method */
-$B.method.tp_richcompare = function(self){
-
+$B.method.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, method)){
+        return _b_.NotImplemented
+    }
+    var res
+    switch(op){
+        case '__eq__':
+            console.log('eq', self, other)
+            res = (self.obj === other.obj && self.func === other.func)
+            console.log('res', res)
+            break
+        case '__ne__':
+            res = (self.obj !== other.obj || self.func !== other.func)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+    return res
 }
 
 $B.method.tp_repr = function(self){
@@ -674,13 +694,7 @@ $B.builtin_function_or_method.tp_hash = function(self){
 }
 
 $B.builtin_function_or_method.tp_call = function(self, ...args){
-    try{
-        return self(...args)
-    }catch(err){
-        console.log('error', err)
-        console.log('call builtin func', self, 'args', args)
-        throw err
-    }
+    return self(...args)
 }
 
 var builtin_function_or_method_funcs = $B.builtin_function_or_method.tp_funcs = {}

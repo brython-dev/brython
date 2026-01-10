@@ -145,7 +145,7 @@ wrapper_descriptor = type(int.__repr__)
 slots = {
     'tp_name': "__name__",
     'tp_basicsize': "__basicsize__",
-    'tp_itersize': "__itemsize__",
+    'tp_itemsize': "__itemsize__",
     'tp_flags': "__flags__",
     'tp_weakrefoffset': "__weakrefoffset__",
     'tp_base': "__base__",

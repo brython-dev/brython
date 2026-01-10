@@ -19,39 +19,16 @@ Module.$factory = function(name, doc, $package){
 }
 
 $B.module_getattr = function(module, attr){
-    return _b_.dict.$getitem_string(module.md_dict, attr, $B.NULL)
+    return _b_.dict.$getitem_string(module.dict, attr, $B.NULL)
 }
 
 $B.module_setattr = function(module, attr, value){
-    _b_.dict.$setitem(module.md_dict, attr, value)
+    _b_.dict.$setitem(module.dict, attr, value)
 }
 
 $B.module_items = function(module){
-    return _b_.dict.$iter_items(module.md_dict)
+    return _b_.dict.$iter_items(module.dict)
 }
-
-Module.tp_setattroXXX = function(self, attr, value){
-    if(attr == 'stdout'){
-        console.log('set module attr', self, attr, value)
-    }
-    _b_.object.tp_setattro(self, attr, value)
-    // self[attr] = value // legacy
-    if(attr == 'stdout'){
-        console.log('after module setattr', Module.tp_getattro(self, attr), self[attr])
-    }
-
-    /*
-    if(self.__name__ == '__builtins__'){
-        // set a Python builtin
-        $B.builtins[attr] = value
-    }else if(self.__name__ == 'builtins'){
-        _b_[attr] = value
-    }else{
-        self[attr] = value
-    }
-    */
-}
-
 
 var module_funcs = $B.module.tp_funcs = {}
 
@@ -86,22 +63,16 @@ $B.module.tp_repr = function(self){
 }
 
 $B.module.tp_getattro = function(self, attr){
-    var res
-    if(self.md_dict){
-        res = _b_.dict.$get_string(self.md_dict, attr, $B.NULL)
-        if(res !== $B.NULL){
-            return res
-        }
+    if(self.dict === undefined){
+        console.log('no dict for module', self)
     }
-    /*
-    res = self[attr]
-    if(res !== undefined){
+    var res = _b_.object.tp_getattro(self, attr)
+    if(res !== $B.NULL){
         return res
     }
-    */
     // search with __getattr__ if defined in the module
-    var getattr = self.__getattr__
-    if(getattr !== undefined){
+    var getattr = $B.str_dict_get(self.dict, '__getattr__', $B.NULL)
+    if(getattr !== $B.NULL){
         return $B.$call(getattr, attr)
     }
     return $B.NULL
@@ -124,7 +95,7 @@ $B.module.tp_new = function(self){
         md_state: $B.NULL,
         md_weaklist: $B.NULL,
         md_name: $B.NULL,
-        md_dict: $B.empty_dict() // for module namespace
+        dict: $B.empty_dict() // for module namespace
     }
 }
 
@@ -147,12 +118,12 @@ module_funcs.__annotations___set = function(self){
 }
 
 module_funcs.__dict__ = function(self){
-    return self.md_dict
+    return self.dict
 }
 
 module_funcs.__dir__ = function(self){
     var names = []
-    for(var item of _b_.dict.$iter_items(self.md_dict)){
+    for(var item of _b_.dict.$iter_items(self.dict)){
         names.push(item.key)
     }
     return $B.$list(names.sort())
@@ -304,7 +275,7 @@ $B.$download_module = $download_module
 
 $B.addToImported = function(name, modobj){
     modobj.ob_type = Module
-    modobj.md_dict = $B.empty_dict()
+    modobj.dict = $B.empty_dict()
     /*
     if($B.imported[name]){
         for(var attr in $B.imported[name]){
@@ -345,6 +316,8 @@ function run_js(module_contents, path, _module){
     try{
         new Function(module_contents)()
     }catch(err){
+        console.log('error for module', _module)
+        console.log(module_contents)
         throw $B.exception(err)
     }
     var new_keys = (new Set(Object.keys(globalThis))).difference(keys_before)
@@ -429,7 +402,7 @@ function run_py(module_contents, path, module, compiled) {
     }catch(err){
         err.$frame_obj = err.$frame_obj || $B.frame_obj
         if($B.get_option('debug', err) > 2){
-            console.log(err + " for module " + module.__name__)
+            console.log('error', err, "\n for module " + module.__name__)
             console.log("module", module)
             console.log(root)
             // console.log(err)
@@ -1150,6 +1123,7 @@ function import_engine(mod_name, _path, from_stdlib){
                 console.log('error for module', module,
                     'loader', _loader, 'exec module', exec_module)
                 console.log(e)
+                console.log('frame obj', $B.frame_obj)
                 delete _sys_modules[_spec_name]
                 throw e
            }

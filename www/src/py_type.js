@@ -89,9 +89,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     }
     try{
         var kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
-                       $B.dict_from_jsobj(extra_kwargs))
+                       {$kw:[extra_kwargs]})
     }catch(err){
-        console.log('error in meta_new', meta_new)
+        console.log('error in meta_new', meta_new, extra_kwargs)
         throw err
     }
     kls.$subclasses = []
@@ -215,24 +215,38 @@ function calculate_metaclass(metatype, bases){
 }
 
 function shape_differs(t1, t2){
+    console.log('shape differs', t1, t2)
     return (
         t1.tp_basicsize != t2.tp_basicsize ||
         t1.tp_itemsize != t2.tp_itemsize
     )
 }
 
+/*
+From https://discuss.python.org/t/solid-bases-for-detecting-incompatible-base-classes/99280
+
+Every class has a single solid base. It is determined as follows:
+
+A class is its own solid base if it has the @solid_base decorator, or if it
+has a non-empty __slots__ definition.
+Otherwise, if there is a single base class, the solid base is the base’s solid
+base.
+Otherwise, determine the solid bases of all base classes. If there is only
+one, that is the solid base. If there are multiple, but one is a subclass of
+all others, the solid base is the subclass. Otherwise, the class cannot exist.
+*/
+
 function solid_base(type){
+    if($B.search_in_dict(type, '__slots__', $B.NULL) !== $B.NULL){
+        return type
+    }
     var base
     if(type.tp_base){
         base = solid_base(type.tp_base)
     }else{
         base = _b_.object
     }
-    if(shape_differs(type, base)){
-        return type
-    }else{
-        return base
-    }
+    return base
 }
 
 /* Calculate the best base amongst multiple base classes.
@@ -252,7 +266,7 @@ function best_base(bases){
             $B.RAISE(_b_.TypeError,
                 `type '${base.__name__}' is not an acceptable base type`)
         }
-        candidate = solid_base(base_i);
+        candidate = solid_base(base_i)
         if(winner == undefined){
             winner = candidate
             base = base_i
@@ -261,7 +275,8 @@ function best_base(bases){
         }else if(_b_.issubclass(candidate, winner)){
             winner = candidate
             base = base_i
-        }else {
+        }else{
+            console.log('bases', bases, '\n  winner', winner, '\n  candidate', candidate)
             $B.RAISE(_b_.TypeError,
                 "multiple bases have instance lay-out conflict")
         }
@@ -1410,7 +1425,9 @@ $B.slot2dunder = {
     tp_iter: '__iter__',
     tp_new: '__new__',
     tp_repr: '__repr__',
-    tp_descr_get: '__get__'
+    tp_descr_get: '__get__',
+    tp_setattro: '__setattr__',
+    tp_str: '__str__'
 }
 
 $B.dunder2slot = {}
@@ -1442,7 +1459,7 @@ $B.search_slot = function(cls, slot, _default){
             return klass[slot]
         }
         if(dunder){
-            var v = $B.search_slot(klass, dunder, $B.NULL)
+            var v = $B.str_dict_get(klass.dict, dunder, $B.NULL)
             if(v !== $B.NULL){
                 if(typeof v !== 'function'){
                     var v_type = $B.get_class(v)
@@ -1605,8 +1622,9 @@ _b_.type.nb_or = function(){
 _b_.type.tp_repr = function(kls){
     // $B.builtins_repr_check(type, arguments) // in brython_builtins.js
     var name = $B.get_name(kls)
-    var module = $B.str_dict_get(kls.dict, '__module__', $B.NULL)
-    var qualname = module === $B.NULL ? name : module + "." + name
+    var module = $B.$getattr(kls, '__module__', $B.NULL)
+    var qualname = (module === $B.NULL || module == 'builtins') ? name :
+        module + "." + name
     return "<class '" + qualname + "'>"
 }
 
@@ -1617,9 +1635,7 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    console.log('call type.tp_call, cls', cls, 'args', args, 'kw', kw)
-
-    var test = cls.tp_name === 'KeyError' // args !== undefined && Array.isArray(args) && args[0] === 'flags'
+    var test = false // cls.tp_name === 'SimpleNamespace' // args !== undefined && Array.isArray(args) && args[0] === 'flags'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -1639,23 +1655,26 @@ _b_.type.tp_call = function(){
     if(test){
         console.log('new_func', new_func)
     }
-    console.log('in tp_call, kw', $.kw, 'args', $.args)
-    console.log('call new_func', new_func)
+
     // create an instance with __new__
     var instance = new_func(cls, ...args, $B.dict2kwarg(kw)), //arguments),
         instance_class = $B.get_class(instance)
     if(test){
         console.log('instance of type', instance)
+        console.log('instance type is cls ?', instance_class === cls)
     }
     if(instance_class === cls){
         // call __init__ with the same parameters
         var init_func = $B.search_slot(cls, 'tp_init', $B.NULL)
+        if(test){
+            console.log('init func', init_func)
+        }
         if(init_func !== $B.NULL && init_func !== _b_.object.tp_init){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
             try{
                 if(kw_len > 0){
-                    var kwarg = {$kw: [kw.$strings]} // {$kw:[{x: 1}, locals.kw]}
+                    var kwarg = $B.dict2kwarg(kw) //{$kw: [kw.$strings]} // {$kw:[{x: 1}, locals.kw]}
                     init_func.call(null, instance, ...$.args, kwarg)
                 }else{
                     init_func.call(null, instance, ...$.args)
@@ -1671,7 +1690,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == '__mro__'
+    var test = false // name == '_member_map_'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1800,7 +1819,10 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         return type
     }
     if(res instanceof Object){
-        return type
+        if(test){
+            console.log('type.tp_new returns', res.type)
+        }
+        return res.type
     }
     //type = type_new_impl(ctx)
 
@@ -2001,7 +2023,13 @@ type_funcs.__itemsize__ = function(self){
 }
 
 type_funcs.__module___get = function(self){
-
+    if(self.dict){
+        var module = $B.str_dict_get(self.dict, '__module__', $B.NULL)
+        if(module !== $B.NULL){
+            return module
+        }
+    }
+    return 'builtins'
 }
 
 type_funcs.__module___set = function(self){
@@ -2099,7 +2127,29 @@ property.$factory = function(fget, fset, fdel, doc){
     return res
 }
 
-property.tp_init = function(){
+
+/* property start */
+_b_.property.tp_descr_set = function(self, obj, value){
+    if(self.fset === undefined){
+        var name = self.fget.$function_infos[$B.func_attrs.__name__]
+        var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
+                  'has no setter'
+        $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
+    }
+    $B.$call(self.fset, obj, value)
+}
+
+_b_.property.tp_descr_get = function(self, obj, type){
+    if(obj === _b_.None){
+        return self
+    }
+    if(self.fget === undefined){
+        $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
+    }
+    return $B.$call(self.fget, obj)
+}
+
+_b_.property.tp_init = function(){
     var $ = $B.args('__init__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
@@ -2139,28 +2189,70 @@ property.tp_init = function(){
     }
 }
 
-property.__get__ = function(self, kls){
-    if(self.fget === undefined){
-        $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
-    }
-    return $B.$call(self.fget, kls)
-}
-
-property.tp_new = function(cls){
+_b_.property.tp_new = function(cls){
     return {
         ob_type: cls
     }
 }
 
-property.__set__ = function(self, obj, value){
-    if(self.fset === undefined){
-        var name = self.fget.$function_infos[$B.func_attrs.__name__]
-        var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
-                  'has no setter'
-        $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
-    }
-    $B.$call(self.fset, obj, value)
+var property_funcs = _b_.property.tp_funcs = {}
+
+property_funcs.__doc__ = function(self){
+
 }
+
+property_funcs.__isabstractmethod___get = function(self){
+
+}
+
+property_funcs.__isabstractmethod___set = function(self){
+
+}
+
+property_funcs.__name___get = function(self){
+    console.log('property name', self)
+    return $B.$getattr(self.fget, '__name__')
+}
+
+property_funcs.__name___set = function(self){
+
+}
+
+property_funcs.__set_name__ = function(self){
+
+}
+
+property_funcs.deleter = function(self){
+    return self.deleter
+}
+
+property_funcs.fdel = function(self){
+    return self.fdel
+}
+
+property_funcs.fget = function(self){
+    return self.fget
+}
+
+property_funcs.fset = function(self){
+    return self.fset
+}
+
+property_funcs.getter = function(self){
+    return self.getter
+}
+
+property_funcs.setter = function(self){
+    return self.setter
+}
+
+_b_.property.tp_methods = ["getter", "setter", "deleter", "__set_name__"]
+
+_b_.property.tp_members = ["fget", "fset", "fdel", "__doc__"]
+
+_b_.property.tp_getset = ["__name__", "__isabstractmethod__"]
+
+/* property end */
 
 $B.set_func_names(property, "builtins")
 

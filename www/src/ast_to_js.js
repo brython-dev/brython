@@ -3439,7 +3439,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         }
     }
 
-    js += `\nvar __file__ = '${scopes.filename ?? "<string>"}'\n` +
+    js += `\nvar __file__ = locals.__file__ = '${scopes.filename ?? "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
@@ -4015,7 +4015,7 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
         }
     }
     var method = opclass2dunder[this.op.constructor.$name]
-    return `$B.$getattr($B.get_class(locals.$result = ${operand}), '${method}')(locals.$result)`
+    return `$B.$call($B.$getattr($B.get_class(locals.$result = ${operand}), '${method}'), locals.$result)`
 }
 
 $B.ast.While.prototype.to_js = function(scopes){

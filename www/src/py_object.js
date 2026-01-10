@@ -263,7 +263,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__dict__' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == 'args' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -400,7 +400,6 @@ object_funcs.__dir__ = function(self){
     if(itsclass != NULL){
         $B.merge_class_dict(dict, itsclass)
     }
-    console.log('make list from', dict)
     result = $B.$list(Array.from($B.make_js_iterator(dict)))
     return result
 }

@@ -482,9 +482,6 @@ class EnumType(type):
         # inherited __new__ unless a new __new__ is defined (or the resulting
         # class will fail).
         #
-        test = cls == 'EnumCheck'
-        if test:
-            print('enum 487, ENumType.__new__', cls, bases)
         if _simple:
             return super().__new__(metacls, cls, bases, classdict, **kwds)
         #
@@ -1791,7 +1788,6 @@ def _simple_enum(etype=Enum, *, boundary=None, use_args=None):
         # things break (such as pickle)
         # however, if the method is defined in the Enum itself, don't replace
         # it
-        print('enum 1791, call type', cls_name, 'etype', etype)
         enum_class = type(cls_name, (etype, ), body, boundary=boundary, _simple=True)
         for name in ('__repr__', '__str__', '__format__', '__reduce_ex__'):
             if name not in body:

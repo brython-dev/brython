@@ -534,6 +534,19 @@ function set_script_id(script){
     return id
 }
 
+$B.get_html = function(){
+    console.log('debug', $B.get_option('debug'))
+    var this_url = window.location.href
+    var xhr = new XMLHttpRequest()
+    var res
+    xhr.open('GET', this_url, false)
+    xhr.onreadystatechange = function(){
+        res = this.responseText
+    }
+    xhr.send()
+    return res
+}
+
 var brython = $B.parser.brython = function(options){
     $B.$options = $B.parse_options(options)
 

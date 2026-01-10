@@ -31,30 +31,6 @@ function long_long_meth(self){
     return int_value(self)
 }
 
-
-
-
-
-
-
-
-
-function int___round__(){
-
-}
-
-function int___getnewargs__(){
-
-}
-
-function int___format__(){
-
-}
-
-function int___sizeof__(){
-
-}
-
 function int_is_integer(){
     return true
 }
@@ -182,12 +158,6 @@ int.$getnewargs = function(self){
 int.__getnewargs__ = function(){
     return int.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
 }
-
-int.__init__ = () => _b_.None
-
-
-
-
 
 int.__mul__ = Function('self', 'other',
     op_model.replace(/\+/g, '*').replace(/add/g, "mul"))
@@ -532,7 +502,7 @@ _b_.int.tp_richcompare = function(a, b, op){
     /* if a < b, return a negative number
        if a == b, return 0
        if a > b, return a positive number */
-    var result
+    var res
     if(typeof a == 'number' || $B.$isinstance(a, int)){
         a = int_value(a)
     }else if($B.is_long_int(other)){
@@ -1218,17 +1188,16 @@ _b_.bool.tp_repr = function(self){
     return self ? "True" : "False"
 }
 
-_b_.bool.tp_new = function(cls, value) {
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "bool.__new__(): not enough arguments")
-    }else if(!$B.$isinstance(cls, _b_.type)) {
+_b_.bool.tp_new = function(cls, value){
+    var $ = $B.args('__new__', 2, {cls: null, value: null}, ['cls', 'value'],
+                arguments, {}, null, null)
+    var cls = $.cls,
+        value = $.value
+    if(!$B.$isinstance(cls, _b_.type)) {
         $B.RAISE(_b_.TypeError, `bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
     }else if(!_b_.issubclass(cls, bool)) {
         let class_name = $B.class_name(cls)
         $B.RAISE(_b_.TypeError, `bool.__new__(${class_name}): ${class_name} is not a subtype of bool`)
-    }
-    if(arguments.length > 2){
-        $B.RAISE(_b_.TypeError, `bool expected at most 1 argument, got ${arguments.length - 1}`)
     }
     return bool.$factory(value)
 }

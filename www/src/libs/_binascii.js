@@ -189,6 +189,7 @@ var module = {
 module.hexlify = module.b2a_hex
 module.unhexlify = module.a2b_hex
 
-$B.imported._binascii = module
+$B.addToImported('_binascii', module)
+
 }
 )(__BRYTHON__)

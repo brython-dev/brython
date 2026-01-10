@@ -1363,7 +1363,6 @@
         // add class and __str__
         module_obj.ob_type = $B.module
         module_obj.dict = $B.empty_dict()
-        module_obj.md_dict = $B.empty_dict()
         $B.imported[name] = module_obj
         // set attribute "name" of functions
         for(var attr in module_obj){
@@ -1381,7 +1380,7 @@
                     }
                 )
             }
-            _b_.dict.$setitem(module_obj.md_dict, attr, module_obj[attr])
+            _b_.dict.$setitem(module_obj.dict, attr, module_obj[attr])
         }
         module_obj.__name__ = name
     }
@@ -1399,16 +1398,8 @@
         'Python builtins')
 
     for(let attr in _b_){
-        _b_.__builtins__[attr] = _b_[attr]
+        $B.module_setattr(_b_.__builtins__, attr, _b_[attr])
         $B.builtins_scope.binding[attr] = true
-        if(_b_[attr].$is_class){
-            if(! _b_[attr].tp_bases){
-                _b_[attr].tp_bases = [_b_.object]
-            }
-        }
-    }
-    _b_.__builtins__.__setattr__ = function(attr, value){
-        _b_[attr] = value
     }
 
     // Attributes of __BRYTHON__ are Python lists
