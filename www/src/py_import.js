@@ -566,7 +566,6 @@ VFSLoader_funcs.exec_module = function(self, modobj){
         console.log('no module')
         console.log(Error('trace').stack)
     }
-    console.log('VFS loader', self, modobj)
     var stored = modobj.__spec__.loader_state.stored,
         timestamp = modobj.__spec__.loader_state.timestamp
     var ext = stored[0],
@@ -1142,7 +1141,7 @@ function import_error(mod_name){
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist){
-    var $test = mod_name == "bisect"
+    var $test = false // mod_name == "bisect"
     if($test){console.log("__import__", mod_name, 'fromlist', fromlist)}
     // Main entry point for __import__
     //
@@ -1319,7 +1318,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'browser' // && fromlist.length == 1 && fromlist[0] == "timer"
+    var test = mod_name == 'c' // && fromlist.length == 1 && fromlist[0] == "timer"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
@@ -1474,9 +1473,13 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
         }
         if(__all__ === thunk){
             // from mod_name import * ... when __all__ is not defined
-            for(var attr in modobj){
+            for(var item of _b_.dict.$iter_items(modobj.dict)){
+                var attr = item.key
                 if(attr[0] !== "_"){
-                    locals[attr] = modobj[attr]
+                    locals[attr] = item.value
+                    if(test){
+                        console.log('set attr', attr, 'to locals', locals)
+                    }
                 }
             }
         }else{

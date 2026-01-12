@@ -290,7 +290,7 @@ function set_symmetric_difference_update(so, other){
 
 set.__class_getitem__ = $B.$class_getitem
 
-set.__eq__ = function(self, other){
+function set_eq(self, other){
     if($B.$isinstance(other, [_b_.set, _b_.frozenset])){
       if(self.$used != other.$used){
           return false
@@ -335,23 +335,42 @@ set.__eq__ = function(self, other){
     return _b_.NotImplemented
 }
 
-set.__format__ = function(self){
-    return set.__repr__(self)
+function set_le(self, other){
+    // Test whether every element in the set is in other.
+    if($B.$isinstance(other, [set, frozenset])){
+        return set.issubset(self, other)
+    }
+    return _b_.NotImplemented
 }
 
-set.__ge__ = function(self, other){
+
+function set_lt(self, other){
+    if($B.$isinstance(other, [set, frozenset])){
+        return set.__le__(self, other) &&
+            set.__len__(self) < set.__len__(other)
+    }else{
+        return _b_.NotImplemented
+    }
+}
+
+function set_ge(self, other){
     if($B.$isinstance(other, [set, frozenset])){
         return set.__le__(other, self)
     }
     return _b_.NotImplemented
 }
 
-set.__gt__ = function(self, other){
+function set_gt(self, other){
     if($B.$isinstance(other, [set, frozenset])){
         return set.__lt__(other, self)
     }
     return _b_.NotImplemented
 }
+
+set.__format__ = function(self){
+    return set.__repr__(self)
+}
+
 
 var set_iterator = $B.make_builtin_class('set_iterator')
 
@@ -389,24 +408,6 @@ function set_make_items(so){
         items = items.concat(so.$store[hash])
     }
     return $B.$list(items)
-}
-
-set.__le__ = function(self, other){
-    // Test whether every element in the set is in other.
-    if($B.$isinstance(other, [set, frozenset])){
-        return set.issubset(self, other)
-    }
-    return _b_.NotImplemented
-}
-
-
-set.__lt__ = function(self, other){
-    if($B.$isinstance(other, [set, frozenset])){
-        return set.__le__(self, other) &&
-            set.__len__(self) < set.__len__(other)
-    }else{
-        return _b_.NotImplemented
-    }
 }
 
 set.__rand__ = function(self, other){
@@ -489,8 +490,34 @@ set.$factory = function(){
 }
 
 /* set start */
-_b_.set.tp_richcompare = function(self){
-
+_b_.set.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, [_b_.set, _b_.frozenset])){
+        return _b_.NotImplemented
+    }
+    var res
+    switch(op){
+        case '__eq__':
+            res = set_eq(self, other)
+            break
+        case '__ne__':
+            res = ! set_eq(self, other)
+            break
+        case '__lt_':
+            res = set_lt(self, other)
+            break
+        case '__le__':
+            res = set_le(self, other)
+            break
+        case '__ge__':
+            res = set_ge(self, other)
+            break
+        case '__gt__':
+            res = set_gt(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
 }
 
 _b_.set.nb_subtract = function(self, other){
@@ -919,12 +946,14 @@ frozenset.tp_init = function(){
 }
 
 frozenset.tp_new = function(cls, iterable){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "frozenset.__new__(): not enough arguments")
-    }
+    var $ = $B.args('__new__', 2, {cls: null, iterable: null},
+                ['cls', 'iterable'], arguments, {iterable: _b_.None}, null,
+                null)
+    var cls = $.cls,
+        iterable = $.iterable
     var self = make_new_set(cls)
 
-    if(iterable === undefined){
+    if(iterable === _b_.None){
         return self
     }
 

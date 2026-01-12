@@ -30,7 +30,7 @@ function wrap_with_reflected(dunder, rdunder){
         $B.str_dict_set(cls.dict, rdunder, $B.wrapper_descriptor.$factory(
             cls,
             rdunder,
-            (a, b) => func(b, a)
+            func
         ))
     }
 }
@@ -38,6 +38,8 @@ function wrap_with_reflected(dunder, rdunder){
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
+        bf_getbuffer: wrap('__buffer__'),
+        bf_releasebuffer: wrap('__release_buffer__'),
         mp_length: wrap('__len__'),
         mp_subscript: wrap('__getitem__'),
         mp_ass_subscript: make_setitem_delitem,
@@ -176,10 +178,6 @@ function make_richcompare(cls){
 }
 
 $B.finalize_type = function(cls){
-    if(cls.tp_name == 'JSArray_iterator'){
-        console.log('finalize', cls)
-    }
-
     cls.tp_mro = $B.make_mro(cls)
     cls.dict = $B.empty_dict()
     if(cls.tp_funcs){
@@ -228,9 +226,6 @@ $B.finalize_type = function(cls){
         }
         if(cls.classmethods){
             for(var descr of cls.classmethods){
-                if(descr == '__init_subclass__'){
-                    console.log('set init subclass', cls, cls.tp_funcs[descr])
-                }
                 $B.str_dict_set(cls.dict, descr, {
                     ob_type: $B.classmethod_descriptor,
                     d_name: descr,
@@ -251,34 +246,8 @@ $B.finalize_type = function(cls){
             $B.wrapper_methods[slot](cls, slot)
         }
     }
-    /*
-    if(cls.tp_getset){
-        for(var getset of cls.tp_getset){
-            var [name, get, set] = getset
-            cls.dict[name] = $B.getset_descriptor.$factory(cls, name, [get, set])
-        }
-    }
-    if(cls.tp_methods){
-        for(var method of cls.tp_methods){
-            cls.dict[name] = {
-                ob_type: $B.method_descriptor,
-                method,
-                ml: {ml_name: name},
-                cls
-            }
-            method.ob_type = $B.builtin_method
-            method.self = cls.dict[name]
-        }
-    }
-    for(var slot in $B.wrapper_methods){
-        if(cls[slot]){
-            $B.wrapper_methods[slot](cls, slot)
-        }
-    }
-    */
 }
 
-console.log('created types', $B.created_types)
 
 for(var ns of [$B.builtin_types, $B.created_types]){
     for(var name in ns){

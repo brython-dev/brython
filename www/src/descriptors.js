@@ -676,8 +676,20 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 /* wrapper_descriptor end */
 
 /* builtin_function_or_method start */
-$B.builtin_function_or_method.tp_richcompare = function(self){
-
+$B.builtin_function_or_method.tp_richcompare = function(self, other, op){
+    if((op != '__eq__' && op != '__ne__') ||
+        ! $B.$isinstance(self, $B.builtin_function_or_method) ||
+        ! $B.$isinstance(other, $B.builtin_function_or_method)){
+        return _b_.NotImplemented
+    }
+    var res
+    var eq = self === other
+    if(op == '__eq__'){
+        res = eq
+    }else{
+        res = ! eq
+    }
+    return res
 }
 
 $B.builtin_function_or_method.tp_repr = function(self){

@@ -1122,7 +1122,7 @@ $B.$getitem1 = function(obj, item){
         }
         var class_gi = $B.type_getattribute(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
-            return $B.$call(class_gi, obj, item)
+            return $B.$call(class_gi, item)
         }else if($B.get_class(obj) !== $B.JSObj){
             class_gi = $B.$getattr($B.get_class(obj), "__getitem__", _b_.None)
             if(class_gi !== _b_.None){
@@ -1200,13 +1200,13 @@ $B.$setitem = function(obj, item, value, inum){
             throw err
         }
     }
-    var si = $B.$getattr($B.get_class(obj), "__setitem__", null)
-    if(si === null || typeof si != 'function'){
+    var setitem = $B.$getattr($B.get_class(obj), "__setitem__", $B.NULL)
+    if(setitem === $B.NULL){
         $B.set_inum(inum)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object does not support item assignment")
     }
-    return si(obj, item, value)
+    return $B.$call(setitem, obj, item, value)
 }
 
 $B.set_inum = function(inum){
@@ -1884,8 +1884,17 @@ $B.rich_comp = function(op, x, y){
                 $B.RAISE(_b_.TypeError, `not callable {op}`)
             }
         }else{
-            res = in_mro(x, y)
+            try{
+                res = in_mro(x, y)
+            }catch(err){
+                console.log('error, in_mro', in_mro, 'x', x, 'y', y)
+                throw err
+            }
         }
+    }
+    var test = false // y === _b_.None && op == '__gt__'
+    if(test){
+        console.log('rich comp', x, y, op, 'res', res)
     }
     if(res !== _b_.NotImplemented){
         return res

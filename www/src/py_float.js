@@ -547,52 +547,6 @@ float.tp_setattro = function(self, attr, value){
 }
 */
 
-// comparison methods
-var comp_func_body = `
-var $B = __BRYTHON__,
-    _b_ = $B.builtins
-if($B.$isinstance(other, _b_.int)){
-    if($B.is_long_int(other)){
-        return self.value > parseInt(other.value)
-    }
-    return self.value > other.valueOf()
-}
-if($B.$isinstance(other, _b_.float)){
-    return self.value > other.value
-}
-
-if($B.$isinstance(other, _b_.bool)) {
-    return self.value > _b_.bool.__hash__(other)
-}
-
-var int_method = $B.$getattr(other, "__int__", null)
-if(int_method !== null){
-    var v = int_method()
-    return _b_.int.__gt__(self.value, v)
-}
-var index_method = $B.$getattr(other, "__index__", null)
-if(index_method !== null){
-    var v = index_method()
-    return _b_.int.__gt__(self.value, v)
-}
-
-// See if other has the opposite operator, eg <= for >
-var inv_op = $B.$getattr(other, "__le__", _b_.None)
-if(inv_op !== _b_.None){
-    return inv_op(self)
-}
-
-$B.RAISE(_b_.TypeError,
-    "unorderable types: float() > " + $B.class_name(other) + "()")
-`
-
-for(let op in $B.$comps){
-    let body = comp_func_body.replace(/>/gm, op).
-                  replace(/__gt__/gm, `__${$B.$comps[op]}__`).
-                  replace(/__le__/, `__${$B.$inv_comps[op]}__`)
-    float[`__${$B.$comps[op]}__`] = Function('self', 'other', body)
-}
-
 // add "reflected" methods
 var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
     "lshift", "rshift", "and", "xor", "or", "divmod"]

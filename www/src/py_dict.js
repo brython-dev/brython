@@ -691,14 +691,6 @@ function add_iterable(d, js_iterable){
     }
 }
 
-
-
-
-dict.__ne__ = function(self, other){
-    var res = dict.__eq__(self, other)
-    return res === _b_.NotImplemented ? res : ! res
-}
-
 dict.$iter_items_reversed = function*(d){
     var version = d.$version
     if(d.$all_str){

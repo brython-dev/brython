@@ -718,7 +718,9 @@ _b_.list.sq_contains = sq_contains
 
 var list_funcs = _b_.list.tp_funcs = {}
 
-list_funcs.__class_getitem__ = $B.$class_getitem
+list_funcs.__class_getitem__ = function(cls, items){
+    return $B.$class_getitem(cls, items)
+}
 
 list_funcs.__reversed__ = function(self){
     return list_reverseiterator.$factory(self)
@@ -978,8 +980,6 @@ for(let attr in list){
     }
 }
 
-tuple.__class_getitem__ = $B.$class_getitem
-
 function c_mul(a, b){
     var s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
     return parseInt(s.substr(0, s.length - 1), 16)
@@ -1067,7 +1067,7 @@ _b_.tuple.sq_contains = function(){
 var tuple_funcs = _b_.tuple.tp_funcs = {}
 
 tuple_funcs.__class_getitem__ = function(self){
-
+    return $B.$class_getitem.apply(null, arguments)
 }
 
 tuple_funcs.__getnewargs__ = function(self){

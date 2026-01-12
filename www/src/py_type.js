@@ -1493,8 +1493,6 @@ $B.type_getattribute = function(klass, attr, _default){
 // __name__ is a data descriptor
 type.tp_name = 'type'
 
-type.__qualname__ = 'type'
-
 type.__ror__ = function(){
     var len = arguments.length
     if(len != 1){
@@ -1690,7 +1688,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == '_member_map_'
+    var test = false // name == '__qualname__'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1995,8 +1993,7 @@ type_funcs.__dir__ = function(klass){
 }
 
 type_funcs.__doc___get = function(cls){
-    console.log('get doc')
-    return cls.__doc__
+    return $B.str_dict_get(cls.dict, '__doc__', _b_.None)
 }
 
 type_funcs.__doc___set = function(cls, value){
@@ -2407,49 +2404,240 @@ $B.make_iterator_class = function(name, reverse){
 
 
 // PEP 585
-$B.GenericAlias = $B.make_builtin_class("GenericAlias")
+function _Py_make_parameters(args){
+    var is_args_list = $B.$isinstance(args, _b_.list)
+    var tuple_args
+    if(is_args_list){
+        args = tuple_args = $B.fast_tuple(args)
+    }
+    var nargs = args.length
+    var len = nargs
+    var parameters = $B.fast_tuple()
+    var iparam = 0
+    for(let iarg = 0; iarg < nargs; iarg++){
+        let t = args[iarg]
+        // We don't want __parameters__ descriptor of a bare Python class.
+        if($B.is_type(t)){
+            continue
+        }
+        var rc = $B.$getattr(t, '__typing_subst__', $B.NULL)
+        if(rc !== $B.NULL){
+            parameters.push(t)
+            iparam++
+        }else{
+            var subparams = $B.$getattr(t, '__parameters__', $B.NULL)
+            if(subparams === $B.NULL &&
+                    $B.$isinstance(t, [_b_.tuple, _b_.list])){
+                // Recursively call _Py_make_parameters for lists/tuples and
+                // add the results to the current parameters.
+                subparams = _Py_make_parameters(t)
+            }
+            if(subparams && $B.$isinstance(subparams, _b_.tuple)){
+                var len2 = subparams.length
+                var needed = len2 - 1 - (iarg - iparam)
+                if(needed > 0){
+                    len += needed;
+                    _PyTuple_Resize(parameters, len)
+                }
+                for(let t2 of subparams){
+                    parameters.push(t2)
+                    iparam++
+                }
+            }
+        }
+    }
+    if(iparam < len){
+        _PyTuple_Resize(parameters, iparam)
+    }
+    return parameters
+}
 
-$B.GenericAlias.$factory = function(origin_class, items){
-    var res = {
-        ob_type: $B.GenericAlias,
-        origin_class,
-        items
+function _unpacked_tuple_args(arg){
+    var result
+    // Fast path
+    if($B.exact_type(arg, $B.GenericAlias) &&
+            arg.starred &&
+            arg.origin == _b_.tuple){
+        return arg.args
+    }
+
+    var result = $B.$getattr(arg, '__typing_unpacked_tuple_args__', $B.NULL)
+    if(result !== $B.NULL) {
+        if(result === _b_.None){
+            return $B.NULL
+        }
+        return result
+    }
+    return $B.NULL
+}
+
+function _unpack_args(item){
+    var newargs = []
+    var is_tuple = $B.$isinstance(item, _b_.tuple)
+    var nitems = is_tuple ? item.length : 1
+    var argitems = is_tuple ? item[0] : item
+    for(let item of argitems){
+        if(! $B.is_type(item)){
+            var subargs = _unpacked_tuple_args(item)
+            if (subargs !== $B.NULL &&
+                    $B.$isinstance(subargs, _b_.tuple) &&
+                    ! (subargs.length > 0 &&
+                        subargs[subargs.length - 1] === $B.ellipsis)){
+                newargs = newargs.concat(subargs)
+                continue
+            }
+        }
+        newargs.push(item)
+    }
+    return $B.$list(newargs)
+}
+
+function _is_unpacked_typevartuple(arg){
+    var tmp
+    if($B.is_type(arg)){ // TODO: Add test
+        return 0
+    }
+    var tmp = $B.$getattr(arg, '__typing_is_unpacked_typevartuple__', $B.NULL)
+    if(tmp !== $B.NULL){
+        res = !!tmp
     }
     return res
 }
 
-$B.GenericAlias.__args__ = self => $B.fast_tuple(self.items)
-
-$B.GenericAlias.__call__ = function(self, ...args){
-    return self.origin_class.$factory.apply(null, args)
-}
-
-$B.GenericAlias.__eq__ = function(self, other){
-    if(! $B.$isinstance(other, $B.GenericAlias)){
-        return false
+function subs_tvars(obj, params, argitems, nargs){
+    var subparams
+    var subparams = $B.$getattr(obj, '__parameters__', $B.NULL)
+    if(subparams !== $B.NULL &&
+            $B.$isinstance(subparams, _b_.tuple) &&
+            subparams.length > 0){
+        var nparams = params.length
+        var nsubargs = subparams.length
+        var subargs = $B.fast_tuple()
+        var j = 0
+        for(let arg of subparams){
+            var iparam = tuple_index(params, nparams, arg)
+            if(iparam >= 0){
+                var param = params[iparam]
+                arg = argitems[iparam]
+                if($B.get_class(param).tp_iter && $B.$isinstance(arg, _b_.tuple)){  // TypeVarTuple
+                    j = tuple_extend(subargs, j,
+                                    arg[0],
+                                    arg.length)
+                    continue
+                }
+            }
+            subargs[j] = arg
+            j++;
+        }
+        obj = PyObject_GetItem(obj, subargs);
     }
-    return $B.rich_comp("__eq__", self.origin_class, other.origin_class) &&
-        $B.rich_comp("__eq__", self.items, other.items)
+    return obj
 }
 
-$B.GenericAlias.__getitem__ = function(self, item){
-    $B.RAISE(_b_.TypeError, "descriptor '__getitem__' for '" +
-        self.origin_class.__name__ +"' objects doesn't apply to a '" +
-        $B.class_name(item) +"' object")
+function _Py_subs_parameters(self, args, parameters, item){
+    var nparams = parameters.length
+    if(nparams == 0){
+        $B.RAISE(_b_.TypeError,
+            `${_b_.repr(self)} is not a generic class`
+        )
+    }
+    item = _unpack_args(item)
+    for(let param of parameters) {
+        var tmp
+        var prepare = $B.$getattr(param, '__typing_prepare_subst__', $B.NULL)
+        if (prepare !== $B.NULL && prepare != _b_.None){
+            tmp = $B.$call(prepare, self, item)
+            item = tmp
+        }
+    }
+    var is_tuple = $B.$isinstance(item, _b_.tuple)
+    var nitems = is_tuple ? item.length : 1
+    var argitems = is_tuple ? item[0] : item
+    if(nitems != nparams){
+        var qualif = nitems > nparams ? "many" : "few"
+        $B.RAISE(_b_.TypeError,
+            `Too ${qualif} arguments for ${_b_.repr(self)}; ` +
+            `actual ${nitems}, expected ${nparams}`
+        )
+    }
+    /* Replace all type variables (specified by parameters)
+       with corresponding values specified by argitems.
+        t = list[T];          t[int]      -> newargs = [int]
+        t = dict[str, T];     t[int]      -> newargs = [str, int]
+        t = dict[T, list[S]]; t[str, int] -> newargs = [str, list[int]]
+        t = list[[T]];        t[str]      -> newargs = [[str]]
+     */
+    var is_args_list = $B.$isinstance(args, _b_.list)
+    var tuple_args
+    if(is_args_list){
+        args = tuple_args = $B.fats_tuple(args)
+    }
+    var nargs = args.length
+    var newargs = $B.fast_tuple()
+    for(let iarg = 0, jarg = 0; iarg < nargs; iarg++){
+        var arg = args[iarg]
+        if($B.is_type(arg)){
+            newargs[jarg] = arg
+            jarg++
+            continue
+        }
+        // Recursively substitute params in lists/tuples.
+        if($B.$isinstance(arg, [_b_.tuple, _b_.list])){
+            var subargs = _Py_subs_parameters(self, arg, parameters, item)
+            if($B.$isinstance(arg, _b_.tuple)){
+                newargs[jarg] = subargs
+            }else{
+                // _Py_subs_parameters returns a tuple. If the original arg was a list,
+                // convert subargs to a list as well.
+                newargs[jarg] = $B.$list(subargs)
+            }
+            jarg++
+            continue
+        }
+        var unpack = _is_unpacked_typevartuple(arg);
+        var subst = $B.$getattr(arg, '__typing_subst__', $B.NULL)
+        if(subst !== $B.NULL){
+            var iparam = tuple_index(parameters, nparams, arg);
+            arg = $B.$call(subst, argitems[iparam])
+        }else{
+            arg = subs_tvars(arg, parameters, argitems, nitems);
+        }
+        if(unpack){
+            if(! $B.$isinstance(arg, _b_.tuple)){
+                var original = args[iarg]
+                $B.RAISE(_b_.TypeError,
+                    `expected __typing_subst__ of ${_b_.repr(original)} ` +
+                    `objects to return a tuple, not ${_b_.repr(arg)}`
+                )
+            }
+            jarg = tuple_extend(newargs, jarg,
+                    arg[0], arg.length)
+        }else{
+            newargs[jarg] = arg
+            jarg++
+        }
+    }
+    return newargs
+}
+
+$B.GenericAlias = $B.make_builtin_class("types.GenericAlias")
+
+$B.GenericAlias.$factory = function(origin, args){
+    var res = {
+        ob_type: $B.GenericAlias,
+        origin,
+        args
+    }
+    return res
+}
+
+function GenericAlias_eq(self, other){
+    return $B.rich_comp("__eq__", self.origin, other.origin) &&
+        $B.rich_comp("__eq__", self.args, other.args)
 }
 
 $B.GenericAlias.__mro_entries__ = function(self){
-    return $B.fast_tuple([self.origin_class])
-}
-
-$B.GenericAlias.tp_new = function(origin_class, items){
-    var res = {
-        ob_type: $B.GenericAlias,
-        origin_class,
-        items,
-        $is_class: true
-    }
-    return res
+    return $B.fast_tuple([self.origin])
 }
 
 $B.GenericAlias.__or__ = function(){
@@ -2458,34 +2646,178 @@ $B.GenericAlias.__or__ = function(){
     return $B.UnionType.$factory([$.self, $.other])
 }
 
-$B.GenericAlias.__origin__ = self => self.origin_class
-
 // In PEP 585 : "a lazily computed tuple (possibly empty) of unique
 // type variables found in __args__", but what are "unique type
 // variables" ?
 $B.GenericAlias.__parameters__ = self => $B.fast_tuple([])
 
+var ga_attr_exceptions = [
+    "__class__",
+    "__origin__",
+    "__args__",
+    "__unpacked__",
+    "__parameters__",
+    "__typing_unpacked_tuple_args__",
+    "__mro_entries__",
+    "__reduce_ex__",  // needed so we don't look up object.__reduce_ex__
+    "__reduce__"
+]
+
+var ga_attr_blocked = [
+    "__bases__",
+    "__copy__",
+    "__deepcopy__"
+]
+
+/* GenericAlias start */
+$B.GenericAlias.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, $B.GenericAlias)){
+        return _b_.NotImplemented
+    }
+    var res
+    switch(op){
+        case '__eq__':
+            res = GenericAlias_eq(self, other)
+            break
+        case '__ne__':
+            res = ! GenericAlias_eq(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+    return res
+}
+
+$B.GenericAlias.nb_or = function(self){
+
+}
+
 $B.GenericAlias.tp_repr = function(self){
-    var items = Array.isArray(self.items) ? self.items : [self.items]
+    var args = Array.isArray(self.args) ? self.args : [self.args]
     var reprs = []
-    for(var item of items){
-        if(item === _b_.Ellipsis){
+    for(var arg of args){
+        if(arg === _b_.Ellipsis){
             reprs.push('...')
         }else{
-            if($B.is_type(item)){
-                reprs.push($B.get_name(item))
+            if($B.is_type(arg)){
+                reprs.push($B.get_name(arg))
             }else{
-                reprs.push(_b_.repr(item))
+                reprs.push(_b_.repr(arg))
             }
         }
     }
-    var iv = $B.$getattr(self.origin_class, '__infer_variance__', true)
+    var iv = $B.$getattr(self.origin, '__infer_variance__', true)
     var prefix = iv ? '' : '~'
-    return prefix + $B.$getattr(self.origin_class, '__qualname__') + '[' +
+    return prefix + $B.$getattr(self.origin, '__qualname__') + '[' +
         reprs.join(", ") + ']'
 }
 
-$B.GenericAlias.__type_params__ = self => $B.$getattr(self.origin_class, '__type_params__')
+$B.GenericAlias.tp_hash = function(self){
+
+}
+
+$B.GenericAlias.tp_call = function(self, ...args){
+    return $B.$call(self.origin, ...args)
+}
+
+$B.GenericAlias.tp_getattro = function(self, name){
+    if($B.exact_type(name, _b_.str)){
+        // When we check blocked attrs, we don't allow to proxy them to `__origin__`.
+        // Otherwise, we can break existing code.
+        if(ga_attr_blocked.includes(name)){
+            return _b_.object.tp_getattro(self, name)
+        }
+        // When we see own attrs, it has a priority over `__origin__`'s attr.
+        if(ga_attr_exceptions.includes(name)){
+            return _b_.object.tp_getattro(self, name)
+        }
+        return _b_.object.tp_getattro(self.origin, name)
+    }
+}
+
+$B.GenericAlias.tp_iter = function(self){
+
+}
+
+$B.GenericAlias.tp_new = function(cls, origin, args){
+    return {
+        ob_type: cls,
+        origin,
+        args
+    }
+}
+
+$B.GenericAlias.mp_subscript = function(self, item){
+    // Populate __parameters__ if needed.
+    if (! self.hasOwnProperty('parameters')){
+        self.parameters = _Py_make_parameters(self.args)
+    }
+
+    var newargs = _Py_subs_parameters(self, self.args, self.parameters, item);
+
+    var res = $B.GenericAlias.$factory(alias.origin, newargs)
+    res.starred = self.starred
+    return res
+}
+
+var GenericAlias_funcs = $B.GenericAlias.tp_funcs = {}
+
+GenericAlias_funcs.__args__ = function(self){
+    return self.args
+}
+
+GenericAlias_funcs.__dir__ = function(self){
+
+}
+
+GenericAlias_funcs.__instancecheck__ = function(self){
+
+}
+
+GenericAlias_funcs.__mro_entries__ = function(self){
+
+}
+
+GenericAlias_funcs.__origin__ = function(self){
+    return self.origin
+}
+
+GenericAlias_funcs.__parameters___get = function(self){
+
+}
+
+GenericAlias_funcs.__parameters___set = function(self){
+
+}
+
+GenericAlias_funcs.__reduce__ = function(self){
+
+}
+
+GenericAlias_funcs.__subclasscheck__ = function(self){
+
+}
+
+GenericAlias_funcs.__typing_unpacked_tuple_args___get = function(self){
+
+}
+
+GenericAlias_funcs.__typing_unpacked_tuple_args___set = function(self){
+
+}
+
+GenericAlias_funcs.__unpacked__ = function(self){
+
+}
+
+$B.GenericAlias.tp_methods = ["__mro_entries__", "__instancecheck__", "__subclasscheck__", "__reduce__", "__dir__"]
+
+$B.GenericAlias.tp_members = ["__origin__", "__args__", "__unpacked__"]
+
+$B.GenericAlias.tp_getset = ["__parameters__", "__typing_unpacked_tuple_args__"]
+
+/* GenericAlias end */
 
 $B.set_func_names($B.GenericAlias, "types")
 

@@ -490,7 +490,6 @@ _b_.dir = function(obj){
     if($B.is_type(obj)){
         // Use metaclass __dir__
         var dir_func = $B.$getattr($B.get_class(obj), "__dir__", $B.NULL)
-        console.log('use dir func', dir_func)
         return $B.$call(dir_func, obj)
     }
     try{
@@ -1741,11 +1740,12 @@ map.$factory = function(){
     }
 }
 
-map.tp_iter = function (self){
+/* map start */
+_b_.map.tp_iter = function(self){
     return self
 }
 
-map.tp_iternext = function*(self){
+_b_.map.tp_iternext = function*(self){
     var args = []
     for(var iter of self.args){
         var arg = iter.next()
@@ -1756,6 +1756,36 @@ map.tp_iternext = function*(self){
     }
     yield $B.$call(self.func, ...args)
 }
+
+_b_.map.tp_new = function(){
+    var $ = $B.args('map', 3, {cls: null, func: null, it1:null},
+                ['cls', 'func', 'it1'], arguments, {}, 'args', null)
+    var cls = $.cls,
+        func = $.func
+    var iter_args = [$B.make_js_iterator($.it1)]
+    for(var arg of $.args){
+        iter_args.push($B.make_js_iterator(arg))
+    }
+    return {
+        ob_type: cls,
+        args: iter_args,
+        func: func
+    }
+}
+
+var map_funcs = _b_.map.tp_funcs = {}
+
+map_funcs.__reduce__ = function(self){
+
+}
+
+map_funcs.__setstate__ = function(self){
+
+}
+
+_b_.map.tp_methods = ["__reduce__", "__setstate__"]
+
+/* map end */
 
 $B.set_func_names(map, "builtins")
 
@@ -2711,11 +2741,12 @@ zip.$factory = function(){
     }
 }
 
-zip.tp_iter = function(self){
+/* zip start */
+_b_.zip.tp_iter = function(self){
     return self
 }
 
-zip.tp_iternext = function(self){
+_b_.zip.tp_iternext = function(self){
     var res = [],
         len = self.iters.length
     for(var i = 0; i < len; i++){
@@ -2741,6 +2772,41 @@ zip.tp_iternext = function(self){
     }
     return $B.fast_tuple(res)
 }
+
+_b_.zip.tp_new = function(){
+    var $ = $B.args('zip', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw')
+    var cls = $.cls,
+        args = $.args,
+        kw = $.kw
+    var res = {
+        ob_type: cls,
+        items: []
+    }
+    var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
+    var iters = []
+    for(var arg of args){
+        iters.push($B.make_js_iterator(arg))
+    }
+    return {
+        ob_type: cls,
+        iters,
+        strict
+    }
+}
+
+var zip_funcs = _b_.zip.tp_funcs = {}
+
+zip_funcs.__reduce__ = function(self){
+
+}
+
+zip_funcs.__setstate__ = function(self){
+
+}
+
+_b_.zip.tp_methods = ["__reduce__", "__setstate__"]
+
+/* zip end */
 
 $B.set_func_names(zip, "builtins")
 

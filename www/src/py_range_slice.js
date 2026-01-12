@@ -11,14 +11,14 @@ range.$not_basetype = true  // range cannot be a base class
 
 function range_eq(self, other){
     if($B.$isinstance(other, range)){
-        var len = range.__len__(self)
-        if(! $B.rich_comp('__eq__', len, range.__len__(other))){
+        var len = range.mp_length(self)
+        if(! $B.rich_comp('__eq__', len, range.mp_length(other))){
             return false
         }
         if(len == 0){
             return true
         }
-        if(! $B.rich_comp('__eq__', self.start,other.start)){
+        if(! $B.rich_comp('__eq__', self.start, other.start)){
             return false
         }
         if(len == 1){

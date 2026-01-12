@@ -502,6 +502,9 @@ _b_.int.tp_richcompare = function(a, b, op){
     /* if a < b, return a negative number
        if a == b, return 0
        if a > b, return a positive number */
+    if(! $B.$isinstance(b, _b_.int)){
+        return _b_.NotImplemented
+    }
     var res
     if(typeof a == 'number' || $B.$isinstance(a, int)){
         a = int_value(a)

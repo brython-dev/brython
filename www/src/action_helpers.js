@@ -262,6 +262,7 @@ $B._PyPegen.constant_from_string = function(p, token){
         try{
             value = _b_.bytes.$factory(encode_bytestring(value))
         }catch(err){
+            console.log('err', err)
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
                 token.lineno, token.col_offset,

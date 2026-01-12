@@ -141,7 +141,7 @@ function object_subclasshook(klass){
 _b_.object.tp_richcompare = function(self, other, op){
     var res
 
-    switch (op) {
+    switch(op){
         case '__eq__':
             /* Return NotImplemented instead of False, so if two
                objects are compared, both get a chance at the
@@ -156,7 +156,7 @@ _b_.object.tp_richcompare = function(self, other, op){
             if(self_richcomp === $B.NULL){
                 res = _b_.NotImplemented
             }else{
-                res = $B.$call(self_richcomp(self, other, '__eq__'))
+                res = $B.$call(self_richcomp, self, other, '__eq__')
                 if(res !== _b_.NotImplemented){
                     return ! $B.$bool(res)
                 }
@@ -325,20 +325,26 @@ _b_.object.tp_init = function(){
     return _b_.None
 }
 
-_b_.object.tp_new = function(cls, ...args){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "object.__new__(): not enough arguments")
-    }
-    var init_func = $B.$getattr(cls, "__init__")
-    if(init_func === object.tp_init){
-        if(args.length > 0){
-            $B.RAISE(_b_.TypeError, "object() takes no parameters")
+_b_.object.tp_new = function(){
+    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args',
+                'kw')
+    var cls = $.cls,
+        args = $.args,
+        kw = $.kw
+    if(args.length > 0 || _b_.len(kw)){
+        if($B.search_slot(cls, 'tp_new', $B.NULL) !== _b_.object.tp_new){
+            $B.RAISE(_b_.TypeError,
+                "object.__new__() takes exactly one argument "  +
+                "(the type to instantiate)"
+            )
+        }
+        if($B.search_slot(cls, 'tp_init', $B.NULL) === _b_.object.tp_init){
+            $B.RAISE(_b_.TypeError, `${$B.get_name(cls)} takes no arguments`)
         }
     }
-    var res = Object.create(null)
-    $B.update_obj(res, {
-        ob_type: cls,
-        })
+    var res = {
+        ob_type: cls
+    }
     if(cls !== object){
         res.dict = $B.empty_dict()
     }
@@ -375,7 +381,6 @@ object_funcs.__class___set = function(cls, new_cls){
 }
 
 object_funcs.__dir__ = function(self){
-    console.log('object dir', self)
     var result
     var dict
     var itsclass

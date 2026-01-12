@@ -236,9 +236,9 @@ function _PyST_IsFunctionLike(ste){
 
 function PyErr_Format(exc_type, message, arg){
     if(arg){
-        message = _b_.str.__mod__(message, arg)
+        message = _b_.str.nb_remainder(message, arg)
     }
-    return exc_type.$factory(message)
+    return $B.$call(exc_type, message)
 }
 
 function PyErr_SetString(exc_type, message){

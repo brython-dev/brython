@@ -207,7 +207,7 @@ def get_slots_by_type(cls):
         if slot == 'tp_doc':
             v = getattr(cls, slots[slot])
             if isinstance(v, str):
-                value = '`' + v + '`'
+                value = '`' + v.replace("`", "\\`") + '`'
         elif slot == 'tp_base':
             attr_value = getattr(cls, slots[slot], None)
             if attr_value is not None:
@@ -243,16 +243,30 @@ def make_builtins_init(bltins):
 # build a set of all the types with __module__ set to "builtins" by
 # recursively adding all the subclasses of such types, starting with
 # the type "object"
+
 def get_builtins(head, classes=None):
     if classes is None:
         classes = set([head])
     for cls in type.__subclasses__(head):
-        if cls.__module__ == 'builtins':
+        if True: #cls.__module__ == 'builtins':
             classes.add(cls)
             classes |= get_builtins(cls, classes)
+
     return classes
 
+
 all_builtins = get_builtins(object)
+print(sorted(x.__name__ for x in all_builtins))
+class_names = {}
+for cls in all_builtins:
+    if cls.__name__ in class_names:
+        print('doublon', class_names[cls.__name__], cls)
+    class_names[cls.__name__] = cls
+input()
+
+all_builtins = {x for x in all_builtins if x.__module__ == 'builtins'}
+
+print('class names', class_names)
 
 def make_sets():
     builtin_names = dir(builtins)
