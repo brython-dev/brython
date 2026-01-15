@@ -401,13 +401,14 @@ $B._PyPegen.formatted_value = function(p,
             debug_end_offset = format.result.col_offset + 1
             debug_metadata = format.metadata
         }else{
-            debug_end_line = p.end_lineno
-            debug_end_offset = p.end_col_offset
+            debug_end_line = arena.end_lineno
+            debug_end_offset = arena.end_col_offset
             debug_metadata = closing_brace.metadata
         }
+        debug_metadata = debug_metadata.replace(new RegExp("'", "g"), "\\'")
         var debug = new $B.ast.Constant(debug_metadata)
-        debug.lineno = p.lineno
-        debug.col_offset = p.col_offset + 1
+        debug.lineno = arena.lineno
+        debug.col_offset = arena.col_offset + 1
         debug.end_lineno = debug_end_line
         debug.end_col_offset = debug_end_offset
         var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
