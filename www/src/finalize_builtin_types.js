@@ -134,7 +134,7 @@ function make_setitem_delitem(cls){
         $B.wrapper_descriptor.$factory(
             cls,
             '__delitem__',
-            (a) => setitem(a, $B.NULL)
+            (self, key) => setitem(self, key, $B.NULL)
         )
     )
 }
