@@ -436,7 +436,7 @@ BytesIO.tp_init = function(){
     _self._buffer = buf
     _self._pos = 0
     _self.closed = false
-    _self.$exports = 0
+    _self.exports = 0
 }
 
 BytesIO.__getstate__ = function(_self){
@@ -498,7 +498,7 @@ BytesIO.getbuffer = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
-    _self.$exports++
+    _self.exports++
     return _b_.memoryview.$factory(_self._buffer)
 }
 
@@ -513,7 +513,7 @@ BytesIO.close = function(_self){
     if(_self._buffer !== _b_.None){
         $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
-    _self.$exports = 0
+    _self.exports = 0
     $B._BufferedIOBase.close(_self)
 }
 

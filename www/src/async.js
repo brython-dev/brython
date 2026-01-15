@@ -170,7 +170,7 @@ $B.promise = function(obj){
         // store current frames stack, to be able to restore it when the
         // promise resolves
         obj.$frame_obj = $B.frame_obj
-        return coroutine.send(obj)
+        return coroutine.tp_funcs.send(obj)
     }
     if(typeof obj == "function"){
         return obj()

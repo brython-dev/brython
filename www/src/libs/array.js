@@ -102,7 +102,7 @@ array.__mul__ = function(self, nb){
 }
 
 array.__release_buffer__ = function(_self, buffer){
-    _b_.memoryview.release(buffer)
+    _b_.memoryview.tp_funcs.release(buffer)
 }
 
 array.__setitem__ = function(_self, index, value){
@@ -122,7 +122,7 @@ array.__setitem__ = function(_self, index, value){
         var itemsize = array.itemsize(_self)
         var slice = _b_.slice.$conv_for_seq(index, _self.obj.length / itemsize)
         if(slice.start * itemsize + value.obj.length > _self.obj.length){
-            if(_self.$exports > 0){
+            if(_self.exports > 0){
                 $B.RAISE(_b_.BufferError,
                     'cannot resize an array that is exporting buffers')
             }

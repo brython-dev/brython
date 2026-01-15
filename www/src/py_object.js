@@ -147,8 +147,7 @@ _b_.object.tp_richcompare = function(self, other, op){
                objects are compared, both get a chance at the
                comparison.  See issue #1393. */
             res = $B.$is(self, other) ? true : _b_.NotImplemented
-            break;
-
+            break
         case '__ne__':
             /* By default, __ne__() delegates to __eq__() and inverts the result,
                unless the latter returns NotImplemented. */
@@ -263,7 +262,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == 'args' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == '__doc__' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -295,6 +294,9 @@ _b_.object.tp_getattro = function(self, attr){
     }
     // search in self dict
     var in_dict = $B.search_in_dict(self, attr, $B.NULL)
+    if(test){
+        console.log('in object dict', in_dict)
+    }
     if(in_dict !== $B.NULL){
         return in_dict
     }else if(getter !== $B.NULL){
@@ -308,6 +310,9 @@ _b_.object.tp_getattro = function(self, attr){
         }
         return getter(in_mro, self, klass)
     }else if(in_mro !== $B.NULL){
+        if(test){
+            console.log('return in_mro', in_mro)
+        }
         return in_mro
     }
     if(test){

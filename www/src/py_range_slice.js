@@ -423,7 +423,7 @@ function conv_slice(self){
             res.push(val)
         }else{
             try{
-                res.push($B.PyNumber_Index(val))
+                res.push($B.$call(_b_.int, val))
             }catch(err){
                 $B.RAISE(_b_.TypeError, "slice indices must be " +
                     "integers or None or have an __index__ method")
@@ -447,7 +447,7 @@ slice.$conv_for_seq = function(self, len){
     if(self.start === None){
         start = step_is_neg ? len_1 : 0
     }else{
-        start = $B.PyNumber_Index(self.start)
+        start = $B.$call(_b_.int, self.start)
         if($B.rich_comp('__gt__', 0, start)){
             start = $B.rich_op('__add__', start, len)
             if($B.rich_comp('__gt__', 0, start)){
@@ -510,15 +510,6 @@ slice.indices = function(self){
         }
     }
     return _b_.tuple.$factory([_start, _stop, _step])
-}
-
-slice.$fast_slice = function(start, stop, step){
-    return {
-        ob_type: _b_.slice,
-        start,
-        stop,
-        step
-    }
 }
 
 slice.$factory = function(){

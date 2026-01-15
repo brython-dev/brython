@@ -75,7 +75,7 @@ $B.$raise = function(arg, cause){
             arg.__cause__ = cause || _b_.None
             arg.__suppress_context__ = cause !== undefined
             throw arg
-        }else if(arg.$is_class && _b_.issubclass(arg, _b_.BaseException)){
+        }else if($B.is_type(arg) && _b_.issubclass(arg, _b_.BaseException)){
             if(arg === _b_.StopIteration){
                 if($B.frame_obj.frame[1].$is_generator){
                     // PEP 479
@@ -483,7 +483,7 @@ $B.is_recursion_error = function(js_exc){
 }
 
 $B.RAISE = function(error_type, message){
-    throw $B.$call(error_type, message)
+    throw $B.$call(error_type, message ?? '')
 }
 
 $B.RAISE_IF_NOT = function(exc, exc_type){

@@ -353,7 +353,7 @@ var ascii_format = function(val, flags, type) {
     if(type == 'bytes'){
         var repr = _b_.repr(val)
         ascii = _b_.str.tp_funcs.encode(repr, 'ascii', 'backslashreplace')
-        ascii = _b_.bytes.tp_funcs.decode(ascii, 'ascii')
+        ascii = $B.bytes_decode(ascii, 'ascii')
     }else{
         ascii = _b_.ascii(val)
     }
@@ -378,7 +378,9 @@ var _float_helper = function(val, flags){
 
 var validate_precision = function(precision) {
     // force precision to limits of javascript
-    if(precision > 20){precision = 20}
+    if(precision > 20){
+        precision = 20
+    }
 }
 
 function handle_special_values(value, upper){
@@ -648,7 +650,7 @@ function series_of_bytes(val, flags){
             }catch(err){
                 if($B.is_exc(err, _b_.StopIteration)){
                     var b = _b_.bytes.$factory(ints)
-                    return format_padding(_b_.bytes.decode(b, "ascii"), flags)
+                    return format_padding($B.bytes_decode(b, "ascii"), flags)
                 }
                 throw err
             }
@@ -656,7 +658,7 @@ function series_of_bytes(val, flags){
     }else{
         try{
             var bytes_obj = $B.$getattr(val, "__bytes__")()
-            return format_padding(_b_.bytes.decode(bytes_obj), flags)
+            return format_padding($B.bytes_decode(bytes_obj), flags)
         }catch(err){
             if($B.is_exc(err, _b_.AttributeError)){
                 $B.RAISE(_b_.TypeError, "%b does not accept '" +
@@ -1201,7 +1203,7 @@ str.$factory = function(arg, encoding){
         if($B.exact_type(arg, _b_.bytes) && encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
             // bytes.decode(encoding, errors)
-            return _b_.bytes.decode(arg, encoding, errors)
+            return $B.bytes_decode(arg, encoding, errors)
         }
         // Implicit invocation of __str__ uses method __str__ on the class,
         // even if arg has an attribute __str__
@@ -1566,7 +1568,7 @@ str_funcs.encode = function(){
         }
         return res
     }
-    return _b_.bytes.__new__(_b_.bytes, $.self, $.encoding, $.errors)
+    return _b_.bytes.tp_new(_b_.bytes, $.self, $.encoding, $.errors)
 }
 
 str_funcs.endswith = function(){

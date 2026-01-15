@@ -105,7 +105,7 @@ function mp_subscript(self, key){
 
     var int_key
     try{
-        int_key = $B.PyNumber_Index(key)
+        int_key = $B.$call(_b_.int, key)
     }catch(err){
         // ignore
     }
@@ -201,7 +201,7 @@ var list = _b_.list
 list.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 list.$is_sequence = true
 
-function list_delitem(self, arg){
+$B.list_delitem = function(self, arg){
     if(isinstance(arg, _b_.int)){
         let pos = arg
         if(arg < 0){
@@ -309,12 +309,6 @@ list.$getitem_slice = function(self, key){
 }
 
 list.__hash__ = _b_.None
-
-
-
-
-
-
 
 var list_iterator = $B.make_builtin_class("list_iterator")
 
@@ -610,7 +604,7 @@ _b_.list.mp_ass_subscript = function(){
         arg = $.key,
         value = $.value
     if(value === $B.NULL){
-        return list_delitem(self, arg)
+        return $B.list_delitem(self, arg)
     }else{
         return list.$setitem(self, arg, value)
     }
@@ -925,6 +919,7 @@ _b_.list.classmethods = ["__class_getitem__"]
 
 $B.set_func_names(list, "builtins")
 
+$B.list_getitem = _b_.list.mp_subscript
 
 // Tuples
 var tuple = _b_.tuple

@@ -978,10 +978,10 @@ int_funcs.denominator_get = function(self){
 int_funcs.denominator_set = $B.NULL
 
 int_funcs.from_bytes = function(self){
-    var $ = $B.args("from_bytes", 3,
-        {bytes:null, byteorder:null, signed:null},
-        ["bytes", "byteorder", "signed"],
-        arguments, {byteorder: 'big', signed: false}, null, null)
+    var $ = $B.args("from_bytes", 4,
+                {cls: null, bytes:null, byteorder:null, signed:null},
+                ["cls", "bytes", "byteorder", "signed"], arguments,
+                {byteorder: 'big', signed: false}, null, null)
 
     var x = $.bytes,
         byteorder = $.byteorder,

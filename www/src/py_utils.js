@@ -1136,7 +1136,7 @@ $B.$getitem1 = function(obj, item){
     }
 
     if(is_list){
-        return _b_.list.$getitem(obj, item)
+        return $B.list_getitem(obj, item)
     }
     if(is_dict){
         return _b_.dict.$getitem(obj, item)
@@ -1152,15 +1152,22 @@ $B.$getitem1 = function(obj, item){
     throw exc
 }
 
-$B.getitem_slice = function(obj, slice){
-    var res
-    var klass = $B.get_class(obj)
-    if(Array.isArray(obj) && klass === _b_.list){
-        return _b_.list.mp_subscript(obj, slice)
-    }else if(typeof obj == "string"){
-        return _b_.str.mp_subscript(obj, slice)
+$B.getitem_slice = function(obj, slice, inum){
+    try{
+        var res
+        var klass = $B.get_class(obj)
+        if(Array.isArray(obj) && klass === _b_.list){
+            res = _b_.list.mp_subscript(obj, slice)
+        }else if(typeof obj == "string"){
+            res = _b_.str.mp_subscript(obj, slice)
+        }else{
+            res = $B.$call($B.$getattr(klass, "__getitem__"), obj, slice)
+        }
+        return res
+    }catch(err){
+        $B.set_inum(inum)
+        throw err
     }
-    return $B.$call($B.$getattr(klass, "__getitem__"), obj, slice)
 }
 
 $B.$getattr_pep657 = function(obj, attr, inum){
@@ -1268,12 +1275,12 @@ $B.$delitem = function(obj, item, inum){
             throw err
         }
     }
-    var di = $B.search_in_mro(klass, "__delitem__")
-    if(di === undefined){
+    var delitem = $B.$getattr(klass, "__delitem__", $B.NULL)
+    if(delitem === $B.NULL){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object doesn't support item deletion")
     }
-    return di(obj, item)
+    return $B.$call(delitem, obj, item)
 }
 
 

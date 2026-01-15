@@ -416,9 +416,9 @@ _b_.delattr = function(obj, attr) {
     // If the object's class has a __delattr__ method, use it
     var deleter = $B.search_in_mro($B.get_class(obj), '__delattr__')
     if(deleter){
-        return deleter(obj, attr)
+        return $B.$call(deleter, obj, attr)
     }
-    return _b_.object.__delattr__(obj, attr)
+    return _b_.object.tp_setattro(obj, attr, $B.NULL)
 }
 
 $B.$delattr = function(obj, attr, inum){
@@ -1868,6 +1868,21 @@ _b_.max = function(){
     return $extreme(arguments, '__gt__')
 }
 
+/* memory_iterator start */
+$B.memory_iterator.tp_iter = function(self){
+    return self
+}
+
+$B.memory_iterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item
+    }
+}
+
+var memory_iterator_funcs = $B.memory_iterator.tp_funcs = {}
+
+/* memory_iterator end */
+
 var memoryview = _b_.memoryview
 
 memoryview.$factory = function(obj){
@@ -1876,8 +1891,8 @@ memoryview.$factory = function(obj){
         return obj
     }
     if($B.get_class(obj).$buffer_protocol){
-        obj.$exports = obj.$exports ?? 0
-        obj.$exports++ // used to prevent resizing
+        obj.exports = obj.exports ?? 0
+        obj.exports++ // used to prevent resizing
         var res = {
             ob_type: memoryview,
             obj: obj,
@@ -1904,100 +1919,132 @@ memoryview.$buffer_protocol = true
 memoryview.$not_basetype = true // cannot be a base class
 memoryview.$is_sequence = true
 
-memoryview.$getbuffer = function(self){
-    self.$exports++
-}
-
-function memory_obj_get(){
-
-}
-
-function memory_nbytes_get(self){
-    var product = 1
-    for(var x of self.shape){
-        product *= x
-    }
-    return x * self.itemsize
-}
-
-function memory_readonly_get(self){
-    return $B.$isinstance(self.obj, _b_.bytes)
-}
-
-function memory_itemsize_get(){
-
-}
-
-function memory_format_get(){
-
-}
-
-function memory_ndim_get(){
-
-}
-
-function memory_shape_get(){
-
-}
-
-function memory_strides_get(){
-
-}
-
-function memory_suboffsets_get(){
-
-}
-
-function memory_c_contiguous(){
-
-}
-
-function memory_f_contiguous(){
-
-}
-
-function memory_contiguous(){
-
-}
-
-/* memoryview.tp_getset start */
-memoryview.tp_getset = [
-    ["obj", memory_obj_get, NULL],
-    ["nbytes", memory_nbytes_get, NULL],
-    ["readonly", memory_readonly_get, NULL],
-    ["itemsize", memory_itemsize_get, NULL],
-    ["format", memory_format_get, NULL],
-    ["ndim", memory_ndim_get, NULL],
-    ["shape", memory_shape_get, NULL],
-    ["strides", memory_strides_get, NULL],
-    ["suboffsets", memory_suboffsets_get, NULL],
-    ["c_contiguous", memory_c_contiguous, NULL],
-    ["f_contiguous", memory_f_contiguous, NULL],
-    ["contiguous", memory_contiguous, NULL]
-]
-/* memoryview.tp_getset end */
-memoryview.__enter__ = function(_self){
-    return _self
-}
-
-memoryview.__exit__ = function(_self){
-    memoryview.release(_self)
-}
-
 memoryview.__del__ = function(self){
     if(! self.$released){
-        memoryview.release(self)
+        memoryview.tp_funcs.release(self)
     }
 }
 
-memoryview.__eq__ = function(self, other){
+function memoryview_eq(self, other){
     if($B.get_class(other) !== memoryview){
         return false
     }
     return $B.$getattr(self.obj, '__eq__')(other.obj)
 }
 
-memoryview.__getitem__ = function(self, key){
+var struct_format = {
+    'x': {'size': 1},
+    'b': {'size': 1},
+    'B': {'size': 1},
+    'c': {'size': 1},
+    's': {'size': 1},
+    'p': {'size': 1},
+    'h': {'size': 2},
+    'H': {'size': 2},
+    'i': {'size': 4},
+    'I': {'size': 4},
+    'l': {'size': 4},
+    'L': {'size': 4},
+    'q': {'size': 8},
+    'Q': {'size': 8},
+    'f': {'size': 4},
+    'd': {'size': 8},
+    'P': {'size': 8}
+}
+
+const MEMORYVIEW = {
+    RELEASED:    0x001,  /* access to master buffer blocked */
+    C:           0x002,  /* C-contiguous layout */
+    FORTRAN:     0x004,  /* Fortran contiguous layout */
+    SCALAR:      0x008,  /* scalar: ndim = 0 */
+    PIL:         0x010,  /* PIL-style layout */
+    RESTRICTED:  0x020  /* Disallow new references to the memoryview's buffer */
+}
+
+/* memoryview start */
+_b_.memoryview.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, _b_.memoryview)){
+        return _b_.NotImplemented
+    }
+    var res
+    switch(op){
+        case '__eq__':
+            res = memoryview_eq(self, other)
+            break
+        case '__ne__':
+            res = ! memoryview_eq(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+    return res
+}
+
+_b_.memoryview.sq_ass_item = function(self, key, value){
+    try{
+        $B.$setitem(self.obj, key, value)
+    }catch(err){
+        $B.RAISE(_b_.TypeError, "cannot modify read-only memory")
+    }
+}
+
+_b_.memoryview.tp_repr = function(self){
+    if(self.flags & MEMORYVIEW.RELEASED){
+        return "<released memory>"
+    }else{
+        return "<memory>"
+    }
+}
+
+_b_.memoryview.tp_hash = function(self){
+    $B.RAISE(_b_.NotImplementedError, '__hash__')
+}
+
+_b_.memoryview.tp_iter = function(self){
+    return {
+        ob_type: $B.memory_iterator,
+        it: $B.make_js_iterator(self.obj)
+    }
+}
+
+_b_.memoryview.tp_new = function(){
+    var $ = $B.args('__new__', 2, {cls: null, obj: null}, ['cls', 'obj'],
+                arguments, {}, null, null)
+    var cls = $.cls,
+        obj = $.obj
+    if($B.get_class(obj) === memoryview){
+        return obj
+    }
+    if($B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL){
+        obj.exports = obj.exports ?? 0
+        obj.exports++ // used to prevent resizing
+        var res = {
+            ob_type: cls,
+            obj: obj,
+            mbuf: null,
+            format: 'B',
+            itemsize: 1,
+            ndim: 1,
+            shape: _b_.tuple.$factory([_b_.len(obj)]),
+            strides: _b_.tuple.$factory([1]),
+            suboffsets: _b_.tuple.$factory([]),
+            c_contiguous: true,
+            f_contiguous: true,
+            contiguous: true
+        }
+        return res
+    }else{
+        $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
+            "is required, not '" + $B.class_name(obj) + "'")
+    }
+}
+
+_b_.memoryview.mp_length = function(self){
+    return len(self.obj) / self.itemsize
+}
+
+_b_.memoryview.mp_subscript = function(self, key){
     var res
     if($B.$isinstance(key, _b_.int)){
         var start = key * self.itemsize
@@ -2020,45 +2067,49 @@ memoryview.__getitem__ = function(self, key){
         }
     }
     // fix me : add slice support for other formats than B
-    res = $B.get_class(self.obj).__getitem__(self.obj, key)
+    var getitem = $B.$getattr($B.get_class(self.obj), '__getitem__', $B.NULL)
+    if(getitem !== $B.NULL){
+        res = $B.$call(getitem, self.obj, key)
+    }
     if($B.get_class(key) === _b_.slice){
         return memoryview.$factory(res)
     }
 }
 
-memoryview.sq_length = function(self){
-    return len(self.obj) / self.itemsize
+_b_.memoryview.bf_getbuffer = function(self){
+    self.exports++
+    return self
 }
 
-memoryview.__setitem__ = function(self, key, value){
-    try{
-        $B.$setitem(self.obj, key, value)
-    }catch(err){
-        $B.RAISE(_b_.TypeError, "cannot modify read-only memory")
-    }
+_b_.memoryview.bf_releasebuffer = function(self){
+    self.exports--
 }
 
-var struct_format = {
-    'x': {'size': 1},
-    'b': {'size': 1},
-    'B': {'size': 1},
-    'c': {'size': 1},
-    's': {'size': 1},
-    'p': {'size': 1},
-    'h': {'size': 2},
-    'H': {'size': 2},
-    'i': {'size': 4},
-    'I': {'size': 4},
-    'l': {'size': 4},
-    'L': {'size': 4},
-    'q': {'size': 8},
-    'Q': {'size': 8},
-    'f': {'size': 4},
-    'd': {'size': 8},
-    'P': {'size': 8}
-    }
+var memoryview_funcs = _b_.memoryview.tp_funcs = {}
 
-memoryview.cast = function(self, format, shape){
+memoryview_funcs.__class_getitem__ = function(){
+    return $B.$class_getitem.apply(null, arguments)
+}
+
+memoryview_funcs.__enter__ = function(self){
+    return self
+}
+
+memoryview_funcs.__exit__ = function(self){
+    memoryview.tp_funcs.release(self)
+}
+
+memoryview_funcs._from_flags = function(self){
+
+}
+
+memoryview_funcs.c_contiguous_get = function(self){
+    return self.flags & (MEMORYVIEW.SCALAR | MEMORYVIEW.C)
+}
+
+memoryview_funcs.c_contiguous_set = _b_.None
+
+memoryview_funcs.cast = function(self, format, shape){
     if(! struct_format.hasOwnProperty(format)){
         $B.RAISE(_b_.ValueError, `unknown format: '${format}'`)
     }
@@ -2097,7 +2148,41 @@ memoryview.cast = function(self, format, shape){
             return res
     }
 }
-memoryview.hex = function(self){
+
+memoryview_funcs.contiguous_get = function(self){
+    return self.flags & (MEMORYVIEW.SCALAR | MEMORYVIEW.C | MEMORYVIEW.FORTRAN)
+}
+
+memoryview_funcs.contiguous_set = _b_.None
+
+memoryview_funcs.count = function(self){
+    var $ = $B.args('count', 2, {self: null, value: null}, ['self', 'value'],
+                arguments, {}, null, null)
+    var self = $.self,
+        value = $.value
+    var iter = _b_.memoryview.tp_iter(self)
+    var count = 0
+    for(var item of $B.make_js_iterator(iter)){
+        if($B.is_or_equals(item, value)){
+            count++
+        }
+    }
+    return count
+}
+
+memoryview_funcs.f_contiguous_get = function(self){
+    return self.flags & (MEMORYVIEW.SCALAR | MEMORYVIEW.FORTRAN)
+}
+
+memoryview_funcs.f_contiguous_set = _b_.None
+
+memoryview_funcs.format_get = function(self){
+    return self.format
+}
+
+memoryview_funcs.format_set = _b_.None
+
+memoryview_funcs.hex = function(self){
     var res = '',
         bytes = _b_.bytes.$factory(self)
     bytes.source.forEach(function(item){
@@ -2106,15 +2191,102 @@ memoryview.hex = function(self){
     return res
 }
 
-memoryview.release = function(self){
+memoryview_funcs.index = function(self){
+    var $ = $B.args('index', 4,
+                {self: null, value: null, start: null, stop: null},
+                ['self', 'value', 'start', 'stop'], arguments,
+                {start: 0, stop: $B.max_int}, null, null)
+    var self = $.self,
+        value = $.value,
+        start = $.start,
+        stop = $.stop
+    if(self.ndim == 0){
+        $B.RAISE(_b_.TypeError, "invalid lookup on 0-dim memory")
+    }
+    if(self.ndim == 1){
+        var n = self.shape[0]
+        if(start < 0){
+            start = Math.max(start + n, 0)
+        }
+        if(stop < 0){
+            stop = Math.max(stop + n, 0)
+        }
+        stop = Math.min(stop, n)
+        start = Math.min(start, stop)
+        for(let index = start; index < stop; index++){
+            var item = _b_.memoryview.mp_subscript(self, index)
+            if($B.is_or_equals(item, value)){
+                return index
+            }
+        }
+        $B.RAISE(_b_.ValueError, "memoryview.index(x): x not found");
+    }
+    $B.RAISE(_b_.NotImplementedError,
+        "multi-dimensional lookup is not implemented"
+    )
+}
+
+memoryview_funcs.itemsize_get = function(self){
+    return self.itemsize
+}
+
+memoryview_funcs.itemsize_set = _b_.None
+
+memoryview_funcs.nbytes_get = function(self){
+    var product = 1
+    for(var x of self.shape){
+        product *= x
+    }
+    return x * self.itemsize
+}
+
+memoryview_funcs.nbytes_set = _b_.None
+
+memoryview_funcs.ndim_get = function(self){
+    return self.ndim
+}
+
+memoryview_funcs.ndim_set = _b_.None
+
+memoryview_funcs.obj_get = function(self){
+    return self.obj
+}
+
+memoryview_funcs.obj_set = _b_.None
+
+memoryview_funcs.readonly_get = function(self){
+    return $B.$isinstance(self.obj, _b_.bytes)
+}
+
+memoryview_funcs.readonly_set = _b_.None
+
+memoryview_funcs.release = function(self){
     if(self.$released){
         return
     }
     self.$released = true
-    self.obj.$exports -= 1
+    self.obj.exports -= 1
 }
 
-memoryview.tobytes = function(self){
+memoryview_funcs.shape_get = function(self){
+    return self.shape
+}
+
+memoryview_funcs.shape_set = _b_.None
+
+memoryview_funcs.strides_get = function(self){
+    return self.strides
+}
+
+memoryview_funcs.strides_set = _b_.None
+
+memoryview_funcs.suboffsets_get = function(self){
+    return self.suboffsets
+}
+
+memoryview_funcs.suboffsets_set = _b_.None
+
+memoryview_funcs.tobytes = function(self){
     if($B.$isinstance(self.obj, [_b_.bytes, _b_.bytearray])){
         return {
             ob_type: _b_.bytes,
@@ -2125,7 +2297,8 @@ memoryview.tobytes = function(self){
     }
     $B.RAISE(_b_.TypeError, 'cannot run tobytes with ' + $B.class_name(self.obj))
 }
-memoryview.tolist = function(self){
+
+memoryview_funcs.tolist = function(self){
     if(self.itemsize == 1){
         return _b_.list.$factory(_b_.bytes.$factory(self.obj))
     }else if(self.itemsize == 4){
@@ -2144,6 +2317,18 @@ memoryview.tolist = function(self){
         }
     }
 }
+
+memoryview_funcs.toreadonly = function(self){
+    self.readonly = 1
+}
+
+_b_.memoryview.tp_methods = ["release", "tobytes", "hex", "tolist", "cast", "toreadonly", "count", "index", "__enter__", "__exit__"]
+
+_b_.memoryview.classmethods = ["_from_flags", "__class_getitem__"]
+
+_b_.memoryview.tp_getset = ["obj", "nbytes", "readonly", "itemsize", "format", "ndim", "shape", "strides", "suboffsets", "c_contiguous", "f_contiguous", "contiguous"]
+
+/* memoryview end */
 
 $B.set_func_names(memoryview, "builtins")
 
