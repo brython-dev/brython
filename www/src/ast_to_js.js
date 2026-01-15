@@ -2077,6 +2077,7 @@ $B.ast.Constant.prototype.to_js = function(){
         return `_b_.Ellipsis`
     }else{
         console.log('invalid value', this.value)
+        console.log(Error('trace').stack)
         throw SyntaxError('bad value', this.value)
     }
 }
@@ -3631,10 +3632,10 @@ $B.ast.Starred.prototype.to_js = function(scopes){
 $B.ast.Subscript.prototype.to_js = function(scopes){
     var value = $B.js_from_ast(this.value, scopes),
         slice = $B.js_from_ast(this.slice, scopes)
+    var inum = add_to_positions(scopes, this)
     if(this.slice instanceof $B.ast.Slice){
-        return `$B.getitem_slice(${value}, ${slice})`
+        return `$B.getitem_slice(${value}, ${slice}, ${inum})`
     }else{
-        var inum = add_to_positions(scopes, this)
         return `$B.$getitem(${value}, ${slice}, ${inum})`
     }
 }
