@@ -1477,17 +1477,37 @@ $B.search_slot = function(cls, slot, _default){
 }
 
 $B.type_getattribute = function(klass, attr, _default){
-    var test = false // attr == '__class_getitem__'
+    var test = false // attr == 'spam'
     if(test){
         console.log('type getattribute', attr, klass)
 
     }
     var meta = $B.get_class(klass)
     var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
-    if(getattro === $B.NULL){
+    if(getattro !== $B.NULL){
+        if(test){
+            console.log('getattro', getattro)
+        }
+        var res = getattro(klass, attr, $B.NULL)
+        if(test){
+            console.log('result of getattro', res)
+        }
+        if(res !== $B.NULL){
+            return res
+        }
+    }
+    var getattr = $B.search_in_mro(meta, '__getattr__', $B.NULL)
+    if(getattr === $B.NULL){
         return $B.NULL
     }
-    return getattro(klass, attr)
+    try{
+        return $B.$call(getattr, klass, attr)
+    }catch(err){
+        if($B.is_exc(err, _b_.AttributeError)){
+            return $B.NULL
+        }
+        throw err
+    }
 }
 
 
@@ -1619,11 +1639,15 @@ _b_.type.nb_or = function(){
 }
 
 _b_.type.tp_repr = function(kls){
-    // $B.builtins_repr_check(type, arguments) // in brython_builtins.js
     var name = $B.get_name(kls)
-    var module = $B.$getattr(kls, '__module__', $B.NULL)
-    var qualname = (module === $B.NULL || module == 'builtins') ? name :
-        module + "." + name
+    var qualname
+    if(kls.hasOwnProperty('tp_flags' && (kls.tp_flags & TPFLAGS.HEAPTYPE))){
+        var module = $B.$getattr(kls, '__module__', $B.NULL)
+        qualname = (module === $B.NULL || module == 'builtins') ? name :
+            module + "." + name
+    }else{
+        qualname = name
+    }
     return "<class '" + qualname + "'>"
 }
 
@@ -1689,7 +1713,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == '__qualname__'
+    var test = false // name == 'spam'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1743,13 +1767,15 @@ _b_.type.tp_getattro = function(obj, name){
             console.log('local_get', local_get)
         }
         if(local_get !== NULL){
-            var res = local_get(attribute, _b_.None, obj)
+            var res = local_get(attribute, $B.NULL, obj)
             if(test){
                 console.log('result of local_get', res)
             }
             return res
         }
         return attribute
+    }else if(test){
+        console.log('no attribute')
     }
     if(getter !== NULL){
         if(typeof getter !== 'function'){

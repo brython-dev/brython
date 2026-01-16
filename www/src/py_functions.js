@@ -4,29 +4,12 @@
 var _b_ = $B.builtins
 
 // add attributes to native Function
-$B.function = $B.make_builtin_class('function')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 $B.function.__delattr__ = function(self, attr){
     if(attr == "__dict__"){
         $B.RAISE(_b_.TypeError, "can't delete function __dict__")
     }
 }
-
-
 
 function doc_set(f, value){
     $B.check_infos(f)
@@ -101,24 +84,10 @@ $B.function.__dir__ = function(self){
                sort()
 }
 
-$B.function.tp_descr_get = function(self, obj){
-    // adapted from
-    // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
-    if(obj === _b_.None){
-        return self
-    }
-    return $B.method.$factory(self, obj)
-}
-
 function globals_get(f){
     $B.check_infos(f)
     return $B.obj_dict($B.imported[f.$infos.__module__])
 }
-
-
-
-
-
 
 $B.function.__setattr__ = function(self, attr, value){
     if(self.$infos === undefined){
@@ -143,7 +112,6 @@ $B.function.__setattr__ = function(self, attr, value){
     }
     _b_.dict.$setitem(self.dict, attr, value)
 }
-
 
 $B.function.$factory = function(){
     var $ = $B.args('FunctionType', 2,
@@ -190,7 +158,7 @@ $B.function.tp_call = function(self, ...args){
 }
 
 $B.function.tp_descr_get = function(self, obj){
-    if(obj === _b_.None){
+    if(obj === $B.NULL){
         return self
     }
     return $B.$call($B.method, self, obj)

@@ -242,9 +242,7 @@ $B.method.tp_richcompare = function(self, other, op){
     var res
     switch(op){
         case '__eq__':
-            console.log('eq', self, other)
             res = (self.obj === other.obj && self.func === other.func)
-            console.log('res', res)
             break
         case '__ne__':
             res = (self.obj !== other.obj || self.func !== other.func)
@@ -257,8 +255,6 @@ $B.method.tp_richcompare = function(self, other, op){
 }
 
 $B.method.tp_repr = function(self){
-    console.log('method repr', self, self.func, self.obj)
-    console.log('func.$function infos', self.func.$function_infos)
     var name = self.func.$function_infos[$B.func_attrs.__qualname__]
     return "<bound method " + name +
        " of " + _b_.str.$factory(self.obj) + ">"
@@ -355,7 +351,7 @@ $B.method_descriptor.tp_call = function(self, ...args){
 }
 
 $B.method_descriptor.tp_descr_get = function(self, obj, klass){
-    if(obj === _b_.None){
+    if(obj === $B.NULL){
         return self
     }
     var f = self.method.bind(null, obj)
@@ -532,7 +528,7 @@ $B.getset_descriptor.tp_repr = function(self){
 }
 
 $B.getset_descriptor.tp_descr_get = function(self, obj){
-    if(obj === _b_.None){
+    if(obj === $B.NULL){
         return self
     }
     if(! $B.get_mro($B.get_class(obj)).includes(self.cls)){
@@ -611,7 +607,7 @@ $B.wrapper_descriptor.tp_call = function(self, ...args){
 }
 
 $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){
-    if(obj === _b_.None){
+    if(obj === $B.NULL){
         return self
     }
     var res = {
