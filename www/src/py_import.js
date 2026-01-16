@@ -57,8 +57,8 @@ $B.module.tp_getset = ["__annotations__", "__annotate__"]
 /* module start */
 $B.module.tp_repr = function(self){
     var res = "<module " + self.__name__
-    res += self.__file__ === undefined ? " (built-in)" :
-        ' at ' + self.__file__
+    res += self.__module__ === undefined ? " (built-in)" :
+        ' at ' + self.__module__
     return res + ">"
 }
 
@@ -274,23 +274,11 @@ function $download_module(mod, url){
 $B.$download_module = $download_module
 
 $B.addToImported = function(name, modobj){
-    modobj.ob_type = Module
-    modobj.dict = $B.empty_dict()
-    /*
-    if($B.imported[name]){
-        for(var attr in $B.imported[name]){
-            if(! modobj.hasOwnProperty(attr)){
-                console.log('set module attr', name, attr)
-                modobj[attr] = $B.module_getattr($B.imported[name], attr)
-            }
-        }
-    }
-    */
-    $B.imported[name] = modobj
+    var module = Module.$factory(name)
+    $B.imported[name] = module
     if(modobj === undefined){
         $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
-    modobj.__name__ = name
     for(var attr in modobj){
         if(typeof modobj[attr] == "function" && ! modobj[attr].$infos){
             modobj[attr].$infos = {
@@ -304,10 +292,12 @@ $B.addToImported = function(name, modobj){
                 }
             }
             modobj[attr].$in_js_module = true
+            modobj[attr].ob_type = $B.function
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
                 modobj[attr].__module__ === undefined){
             modobj[attr].__module__ = name
         }
+        $B.module_setattr(module, attr, modobj[attr])
     }
 }
 
@@ -1318,7 +1308,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = mod_name == 'c' // && fromlist.length == 1 && fromlist[0] == "timer"
+    var test = false // mod_name == 'python_re' // && fromlist.length == 1 && fromlist[0] == "timer"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
@@ -1477,9 +1467,6 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                 var attr = item.key
                 if(attr[0] !== "_"){
                     locals[attr] = item.value
-                    if(test){
-                        console.log('set attr', attr, 'to locals', locals)
-                    }
                 }
             }
         }else{
