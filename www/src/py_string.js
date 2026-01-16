@@ -3,6 +3,7 @@
 
 var _b_ = $B.builtins
 
+
 // build tables from data in unicode_data.js
 var escape2cp = $B.escape2cp = {b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'}
 
@@ -2650,6 +2651,8 @@ _b_.str.staticmethods = ["maketrans"]
 
 $B.set_func_names(str, "builtins")
 
+// exports
+$B.str_len = _b_.str.mp_length
 
 // Function to parse the 2nd argument of format()
 $B.parse_format_spec = function(spec, obj){

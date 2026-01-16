@@ -847,6 +847,10 @@ var $$eval = _b_.eval = function(){
         var res = exec_func($B, _b_, exec_locals,
                             exec_locals, exec_globals, frame, _frame_obj)
     }catch(err){
+        if(err.ob_type === undefined){
+            console.log('JS error')
+            console.log(err)
+        }
         if($B.get_option('debug') > 2){
             console.log(
                 'Python code\n', src,

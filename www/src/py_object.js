@@ -363,26 +363,25 @@ object_funcs.__class___get = function(self){
 }
 
 object_funcs.__class___set = function(cls, new_cls){
-    if(value == $B.NULL){
+    if(new_cls == $B.NULL){
         $B.RAISE(_b_.TypeError,
             "can't delete __class__ attribute")
     }
     var old_cls = $B.get_class(cls)
-    if(!($B.issubclass(new_cls, $B.module) &&
-          $B.issubclass(oldto, $B.module)) &&
-        ($B._PyType_HasFeature(newto, $B.TPFLAGS.IMMUTABLETYPE) ||
-         $B._PyType_HasFeature(oldto, $B.TPFLAGS.IMMUTABLETYPE))){
+    if(!(_b_.issubclass(new_cls, $B.module) &&
+          _b_.issubclass(old_cls, $B.module)) &&
+        ($B._PyType_HasFeature(new_cls, $B.TPFLAGS.IMMUTABLETYPE) ||
+         $B._PyType_HasFeature(old_cls, $B.TPFLAGS.IMMUTABLETYPE))){
             $B.RAISE(_b_.TypeError,
                      "__class__ assignment only supported for mutable types " +
                      "or ModuleType subclasses")
     }
-    if(! $B.is_type(value)) {
+    if(! $B.is_type(new_cls)) {
         $B.$RAISE(_b_.TypeError, "__class__ must be set to a class," +
-            ` not '${$B.class_name(value)}' object"`)
+            ` not '${$B.class_name(new_cls)}' object"`)
     }
     // XXX skip code in CPython Objects/typeobject/object_set_class_world_stopped
     cls.ob_type = new_cls
-    return res;
 }
 
 object_funcs.__dir__ = function(self){

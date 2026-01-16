@@ -986,7 +986,8 @@ int_funcs.from_bytes = function(self){
     var x = $.bytes,
         byteorder = $.byteorder,
         signed = $.signed,
-        _bytes, _len
+        _bytes, 
+        _len
     if($B.$isinstance(x, [_b_.bytes, _b_.bytearray])){
         _bytes = x.source
         _len = x.source.length

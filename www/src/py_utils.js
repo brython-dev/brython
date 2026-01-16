@@ -1207,13 +1207,13 @@ $B.$setitem = function(obj, item, value, inum){
             throw err
         }
     }
-    var setitem = $B.$getattr($B.get_class(obj), "__setitem__", $B.NULL)
+    var setitem = $B.$getattr(obj, "__setitem__", $B.NULL)
     if(setitem === $B.NULL){
         $B.set_inum(inum)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object does not support item assignment")
     }
-    return $B.$call(setitem, obj, item, value)
+    return $B.$call(setitem, item, value)
 }
 
 $B.set_inum = function(inum){
@@ -1481,7 +1481,14 @@ $B.member_func = function(obj){
 }
 
 $B.$is_member = function(item, _set){
-    return $B.member_func(_set)(item)
+    var contains = $B.$getattr(_set, '__contains__', $B.NULL)
+    if(contains === $B.NULL){
+        $B.RAISE(_b_.TypeError,
+            `argument of type '${$B.class_name(_set)}' ` +
+            'is not a container or iterable'
+        )
+    }
+    return $B.$call(contains, item)
 }
 
 var counter = 0
