@@ -272,14 +272,6 @@ $B._PyType_HasFeature = function(type, feature){
     return type.tp_flags & feature != 0
 }
 
-/*
-$B.make_class_dict = function(klass, obj){
-    console.log('remove $B.make_class_dict for ', klass.tp_name ?? klass.__name__)
-    var stack = Error().stack
-    var lines = stack.split('\n')
-    console.log(lines[2])
-}
-*/
 $B.make_builtin_class = function(tp_name, tp_bases){
     if(tp_name === undefined){
         console.log('no tp name')
@@ -319,16 +311,6 @@ $B.make_type = function(tp_name, tp_bases){
     return cls
 }
 
-/*
-for(var class_name of $B.builtin_classes){
-    _b_[class_name] = $B.make_builtin_class(class_name)
-}
-
-// bool inherits int
-_b_.bool = $B.make_builtin_class('bool', [_b_.int])
-
-*/
-
 $B.obj_dict = function(obj, exclude){
     var res = {
         ob_type: _b_.dict,
@@ -342,20 +324,20 @@ $B.obj_dict = function(obj, exclude){
 $B.set_func_names = function(klass, module){
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
-            $B.add_function_infos(klass, attr)
+            $B.add_function_infos(klass, attr, module)
         }
     }
 }
 
 $B.add_function_infos = function(klass, attr, module, qualname){
     module = module ?? klass.__module__
-    qualname = qualname ?? klass.tp_name
+    qualname = qualname ?? module + '.' + attr
     $B.set_function_infos(klass[attr],
         {
             __doc__: klass[attr].__doc__ || '',
             __module__: module,
             __name__: attr,
-            __qualname__ : qualname + '.' + attr,
+            __qualname__ : qualname,
             __defaults__: [],
             __kwdefaults__: {}
        }
