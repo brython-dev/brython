@@ -994,7 +994,9 @@ function transform_repl(data, pattern){
     return data
 }
 
-
+function Flag_eq(self, other){
+    return self.value == other.value
+}
 
 var Flag = $B.make_type("Flag")
 
@@ -1005,54 +1007,33 @@ Flag.$factory = function(value){
     }
 }
 
-Flag.__and__ = function(self, other){
-    if($B.exact_type(other, Flag)){
-        return Flag.$factory(self.value & other.value)
-    }else if(typeof other == "number" || typeof other == "boolean"){
-        return Flag.$factory(self.value & other)
+Flag.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, Flag)){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
-}
-
-Flag.__index__ = function(self){
-    return self.value
-}
-
-Flag.__invert__ = function(self){
-    return Flag.$factory(~self.value)
-}
-
-Flag.__eq__ = function(self, other){
-    return self.value == other.value
-}
-
-Flag.__or__ = function(self, other){
-    if($B.exact_type(other, Flag)){
-        return Flag.$factory(self.value | other.value)
-    }else if(typeof other == "number" || typeof other == "boolean"){
-        return Flag.$factory(self.value | other)
+    var res
+    switch(op){
+        case '__eq__':
+            res = Flag_eq(self, other)
+            break
+        case '__ne__':
+            res = ! Flag_eq(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
     }
-    return _b_.NotImplemented
+    return res
 }
 
-Flag.__rand__ = function(self, other){
-    if(typeof other == "number" || $B.$isinstance(other, _b_.int)){
-        if(other == 0){
-            return false // Flag.$factory(self.value)
-        }
-        return self.value & other
-    }
-    return _b_.NotImplemented
-}
-
-Flag.__ror__ = function(self, other){
-    if(typeof other == "number" || $B.$isinstance(other, _b_.int)){
-        if(other == 0){
-            return self.value
-        }
-        return self.value | other
-    }
-    return _b_.NotImplemented
+Flag.tp_new = function(){
+    var $ = $B.args('__new__', 2, {cls: null, value: null}, ['cls', 'value'],
+                arguments, {}, null, null)
+    var cls = $.cls,
+        value = $.value
+    var res = Flag.$factory(value)
+    res.ob_type = cls
+    return res
 }
 
 Flag.tp_repr = function(self){
@@ -1083,9 +1064,36 @@ Flag.tp_repr = function(self){
     return res
 }
 
-Flag.__xor__ = function(self, other){
+Flag.nb_and = function(self, other){
+    if($B.exact_type(other, Flag)){
+        return Flag.$factory(self.value & other.value)
+    }else if(typeof other == "number" || typeof other == "boolean"){
+        return Flag.$factory(self.value & other)
+    }
+    return _b_.NotImplemented
+}
+
+Flag.nb_or = function(self, other){
+    if($B.exact_type(other, Flag)){
+        return Flag.$factory(self.value | other.value)
+    }else if(typeof other == "number" || typeof other == "boolean"){
+        return Flag.$factory(self.value | other)
+    }
+    return _b_.NotImplemented
+}
+
+Flag.nb_xor = function(self, other){
     return Flag.$factory(self.value ^ other.value)
 }
+
+Flag.nb_index = function(self){
+    return self.value
+}
+
+Flag.nb_invert = function(self){
+    return Flag.$factory(~self.value)
+}
+
 
 $B.set_func_names(Flag, "re")
 $B.finalize_type(Flag)
@@ -1148,6 +1156,20 @@ GroupIndex.__setitem__ = function(){
 $B.set_func_names(GroupIndex, "re")
 $B.finalize_type(GroupIndex)
 
+function Pattern_eq(self, other){
+    if(other.$pattern && self.$pattern.type != other.$pattern.$type){
+        // warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
+    }
+    return self.pattern == other.pattern &&
+        self.flags.value == other.flags.value
+}
+
+function _reconstructor(cls, base, state){
+    var pattern = _b_.dict.$getitem(state, 'pattern'),
+        flags = Flag.$factory(_b_.dict.$getitem(state, 'flags'))
+    return module.compile(pattern, flags)
+}
+
 var Pattern = $B.make_type("Pattern")
 
 Pattern.$factory = function(pattern){
@@ -1167,47 +1189,38 @@ Pattern.$factory = function(pattern){
     }
 }
 
-Pattern.__copy__ = function(self){
-    return self
-}
-
-Pattern.__deepcopy__ = function(self){
-    return self
-}
-
-Pattern.__eq__ = function(self, other){
-    if(other.$pattern && self.$pattern.type != other.$pattern.$type){
-        // warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
+Pattern.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, Pattern)){
+        return _b_.NotImplemented
     }
-    return self.pattern == other.pattern &&
-        self.flags.value == other.flags.value
+    var res
+    switch(op){
+        case '__eq__':
+            res = Pattern_eq(self, other)
+            break
+        case '__ne__':
+            res = ! Patttern_eq(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+    return res
 }
 
-Pattern.__hash__ = function(self){
+Pattern.tp_hash = function(self){
     // best effort ;-)
     return _b_.hash(self.pattern) + self.flags.value
 }
 
-Pattern.__new__ = Pattern.$factory
-
-Pattern.__reduce__ = function(self){
-    return Pattern.__reduce_ex__(self, 4)
-}
-
-Pattern.__reduce_ex__ = function(self, protocol){
-    var res = _reconstructor,
-        state = $B.get_mro($B.get_class(self))
-    var d = $B.empty_dict()
-    _b_.dict.$setitem(d, 'pattern', self.pattern)
-    _b_.dict.$setitem(d, 'flags', self.flags.value)
-    state.push(d)
-    return $B.fast_tuple([res, $B.fast_tuple(state)])
-}
-
-function _reconstructor(cls, base, state){
-    var pattern = _b_.dict.$getitem(state, 'pattern'),
-        flags = Flag.$factory(_b_.dict.$getitem(state, 'flags'))
-    return module.compile(pattern, flags)
+Pattern.tp_new = function(){
+    var $ = $B.args('__new__', {cls: null, pattern: null}, ['cls', 'pattern'],
+                arguments, {}, null)
+    var cls = $.cls,
+        pattern = $.pattern
+    var res = Pattern.$factory(pattern)
+    res.ob_type = cls
+    return res
 }
 
 Pattern.tp_repr = function(self){
@@ -1238,7 +1251,31 @@ Pattern.tp_repr = function(self){
     return res + ')'
 }
 
-Pattern.findall = function(self){
+var Pattern_funcs = Pattern.tp_funcs = {}
+
+Pattern_funcs.__copy__ = function(self){
+    return self
+}
+
+Pattern_funcs.__deepcopy__ = function(self){
+    return self
+}
+
+Pattern_funcs.__reduce__ = function(self){
+    return Pattern.__reduce_ex__(self, 4)
+}
+
+Pattern_funcs.__reduce_ex__ = function(self, protocol){
+    var res = _reconstructor,
+        state = $B.get_mro($B.get_class(self))
+    var d = $B.empty_dict()
+    _b_.dict.$setitem(d, 'pattern', self.pattern)
+    _b_.dict.$setitem(d, 'flags', self.flags.value)
+    state.push(d)
+    return $B.fast_tuple([res, $B.fast_tuple(state)])
+}
+
+Pattern_funcs.findall = function(self){
     var iter = Pattern.finditer.apply(null, arguments).js_gen,
         res = []
 
@@ -1267,7 +1304,7 @@ Pattern.findall = function(self){
     }
 }
 
-Pattern.finditer = function(self){
+Pattern_funcs.finditer = function(self){
     var $ = $B.args("finditer", 4,
             {self: null, string: null, pos: null, endpos: null},
             'self string pos endpos'.split(' '), arguments,
@@ -1278,7 +1315,7 @@ Pattern.finditer = function(self){
             self.flags, $.string, $.pos, endpos)
 }
 
-Pattern.fullmatch = function(self, string){
+Pattern_funcs.fullmatch = function(self, string){
     var $ = $B.args("match", 4,
                     {self: null, string: null, pos: null, endpos: null},
                     ["self", "string", "pos", "endpos"], arguments,
@@ -1300,13 +1337,13 @@ Pattern.fullmatch = function(self, string){
     }
 }
 
-Pattern.groupindex = {
-    __get__: function(self){
-        return GroupIndex.$factory(self)
-    }
+Pattern_funcs.groupindex_get = function(self){
+    return GroupIndex.$factory(self)
 }
 
-Pattern.match = function(self, string){
+Pattern_funcs.groupindex_set = _b_.None
+
+Pattern_funcs.match = function(self, string){
     var $ = $B.args("match", 4,
                     {self: null, string: null, pos: null, endpos: null},
                     ["self", "string", "pos", "endpos"], arguments,
@@ -1324,11 +1361,11 @@ Pattern.match = function(self, string){
     return mo ? MatchObject.$factory(mo) : _b_.None
 }
 
-Pattern.scanner = function(self, string, pos, endpos){
+Pattern_funcs.scanner = function(self, string, pos, endpos){
     return Scanner.$factory.apply(null, arguments) // self, string, pos, endpos)
 }
 
-Pattern.search = function(self, string){
+Pattern_funcs.search = function(self, string){
     var $ = $B.args("match", 4,
                     {self: null, string: null, pos: null, endpos: null},
                     ["self", "string", "pos", "endpos"], arguments,
@@ -1353,11 +1390,11 @@ Pattern.search = function(self, string){
     return _b_.None
 }
 
-Pattern.split = function(){
+Pattern_funcs.split = function(){
     return module.split.apply(null, arguments)
 }
 
-Pattern.sub = function(){
+Pattern_funcs.sub = function(){
     var $ = $B.args("match", 4,
                     {self: null, repl: null, string: null, count: null},
                     "self repl string count".split(' '), arguments,
@@ -1370,6 +1407,13 @@ Pattern.sub = function(){
 
     return module.sub($.self, $.repl, $.string, $.count)
 }
+
+Pattern.tp_methods = [
+    "__copy__", "__deepcopy__", "__reduce__", "__reduce_ex__", "findall",
+    "finditer", "fullmatch", "match", "scanner", "search", "split", "sub"
+]
+
+Pattern.tp_getset = ["groupindex"]
 
 $B.set_func_names(Pattern, "re")
 $B.finalize_type(Pattern)
@@ -2929,7 +2973,7 @@ function StringObj(obj){
                 i++
             }
         }
-        this.length = _b_.str.__len__(obj)
+        this.length = $B.str_len(obj)
         if(obj instanceof String){
             // store for next use
             obj.codepoints = this.codepoints
@@ -2940,12 +2984,12 @@ function StringObj(obj){
         this.string = obj.string
         this.codepoints = obj.codepoints
         this.index_map = obj.index_map
-        this.length = _b_.str.__len__(obj)
+        this.length = $B.str_len(obj)
     }else if($B.$isinstance(obj, _b_.str)){ // str subclass
         var so = new StringObj(_b_.str.$factory(obj))
         this.string = so.string
         this.codepoints = so.codepoints
-        this.length = _b_.str.__len__(obj)
+        this.length = $B.str_len(obj)
     }else if($B.$isinstance(obj, [_b_.bytes, _b_.bytearray])){
         this.string = _b_.bytes.decode(obj, 'latin1')
         this.codepoints = obj.source
@@ -3315,15 +3359,7 @@ MatchObject.$factory = function(mo){
     }
 }
 
-MatchObject.__copy__ = function(self){
-    return self
-}
-
-MatchObject.__deepcopy__ = function(self){
-    return self
-}
-
-MatchObject.__getitem__ = function(){
+MatchObject.mp_subscript = function(){
     var $ = $B.args("__getitem__", 2, {self: null, key: null},
                 ['self', 'key'], arguments, {}, null, null),
         self = $.self,
@@ -3343,11 +3379,31 @@ MatchObject.__getitem__ = function(){
     $B.RAISE(_b_.IndexError, "no such group")
 }
 
+MatchObject.tp_new = function(){
+    var $ = $B.args('__new__', 2, {cls: null, mo: null}, ['cls', 'mo'],
+                arguments, {}, null, null)
+    var cls = $.cls,
+        mo = $.mo
+    var res = MatchObject.$factory(mo)
+    res.ob_type = cls
+    return res
+}
+
 MatchObject.tp_repr =  function(self){
     return self.mo.toString()
 }
 
-MatchObject.end = function(self){
+var MatchObject_funcs = MatchObject.tp_funcs = {}
+
+MatchObject_funcs.__copy__ = function(self){
+    return self
+}
+
+MatchObject_funcs.__deepcopy__ = function(self){
+    return self
+}
+
+MatchObject_funcs.end = function(self){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
     var group = MatchObject.group(self, $.group)
@@ -3360,13 +3416,11 @@ MatchObject.end = function(self){
     }
 }
 
-MatchObject.endpos = _b_.property.$factory(
-    function(self){
-        return self.mo.endpos
-    }
-)
+MatchObject_funcs.endpos = function(self){
+    return self.mo.endpos
+}
 
-MatchObject.expand = function(){
+MatchObject_funcs.expand = function(){
     var $ = $B.args("expand", 2, {self: null, template: null},
                 ['self', 'template'], arguments, {}, null, null)
     var data = {
@@ -3380,7 +3434,7 @@ MatchObject.expand = function(){
     }
 }
 
-MatchObject.group = function(self){
+MatchObject_funcs.group = function(self){
     var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
                 {}, 'args', null),
             self = $.self,
@@ -3415,7 +3469,7 @@ MatchObject.group = function(self){
     return $B.fast_tuple(result)
 }
 
-MatchObject.groupdict = function(){
+MatchObject_funcs.groupdict = function(){
     /*
     Return a dictionary containing all the named subgroups of the match, keyed
     by the subgroup name. The default argument is used for groups that did not
@@ -3440,7 +3494,7 @@ MatchObject.groupdict = function(){
     return d
 }
 
-MatchObject.groups = function(self){
+MatchObject_funcs.groups = function(self){
     var $ = $B.args("group", 2, {self: null, default: null},
                 ['self', 'default'], arguments,
                 {default: _b_.None}, null, null),
@@ -3449,7 +3503,7 @@ MatchObject.groups = function(self){
     return self.mo.groups(_default)
 }
 
-MatchObject.lastindex = _b_.property.$factory(
+MatchObject_funcs.lastindex = _b_.property.$factory(
    function(self){
         /* The integer index of the last matched capturing group, or None if
            no group was matched at all.
@@ -3462,7 +3516,7 @@ MatchObject.lastindex = _b_.property.$factory(
     }
 )
 
-MatchObject.lastgroup = _b_.property.$factory(
+MatchObject_funcs.lastgroup = _b_.property.$factory(
     function(self){
         /* The name of the last matched capturing group, or None if the group
            didn't have a name, or if no group was matched at all.
@@ -3477,34 +3531,30 @@ MatchObject.lastgroup = _b_.property.$factory(
     }
 )
 
-MatchObject.pos = _b_.property.$factory(
-    function(self){
-        return self.mo.start
-    }
-)
+MatchObject_funcs.pos = function(self){
+    return self.mo.start
+}
 
-MatchObject.re = _b_.property.$factory(
-    function(self){
-        return self.mo.node.pattern
-    }
-)
+MatchObject_funcs.re = function(self){
+    return self.mo.node.pattern
+}
 
-MatchObject.regs = _b_.property.$factory(
-    function(self){
-        var res = [$B.fast_tuple($B.fast_tuple([self.mo.start, self.mo.end]))]
-        for(var group_num in self.mo.node.$groups){
-            if(isFinite(group_num)){
-                var group = self.mo.node.$groups[group_num].item
-                // group.pattern includes the opening and closing brackets
-                res.push($B.fast_tuple([group.pos,
-                    group.pos + group.pattern.length - 2]))
-            }
+MatchObject_funcs.regs_get = function(self){
+    var res = [$B.fast_tuple($B.fast_tuple([self.mo.start, self.mo.end]))]
+    for(var group_num in self.mo.node.$groups){
+        if(isFinite(group_num)){
+            var group = self.mo.node.$groups[group_num].item
+            // group.pattern includes the opening and closing brackets
+            res.push($B.fast_tuple([group.pos,
+                group.pos + group.pattern.length - 2]))
         }
-        return $B.fast_tuple(res)
     }
-)
+    return $B.fast_tuple(res)
+}
 
-MatchObject.span = function(){
+MatchObject_funcs.regs_set = _b_.None
+
+MatchObject_funcs.span = function(){
     /*
     Match.span([group])
 
@@ -3527,7 +3577,7 @@ MatchObject.span = function(){
     return $B.fast_tuple([span.start, span.end])
 }
 
-MatchObject.start = function(self){
+MatchObject_funcs.start = function(self){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
     var group = MatchObject.group(self, $.group)
@@ -3540,11 +3590,22 @@ MatchObject.start = function(self){
     }
 }
 
-MatchObject.string = _b_.property.$factory(
+MatchObject_funcs.string = _b_.property.$factory(
     function(self){
         return self.mo.string.to_str()
     }
 )
+
+MatchObject.tp_methods = [
+    "__copy__", "__deepcopy__", "end", "expand", "group", "groupdict", 
+    "groups", "span", "start"
+]
+
+MatchObject.tp_getset = ["regs"]
+
+MatchObject.tp_members = [
+    "endpos", "pos", "re"
+]
 
 $B.set_func_names(MatchObject, 're')
 $B.finalize_type(MatchObject)
@@ -4181,9 +4242,8 @@ var DOTALL = module.S = module.DOTALL = Flag.$factory(16)
 var U = module.U = module.UNICODE = Flag.$factory(32)
 var VERBOSE = module.X = module.VERBOSE = Flag.$factory(64)
 module.cache = cache
-module._compile = module.compile
 
-$B.set_func_names(module, 're')
+$B.set_func_names(module, '_re')
 
 var inline_flags = {
     i: IGNORECASE,

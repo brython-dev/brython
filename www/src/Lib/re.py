@@ -33,11 +33,6 @@ class RegexFlag:
 
 
 from python_re import *
-from browser import console
-
-
 import python_re
-_compile = python_re._compile
 _reconstructor = python_re._reconstructor
-
 python_re._reconstructor.__module__ = 're'
