@@ -394,6 +394,8 @@ dict.$delitem  = function(self, key){
     $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
 }
 
+$B.dict_delitem = dict.$delitem
+
 function dict_eq(){
     var $ = $B.args("__eq__", 2, {self: null, other: null},
         ["self", "other"], arguments, {}, null, null),

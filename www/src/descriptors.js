@@ -90,61 +90,41 @@ $B.method_wrapper.tp_getset = ["__objclass__", "__name__", "__qualname__", "__te
 $B.set_func_names($B.method_wrapper, 'builtins')
 /* method_wrapper end */
 
-$B.member_descriptor.$factory = function(name, cls){
-    return {
-        ob_type: $B.member_descriptor,
-        d_member: {
-            ml: {ml_name: name},
-            cls
-        }
-    }
-}
 
 /* member_descriptor start */
-$B.member_descriptor.tp_descr_set = function(self, kls, value){
-    if(value === $B.NULL){
-            if(kls.$slot_values === undefined ||
-                ! kls.$slot_values.hasOwnProperty(self.attr)){
-            $B.RAISE_ATTRIBUTE_ERROR('cannot delete', self, self.attr)
-        }
-        kls.$slot_values.delete(self.attr)
-        return
+$B.member_descriptor.tp_descr_set = function(self, obj, value){
+    if(self.setter){
+        self.setter(obj, value)
     }
-    if(kls.$slot_values === undefined){
-        kls.$slot_values = new Map()
-    }
-    kls.$slot_values.set(self.attr, value)
 }
 
 $B.member_descriptor.tp_repr = function(self){
-    return "<member '" + self.d_member.ml.ml_name + "' of '" +
-        self.d_member.cls.tp_name + "' objects>"
+    return "<member '" + self.name + "' of '" +
+        self.d_type.tp_name + "' objects>"
 }
 
 $B.member_descriptor.tp_descr_get = function(self, obj, kls){
-    if(obj === _b_.None){
+    if(obj === $B.NULL){
         return self
     }
-    return self.d_member.method(obj)
+    return self.getter(obj)
 }
 
 var member_descriptor_funcs = $B.member_descriptor.tp_funcs = {}
 
 member_descriptor_funcs.__name__ = function(self){
-    return self.attr
+    return self.name
 }
 
 member_descriptor_funcs.__objclass__ = function(self){
-
+    return self.d_type
 }
 
 member_descriptor_funcs.__qualname___get = function(self){
-
+    return self.name
 }
 
-member_descriptor_funcs.__qualname___set = function(self){
-
-}
+member_descriptor_funcs.__qualname___set = _b_.None
 
 member_descriptor_funcs.__reduce__ = function(self){
 
@@ -340,11 +320,21 @@ $B.method_descriptor.tp_repr = function(self){
 }
 
 $B.method_descriptor.tp_call = function(self, ...args){
+    if(args.length == 0){
+        var name = self.ml.ml_name
+        var class_name = self.cls.tp_name
+        $B.RAISE(_b_.TypeError,
+            `"unbound method ${class_name}.${name} needs an argument`
+        )
+    }
     try{
         var res = self.method(...args)
         return res
     }catch(err){
         console.log('error in method_descriptor call')
+        console.log('self.method', self.method)
+        console.log('args', args)
+        console.log('frame obj', $B.frame_obj)
         console.log(err)
         throw err
     }
@@ -446,14 +436,6 @@ $B.classmethod_descriptor.tp_descr_get = function(self, obj, type){
         }
     )
     return f
-    /*
-    var f = function(obj){
-        return self(type, ...arguments)
-    }
-    f.ob_type = $B.builtin_function_or_method
-    f.$function_infos = _self.$function_infos
-    return f
-    */
 }
 
 var classmethod_descriptor_funcs = $B.classmethod_descriptor.tp_funcs = {}
@@ -516,7 +498,7 @@ $B.getset_descriptor.$factory = function(klass, attr, getset){
 $B.getset_descriptor.tp_descr_set = function(self, obj, value){
     if(self.setter === undefined){
         $B.RAISE_ATTRIBUTE_ERROR(
-            `attribute '${self.attr}' of '${self.cls.__qualname__}' objects is not writable`,
+            `attribute '${self.attr}' of '${self.cls.tp_name}' objects is not writable`,
             self,
             self.attr)
     }
@@ -617,18 +599,6 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){
         wrapped: self.wrapped
     }
     return res
-    /*
-    // self is the dunder method, obj is an object
-    var f = function(){
-        return self.call(null, obj, ...arguments)
-    }
-    f.ob_type = $B.method_wrapper
-    f.$function_infos = self.$function_infos
-    f.__objclass__ = self.__objclass__
-    console.log('wrapper_descr __get__', self, obj, type)
-    console.log('     returns', f)
-    return f
-    */
 }
 
 var wrapper_descriptor_funcs = $B.wrapper_descriptor.tp_funcs = {}

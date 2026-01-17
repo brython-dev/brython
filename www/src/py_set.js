@@ -518,6 +518,7 @@ _b_.set.tp_richcompare = function(self, other, op){
             res = _b_.NotImplemented
             break
     }
+    return res
 }
 
 _b_.set.nb_subtract = function(self, other){

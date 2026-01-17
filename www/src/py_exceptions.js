@@ -233,9 +233,9 @@ var frame = $B.frame
 
 /* frame */
 $B.frame.tp_repr = function(self){
-    return '<frame object, file ' + _self.__file__ +
-        ', line ' + _self.$lineno + ', code ' +
-        frame.f_code.__get__(_self).co_name + '>'
+    return '<frame object, file ' + self.__file__ +
+        ', line ' + self.$lineno + ', code ' +
+        frame.tp_funcs.f_code_get(self).co_name + '>'
 }
 
 var frame_funcs = $B.frame.tp_funcs = {}
@@ -258,7 +258,7 @@ frame_funcs.f_back_get = function(self){
         frame_obj = frame_obj.prev
     }
     if(frame_obj.prev !== null){
-        return frame.$factory(frame_obj.prev.frame)
+        return frame_obj.prev.frame
     }
     return _b_.None
 }
@@ -830,15 +830,22 @@ $B.attr_error = function(name, obj){
 
 // NameError supports keyword-only "name" parameter
 
+/* NameError start */
 _b_.NameError.tp_init = function(){
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name'], $.kw)
 }
 
-_b_.NameError.tp_repr = function(self){
+var NameError_funcs = _b_.NameError.tp_funcs = {}
+
+NameError_funcs.name = function(self){
     return self.args[0]
 }
+
+_b_.NameError.tp_members = ["name"]
+
+/* NameError end */
 
 $B.set_func_names(_b_.NameError, 'builtins')
 

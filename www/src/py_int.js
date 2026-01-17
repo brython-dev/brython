@@ -6,36 +6,6 @@ var _b_ = $B.builtins
 var int = _b_.int
 var NULL = $B.NULL
 
-function long_long_getter(self){
-    return int_value(self)
-}
-
-function long_get0(){
-    return 0
-}
-
-function long_get1(){
-    return 1
-}
-
-/* int.tp_getset start */
-int.tp_getset = [
-    ["real", long_long_getter, NULL],
-    ["imag", long_get0, NULL],
-    ["numerator", long_long_getter, NULL],
-    ["denominator", long_get1, NULL]
-]
-/* int.tp_getset end */
-
-function long_long_meth(self){
-    return int_value(self)
-}
-
-function int_is_integer(){
-    return true
-}
-
-
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
         " : 'int' and '" + $B.class_name(other) + "'"

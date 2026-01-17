@@ -71,6 +71,7 @@ Object.assign($B.wrapper_methods,
         sq_length: wrap('__len__'),
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
+        tp_descr_set: wrap('__set__'),
         tp_getattro: make_getattribute,
         tp_finalize: wrap('__del__'),
         tp_hash: wrap('__hash__'),
@@ -220,7 +221,8 @@ $B.finalize_type = function(cls){
                     ob_type: $B.member_descriptor,
                     d_member: member,
                     d_type: cls,
-                    d_name: descr
+                    name: descr,
+                    getter: cls.tp_funcs[descr]
                 })
             }
         }

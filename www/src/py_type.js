@@ -57,16 +57,37 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     delete extra_kwargs.metaclass
 
+    // set __module__ and __qualname__ before calling metaclass.__new__
+    var classdef_frame = $B.frame_obj.prev.frame
+    var module = classdef_frame[2]
+    $B.str_dict_set(dict, '__module__', module)
+
+    var stack = []
+    var frame_obj = $B.frame_obj.prev
+    while(frame_obj.prev){
+        var frame = frame_obj.frame
+        if(frame[0] == frame[2]){
+            break
+        }
+        if(class_name == 'Foo'){
+            console.log('frame', frame_obj.frame)
+        }
+        stack.push(frame_obj.frame[0] + '.')
+        frame_obj = frame_obj.prev
+    }
+    var qualname = `${stack.join('')}${class_name}`
+    $B.str_dict_set(dict, '__qualname__', qualname)
+
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
-    if(dict.__eq__ !== undefined &&
-            dict.__hash__ === undefined){
-        dict.__hash__ = _b_.None
+    if($B.str_dict_get(dict, '__eq__', $B.NULL) !== $B.NULL &&
+            $B.str_dict_get(dict, '__hash__', $B.NULL) === $B.NULL){
+        $B.str_dict_set(dict, '__hash__', _b_.None)
     }
 
     // Check if class has __slots__
-    var slots = dict.__slots__
-    if(slots !== undefined){
+    var slots = $B.str_dict_get(dict, '__slots__', $B.NULL)
+    if(slots !== $B.NULL){
         if(typeof slots == "string"){
             slots = [slots]
         }else{
@@ -77,7 +98,7 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
                 }
             }
         }
-        dict.__slots__ = slots
+        $B.str_dict_set(dict, '__slots__', slots)
     }
 
     set_type_new(dict)
@@ -312,8 +333,8 @@ function type_new_get_bases(ctx, type){
     var winner = calculate_metaclass(ctx.metatype, ctx.bases)
 
     if(winner !== ctx.metatype){
-        var winner_new_func = $B.search_own_slot(winner, 'tp_new', $B.NULL)
-        var type_new_func = $B.search_own_slot(type, 'tp_new', $B.NULL)
+        var winner_new_func = $B.search_slot(winner, 'tp_new', $B.NULL)
+        var type_new_func = $B.search_slot(type, 'tp_new', $B.NULL)
         if(winner_new_func !== type_new_func){
             /* Pass it to the winner */
             type = winner_new_func(winner, ...ctx.args, $B.dict2kwarg(ctx.kwds))
@@ -326,8 +347,6 @@ function type_new_get_bases(ctx, type){
     ctx.base = best_base(ctx.bases)
     return 0
 }
-
-
 
 $B.make_class_namespace = function(metaclass, class_name, qualname,
                                    orig_bases, bases){
@@ -373,6 +392,109 @@ $B.resolve_mro_entries = function(bases){
         }
     }
     return has_mro_entries ? new_bases : bases
+}
+
+$B.make_annotate_func = function(dict, annotations, class_frame){
+    if(annotations === undefined){
+        $B.str_dict_set(dict, '__annotate_func__', _b_.None)
+        return
+    }
+    var __annotate_func__ = annotations
+    $B.str_dict_set(dict, '__annotate_func__', __annotate_func__)
+    $B.set_function_infos(__annotate_func__,
+        {
+            __defaults__: _b_.None,
+            __kwdefaults__: _b_.None,
+            __name__: '__annotate__',
+            __module__: class_frame[2],
+            __qualname__: class_frame[0] + '.__annotate__'
+        }
+    )
+}
+
+$B.check_annotate_format = function(format){
+    if(! $B.$isinstance(format, _b_.int)){
+        $B.RAISE(_b_.TypeError, '__annotate__ argument should be ' +
+            `int, not ${$B.class_name(format)}`)
+    }
+    if(format != 1 && format != 2){
+        $B.RAISE(_b_.NotImplementedError, '')
+    }
+}
+
+$B.postpone_annotations = function(obj, file){
+    // create property __annotations__ for a module with
+    // "from __future__ import annotations
+    var module_frame = $B.frame_obj.frame
+    obj.$annotations = {}
+    Object.defineProperty(obj, '__annotations__',
+        {
+            configurable: true,
+            get(){
+                if(obj.$set_annotations){
+                    return obj.$set_annotations
+                }
+                var res = $B.empty_dict()
+                for(var key in obj.$annotations){
+                    _b_.dict.$setitem(res, key, obj.$annotations[key][1]())
+                }
+                return res
+            },
+            set(value){
+                obj.$set_annotations = value
+            }
+        }
+    )
+}
+
+$B.make_module_annotate = function(locals){
+    Object.defineProperty(locals, '__annotations__',
+        {
+            get() {
+                if(locals.$set_annotations){
+                    return locals.$set_annotations
+                }
+                if(locals.__annotate__){
+                    return locals.__annotate__(1)
+                }
+                return locals.__annotate_func__(1)
+            },
+            set(value){
+                locals.$set_annotations = value
+            }
+        }
+    )
+    Object.defineProperty(locals, '__annotate__',
+        {
+            get() {
+                if(locals.$annotate){
+                    return locals.$annotate
+                }
+                return locals.__annotate_func__
+            },
+            set(value){
+                locals.$annotate = value
+            }
+        }
+    )
+    locals.__annotate_func__ = function(format){
+        switch(format){
+            case 1:
+                var ann_dict = $B.empty_dict()
+                for(var key in locals.$annotations){
+                    var item = locals.$annotations[key]
+                    //frame.$lineno = item[0]
+                    $B.$setitem(ann_dict, key, item[1]())
+                }
+                return ann_dict
+            default:
+                $B.RAISE(_b_.NotImplementedError, )
+        }
+    }
+    $B.add_function_infos(locals, '__annotate_func__')
+
+    $B.set_function_attr(locals.__annotate_func__, '__name__', '__annotate__')
+    $B.set_function_attr(locals.__annotate_func__, '__qualname__', '__annotate__')
 }
 
 function object_get_dict(obj){
@@ -644,8 +766,6 @@ type.$call_no_init = function(klass, new_func){
     return new_func.bind(null, klass)
 }
 
-
-
 $B.$class_getitem = function(kls, origin, args){
     return $B.GenericAlias.$factory(kls, origin, args)
 }
@@ -674,13 +794,6 @@ $B.merge_class_dict = function(dict, klass){
 $B.set_class_attr = function(cls_dict, attr, value){
     cls_dict.$strings[attr] = value
 }
-
-/*
-type.__format__ = function(klass){
-    // For classes, format spec is ignored, return str(klass)
-    return _b_.str.$factory(klass)
-}
-*/
 
 var NULL = {NULL:true}
 
@@ -777,9 +890,6 @@ $B.type_getattribute = function(klass, attr, _default){
 }
 
 
-// __name__ is a data descriptor
-type.tp_name = 'type'
-
 type.__ror__ = function(){
     var len = arguments.length
     if(len != 1){
@@ -807,28 +917,23 @@ function type_mro(cls){
     return $B.$list(type.$mro(cls))
 }
 
-
-
-$B.set_func_names(type, "builtins")
-
-function type___subclasses__(klass){
-
-}
-
-function type___subclasscheck__(cls, subclass){
-    // Is subclass a subclass of self ?
-    if(subclass.tp_bases === undefined){
-        return self === _b_.object
+function make_slot_getter(name){
+    return function(self){
+        if(! self.hasOwnProperty('slot_values') ||
+                ! self.slot_values.hasOwnProperty(name)){
+            throw $B.attr_error(name, self)
+        }
+        return self.slot_values[name]
     }
-    return subclass.tp_bases.indexOf(cls) > -1
 }
-function type___dir__(klass){
-    var dict = $B.empty_dict()
-    $B.merge_class_dict(dict, klass)
-    return _b_.sorted(dict)
-}
-function type___sizeof__(klass){
- $B.RAISE(_b_.NotImplementedError)
+
+function make_slot_setter(name){
+    return function(self, value){
+        if(! self.hasOwnProperty('slot_values')){
+            self.slot_values = {}
+        }
+        self.slot_values[name] = value
+    }
 }
 
 /* type start */
@@ -864,32 +969,6 @@ _b_.type.tp_setattro = function(kls, attr, value){
         $B.str_dict_set(kls.dict, attr, value)
     }
     return _b_.None
-    /*
-    kls[attr] = value
-
-    var mp = kls.dict
-    // mapping proxy is read-only, set key/value without using __setitem__
-    mp[attr] = value
-
-    switch(attr){
-        case '__init__':
-        case '__new__':
-            // redefine the function that creates instances of the class
-            kls.$factory = $B.$instance_creator(kls)
-            break
-        case "__bases__XXX":
-            // redefine mro
-            kls.__mro__ = _b_.type.mro(kls)
-            break
-        case '__setattr__':
-            var initial_value = kls.$tp_setattr
-            kls.$tp_setattr = value
-            update_subclasses(kls, '__setattr__', '$tp_setattr', value)
-            break
-    }
-    if($test){console.log("after setattr", kls)}
-    return _b_.None
-    */
 }
 
 _b_.type.nb_or = function(){
@@ -969,8 +1048,6 @@ _b_.type.tp_call = function(){
                     init_func.call(null, instance, ...$.args)
                 }
             }catch(err){
-                console.log('error in init of', cls)
-                console.log('frame obj', $B.frame_obj)
                 throw err
             }
         }
@@ -979,7 +1056,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == 'spam'
+    var test = false // name == 'mro'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1086,6 +1163,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
     $B.set_class_attr(cl_dict, '__module__', module)
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
+    $B.set_class_attr(cl_dict, '__qualname__', qualname)
 
     var [name, bases, orig_dict] = args
 
@@ -1115,31 +1193,10 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         }
         return res.type
     }
-    //type = type_new_impl(ctx)
 
-    /*
-    if(meta === _b_.type){
-        var resolved_bases = $B.resolve_mro_entries(bases)
-        meta = $B.get_metaclass(name, resolved_bases)
-        if(test){
-            console.log('metaclass from bases', meta)
-        }
-    }
-
-    var meta_new = $B.search_slot(meta, 'tp_new', $B.NULL)
-    if(meta_new === $B.NULL){
-        $B.RAISE(_b_.TypeError, `no __new__ for metaclass ${name}`)
-    }
-    if(meta_new !== _b_.type.tp_new){
-        console.log('meta_new', meta_new)
-        throw Error('trace')
-        return meta_new.apply(null, arguments)
-    }
-    */
     var class_obj = {
         ob_type: ctx.metatype,
         tp_bases : ctx.bases,
-        __module__: module,
         tp_name: name,
         dict: cl_dict,
         $is_class: true
@@ -1148,8 +1205,14 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if(slots !== $B.NULL){
         for(let key of $B.make_js_iterator(slots)){
-            $B.str_dict_set(cl_dict, key,
-                $B.member_descriptor.$factory(key, class_obj))
+            var md = {
+                ob_type: $B.member_descriptor,
+                d_type: class_obj,
+                name: key,
+                getter: make_slot_getter(key),
+                setter: make_slot_setter(key)
+            }
+            $B.str_dict_set(cl_dict, key, md)
         }
     }
 
@@ -1240,24 +1303,43 @@ type_funcs.__annotate___set = function(self){
 
 }
 
-type_funcs.__annotations___get = function(self){
-    console.log('get annotations', self)
+type_funcs.__annotations___get = function(cls){
+    var annotations = $B.str_dict_get(cls.dict, '__annotations__', $B.NULL)
+    if(annotations !== $B.NULL){
+        return annotations
+    }
+    var ann_func = $B.str_dict_get(cls.dict, '__annotate_func__', $B.NULL)
+    if(ann_func === $B.NULL || ann_func === _b_.None){
+        return $B.empty_dict()
+    }
+    return $B.$call(ann_func, 1)
 }
 
 type_funcs.__annotations___set = function(self){
 
 }
 
-type_funcs.__base__ = function(self){
-
+type_funcs.__base__ = function(cls){
+    return cls.tp_base
 }
 
-type_funcs.__bases___get = function(self){
-
+type_funcs.__bases___get = function(cls){
+    return $B.fast_tuple(cls.tp_bases)
 }
 
-type_funcs.__bases___set = function(self){
-
+type_funcs.__bases___set = function(){
+    var $ = $B.args('__bases__', 2, {cls: null, bases: null}, ['cls', 'bases'],
+                arguments, {}, null, null)
+    var cls = $.cls,
+        bases = $.bases
+    if(! $B.exact_type(bases, _b_.tuple)){
+        $B.RAISE(_b_.TypeError,
+            `can only assign tuple to ${$B.get_name(cls)}.__bases__, ` +
+            `not ${$B.class_name(bases)}`
+        )
+    }
+    cls.tp_bases = bases
+    cls.tp_mro = $B.make_mro(cls)
 }
 
 type_funcs.__basicsize__ = function(self){
@@ -1348,7 +1430,7 @@ type_funcs.__prepare__ = function(cls){
 }
 
 type_funcs.__qualname___get = function(cls){
-    return $B.get_name(cls)
+    return $B.str_dict_get(cls.dict, '__qualname__', $B.get_name(cls))
 }
 
 type_funcs.__qualname___set = function(cls, value){
@@ -1392,8 +1474,8 @@ type_funcs.__weakrefoffset__ = function(self){
 
 }
 
-type_funcs.mro = function(self){
-
+type_funcs.mro = function(cls){
+    return $B.$list($B.get_mro(cls))
 }
 
 _b_.type.tp_methods = ["mro", "__subclasses__", "__instancecheck__", "__subclasscheck__", "__dir__", "__sizeof__"]
@@ -1405,6 +1487,8 @@ _b_.type.tp_members = ["__basicsize__", "__itemsize__", "__flags__", "__weakrefo
 _b_.type.tp_getset = ["__name__", "__qualname__", "__bases__", "__mro__", "__module__", "__abstractmethods__", "__dict__", "__doc__", "__text_signature__", "__annotations__", "__annotate__", "__type_params__"]
 
 /* type end */
+
+$B.set_func_names(type, "builtins")
 
 
 // property (built in function)
@@ -2141,7 +2225,7 @@ $B.UnionType.__eq__ = function(self, other){
     if(! $B.$isinstance(other, $B.UnionType)){
         return _b_.NotImplemented
     }
-    return _b_.list.__eq__(self.items, other.items)
+    return $B.list_eq(self.items, other.items)
 }
 
 $B.UnionType.__or__ = function(self, other){
@@ -2177,100 +2261,6 @@ $B.UnionType.tp_members = ['__args__']
 $B.UnionType.tp_getset = ['__parameters__']
 
 $B.set_func_names($B.UnionType, "types")
-
-
-$B.make_annotate_func = function(dict, annotations, class_frame){
-    if(annotations === undefined){
-        dict.__annotate_func__ = _b_.None
-        return
-    }
-    var __annotate_func__ = annotations
-    dict.__annotate_func__ = __annotate_func__
-    $B.set_function_infos(__annotate_func__,
-        {
-            __defaults__: _b_.None,
-            __kwdefaults__: _b_.None,
-            __name__: '__annotate__',
-            __module__: class_frame[2],
-            __qualname__: class_frame[0] + '.__annotate__'
-        }
-    )
-}
-
-$B.postpone_annotations = function(obj, file){
-    // create property __annotations__ for a module with
-    // "from __future__ import annotations
-    var module_frame = $B.frame_obj.frame
-    obj.$annotations = {}
-    Object.defineProperty(obj, '__annotations__',
-        {
-            configurable: true,
-            get(){
-                if(obj.$set_annotations){
-                    return obj.$set_annotations
-                }
-                var res = $B.empty_dict()
-                for(var key in obj.$annotations){
-                    _b_.dict.$setitem(res, key, obj.$annotations[key][1]())
-                }
-                return res
-            },
-            set(value){
-                obj.$set_annotations = value
-            }
-        }
-    )
-}
-
-$B.make_module_annotate = function(locals){
-    Object.defineProperty(locals, '__annotations__',
-        {
-            get() {
-                if(locals.$set_annotations){
-                    return locals.$set_annotations
-                }
-                if(locals.__annotate__){
-                    return locals.__annotate__(1)
-                }
-                return locals.__annotate_func__(1)
-            },
-            set(value){
-                locals.$set_annotations = value
-            }
-        }
-    )
-    Object.defineProperty(locals, '__annotate__',
-        {
-            get() {
-                if(locals.$annotate){
-                    return locals.$annotate
-                }
-                return locals.__annotate_func__
-            },
-            set(value){
-                locals.$annotate = value
-            }
-        }
-    )
-    locals.__annotate_func__ = function(format){
-        switch(format){
-            case 1:
-                var ann_dict = $B.empty_dict()
-                for(var key in locals.$annotations){
-                    var item = locals.$annotations[key]
-                    //frame.$lineno = item[0]
-                    $B.$setitem(ann_dict, key, item[1]())
-                }
-                return ann_dict
-            default:
-                $B.RAISE(_b_.NotImplementedError, )
-        }
-    }
-    $B.add_function_infos(locals, '__annotate_func__')
-
-    $B.set_function_attr(locals.__annotate_func__, '__name__', '__annotate__')
-    $B.set_function_attr(locals.__annotate_func__, '__qualname__', '__annotate__')
-}
 
 
 })(__BRYTHON__);

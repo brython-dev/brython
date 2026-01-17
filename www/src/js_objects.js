@@ -1024,7 +1024,7 @@ js_array.mp_ass_subscript = function(self, key, value){
 
 js_array.__eq__ = function(_self, other){
     if($B.$isinstance(other, _b_.list)){
-        return _b_.list.__eq__($B.$list(_self.map(jsobj2pyobj)), other)
+        return $B.list_eq($B.$list(_self.map(jsobj2pyobj)), other)
     }else if(other.$is_js_array){
         if(_self.length != other.length){
             return false

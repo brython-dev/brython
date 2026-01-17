@@ -70,27 +70,6 @@ function _float_div_mod(vx, wx){
     return {floordiv, mod}
 }
 
-float.__eq__ = function(self, other){
-    check_self_is_float(self, '__eq__')
-    if(isNaN(self.value) &&
-            ($B.$isinstance(other, float) && isNaN(other.value))){
-        return false
-    }
-    if($B.$isinstance(other, _b_.int)){
-        return self.value == other
-    }
-    if($B.$isinstance(other, float)) {
-        return self.value == other.value
-    }
-    if($B.$isinstance(other, _b_.complex)){
-        if(! $B.rich_comp('__eq__', 0, other.$imag)){
-            return false
-        }
-        return float.__eq__(self, other.$real)
-    }
-    return _b_.NotImplemented
-}
-
 const DBL_MANT_DIG = 53,
       LONG_MAX = $B.MAX_VALUE,
       DBL_MAX_EXP = 2 ** 10,
@@ -435,14 +414,6 @@ function ldexp(mantissa, exponent) {
 }
 
 float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
-
-
-
-
-float.__ne__ = function(self, other){
-    var res = float.__eq__(self, other)
-    return res === _b_.NotImplemented ? res : ! res
-}
 
 function float_round(x, ndigits){
     function overflow(){

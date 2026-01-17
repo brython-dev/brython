@@ -733,15 +733,6 @@ $B.check_nb_args_no_kw = function(name, expected, args){
     }
 }
 
-$B.check_annotate_format = function(format){
-    if(! $B.$isinstance(format, _b_.int)){
-        $B.RAISE(_b_.TypeError, '__annotate__ argument should be ' +
-            `int, not ${$B.class_name(format)}`)
-    }
-    if(format != 1 && format != 2){
-        $B.RAISE(_b_.NotImplementedError, '')
-    }
-}
 
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
@@ -1256,7 +1247,7 @@ $B.$delitem = function(obj, item, inum){
             )
         }else{
             try{
-                _b_.dict.__delitem__(obj, item)
+                $B.dict_delitem(obj, item)
             }catch(err){
                 if($B.is_exc(err, [_b_.KeyError])){
                     $B.set_inum(inum)
@@ -1267,7 +1258,7 @@ $B.$delitem = function(obj, item, inum){
         return
     }else if(klass === _b_.list){
         try{
-            return _b_.list.__delitem__(obj, item)
+            return $B.list_delitem(obj, item)
         }catch(err){
             if($B.is_exc(err, [_b_.IndexError])){
                 $B.set_inum(inum)
@@ -1519,10 +1510,10 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = false // callable.ob_type === $B.method_wrapper
+    var test = false // callable === _b_.super
     var klass = $B.get_class(callable)
     if(test){
-        console.log('call', callable, 'klass', klass)
+        console.log('call', callable, 'klass', klass, 'args', args)
     }
     var call_method = $B.search_slot(klass, 'tp_call', $B.NULL)
     if(test){

@@ -485,8 +485,6 @@ _b_.dir = function(obj){
 
     var klass = $B.get_class(obj)
 
-    console.log('dir of obj', obj, 'is class', $B.is_type(obj))
-
     if($B.is_type(obj)){
         // Use metaclass __dir__
         var dir_func = $B.$getattr($B.get_class(obj), "__dir__", $B.NULL)
@@ -1232,65 +1230,8 @@ $B.$hash = function(obj){
         return hash_func(obj)
     }
     $B.RAISE(_b_.TypeError, "unhashable type: '" +
-            _b_.str.$factory($B.jsobj2pyobj(obj)) + "'")
-    /*
-    if(obj.$is_class ||
-            klass === _b_.type ||
-            klass === $B.function){
-        return obj.__hashvalue__ = $B.$py_next_hash--
-    }
-    if(typeof obj == "string"){
-        return _b_.str.tp_hash(obj)
-    }else if(typeof obj == "number"){
-        return obj
-    }else if(typeof obj == "boolean"){
-        return obj ? 1 : 0
-    }else if(klass === _b_.float){
-        return _b_.float.$hash_func(obj)
-    }
-    // Implicit invocation of special methods uses object class, even if
-    // obj has an attribute __hash__
-    if(klass === undefined){
-        $B.RAISE(_b_.TypeError, "unhashable type: '" +
-                _b_.str.$factory($B.jsobj2pyobj(obj)) + "'")
-    }
-
-    var hash_method = _b_.type.__getattribute__(klass, '__hash__', _b_.None)
-
-    if(hash_method === _b_.None){
-        $B.RAISE(_b_.TypeError, "unhashable type: '" +
-                $B.class_name(obj) + "'")
-    }
-
-    // If no specific __hash__ method is supplied for the instance but
-    // a __eq__ method is defined, the object is not hashable
-    //
-    // class A:
-    //     def __eq__(self, other):
-    //         return False
-    //
-    // d = {A():1}
-    //
-    // throws an exception : unhashable type: 'A'
-    function check_int(v){
-        if((! Number.isInteger(v)) && ! $B.$isinstance(v, _b_.int)){
-            $B.RAISE(_b_.TypeError,
-                '__hash__ method should return an integer')
-        }
-        return v
-    }
-    var res
-    if(hash_method === _b_.object.__hash__){
-        if(_b_.type.__getattribute__(klass, '__eq__') !== _b_.object.__eq__){
-            $B.RAISE(_b_.TypeError, "unhashable type: '" +
-                $B.class_name(obj) + "'", 'hash')
-        }else{
-            return obj.__hashvalue__ = check_int(_b_.object.__hash__(obj))
-        }
-    }else{
-        return check_int($B.$call(hash_method), obj)
-    }
-    */
+            _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
+    )
 }
 
 var help = _b_.help = function(obj){
@@ -2687,9 +2628,9 @@ var $$super = _b_.super
 /* super start */
 _b_.super.tp_repr = function(self){
     $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
-    var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
-    if(self.__self_class__ !== undefined){
-        res += ', <' + $B.get_name($B.get_class(self.__self_class__)) + ' object>'
+    var res = "<super: <class '" + $B.get_name(self.type) + "'>"
+    if(self.obj_type !== undefined){
+        res += ', <' + $B.get_name($B.get_class(self.obj_type)) + ' object>'
     }else{
         res += ', NULL'
     }
@@ -2701,7 +2642,7 @@ _b_.super.tp_getattro = function(self, attr){
         if(attr == "__init__"){
             // use call on parent
             return function(){
-                mro[0].$js_func.call(self.__self_class__, ...arguments)
+                mro[0].$js_func.call(self.obj_type, ...arguments)
             }
         }
     }
@@ -2769,51 +2710,14 @@ _b_.super.tp_getattro = function(self, attr){
         console.log('result of super.tp_getattro', attr, res)
     }
     return res
-    /*
-    if(f.$type == "staticmethod" || attr == "__new__"){
-        return f
-    }else if(cls === _b_.classmethod){
-        return f.func.bind(null, object_or_type)
-    }else if(f.$is_property){
-        return f.fget(object_or_type)
-    }else if(typeof f != "function"){
-        return f
-    }else{
-        if(cls === $B.method){
-            // If the function is a bound method, use the underlying function
-            f = f.$infos.__func__
-        }
-        var method = function(){
-            var res = $B.$call(f, ...arguments)
-            if($test){
-                console.log("calling super", self.__self_class__, attr, f, "res", res)
-            }
-            return res
-        }
-        method.ob_type = $B.method
-        var module
-        if(f.$infos !== undefined){
-            module = f.$infos.__module__
-        }else if(cls === _b_.property){
-            module = f.fget.$infos.__module
-        }else if(f.$is_class){
-            module = f.__module__
-        }
-        method.$infos = {
-            __self__: self.__self_class__,
-            __func__: f,
-            __name__: attr,
-            __module__: module,
-            __qualname__: klass.__name__ + "." + attr
-        }
-        return method
-    }
-    */
 }
 
 _b_.super.tp_descr_get = function(self, instance){
     // https://www.artima.com/weblogs/viewpost.jsp?thread=236278
-    return $$super.$factory(self.__thisclass__, instance)
+    if(instance === $B.NULL){
+        return self
+    }
+    return $B.$call($$super, self.type, instance)
 }
 
 _b_.super.tp_init = function(self, _type, object_or_type){
@@ -2852,6 +2756,8 @@ _b_.super.tp_init = function(self, _type, object_or_type){
         }else if($B.$isinstance(object_or_type, _type)){
             $arg2 = 'object'
         }else{
+            console.log('obj', object_or_type)
+            console.log(Error('trace').stack)
             $B.RAISE(_b_.TypeError,
                 'super(type, obj): obj must be an instance ' +
                 'or subtype of type')

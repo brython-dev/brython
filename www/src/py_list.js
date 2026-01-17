@@ -262,7 +262,7 @@ $B.list_delitem = function(self, arg){
     }
 
     if(_b_.hasattr(arg, "__int__") || _b_.hasattr(arg, "__index__")){
-       list.__delitem__(self, _b_.int.$factory(arg))
+       $B.list_delitem(self, _b_.int.$factory(arg))
        return _b_.None
     }
 
@@ -322,7 +322,7 @@ list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
-function eq(self, other){
+var eq = $B.list_eq = function(self, other){
     if(other[$B.PYOBJ]){
         other = other[$B.PYOBJ]
     }
