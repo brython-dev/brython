@@ -7,7 +7,6 @@ defines = {}
 for dirpath, dirnames, filenames in os.walk(obj_dir):
     for filename in filenames:
         if filename.endswith('.h'):
-            print(filename)
             path = os.path.join(dirpath, filename)
             with open(path, encoding='utf-8') as f:
                 reading_def = False
