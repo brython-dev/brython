@@ -221,11 +221,20 @@ _b_.object.tp_setattro = function(self, attr, value){
             return setter(in_mro, self, value)
         }
     }
+    var slots = $B.str_dict_get(klass.dict, '__slots__', $B.NULL)
+    if(slots !== $B.NULL){
+        if($B.set_has(slots, attr)){
+            self.slot_values[attr] = value
+        }
+    }
     var dict = self.dict
     if(dict){
         _b_.dict.$setitem(dict, attr, value)
     }else{
-        self[attr] = value
+        $B.RAISE(_b_.AttributeError,
+            `'${$B.get_name(klass)}' object has no attribute ` +
+            `'${attr}' and no __dict__ for setting new attributes`
+        )
     }
     return _b_.None
 }
@@ -262,7 +271,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__doc__' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == '__dict__' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -350,7 +359,7 @@ _b_.object.tp_new = function(){
     var res = {
         ob_type: cls
     }
-    if(cls !== object){
+    if(cls !== object && $B.str_dict_get(cls.dict, '__slots__', $B.NULL) === $B.NULL){
         res.dict = $B.empty_dict()
     }
     return res

@@ -549,11 +549,10 @@ classmethod.$factory = function(func){
     $B.check_nb_args_no_kw('classmethod', 1, arguments)
     return {
         ob_type: classmethod,
+        dict: $B.empty_dict(),
         func
     }
 }
-
-
 
 /* classmethod start */
 _b_.classmethod.tp_repr = function(self){
@@ -597,7 +596,7 @@ _b_.classmethod.tp_init = function(self, func){
 _b_.classmethod.tp_new = function(cls){
     return {
         ob_type: cls,
-        func : _b_.None
+        dict: $B.empty_dict()
     }
 }
 
@@ -1025,7 +1024,7 @@ _b_.type.tp_call = function(){
     }
 
     // create an instance with __new__
-    var instance = new_func(cls, ...args, $B.dict2kwarg(kw)), //arguments),
+    var instance = new_func(cls, ...args, $B.dict2kwarg(kw)),
         instance_class = $B.get_class(instance)
     if(test){
         console.log('instance of type', instance)
@@ -1056,7 +1055,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == 'mro'
+    var test = false // name == 'class_method'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1209,7 +1208,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
                 ob_type: $B.member_descriptor,
                 d_type: class_obj,
                 name: key,
-                getter: make_slot_getter(key),
+                d_member: {method: make_slot_getter(key)},
                 setter: make_slot_setter(key)
             }
             $B.str_dict_set(cl_dict, key, md)
