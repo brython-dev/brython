@@ -439,6 +439,45 @@ Clipboard.__setitem__ = function(self, name, value){
 
 $B.set_func_names(Clipboard, "<dom>")
 
+function dimension_get(self, attr){
+    // Special case for Canvas
+    // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
+    if(self.tagName == "CANVAS" && self[attr]){
+        return self[attr]
+    }
+
+    if(self instanceof SVGElement){
+        return self[attr].baseVal.value
+    }
+    var computed = window.getComputedStyle(self).
+                          getPropertyValue(attr)
+    if(computed !== undefined){
+        if(computed == ''){
+            if(self.style[attr] !== undefined){
+                return parseInt(self.style[attr])
+            }else{
+                return 0
+            }
+        }
+        let prop = Math.floor(parseFloat(computed) + 0.5)
+        return isNaN(prop) ? 0 : prop
+    }else if(self.style[attr]){
+        return parseInt(self.style[attr])
+    }else{
+        $B.RAISE_ATTRIBUTE_ERROR("style." + attr +
+            " is not set for " + _b_.str.$factory(self), self, attr)
+    }
+}
+
+function dimension_set(self, attr, value){
+    if($B.$isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
+        self.style[attr] = value + "px"
+        return _b_.None
+    }else{
+        $B.RAISE(_b_.ValueError, attr + " value should be" +
+            " an integer or float, not " + $B.class_name(value))
+    }
+}
 
 // Class for DOM nodes
 var DOMNode = $B.make_builtin_class('DOMNode')
@@ -499,46 +538,6 @@ DOMNode.tp_getattro = function(self, attr){
     switch(attr) {
         case "attrs":
             return Attributes.$factory(self)
-        /*
-        case "children":
-        case "child_nodes":
-        case "class_name":
-        case "html":
-        case "parent":
-        case "text":
-            return DOMNode[attr](self)
-        */
-        case "height":
-        case "left":
-        case "top":
-        case "width":
-            // Special case for Canvas
-            // http://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
-            if(self.tagName == "CANVAS" && self[attr]){
-                return self[attr]
-            }
-
-            if(self instanceof SVGElement){
-                return self[attr].baseVal.value
-            }
-            var computed = window.getComputedStyle(self).
-                                  getPropertyValue(attr)
-            if(computed !== undefined){
-                if(computed == ''){
-                    if(self.style[attr] !== undefined){
-                        return parseInt(self.style[attr])
-                    }else{
-                        return 0
-                    }
-                }
-                let prop = Math.floor(parseFloat(computed) + 0.5)
-                return isNaN(prop) ? 0 : prop
-            }else if(self.style[attr]){
-                return parseInt(self.style[attr])
-            }else{
-                $B.RAISE_ATTRIBUTE_ERROR("style." + attr +
-                    " is not set for " + _b_.str.$factory(self), self, attr)
-            }
         case "x":
         case "y":
             if(! (self instanceof SVGElement)){
@@ -546,15 +545,6 @@ DOMNode.tp_getattro = function(self, attr){
                 return attr == "x" ? pos.left : pos.top
             }
             break
-        /*
-        case "closest":
-            if(! self[attr]){
-                throw $B.attr_error(self, attr)
-            }
-            return function(){
-                return DOMNode[attr].call(null, self, ...arguments)
-            }
-        */
         case "headers":
           if(self.nodeType == Node.DOCUMENT_NODE){
               // HTTP headers
@@ -924,7 +914,7 @@ DOMNode.tp_richcompare = function(self, other, op){
     }
 }
 
-DOMNode.tp_setattroXXX = function(self, attr, value){
+DOMNode.tp_setattro = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
     console.log('DOMNode setattro', self, attr, value)
@@ -937,19 +927,6 @@ DOMNode.tp_setattroXXX = function(self, attr, value){
         return _b_.None
     }
 
-    switch(attr){
-        case "left":
-        case "top":
-        case "width":
-        case "height":
-            if($B.$isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
-                self.style[attr] = value + "px"
-                return _b_.None
-            }else{
-                $B.RAISE(_b_.ValueError, attr + " value should be" +
-                    " an integer or float, not " + $B.class_name(value))
-            }
-    }
     if(DOMNode["set_" + attr] !== undefined) {
       return DOMNode["set_" + attr](self, value)
     }
@@ -1291,6 +1268,14 @@ DOMNode.getSelectionRange = function(self){ // for TEXTAREA
 }
 */
 
+DOMNode_funcs.height_get = function(self){
+    return dimension_get(self, 'height')
+}
+
+DOMNode_funcs.height_set = function(self, value){
+    return dimension_set(self, 'height', value)
+}
+
 DOMNode_funcs.html_get = function(self){
     var res = self.innerHTML
     if(res === undefined){
@@ -1332,6 +1317,14 @@ DOMNode_funcs.inside = function(self, other){
         elt = elt.parentNode
         if(! elt){return false}
     }
+}
+
+DOMNode_funcs.left_get = function(self){
+    return dimension_get(self, 'left')
+}
+
+DOMNode_funcs.left_set = function(self, value){
+    return dimension_set(self, 'left', value)
 }
 
 DOMNode_funcs.parent = function(self){
@@ -1440,6 +1433,15 @@ DOMNode.set_value = function(self, value){
     self.value = _b_.str.$factory(value)
 }
 
+
+DOMNode_funcs.top_get = function(self){
+    return dimension_get(self, 'top')
+}
+
+DOMNode_funcs.top_set = function(self, value){
+    return dimension_set(self, 'top', value)
+}
+
 DOMNode.submit = function(self){ // for FORM
     return function(){self.submit()}
 }
@@ -1531,9 +1533,17 @@ DOMNode_funcs.unbind = function(self, event){
     }
 }
 
+DOMNode_funcs.width_get = function(self){
+    return dimension_get(self, 'width')
+}
+
+DOMNode_funcs.width_set = function(self, value){
+    return dimension_set(self, 'width', value)
+}
+
 DOMNode.tp_getset = [
     "abs_left", "abs_top", "class_name", "html", "scrolled_left",
-    "scrolled_top", "style", "text"
+    "scrolled_top", "style", "text", "height", "left", "top", "width"
 ]
 
 DOMNode.tp_methods = [
