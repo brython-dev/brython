@@ -713,7 +713,7 @@ $B.JSObj.tp_getattro = function(_self, attr){
     }
 }
 
-$B.JSObj.__setattr__ = function(_self, attr, value){
+$B.JSObj.tp_setattro = function(_self, attr, value){
     _self[attr] = $B.pyobj2jsobj(value)
     return _b_.None
 }

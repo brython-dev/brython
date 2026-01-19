@@ -221,8 +221,7 @@ $B.finalize_type = function(cls){
                     ob_type: $B.member_descriptor,
                     d_member: member,
                     d_type: cls,
-                    name: descr,
-                    getter: cls.tp_funcs[descr]
+                    d_name: descr
                 })
             }
         }

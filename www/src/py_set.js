@@ -48,6 +48,8 @@ function set_contains(so, key, hash){
     return !! set_lookkey(so, key, hash)
 }
 
+$B.set_has = set_contains
+
 // Create a copy of the object : same type, same items
 function set_copy(obj){
     var res = make_new_set_base_type(obj) // set or frozenset

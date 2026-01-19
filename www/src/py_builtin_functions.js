@@ -577,8 +577,6 @@ $B.set_func_names(enumerate, "builtins")
 
 $B.LOCALS_PROXY = Symbol('locals_proxy')
 
-enumerate.__class_getitem__ = _b_.classmethod.$factory(enumerate.__class_getitem__)
-
 //eval() (built in function)
 var $$eval = _b_.eval = function(){
     var $ = $B.args("eval", 4,

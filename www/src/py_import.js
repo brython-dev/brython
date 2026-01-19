@@ -526,13 +526,6 @@ VFSFinder.classmethods = ["find_spec"]
 
 $B.set_func_names(VFSFinder, "<import>")
 
-for(let method in VFSFinder){
-    if(typeof VFSFinder[method] == "function"){
-        VFSFinder[method] = _b_.classmethod.$factory(
-            VFSFinder[method])
-    }
-}
-
 // Loader for VFS modules
 const VFSLoader = $B.make_builtin_class("VFSLoader")
 

@@ -1042,9 +1042,6 @@ _b_.BaseExceptionGroup.subgroup = function(self, condition){
 
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
-_b_.BaseExceptionGroup.__class_getitem__ =
-    _b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
-
 _b_.ExceptionGroup.factory = function(){
     var missing = {},
         $ = $B.args("ExceptionGroup", 2, {message: null, exceptions: null},

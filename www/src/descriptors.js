@@ -93,9 +93,18 @@ $B.set_func_names($B.method_wrapper, 'builtins')
 
 /* member_descriptor start */
 $B.member_descriptor.tp_descr_set = function(self, obj, value){
-    if(self.setter){
-        self.setter(obj, value)
+    if(value === $B.NULL){
+            if(obj.slot_values === undefined ||
+                ! obj.slot_values.hasOwnProperty(self.name)){
+            $B.RAISE_ATTRIBUTE_ERROR('cannot delete', self, self.name)
+        }
+        kls.slot_values.delete(self.name)
+        return
     }
+    if(obj.slot_values === undefined){
+        obj.slot_values = {}
+    }
+    obj.slot_values[self.name] = value
 }
 
 $B.member_descriptor.tp_repr = function(self){
@@ -107,7 +116,10 @@ $B.member_descriptor.tp_descr_get = function(self, obj, kls){
     if(obj === $B.NULL){
         return self
     }
-    return self.getter(obj)
+    if(self.d_member ===  undefined){
+        console.log('no d_member', self)
+    }
+    return self.d_member.method(obj)
 }
 
 var member_descriptor_funcs = $B.member_descriptor.tp_funcs = {}
@@ -162,49 +174,12 @@ method.$factory = function(func, obj){
     return {
         ob_type: $B.method,
         func,
-        obj
+        obj,
+        dict: $B.empty_dict()
     }
-    /*
-    var f = function(){
-        return $B.$call(func, obj, ...arguments)
-    }
-    f.ob_type = method
-    if(typeof func !== 'function'){
-        console.log('method from func w-o $infos', func, 'all', $B.$call(func))
-    }
-    if(! func.$infos && func.$function_infos){
-        $B.make_function_infos(func, ...func.$function_infos)
-        f.$function_infos = func.$function_infos
-    }
-    f.$infos = {}
-    if(func.$infos){
-        for(var key in func.$infos){
-            f.$infos[key] = func.$infos[key]
-        }
-    }
-    f.$infos.__func__ = func
-    f.$infos.__self__ = obj
-    f.$infos.dict = $B.empty_dict()
-
-    return f
-    */
 }
 
-/*
-method.__eq__ = function(self, other){
-    console.log('émthod eq', self, other)
-    return self.$infos !== undefined &&
-           other.$infos !== undefined &&
-           self.$infos.__func__ === other.$infos.__func__ &&
-           self.$infos.__self__ === other.$infos.__self__
-}
-
-method.__ne__ = function(self, other){
-    return ! $B.method.__eq__(self, other)
-}
-*/
-
-method.__setattr__ = function(self, key){
+method.tp_setattro = function(self, key){
     // Attempting to set an attribute on a method results in an AttributeError
     // being raised.
     if(key == "__class__"){
@@ -262,7 +237,7 @@ $B.method.tp_getattro = function(self, attr){
             return descr
         }
     }
-    return $B.object_getattribute(self.func, attr);
+    return $B.object_getattribute(self.func, attr)
 }
 
 $B.method.tp_descr_get = function(self){
@@ -273,7 +248,8 @@ $B.method.tp_new = function(cls, func, obj){
     return {
         ob_type: cls,
         func,
-        obj
+        obj,
+        dict: $B.empty_dict()
     }
 }
 
