@@ -266,11 +266,20 @@ function_funcs.__defaults___set = function(self, value){
 }
 
 function_funcs.__dict___get = function(self){
-
+    return self.dict
 }
 
-function_funcs.__dict___set = function(self){
-
+function_funcs.__dict___set = function(self, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, "cannot delete __dict__")
+    }
+    if(! $B.$isinstance(value, _b_.dict)){
+        $B.RAISE(_b_.TypeError,
+            `__dict__ must be set to a dictionary, not a ` +
+            `'${$B.class_name(value)}'`
+        )
+    }
+    self.dict = value
 }
 
 
@@ -306,11 +315,11 @@ function_funcs.__kwdefaults___set = function(self, value){
 }
 
 function_funcs.__module__ = function(self){
-
+    return self.$function_infos[$B.func_attrs.__module__]
 }
 
 function_funcs.__name___get = function(self){
-
+    return self.$function_infos[$B.func_attrs.__name__]
 }
 
 function_funcs.__name___set = function(self){
@@ -343,7 +352,11 @@ $B.function.tp_getset = ["__code__", "__defaults__", "__kwdefaults__", "__annota
 
 $B.set_func_names($B.function, "builtins")
 
-
+$B.setup_function = function(f){
+    f.ob_type = $B.function
+    f.dict = $B.empty_dict()
+    f.$args_parser = $B.make_args_parser_and_parse
+}
 
 $B.check_infos = function(f){
     if(! f.$infos){

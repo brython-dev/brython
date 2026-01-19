@@ -2708,7 +2708,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var annotations = postponed ? anns_strings : 'false'
 
     // Set admin infos
-    js += prefix + `${name2}.ob_type = $B.function\n`
+    js += prefix + `$B.setup_function(${name2})\n`
     js += prefix + `${name2}.$function_infos = [` +
         `'${gname}', ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
@@ -2730,8 +2730,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `[${varnames}], ` +
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}]\n`;
-
-    js += prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n`
 
     if(anns && ! postponed){
         //var annotate_scope = new Scope('__annotate__', 'def', this)
