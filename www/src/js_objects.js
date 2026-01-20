@@ -713,12 +713,16 @@ $B.JSObj.tp_getattro = function(_self, attr){
     }
 }
 
-$B.JSObj.tp_setattro = function(_self, attr, value){
-    _self[attr] = $B.pyobj2jsobj(value)
+$B.JSObj.tp_setattro = function(self, attr, value){
+    if(value === $B.NULL){
+        delete self[attr]
+        return
+    }
+    self[attr] = $B.pyobj2jsobj(value)
     return _b_.None
 }
 
-$B.JSObj.__getitem__ = function(_self, key){
+$B.JSObj.mp_subscript = function(_self, key){
     if(typeof key == "string"){
         try{
             return $B.JSObj.tp_getattro(_self, key)
@@ -759,7 +763,7 @@ $B.JSObj.__getitem__ = function(_self, key){
     $B.RAISE(_b_.KeyError, key)
 }
 
-$B.JSObj.__setitem__ = $B.JSObj.__setattr__
+$B.JSObj.mp_ass_subscript = $B.JSObj.tp_setattro
 
 $B.JSObj.tp_repr = function(_self){
     if(typeof _self == 'number'){
@@ -941,11 +945,11 @@ $B.set_func_names($B.SizedJSObj, 'builtins')
 
 $B.IterableJSObj = $B.make_builtin_class('IterableJavascriptObject', [$B.JSObj])
 
-$B.IterableJSObj.__contains__ = function(self, key){
+$B.IterableJSObj.sq_contains = function(self, key){
     if(self.contains !== undefined && typeof self.contains == 'function'){
         return self.contains(key)
     }else{
-        for(var item of $B.IterableJSObj.__iter__(self).it){
+        for(var item of $B.IterableJSObj.tp_iter(self).it){
             if($B.is_or_equals(item, key)){
                 return true
             }
