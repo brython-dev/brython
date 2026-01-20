@@ -79,10 +79,6 @@ coroutine_funcs.cr_frame_set = function(self){
 
 }
 
-coroutine_funcs.cr_origin = function(self){
-
-}
-
 coroutine_funcs.cr_running_get = function(self){
 
 }
@@ -132,7 +128,9 @@ $B.coroutine.tp_methods = ["send", "throw", "close", "__sizeof__"]
 
 $B.coroutine.classmethods = ["__class_getitem__"]
 
-$B.coroutine.tp_members = ["cr_origin"]
+$B.coroutine.tp_members = [
+    ["cr_origin", $B.TYPES.OBJECT, "cr_origin_or_finalizer", 1]
+]
 
 $B.coroutine.tp_getset = ["__name__", "__qualname__", "cr_await", "cr_running", "cr_frame", "cr_code", "cr_suspended"]
 

@@ -342,9 +342,6 @@ $B.add_function_infos = function(klass, attr, module, qualname){
             __kwdefaults__: {}
        }
     )
-    if(klass[attr].$type == "classmethod"){
-        klass[attr].ob_type = $B.method
-    }
 }
 
 // Set function attributes
@@ -512,6 +509,31 @@ $B.SYMBOL_FLAGS = {
     TYPE_FUNCTION,
     TYPE_MODULE
 }
+
+/* Types allowed for setting member values */
+$B.TYPES = {
+    SHORT: 0,
+    INT: 1,
+    LONG: 2,
+    FLOAT: 3,
+    DOUBLE: 4,
+    STRING: 5,
+    OBJECT: 6,
+    CHAR: 7,
+    BYTE: 8,
+    UBYTE: 9,
+    USHORT: 10,
+    UINT: 11,
+    ULONG: 12,
+    STRING_INPLACE: 13,
+    BOOL: 14,
+    OBJECT_EX: 16,
+    LONGLONG: 17,
+    ULONGLONG: 18,
+    PYSSIZET: 19,
+    NONE: 20
+}
+
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1

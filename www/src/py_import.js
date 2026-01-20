@@ -117,10 +117,6 @@ module_funcs.__annotations___set = function(self){
 
 }
 
-module_funcs.__dict__ = function(self){
-    return self.dict
-}
-
 module_funcs.__dir__ = function(self){
     var names = []
     for(var item of _b_.dict.$iter_items(self.dict)){
@@ -131,7 +127,9 @@ module_funcs.__dir__ = function(self){
 
 $B.module.tp_methods = ["__dir__"]
 
-$B.module.tp_members = ["__dict__"]
+$B.module.tp_members = [
+    ["__dict__", $B.TYPES.OBJECT, "dict", 1]
+]
 
 $B.module.tp_getset = ["__annotations__", "__annotate__"]
 

@@ -68,11 +68,6 @@ method_wrapper_funcs.__reduce__ = function(self){
 
 }
 
-method_wrapper_funcs.__self__ = function(self){
-    console.log('attribute self', self)
-    return self.self
-}
-
 method_wrapper_funcs.__text_signature___get = function(self){
 
 }
@@ -83,7 +78,9 @@ method_wrapper_funcs.__text_signature___set = function(self){
 
 $B.method_wrapper.tp_methods = ["__reduce__"]
 
-$B.method_wrapper.tp_members = ["__self__"]
+$B.method_wrapper.tp_members = [
+    ["__self__", $B.TYPES.OBJECT, "self", 1]
+]
 
 $B.method_wrapper.tp_getset = ["__objclass__", "__name__", "__qualname__", "__text_signature__"]
 
@@ -92,6 +89,7 @@ $B.set_func_names($B.method_wrapper, 'builtins')
 
 
 /* member_descriptor start */
+
 $B.member_descriptor.tp_descr_set = function(self, obj, value){
     if(value === $B.NULL){
             if(obj.slot_values === undefined ||
@@ -108,7 +106,7 @@ $B.member_descriptor.tp_descr_set = function(self, obj, value){
 }
 
 $B.member_descriptor.tp_repr = function(self){
-    return "<member '" + self.name + "' of '" +
+    return "<member '" + self.d_name + "' of '" +
         self.d_type.tp_name + "' objects>"
 }
 
@@ -119,18 +117,10 @@ $B.member_descriptor.tp_descr_get = function(self, obj, kls){
     if(self.d_member ===  undefined){
         console.log('no d_member', self)
     }
-    return self.d_member.method(obj)
+    return obj[self.d_member.attr]
 }
 
 var member_descriptor_funcs = $B.member_descriptor.tp_funcs = {}
-
-member_descriptor_funcs.__name__ = function(self){
-    return self.name
-}
-
-member_descriptor_funcs.__objclass__ = function(self){
-    return self.d_type
-}
 
 member_descriptor_funcs.__qualname___get = function(self){
     return self.name
@@ -144,7 +134,10 @@ member_descriptor_funcs.__reduce__ = function(self){
 
 $B.member_descriptor.tp_methods = ["__reduce__"]
 
-$B.member_descriptor.tp_members = ["__objclass__", "__name__"]
+$B.member_descriptor.tp_members = [
+    ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
+    ["__name__", $B.TYPES.OBJECT, "d_name", 1]
+]
 
 $B.member_descriptor.tp_getset = ["__qualname__"]
 
@@ -152,29 +145,13 @@ $B.member_descriptor.tp_getset = ["__qualname__"]
 
 $B.set_func_names($B.member_descriptor, "builtins")
 
-// Used for class members, defined in __slots__
-var member_descriptor = $B.member_descriptor
 
-/*
-member_descriptor.$factory = function(attr, cls){
-    return{
-        ob_type: member_descriptor,
-        cls: cls,
-        attr: attr
-    }
-}
-*/
-
-
-// used as the factory for method objects
-
-$B.objs = []
 var method = $B.method
 method.$factory = function(func, obj){
     return {
         ob_type: $B.method,
-        func,
-        obj,
+        im_func: func,
+        im_self: obj,
         dict: $B.empty_dict()
     }
 }
@@ -197,10 +174,12 @@ $B.method.tp_richcompare = function(self, other, op){
     var res
     switch(op){
         case '__eq__':
-            res = (self.obj === other.obj && self.func === other.func)
+            res = (self.im_self === other.im_self &&
+                self.im_func === other.im_func)
             break
         case '__ne__':
-            res = (self.obj !== other.obj || self.func !== other.func)
+            res = (self.im_self !== other.im_self ||
+                self.im_func !== other.im_func)
             break
         default:
             res = _b_.NotImplemented
@@ -210,9 +189,9 @@ $B.method.tp_richcompare = function(self, other, op){
 }
 
 $B.method.tp_repr = function(self){
-    var name = self.func.$function_infos[$B.func_attrs.__qualname__]
+    var name = self.im_func.$function_infos[$B.func_attrs.__qualname__]
     return "<bound method " + name +
-       " of " + _b_.str.$factory(self.obj) + ">"
+       " of " + _b_.str.$factory(self.im_self) + ">"
 }
 
 $B.method.tp_hash = function(self){
@@ -220,10 +199,10 @@ $B.method.tp_hash = function(self){
 }
 
 $B.method.tp_call = function(self, ...args){
-    if(typeof self.func !== 'function'){
-        console.log('not a function', self, self.func)
+    if(typeof self.im_func !== 'function'){
+        console.log('not a function', self, self.im_func)
     }
-    return self.func(self.obj, ...args)
+    return self.im_func(self.im_self, ...args)
 }
 
 $B.method.tp_getattro = function(self, attr){
@@ -237,7 +216,7 @@ $B.method.tp_getattro = function(self, attr){
             return descr
         }
     }
-    return $B.object_getattribute(self.func, attr)
+    return $B.object_getattribute(self.im_func, attr)
 }
 
 $B.method.tp_descr_get = function(self){
@@ -247,58 +226,41 @@ $B.method.tp_descr_get = function(self){
 $B.method.tp_new = function(cls, func, obj){
     return {
         ob_type: cls,
-        func,
-        obj,
+        im_func: func,
+        im_self: obj,
         dict: $B.empty_dict()
     }
 }
 
 var method_funcs = $B.method.tp_funcs = {}
 
-method_funcs.__func__ = function(self){
-    return self.func
-}
-
 method_funcs.__reduce__ = function(self){
 
-}
-
-method_funcs.__self__ = function(self){
-    return self.obj
 }
 
 $B.method.functions_or_methods = ["__new__"]
 
 $B.method.tp_methods = ["__reduce__"]
 
-$B.method.tp_members = ["__func__", "__self__"]
+$B.method.tp_members = [
+    ["__func__", $B.TYPES.OBJECT, "im_func", 1],
+    ["__self__", $B.TYPES.OBJECT, "im_self", 1]
+]
 
 $B.set_func_names(method, "builtins")
 
 
-// method descriptor has attrs method (a function), cls, name
-/*
-$B.method_descriptor.$factory = function(cls, attr, f){
-    f.ob_type = $B.method_descriptor
-    f.ml = {
-        ml_name: attr
-    }
-    f.__objclass__ = cls
-    return f
-}
-*/
-
 /* method_descriptor start */
 $B.method_descriptor.tp_repr = function(self){
-    var name = self.ml.ml_name
-    var class_name = self.cls.tp_name
+    var name = self.d_name
+    var class_name = self.d_type.tp_name
     return `<method '${name}' of '${class_name}' objects>`
 }
 
 $B.method_descriptor.tp_call = function(self, ...args){
     if(args.length == 0){
-        var name = self.ml.ml_name
-        var class_name = self.cls.tp_name
+        var name = self.d_name
+        var class_name = self.d_type.tp_name
         $B.RAISE(_b_.TypeError,
             `"unbound method ${class_name}.${name} needs an argument`
         )
@@ -323,23 +285,15 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass){
     var f = self.method.bind(null, obj)
     f.ob_type = $B.builtin_method
     f.$infos = self.$infos
-    f.ml = {ml_name: self.ml.ml_name}
+    f.ml = {ml_name: self.d_name}
     f.m_self = self
     return f
 }
 
 var method_descriptor_funcs = $B.method_descriptor.tp_funcs = {}
 
-method_descriptor_funcs.__name__ = function(self){
-    return self.name
-}
-
-method_descriptor_funcs.__objclass__ = function(self){
-    return self.cls
-}
-
 method_descriptor_funcs.__qualname___get = function(self){
-    return self.name
+    return self.d_name
 }
 
 method_descriptor_funcs.__qualname___set = function(self, value){
@@ -360,7 +314,10 @@ method_descriptor_funcs.__text_signature___set = function(self){
 
 $B.method_descriptor.tp_methods = ["__reduce__"]
 
-$B.method_descriptor.tp_members = ["__objclass__", "__name__"]
+$B.method_descriptor.tp_members = [
+    ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
+    ["__name__", $B.TYPES.OBJECT, "d_name", 1]
+]
 
 $B.method_descriptor.tp_getset = ["__qualname__", "__text_signature__"]
 
@@ -424,14 +381,6 @@ classmethod_descriptor_funcs.__doc___set = function(self){
 
 }
 
-classmethod_descriptor_funcs.__name__ = function(self){
-    return self.d_name
-}
-
-classmethod_descriptor_funcs.__objclass__ = function(self){
-    return self.d_type
-}
-
 classmethod_descriptor_funcs.__qualname___get = function(self){
 
 }
@@ -448,7 +397,10 @@ classmethod_descriptor_funcs.__text_signature___set = function(self){
 
 }
 
-$B.classmethod_descriptor.tp_members = ["__objclass__", "__name__"]
+$B.classmethod_descriptor.tp_members = [
+    ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
+    ["__name__", $B.TYPES.OBJECT, "d_name", 1]
+]
 
 $B.classmethod_descriptor.tp_getset = ["__doc__", "__qualname__", "__text_signature__"]
 
@@ -462,8 +414,8 @@ $B.getset_descriptor.$factory = function(klass, attr, getset){
     var res = {
         ob_type: $B.getset_descriptor,
         __doc__: _b_.None,
-        cls: klass,
-        attr,
+        d_type: klass,
+        d_name: attr,
         getter,
         setter
     }
@@ -474,24 +426,24 @@ $B.getset_descriptor.$factory = function(klass, attr, getset){
 $B.getset_descriptor.tp_descr_set = function(self, obj, value){
     if(self.setter === undefined){
         $B.RAISE_ATTRIBUTE_ERROR(
-            `attribute '${self.attr}' of '${self.cls.tp_name}' objects is not writable`,
+            `attribute '${self.d_name}' of '${self.d_type.tp_name}' objects is not writable`,
             self,
-            self.attr)
+            self.d_name)
     }
     return self.setter(obj, value)
 }
 
 $B.getset_descriptor.tp_repr = function(self){
-    return `<attribute '${self.attr}' of '${$B.get_name(self.cls)}' objects>`
+    return `<attribute '${self.d_name}' of '${$B.get_name(self.d_type)}' objects>`
 }
 
 $B.getset_descriptor.tp_descr_get = function(self, obj){
     if(obj === $B.NULL){
         return self
     }
-    if(! $B.get_mro($B.get_class(obj)).includes(self.cls)){
-        $B.RAISE(_b_.TypeError, `descriptor '${self.attr}' for ` +
-            `'${$B.get_name(self.cls)}' objects doesn't apply to a ` +
+    if(! $B.get_mro($B.get_class(obj)).includes(self.d_type)){
+        $B.RAISE(_b_.TypeError, `descriptor '${self.d_name}' for ` +
+            `'${$B.get_name(self.d_type)}' objects doesn't apply to a ` +
             `'${$B.class_name(obj)}' object`)
     }
     return self.getter(obj)
@@ -499,23 +451,18 @@ $B.getset_descriptor.tp_descr_get = function(self, obj){
 
 var getset_descriptor_funcs = $B.getset_descriptor.tp_funcs = {}
 
-getset_descriptor_funcs.__name__ = function(self){
-    return self.attr
-}
-
-getset_descriptor_funcs.__objclass__ = function(self){
-    return self.cls
-}
-
 getset_descriptor_funcs.__qualname___get = function(self){
-    return self.attr
+    return self.d_name
 }
 
 getset_descriptor_funcs.__qualname___set = function(self, value){
-    self.attr = value
+    self.d_name = value
 }
 
-$B.getset_descriptor.tp_members = ["__objclass__", "__name__"]
+$B.getset_descriptor.tp_members = [
+    ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
+    ["__name__", $B.TYPES.OBJECT, "d_name", 1]
+]
 
 $B.getset_descriptor.tp_getset = ["__qualname__"]
 
@@ -543,17 +490,16 @@ wrapper_descriptor.$factory = function(cls, attr, f){
     */
     return {
         ob_type: wrapper_descriptor,
-        d_base: cls,
+        d_type: cls,
         d_name: attr,
         wrapped: f
     }
 }
 
-
 /* wrapper_descriptor */
 $B.wrapper_descriptor.tp_repr = function(self){
     var name = self.d_name
-    var class_name = self.d_base.tp_name
+    var class_name = self.d_type.tp_name
     return `<slot wrapper '${name}' of '${class_name}' objects>`
 }
 
@@ -579,20 +525,12 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){
 
 var wrapper_descriptor_funcs = $B.wrapper_descriptor.tp_funcs = {}
 
-wrapper_descriptor_funcs.__name__ = function(self){
-    return self.d_name
-}
-
-wrapper_descriptor_funcs.__objclass__ = function(self){
-    return self.d_base
-}
-
 wrapper_descriptor_funcs.__qualname___get = function(self){
     return self.d_name
 }
 
 wrapper_descriptor_funcs.__qualname___set = function(self, value){
-
+    self.d_name = value
 }
 
 wrapper_descriptor_funcs.__reduce__ = function(self){
@@ -609,7 +547,10 @@ wrapper_descriptor_funcs.__text_signature___set = function(self){
 
 $B.wrapper_descriptor.tp_methods = ["__reduce__"]
 
-$B.wrapper_descriptor.tp_members = ["__objclass__", "__name__"]
+$B.wrapper_descriptor.tp_members = [
+    ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
+    ["__name__", $B.TYPES.OBJECT, "d_name", 1]
+]
 
 $B.wrapper_descriptor.tp_getset = ["__qualname__", "__text_signature__"]
 
@@ -653,10 +594,6 @@ $B.builtin_function_or_method.tp_call = function(self, ...args){
 
 var builtin_function_or_method_funcs = $B.builtin_function_or_method.tp_funcs = {}
 
-builtin_function_or_method_funcs.__module__ = function(self){
-
-}
-
 builtin_function_or_method_funcs.__name___get = function(self){
 
 }
@@ -695,7 +632,9 @@ builtin_function_or_method_funcs.__text_signature___set = function(self){
 
 $B.builtin_function_or_method.tp_methods = ["__reduce__"]
 
-$B.builtin_function_or_method.tp_members = ["__module__"]
+$B.builtin_function_or_method.tp_members = [
+    ["__module__", $B.TYPES.OBJECT, "m_module", 0]
+]
 
 $B.builtin_function_or_method.tp_getset = ["__name__", "__qualname__", "__self__", "__text_signature__"]
 

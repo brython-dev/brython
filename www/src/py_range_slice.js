@@ -371,21 +371,13 @@ range_funcs.index = function(self){
     }
 }
 
-range_funcs.start = function(self){
-    return self.start
-}
-
-range_funcs.step = function(self){
-    return self.step
-}
-
-range_funcs.stop = function(self){
-    return self.stop
-}
-
 _b_.range.tp_methods = ["__reversed__", "__reduce__", "count", "index"]
 
-_b_.range.tp_members = ["start", "stop", "step"]
+_b_.range.tp_members = [
+    ["start", $B.TYPES.OBJECT_EX, "start", 1],
+    ["stop", $B.TYPES.OBJECT_EX, "stop", 1],
+    ["step", $B.TYPES.OBJECT_EX, "step", 1]
+]
 
 /* range end */
 

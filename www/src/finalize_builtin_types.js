@@ -203,26 +203,22 @@ $B.finalize_type = function(cls){
                 $B.str_dict_set(cls.dict, descr, {
                     ob_type: $B.method_descriptor,
                     method,
-                    ml: {ml_name: descr},
-                    cls
+                    d_name: descr,
+                    d_type: cls
                 })
                 method.self = $B.str_dict_get(cls.dict, descr)
             }
         }
-        if(cls.tp_members){
+        if(cls.tp_members){ // temporary
             for(var descr of cls.tp_members){
-                var member = {
-                    ob_type: $B.method_descriptor,
-                    method: cls.tp_funcs[descr],
-                    ml: {ml_name: descr},
-                    cls
-                }
-                $B.str_dict_set(cls.dict, descr, {
-                    ob_type: $B.member_descriptor,
-                    d_member: member,
-                    d_type: cls,
-                    d_name: descr
-                })
+                var [name, type, attr, flags] = descr
+                $B.str_dict_set(cls.dict, name, 
+                    {
+                        ob_type: $B.member_descriptor,
+                        d_member: {name, type, attr, flags},
+                        d_name: name
+                    }
+                )
             }
         }
         if(cls.classmethods){

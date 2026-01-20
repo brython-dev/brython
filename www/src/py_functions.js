@@ -200,7 +200,7 @@ function_funcs.__annotations___set = function(self, value){
     self.__annotations__ = value
 }
 
-function_funcs.__builtins__ = function(self){
+function_funcs.__builtins___get = function(self){
     $B.check_infos(self)
     if(self.$infos && self.$infos.__globals__){
         return _b_.dict.$getitem(self.$infos.__globals__, '__builtins__')
@@ -208,7 +208,9 @@ function_funcs.__builtins__ = function(self){
     return $B.obj_dict(_b_)
 }
 
-function_funcs.__closure__ = function(self){
+function_funcs.__builtins___set = _b_.None
+
+function_funcs.__closure___get = function(self){
     var free_vars = self.$function_infos[$B.func_attrs.free_vars]
     if(free_vars === undefined || free_vars.length == 0){
         return _b_.None
@@ -224,6 +226,8 @@ function_funcs.__closure__ = function(self){
     }
     return $B.fast_tuple(cells)
 }
+
+function_funcs.__closure___set = _b_.None
 
 function_funcs.__code___get = function(self){
     $B.check_infos(self)
@@ -282,15 +286,6 @@ function_funcs.__dict___set = function(self, value){
     self.dict = value
 }
 
-
-function_funcs.__doc__ = function(self){
-    return self.$function_infos[$B.func_attrs.__doc__]
-}
-
-function_funcs.__globals__ = function(self){
-    return self.globals
-}
-
 function_funcs.__kwdefaults___get = function(self){
     $B.check_infos(self)
     return self.$infos.__kwdefaults__
@@ -312,10 +307,6 @@ function_funcs.__kwdefaults___set = function(self, value){
     self.$function_infos[$B.func_attrs.__kwdefaults__] = kwd
     // Make a new version of arguments parser
     $B.make_args_parser(self)
-}
-
-function_funcs.__module__ = function(self){
-    return self.$function_infos[$B.func_attrs.__module__]
 }
 
 function_funcs.__name___get = function(self){
@@ -342,9 +333,17 @@ function_funcs.__type_params___set = function(self){
 
 }
 
-$B.function.tp_members = ["__closure__", "__doc__", "__globals__", "__module__", "__builtins__"]
+$B.function.tp_members = [
+    ["__doc__", $B.TYPES.OBJECT, "func_doc", 0],
+    ["__globals__", $B.TYPES.OBJECT, "func_globals", 1],
+    ["__module__", $B.TYPES.OBJECT, "func_module", 0]
+]
 
-$B.function.tp_getset = ["__code__", "__defaults__", "__kwdefaults__", "__annotations__", "__annotate__", "__dict__", "__name__", "__qualname__", "__type_params__"]
+$B.function.tp_getset = [
+    "__code__", "__defaults__", "__kwdefaults__", "__annotations__",
+    "__annotate__", "__dict__", "__name__", "__qualname__", "__type_params__",
+    "__builtins__", "__closure__" // members in CPython
+]
 
 
 /* function end */
@@ -356,6 +355,9 @@ $B.setup_function = function(f){
     f.ob_type = $B.function
     f.dict = $B.empty_dict()
     f.$args_parser = $B.make_args_parser_and_parse
+    f.func_doc = f.$function_infos[$B.func_attrs.__doc__]
+    f.func_globals = $B.frame_obj.frame[3]
+    f.func_module = f.$function_infos[$B.func_attrs.__module__]
 }
 
 $B.check_infos = function(f){

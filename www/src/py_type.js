@@ -550,13 +550,13 @@ classmethod.$factory = function(func){
     return {
         ob_type: classmethod,
         dict: $B.empty_dict(),
-        func
+        cm_callable: func
     }
 }
 
 /* classmethod start */
 _b_.classmethod.tp_repr = function(self){
-    return `<classmethod(${_b_.repr(self.func)})>`
+    return `<classmethod(${_b_.repr(self.cm_callable)})>`
 }
 
 _b_.classmethod.tp_descr_get = function(){
@@ -571,26 +571,26 @@ _b_.classmethod.tp_descr_get = function(){
     if(cls === _b_.None || cls === undefined){
         cls = $B.get_class(obj)
     }
-    var func_class = $B.get_class(self.func),
+    var func_class = $B.get_class(self.cm_callable),
         candidates = [func_class].concat($B.get_mro(func_class))
     for(var candidate of candidates){
         if(candidate === $B.function){
             break
         }
         if(candidate.__get__){
-            return candidate.__get__(self.func, cls, cls)
+            return candidate.__get__(self.cm_callable, cls, cls)
         }
     }
     try{
-        return $B.method.$factory(self.func, cls)
+        return $B.method.$factory(self.cm_callable, cls)
     }catch(err){
-        console.log('error, self', self, self.func, 'cls', cls)
+        console.log('error, self', self, self.cm_callable, 'cls', cls)
         throw err
     }
 }
 
 _b_.classmethod.tp_init = function(self, func){
-    self.func = func
+    self.cm_callable = func
 }
 
 _b_.classmethod.tp_new = function(cls){
@@ -620,10 +620,6 @@ classmethod_funcs.__annotations___set = function(self){
 
 classmethod_funcs.__class_getitem__ = $B.$class_getitem
 
-classmethod_funcs.__func__ = function(self){
-    return self.func
-}
-
 classmethod_funcs.__isabstractmethod___get = function(self){
 
 }
@@ -632,13 +628,12 @@ classmethod_funcs.__isabstractmethod___set = function(self){
 
 }
 
-classmethod_funcs.__wrapped__ = function(self){
-    return self.func
-}
-
 _b_.classmethod.classmethods = ["__class_getitem__"]
 
-_b_.classmethod.tp_members = ["__func__", "__wrapped__"]
+_b_.classmethod.tp_members = [
+    ["__func__", $B.TYPES.OBJECT, "cm_callable", 1],
+    ["__wrapped__", $B.TYPES.OBJECT, "cm_callable", 1]
+]
 
 _b_.classmethod.tp_getset = ["__isabstractmethod__", "__annotations__", "__annotate__"]
 
@@ -652,31 +647,31 @@ var staticmethod = _b_.staticmethod
 staticmethod.$factory = function(func){
     return {
         ob_type: staticmethod,
-        func
+        sm_callable: func
     }
 }
 
 /* staticmethod start */
 _b_.staticmethod.tp_repr = function(self){
-    return `<staticmethod(${_b_.repr(self.func)})>`
+    return `<staticmethod(${_b_.repr(self.sm_callable)})>`
 }
 
 _b_.staticmethod.tp_call = function(self, ...args){
-    return self.func(...args)
+    return self.sm_callable(...args)
 }
 
 _b_.staticmethod.tp_descr_get = function(self){
-    return self.func
+    return self.sm_callable
 }
 
 _b_.staticmethod.tp_init = function(self, func){
-    self.func = func
+    self.sm_callable = func
 }
 
 _b_.staticmethod.tp_new = function(self){
     return {
         ob_type: _b_.staticmethod,
-        func: _b_.None
+        sm_callable: _b_.None
     }
 }
 
@@ -710,10 +705,6 @@ staticmethod_funcs.__dict___set = function(self){
 
 }
 
-staticmethod_funcs.__func__ = function(self){
-    return self.func
-}
-
 staticmethod_funcs.__isabstractmethod___get = function(self){
 
 }
@@ -722,13 +713,12 @@ staticmethod_funcs.__isabstractmethod___set = function(self){
 
 }
 
-staticmethod_funcs.__wrapped__ = function(self){
-    return self.func
-}
-
 _b_.staticmethod.classmethods = ["__class_getitem__"]
 
-_b_.staticmethod.tp_members = ["__func__", "__wrapped__"]
+_b_.staticmethod.tp_members = [
+    ["__func__", $B.TYPES.OBJECT, "sm_callable", 1],
+    ["__wrapped__", $B.TYPES.OBJECT, "sm_callable", 1]
+]
 
 _b_.staticmethod.tp_getset = ["__isabstractmethod__", "__dict__", "__annotations__", "__annotate__"]
 
@@ -1207,7 +1197,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
             var md = {
                 ob_type: $B.member_descriptor,
                 d_type: class_obj,
-                name: key,
+                d_name: key,
                 d_member: {method: make_slot_getter(key)},
                 setter: make_slot_setter(key)
             }
@@ -1318,10 +1308,6 @@ type_funcs.__annotations___set = function(self){
 
 }
 
-type_funcs.__base__ = function(cls){
-    return cls.tp_base
-}
-
 type_funcs.__bases___get = function(cls){
     return $B.fast_tuple(cls.tp_bases)
 }
@@ -1341,10 +1327,6 @@ type_funcs.__bases___set = function(){
     cls.tp_mro = $B.make_mro(cls)
 }
 
-type_funcs.__basicsize__ = function(self){
-
-}
-
 type_funcs.__dict___get = function(cls){
     return {
         ob_type: $B.mappingproxy,
@@ -1353,10 +1335,6 @@ type_funcs.__dict___get = function(cls){
 }
 
 type_funcs.__dict___set = function(self){
-
-}
-
-type_funcs.__dictoffset__ = function(self){
 
 }
 
@@ -1374,10 +1352,6 @@ type_funcs.__doc___set = function(cls, value){
     cls.__doc__ = value
 }
 
-type_funcs.__flags__ = function(self){
-
-}
-
 type_funcs.__instancecheck__ = function(cls, instance){
     var kl = $B.get_class(instance)
     var mro = $B.get_mro(kl)
@@ -1387,10 +1361,6 @@ type_funcs.__instancecheck__ = function(cls, instance){
         }
     }
     return false
-}
-
-type_funcs.__itemsize__ = function(self){
-
 }
 
 type_funcs.__module___get = function(self){
@@ -1469,21 +1439,31 @@ type_funcs.__type_params___set = function(self){
 
 }
 
-type_funcs.__weakrefoffset__ = function(self){
-
-}
-
 type_funcs.mro = function(cls){
     return $B.$list($B.get_mro(cls))
 }
 
-_b_.type.tp_methods = ["mro", "__subclasses__", "__instancecheck__", "__subclasscheck__", "__dir__", "__sizeof__"]
+_b_.type.tp_methods = [
+    "mro", "__subclasses__", "__instancecheck__", "__subclasscheck__", "__dir__",
+    "__sizeof__"
+]
 
 _b_.type.classmethods = ["__prepare__"]
 
-_b_.type.tp_members = ["__basicsize__", "__itemsize__", "__flags__", "__weakrefoffset__", "__base__", "__dictoffset__"]
+_b_.type.tp_members = [
+    ["__basicsize__", $B.TYPES.PYSSIZET, "tp_basicsize", 1],
+    ["__itemsize__", $B.TYPES.PYSSIZET, "tp_itemsize", 1],
+    ["__flags__", $B.TYPES.ULONG, "tp_flags", 1],
+    ["__weakrefoffset__", $B.TYPES.PYSSIZET, "tp_weaklistoffset", 1],
+    ["__base__", $B.TYPES.OBJECT, "tp_base", 1],
+    ["__dictoffset__", $B.TYPES.PYSSIZET, "tp_dictoffset", 1]
+]
 
-_b_.type.tp_getset = ["__name__", "__qualname__", "__bases__", "__mro__", "__module__", "__abstractmethods__", "__dict__", "__doc__", "__text_signature__", "__annotations__", "__annotate__", "__type_params__"]
+_b_.type.tp_getset = [
+    "__name__", "__qualname__", "__bases__", "__mro__", "__module__",
+    "__abstractmethods__", "__dict__", "__doc__", "__text_signature__",
+    "__annotations__", "__annotate__", "__type_params__"
+]
 
 /* type end */
 
@@ -1503,23 +1483,23 @@ property.$factory = function(fget, fset, fdel, doc){
 
 /* property start */
 _b_.property.tp_descr_set = function(self, obj, value){
-    if(self.fset === undefined){
-        var name = self.fget.$function_infos[$B.func_attrs.__name__]
+    if(self.prop_set === undefined){
+        var name = self.prop_get.$function_infos[$B.func_attrs.__name__]
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
     }
-    $B.$call(self.fset, obj, value)
+    $B.$call(self.prop_set, obj, value)
 }
 
 _b_.property.tp_descr_get = function(self, obj, type){
     if(obj === _b_.None){
         return self
     }
-    if(self.fget === undefined){
+    if(self.prop_get === undefined){
         $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
-    return $B.$call(self.fget, obj)
+    return $B.$call(self.prop_get, obj)
 }
 
 _b_.property.tp_init = function(){
@@ -1533,14 +1513,14 @@ _b_.property.tp_init = function(){
         fset = $.fset,
         fdel = $.fdel,
         doc = $.doc
-    self.__doc__ = doc
+    self.prop_doc = doc
     if($B.$getattr && doc === _b_.None){
-        self.__doc__ = $B.$getattr(fget, '__doc__', doc)
+        self.prop_doc = $B.$getattr(fget, '__doc__', doc)
     }
     self.$type = fget.$type
-    self.fget = fget
-    self.fset = fset
-    self.fdel = fdel
+    self.prop_get = fget
+    self.prop_set = fset
+    self.prop_del = fdel
     self.$is_property = true
 
     if(fget && fget.$attrs){
@@ -1552,13 +1532,13 @@ _b_.property.tp_init = function(){
     self.__delete__ = fdel;
 
     self.getter = function(fget){
-        return property.$factory(fget, self.fset, self.fdel, self.__doc__)
+        return property.$factory(fget, self.prop_set, self.prop_del, self.prop_doc)
     }
     self.setter = function(fset){
-        return property.$factory(self.fget, fset, self.fdel, self.__doc__)
+        return property.$factory(self.prop_get, fset, self.prop_del, self.prop_doc)
     }
     self.deleter = function(fdel){
-        return property.$factory(self.fget, self.fset, fdel, self.__doc__)
+        return property.$factory(self.prop_get, self.prop_set, fdel, self.prop_doc)
     }
 }
 
@@ -1570,10 +1550,6 @@ _b_.property.tp_new = function(cls){
 
 var property_funcs = _b_.property.tp_funcs = {}
 
-property_funcs.__doc__ = function(self){
-
-}
-
 property_funcs.__isabstractmethod___get = function(self){
 
 }
@@ -1584,7 +1560,7 @@ property_funcs.__isabstractmethod___set = function(self){
 
 property_funcs.__name___get = function(self){
     console.log('property name', self)
-    return $B.$getattr(self.fget, '__name__')
+    return $B.$getattr(self.prop_get, '__name__')
 }
 
 property_funcs.__name___set = function(self){
@@ -1599,18 +1575,6 @@ property_funcs.deleter = function(self){
     return self.deleter
 }
 
-property_funcs.fdel = function(self){
-    return self.fdel
-}
-
-property_funcs.fget = function(self){
-    return self.fget
-}
-
-property_funcs.fset = function(self){
-    return self.fset
-}
-
 property_funcs.getter = function(self){
     return self.getter
 }
@@ -1621,7 +1585,12 @@ property_funcs.setter = function(self){
 
 _b_.property.tp_methods = ["getter", "setter", "deleter", "__set_name__"]
 
-_b_.property.tp_members = ["fget", "fset", "fdel", "__doc__"]
+_b_.property.tp_members = [
+    ["fget", $B.TYPES.OBJECT, "prop_get", 1],
+    ["fset", $B.TYPES.OBJECT, "prop_set", 1],
+    ["fdel", $B.TYPES.OBJECT, "prop_del", 1],
+    ["__doc__",  $B.TYPES.OBJECT, "prop_doc", 0]
+]
 
 _b_.property.tp_getset = ["__name__", "__isabstractmethod__"]
 
@@ -2120,7 +2089,8 @@ $B.GenericAlias.tp_new = function(cls, origin, args){
     return {
         ob_type: cls,
         origin,
-        args
+        args,
+        starred: false // ???
     }
 }
 
@@ -2139,10 +2109,6 @@ $B.GenericAlias.mp_subscript = function(self, item){
 
 var GenericAlias_funcs = $B.GenericAlias.tp_funcs = {}
 
-GenericAlias_funcs.__args__ = function(self){
-    return self.args
-}
-
 GenericAlias_funcs.__dir__ = function(self){
 
 }
@@ -2153,10 +2119,6 @@ GenericAlias_funcs.__instancecheck__ = function(self){
 
 GenericAlias_funcs.__mro_entries__ = function(self){
 
-}
-
-GenericAlias_funcs.__origin__ = function(self){
-    return self.origin
 }
 
 GenericAlias_funcs.__parameters___get = function(self){
@@ -2183,13 +2145,13 @@ GenericAlias_funcs.__typing_unpacked_tuple_args___set = function(self){
 
 }
 
-GenericAlias_funcs.__unpacked__ = function(self){
-
-}
-
 $B.GenericAlias.tp_methods = ["__mro_entries__", "__instancecheck__", "__subclasscheck__", "__reduce__", "__dir__"]
 
-$B.GenericAlias.tp_members = ["__origin__", "__args__", "__unpacked__"]
+$B.GenericAlias.tp_members = [
+    ["__origin__", $B.TYPES.OBJECT, "origin", 1],
+    ["__args__", $B.TYPES.OBJECT, "args", 1],
+    ["__unpacked__", $B.TYPES.BOOL, "starred", 1]
+]
 
 $B.GenericAlias.tp_getset = ["__parameters__", "__typing_unpacked_tuple_args__"]
 
@@ -2202,15 +2164,11 @@ $B.UnionType = $B.make_builtin_class("UnionType")
 $B.UnionType.$factory = function(items){
     return {
         ob_type: $B.UnionType,
-        items
+        args: $B.fast_tuple(items)
     }
 }
 
 var UnionType_funcs = $B.UnionType.tp_funcs = {}
-
-UnionType_funcs.__args__ = function(self){
-    return $B.fast_tuple(self.items)
-}
 
 $B.UnionType.__class_getitem__ = function(cls, items){
     if($B.$isinstance(items, _b_.tuple)){
@@ -2224,11 +2182,11 @@ $B.UnionType.__eq__ = function(self, other){
     if(! $B.$isinstance(other, $B.UnionType)){
         return _b_.NotImplemented
     }
-    return $B.list_eq(self.items, other.items)
+    return $B.list_eq(self.args, other.args)
 }
 
 $B.UnionType.__or__ = function(self, other){
-    var items = self.items.slice()
+    var items = self.args.slice()
     if(! items.includes(other)){
         items.push(other)
     }
@@ -2241,9 +2199,9 @@ UnionType_funcs.__parameters___get = function(self){
 
 $B.UnionType.tp_repr = function(self){
     var t = []
-    for(var item of self.items){
-        if(item.$is_class){
-            var s = item.__name__
+    for(var item of self.args){
+        if($B.is_type(item)){
+            var s = $B.get_name(item)
             if(item.__module__ !== "builtins"){
                 s = item.__module__ + '.' + s
             }
@@ -2255,7 +2213,9 @@ $B.UnionType.tp_repr = function(self){
     return t.join(' | ')
 }
 
-$B.UnionType.tp_members = ['__args__']
+$B.UnionType.tp_members = [
+    ["__args__", $B.TYPES.OBJECT, "args", 1]
+]
 
 $B.UnionType.tp_getset = ['__parameters__']
 

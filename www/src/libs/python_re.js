@@ -3386,6 +3386,9 @@ MatchObject.tp_new = function(){
         mo = $.mo
     var res = MatchObject.$factory(mo)
     res.ob_type = cls
+    res.endpos = self.mo.endpos
+    res.pos = self.mo.start
+    res.re = self.mo.node.pattern
     return res
 }
 
@@ -3414,10 +3417,6 @@ MatchObject_funcs.end = function(self){
     }else{
         return self.mo.$groups[$.group].end
     }
-}
-
-MatchObject_funcs.endpos = function(self){
-    return self.mo.endpos
 }
 
 MatchObject_funcs.expand = function(){
@@ -3531,14 +3530,6 @@ MatchObject_funcs.lastgroup = _b_.property.$factory(
     }
 )
 
-MatchObject_funcs.pos = function(self){
-    return self.mo.start
-}
-
-MatchObject_funcs.re = function(self){
-    return self.mo.node.pattern
-}
-
 MatchObject_funcs.regs_get = function(self){
     var res = [$B.fast_tuple($B.fast_tuple([self.mo.start, self.mo.end]))]
     for(var group_num in self.mo.node.$groups){
@@ -3597,14 +3588,16 @@ MatchObject_funcs.string = _b_.property.$factory(
 )
 
 MatchObject.tp_methods = [
-    "__copy__", "__deepcopy__", "end", "expand", "group", "groupdict", 
+    "__copy__", "__deepcopy__", "end", "expand", "group", "groupdict",
     "groups", "span", "start"
 ]
 
 MatchObject.tp_getset = ["regs"]
 
 MatchObject.tp_members = [
-    "endpos", "pos", "re"
+    ["endpos", $B.TYPES.OBJECT, "endpos", 1],
+    ["pos", $B.TYPES.OBJECT, "pos", 1],
+    ["re", $B.TYPES.OBJECT, "re", 1]
 ]
 
 $B.set_func_names(MatchObject, 're')

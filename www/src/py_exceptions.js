@@ -174,14 +174,6 @@ traceback_funcs.__dir__ = function(self){
     return $B.$list(['tb_frame', 'tb_next', 'tb_lasti', 'tb_lineno'])
 }
 
-traceback_funcs.tb_frame = function(self){
-    return self.tb_frame
-}
-
-traceback_funcs.tb_lasti = function(self){
-    return self.tb_lasti
-}
-
 traceback_funcs.tb_lineno_get = function(self){
     return self.tb_lineno
 }
@@ -220,7 +212,10 @@ traceback_funcs.tb_next_set = function(self, value){
 
 $B.traceback.tp_methods = ["__dir__"]
 
-$B.traceback.tp_members = ["tb_frame", "tb_lasti"]
+$B.traceback.tp_members = [
+    ["tb_frame", $B.TYPES.OBJECT, "tb_frame",  1],
+    ["tb_lasti", $B.TYPES.INT, "tb_lasti",  1]
+]
 
 $B.traceback.tp_getset = ["tb_next", "tb_lineno"]
 
@@ -349,10 +344,6 @@ frame_funcs.f_trace_get = function(self){
     return self.$f_trace
 }
 
-frame_funcs.f_trace_lines = function(self){
-
-}
-
 frame_funcs.f_trace_opcodes_get = function(self){
 
 }
@@ -367,7 +358,9 @@ frame_funcs.f_trace_set = function(self, value){
 
 $B.frame.tp_methods = ["clear", "__sizeof__"]
 
-$B.frame.tp_members = ["f_trace_lines"]
+$B.frame.tp_members = [
+    ["f_trace_lines", $B.TYPES.BOOL, "f_trace_lines", 0]
+]
 
 $B.frame.tp_getset = ["f_back", "f_locals", "f_lineno", "f_trace", "f_lasti", "f_globals", "f_builtins", "f_code", "f_trace_opcodes", "f_generator"]
 
@@ -556,7 +549,7 @@ _b_.BaseException.tp_new = function(cls){
         __traceback__: _b_.None,
         __cause__: _b_.None,
         __context__: _b_.None,
-        __suppress_context__: false
+        suppress_context: false
     }
     return res
 }
@@ -584,10 +577,6 @@ BaseException_funcs.__reduce__ = function(self){
 }
 
 BaseException_funcs.__setstate__ = function(self){
-
-}
-
-BaseException_funcs.__suppress_context__ = function(self){
 
 }
 
@@ -629,7 +618,9 @@ _b_.BaseException.functions_or_methods = ["__new__"]
 
 _b_.BaseException.tp_methods = ["__reduce__", "__setstate__", "with_traceback", "add_note"]
 
-_b_.BaseException.tp_members = ["__suppress_context__"]
+_b_.BaseException.tp_members = [
+    ["__suppress_context__", $B.TYPES.BOOL, "suppress_context", 0]
+]
 
 _b_.BaseException.tp_getset = ["args", "__traceback__", "__context__", "__cause__"]
 
@@ -666,11 +657,10 @@ _b_.StopIteration.tp_init = function(self){
 
 var StopIteration_funcs = _b_.StopIteration.tp_funcs = {}
 
-StopIteration_funcs.value_get = function(self){
-    return _self.value ?? _b_.None
-}
+_b_.StopIteration.tp_members = [
+    ["value", $B.TYPES.OBJECT, "value", 0]
+]
 
-_b_.StopIteration.tp_members = ["value"]
 $B.set_func_names(_b_.StopIteration, 'builtins')
 
 /*
@@ -839,11 +829,9 @@ _b_.NameError.tp_init = function(){
 
 var NameError_funcs = _b_.NameError.tp_funcs = {}
 
-NameError_funcs.name = function(self){
-    return self.args[0]
-}
-
-_b_.NameError.tp_members = ["name"]
+_b_.NameError.tp_members = [
+    ["name", $B.TYPES.OBJECT, "name", 0]
+]
 
 /* NameError end */
 

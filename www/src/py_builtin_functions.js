@@ -2776,19 +2776,11 @@ _b_.super.tp_new = function(self){
 
 var super_funcs = _b_.super.tp_funcs = {}
 
-super_funcs.__self__ = function(self){
-    return self.obj
-}
-
-super_funcs.__self_class__ = function(self){
-    return self.obj_type
-}
-
-super_funcs.__thisclass__ = function(self){
-    return self.type
-}
-
-_b_.super.tp_members = ["__thisclass__", "__self__", "__self_class__"]
+_b_.super.tp_members =  [
+    ["__thisclass__", $B.TYPES.OBJECT, "type", 1],
+    ["__self__",  $B.TYPES.OBJECT, "obj", 1],
+    ["__self_class__", $B.TYPES.OBJECT, "obj_type", 1]
+]
 
 /* super end */
 

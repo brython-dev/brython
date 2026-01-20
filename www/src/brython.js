@@ -120,8 +120,7 @@ $B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[
 $B.add_function_infos=function(klass,attr,module,qualname){module=module ?? klass.__module__
 qualname=qualname ?? module+'.'+attr
 $B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :qualname,__defaults__:[],__kwdefaults__:{}}
-)
-if(klass[attr].$type=="classmethod"){klass[attr].ob_type=$B.method}}
+)}
 $B.set_function_infos=function(f,attrs){f.$function_infos=f.$function_infos ??[]
 for(var key in attrs){if($B.func_attrs[key]===undefined){throw Error('no function attribute '+key)}
 f.$function_infos[$B.func_attrs[key]]=attrs[key]}}
@@ -182,6 +181,7 @@ DEF_COMP_ITER,
 DEF_TYPE_PARAM,
 DEF_COMP_CELL,
 DEF_BOUND,SCOPE_OFFSET,SCOPE_OFF,SCOPE_MASK,LOCAL,GLOBAL_EXPLICIT,GLOBAL_IMPLICIT,FREE,CELL,TYPE_CLASS,TYPE_FUNCTION,TYPE_MODULE}
+$B.TYPES={SHORT:0,INT:1,LONG:2,FLOAT:3,DOUBLE:4,STRING:5,OBJECT:6,CHAR:7,BYTE:8,UBYTE:9,USHORT:10,UINT:11,ULONG:12,STRING_INPLACE:13,BOOL:14,OBJECT_EX:16,LONGLONG:17,ULONGLONG:18,PYSSIZET:19,NONE:20}
 $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.int_max_str_digits=4300
@@ -664,8 +664,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-01-17 17:42:40.603394"
-__BRYTHON__.timestamp=1768668160603
+__BRYTHON__.compiled_date="2026-01-20 08:14:17.145355"
+__BRYTHON__.timestamp=1768893257143
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2486,8 +2486,12 @@ if(in_mro !==$B.NULL){if(test){console.log(attr,'in class mro',in_mro)}
 var setter=$B.search_slot($B.get_class(in_mro),'tp_descr_set',$B.NULL)
 if(setter !==$B.NULL){if(test){console.log('setter',setter)}
 return setter(in_mro,self,value)}}
+var slots=$B.str_dict_get(klass.dict,'__slots__',$B.NULL)
+if(slots !==$B.NULL){if($B.set_has(slots,attr)){self.slot_values[attr]=value}}
 var dict=self.dict
-if(dict){_b_.dict.$setitem(dict,attr,value)}else{self[attr]=value}
+if(dict){_b_.dict.$setitem(dict,attr,value)}else{$B.RAISE(_b_.AttributeError,`'${$B.get_name(klass)}' object has no attribute `+
+`'${attr}' and no __dict__ for setting new attributes`
+)}
 return _b_.None}
 _b_.object.tp_repr=function(self){var klass=$B.get_class(self)
 if(klass===_b_.type){return "<class '"+$B.get_name(self)+"'>"}
@@ -2537,7 +2541,7 @@ if(args.length > 0 ||_b_.len(kw)){if($B.search_slot(cls,'tp_new',$B.NULL)!==_b_.
 )}
 if($B.search_slot(cls,'tp_init',$B.NULL)===_b_.object.tp_init){$B.RAISE(_b_.TypeError,`${$B.get_name(cls)} takes no arguments`)}}
 var res={ob_type:cls}
-if(cls !==object){res.dict=$B.empty_dict()}
+if(cls !==object && $B.str_dict_get(cls.dict,'__slots__',$B.NULL)===$B.NULL){res.dict=$B.empty_dict()}
 return res}
 var object_funcs=_b_.object.tp_funcs={}
 object_funcs.__class___get=function(self){return $B.get_class(self)}
@@ -2801,42 +2805,41 @@ return type.__call__(metaclass,kls,resolved_bases,cl_dict,kwargs)}}
 var classmethod=_b_.classmethod
 classmethod.$factory=function(func){$B.check_nb_args_no_kw('classmethod',1,arguments)
 return{
-ob_type:classmethod,func}}
-_b_.classmethod.tp_repr=function(self){return `<classmethod(${_b_.repr(self.func)})>`}
+ob_type:classmethod,dict:$B.empty_dict(),cm_callable:func}}
+_b_.classmethod.tp_repr=function(self){return `<classmethod(${_b_.repr(self.cm_callable)})>`}
 _b_.classmethod.tp_descr_get=function(){
 var $=$B.args('classmethod',3,{self:null,obj:null,cls:null},['self','obj','cls'],arguments,{cls:_b_.None},null,null),self=$.self,obj=$.obj,cls=$.cls
 if(cls===_b_.None ||cls===undefined){cls=$B.get_class(obj)}
-var func_class=$B.get_class(self.func),candidates=[func_class].concat($B.get_mro(func_class))
+var func_class=$B.get_class(self.cm_callable),candidates=[func_class].concat($B.get_mro(func_class))
 for(var candidate of candidates){if(candidate===$B.function){break}
-if(candidate.__get__){return candidate.__get__(self.func,cls,cls)}}
-try{return $B.method.$factory(self.func,cls)}catch(err){console.log('error, self',self,self.func,'cls',cls)
+if(candidate.__get__){return candidate.__get__(self.cm_callable,cls,cls)}}
+try{return $B.method.$factory(self.cm_callable,cls)}catch(err){console.log('error, self',self,self.cm_callable,'cls',cls)
 throw err}}
-_b_.classmethod.tp_init=function(self,func){self.func=func}
+_b_.classmethod.tp_init=function(self,func){self.cm_callable=func}
 _b_.classmethod.tp_new=function(cls){return{
-ob_type:cls,func :_b_.None}}
+ob_type:cls,dict:$B.empty_dict()}}
 var classmethod_funcs=_b_.classmethod.tp_funcs={}
 classmethod_funcs.__annotate___get=function(self){}
 classmethod_funcs.__annotate___set=function(self){}
 classmethod_funcs.__annotations___get=function(self){}
 classmethod_funcs.__annotations___set=function(self){}
 classmethod_funcs.__class_getitem__=$B.$class_getitem
-classmethod_funcs.__func__=function(self){return self.func}
 classmethod_funcs.__isabstractmethod___get=function(self){}
 classmethod_funcs.__isabstractmethod___set=function(self){}
-classmethod_funcs.__wrapped__=function(self){return self.func}
 _b_.classmethod.classmethods=["__class_getitem__"]
-_b_.classmethod.tp_members=["__func__","__wrapped__"]
+_b_.classmethod.tp_members=[["__func__",$B.TYPES.OBJECT,"cm_callable",1],["__wrapped__",$B.TYPES.OBJECT,"cm_callable",1]
+]
 _b_.classmethod.tp_getset=["__isabstractmethod__","__annotations__","__annotate__"]
 $B.set_func_names(classmethod,"builtins")
 var staticmethod=_b_.staticmethod
 staticmethod.$factory=function(func){return{
-ob_type:staticmethod,func}}
-_b_.staticmethod.tp_repr=function(self){return `<staticmethod(${_b_.repr(self.func)})>`}
-_b_.staticmethod.tp_call=function(self,...args){return self.func(...args)}
-_b_.staticmethod.tp_descr_get=function(self){return self.func}
-_b_.staticmethod.tp_init=function(self,func){self.func=func}
+ob_type:staticmethod,sm_callable:func}}
+_b_.staticmethod.tp_repr=function(self){return `<staticmethod(${_b_.repr(self.sm_callable)})>`}
+_b_.staticmethod.tp_call=function(self,...args){return self.sm_callable(...args)}
+_b_.staticmethod.tp_descr_get=function(self){return self.sm_callable}
+_b_.staticmethod.tp_init=function(self,func){self.sm_callable=func}
 _b_.staticmethod.tp_new=function(self){return{
-ob_type:_b_.staticmethod,func:_b_.None}}
+ob_type:_b_.staticmethod,sm_callable:_b_.None}}
 var staticmethod_funcs=_b_.staticmethod.tp_funcs={}
 staticmethod_funcs.__annotate___get=function(self){}
 staticmethod_funcs.__annotate___set=function(self){}
@@ -2845,12 +2848,11 @@ staticmethod_funcs.__annotations___set=function(self){}
 staticmethod_funcs.__class_getitem__=function(self){}
 staticmethod_funcs.__dict___get=function(self){}
 staticmethod_funcs.__dict___set=function(self){}
-staticmethod_funcs.__func__=function(self){return self.func}
 staticmethod_funcs.__isabstractmethod___get=function(self){}
 staticmethod_funcs.__isabstractmethod___set=function(self){}
-staticmethod_funcs.__wrapped__=function(self){return self.func}
 _b_.staticmethod.classmethods=["__class_getitem__"]
-_b_.staticmethod.tp_members=["__func__","__wrapped__"]
+_b_.staticmethod.tp_members=[["__func__",$B.TYPES.OBJECT,"sm_callable",1],["__wrapped__",$B.TYPES.OBJECT,"sm_callable",1]
+]
 _b_.staticmethod.tp_getset=["__isabstractmethod__","__dict__","__annotations__","__annotate__"]
 $B.set_func_names(staticmethod,"builtins")
 type.$call=function(klass,new_func,init_func){
@@ -2951,8 +2953,7 @@ console.log('args',args)
 $B.RAISE(_b_.TypeError,'type() takes 1 or 3 arguments')}}
 var new_func=$B.search_slot(cls,"tp_new")
 if(test){console.log('new_func',new_func)}
-var instance=new_func(cls,...args,$B.dict2kwarg(kw)),
-instance_class=$B.get_class(instance)
+var instance=new_func(cls,...args,$B.dict2kwarg(kw)),instance_class=$B.get_class(instance)
 if(test){console.log('instance of type',instance)
 console.log('instance type is cls ?',instance_class===cls)}
 if(instance_class===cls){
@@ -3017,7 +3018,7 @@ if(res instanceof Object){if(test){console.log('type.tp_new returns',res.type)}
 return res.type}
 var class_obj={ob_type:ctx.metatype,tp_bases :ctx.bases,tp_name:name,dict:cl_dict,$is_class:true}
 let slots=$B.str_dict_get(cl_dict,'__slots__',$B.NULL)
-if(slots !==$B.NULL){for(let key of $B.make_js_iterator(slots)){var md={ob_type:$B.member_descriptor,d_type:class_obj,name:key,getter:make_slot_getter(key),setter:make_slot_setter(key)}
+if(slots !==$B.NULL){for(let key of $B.make_js_iterator(slots)){var md={ob_type:$B.member_descriptor,d_type:class_obj,d_name:key,d_member:{method:make_slot_getter(key)},setter:make_slot_setter(key)}
 $B.str_dict_set(cl_dict,key,md)}}
 $B.str_dict_set(class_obj.dict,'__dict__',$B.getset_descriptor.$factory(
 class_obj,'__dict__',[object_get_dict,object_set_dict]
@@ -3057,7 +3058,6 @@ var ann_func=$B.str_dict_get(cls.dict,'__annotate_func__',$B.NULL)
 if(ann_func===$B.NULL ||ann_func===_b_.None){return $B.empty_dict()}
 return $B.$call(ann_func,1)}
 type_funcs.__annotations___set=function(self){}
-type_funcs.__base__=function(cls){return cls.tp_base}
 type_funcs.__bases___get=function(cls){return $B.fast_tuple(cls.tp_bases)}
 type_funcs.__bases___set=function(){var $=$B.args('__bases__',2,{cls:null,bases:null},['cls','bases'],arguments,{},null,null)
 var cls=$.cls,bases=$.bases
@@ -3066,22 +3066,18 @@ if(! $B.exact_type(bases,_b_.tuple)){$B.RAISE(_b_.TypeError,`can only assign tup
 )}
 cls.tp_bases=bases
 cls.tp_mro=$B.make_mro(cls)}
-type_funcs.__basicsize__=function(self){}
 type_funcs.__dict___get=function(cls){return{
 ob_type:$B.mappingproxy,mapping:cls.dict}}
 type_funcs.__dict___set=function(self){}
-type_funcs.__dictoffset__=function(self){}
 type_funcs.__dir__=function(klass){var dict=$B.empty_dict()
 $B.merge_class_dict(dict,klass)
 return _b_.list.$factory(dict)}
 type_funcs.__doc___get=function(cls){return $B.str_dict_get(cls.dict,'__doc__',_b_.None)}
 type_funcs.__doc___set=function(cls,value){cls.__doc__=value}
-type_funcs.__flags__=function(self){}
 type_funcs.__instancecheck__=function(cls,instance){var kl=$B.get_class(instance)
 var mro=$B.get_mro(kl)
 for(var klass of mro){if(klass===cls){return true}}
 return false}
-type_funcs.__itemsize__=function(self){}
 type_funcs.__module___get=function(self){if(self.dict){var module=$B.str_dict_get(self.dict,'__module__',$B.NULL)
 if(module !==$B.NULL){return module}}
 return 'builtins'}
@@ -3104,56 +3100,55 @@ type_funcs.__text_signature___get=function(self){}
 type_funcs.__text_signature___set=function(self){}
 type_funcs.__type_params___get=function(self){}
 type_funcs.__type_params___set=function(self){}
-type_funcs.__weakrefoffset__=function(self){}
 type_funcs.mro=function(cls){return $B.$list($B.get_mro(cls))}
-_b_.type.tp_methods=["mro","__subclasses__","__instancecheck__","__subclasscheck__","__dir__","__sizeof__"]
+_b_.type.tp_methods=["mro","__subclasses__","__instancecheck__","__subclasscheck__","__dir__","__sizeof__"
+]
 _b_.type.classmethods=["__prepare__"]
-_b_.type.tp_members=["__basicsize__","__itemsize__","__flags__","__weakrefoffset__","__base__","__dictoffset__"]
-_b_.type.tp_getset=["__name__","__qualname__","__bases__","__mro__","__module__","__abstractmethods__","__dict__","__doc__","__text_signature__","__annotations__","__annotate__","__type_params__"]
+_b_.type.tp_members=[["__basicsize__",$B.TYPES.PYSSIZET,"tp_basicsize",1],["__itemsize__",$B.TYPES.PYSSIZET,"tp_itemsize",1],["__flags__",$B.TYPES.ULONG,"tp_flags",1],["__weakrefoffset__",$B.TYPES.PYSSIZET,"tp_weaklistoffset",1],["__base__",$B.TYPES.OBJECT,"tp_base",1],["__dictoffset__",$B.TYPES.PYSSIZET,"tp_dictoffset",1]
+]
+_b_.type.tp_getset=["__name__","__qualname__","__bases__","__mro__","__module__","__abstractmethods__","__dict__","__doc__","__text_signature__","__annotations__","__annotate__","__type_params__"
+]
 $B.set_func_names(type,"builtins")
 var property=_b_.property
 property.$factory=function(fget,fset,fdel,doc){var res={ob_type:property}
 property.tp_init(res,fget,fset,fdel,doc)
 return res}
-_b_.property.tp_descr_set=function(self,obj,value){if(self.fset===undefined){var name=self.fget.$function_infos[$B.func_attrs.__name__]
+_b_.property.tp_descr_set=function(self,obj,value){if(self.prop_set===undefined){var name=self.prop_get.$function_infos[$B.func_attrs.__name__]
 var msg=`property '${name}' of '${$B.class_name(obj)}' object `+
 'has no setter'
 $B.RAISE_ATTRIBUTE_ERROR(msg,self,'__set__')}
-$B.$call(self.fset,obj,value)}
+$B.$call(self.prop_set,obj,value)}
 _b_.property.tp_descr_get=function(self,obj,type){if(obj===_b_.None){return self}
-if(self.fget===undefined){$B.RAISE_ATTRIBUTE_ERROR("unreadable attribute",self,'__get__')}
-return $B.$call(self.fget,obj)}
+if(self.prop_get===undefined){$B.RAISE_ATTRIBUTE_ERROR("unreadable attribute",self,'__get__')}
+return $B.$call(self.prop_get,obj)}
 _b_.property.tp_init=function(){var $=$B.args('__init__',5,{self:null,fget:null,fset:null,fdel:null,doc:null},['self','fget','fset','fdel','doc'],arguments,{fget:_b_.None,fset:_b_.None,fdel:_b_.None,doc:_b_.None},null,null),self=$.self,fget=$.fget,fset=$.fset,fdel=$.fdel,doc=$.doc
-self.__doc__=doc
-if($B.$getattr && doc===_b_.None){self.__doc__=$B.$getattr(fget,'__doc__',doc)}
+self.prop_doc=doc
+if($B.$getattr && doc===_b_.None){self.prop_doc=$B.$getattr(fget,'__doc__',doc)}
 self.$type=fget.$type
-self.fget=fget
-self.fset=fset
-self.fdel=fdel
+self.prop_get=fget
+self.prop_set=fset
+self.prop_del=fdel
 self.$is_property=true
 if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
 self.__delete__=fdel;
-self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
-self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
-self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
+self.getter=function(fget){return property.$factory(fget,self.prop_set,self.prop_del,self.prop_doc)}
+self.setter=function(fset){return property.$factory(self.prop_get,fset,self.prop_del,self.prop_doc)}
+self.deleter=function(fdel){return property.$factory(self.prop_get,self.prop_set,fdel,self.prop_doc)}}
 _b_.property.tp_new=function(cls){return{
 ob_type:cls}}
 var property_funcs=_b_.property.tp_funcs={}
-property_funcs.__doc__=function(self){}
 property_funcs.__isabstractmethod___get=function(self){}
 property_funcs.__isabstractmethod___set=function(self){}
 property_funcs.__name___get=function(self){console.log('property name',self)
-return $B.$getattr(self.fget,'__name__')}
+return $B.$getattr(self.prop_get,'__name__')}
 property_funcs.__name___set=function(self){}
 property_funcs.__set_name__=function(self){}
 property_funcs.deleter=function(self){return self.deleter}
-property_funcs.fdel=function(self){return self.fdel}
-property_funcs.fget=function(self){return self.fget}
-property_funcs.fset=function(self){return self.fset}
 property_funcs.getter=function(self){return self.getter}
 property_funcs.setter=function(self){return self.setter}
 _b_.property.tp_methods=["getter","setter","deleter","__set_name__"]
-_b_.property.tp_members=["fget","fset","fdel","__doc__"]
+_b_.property.tp_members=[["fget",$B.TYPES.OBJECT,"prop_get",1],["fset",$B.TYPES.OBJECT,"prop_set",1],["fdel",$B.TYPES.OBJECT,"prop_del",1],["__doc__",$B.TYPES.OBJECT,"prop_doc",0]
+]
 _b_.property.tp_getset=["__name__","__isabstractmethod__"]
 $B.set_func_names(property,"builtins")
 $B.$instance_creator=function(klass){var test=false 
@@ -3347,7 +3342,7 @@ if(ga_attr_exceptions.includes(name)){return _b_.object.tp_getattro(self,name)}
 return _b_.object.tp_getattro(self.origin,name)}}
 $B.GenericAlias.tp_iter=function(self){}
 $B.GenericAlias.tp_new=function(cls,origin,args){return{
-ob_type:cls,origin,args}}
+ob_type:cls,origin,args,starred:false }}
 $B.GenericAlias.mp_subscript=function(self,item){
 if(! self.hasOwnProperty('parameters')){self.parameters=_Py_make_parameters(self.args)}
 var newargs=_Py_subs_parameters(self,self.args,self.parameters,item);
@@ -3355,40 +3350,38 @@ var res=$B.GenericAlias.$factory(alias.origin,newargs)
 res.starred=self.starred
 return res}
 var GenericAlias_funcs=$B.GenericAlias.tp_funcs={}
-GenericAlias_funcs.__args__=function(self){return self.args}
 GenericAlias_funcs.__dir__=function(self){}
 GenericAlias_funcs.__instancecheck__=function(self){}
 GenericAlias_funcs.__mro_entries__=function(self){}
-GenericAlias_funcs.__origin__=function(self){return self.origin}
 GenericAlias_funcs.__parameters___get=function(self){}
 GenericAlias_funcs.__parameters___set=function(self){}
 GenericAlias_funcs.__reduce__=function(self){}
 GenericAlias_funcs.__subclasscheck__=function(self){}
 GenericAlias_funcs.__typing_unpacked_tuple_args___get=function(self){}
 GenericAlias_funcs.__typing_unpacked_tuple_args___set=function(self){}
-GenericAlias_funcs.__unpacked__=function(self){}
 $B.GenericAlias.tp_methods=["__mro_entries__","__instancecheck__","__subclasscheck__","__reduce__","__dir__"]
-$B.GenericAlias.tp_members=["__origin__","__args__","__unpacked__"]
+$B.GenericAlias.tp_members=[["__origin__",$B.TYPES.OBJECT,"origin",1],["__args__",$B.TYPES.OBJECT,"args",1],["__unpacked__",$B.TYPES.BOOL,"starred",1]
+]
 $B.GenericAlias.tp_getset=["__parameters__","__typing_unpacked_tuple_args__"]
 $B.set_func_names($B.GenericAlias,"types")
 $B.UnionType=$B.make_builtin_class("UnionType")
 $B.UnionType.$factory=function(items){return{
-ob_type:$B.UnionType,items}}
+ob_type:$B.UnionType,args:$B.fast_tuple(items)}}
 var UnionType_funcs=$B.UnionType.tp_funcs={}
-UnionType_funcs.__args__=function(self){return $B.fast_tuple(self.items)}
 $B.UnionType.__class_getitem__=function(cls,items){if($B.$isinstance(items,_b_.tuple)){return $B.UnionType.$factory(items)}else{return items}}
 $B.UnionType.__eq__=function(self,other){if(! $B.$isinstance(other,$B.UnionType)){return _b_.NotImplemented}
-return $B.list_eq(self.items,other.items)}
-$B.UnionType.__or__=function(self,other){var items=self.items.slice()
+return $B.list_eq(self.args,other.args)}
+$B.UnionType.__or__=function(self,other){var items=self.args.slice()
 if(! items.includes(other)){items.push(other)}
 return $B.UnionType.$factory(items)}
 UnionType_funcs.__parameters___get=function(self){return $B.fast_tuple([])}
 $B.UnionType.tp_repr=function(self){var t=[]
-for(var item of self.items){if(item.$is_class){var s=item.__name__
+for(var item of self.args){if($B.is_type(item)){var s=$B.get_name(item)
 if(item.__module__ !=="builtins"){s=item.__module__+'.'+s}
 t.push(s)}else{t.push(_b_.repr(item))}}
 return t.join(' | ')}
-$B.UnionType.tp_members=['__args__']
+$B.UnionType.tp_members=[["__args__",$B.TYPES.OBJECT,"args",1]
+]
 $B.UnionType.tp_getset=['__parameters__']
 $B.set_func_names($B.UnionType,"types")})(__BRYTHON__);
 ;
@@ -3409,77 +3402,80 @@ method_wrapper_funcs.__objclass___set=function(self){}
 method_wrapper_funcs.__qualname___get=function(self){}
 method_wrapper_funcs.__qualname___set=function(self){}
 method_wrapper_funcs.__reduce__=function(self){}
-method_wrapper_funcs.__self__=function(self){console.log('attribute self',self)
-return self.self}
 method_wrapper_funcs.__text_signature___get=function(self){}
 method_wrapper_funcs.__text_signature___set=function(self){}
 $B.method_wrapper.tp_methods=["__reduce__"]
-$B.method_wrapper.tp_members=["__self__"]
+$B.method_wrapper.tp_members=[["__self__",$B.TYPES.OBJECT,"self",1]
+]
 $B.method_wrapper.tp_getset=["__objclass__","__name__","__qualname__","__text_signature__"]
 $B.set_func_names($B.method_wrapper,'builtins')
-$B.member_descriptor.tp_descr_set=function(self,obj,value){if(self.setter){self.setter(obj,value)}}
-$B.member_descriptor.tp_repr=function(self){return "<member '"+self.name+"' of '"+
+$B.member_descriptor.tp_descr_set=function(self,obj,value){if(value===$B.NULL){if(obj.slot_values===undefined ||
+! obj.slot_values.hasOwnProperty(self.name)){$B.RAISE_ATTRIBUTE_ERROR('cannot delete',self,self.name)}
+kls.slot_values.delete(self.name)
+return}
+if(obj.slot_values===undefined){obj.slot_values={}}
+obj.slot_values[self.name]=value}
+$B.member_descriptor.tp_repr=function(self){return "<member '"+self.d_name+"' of '"+
 self.d_type.tp_name+"' objects>"}
 $B.member_descriptor.tp_descr_get=function(self,obj,kls){if(obj===$B.NULL){return self}
-return self.getter(obj)}
+if(self.d_member===undefined){console.log('no d_member',self)}
+return obj[self.d_member.attr]}
 var member_descriptor_funcs=$B.member_descriptor.tp_funcs={}
-member_descriptor_funcs.__name__=function(self){return self.name}
-member_descriptor_funcs.__objclass__=function(self){return self.d_type}
 member_descriptor_funcs.__qualname___get=function(self){return self.name}
 member_descriptor_funcs.__qualname___set=_b_.None
 member_descriptor_funcs.__reduce__=function(self){}
 $B.member_descriptor.tp_methods=["__reduce__"]
-$B.member_descriptor.tp_members=["__objclass__","__name__"]
+$B.member_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
+]
 $B.member_descriptor.tp_getset=["__qualname__"]
 $B.set_func_names($B.member_descriptor,"builtins")
-var member_descriptor=$B.member_descriptor
-$B.objs=[]
 var method=$B.method
 method.$factory=function(func,obj){return{
-ob_type:$B.method,func,obj}}
-method.__setattr__=function(self,key){
+ob_type:$B.method,im_func:func,im_self:obj,dict:$B.empty_dict()}}
+method.tp_setattro=function(self,key){
 if(key=="__class__"){$B.RAISE(_b_.TypeError,"__class__ assignment only supported "+
 "for heap types or ModuleType subclasses")}
 throw $B.attr_error(key,self)}
 $B.method.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,method)){return _b_.NotImplemented}
 var res
 switch(op){case '__eq__':
-res=(self.obj===other.obj && self.func===other.func)
+res=(self.im_self===other.im_self &&
+self.im_func===other.im_func)
 break
 case '__ne__':
-res=(self.obj !==other.obj ||self.func !==other.func)
+res=(self.im_self !==other.im_self ||
+self.im_func !==other.im_func)
 break
 default:
 res=_b_.NotImplemented
 break}
 return res}
-$B.method.tp_repr=function(self){var name=self.func.$function_infos[$B.func_attrs.__qualname__]
+$B.method.tp_repr=function(self){var name=self.im_func.$function_infos[$B.func_attrs.__qualname__]
 return "<bound method "+name+
-" of "+_b_.str.$factory(self.obj)+">"}
+" of "+_b_.str.$factory(self.im_self)+">"}
 $B.method.tp_hash=function(self){}
-$B.method.tp_call=function(self,...args){if(typeof self.func !=='function'){console.log('not a function',self,self.func)}
-return self.func(self.obj,...args)}
+$B.method.tp_call=function(self,...args){if(typeof self.im_func !=='function'){console.log('not a function',self,self.im_func)}
+return self.im_func(self.im_self,...args)}
 $B.method.tp_getattro=function(self,attr){var tp=$B.get_class(self)
 var descr=$B.search_in_mro(tp,attr,$B.NULL)
 if(descr !==$B.NULL){var getter=$B.search_slot($B.get_class(descr),'tp_descr_get',$B.NULL)
 if(getter !==$B.NULL){return getter(descr,self,tp)}else{return descr}}
-return $B.object_getattribute(self.func,attr);}
+return $B.object_getattribute(self.im_func,attr)}
 $B.method.tp_descr_get=function(self){return self}
 $B.method.tp_new=function(cls,func,obj){return{
-ob_type:cls,func,obj}}
+ob_type:cls,im_func:func,im_self:obj,dict:$B.empty_dict()}}
 var method_funcs=$B.method.tp_funcs={}
-method_funcs.__func__=function(self){return self.func}
 method_funcs.__reduce__=function(self){}
-method_funcs.__self__=function(self){return self.obj}
 $B.method.functions_or_methods=["__new__"]
 $B.method.tp_methods=["__reduce__"]
-$B.method.tp_members=["__func__","__self__"]
+$B.method.tp_members=[["__func__",$B.TYPES.OBJECT,"im_func",1],["__self__",$B.TYPES.OBJECT,"im_self",1]
+]
 $B.set_func_names(method,"builtins")
-$B.method_descriptor.tp_repr=function(self){var name=self.ml.ml_name
-var class_name=self.cls.tp_name
+$B.method_descriptor.tp_repr=function(self){var name=self.d_name
+var class_name=self.d_type.tp_name
 return `<method '${name}' of '${class_name}' objects>`}
-$B.method_descriptor.tp_call=function(self,...args){if(args.length==0){var name=self.ml.ml_name
-var class_name=self.cls.tp_name
+$B.method_descriptor.tp_call=function(self,...args){if(args.length==0){var name=self.d_name
+var class_name=self.d_type.tp_name
 $B.RAISE(_b_.TypeError,`"unbound method ${class_name}.${name} needs an argument`
 )}
 try{var res=self.method(...args)
@@ -3493,19 +3489,18 @@ $B.method_descriptor.tp_descr_get=function(self,obj,klass){if(obj===$B.NULL){ret
 var f=self.method.bind(null,obj)
 f.ob_type=$B.builtin_method
 f.$infos=self.$infos
-f.ml={ml_name:self.ml.ml_name}
+f.ml={ml_name:self.d_name}
 f.m_self=self
 return f}
 var method_descriptor_funcs=$B.method_descriptor.tp_funcs={}
-method_descriptor_funcs.__name__=function(self){return self.name}
-method_descriptor_funcs.__objclass__=function(self){return self.cls}
-method_descriptor_funcs.__qualname___get=function(self){return self.name}
+method_descriptor_funcs.__qualname___get=function(self){return self.d_name}
 method_descriptor_funcs.__qualname___set=function(self,value){self.name=value}
 method_descriptor_funcs.__reduce__=function(self){}
 method_descriptor_funcs.__text_signature___get=function(self){}
 method_descriptor_funcs.__text_signature___set=function(self){}
 $B.method_descriptor.tp_methods=["__reduce__"]
-$B.method_descriptor.tp_members=["__objclass__","__name__"]
+$B.method_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
+]
 $B.method_descriptor.tp_getset=["__qualname__","__text_signature__"]
 $B.set_func_names($B.method_descriptor,'builtins')
 $B.classmethod_descriptor.tp_repr=function(self){console.log(self)
@@ -3525,41 +3520,39 @@ return f}
 var classmethod_descriptor_funcs=$B.classmethod_descriptor.tp_funcs={}
 classmethod_descriptor_funcs.__doc___get=function(self){}
 classmethod_descriptor_funcs.__doc___set=function(self){}
-classmethod_descriptor_funcs.__name__=function(self){return self.d_name}
-classmethod_descriptor_funcs.__objclass__=function(self){return self.d_type}
 classmethod_descriptor_funcs.__qualname___get=function(self){}
 classmethod_descriptor_funcs.__qualname___set=function(self){}
 classmethod_descriptor_funcs.__text_signature___get=function(self){}
 classmethod_descriptor_funcs.__text_signature___set=function(self){}
-$B.classmethod_descriptor.tp_members=["__objclass__","__name__"]
+$B.classmethod_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
+]
 $B.classmethod_descriptor.tp_getset=["__doc__","__qualname__","__text_signature__"]
 $B.set_func_names($B.classmethod_descriptor,'builtins')
 $B.getset_descriptor.$factory=function(klass,attr,getset){var[getter,setter]=getset
-var res={ob_type:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr,getter,setter}
+var res={ob_type:$B.getset_descriptor,__doc__:_b_.None,d_type:klass,d_name:attr,getter,setter}
 return res}
 $B.getset_descriptor.tp_descr_set=function(self,obj,value){if(self.setter===undefined){$B.RAISE_ATTRIBUTE_ERROR(
-`attribute '${self.attr}' of '${self.cls.tp_name}' objects is not writable`,self,self.attr)}
+`attribute '${self.d_name}' of '${self.d_type.tp_name}' objects is not writable`,self,self.d_name)}
 return self.setter(obj,value)}
-$B.getset_descriptor.tp_repr=function(self){return `<attribute '${self.attr}' of '${$B.get_name(self.cls)}' objects>`}
+$B.getset_descriptor.tp_repr=function(self){return `<attribute '${self.d_name}' of '${$B.get_name(self.d_type)}' objects>`}
 $B.getset_descriptor.tp_descr_get=function(self,obj){if(obj===$B.NULL){return self}
-if(! $B.get_mro($B.get_class(obj)).includes(self.cls)){$B.RAISE(_b_.TypeError,`descriptor '${self.attr}' for `+
-`'${$B.get_name(self.cls)}' objects doesn't apply to a `+
+if(! $B.get_mro($B.get_class(obj)).includes(self.d_type)){$B.RAISE(_b_.TypeError,`descriptor '${self.d_name}' for `+
+`'${$B.get_name(self.d_type)}' objects doesn't apply to a `+
 `'${$B.class_name(obj)}' object`)}
 return self.getter(obj)}
 var getset_descriptor_funcs=$B.getset_descriptor.tp_funcs={}
-getset_descriptor_funcs.__name__=function(self){return self.attr}
-getset_descriptor_funcs.__objclass__=function(self){return self.cls}
-getset_descriptor_funcs.__qualname___get=function(self){return self.attr}
-getset_descriptor_funcs.__qualname___set=function(self,value){self.attr=value}
-$B.getset_descriptor.tp_members=["__objclass__","__name__"]
+getset_descriptor_funcs.__qualname___get=function(self){return self.d_name}
+getset_descriptor_funcs.__qualname___set=function(self,value){self.d_name=value}
+$B.getset_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
+]
 $B.getset_descriptor.tp_getset=["__qualname__"]
 $B.set_func_names($B.getset_descriptor,"builtins")
 var wrapper_descriptor=$B.wrapper_descriptor
 wrapper_descriptor.$factory=function(cls,attr,f){
 return{
-ob_type:wrapper_descriptor,d_base:cls,d_name:attr,wrapped:f}}
+ob_type:wrapper_descriptor,d_type:cls,d_name:attr,wrapped:f}}
 $B.wrapper_descriptor.tp_repr=function(self){var name=self.d_name
-var class_name=self.d_base.tp_name
+var class_name=self.d_type.tp_name
 return `<slot wrapper '${name}' of '${class_name}' objects>`}
 $B.wrapper_descriptor.tp_call=function(self,...args){if(typeof self.wrapped !=='function'){console.log('self.wrapped not a function',self)}
 return self.wrapped(...args)}
@@ -3567,15 +3560,14 @@ $B.wrapper_descriptor.tp_descr_get=function(self,obj,type){if(obj===$B.NULL){ret
 var res={ob_type:$B.method_wrapper,d_name:self.d_name,self:obj,wrapped:self.wrapped}
 return res}
 var wrapper_descriptor_funcs=$B.wrapper_descriptor.tp_funcs={}
-wrapper_descriptor_funcs.__name__=function(self){return self.d_name}
-wrapper_descriptor_funcs.__objclass__=function(self){return self.d_base}
 wrapper_descriptor_funcs.__qualname___get=function(self){return self.d_name}
-wrapper_descriptor_funcs.__qualname___set=function(self,value){}
+wrapper_descriptor_funcs.__qualname___set=function(self,value){self.d_name=value}
 wrapper_descriptor_funcs.__reduce__=function(self){}
 wrapper_descriptor_funcs.__text_signature___get=function(self){return '(self, /, *args, **kwargs)'}
 wrapper_descriptor_funcs.__text_signature___set=function(self){}
 $B.wrapper_descriptor.tp_methods=["__reduce__"]
-$B.wrapper_descriptor.tp_members=["__objclass__","__name__"]
+$B.wrapper_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
+]
 $B.wrapper_descriptor.tp_getset=["__qualname__","__text_signature__"]
 $B.set_func_names(wrapper_descriptor,"builtins")
 $B.builtin_function_or_method.tp_richcompare=function(self,other,op){if((op !='__eq__' && op !='__ne__')||
@@ -3590,7 +3582,6 @@ $B.builtin_function_or_method.tp_repr=function(self){if(self.m_self){return `<bu
 $B.builtin_function_or_method.tp_hash=function(self){}
 $B.builtin_function_or_method.tp_call=function(self,...args){return self(...args)}
 var builtin_function_or_method_funcs=$B.builtin_function_or_method.tp_funcs={}
-builtin_function_or_method_funcs.__module__=function(self){}
 builtin_function_or_method_funcs.__name___get=function(self){}
 builtin_function_or_method_funcs.__name___set=function(self){}
 builtin_function_or_method_funcs.__qualname___get=function(self){}
@@ -3601,7 +3592,8 @@ builtin_function_or_method_funcs.__self___set=function(self){}
 builtin_function_or_method_funcs.__text_signature___get=function(self){}
 builtin_function_or_method_funcs.__text_signature___set=function(self){}
 $B.builtin_function_or_method.tp_methods=["__reduce__"]
-$B.builtin_function_or_method.tp_members=["__module__"]
+$B.builtin_function_or_method.tp_members=[["__module__",$B.TYPES.OBJECT,"m_module",0]
+]
 $B.builtin_function_or_method.tp_getset=["__name__","__qualname__","__self__","__text_signature__"]
 $B.set_func_names($B.builtin_function_or_method,"builtins")})(__BRYTHON__)
 ;
@@ -3675,15 +3667,17 @@ if(self.__annotations__ !==undefined){return self.__annotations__}else{return se
 function_funcs.__annotations___set=function(self,value){$B.check_infos(self)
 if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.TypeError,'__annotations__ must be set to a dict object')}
 self.__annotations__=value}
-function_funcs.__builtins__=function(self){$B.check_infos(self)
+function_funcs.__builtins___get=function(self){$B.check_infos(self)
 if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
 return $B.obj_dict(_b_)}
-function_funcs.__closure__=function(self){var free_vars=self.$function_infos[$B.func_attrs.free_vars]
+function_funcs.__builtins___set=_b_.None
+function_funcs.__closure___get=function(self){var free_vars=self.$function_infos[$B.func_attrs.free_vars]
 if(free_vars===undefined ||free_vars.length==0){return _b_.None}
 var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(_b_.None))}}
 return $B.fast_tuple(cells)}
+function_funcs.__closure___set=_b_.None
 function_funcs.__code___get=function(self){$B.check_infos(self)
 var res={ob_type:_b_.code}
 for(var _attr in self.$infos.__code__){res[_attr]=self.$infos.__code__[_attr]}
@@ -3701,10 +3695,12 @@ if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){$B.RAIS
 self.$infos.__defaults__=value
 self.$function_infos[$B.func_attrs.__defaults__]=value
 $B.make_args_parser(self)}
-function_funcs.__dict___get=function(self){}
-function_funcs.__dict___set=function(self){}
-function_funcs.__doc__=function(self){return self.$function_infos[$B.func_attrs.__doc__]}
-function_funcs.__globals__=function(self){return self.globals}
+function_funcs.__dict___get=function(self){return self.dict}
+function_funcs.__dict___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"cannot delete __dict__")}
+if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.TypeError,`__dict__ must be set to a dictionary, not a `+
+`'${$B.class_name(value)}'`
+)}
+self.dict=value}
 function_funcs.__kwdefaults___get=function(self){$B.check_infos(self)
 return self.$infos.__kwdefaults__}
 function_funcs.__kwdefaults___set=function(self,value){$B.check_infos(self)
@@ -3714,16 +3710,23 @@ var kwd={}
 for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
 self.$function_infos[$B.func_attrs.__kwdefaults__]=kwd
 $B.make_args_parser(self)}
-function_funcs.__module__=function(self){}
-function_funcs.__name___get=function(self){}
+function_funcs.__name___get=function(self){return self.$function_infos[$B.func_attrs.__name__]}
 function_funcs.__name___set=function(self){}
 function_funcs.__qualname___get=function(self){}
 function_funcs.__qualname___set=function(self){}
 function_funcs.__type_params___get=function(self){}
 function_funcs.__type_params___set=function(self){}
-$B.function.tp_members=["__closure__","__doc__","__globals__","__module__","__builtins__"]
-$B.function.tp_getset=["__code__","__defaults__","__kwdefaults__","__annotations__","__annotate__","__dict__","__name__","__qualname__","__type_params__"]
+$B.function.tp_members=[["__doc__",$B.TYPES.OBJECT,"func_doc",0],["__globals__",$B.TYPES.OBJECT,"func_globals",1],["__module__",$B.TYPES.OBJECT,"func_module",0]
+]
+$B.function.tp_getset=["__code__","__defaults__","__kwdefaults__","__annotations__","__annotate__","__dict__","__name__","__qualname__","__type_params__","__builtins__","__closure__" 
+]
 $B.set_func_names($B.function,"builtins")
+$B.setup_function=function(f){f.ob_type=$B.function
+f.dict=$B.empty_dict()
+f.$args_parser=$B.make_args_parser_and_parse
+f.func_doc=f.$function_infos[$B.func_attrs.__doc__]
+f.func_globals=$B.frame_obj.frame[3]
+f.func_module=f.$function_infos[$B.func_attrs.__module__]}
 $B.check_infos=function(f){if(! f.$infos){if(f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}else{console.log('no $infos, no $function_infos')}}}
 $B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames,annotations,type_params
 ){f.$is_func=true
@@ -4806,7 +4809,6 @@ _b_.enumerate.tp_methods=["__reduce__"]
 _b_.enumerate.classmethods=["__class_getitem__"]
 $B.set_func_names(enumerate,"builtins")
 $B.LOCALS_PROXY=Symbol('locals_proxy')
-enumerate.__class_getitem__=_b_.classmethod.$factory(enumerate.__class_getitem__)
 var $$eval=_b_.eval=function(){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},['src','globals','locals','mode'],arguments,{globals:_b_.None,locals:_b_.None,mode:'eval'},null,null,4),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
@@ -5556,10 +5558,8 @@ self.$args2=$arg2}
 _b_.super.tp_new=function(self){return{
 ob_type:_b_.super,dict:$B.empty_dict()}}
 var super_funcs=_b_.super.tp_funcs={}
-super_funcs.__self__=function(self){return self.obj}
-super_funcs.__self_class__=function(self){return self.obj_type}
-super_funcs.__thisclass__=function(self){return self.type}
-_b_.super.tp_members=["__thisclass__","__self__","__self_class__"]
+_b_.super.tp_members=[["__thisclass__",$B.TYPES.OBJECT,"type",1],["__self__",$B.TYPES.OBJECT,"obj",1],["__self_class__",$B.TYPES.OBJECT,"obj_type",1]
+]
 $B.set_func_names($$super,"builtins")
 _b_.vars=function(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj:def},null,null),obj=$.obj
 if(obj===def){return _b_.locals()}else{if(obj.dict){return obj.dict}else{$B.RAISE(_b_.TypeError,"vars() argument must have __dict__ attribute")}}}
@@ -5963,8 +5963,6 @@ traceback.$factory=function(exc){return make_tb()}
 $B.traceback.tp_new=function(self){return make_tb()}
 var traceback_funcs=$B.traceback.tp_funcs={}
 traceback_funcs.__dir__=function(self){return $B.$list(['tb_frame','tb_next','tb_lasti','tb_lineno'])}
-traceback_funcs.tb_frame=function(self){return self.tb_frame}
-traceback_funcs.tb_lasti=function(self){return self.tb_lasti}
 traceback_funcs.tb_lineno_get=function(self){return self.tb_lineno}
 traceback_funcs.tb_lineno_set=$B.NULL
 traceback_funcs.tb_next_get=function(self){return self.tb_next ?? _b_.None}
@@ -5976,7 +5974,8 @@ while(cursor !==_b_.None){if(cursor===self){$B.RAISE(_b_.ValueError,"traceback l
 cursor=cursor.tb_next}
 self.tb_next=value}
 $B.traceback.tp_methods=["__dir__"]
-$B.traceback.tp_members=["tb_frame","tb_lasti"]
+$B.traceback.tp_members=[["tb_frame",$B.TYPES.OBJECT,"tb_frame",1],["tb_lasti",$B.TYPES.INT,"tb_lasti",1]
+]
 $B.traceback.tp_getset=["tb_next","tb_lineno"]
 $B.set_func_names(traceback,"builtins")
 var frame=$B.frame
@@ -6020,12 +6019,12 @@ frame_funcs.f_locals_get=function(self){
 if(self.f_locals){return self.f_locals}else if(self.f_globals && self[1]==self[3]){return self.f_locals=self.f_globals}else{return self.f_locals=$B.obj_dict(self[1])}}
 frame_funcs.f_locals_set=$B.NULL
 frame_funcs.f_trace_get=function(self){return self.$f_trace}
-frame_funcs.f_trace_lines=function(self){}
 frame_funcs.f_trace_opcodes_get=function(self){}
 frame_funcs.f_trace_opcodes_set=function(self){}
 frame_funcs.f_trace_set=function(self,value){self.$f_trace=value}
 $B.frame.tp_methods=["clear","__sizeof__"]
-$B.frame.tp_members=["f_trace_lines"]
+$B.frame.tp_members=[["f_trace_lines",$B.TYPES.BOOL,"f_trace_lines",0]
+]
 $B.frame.tp_getset=["f_back","f_locals","f_lineno","f_trace","f_lasti","f_globals","f_builtins","f_code","f_trace_opcodes","f_generator"]
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
@@ -6096,7 +6095,7 @@ _b_.BaseException.tp_init=function(self,...args){var $=$B.args('__init__',1,{sel
 check_no_keywords($.self,$.kw)
 self.args=$B.fast_tuple(args)}
 _b_.BaseException.tp_new=function(cls){var $=$B.args('__new__',1,{cls:null},['cls'],arguments,{},'args','kw')
-var res={ob_type:$.cls,dict:$B.empty_dict(),args:$B.fast_tuple($.args),notes:_b_.None,__traceback__:_b_.None,__cause__:_b_.None,__context__:_b_.None,__suppress_context__:false}
+var res={ob_type:$.cls,dict:$B.empty_dict(),args:$B.fast_tuple($.args),notes:_b_.None,__traceback__:_b_.None,__cause__:_b_.None,__context__:_b_.None,suppress_context:false}
 return res}
 var BaseException_funcs=_b_.BaseException.tp_funcs={}
 BaseException_funcs.__cause___get=function(self){}
@@ -6105,7 +6104,6 @@ BaseException_funcs.__context___get=function(self){}
 BaseException_funcs.__context___set=function(self){}
 BaseException_funcs.__reduce__=function(self){}
 BaseException_funcs.__setstate__=function(self){}
-BaseException_funcs.__suppress_context__=function(self){}
 BaseException_funcs.__traceback___get=function(self){return self.__traceback__}
 BaseException_funcs.__traceback___set=function(self){}
 BaseException_funcs.add_note=function(self,note){
@@ -6118,7 +6116,8 @@ BaseException_funcs.with_traceback=function(self,tb){self.__traceback__=tb
 return self}
 _b_.BaseException.functions_or_methods=["__new__"]
 _b_.BaseException.tp_methods=["__reduce__","__setstate__","with_traceback","add_note"]
-_b_.BaseException.tp_members=["__suppress_context__"]
+_b_.BaseException.tp_members=[["__suppress_context__",$B.TYPES.BOOL,"suppress_context",0]
+]
 _b_.BaseException.tp_getset=["args","__traceback__","__context__","__cause__"]
 $B.set_func_names(_b_.BaseException,'builtins')
 make_builtin_exception("JavascriptError",_b_.Exception)
@@ -6127,8 +6126,8 @@ check_no_keywords($.self,$.kw)
 _b_.BaseException.tp_init($.self,...$.args)
 if($.args.length > 0){$.self.value=$.args[0]}}
 var StopIteration_funcs=_b_.StopIteration.tp_funcs={}
-StopIteration_funcs.value_get=function(self){return _self.value ?? _b_.None}
-_b_.StopIteration.tp_members=["value"]
+_b_.StopIteration.tp_members=[["value",$B.TYPES.OBJECT,"value",0]
+]
 $B.set_func_names(_b_.StopIteration,'builtins')
 _b_.ImportError.tp_init=function(){var $=$B.args("ImportError",1,{self:null},['self'],arguments,{},'args','kw')
 _b_.BaseException.tp_init($.self,...$.args)
@@ -6175,8 +6174,8 @@ _b_.NameError.tp_init=function(){var $=$B.args('__init__',1,{self:null},['self']
 _b_.BaseException.tp_init($.self,...$.args)
 $B.set_expected_kwargs($.self,['name'],$.kw)}
 var NameError_funcs=_b_.NameError.tp_funcs={}
-NameError_funcs.name=function(self){return self.args[0]}
-_b_.NameError.tp_members=["name"]
+_b_.NameError.tp_members=[["name",$B.TYPES.OBJECT,"name",0]
+]
 $B.set_func_names(_b_.NameError,'builtins')
 _b_.UnboundLocalError.tp_repr=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
@@ -6251,8 +6250,6 @@ res.push(eg)}
 return $B.fast_tuple(res)}
 _b_.BaseExceptionGroup.subgroup=function(self,condition){return _b_.BaseExceptionGroup.split(self,condition)[0]}
 $B.set_func_names(_b_.BaseExceptionGroup,"builtins")
-_b_.BaseExceptionGroup.__class_getitem__=
-_b_.classmethod.$factory(_b_.BaseExceptionGroup.__class_getitem__)
 _b_.ExceptionGroup.factory=function(){var missing={},$=$B.args("ExceptionGroup",2,{message:null,exceptions:null},['message','exceptions'],arguments,{exceptions:missing},null,null)
 var err=Error()
 err.args=$B.fast_tuple(Array.from(arguments))
@@ -6621,11 +6618,9 @@ $B.rich_comp('__ge__',self.start,other)
 && $B.rich_comp('__gt__',other,self.stop))){return fl}else{$B.RAISE(_b_.ValueError,_b_.str.$factory(other)+
 ' not in range')}}else{$B.RAISE(_b_.ValueError,_b_.str.$factory(other)+
 " not in range")}}
-range_funcs.start=function(self){return self.start}
-range_funcs.step=function(self){return self.step}
-range_funcs.stop=function(self){return self.stop}
 _b_.range.tp_methods=["__reversed__","__reduce__","count","index"]
-_b_.range.tp_members=["start","stop","step"]
+_b_.range.tp_members=[["start",$B.TYPES.OBJECT_EX,"start",1],["stop",$B.TYPES.OBJECT_EX,"stop",1],["step",$B.TYPES.OBJECT_EX,"step",1]
+]
 $B.set_func_names(range,"builtins")
 var slice=_b_.slice
 slice.$not_basetype=true 
@@ -7572,6 +7567,7 @@ stored[stored.length]=item
 so.$used++
 so.$version++}}
 function set_contains(so,key,hash){return !! set_lookkey(so,key,hash)}
+$B.set_has=set_contains
 function set_copy(obj){var res=make_new_set_base_type(obj)
 for(var hash in obj.$store){res.$store[hash]=obj.$store[hash].slice()}
 res.$used=obj.$used
@@ -7938,12 +7934,12 @@ module_funcs.__annotate___get=function(self){}
 module_funcs.__annotate___set=function(self){}
 module_funcs.__annotations___get=function(self){}
 module_funcs.__annotations___set=function(self){}
-module_funcs.__dict__=function(self){return self.dict}
 module_funcs.__dir__=function(self){var names=[]
 for(var item of _b_.dict.$iter_items(self.dict)){names.push(item.key)}
 return $B.$list(names.sort())}
 $B.module.tp_methods=["__dir__"]
-$B.module.tp_members=["__dict__"]
+$B.module.tp_members=[["__dict__",$B.TYPES.OBJECT,"dict",1]
+]
 $B.module.tp_getset=["__annotations__","__annotate__"]
 $B.set_func_names(Module,"builtins")
 $B.make_import_paths=function(filename){
@@ -8089,8 +8085,6 @@ submodule_search_locations:is_package? $B.$list([]):_b_.None,loader_state:{store
 cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
 VFSFinder.classmethods=["find_spec"]
 $B.set_func_names(VFSFinder,"<import>")
-for(let method in VFSFinder){if(typeof VFSFinder[method]=="function"){VFSFinder[method]=_b_.classmethod.$factory(
-VFSFinder[method])}}
 const VFSLoader=$B.make_builtin_class("VFSLoader")
 VFSLoader.$factory=function(){return{
 ob_type:VFSLoader}}
@@ -12207,7 +12201,7 @@ return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{if(test){console.log('js
 var res=jsobj2pyobj(js_attr)
 if(test){console.log('    res',res)}
 return res}}
-$B.JSObj.__setattr__=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
+$B.JSObj.tp_setattro=function(_self,attr,value){_self[attr]=$B.pyobj2jsobj(value)
 return _b_.None}
 $B.JSObj.__getitem__=function(_self,key){if(typeof key=="string"){try{return $B.JSObj.tp_getattro(_self,key)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){$B.RAISE(_b_.KeyError,err.name)}
 throw err}}else if(typeof key=="number"){if(_self[key]!==undefined){return jsobj2pyobj(_self[key])}
@@ -12723,6 +12717,18 @@ ob_type :Clipboard,dict:$B.empty_dict(),data :data}}
 Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
 Clipboard.__setitem__=function(self,name,value){self.data.setData(name,value)}
 $B.set_func_names(Clipboard,"<dom>")
+function dimension_get(self,attr){
+if(self.tagName=="CANVAS" && self[attr]){return self[attr]}
+if(self instanceof SVGElement){return self[attr].baseVal.value}
+var computed=window.getComputedStyle(self).
+getPropertyValue(attr)
+if(computed !==undefined){if(computed==''){if(self.style[attr]!==undefined){return parseInt(self.style[attr])}else{return 0}}
+let prop=Math.floor(parseFloat(computed)+0.5)
+return isNaN(prop)? 0 :prop}else if(self.style[attr]){return parseInt(self.style[attr])}else{$B.RAISE_ATTRIBUTE_ERROR("style."+attr+
+" is not set for "+_b_.str.$factory(self),self,attr)}}
+function dimension_set(self,attr,value){if($B.$isinstance(value,[_b_.int,_b_.float])&& self.nodeType==1){self.style[attr]=value+"px"
+return _b_.None}else{$B.RAISE(_b_.ValueError,attr+" value should be"+
+" an integer or float, not "+$B.class_name(value))}}
 var DOMNode=$B.make_builtin_class('DOMNode')
 DOMNode.$factory=(elt)=> elt
 DOMNode.nb_add=function(self,other){
@@ -12743,18 +12749,6 @@ if(self.parentNode){self.parentNode.removeChild(self)}}
 DOMNode.__eq__=function(self,other){return self==other}
 DOMNode.tp_getattro=function(self,attr){switch(attr){case "attrs":
 return Attributes.$factory(self)
-case "height":
-case "left":
-case "top":
-case "width":
-if(self.tagName=="CANVAS" && self[attr]){return self[attr]}
-if(self instanceof SVGElement){return self[attr].baseVal.value}
-var computed=window.getComputedStyle(self).
-getPropertyValue(attr)
-if(computed !==undefined){if(computed==''){if(self.style[attr]!==undefined){return parseInt(self.style[attr])}else{return 0}}
-let prop=Math.floor(parseFloat(computed)+0.5)
-return isNaN(prop)? 0 :prop}else if(self.style[attr]){return parseInt(self.style[attr])}else{$B.RAISE_ATTRIBUTE_ERROR("style."+attr+
-" is not set for "+_b_.str.$factory(self),self,attr)}
 case "x":
 case "y":
 if(!(self instanceof SVGElement)){let pos=$getPosition(self)
@@ -12898,18 +12892,10 @@ DOMNode.tp_richcompare=function(self,other,op){switch(op){case '__le__':
 return DOMNode.attach(self,other)
 default:
 return _b_.NotImplemented}}
-DOMNode.tp_setattroXXX=function(self,attr,value){
-console.log('DOMNode setattro',self,attr,value)
+DOMNode.tp_setattro=function(self,attr,value){
 if(value===$B.NULL){if(self[attr]===undefined){$B.RAISE_ATTRIBUTE_ERROR(`cannot delete DOMNode attribute '${attr}'`,self,attr)}
 delete self[attr]
 return _b_.None}
-switch(attr){case "left":
-case "top":
-case "width":
-case "height":
-if($B.$isinstance(value,[_b_.int,_b_.float])&& self.nodeType==1){self.style[attr]=value+"px"
-return _b_.None}else{$B.RAISE(_b_.ValueError,attr+" value should be"+
-" an integer or float, not "+$B.class_name(value))}}
 if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
 var frame=$B.frame_obj.frame
@@ -12996,9 +12982,10 @@ DOMNode_funcs.bindings=function(self){
 var res=$B.empty_dict()
 for(var key in self.$events){_b_.dict.$setitem(res,key,self.$events[key].map(x=> x[1]))}
 return res}
-DOMNode_funcs.events=function(self,event){self.$events=self.$events ||{}
+DOMNode_funcs.events_get=function(self,event){self.$events=self.$events ||{}
 var evt_list=self.$events[event]=self.$events[event]||[],funcs=evt_list.map(x=> x[0])
 return $B.$list(funcs)}
+DOMNode_funcs.events_set=_b_.None
 function make_list(node_list){var res=[]
 for(var i=0;i < node_list.length;i++){res.push(DOMNode.$factory(node_list[i]))}
 return $B.$list(res)}
@@ -13024,6 +13011,8 @@ if($dict["selector"]!==undefined){if(self.querySelectorAll===undefined){$B.RAISE
 "selection by selector")}
 return make_list(self.querySelectorAll($dict['selector']))}
 return $B.$list([])}
+DOMNode_funcs.height_get=function(self){return dimension_get(self,'height')}
+DOMNode_funcs.height_set=function(self,value){return dimension_set(self,'height',value)}
 DOMNode_funcs.html_get=function(self){var res=self.innerHTML
 if(res===undefined){if(self.nodeType==Node.DOCUMENT_NODE && self.body){res=self.body.innerHTML}else{res=_b_.None}}
 return res}
@@ -13039,8 +13028,11 @@ var elt=self
 while(true){if(other===elt){return true}
 elt=elt.parentNode
 if(! elt){return false}}}
-DOMNode_funcs.parent=function(self){if(self.parentElement){return DOMNode.$factory(self.parentElement)}
+DOMNode_funcs.left_get=function(self){return dimension_get(self,'left')}
+DOMNode_funcs.left_set=function(self,value){return dimension_set(self,'left',value)}
+DOMNode_funcs.parent_get=function(self){if(self.parentElement){return DOMNode.$factory(self.parentElement)}
 return _b_.None}
+DOMNode_funcs.parent_set=_b_.None
 DOMNode_funcs.reset=function(self){
 return function(){self.reset()}}
 DOMNode_funcs.scrolled_left_get=function(self){return $getPosition(self).left-
@@ -13082,6 +13074,8 @@ case "borderWidth":
 if($B.$isinstance(value,_b_.int)){value=value+"px"}}
 self.style[key]=value}}}
 DOMNode.set_value=function(self,value){self.value=_b_.str.$factory(value)}
+DOMNode_funcs.top_get=function(self){return dimension_get(self,'top')}
+DOMNode_funcs.top_set=function(self,value){return dimension_set(self,'top',value)}
 DOMNode.submit=function(self){
 return function(){self.submit()}}
 DOMNode_funcs.text_get=function(self){if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
@@ -13114,11 +13108,12 @@ events.splice(j,1)
 flag=true
 break}}
 if(! flag){$B.RAISE(_b_.KeyError,'missing callback for event '+event)}}}
-DOMNode.tp_getset=["abs_left","abs_top","class_name","html","scrolled_left","scrolled_top","style","text"
+DOMNode_funcs.width_get=function(self){return dimension_get(self,'width')}
+DOMNode_funcs.width_set=function(self,value){return dimension_set(self,'width',value)}
+DOMNode.tp_getset=["abs_left","abs_top","class_name","html","scrolled_left","scrolled_top","style","text","height","left","top","width","events","parent"
 ]
 DOMNode.tp_methods=["__dir__","bind","bindings","children","child_nodes","clear","clone","closest","get","index","inside","reset","select","select_one","setSelectionRange","trigger","unbind"
 ]
-DOMNode.tp_members=["events","parent"]
 $B.set_func_names(DOMNode,"builtins")
 var Query=$B.make_builtin_class("query")
 Query.sq_contains=function(self,key){return self._keys.indexOf(key)>-1}
@@ -13311,7 +13306,6 @@ coroutine_funcs.cr_code_get=function(self){}
 coroutine_funcs.cr_code_set=function(self){}
 coroutine_funcs.cr_frame_get=function(self){}
 coroutine_funcs.cr_frame_set=function(self){}
-coroutine_funcs.cr_origin=function(self){}
 coroutine_funcs.cr_running_get=function(self){}
 coroutine_funcs.cr_running_set=function(self){}
 coroutine_funcs.cr_suspended_get=function(self){}
@@ -13328,7 +13322,8 @@ return res}
 coroutine_funcs.throw=function(self){}
 $B.coroutine.tp_methods=["send","throw","close","__sizeof__"]
 $B.coroutine.classmethods=["__class_getitem__"]
-$B.coroutine.tp_members=["cr_origin"]
+$B.coroutine.tp_members=[["cr_origin",$B.TYPES.OBJECT,"cr_origin_or_finalizer",1]
+]
 $B.coroutine.tp_getset=["__name__","__qualname__","cr_await","cr_running","cr_frame","cr_code","cr_suspended"]
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
@@ -13941,10 +13936,12 @@ if(cls.tp_methods){for(var descr of cls.tp_methods){var method=cls.tp_funcs[desc
 if(method===undefined){console.log('no method',cls,cls.tp_funcs,descr)
 alert()}
 method.ob_type=$B.builtin_method
-$B.str_dict_set(cls.dict,descr,{ob_type:$B.method_descriptor,method,ml:{ml_name:descr},cls})
+$B.str_dict_set(cls.dict,descr,{ob_type:$B.method_descriptor,method,d_name:descr,d_type:cls})
 method.self=$B.str_dict_get(cls.dict,descr)}}
-if(cls.tp_members){for(var descr of cls.tp_members){var member={ob_type:$B.method_descriptor,method:cls.tp_funcs[descr],ml:{ml_name:descr},cls}
-$B.str_dict_set(cls.dict,descr,{ob_type:$B.member_descriptor,d_member:member,d_type:cls,name:descr,getter:cls.tp_funcs[descr]})}}
+if(cls.tp_members){
+for(var descr of cls.tp_members){var[name,type,attr,flags]=descr
+$B.str_dict_set(cls.dict,name,{ob_type:$B.member_descriptor,d_member:{name,type,attr,flags},d_name:name}
+)}}
 if(cls.classmethods){for(var descr of cls.classmethods){$B.str_dict_set(cls.dict,descr,{ob_type:$B.classmethod_descriptor,d_name:descr,d_type:cls,d_method:cls.tp_funcs[descr]})}}
 if(cls.staticmethods){for(var descr of cls.staticmethods){$B.str_dict_set(cls.dict,descr,_b_.staticmethod.$factory(cls.tp_funcs[descr]))}}}
 for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,slot)}}}
@@ -15084,7 +15081,6 @@ anns_values=`[${ann_items_values.join(', ')}]`
 anns_strings=`[${ann_items_strings.join(', ')}]`
 anns=ann_items_values.length > 0}else{anns=false}
 var annotations=postponed ? anns_strings :'false'
-js+=prefix+`${name2}.ob_type = $B.function\n`
 js+=prefix+`${name2}.$function_infos = [`+
 `'${gname}', `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
@@ -15105,7 +15101,7 @@ prefix+tab+`${positional.length}, `+
 `[${varnames}], `+
 `${annotations}, `+
 `${has_type_params ? 'type_params' : '[]'}]\n`;
-js+=prefix+`${name2}.$args_parser = $B.make_args_parser_and_parse\n`
+js+=prefix+`$B.setup_function(${name2})\n`
 if(anns && ! postponed){
 var inum=add_to_positions(scopes,this)
 js+=prefix+`${name2}.__annotate__ = function(format){\n`

@@ -917,7 +917,6 @@ DOMNode.tp_richcompare = function(self, other, op){
 DOMNode.tp_setattro = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
-    console.log('DOMNode setattro', self, attr, value)
     if(value === $B.NULL){
         if(self[attr] === undefined){
             $B.RAISE_ATTRIBUTE_ERROR(`cannot delete DOMNode attribute '${attr}'`,
@@ -1184,12 +1183,14 @@ DOMNode_funcs.bindings = function(self){
     return res
 }
 
-DOMNode_funcs.events = function(self, event){
+DOMNode_funcs.events_get = function(self, event){
     self.$events = self.$events || {}
     var evt_list = self.$events[event] = self.$events[event] || [],
         funcs = evt_list.map(x => x[0])
     return $B.$list(funcs)
 }
+
+DOMNode_funcs.events_set = _b_.None
 
 function make_list(node_list){
     var res = []
@@ -1327,12 +1328,14 @@ DOMNode_funcs.left_set = function(self, value){
     return dimension_set(self, 'left', value)
 }
 
-DOMNode_funcs.parent = function(self){
+DOMNode_funcs.parent_get = function(self){
     if(self.parentElement){
         return DOMNode.$factory(self.parentElement)
     }
     return _b_.None
 }
+
+DOMNode_funcs.parent_set = _b_.None
 
 DOMNode_funcs.reset = function(self){ // for FORM
     return function(){
@@ -1543,7 +1546,8 @@ DOMNode_funcs.width_set = function(self, value){
 
 DOMNode.tp_getset = [
     "abs_left", "abs_top", "class_name", "html", "scrolled_left",
-    "scrolled_top", "style", "text", "height", "left", "top", "width"
+    "scrolled_top", "style", "text", "height", "left", "top", "width",
+    "events", "parent"
 ]
 
 DOMNode.tp_methods = [
@@ -1551,8 +1555,6 @@ DOMNode.tp_methods = [
     "clone", "closest", "get", "index", "inside", "reset", "select",
     "select_one", "setSelectionRange", "trigger", "unbind"
 ]
-
-DOMNode.tp_members = ["events", "parent"]
 
 $B.set_func_names(DOMNode, "builtins")
 
