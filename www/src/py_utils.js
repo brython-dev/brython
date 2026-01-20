@@ -1290,15 +1290,13 @@ $B.delete_for_reassign = function(name, namespace){
             // accessor whose 'get' method raises a NameError
             return
         }
+        // search slot tp_dealloc
+        // defined for memoryview: calls release(), which decrements buffer
+        // exports
         var klass = $B.get_class(value)
-        if($B.$isinstance(value, $B.DOMNode)){
-            // don't call __del__ for this case because it would remove the
-            // element from its parent...
-        }else{
-            var del_method = $B.search_in_mro(klass, '__del__')
-            if(del_method){
-                $B.$call(del_method, value)
-            }
+        var del_method = $B.search_slot(klass, 'tp_dealloc', $B.NULL)
+        if(del_method !== $B.NULL){
+            $B.$call(del_method, value)
         }
     }
     delete namespace[name]

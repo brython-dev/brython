@@ -794,6 +794,7 @@ var $$eval = _b_.eval = function(){
             }
         }else{
             console.log('JS Error', err.message)
+            console.log(err)
         }
         $B.frame_obj = save_frame_obj
         throw err
@@ -843,7 +844,7 @@ var $$eval = _b_.eval = function(){
         var res = exec_func($B, _b_, exec_locals,
                             exec_locals, exec_globals, frame, _frame_obj)
     }catch(err){
-        if(err.ob_type === undefined){
+        if(err.ob_type === undefined || err.ob_type == $B.JavascriptError){
             console.log('JS error')
             console.log(err)
         }
@@ -1041,8 +1042,8 @@ $B.search_in_mro = function(klass, attr, _default){
             console.log('search', attr, 'in', mro[i])
         }
         if(mro[i].hasOwnProperty && mro[i].hasOwnProperty(attr)){
-            if(test){
-                console.log('found in mro', i, mro[i])
+            if(true){
+                console.log('found attr', attr, 'in mro', i, mro[i])
                 console.log(mro[i][attr])
             }
             if(! mro[i].dict ||
@@ -1862,11 +1863,6 @@ memoryview.$buffer_protocol = true
 memoryview.$not_basetype = true // cannot be a base class
 memoryview.$is_sequence = true
 
-memoryview.__del__ = function(self){
-    if(! self.$released){
-        memoryview.tp_funcs.release(self)
-    }
-}
 
 function memoryview_eq(self, other){
     if($B.get_class(other) !== memoryview){
@@ -1905,6 +1901,13 @@ const MEMORYVIEW = {
 }
 
 /* memoryview start */
+
+memoryview.tp_dealloc = function(self){
+    if(! self.$released){
+        memoryview.tp_funcs.release(self)
+    }
+}
+
 _b_.memoryview.tp_richcompare = function(self, other, op){
     if(! $B.$isinstance(other, _b_.memoryview)){
         return _b_.NotImplemented
