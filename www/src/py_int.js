@@ -55,29 +55,6 @@ int.$to_js_number = function(obj){
 int.$to_bigint = bigint_value
 int.$int_value = int_value
 
-
-
-var op_model =
-`var _b_ = __BRYTHON__.builtins
-if(typeof other == "number"){
-    return _b_.int.$int_or_long(BigInt(self) + BigInt(other))
-}else if($B.is_long_int(other)){
-    return _b_.int.$int_or_long(BigInt(self) + other.value)
-}else if(typeof other == "boolean"){
-    return _b_.int.$int_or_long(BigInt(self) + (other ? 1n : 0n))
-}else if($B.$isinstance(other, _b_.int)){
-    return _b_.int.__add__(self, other.$brython_value)
-}
-return _b_.NotImplemented
-`
-
-int.__add__ = Function('self', 'other', op_model)
-
-
-
-
-
-
 function preformat(self, fmt){
     if(fmt.empty){return _b_.str.$factory(self)}
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type) == -1){
@@ -129,20 +106,6 @@ int.__getnewargs__ = function(){
     return int.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
 }
 
-int.__mul__ = Function('self', 'other',
-    op_model.replace(/\+/g, '*').replace(/add/g, "mul"))
-
-/*
-int.__ne__ = function(self, other){
-    var res = int.__eq__(self, other)
-    return (res  === _b_.NotImplemented) ? res : !res
-}
-*/
-
-
-
-
-
 function extended_euclidean(a, b){
     // arguments are big ints
     var d, u, v
@@ -154,9 +117,7 @@ function extended_euclidean(a, b){
     }
 }
 
-
-
-
+/*
 int.__setattr__ = function(self, attr, value){
     if(typeof self == "number" || typeof self == "boolean"){
         var cl_name = $B.class_name(self)
@@ -172,58 +133,7 @@ int.__setattr__ = function(self, attr, value){
     _b_.dict.$setitem(self.__dict__, attr, value)
     return _b_.None
 }
-
-int.__sub__ = Function('self', 'other',
-     op_model.replace(/\+/g, '-').replace(/__add__/g, '__sub__'))
-
-
-
-
-
-// code for operands & | ^
-var model =
-`var _b_ = __BRYTHON__.builtins
-if(typeof other == "number"){
-    // transform into BigInt: JS converts numbers to 32 bits
-    return _b_.int.$int_or_long(BigInt(self) & BigInt(other))
-}else if(typeof other == "boolean"){
-    return self & (other ? 1 : 0)
-}else if($B.is_long_int(other)){
-    return _b_.int.$int_or_long(BigInt(self) & other.value)
-}else if($B.$isinstance(other, _b_.int)){
-    // int subclass
-    return _b_.int.__and__(self, other.$brython_value)
-}
-return _b_.NotImplemented`
-
-int.__and__ = Function('self', 'other', model)
-int.__lshift__ = Function('self', 'other',
-     model.replace(/&/g, '<<').replace(/__and__/g, '__lshift__'))
-int.__rshift__ = Function('self', 'other',
-     model.replace(/&/g, '>>').replace(/__and__/g, '__rshift__'))
-int.__or__ = Function('self', 'other',
-     model.replace(/&/g, '|').replace(/__and__/g, '__or__'))
-int.__xor__ = Function('self', 'other',
-     model.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
-
-// add "reflected" methods
-var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
-    "lshift", "rshift", "and", "xor", "or", "divmod"]
-
-for(var r_opname of r_opnames){
-    if(int["__r" + r_opname + "__"] === undefined &&
-            int['__' + r_opname + '__']){
-        int["__r" + r_opname + "__"] = (function(name){
-            return function(self, other){
-                if($B.$isinstance(other, int)){
-                    other = int_value(other)
-                    return int["__" + name + "__"](other, self)
-                }
-                return _b_.NotImplemented
-            }
-        })(r_opname)
-    }
-}
+*/
 
 var $valid_digits = function(base) {
     var digits = ""
@@ -654,7 +564,7 @@ _b_.int.nb_power = function(self, other, z){
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }
     }else if($B.$isinstance(other, _b_.complex)){
-        var preal = Math.pow(self, other.$real),
+        var preal = Math.pow(self, other.real),
             ln = Math.log(self)
         return $B.make_complex(preal * Math.cos(ln), preal * Math.sin(ln))
     }
@@ -956,7 +866,7 @@ int_funcs.from_bytes = function(self){
     var x = $.bytes,
         byteorder = $.byteorder,
         signed = $.signed,
-        _bytes, 
+        _bytes,
         _len
     if($B.$isinstance(x, [_b_.bytes, _b_.bytearray])){
         _bytes = x.source

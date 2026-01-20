@@ -51,21 +51,6 @@ object.$no_new_init = function(cls){
     return res
 }
 
-
-
-object.__ne__ = function(self, other){
-    if(self === other){
-        return false
-    }
-    var eq = $B.$getattr($B.get_class(self), "__eq__", null)
-    if(eq !== null){
-        var res = $B.$call(eq, self, other)
-        if(res === _b_.NotImplemented){return res}
-        return ! $B.$bool(res)
-    }
-    return _b_.NotImplemented
-}
-
 function getNewArguments(self, klass){
     var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
     if(newargs_ex !== null){
@@ -271,7 +256,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__dict__' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == 'data' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)

@@ -152,14 +152,6 @@ function to_chars(s){
     return Array.from(s)
 }
 
-str.__eq__ = function(_self, other){
-    if($B.$isinstance(other, str)){
-        [_self, other] = to_string([_self, other])
-        return _self + '' == other + ''
-    }
-    return _b_.NotImplemented
-}
-
 function preformat(_self, fmt){
     if(fmt.empty){
         return _b_.str.$factory(_self)
@@ -961,11 +953,7 @@ $B.printf_format = function(s, type, args){
     return ret
 }
 
-str.__ne__ = function(_self, other){
-    var eq = str.__eq__(_self, other)
-    return eq === _b_.NotImplemented ? eq : ! eq
-}
-
+/*
 str.__setattr__ = function(_self, attr, value){
     if(typeof _self === "string"){
         if(str.hasOwnProperty(attr)){
@@ -981,6 +969,7 @@ str.__setattr__ = function(_self, attr, value){
     _b_.dict.$setitem(_self.dict, attr, value)
     return _b_.None
 }
+*/
 
 var combining = []
 for(var cp = 0x300; cp <= 0x36F; cp++){
@@ -988,21 +977,6 @@ for(var cp = 0x300; cp <= 0x36F; cp++){
 }
 var combining_re = new RegExp("(" + combining.join("|") + ")", "g")
 
-
-var body = `var _b_ = __BRYTHON__.builtins
-if(typeof other !== typeof _self){
-    return _b_.NotImplemented
-}else if(typeof _self == "string"){
-    return _self > other
-}else{
-    return _self.$brython_value > other.$brython_value
-}`
-
-var comps = {">": "gt", ">=": "ge", "<": "lt", "<=": "le"}
-for(var op in comps){
-    str[`__${comps[op]}__`] = Function('_self', 'other',
-        body.replace(/>/gm, op))
-}
 
 // Next function used by method .format()
 
@@ -1235,17 +1209,29 @@ str.$factory = function(arg, encoding){
 }
 
 /* str start */
-_b_.str.tp_richcompare = function(self, other){
-    if($B.$isinstance(other, str)){
-        [self, other] = to_string([self, other])
-        self += ''
-        other += ''
-        if(self == other){
-            return 0
-        }
-        return self > other ? 1 : -1
+_b_.str.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, str)){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    [self, other] = to_string([self, other])
+    self += ''
+    other += ''
+    switch(op){
+        case '__eq__':
+            return self == other
+        case '__ne__':
+            return self != other
+        case '__lt__':
+            return self < other
+        case '__le__':
+            return self <= other
+        case '__ge__':
+            return self >= other
+        case '__gt__':
+            return self > other
+        default:
+            return _b_.NotImplemented
+    }
 }
 
 _b_.str.nb_multiply = function(self, other){
