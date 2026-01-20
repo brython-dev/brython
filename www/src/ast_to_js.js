@@ -2072,7 +2072,7 @@ $B.ast.Constant.prototype.to_js = function(){
     }else if(klass === _b_.float){
         return `({ob_type: _b_.float, value: ${this.value.value}})`
     }else if(klass === _b_.complex){
-        return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`
+        return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`
     }else if(this.value === _b_.Ellipsis){
         return `_b_.Ellipsis`
     }else{

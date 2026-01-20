@@ -158,6 +158,7 @@ $B.make_async = func => {
     f.$is_func = true
     f.$is_async = true
     f.$args_parser = func.$args_parser
+    f.ob_type = $B.function
     return f
 }
 

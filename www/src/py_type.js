@@ -878,15 +878,6 @@ $B.type_getattribute = function(klass, attr, _default){
     }
 }
 
-
-type.__ror__ = function(){
-    var len = arguments.length
-    if(len != 1){
-        $B.RAISE(_b_.TypeError, `expected 1 argument, got ${len}`)
-    }
-    return _b_.NotImplemented
-}
-
 function update_subclasses(kls, name, alias, value){
     // recursively propagate kls[alias] = value to subclasses of kls that
     // don't define kls[name]
@@ -1194,11 +1185,17 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if(slots !== $B.NULL){
         for(let key of $B.make_js_iterator(slots)){
+            var member = {
+                name: key,
+                type: $B.TYPES.OBJECT,
+                attr: 'slot_value_' + name,
+                flags: 0
+            }
             var md = {
                 ob_type: $B.member_descriptor,
                 d_type: class_obj,
                 d_name: key,
-                d_member: {method: make_slot_getter(key)},
+                d_member: member,
                 setter: make_slot_setter(key)
             }
             $B.str_dict_set(cl_dict, key, md)

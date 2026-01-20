@@ -212,7 +212,7 @@ $B.finalize_type = function(cls){
         if(cls.tp_members){ // temporary
             for(var descr of cls.tp_members){
                 var [name, type, attr, flags] = descr
-                $B.str_dict_set(cls.dict, name, 
+                $B.str_dict_set(cls.dict, name,
                     {
                         ob_type: $B.member_descriptor,
                         d_member: {name, type, attr, flags},
