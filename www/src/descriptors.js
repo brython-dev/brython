@@ -91,18 +91,15 @@ $B.set_func_names($B.method_wrapper, 'builtins')
 /* member_descriptor start */
 
 $B.member_descriptor.tp_descr_set = function(self, obj, value){
+    if(self.d_member.flags != 0){
+        $B.RAISE(_b_.AttributeError, "readonly attribute")
+    }
+    var attr = self.d_member.attr
     if(value === $B.NULL){
-            if(obj.slot_values === undefined ||
-                ! obj.slot_values.hasOwnProperty(self.name)){
-            $B.RAISE_ATTRIBUTE_ERROR('cannot delete', self, self.name)
-        }
-        kls.slot_values.delete(self.name)
+        delete obj[attr]
         return
     }
-    if(obj.slot_values === undefined){
-        obj.slot_values = {}
-    }
-    obj.slot_values[self.name] = value
+    obj[attr] = value
 }
 
 $B.member_descriptor.tp_repr = function(self){
@@ -114,10 +111,11 @@ $B.member_descriptor.tp_descr_get = function(self, obj, kls){
     if(obj === $B.NULL){
         return self
     }
-    if(self.d_member ===  undefined){
-        console.log('no d_member', self)
+    var attr = self.d_member.attr
+    if(! obj.hasOwnProperty(attr)){
+        throw $B.attr_error(self.d_member.name, obj)
     }
-    return obj[self.d_member.attr]
+    return obj[attr]
 }
 
 var member_descriptor_funcs = $B.member_descriptor.tp_funcs = {}
