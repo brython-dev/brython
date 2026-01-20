@@ -1155,7 +1155,9 @@
 
     var HTTPRequest = $B.make_builtin_class("HTTPRequest")
 
-    HTTPRequest.data = _b_.property.$factory(function(self){
+    var HTTPRequest_funcs = HTTPRequest.tp_funcs = {}
+
+    HTTPRequest_funcs.data_get = function(self){
         if(self.format == "binary"){
             var view = new Uint8Array(self.response)
             return _b_.bytes.$factory(Array.from(view))
@@ -1167,9 +1169,11 @@
             return "data:" + self.getResponseHeader("Content-Type") +
                 ";base64," + base64String
         }
-    })
+    }
 
-    HTTPRequest.response_headers = _b_.property.$factory(function(self){
+    HTTPRequest_funcs.data_set = _b_.None
+
+    HTTPRequest_funcs.response_headers_get = function(self){
         var headers = self.getAllResponseHeaders()
         if(headers === null){return _b_.None}
         var res = $B.empty_dict()
@@ -1186,7 +1190,13 @@
             })
         }
         return res
-    })
+    }
+
+    HTTPRequest_funcs.response_headers_set = _b_.None
+
+    HTTPRequest.tp_getset = [
+        "data", "response_header"
+    ]
 
     var Future = $B.make_builtin_class("Future")
     Future.$factory = function(){
@@ -1586,6 +1596,5 @@ $B.imported.builtins = $B.module.tp_new($B.module, 'builtins', builtins_doc)
 for(var attr in _b_){
     $B.module_setattr($B.imported.builtins, attr, _b_[attr])
 }
-
 
 })(__BRYTHON__);
