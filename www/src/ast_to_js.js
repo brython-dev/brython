@@ -991,7 +991,7 @@ function make_comp(scopes){
     if(this instanceof $B.ast.ListComp){
         js += prefix + `result_${id}.push(${elt})\n`
     }else if(this instanceof $B.ast.SetComp){
-        js += prefix + `_b_.set.add(result_${id}, ${elt})\n`
+        js += prefix + `$B.set_add(result_${id}, ${elt})\n`
     }else if(this instanceof $B.ast.DictComp){
         js += prefix + `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
     }
@@ -1892,14 +1892,9 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     js += prefix + `locals = ${locals_name}\n`
     dedent(2)
 
-    var static_attrs = []
-    if(class_scope.static_attributes){
-        static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
-    }
     js += prefix + `locals.__doc__ = ${docstring}\n` +
           prefix + `locals.__module__ = '${glob}'\n` +
-          prefix + `locals.__firstlineno__ = ${this.lineno}\n` +
-          prefix + `locals.__static_attributes__ = $B.fast_tuple([${static_attrs}])\n`
+          prefix + `locals.__firstlineno__ = ${this.lineno}\n`
 
     js += prefix + `var frame = [name, locals, '${glob}', ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
@@ -1922,6 +1917,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     js += add_body(this.body, scopes) + '\n'
 
+    var static_attrs = []
+    if(class_scope.static_attributes){
+        static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
+    }
+    js += prefix + `locals.__static_attributes__ = $B.fast_tuple([${static_attrs}])\n`
+    
     if(class_scope.positions){
         js = js.substr(0, index_for_positions) +
              prefix + `frame.positions = [${class_scope.positions}]\n` +

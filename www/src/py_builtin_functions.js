@@ -1035,19 +1035,21 @@ $B.search_in_mro = function(klass, attr, _default){
     if(mro === undefined){
         console.log('no mro in class', klass, klass.tp_mro, klass.__mro__)
         //console.log(Error().stack)
-        mro = klass.tp_mro = _b_.type.$mro(klass)
+        mro = klass.tp_mro = $B.make_mro(klass)
     }
     for(var i = 0, len = mro.length; i < len; i++){
         if(test){
             console.log('search', attr, 'in', mro[i])
         }
         if(mro[i].hasOwnProperty && mro[i].hasOwnProperty(attr)){
-            if(true){
+            if(test){
                 console.log('found attr', attr, 'in mro', i, mro[i])
                 console.log(mro[i][attr])
             }
+            var dunder = $B.slot2dunder.hasOwnProperty(attr) ?
+                $B.slot2dunder[attr] : attr
             if(! mro[i].dict ||
-                    $B.str_dict_get(mro[i].dict, attr, $B.NULL) === $B.NULL){
+                    $B.str_dict_get(mro[i].dict, dunder, $B.NULL) === $B.NULL){
                 console.log('attr', attr, 'found in mro[i]', mro[i],
                     'but absent in dict')
             }
@@ -1083,13 +1085,6 @@ var NULL = $B.NULL
 $B.search_in_dict = function(obj, attr, _default){
     var test = false // attr == 'now'
     var is_type = $B.is_type(obj)
-    if(obj.__dict__){
-        console.log('old school __dict__')
-        var in_dict = _b_.dict.$get_string(obj.__dict__, attr)
-        if(in_dict !== _b_.dict.$missing){
-            return in_dict
-        }
-    }
     if(obj.dict){
         var v = $B.str_dict_get(obj.dict, attr, $B.NULL)
         if(v !== $B.NULL){
@@ -1116,7 +1111,12 @@ $B.object_getattribute = function(obj, attr){
         console.log('get attr', attr, 'of obj', obj, 'klass', klass)
         console.log(getattribute)
     }
-    var res = getattribute(obj, attr)
+    var res = $B.NULL
+    try{
+        res = getattribute(obj, attr)
+    }catch(err){
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+    }
     if(test){
         console.log('result of getattribute', res)
     }
@@ -1225,8 +1225,12 @@ $B.$hash = function(obj){
     }
     var klass = $B.get_class(obj)
     var hash_func = $B.search_slot(klass, 'tp_hash', $B.NULL)
-    if(hash_func !== $B.NULL){
-        return hash_func(obj)
+    if(hash_func !== $B.NULL && hash_func !== _b_.None){
+        var res = hash_func(obj)
+        if(! $B.$isinstance(res, _b_.int)){
+            $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
+        }
+        return res
     }
     $B.RAISE(_b_.TypeError, "unhashable type: '" +
             _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
@@ -2626,6 +2630,53 @@ _b_.sum = function(){
 var $$super = _b_.super
 
 
+function supercheck(type, obj){
+    /* obj can be a class, or an instance of one:
+
+       - If it is a class, it must be a subclass of 'type'.      This case is
+         used for class methods; the return value is obj.
+
+       - If it is an instance, it must be an instance of 'type'.  This is
+         the normal case; the return value is obj.__class__.
+
+       But... when obj is an instance, we want to allow for the case where
+       Py_TYPE(obj) is not a subclass of type, but obj.__class__ is!
+       This will allow using super() with a proxy for obj.
+    */
+
+    /* Check for first bullet above (special case) */
+    if($B.is_type(obj) && _b_.issubclass(obj, type)){
+        return obj
+    }
+
+    /* Normal case */
+    if(_b_.issubclass($B.get_class(obj), type)){
+        return $B.get_class(obj)
+    }else{
+        var class_attr = $B.$getattr(obj, '__class__', $B.NULL)
+        if(class_attr !== $B.NULL && $B.is_type(class_attr) &&
+                class_attr !== $B.get_class(obj)){
+            if(_b_.issubclass(class_attr, type)){
+                return class_attr
+            }
+        }
+    }
+
+    var type_or_instance, obj_str;
+
+    if($B.is_type(obj)){
+        type_or_instance = "type";
+        obj_str = obj.tp_name
+    }else{
+        type_or_instance = "instance of";
+        obj_str = $B.class_name(obj)
+    }
+    $B.RAISE(_b_.TypeError,
+        `super(type, obj): obj (${type_or_instance} ${obj_str}) is not ` +
+        `an instance or subtype of type (${type.tp_name}).`
+    )
+}
+
 /* super start */
 _b_.super.tp_repr = function(self){
     $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
@@ -2639,6 +2690,12 @@ _b_.super.tp_repr = function(self){
 }
 
 _b_.super.tp_getattro = function(self, attr){
+    /* We want __class__ to return the class of the super object
+       (i.e. super, or a subclass), not the class of su->obj. */
+    var $test = false // attr == "__init_subclass__" // && self.obj.tp_name == 'Plugin'// && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    if(attr == "__class__"){
+        return _b_.object.tp_getattro(self, attr)
+    }
     if(self.type.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -2647,15 +2704,23 @@ _b_.super.tp_getattro = function(self, attr){
             }
         }
     }
+    if(self.obj === _b_.None){
+        return _b_.object.tp_getattro(self, attr)
+    }
     // Determine method resolution order from object_or_type
     var object_or_type = self.obj,
-        mro = self.$arg2 == 'type' ? $B.get_mro(object_or_type) :
-                                     $B.get_mro($B.get_class(object_or_type))
+        mro = $B.get_mro(self.obj_type)
     // Search of method attr starts in mro after self.__thisclass__
     var search_start = mro.indexOf(self.type) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__new__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    if($test){
+        console.log('super.tp_getattro, self', self, 'attr', attr)
+        console.log('search classes', search_classes)
+        console.log('frame obj', $B.frame_obj)
+    }
+
+    var $test = false // attr == "__init_subclass__" && self.obj.tp_name == 'Plugin'// && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
         console.log('frame obj', $B.frame_obj)
@@ -2691,7 +2756,7 @@ _b_.super.tp_getattro = function(self, attr){
         if($test){
             console.log("no attr", attr, self, "mro", mro)
         }
-        return $B.NULL
+        return _b_.object.tp_getattro(self, attr)
     }
 
     if($test){
@@ -2703,12 +2768,19 @@ _b_.super.tp_getattro = function(self, attr){
     var getter = $B.search_slot(f_cls, 'tp_descr_get', $B.NULL)
     var res
     if(getter !== $B.NULL){
+        if($test){
+            console.log('call getter', getter)
+            console.log('args', self.obj, self.obj_type)
+        }
         res = getter(f, self.obj, self.obj_type)
     }else{
         res = f
     }
     if($test){
         console.log('result of super.tp_getattro', attr, res)
+    }
+    if(res === $B.NULL){
+        return _b_.object.tp_getattro(self, attr)
     }
     return res
 }
@@ -2722,52 +2794,45 @@ _b_.super.tp_descr_get = function(self, instance){
 }
 
 _b_.super.tp_init = function(self, _type, object_or_type){
-    if(self === undefined){
-        $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'super' " +
-            "object needs an argument")
-    }
-    if($B.get_class(self) !== $$super){
-        $B.RAISE(_b_.TypeError, "descriptor '__init__' requires a" +
-            " 'super' object but received a '" + $B.class_name(self) + "'")
-    }
-    var no_object_or_type = object_or_type === undefined
-    if(_type === undefined && object_or_type === undefined){
-        var frame = $B.frame_obj.frame,
-            pyframe = $B.imported["_sys"]._getframe(),
-            code = $B.$getattr(pyframe, 'f_code'),
-            co_varnames = code.co_varnames
-        if(co_varnames.length > 0){
-            _type = $B.get_class(frame[1])
-            if(_type === undefined){
+    var $ = $B.args('__init__', 3,
+                {self: null, type: null, object_or_type: null},
+                ['self', 'type', 'object_or_type'], arguments,
+                {type: _b_.None, object_or_type: _b_.None}, null, null)
+    var self = $.self,
+        type = $.type,
+        object_or_type = $.object_or_type
+    if(object_or_type === _b_.None){
+        if(type === _b_.None){
+            var frame = $B.frame_obj.frame,
+                pyframe = $B.imported["_sys"]._getframe(),
+                code = $B.$getattr(pyframe, 'f_code'),
+                co_varnames = code.co_varnames
+            if(co_varnames.length > 0){
+                type = $B.get_class(frame[1])
+                if(type === undefined){
+                    $B.RAISE(_b_.RuntimeError, "super(): no arguments")
+                }
+                object_or_type = frame[1][code.co_varnames[0]]
+            }else{
                 $B.RAISE(_b_.RuntimeError, "super(): no arguments")
             }
-            object_or_type = frame[1][code.co_varnames[0]]
+            self.type = type
+            self.obj = object_or_type
+            self.obj_type = supercheck(type, object_or_type)
+            return
         }else{
-            $B.RAISE(_b_.RuntimeError, "super(): no arguments")
+            self.type = type
+            self.obj = _b_.None
+            self.obj_type = _b_.None
+            return
         }
     }
-    if((! no_object_or_type) && Array.isArray(object_or_type)){
+    if(Array.isArray(object_or_type)){
         object_or_type = object_or_type[0]
     }
-    var $arg2
-
-    if(object_or_type !== undefined){
-        if($B.is_type(object_or_type)){
-            $arg2 = 'type'
-        }else if($B.$isinstance(object_or_type, _type)){
-            $arg2 = 'object'
-        }else{
-            console.log('obj', object_or_type)
-            console.log(Error('trace').stack)
-            $B.RAISE(_b_.TypeError,
-                'super(type, obj): obj must be an instance ' +
-                'or subtype of type')
-        }
-    }
-    self.type = _type
+    self.type = type
     self.obj = object_or_type
-    self.obj_type = $B.get_class(self.obj)
-    self.$args2 = $arg2
+    self.obj_type = supercheck(type, object_or_type)
 }
 
 _b_.super.tp_new = function(self){

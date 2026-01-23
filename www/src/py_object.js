@@ -256,7 +256,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == 'data' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == '__init__' // $B.get_class(self) === _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -317,9 +317,30 @@ _b_.object.tp_getattro = function(self, attr){
 }
 
 _b_.object.tp_init = function(){
-    if(arguments.length == 0){
+    var $ = $B.args('__init__', 0, {}, [], arguments, {},
+                'args', 'kw')
+    var args = $.args,
+        kw = $.kw
+
+    if(args.length == 0){
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
             "object needs an argument")
+    }else if(args.length > 1 || _b_.len(kw) > 0){
+        var self = args[0]
+        var type = $B.get_class(self)
+        var self_init = $B.search_slot(type, 'tp_init', $B.NULL)
+        if(self_init !== _b_.object.tp_init){
+            $B.RAISE(_b_.TypeError,
+                `object.__init__() takes exactly ` +
+                `one argument (the instance to initialize)`
+            )
+        }
+        if($B.search_slot(type, 'tp_new', $B.NULL) === object.tp_new){
+            $B.RAISE(_b_.TypeError,
+                `${$B.get_name(type)}.__init__() takes exactly one ` +
+                `argument (the instance to initialize)`
+            )
+        }
     }
     return _b_.None
 }
@@ -340,6 +361,18 @@ _b_.object.tp_new = function(){
         if($B.search_slot(cls, 'tp_init', $B.NULL) === _b_.object.tp_init){
             $B.RAISE(_b_.TypeError, `${$B.get_name(cls)} takes no arguments`)
         }
+    }
+    if(cls.tp_flags & $B.TPFLAGS.IS_ABSTRACT){
+        var abstractmethods = _b_.type.tp_funcs.__abstractmethods___get(cls)
+        var am = Array.from($B.make_js_iterator(abstractmethods))
+        am.sort()
+        console.log('abstractmethods', am)
+        var plural = am.length == 1 ? '' : 's'
+        $B.RAISE(_b_.TypeError,
+            `Can't instantiate abstract class ${$B.get_name(cls)} ` +
+            `without an implementation for abstract method${plural} ` +
+            ` '${am.join(', ')}'`
+        )
     }
     var res = {
         ob_type: cls

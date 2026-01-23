@@ -69,9 +69,6 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         if(frame[0] == frame[2]){
             break
         }
-        if(class_name == 'Foo'){
-            console.log('frame', frame_obj.frame)
-        }
         stack.push(frame_obj.frame[0] + '.')
         frame_obj = frame_obj.prev
     }
@@ -559,7 +556,16 @@ _b_.classmethod.tp_repr = function(self){
     return `<classmethod(${_b_.repr(self.cm_callable)})>`
 }
 
-_b_.classmethod.tp_descr_get = function(){
+_b_.classmethod.tp_descr_get = function(self, obj, type){
+    if (! self.hasOwnProperty("cm_callable")){
+        $B.RAISE(_b_.RuntimeError, "uninitialized classmethod object")
+    }
+    if(type === undefined){
+        type = $B.get_class(obj)
+    }
+    return $B.$call($B.method, self.cm_callable, type)
+}
+/*
     // adapted from
     // https://docs.python.org/3/howto/descriptor.html#class-methods
     var $ = $B.args('classmethod', 3, {self: null, obj: null, cls: null},
@@ -587,7 +593,9 @@ _b_.classmethod.tp_descr_get = function(){
         console.log('error, self', self, self.cm_callable, 'cls', cls)
         throw err
     }
+
 }
+*/
 
 _b_.classmethod.tp_init = function(self, func){
     self.cm_callable = func
@@ -791,6 +799,7 @@ var counter = 0
 $B.slot2dunder = {
     tp_call: '__call__',
     tp_descr_get: '__get__',
+    tp_hash: '__hash__',
     tp_init: '__init__',
     tp_iter: '__iter__',
     tp_new: '__new__',
@@ -833,7 +842,7 @@ $B.search_slot = function(cls, slot, _default){
                 if(typeof v !== 'function'){
                     var v_type = $B.get_class(v)
                     var getter = $B.search_slot(v_type, 'tp_descr_get', $B.NULL)
-                    if(getter){
+                    if(getter !== $B.NULL){
                         v = getter(v, cls)
                     }
                 }
@@ -891,28 +900,29 @@ function update_subclasses(kls, name, alias, value){
     }
 }
 
-type.$mro = $B.make_mro
+$B.type_check = function(obj, cls){
+    var obj_type = $B.get_class(obj)
+    return obj_type === cls || obj_type.tp_mro.includes(cls)
+}
 
 function type_mro(cls){
-    return $B.$list(type.$mro(cls))
+    return $B.$list($B.make_mro(cls))
 }
 
-function make_slot_getter(name){
-    return function(self){
-        if(! self.hasOwnProperty('slot_values') ||
-                ! self.slot_values.hasOwnProperty(name)){
-            throw $B.attr_error(name, self)
-        }
-        return self.slot_values[name]
-    }
-}
 
-function make_slot_setter(name){
-    return function(self, value){
-        if(! self.hasOwnProperty('slot_values')){
-            self.slot_values = {}
+function set_tp_slots(cls){
+    for(var [slot, dunder] of Object.entries($B.slot2dunder)){
+        var method = $B.str_dict_get(cls.dict, dunder, $B.NULL)
+        if(method !== $B.NULL){
+            cls[slot] = method
+        }else{
+            for(var kls of $B.get_mro(cls).slice(1)){
+                if(kls[slot]){
+                    cls[slot] = kls[slot]
+                    break
+                }
+            }
         }
-        self.slot_values[name] = value
     }
 }
 
@@ -983,7 +993,7 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    var test = false // cls.tp_name === 'SimpleNamespace' // args !== undefined && Array.isArray(args) && args[0] === 'flags'
+    var test = false // args[0] === 'C'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -1008,12 +1018,12 @@ _b_.type.tp_call = function(){
     var instance = new_func(cls, ...args, $B.dict2kwarg(kw)),
         instance_class = $B.get_class(instance)
     if(test){
-        console.log('instance of type', instance)
-        console.log('instance type is cls ?', instance_class === cls)
+        console.log('instance of type', instance, 'cls', cls)
+        console.log('instance type is cls ?', $B.type_check(instance, cls))
     }
-    if(instance_class === cls){
+    if($B.type_check(instance, cls)){
         // call __init__ with the same parameters
-        var init_func = $B.search_slot(cls, 'tp_init', $B.NULL)
+        var init_func = $B.search_slot(instance_class, 'tp_init', $B.NULL)
         if(test){
             console.log('init func', init_func)
         }
@@ -1132,7 +1142,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
                 {}, 'args', 'kwds')
     var args = $.args,
         kwds = $.kwds
-    var test = false // name == 'EnumCheck'
+    var test = false // name == 'C'
     if(test){
         console.log('type.tp_new', name, 'metatype', metatype,
             'extrakw', extra_kwargs)
@@ -1156,7 +1166,19 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         bases
     }
     // PyObject *type = NULL;
-    var res = type_new_get_bases(ctx, type)
+    var class_obj = {
+        ob_type: metatype,
+        dict: cl_dict,
+        tp_bases: bases,
+        tp_name: name,
+        tp_flags: $B.TPFLAGS.DEFAULT | $B.TPFLAGS.HEAPTYPE |
+                   $B.TPFLAGS.BASETYPE | $B.TPFLAGS.HAVE_GC
+    }
+    class_obj.tp_mro = $B.make_mro(class_obj)
+
+    var res = type_new_get_bases(ctx, class_obj)
+    class_obj.tp_base = ctx.base
+    class_obj.tp_bases = ctx.bases
     if(test){
         console.log('result of type_new_get_bases', res)
     }
@@ -1165,21 +1187,13 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         return NULL;
     }
     if(res == 1){
-        return type
+        return class_obj
     }
     if(res instanceof Object){
         if(test){
             console.log('type.tp_new returns', res.type)
         }
         return res.type
-    }
-
-    var class_obj = {
-        ob_type: ctx.metatype,
-        tp_bases : ctx.bases,
-        tp_name: name,
-        dict: cl_dict,
-        $is_class: true
     }
 
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
@@ -1195,8 +1209,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
                 ob_type: $B.member_descriptor,
                 d_type: class_obj,
                 d_name: key,
-                d_member: member,
-                setter: make_slot_setter(key)
+                d_member: member
             }
             $B.str_dict_set(cl_dict, key, md)
         }
@@ -1209,8 +1222,6 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
             [object_get_dict, object_set_dict]
         )
     )
-
-    class_obj.tp_mro = type_mro(class_obj)
 
     // set class attributes
     for(var item of _b_.dict.$iter_items(cl_dict)){
@@ -1247,21 +1258,18 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
             }
         }
     }
-
+    if(test){
+        console.log('class obj', class_obj)
+    }
+    // set_tp_slots(class_obj)
     var sup = $B.$call(_b_.super, class_obj, class_obj)
     var init_subclass = _b_.super.tp_getattro(sup, "__init_subclass__")
     if(test){
-        console.log('call init subclass with extra_kwargs', extra_kwargs)
-    }
-    try{
-        $B.dict2kwarg(extra_kwargs)
-    }catch(err){
-        console.log('error for extra_kwargs', extra_kwargs)
-        console.log('tp new', name)
-        console.log(err)
-        throw err
+        console.log('call init subclass', init_subclass)
+        console.log('extra_kwargs', extra_kwargs)
     }
     $B.$call(init_subclass, $B.dict2kwarg(extra_kwargs))
+    class_obj.tp_flags |= $B.TPFLAGS.READY
     return class_obj
 }
 
@@ -1269,16 +1277,32 @@ var type_funcs = _b_.type.tp_funcs = {}
 
 type_funcs.__abstractmethods___get = function(cls){
     if(cls !== type) {
-        var res = type.dict.__abstractmethods__
-        if(res !== undefined){
+        var res = $B.str_dict_get(cls.dict, '__abstractmethods__', $B.NULL)
+        if(res !== $B.NULL){
             return res
         }
     }
-    throw attr_error('__abstractmethods__', cls)
+    throw $B.attr_error('__abstractmethods__', cls)
 }
 
 type_funcs.__abstractmethods___set = function(cls, value){
-    $B.RAISE(_b_.NotImplementedError)
+    var abstract, res;
+    var dict = cls.dict
+    if(value != $B.NULL) {
+        abstract = $B.$bool(value)
+        res = $B.str_dict_set(dict, '__abstractmethods__', value)
+    }else{
+        abstract = 0;
+        res = $B.str_dict_pop(dict, '__abstractmethods__')
+        if(res === $B.NULL){
+            $B.RAISE(_b_.AttributeError, '__abstractmethods__')
+        }
+    }
+    if(abstract){
+        cls.tp_flags |= $B.TPFLAGS.IS_ABSTRACT
+    }else{
+        cls.tp_flags = cls.tp_flags & ~ $B.TPFLAGS.IS_ABSTRACT
+    }
 }
 
 type_funcs.__annotate___get = function(self){
@@ -1480,7 +1504,7 @@ property.$factory = function(fget, fset, fdel, doc){
 
 /* property start */
 _b_.property.tp_descr_set = function(self, obj, value){
-    if(self.prop_set === undefined){
+    if(self.prop_set === _b_.None){
         var name = self.prop_get.$function_infos[$B.func_attrs.__name__]
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
@@ -1493,7 +1517,7 @@ _b_.property.tp_descr_get = function(self, obj, type){
     if(obj === _b_.None){
         return self
     }
-    if(self.prop_get === undefined){
+    if(self.prop_get === _b_.None){
         $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
     return $B.$call(self.prop_get, obj)
@@ -1978,21 +2002,6 @@ function GenericAlias_eq(self, other){
         $B.rich_comp("__eq__", self.args, other.args)
 }
 
-$B.GenericAlias.__mro_entries__ = function(self){
-    return $B.fast_tuple([self.origin])
-}
-
-$B.GenericAlias.__or__ = function(){
-    var $ = $B.args('__or__', 2, {self: null, other: null}, ['self', 'other'],
-                    arguments, {}, null, null)
-    return $B.UnionType.$factory([$.self, $.other])
-}
-
-// In PEP 585 : "a lazily computed tuple (possibly empty) of unique
-// type variables found in __args__", but what are "unique type
-// variables" ?
-$B.GenericAlias.__parameters__ = self => $B.fast_tuple([])
-
 var ga_attr_exceptions = [
     "__class__",
     "__origin__",
@@ -2031,8 +2040,10 @@ $B.GenericAlias.tp_richcompare = function(self, other, op){
     return res
 }
 
-$B.GenericAlias.nb_or = function(self){
-
+$B.GenericAlias.nb_or = function(){
+    var $ = $B.args('__or__', 2, {self: null, other: null}, ['self', 'other'],
+                    arguments, {}, null, null)
+    return $B.UnionType.$factory([$.self, $.other])
 }
 
 $B.GenericAlias.tp_repr = function(self){
@@ -2115,16 +2126,14 @@ GenericAlias_funcs.__instancecheck__ = function(self){
 }
 
 GenericAlias_funcs.__mro_entries__ = function(self){
-
+    return $B.fast_tuple([self.origin])
 }
 
 GenericAlias_funcs.__parameters___get = function(self){
-
+    return $B.fast_tuple()
 }
 
-GenericAlias_funcs.__parameters___set = function(self){
-
-}
+GenericAlias_funcs.__parameters___set = _b_.None
 
 GenericAlias_funcs.__reduce__ = function(self){
 

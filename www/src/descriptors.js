@@ -336,7 +336,7 @@ $B.classmethod_descriptor.tp_call = function(self, ...args){
 }
 
 $B.classmethod_descriptor.tp_descr_get = function(self, obj, type){
-    if(type === _b_.None){
+    if(type === undefined){
         type = $B.get_class(obj)
     }
     if(! $B.is_type(type)){
@@ -556,88 +556,6 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 
 /* wrapper_descriptor end */
 
-/* builtin_function_or_method start */
-$B.builtin_function_or_method.tp_richcompare = function(self, other, op){
-    if((op != '__eq__' && op != '__ne__') ||
-        ! $B.$isinstance(self, $B.builtin_function_or_method) ||
-        ! $B.$isinstance(other, $B.builtin_function_or_method)){
-        return _b_.NotImplemented
-    }
-    var res
-    var eq = self === other
-    if(op == '__eq__'){
-        res = eq
-    }else{
-        res = ! eq
-    }
-    return res
-}
 
-$B.builtin_function_or_method.tp_repr = function(self){
-    if(self.m_self){
-        return `<built_in method '${self.ml.ml_name}' ` +
-            `of ${$B.class_name(self.m_self)} object>`
-    }else{
-        return `<built_in function >`
-    }
-}
-
-$B.builtin_function_or_method.tp_hash = function(self){
-
-}
-
-$B.builtin_function_or_method.tp_call = function(self, ...args){
-    return self(...args)
-}
-
-var builtin_function_or_method_funcs = $B.builtin_function_or_method.tp_funcs = {}
-
-builtin_function_or_method_funcs.__name___get = function(self){
-
-}
-
-builtin_function_or_method_funcs.__name___set = function(self){
-
-}
-
-builtin_function_or_method_funcs.__qualname___get = function(self){
-
-}
-
-builtin_function_or_method_funcs.__qualname___set = function(self){
-
-}
-
-builtin_function_or_method_funcs.__reduce__ = function(self){
-
-}
-
-builtin_function_or_method_funcs.__self___get = function(self){
-
-}
-
-builtin_function_or_method_funcs.__self___set = function(self){
-
-}
-
-builtin_function_or_method_funcs.__text_signature___get = function(self){
-
-}
-
-builtin_function_or_method_funcs.__text_signature___set = function(self){
-
-}
-
-$B.builtin_function_or_method.tp_methods = ["__reduce__"]
-
-$B.builtin_function_or_method.tp_members = [
-    ["__module__", $B.TYPES.OBJECT, "m_module", 0]
-]
-
-$B.builtin_function_or_method.tp_getset = ["__name__", "__qualname__", "__self__", "__text_signature__"]
-
-/* builtin_function_or_method end */
-
-$B.set_func_names($B.builtin_function_or_method, "builtins")
 
 })(__BRYTHON__)

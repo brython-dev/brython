@@ -44,6 +44,8 @@ function set_add(so, item, hash){
     }
 }
 
+$B.set_add = set_add
+
 function set_contains(so, key, hash){
     return !! set_lookkey(so, key, hash)
 }

@@ -186,6 +186,13 @@ $B.str_dict_del = function(d, attr){
     delete d.$strings[attr]
 }
 
+$B.str_dict_pop = function(d, attr){
+    if(! d.$strings.hasOwnProperty(attr)){
+        return $B.NULL
+    }
+    delete d.$strings[attr]
+}
+
 $B.hasOnlyStringKeys = function(d){
     return d.$all_str
 }

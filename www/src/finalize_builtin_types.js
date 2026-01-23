@@ -106,6 +106,8 @@ function make_getattribute(cls){
 
 function make_new(cls){
     cls.tp_new.ob_type = $B.builtin_function_or_method
+    cls.tp_new.m_self = cls
+    cls.tp_new.ml = {ml_name: '__new__'}
     $B.str_dict_set(cls.dict, '__new__', cls.tp_new)
 }
 
