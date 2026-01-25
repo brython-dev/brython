@@ -799,6 +799,7 @@ var counter = 0
 $B.slot2dunder = {
     tp_call: '__call__',
     tp_descr_get: '__get__',
+    tp_descr_set: '__set__',
     tp_hash: '__hash__',
     tp_init: '__init__',
     tp_iter: '__iter__',
