@@ -1065,6 +1065,10 @@ _b_.ExceptionGroup.factory = function(){
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
+// Brython-specific
+_b_.JavascriptError = $B.make_builtin_class('JavascriptError',
+    [_b_.BaseException])
+
 function make_report(lines, positions){
     // positions is [lineno, end_lineno, col_offset, end_col_offset]
     // Return a string with the lines between lineno and end_lineno,
@@ -1327,7 +1331,7 @@ function trace_from_stack(err){
         count_repeats = 0
         trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
-        var src
+        var src = false
         if(! filename.startsWith('<')){
             src = $B.file_cache[filename]
         }
