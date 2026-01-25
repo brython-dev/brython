@@ -930,7 +930,13 @@ $B.make_js_iterator = function(iterator, frame, lineno){
 
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
-    var next_func = $B.$getattr(it, '__next__', null)
+    try{
+        var next_func = $B.$getattr(it, '__next__', null)
+    }catch(err){
+        console.log('error for __next__ of', it)
+        console.log('iterator', iterator)
+        throw err
+    }
     if(test){
         console.log('next_func', next_func)
     }
@@ -1232,7 +1238,7 @@ $B.$delitem = function(obj, item, inum){
         if(obj.$is_namespace){
             // Deleting a name from a namespace should trigger a NameError in
             // the next references to the name. Cf issue #2423.
-            Object.defineProperty(obj.$jsobj, item,
+            Object.defineProperty(obj.$strings, item,
                 {
                     get(){
                         throw $B.name_error(item)
@@ -1240,7 +1246,7 @@ $B.$delitem = function(obj, item, inum){
                     set(value){
                         // resetting a value in the namespace: redefine the
                         // property
-                        Object.defineProperty(obj.$jsobj, item, {value})
+                        Object.defineProperty(obj.$strings, item, {value})
                         return _b_.None
                     }
                 }

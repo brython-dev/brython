@@ -1198,7 +1198,7 @@ _b_.globals = function(){
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args_no_kw('globals', 0, arguments)
     var res = $B.obj_dict($B.frame_obj.frame[3])
-    res.$jsobj.__BRYTHON__ = $B.jsobj2pyobj($B) // issue 1181
+    res.$strings.__BRYTHON__ = $B.jsobj2pyobj($B) // issue 1181
     res.$is_namespace = true
     return res
 }

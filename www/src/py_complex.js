@@ -654,8 +654,7 @@ _b_.complex.tp_members = [
 
 /* complex end */
 
-//$B.set_func_names(complex, "builtins")
+$B.set_func_names(complex, "builtins")
 
-console.log('complex.tp_members', _b_.complex.tp_members)
 
 })(__BRYTHON__);

@@ -402,6 +402,7 @@ dict.$iter_items = function*(d){
                 yield {key, value: d.$strings[key]}
             }
         }
+        return
     }
     if(d.$jsobj){
         for(let key in d.$jsobj){
@@ -1076,6 +1077,7 @@ $B.dict_items.tp_hash = _b_.None
 $B.dict_items.tp_iter = function(self){
     return {
         ob_type: $B.dict_itemiterator,
+        it: _b_.dict.$iter_items(self.dict),
         dict: self.dict
     }
 }
@@ -1259,7 +1261,8 @@ $B.dict_values.tp_repr = function(self){
 $B.dict_values.tp_iter = function(self){
     return {
         ob_type: $B.dict_valueiterator,
-        dict: self
+        it: _b_.dict.$iter_items(self.dict),
+        dict: self.dict
     }
 }
 
@@ -1368,7 +1371,8 @@ _b_.dict.tp_hash = _b_.None
 _b_.dict.tp_iter = function(self){
     return {
         ob_type: $B.dict_keyiterator,
-        it: dict.$iter_items(self)
+        it: _b_.dict.$iter_items(self),
+        dict: self
     }
 }
 
@@ -1827,7 +1831,7 @@ $B.dict_keyiterator.tp_iter = function(self){
 }
 
 $B.dict_keyiterator.tp_iternext = function*(self){
-    for(var item of _b_.dict.$iter_items(self.dict)){
+    for(var item of self.it){
         yield item.key
     }
 }
@@ -1852,7 +1856,7 @@ $B.dict_valueiterator.tp_iter = function(self){
 }
 
 $B.dict_valueiterator.tp_iternext = function*(self){
-    for(var item of _b_.dict.$iter_items(self.dict)){
+    for(var item of self.it){
         yield item.value
     }
 }
@@ -1878,7 +1882,7 @@ $B.dict_itemiterator.tp_iter = function(self){
 }
 
 $B.dict_itemiterator.tp_iternext = function*(self){
-    for(var item of _b_.dict.$iter_items(self.dict)){
+    for(var item of self.it){
         yield $B.fast_tuple([item.key, item.value])
     }
 }
