@@ -149,7 +149,7 @@
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==3.13.0"
+            "version": ">=3.13.3"
         },
         "aiosignal": {
             "hashes": [

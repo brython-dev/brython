@@ -865,4 +865,7 @@ assert complex.__mul__(2+3j, 'a') is NotImplemented
 assert_raises(TypeError, eval, "2 + 3j / 'a'",
   msg="unsupported operand type(s) for /: 'complex' and 'str'")
 
+# issue 2658
+assert 2 ** 53 == float(2 ** 53)
+
 print('passed all tests...')
