@@ -315,15 +315,6 @@ $B.obj_dict = function(obj, exclude){
     var res = $B.empty_dict()
     res.$strings = obj
     return res
-    /*
-    {
-        ob_type: _b_.dict,
-        all_str: true,
-        $strings: obj,
-        $exclude: exclude || function(){return false}
-    }
-    return res
-    */
 }
 
 // Set attributes of klass methods
