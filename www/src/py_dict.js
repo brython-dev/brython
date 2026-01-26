@@ -128,11 +128,10 @@ function all_contained_in(self, other){
 }
 
 function dictview_len(self){
-    return _b_.dict.mp_length(self.dict)
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 function dictview_richcompare(self, other, op){
-    console.log('dictvoew_rc', self, other, op)
     if(! $B.$isinstance(other, [_b_.set, _b_.frozenset, $B.dict_keys])){
         return _b_.NotImplemented
     }
@@ -282,7 +281,7 @@ function make_view_comparison_methods(klass){
                 // compare set of items to other
                 if($B.exact_type(self, _dict_keys) ||
                         ($B.exact_type(self, _dict_items)
-                         && dict.$set_like(self.dict))){
+                         && dict.$set_like(self.dict_obj))){
                     return _b_.set[op](_b_.set.$factory(self),
                         _b_.set.$factory(other))
                 }else{
@@ -1046,7 +1045,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
 
 /* dict_items start */
 $B.dict_items.tp_richcompare = function(self, other, op){
-
+    return dictview_richcompare(self, other, op)
 }
 
 $B.dict_items.nb_subtract = function(self, other){
@@ -1066,7 +1065,7 @@ $B.dict_items.nb_or = function(self){
 }
 
 $B.dict_items.tp_repr = function(self){
-    var items = Array.from(dict.$iter_items(self.dict)).map(
+    var items = Array.from(dict.$iter_items(self.dict_obj)).map(
         x => $B.fast_tuple([x.key, x.value]))
     items = $B.$list(items)
     return 'dict_items(' + _b_.repr(items) + ')'
@@ -1077,13 +1076,13 @@ $B.dict_items.tp_hash = _b_.None
 $B.dict_items.tp_iter = function(self){
     return {
         ob_type: $B.dict_itemiterator,
-        it: _b_.dict.$iter_items(self.dict),
-        dict: self.dict
+        it: _b_.dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
     }
 }
 
 $B.dict_items.mp_length = function(self){
-    return _b_.dict.mp_length(self.dict)
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 $B.dict_items.sq_contains = function(self, obj){
@@ -1093,7 +1092,7 @@ $B.dict_items.sq_contains = function(self, obj){
     var key = obj[0]
     var value = obj[1]
     try{
-        var result = _b_.dict.$getitem(self.dict, key)
+        var result = _b_.dict.$getitem(self.dict_obj, key)
     }catch(err){
         $B.RAISE_IF_NOT(err, _b_.KeyError)
         return false
@@ -1106,7 +1105,7 @@ var dict_items_funcs = $B.dict_items.tp_funcs = {}
 dict_items_funcs.__reversed__ = function(self){
     return {
         ob_type: $B.dict_reverseitemiterator,
-        dict: self.dict
+        dict_obj: self.dict_obj
     }
 }
 
@@ -1115,7 +1114,7 @@ dict_items_funcs.isdisjoint = function(self){
 }
 
 dict_items_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict)
+    return $B.mappingproxy.tp_new(self.dict_obj)
 }
 
 dict_items_funcs.mapping_set = _b_.None
@@ -1131,15 +1130,6 @@ const dict_reverseitemiterator = make_reverse_iterator(
     'dict_reverseitemiterator',
     dict.$iter_items_reversed)
 
-/*
-_dict_items.__reversed__ = function(self){
-    return dict_reverseitemiterator.$factory(self.dict)
-}
-
-make_view_comparison_methods(_dict_items)
-
-$B.set_func_names(_dict_items, 'builtins')
-*/
 
 /* dict_keys start */
 $B.dict_keys.tp_richcompare = function(self, other, op){
@@ -1163,7 +1153,7 @@ $B.dict_keys.nb_or = function(self, other){
 }
 
 $B.dict_keys.tp_repr = function(self){
-    var keys = Array.from(dict.$iter_items(self.dict)).map(x => x.key)
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
     return `dict_keys({${keys}])`
 }
 
@@ -1172,17 +1162,17 @@ $B.dict_keys.tp_hash = _b_.None
 $B.dict_keys.tp_iter = function(self){
     return {
         ob_type: $B.dict_keyiterator,
-        it: dict.$iter_items(self.dict),
-        dict: self.dict
+        it: dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
     }
 }
 
 $B.dict_keys.mp_length = function(self){
-    return dict.mp_length(self.dict)
+    return dict.mp_length(self.dict_obj)
 }
 
 $B.dict_keys.sq_contains = function(self, value){
-    for(var item of dict.$iter_items(self.dict)){
+    for(var item of dict.$iter_items(self.dict_obj)){
         if($B.is_or_equals(item.key, value)){
             return true
         }
@@ -1195,18 +1185,18 @@ var dict_keys_funcs = $B.dict_keys.tp_funcs = {}
 dict_keys_funcs.__reversed__ = function(self){
     return {
         ob_type: $B.dict_reversekeyiterator,
-        dict: self.dict
+        dict_obj: self.dict_obj
     }
 }
 
 dict_keys_funcs.isdisjoint = function(self, other){
-    var keys = Array.from(dict.$iter_items(self.dict)).map(x => x.key)
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
     var self_as_set = $B.$call(_b_.set, keys)
     return _b_.set.isdisjoint(as_set, other)
 }
 
 dict_keys_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict)
+    return $B.mappingproxy.tp_new(self.dict_obj)
 }
 
 dict_keys_funcs.mapping_set = _b_.None
@@ -1254,20 +1244,20 @@ make_view_comparison_methods(dict_values)
 
 /* dict_values start */
 $B.dict_values.tp_repr = function(self){
-    var values = Array.from(dict.$iter_items(self.dict)).map(x => x.value)
+    var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
     return `dict_values({${keys}])`
 }
 
 $B.dict_values.tp_iter = function(self){
     return {
         ob_type: $B.dict_valueiterator,
-        it: _b_.dict.$iter_items(self.dict),
-        dict: self.dict
+        it: _b_.dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
     }
 }
 
 $B.dict_values.mp_length = function(self){
-    return _b_.dict.mp_length(self.dict)
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 var dict_values_funcs = $B.dict_values.tp_funcs = {}
@@ -1275,12 +1265,12 @@ var dict_values_funcs = $B.dict_values.tp_funcs = {}
 dict_values_funcs.__reversed__ = function(self){
     return {
         ob_type: $B.dict_reversevalueiterator,
-        dict: self.dict
+        dict_obj: self.dict_obj
     }
 }
 
 dict_values_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict)
+    return $B.mappingproxy.tp_new(self.dict_obj)
 }
 
 dict_values_funcs.mapping_set = _b_.None
@@ -1372,7 +1362,7 @@ _b_.dict.tp_iter = function(self){
     return {
         ob_type: $B.dict_keyiterator,
         it: _b_.dict.$iter_items(self),
-        dict: self
+        dict_obj: self
     }
 }
 
@@ -1650,7 +1640,7 @@ dict_funcs.items = function(self){
     $B.args('items', 1, {self: null}, ['self'], arguments, {}, null, null)
     return {
         ob_type: $B.dict_items,
-        dict: self
+        dict_obj: self
     }
 }
 
@@ -1658,7 +1648,7 @@ dict_funcs.keys = function(self){
     $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
     return {
         ob_type: $B.dict_keys,
-        dict: self
+        dict_obj: self
     }
 }
 
@@ -1807,8 +1797,8 @@ dict_funcs.update = function(self){
 dict_funcs.values = function(self){
     $B.args('values', 1, {self: null}, ['self'], arguments, {}, null, null)
     return {
-        ob_type: $B.dict_valueiterator,
-        dict: self
+        ob_type: $B.dict_values,
+        dict_obj: self
     }
 }
 
@@ -1839,7 +1829,7 @@ $B.dict_keyiterator.tp_iternext = function*(self){
 var dict_keyiterator_funcs = $B.dict_keyiterator.tp_funcs = {}
 
 dict_keyiterator_funcs.__length_hint__ = function(self){
-    return _b_.dict.mp_length(self.dict)
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 dict_keyiterator_funcs.__reduce__ = function(self){
@@ -1864,7 +1854,7 @@ $B.dict_valueiterator.tp_iternext = function*(self){
 var dict_valueiterator_funcs = $B.dict_valueiterator.tp_funcs = {}
 
 dict_valueiterator_funcs.__length_hint__ = function(self){
-    return _b_.dict.mp_length(self.dict)
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 dict_valueiterator_funcs.__reduce__ = function(self){
@@ -1890,7 +1880,7 @@ $B.dict_itemiterator.tp_iternext = function*(self){
 var dict_itemiterator_funcs = $B.dict_itemiterator.tp_funcs = {}
 
 dict_itemiterator_funcs.__length_hint__ = function(self){
-    return_b_.dict.mp_length(self.dict)
+    return_b_.dict.mp_length(self.obj)
 }
 
 dict_itemiterator_funcs.__reduce__ = function(self){
@@ -2011,7 +2001,8 @@ $B.mappingproxy.tp_str = function(self){
 $B.mappingproxy.tp_iter = function(self){
     return {
         ob_type: $B.dict_keyiterator,
-        it: mappingproxy_iter_items(self)
+        it: mappingproxy_iter_items(self),
+        dict_obj: self.mapping
     }
 }
 
@@ -2070,7 +2061,8 @@ mappingproxy_funcs.items = function(self){
 mappingproxy_funcs.keys = function(self){
     return {
         ob_type: $B.dict_keyiterator,
-        it: mappingproxy_iter_items(self)
+        it: mappingproxy_iter_items(self),
+        dict_obj: self.mapping
     }
 }
 
