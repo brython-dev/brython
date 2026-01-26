@@ -869,10 +869,13 @@
 
     // _warnings provides basic warning filtering support.
     modules._warnings = {
+        _acquire_lock: function(){},
         _defaultaction: "default",
-        _filters_mutated: function(){
-        },
+        _filters_mutated: function(){},
+        _filters_mutated_lock_held: function(){},
         _onceregistry: $B.empty_dict(),
+        _release_lock: function(){},
+        _warnings_context: {},
         filters: $B.$list([
             $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0]),
