@@ -441,11 +441,36 @@ function _repr(self){
     return res
 }
 
-var list_reverseiterator = $B.make_iterator_class("list_reverseiterator", true)
-
-list_reverseiterator.__reduce__ = list_reverseiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
+/* list_reverseiterator start */
+$B.list_reverseiterator.tp_iter = function(self){
+    return self
 }
+
+$B.list_reverseiterator.tp_iternext = function*(self){
+    while(self.counter > 0){
+        yield self.items[self.counter]
+        self.counter--
+    }
+}
+
+var list_reverseiterator_funcs = $B.list_reverseiterator.tp_funcs = {}
+
+list_reverseiterator_funcs.__length_hint__ = function(self){
+    return self.items.length
+}
+
+list_reverseiterator_funcs.__reduce__ = function(self){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([list.$factory(self).reverse()]), 0])
+}
+
+list_reverseiterator_funcs.__setstate__ = function(self){
+
+}
+
+$B.list_reverseiterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+/* list_reverseiterator end */
 
 // Set list key or slice
 function set_list_slice(obj, start, stop, value){
@@ -717,7 +742,11 @@ list_funcs.__class_getitem__ = function(cls, items){
 }
 
 list_funcs.__reversed__ = function(self){
-    return list_reverseiterator.$factory(self)
+    return {
+        ob_type: $B.list_reverseiterator,
+        counter: self.length - 1,
+        items: self
+    }
 }
 
 list_funcs.__sizeof__ = function(self){
@@ -926,14 +955,34 @@ var tuple = _b_.tuple
 tuple.$match_sequence_pattern = true
 tuple.$is_sequence = true
 
-var tuple_iterator = $B.make_iterator_class("tuple_iterator")
+/* tuple_iterator start */
+$B.tuple_iterator.tp_iter = function(self){
+    return self
+}
 
-
-tuple_iterator.tp_iternext = function*(self){
+$B.tuple_iterator.tp_iternext = function*(self){
     for(var value of self.it){
         yield value
     }
 }
+
+var tuple_iterator_funcs = $B.tuple_iterator.tp_funcs = {}
+
+tuple_iterator_funcs.__length_hint__ = function(self){
+    return self.obj.length
+}
+
+tuple_iterator_funcs.__reduce__ = function(self){
+
+}
+
+tuple_iterator_funcs.__setstate__ = function(self){
+
+}
+
+$B.tuple_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+/* tuple_iterator end */
 
 tuple.$factory = function(){
     var obj = factory.apply(tuple, arguments)
@@ -1011,7 +1060,8 @@ _b_.tuple.tp_hash = function(self){
 
 _b_.tuple.tp_iter = function(self){
     return {
-        ob_type: tuple_iterator,
+        ob_type: $B.tuple_iterator,
+        obj: self,
         it: self[Symbol.iterator]()
     }
 }
