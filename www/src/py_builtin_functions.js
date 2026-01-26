@@ -1459,8 +1459,7 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.type_getattribute(classinfo, '__subclasscheck__', $B.NULL)
-
+    var sch = $B.type_getattribute($B.get_class(classinfo), '__subclasscheck__', $B.NULL)
     if(sch === $B.NULL){
         return false
     }
@@ -2477,17 +2476,60 @@ reversed.$factory = function(seq){
     return res
 }
 
-reversed.tp_iter = function(self){
+
+/* reversed start */
+_b_.reversed.tp_iter = function(self){
     return self
 }
 
-reversed.tp_iternext = function(self){
+_b_.reversed.tp_iternext = function(self){
     self.$counter--
     if(self.$counter < 0){
         $B.RAISE(_b_.StopIteration, '')
     }
     return self.getter(self.$counter)
 }
+
+_b_.reversed.tp_new = function(cls, seq){
+    check_nb_args_no_kw('reversed', 2, arguments)
+
+    var rev_method = $B.$getattr(seq, '__reversed__', $B.NULL)
+    if(rev_method !== $B.NULL){
+        return $B.$call(rev_method)
+    }
+    try{
+        var method = $B.$getattr(seq, '__getitem__')
+    }catch(err){
+        $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
+    }
+
+    var res = {
+        ob_type: cls,
+        $counter: _b_.len(seq),
+        getter: function(i){
+            return $B.$call(method, i)
+        }
+    }
+    return res
+}
+
+var reversed_funcs = _b_.reversed.tp_funcs = {}
+
+reversed_funcs.__length_hint__ = function(self){
+
+}
+
+reversed_funcs.__reduce__ = function(self){
+
+}
+
+reversed_funcs.__setstate__ = function(self){
+
+}
+
+_b_.reversed.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+/* reversed end */
 
 $B.set_func_names(reversed, "builtins")
 
