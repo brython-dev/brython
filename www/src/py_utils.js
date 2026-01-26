@@ -930,17 +930,12 @@ $B.make_js_iterator = function(iterator, frame, lineno){
 
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
-    try{
-        var next_func = $B.$getattr(it, '__next__', null)
-    }catch(err){
-        console.log('error for __next__ of', it)
-        console.log('iterator', iterator)
-        throw err
-    }
+
+    var next_func = $B.$getattr(it, '__next__', null)
     if(test){
         console.log('next_func', next_func)
     }
-
+    
     if(next_func !== null){
         //next_func = $B.$call(next_func)
         return {
@@ -1757,7 +1752,7 @@ $B.leave_frame = function(arg){
     var frame = $B.frame_obj.frame
     if(frame.$coroutine){
         if(! frame.$coroutine.$sent){
-            var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.name]
+            var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.__name__]
             var message = $B.EXC(_b_.RuntimeWarning,
                 `coroutine '${cname}' was never awaited`)
             message.lineno = frame.$coroutine.$lineno

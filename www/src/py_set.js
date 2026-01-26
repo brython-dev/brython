@@ -577,9 +577,9 @@ _b_.set.tp_hash = _b_.None
 _b_.set.tp_iter = function(self){
     return {
         ob_type: set_iterator,
-        so,
-        it: set_iter(so),
-        version: so.$version
+        so: self,
+        it: set_iter(self),
+        version: self.$version
     }
 }
 

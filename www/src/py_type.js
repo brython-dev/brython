@@ -37,7 +37,7 @@ const TPFLAGS = {
 // generic code for class constructor
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
-    var test = false // class_name == 'Meta'
+    var test = false // class_name == 'Generator'
     if(test){
         console.log('class constructor', class_name, 'dict', dict)
         console.log('metaclass', metaclass)
@@ -629,12 +629,14 @@ classmethod_funcs.__annotations___set = function(self){
 classmethod_funcs.__class_getitem__ = $B.$class_getitem
 
 classmethod_funcs.__isabstractmethod___get = function(self){
-
+    var res = $B.str_dict_get(self.cm_callable.dict, '__isabstractmethod__', $B.NULL)
+    if(res === $B.NULL){
+        return false
+    }
+    return res
 }
 
-classmethod_funcs.__isabstractmethod___set = function(self){
-
-}
+classmethod_funcs.__isabstractmethod___set = _b_.None
 
 _b_.classmethod.classmethods = ["__class_getitem__"]
 
@@ -833,6 +835,9 @@ $B.search_own_slot = function(cls, slot, _default){
 
 $B.search_slot = function(cls, slot, _default){
     var dunder = $B.slot2dunder[slot]
+    if(cls.tp_mro === undefined){
+        console.log('no mro', cls)
+    }
     for(var klass of cls.tp_mro){
         if(klass.hasOwnProperty(slot)){
             return klass[slot]
@@ -1441,8 +1446,8 @@ type_funcs.__subclasscheck__ = function(self, subclass){
     return subclass.tp_bases.indexOf(klass) > -1
 }
 
-type_funcs.__subclasses__ = function(self){
-
+type_funcs.__subclasses__ = function(cls){
+    return $B.$list(cls.$subclasses)
 }
 
 type_funcs.__text_signature___get = function(self){

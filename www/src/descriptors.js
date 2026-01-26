@@ -326,8 +326,6 @@ $B.set_func_names($B.method_descriptor, 'builtins')
 
 /* classmethod_descriptor start */
 $B.classmethod_descriptor.tp_repr = function(self){
-    console.log(self)
-    //var name = self.$function_infos[$B.func_attrs.__name__]
     return `<method '${self.d_name}' of '${$B.get_name(self.d_type)}' objects>`
 }
 

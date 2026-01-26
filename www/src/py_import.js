@@ -1100,9 +1100,7 @@ function import_engine(mod_name, _path, from_stdlib){
             try{
                 exec_module(module)
             }catch(e){
-                console.log('error for module', module,
-                    'loader', _loader, 'exec module', exec_module)
-                console.log(e)
+                console.log('error for module', module)
                 console.log('frame obj', $B.frame_obj)
                 delete _sys_modules[_spec_name]
                 throw e
@@ -1214,7 +1212,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
             if(i < len){
                 var path = $B.imported[_mod_name].__path__
                 if(path === undefined){
-                    console.log('no __path__', _mod_name, $B.imported[_mod_name])
+                    if($test){
+                        console.log('no __path__', _mod_name, $B.imported[_mod_name])
+                        console.log('modobj',modobj)
+                    }
                     // If this is the last but one part, and the last part is
                     // an attribute of module, and this attribute is a module,
                     // return it. This is the case for os.path for instance

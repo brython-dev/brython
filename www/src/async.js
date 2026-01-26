@@ -7,7 +7,6 @@ var _b_ = $B.builtins
 var coroutine = $B.coroutine
 
 
-
 /* coroutine start */
 coroutine.tp_repr = function(self){
     if(self.$func.$function_infos){
@@ -132,7 +131,10 @@ $B.coroutine.tp_members = [
     ["cr_origin", $B.TYPES.OBJECT, "cr_origin_or_finalizer", 1]
 ]
 
-$B.coroutine.tp_getset = ["__name__", "__qualname__", "cr_await", "cr_running", "cr_frame", "cr_code", "cr_suspended"]
+$B.coroutine.tp_getset = [
+    "__name__", "__qualname__", "cr_await", "cr_running", "cr_frame",
+    "cr_code", "cr_suspended"
+]
 
 $B.set_func_names(coroutine, "builtins")
 
@@ -159,6 +161,7 @@ $B.make_async = func => {
     f.$is_async = true
     f.$args_parser = func.$args_parser
     f.ob_type = $B.function
+    f.dict = $B.empty_dict()
     return f
 }
 

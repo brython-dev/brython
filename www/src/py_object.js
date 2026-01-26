@@ -90,13 +90,6 @@ function getNewArguments(self, klass){
     }
 }
 
-
-
-
-object.__subclasshook__ = function(){
-    return _b_.NotImplemented
-}
-
 // constructor of the built-in class 'object'
 object.$factory = function(){
     if(arguments.length > 0 ||
@@ -112,15 +105,6 @@ object.$factory = function(){
     object.__init__.apply(null, args)
     return res
 }
-
-$B.set_func_names(object, "builtins")
-
-
-function object_subclasshook(klass){
-    return _b_.NotImplemented
-}
-
-
 
 /* object start */
 _b_.object.tp_richcompare = function(self, other, op){
@@ -256,7 +240,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__init__' // $B.get_class(self) === _b_.TypeError
+    var test = false // attr == '__next__' && $B.get_class(self) === $B.dict_itemiterator // _b_.TypeError
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -289,7 +273,7 @@ _b_.object.tp_getattro = function(self, attr){
     // search in self dict
     var in_dict = $B.search_in_dict(self, attr, $B.NULL)
     if(test){
-        console.log('in object dict', in_dict)
+        console.log('in object dict', in_dict, '\n    type', $B.get_class(in_dict))
     }
     if(in_dict !== $B.NULL){
         return in_dict
@@ -366,7 +350,6 @@ _b_.object.tp_new = function(){
         var abstractmethods = _b_.type.tp_funcs.__abstractmethods___get(cls)
         var am = Array.from($B.make_js_iterator(abstractmethods))
         am.sort()
-        console.log('abstractmethods', am)
         var plural = am.length == 1 ? '' : 's'
         $B.RAISE(_b_.TypeError,
             `Can't instantiate abstract class ${$B.get_name(cls)} ` +
@@ -568,14 +551,19 @@ object_funcs.__sizeof__ = function(self){
 
 _b_.object.functions_or_methods = ["__new__"]
 
-_b_.object.tp_methods = ["__reduce_ex__", "__reduce__", "__getstate__", "__format__", "__sizeof__", "__dir__"]
+_b_.object.tp_methods = [
+    "__reduce_ex__", "__reduce__", "__getstate__", "__format__", "__sizeof__", 
+    "__dir__"]
 
 _b_.object.classmethods = ["__init_subclass__"]
 
 _b_.object.tp_getset = ["__class__"]
 
-
 /* object end */
+
+
+$B.set_func_names(object, "builtins")
+
 
 })(__BRYTHON__);
 
