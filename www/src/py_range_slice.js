@@ -69,7 +69,7 @@ $B.range_iterator.tp_iternext = function*(self){
                 self.it += self.step
             }
         }
-    }        
+    }
 }
 
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
@@ -157,8 +157,9 @@ _b_.range.tp_iter = function(self){
 
 _b_.range.tp_new = function(self){
     var $ = $B.args("range", 4, {cls: null, start: null, stop: null, step: null},
-        ["cls", "start", "stop", "step"],
-        arguments, {start: null, stop: null, step: null}, null, null),
+                ["cls", "start", "stop", "step"], arguments,
+                {start: null, stop: null, step: null}, null, null)
+    var cls = $.cls,
         start = $.start,
         stop = $.stop,
         step = $.step,
@@ -295,9 +296,11 @@ range_funcs.__reduce__ = function(self){
 
 range_funcs.__reversed__ = function(self){
     var n = $B.rich_op('__sub__', range.mp_length(self), 1)
-    return range.$factory($B.rich_op('__add__', self.start, $B.rich_op('__mul__', n, self.step)),
-        $B.rich_op('__sub__', self.start, self.step),
-        $B.rich_op('__mul__', -1, self.step))
+    var start = $B.rich_op('__add__', self.start, $B.rich_op('__mul__', n,
+        self.step))
+    var stop = $B.rich_op('__sub__', self.start, self.step)
+    var step = $B.rich_op('__mul__', -1, self.step)
+    return $B.$call(range, start, stop, step)
 }
 
 range_funcs.count = function(self, ob){

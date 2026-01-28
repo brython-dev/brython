@@ -109,7 +109,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         var kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
                        {$kw:[extra_kwargs]})
     }catch(err){
-        console.log('error in meta_new', meta_new, extra_kwargs)
+        if(test){
+            console.log('error in meta_new', meta_new, extra_kwargs)
+        }
         throw err
     }
     kls.$subclasses = []
@@ -255,21 +257,22 @@ all others, the solid base is the subclass. Otherwise, the class cannot exist.
 */
 
 function solid_base(type){
-    if($B.search_in_dict(type, '__slots__', $B.NULL) !== $B.NULL){
-        return type
-    }
     var base
     if(type.tp_base){
         base = solid_base(type.tp_base)
     }else{
         base = _b_.object
     }
+    var slots = $B.search_in_dict(type, '__slots__', $B.NULL)
+    if(slots !== $B.NULL && slots.length > 0){
+        return type
+    }
     return base
 }
 
 /* Calculate the best base amongst multiple base classes.
    This is the first one that's on the path to the "solid base". */
-function best_base(bases){
+function best_base(bases, ctx){
     var n = bases.length
     var base,
         winner,
@@ -294,7 +297,6 @@ function best_base(bases){
             winner = candidate
             base = base_i
         }else{
-            console.log('bases', bases, '\n  winner', winner, '\n  candidate', candidate)
             $B.RAISE(_b_.TypeError,
                 "multiple bases have instance lay-out conflict")
         }
@@ -341,7 +343,7 @@ function type_new_get_bases(ctx, type){
     }
 
     /* Calculate best base, and check that all bases are type objects */
-    ctx.base = best_base(ctx.bases)
+    ctx.base = best_base(ctx.bases, ctx)
     return 0
 }
 
@@ -1052,7 +1054,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == 'class_method'
+    var test = name == '__eq__' && obj.tp_name == 'KeysView'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)

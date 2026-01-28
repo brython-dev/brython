@@ -452,24 +452,6 @@ function set_repr(self){
     return head + res + tail
 }
 
-set.__ror__ = function(self, other){
-    // Used when other.__or__(self) is NotImplemented
-    return set.__or__(self, other)
-}
-
-set.__rsub__ = function(self, other){
-    // Used when other.__sub__(self) is NotImplemented
-    return set.__sub__(self, other)
-}
-
-set.__rxor__ = function(self, other){
-    // Used when other.__xor__(self) is NotImplemented
-    return set.__xor__(self, other)
-}
-
-// add "reflected" methods
-$B.make_rmethods(set)
-
 set.$literal = function(items){
     let res = make_new_set(set)
     for(let item of items){

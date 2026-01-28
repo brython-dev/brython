@@ -935,7 +935,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     if(test){
         console.log('next_func', next_func)
     }
-    
+
     if(next_func !== null){
         //next_func = $B.$call(next_func)
         return {
@@ -1857,14 +1857,8 @@ $B.rich_comp = function(op, x, y){
         // reflected method of the right operand has priority, otherwise the
         // left operand's method has priority."
         if($B.get_mro(y.ob_type).indexOf(x.ob_type) > -1){
-            y_rev_func = $B.$getattr(y, rev_op)
-            try{
-                res = $B.$call(y_rev_func, x)
-            }catch(err){
-                console.log('error', 'x', x, 'y', y, 'op', op, 'y_rev_func', y_rev_func)
-                console.log(err)
-                throw err
-            }
+            y_rev_func = $B.$getattr($B.get_class(y), rev_op)
+            res = $B.$call(y_rev_func, y, x)
             if(res !== _b_.NotImplemented){
                 return res
             }

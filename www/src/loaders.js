@@ -457,9 +457,6 @@ var loop = $B.loop = function(){
                     err.$linenums = linenums
                 }
             }
-            if(err.args && err.args[0] && err.args[0].includes('interpreted')){
-                console.log(Error('trace').stack)
-            }
             $B.handle_error(err)
         }
         loop()

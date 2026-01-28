@@ -153,55 +153,10 @@ function type_params_set(f, value){
     f.$infos.__type_params__ = value
 }
 
-/*
-$B.function.__dir__ = function(self){
-    if(self.$function_infos && ! self.$infos){
-        $B.make_function_infos(self, ...self.$function_infos)
-    }
-    if(self.$infos === undefined){
-        console.log('no $infos', self, self.$function_infos)
-    }
-    var infos = self.$infos.dict || {},
-        attrs = self.$attrs || {}
-
-    return $B.$list(Object.keys(infos).
-               concat(Object.keys(attrs)).
-               concat(Object.keys($B.function)).
-               filter(x => !x.startsWith('$'))).
-               sort()
-}
-*/
-
 function globals_get(f){
     $B.check_infos(f)
     return $B.obj_dict($B.imported[f.$infos.__module__])
 }
-
-/*
-$B.function.__setattr__ = function(self, attr, value){
-    if(self.$infos === undefined){
-        $B.make_function_infos(self, ...self.$function_infos)
-    }
-    var klass_attr = $B.function[attr]
-    var klass_attr_type = $B.get_class(klass_attr)
-    if(klass_attr !== undefined){
-        if(klass_attr_type.__get__ && klass_attr_type.__set__){
-            return klass_attr_type.__set__(klass_attr, self, value)
-        }
-    }
-    klass_attr = $B.function.dict[attr]
-    if(klass_attr){
-        klass_attr_type = $B.get_class(klass_attr)
-        if(klass_attr_type.__get__ && klass_attr_type.__set__){
-            return klass_attr_type.__set__(klass_attr, self, value)
-        }
-    }
-    if(! self.dict){
-        self.dict = $B.empty_dict()
-    }
-    _b_.dict.$setitem(self.dict, attr, value)
-}
-*/
 
 $B.function.$factory = function(){
     var $ = $B.args('FunctionType', 2,
@@ -265,11 +220,11 @@ $B.function.tp_new = function(cls, infos, globals){
 var function_funcs = $B.function.tp_funcs = {}
 
 function_funcs.__annotate___get = function(self){
-
+    return self.__annotate__
 }
 
-function_funcs.__annotate___set = function(self){
-
+function_funcs.__annotate___set = function(self, value){
+    self.__annotate__ = value
 }
 
 function_funcs.__annotations___get = function(self){
@@ -408,19 +363,20 @@ function_funcs.__name___set = function(self){
 }
 
 function_funcs.__qualname___get = function(self){
-
+    return self.$function_infos[$B.func_attrs.__name__]
 }
 
-function_funcs.__qualname___set = function(self){
-
+function_funcs.__qualname___set = function(self, value){
+    self.$function_infos[$B.func_attrs.__name__] = value
 }
 
 function_funcs.__type_params___get = function(self){
-
+    var res = self.$function_infos[$B.func_attrs.__type_params__]
+    return $B.fast_tuple(res)
 }
 
-function_funcs.__type_params___set = function(self){
-
+function_funcs.__type_params___set = function(self, value){
+    self.$function_infos[$B.func_attrs.__type_params__] = value
 }
 
 $B.function.tp_members = [

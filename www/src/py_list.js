@@ -447,9 +447,10 @@ $B.list_reverseiterator.tp_iter = function(self){
 }
 
 $B.list_reverseiterator.tp_iternext = function*(self){
-    while(self.counter > 0){
-        yield self.items[self.counter]
+    if(self.counter >= 0){
+        var res = self.items[self.counter]
         self.counter--
+        yield res
     }
 }
 

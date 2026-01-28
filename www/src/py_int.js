@@ -386,15 +386,8 @@ _b_.int.tp_richcompare = function(a, b, op){
         return _b_.NotImplemented
     }
     var res
-    if(typeof a == 'number' || $B.$isinstance(a, int)){
-        a = int_value(a)
-    }else if($B.is_long_int(other)){
-        other = other.value
-    }else if(typeof b == 'boolean'){
-        b = b ? 1 : 0
-    }else{
-        return _b_.NotImplemented
-    }
+    a = int_value(a)
+    b = int_value(b)
 
     switch(op){
         case '__eq__':
