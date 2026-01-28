@@ -335,7 +335,7 @@ function RandomStream(seed) {
 
 }
 
-var Random = $B.make_type("Random"
+var Random = $B.make_type("Random")
 
 Random.$factory = function(){
     return {
@@ -344,17 +344,35 @@ Random.$factory = function(){
     }
 }
 
-Random.getrandbits = function(){
+Random.tp_new = function(){
+    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {},
+                'args', 'kw')
+    var cls = $.cls
+    return {
+        ob_type: cls,
+        _random: RandomStream(Date.now()),
+        dict: $B.empty_dict()
+    }
+}
+
+Random.tp_init = function(){
+
+}
+
+var Random_funcs = Random.tp_funcs = {}
+
+Random_funcs.getrandbits = function(){
     var $ = $B.args("getrandbits", 2, {self: null, k:null}, ["self", "k"],
-        arguments, {}, null, null),
-        self = $.self,
+        arguments, {}, null, null)
+    var self = $.self,
         k = $B.PyNumber_Index($.k)
-
-    if(k < 0)
+    
+    if(k < 0){
         $B.RAISE(_b_.ValueError, 'number of bits must be non-negative')
-
-    if(k === 0)
+    }
+    if(k === 0){
         return 0
+    }
 
     const words = Math.floor((k - 1) / 32) + 1
     const wordarray = new ArrayBuffer(words * 4)
@@ -368,25 +386,25 @@ Random.getrandbits = function(){
             r >>>= (32 - k)  /* Drop least significant bits */
         wordarray_view.setUint32(i * 4, r, true)
     }
-
-    return _b_.int.from_bytes(_b_.bytes.$factory(Array.from(new Uint8Array(wordarray))), "little")
+    var _bytes = _b_.bytes.$factory(Array.from(new Uint8Array(wordarray)))
+    return _b_.int.tp_funcs.from_bytes(_b_.bytes, _bytes, "little")
 }
 
-Random.getstate = function(){
+Random_funcs.getstate = function(){
     var $ = $B.args('getstate', 1, {self: null},
         ["self"], arguments, {}, null, null),
         self = $.self
     return self._random.getstate()
 }
 
-Random.random = function(){
+Random_funcs.random = function(){
     var $ = $B.args('random', 1, {self: null}, ["self"],
         arguments, {}, null, null),
         self = $.self
     return $B.fast_float(self._random())
 }
 
-Random.seed = function(){
+Random_funcs.seed = function(){
     var $ = $B.args('seed', 2, {self: null, n: null}, ['self', 'n'],
         arguments, {}, null, null),
         self = $.self,
@@ -399,7 +417,7 @@ Random.seed = function(){
     }
 }
 
-Random.setstate = function(){
+Random_funcs.setstate = function(){
     var $ = $B.args('setstate', 2, {self: null, state:null}, ['self', 'state'],
         arguments, {}, null, null),
         self = $.self,
@@ -407,9 +425,15 @@ Random.setstate = function(){
     return self._random.setstate(state)
 }
 
-$B.set_func_names(Random, "_random")
+Random.tp_methods = [
+    "random", "seed", "getstate", "setstate", "getrandbits"
+]
+
 $B.finalize_type(Random)
 
-$B.imported._random = { Random }
+$B.set_func_names(Random, "_random")
+
+$B.addToImported('_random', {Random})
+//$B.imported._random = { Random }
 
 })(__BRYTHON__)
