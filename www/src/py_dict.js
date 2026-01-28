@@ -174,7 +174,7 @@ function dictview_richcompare(self, other, op){
 }
 
 function dictviews_or(self, other){
-    var result = dictviews_to_set(self)
+    var result = $B.$call(_b_.set, self)
     _b_.set.tp_funcs.update(result, other)
     return result
 }
@@ -191,7 +191,7 @@ function dictviews_xor(self, other){
             $B.$isinstance(other, $B.dict_items)){
         return dictitems_xor(self, other)
     }
-    var result = dictviews_to_set(self)
+    var result = $B.$call(_b_.set, self)
     $B.$call($B.$getattr(result, 'symmetric_difference_update'), other)
     return result
 }
@@ -921,36 +921,6 @@ function make_reverse_iterator(name, iter_func){
     return klass
 }
 
-/*
-const dict_reversekeyiterator = make_reverse_iterator(
-    'dict_reversekeyiterator',
-    dict.$iter_keys_reversed)
-*/
-
-/* dict_reversekeyiterator start */
-$B.dict_reversekeyiterator.tp_iter = function(self){
-    return self
-}
-
-$B.dict_reversekeyiterator.tp_iternext = function*(self){
-    for(var entry of dict.$iter_items_reversed(d)){
-        yield entry[0]
-    }
-}
-
-var dict_reversekeyiterator_funcs = $B.dict_reversekeyiterator.tp_funcs = {}
-
-dict_reversekeyiterator_funcs.__length_hint__ = function(self){
-
-}
-
-dict_reversekeyiterator_funcs.__reduce__ = function(self){
-
-}
-
-$B.dict_reversekeyiterator.tp_methods = ["__length_hint__", "__reduce__"]
-
-/* dict_reversekeyiterator end */
 
 function convert_all_str(d){
     // convert dict with only str keys to regular dict
@@ -1043,247 +1013,6 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
 }
 
 
-/* dict_items start */
-$B.dict_items.tp_richcompare = function(self, other, op){
-    return dictview_richcompare(self, other, op)
-}
-
-$B.dict_items.nb_subtract = function(self, other){
-    return dictviews_sub(self, other)
-}
-
-$B.dict_items.nb_and = function(self){
-    return _PyDictView_Intersect(self, other)
-}
-
-$B.dict_items.nb_xor = function(self){
-    return dictviews_xor(self, other)
-}
-
-$B.dict_items.nb_or = function(self){
-    return dictviews_or(self, other)
-}
-
-$B.dict_items.tp_repr = function(self){
-    var items = Array.from(dict.$iter_items(self.dict_obj)).map(
-        x => $B.fast_tuple([x.key, x.value]))
-    items = $B.$list(items)
-    return 'dict_items(' + _b_.repr(items) + ')'
-}
-
-$B.dict_items.tp_hash = _b_.None
-
-$B.dict_items.tp_iter = function(self){
-    return {
-        ob_type: $B.dict_itemiterator,
-        it: _b_.dict.$iter_items(self.dict_obj),
-        dict_obj: self.dict_obj
-    }
-}
-
-$B.dict_items.mp_length = function(self){
-    return _b_.dict.mp_length(self.dict_obj)
-}
-
-$B.dict_items.sq_contains = function(self, obj){
-    if(! $B.$isinstance(obj, _b_.tuple) || obj.length != 2){
-        return false
-    }
-    var key = obj[0]
-    var value = obj[1]
-    try{
-        var result = _b_.dict.$getitem(self.dict_obj, key)
-    }catch(err){
-        $B.RAISE_IF_NOT(err, _b_.KeyError)
-        return false
-    }
-    return $B.is_or_equals(result, value)
-}
-
-var dict_items_funcs = $B.dict_items.tp_funcs = {}
-
-dict_items_funcs.__reversed__ = function(self){
-    return {
-        ob_type: $B.dict_reverseitemiterator,
-        dict_obj: self.dict_obj
-    }
-}
-
-dict_items_funcs.isdisjoint = function(self){
-
-}
-
-dict_items_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict_obj)
-}
-
-dict_items_funcs.mapping_set = _b_.None
-
-$B.dict_items.tp_methods = ["isdisjoint", "__reversed__"]
-
-$B.dict_items.tp_getset = ["mapping"]
-
-/* dict_items end */
-
-
-const dict_reverseitemiterator = make_reverse_iterator(
-    'dict_reverseitemiterator',
-    dict.$iter_items_reversed)
-
-
-/* dict_keys start */
-$B.dict_keys.tp_richcompare = function(self, other, op){
-    return dictview_richcompare(self, other, op)
-}
-
-$B.dict_keys.nb_subtract = function(self, other){
-    return dictviews_sub(self, other)
-}
-
-$B.dict_keys.nb_and = function(self, other){
-    return _PyDictView_Intersect(self, other)
-}
-
-$B.dict_keys.nb_xor = function(self, other){
-    return dictviews_xor(self, other)
-}
-
-$B.dict_keys.nb_or = function(self, other){
-    return dictviews_or(self, other)
-}
-
-$B.dict_keys.tp_repr = function(self){
-    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
-    return `dict_keys({${keys}])`
-}
-
-$B.dict_keys.tp_hash = _b_.None
-
-$B.dict_keys.tp_iter = function(self){
-    return {
-        ob_type: $B.dict_keyiterator,
-        it: dict.$iter_items(self.dict_obj),
-        dict_obj: self.dict_obj
-    }
-}
-
-$B.dict_keys.mp_length = function(self){
-    return dict.mp_length(self.dict_obj)
-}
-
-$B.dict_keys.sq_contains = function(self, value){
-    for(var item of dict.$iter_items(self.dict_obj)){
-        if($B.is_or_equals(item.key, value)){
-            return true
-        }
-    }
-    return false
-}
-
-var dict_keys_funcs = $B.dict_keys.tp_funcs = {}
-
-dict_keys_funcs.__reversed__ = function(self){
-    return {
-        ob_type: $B.dict_reversekeyiterator,
-        dict_obj: self.dict_obj
-    }
-}
-
-dict_keys_funcs.isdisjoint = function(self, other){
-    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
-    var self_as_set = $B.$call(_b_.set, keys)
-    return _b_.set.isdisjoint(as_set, other)
-}
-
-dict_keys_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict_obj)
-}
-
-dict_keys_funcs.mapping_set = _b_.None
-
-$B.dict_keys.tp_methods = ["isdisjoint", "__reversed__"]
-
-$B.dict_keys.tp_getset = ["mapping"]
-
-/* dict_keys end */
-
-/*
-var dict_values = $B.make_builtin_class("dict_values")
-
-dict_values.tp_iter = function(self){
-    return {
-        ob_type: dict_valueiterator,
-        it: dict.$iter_items(self)
-    }
-}
-
-dict_values.sq_length = function(self){
-    return dict.mp_length(self.dict)
-}
-
-dict_values.__reduce__ = function(self){
-    var items = $B.$list(Array.from(dict_values.tp_iter(self)))
-    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
-}
-
-dict_values.tp_repr = function(self){
-    var items = Array.from(dict_values.tp_iter(self))
-    return 'dict_values(' + _b_.repr(items) + ')'
-}
-
-const dict_reversevalueiterator = make_reverse_iterator(
-    'dict_reversevalueiterator',
-    dict.$iter_values_reversed)
-
-dict_values.__reversed__ = function(self){
-    return dict_reversevalueiterator.$factory(self.dict)
-}
-
-make_view_comparison_methods(dict_values)
-*/
-
-/* dict_values start */
-$B.dict_values.tp_repr = function(self){
-    var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
-    return `dict_values({${keys}])`
-}
-
-$B.dict_values.tp_iter = function(self){
-    return {
-        ob_type: $B.dict_valueiterator,
-        it: _b_.dict.$iter_items(self.dict_obj),
-        dict_obj: self.dict_obj
-    }
-}
-
-$B.dict_values.mp_length = function(self){
-    return _b_.dict.mp_length(self.dict_obj)
-}
-
-var dict_values_funcs = $B.dict_values.tp_funcs = {}
-
-dict_values_funcs.__reversed__ = function(self){
-    return {
-        ob_type: $B.dict_reversevalueiterator,
-        dict_obj: self.dict_obj
-    }
-}
-
-dict_values_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict_obj)
-}
-
-dict_values_funcs.mapping_set = _b_.None
-
-$B.dict_values.tp_methods = ["__reversed__"]
-
-$B.dict_values.tp_getset = ["mapping"]
-
-/* dict_values end */
-
-$B.set_func_names($B.dict_values, 'builtins')
-
-
 dict.$literal = function(items){
     var res = $B.empty_dict()
     for(var item of items){
@@ -1311,6 +1040,8 @@ dict.$from_array = function(arrays){
     return res
 }
 
+/* dict start */
+
 _b_.dict.tp_richcompare = function(self, other, op){
     if(! $B.$isinstance(other, _b_.dict)){
         return _b_.NotImplemented
@@ -1330,13 +1061,13 @@ _b_.dict.tp_richcompare = function(self, other, op){
     return res
 }
 
-_b_.dict.nb_or = function(self){
+_b_.dict.nb_or = function(self, other){
     // PEP 584
     if(! $B.$isinstance(other, dict)){
         return _b_.NotImplemented
     }
-    var res = dict.copy(self)
-    dict.update(res, other)
+    var res = dict.tp_funcs.copy(self)
+    dict.tp_funcs.update(res, other)
     return res
 }
 
@@ -1401,8 +1132,8 @@ _b_.dict.tp_init = function(self, first, second){
         }
     }
 
-    var $ = $B.args("dict", 1, {self:null}, ["self"],
-        arguments, {}, "first", "second")
+    var $ = $B.args("dict", 1, {self:null}, ["self"], arguments, {}, "first",
+                "second")
 
     var args = $.first
     if(args.length > 1){
@@ -1434,20 +1165,22 @@ _b_.dict.tp_init = function(self, first, second){
                 dict.$setitem(self, entry.key, entry.value, entry.hash)
             }
         }else{
-            var keys = $B.$getattr(args, "keys", null)
-            if(keys !== null){
-                var gi = $B.$getattr(args, "__getitem__", null)
-                if(gi !== null){
+            var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
+            if(keys !== $B.NULL){
+                console.log('keys', keys)
+                var gi = $B.$getattr($B.get_class(args), "__getitem__", $B.NULL)
+                if(gi !== $B.NULL){
                     // has keys and __getitem__ : it's a mapping, iterate on
                     // keys and values
-                    // gi = $B.$call(gi)
-                    let kiter = _b_.iter($B.$call(keys))
-                    while(true){
+                    console.log('has keys and getitem')
+                    for(var key of $B.make_js_iterator($B.$call(keys, args))){
+                        console.log('key', key)
                         try{
-                            let key = _b_.next(kiter),
-                                value = $B.$call(gi, key)
-                            dict.__setitem__(self, key, value)
+                            let value = $B.$call(gi, args, key)
+                            console.log('key', key, 'value', value)
+                            dict.$setitem(self, key, value)
                         }catch(err){
+                            console.log('error', err)
                             if($B.is_exc(err, _b_.StopIteration)){
                                 break
                             }
@@ -1811,9 +1544,251 @@ _b_.dict.classmethods = [
     "fromkeys", "__class_getitem__"
 ]
 
+/* dict end */
+
 $B.set_func_names(dict, "builtins")
 
 $B.dict_get = dict.tp_funcs.get
+
+
+/* dict_items start */
+$B.dict_items.tp_richcompare = function(self, other, op){
+    return dictview_richcompare(self, other, op)
+}
+
+$B.dict_items.nb_subtract = function(self, other){
+    return dictviews_sub(self, other)
+}
+
+$B.dict_items.nb_and = function(self){
+    return _PyDictView_Intersect(self, other)
+}
+
+$B.dict_items.nb_xor = function(self){
+    return dictviews_xor(self, other)
+}
+
+$B.dict_items.nb_or = function(self){
+    return dictviews_or(self, other)
+}
+
+$B.dict_items.tp_repr = function(self){
+    var items = Array.from(dict.$iter_items(self.dict_obj)).map(
+        x => $B.fast_tuple([x.key, x.value]))
+    items = $B.$list(items)
+    return 'dict_items(' + _b_.repr(items) + ')'
+}
+
+$B.dict_items.tp_hash = _b_.None
+
+$B.dict_items.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_itemiterator,
+        it: _b_.dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+$B.dict_items.mp_length = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+$B.dict_items.sq_contains = function(self, obj){
+    if(! $B.$isinstance(obj, _b_.tuple) || obj.length != 2){
+        return false
+    }
+    var key = obj[0]
+    var value = obj[1]
+    try{
+        var result = _b_.dict.$getitem(self.dict_obj, key)
+    }catch(err){
+        $B.RAISE_IF_NOT(err, _b_.KeyError)
+        return false
+    }
+    return $B.is_or_equals(result, value)
+}
+
+var dict_items_funcs = $B.dict_items.tp_funcs = {}
+
+dict_items_funcs.__reversed__ = function(self){
+    return {
+        ob_type: $B.dict_reverseitemiterator,
+        it: dict.$iter_items_reversed(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+dict_items_funcs.isdisjoint = function(self){
+
+}
+
+dict_items_funcs.mapping_get = function(self){
+    return $B.mappingproxy.tp_new(self.dict_obj)
+}
+
+dict_items_funcs.mapping_set = _b_.None
+
+$B.dict_items.tp_methods = ["isdisjoint", "__reversed__"]
+
+$B.dict_items.tp_getset = ["mapping"]
+
+/* dict_items end */
+
+
+/* dict_keys start */
+$B.dict_keys.tp_richcompare = function(self, other, op){
+    return dictview_richcompare(self, other, op)
+}
+
+$B.dict_keys.nb_subtract = function(self, other){
+    return dictviews_sub(self, other)
+}
+
+$B.dict_keys.nb_and = function(self, other){
+    return _PyDictView_Intersect(self, other)
+}
+
+$B.dict_keys.nb_xor = function(self, other){
+    return dictviews_xor(self, other)
+}
+
+$B.dict_keys.nb_or = function(self, other){
+    return dictviews_or(self, other)
+}
+
+$B.dict_keys.tp_repr = function(self){
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
+    return `dict_keys({${keys}])`
+}
+
+$B.dict_keys.tp_hash = _b_.None
+
+$B.dict_keys.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_keyiterator,
+        it: dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+$B.dict_keys.mp_length = function(self){
+    return dict.mp_length(self.dict_obj)
+}
+
+$B.dict_keys.sq_contains = function(self, value){
+    for(var item of dict.$iter_items(self.dict_obj)){
+        if($B.is_or_equals(item.key, value)){
+            return true
+        }
+    }
+    return false
+}
+
+var dict_keys_funcs = $B.dict_keys.tp_funcs = {}
+
+dict_keys_funcs.__reversed__ = function(self){
+    return {
+        ob_type: $B.dict_reversekeyiterator,
+        it: _b_.dict.$iter_items_reversed(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+dict_keys_funcs.isdisjoint = function(self, other){
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
+    var self_as_set = $B.$call(_b_.set, keys)
+    return _b_.set.isdisjoint(as_set, other)
+}
+
+dict_keys_funcs.mapping_get = function(self){
+    return $B.mappingproxy.tp_new(self.dict_obj)
+}
+
+dict_keys_funcs.mapping_set = _b_.None
+
+$B.dict_keys.tp_methods = ["isdisjoint", "__reversed__"]
+
+$B.dict_keys.tp_getset = ["mapping"]
+
+/* dict_keys end */
+
+/*
+var dict_values = $B.make_builtin_class("dict_values")
+
+dict_values.tp_iter = function(self){
+    return {
+        ob_type: dict_valueiterator,
+        it: dict.$iter_items(self)
+    }
+}
+
+dict_values.sq_length = function(self){
+    return dict.mp_length(self.dict)
+}
+
+dict_values.__reduce__ = function(self){
+    var items = $B.$list(Array.from(dict_values.tp_iter(self)))
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
+}
+
+dict_values.tp_repr = function(self){
+    var items = Array.from(dict_values.tp_iter(self))
+    return 'dict_values(' + _b_.repr(items) + ')'
+}
+
+const dict_reversevalueiterator = make_reverse_iterator(
+    'dict_reversevalueiterator',
+    dict.$iter_values_reversed)
+
+dict_values.__reversed__ = function(self){
+    return dict_reversevalueiterator.$factory(self.dict)
+}
+
+make_view_comparison_methods(dict_values)
+*/
+
+/* dict_values start */
+$B.dict_values.tp_repr = function(self){
+    var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
+    return `dict_values({${keys}])`
+}
+
+$B.dict_values.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_valueiterator,
+        it: _b_.dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+$B.dict_values.mp_length = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+var dict_values_funcs = $B.dict_values.tp_funcs = {}
+
+dict_values_funcs.__reversed__ = function(self){
+    return {
+        ob_type: $B.dict_reversevalueiterator,
+        it: dict.$iter_items_reversed(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+dict_values_funcs.mapping_get = function(self){
+    return $B.mappingproxy.tp_new(self.dict_obj)
+}
+
+dict_values_funcs.mapping_set = _b_.None
+
+$B.dict_values.tp_methods = ["__reversed__"]
+
+$B.dict_values.tp_getset = ["mapping"]
+
+/* dict_values end */
+
+$B.set_func_names($B.dict_values, 'builtins')
+
 
 /* dict_keyiterator start */
 $B.dict_keyiterator.tp_iter = function(self){
@@ -1840,6 +1815,32 @@ dict_keyiterator_funcs.__reduce__ = function(self){
 $B.dict_keyiterator.tp_methods = ["__length_hint__", "__reduce__"]
 /* dict_keyiterator end */
 
+
+/* dict_reversekeyiterator start */
+$B.dict_reversekeyiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_reversekeyiterator.tp_iternext = function*(self){
+    for(var entry of self.it){
+        yield entry[0]
+    }
+}
+
+var dict_reversekeyiterator_funcs = $B.dict_reversekeyiterator.tp_funcs = {}
+
+dict_reversekeyiterator_funcs.__length_hint__ = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+dict_reversekeyiterator_funcs.__reduce__ = function(self){
+
+}
+
+$B.dict_reversekeyiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+/* dict_reversekeyiterator end */
+
 /* dict_valueiterator start */
 $B.dict_valueiterator.tp_iter = function(self){
     return self
@@ -1864,6 +1865,31 @@ dict_valueiterator_funcs.__reduce__ = function(self){
 
 $B.dict_valueiterator.tp_methods = ["__length_hint__", "__reduce__"]
 /* dict_valueiterator end */
+
+/* dict_reversevalueiterator start */
+$B.dict_reversevalueiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_reversevalueiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item[1]
+    }
+}
+
+var dict_reversevalueiterator_funcs = $B.dict_reversevalueiterator.tp_funcs = {}
+
+dict_reversevalueiterator_funcs.__length_hint__ = function(self){
+
+}
+
+dict_reversevalueiterator_funcs.__reduce__ = function(self){
+
+}
+
+$B.dict_reversevalueiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+/* dict_reversevalueiterator end */
 
 /* dict_itemiterator start */
 
@@ -1891,6 +1917,31 @@ dict_itemiterator_funcs.__reduce__ = function(self){
 $B.dict_itemiterator.tp_methods = ["__length_hint__", "__reduce__"]
 /* dict_itemiterator start */
 
+/* dict_reverseitemiterator start */
+$B.dict_reverseitemiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_reverseitemiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item
+    }
+}
+
+var dict_reverseitemiterator_funcs = $B.dict_reverseitemiterator.tp_funcs = {}
+
+dict_reverseitemiterator_funcs.__length_hint__ = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+dict_reverseitemiterator_funcs.__reduce__ = function(self){
+
+}
+
+$B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+/* dict_reverseitemiterator end */
+
 $B.empty_dict = function(){
     return {
         ob_type: dict,
@@ -1911,10 +1962,6 @@ dict.$from_js = function(jsobj){
     }
     return res
 }
-
-// This must be done after set_func_names, otherwise dict.fromkeys doesn't
-// have the attribute $infos
-dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy
