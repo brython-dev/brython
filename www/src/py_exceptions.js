@@ -306,7 +306,7 @@ frame_funcs.f_globals_get = function(self){
     }else if(self.f_locals && self[1] == self[3]){
         return self.f_globals = self.f_locals
     }else{
-        return self.f_globals = $B.obj_dict(_self[3])
+        return self.f_globals = $B.obj_dict(self[3])
     }
 }
 

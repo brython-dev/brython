@@ -304,8 +304,6 @@ function run_js(module_contents, path, _module){
     try{
         new Function(module_contents)()
     }catch(err){
-        console.log('error for module', _module)
-        console.log(module_contents)
         throw $B.exception(err)
     }
     var new_keys = (new Set(Object.keys(globalThis))).difference(keys_before)

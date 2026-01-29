@@ -108,7 +108,7 @@ var module = {
                 arguments, {}, null, null),
             s = $.s
         if($B.$isinstance(s, _b_.bytes)){
-            s = _b_.bytes.decode(s, 'ascii')
+            s = $B.bytes_decode(s, 'ascii')
         }
         if(typeof s !== "string"){
             $B.RAISE(_b_.TypeError, "argument should be bytes, " +
@@ -165,7 +165,7 @@ var module = {
         return _b_.bytes.$factory(res)
     },
     b2a_uu: function(obj){
-        var string = _b_.bytes.decode(obj, 'ascii')
+        var string = $B.bytes_decode(obj, 'ascii')
         var len = string.length,
             res = String.fromCharCode((0x20 + len) & 0x3F)
         while(string.length > 0){

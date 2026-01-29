@@ -65,7 +65,7 @@ function _read(req){
         return $B.jsobj2pyobj(xhr.response)
     }else{
         var encoding = $B.$getattr(req, 'encoding', "utf-8")
-        return _b_.bytes.decode(b, encoding)
+        return $B.bytes_decode(b, encoding)
     }
 }
 

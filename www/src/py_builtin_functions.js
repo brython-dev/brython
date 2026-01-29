@@ -281,7 +281,7 @@ _b_.compile = function() {
             first_line = _b_.bytes.$factory($.source.source.slice(0, lfpos))
         }
         // decode with a safe decoder
-        first_line = _b_.bytes.decode(first_line, 'latin-1')
+        first_line = $B.bytes_decode(first_line, 'latin-1')
         // search encoding (PEP263)
         var encoding_re = /^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)/
         var mo = first_line.match(encoding_re)
@@ -296,13 +296,13 @@ _b_.compile = function() {
             }else{
                 second_line = _b_.bytes.$factory(rest)
             }
-            second_line = _b_.bytes.decode(second_line, 'latin-1')
+            second_line = $B.bytes_decode(second_line, 'latin-1')
             mo = second_line.match(encoding_re)
             if(mo){
                 encoding = mo[1]
             }
         }
-        $.source = _b_.bytes.decode($.source, encoding)
+        $.source = $B.bytes_decode($.source, encoding)
     }
 
     if(! $B.$isinstance(filename, [_b_.bytes, _b_.str])){

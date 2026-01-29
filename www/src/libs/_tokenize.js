@@ -4,7 +4,7 @@ var _b_ = $B.builtins
 
 $B.$import('token')
 
-var TokenizerIter = $B.maketype('TokenizerIter')
+var TokenizerIter = $B.make_type('TokenizerIter')
 
 TokenizerIter.$factory = function(it){
     var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
@@ -45,7 +45,7 @@ TokenizerIter.tp_iter = function(self){
                     $B.RAISE(_b_.TypeError,
                         'readline() returned a non-bytes object')
                 }
-                line = _b_.bytes.decode(line, self.encoding)
+                line = $B.bytes_decode(line, self.encoding)
             }
             line_num++
             for(var token of $B.tokenizer(line, 'test')){
@@ -71,7 +71,7 @@ TokenizerIter.tp_iter = function(self){
     return $B.generator.$factory(js_iter)()
 }
 
-TokenizerIter.__next__ = function*(self){
+TokenizerIter.tp_iternext = function*(self){
 
 }
 

@@ -12,7 +12,7 @@ var module = {
         var $ = $B.args('load', 1, {file:null}, ['file'], arguments, {},
             null, null)
         var content = $B.$call($B.$getattr($.file, "read"))
-        return $module.loads(_b_.bytes.decode(content, "latin-1"));
+        return $module.loads($B.bytes_decode(content, "latin-1"));
     },
     dump: function(){
         var $ = $B.args('dump', 2, {value:null, file: null},

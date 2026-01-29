@@ -671,16 +671,6 @@ $B._FileIO.tp_init = function(){
         _self.$bytes = bytes
         _self.$byte_pos = _self.$line_pos = 0
         return
-        /*
-        if(! binary){
-            // use encoding to restore text
-            try{
-                _self.$text = _b_.bytes.decode(result.content, encoding)
-            } catch(error) {
-                result.error = error
-            }
-        }
-        */
     }
     _self.fd = new XMLHttpRequest()
     // Set mimetype so that bytes are not modified

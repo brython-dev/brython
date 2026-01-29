@@ -921,7 +921,7 @@ $B.printf_format = function(s, type, args){
             var func = char_mapping[fmt.conversion_type],
                 value
             if(fmt.mapping_key !== undefined){
-                value = getitem(fmt.mapping_key)
+                value = $B.$call(getitem, fmt.mapping_key)
             }else{
                 if(argpos === null){
                     value = args

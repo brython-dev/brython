@@ -1088,7 +1088,7 @@ _b_.tuple.tp_new = function(self){
                 `argument, got ${args.length}`)
         }
     }
-    if(cls === tuple && _b_.dict.__len__(kw) > 0){
+    if(cls === tuple && _b_.len(kw) > 0){
         $B.RAISE(_b_.TypeError, 'tuple() takes no keyword arguments')
     }
     return self

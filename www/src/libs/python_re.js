@@ -242,7 +242,7 @@ function validate_group_name(sname, pos, is_bytes){
         fail(`bad character in group name '${sname.string}'`, pos + 4)
     }
     if(is_bytes && ! is_ascii(sname.string)){
-        var s = _b_.bytes.decode(_b_.bytes.$factory(sname.codepoints),
+        var s = $B.bytes_decode(_b_.bytes.$factory(sname.codepoints),
                                  'ascii', 'backslashreplace')
         warn(_b_.DeprecationWarning,
             `bad character in group name '${s}' at position ${pos + 4}`)
@@ -961,7 +961,7 @@ function transform_repl(data, pattern){
                 if(parts[i] == 0){
                     var x = s.substring(mo.start, mo.end)
                     if(is_bytes){
-                        x = _b_.bytes.decode(x, 'latin-1')
+                        x = $B.bytes_decode(x, 'latin-1')
                     }
                     res += x
                 }else if(groups[parts[i]] === undefined){
@@ -979,7 +979,7 @@ function transform_repl(data, pattern){
                     group = groups[parts[i]]
                     var x = s.substring(group.start, group.end)
                     if(is_bytes){
-                        x = _b_.bytes.decode(x, 'latin-1')
+                        x = $B.bytes_decode(x, 'latin-1')
                     }
                     res += x
                 }
@@ -2991,11 +2991,11 @@ function StringObj(obj){
         this.codepoints = so.codepoints
         this.length = $B.str_len(obj)
     }else if($B.$isinstance(obj, [_b_.bytes, _b_.bytearray])){
-        this.string = _b_.bytes.decode(obj, 'latin1')
+        this.string = $B.bytes_decode(obj, 'latin1')
         this.codepoints = obj.source
         this.type = "bytes"
     }else if($B.$isinstance(obj, _b_.memoryview)){
-        this.string = _b_.bytes.decode(obj.obj, 'latin1')
+        this.string = $B.bytes_decode(obj.obj, 'latin1')
         this.codepoints = obj.obj.source
         this.type = "bytes"
     }else if($B.get_class(obj).$buffer_protocol){
@@ -3111,7 +3111,7 @@ function subn(pattern, repl, string, count, flags){
         if(typeof repl == "function"){
             var x = $B.$call(repl, bmo)
             if($B.exact_type(x, _b_.bytes)){
-                x = _b_.bytes.decode(x, 'latin-1')
+                x = $B.bytes_decode(x, 'latin-1')
             }
             res += x
         }else{
