@@ -1054,7 +1054,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = name == '__eq__' && obj.tp_name == 'KeysView'
+    var test = false // name == '__subclasshook__' // && obj.tp_name == 'KeysView'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1082,11 +1082,15 @@ _b_.type.tp_getattro = function(obj, name){
                     console.log('data descriptor', name)
                     console.log('__set__', $B.search_slot(in_mro_class, 'tp_descr_set', NULL))
                 }
-                var res = getter(in_mro, obj, klass)     // data descriptor
-                if(test){
-                    console.log('result of getter', res)
+                try{
+                    var res = getter(in_mro, obj, klass)     // data descriptor
+                    if(test){
+                        console.log('result of getter', res)
+                    }
+                    return res
+                }catch(err){
+                    $B.RAISE_IF_NOT(err, _b_.AttributeError)
                 }
-                return res
             }else{
                 if(test){
                     console.log('non-data descriptor', name)
@@ -1123,7 +1127,12 @@ _b_.type.tp_getattro = function(obj, name){
             console.log('getter', getter)
             console.log(Error().stack)
         }
-        return getter(in_mro, obj)  // non-data descriptor
+        try{
+            return getter(in_mro, obj)  // non-data descriptor
+        }catch(err){
+            $B.RAISE_IF_NOT(err, _b_.AttributeError)
+            return $B.NULL
+        }
     }
     if(in_mro !== NULL){
         return in_mro
@@ -1210,7 +1219,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
-                attr: 'slot_value_' + name,
+                attr: 'slot_value_' + key,
                 flags: 0
             }
             var md = {
