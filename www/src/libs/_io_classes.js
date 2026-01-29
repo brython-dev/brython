@@ -1,4 +1,6 @@
-var _b_ = __BRYTHON__.builtins
+(function($B){
+    
+var _b_ = $B.builtins
 
 function get_self(name, args){
     return $B.args(name, 1, {self: null}, ["self"], args, {}, null, null).self
@@ -75,6 +77,21 @@ function get_newlines(text, newline){
     return newlines
 }
 
+function transform_newline(s, newline){
+    switch(newline){
+        case _b_.None:
+            s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+            break
+        case '\r':
+            s = s.replace(/\n/g, '\r')
+            break
+        case '\r\n':
+            s = s.replace(/\n/g, '\r\n')
+            break
+    }
+    return s
+}
+
 var StringIO = $B.make_type("StringIO", [$B._TextIOBase])
 
 StringIO.tp_init = function(){
@@ -115,7 +132,9 @@ StringIO.tp_init = function(){
     $.self.closed = false
 }
 
-StringIO.__getstate__ = function(_self){
+var StringIO_funcs = StringIO.tp_funcs = {}
+
+StringIO_funcs.__getstate__ = function(_self){
     check_closed(_self)
 
     var initvalue = StringIO.getvalue(_self)
@@ -128,7 +147,7 @@ StringIO.__getstate__ = function(_self){
     return state
 }
 
-StringIO.__setstate__ = function(_self, state){
+StringIO_funcs.__setstate__ = function(_self, state){
     var [initvalue, readnl, pos, dict] = state
     _self.$text = initvalue
     _self.newlines = readnl
@@ -142,22 +161,17 @@ StringIO.__setstate__ = function(_self, state){
     }
 }
 
-function transform_newline(s, newline){
-    switch(newline){
-        case _b_.None:
-            s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-            break
-        case '\r':
-            s = s.replace(/\n/g, '\r')
-            break
-        case '\r\n':
-            s = s.replace(/\n/g, '\r\n')
-            break
-    }
-    return s
+StringIO_funcs.close = function(self){
+    self.closed = true
 }
 
-StringIO.getvalue = function(){
+StringIO_funcs.closed = $B.getset_descriptor.$factory(
+    StringIO,
+    'closed',
+    [self => self.closed]
+)
+
+StringIO_funcs.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
             ["self"], arguments, {}, null, null)
     var _self = $.self
@@ -169,23 +183,19 @@ StringIO.getvalue = function(){
     return transform_newline(res, _self.$newline)
 }
 
-StringIO.line_buffering = $B.getset_descriptor.$factory(
+StringIO_funcs.line_buffering = $B.getset_descriptor.$factory(
     StringIO,
     'line_buffering',
-    function(){
-        return false
-    }
+    [() => false]
 )
 
-StringIO.newlines = $B.getset_descriptor.$factory(
+StringIO_funcs.newlines = $B.getset_descriptor.$factory(
     StringIO,
     'newlines',
-    function(self){
-        return self.$newlines
-    }
+    [self => self.$newlines]
 )
 
-StringIO.read = function(){
+StringIO_funcs.read = function(){
     var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: -1}, null, null),
         _self = $.self,
@@ -244,7 +254,11 @@ StringIO.read = function(){
     return transform_newline(res, _self.$newline)
 }
 
-StringIO.readline = function(){
+StringIO_funcs.readable = function(self){
+    return ! self.closed
+}
+
+StringIO_funcs.readline = function(){
     var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: -1}, null, null),
         _self = $.self,
@@ -321,7 +335,15 @@ StringIO.readline = function(){
     return $B.String(res)
 }
 
-StringIO.truncate = function(self, size){
+StringIO_funcs.seekable = function(self){
+    return ! self.closed
+}
+
+StringIO_funcs.tell = function(self){
+    return self.$text_pos
+}
+
+StringIO_funcs.truncate = function(self, size){
     var $ = $B.args('truncate', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: _b_.None}, null, null),
         _self = $.self,
@@ -352,7 +374,7 @@ StringIO.truncate = function(self, size){
     return _self.$text_pos
 }
 
-StringIO.seek = function(self, pos, whence){
+StringIO_funcs.seek = function(self, pos, whence){
     var $ = $B.args('seek', 3, {self: null, pos: null, whence: null},
                 ['self', 'pos', 'whence'], arguments, {whence: 0}, null, null),
         _self = $.self,
@@ -392,7 +414,11 @@ StringIO.seek = function(self, pos, whence){
     return _self.$text_pos
 }
 
-StringIO.write = function(){
+StringIO_funcs.writable = function(self){
+    return ! self.closed
+}
+
+StringIO_funcs.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
             var _self = $.self,
@@ -413,6 +439,16 @@ StringIO.write = function(){
     _self.$text_pos = position + data.length
     return data.length
 }
+
+StringIO.tp_methods = [
+    "close", "getvalue", "read", "readline", "tell", "truncate", "seek",
+    "write", "seekable", "readable", "writable", "__getstate__",
+    "__setstate__"
+]
+
+StringIO.tp_getset = [
+    "closed", "newlines", "line_buffering"
+]
 
 $B.set_func_names(StringIO, "_io")
 $B.finalize_type(StringIO)
@@ -710,7 +746,7 @@ $B.finalize_type(BlockingIOError)
 // generate $B._IOUnsupported if not defined yet
 $B.make_IOUnsupported()
 
-BufferedWriter = $B.make_type("BufferedWriter", [$B._TextIOBase])
+var BufferedWriter = $B.make_type("BufferedWriter", [$B._TextIOBase])
 
 BufferedWriter.$factory = function(){
     return "fileio"
@@ -718,7 +754,7 @@ BufferedWriter.$factory = function(){
 
 $B.finalize_type(BufferedWriter)
 
-BufferedRWPair = $B.make_type("BufferedRWPair", [$B._TextIOBase])
+var BufferedRWPair = $B.make_type("BufferedRWPair", [$B._TextIOBase])
 
 BufferedRWPair.$factory = function(){
     return "fileio"
@@ -726,7 +762,7 @@ BufferedRWPair.$factory = function(){
 
 $B.finalize_type(BufferedRWPair)
 
-BufferedRandom: $B.make_type("BufferedRandom", [$B._TextIOBase])
+var BufferedRandom = $B.make_type("BufferedRandom", [$B._TextIOBase])
 
 BufferedRandom.$factory = function(){
     return "fileio"
@@ -734,7 +770,7 @@ BufferedRandom.$factory = function(){
 
 $B.finalize_type(BufferedRandom)
 
-IncrementalNewlineDecoder: $B.make_type("IncrementalNewlineDecoder", [$B._TextIOBase])
+var IncrementalNewlineDecoder = $B.make_type("IncrementalNewlineDecoder", [$B._TextIOBase])
 
 IncrementalNewlineDecoder.$factory = function(){
     return "fileio"
@@ -742,25 +778,25 @@ IncrementalNewlineDecoder.$factory = function(){
 
 $B.finalize_type(IncrementalNewlineDecoder)
 
-var $module = (function($B){
-    return {
-        _BufferedIOBase,
-        _IOBase,
-        _RawIOBase,
-        _TextIOBase: $B._TextIOBase,
-        BlockingIOError,
-        BytesIO: BytesIO,
-        FileIO: $B._FileIO,
-        StringIO: StringIO,
-        BufferedReader: $B._BufferedReader,
-        BufferedWriter,
-        BufferedRWPair,
-        BufferedRandom,
-        IncrementalNewlineDecoder,
-        UnsupportedOperation: $B._IOUnsupported,
-        TextIOWrapper: $B._TextIOWrapper
-    }
-})(__BRYTHON__)
-$module._IOBase.__doc__ = "_IOBase"
+var module = {
+    _BufferedIOBase,
+    _IOBase,
+    _RawIOBase,
+    _TextIOBase: $B._TextIOBase,
+    BlockingIOError,
+    BytesIO: BytesIO,
+    FileIO: $B._FileIO,
+    StringIO: StringIO,
+    BufferedReader: $B._BufferedReader,
+    BufferedWriter,
+    BufferedRWPair,
+    BufferedRandom,
+    IncrementalNewlineDecoder,
+    UnsupportedOperation: $B._IOUnsupported,
+    TextIOWrapper: $B._TextIOWrapper
+}
 
-__BRYTHON__.imported._io_classes = $module
+$B.addToImported('_io_classes', module)
+
+
+})(__BRYTHON__)
