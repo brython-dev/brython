@@ -240,7 +240,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__next__' && $B.get_class(self) === $B.dict_itemiterator // _b_.TypeError
+    var test = false // attr == 'func'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -360,7 +360,8 @@ _b_.object.tp_new = function(){
     var res = {
         ob_type: cls
     }
-    if(cls !== object && $B.str_dict_get(cls.dict, '__slots__', $B.NULL) === $B.NULL){
+    if(cls !== object && 
+            $B.str_dict_get(cls.dict, '__slots__', $B.NULL) === $B.NULL){
         res.dict = $B.empty_dict()
     }
     return res
@@ -549,10 +550,15 @@ object_funcs.__sizeof__ = function(self){
 
 }
 
+object_funcs.__subclasshook__ = function(self){
+    return _b_.NotImplemented
+}
+
 _b_.object.functions_or_methods = ["__new__"]
 
 _b_.object.tp_methods = [
-    "__reduce_ex__", "__reduce__", "__getstate__", "__format__", "__sizeof__", 
+    "__reduce_ex__", "__reduce__", "__getstate__", "__subclasshook__",
+    "__init_subclass__", "__format__", "__sizeof__",
     "__dir__"]
 
 _b_.object.classmethods = ["__init_subclass__"]
