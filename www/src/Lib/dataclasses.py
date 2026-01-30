@@ -502,10 +502,8 @@ class _FuncBuilder:
         # return __init__,__repr__
 
         txt = f"def __create_fn__({local_vars}):\n{fns_src}\n return {return_names}"
-        print('dataclasses 505, txt\n', txt)
         ns = {}
         exec(txt, self.globals, ns)
-        print('dataclasses 508, call with', self.locals)
         fns = ns['__create_fn__'](**self.locals)
 
         # Now that we've generated the functions, assign them into cls.
@@ -1732,3 +1730,4 @@ def _replace(self, /, **changes):
     # changes that aren't fields, this will correctly raise a
     # TypeError.
     return self.__class__(**changes)
+

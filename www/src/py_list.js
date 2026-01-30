@@ -998,6 +998,7 @@ $B.fast_tuple = function(array){
 }
 
 // add tuple methods
+/*
 for(let attr in list){
     switch(attr) {
         case "__delitem__":
@@ -1024,7 +1025,7 @@ for(let attr in list){
             }
     }
 }
-
+*/
 function c_mul(a, b){
     var s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
     return parseInt(s.substr(0, s.length - 1), 16)

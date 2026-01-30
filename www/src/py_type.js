@@ -1007,7 +1007,7 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    var test = false // args[0] === 'C'
+    var test = false // cls === _b_.tuple
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
