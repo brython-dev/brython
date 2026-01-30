@@ -891,8 +891,8 @@ $B.set_func_names($B.JSObj, "builtins")
 
 var js_list_meta = $B.make_builtin_class('js_list_meta')
 
-js_list_meta.tp_getattro = function(_self, attr){
-
+/*
+js_list_meta.tp_getattroXXX = function(_self, attr){
     if(_b_.list[attr] === undefined){
         if(js_array.hasOwnProperty(attr)){
             return js_array[attr]
@@ -933,7 +933,7 @@ js_list_meta.tp_getattro = function(_self, attr){
 }
 
 $B.set_func_names(js_list_meta, 'builtins')
-
+*/
 
 $B.SizedJSObj = $B.make_builtin_class('SizedJavascriptObject', [$B.JSObj])
 
@@ -1000,41 +1000,15 @@ js_array_iterator.tp_iternext = function(_self){
 
 $B.set_func_names(js_array_iterator, 'builtins')
 
-/* js_array : type of Javascript arrays */
-
-var js_array = $B.js_array = $B.make_builtin_class('JavascriptArray',
-    [$B.JSObj])
-
-js_array.ob_type = js_list_meta
-
-js_array.sq_concat = function(_self, other){ // __add__
-    var res = _self.slice()
-    if($B.$isinstance(other, js_array)){
-        return _self.slice().concat(other)
-    }
-    for(var item of $B.make_js_iterator(other)){
-        res.push(pyobj2jsobj(item))
-    }
-    return res
-}
-
-js_array.mp_ass_subscript = function(self, key, value){
-    if(value === $B.NULL){
-        self.splice(key, 1)
-    }else{
-        self[key] = value
-    }
-}
-
-js_array.__eq__ = function(_self, other){
+function js_array_eq(self, other){
     if($B.$isinstance(other, _b_.list)){
-        return $B.list_eq($B.$list(_self.map(jsobj2pyobj)), other)
+        return $B.list_eq($B.$list(self.map(jsobj2pyobj)), other)
     }else if(other.$is_js_array){
-        if(_self.length != other.length){
+        if(self.length != other.length){
             return false
         }
-        for(var i = 0, len = _self.length; i <len; i++){
-            if(_self[i] != other[i]){
+        for(var i = 0, len = self.length; i <len; i++){
+            if(self[i] != other[i]){
                 return false
             }
         }
@@ -1043,15 +1017,7 @@ js_array.__eq__ = function(_self, other){
     return _b_.NotImplemented
 }
 
-js_array.__ge__ = function(_self, other){
-    return js_array.__le__(other, _self)
-}
-
-js_array.__gt__ = function(_self, other){
-    return js_array.__lt__(other, _self)
-}
-
-js_array.__le__ = function(self, other){
+function js_array_le(self, other){
     if($B.$isinstance(other, _b_.list)){
         return _b_.list.__le__($B.$list(_self.map(jsobj2pyobj)), other)
     }else if(other.$is_js_array){
@@ -1075,19 +1041,19 @@ js_array.__le__ = function(self, other){
     return _b_.NotImplemented
 }
 
-js_array.__lt__ = function(_self, other){
+function js_array_lt(self, other){
     if($B.$isinstance(other, _b_.list)){
-        return _b_.list.__lt__($B.$list(_self.map(jsobj2pyobj)), other)
+        return _b_.list.__lt__($B.$list(self.map(jsobj2pyobj)), other)
     }else if(other.$is_js_array){
         var i = 0
         // skip all items that compare equal
-        while(i < _self.length && i < other.length &&
-                _self[i] == other[i]){
+        while(i < self.length && i < other.length &&
+                self[i] == other[i]){
             i++
         }
-        if(i == _self.length){
+        if(i == self.length){
             // [1] < [1, 2] is True
-            return _self.length < other.length
+            return self.length < other.length
         }
         if(i == other.length){
             // [1, 2] < [1] is false
@@ -1097,6 +1063,55 @@ js_array.__lt__ = function(_self, other){
         return self[i] <= other[i]
     }
     return _b_.NotImplemented
+}
+
+
+/* js_array : type of Javascript arrays */
+
+var js_array = $B.js_array = $B.make_builtin_class('JavascriptArray',
+    [$B.JSObj])
+
+// js_array.ob_type = js_list_meta
+
+js_array.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, [_b_.list, js_array])){
+        return _b_.NotImplemented
+    }
+    switch(op){
+        case '__eq__':
+            return js_array_eq(self, other)
+        case '__ne__':
+            return ! js_array_eq(self, other)
+        case '__lt__':
+            return js_array_lt(self, other)
+        case '__le__':
+            return js_array_le(self, other)
+        case '__ge__':
+            return js_array_le(other, self)
+        case '__gt__':
+            return js_array_lt(other, self)
+        default:
+            return _b_.NotImplemented
+    }
+}
+
+js_array.sq_concat = function(_self, other){ // __add__
+    var res = _self.slice()
+    if($B.$isinstance(other, js_array)){
+        return _self.slice().concat(other)
+    }
+    for(var item of $B.make_js_iterator(other)){
+        res.push(pyobj2jsobj(item))
+    }
+    return res
+}
+
+js_array.mp_ass_subscript = function(self, key, value){
+    if(value === $B.NULL){
+        self.splice(key, 1)
+    }else{
+        self[key] = value
+    }
 }
 
 js_array.tp_getattro = function(_self, attr){
@@ -1133,7 +1148,17 @@ js_array.mp_subscript = function(_self, i){
     return jsobj2pyobj(_self[i])
 }
 
-js_array.__iadd__ = function(_self, other){
+js_array.sq_contains = function(self, item){
+    item = pyobj2jsobj(item)
+    for(var x of self){
+        if($B.is_or_equals(x, item)){
+            return true
+        }
+    }
+    return false
+}
+
+js_array.nb_inplace_add = function(_self, other){
     if($B.$isinstance(other, js_array)){
         for(var item of other){
             _self.push(item)
@@ -1155,19 +1180,6 @@ js_array.nb_multiply = function(_self, nb){
     for(var i = 1; i < nb; i++){
         res = res.concat(_self)
     }
-    return res
-}
-
-js_array.__radd__ = function(_self, other){
-    var res = other.slice()
-    if($B.$isinstance(other, js_array)){
-        res = res.concat(_self)
-        return res
-    }
-    for(var item of _self){
-        res.push($B.jsobj2pyobj(item))
-    }
-    res.ob_type = $B.get_class(other)
     return res
 }
 
@@ -1198,6 +1210,7 @@ js_array_funcs.append = function(_self, x){
 }
 
 js_array.tp_methods = ["append"]
+
 
 $B.set_func_names(js_array, 'javascript')
 
