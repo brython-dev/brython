@@ -360,7 +360,7 @@ _b_.object.tp_new = function(){
     var res = {
         ob_type: cls
     }
-    if(cls !== object && 
+    if(cls !== object &&
             $B.str_dict_get(cls.dict, '__slots__', $B.NULL) === $B.NULL){
         res.dict = $B.empty_dict()
     }

@@ -263,7 +263,12 @@ function solid_base(type){
     }else{
         base = _b_.object
     }
-    var slots = $B.search_in_dict(type, '__slots__', $B.NULL)
+    try{
+        var slots = $B.search_in_dict(type, '__slots__', $B.NULL)
+    }catch(err){
+        console.log('error searching __slots__ in type', type)
+        throw err
+    }
     if(slots !== $B.NULL && slots.length > 0){
         return type
     }
@@ -807,6 +812,7 @@ $B.slot2dunder = {
     tp_hash: '__hash__',
     tp_init: '__init__',
     tp_iter: '__iter__',
+    tp_iternext: '__next__',
     tp_new: '__new__',
     tp_repr: '__repr__',
     tp_setattro: '__setattr__',
@@ -1054,7 +1060,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == '__subclasshook__' // && obj.tp_name == 'KeysView'
+    var test = false // name == '__class_getitem__' && obj.tp_name == 'Mapping'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)

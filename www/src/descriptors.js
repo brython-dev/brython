@@ -187,7 +187,7 @@ $B.method.tp_richcompare = function(self, other, op){
 }
 
 $B.method.tp_repr = function(self){
-    var name = self.im_func.$function_infos[$B.func_attrs.__qualname__]
+    var name = $B.$getattr(self.im_func, '__qualname__') //.$function_infos[$B.func_attrs.__qualname__]
     return "<bound method " + name +
        " of " + _b_.str.$factory(self.im_self) + ">"
 }
@@ -197,10 +197,7 @@ $B.method.tp_hash = function(self){
 }
 
 $B.method.tp_call = function(self, ...args){
-    if(typeof self.im_func !== 'function'){
-        console.log('not a function', self, self.im_func)
-    }
-    return self.im_func(self.im_self, ...args)
+    return $B.$call(self.im_func, self.im_self, ...args)
 }
 
 $B.method.tp_getattro = function(self, attr){

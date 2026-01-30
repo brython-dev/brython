@@ -301,7 +301,7 @@ $B.make_type = function(tp_name, tp_bases){
         ob_type: _b_.type,
         tp_name,
         tp_bases: tp_bases ?? [_b_.object],
-        dict: Object.create(null)
+        dict: $B.empty_dict()
     }
     if(tp_bases){
         cls.tp_mro = [cls, ...tp_bases, _b_.object]

@@ -6,7 +6,18 @@
 var _b_ = $B.builtins,
     _window = globalThis
 
-// var dbUpdater = new Worker($B.brython_path + 'indexedDBupdater.js')
+$B.namespace = function(module_name){
+    // Used at the beginning of each script, returns the module namespace.
+    // If $B.imported[module_name] exists, setting attributes to the
+    // namespace must update the module's `dict`
+    if($B.imported.hasOwnProperty(module_name)){
+        return $B.imported[module_name].dict.$strings
+    }
+    // When the generated Javascript is copied / pasted from the console for
+    // debugging, $B.imported[module_name] is not set; return an empty JS
+    // object
+    return {}
+}
 
 // Class for modules
 var Module = $B.module
@@ -29,26 +40,6 @@ $B.module_setattr = function(module, attr, value){
 $B.module_items = function(module){
     return _b_.dict.$iter_items(module.dict)
 }
-
-var module_funcs = $B.module.tp_funcs = {}
-
-module_funcs.__annotate___get = function(self){
-
-}
-
-module_funcs.__annotate___set = function(self){
-
-}
-
-module_funcs.__annotations___get = function(self){
-
-}
-
-module_funcs.__annotations___set = function(self){
-
-}
-
-
 
 $B.module.tp_methods = ["__dir__"]
 
@@ -83,8 +74,8 @@ $B.module.tp_init = function(self){
                 ['self', 'name', 'doc'], arguments, {doc: _b_.None},
                 'args', 'kw')
     var self = $.self
-    self.__name__ = $.name
-    self.__doc__ = $.doc
+    $B.module_setattr(self, '__name__', $.name)
+    $B.module_setattr(self, '__doc__', $.doc)
 }
 
 $B.module.tp_new = function(self){
@@ -1316,14 +1307,16 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
                        {_bootstrap_external: [ns, alias]}, locals, 0)
         // set attribute _bootstrap_external of importlib._bootstrap
         // and _frozen_importlib
-        let _bootstrap = $B.imported.importlib._bootstrap,
-            _bootstrap_external = $B.imported.importlib['_bootstrap_external']
-        _bootstrap_external._set_bootstrap_module(_bootstrap)
-        _bootstrap._bootstap_external = _bootstrap_external
+        let _bootstrap = $B.module_getattr($B.imported.importlib, '_bootstrap')
+        let _bootstrap_external = $B.module_getattr($B.imported.importlib,
+                '_bootstrap_external')
+        $B.module_getattr(_bootstrap_external, '_set_bootstrap_module')(_bootstrap)
+        $B.module_setattr(_bootstrap, '_bootstap_external', _bootstrap_external)
 
         let _frozen_importlib = $B.imported._frozen_importlib
         if(_frozen_importlib){
-            _frozen_importlib._bootstrap_external = _bootstrap_external
+            $B.module_setattr(_frozen_importlib, '_bootstrap_external',
+                _bootstrap_external)
         }
         return
     }

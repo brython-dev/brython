@@ -745,7 +745,7 @@ mod._validate = function(ast_obj){
     }
 }
 
-$B.imported._ast = mod
+$B.addToImported('_ast', mod)
 
 }
 )(__BRYTHON__)

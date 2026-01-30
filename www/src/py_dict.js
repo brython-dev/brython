@@ -452,11 +452,13 @@ var $copy_dict = function(left, right){
     }
 }
 
+/*
 dict.__bool__ = function () {
     var $ = $B.args("__bool__", 1, {self: null}, ["self"],
         arguments, {}, null, null)
     return dict.mp_length($.self) > 0
 }
+*/
 
 dict.__class_getitem__ = $B.$class_getitem
 

@@ -1126,8 +1126,8 @@ function _build_concatenated_str(p, strings){
 
                    u"abc" "def" -> u"abcdef"
                    "abc" u"abc" ->  "abcabc" */
-                var kind = $B.get_class(elem)
-
+                var kind = $B.get_class(elem.value)
+                
                 var concat_str = ''
                 var last_elem = elem;
                 var j

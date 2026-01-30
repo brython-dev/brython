@@ -2326,7 +2326,7 @@ str_funcs.rpartition = function(self, sep) {
     check_str(sep)
     var _self = reverse(self),
     sep = reverse(sep)
-    var items = str.partition(_self, sep).reverse()
+    var items = str_funcs.partition(_self, sep).reverse()
     for(var i = 0; i < items.length; i++){
         items[i] = items[i].split("").reverse().join("")
     }

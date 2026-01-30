@@ -1003,7 +1003,7 @@ _b_.getattr = function(){
 }
 
 $B.search_in_mro = function(klass, attr, _default){
-    var test = false // attr == 'upper' // && klass.__qualname__ == 'MagicMock'
+    var test = false // attr == '__class_getitem__' // && klass.__qualname__ == 'MagicMock'
     if(test){
         console.log('search', attr, 'in mro of', klass)
         console.log(Error('trace').stack)
@@ -1571,7 +1571,7 @@ $B.PyObject_GetIter = function(obj){
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
-    var test = false // obj.tp_name == 'FlagBoundary'
+    var test = false // $B.get_class(obj).tp_name == 'permutations'
     var NULL = {}
     if(test){
         console.log('iter', obj)
@@ -1586,7 +1586,6 @@ $B.$iter = function(obj, sentinel){
         if(iter_func !== $B.NULL){
             var res = $B.$call(iter_func, obj)
             if($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL){
-                console.log('result of iter func', res, $B.get_class(res))
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)
             }

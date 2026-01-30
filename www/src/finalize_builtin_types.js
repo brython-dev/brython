@@ -250,9 +250,6 @@ $B.finalize_type = function(cls){
 
 for(var ns of [$B.builtin_types, $B.created_types]){
     for(var name in ns){
-        if(ns[name].ob_type !== _b_.type){
-            continue
-        }
         var cls = ns[name]
         $B.finalize_type(cls)
     }

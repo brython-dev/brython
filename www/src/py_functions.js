@@ -358,16 +358,16 @@ function_funcs.__name___get = function(self){
     return self.$function_infos[$B.func_attrs.__name__]
 }
 
-function_funcs.__name___set = function(self){
-
+function_funcs.__name___set = function(self, value){
+    self.$function_infos[$B.func_attrs.__name__] = value
 }
 
 function_funcs.__qualname___get = function(self){
-    return self.$function_infos[$B.func_attrs.__name__]
+    return self.$function_infos[$B.func_attrs.__qualname__]
 }
 
 function_funcs.__qualname___set = function(self, value){
-    self.$function_infos[$B.func_attrs.__name__] = value
+    self.$function_infos[$B.func_attrs.__qualname__] = value
 }
 
 function_funcs.__type_params___get = function(self){

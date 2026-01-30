@@ -931,7 +931,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     // next_func is initialized as undefined; set_lineno() must be called
     // before it is initialized from the iterator
 
-    var next_func = $B.$getattr(it, '__next__', null)
+    var next_func = $B.$getattr($B.get_class(it), '__next__', null)
     if(test){
         console.log('next_func', next_func)
     }
@@ -1471,14 +1471,14 @@ $B.member_func = function(obj){
 }
 
 $B.$is_member = function(item, _set){
-    var contains = $B.$getattr(_set, '__contains__', $B.NULL)
+    var contains = $B.$getattr($B.get_class(_set), '__contains__', $B.NULL)
     if(contains === $B.NULL){
         $B.RAISE(_b_.TypeError,
             `argument of type '${$B.class_name(_set)}' ` +
             'is not a container or iterable'
         )
     }
-    return $B.$call(contains, item)
+    return $B.$call(contains, _set, item)
 }
 
 var counter = 0
