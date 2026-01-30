@@ -1922,7 +1922,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         static_attrs = Array.from(class_scope.static_attributes).map(x => `"${x}"`)
     }
     js += prefix + `locals.__static_attributes__ = $B.fast_tuple([${static_attrs}])\n`
-    
+
     if(class_scope.positions){
         js = js.substr(0, index_for_positions) +
              prefix + `frame.positions = [${class_scope.positions}]\n` +
@@ -2044,7 +2044,7 @@ $B.ast.comprehension.prototype.to_js = function(scopes){
 }
 
 $B.ast.Constant.prototype.to_js = function(){
-    if(this.kind){
+    if(this.kind === $B.JSObj){
         console.log('constant kind', this.kind)
     }
     if(this.value === true || this.value === false){
@@ -2138,7 +2138,7 @@ $B.ast.Dict.prototype.to_js = function(scopes){
         if(no_key(i)){
             // format **t
             has_packed = true
-            items.push('_b_.list.$factory(_b_.dict.items(' +
+            items.push('_b_.list.$factory(_b_.dict.tp_funcs.items(' +
                       $B.js_from_ast(this.values[i], scopes) + '))')
         }else{
             var item = `[${$B.js_from_ast(this.keys[i], scopes)}, ` +
@@ -3426,7 +3426,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
 
     var js = `var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `    ${global_name} = {},\n` +
+        js += `    ${global_name} = $B.namespace('${module_id}'),\n` +
               `    locals = ${global_name},\n` +
               `    frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
@@ -3640,7 +3640,7 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 }
 
 $B.ast.TemplateStr.prototype.to_js = function(scopes){
-    var js = prefix + '$B.Template('
+    var js = prefix + '$B.$call($B.Template, '
     var items = []
     var expect_str = true
     // a template must start and end with a string (possibly empty)
