@@ -519,7 +519,7 @@ dict.$delitem  = function(self, key){
                 $B.RAISE(_b_.KeyError, key)
             }
         }
-        if(! dict.__contains__(self, key)){
+        if(! dict.sq_contains(self, key)){
             $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
     }
@@ -592,12 +592,12 @@ dict.$eq = function(self, other){
     }
 
     if(self.$all_str){
-        let d = dict.copy(self)
+        let d = dict.tp_funcs.copy(self)
         convert_all_str(d)
         return dict.$eq(d, other)
     }
     if(other.$all_str){
-        let d = dict.copy(other)
+        let d = dict.tp_funcs.copy(other)
         convert_all_str(d)
         return dict.$eq(self, d)
     }
@@ -799,7 +799,7 @@ dict.$getitem = function(self, key, ignore_missing){
     $B.RAISE(_b_.KeyError, key)
 }
 
-dict.__hash__ = _b_.None
+dict.tp_hash = _b_.None
 
 function init_from_list(self, args){
     var i = 0
@@ -1169,20 +1169,15 @@ _b_.dict.tp_init = function(self, first, second){
         }else{
             var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
             if(keys !== $B.NULL){
-                console.log('keys', keys)
                 var gi = $B.$getattr($B.get_class(args), "__getitem__", $B.NULL)
                 if(gi !== $B.NULL){
                     // has keys and __getitem__ : it's a mapping, iterate on
                     // keys and values
-                    console.log('has keys and getitem')
                     for(var key of $B.make_js_iterator($B.$call(keys, args))){
-                        console.log('key', key)
                         try{
                             let value = $B.$call(gi, args, key)
-                            console.log('key', key, 'value', value)
                             dict.$setitem(self, key, value)
                         }catch(err){
-                            console.log('error', err)
                             if($B.is_exc(err, _b_.StopIteration)){
                                 break
                             }
@@ -1207,7 +1202,7 @@ _b_.dict.tp_init = function(self, first, second){
 
 _b_.dict.nb_inplace_or = function(self){
     // PEP 584
-    dict.update(self, other)
+    dict.tp_funcs.update(self, other)
     return self
 }
 

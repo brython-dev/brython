@@ -60,17 +60,17 @@ _IOBase.tp_iter = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, 'closed')
     }
+    self.readline = $B.search_in_mro($B.get_class(_self), 'readline')
     return _self
 }
 
-_IOBase.tp_next = function(_self){
-    var readline = $B.search_in_mro($B.get_class(_self), 'readline')
-    var line = readline(_self)
+_IOBase.tp_iternext = function*(_self){
+    var line = $B.$call(self.readline, _self)
 
     if(line == undefined || _b_.len(line) === 0){
-        $B.RAISE(_b_.StopIteration, '')
+        return
     }
-    return line;
+    yield line
 }
 
 _IOBase.tp_finalize = function(_self){
@@ -99,7 +99,7 @@ _IOBase_funcs.__enter__ = function(self){
 }
 
 _IOBase_funcs.__exit__ = function(self){
-    _IOBase.close(self)
+    _IOBase_funcs.close(self)
 }
 
 _IOBase_funcs.close = function(_self){
@@ -114,7 +114,6 @@ _IOBase_funcs.closed_set = $B.NULL
 
 _IOBase_funcs.fileno = function(_self){
     _io_unsupported('fileno')
-    // return _self._fileno ?? (_self._fileno = $B.UUID(), _self._fileno)
 }
 
 _IOBase_funcs.flush = function(_self){

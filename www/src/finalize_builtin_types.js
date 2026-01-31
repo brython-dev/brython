@@ -218,7 +218,8 @@ $B.finalize_type = function(cls){
                     {
                         ob_type: $B.member_descriptor,
                         d_member: {name, type, attr, flags},
-                        d_name: name
+                        d_name: name,
+                        d_type: cls
                     }
                 )
             }

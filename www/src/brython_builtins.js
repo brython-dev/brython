@@ -268,6 +268,15 @@ $B.is_long_int = function(obj){
     return $B.get_class(obj) === $B.long_int
 }
 
+$B.is_sequence = function(obj){
+    var type = $B.get_class(obj)
+    var flags = $B.search_slot(type, 'tp_flags', $B.NULL)
+    if(flags !== $B.NULL){
+        return flags & $B.TPFLAGS.SEQUENCE
+    }
+    return false
+}
+
 $B._PyType_HasFeature = function(type, feature){
     return type.tp_flags & feature != 0
 }

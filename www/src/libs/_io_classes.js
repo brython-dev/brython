@@ -1,5 +1,5 @@
 (function($B){
-    
+
 var _b_ = $B.builtins
 
 function get_self(name, args){
@@ -8,6 +8,7 @@ function get_self(name, args){
 
 var _IOBase = $B._IOBase
 
+/*
 _IOBase.close = function(){
     get_self("close", arguments).closed = true
 }
@@ -18,6 +19,7 @@ _IOBase.flush = function(){
 }
 
 $B.set_func_names(_IOBase, '_io')
+*/
 
 // Base class for binary streams that support some kind of buffering.
 var _BufferedIOBase = $B.make_type("_BufferedIOBase", [_IOBase])

@@ -2017,11 +2017,14 @@ str_funcs.join = function(self, iterable){
         try{
             var obj2 = _b_.next(iterable)
             if(! $B.$isinstance(obj2, str)){
+                console.log('str join', arguments)
+    
                 $B.RAISE(_b_.TypeError, "sequence item " + count +
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
             }
             res.push(obj2)
+            count++
         }catch(err){
             if($B.$isinstance(err, _b_.StopIteration)){
                 break

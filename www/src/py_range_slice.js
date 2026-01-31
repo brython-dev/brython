@@ -389,20 +389,12 @@ $B.set_func_names(range, "builtins")
 // slice
 var slice = _b_.slice
 
-slice.$not_basetype = true // slice cannot be a base class
-
-slice.__eq__ = function(self, other){
+function slice_eq(self, other){
     var conv1 = conv_slice(self),
         conv2 = conv_slice(other)
     return conv1[0] == conv2[0] &&
         conv1[1] == conv2[1] &&
         conv1[2] == conv2[2]
-}
-
-slice.tp_repr = function(self){
-    $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
-    return "slice(" + _b_.str.$factory(self.start) + ", " +
-        _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }
 
 slice.tp_setattro = function(self, attr){
@@ -467,11 +459,97 @@ slice.$conv_for_seq = function(self, len){
     return {start: start, stop: stop, step: step}
 }
 
-slice.start = function(self){return self.start}
-slice.step = function(self){return self.step}
-slice.stop = function(self){return self.stop}
+slice.$factory = function(){
+    var $ = $B.args("slice", 3, {start: null, stop: null, step: null},
+        ["start", "stop", "step"], arguments,{stop: null, step: null},
+        null, null)
+    return slice.$fast_slice($.start, $.stop, $.step)
+}
 
-slice.indices = function(self){
+slice.$fast_slice = function(start, stop, step){
+    if(stop === null && step === null){
+        stop = start
+        start = _b_.None
+        step = _b_.None
+    }else{
+        step = step === null ? _b_.None : step
+    }
+
+    var res = {
+        ob_type: slice,
+        start: start,
+        stop: stop,
+        step: step
+    }
+    conv_slice(res) // to check types
+    return res
+}
+
+const _PyHASH_XXPRIME_1 = 11400714785074694791
+const _PyHASH_XXPRIME_2 = 14029467366897019727
+const _PyHASH_XXPRIME_5 = 2870177450012600261
+const _PyHASH_XXROTATE = (x) => ((x << 31) | (x >> 33))  /* Rotate left 31 bits */
+
+/* slice start */
+_b_.slice.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, _b_.slice)){
+        return _b_.NotImplemented
+    }
+    switch(op){
+        case '__eq__':
+            return slice_eq(self, other)
+        case '__ne__':
+            return ! slice_eq(self, other)
+        default:
+            return _b_.NotImplemented
+    }
+}
+
+_b_.slice.tp_repr = function(self){
+    $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
+    return "slice(" + _b_.str.$factory(self.start) + ", " +
+        _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
+}
+
+_b_.slice.tp_hash = function(self){
+    var acc = _PyHASH_XXPRIME_5
+
+    function _PyHASH_SLICE_PART(v){
+        var lane = _b_.hash(v)
+        if(lane == -1){
+            return -1
+        }
+        acc += lane * _PyHASH_XXPRIME_2
+        acc = _PyHASH_XXROTATE(acc)
+        acc *= _PyHASH_XXPRIME_1
+    }
+    _PyHASH_SLICE_PART(self.start)
+    _PyHASH_SLICE_PART(self.stop)
+    _PyHASH_SLICE_PART(self.step)
+    if(acc == -1){
+        return 1546275796
+    }
+    return acc
+}
+
+_b_.slice.tp_new = function(){
+    var $ = $B.args("slice", 4,
+                {cls: null, start: null, stop: null, step: null},
+                ["cls", "start", "stop", "step"], arguments,
+                {stop: null, step: null}, null, null)
+    var res = slice.$fast_slice($.start, $.stop, $.step)
+    res.ob_type = $.cls
+    return res
+}
+
+var slice_funcs = _b_.slice.tp_funcs = {}
+
+slice_funcs.__reduce__ = function(self){
+    return $B.fast_tuple([$B.get_class(self),
+        $B.fast_tuple([self.start, self.stop, self.step])])
+}
+
+slice_funcs.indices = function(){
     // This method takes a single integer argument length and computes
     // information about the slice that the slice object would describe if
     // applied to a sequence of length items. It returns a tuple of three
@@ -507,31 +585,15 @@ slice.indices = function(self){
     return _b_.tuple.$factory([_start, _stop, _step])
 }
 
-slice.$factory = function(){
-    var $ = $B.args("slice", 3, {start: null, stop: null, step: null},
-        ["start", "stop", "step"], arguments,{stop: null, step: null},
-        null, null)
-    return slice.$fast_slice($.start, $.stop, $.step)
-}
+_b_.slice.tp_methods = ["indices", "__reduce__"]
 
-slice.$fast_slice = function(start, stop, step){
-    if(stop === null && step === null){
-        stop = start
-        start = _b_.None
-        step = _b_.None
-    }else{
-        step = step === null ? _b_.None : step
-    }
+_b_.slice.tp_members = [
+    ["start", $B.TYPES.OBJECT, "start", 1],
+    ["stop", $B.TYPES.OBJECT, "stop", 1],
+    ["step", $B.TYPES.OBJECT, "step", 1]
+]
 
-    var res = {
-        ob_type: slice,
-        start: start,
-        stop: stop,
-        step: step
-    }
-    conv_slice(res) // to check types
-    return res
-}
+/* slice end */
 
 $B.set_func_names(slice, "builtins")
 

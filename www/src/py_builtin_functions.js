@@ -543,8 +543,9 @@ _b_.enumerate.tp_iter = function(self){
 
 _b_.enumerate.tp_iternext = function*(self){
     for(var item of self.it){
-        yield $B.fast_tuple([self.counter, item])
+        var res = $B.fast_tuple([self.counter, item])
         self.counter++
+        yield res
     }
 }
 
@@ -679,16 +680,17 @@ var $$eval = _b_.eval = function(){
         }
         // _globals is used for both globals and locals
         exec_globals = {}
-        if(_globals.$jsobj){ // eg globals()
-            exec_globals = _globals.$jsobj
+        if(_globals.$strings){ // eg globals()
+            exec_globals = _globals.$strings
         }else{
             // The globals object must be the same across calls to exec()
             // with the same dictionary (cf. issue 690)
-            exec_globals = _globals.$jsobj = {}
-            for(var key of _b_.dict.$keys_string(_globals)){
-                _globals.$jsobj[key] = _b_.dict.$getitem_string(_globals, key)
+            exec_globals = _globals.$strings = {}
+            for(var entry of _b_.dict.$iter_items(_globals)){
+                var key = entry.key
+                _globals.$strings[key] = $B.str_dict_get(_globals, key)
                 if(key == '__name__'){
-                    __name__ = _globals.$jsobj[key]
+                    __name__ = _globals.$strings[key]
                 }
             }
             _globals.$all_str = false
@@ -697,7 +699,6 @@ var $$eval = _b_.eval = function(){
         if(exec_globals.__builtins__ === undefined){
             exec_globals.__builtins__ = _b_.__builtins__
         }
-        // filename = exec_globals.__file__ || '<string>'
         if(_locals === _b_.None){
             exec_locals = exec_globals
         }else{
@@ -705,35 +706,29 @@ var $$eval = _b_.eval = function(){
                 // running exec at module level
                 global_name += '_globals'
                 exec_locals = exec_globals
-            }else if(_locals.$jsobj){
-                for(let key in _locals.$jsobj){
-                    exec_globals[key] = _locals.$jsobj[key]
-                }
+            }else if($B.exact_type(_locals, _b_.dict)){
+                exec_locals = _locals.$strings
             }else{
-                if(_locals.$jsobj){
-                    exec_locals = _locals.$jsobj
-                }else{
-                    var klass = $B.get_class(_locals),
-                        getitem = $B.$getattr(klass, '__getitem__'),
-                        setitem = $B.$getattr(klass, '__setitem__')
-                    exec_locals = new Proxy(_locals, {
-                        get(target, prop){
-                            if(prop == '$target'){
-                                return target
-                            }else if(prop == $B.LOCALS_PROXY){
-                                return true
-                            }
-                            try{
-                                return $B.$call(getitem, target, prop)
-                            }catch(err){
-                                return undefined
-                            }
-                        },
-                        set(target, prop, value){
-                            return $B.$call(setitem, target, prop, value)
+                var klass = $B.get_class(_locals),
+                    getitem = $B.$getattr(klass, '__getitem__'),
+                    setitem = $B.$getattr(klass, '__setitem__')
+                exec_locals = new Proxy(_locals, {
+                    get(target, prop){
+                        if(prop == '$target'){
+                            return target
+                        }else if(prop == $B.LOCALS_PROXY){
+                            return true
                         }
-                    })
-                }
+                        try{
+                            return $B.$call(getitem, target, prop)
+                        }catch(err){
+                            return undefined
+                        }
+                    },
+                    set(target, prop, value){
+                        return $B.$call(setitem, target, prop, value)
+                    }
+                })
             }
         }
     }
@@ -799,7 +794,6 @@ var $$eval = _b_.eval = function(){
         $B.frame_obj = save_frame_obj
         throw err
     }
-
 
     if(mode == 'eval'){
         // must set locals, might be used if expression is like
@@ -869,7 +863,7 @@ var $$eval = _b_.eval = function(){
         $B.frame_obj = save_frame_obj
         throw err
     }
-    if(_globals !== _b_.None && ! _globals.$jsobj){
+    if(_globals !== _b_.None && ! _globals.$strings){
         for(var _key in exec_globals){
             if(! _key.startsWith('$')){
                 _b_.dict.$setitem(_globals, _key, exec_globals[_key])
@@ -1586,6 +1580,8 @@ $B.$iter = function(obj, sentinel){
         if(iter_func !== $B.NULL){
             var res = $B.$call(iter_func, obj)
             if($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL){
+                console.log('iter, obj', obj, 'result of iter func', res)
+                console.log('no tp_iternext in', $B.get_class(res))
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)
             }
@@ -2478,15 +2474,16 @@ reversed.$factory = function(seq){
 
 /* reversed start */
 _b_.reversed.tp_iter = function(self){
+    self.counter = self.len
     return self
 }
 
-_b_.reversed.tp_iternext = function(self){
-    self.$counter--
-    if(self.$counter < 0){
-        $B.RAISE(_b_.StopIteration, '')
+_b_.reversed.tp_iternext = function*(self){
+    self.counter--
+    if(self.counter < 0){
+        return
     }
-    return self.getter(self.$counter)
+    yield $B.$call(self.getitem, self.seq, self.counter)
 }
 
 _b_.reversed.tp_new = function(cls, seq){
@@ -2497,17 +2494,16 @@ _b_.reversed.tp_new = function(cls, seq){
         return $B.$call(rev_method)
     }
     try{
-        var method = $B.$getattr(seq, '__getitem__')
+        var method = $B.$getattr($B.get_class(seq), '__getitem__')
     }catch(err){
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 
     var res = {
         ob_type: cls,
-        $counter: _b_.len(seq),
-        getter: function(i){
-            return $B.$call(method, i)
-        }
+        seq,
+        len: _b_.len(seq),
+        getitem: method
     }
     return res
 }

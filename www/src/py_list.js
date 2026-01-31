@@ -566,6 +566,7 @@ function $elts_class(self){
 
 // function used for list literals
 $B.$list = function(t){
+    t = t ?? []
     t.ob_type = _b_.list
     return t
 }
