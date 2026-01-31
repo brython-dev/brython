@@ -663,9 +663,9 @@ $B.resolve_local = function(name, inum){
 }
 
 $B.resolve_in_scopes = function(name, namespaces, inum){
-    var test = false // name == 'dict'
+    var test = false // name == 'a'
     if(test){
-        console.log('resolve in scopes', name)
+        console.log('resolve in scopes', name, 'namespaces', namespaces)
     }
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
@@ -3848,9 +3848,9 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                       prefix + 'matching = split[0],\n' +
                       prefix + 'rest = split[1]\n'
                 dedent()
-                js += prefix + 'if(matching.exceptions !== _b_.None){\n'
+                js += prefix + 'if(matching !== _b_.None){\n'
                 indent()
-                js += prefix + 'for(var err of matching.exceptions){\n'
+                js += prefix + 'for(var err of matching.excs){\n'
                 indent()
                 if(handler.name){
                     bind(handler.name, scopes)
@@ -3869,7 +3869,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                 js += prefix + `${err} = rest\n`
             }
         }
-        js += prefix + `if(${err}.exceptions !== _b_.None){\n` +
+        js += prefix + `if(${err} !== _b_.None){\n` +
               prefix + tab + `throw ${err}\n` +
               prefix + '}\n'
         dedent()

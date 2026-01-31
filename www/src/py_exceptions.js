@@ -73,7 +73,7 @@ $B.$raise = function(arg, cause){
             }
             arg.__context__ = active_exc === undefined ? _b_.None : active_exc
             arg.__cause__ = cause || _b_.None
-            arg.__suppress_context__ = cause !== undefined
+            arg.suppress_context = cause !== undefined
             throw arg
         }else if($B.is_type(arg) && _b_.issubclass(arg, _b_.BaseException)){
             if(arg === _b_.StopIteration){
@@ -85,7 +85,7 @@ $B.$raise = function(arg, cause){
             var exc = $B.$call(arg)
             exc.__context__ = active_exc === undefined ? _b_.None : active_exc
             exc.__cause__ = cause || _b_.None
-            exc.__suppress_context__ = cause !== undefined
+            exc.suppress_context = cause !== undefined
             throw exc
         }else{
             $B.RAISE(_b_.TypeError, "exceptions must derive from BaseException")
@@ -261,7 +261,10 @@ frame_funcs.f_back_get = function(self){
 frame_funcs.f_back_set = $B.NULL
 
 frame_funcs.f_builtins_get = function(self){
-    return $B.$getattr(self[3].__builtins__, '__dict__')
+    if(self[3].hasOwnProperty('__builtins__')){
+        return self[3].__builtins__.dict
+    }
+    return $B.obj_dict(_b_)
 }
 
 frame_funcs.f_builtins_set = $B.NULL
@@ -362,7 +365,10 @@ $B.frame.tp_members = [
     ["f_trace_lines", $B.TYPES.BOOL, "f_trace_lines", 0]
 ]
 
-$B.frame.tp_getset = ["f_back", "f_locals", "f_lineno", "f_trace", "f_lasti", "f_globals", "f_builtins", "f_code", "f_trace_opcodes", "f_generator"]
+$B.frame.tp_getset = [
+    "f_back", "f_locals", "f_lineno", "f_trace", "f_lasti", "f_globals",
+    "f_builtins", "f_code", "f_trace_opcodes", "f_generator"
+]
 
 
 $B.set_func_names(frame, "builtins")
@@ -425,7 +431,7 @@ $B.exception = function(js_exc){
         }
         exc.__cause__ = _b_.None
         exc.__context__ = _b_.None
-        exc.__suppress_context__ = false
+        exc.suppress_context = false
         exc.__traceback__ = traceback.$factory(js_exc)
         exc.args = _b_.tuple.$factory([msg])
         exc.$py_error = true
@@ -557,7 +563,7 @@ _b_.BaseException.tp_new = function(cls){
 var BaseException_funcs = _b_.BaseException.tp_funcs = {}
 
 BaseException_funcs.__cause___get = function(self){
-
+    return self.__cause__
 }
 
 BaseException_funcs.__cause___set = function(self){
@@ -565,7 +571,7 @@ BaseException_funcs.__cause___set = function(self){
 }
 
 BaseException_funcs.__context___get = function(self){
-
+    return self.__context__
 }
 
 BaseException_funcs.__context___set = function(self){
@@ -847,12 +853,7 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 /* IndexError start */
 _b_.IndexError.tp_new = function(cls, ...args){
-    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {},
-                'args', 'kw')
-    return {
-        ob_type: cls,
-        args: $.args
-    }
+    return _b_.BaseException.tp_new(cls, ...args)
 }
 
 var IndexError_funcs = _b_.IndexError.tp_funcs = {}
@@ -942,62 +943,119 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
 }
 
 // PEP 654
-//_b_.BaseExceptionGroup = $B.make_class("BaseExceptionGroup")
 
-_b_.BaseExceptionGroup.__new__ = function(){
-    var missing = {},
-        $ = $B.args("BaseExceptionGroup", 3,
-                    {cls: null, message: null, exceptions: null},
-                    ['cls', 'message', 'exceptions'], arguments,
-                    {exceptions: missing}, null, null)
-    var cls = $.cls
-    var exceptions = $.exceptions === missing ? [] : $.exceptions
-    if(exceptions !== _b_.None){
-        var exc_list = _b_.list.$factory(exceptions)
-        var all_exceptions = true
-        for(var exc of exc_list){
-            if(! $B.$isinstance(exc, _b_.Exception)){
-                all_exceptions = false
-                break
-            }
+_b_.BaseExceptionGroup.$factory = function(msg, excs){
+    return {
+        ob_type: _b_.BaseExceptionGroup,
+        msg,
+        excs: $B.fast_tuple(excs)
+    }
+}
+
+/* BaseExceptionGroup start */
+_b_.BaseExceptionGroup.tp_str = function(self){
+    return `${self.msg} (${self.excs.length} sub-exception` +
+        `${self.excs.length > 1 ? 's' : ''})`
+}
+
+_b_.BaseExceptionGroup.tp_init = function(self, ...args){
+    $B.check_no_kw('__init__', arguments)
+    _b_.BaseException.tp_init(self, ...args)
+}
+
+_b_.BaseExceptionGroup.tp_new = function(){
+    var $ = $B.args('__new__', 3,
+                {cls: null, message: null, exceptions: null},
+                ['cls', 'message', 'exceptions'], arguments, {}, null, null)
+    var cls = $.cls,
+        message = $.message,
+        exceptions = $.exceptions
+
+    if(! $B.is_sequence(exceptions)){
+        $B.RAISE(_b_.TypeError,
+            "second argument (exceptions) must be a sequence")
+    }
+
+    exceptions = $B.fast_tuple(Array.from($B.make_js_iterator(exceptions)))
+
+    if(exceptions.length == 0){
+        $B.RAISE(_b_.ValueError,
+            "second argument (exceptions) must be a non-empty sequence"
+        )
+    }
+
+    var nested_base_exceptions = false
+    var i = 0
+    for(let exc of exceptions){
+        if(! $B.$isinstance(exc, _b_.BaseException)){
+            $B.RAISE(_b_.ValueError,
+                `Item ${i} of second argument (exceptions) is not an exception`
+            )
         }
-        if(all_exceptions){
+        if(! $B.$isinstance(exc, _b_.Exception)){
+            nested_base_exceptions = true
+        }
+        i++
+    }
+    if(cls === _b_.ExceptionGroup){
+        if(nested_base_exceptions){
+            $B.RAISE(_b_.TypeError,
+                "Cannot nest BaseExceptions in an ExceptionGroup"
+            )
+        }
+    }else if(cls === _b_.BaseExceptionGroup){
+        if(! nested_base_exceptions){
+            /* All nested exceptions are Exception subclasses,
+             * wrap them in an ExceptionGroup
+             */
             cls = _b_.ExceptionGroup
         }
+    }else{
+        /* user-defined subclass */
+        if(nested_base_exceptions){
+            if(_b_.issubclass(cls, _b_.Exception)){
+                $B.RAISE(TypeError,
+                    "Cannot nest BaseExceptions in '$B.get_name(cls)'"
+                )
+            }
+        }
     }
-    var args = Array.from(arguments).slice(1)
-    var exc = _b_.BaseException.__new__(cls, ...args)
-    exc.message = $.message
-    exc.exceptions = exceptions
-    return exc
+    var self = _b_.BaseException.tp_new.apply(null, arguments)
+    self.ob_type = cls
+    self.msg = message
+    self.excs = exceptions
+    return self
 }
 
-_b_.BaseExceptionGroup.__class_getitem__ = $B.$class_getitem
+var BaseExceptionGroup_funcs = _b_.BaseExceptionGroup.tp_funcs = {}
 
-_b_.BaseExceptionGroup.tp_repr = function(self){
-    return `${self.message} (${self.exceptions.length} sub-exception` +
-        `${self.exceptions.length > 1 ? 's' : ''})`
+BaseExceptionGroup_funcs.__class_getitem__ = function(){
+    return $B.$class_getitem.apply(null, arguments)
 }
 
-_b_.BaseExceptionGroup.split = function(self, condition){
+BaseExceptionGroup_funcs.derive = function(self){
+
+}
+
+BaseExceptionGroup_funcs.split = function(self, condition){
     // condition is a function applied to exceptions
     // returns (matching_be, non_matching_be)
     var matching_excs = [],
         non_matching_excs = []
-    for(var exc of self.exceptions){
+    for(var exc of self.excs){
         if($B.$isinstance(exc, _b_.BaseExceptionGroup)){
-            var subsplit = _b_.BaseExceptionGroup.split(exc, condition),
+            var subsplit = BaseExceptionGroup_funcs.split(exc, condition),
                 matching = subsplit[0],
                 non_matching = subsplit[1]
             if(matching === _b_.None){
                 non_matching_excs.push(exc)
-            }else if(matching.exceptions.length == exc.exceptions.length){
+            }else if(matching.excs.length == exc.excs.length){
                 matching_excs.push(exc)
             }else{
-                if(matching.exceptions.length > 0){
+                if(matching.excs.length > 0){
                     matching_excs = matching_excs.concat(matching)
                 }
-                if(non_matching.exceptions.length > 0){
+                if(non_matching.excs.length > 0){
                     non_matching_excs = non_matching_excs.concat(non_matching)
                 }
             }
@@ -1015,20 +1073,38 @@ _b_.BaseExceptionGroup.split = function(self, condition){
     }
     var res = []
     for(var item of [matching_excs, non_matching_excs]){
-        var eg = _b_.BaseExceptionGroup.$factory(self.message, item)
-        eg.__cause__ = self.__cause__
-        eg.__context__ = self.__context__
-        eg.__traceback__ = self.__traceback__
-        res.push(eg)
+        if(item === _b_.None){
+            res.push(item)
+        }else{
+            var eg = _b_.BaseExceptionGroup.tp_new(_b_.BaseExceptionGroup,
+                self.msg, $B.$list(item))
+            eg.__cause__ = self.__cause__
+            eg.__context__ = self.__context__
+            eg.__traceback__ = self.__traceback__
+            res.push(eg)
+        }
     }
     return $B.fast_tuple(res)
 }
 
-_b_.BaseExceptionGroup.subgroup = function(self, condition){
-    return _b_.BaseExceptionGroup.split(self, condition)[0]
+BaseExceptionGroup_funcs.subgroup = function(self, condition){
+    return BaseExceptionGroup_funcs.split(self, condition)[0]
 }
 
+_b_.BaseExceptionGroup.classmethods = ["__class_getitem__"]
+
+_b_.BaseExceptionGroup.tp_methods = ["derive", "split", "subgroup"]
+
+_b_.BaseExceptionGroup.tp_members = [
+    ["message", $B.TYPES.OBJECT, "msg", 1],
+    ["exceptions", $B.TYPES.OBJECT, "excs", 1]
+]
+
+/* BaseExceptionGroup end */
+
+
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
+
 
 _b_.ExceptionGroup.factory = function(){
     var missing = {},
@@ -1059,9 +1135,24 @@ _b_.ExceptionGroup.factory = function(){
 
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
-    err.__suppress_context__ = false // XXX fix me
+    err.suppress_context = false // XXX fix me
     return err
 }
+
+/* ExceptionGroup start */
+var ExceptionGroup_funcs = _b_.ExceptionGroup.tp_funcs = {}
+
+ExceptionGroup_funcs.__weakref___get = function(self){
+
+}
+
+ExceptionGroup_funcs.__weakref___set = function(self){
+
+}
+
+_b_.ExceptionGroup.tp_getset = ["__weakref__"]
+
+/* ExceptionGroup end */
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
