@@ -1764,7 +1764,7 @@ str_funcs.format = function(){
         }
 
         // Call attribute __format__ to perform the actual formatting
-        if(value.$is_class || value.$factory){
+        if($B.is_type(value)){
             // For classes, don't use the class __format__ method
             res += $B.get_class(value).__format__(value, fmt.spec)
         }else{

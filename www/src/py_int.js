@@ -995,7 +995,7 @@ $B.$bool = function(obj, bool_class){ // return true or false
             if(obj){return true}
             return false
         default:
-            if(obj.$is_class){
+            if($B.is_type(obj)){
                 return true
             }
             var klass = $B.get_class(obj),

@@ -15,8 +15,7 @@ $B.make_class = function(qualname, factory){
         tp_bases: [object],
         __mro__: [object],
         __name__: qualname,
-        __qualname__: qualname,
-        $is_class: true
+        __qualname__: qualname
     }
 
     A.$factory = factory

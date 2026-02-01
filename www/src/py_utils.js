@@ -1836,7 +1836,7 @@ $B.rich_comp = function(op, x, y){
     }
     var res
 
-    if(x !== null && (x.$is_class || x.$factory)) {
+    if(x !== null && $B.is_type(x)){
         if(op == "__eq__"){
             return (x === y)
         }else if(op == "__ne__"){

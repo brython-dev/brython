@@ -53,7 +53,6 @@ function is_ascii_digit(cp){
 var $error_2 = {
     $name: "error",
     $qualname: "error",
-    $is_class: true,
     __module__: "re"
 }
 

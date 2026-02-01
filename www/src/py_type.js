@@ -115,7 +115,6 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         throw err
     }
     kls.$subclasses = []
-    kls.$is_class = true
 
     //$B.make_annotate_class(kls, annotate, frame)
 
@@ -1690,7 +1689,7 @@ $B.$instance_creator = function(klass){
         }
     }else{
         call_func = _b_.type.tp_getattro(metaclass, "__call__")
-        if(call_func.$is_class){
+        if($B.is_type(call_func)){
             factory = call_func
         }else{
             factory = call_func.bind(null, klass)
@@ -1726,7 +1725,6 @@ $B.make_iterator_class = function(name, reverse){
                 $builtin_iterator: true
             }
         },
-        $is_class: true,
         $iterator_class: true,
 
         tp_iter: function(self){

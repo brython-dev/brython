@@ -1268,7 +1268,7 @@ var help = _b_.help = function(obj){
             }else if(['False', 'True', 'None', 'NotImplemented', 'Ellipsis', '__debug__'].
                     indexOf(obj) > -1){
                 url = lib_url + `/constants.html#${obj}`
-            }else if(_b_[obj].$is_class &&
+            }else if($B.is_type(_b_[obj]) &&
                     _b_[obj].tp_bases.indexOf(_b_.Exception) > -1){
                 url = lib_url + `/exceptions.html#${obj}`
             }
@@ -1376,7 +1376,7 @@ $B.$isinstance = function(obj, cls){
         $B.RAISE(_b_.TypeError,
             'isinstance() arg 2 cannot be a parameterized generic')
     }
-    if((!klass) && (! cls.$is_class)){
+    if((!klass) && (! $B.is_type(cls))){
         if(! $B.$getattr(cls, '__instancecheck__', false)){
             $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type " +
                 "or tuple of types")

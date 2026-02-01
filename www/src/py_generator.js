@@ -313,7 +313,7 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
     var gen = self.js_gen,
         exc = type
 
-    if(exc.$is_class){
+    if($B.is_type(exc)){
         if(! _b_.issubclass(type, _b_.BaseException)){
             $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")

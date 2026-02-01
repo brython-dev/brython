@@ -453,7 +453,7 @@ $B.is_exc = function(exc, exc_list){
     if(! Array.isArray(exc_list)){
         exc_list = [exc_list]
     }
-    var this_exc_class = exc.$is_class ? exc : $B.get_class(exc)
+    var this_exc_class = $B.is_type(exc) ? exc : $B.get_class(exc)
     for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]
         if(this_exc_class === undefined){
