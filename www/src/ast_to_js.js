@@ -2504,6 +2504,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     indent()
 
+    if(is_generator){
+        // mark calling frame as having a genrator
+        js += prefix + '$B.frame_obj.frame.$has_generators = true\n'
+    }
     var locals_name = make_scope_name(scopes, func_scope)
     js += prefix + `var locals\n`
 
