@@ -1509,7 +1509,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = false // callable === _b_.super
+    var test = callable.$function_infos && callable.$function_infos[1] == 'test_gen1'
     var klass = $B.get_class(callable)
     if(test){
         console.log('call', callable, 'klass', klass, 'args', args)

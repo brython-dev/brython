@@ -898,9 +898,9 @@
             }
             var filters
             if($B.imported.warnings){
-                filters = $B.imported.warnings.filters
+                filters = $B.module_getattr($B.imported.warnings, 'filters')
             }else{
-                filters = modules._warnings.filters
+                filters = $B.module_getattr(modules._warnings, 'filters')
             }
             if(filters[0][0] == 'error'){
                 var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
@@ -958,7 +958,9 @@
                 }
             }
             if($B.imported.warnings){
-                $B.imported.warnings._showwarnmsg_impl(warning_message)
+                var showwarn = $B.module_getattr($B.imported.warnings, 
+                    '_showwarnmsg_impl')
+                $B.$call(showwarn, warning_message)
             }else{
                 var trace = ''
                 if(file && lineno){
