@@ -35,6 +35,22 @@ function wrap_with_reflected(dunder, rdunder){
     }
 }
 
+function wrap_with_same_reflected(dunder, rdunder){
+    return function(cls, attr){
+        var func = cls[attr]
+        $B.str_dict_set(cls.dict, dunder, $B.wrapper_descriptor.$factory(
+            cls,
+            dunder,
+            func
+        ))
+        $B.str_dict_set(cls.dict, rdunder, $B.wrapper_descriptor.$factory(
+            cls,
+            rdunder,
+            func
+        ))
+    }
+}
+
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
@@ -48,7 +64,7 @@ Object.assign($B.wrapper_methods,
         nb_and: wrap_with_reflected('__and__', '__rand__'),
         nb_bool: wrap('__bool__'),
         nb_divmod: wrap_with_reflected('__divmod__', '__rdivmod__'),
-        nb_floor_divide: wrap('__floordiv__'),
+        nb_floor_divide: wrap_with_reflected('__floordiv__', '__rfloordiv__'),
         nb_index: wrap('__index__'),
         nb_lshift: wrap_with_reflected('__lshift__', '__rlshift__'),
         nb_inplace_add: wrap('__iadd__'),
@@ -63,12 +79,13 @@ Object.assign($B.wrapper_methods,
         nb_remainder: wrap_with_reflected('__mod__', '__rmod__'),
         nb_subtract: wrap_with_reflected('__sub__', '__rsub__'),
         nb_rshift: wrap_with_reflected('__rshift__', '__rrshift__'),
-        nb_true_divide: wrap('__truediv__'),
+        nb_true_divide: wrap_with_reflected('__truediv__', '__rtruediv__'),
         nb_xor: wrap_with_reflected('__xor__', '__rxor__'),
         sq_ass_item: make_setitem_delitem,
         sq_concat: wrap('__add__'),
         sq_contains: wrap('__contains__'),
         sq_length: wrap('__len__'),
+        sq_repeat: wrap_with_same_reflected('__mul__', '__rmul__'),
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
         tp_descr_set: wrap('__set__'),
@@ -116,7 +133,7 @@ function make_next(cls){
         var itn = cls.tp_iternext(obj)
         var res = itn.next()
         if(res.done){
-            $B.RAISE(__BRYTHON__.builtins.StopIteration)
+            $B.RAISE(_b_.StopIteration, res.value)
         }
         return res.value
     }

@@ -620,7 +620,7 @@ _b_.list.tp_richcompare = function(){
     return tp_richcompare.apply(this, arguments)
 }
 
-_b_.list.nb_multiply = function(){
+_b_.list.sq_repeat = function(){
     return nb_multiply.apply(null, arguments)
 }
 
